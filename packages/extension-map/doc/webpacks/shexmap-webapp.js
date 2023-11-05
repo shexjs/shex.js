@@ -7615,9 +7615,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports["default"] = void 0;
 const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-      XSD = 'http://www.w3.org/2001/XMLSchema#',
-      SWAP = 'http://www.w3.org/2000/10/swap/';
-var _default = {
+  XSD = 'http://www.w3.org/2001/XMLSchema#',
+  SWAP = 'http://www.w3.org/2000/10/swap/';
+var _default = exports["default"] = {
   xsd: {
     decimal: `${XSD}decimal`,
     boolean: `${XSD}boolean`,
@@ -7643,7 +7643,6 @@ var _default = {
     implies: `${SWAP}log#implies`
   }
 };
-exports["default"] = _default;
 
 /***/ }),
 
@@ -7661,25 +7660,23 @@ exports.escapeQuotes = escapeQuotes;
 exports.termFromId = termFromId;
 exports.termToId = termToId;
 exports.unescapeQuotes = unescapeQuotes;
-
 var _IRIs = _interopRequireDefault(__webpack_require__(5325));
-
 var _N3Util = __webpack_require__(7141);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 // N3.js implementations of the RDF/JS core data types
 // See https://github.com/rdfjs/representation-task-force/blob/master/interface-spec.md
+
 const {
   rdf,
   xsd
-} = _IRIs.default; // eslint-disable-next-line prefer-const
+} = _IRIs.default;
 
+// eslint-disable-next-line prefer-const
 let DEFAULTGRAPH;
 let _blankNodeCounter = 0;
 const escapedLiteral = /^"(.*".*)(?="[^"]*$)/;
-const quadId = /^<<("(?:""|[^"])*"[^ ]*|[^ ]+) ("(?:""|[^"])*"[^ ]*|[^ ]+) ("(?:""|[^"])*"[^ ]*|[^ ]+) ?("(?:""|[^"])*"[^ ]*|[^ ]+)?>>$/; // ## DataFactory singleton
 
+// ## DataFactory singleton
 const DataFactory = {
   namedNode,
   blankNode,
@@ -7689,104 +7686,97 @@ const DataFactory = {
   quad,
   triple: quad
 };
-var _default = DataFactory; // ## Term constructor
-
-exports["default"] = _default;
-
+var _default = exports["default"] = DataFactory; // ## Term constructor
 class Term {
   constructor(id) {
     this.id = id;
-  } // ### The value of this term
+  }
 
-
+  // ### The value of this term
   get value() {
     return this.id;
-  } // ### Returns whether this object represents the same term as the other
+  }
 
-
+  // ### Returns whether this object represents the same term as the other
   equals(other) {
     // If both terms were created by this library,
     // equality can be computed through ids
-    if (other instanceof Term) return this.id === other.id; // Otherwise, compare term type and value
-
+    if (other instanceof Term) return this.id === other.id;
+    // Otherwise, compare term type and value
     return !!other && this.termType === other.termType && this.value === other.value;
-  } // ### Implement hashCode for Immutable.js, since we implement `equals`
+  }
+
+  // ### Implement hashCode for Immutable.js, since we implement `equals`
   // https://immutable-js.com/docs/v4.0.0/ValueObject/#hashCode()
-
-
   hashCode() {
     return 0;
-  } // ### Returns a plain object representation of this term
+  }
 
-
+  // ### Returns a plain object representation of this term
   toJSON() {
     return {
       termType: this.termType,
       value: this.value
     };
   }
+}
 
-} // ## NamedNode constructor
-
-
+// ## NamedNode constructor
 exports.Term = Term;
-
 class NamedNode extends Term {
   // ### The term type of this term
   get termType() {
     return 'NamedNode';
   }
+}
 
-} // ## Literal constructor
-
-
+// ## Literal constructor
 exports.NamedNode = NamedNode;
-
 class Literal extends Term {
   // ### The term type of this term
   get termType() {
     return 'Literal';
-  } // ### The text value of this literal
+  }
 
-
+  // ### The text value of this literal
   get value() {
     return this.id.substring(1, this.id.lastIndexOf('"'));
-  } // ### The language of this literal
+  }
 
-
+  // ### The language of this literal
   get language() {
     // Find the last quotation mark (e.g., '"abc"@en-us')
     const id = this.id;
-    let atPos = id.lastIndexOf('"') + 1; // If "@" it follows, return the remaining substring; empty otherwise
-
+    let atPos = id.lastIndexOf('"') + 1;
+    // If "@" it follows, return the remaining substring; empty otherwise
     return atPos < id.length && id[atPos++] === '@' ? id.substr(atPos).toLowerCase() : '';
-  } // ### The datatype IRI of this literal
+  }
 
-
+  // ### The datatype IRI of this literal
   get datatype() {
     return new NamedNode(this.datatypeString);
-  } // ### The datatype string of this literal
+  }
 
-
+  // ### The datatype string of this literal
   get datatypeString() {
     // Find the last quotation mark (e.g., '"abc"^^http://ex.org/types#t')
     const id = this.id,
-          dtPos = id.lastIndexOf('"') + 1;
-    const char = dtPos < id.length ? id[dtPos] : ''; // If "^" it follows, return the remaining substring
-
-    return char === '^' ? id.substr(dtPos + 2) : // If "@" follows, return rdf:langString; xsd:string otherwise
+      dtPos = id.lastIndexOf('"') + 1;
+    const char = dtPos < id.length ? id[dtPos] : '';
+    // If "^" it follows, return the remaining substring
+    return char === '^' ? id.substr(dtPos + 2) :
+    // If "@" follows, return rdf:langString; xsd:string otherwise
     char !== '@' ? xsd.string : rdf.langString;
-  } // ### Returns whether this object represents the same term as the other
+  }
 
-
+  // ### Returns whether this object represents the same term as the other
   equals(other) {
     // If both literals were created by this library,
     // equality can be computed through ids
-    if (other instanceof Literal) return this.id === other.id; // Otherwise, compare term type, value, language, and datatype
-
+    if (other instanceof Literal) return this.id === other.id;
+    // Otherwise, compare term type, value, language, and datatype
     return !!other && !!other.datatype && this.termType === other.termType && this.value === other.value && this.language === other.language && this.datatype.value === other.datatype.value;
   }
-
   toJSON() {
     return {
       termType: this.termType,
@@ -7798,139 +7788,138 @@ class Literal extends Term {
       }
     };
   }
+}
 
-} // ## BlankNode constructor
-
-
+// ## BlankNode constructor
 exports.Literal = Literal;
-
 class BlankNode extends Term {
   constructor(name) {
     super(`_:${name}`);
-  } // ### The term type of this term
+  }
 
-
+  // ### The term type of this term
   get termType() {
     return 'BlankNode';
-  } // ### The name of this blank node
+  }
 
-
+  // ### The name of this blank node
   get value() {
     return this.id.substr(2);
   }
-
 }
-
 exports.BlankNode = BlankNode;
-
 class Variable extends Term {
   constructor(name) {
     super(`?${name}`);
-  } // ### The term type of this term
+  }
 
-
+  // ### The term type of this term
   get termType() {
     return 'Variable';
-  } // ### The name of this variable
+  }
 
-
+  // ### The name of this variable
   get value() {
     return this.id.substr(1);
   }
+}
 
-} // ## DefaultGraph constructor
-
-
+// ## DefaultGraph constructor
 exports.Variable = Variable;
-
 class DefaultGraph extends Term {
   constructor() {
     super('');
     return DEFAULTGRAPH || this;
-  } // ### The term type of this term
+  }
 
-
+  // ### The term type of this term
   get termType() {
     return 'DefaultGraph';
-  } // ### Returns whether this object represents the same term as the other
+  }
 
-
+  // ### Returns whether this object represents the same term as the other
   equals(other) {
     // If both terms were created by this library,
     // equality can be computed through strict equality;
     // otherwise, compare term types.
     return this === other || !!other && this.termType === other.termType;
   }
+}
 
-} // ## DefaultGraph singleton
-
-
+// ## DefaultGraph singleton
 exports.DefaultGraph = DefaultGraph;
-DEFAULTGRAPH = new DefaultGraph(); // ### Constructs a term from the given internal string ID
+DEFAULTGRAPH = new DefaultGraph();
 
-function termFromId(id, factory) {
-  factory = factory || DataFactory; // Falsy value or empty string indicate the default graph
+// ### Constructs a term from the given internal string ID
+// The third 'nested' parameter of this function is to aid
+// with recursion over nested terms. It should not be used
+// by consumers of this library.
+// See https://github.com/rdfjs/N3.js/pull/311#discussion_r1061042725
+function termFromId(id, factory, nested) {
+  factory = factory || DataFactory;
 
-  if (!id) return factory.defaultGraph(); // Identify the term type based on the first character
+  // Falsy value or empty string indicate the default graph
+  if (!id) return factory.defaultGraph();
 
+  // Identify the term type based on the first character
   switch (id[0]) {
     case '?':
       return factory.variable(id.substr(1));
-
     case '_':
       return factory.blankNode(id.substr(2));
-
     case '"':
       // Shortcut for internal literals
-      if (factory === DataFactory) return new Literal(id); // Literal without datatype or language
-
-      if (id[id.length - 1] === '"') return factory.literal(id.substr(1, id.length - 2)); // Literal with datatype or language
-
+      if (factory === DataFactory) return new Literal(id);
+      // Literal without datatype or language
+      if (id[id.length - 1] === '"') return factory.literal(id.substr(1, id.length - 2));
+      // Literal with datatype or language
       const endPos = id.lastIndexOf('"', id.length - 1);
       return factory.literal(id.substr(1, endPos - 1), id[endPos + 1] === '@' ? id.substr(endPos + 2) : factory.namedNode(id.substr(endPos + 3)));
-
-    case '<':
-      const components = quadId.exec(id);
-      return factory.quad(termFromId(unescapeQuotes(components[1]), factory), termFromId(unescapeQuotes(components[2]), factory), termFromId(unescapeQuotes(components[3]), factory), components[4] && termFromId(unescapeQuotes(components[4]), factory));
-
+    case '[':
+      id = JSON.parse(id);
+      break;
     default:
-      return factory.namedNode(id);
+      if (!nested || !Array.isArray(id)) {
+        return factory.namedNode(id);
+      }
   }
-} // ### Constructs an internal string ID from the given term or ID string
+  return factory.quad(termFromId(id[0], factory, true), termFromId(id[1], factory, true), termFromId(id[2], factory, true), id[3] && termFromId(id[3], factory, true));
+}
 
-
-function termToId(term) {
+// ### Constructs an internal string ID from the given term or ID string
+// The third 'nested' parameter of this function is to aid
+// with recursion over nested terms. It should not be used
+// by consumers of this library.
+// See https://github.com/rdfjs/N3.js/pull/311#discussion_r1061042725
+function termToId(term, nested) {
   if (typeof term === 'string') return term;
   if (term instanceof Term && term.termType !== 'Quad') return term.id;
-  if (!term) return DEFAULTGRAPH.id; // Term instantiated with another library
+  if (!term) return DEFAULTGRAPH.id;
 
+  // Term instantiated with another library
   switch (term.termType) {
     case 'NamedNode':
       return term.value;
-
     case 'BlankNode':
       return `_:${term.value}`;
-
     case 'Variable':
       return `?${term.value}`;
-
     case 'DefaultGraph':
       return '';
-
     case 'Literal':
       return `"${term.value}"${term.language ? `@${term.language}` : term.datatype && term.datatype.value !== xsd.string ? `^^${term.datatype.value}` : ''}`;
-
     case 'Quad':
-      // To identify RDF* quad components, we escape quotes by doubling them.
-      // This avoids the overhead of backslash parsing of Turtle-like syntaxes.
-      return `<<${escapeQuotes(termToId(term.subject))} ${escapeQuotes(termToId(term.predicate))} ${escapeQuotes(termToId(term.object))}${(0, _N3Util.isDefaultGraph)(term.graph) ? '' : ` ${termToId(term.graph)}`}>>`;
-
+      const res = [termToId(term.subject, true), termToId(term.predicate, true), termToId(term.object, true)];
+      if (!(0, _N3Util.isDefaultGraph)(term.graph)) {
+        res.push(termToId(term.graph, true));
+      }
+      return nested ? res : JSON.stringify(res);
     default:
       throw new Error(`Unexpected termType: ${term.termType}`);
   }
-} // ## Quad constructor
+}
 
-
+// ## Quad constructor
 class Quad extends Term {
   constructor(subject, predicate, object, graph) {
     super('');
@@ -7938,30 +7927,26 @@ class Quad extends Term {
     this._predicate = predicate;
     this._object = object;
     this._graph = graph || DEFAULTGRAPH;
-  } // ### The term type of this term
+  }
 
-
+  // ### The term type of this term
   get termType() {
     return 'Quad';
   }
-
   get subject() {
     return this._subject;
   }
-
   get predicate() {
     return this._predicate;
   }
-
   get object() {
     return this._object;
   }
-
   get graph() {
     return this._graph;
-  } // ### Returns a plain object representation of this quad
+  }
 
-
+  // ### Returns a plain object representation of this quad
   toJSON() {
     return {
       termType: this.termType,
@@ -7970,70 +7955,68 @@ class Quad extends Term {
       object: this._object.toJSON(),
       graph: this._graph.toJSON()
     };
-  } // ### Returns whether this object represents the same quad as the other
+  }
 
-
+  // ### Returns whether this object represents the same quad as the other
   equals(other) {
     return !!other && this._subject.equals(other.subject) && this._predicate.equals(other.predicate) && this._object.equals(other.object) && this._graph.equals(other.graph);
   }
-
 }
-
 exports.Triple = exports.Quad = Quad;
-
 // ### Escapes the quotes within the given literal
 function escapeQuotes(id) {
   return id.replace(escapedLiteral, (_, quoted) => `"${quoted.replace(/"/g, '""')}`);
-} // ### Unescapes the quotes within the given literal
+}
 
-
+// ### Unescapes the quotes within the given literal
 function unescapeQuotes(id) {
   return id.replace(escapedLiteral, (_, quoted) => `"${quoted.replace(/""/g, '"')}`);
-} // ### Creates an IRI
+}
 
-
+// ### Creates an IRI
 function namedNode(iri) {
   return new NamedNode(iri);
-} // ### Creates a blank node
+}
 
-
+// ### Creates a blank node
 function blankNode(name) {
   return new BlankNode(name || `n3-${_blankNodeCounter++}`);
-} // ### Creates a literal
+}
 
-
+// ### Creates a literal
 function literal(value, languageOrDataType) {
   // Create a language-tagged string
-  if (typeof languageOrDataType === 'string') return new Literal(`"${value}"@${languageOrDataType.toLowerCase()}`); // Automatically determine datatype for booleans and numbers
+  if (typeof languageOrDataType === 'string') return new Literal(`"${value}"@${languageOrDataType.toLowerCase()}`);
 
+  // Automatically determine datatype for booleans and numbers
   let datatype = languageOrDataType ? languageOrDataType.value : '';
-
   if (datatype === '') {
     // Convert a boolean
-    if (typeof value === 'boolean') datatype = xsd.boolean; // Convert an integer or double
+    if (typeof value === 'boolean') datatype = xsd.boolean;
+    // Convert an integer or double
     else if (typeof value === 'number') {
       if (Number.isFinite(value)) datatype = Number.isInteger(value) ? xsd.integer : xsd.double;else {
         datatype = xsd.double;
         if (!Number.isNaN(value)) value = value > 0 ? 'INF' : '-INF';
       }
     }
-  } // Create a datatyped literal
+  }
 
-
+  // Create a datatyped literal
   return datatype === '' || datatype === xsd.string ? new Literal(`"${value}"`) : new Literal(`"${value}"^^${datatype}`);
-} // ### Creates a variable
+}
 
-
+// ### Creates a variable
 function variable(name) {
   return new Variable(name);
-} // ### Returns the default graph
+}
 
-
+// ### Returns the default graph
 function defaultGraph() {
   return DEFAULTGRAPH;
-} // ### Creates a quad
+}
 
-
+// ### Creates a quad
 function quad(subject, predicate, object, graph) {
   return new Quad(subject, predicate, object, graph);
 }
@@ -8057,76 +8040,70 @@ exports.isNamedNode = isNamedNode;
 exports.isVariable = isVariable;
 exports.prefix = prefix;
 exports.prefixes = prefixes;
-
 var _N3DataFactory = _interopRequireDefault(__webpack_require__(713));
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 // **N3Util** provides N3 utility functions.
+
 // Tests whether the given term represents an IRI
 function isNamedNode(term) {
   return !!term && term.termType === 'NamedNode';
-} // Tests whether the given term represents a blank node
+}
 
-
+// Tests whether the given term represents a blank node
 function isBlankNode(term) {
   return !!term && term.termType === 'BlankNode';
-} // Tests whether the given term represents a literal
+}
 
-
+// Tests whether the given term represents a literal
 function isLiteral(term) {
   return !!term && term.termType === 'Literal';
-} // Tests whether the given term represents a variable
+}
 
-
+// Tests whether the given term represents a variable
 function isVariable(term) {
   return !!term && term.termType === 'Variable';
-} // Tests whether the given term represents the default graph
+}
 
-
+// Tests whether the given term represents the default graph
 function isDefaultGraph(term) {
   return !!term && term.termType === 'DefaultGraph';
-} // Tests whether the given quad is in the default graph
+}
 
-
+// Tests whether the given quad is in the default graph
 function inDefaultGraph(quad) {
   return isDefaultGraph(quad.graph);
-} // Creates a function that prepends the given IRI to a local name
+}
 
-
+// Creates a function that prepends the given IRI to a local name
 function prefix(iri, factory) {
   return prefixes({
     '': iri.value || iri
   }, factory)('');
-} // Creates a function that allows registering and expanding prefixes
+}
 
-
+// Creates a function that allows registering and expanding prefixes
 function prefixes(defaultPrefixes, factory) {
   // Add all of the default prefixes
   const prefixes = Object.create(null);
+  for (const prefix in defaultPrefixes) processPrefix(prefix, defaultPrefixes[prefix]);
+  // Set the default factory if none was specified
+  factory = factory || _N3DataFactory.default;
 
-  for (const prefix in defaultPrefixes) processPrefix(prefix, defaultPrefixes[prefix]); // Set the default factory if none was specified
-
-
-  factory = factory || _N3DataFactory.default; // Registers a new prefix (if an IRI was specified)
+  // Registers a new prefix (if an IRI was specified)
   // or retrieves a function that expands an existing prefix (if no IRI was specified)
-
   function processPrefix(prefix, iri) {
     // Create a new prefix if an IRI is specified or the prefix doesn't exist
     if (typeof iri === 'string') {
       // Create a function that expands the prefix
       const cache = Object.create(null);
-
       prefixes[prefix] = local => {
         return cache[local] || (cache[local] = factory.namedNode(iri + local));
       };
     } else if (!(prefix in prefixes)) {
       throw new Error(`Unknown prefix: ${prefix}`);
     }
-
     return prefixes[prefix];
   }
-
   return processPrefix;
 }
 
@@ -18032,7 +18009,6 @@ let DEFAULTGRAPH;
 let _blankNodeCounter = 0;
 
 const escapedLiteral = /^"(.*".*)(?="[^"]*$)/;
-const quadId = /^<<("(?:""|[^"])*"[^ ]*|[^ ]+) ("(?:""|[^"])*"[^ ]*|[^ ]+) ("(?:""|[^"])*"[^ ]*|[^ ]+) ?("(?:""|[^"])*"[^ ]*|[^ ]+)?>>$/;
 
 // ## DataFactory singleton
 const DataFactory = {
@@ -18210,9 +18186,12 @@ class DefaultGraph extends Term {
 // ## DefaultGraph singleton
 DEFAULTGRAPH = new DefaultGraph();
 
-
 // ### Constructs a term from the given internal string ID
-function termFromId(id, factory) {
+// The third 'nested' parameter of this function is to aid
+// with recursion over nested terms. It should not be used
+// by consumers of this library.
+// See https://github.com/rdfjs/N3.js/pull/311#discussion_r1061042725
+function termFromId(id, factory, nested) {
   factory = factory || DataFactory;
 
   // Falsy value or empty string indicate the default graph
@@ -18237,21 +18216,28 @@ function termFromId(id, factory) {
     return factory.literal(id.substr(1, endPos - 1),
             id[endPos + 1] === '@' ? id.substr(endPos + 2)
                                    : factory.namedNode(id.substr(endPos + 3)));
-  case '<':
-    const components = quadId.exec(id);
-    return factory.quad(
-      termFromId(unescapeQuotes(components[1]), factory),
-      termFromId(unescapeQuotes(components[2]), factory),
-      termFromId(unescapeQuotes(components[3]), factory),
-      components[4] && termFromId(unescapeQuotes(components[4]), factory)
-    );
+  case '[':
+    id = JSON.parse(id);
+    break;
   default:
-    return factory.namedNode(id);
+    if (!nested || !Array.isArray(id)) {
+      return factory.namedNode(id);
+    }
   }
+  return factory.quad(
+    termFromId(id[0], factory, true),
+    termFromId(id[1], factory, true),
+    termFromId(id[2], factory, true),
+    id[3] && termFromId(id[3], factory, true)
+  );
 }
 
 // ### Constructs an internal string ID from the given term or ID string
-function termToId(term) {
+// The third 'nested' parameter of this function is to aid
+// with recursion over nested terms. It should not be used
+// by consumers of this library.
+// See https://github.com/rdfjs/N3.js/pull/311#discussion_r1061042725
+function termToId(term, nested) {
   if (typeof term === 'string')
     return term;
   if (term instanceof Term && term.termType !== 'Quad')
@@ -18269,17 +18255,15 @@ function termToId(term) {
     term.language ? `@${term.language}` :
       (term.datatype && term.datatype.value !== N3DataFactory_xsd.string ? `^^${term.datatype.value}` : '')}`;
   case 'Quad':
-    // To identify RDF* quad components, we escape quotes by doubling them.
-    // This avoids the overhead of backslash parsing of Turtle-like syntaxes.
-    return `<<${
-        escapeQuotes(termToId(term.subject))
-      } ${
-        escapeQuotes(termToId(term.predicate))
-      } ${
-        escapeQuotes(termToId(term.object))
-      }${
-        (isDefaultGraph(term.graph)) ? '' : ` ${termToId(term.graph)}`
-      }>>`;
+    const res = [
+      termToId(term.subject, true),
+      termToId(term.predicate, true),
+      termToId(term.object, true),
+    ];
+    if (!isDefaultGraph(term.graph)) {
+      res.push(termToId(term.graph, true));
+    }
+    return nested ? res : JSON.stringify(res);
   default: throw new Error(`Unexpected termType: ${term.termType}`);
   }
 }
@@ -19889,6 +19873,7 @@ var browser = __webpack_require__(180);
 
 
 
+
 // ## Constructor
 class N3Store {
   constructor(quads, options) {
@@ -19900,7 +19885,6 @@ class N3Store {
     // saving memory by using only numbers as keys in `_graphs`
     this._id = 0;
     this._ids = Object.create(null);
-    this._ids['><'] = 0; // dummy entry, so the first actual key is non-zero
     this._entities = Object.create(null); // inverse of `_ids`
     // `_blankNodeIndex` is the index of the last automatically named blank node
     this._blankNodeIndex = 0;
@@ -19914,6 +19898,45 @@ class N3Store {
     // Add quads if passed
     if (quads)
       this.addQuads(quads);
+  }
+
+  _termFromId(id, factory) {
+    if (id[0] === '.') {
+      const entities = this._entities;
+      const terms = id.split('.');
+      const q = this._factory.quad(
+        this._termFromId(entities[terms[1]]),
+        this._termFromId(entities[terms[2]]),
+        this._termFromId(entities[terms[3]]),
+        terms[4] && this._termFromId(entities[terms[4]])
+      );
+      return q;
+    }
+    return termFromId(id, factory);
+  }
+
+  _termToNumericId(term) {
+    if (term.termType === 'Quad') {
+      const s = this._termToNumericId(term.subject),
+          p = this._termToNumericId(term.predicate),
+          o = this._termToNumericId(term.object);
+      let g;
+
+      return s && p && o && (isDefaultGraph(term.graph) || (g = this._termToNumericId(term.graph))) &&
+        this._ids[g ? `.${s}.${p}.${o}.${g}` : `.${s}.${p}.${o}`];
+    }
+    return this._ids[termToId(term)];
+  }
+
+  _termToNewNumericId(term) {
+    // This assumes that no graph term is present - we may wish to error if there is one
+    const str = term && term.termType === 'Quad' ?
+      `.${this._termToNewNumericId(term.subject)}.${this._termToNewNumericId(term.predicate)}.${this._termToNewNumericId(term.object)}${
+        isDefaultGraph(term.graph) ? '' : `.${this._termToNewNumericId(term.graph)}`
+      }`
+      : termToId(term);
+
+    return this._ids[str] || (this._ids[this._entities[++this._id] = str] = this._id);
   }
 
   // ## Public properties
@@ -19974,24 +19997,24 @@ class N3Store {
   *_findInIndex(index0, key0, key1, key2, name0, name1, name2, graphId) {
     let tmp, index1, index2;
     const entityKeys = this._entities;
-    const graph = termFromId(graphId, this._factory);
+    const graph = this._termFromId(graphId, this._factory);
     const parts = { subject: null, predicate: null, object: null };
 
     // If a key is specified, use only that part of index 0.
     if (key0) (tmp = index0, index0 = {})[key0] = tmp[key0];
     for (const value0 in index0) {
       if (index1 = index0[value0]) {
-        parts[name0] = termFromId(entityKeys[value0], this._factory);
+        parts[name0] = this._termFromId(entityKeys[value0], this._factory);
         // If a key is specified, use only that part of index 1.
         if (key1) (tmp = index1, index1 = {})[key1] = tmp[key1];
         for (const value1 in index1) {
           if (index2 = index1[value1]) {
-            parts[name1] = termFromId(entityKeys[value1], this._factory);
+            parts[name1] = this._termFromId(entityKeys[value1], this._factory);
             // If a key is specified, use only that part of index 2, if it exists.
             const values = key2 ? (key2 in index2 ? [key2] : []) : Object.keys(index2);
             // Create quads for all items found in index 2.
             for (let l = 0; l < values.length; l++) {
-              parts[name2] = termFromId(entityKeys[values[l]], this._factory);
+              parts[name2] = this._termFromId(entityKeys[values[l]], this._factory);
               yield this._factory.quad(parts.subject, parts.predicate, parts.object, graph);
             }
           }
@@ -20076,7 +20099,7 @@ class N3Store {
     return id => {
       if (!(id in uniqueIds)) {
         uniqueIds[id] = true;
-        callback(termFromId(this._entities[id], this._factory));
+        callback(this._termFromId(this._entities[id], this._factory));
       }
     };
   }
@@ -20100,9 +20123,6 @@ class N3Store {
         predicate = subject.predicate, subject = subject.subject;
 
     // Convert terms to internal string representation
-    subject = termToId(subject);
-    predicate = termToId(predicate);
-    object = termToId(object);
     graph = termToId(graph);
 
     // Find the graph that will contain the triple
@@ -20118,11 +20138,9 @@ class N3Store {
     // Since entities can often be long IRIs, we avoid storing them in every index.
     // Instead, we have a separate index that maps entities to numbers,
     // which are then used as keys in the other indexes.
-    const ids = this._ids;
-    const entities = this._entities;
-    subject   = ids[subject]   || (ids[entities[++this._id] = subject]   = this._id);
-    predicate = ids[predicate] || (ids[entities[++this._id] = predicate] = this._id);
-    object    = ids[object]    || (ids[entities[++this._id] = object]    = this._id);
+    subject   = this._termToNewNumericId(subject);
+    predicate = this._termToNewNumericId(predicate);
+    object    = this._termToNewNumericId(object);
 
     const changed = this._addToIndex(graphItem.subjects,   subject,   predicate, object);
     this._addToIndex(graphItem.predicates, predicate, object,    subject);
@@ -20167,17 +20185,14 @@ class N3Store {
         predicate = subject.predicate, subject = subject.subject;
 
     // Convert terms to internal string representation
-    subject = termToId(subject);
-    predicate = termToId(predicate);
-    object = termToId(object);
     graph = termToId(graph);
 
     // Find internal identifiers for all components
     // and verify the quad exists.
-    const ids = this._ids, graphs = this._graphs;
+    const graphs = this._graphs;
     let graphItem, subjects, predicates;
-    if (!(subject    = ids[subject]) || !(predicate = ids[predicate]) ||
-        !(object     = ids[object])  || !(graphItem = graphs[graph])  ||
+    if (!(subject    = subject && this._termToNumericId(subject)) || !(predicate = predicate && this._termToNumericId(predicate)) ||
+        !(object     = object && this._termToNumericId(object))  || !(graphItem = graphs[graph])  ||
         !(subjects   = graphItem.subjects[subject]) ||
         !(predicates = subjects[predicate]) ||
         !(object in predicates))
@@ -20236,18 +20251,15 @@ class N3Store {
   // Setting any field to `undefined` or `null` indicates a wildcard.
   *readQuads(subject, predicate, object, graph) {
     // Convert terms to internal string representation
-    subject = subject && termToId(subject);
-    predicate = predicate && termToId(predicate);
-    object = object && termToId(object);
     graph = graph && termToId(graph);
 
-    const graphs = this._getGraphs(graph), ids = this._ids;
+    const graphs = this._getGraphs(graph);
     let content, subjectId, predicateId, objectId;
 
     // Translate IRIs to internal index keys.
-    if (isString(subject)   && !(subjectId   = ids[subject])   ||
-        isString(predicate) && !(predicateId = ids[predicate]) ||
-        isString(object)    && !(objectId    = ids[object]))
+    if (subject   && !(subjectId   = this._termToNumericId(subject))   ||
+        predicate && !(predicateId = this._termToNumericId(predicate)) ||
+        object    && !(objectId    = this._termToNumericId(object)))
       return;
 
     for (const graphId in graphs) {
@@ -20294,18 +20306,15 @@ class N3Store {
   // Setting any field to `undefined` or `null` indicates a wildcard.
   countQuads(subject, predicate, object, graph) {
     // Convert terms to internal string representation
-    subject = subject && termToId(subject);
-    predicate = predicate && termToId(predicate);
-    object = object && termToId(object);
     graph = graph && termToId(graph);
 
-    const graphs = this._getGraphs(graph), ids = this._ids;
+    const graphs = this._getGraphs(graph);
     let count = 0, content, subjectId, predicateId, objectId;
 
     // Translate IRIs to internal index keys.
-    if (isString(subject)   && !(subjectId   = ids[subject])   ||
-        isString(predicate) && !(predicateId = ids[predicate]) ||
-        isString(object)    && !(objectId    = ids[object]))
+    if (subject   && !(subjectId   = this._termToNumericId(subject))   ||
+        predicate && !(predicateId = this._termToNumericId(predicate)) ||
+        object    && !(objectId    = this._termToNumericId(object)))
       return 0;
 
     for (const graphId in graphs) {
@@ -20376,17 +20385,15 @@ class N3Store {
   // Setting any field to `undefined` or `null` indicates a wildcard.
   forSubjects(callback, predicate, object, graph) {
     // Convert terms to internal string representation
-    predicate = predicate && termToId(predicate);
-    object = object && termToId(object);
     graph = graph && termToId(graph);
 
-    const ids = this._ids, graphs = this._getGraphs(graph);
+    const graphs = this._getGraphs(graph);
     let content, predicateId, objectId;
     callback = this._uniqueEntities(callback);
 
     // Translate IRIs to internal index keys.
-    if (isString(predicate) && !(predicateId = ids[predicate]) ||
-        isString(object)    && !(objectId    = ids[object]))
+    if (predicate && !(predicateId = this._termToNumericId(predicate)) ||
+        object    && !(objectId    = this._termToNumericId(object)))
       return;
 
     for (graph in graphs) {
@@ -20423,17 +20430,15 @@ class N3Store {
   // Setting any field to `undefined` or `null` indicates a wildcard.
   forPredicates(callback, subject, object, graph) {
     // Convert terms to internal string representation
-    subject = subject && termToId(subject);
-    object = object && termToId(object);
     graph = graph && termToId(graph);
 
-    const ids = this._ids, graphs = this._getGraphs(graph);
+    const graphs = this._getGraphs(graph);
     let content, subjectId, objectId;
     callback = this._uniqueEntities(callback);
 
     // Translate IRIs to internal index keys.
-    if (isString(subject) && !(subjectId = ids[subject]) ||
-        isString(object)  && !(objectId  = ids[object]))
+    if (subject   && !(subjectId   = this._termToNumericId(subject))   ||
+        object    && !(objectId    = this._termToNumericId(object)))
       return;
 
     for (graph in graphs) {
@@ -20470,17 +20475,15 @@ class N3Store {
   // Setting any field to `undefined` or `null` indicates a wildcard.
   forObjects(callback, subject, predicate, graph) {
     // Convert terms to internal string representation
-    subject = subject && termToId(subject);
-    predicate = predicate && termToId(predicate);
     graph = graph && termToId(graph);
 
-    const ids = this._ids, graphs = this._getGraphs(graph);
+    const graphs = this._getGraphs(graph);
     let content, subjectId, predicateId;
     callback = this._uniqueEntities(callback);
 
     // Translate IRIs to internal index keys.
-    if (isString(subject)   && !(subjectId   = ids[subject]) ||
-        isString(predicate) && !(predicateId = ids[predicate]))
+    if (subject   && !(subjectId   = this._termToNumericId(subject))   ||
+        predicate && !(predicateId = this._termToNumericId(predicate)))
       return;
 
     for (graph in graphs) {
@@ -31660,7 +31663,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ShExValidator = exports.resultMapToShapeExprTest = exports.InterfaceOptions = void 0;
+exports.ShExValidator = exports.resultMapToShapeExprTest = exports.ShapeExprValidationContext = exports.InterfaceOptions = void 0;
 // interface constants
 const ShExTerm = __importStar(__webpack_require__(1101));
 const term_1 = __webpack_require__(1101);
@@ -31745,7 +31748,7 @@ class EmptyTracker {
 }
 class ShapeExprValidationContext {
     constructor(parent, label, // Can only be Start if it's the root of a context list.
-    depth, tracker, seen, matchTarget, subGraph) {
+    depth = 0, tracker = new EmptyTracker(), seen = {}, matchTarget = null, subGraph = null) {
         this.parent = parent;
         this.label = label;
         this.depth = depth;
@@ -31767,6 +31770,7 @@ class ShapeExprValidationContext {
         return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph);
     }
 }
+exports.ShapeExprValidationContext = ShapeExprValidationContext;
 class MapMap {
     constructor() {
         this.data = new Map();
