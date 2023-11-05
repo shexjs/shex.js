@@ -194,15 +194,15 @@ interface ExtensionIndex {
 
 interface ResList {passes: shapeExprTest[], failures: shapeExprTest[]}
 
-class ShapeExprValidationContext {
+export class ShapeExprValidationContext {
   constructor(
       public parent: ShapeExprValidationContext | null,
       public label: LabelOrStart, // Can only be Start if it's the root of a context list.
-      public depth: number,
-      public tracker: QueryTracker,
-      public seen: SeenIndex,
-      public matchTarget: MatchTarget | null,
-      public subGraph: NeighborhoodDb | null) {
+      public depth: number = 0,
+      public tracker: QueryTracker = new EmptyTracker(),
+      public seen: SeenIndex = {},
+      public matchTarget: MatchTarget | null = null,
+      public subGraph: NeighborhoodDb | null = null) {
   }
 
   public checkShapeLabel(label: LabelOrStart): ShapeExprValidationContext {

@@ -25,7 +25,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ShExValidator = exports.resultMapToShapeExprTest = exports.InterfaceOptions = void 0;
+exports.ShExValidator = exports.resultMapToShapeExprTest = exports.ShapeExprValidationContext = exports.InterfaceOptions = void 0;
 // interface constants
 const ShExTerm = __importStar(require("@shexjs/term"));
 const term_1 = require("@shexjs/term");
@@ -110,7 +110,7 @@ class EmptyTracker {
 }
 class ShapeExprValidationContext {
     constructor(parent, label, // Can only be Start if it's the root of a context list.
-    depth, tracker, seen, matchTarget, subGraph) {
+    depth = 0, tracker = new EmptyTracker(), seen = {}, matchTarget = null, subGraph = null) {
         this.parent = parent;
         this.label = label;
         this.depth = depth;
@@ -132,6 +132,7 @@ class ShapeExprValidationContext {
         return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph);
     }
 }
+exports.ShapeExprValidationContext = ShapeExprValidationContext;
 class MapMap {
     constructor() {
         this.data = new Map();
