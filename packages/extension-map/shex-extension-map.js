@@ -100,7 +100,12 @@ function register (validator, api) {
             update(key, N3DataFactory.literal(results[key]));
         } else {
           const bindingName = code.match(pattern);
-          update(bindingName, ctx.triples[0].node || ctx.triples[0].object);
+          if (ctx.node) {
+            update(bindingName, ctx.node);
+          } else {
+            const inverse = ctx.tripleExpr.type === 'TripleConstraint' && ctx.tripleExpr.inverse;
+            update(bindingName, inverse ? ctx.triples[0].subject : ctx.triples[0].object);
+          }
         }
 
         return []; // There are no evaluation failures. Any parsing problem throws.

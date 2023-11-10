@@ -396,11 +396,11 @@ class ShExValidator {
             function makeSchemaVisitor() {
                 const schemaVisitor = new visitor_1.ShExVisitor();
                 let curLabel;
-                let curAbstract;
+                // let curAbstract; -- not yet used
                 const oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
                 schemaVisitor.visitShapeDecl = function (decl) {
                     curLabel = decl.id;
-                    curAbstract = decl.abstract;
+                    // curAbstract = decl.abstract;
                     abstractness[decl.id] = !!decl.abstract;
                     return oldVisitShapeDecl.call(schemaVisitor, decl, decl.id);
                 };
@@ -476,7 +476,7 @@ class ShExValidator {
                 const sub = this.validateShapeExpr(focus, shapeExpr.shapeExpr, ctx);
                 return ("errors" in sub)
                     ? { type: "ShapeNotResults", solution: sub }
-                    : { type: "ShapeNotFailure", errors: sub }; // ugh
+                    : { type: "ShapeNotFailure", errors: sub };
             case "ShapeAnd":
                 const andPasses = [];
                 const andErrors = [];
@@ -519,13 +519,13 @@ class ShExValidator {
         // only construct a regexp engine if shape has a triple expression
         const regexEngine = shape.expression === undefined ? null : this.regexModule.compile(this.schema, shape, this.index);
         for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
-            const { errors, results } = this.tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine);
+            const { errors, triples, results } = this.tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine);
             const possibleRet = { type: "ShapeTest", node: (0, term_1.rdfJsTerm2Ld)(focus), shape: ctx.label };
             if (errors.length === 0 && results !== null) // only include .solution for non-empty pattern
                 // @ts-ignore TODO
                 possibleRet.solution = results;
             if ("semActs" in shape) {
-                const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({ node: focus }, results), possibleRet);
+                const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({ node: focus, triples }, results), possibleRet);
                 if (semActErrors.length)
                     // some semAct aborted
                     Array.prototype.push.apply(errors, semActErrors);
@@ -571,6 +571,7 @@ class ShExValidator {
     tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, t2tcErrors, outgoing, regexEngine) {
         const tc2ts = new eval_validator_api_1.MapArray();
         tripleConstraints.forEach(tc => tc2ts.empty(tc));
+        const usedTriples = [];
         const unexpectedTriples = [];
         const extendsToTriples = _seq((shape.extends || []).length).map(() => []);
         t2tc.forEach((tripleConstraint, triple) => {
@@ -586,10 +587,13 @@ class ShExValidator {
                 tc2ts.add(tripleConstraint, { triple: triple, res: t2tcErrors.get(tripleConstraint, triple) });
             }
         });
+        // usedTriples are returned to be passed to a SemActHandler
         outgoing.forEach(triple => {
             if (!t2tc.has(triple) // didn't match anything
                 && matchedExtras.indexOf(triple) === -1) // isn't in EXTRAs
                 unexpectedTriples.push(triple);
+            else
+                usedTriples.push(triple);
         });
         const errors = [];
         // Triples not mapped to triple constraints are not allowed in closed shapes.
@@ -623,7 +627,7 @@ class ShExValidator {
         // TODO: what if results is a TypedError (i.e. not a container of further errors)?
         if (results !== null && results.errors !== undefined)
             Array.prototype.push.apply(errors, results.errors);
-        return { errors, results };
+        return { errors, triples: usedTriples, results };
     }
     /**
      * For each TripleConstraint TC, for each triple T | T.p === TC.p, get the result of testing the value constraint.

@@ -413,6 +413,10 @@ ul {
     <script src="./ShExBaseApp.js"></script>
     <script src="./ShExApp.js"></script>
     <script src="../doc/ShExRSchema.js"></script>
-    <script>new ShExApp(DefaultBase).start();</script>
+    <script>
+      const shExAppInstance = new ShExApp(DefaultBase);
+      shExAppInstance.start();
+      console.log('ShExApp instance:', shExAppInstance);
+    </script>
   </body>
 </html>

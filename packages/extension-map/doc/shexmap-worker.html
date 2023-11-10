@@ -451,6 +451,10 @@ ul {
     <script src="../../shex-webapp/doc/RemoteShExValidator.js"></script>
     <script src="../../shex-webapp/doc/WorkerMarshalling.js"></script>
     <script src="../../shex-webapp/doc/ShExRSchema.js"></script>
-    <script>new ShExMapInWorkerApp(DefaultBase).start();</script>
+    <script>
+      const shExAppInstance = new ShExMapInWorkerApp(DefaultBase);
+      shExAppInstance.start();
+      console.log('ShExApp instance:', shExAppInstance);
+    </script>
   </body>
 </html>

@@ -1,7 +1,6 @@
 /**
  * Support functions associated with XSD datatypes (or any other DT ShEx should support).
  */
-import * as ShExTerm from "@shexjs/term";
 import type {Term as RdfJsTerm} from 'rdf-js';
 import {NodeConstraint, objectValue} from "shexj";
 

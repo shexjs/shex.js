@@ -30,6 +30,7 @@ import {
   shapeExprTest,
   ShapeNotFailure,
   ShapeNotResults,
+  ShapeAndResults,
   ShapeTest,
   SolutionList,
 } from "@shexjs/term/shexv";
@@ -62,8 +63,6 @@ import {getNumericDatatype, testFacets, testKnownTypes} from "./shex-xsd";
 import * as RdfJs from "@rdfjs/types/data-model";
 import {Literal as RdfJsLiteral} from "@rdfjs/types/data-model";
 import {ShExVisitor, ShExIndexVisitor} from "@shexjs/visitor";
-import {DataFactory} from "n3";
-import quad = DataFactory.quad;
 
 export {};
 
@@ -286,11 +285,11 @@ export function resultMapToShapeExprTest(resultsMap: ShExJsResultMapEntry[]): sh
   }, {passes: [], failures: []});
   if (passFails.failures.length > 0) {
     return passFails.failures.length !== 1
-        ? {type: "FailureList", errors: passFails.failures}
+        ? {type: "FailureList", errors: passFails.failures} as FailureList
         : passFails.failures [0];
   } else {
     return passFails.passes.length !== 1
-        ? {type: "SolutionList", solutions: passFails.passes}
+        ? {type: "SolutionList", solutions: passFails.passes} as SolutionList
         : passFails.passes [0];
   }
 }
@@ -301,6 +300,7 @@ export function resultMapToShapeExprTest(resultsMap: ShExJsResultMapEntry[]): sh
 class TrivialNeighborhood implements NeighborhoodDb {
   incoming: Quad[] = [];
   outgoing: Quad[] = [];
+  //@ts-ignore -- TODO: model DbTracker on QueryTracker
   private queryTracker: QueryTracker | null;
 
   constructor(queryTracker: QueryTracker | null) {
@@ -508,11 +508,11 @@ export class ShExValidator {
     let ret: shapeExprTest;
     if (results.passes.length > 0) {
       ret = results.passes.length !== 1 ?
-        { type: "SolutionList", solutions: results.passes } :
+        { type: "SolutionList", solutions: results.passes } as SolutionList :
       results.passes [0];
     } else if (results.failures.length > 0) {
       ret = results.failures.length !== 1 ?
-        { type: "FailureList", errors: results.failures } :
+        { type: "FailureList", errors: results.failures } as FailureList :
       results.failures [0];
     } else {
       ret = {
@@ -533,12 +533,12 @@ export class ShExValidator {
       function makeSchemaVisitor () {
         const schemaVisitor = new (ShExVisitor as any)();
         let curLabel: string;
-        let curAbstract;
+        // let curAbstract; -- not yet used
         const oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
 
         schemaVisitor.visitShapeDecl = function (decl: ShapeDecl) {
           curLabel = decl.id;
-          curAbstract = decl.abstract;
+          // curAbstract = decl.abstract;
           abstractness[decl.id] = !!decl.abstract;
           return oldVisitShapeDecl.call(schemaVisitor, decl, decl.id);
         };
@@ -617,8 +617,8 @@ export class ShExValidator {
       case "ShapeNot":
         const sub = this.validateShapeExpr(focus, shapeExpr.shapeExpr, ctx);
         return ("errors" in sub)
-          ? {type: "ShapeNotResults", solution: sub} as any as shapeExprTest
-          : {type: "ShapeNotFailure", errors: sub} as any as shapeExprTest; // ugh
+          ? {type: "ShapeNotResults", solution: sub} as ShapeNotResults
+          : {type: "ShapeNotFailure", errors: sub} as ShapeNotFailure
 
       case "ShapeAnd":
         const andPasses = [];
@@ -632,8 +632,8 @@ export class ShExValidator {
             andPasses.push(sub);
         }
         return andErrors.length > 0
-          ? {type: "ShapeAndFailure", errors: andErrors} as any as shapeExprTest
-          : {type: "ShapeAndResults", solutions: andPasses};
+          ? {type: "ShapeAndFailure", errors: andErrors} as ShapeAndFailure
+          : {type: "ShapeAndResults", solutions: andPasses} as ShapeAndResults;
 
       default:
         throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
@@ -669,7 +669,7 @@ export class ShExValidator {
     const regexEngine = shape.expression === undefined ? null : this.regexModule.compile(this.schema, shape, this.index);
 
     for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
-      const {errors, results}
+      const {errors, triples, results}
           = this.tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine);
 
       const possibleRet = { type: "ShapeTest", node: rdfJsTerm2Ld(focus), shape: ctx.label };
@@ -677,7 +677,7 @@ export class ShExValidator {
         // @ts-ignore TODO
         possibleRet.solution = results;
       if ("semActs" in shape) {
-        const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({node: focus}, results), possibleRet)
+        const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({node: focus, triples}, results), possibleRet)
         if (semActErrors.length)
           // some semAct aborted
           Array.prototype.push.apply(errors, semActErrors);
@@ -734,6 +734,7 @@ export class ShExValidator {
     const tc2ts: ConstraintToTripleResults = new MapArray<TripleConstraint, TripleResult>();
     tripleConstraints.forEach(tc => tc2ts.empty(tc))
 
+    const usedTriples: Quad[] = [];
     const unexpectedTriples: Quad[] = [];
     const extendsToTriples: Quad[][] = _seq((shape.extends || []).length).map(() => []);
     t2tc.forEach((tripleConstraint, triple) => {
@@ -748,10 +749,14 @@ export class ShExValidator {
         tc2ts.add(tripleConstraint, {triple: triple, res: t2tcErrors.get(tripleConstraint, triple)!});
       }
     });
+
+    // usedTriples are returned to be passed to a SemActHandler
     outgoing.forEach(triple => {
       if (!t2tc.has(triple) // didn't match anything
           && matchedExtras.indexOf(triple) === -1) // isn't in EXTRAs
         unexpectedTriples.push(triple);
+      else
+        usedTriples.push(triple);
     })
 
     const errors: error[] = [];
@@ -786,7 +791,7 @@ export class ShExValidator {
     // TODO: what if results is a TypedError (i.e. not a container of further errors)?
     if (results !== null && (results as NestedFailure).errors !== undefined)
       Array.prototype.push.apply(errors, (results as NestedFailure).errors);
-    return {errors, results};
+    return {errors, triples: usedTriples, results};
   }
 
   /**
@@ -1101,8 +1106,8 @@ export class ShExValidator {
     Object.assign(
       ncRet,
       errors.length > 0
-        ? {type: "NodeConstraintViolation", errors: errors}
-      : {type: "NodeConstraintTest",}
+        ? {type: "NodeConstraintViolation", errors: errors} as NodeConstraintViolation
+      : {type: "NodeConstraintTest",} as NodeConstraintTest
     );
     return this.evaluateShapeExprSemActs(ncRet, nc, focus, ctx.label);
   }

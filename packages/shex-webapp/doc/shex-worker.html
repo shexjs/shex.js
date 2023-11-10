@@ -420,6 +420,10 @@ ul {
     <script src="./RemoteShExValidator.js"></script>
     <script src="./WorkerMarshalling.js"></script>
     <script src="../doc/ShExRSchema.js"></script>
-    <script>new ShExInWorkerApp(DefaultBase).start();</script>
+    <script>
+      const shExAppInstance = new ShExInWorkerApp(DefaultBase);
+      shExAppInstance.start();
+      console.log('ShExApp instance:', shExAppInstance);
+    </script>
   </body>
 </html>

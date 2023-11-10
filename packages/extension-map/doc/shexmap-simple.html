@@ -445,6 +445,10 @@ ul {
     <script src="./ShExMapBaseApp.js"></script>
     <script src="./ShExMapInMainApp.js"></script>
     <script src="../../shex-webapp/doc/ShExRSchema.js"></script>
-    <script>new ShExMapInMainApp(DefaultBase).start();</script>
+    <script>
+      const shExAppInstance = new ShExMapInMainApp(DefaultBase);
+      shExAppInstance.start();
+      console.log('ShExApp instance:', shExAppInstance);
+    </script>
   </body>
 </html>
