@@ -1,6 +1,6 @@
 {
   "name": "shex",
-  "version": "1.0.0-alpha.28",
+  "version": "1.0.0-alpha.29",
   "description": "Shape Expressions meta package",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -19,9 +19,9 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/cli": "^1.0.0-alpha.28",
-    "@shexjs/extension-map": "^1.0.0-alpha.28",
-    "@shexjs/webapp": "^1.0.0-alpha.28"
+    "@shexjs/cli": "^1.0.0-alpha.29",
+    "@shexjs/extension-map": "^1.0.0-alpha.29",
+    "@shexjs/webapp": "^1.0.0-alpha.29"
   },
   "scripts": {
     "test": "echo no tests for meta-package"

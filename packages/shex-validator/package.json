@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/validator",
-  "version": "1.0.0-alpha.28",
+  "version": "1.0.0-alpha.29",
   "description": "Shape Expressions Validator and schema index generator.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -22,9 +22,9 @@
   },
   "dependencies": {
     "@rdfjs/data-model": "^2.0.1",
-    "@shexjs/eval-simple-1err": "^1.0.0-alpha.28",
-    "@shexjs/eval-threaded-nerr": "^1.0.0-alpha.28",
-    "@shexjs/eval-validator-api": "^1.0.0-alpha.28",
+    "@shexjs/eval-simple-1err": "^1.0.0-alpha.29",
+    "@shexjs/eval-threaded-nerr": "^1.0.0-alpha.29",
+    "@shexjs/eval-validator-api": "^1.0.0-alpha.29",
     "@shexjs/neighborhood-api": "^1.0.0-alpha.28",
     "@shexjs/term": "^1.0.0-alpha.27",
     "@shexjs/visitor": "^1.0.0-alpha.27",
