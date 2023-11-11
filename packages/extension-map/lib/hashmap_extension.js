@@ -98,7 +98,7 @@ function lift(mapDirective, input, prefixes, args) {
     // Get the expanded const name if it was prefixed
     const expandedName = expandedVarName(mapArgs.varName, prefixes);
 
-    const key = extUtils.trimQuotes(input);
+    const key = input.value || input;
     if (key.length === 0) throw Error('Hashmap extension has no input');
     
     const mappedValue = mapArgs.hash[key];
@@ -111,13 +111,14 @@ function lower(mapDirective, bindings, prefixes, args) {
     // Get the expanded const name if it was prefixed
     const expandedName = expandedVarName(mapArgs.varName, prefixes);
 
-    const mappedValue = extUtils.trimQuotes( bindings.get(expandedName) );
+    const mappedValueTerm = bindings.get(expandedName);
+  const mappedValue = mappedValueTerm.value || mappedValueTerm;
     if (mappedValue === undefined) throw Error('Unable to find mapped value for ' + mapArgs.varName);
 
     // Now use the mapped Value to find the original value and clean it up if we get something
     const inverseValue = invert(mapArgs.hash, mappedValue);
     if (inverseValue.length !== 0) {
-        return extUtils.unescapeMetaChars( extUtils.collapseSpaces(inverseValue) );
+        return '"' + extUtils.unescapeMetaChars( extUtils.collapseSpaces(inverseValue) ) + '"';
     }
 
     return inverseValue; 

@@ -128,7 +128,7 @@ function lower(mapDirective, bindings, prefixes, args) {
                             " because variable \"" + expVarName + "\" was not found!");
       
             } else {
-                return extUtils.trimQuotes( val);
+                return val.value || val;
             }
     });
 
@@ -137,7 +137,7 @@ function lower(mapDirective, bindings, prefixes, args) {
     }
 
     string = extUtils.collapseSpaces(string); // replaces white space with a single space 
-    return extUtils.unescapeMetaChars(string);
+    return '"' + extUtils.unescapeMetaChars(string) + '"';
 }
 
 return {

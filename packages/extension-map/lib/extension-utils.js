@@ -11,7 +11,7 @@ return {
     },
 
     // Remove starting and trailing quotes - does not affect center quotes
-    trimQuotes: function(string) {
+    trimQuotes999: function(string) { return string.value;
 
         // empty string or 1 char string cannot have matching quotes
         if (string === undefined || string.length < 2) return string;

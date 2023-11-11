@@ -94,8 +94,9 @@ function register (validator, api) {
         };
 
         // Do we have a map extension function?
-        if (/.*[(].*[)].*$/s.test(code)) {
-          const results = extensions.lift(code, ctx.object.value, prefixes);
+        const funcArg = code.match(/^\s*[a-zA-Z0-9]+\((.*)\)\s*$/)
+        if (funcArg) {
+          const results = extensions.lift(code, ctx.triples[0].object.value, prefixes);
           for (key in results)
             update(key, N3DataFactory.literal(results[key]));
         } else {
@@ -146,8 +147,9 @@ function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, s
 
             // Is the arg a function? Check if it has parentheses and ends with a closing one
             if (tripleObject === undefined) {
-              if (/[ a-zA-Z0-9]+\(/.test(code)) 
-                  tripleObject = extensions.lower(code, bindings, schema.prefixes);
+              const funcArg = code.match(/^\s*[a-zA-Z0-9]+\((.*)\)\s*$/)
+              if (funcArg)
+                tripleObject = extensions.lower(code, bindings, schema._prefixes, funcArg[1]);
             }
 
             if (tripleObject === undefined)

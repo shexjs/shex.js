@@ -25097,7 +25097,7 @@ return {
     },
 
     // Remove starting and trailing quotes - does not affect center quotes
-    trimQuotes: function(string) {
+    trimQuotes999: function(string) { return string.value;
 
         // empty string or 1 char string cannot have matching quotes
         if (string === undefined || string.length < 2) return string;
@@ -25315,7 +25315,7 @@ function lift(mapDirective, input, prefixes, args) {
     // Get the expanded const name if it was prefixed
     const expandedName = expandedVarName(mapArgs.varName, prefixes);
 
-    const key = extUtils.trimQuotes(input);
+    const key = input.value || input;
     if (key.length === 0) throw Error('Hashmap extension has no input');
     
     const mappedValue = mapArgs.hash[key];
@@ -25328,13 +25328,14 @@ function lower(mapDirective, bindings, prefixes, args) {
     // Get the expanded const name if it was prefixed
     const expandedName = expandedVarName(mapArgs.varName, prefixes);
 
-    const mappedValue = extUtils.trimQuotes( bindings.get(expandedName) );
+    const mappedValueTerm = bindings.get(expandedName);
+  const mappedValue = mappedValueTerm.value || mappedValueTerm;
     if (mappedValue === undefined) throw Error('Unable to find mapped value for ' + mapArgs.varName);
 
     // Now use the mapped Value to find the original value and clean it up if we get something
     const inverseValue = invert(mapArgs.hash, mappedValue);
     if (inverseValue.length !== 0) {
-        return extUtils.unescapeMetaChars( extUtils.collapseSpaces(inverseValue) );
+        return '"' + extUtils.unescapeMetaChars( extUtils.collapseSpaces(inverseValue) ) + '"';
     }
 
     return inverseValue; 
@@ -25485,7 +25486,7 @@ function lower(mapDirective, bindings, prefixes, args) {
                             " because variable \"" + expVarName + "\" was not found!");
       
             } else {
-                return extUtils.trimQuotes( val);
+                return val.value || val;
             }
     });
 
@@ -25494,7 +25495,7 @@ function lower(mapDirective, bindings, prefixes, args) {
     }
 
     string = extUtils.collapseSpaces(string); // replaces white space with a single space 
-    return extUtils.unescapeMetaChars(string);
+    return '"' + extUtils.unescapeMetaChars(string) + '"';
 }
 
 return {
@@ -25686,8 +25687,9 @@ function register (validator, api) {
         };
 
         // Do we have a map extension function?
-        if (/.*[(].*[)].*$/s.test(code)) {
-          const results = extensions.lift(code, ctx.object.value, prefixes);
+        const funcArg = code.match(/^\s*[a-zA-Z0-9]+\((.*)\)\s*$/)
+        if (funcArg) {
+          const results = extensions.lift(code, ctx.triples[0].object.value, prefixes);
           for (key in results)
             update(key, N3DataFactory.literal(results[key]));
         } else {
@@ -25738,8 +25740,9 @@ function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, s
 
             // Is the arg a function? Check if it has parentheses and ends with a closing one
             if (tripleObject === undefined) {
-              if (/[ a-zA-Z0-9]+\(/.test(code)) 
-                  tripleObject = extensions.lower(code, bindings, schema.prefixes);
+              const funcArg = code.match(/^\s*[a-zA-Z0-9]+\((.*)\)\s*$/)
+              if (funcArg)
+                tripleObject = extensions.lower(code, bindings, schema._prefixes, funcArg[1]);
             }
 
             if (tripleObject === undefined)

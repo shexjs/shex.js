@@ -240,7 +240,7 @@ describe('Hashmap extension', function() {
                     registered.binder([{"urn:local:test:string": "beta"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"alpha": "beta"}'))
-            .to.equal('alpha');
+            .to.equal('"alpha"');
 
             expect(
                 hmExtension.lower(
@@ -248,7 +248,7 @@ describe('Hashmap extension', function() {
                     registered.binder([{"urn:local:test:string": "abc"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "x": "xyz"}'))
-            .to.equal('a');
+            .to.equal('"a"');
 
             expect(
                 hmExtension.lower(
@@ -256,7 +256,7 @@ describe('Hashmap extension', function() {
                     registered.binder([{"urn:local:test:string": "xyz"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "x": "xyz"}'))
-            .to.equal('x');
+            .to.equal('"x"');
         });
     });
 

@@ -27,45 +27,6 @@ describe('Map extension utils', function() {
         });
     });
 
-    describe('#trimQuotes', function() {
-
-        it('should return an undefined string with no change', function() { 
-            expect( 
-                mapExtUtils.trimQuotes(undefined)
-            ).to.be.undefined;
-        });
-
-        it('should return an empty string with no change', function() { 
-            expect( 
-                mapExtUtils.trimQuotes('')
-            ).to.equal('');
-        });
-
-        it('should remove starting and trailing double quotes', function() {
-            expect( 
-                mapExtUtils.trimQuotes('"Test"')
-            ).to.equal('Test');
-        });
-
-        it('should remove starting and trailing single quotes', function() {
-            expect( 
-                mapExtUtils.trimQuotes("'Test'")
-            ).to.equal('Test');
-        });
-
-        it('should not remove mismatched quotes', function() {
-            expect( 
-                mapExtUtils.trimQuotes("'Test\"")
-            ).to.equal("'Test\"");
-        });
-
-        it('should not remove non-leading and non-trailing quotes', function() {
-            expect( 
-                mapExtUtils.trimQuotes("'Testing \"123\" for you'")
-            ).to.equal("Testing \"123\" for you");
-        });
-    });
-
     describe('#unescapeMetaChars', function() {
  
         it('should unescape meta characters', function() {

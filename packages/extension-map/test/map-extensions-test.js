@@ -153,7 +153,7 @@ describe('Map extensions', function() {
                     'hashmap(test:string, {"alpha": "beta"})',
                     registered.binder([{"urn:local:test:string": "beta"}]),
                     {"test": "urn:local:test:"}))
-            .to.equal('alpha');
+            .to.equal('"alpha"');
         });
 
         it('should execute a simple regex function', function() {
@@ -162,7 +162,7 @@ describe('Map extensions', function() {
                     "regex(/(?<dem:test>^[a-zA-Z]+)/)", 
                     registered.binder([{ 'http://a.example/dem#test': 'Testing' }]), 
                     {"dem": "http://a.example/dem#"})
-            ).to.equal('Testing');
+            ).to.equal('"Testing"');
         });
     });
     

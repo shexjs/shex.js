@@ -154,30 +154,33 @@ describe('Regex extension', function() {
             expect(
                 regexExtension.lower(
                     "regex(/(?<dem:family>^[a-zA-Z]+)/)", 
-                    registered.binder([{"http://a.example/dem#family": "Smith"}]),
+                    registered.binder([{"http://a.example/dem#family": {value:"Smith"}}]),
                     {"dem": "http://a.example/dem#"},
                     "/(?<dem:family>^[a-zA-Z]+)/")
-            ).to.equal("Smith");
+            ).to.equal('"Smith"');
         });
 
         it('should execute a regex function with an embedded capture expression', function() {
             expect(
                 regexExtension.lower(
                     "regex(/A (?<test:string>[a-zA-Z]+) string/)", 
-                    registered.binder([{"urn:local:test:string": "test"}]), 
+                    registered.binder([{"urn:local:test:string": {value:"test"}}]), 
                     {"test": "urn:local:test:"},
                     "/A (?<test:string>[a-zA-Z]+) string/")
-            ).to.equal("A test string");
+            ).to.equal('"A test string"');
         });
 
-	it('should execute a regex function with a multiple capture variables', function() {
+	it('should execute a regex function with a multiple capture variables', function() {debugger
             expect(
                 regexExtension.lower(
-                    "regex(/(?<dem:family>[a-zA-Z]+), (?<dem:given>[a-zA-Z]+)/)",
-                    registered.binder([{ 'http://a.example/dem#family': 'Doe', 'http://a.example/dem#given': 'John'}]),
-                    {"dem": "http://a.example/dem#"},
-                    "/(?<dem:family>[a-zA-Z]+), (?<dem:given>[a-zA-Z]+)/")
-            ).to.equal("Doe, John");
+                    " regex( /(?<t:family>[a-zA-Z]+), (?<t:given>[a-zA-Z]+)/ ) ",
+                  registered.binder([{
+                    'http://a.example/family': {value: 'Doe'},
+                    'http://a.example/given': {value: 'John'}
+                  }]),
+                    {"t": "http://a.example/"},
+                    " /(?<t:family>[a-zA-Z]+), (?<t:given>[a-zA-Z]+)/ ")
+            ).to.equal('"Doe, John"');
         });
     });
 
