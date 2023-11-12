@@ -17,8 +17,8 @@
       a [fhir:Observation]?;
       # fhir:subject @<Patient>;
       fhir:coding { fhir:code [sct:Blood_Pressure] };
-      fhir:related { fhir:type ["has-component"]; fhir:target @<sysBP> };
-      fhir:related { fhir:type ["has-component"]; fhir:target @<diaBP> }
+      fhir:component @<sysBP>;
+      fhir:component @<diaBP>
     }
     <sysBP> {
       a [fhir:Observation]?;
@@ -47,8 +47,8 @@
     <tag:BPfhir123>
       a fhir:Observation;
       fhir:coding [ fhir:code sct:Blood_Pressure ];
-      fhir:related [ fhir:type "has-component"; fhir:target _:sysBP123 ];
-      fhir:related [ fhir:type "has-component"; fhir:target _:diaBP123 ]
+      fhir:component _:sysBP123;
+      fhir:component _:diaBP123
     .
     _:sysBP123
       a fhir:Observation;
@@ -113,8 +113,8 @@
       a [fhir:Observation]?;
       # fhir:subject @<Patient>;
       fhir:coding { fhir:code [sct:Blood_Pressure] };
-      fhir:related { fhir:type ["has-component"]; fhir:target @<sysBP> };
-      fhir:related { fhir:type ["has-component"]; fhir:target @<diaBP> }
+      fhir:component @<sysBP>;
+      fhir:component @<diaBP>
     }
     <sysBP> {
       a [fhir:Observation]?;
@@ -143,8 +143,8 @@
     <tag:BPfhir123>
       a fhir:Observation;
       fhir:coding [ fhir:code sct:Blood_Pressure ];
-      fhir:related [ fhir:type "has-component"; fhir:target _:sysBP123 ];
-      fhir:related [ fhir:type "has-component"; fhir:target _:diaBP123 ]
+      fhir:component _:sysBP123;
+      fhir:component _:diaBP123
     .
     _:sysBP123
       a fhir:Observation;
@@ -241,8 +241,8 @@
       a [fhir:Observation]?;
       # fhir:subject @<Patient>;
       fhir:coding { fhir:code [sct:Blood_Pressure] };
-      fhir:related { fhir:type ["has-component"]; fhir:target @<sysBP> };
-      fhir:related { fhir:type ["has-component"]; fhir:target @<diaBP> }
+      fhir:component @<sysBP>;
+      fhir:component @<diaBP>
     }
     <sysBP> {
       a [fhir:Observation]?;
@@ -321,8 +321,8 @@
       a [fhir:Observation]?;
       # fhir:subject @<Patient>;
       fhir:coding { fhir:code [sct:Blood_Pressure] };
-      fhir:related { fhir:type ["has-component"]; fhir:target @<sysBP> };
-      fhir:related { fhir:type ["has-component"]; fhir:target @<diaBP> }
+      fhir:component @<sysBP>;
+      fhir:component @<diaBP>
     }
     <sysBP> {
       a [fhir:Observation]?;
@@ -421,8 +421,8 @@
       a [fhir:Observation]?;
       # fhir:subject @<Patient>;
       fhir:coding { fhir:code [sct:Blood_Pressure] };
-      fhir:related { fhir:type ["has-component"]; fhir:target @<sysBP> };
-      fhir:related { fhir:type ["has-component"]; fhir:target @<diaBP> }
+      fhir:component @<sysBP>;
+      fhir:component @<diaBP>
     }
     <sysBP> {
       a [fhir:Observation]?;
@@ -523,8 +523,8 @@
       a [fhir:Observation]?;
       # fhir:subject @<Patient>;
       fhir:coding { fhir:code [sct:Blood_Pressure] };
-      fhir:related { fhir:type ["has-component"]; fhir:target @<sysBP> };
-      fhir:related { fhir:type ["has-component"]; fhir:target @<diaBP> }
+      fhir:component @<sysBP>;
+      fhir:component @<diaBP>
     }
     <sysBP> {
       a [fhir:Observation]?;
@@ -657,15 +657,15 @@
       fhir:status ["final"];
       fhir:subject @<Patient>;
       fhir:coding { fhir:code [sct:Blood_Pressure] };
-      fhir:related { fhir:type ["has-component"]; fhir:target @<sysBP> };
-      fhir:related { fhir:type ["has-component"]; fhir:target @<diaBP> }
+      fhir:component @<sysBP>;
+      fhir:component @<diaBP>
     }
     <BPfhir> {
       a [fhir:Observation]?;
       fhir:subject @<Patient>;
       fhir:coding { fhir:code [sct:Blood_Pressure] };
-      fhir:related { fhir:type ["has-component"]; fhir:target @<sysBP> };
-      fhir:related { fhir:type ["has-component"]; fhir:target @<diaBP> }
+      fhir:component @<sysBP>;
+      fhir:component @<diaBP>
     }
     <sysBP> {
       a [fhir:Observation]?;

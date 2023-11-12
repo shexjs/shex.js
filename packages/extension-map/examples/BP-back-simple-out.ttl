@@ -5,24 +5,27 @@ PREFIX bp: <http://shex.io/extensions/Map/#BPDAM->
 PREFIX Map: <http://shex.io/extensions/Map/#>
 
 <tag:BPfhir123> a fhir:Observation;
-    fhir:coding _:b0;
-    fhir:related _:b1, _:b5.
-_:b0 fhir:code sct:Blood_Pressure.
-_:b1 fhir:type "has-component";
-    fhir:target _:b2.
-_:b2 a fhir:Observation;
-    fhir:coding _:b3;
-    fhir:valueQuantity _:b4.
-_:b3 fhir:code sct:Systolic_Blood_Pressure.
-_:b4 a fhir:Quantity;
-    fhir:value "110"^^xsd:float;
-    fhir:units "mmHg".
-_:b5 fhir:type "has-component";
-    fhir:target _:b6.
-_:b6 a fhir:Observation;
-    fhir:coding _:b7;
-    fhir:valueQuantity _:b8.
-_:b7 fhir:code sct:Diastolic_Blood_Pressure.
-_:b8 a fhir:Quantity;
-    fhir:value "70"^^xsd:float;
-    fhir:units "mmHg".
+  fhir:coding [
+    fhir:code sct:Blood_Pressure
+  ];
+  fhir:component [
+    a fhir:Observation;
+    fhir:coding [
+      fhir:code sct:Systolic_Blood_Pressure
+    ];
+    fhir:valueQuantity [
+      a fhir:Quantity;
+      fhir:value "110"^^xsd:float;
+      fhir:units "mmHg"
+    ]
+  ], [
+    a fhir:Observation;
+    fhir:coding [
+      fhir:code sct:Diastolic_Blood_Pressure
+    ];
+    fhir:valueQuantity [
+      a fhir:Quantity;
+      fhir:value "70"^^xsd:float;
+      fhir:units "mmHg"
+    ]
+  ].

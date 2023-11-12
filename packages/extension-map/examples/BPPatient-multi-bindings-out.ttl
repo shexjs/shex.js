@@ -1,51 +1,61 @@
+# <tag:BPfhir123>@<collector>
 PREFIX fhir: <http://hl7.org/fhir-rdf/>
 PREFIX sct: <http://snomed.info/sct/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX bp: <http://shex.io/extensions/Map/#BPDAM->
 PREFIX Map: <http://shex.io/extensions/Map/#>
 
-<tag:BPfhir123> fhir:item _:b0, _:b10.
-_:b0 a fhir:Observation;
-    fhir:coding _:b1;
-    fhir:related _:b2, _:b6.
-_:b1 fhir:code sct:Blood_Pressure.
-_:b2 fhir:type "has-component";
-    fhir:target _:b3.
-_:b3 a fhir:Observation;
-    fhir:coding _:b4;
-    fhir:valueQuantity _:b5.
-_:b4 fhir:code sct:Systolic_Blood_Pressure.
-_:b5 a fhir:Quantity;
-    fhir:value "110"^^xsd:float;
-    fhir:units "mmHg".
-_:b6 fhir:type "has-component";
-    fhir:target _:b7.
-_:b7 a fhir:Observation;
-    fhir:coding _:b8;
-    fhir:valueQuantity _:b9.
-_:b8 fhir:code sct:Diastolic_Blood_Pressure.
-_:b9 a fhir:Quantity;
-    fhir:value "70"^^xsd:float;
-    fhir:units "mmHg".
-_:b10 a fhir:Observation;
-    fhir:coding _:b11;
-    fhir:related _:b12, _:b16.
-_:b11 fhir:code sct:Blood_Pressure.
-_:b12 fhir:type "has-component";
-    fhir:target _:b13.
-_:b13 a fhir:Observation;
-    fhir:coding _:b14;
-    fhir:valueQuantity _:b15.
-_:b14 fhir:code sct:Systolic_Blood_Pressure.
-_:b15 a fhir:Quantity;
-    fhir:value "111"^^xsd:float;
-    fhir:units "mmHg".
-_:b16 fhir:type "has-component";
-    fhir:target _:b17.
-_:b17 a fhir:Observation;
-    fhir:coding _:b18;
-    fhir:valueQuantity _:b19.
-_:b18 fhir:code sct:Diastolic_Blood_Pressure.
-_:b19 a fhir:Quantity;
-    fhir:value "71"^^xsd:float;
-    fhir:units "mmHg".
+<tag:BPfhir123> fhir:item [
+    a fhir:Observation;
+    fhir:coding [
+      fhir:code sct:Blood_Pressure
+    ];
+    fhir:component [
+      a fhir:Observation;
+      fhir:coding [
+        fhir:code sct:Systolic_Blood_Pressure
+      ];
+      fhir:valueQuantity [
+        a fhir:Quantity;
+        fhir:value "110"^^xsd:float;
+        fhir:units "mmHg"
+      ]
+    ], [
+      a fhir:Observation;
+      fhir:coding [
+        fhir:code sct:Diastolic_Blood_Pressure
+      ];
+      fhir:valueQuantity [
+        a fhir:Quantity;
+        fhir:value "70"^^xsd:float;
+        fhir:units "mmHg"
+      ]
+    ]
+  ];
+  fhir:item [
+    a fhir:Observation;
+    fhir:coding [
+      fhir:code sct:Blood_Pressure
+    ];
+    fhir:component [
+      a fhir:Observation;
+      fhir:coding [
+        fhir:code sct:Systolic_Blood_Pressure
+      ];
+      fhir:valueQuantity [
+        a fhir:Quantity;
+        fhir:value "111"^^xsd:float;
+        fhir:units "mmHg"
+      ]
+    ], [
+      a fhir:Observation;
+      fhir:coding [
+        fhir:code sct:Diastolic_Blood_Pressure
+      ];
+      fhir:valueQuantity [
+        a fhir:Quantity;
+        fhir:value "71"^^xsd:float;
+        fhir:units "mmHg"
+      ]
+    ]
+  ].
