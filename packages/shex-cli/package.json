@@ -22,6 +22,7 @@
     "@shexjs/extension-eval": "^1.0.0-alpha.28",
     "@shexjs/extension-test": "^1.0.0-alpha.28",
     "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.29",
+    "@shexjs/neighborhood-sparql": "1.0.0-alpha.29",
     "@shexjs/node": "^1.0.0-alpha.28",
     "@shexjs/parser": "^1.0.0-alpha.28",
     "@shexjs/term": "^1.0.0-alpha.27",
