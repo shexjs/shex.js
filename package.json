@@ -35,7 +35,7 @@
     "jsdom": "^22.1.0",
     "lerna": "^7.4.2",
     "mocha": "^10.2.0",
-    "nock": "^13.3.8",
+    "nock": "^13.4.0",
     "nyc": "^15.1.0",
     "pre-commit": "^1.2.2",
     "shex-test": "github:shexSpec/shexTest#main",
