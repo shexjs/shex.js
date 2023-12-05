@@ -1,4 +1,10 @@
 {
+  "http://shex.io/extensions/Map/#BPDAM-family": {
+    "value": "Walker"
+  },
+  "http://shex.io/extensions/Map/#BPDAM-given": {
+    "value": "Alice"
+  },
   "http://shex.io/extensions/Map/#BPDAM-sysVal": {
     "value": "110",
     "type": "http://www.w3.org/2001/XMLSchema#float"

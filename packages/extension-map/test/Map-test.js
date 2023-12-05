@@ -22,6 +22,7 @@ const StringToRdfJs = require("../lib/stringToRdfJs");
 const expect = require("chai").expect;
 const Path = require("path");
 const Fs = require("fs");
+const JsYaml = require("js-yaml");
 
 var maybeLog = VERBOSE ? console.log : function () {};
 const urlify = (s) => "file://localhost/" + s
@@ -172,7 +173,14 @@ function loadManifest() {
   const schemaBase = 'http://a.example/schema/'
   const turtleBase = 'http://a.example/turtle/'
   const examplesDir = Path.join(__dirname, '../examples')
-  const examplesManifest = JSON.parse(Fs.readFileSync(Path.join(examplesDir, 'manifest.json'), 'utf8'))
+  const examplesManifest = JsYaml.load(Fs.readFileSync(Path.join(examplesDir, 'manifest.yaml'), 'utf8'));
+  const jsonManifest = JSON.parse(Fs.readFileSync(Path.join(examplesDir, 'manifest.json'), 'utf8'));
+  expect(jsonManifest).to.deep.equal(examplesManifest);
+  examplesManifest.forEach(entry => {
+    for (const [key, value] of Object.entries(entry))
+      if (key.endsWith("URL"))
+        entry[key.substring(0, key.length - 3)] = Fs.readFileSync(Path.join(examplesDir, value), 'utf-8');
+  });
 
   return examplesManifest
     .filter(e => e.status === "conformant" && !(e.queryMap.startsWith("_:")))

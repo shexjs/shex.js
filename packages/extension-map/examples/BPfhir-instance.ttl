@@ -1,8 +1,6 @@
 PREFIX fhir: <http://hl7.org/fhir-rdf/>
 PREFIX sct: <http://snomed.info/sct/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-PREFIX bp: <http://shex.io/extensions/Map/#BPDAM->
-PREFIX Map: <http://shex.io/extensions/Map/#>
 
 <tag:BPfhir123> a fhir:Observation;
   fhir:subject [
