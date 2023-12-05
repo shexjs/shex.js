@@ -423,7 +423,9 @@ ul {
     <script>
       const shExAppInstance = new ShExInWorkerApp(DefaultBase);
       shExAppInstance.start();
-      console.log('ShExApp instance:', shExAppInstance);
+      const isRealBrowser = Object.getOwnPropertyDescriptor(globalThis, 'window')?.get?.toString().includes('[native code]') ?? false;
+      if (isRealBrowser) // quiet in tests
+        console.log('ShExApp with worker instance:', shExAppInstance);
     </script>
   </body>
 </html>
