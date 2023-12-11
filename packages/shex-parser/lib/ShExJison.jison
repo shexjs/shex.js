@@ -458,18 +458,18 @@ _O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C:
     ;
 
 _Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt:
-      	// t: @@
+      	// t: !!
     | _O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C	// t: 1dot
     ;
 
 directive:
-      baseDecl	// t: @@
+      baseDecl	// t: 1dot-base
     | prefixDecl	// t: 1dotLNex
-    | importDecl	// t: @@
+    | importDecl	// t: 1dotIMPORT1dot
     ;
 
 baseDecl:
-      IT_BASE IRIREF	{ // t: @@
+      IT_BASE IRIREF	{ // t: 1dot-base
         yy._setBase(yy._base === null ||
                     absoluteIRI.test($2.slice(1, -1)) ? $2.slice(1, -1) : yy._resolveIRI($2.slice(1, -1)));
       }
@@ -482,7 +482,7 @@ prefixDecl:
     ;
 
 importDecl:
-      IT_IMPORT iri	{ // t: @@
+      IT_IMPORT iri	{ // t: 1dotIMPORT1dot
         yy._imports.push($2);
       }
     ;
@@ -513,7 +513,7 @@ _QcodeDecl_E_Plus:
 
 statement:
       directive	// t: open1dotclose
-    | notStartAction	// t: @@
+    | notStartAction	// t: 1dotRef1
     ;
 
 shapeExprDecl:
@@ -521,7 +521,7 @@ shapeExprDecl:
         yy.addShape($3, Object.assign(
           {type: "ShapeDecl"}, $2,
           $4.length > 0 ? { restricts: $4 } : { },
-          {shapeExpr: $5} ), $1, $6) // $5: t: @@
+          {shapeExpr: $5} ), $1, $6)	// t: 0.json
       }
     ;
 
@@ -560,41 +560,41 @@ _O_QshapeExpression_E_Or_QshapeRef_E_Or_QIT_EXTERNAL_E_C:
 shapeExpression:
       _QIT_NOT_E_Opt shapeAtomNoRef _QshapeOr_E_Opt	{
         if ($1)
-          $2 = { type: "ShapeNot", "shapeExpr": nonest($2) }; // t:@@
+          $2 = { type: "ShapeNot", "shapeExpr": nonest($2) };	// t: 1NOTNOTIRI
         if ($3) { // If there were disjuncts,
           //           shapeOr will have $3.set needsAtom.
           //           Prepend $3.needsAtom with $2.
           //           Note that $3 may be a ShapeOr or a ShapeAnd.
           $3.needsAtom.unshift(nonest($2));
           delete $3.needsAtom;
-          $$ = $3;
+          $$ = $3;	// t: 1NOT_literalANDvs_
         } else {
-          $$ = $2;
+          $$ = $2;	// t: 0
         }
       }
     | IT_NOT shapeRef _QshapeOr_E_Opt	{
-        $2 = { type: "ShapeNot", "shapeExpr": nonest($2) } // !!! opt
+        $2 = { type: "ShapeNot", "shapeExpr": nonest($2) }	// t: focusNOTRefOR1dot !!! opt
         if ($3) { // If there were disjuncts,
           //           shapeOr will have $3.set needsAtom.
           //           Prepend $3.needsAtom with $2.
           //           Note that $3 may be a ShapeOr or a ShapeAnd.
           $3.needsAtom.unshift(nonest($2));
           delete $3.needsAtom;
-          $$ = $3;
+          $$ = $3;	// t: focusNOTRefOR1dot
         } else {
-          $$ = $2;
+          $$ = $2;	// t: TwoNegation
         }
       }
     | shapeRef shapeOr	{
         $2.needsAtom.unshift(nonest($1));
         delete $2.needsAtom;
         $$ = $2; // { type: "ShapeOr", "shapeExprs": [$1].concat($2) };
-      }
+      }	// t: 1val1vExprRefAND3
     ;
 
 _QshapeOr_E_Opt:
-      	-> null
-    | shapeOr	-> $1
+      	-> null	// t: 0
+    | shapeOr	-> $1	// t: 1NOT_literalANDvs_
     ;
 
 inlineShapeExpression:
@@ -604,7 +604,7 @@ inlineShapeExpression:
 shapeOr: // Sets .needsAtom to tell shapeExpression where to place leading shapeAtom.
       _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus	{ // returns a ShapeOr
         const disjuncts = $1.map(nonest);
-        $$ = { type: "ShapeOr", shapeExprs: disjuncts, needsAtom: disjuncts }; // t: @@
+        $$ = { type: "ShapeOr", shapeExprs: disjuncts, needsAtom: disjuncts }; // t: 1val1vExprRefOR3
       }
     | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{ // returns a ShapeAnd
         // $1 could have implicit conjuncts and explicit nested ANDs (will have .nested: true)
@@ -613,10 +613,10 @@ shapeOr: // Sets .needsAtom to tell shapeExpression where to place leading shape
           type: "ShapeAnd",
           shapeExprs: $1.reduce(
             (acc, elt) =>
-              acc.concat(elt.type === 'ShapeAnd' && !elt.nested ? elt.shapeExprs : nonest(elt)), []
+              acc.concat(elt.type === 'ShapeAnd' && !elt.nested ? elt.shapeExprs : nonest(elt)), [] // t: 1dotANDopen1dotAND1dotclose : @@
           )
         };
-        $$ = $2.length > 0 ? { type: "ShapeOr", shapeExprs: [and].concat($2.map(nonest)) } : and; // t: @@
+        $$ = $2.length > 0 ? { type: "ShapeOr", shapeExprs: [and].concat($2.map(nonest)) } : and; // t: focusbnode0ORfocusPattern0 : 1val1vExprRefAND3
         $$.needsAtom = and.shapeExprs;
       }
     ;
@@ -626,8 +626,8 @@ _O_QIT_OR_E_S_QshapeAnd_E_C:
     ;
 
 _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus:
-      _O_QIT_OR_E_S_QshapeAnd_E_C	-> [$1]
-    | _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus _O_QIT_OR_E_S_QshapeAnd_E_C	-> $1.concat($2)
+      _O_QIT_OR_E_S_QshapeAnd_E_C	-> [$1] // t: 1val1vExprRefOR3
+    | _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus _O_QIT_OR_E_S_QshapeAnd_E_C	-> $1.concat($2) // t: 1val1vExprRefOR3
     ;
 
 _O_QIT_AND_E_S_QshapeNot_E_C:
@@ -635,71 +635,71 @@ _O_QIT_AND_E_S_QshapeNot_E_C:
     ;
 
 _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus:
-      _O_QIT_AND_E_S_QshapeNot_E_C	-> [$1]
-    | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _O_QIT_AND_E_S_QshapeNot_E_C	-> $1.concat($2)
+      _O_QIT_AND_E_S_QshapeNot_E_C	-> [$1] // t: 1val1vExprRefAND3
+    | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _O_QIT_AND_E_S_QshapeNot_E_C	-> $1.concat($2) // t: 1val1vExprRefAND3
     ;
 
 _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star:
-      	-> []
-    | _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star _O_QIT_OR_E_S_QshapeAnd_E_C	-> $1.concat($2)
+      	-> [] // t: 1val1vExprRefAND3
+    | _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star _O_QIT_OR_E_S_QshapeAnd_E_C	-> $1.concat($2) // t: focusbnode0ORfocusPattern0
     ;
 
 inlineShapeOr:
-      inlineShapeAnd _Q_O_QIT_OR_E_S_QinlineShapeAnd_E_C_E_Star	-> shapeJunction("ShapeOr", $1, $2)
+      inlineShapeAnd _Q_O_QIT_OR_E_S_QinlineShapeAnd_E_C_E_Star	-> shapeJunction("ShapeOr", $1, $2) // t: 1dot
     ;
 
 _O_QIT_OR_E_S_QinlineShapeAnd_E_C:
-      IT_OR inlineShapeAnd	-> $2
+      IT_OR inlineShapeAnd	-> $2 // t: 1dotRefOR3
     ;
 
 _Q_O_QIT_OR_E_S_QinlineShapeAnd_E_C_E_Star:
-      	-> []
-    | _Q_O_QIT_OR_E_S_QinlineShapeAnd_E_C_E_Star _O_QIT_OR_E_S_QinlineShapeAnd_E_C	-> $1.concat($2)
+      	-> [] // t: 1dot
+    | _Q_O_QIT_OR_E_S_QinlineShapeAnd_E_C_E_Star _O_QIT_OR_E_S_QinlineShapeAnd_E_C	-> $1.concat($2) // t: 1dotRefOR3
     ;
 
 shapeAnd:
-      shapeNot _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Star	-> shapeJunction("ShapeAnd", $1, $2) // t: @@
+      shapeNot _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Star	-> shapeJunction("ShapeAnd", $1, $2)	// t: focusbnode0ORfocusPattern0
     ;
 
 _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Star:
-      	-> []
-    | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Star _O_QIT_AND_E_S_QshapeNot_E_C	-> $1.concat($2)
+      	-> [] // t: 1val1vExprRefOR3
+    | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Star _O_QIT_AND_E_S_QshapeNot_E_C	-> $1.concat($2) // t: focusbnode0ORfocusPattern0
     ;
 
 inlineShapeAnd:
-      inlineShapeNot _Q_O_QIT_AND_E_S_QinlineShapeNot_E_C_E_Star	-> shapeJunction("ShapeAnd", $1, $2) // t: @@
+      inlineShapeNot _Q_O_QIT_AND_E_S_QinlineShapeNot_E_C_E_Star	-> shapeJunction("ShapeAnd", $1, $2)	// t: 1iriRef1
     ;
 
 _O_QIT_AND_E_S_QinlineShapeNot_E_C:
-      IT_AND inlineShapeNot	-> $2
+      IT_AND inlineShapeNot	-> $2 // t: 1iriRef1
     ;
 
 _Q_O_QIT_AND_E_S_QinlineShapeNot_E_C_E_Star:
-      	-> []
-    | _Q_O_QIT_AND_E_S_QinlineShapeNot_E_C_E_Star _O_QIT_AND_E_S_QinlineShapeNot_E_C	-> $1.concat($2)
+      	-> [] // t: 1dot
+    | _Q_O_QIT_AND_E_S_QinlineShapeNot_E_C_E_Star _O_QIT_AND_E_S_QinlineShapeNot_E_C	-> $1.concat($2) // t: 1iriRef1
     ;
 
 shapeNot:
-      _QIT_NOT_E_Opt shapeAtom	-> $1 ? { type: "ShapeNot", "shapeExpr": nonest($2) } /* t:@@ */ : $2
+      _QIT_NOT_E_Opt shapeAtom	-> $1 ? { type: "ShapeNot", "shapeExpr": nonest($2) } : $2 // t: 1val1vExprRefAND3 : OneNegation
     ;
 
 _QIT_NOT_E_Opt:
-      	-> false
-    | IT_NOT	-> true
+      	-> false // t: 0
+    | IT_NOT	-> true // t: 1NOTIRI
     ;
 
 inlineShapeNot:
-      _QIT_NOT_E_Opt inlineShapeAtom	-> $1 ? { type: "ShapeNot", "shapeExpr": nonest($2) } /* t: 1NOTNOTdot, 1NOTNOTIRI, 1NOTNOTvs */ : $2
+      _QIT_NOT_E_Opt inlineShapeAtom	-> $1 ? { type: "ShapeNot", "shapeExpr": nonest($2) } /* t: 1NOTNOTdot, 1NOTNOTIRI, 1NOTNOTvs */ : $2 // t: 1NOTIRI : 1dot
     ;
 
 shapeAtom:
       nonLitNodeConstraint _QshapeOrRef_E_Opt	
-        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
-    | litNodeConstraint	
+        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: focusbnode0ORfocusPattern0 : focusvsANDIRI
+    | litNodeConstraint	// t: 1NOT_literalANDvs_
     | shapeOrRef _QnonLitNodeConstraint_E_Opt	
-        -> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t: 1dotRef1 */ : $1 // t:@@
-    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: 1val1vsMinusiri3
-    | '.'	-> yy.EmptyShape // t: 1dot
+        -> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t: 1dotRef1 */ : $1 // t: @@ : 1val1vExprRefAND3
+    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: NOT1dotOR2dotX3
+    | '.'	-> yy.EmptyShape // t: @@
     ;
 
 _QshapeOrRef_E_Opt:
@@ -714,21 +714,21 @@ _QnonLitNodeConstraint_E_Opt:
 
 shapeAtomNoRef:
       nonLitNodeConstraint _QshapeOrRef_E_Opt	
-        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
-    | litNodeConstraint	
+        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: 0focusIRI : 1NOTNOTIRI
+    | litNodeConstraint	// t: 1val1refvsMinusiri3
     | shapeDefinition _QnonLitNodeConstraint_E_Opt	
-	-> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t:@@ */ : $1	 // t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
-    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: 1val1vsMinusiri3
-    | '.'	-> yy.EmptyShape // t: 1dot
+	-> $2 ? shapeJunction("ShapeAnd", $1, [$2]) : $1	 // t: @@ : 0 // 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
+    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: NOT1dotOR2dotX3
+    | '.'	-> yy.EmptyShape // t: 1NOTNOTdot
     ;
 
 inlineShapeAtom:
       nonLitInlineNodeConstraint _QinlineShapeOrRef_E_Opt	
-        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
-    | litInlineNodeConstraint	
+        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: 1iriRef1 : 1iri
+    | litInlineNodeConstraint	// t: 1literal
     | inlineShapeOrRef _QnonLitInlineNodeConstraint_E_Opt	
-        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
-    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: 1val1vsMinusiri3
+        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: @@ : 1dotRef1
+    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: 1NOTNOTIRI
     | '.'	-> yy.EmptyShape // t: 1dot
     ;
 
@@ -743,22 +743,22 @@ _QnonLitInlineNodeConstraint_E_Opt:
     ;
 
 shapeOrRef:
-      shapeDefinition	// t: 1dotInline1
-    | shapeRef	
+      shapeDefinition	// t: 1val1vShapeANDRef3
+    | shapeRef	// t: 1val1vExprRefAND3
     ;
 
 inlineShapeOrRef:
       inlineShapeDefinition	// t: 1dotInline1
-    | shapeRef	
+    | shapeRef	// t: 1dotRef1
     ;
 
 shapeRef:
-      ATPNAME_LN	{ // t: 1dotRefLNex@@
+      ATPNAME_LN	{ // t: 1dotRefLNex1
         $1 = $1.substr(1, $1.length-1);
         const namePos = $1.indexOf(':');
         $$ = yy.addSourceMap(yy.expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1)); // ShapeRef
       }
-    | ATPNAME_NS	{ // t: 1dotRefNS1@@
+    | ATPNAME_NS	{ // t: 1dotRefNS1
         $1 = $1.substr(1, $1.length-1);
         $$ = yy.addSourceMap(yy.expandPrefix($1.substr(0, $1.length - 1), yy)); // ShapeRef
       }
@@ -766,47 +766,47 @@ shapeRef:
     ;
 
 litNodeConstraint:
-      litInlineNodeConstraint _Qannotation_E_Star semanticActions	{ // t: !!
+      litInlineNodeConstraint _Qannotation_E_Star semanticActions	{
         $$ = $1
-        if ($2.length) { $$.annotations = $2; } // t: !!
-        if ($3) { $$.semActs = $3.semActs; } // t: !!
+        if ($2.length) { $$.annotations = $2; } // t: @@ : 1val1refvsMinusiri3
+        if ($3) { $$.semActs = $3.semActs; } // t: @@ : 1val1refvsMinusiri3
       }
     ;
 
 _Qannotation_E_Star:
-      	-> [] // t: 1dot, 1dotAnnot3
-    | _Qannotation_E_Star annotation	-> appendTo($1, $2) // t: 1dotAnnot3
+      	-> [] // t: 0, 1dot, 1dotAnnot3
+    | _Qannotation_E_Star annotation	-> appendTo($1, $2) // t: 1dotAnnotIRIREF, 1dotAnnot3
     ;
 
 nonLitNodeConstraint:
-      nonLitInlineNodeConstraint _Qannotation_E_Star semanticActions	{ // t: !!
+      nonLitInlineNodeConstraint _Qannotation_E_Star semanticActions	{
         $$ = $1
-        if ($2.length) { $$.annotations = $2; } // t: !!
-        if ($3) { $$.semActs = $3.semActs; } // t: !!
+        if ($2.length) { $$.annotations = $2; } // t: @@ : 1NOTNOTIRI
+        if ($3) { $$.semActs = $3.semActs; } // t: @@ : 1NOTNOTIRI
       }
     ;
 
 litInlineNodeConstraint:
-      IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "NodeConstraint", nodeKind: "literal" }, $2) // t: 1literalPattern
+      IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "NodeConstraint", nodeKind: "literal" }, $2) // t: 1literal
     | datatype _QxsFacet_E_Star	{
         if (numericDatatypes.indexOf($1) === -1)
           numericFacets.forEach(function (facet) {
-            if (facet in $2)
+            if (facet in $2) // 1unknowndatatypeMaxInclusive
               yy.error(new Error("Parse error: facet " + facet + " not allowed for unknown datatype " + $1));
           });
         $$ = extend({ type: "NodeConstraint", datatype: $1 }, $2) // t: 1datatype
       }
     | valueSet _QxsFacet_E_Star	-> { type: "NodeConstraint", values: $1 } // t: 1val1IRIREF
-    | _QnumericFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1)
+    | _QnumericFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1) // @@
     ;
 
 _QxsFacet_E_Star:
-      	-> {} // t: 1literalPattern
+      	-> {} // t: 1literal
     | _QxsFacet_E_Star xsFacet	{
         if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
           yy.error(new Error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times"));
         }
-        $$ = extend($1, $2) // t: 1literalLength
+        $$ = extend($1, $2) // t: 1datatypeLength
       }
     ;
 
@@ -823,27 +823,27 @@ _QnumericFacet_E_Plus:
 nonLitInlineNodeConstraint:
       nonLiteralKind _QstringFacet_E_Star	
         -> extend({ type: "NodeConstraint" }, $1, $2 ? $2 : {}) // t: 1iriPattern
-    | _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint" }, $1) // t: @@
+    | _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint" }, $1) // t: 1Length
     ;
 
 _QstringFacet_E_Star:
-      	-> {}
+      	-> {} // 1iri
     | _QstringFacet_E_Star stringFacet	{
         if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
           yy.error(new Error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times"));
         }
         $$ = extend($1, $2)
-      }
+      } // 1iriLength
     ;
 
 _QstringFacet_E_Plus:
-      stringFacet	// t: !! look to 1literalPattern
+      stringFacet	// t: 1Length
     | _QstringFacet_E_Plus stringFacet	{
         if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
           yy.error(new Error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times"));
         }
-        $$ = extend($1, $2) // t: !! look to 1literalLength
-      }
+        $$ = extend($1, $2)
+      } // t: @@ _all
     ;
 
 nonLiteralKind:
@@ -874,15 +874,15 @@ numericFacet:
     ;
 
 _rawNumeric: // like numericLiteral but doesn't parse as RDF literal
-      INTEGER	-> parseInt($1, 10)
-    | DECIMAL	-> parseFloat($1)
-    | DOUBLE	-> parseFloat($1)
+      INTEGER	-> parseInt($1, 10) // t: 1floatMininclusiveINTEGER
+    | DECIMAL	-> parseFloat($1) // t: 1integerMininclusiveDECIMAL
+    | DOUBLE	-> parseFloat($1) // t: 1integerMininclusiveDOUBLE
     | string '^^' datatype	{ // ## deprecated
-        if ($3 === XSD_DECIMAL || $3 === XSD_FLOAT || $3 === XSD_DOUBLE)
+        if ($3 === XSD_DECIMAL || $3 === XSD_FLOAT || $3 === XSD_DOUBLE) // t: @@
           $$ = parseFloat($1.value);
-        else if (numericDatatypes.indexOf($3) !== -1)
+      else if (numericDatatypes.indexOf($3) !== -1) // t: @@
           $$ = parseInt($1.value)
-        else
+        else // t: negativeSyntax/1decimalMininclusiveroman-numeral
           yy.error(new Error("Parse error: numeric range facet expected numeric datatype instead of " + $3));
       }
     ;
@@ -901,18 +901,18 @@ numericLength:
 
 shapeDefinition:
       inlineShapeDefinition _Qannotation_E_Star semanticActions	{ // t: 1dotExtend3
-        $$ = $1 === yy.EmptyShape ? { type: "Shape" } : $1; // t: 0
-        if ($2.length) { $$.annotations = $2; } // t: !! look to open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
-        if ($3) { $$.semActs = $3.semActs; } // t: !! look to open3groupdotcloseCode1, !open1dotOr1dot
+        $$ = $1 === yy.EmptyShape ? { type: "Shape" } : $1; // t: @@ : 1dot
+        if ($2.length) { $$.annotations = $2; } // t: 1dotShapeAnnotIRIREF : 0
+        if ($3) { $$.semActs = $3.semActs; } // t: 1dotShapeCode1 : 0
       }
     ;
 
 inlineShapeDefinition:
       _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: 1dotExtend3
-        const exprObj = $3 ? { expression: $3 } : yy.EmptyObject; // t: 0, 0Extend1
-        $$ = (exprObj === yy.EmptyObject && $1 === yy.EmptyObject) ?
-	  yy.EmptyShape :
-	  extend({ type: "Shape" }, exprObj, $1);
+        const exprObj = $3 ? { expression: $3 } : yy.EmptyObject; // t: 1dot : 1focusMissingRefdot
+        $$ = (exprObj === yy.EmptyObject && $1 === yy.EmptyObject)
+	  ? yy.EmptyShape
+	  : extend({ type: "Shape" }, exprObj, $1); // t: @@ : 1dot
       }
     ;
 
@@ -979,12 +979,12 @@ groupTripleExpr:
     ;
 
 singleElementGroup:
-      unaryTripleExpr _QGT_SEMI_E_Opt	-> $1
+      unaryTripleExpr _QGT_SEMI_E_Opt	-> $1 // t: 1dot
     ;
 
 _QGT_SEMI_E_Opt:
       	// t: 1dot
-    | ','	// ## deprecated // t: 1dotComma
+    | ','	// @Deprecated
     | ';'	// t: 1dotComma
     ;
 
@@ -993,21 +993,21 @@ multiElementGroup:
     ;
 
 _O_QGT_SEMI_E_S_QunaryTripleExpr_E_C:
-      ',' unaryTripleExpr	-> $2 // ## deprecated // t: 2groupOfdot
+      ',' unaryTripleExpr	-> $2 // @Deprecated
     | ';' unaryTripleExpr	-> $2 // t: 2groupOfdot
     ;
 
 _Q_O_QGT_SEMI_E_S_QunaryTripleExpr_E_C_E_Plus:
       _O_QGT_SEMI_E_S_QunaryTripleExpr_E_C	-> [$1] // t: 2groupOfdot
-    | _Q_O_QGT_SEMI_E_S_QunaryTripleExpr_E_C_E_Plus _O_QGT_SEMI_E_S_QunaryTripleExpr_E_C	-> appendTo($1, $2) // t: 2groupOfdot
+    | _Q_O_QGT_SEMI_E_S_QunaryTripleExpr_E_C_E_Plus _O_QGT_SEMI_E_S_QunaryTripleExpr_E_C	-> appendTo($1, $2) // t: 3Eachdot
     ;
 
 unaryTripleExpr:
       _Q_O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C_E_Opt _O_QtripleConstraint_E_Or_QbracketedTripleExpr_E_C	{
-        if ($1) {
+        if ($1) { // t: 2EachInclude1
           $$ = extend({ id: $1 }, $2);
           yy.addProduction($1,  $$);
-        } else {
+        } else { // t: 1dot
           $$ = $2
         }
       }
@@ -1015,17 +1015,17 @@ unaryTripleExpr:
     ;
 
 _O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C:
-      '$' tripleExprLabel	-> yy.addSourceMap($2)
+      '$' tripleExprLabel	-> yy.addSourceMap($2) // t: 2EachInclude1
     ;
 
 _Q_O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C_E_Opt:
-      	
-    | _O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C	
+      	// t: 1dot
+    | _O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C	// t: 2EachInclude1
     ;
 
 _O_QtripleConstraint_E_Or_QbracketedTripleExpr_E_C:
-      tripleConstraint	
-    | bracketedTripleExpr	
+      tripleConstraint	// t: 1dot
+    | bracketedTripleExpr	// t: 1dot
     ;
 
 bracketedTripleExpr:
@@ -1033,10 +1033,14 @@ bracketedTripleExpr:
         // t: open1dotOr1dot, !openopen1dotcloseCode1closeCode2
         $$ = $2;
         // Copy all of the new attributes into the encapsulated shape.
-        if ("min" in $4) { $$.min = $4.min; } // t: open3groupdotclosecard23Annot3Code2
-        if ("max" in $4) { $$.max = $4.max; } // t: open3groupdotclosecard23Annot3Code2
-        if ($5.length) { $$.annotations = $5; } // t: open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
-        if ($6) { $$.semActs = "semActs" in $2 ? $2.semActs.concat($6.semActs) : $6.semActs; } // t: open3groupdotcloseCode1, !open1dotOr1dot
+        if ("min" in $4) { $$.min = $4.min; } // t: 1cardOpt : @@
+        if ("max" in $4) { $$.max = $4.max; } // t: 1cardOpt : @@
+        if ($5.length) { $$.annotations = $5; } // t: open3EachdotcloseAnnot3 : 1dot
+        if ($6) {
+          $$.semActs = "semActs" in $2
+            ? $2.semActs.concat($6.semActs) // t: 1dotCode3
+            : $6.semActs; // t: 1dotCode1
+        } // t: 1dotCode1 : @@
       }
     ;
 
@@ -1048,15 +1052,22 @@ _Qcardinality_E_Opt:
 tripleConstraint:
       _QsenseFlags_E_Opt predicate inlineShapeExpression _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // $6: t: 1dotCode1
-	if ($3 !== yy.EmptyShape && false) {
-	  const t = yy.blank();
-	  yy.addShape(t, $3);
-	  $3 = t; // ShapeRef
-	}
+	// if ($3 !== yy.EmptyShape && false) {
+	//   const t = yy.blank();
+	//   yy.addShape(t, $3);
+	//   $3 = t; // ShapeRef
+	// }
         // %7: t: 1inversedotCode1
-        $$ = extend({ type: "TripleConstraint" }, $1, { predicate: $2 }, ($3 === yy.EmptyShape ? {} : { valueExpr: $3 }), $4, $6); // t: 1dot, 1inversedot
+        $$ = Object.assign(
+          { type: "TripleConstraint" },
+          $1,
+          { predicate: $2 },
+          ($3 === yy.EmptyShape ? {} : { valueExpr: $3 }), // 1dot : 1iri
+          $4,
+          $6
+        ); // t: 1dot, 1inversedot
         if ($5.length)
-          $$["annotations"] = $5; // t: 1dotAnnot3, 1inversedotAnnot3
+          $$["annotations"] = $5; // t: 1dotAnnot3, 1inversedotAnnot3 : 1dot
       }
     ;
 
