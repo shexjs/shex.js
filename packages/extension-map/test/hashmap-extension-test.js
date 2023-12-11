@@ -98,7 +98,11 @@ describe('Hashmap extension', function() {
                     {"test": "urn:local:test:"},
                     'test, {a:abc x}'))
             .to.throw(Error, 
-                'Hashmap extension unable to parse map in hashmap(test, {a:abc x})!Unexpected token a');
+                'Hashmap extension unable to parse map in hashmap(test, {a:abc x})!');
+          // exact error depends on version of node.
+          // '!Unexpected token a');
+          // '!Expected property name or \'}\' in JSON at position 1');
+
         });
 
         it('should fail gracefully if given a hash map that does not have unique key/value pairs', function() {
@@ -208,7 +212,7 @@ describe('Hashmap extension', function() {
                     {"test": "urn:local:test:"},
                     'test, {a:abc x}'))
             .to.throw(Error, 
-                'Hashmap extension unable to parse map in hashmap(test, {a:abc x})!Unexpected token a');
+                'Hashmap extension unable to parse map in hashmap(test, {a:abc x})!');
         });
 
         it('should fail gracefully if given input that is not in the hash map', function() {
