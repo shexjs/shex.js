@@ -309,11 +309,19 @@ case 35:
 
         if ($$[$0-2])
           $$[$0-1] = { type: "ShapeNot", "shapeExpr": nonest($$[$0-1]) };	// t: 1NOTNOTIRI
-        if ($$[$0]) { // If there were disjuncts,
+        if ($$[$0]) { // If there were disjuncts or conjuncts,
           //           shapeOr will have $$[$0].set needsAtom.
           //           Prepend $$[$0].needsAtom with $$[$0-1].
           //           Note that $$[$0] may be a ShapeOr or a ShapeAnd.
-          $$[$0].needsAtom.unshift(nonest($$[$0-1]));
+          if ($$[$0-1].type === 'ShapeAnd' && $$[$0].type === 'ShapeAnd' && !$$[$0-1].nested && !$$[$0].nested) {
+            // $$[$0].annotations = $$[$0].shapeExprs[0].annotations;
+            // delete $$[$0].shapeExprs[0].annotations;
+            // $$[$0-1].semActs = $$[$0-1].shapeExprs[0].semActs;
+            // delete $$[$0].shapeExprs[0].semActs;
+            $$[$0].shapeExprs.splice(0, 0, ...$$[$0-1].shapeExprs)
+          } else {
+            $$[$0].needsAtom.unshift(nonest($$[$0-1])); // t: focusbnode0ORfocusPattern0
+          }
           delete $$[$0].needsAtom;
           this.$ = $$[$0];	// t: 1NOT_literalANDvs_
         } else {
@@ -351,8 +359,8 @@ this.$ = $$[$0]	// t: 1NOT_literalANDvs_;
 break;
 case 41:
  // returns a ShapeOr
-        const disjuncts = $$[$0].map(nonest);
-        this.$ = { type: "ShapeOr", shapeExprs: disjuncts, needsAtom: disjuncts }; // t: 1val1vExprRefOR3
+        const shapeExprs = $$[$0].map(nonest);
+        this.$ = { type: "ShapeOr", shapeExprs: shapeExprs, needsAtom: shapeExprs }; // t: 1val1vExprRefOR3
       
 break;
 case 42:

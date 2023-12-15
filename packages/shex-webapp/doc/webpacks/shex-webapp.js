@@ -24045,7 +24045,7 @@ case 2:
  yy.parser.yy = { lexer: yy.lexer} ; 
 break;
 case 15:
- // t: @@
+ // t: 1dot-base
         yy._setBase(yy._base === null ||
                     absoluteIRI.test($$[$0].slice(1, -1)) ? $$[$0].slice(1, -1) : yy._resolveIRI($$[$0].slice(1, -1)));
       
@@ -24056,7 +24056,7 @@ case 16:
       
 break;
 case 17:
- // t: @@
+ // t: 1dotIMPORT1dot
         yy._imports.push($$[$0]);
       
 break;
@@ -24083,7 +24083,7 @@ case 26:
         yy.addShape($$[$0-3], Object.assign(
           {type: "ShapeDecl"}, $$[$0-4],
           $$[$0-2].length > 0 ? { restricts: $$[$0-2] } : { },
-          {shapeExpr: $$[$0-1]} ), $$[$0-5], $$[$0]) // $$[$0-1]: t: @@
+          {shapeExpr: $$[$0-1]} ), $$[$0-5], $$[$0])	// t: 0.json
       
 break;
 case 27:
@@ -24095,10 +24095,10 @@ break;
 case 29:
 this.$ = { abstract: true };
 break;
-case 30: case 97:
+case 30:
 this.$ = [] // t: 1dot, 1dotAnnot3;
 break;
-case 31: case 98:
+case 31:
 this.$ = appendTo($$[$0-1], $$[$0]) // t: 1dotAnnot3;
 break;
 case 32:
@@ -24112,31 +24112,39 @@ break;
 case 35:
 
         if ($$[$0-2])
-          $$[$0-1] = { type: "ShapeNot", "shapeExpr": nonest($$[$0-1]) }; // t:@@
-        if ($$[$0]) { // If there were disjuncts,
+          $$[$0-1] = { type: "ShapeNot", "shapeExpr": nonest($$[$0-1]) };	// t: 1NOTNOTIRI
+        if ($$[$0]) { // If there were disjuncts or conjuncts,
           //           shapeOr will have $$[$0].set needsAtom.
           //           Prepend $$[$0].needsAtom with $$[$0-1].
           //           Note that $$[$0] may be a ShapeOr or a ShapeAnd.
-          $$[$0].needsAtom.unshift(nonest($$[$0-1]));
+          if ($$[$0-1].type === 'ShapeAnd' && $$[$0].type === 'ShapeAnd' && !$$[$0-1].nested && !$$[$0].nested) {
+            // $$[$0].annotations = $$[$0].shapeExprs[0].annotations;
+            // delete $$[$0].shapeExprs[0].annotations;
+            // $$[$0-1].semActs = $$[$0-1].shapeExprs[0].semActs;
+            // delete $$[$0].shapeExprs[0].semActs;
+            $$[$0].shapeExprs.splice(0, 0, ...$$[$0-1].shapeExprs)
+          } else {
+            $$[$0].needsAtom.unshift(nonest($$[$0-1])); // t: focusbnode0ORfocusPattern0
+          }
           delete $$[$0].needsAtom;
-          this.$ = $$[$0];
+          this.$ = $$[$0];	// t: 1NOT_literalANDvs_
         } else {
-          this.$ = $$[$0-1];
+          this.$ = $$[$0-1];	// t: 0
         }
       
 break;
 case 36:
 
-        $$[$0-1] = { type: "ShapeNot", "shapeExpr": nonest($$[$0-1]) } // !!! opt
+        $$[$0-1] = { type: "ShapeNot", "shapeExpr": nonest($$[$0-1]) }	// t: focusNOTRefOR1dot !!! opt
         if ($$[$0]) { // If there were disjuncts,
           //           shapeOr will have $$[$0].set needsAtom.
           //           Prepend $$[$0].needsAtom with $$[$0-1].
           //           Note that $$[$0] may be a ShapeOr or a ShapeAnd.
           $$[$0].needsAtom.unshift(nonest($$[$0-1]));
           delete $$[$0].needsAtom;
-          this.$ = $$[$0];
+          this.$ = $$[$0];	// t: focusNOTRefOR1dot
         } else {
-          this.$ = $$[$0-1];
+          this.$ = $$[$0-1];	// t: TwoNegation
         }
       
 break;
@@ -24147,16 +24155,16 @@ case 37:
         this.$ = $$[$0]; // { type: "ShapeOr", "shapeExprs": [$$[$0-1]].concat($$[$0]) };
       
 break;
-case 38: case 233: case 250:
-this.$ = null;
+case 38:
+this.$ = null	// t: 0;
 break;
-case 39: case 43: case 46: case 52: case 59: case 190: case 249: case 270: case 274:
-this.$ = $$[$0];
+case 39:
+this.$ = $$[$0]	// t: 1NOT_literalANDvs_;
 break;
 case 41:
  // returns a ShapeOr
-        const disjuncts = $$[$0].map(nonest);
-        this.$ = { type: "ShapeOr", shapeExprs: disjuncts, needsAtom: disjuncts }; // t: @@
+        const shapeExprs = $$[$0].map(nonest);
+        this.$ = { type: "ShapeOr", shapeExprs: shapeExprs, needsAtom: shapeExprs }; // t: 1val1vExprRefOR3
       
 break;
 case 42:
@@ -24167,67 +24175,115 @@ case 42:
           type: "ShapeAnd",
           shapeExprs: $$[$0-1].reduce(
             (acc, elt) =>
-              acc.concat(elt.type === 'ShapeAnd' && !elt.nested ? elt.shapeExprs : nonest(elt)), []
+              acc.concat(elt.type === 'ShapeAnd' && !elt.nested ? elt.shapeExprs : nonest(elt)), [] // t: 1dotANDopen1dotAND1dotclose : @@
           )
         };
-        this.$ = $$[$0].length > 0 ? { type: "ShapeOr", shapeExprs: [and].concat($$[$0].map(nonest)) } : and; // t: @@
+        this.$ = $$[$0].length > 0 ? { type: "ShapeOr", shapeExprs: [and].concat($$[$0].map(nonest)) } : and; // t: focusbnode0ORfocusPattern0 : 1val1vExprRefAND3
         this.$.needsAtom = and.shapeExprs;
       
 break;
-case 44: case 47:
-this.$ = [$$[$0]];
+case 43: case 46: case 190: case 249: case 270: case 274:
+this.$ = $$[$0];
 break;
-case 45: case 48: case 50: case 54: case 57: case 61: case 272: case 276:
-this.$ = $$[$0-1].concat($$[$0]);
+case 44:
+this.$ = [$$[$0]] // t: 1val1vExprRefOR3;
 break;
-case 49: case 53: case 56: case 60: case 271: case 275:
-this.$ = [];
+case 45:
+this.$ = $$[$0-1].concat($$[$0]) // t: 1val1vExprRefOR3;
 break;
-case 51: case 269:
-this.$ = shapeJunction("ShapeOr", $$[$0-1], $$[$0]);
+case 47:
+this.$ = [$$[$0]] // t: 1val1vExprRefAND3;
 break;
-case 55: case 58:
-this.$ = shapeJunction("ShapeAnd", $$[$0-1], $$[$0]) // t: @@;
+case 48:
+this.$ = $$[$0-1].concat($$[$0]) // t: 1val1vExprRefAND3;
+break;
+case 49:
+this.$ = [] // t: 1val1vExprRefAND3;
+break;
+case 50: case 57:
+this.$ = $$[$0-1].concat($$[$0]) // t: focusbnode0ORfocusPattern0;
+break;
+case 51:
+this.$ = shapeJunction("ShapeOr", $$[$0-1], $$[$0]) // t: 1dot;
+break;
+case 52:
+this.$ = $$[$0] // t: 1dotRefOR3;
+break;
+case 53: case 60:
+this.$ = [] // t: 1dot;
+break;
+case 54:
+this.$ = $$[$0-1].concat($$[$0]) // t: 1dotRefOR3;
+break;
+case 55:
+this.$ = shapeJunction("ShapeAnd", $$[$0-1], $$[$0])	// t: focusbnode0ORfocusPattern0;
+break;
+case 56:
+this.$ = [] // t: 1val1vExprRefOR3;
+break;
+case 58:
+this.$ = shapeJunction("ShapeAnd", $$[$0-1], $$[$0])	// t: 1iriRef1;
+break;
+case 59:
+this.$ = $$[$0] // t: 1iriRef1;
+break;
+case 61:
+this.$ = $$[$0-1].concat($$[$0]) // t: 1iriRef1;
 break;
 case 62:
-this.$ = $$[$0-1] ? { type: "ShapeNot", "shapeExpr": nonest($$[$0]) } /* t:@@ */ : $$[$0];
+this.$ = $$[$0-1] ? { type: "ShapeNot", "shapeExpr": nonest($$[$0]) } : $$[$0] // t: 1val1vExprRefAND3 : OneNegation;
 break;
 case 63:
-this.$ = false;
+this.$ = false // t: 0;
 break;
 case 64:
-this.$ = true;
+this.$ = true // t: 1NOTIRI;
 break;
 case 65:
-this.$ = $$[$0-1] ? { type: "ShapeNot", "shapeExpr": nonest($$[$0]) } /* t: 1NOTNOTdot, 1NOTNOTIRI, 1NOTNOTvs */ : $$[$0];
+this.$ = $$[$0-1] ? { type: "ShapeNot", "shapeExpr": nonest($$[$0]) } /* t: 1NOTNOTdot, 1NOTNOTIRI, 1NOTNOTvs */ : $$[$0] // t: 1NOTIRI : 1dot;
 break;
-case 66: case 75: case 80: case 278: case 280:
-this.$ = $$[$0] ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $$[$0-1]), $$[$0] ] } : $$[$0-1];
+case 66:
+this.$ = $$[$0] ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $$[$0-1]), $$[$0] ] } : $$[$0-1] // t: focusbnode0ORfocusPattern0 : focusvsANDIRI;
 break;
 case 68:
-this.$ = $$[$0] ? shapeJunction("ShapeAnd", $$[$0-1], [$$[$0]]) /* t: 1dotRef1 */ : $$[$0-1] // t:@@;
+this.$ = $$[$0] ? shapeJunction("ShapeAnd", $$[$0-1], [$$[$0]]) /* t: 1dotRef1 */ : $$[$0-1] // t: @@ : 1val1vExprRefAND3;
 break;
-case 69: case 78: case 83:
-this.$ = Object.assign($$[$0-1], {nested: true}) // t: 1val1vsMinusiri3;
+case 69: case 78:
+this.$ = Object.assign($$[$0-1], {nested: true}) // t: NOT1dotOR2dotX3;
 break;
-case 70: case 79: case 84:
-this.$ = yy.EmptyShape // t: 1dot;
+case 70:
+this.$ = yy.EmptyShape // t: @@;
+break;
+case 75:
+this.$ = $$[$0] ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $$[$0-1]), $$[$0] ] } : $$[$0-1] // t: 0focusIRI : 1NOTNOTIRI;
 break;
 case 77:
-this.$ = $$[$0] ? shapeJunction("ShapeAnd", $$[$0-1], [$$[$0]]) /* t:@@ */ : $$[$0-1]	 // t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?;
+this.$ = $$[$0] ? shapeJunction("ShapeAnd", $$[$0-1], [$$[$0]]) : $$[$0-1]	 // t: @@ : 0 // 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?;
+break;
+case 79:
+this.$ = yy.EmptyShape // t: 1NOTNOTdot;
+break;
+case 80:
+this.$ = $$[$0] ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $$[$0-1]), $$[$0] ] } : $$[$0-1] // t: 1iriRef1 : 1iri;
 break;
 case 82:
-this.$ = $$[$0] ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $$[$0-1]), $$[$0] ] } : $$[$0-1] // t: !! look to 1dotRef1;
+this.$ = $$[$0] ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $$[$0-1]), $$[$0] ] } : $$[$0-1] // t: @@ : 1dotRef1;
+break;
+case 83:
+this.$ = Object.assign($$[$0-1], {nested: true}) // t: 1NOTNOTIRI;
+break;
+case 84:
+this.$ = yy.EmptyShape // t: 1dot;
 break;
 case 93:
- // t: 1dotRefLNex@@
+ // t: 1dotRefLNex1
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
         const namePos = $$[$0].indexOf(':');
         this.$ = yy.addSourceMap(yy.expandPrefix($$[$0].substr(0, namePos), yy) + $$[$0].substr(namePos + 1)); // ShapeRef
       
 break;
 case 94:
- // t: 1dotRefNS1@@
+ // t: 1dotRefNS1
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
         this.$ = yy.addSourceMap(yy.expandPrefix($$[$0].substr(0, $$[$0].length - 1), yy)); // ShapeRef
       
@@ -24235,21 +24291,34 @@ break;
 case 95:
 this.$ = yy.addSourceMap($$[$0]) // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1;
 break;
-case 96: case 99:
- // t: !!
+case 96:
+
         this.$ = $$[$0-2]
-        if ($$[$0-1].length) { this.$.annotations = $$[$0-1]; } // t: !!
-        if ($$[$0]) { this.$.semActs = $$[$0].semActs; } // t: !!
+        if ($$[$0-1].length) { this.$.annotations = $$[$0-1]; } // t: @@ : 1val1refvsMinusiri3
+        if ($$[$0]) { this.$.semActs = $$[$0].semActs; } // t: @@ : 1val1refvsMinusiri3
+      
+break;
+case 97:
+this.$ = [] // t: 0, 1dot, 1dotAnnot3;
+break;
+case 98:
+this.$ = appendTo($$[$0-1], $$[$0]) // t: 1dotAnnotIRIREF, 1dotAnnot3;
+break;
+case 99:
+
+        this.$ = $$[$0-2]
+        if ($$[$0-1].length) { this.$.annotations = $$[$0-1]; } // t: @@ : 1NOTNOTIRI
+        if ($$[$0]) { this.$.semActs = $$[$0].semActs; } // t: @@ : 1NOTNOTIRI
       
 break;
 case 100:
-this.$ = extend({ type: "NodeConstraint", nodeKind: "literal" }, $$[$0]) // t: 1literalPattern;
+this.$ = extend({ type: "NodeConstraint", nodeKind: "literal" }, $$[$0]) // t: 1literal;
 break;
 case 101:
 
         if (numericDatatypes.indexOf($$[$0-1]) === -1)
           numericFacets.forEach(function (facet) {
-            if (facet in $$[$0])
+            if (facet in $$[$0]) // 1unknowndatatypeMaxInclusive
               yy.error(new Error("Parse error: facet " + facet + " not allowed for unknown datatype " + $$[$0-1]));
           });
         this.$ = extend({ type: "NodeConstraint", datatype: $$[$0-1] }, $$[$0]) // t: 1datatype
@@ -24259,20 +24328,20 @@ case 102:
 this.$ = { type: "NodeConstraint", values: $$[$0-1] } // t: 1val1IRIREF;
 break;
 case 103:
-this.$ = extend({ type: "NodeConstraint"}, $$[$0]);
+this.$ = extend({ type: "NodeConstraint"}, $$[$0]) // @@;
 break;
 case 104:
-this.$ = {} // t: 1literalPattern;
+this.$ = {} // t: 1literal;
 break;
 case 105:
 
         if (Object.keys($$[$0-1]).indexOf(Object.keys($$[$0])[0]) !== -1) {
           yy.error(new Error("Parse error: facet "+Object.keys($$[$0])[0]+" defined multiple times"));
         }
-        this.$ = extend($$[$0-1], $$[$0]) // t: 1literalLength
+        this.$ = extend($$[$0-1], $$[$0]) // t: 1datatypeLength
       
 break;
-case 107: case 113:
+case 107:
 
         if (Object.keys($$[$0-1]).indexOf(Object.keys($$[$0])[0]) !== -1) {
           yy.error(new Error("Parse error: facet "+Object.keys($$[$0])[0]+" defined multiple times"));
@@ -24284,12 +24353,12 @@ case 108:
 this.$ = extend({ type: "NodeConstraint" }, $$[$0-1], $$[$0] ? $$[$0] : {}) // t: 1iriPattern;
 break;
 case 109:
-this.$ = extend({ type: "NodeConstraint" }, $$[$0]) // t: @@;
+this.$ = extend({ type: "NodeConstraint" }, $$[$0]) // t: 1Length;
 break;
 case 110:
-this.$ = {};
+this.$ = {} // 1iri;
 break;
-case 111:
+case 111: case 113:
 
         if (Object.keys($$[$0-1]).indexOf(Object.keys($$[$0])[0]) !== -1) {
           yy.error(new Error("Parse error: facet "+Object.keys($$[$0])[0]+" defined multiple times"));
@@ -24328,18 +24397,21 @@ case 125:
 this.$ = keyValObject($$[$0-1], parseInt($$[$0], 10)) // t: 1literalTotaldigits;
 break;
 case 126:
-this.$ = parseInt($$[$0], 10);
+this.$ = parseInt($$[$0], 10) // t: 1floatMininclusiveINTEGER;
 break;
-case 127: case 128:
-this.$ = parseFloat($$[$0]);
+case 127:
+this.$ = parseFloat($$[$0]) // t: 1integerMininclusiveDECIMAL;
+break;
+case 128:
+this.$ = parseFloat($$[$0]) // t: 1integerMininclusiveDOUBLE;
 break;
 case 129:
  // ## deprecated
-        if ($$[$0] === XSD_DECIMAL || $$[$0] === XSD_FLOAT || $$[$0] === XSD_DOUBLE)
+        if ($$[$0] === XSD_DECIMAL || $$[$0] === XSD_FLOAT || $$[$0] === XSD_DOUBLE) // t: @@
           this.$ = parseFloat($$[$0-2].value);
-        else if (numericDatatypes.indexOf($$[$0]) !== -1)
+      else if (numericDatatypes.indexOf($$[$0]) !== -1) // t: @@
           this.$ = parseInt($$[$0-2].value)
-        else
+        else // t: negativeSyntax/1decimalMininclusiveroman-numeral
           yy.error(new Error("Parse error: numeric range facet expected numeric datatype instead of " + $$[$0]));
       
 break;
@@ -24363,17 +24435,17 @@ this.$ = "fractiondigits" // t: 1literalFractiondigits;
 break;
 case 136:
  // t: 1dotExtend3
-        this.$ = $$[$0-2] === yy.EmptyShape ? { type: "Shape" } : $$[$0-2]; // t: 0
-        if ($$[$0-1].length) { this.$.annotations = $$[$0-1]; } // t: !! look to open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
-        if ($$[$0]) { this.$.semActs = $$[$0].semActs; } // t: !! look to open3groupdotcloseCode1, !open1dotOr1dot
+        this.$ = $$[$0-2] === yy.EmptyShape ? { type: "Shape" } : $$[$0-2]; // t: @@ : 1dot
+        if ($$[$0-1].length) { this.$.annotations = $$[$0-1]; } // t: 1dotShapeAnnotIRIREF : 0
+        if ($$[$0]) { this.$.semActs = $$[$0].semActs; } // t: 1dotShapeCode1 : 0
       
 break;
 case 137:
  // t: 1dotExtend3
-        const exprObj = $$[$0-1] ? { expression: $$[$0-1] } : yy.EmptyObject; // t: 0, 0Extend1
-        this.$ = (exprObj === yy.EmptyObject && $$[$0-3] === yy.EmptyObject) ?
-	  yy.EmptyShape :
-	  extend({ type: "Shape" }, exprObj, $$[$0-3]);
+        const exprObj = $$[$0-1] ? { expression: $$[$0-1] } : yy.EmptyObject; // t: 1dot : 1focusMissingRefdot
+        this.$ = (exprObj === yy.EmptyObject && $$[$0-3] === yy.EmptyObject)
+	  ? yy.EmptyShape
+	  : extend({ type: "Shape" }, exprObj, $$[$0-3]); // t: @@ : 1dot
       
 break;
 case 138:
@@ -24423,13 +24495,13 @@ case 154:
 this.$ = appendTo($$[$0-1], $$[$0]) // t: 2oneOfdot;
 break;
 case 157:
-this.$ = $$[$0-1];
+this.$ = $$[$0-1] // t: 1dot;
 break;
 case 161:
 this.$ = { type: "EachOf", expressions: unionAll([$$[$0-2]], $$[$0-1]) } // t: 2groupOfdot;
 break;
 case 162:
-this.$ = $$[$0] // ## deprecated // t: 2groupOfdot;
+this.$ = $$[$0] // @Deprecated;
 break;
 case 163:
 this.$ = $$[$0] // t: 2groupOfdot;
@@ -24438,30 +24510,34 @@ case 164:
 this.$ = [$$[$0]] // t: 2groupOfdot;
 break;
 case 165:
-this.$ = appendTo($$[$0-1], $$[$0]) // t: 2groupOfdot;
+this.$ = appendTo($$[$0-1], $$[$0]) // t: 3Eachdot;
 break;
 case 166:
 
-        if ($$[$0-1]) {
+        if ($$[$0-1]) { // t: 2EachInclude1
           this.$ = extend({ id: $$[$0-1] }, $$[$0]);
           yy.addProduction($$[$0-1],  this.$);
-        } else {
+        } else { // t: 1dot
           this.$ = $$[$0]
         }
       
 break;
 case 168:
-this.$ = yy.addSourceMap($$[$0]);
+this.$ = yy.addSourceMap($$[$0]) // t: 2EachInclude1;
 break;
 case 173:
 
         // t: open1dotOr1dot, !openopen1dotcloseCode1closeCode2
         this.$ = $$[$0-4];
         // Copy all of the new attributes into the encapsulated shape.
-        if ("min" in $$[$0-2]) { this.$.min = $$[$0-2].min; } // t: open3groupdotclosecard23Annot3Code2
-        if ("max" in $$[$0-2]) { this.$.max = $$[$0-2].max; } // t: open3groupdotclosecard23Annot3Code2
-        if ($$[$0-1].length) { this.$.annotations = $$[$0-1]; } // t: open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
-        if ($$[$0]) { this.$.semActs = "semActs" in $$[$0-4] ? $$[$0-4].semActs.concat($$[$0].semActs) : $$[$0].semActs; } // t: open3groupdotcloseCode1, !open1dotOr1dot
+        if ("min" in $$[$0-2]) { this.$.min = $$[$0-2].min; } // t: 1cardOpt : @@
+        if ("max" in $$[$0-2]) { this.$.max = $$[$0-2].max; } // t: 1cardOpt : @@
+        if ($$[$0-1].length) { this.$.annotations = $$[$0-1]; } // t: open3EachdotcloseAnnot3 : 1dot
+        if ($$[$0]) {
+          this.$.semActs = "semActs" in $$[$0-4]
+            ? $$[$0-4].semActs.concat($$[$0].semActs) // t: 1dotCode3
+            : $$[$0].semActs; // t: 1dotCode1
+        } // t: 1dotCode1 : @@
       
 break;
 case 174:
@@ -24470,11 +24546,22 @@ break;
 case 176:
 
         // $$[$0]: t: 1dotCode1
-	if ($$[$0-3] !== yy.EmptyShape && false) {}
+	// if ($$[$0-3] !== yy.EmptyShape && false) {
+	//   const t = yy.blank();
+	//   yy.addShape(t, $$[$0-3]);
+	//   $$[$0-3] = t; // ShapeRef
+	// }
         // %7: t: 1inversedotCode1
-        this.$ = extend({ type: "TripleConstraint" }, $$[$0-5], { predicate: $$[$0-4] }, ($$[$0-3] === yy.EmptyShape ? {} : { valueExpr: $$[$0-3] }), $$[$0-2], $$[$0]); // t: 1dot, 1inversedot
+        this.$ = Object.assign(
+          { type: "TripleConstraint" },
+          $$[$0-5],
+          { predicate: $$[$0-4] },
+          ($$[$0-3] === yy.EmptyShape ? {} : { valueExpr: $$[$0-3] }), // 1dot : 1iri
+          $$[$0-2],
+          $$[$0]
+        ); // t: 1dot, 1inversedot
         if ($$[$0-1].length)
-          this.$["annotations"] = $$[$0-1]; // t: 1dotAnnot3, 1inversedotAnnot3
+          this.$["annotations"] = $$[$0-1]; // t: 1dotAnnot3, 1inversedotAnnot3 : 1dot
       
 break;
 case 179:
@@ -24644,6 +24731,9 @@ break;
 case 231:
 this.$ = $$[$0] ? unescapeSemanticAction($$[$0-1], $$[$0]) /* t: 1dotCode1 */ : { type: "SemAct", name: $$[$0-1] } // t: 1dotNoCode1;
 break;
+case 233: case 250:
+this.$ = null;
+break;
 case 238:
 this.$ = RDF_TYPE // t: 1AvalA;
 break;
@@ -24709,11 +24799,23 @@ break;
 case 267:
 this.$ = $$[$0] // t: 0Extends1, 1dotExtends1, 1dot3ExtendsLN;
 break;
+case 269:
+this.$ = shapeJunction("ShapeOr", $$[$0-1], $$[$0]);
+break;
+case 271: case 275:
+this.$ = [];
+break;
+case 272: case 276:
+this.$ = $$[$0-1].concat($$[$0]);
+break;
 case 273:
 this.$ = shapeJunction("ShapeAnd", $$[$0-1], $$[$0]);
 break;
 case 277:
 this.$ = $$[$0-1] ? { type: "ShapeNot", "shapeExpr": nonest($$[$0]) } : $$[$0];
+break;
+case 278: case 280:
+this.$ = $$[$0] ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $$[$0-1]), $$[$0] ] } : $$[$0-1];
 break;
 case 281:
 this.$ = Object.assign($$[$0-1], {nested: true});
@@ -25380,7 +25482,7 @@ function ld2RdfJsTerm(ld) {
             if (copy.type)
                 return RdfJsFactory.literal(value, RdfJsFactory.namedNode(copy.type));
             if (Object.keys(copy).length > 0)
-                throw Error(`Unrecognized attributes inn JSON-LD-style object literal: ${JSON.stringify(Object.keys(copy))}`);
+                throw Error(`Unrecognized attributes in JSON-LD-style object literal: ${JSON.stringify(Object.keys(copy))}`);
             return RdfJsFactory.literal(value);
         case 'string':
             return ld.startsWith('_:')
@@ -25430,7 +25532,6 @@ function iri2Turtle(iri, meta = { base: "", prefixes: {} }, aForType = true) {
     return rel;
 }
 //# sourceMappingURL=shex-term.js.map
-
 
 /***/ }),
 

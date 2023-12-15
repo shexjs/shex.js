@@ -561,11 +561,19 @@ shapeExpression:
       _QIT_NOT_E_Opt shapeAtomNoRef _QshapeOr_E_Opt	{
         if ($1)
           $2 = { type: "ShapeNot", "shapeExpr": nonest($2) };	// t: 1NOTNOTIRI
-        if ($3) { // If there were disjuncts,
+        if ($3) { // If there were disjuncts or conjuncts,
           //           shapeOr will have $3.set needsAtom.
           //           Prepend $3.needsAtom with $2.
           //           Note that $3 may be a ShapeOr or a ShapeAnd.
-          $3.needsAtom.unshift(nonest($2));
+          if ($2.type === 'ShapeAnd' && $3.type === 'ShapeAnd' && !$2.nested && !$3.nested) {
+            // $3.annotations = $3.shapeExprs[0].annotations;
+            // delete $3.shapeExprs[0].annotations;
+            // $2.semActs = $2.shapeExprs[0].semActs;
+            // delete $3.shapeExprs[0].semActs;
+            $3.shapeExprs.splice(0, 0, ...$2.shapeExprs)
+          } else {
+            $3.needsAtom.unshift(nonest($2)); // t: focusbnode0ORfocusPattern0
+          }
           delete $3.needsAtom;
           $$ = $3;	// t: 1NOT_literalANDvs_
         } else {
@@ -603,8 +611,8 @@ inlineShapeExpression:
 
 shapeOr: // Sets .needsAtom to tell shapeExpression where to place leading shapeAtom.
       _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus	{ // returns a ShapeOr
-        const disjuncts = $1.map(nonest);
-        $$ = { type: "ShapeOr", shapeExprs: disjuncts, needsAtom: disjuncts }; // t: 1val1vExprRefOR3
+        const shapeExprs = $1.map(nonest);
+        $$ = { type: "ShapeOr", shapeExprs: shapeExprs, needsAtom: shapeExprs }; // t: 1val1vExprRefOR3
       }
     | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{ // returns a ShapeAnd
         // $1 could have implicit conjuncts and explicit nested ANDs (will have .nested: true)
