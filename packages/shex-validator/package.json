@@ -21,7 +21,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@rdfjs/data-model": "^2.0.1",
+    "@rdfjs/data-model": "^2.0.2",
     "@shexjs/eval-simple-1err": "^1.0.0-alpha.29",
     "@shexjs/eval-threaded-nerr": "^1.0.0-alpha.29",
     "@shexjs/eval-validator-api": "^1.0.0-alpha.29",
