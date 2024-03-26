@@ -107,7 +107,7 @@ class ShExVisitor {
     case "ShapeNot": return this.visitShapeNot(expr, ...args);
     case "ShapeExternal": return this.visitShapeExternal(expr, ...args);
     default:
-      throw Error("unexpected shapeExpr type: " + expr.type);
+      throw Error("unexpected shapeExpr type: " + expr.type + JSON.stringify(expr));
     }
   }
 
