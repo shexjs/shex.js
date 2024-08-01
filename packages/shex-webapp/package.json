@@ -49,7 +49,7 @@
     "dctap": "^0.0.6",
     "jquery": "^3.7.1",
     "jquery-contextmenu": "^2.9.2",
-    "jquery-ui": "^1.13.2"
+    "jquery-ui": "^1.13.3"
   },
   "publishConfig": {
     "access": "public"
