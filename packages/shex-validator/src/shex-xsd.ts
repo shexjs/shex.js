@@ -1,7 +1,7 @@
 /**
  * Support functions associated with XSD datatypes (or any other DT ShEx should support).
  */
-import type {Term as RdfJsTerm} from 'rdf-js';
+import type {Term as RdfJsTerm} from '@rdfjs/types';
 import {NodeConstraint, objectValue} from "shexj";
 
 const XSD = "http://www.w3.org/2001/XMLSchema#";

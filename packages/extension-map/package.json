@@ -23,6 +23,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
+    "@rdfjs/types": "^1.1.0",
     "@shexjs/loader": "^1.0.0-alpha.28",
     "@shexjs/parser": "^1.0.0-alpha.28",
     "@shexjs/term": "^1.0.0-alpha.27",

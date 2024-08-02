@@ -3,7 +3,7 @@ import * as RdfJs from '@rdfjs/types/data-model';
 import {shapeExprTest, Recursion, SemActFailure} from "@shexjs/term/shexv";
 // import {NeighborhoodDb} from "@shexjs/neighborhood-api";
 import {SchemaIndex} from "@shexjs/term";
-import {Quad as RdfJsQuad} from "rdf-js";
+import {Quad as RdfJsQuad} from "@rdfjs/types";
 import {TripleConstraint} from "shexj";
 
 export {};

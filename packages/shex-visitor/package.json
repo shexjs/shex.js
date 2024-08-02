@@ -20,6 +20,9 @@
   "engines": {
     "node": ">=0.10.0"
   },
+  "dependencies": {
+    "@rdfjs/types": "^1.1.0"
+  },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
     "browser999": "browserify shex.js -s ShEx -o browser/shex-visitor-browserify.js && uglifyjs browser/shex-visitor-browserify.js --comments -mco browser/shex-visitor-browserify.min.js"

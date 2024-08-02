@@ -15,7 +15,7 @@ import {
   ConstraintToTripleResults, TripleResult
 } from "@shexjs/eval-validator-api";
 import * as Hierarchy from 'hierarchy-closure';
-import type {Quad, Term as RdfJsTerm} from 'rdf-js';
+import type {Quad, Term as RdfJsTerm} from '@rdfjs/types';
 import {Neighborhood, NeighborhoodDb, Start as NeighborhoodStart} from "@shexjs/neighborhood-api";
 import {
   error,

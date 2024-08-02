@@ -35,7 +35,7 @@
 */
 
 import * as ShExJ from 'shexj';
-import {Term as RdfJsTerm} from 'rdf-js';
+import {Term as RdfJsTerm} from '@rdfjs/types';
 const RelativizeIri = require("relativize-url").relativize;
 // import {relativize as RelativizeIri} from "relativize-url"; // someone should lecture the maintainer
 import {DataFactory} from 'rdf-data-factory';
