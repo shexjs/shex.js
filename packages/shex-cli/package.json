@@ -30,7 +30,7 @@
     "@shexjs/validator": "^1.0.0-alpha.29",
     "@shexjs/writer": "^1.0.0-alpha.27",
     "command-line-args": "^5.0.2",
-    "command-line-usage": "^7.0.1",
+    "command-line-usage": "^7.0.3",
     "js-yaml": "^4.1.0",
     "jsonld": "^8.3.2",
     "koa": "^2.15.3",
