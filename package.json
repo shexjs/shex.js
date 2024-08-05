@@ -30,7 +30,7 @@
     "coveralls": "^3.1.0",
     "cross-spawn": "^7.0.3",
     "css-loader": "^7.1.2",
-    "eslint": "^8.57.0",
+    "eslint": "^9.8.0",
     "file-loader": "^6.2.0",
     "jsdom": "^24.1.1",
     "lerna": "^8.1.7",
