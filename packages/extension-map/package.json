@@ -31,7 +31,7 @@
     "@shexjs/validator": "^1.0.0-alpha.29",
     "@shexjs/visitor": "^1.0.0-alpha.27",
     "@shexjs/writer": "^1.0.0-alpha.27",
-    "command-line-args": "^5.0.2",
+    "command-line-args": "^6.0.0",
     "command-line-usage": "^7.0.3",
     "hierarchy-closure": "^1.2.2",
     "jquery": "^3.7.1",
