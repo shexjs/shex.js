@@ -7,7 +7,7 @@
 
 class JSONCache extends InterfaceCache {
   constructor (selection) {
-    super(selection);
+    super(selection, null);
   }
 
   async parse (text) {

@@ -2,6 +2,10 @@
 
 "use strict";
 const TEST_browser = "TEST_browser" in process.env ? JSON.parse(process.env["TEST_browser"]) : false;
+
+const SHEX_IO_TESTS = "https://shex.io/shexTest/main/";
+// const SHEX_IO_TESTS = "http://localhost/checkouts/shexSpec/shexTest/";
+
 const STARTUP_TIMEOUT = 10000
 const SCRIPT_CALLBACK_TIMEOUT = 40000
 const SHEX_SIMPLE = 'packages/shex-webapp/doc/shex-simple.html'
@@ -456,9 +460,9 @@ if (!TEST_browser) {
         "@type": "sht:ValidationTest",
         "trait": [ "Import" ],
         "action": {
-          "schema": "https://shex.io/shexTest/main/schemas/3circRefS1-IS2-IS3-IS3.shex",
+          "schema": SHEX_IO_TESTS + "schemas/3circRefS1-IS2-IS3-IS3.shex",
           "shape": "http://a.example/S1",
-          "data": "https://shex.io/shexTest/main/validation/3circRefPlus1_pass-open.ttl",
+          "data": SHEX_IO_TESTS + "validation/3circRefPlus1_pass-open.ttl",
           "focus": "http://a.example/n1"
         },
         "extensionResults": [],
@@ -473,9 +477,9 @@ if (!TEST_browser) {
         "@type": "sht:ValidationTest",
         "trait": [ "relativeIRI" ],
         "action": {
-          "schema": "http://localhost/checkouts/shexSpec/shexTest/validation/1dot-relative.shex",
+          "schema": SHEX_IO_TESTS + "validation/1dot-relative.shex",
           "shape": "S1",
-          "data": "http://localhost/checkouts/shexSpec/shexTest/validation/Is1_Ip1_Io1-relative.ttl",
+          "data": SHEX_IO_TESTS + "validation/Is1_Ip1_Io1-relative.ttl",
           "focus": "s1"
         },
         "extensionResults": [],
@@ -488,9 +492,9 @@ if (!TEST_browser) {
         "@id": "#1NOTRefOR1dot_pass-inOR",
         "@type": "sht:ValidationTest",
         "action": {
-          "schema": "http://localhost/checkouts/shexSpec/shexTest/schemas/1NOTRefOR1dot.shex",
+          "schema": SHEX_IO_TESTS + "schemas/1NOTRefOR1dot.shex",
           "shape": "http://a.example/S1",
-          "data": "http://localhost/checkouts/shexSpec/shexTest/validation/In1_Ip1_In2.In2_Ip2_LX.ttl",
+          "data": SHEX_IO_TESTS + "validation/In1_Ip1_In2.In2_Ip2_LX.ttl",
           "focus": "http://a.example/n1"
         },
         "extensionResults": [],
