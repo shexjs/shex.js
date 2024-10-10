@@ -386,10 +386,7 @@ ul {
 			<h4>How to use the Tabular Online Validator:</h4>
 			<p style="max-width:100%;white-space:pre-line;" class="wrap">
 			The top left field (purple) should contain your schema. It might already be filled out, if not add it there. 
-			The top right field (green) should contain the SPARQL endpoint where you can get your data. For Wikidata this is "<i>Endpoint: https://query.wikidata.org/sparql</i>". For Wikibase Cloud instances it looks like "<i>Endpoint: https://your_instance_name.wikibase.cloud/query/sparql</i>"
-			In the white field to the left enter the SPARQL query. The items returned by the query will be validated to check if they conform to the schema. The query should be encased in these two strings: "<code>SPARQL'''</code>" and "<code>'''@START</code>".
-			If you are not using Wikidata, enter the SPARQL query endpoint, as well as the url to your general database in the fields below the query field. 
-			
+			In the white field to the left enter the SPARQL query. The items returned by the query will be validated to check if they conform to the schema.
 			Then press the validate button to have the items you are querying for validated against the schema entered. After some time the table of validation results appears below. 
 			
 			Each row in the table is a potential error in the data. However the error being recorded might not be the actual error but indicate an error in a different location, if an error makes little sense look at different rows for the same item. 
@@ -398,11 +395,21 @@ ul {
 			
 			If the results seem to make no sense at all, consider that schemas are, like the data, created by Wikidata contributors who are only human, and there may be an error in the schema. Consider bringing this up in the talk page for the schema, or in any other place where schema users come together.
 			
-			Main problem types are:</p>
+			The most common problem types are:</p>
 			<ul>
 			<li> Missing property: Too few triples with the specified property exist.</li>
-			<li> Complex Error: Often a triple has a value that isn't allowed for that property. Look in Further Error Info for details in chat way it isn't allowed.</li>
+			<li> Complex Error: Often a triple has a value that isn't allowed for that property. 
+			Look in Further Error Info for information about what isn't allowed.</li>
 			<li> Too many values: There are more triples using a specific property than allowed by the shape.</li></ul>
+			
+			<div id="wb-cloud-parameters" data-target="WBCloudParam" style="display:none;">
+				<h4>Linking to Alternate Databases</h4>
+				To link to another database, such as Wikibase Cloud, do the following:
+				Click the option to enable linking to Wikibase Cloud to open extra form fields.
+				In the top right field (green), enter the SPARQL endpoint where you can get your data through a SPARQL query. For Wikidata this is "<i>Endpoint: https://query.wikidata.org/sparql</i>". For Wikibase Cloud instances it looks like "<i>Endpoint: https://your_instance_name.wikibase.cloud/query/sparql</i>"
+				Enter the SPARQL query endpoint, as well as the url to your general database in the fields below the query field. The preview shows an example for a Wikibase Cloud instance.
+				Then continue as normal.
+			</div>
     </div>
     <div id="results">
 	<!-- this table is a placeholder for results in table mode -->
