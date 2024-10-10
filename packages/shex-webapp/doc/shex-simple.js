@@ -51,7 +51,7 @@ var Getables = [
 ];
 
 var QueryParams = Getables.concat([
-  {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
+  {queryStringParm: "interface",    location: $("#interface"),       deflt: "table"     },
   {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "threaded-val-nerr" },
 ]);
 
@@ -756,6 +756,8 @@ function callValidator (done) {
         $("#validate").on("click", terminateWorker);
 
         currentAction = "validating";
+		//if in table mode, initialize the table headers and delete any bits of table already existing
+		tableReset();
         $("#results .status").text("validating...").show();
         time = new Date();
         ShExWorker.onmessage = parseUpdatesAndResults;
@@ -946,10 +948,22 @@ function callValidator (done) {
       if (fails)
         entry.reason = ShEx.Util.errsToSimple(entry.appinfo).join("\n");
       delete entry.appinfo;
-      // fall through to default
+	  
+	case "table":
+		//print the table rows associated with this entry
+		if(fails || document.getElementById("show-conformant").checked==false){
+			renderOutput([entry])
+		}
+		break;
+	  
+      // fall through to default for appinfo case
     default:
       elt = $("<pre/>").text(JSON.stringify(entry, null, "  ")).addClass(klass);
     }
+	//in case of table mode, don't execute next bits of code
+	if ($("#interface").val() == "table"){
+		return
+	}
     results.append(elt);
 
     // update the FixedMap
@@ -1167,6 +1181,10 @@ function prepareControls () {
   $("#clear").on("click", clearAll);
   $("#showMeta").on("click", revealMetaPane);
   $("#download-results-button").on("click", downloadResults);
+  //for table mode
+  $('#export-table').on("click", exportTable);
+  $("#validate").on("click", revealTable);
+  $("#show-wb-cloud").on("change", showHideWBCloudParam);
 
   $("#loadForm").dialog({
     autoOpen: false,
@@ -1604,9 +1622,9 @@ function loadSearchParameters () {
   if (!("manifest" in iface) && !("manifestURL" in iface)) {
     iface.manifestURL = ["../examples/manifest.json"];
   }
-  if ("hideData" in iface) {
+  /*if ("hideData" in iface) {
     $("#inputData textarea").css("visibility", "hidden");
-  }
+  }*/ //this now controlled by a separate system so it can be enabled when desired to connect to wikicloud. System is calling TableModeUtils.js -> showHideWBCloudParam()
   if ("textMapIsSparqlQuery" in iface) {
     $("#textMap").data("isSparqlQuery", true)
       .attr("placeholder", "SELECT ?id WHERE {\n    # ...\n}");

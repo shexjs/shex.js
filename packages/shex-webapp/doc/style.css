@@ -1,0 +1,256 @@
+/* body {
+  font-family: 'myriad pro', sans-serif;
+  font-size: 20px;
+  border: 0;
+  background: #fff;
+  margin: 0;
+  padding: 100px;
+} */
+
+#test {
+	word-break: break-all;
+    white-space: normal;
+}
+
+table{
+	background:#eee;
+	border:1px solid #aaa;
+	border-spacing:0;
+	display:table;
+	/* width:100%; */
+	word-wrap:break-word;
+	text-align:left;
+}
+.results{
+	min-width:600px;
+	max-width:1400px;
+}
+
+thead{
+	background:#bbb;
+	
+	font-weight:bold;
+	position:sticky;
+	top:0;
+	z-index:10;
+}
+
+td{
+	border:1px solid #bbb;
+	vertical-align:top;
+	
+}
+
+th{
+	
+}
+.highcell{vertical-align:top;}
+
+floattext{
+	position:sticky;
+	vertical-align:top;
+	top:30px;
+	word-wrap:break-word;
+	white-space:normal;
+}
+
+/* stuckrow{ */
+	/* display: table-row; */
+	/* position: sticky */
+/* } */
+
+h1 { font-size: 1.3em; }
+      h1, p, ul { margin: 0; margin-left: .1em; }
+      .ShExLogo { float:left; height:1.3em; padding-left: .3em; }
+      /* uncomment for breathing icon
+      .ShExLogo {
+        animation-duration: 2s;
+        animation-name: ShExLogo-breath;
+        animation-iteration-count: infinite;
+        animation-direction: alternate;
+      }
+      @keyframes ShExLogo-breath {
+        from { transform: scale(1, 1); }
+        to { transform: scale(1.2, 1.2); }
+      }
+      */
+      .passes999 { margin-right: 1em; }
+      .passes, #results div .passes { padding-left: .1em; border-left: thick solid #bfb; }
+      .pair.passes { border-left: none; padding-left: none; }
+      .pair.passes { background-color: #bfb; }
+      .fails , #results div .fails  { padding-left: .1em; border-left: thick solid #fbb; }
+      .pair.fails { border-left: none; padding-left: none; }
+      .pair.fails { background-color: #fbb; }
+      .error , #results div .error  { padding-left: .1em; border-left: thick solid #b00; }
+      .running { background-color: #ddf; }
+      #inputarea { overflow-x: none; white-space:nowrap; }
+      #inputarea textarea { overflow-x: auto }
+      #inputarea textarea.data.focus {
+        width: 100%;
+        overflow: hidden;
+        border-style: inset;
+        border-width: 2px;
+        padding: 1px 0px;
+      }
+      ul[data-navColumn] button:focus::before { content: "> "; color: #730; margin-left: -1em; }
+      ul[data-navColumn] button:focus::after  { content: " <"; color: #730; margin-right: -1em; }
+      .schema.textarea, .schema, .schema.ui-dialog-content { background-color: #f4f4ff; color: #000000; border-color: #fc561c }
+      #inputSchema li.selected button { background-color: #e8e8ff; color: #000000; }
+      #inputData textarea, .data, .data.ui-dialog-content { background-color: #f4fff4; color: #000000; border-color: #f0a133 }
+      #inputData li.selected button { background-color: #e8ffe8; color: #000000; }
+      #manifestDrop { border-color: white; width: 100%; }
+      #manifestDrop div.manifest { overflow: auto; max-height: 10ex; }
+      #extensionDrop { border-color: #00ffff; width: 88%; border-width: thin; }
+      #inputSchema li button, #inputData li button {
+        font-size: .7em;
+        padding: 0em 2ex;
+        border-radius: .5em;
+        border: thin solid #000;
+        cursor: pointer;
+        box-shadow: 0.1em 0px 1em rgba(255, 255, 255, 0.9) inset;
+      }
+      #inputSchema li button.disabled, #inputData li button.disabled {
+        color: #777;
+      }
+      body { border-width: .25em; border-style: solid; border-color: white; }
+      .droparea { border-width: .25em; border-style: dashed; }
+      .droparea.hover, body.hover { border: .25em dashed #0c0; }
+      .stoppable { background-color: red; }
+      #results div:disabled { background-color: #fff; }
+      #results div { width: 99%; border: none; }
+      #results div:disabled.passes { color: #373; }
+      #results div:disabled.fails  { color: #733; }
+      #results div:disabled.error  { color: #300; }
+      #results div.human { margin: 1ex 0; }
+      #results div.human pre { margin: 0 2em; }
+      #results h3 { font-size: larger; margin: 0; }
+      #results pre { margin: 1ex; }
+      #results .data, #results .schema { border-style: dotted; border-width: 2px; }
+      .status { display: none; } /* disable .status 'cause it's redundant against the selected marker. */
+      #navlist li {
+        display: inline;
+        list-style-type: none;
+        padding-right: 10px;
+      }
+      #actions {
+        float:right;
+        margin-right: .1em;
+      }
+      /* #actions input { height: 1.5ex; }  */
+      /* #actions button { height: 2.5ex; } */
+      /* http://stackoverflow.com/questions/686905/labeling-file-upload-button#answer-35767488 */
+      .inputfile {
+        /* visibility: hidden etc. wont work */
+        width: 0.1px;
+        height: 0.1px;
+        opacity: 0;
+        overflow: hidden;
+        position: absolute;
+        z-index: -1;
+      }
+      .inputfile:focus + label {
+        /* keyboard navigation */
+        outline: 1px dotted #000;
+        outline: -webkit-focus-ring-color auto 5px;
+      }
+      .inputfile + label * {
+        pointer-events: none;
+      }
+      label {
+        /* border: thin solid black; */
+        padding: 0 .3em;
+      }
+      .heading {
+        font-weight: bold;
+      }
+      .panel {
+        width: 48.5%;
+        display: inline-block;
+        margin: 0 .4em;
+        vertical-align: top;
+      }
+      h2.status { margin: 0; }
+      #addPair, #removePair { text-decoration: none; }
+      #schemaDialect, #dataDialect { font-size: .7em; }
+      #shapeMap { padding-left: .25em; } /* !! doesn't exist */
+      #shapeMap-tabs textarea.error { padding-left: default; border-left: default; background-color: #fdd; }
+      #editMap input.error { padding-left: none; border-left: none; background-color: #fdd; }
+      .pair { list-style-type: none; }
+      .addPair, .removePair { font-size: 80%; line-height: 1ex; font-family: monospace; }
+      .pair button {
+        width: 1em;
+        padding: .5em 0;
+        padding-right: .5em; /* for firefox rendering issue */
+      }
+
+#menuForm > fieldset {
+    box-shadow: -.3ex .3ex grey;
+    display: inline;
+}
+
+#controls {
+    position: absolute;
+    left: 0;
+    top: 0;
+    list-style: none;
+    margin: 0;
+    display: none;
+    background: white; opacity: 1;
+    border: thin solid buttontext;
+    /* box-shadow: -.3ex .3ex grey; */
+}
+#controls div {
+    border: 10px solid buttonface;
+}
+#controls h3 {
+    margin: 0;
+}
+#menu-button { margin-left: 1em; }
+#menu-button svg { width: 1em; height: 1.5ex; }
+#about {
+  margin: 3em;
+}
+#dismiss-about { text-align: center; }
+#controls ul { padding-left: 0; margin-left: 0; list-style-type: none; }
+#controls li { padding: 0 1em; }
+#controls li.menuitem:hover { background-color: buttonface; }
+
+.ui-tabs .ui-tabs-nav .ui-tabs-anchor {
+    padding: 0 .1em;
+}
+.ui-tabs .ui-tabs-panel {
+    padding: 0;
+}
+.ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button {
+    font-size: small;
+}
+#shapeMap-tabs .ui-tabs-panel {
+    font-family: monospace;
+    min-height: 10ex;
+}
+#shapeMap-tabs {
+    font-family: inherit;
+    font-size: inherit;
+    margin-top: .5ex;
+}
+#editMap, #fixedMap {
+    padding: 0;
+}
+#editMap td {
+    padding: 0;
+}
+#editMap td:nth-child(2),
+#editMap td:nth-child(4),
+#editMap td:nth-child(5) {
+    width: .01em;
+}
+#editMap input, #fixedMap input {
+    width: 100%;
+}
+#fixedMap tr td:nth-child(2),
+#fixedMap tr td:nth-child(4),
+#fixedMap tr td:nth-child(5) { width: .8em; }
+ul {
+    padding-left: 1.2em;
+    padding-right: .4em;
+}
