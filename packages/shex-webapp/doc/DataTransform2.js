@@ -323,22 +323,25 @@ function createArrayRow(item) {
 		output.value = item.triple.object.id //value is wrong name for wikidata? Maybe should be id instead?
 	} else if (item.type == "TypeMismatch") {
 		output.error_type = item.type
-		output.error_fulltext = item + "<= This was not supposed to happen. Contact the developer and help them improve this tool by telling you what you did!"
+		//output.error_fulltext = JSON.stringify(item) + "<= This was not supposed to happen. Contact the developer and help them improve this tool by telling you what you did!"
+		output.property = item.triple.predicate
+		output.value = item.triple.object.value
+		output.triple_link = item.triple.subject
 		console.log(item)
 		console.log('type mismatch detected! Implement to continue')
 	} else if (item.type == 'SemActFailure') {
 		output.error_type = item.type
-		output.error_fulltext = item + "<= This was not supposed to happen. Contact the developer and help them improve this tool by telling you what you did!"
+		output.error_fulltext = JSON.stringify(item) + "<= This was not supposed to happen. Contact the developer and help them improve this tool by telling you what you did!"
 		console.log(item)
-		console.log('Semaphote Act Failure detected! Implement to continue')
+		console.log('Semaphore Act Failure detected! Implement to continue')
 	} else if (item.type == 'ClosedShapeViolation') {
 		output.error_type = item.type
-		output.error_fulltext = item + "<= This was not supposed to happen. Contact the developer and help them improve this tool by telling you what you did!"
+		output.error_fulltext = JSON.stringify(item) + "<= This was not supposed to happen. Contact the developer and help them improve this tool by telling you what you did!"
 		console.log(item)
 		console.log('Closed Shape Violation detected! Implement to continue')
 	}else {
 		output.error_type = item.type
-		output.error_fulltext = item + "<= This was not supposed to happen. Contact the developer and help them improve this tool by telling you what you did!"
+		output.error_fulltext = JSON.stringify(item) + "<= This was not supposed to happen. Contact the developer and help them improve this tool by telling you what you did!"
 	}
 	//console.log(item)
 	//console.log(output)
