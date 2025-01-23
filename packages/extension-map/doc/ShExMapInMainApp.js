@@ -13,7 +13,7 @@ class DirectShExMaterializer {
     const materializer = this.mapModule.materializer.construct(this.schema, this.mapper, {});
     this.shapeMap.forEach(pair => {
       try {
-        const binder = this.mapper.binder(this.resultBindings);
+        const binder = this.mapper.binder(JSON.parse(JSON.stringify(this.resultBindings)));
         const resM = materializer.validate(binder, ShExWebApp.StringToRdfJs.n3idTerm2RdfJs(pair.node), pair.shape);
         if ("errors" in resM) {
           this.renderEntry({

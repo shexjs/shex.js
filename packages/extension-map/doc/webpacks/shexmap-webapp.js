@@ -25952,7 +25952,10 @@ function binder (tree) {
       return getObj(s);
     }
   };
-  return {get: getter};
+  function status () {
+    return `globals: ${JSON.stringify(globals)}, stack: ${JSON.stringify(stack)}, tree: ${JSON.stringify(tree)}`;
+  }
+  return {get: getter, debug: status};
 }
 
 }

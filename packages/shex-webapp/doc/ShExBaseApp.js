@@ -397,12 +397,17 @@ class ManifestCache extends InterfaceCache {
     }
   }
 
+  handleBackwardCompatibility (elt) {
+    return elt;
+  }
+
   async prepareManifest (demoList, base) {
     const listItems = Object.keys(this.caches).reduce((acc, k) => {
       acc[k] = {};
       return acc;
     }, {});
-    const nesting = demoList.reduce((acc, elt, idx) => {
+    const nesting = demoList.reduce((acc, eltP, idx) => {
+      const elt = this.handleBackwardCompatibility(eltP);
       const defaultLabel = "title" in elt
             ? elt.title
             : `manifest[${idx}]`;
@@ -904,7 +909,7 @@ class ShapeMapCache extends InterfaceCache {
           rows: '1',
           type: 'text',
           class: 'data focus'
-        }).text(node).on("change", this.markEditMapDirty);
+        }).text(node).on("change", evt => this.markEditMapDirty());
         const joinerElt = $("<span>", {
           class: 'shapeMap-joiner'
         }).append("@").addClass(pair.status);
@@ -925,7 +930,7 @@ class ShapeMapCache extends InterfaceCache {
           type: 'text',
           value: shape,
           class: 'schema inputShape'
-        }).on("change", this.markEditMapDirty);
+        }).on("change", evt => this.markEditMapDirty());
         const addElt = $("<button/>", {
           class: "addPair",
           title: "add a node/shape pair"}).text("+");
@@ -950,7 +955,7 @@ class ShapeMapCache extends InterfaceCache {
       this.editMap.find(".removePair").css("visibility", "visible");
     this.editMap.find(".pair").each(idx => {
       this.addContextMenus(this.editMapSelector + " .pair:nth("+idx+") .focus", this.caches.inputData);
-      this.addContextMenus(".pair:nth("+idx+") .inputShape", this.caches.inputSchema);
+      this.addContextMenus(this.editMapSelector + " .pair:nth("+idx+") .inputShape", this.caches.inputSchema);
     });
     return false;
   }
@@ -1571,6 +1576,7 @@ class ShExResultsRenderer {
 const ShExLoader = ShExWebApp.Loader({
   fetch: window.fetch.bind(window), rdfjs: RdfJs, jsonld: null
 })
+
 class ShExBaseApp {
   constructor (base) {
     this.base = base;
@@ -1584,7 +1590,7 @@ class ShExBaseApp {
     const inputSchema = new SchemaCache($("#inputSchema textarea.schema"), this.onDataLoad.bind(this), this.shexcParser, this.turtleParser);
     const inputData = new TurtleCache($("#inputData textarea"), this.onDataLoad.bind(this), this.turtleParser, this.queryTrackerController);
     const extension = new ExtensionCache($("#extensionDrop"), this.resultsWidget);
-    const shapeMap = new ShapeMapCache($("#textMap"), {inputSchema, inputData}, this.turtleParser, this.resultsWidget); // @@ rename to #shapeMap
+    const shapeMap = new ShapeMapCache($("#textMap"), {inputSchema, inputData}, this.turtleParser, this.resultsWidget);
 
     this.Caches = { inputSchema, inputData, extension, shapeMap };
     this.Getables = [

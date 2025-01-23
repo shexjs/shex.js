@@ -5,26 +5,28 @@
   dataURL: BPfhir-instance.ttl
   queryMap: "<tag:BPfhir123>@START"
   outputSchemaURL: BPdam-schema.shex
-  outputShape: "<BPunitsDAM>"
+  genMap: |
+    <tag:b0>@<BPunitsDAM>,
+    <tag:b1>@START
   staticVars:
     http://abc.example/someConstant: '"123-456"'
-  createRoot: "<tag:b0>"
   status: conformant
   expectedBindingsURL: BP-simple-bindings.json
   outputDataURL: BP-simple-out.ttl
+
 - schemaLabel: BP back
   schemaURL: BPdam-schema.shex
   dataLabel: simple
   dataURL: BPdam-instance.ttl
   queryMap: "<tag:b0>@START"
   outputSchemaURL: BPfhir-schema.shex
-  outputShape: "<BPfhir>"
+  genMap: "<tag:BPfhir123>@<BPfhir>"
   staticVars:
     http://abc.example/anotherConstant: abc-def
-  createRoot: "<tag:BPfhir123>"
   status: conformant
   expectedBindingsURL: BP-simple-bindings.json
   outputDataURL: BP-back-simple-out.ttl
+
 - schemaLabel: BPPatient multi-bindings
   schema: |
     PREFIX  : <http://dam.example/med#>
@@ -120,13 +122,13 @@
         fhir:units xsd:string %Map:{ bp:diaUnits %}
       }
     }
-  outputShape: "<collector>"
+  genMap: "<tag:BPfhir123>@<collector>"
   staticVars:
     http://abc.example/anotherConstant: abc-def
-  createRoot: "<tag:BPfhir123>"
   status: conformant
   expectedBindingsURL: BPPatient-multi-bindings-bindings.json
   outputDataURL: BPPatient-multi-bindings-out.ttl
+
 - schemaLabel: BPPatient 2 levels
   schema: |
     PREFIX  : <http://dam.example/med#>
@@ -263,12 +265,12 @@
         fhir:units xsd:string %Map:{ bp:diaUnits %}
       }
     }
-  outputShape: "<collector>"
+  genMap: "<tag:BPfhir123>@<collector>"
   staticVars: {}
-  createRoot: "<tag:BPfhir123>"
   status: conformant
   expectedBindingsURL: BPPatient-2-levels-bindings.json
   outputDataURL: BPPatient-2-levels-out.ttl
+
 - schemaLabel: symmetric
   schema: |
     PREFIX    : <http://a.example/>
@@ -315,9 +317,8 @@
       schema:location xsd:string %Map:{ :LocationName %} ;
       schema:address  xsd:string %Map:{ :LocationAddress %}
     }
-  outputShape: "<Concert>"
+  genMap: "_:root@<Concert>"
   staticVars: {}
-  createRoot: _:root
   status: conformant
   expectedBindingsURL: symmetric-bindings.json
   outputDataURL: symmetric-out.ttl

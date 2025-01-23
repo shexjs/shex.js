@@ -15,6 +15,22 @@ class JSONCache extends InterfaceCache {
   }
 }
 
+class GenMapCache extends ShapeMapCache {
+  constructor (selection, caches, turtleParser, resultsWidget) {
+    super(selection, null);
+    this.tabsElement = $("#genMap-tabs");
+    this.editMapSelector = "#getEditMap";
+    this.editMap = $("#getEditMap");
+    this.textMap = $("#genTextMap");
+    this.fixedMap = $("#getFixedMap");
+    this.fixedMapTab = this.tabsElement.find('[href="#getFixedMap-tab"]');
+    this.caches = caches;
+    this.resultsWidget = resultsWidget;
+    this.meta.termToLex = (trm) => ShExWebApp.ShExTerm.rdfJsTerm2Turtle(trm, this.meta);
+    this.meta.lexToTerm = (lex) => turtleParser.termToLd(lex, new IRIResolver(this.meta));
+  }
+}
+
 class ShExMapManifestCache extends ManifestCache {
   makeDataEntry (dataLabel, idx, elt, base) {
     const ret = super.makeDataEntry(dataLabel, idx, elt, base);
@@ -22,8 +38,23 @@ class ShExMapManifestCache extends ManifestCache {
     return ret;
   }
 
+  handleBackwardCompatibility (elt) {
+    const ret = super.handleBackwardCompatibility(elt);
+
+    if (!("genMap" in elt) && "createRoot" in elt && "outputShape" in elt) {
+      ret.genMap = ret.createRoot + "@" + ret.outputShape;
+      delete ret.createRoot;
+      delete ret.outputShape;
+    }
+
+    return ret;
+  }
+
   async queryMapLoaded (dataTest, text) {
     await super.queryMapLoaded(dataTest, text);
+    this.caches.genMap.set(dataTest.entry.genMap, 999);
+    await this.caches.genMap.copyTextMapToEditMap();
+
     /* This is kind of a wart 'cause I haven't made a 3rd level of manifest entry for materialization */
     if (dataTest.entry.outputSchema === undefined && dataTest.entry.outputSchemaURL) {
       dataTest.entry.outputSchemaURL = new URL(dataTest.entry.outputSchemaURL, dataTest.url).href; // absolutize
@@ -36,9 +67,6 @@ class ShExMapManifestCache extends ManifestCache {
     $("#outputSchema .status").text(name);
     this.caches.statics.set(JSON.stringify(dataTest.entry.staticVars, null, "  "));
     $("#staticVars .status").text(name);
-
-    $("#outputShape").val(dataTest.entry.outputShape); // targetSchema.start in Map-test
-    $("#createRoot").val(dataTest.entry.createRoot); // createRoot in Map-test
   }
 }
 
@@ -67,12 +95,15 @@ class ShExMapBaseApp extends ShExBaseApp {
     const bindings = new JSONCache($("#bindings1 textarea"));
     const statics = new JSONCache($("#staticVars textarea"));
     const outputSchema = new SchemaCache($("#outputSchema textarea"), null, this.shexcParser, this.turtleParser);
-    Object.assign(this.Caches, { manifest, bindings, statics, outputSchema, });
+    const dummyData = new TurtleCache($("#inputData textarea"), this.onDataLoad.bind(this), this.turtleParser, this.queryTrackerController);
+    const genMap = new GenMapCache($("#genTextMap"), {inputSchema: outputSchema, inputData: dummyData}, this.turtleParser, this.resultsWidget);
+    Object.assign(this.Caches, { manifest, bindings, statics, outputSchema, genMap });
     const parameters = [
-      {queryStringParm: "manifest",  location: manifest.selection,    cache: manifest, fail: e => $("#manifestDrop li").text(NO_MANIFEST_LOADED)},
-      {queryStringParm: "bindings",  location: bindings.selection,    cache: bindings    },
-      {queryStringParm: "statics",   location: statics.selection,     cache: statics     },
-      {queryStringParm: "outSchema", location: outputSchema.selection,cache: outputSchema},
+      {queryStringParm: "manifest",  location: manifest.selection,     cache: manifest,         fail: e => $("#manifestDrop li").text(NO_MANIFEST_LOADED)},
+      {queryStringParm: "bindings",  location: bindings.selection,     cache: bindings          },
+      {queryStringParm: "statics",   location: statics.selection,      cache: statics           },
+      {queryStringParm: "outSchema", location: outputSchema.selection, cache: outputSchema      },
+      {queryStringParm: "gen-map",   location: $("#genTextMap"),           cache: this.Caches.genMap},
     ];
     Array.prototype.push.apply(this.Getables, parameters);
     Array.prototype.push.apply(this.QueryParams, parameters);
@@ -93,10 +124,19 @@ class ShExMapBaseApp extends ShExBaseApp {
         return true;
       },
     ]);
-  }
 
-  prepareControls () {
-    super.prepareControls();
+    $("#genMap-tabs").tabs({
+      activate: async (event, ui) => {
+        if (ui.oldPanel.get(0) === $("#getEditMap-tab").get(0))
+          await this.Caches.genMap.copyEditMapToTextMap();
+        else if (ui.oldPanel.get(0) === $("#getTextMap").get(0))
+          await this.Caches.genMap.copyTextMapToEditMap()
+      }
+    });
+    $("#genTextMap").on("change", evt => {
+      this.resultsWidget.clear();
+      SharedForTests.promise = this.Caches.genMap.copyTextMapToEditMap();
+    });
     $("#materialize").on("click", evt => this.materialize(evt));
   }
 
@@ -156,7 +196,14 @@ class ShExMapBaseApp extends ShExBaseApp {
         resultBindings.unshift(_t);
       }
 
-      const outputShapeMap = [this.fixMaterializationShapeMapEntry($("#createRoot").val(), $("#outputShape").val())];
+      const outputShapeMap = $("#getFixedMap tr").map(
+        (idx, elt) => {
+          const jqElt = $(elt);
+          const nodeStr = jqElt.find(".focus").val();
+          const shapeStr = jqElt.find(".inputShape").val();
+          return Object.assign(this.fixMaterializationShapeMapEntry(nodeStr, shapeStr), {nodeStr, shapeStr}); // cheat and shove more stuff into the ShapeMap
+        }
+      ).get();
 
       await this.Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
       const materializer = this.getMaterializer(outputSchema, outputShapeMap, resultBindings);
@@ -174,7 +221,7 @@ class ShExMapBaseApp extends ShExBaseApp {
       });
 
       outputShapeMap.forEach(pair => {
-        const {node, shape} = pair;
+        const {node, shape, nodeStr, shapeStr} = pair;
         try {
           const nestedWriter = new ShExWebApp.NestedTurtleWriter.Writer(null, {
             // lists: {}, -- lists will require some thinking
@@ -214,13 +261,13 @@ class ShExMapBaseApp extends ShExBaseApp {
             nestedWriter.comment("\n# Triples not in the schema:");
             nestedWriter.addQuads(rest.getQuads())
           }
-          nestedWriter.end((error, result) => this.addResult(error, result));
+          nestedWriter.end((error, result) => this.addResult(error, result, nodeStr, shapeStr));
         } catch (e) {
           console.error(`NestedWriter(${node}@${shape}) failure:`);
           console.error(e);
           const fallbackWriter = new RdfJs.Writer({ prefixes: this.Caches.outputSchema.parsed._prefixes });
           fallbackWriter.addQuads(generatedGraph.getQuads());
-          fallbackWriter.end((error, result) => this.addResult(error, result));
+          fallbackWriter.end((error, result) => this.addResult(error, result, nodeStr, shapeStr));
         }
       });
       this.resultsWidget.finish();
@@ -230,14 +277,14 @@ class ShExMapBaseApp extends ShExBaseApp {
     }
   }
 
-  addResult (error, result) {
+  addResult (error, result, node, shape) {
     this.resultsWidget.append(
       $("<div/>", {class: "passes"}).append(
         $("<span/>", {class: "shapeMap"}).append(
           "# ",
-          $("<span/>", {class: "data"}).text($("#createRoot").val()),
+          $("<span/>", {class: "data"}).text(node),
           $("<span/>", {class: "valStatus"}).text("@"),
-          $("<span/>", {class: "schema"}).text($("#outputShape").val()),
+          $("<span/>", {class: "schema"}).text(shape),
         ),
         $("<pre/>").text(result)
       )

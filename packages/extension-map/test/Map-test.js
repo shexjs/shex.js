@@ -157,9 +157,13 @@ describe('Examples manifest', function () {
     const mapstr = manifest.schemaLabel + '(' + manifest.dataLabel + ')'
     if (TESTS !== null && !TESTS.find(pat => mapstr.indexOf(pat) !== -1 || mapstr.match(RegExp(pat))))
       return;
-    const createRoot = manifest.createRoot.startsWith('_:')
-          ? manifest.createRoot
-          : manifest.createRoot.substr(1, manifest.createRoot.length-2)
+    const createRoot = manifest.genMap.split(/,\n?/).map(
+      elt => elt.split('@').map(
+        s => s.startsWith('_:') ? // Per JSON-LD @IDs,
+          s :                     // BNodes start with _:
+          s.substr(1, s.length-2) // and URLs are bare.
+      )
+    )[0][0];                      // first item (node) of first genMap entry
     const dataSummary = "dataURL" in manifest
           ? manifest.dataURL
           : manifest.data.length + ' chars of turtle'
