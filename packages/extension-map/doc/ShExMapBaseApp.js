@@ -202,11 +202,11 @@ class ShExMapBaseApp extends ShExBaseApp {
       let resultBindings = _dup(await this.Caches.bindings.refresh());
       if (this.Caches.statics.get().trim().length === 0)
         await this.Caches.statics.set("{  }");
-      const _t = await this.Caches.statics.refresh();
-      if (_t && Object.keys(_t).length > 0) {
+      const staticBindings = await this.Caches.statics.refresh();
+      if (staticBindings && Object.keys(staticBindings).length > 0) {
         if (!Array.isArray(resultBindings))
           resultBindings = [resultBindings];
-        resultBindings.unshift(_t);
+        resultBindings.unshift(staticBindings);
       }
 
       const outputShapeMap = $("#getFixedMap tr").map(
