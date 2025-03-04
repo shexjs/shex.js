@@ -3,7 +3,8 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX bp: <http://shex.io/extensions/Map/#BPDAM->
 PREFIX Map: <http://shex.io/extensions/Map/#>
 
-<tag:b0> :name "Walker, Alice";
+<tag:b0> :created "2025-03-04T12:34:56.78Z"^^xsd:dateTime;
+  :name "Walker, Alice";
   :systolic [
     :value "110"^^xsd:float;
     :units "mmHg"

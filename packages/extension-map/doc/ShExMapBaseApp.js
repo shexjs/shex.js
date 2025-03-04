@@ -38,6 +38,8 @@ class ShExMapManifestCache extends ManifestCache {
     return ret;
   }
 
+  /** backward compatibility with earlier API
+   */
   handleBackwardCompatibility (elt) {
     const ret = super.handleBackwardCompatibility(elt);
 
@@ -140,6 +142,15 @@ class ShExMapBaseApp extends ShExBaseApp {
     $("#materialize").on("click", evt => this.materialize(evt));
   }
 
+  /**
+   * overload: Load URL search parameters
+   */
+  async loadSearchParameters () {
+    const ret = super.loadSearchParameters();
+    this.Caches.shapeMap.addContextMenus("#outputShape", this.Caches.outputSchema);
+    return ret;
+  }
+
   makeRenderer () {
     return this.currentRenderer = new ShExMapResultsRenderer(this.resultsWidget, this.Caches, this.MapModule.url)
   }
@@ -175,6 +186,8 @@ class ShExMapBaseApp extends ShExBaseApp {
     }
     this.resultsWidget.start();
     const parsing = "output schema";
+    await this.Caches.genMap.copyEditMapToTextMap(); // also calls copyEditMapToFixedMap()
+
     try {
       const outputSchemaText = this.Caches.outputSchema.selection.val();
       const outputSchemaIsJSON = outputSchemaText.match(/^\s*\{/);
@@ -205,7 +218,6 @@ class ShExMapBaseApp extends ShExBaseApp {
         }
       ).get();
 
-      await this.Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
       const materializer = this.getMaterializer(outputSchema, outputShapeMap, resultBindings);
       $("#results div").empty();
       $("#results .status").text("materializing data...").show();
@@ -292,59 +304,72 @@ class ShExMapBaseApp extends ShExBaseApp {
     // this.resultsWidget.append($("<pre/>").text(result));
   }
 
+  tableToBindings () {
+    $("#bindings1 div").remove()
+    $("#bindings1 textarea").show()
+  }
+
   bindingsToTable () {
     let d = JSON.parse($("#bindings1 textarea").val())
     let div = $("<div/>").css("overflow", "auto").css("border", "thin solid red")
     div.css("width", $("#bindings1 textarea").width()+10)
     div.css("height", $("#bindings1 textarea").height()+12)
-    $("#bindings1 textarea").hide()
+    $("#bindings1 textarea").hide();
+    $("#bindings1 div").remove();
     let thead = $("<thead/>")
     let tbody = $("<tbody/>")
     let table = $("<table>").append(thead, tbody)
     $("#bindings1").append(div.append(table))
 
-    let vars = [];
-    function varsIn (a) {
-      return a.forEach(elt => {
-        if (Array.isArray(elt)) {
-          varsIn(elt)
-        } else {
-          let tr = $("<tr/>")
-          let cols = []
-          Object.keys(elt).forEach(k => {
-            if (vars.indexOf(k) === -1)
-              vars.push(k)
-            let i = vars.indexOf(k)
-            cols[i] = elt[k]
-          })
-          // tr.append(cols.map(c => $("<td/>").text(c)))
-          for (let colI = 0; colI < cols.length; ++colI)
-            tr.append($("<td/>").text(cols[colI] ? this.Caches.inputData.meta.termToLex(n3ify(cols[colI])) : "").css("background-color", "#f7f7f7"))
-          tbody.append(tr)
-        }
-      })
-    }
-    varsIn(Array.isArray(d) ? d : [d])
+    const vars = this.varsIn(Array.isArray(d) ? d : [d], tbody)
 
     vars.forEach(v => {
       thead.append($("<th/>").css("font-size", "small").text(v.substr(v.lastIndexOf("#")+1, 999)))
     })
-
-    function n3ify (ldterm) {
-      if (typeof ldterm !== "object")
-        return ldterm;
-      const ret = "\"" + ldterm.value + "\"";
-      if ("language" in ldterm)
-        return ret + "@" + ldterm.language;
-      if ("type" in ldterm)
-        return ret + "^^" + ldterm.type;
-      return ret;
-    }
   }
 
-  tableToBindings () {
-    $("#bindings1 div").remove()
-    $("#bindings1 textarea").show()
+  varsIn (a, tbody) {
+    let vars = [];
+    for (const elt of a) {
+      if (Array.isArray(elt)) {
+        varsIn(elt)
+      } else {
+        let tr = $("<tr/>")
+        let cols = []
+        Object.keys(elt).forEach(k => {
+          if (vars.indexOf(k) === -1)
+            vars.push(k)
+          let i = vars.indexOf(k)
+          cols[i] = elt[k]
+        })
+        // tr.append(cols.map(c => $("<td/>").text(c)))
+        for (let colI = 0; colI < cols.length; ++colI)
+          // let termToLex handle relativizing URLs and pretty-printing
+          tr.append($("<td/>").text(cols[colI] ? this.Caches.inputData.meta.termToLex(ShExMapBaseApp.ldToTerm(cols[colI])) : "").css("background-color", "#f7f7f7"))
+        tbody.append(tr)
+      }
+    }
+    return vars;
+  }
+
+  static ldToTerm (ldterm) {
+    if (typeof ldterm === "string") {
+      return ldterm.startsWith("_:")
+        ? RdfJs.DataFactory.blankNode(ldterm.substring*(2))
+        : RdfJs.DataFactory.namedNode(ldterm);
+    }
+
+    if (typeof ldterm !== "object")
+      throw new Error(`Malformed JSON-LD structure ${JSON.stringify(ldterm)}`);
+
+    return RdfJs.DataFactory.literal(
+      ldterm.value,
+      "language" in ldterm
+        ? ldterm.language
+        : "type" in ldterm
+        ? RdfJs.DataFactory.namedNode(ldterm.type)
+        : undefined
+    );
   }
 }
 

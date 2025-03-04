@@ -299,6 +299,7 @@ class ManifestCache extends InterfaceCache {
         // }, []);
       }
     }
+
     if (!Array.isArray(textOrObj))
       textOrObj = [textOrObj];
     const demos = textOrObj.reduce((acc, elt) => {
@@ -981,6 +982,9 @@ class ShapeMapCache extends InterfaceCache {
   }
 
   /* context menus */
+  /**
+   * cache: the data panel which provides the concext menu
+   */
   addContextMenus (inputSelector, cache) {
     const _ShapeMapCache = this;
     // !!! terribly stateful; only one context menu at a time!
@@ -1141,8 +1145,7 @@ class ShapeMapCache extends InterfaceCache {
     }
 
     const menuCallback = (key, options) => {
-      if (cache.onLoad)
-        cache.onLoad();
+      this.markEditMapDirty();
       if (key === MENU_ITEM_materialize) {
         var toAdd = Object.keys(options.items).filter(k => {
           return k !== MENU_ITEM_materialize;
@@ -1632,7 +1635,7 @@ class ShExBaseApp {
   }
 
   onDataLoad () {
-    this.Caches.shapeMap.markEditMapDirty();
+    this.Caches.shapeMap.markEditMapDirty(); // still needed after making editMap handler mark dirty directly?
   }
 
   // abstract getValidator (_validator) { } // overriden for ShExMap
@@ -1872,13 +1875,6 @@ class ShExBaseApp {
       return callValidator();
     }
 
-    if ("output-map" in iface)
-      parseShapeMap("output-map", (node, shape) => {
-        // only works for one n/s pair
-        $("#createNode").val(node);
-        $("#outputShape").val(shape);
-      });
-    this.Caches.shapeMap.addContextMenus("#outputShape", this.Caches.outputSchema);
     return loaded;
   }
 
@@ -1962,8 +1958,9 @@ class ShExBaseApp {
             },
             skipCycleCheck: $("#skipCycleCheck").is(":checked"),
           });
+
           let time;
-          const validator = this.getValidator(loaded, alreadLoaded.url, inputData, this.makeRenderer());
+          const validator = this.getValidator(loaded, alreadLoaded.url, inputData); this.renderer = validator.renderer; // keep a copy for the materializer
 
           // Some DBs need to be able to inspect the schema to calculate the neighborhood.
           if ("setSchema" in inputData)

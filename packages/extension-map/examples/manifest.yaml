@@ -9,7 +9,7 @@
     <tag:b0>@<BPunitsDAM>,
     <tag:b1>@START
   staticVars:
-    http://abc.example/someConstant: '"123-456"'
+    "http://dam.example/med#materializationDateTime": "\"2025-03-04T12:34:56.78Z\"^^http://www.w3.org/2001/XMLSchema#dateTime"
   status: conformant
   expectedBindingsURL: BP-simple-bindings.json
   outputDataURL: BP-simple-out.ttl
@@ -42,6 +42,7 @@
     }
 
     <BPunitsDAM> {
+      :created xsd:dateTime? %Map:{ :materializationDateTime %};
       :systolic {
         :value xsd:float %Map:{ bp:sysVal %};
         :units xsd:string %Map:{ bp:sysUnits %}
@@ -50,7 +51,6 @@
         :value xsd:float %Map:{ bp:diaVal %};
         :units xsd:string %Map:{ bp:diaUnits %}
       };
-      :someConstProp xsd:string? %Map:{ <http://abc.example/someConstant> %}
     }
   dataLabel: simple
   data: |
@@ -149,6 +149,7 @@
     }
 
     <BPunitsDAM> {
+      :created xsd:dateTime? %Map:{ :materializationDateTime %};
       :systolic {
         :value xsd:float %Map:{ bp:sysVal %};
         :units xsd:string %Map:{ bp:sysUnits %}
@@ -157,7 +158,6 @@
         :value xsd:float %Map:{ bp:diaVal %};
         :units xsd:string %Map:{ bp:diaUnits %}
       };
-      :someConstProp xsd:string? %Map:{ <http://abc.example/someConstant> %}
     }
   dataLabel: simple
   data: |

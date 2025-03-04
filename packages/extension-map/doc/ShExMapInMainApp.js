@@ -1,10 +1,11 @@
 class DirectShExMaterializer {
-  constructor (schema, shapeMap, resultBindings, mapModule, mapper) {
+  constructor (schema, resultBindings, renderer, shapeMap, mapModule, mapper) {
     // this.trivialMaterializer = this.Mapper.trivialMaterializer(schema);
     // this.outputGraph = trivialMaterializer.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
     this.schema = schema;
     this.shapeMap = shapeMap;
     this.resultBindings = resultBindings;
+    this.renderer = renderer;
     this.mapModule = mapModule;
     this.mapper = mapper;
   }
@@ -16,7 +17,7 @@ class DirectShExMaterializer {
         const binder = this.mapper.binder(JSON.parse(JSON.stringify(this.resultBindings)));
         const resM = materializer.validate(binder, ShExWebApp.StringToRdfJs.n3idTerm2RdfJs(pair.node), pair.shape);
         if ("errors" in resM) {
-          this.renderEntry({
+          this.renderer.entry({
             node: pair.node,
             shape: pair.shape,
             status: "errors" in resM ? "nonconformant" : "conformant",
@@ -24,7 +25,6 @@ class DirectShExMaterializer {
             elapsed: -1
           })
         } else {
-          // console.log("g:", ShExWebApp.Util.valToTurtle(resM));
           generatedGraph.addQuads(ShExWebApp.Util.valToN3js(resM, RdfJs.DataFactory));
         }
       } catch (e) {
@@ -41,13 +41,14 @@ class DirectShExMaterializer {
 
 class ShExMapInMainApp extends ShExMapBaseApp {
   getValidator (loaded, _base, inputData) {
-    const validator = new DirectShExValidator(loaded, inputData, this.makeRenderer());
+    this.renderer = this.makeRenderer(); // keep a copy for the materializer
+    const validator = new DirectShExValidator(loaded, inputData, this.renderer);
     this.Mapper = this.MapModule.register(validator.validator, ShExWebApp);
     return validator;
   }
 
   getMaterializer (schema, shapeMap, resultBindings) {
-    return new DirectShExMaterializer(schema, shapeMap, resultBindings, this.MapModule, this.Mapper);
+    return new DirectShExMaterializer(schema, resultBindings, this.renderer, shapeMap, this.MapModule, this.Mapper);
   }
 }
 

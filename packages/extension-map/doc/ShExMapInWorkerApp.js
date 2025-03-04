@@ -32,7 +32,7 @@ class RemoteShExMaterializer {
         this.resultsWidget.replace("error materializing:\n" + msg.data.exception).
           removeClass("passes fails").addClass("error");
       } else {
-        this.renderEntry({
+        this.renderer.entry({
           node: msg.data.node,
           shape: msg.data.shape,
           status: "errors" in msg.data.results ? "nonconformant" : "conformant",

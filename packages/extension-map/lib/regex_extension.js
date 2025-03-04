@@ -124,8 +124,8 @@ function lower(mapDirective, bindings, prefixes, args) {
             const expVarName = buildExpandedVars(varName, expandedVars, prefixes);
             const val = bindings.get(expVarName);
             if (val === undefined) {
-                throw Error("Unable to process " + mapDirective + 
-                            " because variable \"" + expVarName + "\" was not found!");
+                throw Error("Unable to process ```" + mapDirective +
+                            "``` because variable \"" + expVarName + "\" was not found!");
       
             } else {
                 return val.value || val;

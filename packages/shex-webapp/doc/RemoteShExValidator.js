@@ -145,9 +145,9 @@ class RemoteShExValidator {
       $("#results .status").text("rendering results...").show();
       if (!USE_INCREMENTAL_RESULTS) {
         if ("solutions" in msg.data.results)
-          msg.data.results.solutions.forEach(this.renderEntry);
+          msg.data.results.solutions.forEach(this.renderer.entry);
         else
-          this.renderEntry(msg.data.results);
+          this.renderer.entry(msg.data.results);
       }
       time = new Date() - time;
       $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")

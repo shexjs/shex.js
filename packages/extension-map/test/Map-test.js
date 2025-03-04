@@ -27,6 +27,9 @@ const JsYaml = require("js-yaml");
 var maybeLog = VERBOSE ? console.log : function () {};
 const urlify = (s) => "file://localhost/" + s
 
+const DAM = 'http://dam.example/med#';
+const XSD = 'http://www.w3.org/2001/XMLSchema#';
+
 function loadAndRun (srcSchemas, targetSchemas, inputDataFilePath, node, createRoot, expectedBindings, expectedRdfFilePath, testTrivial) {
   var mapstr = srcSchemas + " -> " + targetSchemas.join(',');
   it('('+ mapstr + ')' + ' should map ' + inputDataFilePath + " to " + expectedRdfFilePath, async function () {
@@ -41,12 +44,12 @@ function loadAndRun (srcSchemas, targetSchemas, inputDataFilePath, node, createR
     // loads[0].data.toString = loads[1].data.toString = g => graphToString(g);
     const inputData = { graph: loads[0].data, meta: { base: urlify(inputDataFilePath), prefixes: {  } } }
     const expectedRdf = { graph: loads[1].data, meta: { base: urlify(expectedRdfFilePath), prefixes: {  } } }
-    return run(loads[0].schema, loads[1].schema, Promise.resolve(inputData), [{node, shape: ShExValidator.Start}], createRoot, expectedBindings, expectedRdf, mapstr, testTrivial);
+    return run(loads[0].schema, loads[1].schema, Promise.resolve(inputData), [{node, shape: ShExValidator.Start}], createRoot, {}, expectedBindings, expectedRdf, mapstr, testTrivial);
   })
 
 }
 
-async function run (srcSchema, targetSchema, inputDataP, smapP, createRoot, expectedBindings, expectedRdfP, mapstr, testTrivial) {
+async function run (srcSchema, targetSchema, inputDataP, smapP, createRoot, staticBindings, expectedBindings, expectedRdfP, mapstr, testTrivial) {
   const [inputData, smap, expectedRdf] = await Promise.all([inputDataP, smapP, expectedRdfP])
   // console.log([inputData.graph.size, JSON.stringify(smap), expectedRdf.graph.size])
 
@@ -71,7 +74,7 @@ async function run (srcSchema, targetSchema, inputDataP, smapP, createRoot, expe
 
   if (testTrivial)
     testGraph(trivial(registered, targetSchema, resultBindings, createRoot), expectedRdf.graph, mapstr)
-  testGraph(materialize(registered, targetSchema, resultBindings, createRoot), expectedRdf.graph, mapstr)
+  testGraph(materialize(registered, targetSchema, staticBindings, resultBindings, createRoot), expectedRdf.graph, mapstr)
 }
 
 function testGraph (got, expected, mapstr) {
@@ -93,9 +96,16 @@ function trivial (registered, schema, resultBindings, createRoot) {
   return trivialMaterializer.materialize(trivialBinder, createRoot);
 }
 
-function materialize (registered, schema, resultBindings, createRoot) {
+function materialize (registered, schema, staticBindings, bindingsObj, createRoot) {
+  let resultBindings = JSON.parse(JSON.stringify(bindingsObj));
+  if (staticBindings && Object.keys(staticBindings).length > 0) {
+    if (!Array.isArray(resultBindings))
+      resultBindings = [resultBindings];
+    resultBindings.unshift(staticBindings);
+  }
+
   const materializer = Mapper.materializer.construct(schema, registered, {});
-  const binder = registered.binder(JSON.parse(JSON.stringify(resultBindings)))
+  const binder = registered.binder(resultBindings)
   const res2 = materializer.validateShapeMap(binder, [{node: createRoot, shape: ShExValidator.Start}])
   if ("errors" in res2)
     throw Error(`unexpectd materialization error`)
@@ -103,81 +113,205 @@ function materialize (registered, schema, resultBindings, createRoot) {
   store.addQuads(ShExUtil.valToN3js(res2, DataFactory))
   return store
 }
-
-describe('A ShEx Mapper', function () {
-  var tests = [
-    ["there", ["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAM.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPDAMFHIR/BPunitsDAM.ttl", true],
-    ["back" , ["Map/BPDAMFHIR/BPunitsDAM.shex"], ["Map/BPDAMFHIR/BPFHIR.shex"], "Map/BPDAMFHIR/BPunitsDAM.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPDAMFHIR/BPFHIR.ttl", true],
-//    ["bifer", ["Map/BPDAMFHIR/BPFHIRsys.shex", "Map/BPDAMFHIR/BPFHIRdia.shex"], ["Map/BPDAMFHIR/BPunitsDAM.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPDAMFHIR/BPunitsDAM.ttl"]
-//    ["bifb" , ["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAMsys.shex", "Map/BPDAMFHIR/BPunitsDAMdia.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPDAMFHIR/BPunitsDAM.ttl"]
-  ];
-  if (TESTS)
-    tests = tests.filter(function (t) { return TESTS.indexOf(t[0]) !== -1; });
-  tests.forEach(function (test) {
-    loadAndRun.apply(null, test.slice(1));
-  });
-
-/*
-  loadAndRun(["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAMsys.shex", "Map/BPDAMFHIR/BPunitsDAMdia.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", null, "Map/BPDAMFHIR/BPunitsDAM.ttl");
-
-  emits:
-    _:0 bpudam:systolic [
-        bpudam:value "110"^^xsd:float.
-        bpudam:units "mmHg" ] ;
-        bpudam:diastolic _:2.
-    _:3 bpudam:systolic _:4.
-    _:3 bpudam:diastolic [
-    _:5 bpudam:value "70"^^xsd:float.
-    _:5 bpudam:units "mmHg" ] .
-
-  instead of:
-    _:b0 bpudam:diastolic [
-        bpudam:value "70"^^xsd:float.
-        bpudam:units "mmHg" ] ;
-    _:b0 bpudam:systolic [
-        bpudam:value "110"^^xsd:float.
-        bpudam:units "mmHg" ] .
-
-  where:
-    PREFIX bpudam: <http://shexspec.github.io/extensions/Map/#BPunitsDAM->
-    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-*/
-});
 const ShapeMap = require("shape-map");
 ShapeMap.Start = ShExValidator.Start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 
 const Awaiting = []
-const Examples = loadManifest()
+const {examplesManifestFile, examples} = loadManifest()
 before(() => {
   return Promise.all(Awaiting)
 })
 
-describe('Examples manifest', function () {
-  Examples.forEach((manifest) => {
-    const mapstr = manifest.schemaLabel + '(' + manifest.dataLabel + ')'
-    if (TESTS !== null && !TESTS.find(pat => mapstr.indexOf(pat) !== -1 || mapstr.match(RegExp(pat))))
-      return;
-    const createRoot = manifest.genMap.split(/,\n?/).map(
-      elt => elt.split('@').map(
-        s => s.startsWith('_:') ? // Per JSON-LD @IDs,
-          s :                     // BNodes start with _:
-          s.substr(1, s.length-2) // and URLs are bare.
-      )
-    )[0][0];                      // first item (node) of first genMap entry
-    const dataSummary = "dataURL" in manifest
-          ? manifest.dataURL
-          : manifest.data.length + ' chars of turtle'
-    it(mapstr + ' should map ' + dataSummary + " to " + manifest.outputDataURL, async function () {
-      return run(manifest.inputSchema, manifest.outputSchema, manifest.inputDataP, manifest.smapP, createRoot, manifest.expectedBindings, manifest.expectedDataP, mapstr, false)
+describe('test file: packages/extension-map/test/Map-test.js', function () {
+  describe('Round-trip tests:', function () {
+    var tests = [
+      ["there", ["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAM.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPDAMFHIR/BPunitsDAM.ttl", true],
+      ["back" , ["Map/BPDAMFHIR/BPunitsDAM.shex"], ["Map/BPDAMFHIR/BPFHIR.shex"], "Map/BPDAMFHIR/BPunitsDAM.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPDAMFHIR/BPFHIR.ttl", true],
+      //    ["bifer", ["Map/BPDAMFHIR/BPFHIRsys.shex", "Map/BPDAMFHIR/BPFHIRdia.shex"], ["Map/BPDAMFHIR/BPunitsDAM.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPDAMFHIR/BPunitsDAM.ttl"]
+      //    ["bifb" , ["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAMsys.shex", "Map/BPDAMFHIR/BPunitsDAMdia.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPDAMFHIR/BPunitsDAM.ttl"]
+    ];
+    if (TESTS)
+      tests = tests.filter(function (t) { return TESTS.indexOf(t[0]) !== -1; });
+    tests.forEach(function (test) {
+      loadAndRun.apply(null, test.slice(1));
+    });
+
+    /*
+      loadAndRun(["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAMsys.shex", "Map/BPDAMFHIR/BPunitsDAMdia.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", null, "Map/BPDAMFHIR/BPunitsDAM.ttl");
+
+      emits:
+      _:0 bpudam:systolic [
+      bpudam:value "110"^^xsd:float.
+      bpudam:units "mmHg" ] ;
+      bpudam:diastolic _:2.
+      _:3 bpudam:systolic _:4.
+      _:3 bpudam:diastolic [
+      _:5 bpudam:value "70"^^xsd:float.
+      _:5 bpudam:units "mmHg" ] .
+
+      instead of:
+      _:b0 bpudam:diastolic [
+      bpudam:value "70"^^xsd:float.
+      bpudam:units "mmHg" ] ;
+      _:b0 bpudam:systolic [
+      bpudam:value "110"^^xsd:float.
+      bpudam:units "mmHg" ] .
+
+      where:
+      PREFIX bpudam: <http://shexspec.github.io/extensions/Map/#BPunitsDAM->
+      PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    */
+  });
+
+  describe(`Examples manifest: ${examplesManifestFile}`, function () {
+    examples.forEach((manifest) => {
+      const mapstr = manifest.schemaLabel + '(' + manifest.dataLabel + ')'
+      if (TESTS !== null && !TESTS.find(pat => mapstr.indexOf(pat) !== -1 || mapstr.match(RegExp(pat))))
+        return;
+      const createRoot = manifest.genMap.split(/,\n?/).map(
+        elt => elt.split('@').map(
+          s => s.startsWith('_:') ? // Per JSON-LD @IDs,
+            s :                     // BNodes start with _:
+            s.substr(1, s.length-2) // and URLs are bare.
+        )
+      )[0][0];                      // first item (node) of first genMap entry
+      const dataSummary = "dataURL" in manifest
+            ? manifest.dataURL
+            : manifest.data.length + ' chars of turtle'
+      it('schema: "' + manifest.schemaLabel + '", data: "' + manifest.dataLabel + '": ' + mapstr + ' should map ' + dataSummary + " to " + manifest.outputDataURL, async function () {
+        return run(manifest.inputSchema, manifest.outputSchema, manifest.inputDataP, manifest.smapP, createRoot, manifest.staticVars, manifest.expectedBindings, manifest.expectedDataP, mapstr, false)
+      })
     })
   })
-})
+
+  describe("Graph equivalence", function () {
+    var p12Permute = [
+      {"_:l1": "_:r1", "_:l2": "_:r2"},
+      {"_:l1": "_:r2", "_:l2": "_:r1"}];
+    var p123Permute = [ // note intentional _:r3 on left side
+      {"_:l1": "_:r1", "_:l2": "_:r2", "_:r3": "_:r3"},
+      {"_:l1": "_:r1", "_:l2": "_:r3", "_:r3": "_:r2"},
+      {"_:l1": "_:r2", "_:l2": "_:r1", "_:r3": "_:r3"},
+      {"_:l1": "_:r2", "_:l2": "_:r3", "_:r3": "_:r1"},
+      {"_:l1": "_:r3", "_:l2": "_:r1", "_:r3": "_:r2"},
+      {"_:l1": "_:r3", "_:l2": "_:r2", "_:r3": "_:r1"}];
+    var equivTests = [
+      {name:"spo123=spo123", p:true, m:{},
+       l:[["s", "p", "o1"], ["s", "p", "o2"], ["s", "p", "o3"]],
+       r:[["s", "p", "o2"], ["s", "p", "o3"], ["s", "p", "o1"]]},
+      {name:"spo123!=sPo123", p:false, m:{},
+       l:[["s", "p", "o1"], ["s", "p", "o2"], ["s", "p", "o3"]],
+       r:[["s", "P", "o2"], ["s", "P", "o3"], ["s", "P", "o1"]]},
+      {name:"l<r", p:false, m:null,
+       l:[["s", "p", "o1"], ["s", "p", "o2"]],
+       r:[["s", "p", "o2"], ["s", "p", "o3"], ["s", "p", "o1"]]},
+      {name:"r<l", p:false, m:null,
+       l:[["s", "p", "o1"], ["s", "p", "o2"], ["s", "p", "o3"]],
+       r:[["s", "p", "o2"], ["s", "p", "o3"]]},
+      {name:"1-bnode-no-rewrite", p:true, m:{"_:x1": "_:x1"},
+       l:[["s", "p", "_:x1"], ["s", "p", "o2"], ["s", "p", "o3"]],
+       r:[["s", "p", "_:x1"], ["s", "p", "o2"], ["s", "p", "o3"]]},
+      {name:"1-bnode-rewrite", p:true, m:{"_:l1": "_:r1"},
+       l:[["s", "p", "_:l1"], ["s", "p", "o2"], ["s", "p", "o3"]],
+       r:[["s", "p", "_:r1"], ["s", "p", "o2"], ["s", "p", "o3"]]},
+      {name:"tall3", p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2", "_:l3": "_:r3"},
+       l:[["s", "p1", "_:l1"], ["_:l1", "p2", "_:l2"], ["_:l2", "p", "_:l3"]],
+       r:[["s", "p1", "_:r1"], ["_:r1", "p2", "_:r2"], ["_:r2", "p", "_:r3"]]},
+      {name:"tall3-rotated1", p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2", "_:l3": "_:r3"},
+       l:[["s", "p1", "_:l1"], ["_:l1", "p2", "_:l2"], ["_:l2", "p", "_:l3"]],
+       r:[["_:r1", "p2", "_:r2"], ["_:r2", "p", "_:r3"], ["s", "p1", "_:r1"]]},
+      {name:"s p _:l1, o2 != s p _:r1, _:r2", p:false, m:null,
+       l:[["s", "p", "_:l1"], ["s", "p", "o2"]],
+       r:[["s", "p", "_:r1"], ["s", "p", "_:r2"]]},
+      {name:"s p _:l1, o2, p3 != s p _:r1, _:r2, o3", p:false, m:null,
+       l:[["s", "p", "_:l1"], ["s", "p", "o2"], ["s", "p", "o3"]],
+       r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "o3"]]},
+      {name:"s p _:l1, o2, p3 != s p _:r1, _:r1, o3", p:false, m:null,
+       l:[["s", "p", "_:l1"], ["s", "p", "o2"], ["s", "p", "o3"]],
+       r:[["s", "p", "_:r1"], ["s", "p", "_:r1"], ["s", "p", "o3"]]},
+      {name:"s p _:l1, _:l2, o3 != s p _:r1, _:r1, o3", p:false, m:null,
+       l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "o3"]],
+       r:[["s", "p", "_:r1"], ["s", "p", "_:r1"], ["s", "p", "o3"]]},
+      {name:"backtrack pass", p:true, m:{"_:l1": "_:r2", "_:l2": "_:r1"},
+       l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["_:l1", "p", "o3"]],
+       r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["_:r2", "p", "o3"]]},
+      {name:"backtrack fail", p:false, m:null,
+       l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["_:l1", "p", "o3"]],
+       r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["_:r2", "p", "o4"]]},
+      {name:"s p _:l1, _:l2, o3 = s p _:r1, _:r2, o3", p:true, m:
+       [{"_:l1": "_:r1", "_:l2": "_:r2"}, {"_:l1": "_:r2", "_:l2": "_:r1"}],
+       l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "o3"]],
+       r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "o3"]]},
+      {name:"s p _:l1. s p2 _:l2, p3 = s p _:r1. s p2 _:r2, o3",
+       p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2"},
+       l:[["s", "p", "_:l1"], ["s", "p2", "_:l2"], ["s", "p2", "o3"]],
+       r:[["s", "p", "_:r1"], ["s", "p2", "_:r2"], ["s", "p2", "o3"]]},
+      {name:"s p _:l1. s p2 _:l2, p3 = s p _:r1. s p2 _:r2, o3 - rotated1",
+       p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2"},
+       l:[["s", "p", "_:l1"], ["s", "p2", "_:l2"], ["s", "p2", "o3"]],
+       r:[["s", "p2", "o3"], ["s", "p", "_:r1"], ["s", "p2", "_:r2"]]},
+      {name:"s p _:l1. s p2 _:l2, p3 = s p _:r1. s p2 _:r2, o3 - rotated2",
+       p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2"},
+       l:[["s", "p", "_:l1"], ["s", "p2", "_:l2"], ["s", "p2", "o3"]],
+       r:[["s", "p2", "_:r2"], ["s", "p2", "o3"], ["s", "p", "_:r1"]]},
+      {name:"s p _:l1, _:l2, _:l3 = s p _:r1, _:r2, _:r3", p:true, m:p123Permute,
+       l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "_:r3"]],
+       r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "_:r3"]]},
+      {name:"s p _:l1, _:l2, _:l3 = s p _:r1, _:r2, _:r3 - rotated1", p:true, m:p123Permute,
+       l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "_:r3"]],
+       r:[["s", "p", "_:r3"], ["s", "p", "_:r1"], ["s", "p", "_:r2"]]},
+      {name:"s p _:l1, _:l2, _:l3 = s p _:r1, _:r2, _:r3 - rotated2", p:true, m:p123Permute,
+       l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "_:r3"]],
+       r:[["s", "p", "_:r2"], ["s", "p", "_:r3"], ["s", "p", "_:r1"]]},
+      // literals
+      {name:"s p _:l1, _:l2, 'o3' = s p _:r1, _:r2, 'o3'", p:true, m:p12Permute,
+       l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\""]],
+       r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\""]]},
+      {name:"s p _:l1, _:l2, 'o3' != s p _:r1, _:r2, 'o4'", p:false, m:null,
+       l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\""]],
+       r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o4\""]]},
+      {name:"s p _:l1, _:l2, 'o3'@fr = s p _:r1, _:r2, 'o3'@fr", p:true, m:p12Permute,
+       l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"@fr"]],
+       r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"@fr"]]},
+      {name:"s p _:l1, _:l2, 'o3'@fr != s p _:r1, _:r2, 'o3'@en-FR", p:false, m:null,
+       l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"@fr"]],
+       r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"@en-FR"]]},
+      {name:"s p _:l1, _:l2, 'o3'^^dt1 = s p _:r1, _:r2, 'o3'^^dt1", p:true, m:p12Permute,
+       l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"^^dt1"]],
+       r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"^^dt1"]]},
+      {name:"s p _:l1, _:l2, 'o3'^^dt1 != s p _:r1, _:r2, 'o3'^^dt2", p:false, m:null,
+       l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"^^dt1"]],
+       r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"^^dt2"]]},
+      {name:"order 1", p:true, m:[{"_:lsys": "_:rsys", "_:ldia": "_:rdia"}], l:[
+        [`_:lsys`,         `${DAM}units`,     `"mmHg"`            ],
+        [`_:lsys`,         `${DAM}value`,     `"70"^^${XSD}float` ],
+        [`tag:a.example/`, `${DAM}systolic`,  `_:lsys`            ],
+        [`tag:a.example/`, `${DAM}diastolic`, `_:ldia`            ],
+        [`_:ldia`,         `${DAM}value`,     `"110"^^${XSD}float`],
+        [`_:ldia`,         `${DAM}units`,     `"mmHg"`            ],
+      ], r:[
+        [`_:rdia`,         `${DAM}units`,     `"mmHg"`            ],
+        [`_:rsys`,         `${DAM}units`,     `"mmHg"`            ],
+        [`tag:a.example/`, `${DAM}systolic`,  `_:rsys`            ],
+        [`tag:a.example/`, `${DAM}diastolic`, `_:rdia`            ],
+        [`_:rdia`,         `${DAM}value`,     `"110"^^${XSD}float`],
+        [`_:rsys`,         `${DAM}value`,     `"70"^^${XSD}float` ],
+      ]},
+    ];
+
+    if (TESTS) // in case we want to filter these tests.
+      equivTests = equivTests.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
+
+    equivTests.forEach(function (t) { testEquiv(t.name, t.l, t.r, t.p, t.m); });
+  });
+});
 
 function loadManifest() {
   const schemaBase = 'http://a.example/schema/'
   const turtleBase = 'http://a.example/turtle/'
   const examplesDir = Path.join(__dirname, '../examples')
-  const examplesManifest = JsYaml.load(Fs.readFileSync(Path.join(examplesDir, 'manifest.yaml'), 'utf8'));
+  const examplesManifestFile = Path.join(examplesDir, 'manifest.yaml');
+  const examplesManifest = JsYaml.load(Fs.readFileSync(examplesManifestFile, 'utf8'));
   const jsonManifest = JSON.parse(Fs.readFileSync(Path.join(examplesDir, 'manifest.json'), 'utf8'));
   expect(jsonManifest).to.deep.equal(examplesManifest);
   examplesManifest.forEach(entry => {
@@ -186,7 +320,7 @@ function loadManifest() {
         entry[key.substring(0, key.length - 3)] = Fs.readFileSync(Path.join(examplesDir, value), 'utf-8');
   });
 
-  return examplesManifest
+  const examples = examplesManifest
     .filter(e => e.status === "conformant" && !(e.queryMap.startsWith("_:")))
     .map((manifest) => {
 
@@ -208,6 +342,7 @@ function loadManifest() {
       Awaiting.push(inputDataP, smapP, expectedDataP)
       return Object.assign(manifest, {inputSchema, outputSchema, inputDataP, smapP, expectedBindings, expectedDataP})
     })
+  return {examplesManifestFile, examples}
 }
 
 
@@ -356,130 +491,6 @@ class OrderedStore {
     }
   }
 }
-
-const DAM = 'http://dam.example/med#';
-const XSD = 'http://www.w3.org/2001/XMLSchema#';
-
-describe("Graph equivalence", function () {
-  var p12Permute = [
-    {"_:l1": "_:r1", "_:l2": "_:r2"},
-    {"_:l1": "_:r2", "_:l2": "_:r1"}];
-  var p123Permute = [ // note intentional _:r3 on left side
-    {"_:l1": "_:r1", "_:l2": "_:r2", "_:r3": "_:r3"},
-    {"_:l1": "_:r1", "_:l2": "_:r3", "_:r3": "_:r2"},
-    {"_:l1": "_:r2", "_:l2": "_:r1", "_:r3": "_:r3"},
-    {"_:l1": "_:r2", "_:l2": "_:r3", "_:r3": "_:r1"},
-    {"_:l1": "_:r3", "_:l2": "_:r1", "_:r3": "_:r2"},
-    {"_:l1": "_:r3", "_:l2": "_:r2", "_:r3": "_:r1"}];
-  var equivTests = [
-    {name:"spo123=spo123", p:true, m:{},
-     l:[["s", "p", "o1"], ["s", "p", "o2"], ["s", "p", "o3"]],
-     r:[["s", "p", "o2"], ["s", "p", "o3"], ["s", "p", "o1"]]},
-    {name:"spo123!=sPo123", p:false, m:{},
-     l:[["s", "p", "o1"], ["s", "p", "o2"], ["s", "p", "o3"]],
-     r:[["s", "P", "o2"], ["s", "P", "o3"], ["s", "P", "o1"]]},
-    {name:"l<r", p:false, m:null,
-     l:[["s", "p", "o1"], ["s", "p", "o2"]],
-     r:[["s", "p", "o2"], ["s", "p", "o3"], ["s", "p", "o1"]]},
-    {name:"r<l", p:false, m:null,
-     l:[["s", "p", "o1"], ["s", "p", "o2"], ["s", "p", "o3"]],
-     r:[["s", "p", "o2"], ["s", "p", "o3"]]},
-    {name:"1-bnode-no-rewrite", p:true, m:{"_:x1": "_:x1"},
-     l:[["s", "p", "_:x1"], ["s", "p", "o2"], ["s", "p", "o3"]],
-     r:[["s", "p", "_:x1"], ["s", "p", "o2"], ["s", "p", "o3"]]},
-    {name:"1-bnode-rewrite", p:true, m:{"_:l1": "_:r1"},
-     l:[["s", "p", "_:l1"], ["s", "p", "o2"], ["s", "p", "o3"]],
-     r:[["s", "p", "_:r1"], ["s", "p", "o2"], ["s", "p", "o3"]]},
-    {name:"tall3", p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2", "_:l3": "_:r3"},
-     l:[["s", "p1", "_:l1"], ["_:l1", "p2", "_:l2"], ["_:l2", "p", "_:l3"]],
-     r:[["s", "p1", "_:r1"], ["_:r1", "p2", "_:r2"], ["_:r2", "p", "_:r3"]]},
-    {name:"tall3-rotated1", p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2", "_:l3": "_:r3"},
-     l:[["s", "p1", "_:l1"], ["_:l1", "p2", "_:l2"], ["_:l2", "p", "_:l3"]],
-     r:[["_:r1", "p2", "_:r2"], ["_:r2", "p", "_:r3"], ["s", "p1", "_:r1"]]},
-    {name:"s p _:l1, o2 != s p _:r1, _:r2", p:false, m:null,
-     l:[["s", "p", "_:l1"], ["s", "p", "o2"]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"]]},
-    {name:"s p _:l1, o2, p3 != s p _:r1, _:r2, o3", p:false, m:null,
-     l:[["s", "p", "_:l1"], ["s", "p", "o2"], ["s", "p", "o3"]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "o3"]]},
-    {name:"s p _:l1, o2, p3 != s p _:r1, _:r1, o3", p:false, m:null,
-     l:[["s", "p", "_:l1"], ["s", "p", "o2"], ["s", "p", "o3"]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r1"], ["s", "p", "o3"]]},
-    {name:"s p _:l1, _:l2, o3 != s p _:r1, _:r1, o3", p:false, m:null,
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "o3"]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r1"], ["s", "p", "o3"]]},
-    {name:"backtrack pass", p:true, m:{"_:l1": "_:r2", "_:l2": "_:r1"},
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["_:l1", "p", "o3"]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["_:r2", "p", "o3"]]},
-    {name:"backtrack fail", p:false, m:null,
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["_:l1", "p", "o3"]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["_:r2", "p", "o4"]]},
-    {name:"s p _:l1, _:l2, o3 = s p _:r1, _:r2, o3", p:true, m:
-     [{"_:l1": "_:r1", "_:l2": "_:r2"}, {"_:l1": "_:r2", "_:l2": "_:r1"}],
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "o3"]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "o3"]]},
-    {name:"s p _:l1. s p2 _:l2, p3 = s p _:r1. s p2 _:r2, o3",
-     p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2"},
-     l:[["s", "p", "_:l1"], ["s", "p2", "_:l2"], ["s", "p2", "o3"]],
-     r:[["s", "p", "_:r1"], ["s", "p2", "_:r2"], ["s", "p2", "o3"]]},
-    {name:"s p _:l1. s p2 _:l2, p3 = s p _:r1. s p2 _:r2, o3 - rotated1",
-     p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2"},
-     l:[["s", "p", "_:l1"], ["s", "p2", "_:l2"], ["s", "p2", "o3"]],
-     r:[["s", "p2", "o3"], ["s", "p", "_:r1"], ["s", "p2", "_:r2"]]},
-    {name:"s p _:l1. s p2 _:l2, p3 = s p _:r1. s p2 _:r2, o3 - rotated2",
-     p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2"},
-     l:[["s", "p", "_:l1"], ["s", "p2", "_:l2"], ["s", "p2", "o3"]],
-     r:[["s", "p2", "_:r2"], ["s", "p2", "o3"], ["s", "p", "_:r1"]]},
-    {name:"s p _:l1, _:l2, _:l3 = s p _:r1, _:r2, _:r3", p:true, m:p123Permute,
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "_:r3"]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "_:r3"]]},
-    {name:"s p _:l1, _:l2, _:l3 = s p _:r1, _:r2, _:r3 - rotated1", p:true, m:p123Permute,
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "_:r3"]],
-     r:[["s", "p", "_:r3"], ["s", "p", "_:r1"], ["s", "p", "_:r2"]]},
-    {name:"s p _:l1, _:l2, _:l3 = s p _:r1, _:r2, _:r3 - rotated2", p:true, m:p123Permute,
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "_:r3"]],
-     r:[["s", "p", "_:r2"], ["s", "p", "_:r3"], ["s", "p", "_:r1"]]},
-    // literals
-    {name:"s p _:l1, _:l2, 'o3' = s p _:r1, _:r2, 'o3'", p:true, m:p12Permute,
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\""]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\""]]},
-    {name:"s p _:l1, _:l2, 'o3' != s p _:r1, _:r2, 'o4'", p:false, m:null,
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\""]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o4\""]]},
-    {name:"s p _:l1, _:l2, 'o3'@fr = s p _:r1, _:r2, 'o3'@fr", p:true, m:p12Permute,
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"@fr"]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"@fr"]]},
-    {name:"s p _:l1, _:l2, 'o3'@fr != s p _:r1, _:r2, 'o3'@en-FR", p:false, m:null,
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"@fr"]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"@en-FR"]]},
-    {name:"s p _:l1, _:l2, 'o3'^^dt1 = s p _:r1, _:r2, 'o3'^^dt1", p:true, m:p12Permute,
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"^^dt1"]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"^^dt1"]]},
-    {name:"s p _:l1, _:l2, 'o3'^^dt1 != s p _:r1, _:r2, 'o3'^^dt2", p:false, m:null,
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"^^dt1"]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"^^dt2"]]},
-    {name:"order 1", p:true, m:[{"_:lsys": "_:rsys", "_:ldia": "_:rdia"}], l:[
-      [`_:lsys`,         `${DAM}units`,     `"mmHg"`            ],
-      [`_:lsys`,         `${DAM}value`,     `"70"^^${XSD}float` ],
-      [`tag:a.example/`, `${DAM}systolic`,  `_:lsys`            ],
-      [`tag:a.example/`, `${DAM}diastolic`, `_:ldia`            ],
-      [`_:ldia`,         `${DAM}value`,     `"110"^^${XSD}float`],
-      [`_:ldia`,         `${DAM}units`,     `"mmHg"`            ],
-    ], r:[
-      [`_:rdia`,         `${DAM}units`,     `"mmHg"`            ],
-      [`_:rsys`,         `${DAM}units`,     `"mmHg"`            ],
-      [`tag:a.example/`, `${DAM}systolic`,  `_:rsys`            ],
-      [`tag:a.example/`, `${DAM}diastolic`, `_:rdia`            ],
-      [`_:rdia`,         `${DAM}value`,     `"110"^^${XSD}float`],
-      [`_:rsys`,         `${DAM}value`,     `"70"^^${XSD}float` ],
-    ]},
-  ];
-
-  if (TESTS) // in case we want to filter these tests.
-    equivTests = equivTests.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
-
-  equivTests.forEach(function (t) { testEquiv(t.name, t.l, t.r, t.p, t.m); });
-});
 
 function testEquiv (name, g1, g2, equals, mapping) {
   it("should test " + name + " to be " + equals, function () {

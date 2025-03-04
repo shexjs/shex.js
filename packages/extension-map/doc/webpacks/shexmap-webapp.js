@@ -23019,6 +23019,8 @@ class Writer {
     // A blank node or list is represented as-is
     if (entity.termType !== 'NamedNode') {
       // If it is a list head, pretty-print it
+      if (this._lists && (entity.value in this._lists))
+        entity = this.list(this._lists[entity.value]);
       return 'id' in entity ? entity.id : `_:${entity.value}`;
     }
     let iri = entity.value;
@@ -25481,8 +25483,8 @@ function lower(mapDirective, bindings, prefixes, args) {
             const expVarName = buildExpandedVars(varName, expandedVars, prefixes);
             const val = bindings.get(expVarName);
             if (val === undefined) {
-                throw Error("Unable to process " + mapDirective + 
-                            " because variable \"" + expVarName + "\" was not found!");
+                throw Error("Unable to process ```" + mapDirective +
+                            "``` because variable \"" + expVarName + "\" was not found!");
       
             } else {
                 return val.value || val;
