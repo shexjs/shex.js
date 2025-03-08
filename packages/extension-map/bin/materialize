@@ -134,7 +134,7 @@ Promise.all([ShExNode.load({shexc: [cmds.target]}, null, {index: true}),
         resultBindings2 = [resultBindings2];
       resultBindings2.unshift(_t);
     }
-    const outputGraph = map.materialize(registered.binder(resultBindings2), cmds.root);
+    const outputGraph = map.materialize(Mapper.getBinder(resultBindings2), cmds.root);
     const writer = new N3.Writer({ prefixes: {} });
     outputGraph.getQuads().forEach(t => { writer.addQuad(t); });
     writer.end(function (error, result) { console.log(result); });

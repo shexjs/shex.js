@@ -219,7 +219,7 @@ describe('Hashmap extension', function() {
             expect(
                 hmExtension.lower.bind(this,
                     'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
-                    registered.binder([{"urn:local:test:string": "efg"}]), 
+                    Mapper.getBinder([{"urn:local:test:string": "efg"}]),
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "x": "xyz"}'))
             .to.throw(Error, 
@@ -230,7 +230,7 @@ describe('Hashmap extension', function() {
             expect(
                 hmExtension.lower.bind(this,
                     'hashmap(test:string, {"a": "abc", "b": "abc", "x": "xyz"})', 
-                    registered.binder([{"urn:local:test:string": "xyz"}]), 
+                    Mapper.getBinder([{"urn:local:test:string": "xyz"}]),
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "b": "abc", "x": "xyz"}'))
             .to.throw(Error, 
@@ -241,7 +241,7 @@ describe('Hashmap extension', function() {
             expect(
                 hmExtension.lower(
                     'hashmap(test:string, {"alpha": "beta"})', 
-                    registered.binder([{"urn:local:test:string": "beta"}]), 
+                    Mapper.getBinder([{"urn:local:test:string": "beta"}]),
                     {"test": "urn:local:test:"},
                     'test:string, {"alpha": "beta"}'))
             .to.equal('"alpha"');
@@ -249,7 +249,7 @@ describe('Hashmap extension', function() {
             expect(
                 hmExtension.lower(
                     'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
-                    registered.binder([{"urn:local:test:string": "abc"}]), 
+                    Mapper.getBinder([{"urn:local:test:string": "abc"}]),
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "x": "xyz"}'))
             .to.equal('"a"');
@@ -257,7 +257,7 @@ describe('Hashmap extension', function() {
             expect(
                 hmExtension.lower(
                     'hashmap(test:string, {"a": "abc", "x": "xyz"})',
-                    registered.binder([{"urn:local:test:string": "xyz"}]), 
+                    Mapper.getBinder([{"urn:local:test:string": "xyz"}]),
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "x": "xyz"}'))
             .to.equal('"x"');

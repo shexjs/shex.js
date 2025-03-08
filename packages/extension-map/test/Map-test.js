@@ -92,7 +92,7 @@ function testGraph (got, expected, mapstr) {
 
 function trivial (registered, schema, resultBindings, createRoot) {
   var trivialMaterializer = registered.trivialMaterializer(schema);
-  const trivialBinder = registered.binder(JSON.parse(JSON.stringify([resultBindings])))
+  const trivialBinder = Mapper.getBinder(JSON.parse(JSON.stringify([resultBindings])))
   return trivialMaterializer.materialize(trivialBinder, createRoot);
 }
 
@@ -105,7 +105,7 @@ function materialize (registered, schema, staticBindings, bindingsObj, createRoo
   }
 
   const materializer = Mapper.materializer.construct(schema, registered, {});
-  const binder = registered.binder(resultBindings)
+  const binder = Mapper.getBinder(resultBindings)
   const res2 = materializer.validateShapeMap(binder, [{node: createRoot, shape: ShExValidator.Start}])
   if ("errors" in res2)
     throw Error(`unexpectd materialization error`)

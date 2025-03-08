@@ -7,7 +7,14 @@ class RemoteShExMaterializer {
       "materialization aborted, re-start from validation",
       {
         request: "materialize",
-        queryMap: shapeMap,
+        queryMap: shapeMap.map(({node, shape}) => {
+          return {
+            node,
+            shape: shape === ShExWebApp.Validator.Start
+              ? START_SHAPE_INDEX_ENTRY
+              : shape
+          };
+        }),
         outputSchema: schema,
         resultBindings: resultBindings,
         options: {track: LOG_PROGRESS},

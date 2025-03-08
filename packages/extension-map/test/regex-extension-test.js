@@ -144,7 +144,7 @@ describe('Regex extension', function() {
             expect(
                 regexExtension.lower.bind(this,
                     "regex(/A (?<test:string>[0-9]+) string/)", 
-                    registered.binder([{}]), 
+                    Mapper.getBinder([{}]),
                     {"test": "urn:local:test:"},
                     "/?<dem:family>^[a-zA-Z]+)/")
                 ).to.throw(Error, 'Found no capture variable in regex(/A (?<test:string>[0-9]+) string/)!');
@@ -154,7 +154,7 @@ describe('Regex extension', function() {
             expect(
                 regexExtension.lower(
                     "regex(/(?<dem:family>^[a-zA-Z]+)/)", 
-                    registered.binder([{"http://a.example/dem#family": {value:"Smith"}}]),
+                    Mapper.getBinder([{"http://a.example/dem#family": {value:"Smith"}}]),
                     {"dem": "http://a.example/dem#"},
                     "/(?<dem:family>^[a-zA-Z]+)/")
             ).to.equal('"Smith"');
@@ -164,7 +164,7 @@ describe('Regex extension', function() {
             expect(
                 regexExtension.lower(
                     "regex(/A (?<test:string>[a-zA-Z]+) string/)", 
-                    registered.binder([{"urn:local:test:string": {value:"test"}}]), 
+                    Mapper.getBinder([{"urn:local:test:string": {value:"test"}}]),
                     {"test": "urn:local:test:"},
                     "/A (?<test:string>[a-zA-Z]+) string/")
             ).to.equal('"A test string"');
@@ -174,7 +174,7 @@ describe('Regex extension', function() {
             expect(
                 regexExtension.lower(
                     " regex( /(?<t:family>[a-zA-Z]+), (?<t:given>[a-zA-Z]+)/ ) ",
-                  registered.binder([{
+                  Mapper.getBinder([{
                     'http://a.example/family': {value: 'Doe'},
                     'http://a.example/given': {value: 'John'}
                   }]),

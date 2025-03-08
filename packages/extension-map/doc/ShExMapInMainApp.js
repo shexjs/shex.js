@@ -4,7 +4,7 @@ class DirectShExMaterializer {
     // this.outputGraph = trivialMaterializer.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
     this.schema = schema;
     this.shapeMap = shapeMap;
-    this.resultBindings = resultBindings;
+    this.resultsTreeBinder = mapModule.getBinder(resultBindings);
     this.renderer = renderer;
     this.mapModule = mapModule;
     this.mapper = mapper;
@@ -14,8 +14,7 @@ class DirectShExMaterializer {
     const materializer = this.mapModule.materializer.construct(this.schema, this.mapper, {});
     this.shapeMap.forEach(pair => {
       try {
-        const binder = this.mapper.binder(JSON.parse(JSON.stringify(this.resultBindings)));
-        const resM = materializer.validate(binder, ShExWebApp.StringToRdfJs.n3idTerm2RdfJs(pair.node), pair.shape);
+        const resM = materializer.validate(this.resultsTreeBinder, ShExWebApp.StringToRdfJs.n3idTerm2RdfJs(pair.node), pair.shape);
         if ("errors" in resM) {
           this.renderer.entry({
             node: pair.node,
@@ -30,6 +29,7 @@ class DirectShExMaterializer {
       } catch (e) {
         console.dir(e);
       }
+      this.resultsTreeBinder.reset(); // reset pointer in binding tree
     });
     time = new Date() - time;
     $("#shapeMap-tabs").attr("title", "last materialization: " + time + " ms");

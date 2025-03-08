@@ -72,9 +72,11 @@ try {
     const materializeMap = msg.data.queryMap;
     const outputSchema = ShExWebApp.Util.ShExJtoAS(msg.data.outputSchema);
     const materializer = MapModule.materializer.construct(outputSchema, Mapper, {});
-    materializeMap.forEach(pair => {
+    const binder = MapModule.getBinder(msg.data.resultBindings);
+    for (const pair of materializeMap) {
+      if (pair.shape === START_SHAPE_INDEX_ENTRY)
+        pair.shape = ShExWebApp.Validator.Start;
       try {
-        const binder = Mapper.binder(msg.data.resultBindings);
         const resM = materializer.validate(binder, ShExWebApp.StringToRdfJs.n3idTerm2RdfJs(pair.node), pair.shape);
         if ("errors" in resM) {
           self.postMessage(Object.assign({ response: "error", results: resM }, pair));
@@ -85,7 +87,8 @@ try {
         console.dir(e);
         self.postMessage({ response: "error", exception: `Exception when materializing ${pair.node}@${pair.shape}: ${typeof e === 'object' && e instanceof Error ? e.message : e}` });
       }
-    });
+      binder.reset(); // reset pointer in binding tree
+    }
     self.postMessage({ response: "done" });
     break;
 
