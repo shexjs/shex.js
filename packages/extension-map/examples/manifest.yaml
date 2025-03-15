@@ -42,7 +42,6 @@
     }
 
     <BPunitsDAM> {
-      :created xsd:dateTime? %Map:{ :materializationDateTime %};
       :systolic {
         :value xsd:float %Map:{ bp:sysVal %};
         :units xsd:string %Map:{ bp:sysUnits %}
@@ -51,6 +50,7 @@
         :value xsd:float %Map:{ bp:diaVal %};
         :units xsd:string %Map:{ bp:diaUnits %}
       };
+      :created xsd:dateTime? %Map:{ :materializationDateTime %};
     }
   dataLabel: simple
   data: |
@@ -149,7 +149,6 @@
     }
 
     <BPunitsDAM> {
-      :created xsd:dateTime? %Map:{ :materializationDateTime %};
       :systolic {
         :value xsd:float %Map:{ bp:sysVal %};
         :units xsd:string %Map:{ bp:sysUnits %}
@@ -158,6 +157,7 @@
         :value xsd:float %Map:{ bp:diaVal %};
         :units xsd:string %Map:{ bp:diaUnits %}
       };
+      :created xsd:dateTime? %Map:{ :materializationDateTime %};
     }
   dataLabel: simple
   data: |

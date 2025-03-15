@@ -6,7 +6,6 @@ PREFIX Map: <http://shex.io/extensions/Map/#>
 start = @<BPunitsDAM>
 
 <BPunitsDAM> {
-  :created xsd:dateTime? %Map:{ :materializationDateTime %};
   :name . %Map:{ regex(/(?<bp:family>[a-zA-Z]+), (?<bp:given>[a-zA-Z]+)/) %};
   :systolic {
     :value xsd:float %Map:{ bp:sysVal %};
@@ -16,4 +15,5 @@ start = @<BPunitsDAM>
     :value xsd:float %Map:{ bp:diaVal %};
     :units xsd:string %Map:{ bp:diaUnits %}
   };
+  :created xsd:dateTime? %Map:{ :materializationDateTime %};
 }
