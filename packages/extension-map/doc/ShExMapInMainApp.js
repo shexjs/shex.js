@@ -1,10 +1,10 @@
 class DirectShExMaterializer {
-  constructor (schema, resultBindings, renderer, shapeMap, mapModule, mapper) {
+  constructor (schema, resultsTreeBinder, renderer, shapeMap, mapModule, mapper) {
     // this.trivialMaterializer = this.Mapper.trivialMaterializer(schema);
     // this.outputGraph = trivialMaterializer.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
     this.schema = schema;
     this.shapeMap = shapeMap;
-    this.resultsTreeBinder = mapModule.getBinder(resultBindings);
+    this.resultsTreeBinder = resultsTreeBinder;
     this.renderer = renderer;
     this.mapModule = mapModule;
     this.mapper = mapper;
@@ -47,8 +47,12 @@ class ShExMapInMainApp extends ShExMapBaseApp {
     return validator;
   }
 
-  getMaterializer (schema, shapeMap, resultBindings) {
-    return new DirectShExMaterializer(schema, resultBindings, this.renderer, shapeMap, this.MapModule, this.Mapper);
+  makeResultsTreeBinder (resultBindings, staticBindings) {
+    return this.MapModule.getBinder(resultBindings, staticBindings); // make getBinder() static in MapModule?
+  }
+
+  makeMaterializer (schema, shapeMap, resultsTreeBinder) {
+    return new DirectShExMaterializer(schema, resultsTreeBinder, this.renderer, shapeMap, this.MapModule, this.Mapper);
   }
 }
 

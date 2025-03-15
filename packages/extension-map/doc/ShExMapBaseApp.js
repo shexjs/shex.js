@@ -92,7 +92,7 @@ class ShExMapBaseApp extends ShExBaseApp {
   constructor (base, validatorClass) {
     super(base, validatorClass);
     this.currentRenderer = null;
-    this.MapModule = ShExWebApp.Map({rdfjs: RdfJs, Validator: ShExWebApp.Validator});
+    this.MapModule = ShExWebApp.Map({rdfjs: RdfJs, Validator: ShExWebApp.Validator}); // TODO, move to ShExMapInMainApp.constructor (i.e. remove from ShExMapInWorkerApp)
     const manifest = new ShExMapManifestCache($("#manifestDrop"), this.Caches, this.resultsWidget);
     const bindings = new JSONCache($("#bindings1 textarea"));
     const statics = new JSONCache($("#staticVars textarea"));
@@ -152,7 +152,7 @@ class ShExMapBaseApp extends ShExBaseApp {
   }
 
   makeRenderer () {
-    return this.currentRenderer = new ShExMapResultsRenderer(this.resultsWidget, this.Caches, this.MapModule.url)
+    return this.currentRenderer = new ShExMapResultsRenderer(this.resultsWidget, this.Caches, this.MapModule.url) // get url from ShExWebApp somewhere
   }
 
   /**
@@ -198,17 +198,6 @@ class ShExMapBaseApp extends ShExBaseApp {
       //   await this.Caches.bindings.refresh()
       // );
 
-      function _dup (obj) { return JSON.parse(JSON.stringify(obj)); }
-      let resultBindings = _dup(await this.Caches.bindings.refresh());
-      if (this.Caches.statics.get().trim().length === 0)
-        await this.Caches.statics.set("{  }");
-      const staticBindings = await this.Caches.statics.refresh();
-      if (staticBindings && Object.keys(staticBindings).length > 0) {
-        if (!Array.isArray(resultBindings))
-          resultBindings = [resultBindings];
-        resultBindings.unshift(staticBindings);
-      }
-
       const outputShapeMap = $("#getFixedMap tr").map(
         (idx, elt) => {
           const jqElt = $(elt);
@@ -218,7 +207,13 @@ class ShExMapBaseApp extends ShExBaseApp {
         }
       ).get();
 
-      const materializer = this.getMaterializer(outputSchema, outputShapeMap, resultBindings);
+      const resultBindings = await this.Caches.bindings.refresh();
+      if (this.Caches.statics.get().trim().length === 0)
+        await this.Caches.statics.set("{  }");
+      const staticBindings = await this.Caches.statics.refresh();
+
+      const resultsTreeBinder = this.makeResultsTreeBinder(resultBindings, staticBindings);
+      const materializer = this.makeMaterializer(outputSchema, outputShapeMap, resultsTreeBinder);
       $("#results div").empty();
       $("#results .status").text("materializing data...").show();
 

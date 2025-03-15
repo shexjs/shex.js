@@ -72,7 +72,7 @@ try {
     const materializeMap = msg.data.queryMap;
     const outputSchema = ShExWebApp.Util.ShExJtoAS(msg.data.outputSchema);
     const materializer = MapModule.materializer.construct(outputSchema, Mapper, {});
-    const binder = MapModule.getBinder(msg.data.resultBindings);
+    const binder = MapModule.getBinder.apply(null, msg.data.resultsTreeBinderArguments);
     for (const pair of materializeMap) {
       if (pair.shape === START_SHAPE_INDEX_ENTRY)
         pair.shape = ShExWebApp.Validator.Start;

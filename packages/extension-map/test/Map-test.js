@@ -96,16 +96,9 @@ function trivial (registered, schema, resultBindings, createRoot) {
   return trivialMaterializer.materialize(trivialBinder, createRoot);
 }
 
-function materialize (registered, schema, staticBindings, bindingsObj, createRoot) {
-  let resultBindings = JSON.parse(JSON.stringify(bindingsObj));
-  if (staticBindings && Object.keys(staticBindings).length > 0) {
-    if (!Array.isArray(resultBindings))
-      resultBindings = [resultBindings];
-    resultBindings.unshift(staticBindings);
-  }
-
+function materialize (registered, schema, staticBindings, resultBindings, createRoot) {
   const materializer = Mapper.materializer.construct(schema, registered, {});
-  const binder = Mapper.getBinder(resultBindings)
+  const binder = Mapper.getBinder(resultBindings, staticBindings)
   const res2 = materializer.validateShapeMap(binder, [{node: createRoot, shape: ShExValidator.Start}])
   if ("errors" in res2)
     throw Error(`unexpectd materialization error`)

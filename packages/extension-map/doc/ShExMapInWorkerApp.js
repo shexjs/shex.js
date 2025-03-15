@@ -1,5 +1,16 @@
+class RemoteResultsTreeBinder {
+  constructor (resultBindings, staticBindings) {
+    this.resultBindings = resultBindings;
+    this.staticBindings = staticBindings;
+  }
+
+  marshal () {
+    return [ this.resultBindings, this.staticBindings ]; // match args to new Binder(resultBindings, staticBindings)
+  }
+}
+
 class RemoteShExMaterializer {
-  constructor (schema, shapeMap, resultBindings, resultsWidget, onCancel, workerUrl) {
+  constructor (schema, shapeMap, resultsTreeBinder, resultsWidget, onCancel, workerUrl) {
     this.generatedGraph = new RdfJs.Store();
     this.created = new Canceleable(
       $("#materialize"),
@@ -16,7 +27,7 @@ class RemoteShExMaterializer {
           };
         }),
         outputSchema: schema,
-        resultBindings: resultBindings,
+        resultsTreeBinderArguments: resultsTreeBinder.marshal(),
         options: {track: LOG_PROGRESS},
       },
       this.parseUpdatesAndResults.bind(this),
@@ -57,12 +68,16 @@ class RemoteShExMaterializer {
 }
 
 class ShExMapInWorkerApp extends ShExMapBaseApp {
-  getValidator (loaded, base, inputData) { // same as ShExInWorkerApp
+  getValidator (loaded, base, inputData) { // same as ShExInWorkerApp TODO: rename to makeValidator()
     return new RemoteShExValidator(loaded, base, inputData, this.makeRenderer(), this.disableResultsAndValidate.bind(this), "endpoint" in this.Caches.inputData ? this.Caches.inputData.endpoint : null, "ShExMapWorkerThread.js")
   }
 
-  getMaterializer (schema, shapeMap, resultBindings) {
-    return new RemoteShExMaterializer(schema, shapeMap, resultBindings, this.resultsWidget, this.materialize.bind(this), "ShExMapWorkerThread.js");
+  makeResultsTreeBinder (resultBindings, staticBindings) {
+    return new RemoteResultsTreeBinder(resultBindings, staticBindings);
+  }
+
+  makeMaterializer (schema, shapeMap, resultsTreeBinder) {
+    return new RemoteShExMaterializer(schema, shapeMap, resultsTreeBinder, this.resultsWidget, this.materialize.bind(this), "ShExMapWorkerThread.js");
   }
 
   makeConsoleTracker () {

@@ -302,7 +302,7 @@ function extractBindingsDelMe (soln, min, max, depth) {
 }
 
 return {
-  getBinder: (tree) => new Binder(tree),
+  getBinder: (resultBindings, staticBindings) => new Binder(resultBindings, staticBindings),
   register: register,
   done: done,
   materializer: materializer,

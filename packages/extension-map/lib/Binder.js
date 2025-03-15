@@ -1,14 +1,14 @@
 
 class Binder {
-  constructor (treeP) {
-    this.treeP = treeP;
+  constructor (resultBindings, staticBindings = {}) {
+    this.resultBindings = resultBindings;
+    this.staticBindings = staticBindings;
     this.reset();
   }
 
   reset () {
     this.stack = []; // e.g. [2, 1] for v="http://shex.io/extensions/Map/#BPDAM-XXX"
-    this.globals = {}; // !! delme
-    const tree = JSON.parse(JSON.stringify(this.treeP));
+    let tree = JSON.parse(JSON.stringify(this.resultBindings));
     Binder._mults(tree); // side effects in tree.
     this.tree = Array.isArray(tree) ? Binder._simplify(tree) : [tree]; // expects an array
   }
@@ -17,8 +17,8 @@ class Binder {
     // work with copy of this.stack while trying to grok this problem...
     if (this.stack === null)
       return undefined;
-    if (v in this.globals)
-      return this.globals[v];
+    if (v in this.staticBindings)
+      return this.staticBindings[v];
     const nextStack = this.stack.slice();
     let next = this.diveIntoObj(nextStack); // no effect if in obj
     while (!(v in next)) {
@@ -54,7 +54,7 @@ class Binder {
     return this.getObj(s);
   }
   debug () {
-    return `this.globals: ${JSON.stringify(this.globals)}, this.stack: ${JSON.stringify(this.stack)}, this.tree: ${JSON.stringify(this.tree)}`;
+    return `this.staticBindings: ${JSON.stringify(this.staticBindings)}, this.stack: ${JSON.stringify(this.stack)}, this.tree: ${JSON.stringify(this.tree)}`;
   }
 
   /**
