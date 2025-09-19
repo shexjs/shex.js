@@ -98,19 +98,24 @@ const ShExNodeCjsModule = function (config = {}) {
 
   return newLoader
 
-  function LoadExtensions (globs) {
+  /** Load CJS extensions like [@shexjs/extension-test](../extension-test) and [@shexjs/extension-map](../extension-map/).
+   * Some modules have a wrapper function to which you pass a config, e.g. {rdfjs, fetch, jsonld, Validator}
+   */
+  function LoadExtensions (globs, moduleFunctionConfig) {
     return globs.reduce(
       (list, glob) =>
         list.concat(Glob.sync(glob))
       , []).
       reduce(function (ret, path) {
         try {
-	  const t = require(path)
-	  ret[t.url] = t
-	  return ret
+          let t = require(path)
+          if (typeof t === 'function')
+            t = t(moduleFunctionConfig);
+          ret[t.url] = t
+          return ret
         } catch (e) {
-	  console.warn("ShEx extension \"" + moduleDir + "\" not loadable: " + e)
-	  return ret
+          console.warn("ShEx extension \"" + path + "\" not loadable: " + e)
+          return ret
         }
       }, {})
   }

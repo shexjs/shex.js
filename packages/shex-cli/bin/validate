@@ -51,10 +51,12 @@ const ShExWriter = require("@shexjs/writer"); // for verbose output
 const {ShExValidator, resultMapToShapeExprTest} = require("@shexjs/validator");
 const ShapeMap = require("shape-map");
 const N3 = require("n3");
+const NodeFetch = require('node-fetch');
+const Jsonld = require('jsonld');
 const ShExNode = require("@shexjs/node")({
   rdfjs: N3,
-  fetch: require('node-fetch'),
-  jsonld: require('jsonld'),
+  fetch: NodeFetch,
+  jsonld: Jsonld,
 });
 const ExitCode = require('../lib/ExitCode')
 const ProgressLoadController = require('../lib/ProgressLoadController')(ShExNode);
@@ -738,9 +740,14 @@ async function queueTests (tests, cmds) {
 async function runValidator (db, shapeMap, schema, options, cmds) {
   // prepare validator
   const validator = new ShExValidator(schema, db, options);
-  const extensions = ShExNode.loadExtensions(cmds.extension);
+  const extensions = ShExNode.loadExtensions(cmds.extension || [], {
+    rdfjs: N3,
+    fetch: NodeFetch,
+    jsonld: Jsonld,
+    Validator: validator,
+  });
   Object.keys(extensions).forEach(function (ext) {
-    extensions[ext].register(validator);
+    extensions[ext].register(validator, {ShExTerm});
   });
 
   if (cmds["dry-run"])

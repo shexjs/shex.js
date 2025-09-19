@@ -23465,7 +23465,7 @@ const ShExLoaderCjsModule = function (config = {}) {
 
   const loader = {
     load: load,
-    loadExtensions: LoadNoExtensions,
+    loadExtensions: config.loadExtensions || LoadNoExtensions,
     GET,
     ResourceLoadControler,
     loadSchemaImports,
