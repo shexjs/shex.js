@@ -99,17 +99,20 @@ const ShExNodeCjsModule = function (config = {}) {
   return newLoader
 
   function LoadExtensions (globs) {
+    const NodePath = require('path')
     return globs.reduce(
       (list, glob) =>
         list.concat(Glob.sync(glob))
       , []).
-      reduce(function (ret, path) {
+      reduce(function (ret, extPath) {
         try {
-	  const t = require(path)
+	  const absPath = NodePath.resolve(extPath)
+	  const rawModule = require(absPath)
+	  const t = typeof rawModule === 'function' ? rawModule(Object.assign({Validator: {}}, config)) : rawModule
 	  ret[t.url] = t
 	  return ret
         } catch (e) {
-	  console.warn("ShEx extension \"" + moduleDir + "\" not loadable: " + e)
+	  console.warn("ShEx extension \"" + extPath + "\" not loadable: " + e)
 	  return ret
         }
       }, {})

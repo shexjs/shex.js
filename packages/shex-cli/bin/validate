@@ -740,7 +740,7 @@ async function runValidator (db, shapeMap, schema, options, cmds) {
   const validator = new ShExValidator(schema, db, options);
   const extensions = ShExNode.loadExtensions(cmds.extension);
   Object.keys(extensions).forEach(function (ext) {
-    extensions[ext].register(validator);
+    extensions[ext].register(validator, {ShExTerm});
   });
 
   if (cmds["dry-run"])
