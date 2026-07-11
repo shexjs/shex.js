@@ -59,7 +59,8 @@
                 }
               }
             ]
-          }
+          },
+          "resultName": "<http://a.example/pass-bottom>@<http://a.example/G0>"
         },
         {
           "type": "ShapeTest",
@@ -122,7 +123,8 @@
                         }
                       }
                     ]
-                  }
+                  },
+                  "resultName": "<http://a.example/pass-bottom>@<http://a.example/G0>"
                 },
                 {
                   "type": "ShapeTest",
@@ -185,7 +187,8 @@
                                 }
                               }
                             ]
-                          }
+                          },
+                          "resultName": "<http://a.example/pass-bottom>@<http://a.example/G0>"
                         }
                       ]
                     },
@@ -238,7 +241,8 @@
                         }
                       ]
                     }
-                  }
+                  },
+                  "resultName": "<http://a.example/pass-bottom>@<http://a.example/G0-0>"
                 }
               ]
             },
@@ -291,7 +295,8 @@
                 }
               ]
             }
-          }
+          },
+          "resultName": "<http://a.example/pass-bottom>@<http://a.example/G0-0-0>"
         },
         {
           "type": "ShapeTest",
@@ -354,7 +359,8 @@
                         }
                       }
                     ]
-                  }
+                  },
+                  "resultName": "<http://a.example/pass-bottom>@<http://a.example/G0>"
                 },
                 {
                   "type": "ShapeTest",
@@ -417,7 +423,8 @@
                                 }
                               }
                             ]
-                          }
+                          },
+                          "resultName": "<http://a.example/pass-bottom>@<http://a.example/G0>"
                         }
                       ]
                     },
@@ -470,7 +477,8 @@
                         }
                       ]
                     }
-                  }
+                  },
+                  "resultName": "<http://a.example/pass-bottom>@<http://a.example/G0-0>"
                 }
               ]
             },
@@ -523,7 +531,8 @@
                 }
               ]
             }
-          }
+          },
+          "resultName": "<http://a.example/pass-bottom>@<http://a.example/G0_0-0>"
         }
       ]
     },

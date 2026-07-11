@@ -25,7 +25,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ShExValidator = exports.resultMapToShapeExprTest = exports.ShapeExprValidationContext = exports.InterfaceOptions = void 0;
+exports.ShExValidator = exports.ShapeExprValidationContext = exports.InterfaceOptions = void 0;
+exports.resultMapToShapeExprTest = resultMapToShapeExprTest;
 // interface constants
 const ShExTerm = __importStar(require("@shexjs/term"));
 const term_1 = require("@shexjs/term");
@@ -33,6 +34,7 @@ const eval_validator_api_1 = require("@shexjs/eval-validator-api");
 const Hierarchy = __importStar(require("hierarchy-closure"));
 const neighborhood_api_1 = require("@shexjs/neighborhood-api");
 const shex_xsd_1 = require("./shex-xsd");
+const feasibility_1 = require("./feasibility");
 const visitor_1 = require("@shexjs/visitor");
 exports.InterfaceOptions = {
     "coverage": {
@@ -194,7 +196,6 @@ function resultMapToShapeExprTest(resultsMap) {
             : passFails.passes[0];
     }
 }
-exports.resultMapToShapeExprTest = resultMapToShapeExprTest;
 /** Directly construct a DB from triples.
  * TODO: should this be in @shexjs/neighborhood-something ?
  */
@@ -514,12 +515,32 @@ class ShExValidator {
         // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
         const { t2tcs, t2tcErrors, tc2TResults } = this.matchByPredicate(tripleConstraints, fromDB, ctx);
         const { missErrors, matchedExtras } = this.whatsMissing(t2tcs, t2tcErrors, shape.extra || []);
+        // Feasibility layer: refute assignments to the *local* triple expression that cannot
+        // appear in any accepted bag, before and during partition enumeration.
+        // Extends TCs were flattened without their owning expression trees, so only the local
+        // expression is analysed; assignments to extends TCs are never refuted here.
+        const feasibility = shape.expression === undefined ? null
+            : new feasibility_1.TripleExprFeasibility(shape.expression, label => this.index.tripleExprs[label]);
+        let feasibilityErrors = [];
+        if (feasibility !== null)
+            feasibilityErrors = this.pruneInfeasibleCandidates(t2tcs, feasibility, extendsTCs);
         const allT2TCs = new TripleToTripleConstraints(t2tcs, extendsTCs, tc2exts);
         const partitionErrors = [];
         // only construct a regexp engine if shape has a triple expression
         const regexEngine = shape.expression === undefined ? null : this.regexModule.compile(this.schema, shape, this.index);
-        for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
-            const { errors, triples, results } = this.tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine);
+        const extendsResultCache = new Map();
+        let firstPruned = null; // fallback for classic error reporting
+        let triedSome = false;
+        for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null && feasibilityErrors.length === 0; t2tc = allT2TCs.next()) {
+            // Skip partitions whose bag over the local expression is refuted: they cannot
+            // satisfy the regex engine, so trying them only repeats known failures.
+            if (feasibility !== null && !this.localBagFeasible(t2tc, feasibility, extendsTCs)) {
+                if (firstPruned === null)
+                    firstPruned = t2tc;
+                continue;
+            }
+            triedSome = true;
+            const { errors, triples, results } = this.tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine, extendsResultCache);
             const possibleRet = { type: "ShapeTest", node: (0, term_1.rdfJsTerm2Ld)(focus), shape: ctx.label };
             if (errors.length === 0 && results !== null) // only include .solution for non-empty pattern
                 // @ts-ignore TODO
@@ -534,9 +555,14 @@ class ShExValidator {
             if (errors.length === 0)
                 ret = possibleRet;
         }
+        // Every partition was pruned: run the first one for a classic error report.
+        if (ret === null && !triedSome && firstPruned !== null && feasibilityErrors.length === 0) {
+            const { errors } = this.tryPartition(firstPruned, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine, extendsResultCache);
+            partitionErrors.push(errors);
+        }
         // Report only last errors until we have a better idea.
-        const lastErrors = partitionErrors[partitionErrors.length - 1];
-        let errors = missErrors.concat(lastErrors.length === 1 ? lastErrors[0] : lastErrors);
+        const lastErrors = partitionErrors.length === 0 ? [] : partitionErrors[partitionErrors.length - 1];
+        let errors = missErrors.concat(feasibilityErrors, lastErrors.length === 1 ? lastErrors[0] : lastErrors);
         if (errors.length > 0)
             ret = {
                 type: "Failure",
@@ -544,6 +570,37 @@ class ShExValidator {
                 shape: ctx.label,
                 errors: errors
             };
+        // A reported result may contain ResultReferences whose named referents appeared
+        // only in partitions that are not part of the report: attach those referents in
+        // a "shared" side table so every reference is resolvable within the document.
+        if (extendsResultCache.size > 0 && ret !== null) {
+            const embedded = new Set();
+            const referenced = new Set();
+            (function walk(v) {
+                if (Array.isArray(v)) {
+                    v.forEach(walk);
+                    return;
+                }
+                if (v === null || typeof v !== "object")
+                    return;
+                if (v.type === "ResultReference") {
+                    referenced.add(v.ref);
+                    return;
+                }
+                if (typeof v.resultName === "string")
+                    embedded.add(v.resultName);
+                Object.values(v).forEach(walk);
+            })(ret);
+            const shared = {};
+            let anyShared = false;
+            for (const { name, result } of extendsResultCache.values())
+                if (referenced.has(name) && !embedded.has(name)) {
+                    shared[name] = result;
+                    anyShared = true;
+                }
+            if (anyShared)
+                ret.shared = shared;
+        }
         // remove N3jsTripleToString
         if (VERBOSE)
             neighborhood.forEach(function (t) {
@@ -551,6 +608,76 @@ class ShExValidator {
                 delete t.toString;
             });
         return this.addShapeAttributes(shape, ret);
+    }
+    /** Arc-consistency pass: delete a triple's candidate constraint when committing one
+     * such triple already makes the local expression infeasible; iterate to fixpoint.
+     * Returns FeasibilityViolation errors for triples whose candidate sets become empty
+     * (such triples can never be matched, and a value-matching triple may not be left
+     * unmatched, so no partition can succeed).
+     */
+    pruneInfeasibleCandidates(t2tcs, feasibility, extendsTCs) {
+        const errors = [];
+        const localOf = (tcs) => tcs.filter(tc => extendsTCs.indexOf(tc) === -1);
+        // Candidate counts before any pruning: a mandatory property is *missing* when it had
+        // no candidates to begin with, not when arc consistency removed them.
+        const hi0 = new Map();
+        t2tcs.reduce((_ret, _t, tcs) => {
+            localOf(tcs).forEach(tc => hi0.set(tc, (hi0.get(tc) || 0) + 1));
+            return null;
+        }, null);
+        let changed = true;
+        while (changed) {
+            changed = false;
+            // hi: per local constraint, how many triples could still be assigned to it
+            const hi = new Map();
+            t2tcs.reduce((_ret, _t, tcs) => {
+                localOf(tcs).forEach(tc => hi.set(tc, (hi.get(tc) || 0) + 1));
+                return null;
+            }, null);
+            t2tcs.reduce((_ret, triple, tcs) => {
+                for (let i = tcs.length - 1; i >= 0; --i) {
+                    const tc = tcs[i];
+                    if (extendsTCs.indexOf(tc) !== -1)
+                        continue; // extends TCs are outside the local expression: never refuted here
+                    const lo = new Map([[tc, 1]]);
+                    if (!feasibility.feasible(lo, hi)) {
+                        tcs.splice(i, 1);
+                        hi.set(tc, hi.get(tc) - 1);
+                        changed = true;
+                        if (tcs.length === 0) {
+                            // Prefer the classic explanation when one exists: a mandatory property
+                            // with no candidate triples at all makes every assignment infeasible.
+                            const missing = feasibility.unattainableMandatory(hi0);
+                            if (missing.length > 0) {
+                                missing.forEach(mtc => {
+                                    if (!errors.some(e => e.type === "MissingProperty" && e.property === mtc.predicate))
+                                        errors.push({ type: "MissingProperty", property: mtc.predicate });
+                                });
+                            }
+                            else {
+                                errors.push({
+                                    type: "FeasibilityViolation",
+                                    triple: { type: "TestedTriple", subject: (0, term_1.rdfJsTerm2Ld)(triple.subject), predicate: (0, term_1.rdfJsTerm2Ld)(triple.predicate), object: (0, term_1.rdfJsTerm2Ld)(triple.object) },
+                                    constraints: [tc],
+                                });
+                            }
+                        }
+                    }
+                }
+                return null;
+            }, null);
+        }
+        return errors;
+    }
+    /** Whether a complete partition's bag over the local expression passes the
+     * feasibility test (a necessary condition for the regex engine to accept). */
+    localBagFeasible(t2tc, feasibility, extendsTCs) {
+        const bag = new Map();
+        t2tc.forEach((tc, _triple) => {
+            if (extendsTCs.indexOf(tc) === -1)
+                bag.set(tc, (bag.get(tc) || 0) + 1);
+        });
+        return feasibility.feasible(bag, bag);
     }
     /**
      * Try a mapping of triples to triple constraints
@@ -568,7 +695,7 @@ class ShExValidator {
      * @param regexEngine engine to use to test regular triple expression
      * @private
      */
-    tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, t2tcErrors, outgoing, regexEngine) {
+    tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, t2tcErrors, outgoing, regexEngine, extendsResultCache = new Map()) {
         const tc2ts = new eval_validator_api_1.MapArray();
         tripleConstraints.forEach(tc => tc2ts.empty(tc));
         const usedTriples = [];
@@ -609,7 +736,7 @@ class ShExValidator {
                 })
             });
         }
-        let results = this.testExtends(shape, focus, extendsToTriples, ctx);
+        let results = this.testExtends(shape, focus, extendsToTriples, ctx, extendsResultCache);
         if (results === null || !("errors" in results)) {
             if (regexEngine !== null /* i.e. shape.expression !== undefined */) {
                 const sub = regexEngine.match(focus, tc2ts, this.semActHandler, null);
@@ -686,7 +813,7 @@ class ShExValidator {
         }
         return ret;
     }
-    testExtends(expr, focus, extendsToTriples, ctx) {
+    testExtends(expr, focus, extendsToTriples, ctx, extendsResultCache = new Map()) {
         if (expr.extends === undefined)
             return null;
         const passes = [];
@@ -695,8 +822,38 @@ class ShExValidator {
             const extend = expr.extends[eNo];
             const subgraph = new TrivialNeighborhood(null); // These triples were tracked earlier.
             extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
+            // The same extension tested against the same subgraph in an earlier partition is
+            // not repeated: the first result was named; later ones reference it.
+            const cacheKey = eNo + "|" + extendsToTriples[eNo]
+                .map(q => `${ShExTerm.rdfJsTerm2Turtle(q.subject)} ${ShExTerm.rdfJsTerm2Turtle(q.predicate)} ${ShExTerm.rdfJsTerm2Turtle(q.object)}`)
+                .sort().join("|");
+            const known = extendsResultCache.get(cacheKey);
+            if (known !== undefined) {
+                const reference = { type: "ResultReference", ref: known.name };
+                if (known.failed)
+                    errors.push(reference);
+                else
+                    passes.push(reference);
+                continue;
+            }
             ctx = ctx.checkExtendsPartition(subgraph); // new context with subgraph
             const sub = this.validateShapeExpr(focus, extend, ctx);
+            // Name the result <focus node><ShExPath>: the part after the focus is a ShExPath
+            // (shape-path-core) expression addressing the extension — a labeled extension by
+            // its shape-declaration selector "@<label>", an inline shapeExpr by a child step
+            // in the extending shape, "@<label>/extends[i]". (The "extends" step parallels the
+            // grammar's "shapeExprs[i]" and is proposed for shape-path-core, which predates
+            // EXTENDS.) Only when the same name recurs (same node and extension against a
+            // different subgraph) is "#2", "#3", … appended.
+            const asShapePath = (label) => label.startsWith("_:") ? "@" + label : "@<" + label + ">";
+            const shapePath = typeof extend === "string"
+                ? asShapePath(extend)
+                : `${typeof ctx.label === "string" ? asShapePath(ctx.label) : "@START"}/extends[${eNo}]`;
+            const base = `${ShExTerm.rdfJsTerm2Turtle(focus)}${shapePath}`;
+            const collisions = [...extendsResultCache.values()].filter(v => v.name === base || v.name.startsWith(base + "#")).length;
+            const name = collisions === 0 ? base : `${base}#${collisions + 1}`;
+            sub.resultName = name;
+            extendsResultCache.set(cacheKey, { name, failed: "errors" in sub, result: sub });
             if ("errors" in sub)
                 errors.push(sub);
             else
@@ -741,9 +898,13 @@ class ShExValidator {
                 return acc;
             }, []);
         };
-        visitor.visitShapeNot = function (expr, _min, _max) {
-            throw Error(`don't know what to do when extending ${JSON.stringify(expr)}`);
-        };
+        // A negated shape expression is a filter over the triples allocated to the
+        // extension, never a sink for them: triple constraints under NOT receive no
+        // partition assignments (they would make the negation satisfy itself), so a
+        // NOT conjunct contributes no triple constraints, like a NodeConstraint.
+        // The negation itself is still evaluated when the extension is validated
+        // against its subgraph.
+        visitor.visitShapeNot = emptyShapeExpr;
         visitor.visitShapeExternal = emptyShapeExpr;
         visitor.visitNodeConstraint = emptyShapeExpr;
         // Override visitShapeRef to follow references.

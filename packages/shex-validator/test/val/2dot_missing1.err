@@ -3,6 +3,9 @@
   "node": "http://a.example/s1",
   "shape": "http://a.example/S1",
   "errors": [
-    { "type": "MissingProperty", "property": "http://a.example/p2" }
+    {
+      "type": "MissingProperty",
+      "property": "http://a.example/p2"
+    }
   ]
 }

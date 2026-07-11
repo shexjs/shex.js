@@ -68,7 +68,9 @@
                                                         },
                                                         "referenced": {
                                                           "type": "NodeConstraintTest",
-                                                          "node": { "value": "Bob" },
+                                                          "node": {
+                                                            "value": "Bob"
+                                                          },
                                                           "shape": "http://a.example/PersonShape",
                                                           "shapeExpr": {
                                                             "type": "NodeConstraint",
@@ -95,7 +97,9 @@
                                                         },
                                                         "referenced": {
                                                           "type": "NodeConstraintTest",
-                                                          "node": { "value": "Smith" },
+                                                          "node": {
+                                                            "value": "Smith"
+                                                          },
                                                           "shape": "http://a.example/PersonShape",
                                                           "shapeExpr": {
                                                             "type": "NodeConstraint",
@@ -141,7 +145,8 @@
                                 ]
                               }
                             ]
-                          }
+                          },
+                          "resultName": "<http://a.example/User2>@<http://a.example/PersonShape>"
                         }
                       ]
                     },
@@ -205,7 +210,9 @@
                                                                   },
                                                                   "referenced": {
                                                                     "type": "NodeConstraintTest",
-                                                                    "node": { "value": "Joe" },
+                                                                    "node": {
+                                                                      "value": "Joe"
+                                                                    },
                                                                     "shape": "http://a.example/PersonShape",
                                                                     "shapeExpr": {
                                                                       "type": "NodeConstraint",
@@ -222,7 +229,9 @@
                                                                   },
                                                                   "referenced": {
                                                                     "type": "NodeConstraintTest",
-                                                                    "node": { "value": "Joseph" },
+                                                                    "node": {
+                                                                      "value": "Joseph"
+                                                                    },
                                                                     "shape": "http://a.example/PersonShape",
                                                                     "shapeExpr": {
                                                                       "type": "NodeConstraint",
@@ -249,7 +258,9 @@
                                                                   },
                                                                   "referenced": {
                                                                     "type": "NodeConstraintTest",
-                                                                    "node": { "value": "Thompson" },
+                                                                    "node": {
+                                                                      "value": "Thompson"
+                                                                    },
                                                                     "shape": "http://a.example/PersonShape",
                                                                     "shapeExpr": {
                                                                       "type": "NodeConstraint",
@@ -295,7 +306,8 @@
                                           ]
                                         }
                                       ]
-                                    }
+                                    },
+                                    "resultName": "<http://a.example/Thompson.J>@<http://a.example/PersonShape>"
                                   },
                                   {
                                     "type": "ShapeTest",
@@ -327,7 +339,8 @@
                                           }
                                         }
                                       ]
-                                    }
+                                    },
+                                    "resultName": "<http://a.example/Thompson.J>@<http://a.example/RepShape>"
                                   }
                                 ]
                               }
@@ -403,7 +416,9 @@
                                                         },
                                                         "referenced": {
                                                           "type": "NodeConstraintTest",
-                                                          "node": { "value": "Joe" },
+                                                          "node": {
+                                                            "value": "Joe"
+                                                          },
                                                           "shape": "http://a.example/PersonShape",
                                                           "shapeExpr": {
                                                             "type": "NodeConstraint",
@@ -420,7 +435,9 @@
                                                         },
                                                         "referenced": {
                                                           "type": "NodeConstraintTest",
-                                                          "node": { "value": "Joseph" },
+                                                          "node": {
+                                                            "value": "Joseph"
+                                                          },
                                                           "shape": "http://a.example/PersonShape",
                                                           "shapeExpr": {
                                                             "type": "NodeConstraint",
@@ -447,7 +464,9 @@
                                                         },
                                                         "referenced": {
                                                           "type": "NodeConstraintTest",
-                                                          "node": { "value": "Thompson" },
+                                                          "node": {
+                                                            "value": "Thompson"
+                                                          },
                                                           "shape": "http://a.example/PersonShape",
                                                           "shapeExpr": {
                                                             "type": "NodeConstraint",
@@ -493,7 +512,8 @@
                                 ]
                               }
                             ]
-                          }
+                          },
+                          "resultName": "<http://a.example/Thompson.J>@<http://a.example/PersonShape>"
                         },
                         {
                           "type": "ShapeTest",
@@ -525,7 +545,8 @@
                                 }
                               }
                             ]
-                          }
+                          },
+                          "resultName": "<http://a.example/Thompson.J>@<http://a.example/RepShape>"
                         }
                       ]
                     }

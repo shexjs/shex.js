@@ -69,7 +69,10 @@
                             },
                             "referenced": {
                               "type": "NodeConstraintTest",
-                              "node": { "value": "3", "type": "http://www.w3.org/2001/XMLSchema#integer" },
+                              "node": {
+                                "value": "3",
+                                "type": "http://www.w3.org/2001/XMLSchema#integer"
+                              },
                               "shape": "http://a.example/#A",
                               "shapeExpr": {
                                 "type": "NodeConstraint",
@@ -147,7 +150,8 @@
                 ]
               }
             }
-          ]
+          ],
+          "resultName": "<http://a.example/s>@<http://a.example/#B>"
         }
       ]
     },
