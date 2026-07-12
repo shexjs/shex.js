@@ -141,6 +141,24 @@ curl -i http://localhost:1234/validate?node=%23Issue1 \
 ```
 (Don't forget to escape the '#' as "%23".)
 
+### Loading extensions:
+
+The `--extension` switch loads ShEx [semantic action extensions](http://shex.io/extensions/) into the validator.
+It takes one or more file globs identifying extension modules, e.g. entries in `node_modules`:
+```sh
+./node_modules/.bin/shex-validate \
+    -x bpfhir.shex -d bpfhir.ttl -n tag:BPfhir123 \
+    --extension node_modules/@shexjs/extension-map/shex-extension-map.js
+```
+Each matched module is loaded and registered with the validator; the extension's results are included in the validation output.
+For example, loading [`@shexjs/extension-map`](../extension-map#readme) as above adorns the results with an `http://shex.io/extensions/Map/` entry which can be piped to the [materialize](#materialize) tool:
+```sh
+./node_modules/.bin/shex-validate \
+    -x bpfhir.shex -d bpfhir.ttl -n tag:BPfhir123 \
+    --extension node_modules/@shexjs/extension-map/shex-extension-map.js \
+  | ./node_modules/.bin/shexmap-materialize -t bpdam.shex
+```
+
 ## conversion
 
 As with validation (above), you can convert by either executable or library.

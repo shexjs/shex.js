@@ -100,7 +100,7 @@ const ShExNodeCjsModule = function (config = {}) {
 
   function LoadExtensions (globs) {
     const NodePath = require('path')
-    return globs.reduce(
+    return (globs || []).reduce(
       (list, glob) =>
         list.concat(Glob.sync(glob))
       , []).

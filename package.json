@@ -34,7 +34,7 @@
     "file-loader": "^6.2.0",
     "jsdom": "^24.1.1",
     "lerna": "^8.1.7",
-    "mocha": "^10.7.3",
+    "mocha": "^11.7.6",
     "nock": "^13.5.4",
     "nyc": "^17.0.0",
     "pre-commit": "^1.2.2",
@@ -87,42 +87,6 @@
     "test",
     "travisRepo"
   ],
-  "eslintConfig": {
-    "rules": {
-      "indent": [
-        2,
-        2
-      ],
-      "quotes": [
-        2,
-        "double"
-      ],
-      "linebreak-style": [
-        2,
-        "unix"
-      ],
-      "semi": [
-        2,
-        "always"
-      ],
-      "strict": [
-        2,
-        "never"
-      ],
-      "no-multi-spaces": 0,
-      "key-spacing": 0
-    },
-    "env": {
-      "node": true,
-      "browser": true
-    },
-    "extends": "eslint:recommended",
-    "globals": {
-      "it": true,
-      "should": true,
-      "describe": true
-    }
-  },
   "nyc": {
     "exclude": [
       "**/*Jison.*",

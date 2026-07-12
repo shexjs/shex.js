@@ -100,7 +100,7 @@ const CommandLineOptions = [
   { name: "dataURL",   alias: "d", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle data", defaultOption: true },
   { name: "jsonld",    alias: "l", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD data" },
   { name: "endpoint",              type: String, typeLabel: "IRI",       multiple: false, defaultValue: undefined, description: "data query endpoint" },
-  { name: "extension",             type: String, typeLabel: "file glob", multiple:  true, defaultValue:        [], description: "ShExC schema" },
+  { name: "extension",             type: String, typeLabel: "file glob", multiple:  true, defaultValue:        [], description: "semantic action extension" },
   { name: "result",                type: String, typeLabel: "file|URL",  multiple: false, defaultValue: undefined, description: "expected JSON results" },
   { name: "serve",     alias: "S", type: String, typeLabel: "URL",       multiple: false, defaultValue: undefined, description: "server" },
   { name: "serve-n",               type: Number, typeLabel: "integer",   multiple: false, defaultValue:        -1, description: "serve N times and exit" },
@@ -517,7 +517,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions, cmd
         if (found === ShExUtil.UnknownIRI)
           console.warn("Warning: could not resolve "+valParms.shape+" with loaded schema");
       }
-      runServer(schemaAndData, valParms, validatorOptions, schemaOptions, cmds);
+      runServer(schemaAndData, valParms, validatorOptions, cmds);
     } else {
       if (shapeMap) { // if we loaded a queryMap
         try {
