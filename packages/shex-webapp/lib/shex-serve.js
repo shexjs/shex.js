@@ -114,10 +114,15 @@ function negotiate(filePath, accept) {
     candidates.sort((a, b) => rank(a) - rank(b) || (a < b ? -1 : 1));
     return Path.join(dir, candidates[0]);
 }
-function makeServer(root) {
+function makeServer(root, options = {}) {
+    const always = { "Cache-Control": "no-store" };
+    if (options.coi) {
+        always["Cross-Origin-Opener-Policy"] = "same-origin";
+        always["Cross-Origin-Embedder-Policy"] = "require-corp";
+    }
     return Http.createServer((req, res) => {
         const reply = (status, headers, body) => {
-            res.writeHead(status, Object.assign({ "Cache-Control": "no-store" }, headers));
+            res.writeHead(status, Object.assign({}, always, headers));
             res.end(body);
         };
         try {
@@ -171,17 +176,21 @@ function main(argv = process.argv.slice(2)) {
             opts.port = parseInt(argv[++i], 10);
         else if (argv[i] === "--root" || argv[i] === "-r")
             opts.root = argv[++i];
+        else if (argv[i] === "--coi")
+            opts.coi = true;
         else {
-            console.error(`usage: shex-serve [--port N] [--root DIR]
+            console.error(`usage: shex-serve [--port N] [--root DIR] [--coi]
 Serves DIR (default: the enclosing npm-workspaces root, else the current
-directory) on http://localhost:N/ (default 8880).`);
+directory) on http://localhost:N/ (default 8880).
+--coi sends COOP/COEP headers (cross-origin isolation, enabling
+SharedArrayBuffer, e.g. for debugger worker suspension).`);
             process.exit(argv[i] === "--help" || argv[i] === "-h" ? 0 : 1);
         }
     }
     const root = Path.resolve(opts.root || repoRoot(process.cwd()));
     const port = opts.port || 8880;
-    makeServer(root).listen(port, () => {
-        console.log(`serving ${root} on http://localhost:${port}/`);
+    makeServer(root, opts).listen(port, () => {
+        console.log(`serving ${root} on http://localhost:${port}/${opts.coi ? " (cross-origin isolated)" : ""}`);
         KnownPages.filter(page => Fs.existsSync(Path.join(root, page))).forEach(page => {
             console.log(`  http://localhost:${port}/${page}`);
             console.log(`  http://localhost:${port}/${page}?editors=1   (language-aware editors)`);

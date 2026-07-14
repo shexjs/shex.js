@@ -56,9 +56,19 @@ toolchain).  Roughly grouped; items link to the docs that motivated them.
   either resurrect or remove them.
 - `shex-serve` conneg is trivial substring matching on Accept (no
   q-values); fine for browsers, not spec-grade.
-- **`shex-serve --coi`**: send COOP/COEP for SharedArrayBuffer (needed by
-  the validation debugger's Atomics suspension;
-  see doc/debugger-design.md) + documented Apache equivalent.
+- Gutter breakpoints are line-granular: a click breaks on the *first*
+  constraint whose range starts on that line; column-precise selection
+  (or a per-line constraint picker) would matter for one-line shapes.
+- Debug session UX: only the ShExMap output-schema pane takes breakpoints;
+  node/predicate breakpoints (the CLIs' `bn`/`bp`) have no web UI yet, and
+  the panel shows the thread snapshot as text — a rendered call
+  stack/binding-frame table (bindingsToTable) is the designed endpoint.
+- Debugging the *worker* variants (shexmap-simple-worker) is unsupported —
+  MaterializerDebugger runs in-thread only; needs the clone-safe
+  breakpoint anchors + a postMessage/Atomics gate.
+- The smoke tests assert behavior but not console silence; a
+  fail-on-unexpected-console-error harness option would have caught the
+  NestedWriter fallback regression before CI did.
 
 ## Materializer (see also doc/threaded-materializer.md)
 
@@ -70,8 +80,14 @@ toolchain).  Roughly grouped; items link to the docs that motivated them.
 - Static-only optional subshapes still emit one island per repetition
   window (the progress guard caps, not eliminates); a
   "must consume ≥1 frame binding" mode could tighten it.
-- Debugger phases 2–6 (CLI REPLs, web-app debug panel, validator
-  stepping) per doc/debugger-design.md.
+- Debugger phases 5–6 (regex-engine `debugHooks` for TC-level validation
+  events; browser validation debugging via worker + Atomics; a unified
+  panel) per doc/debugger-design.md — phases 1–4 (MaterializerDebugger,
+  `shexmap-debug`, the shexmap-simple 🐞 panel, `shex-debug`,
+  `shex-serve --coi`) shipped.
+- `ShExMapDebugRepl` and `ShExDebugRepl` share command grammar and
+  prompt/IO plumbing by parallel construction; extract a common REPL
+  skeleton before a third debugger appears.
 
 ## Validation engines
 

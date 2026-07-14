@@ -5,15 +5,22 @@ ShapeExpression or TripleExpression; set **breakpoints in validation and
 materialization schemas** and **on the lexical representation of a graph
 node**.
 
-> **Status**: the materialization half is *implemented* —
-> `ThreadedMaterializer.run()` is a step-event generator and
-> `MaterializerDebugger` (both in
+> **Status**: phases 1–4 are *implemented*.
+> Materialization: `ThreadedMaterializer.run()` is a step-event generator
+> and `MaterializerDebugger` (both in
 > `packages/extension-map/lib/ThreadedMaterializer.js`) provides
-> stepInto/stepOver/stepOut/continue with all three breakpoint kinds, plus
-> `locate.exprAt(offset)`/`shapeAt(offset)` in `@shexjs/editor-services` for
-> gutter-click → schema-object resolution.  Tested in
-> `packages/extension-map/test/MaterializerDebugger-test.js`.  The
-> validation half and the UI are designed below.
+> stepInto/stepOver/stepOut/continue with all three breakpoint kinds;
+> `shexmap-debug` is the CLI REPL over it, and shexmap-simple's 🐞 button
+> (with `?editors=1`) opens the web debug panel — breakpoint gutter in the
+> output-schema pane, ▶⤵⏭⤴⏹ controls, current-constraint highlight, thread
+> snapshot in the status line.
+> Validation: `shex-debug` is a CLI REPL over the validator's `tracker`
+> events (shape-level stepping; suspension is just blocking on stdin — no
+> worker needed in a terminal), and `shex-serve --coi` sends the COOP/COEP
+> headers browser-side suspension will need.
+> Still designed-only: TC-level validation events (regex-engine
+> `debugHooks`, §4/phase 5) and the browser validation panel over
+> worker + Atomics (phase 6).
 
 ## 1. The central problem: suspending an engine
 
@@ -28,12 +35,19 @@ them, matched to what we own:
 | async/await rewrite | (rejected) | would fork the validator API and slow the hot path |
 
 `Atomics.wait` requires `SharedArrayBuffer`, which requires cross-origin
-isolation. **`shex-serve` must send `Cross-Origin-Opener-Policy: same-origin`
-and `Cross-Origin-Embedder-Policy: require-corp`** (a `--coi` flag, since COEP
-constrains loading cross-origin resources — the cdnjs script is already
-served locally, so the apps qualify).  Apache users get a documented
-`.htaccess` snippet.  Node CLI debugging uses `worker_threads` with the same
-Atomics protocol, REPL on the main thread.
+isolation. **`shex-serve --coi` sends `Cross-Origin-Opener-Policy:
+same-origin` and `Cross-Origin-Embedder-Policy: require-corp`** (opt-in,
+since COEP constrains loading cross-origin resources — the cdnjs script is
+already served locally, so the apps qualify).  Apache users, with
+`mod_headers` enabled, can put the equivalent in an `.htaccess`:
+
+```apache
+Header set Cross-Origin-Opener-Policy "same-origin"
+Header set Cross-Origin-Embedder-Policy "require-corp"
+```
+
+Node CLI debugging needs none of this: blocking on stdin suspends a
+terminal REPL just fine (as `shex-debug` and `shexmap-debug` do).
 
 ## 2. The event protocol
 
@@ -135,13 +149,15 @@ single-threaded) — `shexmap-debug` can ship first.
 
 1. ✅ Materializer: `run()` generator + `MaterializerDebugger` + offset
    lookups + tests.
-2. `shexmap-debug` CLI (REPL over the debugger — no engine work).
-3. Web-app ShExMap debug panel (gutter, controls, highlights) — no engine
-   work beyond what's shipped.
-4. Validator shape-level stepping: tracker formalization + worker gate +
-   `--coi` in shex-serve.
+2. ✅ `shexmap-debug` CLI (REPL over the debugger — no engine work).
+3. ✅ Web-app ShExMap debug panel (gutter, controls, highlights) — no
+   engine work beyond what's shipped.
+4. ✅ Validator shape-level stepping (CLI): `shex-debug` REPL over the
+   tracker (blocking stdin is the suspension — a terminal debugger needs
+   no worker); `--coi` in shex-serve for the browser side to come.
 5. Validator TC-level events: regex-engine `debugHooks`.
-6. Unified panel over both engines; CLI `shex-debug`.
+6. Browser validation debugging (worker gate + Atomics) and a unified
+   panel over both engines.
 
 ## 8. Risks / notes
 

@@ -63,4 +63,36 @@ describe("shex-serve", function () {
     expect(resp.status).to.equal(200);
     expect(await resp.text()).to.include("shex-webapp/");
   });
+
+  it("should not send isolation headers by default", async function () {
+    const resp = await get("/packages/shex-webapp/doc/shex-simple.html");
+    expect(resp.headers.get("cross-origin-opener-policy")).to.be.null;
+    expect(resp.headers.get("cross-origin-embedder-policy")).to.be.null;
+  });
+});
+
+describe("shex-serve --coi", function () {
+  let server, port;
+
+  before(function (done) {
+    server = makeServer(repoRoot, {coi: true});
+    server.listen(0, () => {
+      port = server.address().port;
+      done();
+    });
+  });
+
+  after(function (done) {
+    server.close(done);
+  });
+
+  const get = (path) => fetch(`http://localhost:${port}${path}`);
+
+  it("should send COOP/COEP on files and on errors", async function () {
+    for (const path of ["/packages/shex-webapp/doc/shex-simple.html", "/no-such"]) {
+      const resp = await get(path);
+      expect(resp.headers.get("cross-origin-opener-policy"), path).to.equal("same-origin");
+      expect(resp.headers.get("cross-origin-embedder-policy"), path).to.equal("require-corp");
+    }
+  });
 });

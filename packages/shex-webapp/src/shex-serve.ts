@@ -44,6 +44,11 @@ const KnownPages = [
 export interface ServeOptions {
   root?: string;
   port?: number;
+  /** send COOP/COEP headers so pages are cross-origin isolated --
+   * SharedArrayBuffer (which the validation debugger's worker suspension
+   * needs) is only available to isolated pages.  The same-origin pages
+   * still work; anything embedding cross-origin resources won't. */
+  coi?: boolean;
 }
 
 /** repoRoot - nearest enclosing npm-workspaces root, for `npm run serve`
@@ -85,10 +90,15 @@ export function negotiate (filePath: string, accept: string): string | null {
   return Path.join(dir, candidates[0]);
 }
 
-export function makeServer (root: string): Http.Server {
+export function makeServer (root: string, options: ServeOptions = {}): Http.Server {
+  const always: Http.OutgoingHttpHeaders = {"Cache-Control": "no-store"};
+  if (options.coi) {
+    always["Cross-Origin-Opener-Policy"] = "same-origin";
+    always["Cross-Origin-Embedder-Policy"] = "require-corp";
+  }
   return Http.createServer((req, res) => {
     const reply = (status: number, headers: Http.OutgoingHttpHeaders, body: string | Buffer) => {
-      res.writeHead(status, Object.assign({"Cache-Control": "no-store"}, headers));
+      res.writeHead(status, Object.assign({}, always, headers));
       res.end(body);
     };
     try {
@@ -143,17 +153,21 @@ export function main (argv: string[] = process.argv.slice(2)): void {
       opts.port = parseInt(argv[++i], 10);
     else if (argv[i] === "--root" || argv[i] === "-r")
       opts.root = argv[++i];
+    else if (argv[i] === "--coi")
+      opts.coi = true;
     else {
-      console.error(`usage: shex-serve [--port N] [--root DIR]
+      console.error(`usage: shex-serve [--port N] [--root DIR] [--coi]
 Serves DIR (default: the enclosing npm-workspaces root, else the current
-directory) on http://localhost:N/ (default 8880).`);
+directory) on http://localhost:N/ (default 8880).
+--coi sends COOP/COEP headers (cross-origin isolation, enabling
+SharedArrayBuffer, e.g. for debugger worker suspension).`);
       process.exit(argv[i] === "--help" || argv[i] === "-h" ? 0 : 1);
     }
   }
   const root = Path.resolve(opts.root || repoRoot(process.cwd()));
   const port = opts.port || 8880;
-  makeServer(root).listen(port, () => {
-    console.log(`serving ${root} on http://localhost:${port}/`);
+  makeServer(root, opts).listen(port, () => {
+    console.log(`serving ${root} on http://localhost:${port}/${opts.coi ? " (cross-origin isolated)" : ""}`);
     KnownPages.filter(page => Fs.existsSync(Path.join(root, page))).forEach(page => {
       console.log(`  http://localhost:${port}/${page}`);
       console.log(`  http://localhost:${port}/${page}?editors=1   (language-aware editors)`);

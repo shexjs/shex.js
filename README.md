@@ -286,11 +286,16 @@ ships in `@shexjs/webapp`:
 
 ``` shell
 npm run serve           # prints the shex-simple / shexmap-simple URLs
-                        # (npx shex-serve [--port N] [--root DIR] outside the repo)
+                        # (npx shex-serve [--port N] [--root DIR] [--coi] outside the repo)
 ```
 
 Add `?editors=1` to either app URL for the language-aware CodeMirror editors
 (see [doc/editor-integration-plan.md](doc/editor-integration-plan.md)).
+With the editors on, shexmap-simple's 🐞 button steps through a
+materialization with breakpoints; `shexmap-debug` and `shex-debug` are the
+command-line equivalents (see [doc/debugger-design.md](doc/debugger-design.md)).
+`shex-serve --coi` sends the cross-origin-isolation headers that
+browser-side validation debugging will need.
 
 To add a dependency to one package, use npm's `--workspace` flag from the repo root, e.g. `npm install promise-worker --workspace=@shexjs/webapp`.
 Development tooling (mocha, webpack, eslint...) lives in the root `devDependencies`.
