@@ -7,8 +7,8 @@ const browserify = require("browserify")
 const uglify = require("terser")
 
 const packageGlobs = JSON.parse(
-  fs.readFileSync(__dirname + '/lerna.json', 'utf-8')
-).packages.filter(
+  fs.readFileSync(__dirname + '/../package.json', 'utf-8')
+).workspaces.packages.filter(
   glob => glob !== "."
 )
 const directories = packageGlobs.reduce(

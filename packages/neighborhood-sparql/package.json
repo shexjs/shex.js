@@ -22,7 +22,10 @@
   },
   "dependencies": {
     "@shexjs/eval-validator-api": "^1.0.0-alpha.29",
-    "@shexjs/term": "^1.0.0-alpha.27"
+    "@shexjs/term": "^1.0.0-alpha.27",
+    "@shexjs/util": "^1.0.0-alpha.28",
+    "@shexjs/visitor": "^1.0.0-alpha.27",
+    "n3": "^1.20.4"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot"

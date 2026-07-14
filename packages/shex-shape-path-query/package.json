@@ -22,9 +22,12 @@
   },
   "dependencies": {
     "@shexjs/extension-map": "^1.0.0-alpha.29",
+    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.29",
     "@shexjs/term": "^1.0.0-alpha.27",
     "@shexjs/util": "^1.0.0-alpha.28",
     "@shexjs/validator": "^1.0.0-alpha.29",
+    "n3": "^1.20.4",
+    "shape-map": "^1.0.0-alpha.26",
     "shape-path-core": "^0.0.5"
   },
   "devDependencies": {

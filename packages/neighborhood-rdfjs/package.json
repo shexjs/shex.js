@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@shexjs/eval-validator-api": "^1.0.0-alpha.29",
+    "@shexjs/neighborhood-api": "^1.0.0-alpha.28",
     "@shexjs/term": "^1.0.0-alpha.27"
   },
   "scripts": {
