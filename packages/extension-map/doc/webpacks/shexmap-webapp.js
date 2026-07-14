@@ -7661,9 +7661,9 @@ exports.termFromId = termFromId;
 exports.termToId = termToId;
 exports.unescapeQuotes = unescapeQuotes;
 var _IRIs = _interopRequireDefault(__webpack_require__(3146));
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 // N3.js implementations of the RDF/JS core data types
-// See https://github.com/rdfjs/representation-task-force/blob/master/interface-spec.md
+// See http://rdf.js.org/data-model-spec/
 
 const {
   rdf,
@@ -8040,7 +8040,7 @@ exports.isVariable = isVariable;
 exports.prefix = prefix;
 exports.prefixes = prefixes;
 var _N3DataFactory = _interopRequireDefault(__webpack_require__(5998));
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 // **N3Util** provides N3 utility functions.
 
 // Tests whether the given term represents an IRI
@@ -17325,7 +17325,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 2243:
+/***/ 51:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -17337,12 +17337,15 @@ __webpack_require__.d(__webpack_exports__, {
   BlankNode: () => (/* reexport */ BlankNode),
   DataFactory: () => (/* reexport */ N3DataFactory),
   DefaultGraph: () => (/* reexport */ DefaultGraph),
+  EntityIndex: () => (/* reexport */ N3EntityIndex),
   Lexer: () => (/* reexport */ N3Lexer),
   Literal: () => (/* reexport */ Literal),
   NamedNode: () => (/* reexport */ NamedNode),
   Parser: () => (/* reexport */ N3Parser),
   Quad: () => (/* reexport */ Quad),
+  Reasoner: () => (/* reexport */ N3Reasoner),
   Store: () => (/* reexport */ N3Store),
+  StoreFactory: () => (/* reexport */ N3DatasetCoreFactory),
   StreamParser: () => (/* reexport */ N3StreamParser),
   StreamWriter: () => (/* reexport */ N3StreamWriter),
   Term: () => (/* reexport */ Term),
@@ -17351,6 +17354,7 @@ __webpack_require__.d(__webpack_exports__, {
   Variable: () => (/* reexport */ Variable),
   Writer: () => (/* reexport */ N3Writer),
   "default": () => (/* binding */ src),
+  getRulesFromDataset: () => (/* reexport */ getRulesFromDataset),
   termFromId: () => (/* reexport */ termFromId),
   termToId: () => (/* reexport */ termToId)
 });
@@ -17369,6 +17373,8 @@ __webpack_require__.d(N3Util_namespaceObject, {
   prefixes: () => (prefixes)
 });
 
+// EXTERNAL MODULE: ../../node_modules/n3/node_modules/buffer/index.js
+var buffer = __webpack_require__(227);
 // EXTERNAL MODULE: ../../node_modules/queue-microtask/index.js
 var queue_microtask = __webpack_require__(9509);
 var queue_microtask_default = /*#__PURE__*/__webpack_require__.n(queue_microtask);
@@ -17406,6 +17412,7 @@ const RDF  = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
 
 ;// CONCATENATED MODULE: ../../node_modules/n3/src/N3Lexer.js
 // **N3Lexer** tokenizes N3 documents.
+
 
 
 
@@ -17899,7 +17906,7 @@ class N3Lexer {
         if (this._input !== null && data.length !== 0) {
           // Prepend any previous pending writes
           if (this._pendingBuffer) {
-            data = Buffer.concat([this._pendingBuffer, data]);
+            data = buffer.Buffer.concat([this._pendingBuffer, data]);
             this._pendingBuffer = null;
           }
           // Hold if the buffer ends in an incomplete unicode sequence
@@ -17929,7 +17936,7 @@ class N3Lexer {
 
 ;// CONCATENATED MODULE: ../../node_modules/n3/src/N3DataFactory.js
 // N3.js implementations of the RDF/JS core data types
-// See https://github.com/rdfjs/representation-task-force/blob/master/interface-spec.md
+// See http://rdf.js.org/data-model-spec/
 
 
 
@@ -18159,7 +18166,7 @@ function termFromId(id, factory, nested) {
     termFromId(id[0], factory, true),
     termFromId(id[1], factory, true),
     termFromId(id[2], factory, true),
-    id[3] && termFromId(id[3], factory, true)
+    id[3] && termFromId(id[3], factory, true),
   );
 }
 
@@ -18559,7 +18566,7 @@ class N3Parser {
       break;
     case '<<':
       if (!this._supportsRDFStar)
-        return this._error('Unexpected RDF* syntax', token);
+        return this._error('Unexpected RDF-star syntax', token);
       this._saveContext('<<', this._graph, null, null, null);
       this._graph = null;
       return this._readSubject;
@@ -18648,7 +18655,7 @@ class N3Parser {
       return this._readSubject;
     case '<<':
       if (!this._supportsRDFStar)
-        return this._error('Unexpected RDF* syntax', token);
+        return this._error('Unexpected RDF-star syntax', token);
       this._saveContext('<<', this._graph, this._subject, this._predicate, null);
       this._graph = null;
       return this._readSubject;
@@ -18937,7 +18944,7 @@ class N3Parser {
     // {| means that the current triple is annotated with predicate-object pairs.
     case '{|':
       if (!this._supportsRDFStar)
-        return this._error('Unexpected RDF* syntax', token);
+        return this._error('Unexpected RDF-star syntax', token);
       // Continue using the last triple as quoted triple subject for the predicate-object pairs.
       const predicate = this._predicate, object = this._object;
       this._subject = this._quad(subject, predicate, object, this.DEFAULTGRAPH);
@@ -19171,7 +19178,7 @@ class N3Parser {
     return this._readPath;
   }
 
-  // ### `_readRDFStarTailOrGraph` reads the graph of a nested RDF* quad or the end of a nested RDF* triple
+  // ### `_readRDFStarTailOrGraph` reads the graph of a nested RDF-star quad or the end of a nested RDF-star triple
   _readRDFStarTailOrGraph(token) {
     if (token.type !== '>>') {
       // An entity means this is a quad (only allowed if not already inside a graph)
@@ -19182,7 +19189,7 @@ class N3Parser {
     return this._readRDFStarTail(token);
   }
 
-  // ### `_readRDFStarTail` reads the end of a nested RDF* triple
+  // ### `_readRDFStarTail` reads the end of a nested RDF-star triple
   _readRDFStarTail(token) {
     if (token.type !== '>>')
       return this._error(`Expected >> but got ${token.type}`, token);
@@ -19596,9 +19603,10 @@ class N3Writer {
 
   // ### `quadsToString` serializes an array of quads as a string
   quadsToString(quads) {
-    return quads.map(t => {
-      return this.quadToString(t.subject, t.predicate, t.object, t.graph);
-    }).join('');
+    let quadsString = '';
+    for (const quad of quads)
+      quadsString += this.quadToString(quad.subject, quad.predicate, quad.object, quad.graph);
+    return quadsString;
   }
 
   // ### `_encodeSubject` represents a subject
@@ -19691,7 +19699,7 @@ class N3Writer {
     }
   }
 
-  // ### `_encodeQuad` encodes an RDF* quad
+  // ### `_encodeQuad` encodes an RDF-star quad
   _encodeQuad({ subject, predicate, object, graph }) {
     return `<<${
       this._encodeSubject(subject)} ${
@@ -19873,33 +19881,36 @@ var browser = __webpack_require__(6842);
 
 
 
+
+const ITERATOR = Symbol('iter');
+
+function merge(target, source, depth = 4) {
+  if (depth === 0)
+    return Object.assign(target, source);
+
+  for (const key in source)
+    target[key] = merge(target[key] || Object.create(null), source[key], depth - 1);
+
+  return target;
+}
+
 // ## Constructor
-class N3Store {
-  constructor(quads, options) {
-    // The number of quads is initially zero
-    this._size = 0;
-    // `_graphs` contains subject, predicate, and object indexes per graph
-    this._graphs = Object.create(null);
+class N3EntityIndex {
+  constructor(options = {}) {
+    this._id = 1;
     // `_ids` maps entities such as `http://xmlns.com/foaf/0.1/name` to numbers,
     // saving memory by using only numbers as keys in `_graphs`
-    this._id = 0;
     this._ids = Object.create(null);
-    this._entities = Object.create(null); // inverse of `_ids`
+    this._ids[''] = 1;
+     // inverse of `_ids`
+    this._entities = Object.create(null);
+    this._entities[1] = '';
     // `_blankNodeIndex` is the index of the last automatically named blank node
     this._blankNodeIndex = 0;
-
-    // Shift parameters if `quads` is not given
-    if (!options && quads && !quads[0])
-      options = quads, quads = null;
-    options = options || {};
     this._factory = options.factory || N3DataFactory;
-
-    // Add quads if passed
-    if (quads)
-      this.addQuads(quads);
   }
 
-  _termFromId(id, factory) {
+  _termFromId(id) {
     if (id[0] === '.') {
       const entities = this._entities;
       const terms = id.split('.');
@@ -19907,11 +19918,11 @@ class N3Store {
         this._termFromId(entities[terms[1]]),
         this._termFromId(entities[terms[2]]),
         this._termFromId(entities[terms[3]]),
-        terms[4] && this._termFromId(entities[terms[4]])
+        terms[4] && this._termFromId(entities[terms[4]]),
       );
       return q;
     }
-    return termFromId(id, factory);
+    return termFromId(id, this._factory);
   }
 
   _termToNumericId(term) {
@@ -19936,6 +19947,50 @@ class N3Store {
       : termToId(term);
 
     return this._ids[str] || (this._ids[this._entities[++this._id] = str] = this._id);
+  }
+
+  createBlankNode(suggestedName) {
+    let name, index;
+    // Generate a name based on the suggested name
+    if (suggestedName) {
+      name = suggestedName = `_:${suggestedName}`, index = 1;
+      while (this._ids[name])
+        name = suggestedName + index++;
+    }
+    // Generate a generic blank node name
+    else {
+      do { name = `_:b${this._blankNodeIndex++}`; }
+      while (this._ids[name]);
+    }
+    // Add the blank node to the entities, avoiding the generation of duplicates
+    this._ids[name] = ++this._id;
+    this._entities[this._id] = name;
+    return this._factory.blankNode(name.substr(2));
+  }
+}
+
+// ## Constructor
+class N3Store {
+  constructor(quads, options) {
+    // The number of quads is initially zero
+    this._size = 0;
+    // `_graphs` contains subject, predicate, and object indexes per graph
+    this._graphs = Object.create(null);
+
+    // Shift parameters if `quads` is not given
+    if (!options && quads && !quads[0])
+      options = quads, quads = null;
+    options = options || {};
+    this._factory = options.factory || N3DataFactory;
+    this._entityIndex = options.entityIndex || new N3EntityIndex({ factory: this._factory });
+    this._entities = this._entityIndex._entities;
+    this._termFromId = this._entityIndex._termFromId.bind(this._entityIndex);
+    this._termToNumericId = this._entityIndex._termToNumericId.bind(this._entityIndex);
+    this._termToNewNumericId = this._entityIndex._termToNewNumericId.bind(this._entityIndex);
+
+    // Add quads if passed
+    if (quads)
+      this.addQuads(quads);
   }
 
   // ## Public properties
@@ -19996,24 +20051,24 @@ class N3Store {
   *_findInIndex(index0, key0, key1, key2, name0, name1, name2, graphId) {
     let tmp, index1, index2;
     const entityKeys = this._entities;
-    const graph = this._termFromId(graphId, this._factory);
+    const graph = this._termFromId(entityKeys[graphId]);
     const parts = { subject: null, predicate: null, object: null };
 
     // If a key is specified, use only that part of index 0.
     if (key0) (tmp = index0, index0 = {})[key0] = tmp[key0];
     for (const value0 in index0) {
       if (index1 = index0[value0]) {
-        parts[name0] = this._termFromId(entityKeys[value0], this._factory);
+        parts[name0] = this._termFromId(entityKeys[value0]);
         // If a key is specified, use only that part of index 1.
         if (key1) (tmp = index1, index1 = {})[key1] = tmp[key1];
         for (const value1 in index1) {
           if (index2 = index1[value1]) {
-            parts[name1] = this._termFromId(entityKeys[value1], this._factory);
+            parts[name1] = this._termFromId(entityKeys[value1]);
             // If a key is specified, use only that part of index 2, if it exists.
             const values = key2 ? (key2 in index2 ? [key2] : []) : Object.keys(index2);
             // Create quads for all items found in index 2.
             for (let l = 0; l < values.length; l++) {
-              parts[name2] = this._termFromId(entityKeys[values[l]], this._factory);
+              parts[name2] = this._termFromId(entityKeys[values[l]]);
               yield this._factory.quad(parts.subject, parts.predicate, parts.object, graph);
             }
           }
@@ -20084,11 +20139,8 @@ class N3Store {
   // ### `_getGraphs` returns an array with the given graph,
   // or all graphs if the argument is null or undefined.
   _getGraphs(graph) {
-    if (!isString(graph))
-      return this._graphs;
-    const graphs = {};
-    graphs[graph] = this._graphs[graph];
-    return graphs;
+    graph = graph === '' ? 1 : (graph && (this._termToNumericId(graph) || -1));
+    return typeof graph !== 'number' ? this._graphs : { [graph]: this._graphs[graph] };
   }
 
   // ### `_uniqueEntities` returns a function that accepts an entity ID
@@ -20122,7 +20174,7 @@ class N3Store {
         predicate = subject.predicate, subject = subject.subject;
 
     // Convert terms to internal string representation
-    graph = termToId(graph);
+    graph = graph ? this._termToNewNumericId(graph) : 1;
 
     // Find the graph that will contain the triple
     let graphItem = this._graphs[graph];
@@ -20141,13 +20193,14 @@ class N3Store {
     predicate = this._termToNewNumericId(predicate);
     object    = this._termToNewNumericId(object);
 
-    const changed = this._addToIndex(graphItem.subjects,   subject,   predicate, object);
+    if (!this._addToIndex(graphItem.subjects,   subject,   predicate, object))
+      return false;
     this._addToIndex(graphItem.predicates, predicate, object,    subject);
     this._addToIndex(graphItem.objects,    object,    subject,   predicate);
 
     // The cached quad count is now invalid
     this._size = null;
-    return changed;
+    return true;
   }
 
   // ### `addQuads` adds multiple quads to the store
@@ -20182,9 +20235,8 @@ class N3Store {
     if (!predicate)
       graph = subject.graph, object = subject.object,
         predicate = subject.predicate, subject = subject.subject;
-
     // Convert terms to internal string representation
-    graph = termToId(graph);
+    graph = graph ? this._termToNumericId(graph) : 1;
 
     // Find internal identifiers for all components
     // and verify the quad exists.
@@ -20226,10 +20278,16 @@ class N3Store {
   removeMatches(subject, predicate, object, graph) {
     const stream = new browser.Readable({ objectMode: true });
 
-    stream._read = () => {
-      for (const quad of this.readQuads(subject, predicate, object, graph))
-        stream.push(quad);
-      stream.push(null);
+    const iterable = this.readQuads(subject, predicate, object, graph);
+    stream._read = size => {
+      while (size-- > 0) {
+        const { done, value } = iterable.next();
+        if (done) {
+          stream.push(null);
+          return;
+        }
+        stream.push(value);
+      }
     };
 
     return this.remove(stream);
@@ -20246,12 +20304,12 @@ class N3Store {
     return [...this.readQuads(subject, predicate, object, graph)];
   }
 
-  // ### `readQuads` returns an generator of quads matching a pattern.
-  // Setting any field to `undefined` or `null` indicates a wildcard.
+  /**
+   * `readQuads` returns a generator of quads matching a pattern.
+   * Setting any field to `undefined` or `null` indicates a wildcard.
+   * @deprecated Use `match` instead.
+   */
   *readQuads(subject, predicate, object, graph) {
-    // Convert terms to internal string representation
-    graph = graph && termToId(graph);
-
     const graphs = this._getGraphs(graph);
     let content, subjectId, predicateId, objectId;
 
@@ -20298,15 +20356,12 @@ class N3Store {
   // Setting any field to `undefined` or `null` indicates a wildcard.
   // For backwards compatibility, the object return also implements the Readable stream interface.
   match(subject, predicate, object, graph) {
-    return new DatasetCoreAndReadableStream(this, subject, predicate, object, graph);
+    return new DatasetCoreAndReadableStream(this, subject, predicate, object, graph, { entityIndex: this._entityIndex });
   }
 
   // ### `countQuads` returns the number of quads matching a pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   countQuads(subject, predicate, object, graph) {
-    // Convert terms to internal string representation
-    graph = graph && termToId(graph);
-
     const graphs = this._getGraphs(graph);
     let count = 0, content, subjectId, predicateId, objectId;
 
@@ -20345,7 +20400,7 @@ class N3Store {
   // Setting any field to `undefined` or `null` indicates a wildcard.
   forEach(callback, subject, predicate, object, graph) {
     this.some(quad => {
-      callback(quad);
+      callback(quad, this);
       return false;
     }, subject, predicate, object, graph);
   }
@@ -20354,12 +20409,7 @@ class N3Store {
   // and returns `true` if it returns truthy for all them.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   every(callback, subject, predicate, object, graph) {
-    let some = false;
-    const every = !this.some(quad => {
-      some = true;
-      return !callback(quad);
-    }, subject, predicate, object, graph);
-    return some && every;
+    return !this.some(quad => !callback(quad, this), subject, predicate, object, graph);
   }
 
   // ### `some` executes the callback on all quads,
@@ -20383,9 +20433,6 @@ class N3Store {
   // ### `forSubjects` executes the callback on all subjects that match the pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   forSubjects(callback, predicate, object, graph) {
-    // Convert terms to internal string representation
-    graph = graph && termToId(graph);
-
     const graphs = this._getGraphs(graph);
     let content, predicateId, objectId;
     callback = this._uniqueEntities(callback);
@@ -20428,9 +20475,6 @@ class N3Store {
   // ### `forPredicates` executes the callback on all predicates that match the pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   forPredicates(callback, subject, object, graph) {
-    // Convert terms to internal string representation
-    graph = graph && termToId(graph);
-
     const graphs = this._getGraphs(graph);
     let content, subjectId, objectId;
     callback = this._uniqueEntities(callback);
@@ -20473,9 +20517,6 @@ class N3Store {
   // ### `forObjects` executes the callback on all objects that match the pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   forObjects(callback, subject, predicate, graph) {
-    // Convert terms to internal string representation
-    graph = graph && termToId(graph);
-
     const graphs = this._getGraphs(graph);
     let content, subjectId, predicateId;
     callback = this._uniqueEntities(callback);
@@ -20522,28 +20563,13 @@ class N3Store {
       this.some(quad => {
         callback(quad.graph);
         return true; // Halt iteration of some()
-      }, subject, predicate, object, graph);
+      }, subject, predicate, object, this._termFromId(this._entities[graph]));
     }
   }
 
   // ### `createBlankNode` creates a new blank node, returning its name
   createBlankNode(suggestedName) {
-    let name, index;
-    // Generate a name based on the suggested name
-    if (suggestedName) {
-      name = suggestedName = `_:${suggestedName}`, index = 1;
-      while (this._ids[name])
-        name = suggestedName + index++;
-    }
-    // Generate a generic blank node name
-    else {
-      do { name = `_:b${this._blankNodeIndex++}`; }
-      while (this._ids[name]);
-    }
-    // Add the blank node to the entities, avoiding the generation of duplicates
-    this._ids[name] = ++this._id;
-    this._entities[this._id] = name;
-    return this._factory.blankNode(name.substr(2));
+    return this._entityIndex.createBlankNode(suggestedName);
   }
 
   // ### `extractLists` finds and removes all list triples
@@ -20644,6 +20670,193 @@ class N3Store {
     return lists;
   }
 
+  /**
+   * Returns `true` if the current dataset is a superset of the given dataset; in other words, returns `true` if
+   * the given dataset is a subset of, i.e., is contained within, the current dataset.
+   *
+   * Blank Nodes will be normalized.
+   */
+  addAll(quads) {
+    if (Array.isArray(quads))
+      this.addQuads(quads);
+    else if (quads instanceof N3Store && quads._entityIndex === this._entityIndex) {
+      if (quads._size !== 0) {
+        this._graphs = merge(this._graphs, quads._graphs);
+        this._size = null; // Invalidate the cached size
+      }
+    }
+    else {
+      for (const quad of quads)
+        this.add(quad);
+    }
+    return this;
+  }
+
+  /**
+   * Returns `true` if the current dataset is a superset of the given dataset; in other words, returns `true` if
+   * the given dataset is a subset of, i.e., is contained within, the current dataset.
+   *
+   * Blank Nodes will be normalized.
+   */
+  contains(other) {
+    if (other === this)
+      return true;
+
+    if (!(other instanceof N3Store) || this._entityIndex !== other._entityIndex)
+      return other.every(quad => this.has(quad));
+
+    const g1 = this._graphs, g2 = other._graphs;
+    let s1, s2, p1, p2, o1;
+    for (const graph in g2) {
+      if (!(s1 = g1[graph])) return false;
+      s1 = s1.subjects;
+      for (const subject in (s2 = g2[graph].subjects)) {
+        if (!(p1 = s1[subject])) return false;
+        for (const predicate in (p2 = s2[subject])) {
+          if (!(o1 = p1[predicate])) return false;
+          for (const object in p2[predicate])
+            if (!(object in o1)) return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  /**
+   * This method removes the quads in the current dataset that match the given arguments.
+   *
+   * The logic described in {@link https://rdf.js.org/dataset-spec/#quad-matching|Quad Matching} is applied for each
+   * quad in this dataset, to select the quads which will be deleted.
+   *
+   * @param subject   The optional exact subject to match.
+   * @param predicate The optional exact predicate to match.
+   * @param object    The optional exact object to match.
+   * @param graph     The optional exact graph to match.
+   */
+  deleteMatches(subject, predicate, object, graph) {
+    for (const quad of this.match(subject, predicate, object, graph))
+      this.removeQuad(quad);
+    return this;
+  }
+
+  /**
+   * Returns a new dataset that contains all quads from the current dataset that are not included in the given dataset.
+   */
+  difference(other) {
+    if (other === this)
+      return new N3Store({ entityIndex: this._entityIndex });
+
+    return this.filter(quad => !other.has(quad));
+  }
+
+  /**
+   * Returns true if the current dataset contains the same graph structure as the given dataset.
+   *
+   * Blank Nodes will be normalized.
+   */
+  equals(other) {
+    return other === this || (this.size === other.size && this.contains(other));
+  }
+
+  /**
+   * Creates a new dataset with all the quads that pass the test implemented by the provided `iteratee`.
+   *
+   * This method is aligned with Array.prototype.filter() in ECMAScript-262.
+   */
+  filter(iteratee) {
+    const store = new N3Store({ entityIndex: this._entityIndex });
+    for (const quad of this)
+      if (iteratee(quad, this))
+        store.add(quad);
+    return store;
+  }
+
+  /**
+   * Returns a new dataset containing all quads from the current dataset that are also included in the given dataset.
+   */
+  intersection(other) {
+    if (other === this) {
+      const store = new N3Store({ entityIndex: this._entityIndex });
+      store._graphs = merge(Object.create(null), this._graphs);
+      store._size = this._size;
+    }
+    return this.filter(quad => other.has(quad));
+  }
+
+  /**
+   * Returns a new dataset containing all quads returned by applying `iteratee` to each quad in the current dataset.
+   */
+  map(iteratee) {
+    const store = new N3Store({ entityIndex: this._entityIndex });
+    for (const quad of this)
+      store.add(iteratee(quad, this));
+    return store;
+  }
+
+  /**
+   * This method calls the `iteratee` method on each `quad` of the `Dataset`. The first time the `iteratee` method
+   * is called, the `accumulator` value is the `initialValue`, or, if not given, equals the first quad of the `Dataset`.
+   * The return value of each call to the `iteratee` method is used as the `accumulator` value for the next call.
+   *
+   * This method returns the return value of the last `iteratee` call.
+   *
+   * This method is aligned with `Array.prototype.reduce()` in ECMAScript-262.
+   */
+  reduce(callback, initialValue) {
+    const iter = this.readQuads();
+    let accumulator = initialValue === undefined ? iter.next().value : initialValue;
+    for (const quad of iter)
+      accumulator = callback(accumulator, quad, this);
+    return accumulator;
+  }
+
+  /**
+   * Returns the set of quads within the dataset as a host-language-native sequence, for example an `Array` in
+   * ECMAScript-262.
+   *
+   * Since a `Dataset` is an unordered set, the order of the quads within the returned sequence is arbitrary.
+   */
+  toArray() {
+    return this.getQuads();
+  }
+
+  /**
+   * Returns an N-Quads string representation of the dataset, preprocessed with the
+   * {@link https://json-ld.github.io/normalization/spec/|RDF Dataset Normalization} algorithm.
+   */
+  toCanonical() {
+    throw new Error('not implemented');
+  }
+
+  /**
+   * Returns a stream that contains all quads of the dataset.
+   */
+  toStream() {
+    return this.match();
+  }
+
+  /**
+   * Returns an N-Quads string representation of the dataset.
+   *
+   * No prior normalization is required, therefore the results for the same quads may vary depending on the `Dataset`
+   * implementation.
+   */
+  toString() {
+    return (new N3Writer()).quadsToString(this);
+  }
+
+  /**
+   * Returns a new `Dataset` that is a concatenation of this dataset and the quads given as an argument.
+   */
+  union(quads) {
+    const store = new N3Store({ entityIndex: this._entityIndex });
+    store._graphs = merge(Object.create(null), this._graphs);
+    store._size = this._size;
+
+    store.addAll(quads);
+    return store;
+  }
+
   // ### Store is an iterable.
   // Can be used where iterables are expected: for...of loops, array spread operator,
   // `yield*`, and destructuring assignment (order is not guaranteed).
@@ -20652,24 +20865,19 @@ class N3Store {
   }
 }
 
-// Determines whether the argument is a string
-function isString(s) {
-  return typeof s === 'string' || s instanceof String;
-}
-
 /**
  * A class that implements both DatasetCore and Readable.
  */
 class DatasetCoreAndReadableStream extends browser.Readable {
-  constructor(n3Store, subject, predicate, object, graph) {
+  constructor(n3Store, subject, predicate, object, graph, options) {
     super({ objectMode: true });
-    Object.assign(this, { n3Store, subject, predicate, object, graph });
+    Object.assign(this, { n3Store, subject, predicate, object, graph, options });
   }
 
   get filtered() {
     if (!this._filtered) {
       const { n3Store, graph, object, predicate, subject } = this;
-      const newStore = this._filtered = new N3Store({ factory: n3Store._factory });
+      const newStore = this._filtered = new N3Store({ factory: n3Store._factory, entityIndex: this.options.entityIndex });
       for (const quad of n3Store.readQuads(subject, predicate, object, graph))
         newStore.addQuad(quad);
     }
@@ -20680,10 +20888,94 @@ class DatasetCoreAndReadableStream extends browser.Readable {
     return this.filtered.size;
   }
 
-  _read() {
-    for (const quad of this)
-      this.push(quad);
-    this.push(null);
+  _read(size) {
+    if (size > 0 && !this[ITERATOR])
+      this[ITERATOR] = this[Symbol.iterator]();
+    const iterable = this[ITERATOR];
+    while (size-- > 0) {
+      const { done, value } = iterable.next();
+      if (done) {
+        this.push(null);
+        return;
+      }
+      this.push(value);
+    }
+  }
+
+  addAll(quads) {
+    return this.filtered.addAll(quads);
+  }
+
+  contains(other) {
+    return this.filtered.contains(other);
+  }
+
+  deleteMatches(subject, predicate, object, graph) {
+    return this.filtered.deleteMatches(subject, predicate, object, graph);
+  }
+
+  difference(other) {
+    return this.filtered.difference(other);
+  }
+
+  equals(other) {
+    return this.filtered.equals(other);
+  }
+
+  every(callback, subject, predicate, object, graph) {
+    return this.filtered.every(callback, subject, predicate, object, graph);
+  }
+
+  filter(iteratee) {
+    return this.filtered.filter(iteratee);
+  }
+
+  forEach(callback, subject, predicate, object, graph) {
+    return this.filtered.forEach(callback, subject, predicate, object, graph);
+  }
+
+  import(stream) {
+    return this.filtered.import(stream);
+  }
+
+  intersection(other) {
+    return this.filtered.intersection(other);
+  }
+
+  map(iteratee) {
+    return this.filtered.map(iteratee);
+  }
+
+  some(callback, subject, predicate, object, graph) {
+    return this.filtered.some(callback, subject, predicate, object, graph);
+  }
+
+  toCanonical() {
+    return this.filtered.toCanonical();
+  }
+
+  toStream() {
+    return this._filtered ?
+      this._filtered.toStream()
+      : this.n3Store.match(this.subject, this.predicate, this.object, this.graph);
+  }
+
+  union(quads) {
+    return this._filtered ?
+      this._filtered.union(quads)
+      : this.n3Store.match(this.subject, this.predicate, this.object, this.graph).addAll(quads);
+  }
+
+  toArray() {
+    return this._filtered ? this._filtered.toArray() : this.n3Store.getQuads(this.subject, this.predicate, this.object, this.graph);
+  }
+
+  reduce(callback, initialValue) {
+    return this.filtered.reduce(callback, initialValue);
+  }
+
+  toString() {
+    return (new N3Writer()).quadsToString(this);
   }
 
   add(quad) {
@@ -20699,12 +20991,229 @@ class DatasetCoreAndReadableStream extends browser.Readable {
   }
 
   match(subject, predicate, object, graph) {
-    return new DatasetCoreAndReadableStream(this.filtered, subject, predicate, object, graph);
+    return new DatasetCoreAndReadableStream(this.filtered, subject, predicate, object, graph, this.options);
   }
 
   *[Symbol.iterator]() {
     yield* this._filtered || this.n3Store.readQuads(this.subject, this.predicate, this.object, this.graph);
   }
+}
+
+;// CONCATENATED MODULE: ../../node_modules/n3/src/N3StoreFactory.js
+
+
+class N3DatasetCoreFactory {
+  dataset(quads) {
+    return new N3Store(quads);
+  }
+}
+
+;// CONCATENATED MODULE: ../../node_modules/n3/src/N3Reasoner.js
+
+
+/**
+ * Gets rules from a dataset. This will only collect horn rules declared using log:implies.
+ */
+function getRulesFromDataset(dataset) {
+  const rules = [];
+  for (const { subject, object } of dataset.match(null, N3DataFactory.namedNode('http://www.w3.org/2000/10/swap/log#implies'), null, N3DataFactory.defaultGraph())) {
+    const premise = [...dataset.match(null, null, null, subject)];
+    const conclusion = [...dataset.match(null, null, null, object)];
+    rules.push({ premise, conclusion });
+  }
+  return rules;
+}
+
+class N3Reasoner {
+  constructor(store) {
+    this._store = store;
+  }
+
+  _add(subject, predicate, object, graphItem, cb) {
+    // Only add to the remaining indexes if there is not already a value in the index
+    if (!this._store._addToIndex(graphItem.subjects,   subject,   predicate, object)) return;
+    this._store._addToIndex(graphItem.predicates, predicate, object,    subject);
+    this._store._addToIndex(graphItem.objects,    object,    subject,   predicate);
+    cb();
+  }
+
+  // eslint-disable-next-line no-warning-comments
+  _evaluatePremise(rule, content, cb, i = 0) {
+    let v1, v2, value, index1, index2;
+    const [val0, val1, val2] = rule.premise[i].value, index = content[rule.premise[i].content];
+    const v0 = !(value = val0.value);
+    for (value in v0 ? index : { [value]: index[value] }) {
+      if (index1 = index[value]) {
+        if (v0) val0.value = Number(value);
+        v1 = !(value = val1.value);
+        for (value in v1 ? index1 : { [value]: index1[value] }) {
+          if (index2 = index1[value]) {
+            if (v1) val1.value = Number(value);
+            v2 = !(value = val2.value);
+            for (value in v2 ? index2 : { [value]: index2[value] }) {
+              if (v2) val2.value = Number(value);
+
+              if (i === rule.premise.length - 1)
+                rule.conclusion.forEach(c => {
+                  // eslint-disable-next-line max-nested-callbacks
+                  this._add(c.subject.value, c.predicate.value, c.object.value, content, () => { cb(c); });
+                });
+              else
+                this._evaluatePremise(rule, content, cb, i + 1);
+            }
+            if (v2) val2.value = null;
+          }
+        }
+        if (v1) val1.value = null;
+      }
+    }
+    if (v0) val0.value = null;
+  }
+
+  _evaluateRules(rules, content, cb) {
+    for (let i = 0; i < rules.length; i++) {
+      this._evaluatePremise(rules[i], content, cb);
+    }
+  }
+
+  // A naive reasoning algorithm where rules are just applied by repeatedly applying rules
+  // until no more evaluations are made
+  _reasonGraphNaive(rules, content) {
+    const newRules = [];
+
+    function addRule(conclusion) {
+      if (conclusion.next)
+        conclusion.next.forEach(rule => {
+          newRules.push([conclusion.subject.value, conclusion.predicate.value, conclusion.object.value, rule]);
+        });
+    }
+
+    // eslint-disable-next-line func-style
+    const addConclusions = conclusion => {
+      conclusion.forEach(c => {
+        // eslint-disable-next-line max-nested-callbacks
+        this._add(c.subject.value, c.predicate.value, c.object.value, content, () => { addRule(c); });
+      });
+    };
+
+    this._evaluateRules(rules, content, addRule);
+
+    let r;
+    while ((r = newRules.pop()) !== undefined) {
+      const [subject, predicate, object, rule] = r;
+      const v1 = rule.basePremise.subject.value;
+      if (!v1) rule.basePremise.subject.value = subject;
+      const v2 = rule.basePremise.predicate.value;
+      if (!v2) rule.basePremise.predicate.value = predicate;
+      const v3 = rule.basePremise.object.value;
+      if (!v3) rule.basePremise.object.value = object;
+
+      if (rule.premise.length === 0) {
+        addConclusions(rule.conclusion);
+      }
+      else {
+        this._evaluatePremise(rule, content, addRule);
+      }
+
+      if (!v1) rule.basePremise.subject.value = null;
+      if (!v2) rule.basePremise.predicate.value = null;
+      if (!v3) rule.basePremise.object.value = null;
+    }
+  }
+
+  _createRule({ premise, conclusion }) {
+    const varMapping = {};
+
+    const toId = value => value.termType === 'Variable' ?
+      // If the term is a variable, then create an empty object that values can be placed into
+      (varMapping[value.value] = varMapping[value.value] || {}) :
+      // If the term is not a variable, then set the ID value
+      { value: this._store._termToNewNumericId(value) };
+
+    // eslint-disable-next-line func-style
+    const t = term => ({ subject: toId(term.subject), predicate: toId(term.predicate), object: toId(term.object) });
+
+    return {
+      premise: premise.map(p => t(p)),
+      conclusion: conclusion.map(p => t(p)),
+      variables: Object.values(varMapping),
+    };
+  }
+
+  reason(rules) {
+    if (!Array.isArray(rules)) {
+      rules = getRulesFromDataset(rules);
+    }
+    rules = rules.map(rule => this._createRule(rule));
+
+    for (const r1 of rules) {
+      for (const r2 of rules) {
+        for (let i = 0; i < r2.premise.length; i++) {
+          const p = r2.premise[i];
+          for (const c of r1.conclusion) {
+            if (termEq(p.subject, c.subject) && termEq(p.predicate, c.predicate) && termEq(p.object, c.object)) {
+              const set = new Set();
+
+              const premise = [];
+
+              // Since these *will* be substituted when we apply the rule,
+              // we need to do this, so that we index correctly in the subsequent section
+              p.subject.value = p.subject.value || 1;
+              p.object.value = p.object.value || 1;
+              p.predicate.value = p.predicate.value || 1;
+
+              for (let j = 0; j < r2.premise.length; j++) {
+                if (j !== i) {
+                  premise.push(getIndex(r2.premise[j], set));
+                }
+              }
+
+              // eslint-disable-next-line no-warning-comments
+              // TODO: Create new rule, with new indexing
+              //       Future, 'collapse' the next statements when they share a premise/base-premise
+              (c.next = c.next || []).push({
+                premise,
+                conclusion: r2.conclusion,
+                // This is a single premise of the form { subject, predicate, object },
+                // which we can use to instantiate the rule using the new data that was emitted
+                basePremise: p,
+              });
+            }
+            r2.variables.forEach(v => { v.value = null; });
+          }
+        }
+      }
+    }
+
+    for (const rule of rules) {
+      const set = new Set();
+      rule.premise = rule.premise.map(p => getIndex(p, set));
+    }
+
+    const graphs = this._store._getGraphs();
+    for (const graphId in graphs) {
+      this._reasonGraphNaive(rules, graphs[graphId]);
+    }
+
+    this._store._size = null;
+  }
+}
+
+function getIndex({ subject, predicate, object }, set) {
+  const s = subject.value   || set.has(subject)   || (set.add(subject), false);
+  const p = predicate.value || set.has(predicate) || (set.add(predicate), false);
+  const o = object.value    || set.has(object)    || (set.add(object), false);
+
+  return (!s && p) ? { content: 'predicates', value: [predicate, object, subject] } :
+    o ? { content: 'objects', value: [object, subject, predicate] } :
+        { content: 'subjects', value: [subject, predicate, object] };
+}
+
+function termEq(t1, t2) {
+  if (t1.value === null) {
+    t1.value = t2.value;
+  }
+  return t1.value === t2.value;
 }
 
 ;// CONCATENATED MODULE: ../../node_modules/n3/src/N3StreamParser.js
@@ -20732,7 +21241,7 @@ class N3StreamParser extends browser.Transform {
       // Handle quads by pushing them down the pipeline
       (error, quad) => { error && this.emit('error', error) || quad && this.push(quad); },
       // Emit prefixes through the `prefix` event
-      (prefix, uri) => { this.emit('prefix', prefix, uri); }
+      (prefix, uri) => { this.emit('prefix', prefix, uri); },
     );
 
     // Implement Transform methods through parser callbacks
@@ -20791,6 +21300,8 @@ class N3StreamWriter extends browser.Transform {
 
 
 
+
+
 // Named exports
 
 
@@ -20800,9 +21311,12 @@ class N3StreamWriter extends browser.Transform {
   Parser: N3Parser,
   Writer: N3Writer,
   Store: N3Store,
+  StoreFactory: N3DatasetCoreFactory,
+  EntityIndex: N3EntityIndex,
   StreamParser: N3StreamParser,
   StreamWriter: N3StreamWriter,
   Util: N3Util_namespaceObject,
+  Reasoner: N3Reasoner,
 
   DataFactory: N3DataFactory,
 
@@ -24553,6 +25067,518 @@ if (true)
 
 /***/ }),
 
+/***/ 4245:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+"use strict";
+/** ThreadedMaterializer - prototype NFA-thread-based ShExMap materializer.
+ *
+ * Motivation: the trivialMaterializer/ShExMaterializer pair walks the target
+ * schema depth-first while sharing ONE mutable binder (a pointer into the
+ * binding tree plus destructive "used" marks -- see binder() in
+ * ../shex-extension-map.js).  When a required node deep in the schema can't be
+ * satisfied, the containing node is eliminated, but the binder's pointer and
+ * used-marks are NOT restored, so success depends precariously on visit order.
+ *
+ * This prototype treats materialization like Thompson/Pike NFA simulation
+ * (c.f. rbenx in ./eval-simple-1err-materializer.js): the target schema
+ * compiles to an NFA (plus a call stack for shape references, making it an
+ * RTN/pushdown machine), and each live thread carries ITS OWN immutable
+ * binding-tree cursor along with its NFA state, repetition counters and
+ * emitted triples.  A thread that hits an unbound required variable simply
+ * dies; sibling threads (fewer repetitions, skipped optional, other OneOf
+ * disjunct) proceed with an uncorrupted cursor, giving the state rollback the
+ * single-threaded implementation lacks.
+ *
+ * Thread anatomy:
+ *   nfa       - compiled NFA of the shape instance being synthesized
+ *   stateNo   - current state in that NFA
+ *   subject   - N3id term whose arcs we are emitting
+ *   repeats   - {reptStateNo: count} for counted repetitions (this instance)
+ *   callStack - persistent list of {nfa, outs, subject, repeats, parent}
+ *   cursor    - {idx, used} pointer into the normalized binding frames
+ *   quads     - persistent list of emitted {s, p, o} N3id triples
+ *   bnode     - counter for inventing intermediate blank nodes
+ *
+ * Scheduling here is depth-first with greedy priority (prefer another
+ * repetition / the emitting arm of an optional / the first OneOf disjunct),
+ * so the first accepting thread is the greedy-maximal materialization --
+ * equivalent to a backtracking regex engine.  The same thread structure can
+ * be stepped breadth-parallel (PikeVM style) by deduplicating threads on
+ * (stateNo, callStack, cursor); see ../doc/threaded-materializer.md, which
+ * also discusses determinizing this machine into a DFA.
+ */
+
+
+const extensions = __webpack_require__(1787);
+const {n3idQuad2RdfJs} = __webpack_require__(6638);
+
+const MapExt = "http://shex.io/extensions/Map/#";
+const variablePattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
+const functionPattern = /^\s*[a-zA-Z0-9]+\(.*\)\s*$/;
+const UNBOUNDED = -1;
+
+class MaterializationError extends Error {
+  constructor (message, failures) {
+    super(failures && failures.length
+          ? message + "; deepest failures: " + JSON.stringify(failures.slice(-3))
+          : message);
+    this.failures = failures || [];
+  }
+}
+
+/** normalizeBindingTree - flatten a binding tree to a sequence of frames.
+ *
+ * Reproduces the _mults/_cross preprocessing in binder(): bindings whose
+ * variable occurs exactly once under an array level (e.g. bp:name next to a
+ * list of repeated groups) are distributed into every frame produced by the
+ * sibling arrays, preserving the association of multi-bindings while turning
+ * the tree into a linear input tape for the NFA.
+ */
+function normalizeBindingTree (tree) {
+  return walk(Array.isArray(tree) ? tree : [tree]).frames;
+
+  function walk (node) {
+    if (!Array.isArray(node)) {
+      const counts = {};
+      for (const k of Object.keys(node))
+        counts[k] = 1;
+      return {frames: [Object.assign({}, node)], leaf: true, counts};
+    }
+    const kids = node.map(walk);
+    const counts = {};
+    kids.forEach(kid => {
+      for (const k of Object.keys(kid.counts))
+        counts[k] = (counts[k] || 0) + kid.counts[k];
+    });
+    if (!kids.some(kid => !kid.leaf)) // plain sequence of frames
+      return {frames: [].concat.apply([], kids.map(kid => kid.frames)), leaf: false, counts};
+
+    // distribute each singleton binding from leaf kids into array kids' frames
+    const shared = {};
+    const ordered = [];
+    kids.forEach(kid => {
+      if (kid.leaf) {
+        const rest = {};
+        for (const [k, v] of Object.entries(kid.frames[0])) {
+          if (counts[k] === 1)
+            shared[k] = v;
+          else
+            rest[k] = v;
+        }
+        if (Object.keys(rest).length > 0)
+          ordered.push({frames: [rest], leaf: true});
+      } else {
+        ordered.push(kid);
+      }
+    });
+    const frames = [];
+    ordered.forEach(kid => kid.frames.forEach(frame => {
+      frames.push(kid.leaf ? frame : Object.assign({}, shared, frame));
+    }));
+    return {frames, leaf: false, counts};
+  }
+}
+
+/** cursorGet - immutable lookup in the frame sequence.
+ *
+ * Mirrors binder().get: stay on the current frame if it holds an unused
+ * binding for the variable, else scan forward; never move backward.  Returns
+ * {value, cursor} with a NEW cursor (the caller's cursor is untouched), or
+ * null if no unused binding remains -- unlike binder(), failure poisons
+ * nothing.  cursor.n counts consumed frame bindings (globals don't count);
+ * Rept states use it to demand progress from repeated subexpressions.
+ */
+function cursorGet (frames, globals, cursor, varName) {
+  if (varName in globals) // staticVars: always available, never consumed
+    return {value: globals[varName], cursor};
+  for (let i = cursor.idx; i < frames.length; ++i) {
+    const key = i + " " + varName;
+    if (varName in frames[i] && !(key in cursor.used)) {
+      const used = Object.assign({}, cursor.used);
+      used[key] = true;
+      return {value: frames[i][varName], cursor: {idx: i, used, n: cursor.n + 1}};
+    }
+  }
+  return null;
+}
+
+class ThreadedMaterializer {
+  constructor (schema, options = {}) {
+    this.schema = schema;
+    this.index = schema._index || (__webpack_require__(8822).index)(schema);
+    this.prefixes = schema._prefixes || schema.prefixes || {};
+    this.globals = options.staticVars || {};
+    this.maxRepeat = options.maxRepeat || 50;       // clamp unbounded cardinalities
+    this.maxCallDepth = options.maxCallDepth || 50; // guard cyclic shape references
+    this.maxSteps = options.maxSteps || 1000000;    // guard thread explosions
+    this._nfaCache = new Map();
+  }
+
+  /** materialize - synthesize a graph instance of shapeLabel (default: start)
+   * rooted at createRoot from the given binding tree.
+   * Returns an array of RdfJs quads.
+   */
+  materialize (bindingTree, createRoot, shapeLabel) {
+    const frames = normalizeBindingTree(bindingTree);
+    const nfa = this._compileShapeExprNFA(shapeLabel || this.schema.start
+                                          || runtimeError("no shape given and no start in schema"));
+    const failures = [];
+    const stack = [{
+      nfa, stateNo: nfa.start,
+      subject: createRoot || "_:root",
+      repeats: {}, callStack: null,
+      cursor: {idx: 0, used: {}, n: 0},
+      quads: null, bnode: 0
+    }];
+    let steps = 0;
+
+    while (stack.length > 0) {
+      if (++steps > this.maxSteps)
+        throw new MaterializationError("exceeded maxSteps=" + this.maxSteps, failures);
+      const th = stack.pop();
+      const st = th.nfa.states[th.stateNo];
+      switch (st.type) {
+
+      case "Match":
+        if (th.callStack === null)
+          return collectQuads(th.quads); // accept: greedy-first materialization
+        { // return from a shape-reference call
+          const frame = th.callStack;
+          // vacuous-descend rule: greedy entry into an OPTIONAL shape-valued
+          // constraint whose subshape then emitted nothing and consumed
+          // nothing would leave a dangling bnode island; drop this thread --
+          // the skip arm already queued yields the same content without it.
+          // (A REQUIRED constraint keeps its empty island, as the old
+          // materializer did.)
+          if (frame.skippable && th.quads === frame.quadsMark && th.cursor.n === frame.consumedMark)
+            break;
+          frame.outs.forEach(out => stack.push(Object.assign({}, th, {
+            nfa: frame.nfa, stateNo: out,
+            subject: frame.subject, repeats: frame.repeats,
+            callStack: frame.parent
+          })));
+        }
+        break;
+
+      case "Split": // OneOf: first disjunct has priority, so push it last
+        for (let i = st.outs.length - 1; i >= 0; --i)
+          stack.push(Object.assign({}, th, {stateNo: st.outs[i]}));
+        break;
+
+      case "Rept": {
+        const r = th.repeats[th.stateNo] || {n: 0, at: -1};
+        if (r.n >= st.min) { // exit arm (lower priority): reset counter for possible re-entry
+          const repeats = Object.assign({}, th.repeats);
+          delete repeats[th.stateNo];
+          stack.push(Object.assign({}, th, {stateNo: st.outs[1], repeats}));
+        }
+        // greedy: another repetition, but only if the previous iteration
+        // consumed a frame binding -- constant- or staticVar-only
+        // subexpressions stay satisfiable forever, so without this progress
+        // guard a starred one would loop to maxRepeat.
+        if (r.n < Math.min(st.max, this.maxRepeat) && (r.n === 0 || th.cursor.n > r.at)) {
+          const repeats = Object.assign({}, th.repeats);
+          repeats[th.stateNo] = {n: r.n + 1, at: th.cursor.n};
+          stack.push(Object.assign({}, th, {stateNo: st.outs[0], repeats}));
+        }
+        break;
+      }
+
+      case "TC":
+        this._stepTripleConstraint(th, st, frames, stack, failures);
+        break;
+
+      default:
+        runtimeError("unexpected NFA state type " + st.type);
+      }
+    }
+    throw new MaterializationError("no thread reached an accepting state", failures);
+  }
+
+  /** _stepTripleConstraint - one TC visit synthesizes exactly one instance of
+   * the constraint (cardinality is handled by the surrounding Rept states):
+   *  - Map semActs: resolve each variable/function against this thread's
+   *    cursor; any unbound variable kills the thread (rollback comes free).
+   *  - singleton value set: emit the constant.
+   *  - shape-valued: invent a bnode, link it, and call into the sub-shape NFA.
+   */
+  _stepTripleConstraint (th, st, frames, stack, failures) {
+    const tc = st.tc;
+    const mapExts = (tc.semActs || []).filter(ext => ext.name === MapExt);
+
+    if (mapExts.length > 0) {
+      let cursor = th.cursor;
+      const objects = [];
+      for (const ext of mapExts) {
+        const code = ext.code;
+        const m = code.match(variablePattern);
+        if (m) {
+          const varName = m[1] ? m[1] : this._expandPrefix(m[2], m[3]);
+          const hit = cursorGet(frames, this.globals, cursor, varName);
+          if (hit === null) {
+            failures.push({predicate: tc.predicate, variable: varName, frame: cursor.idx});
+            return; // unbound required variable: this thread dies
+          }
+          cursor = hit.cursor;
+          objects.push(n3ify(hit.value));
+        } else if (functionPattern.test(code)) {
+          try { // e.g. regex(...)/hashmap(...): lower() pulls variables via get()
+            const adapter = {get: (v) => {
+              const hit = cursorGet(frames, this.globals, cursor, v);
+              if (hit === null)
+                return undefined;
+              cursor = hit.cursor;
+              return hit.value;
+            }};
+            objects.push(extensions.lower(code, adapter, this.prefixes));
+          } catch (e) {
+            failures.push({predicate: tc.predicate, code, error: e.message});
+            return;
+          }
+        } else {
+          failures.push({predicate: tc.predicate, code, error: "unrecognized Map code"});
+          return;
+        }
+      }
+      let quads = th.quads;
+      for (const o of objects)
+        quads = {q: this._triple(tc, th.subject, o), prev: quads};
+      st.outs.forEach(out => stack.push(Object.assign({}, th, {stateNo: out, cursor, quads})));
+      return;
+    }
+
+    const valueExpr = tc.valueExpr === undefined ? undefined : this._resolveShapeExpr(tc.valueExpr);
+    if (valueExpr && valueExpr.type === "NodeConstraint"
+        && valueExpr.values && valueExpr.values.length === 1) {
+      const quads = {q: this._triple(tc, th.subject, n3ify(valueExpr.values[0])), prev: th.quads};
+      st.outs.forEach(out => stack.push(Object.assign({}, th, {stateNo: out, quads})));
+      return;
+    }
+
+    if (valueExpr && ["Shape", "ShapeAnd", "ShapeOr"].indexOf(valueExpr.type) !== -1) {
+      if (stackDepth(th.callStack) >= this.maxCallDepth) {
+        failures.push({predicate: tc.predicate, error: "exceeded maxCallDepth"});
+        return;
+      }
+      const bnode = "_:tm" + th.bnode;
+      const sub = this._compileShapeExprNFA(valueExpr);
+      const quads = {q: this._triple(tc, th.subject, bnode), prev: th.quads};
+      stack.push(Object.assign({}, th, {
+        nfa: sub, stateNo: sub.start,
+        subject: bnode, repeats: {},
+        callStack: {nfa: th.nfa, outs: st.outs, subject: th.subject, repeats: th.repeats, parent: th.callStack,
+                    skippable: st.skippable === true, quadsMark: quads, consumedMark: th.cursor.n},
+        quads,
+        bnode: th.bnode + 1
+      }));
+      return;
+    }
+
+    failures.push({predicate: tc.predicate,
+                   error: "cannot synthesize valueExpr of type "
+                   + (valueExpr ? valueExpr.type : "undefined")
+                   + " without a Map semAct"});
+  }
+
+  _triple (tc, subject, object) {
+    return tc.inverse
+      ? {s: object, p: tc.predicate, o: subject}
+      : {s: subject, p: tc.predicate, o: object};
+  }
+
+  _expandPrefix (prefix, local) {
+    return prefix in this.prefixes ? this.prefixes[prefix] + local : prefix + ":" + local;
+  }
+
+  _resolveShapeExpr (shapeExpr) {
+    for (let hops = 0; typeof shapeExpr === "string"; ++hops) {
+      if (hops > 100)
+        runtimeError("shape reference loop at " + shapeExpr);
+      const decl = this.index.shapeExprs[shapeExpr];
+      if (!decl)
+        runtimeError("shape " + shapeExpr + " not found in schema");
+      shapeExpr = "shapeExpr" in decl ? decl.shapeExpr : decl;
+    }
+    return shapeExpr;
+  }
+
+  /** _compileShapeExprNFA - compile any shapeExpr to an NFA (cached per
+   * resolved shapeExpr object):
+   * - Shape: its tripleExpr's NFA;
+   * - ShapeAnd: conjuncts' NFAs concatenated against the same subject
+   *   (NodeConstraint conjuncts restrict the focus node, not its arcs, so
+   *   they contribute no emissions and are skipped);
+   * - ShapeOr: prioritized Split over the disjuncts' NFAs;
+   * - NodeConstraint: the empty NFA (nothing to synthesize).
+   */
+  _compileShapeExprNFA (shapeExpr) {
+    const se = this._resolveShapeExpr(shapeExpr);
+    if (this._nfaCache.has(se))
+      return this._nfaCache.get(se);
+    let nfa;
+    if (se.type === "Shape") {
+      nfa = this._nfaFor(se);
+    } else if (se.type === "ShapeAnd" || se.type === "ShapeOr") {
+      const parts = se.shapeExprs
+            .map(nested => this._resolveShapeExpr(nested))
+            .filter(nested => nested.type !== "NodeConstraint")
+            .map(nested => this._compileShapeExprNFA(nested));
+      nfa = se.type === "ShapeAnd" ? concatNFAs(parts) : splitNFAs(parts);
+    } else if (se.type === "NodeConstraint") {
+      nfa = {states: [{type: "Match"}], start: 0};
+    } else {
+      runtimeError(se.type + " synthesis not supported by this prototype");
+    }
+    this._nfaCache.set(se, nfa);
+    return nfa;
+  }
+
+  /** _nfaFor - compile a Shape's tripleExpr to an NFA (cached per Shape).
+   * States: TC (consume/emit one constraint instance), Split (OneOf),
+   * Rept (counted repetition: outs[0]=loop body, outs[1]=exit), Match.
+   * The Match state is always state 0.
+   */
+  _nfaFor (shape) {
+    if (this._nfaCache.has(shape))
+      return this._nfaCache.get(shape);
+    const states = [];
+    const mkState = (s) => states.push(s) - 1;
+    const patch = (tail, target) => tail.forEach(t => states[t].outs.push(target));
+
+    const walkExpr = (expr) => {
+      let pair;
+      switch (expr.type) {
+      case "TripleConstraint": {
+        const s = mkState({type: "TC", tc: expr, outs: []});
+        pair = {start: s, tail: [s]};
+        break;
+      }
+      case "OneOf": {
+        const starts = [], tails = [];
+        expr.expressions.forEach(nested => {
+          const p = walkExpr(nested);
+          starts.push(p.start);
+          tails.push.apply(tails, p.tail);
+        });
+        pair = {start: mkState({type: "Split", outs: starts}), tail: tails};
+        break;
+      }
+      case "EachOf": {
+        let start = null, tail = null;
+        expr.expressions.forEach((nested, ord) => {
+          const p = walkExpr(nested);
+          if (ord === 0)
+            start = p.start;
+          else
+            patch(tail, p.start);
+          tail = p.tail;
+        });
+        pair = {start, tail};
+        break;
+      }
+      default:
+        runtimeError("unexpected tripleExpr type " + expr.type);
+      }
+      const min = "min" in expr ? expr.min : 1;
+      const max = "max" in expr ? (expr.max === UNBOUNDED ? Infinity : expr.max) : 1;
+      if (min === 0 && expr.type === "TripleConstraint")
+        states[pair.start].skippable = true; // enables the vacuous-descend rule
+      if (min === 1 && max === 1)
+        return pair;
+      const rept = mkState({type: "Rept", min, max, outs: [pair.start]}); // parent patch appends outs[1]=exit
+      patch(pair.tail, rept);
+      return {start: rept, tail: [rept]};
+    };
+
+    const matchState = mkState({type: "Match"});
+    let start = matchState;
+    if (shape.expression) {
+      const pair = walkExpr(shape.expression);
+      patch(pair.tail, matchState);
+      start = pair.start;
+    }
+    const nfa = {states, start};
+    this._nfaCache.set(shape, nfa);
+    return nfa;
+  }
+}
+
+/** cloneInto - append a copy of an NFA's states (outs re-based) to combined,
+ * returning the offset at which they landed.
+ */
+function cloneInto (combined, nfa) {
+  const offset = combined.length;
+  nfa.states.forEach(s => combined.push(
+    Object.assign({}, s, s.outs ? {outs: s.outs.map(o => o + offset)} : {})));
+  return offset;
+}
+
+/** concatNFAs - one NFA that runs each part in sequence against the same
+ * subject: every part's Match (state 0 by construction) except the last's
+ * becomes a Split to the next part's start.
+ */
+function concatNFAs (parts) {
+  if (parts.length === 0)
+    return {states: [{type: "Match"}], start: 0};
+  const states = [];
+  const offsets = parts.map(part => cloneInto(states, part));
+  for (let i = 0; i < parts.length - 1; ++i)
+    states[offsets[i]] = {type: "Split", outs: [offsets[i + 1] + parts[i + 1].start]};
+  return {states, start: offsets[0] + parts[0].start};
+}
+
+/** splitNFAs - one NFA that forks over the parts (each keeps its own Match;
+ * the stepper treats any Match as end-of-shape).  Part order is priority
+ * order.
+ */
+function splitNFAs (parts) {
+  if (parts.length === 0)
+    return {states: [{type: "Match"}], start: 0};
+  const states = [];
+  const outs = parts.map(part => cloneInto(states, part) + part.start);
+  const split = states.push({type: "Split", outs}) - 1;
+  return {states, start: split};
+}
+
+function collectQuads (quadList) {
+  const triples = [];
+  for (let node = quadList; node !== null; node = node.prev)
+    triples.unshift(node.q);
+  const seen = {};
+  return triples.filter(t => {
+    const key = t.s + " " + t.p + " " + t.o;
+    return key in seen ? false : (seen[key] = true);
+  }).map(t => n3idQuad2RdfJs(t.s, t.p, t.o));
+}
+
+function stackDepth (callStack) {
+  let depth = 0;
+  for (let frame = callStack; frame !== null; frame = frame.parent)
+    ++depth;
+  return depth;
+}
+
+function n3ify (ldterm) { // ShExJson term -> N3id string (c.f. shex-extension-map.js)
+  if (typeof ldterm !== "object")
+    return ldterm;
+  const ret = "\"" + ldterm.value + "\"";
+  if ("language" in ldterm)
+    return ret + "@" + ldterm.language;
+  if ("type" in ldterm)
+    return ret + "^^" + ldterm.type;
+  return ret;
+}
+
+function runtimeError () {
+  throw new MaterializationError(Array.prototype.join.call(arguments, ""));
+}
+
+module.exports = {ThreadedMaterializer, normalizeBindingTree, MaterializationError};
+
+
+/***/ }),
+
 /***/ 3443:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
@@ -26036,6 +27062,8 @@ return {
   register: register,
   done: done,
   materializer: materializer,
+  ThreadedMaterializer: (__webpack_require__(4245).ThreadedMaterializer),
+  MaterializationError: (__webpack_require__(4245).MaterializationError),
   // binder: binder,
   url: MapExt,
   // visitTripleConstraint: myvisitTripleConstraint
@@ -26207,7 +27235,7 @@ const NeighborhoodSparqlModule = (function () {
   const ShExTerm = __webpack_require__(2130);
   const ShExUtil = __webpack_require__(8822);
   const {ShExVisitor} = __webpack_require__(9522);
-  const RdfJs = __webpack_require__(2243); // TODO: set global externally
+  const RdfJs = __webpack_require__(51); // TODO: set global externally
 
   function sparqlDB (endpoint, queryTracker, options = {}) {
     // Need to inspect the schema to calculate the relevant neighborhood.
@@ -27347,7 +28375,7 @@ const ShExLoaderCjsModule = function (config = {}) {
 
   const loader = {
     load: load,
-    loadExtensions: LoadNoExtensions,
+    loadExtensions: config.loadExtensions || LoadNoExtensions,
     GET,
     ResourceLoadControler,
     loadSchemaImports,

@@ -113,7 +113,8 @@ function normalizeBindingTree (tree) {
  * binding for the variable, else scan forward; never move backward.  Returns
  * {value, cursor} with a NEW cursor (the caller's cursor is untouched), or
  * null if no unused binding remains -- unlike binder(), failure poisons
- * nothing.
+ * nothing.  cursor.n counts consumed frame bindings (globals don't count);
+ * Rept states use it to demand progress from repeated subexpressions.
  */
 function cursorGet (frames, globals, cursor, varName) {
   if (varName in globals) // staticVars: always available, never consumed
@@ -123,7 +124,7 @@ function cursorGet (frames, globals, cursor, varName) {
     if (varName in frames[i] && !(key in cursor.used)) {
       const used = Object.assign({}, cursor.used);
       used[key] = true;
-      return {value: frames[i][varName], cursor: {idx: i, used}};
+      return {value: frames[i][varName], cursor: {idx: i, used, n: cursor.n + 1}};
     }
   }
   return null;
@@ -147,17 +148,14 @@ class ThreadedMaterializer {
    */
   materialize (bindingTree, createRoot, shapeLabel) {
     const frames = normalizeBindingTree(bindingTree);
-    const shape = this._resolveShapeExpr(shapeLabel || this.schema.start
-                                         || runtimeError("no shape given and no start in schema"));
-    if (shape.type !== "Shape")
-      runtimeError("expected root shapeExpr of type Shape, got " + shape.type);
-    const nfa = this._nfaFor(shape);
+    const nfa = this._compileShapeExprNFA(shapeLabel || this.schema.start
+                                          || runtimeError("no shape given and no start in schema"));
     const failures = [];
     const stack = [{
       nfa, stateNo: nfa.start,
       subject: createRoot || "_:root",
       repeats: {}, callStack: null,
-      cursor: {idx: 0, used: {}},
+      cursor: {idx: 0, used: {}, n: 0},
       quads: null, bnode: 0
     }];
     let steps = 0;
@@ -174,6 +172,14 @@ class ThreadedMaterializer {
           return collectQuads(th.quads); // accept: greedy-first materialization
         { // return from a shape-reference call
           const frame = th.callStack;
+          // vacuous-descend rule: greedy entry into an OPTIONAL shape-valued
+          // constraint whose subshape then emitted nothing and consumed
+          // nothing would leave a dangling bnode island; drop this thread --
+          // the skip arm already queued yields the same content without it.
+          // (A REQUIRED constraint keeps its empty island, as the old
+          // materializer did.)
+          if (frame.skippable && th.quads === frame.quadsMark && th.cursor.n === frame.consumedMark)
+            break;
           frame.outs.forEach(out => stack.push(Object.assign({}, th, {
             nfa: frame.nfa, stateNo: out,
             subject: frame.subject, repeats: frame.repeats,
@@ -188,15 +194,19 @@ class ThreadedMaterializer {
         break;
 
       case "Rept": {
-        const r = th.repeats[th.stateNo] || 0;
-        if (r >= st.min) { // exit arm (lower priority): reset counter for possible re-entry
+        const r = th.repeats[th.stateNo] || {n: 0, at: -1};
+        if (r.n >= st.min) { // exit arm (lower priority): reset counter for possible re-entry
           const repeats = Object.assign({}, th.repeats);
           delete repeats[th.stateNo];
           stack.push(Object.assign({}, th, {stateNo: st.outs[1], repeats}));
         }
-        if (r < Math.min(st.max, this.maxRepeat)) { // greedy: another repetition
+        // greedy: another repetition, but only if the previous iteration
+        // consumed a frame binding -- constant- or staticVar-only
+        // subexpressions stay satisfiable forever, so without this progress
+        // guard a starred one would loop to maxRepeat.
+        if (r.n < Math.min(st.max, this.maxRepeat) && (r.n === 0 || th.cursor.n > r.at)) {
           const repeats = Object.assign({}, th.repeats);
-          repeats[th.stateNo] = r + 1;
+          repeats[th.stateNo] = {n: r.n + 1, at: th.cursor.n};
           stack.push(Object.assign({}, th, {stateNo: st.outs[0], repeats}));
         }
         break;
@@ -273,18 +283,20 @@ class ThreadedMaterializer {
       return;
     }
 
-    if (valueExpr && valueExpr.type === "Shape") {
+    if (valueExpr && ["Shape", "ShapeAnd", "ShapeOr"].indexOf(valueExpr.type) !== -1) {
       if (stackDepth(th.callStack) >= this.maxCallDepth) {
         failures.push({predicate: tc.predicate, error: "exceeded maxCallDepth"});
         return;
       }
       const bnode = "_:tm" + th.bnode;
-      const sub = this._nfaFor(valueExpr);
+      const sub = this._compileShapeExprNFA(valueExpr);
+      const quads = {q: this._triple(tc, th.subject, bnode), prev: th.quads};
       stack.push(Object.assign({}, th, {
         nfa: sub, stateNo: sub.start,
         subject: bnode, repeats: {},
-        callStack: {nfa: th.nfa, outs: st.outs, subject: th.subject, repeats: th.repeats, parent: th.callStack},
-        quads: {q: this._triple(tc, th.subject, bnode), prev: th.quads},
+        callStack: {nfa: th.nfa, outs: st.outs, subject: th.subject, repeats: th.repeats, parent: th.callStack,
+                    skippable: st.skippable === true, quadsMark: quads, consumedMark: th.cursor.n},
+        quads,
         bnode: th.bnode + 1
       }));
       return;
@@ -315,14 +327,44 @@ class ThreadedMaterializer {
         runtimeError("shape " + shapeExpr + " not found in schema");
       shapeExpr = "shapeExpr" in decl ? decl.shapeExpr : decl;
     }
-    if (shapeExpr.type === "ShapeAnd" || shapeExpr.type === "ShapeOr" || shapeExpr.type === "ShapeNot")
-      runtimeError(shapeExpr.type + " synthesis not supported by this prototype");
     return shapeExpr;
+  }
+
+  /** _compileShapeExprNFA - compile any shapeExpr to an NFA (cached per
+   * resolved shapeExpr object):
+   * - Shape: its tripleExpr's NFA;
+   * - ShapeAnd: conjuncts' NFAs concatenated against the same subject
+   *   (NodeConstraint conjuncts restrict the focus node, not its arcs, so
+   *   they contribute no emissions and are skipped);
+   * - ShapeOr: prioritized Split over the disjuncts' NFAs;
+   * - NodeConstraint: the empty NFA (nothing to synthesize).
+   */
+  _compileShapeExprNFA (shapeExpr) {
+    const se = this._resolveShapeExpr(shapeExpr);
+    if (this._nfaCache.has(se))
+      return this._nfaCache.get(se);
+    let nfa;
+    if (se.type === "Shape") {
+      nfa = this._nfaFor(se);
+    } else if (se.type === "ShapeAnd" || se.type === "ShapeOr") {
+      const parts = se.shapeExprs
+            .map(nested => this._resolveShapeExpr(nested))
+            .filter(nested => nested.type !== "NodeConstraint")
+            .map(nested => this._compileShapeExprNFA(nested));
+      nfa = se.type === "ShapeAnd" ? concatNFAs(parts) : splitNFAs(parts);
+    } else if (se.type === "NodeConstraint") {
+      nfa = {states: [{type: "Match"}], start: 0};
+    } else {
+      runtimeError(se.type + " synthesis not supported by this prototype");
+    }
+    this._nfaCache.set(se, nfa);
+    return nfa;
   }
 
   /** _nfaFor - compile a Shape's tripleExpr to an NFA (cached per Shape).
    * States: TC (consume/emit one constraint instance), Split (OneOf),
    * Rept (counted repetition: outs[0]=loop body, outs[1]=exit), Match.
+   * The Match state is always state 0.
    */
   _nfaFor (shape) {
     if (this._nfaCache.has(shape))
@@ -367,6 +409,8 @@ class ThreadedMaterializer {
       }
       const min = "min" in expr ? expr.min : 1;
       const max = "max" in expr ? (expr.max === UNBOUNDED ? Infinity : expr.max) : 1;
+      if (min === 0 && expr.type === "TripleConstraint")
+        states[pair.start].skippable = true; // enables the vacuous-descend rule
       if (min === 1 && max === 1)
         return pair;
       const rept = mkState({type: "Rept", min, max, outs: [pair.start]}); // parent patch appends outs[1]=exit
@@ -385,6 +429,43 @@ class ThreadedMaterializer {
     this._nfaCache.set(shape, nfa);
     return nfa;
   }
+}
+
+/** cloneInto - append a copy of an NFA's states (outs re-based) to combined,
+ * returning the offset at which they landed.
+ */
+function cloneInto (combined, nfa) {
+  const offset = combined.length;
+  nfa.states.forEach(s => combined.push(
+    Object.assign({}, s, s.outs ? {outs: s.outs.map(o => o + offset)} : {})));
+  return offset;
+}
+
+/** concatNFAs - one NFA that runs each part in sequence against the same
+ * subject: every part's Match (state 0 by construction) except the last's
+ * becomes a Split to the next part's start.
+ */
+function concatNFAs (parts) {
+  if (parts.length === 0)
+    return {states: [{type: "Match"}], start: 0};
+  const states = [];
+  const offsets = parts.map(part => cloneInto(states, part));
+  for (let i = 0; i < parts.length - 1; ++i)
+    states[offsets[i]] = {type: "Split", outs: [offsets[i + 1] + parts[i + 1].start]};
+  return {states, start: offsets[0] + parts[0].start};
+}
+
+/** splitNFAs - one NFA that forks over the parts (each keeps its own Match;
+ * the stepper treats any Match as end-of-shape).  Part order is priority
+ * order.
+ */
+function splitNFAs (parts) {
+  if (parts.length === 0)
+    return {states: [{type: "Match"}], start: 0};
+  const states = [];
+  const outs = parts.map(part => cloneInto(states, part) + part.start);
+  const split = states.push({type: "Split", outs}) - 1;
+  return {states, start: split};
 }
 
 function collectQuads (quadList) {

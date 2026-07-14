@@ -71,16 +71,17 @@ try {
   case "materialize":
     const materializeMap = msg.data.queryMap;
     const outputSchema = ShExWebApp.Util.ShExJtoAS(msg.data.outputSchema);
-    const materializer = MapModule.materializer.construct(outputSchema, Mapper, {});
+    // NFA-thread materializer (see extension-map/doc/threaded-materializer.md):
+    // needs no registered validator/Mapper state -- each materialization
+    // thread carries its own binding-tree cursor.  Emitted quads are
+    // marshalled back to the app, which rebuilds them with its DataFactory.
+    const materializer = new MapModule.ThreadedMaterializer(outputSchema, {staticVars: msg.data.staticVars || {}});
     materializeMap.forEach(pair => {
       try {
-        const binder = Mapper.binder(msg.data.resultBindings);
-        const resM = materializer.validate(binder, ShExWebApp.StringToRdfJs.n3idTerm2RdfJs(pair.node), pair.shape);
-        if ("errors" in resM) {
-          self.postMessage(Object.assign({ response: "error", results: resM }, pair));
-        } else {
-          self.postMessage({ response: "update", results: resM });
-        }
+        // a structured-cloned Start marker arrives as a plain object; labels are strings
+        const shape = !pair.shape || typeof pair.shape === "object" ? undefined : pair.shape;
+        const quads = materializer.materialize(msg.data.resultBindings, pair.node, shape);
+        self.postMessage({ response: "update", quads: quads.map(q => WorkerMarshalling.rdfjsTripleToJsonTriple(q)) });
       } catch (e) {
         console.dir(e);
         self.postMessage({ response: "error", exception: `Exception when materializing ${pair.node}@${pair.shape}: ${typeof e === 'object' && e instanceof Error ? e.message : e}` });

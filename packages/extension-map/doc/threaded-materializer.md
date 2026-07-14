@@ -85,6 +85,14 @@ enters the subshape's NFA. `Match` with a non-empty call stack pops back into
 the caller. (Formally the machine is a pushdown transducer; see the DFA
 section for what that costs us.)
 
+Shape *expressions* compose at the NFA level: `ShapeAnd` concatenates its
+conjuncts' NFAs against the same subject (`NodeConstraint` conjuncts restrict
+the focus node, not its arcs, so they contribute no emissions and are
+skipped — this handles targets like the vpr-FHIR
+`start=@<Condition> AND {fhir:nodeRole [fhir:treeRoot]}`), and `ShapeOr`
+compiles to a prioritized `Split` over its disjuncts. `ShapeNot` synthesis is
+rejected with a clear error.
+
 A **thread** is one immutable configuration:
 
 ```
@@ -131,17 +139,20 @@ Guards: unbounded cardinalities clamp at `maxRepeat` (50, like
   silently skipped the triple, leaving a partially-populated node behind.
 * `staticVars` are exposed as globals — always readable, never consumed —
   rather than `bin/materialize`'s trick of unshifting them as an extra
-  binding-tree entry (which made each static var single-use).
-* `ShapeAnd`/`ShapeOr`/`ShapeNot` as *value expressions to synthesize* are
-  rejected with a clear error rather than half-handled. (`ShapeOr` would fit
-  the model naturally as a thread fork; `ShapeAnd` needs a notion of merging
-  emissions and is left out of the prototype.)
-* A starred subshape that consumes **no** bindings (all constants) repeats to
-  `maxRepeat` under greedy scheduling, producing `maxRepeat` isomorphic
-  bnode islands (exact duplicate triples are deduped, distinct-bnode islands
-  are not). The old code had the same behavior via `maxAdd`. A useful
-  refinement would be to require each repetition to consume at least one
-  binding after the first.
+  binding-tree entry (which made each static var single-use and lost to any
+  binding that moved the cursor past frame 0; the vpr-FHIR fixture's
+  `PARAM-status` now survives into the output).
+* **Progress guard**: a `Rept` may only take a repetition beyond the first if
+  the previous iteration consumed at least one *frame* binding (globals and
+  constants keep a subexpression satisfiable forever, so an unguarded starred
+  constant-only subshape would loop to `maxRepeat`). One binding-free
+  iteration is allowed, matching the old `maxAdd = 1` behavior for
+  unrecursed repetition.
+* **Vacuous-descend rule**: greedily entering an *optional* shape-valued `TC`
+  whose subshape then emits nothing and consumes nothing would leave a
+  dangling `<parent> <p> _:empty` link; that thread is dropped in favor of
+  the already-queued skip arm. Required constraints keep their empty islands,
+  as the old materializer's output did.
 
 ## Could this be a DFA?
 
@@ -216,10 +227,29 @@ prototype is the right tool; its immutable-thread structure is also exactly
 the shape a TDFA compiler would consume, so nothing here is thrown away on the
 way to a DFA.
 
+## Where it's wired in
+
+* **`bin/materialize`** builds a `ThreadedMaterializer` from the target schema
+  with `--jsonvars` as `staticVars` (CLI tests: `test/Map-cli-test.js`,
+  including a `validate --extension | materialize` round trip over the
+  BPDAMFHIR pair).
+* **shexmap-simple.html** (`doc/ShExMapInMainApp.js`): `DirectShExMaterializer`
+  materializes with `MapModule.ThreadedMaterializer` and adds the returned
+  quads to the result graph directly.
+* **shexmap-worker.html** (`doc/ShExMapInWorkerApp.js` /
+  `doc/ShExMapWorkerThread.js`): the worker materializes with
+  `MapModule.ThreadedMaterializer` and posts `WorkerMarshalling`-encoded quads
+  back to the page (the old protocol shipped a validation-result structure).
+  Statics travel in the `materialize` request as `staticVars`.
+* The module exposes it as `Map(...).ThreadedMaterializer` (and
+  `MaterializationError`), in node and in the webpacked `ShExWebApp` bundle
+  alike.
+
 ## Trying it
 
 ```sh
 ./node_modules/.bin/mocha packages/extension-map/test/ThreadedMaterializer-test.js
+TEST_cli=true ./node_modules/.bin/mocha packages/extension-map/test/Map-cli-test.js
 ```
 
 ```js

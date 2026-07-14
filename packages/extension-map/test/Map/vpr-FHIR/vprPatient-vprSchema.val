@@ -179,7 +179,7 @@
                                 "object": { "value": "MEDCIN" },
                                 "extensions": {
                                   "http://shex.io/extensions/Map/#": {
-                                    "tag:eric@w3.org/2016/ProblemList/Sys": { "VALUE": "MEDCIN" }
+                                    "tag:eric@w3.org/2016/ProblemList/Sys": { "value": "MEDCIN" }
                                   }
                                 }
                               }

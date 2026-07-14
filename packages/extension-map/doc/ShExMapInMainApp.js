@@ -1,35 +1,21 @@
 class DirectShExMaterializer {
-  constructor (schema, shapeMap, resultBindings, mapModule, mapper) {
-    // this.trivialMaterializer = this.Mapper.trivialMaterializer(schema);
-    // this.outputGraph = trivialMaterializer.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
+  constructor (schema, shapeMap, resultBindings, staticVars, mapModule) {
     this.schema = schema;
     this.shapeMap = shapeMap;
     this.resultBindings = resultBindings;
+    this.staticVars = staticVars;
     this.mapModule = mapModule;
-    this.mapper = mapper;
   }
   async invoke (fixedMap, validationTracker, time, _done, _currentAction) {
     const generatedGraph = new RdfJs.Store();
-    const materializer = this.mapModule.materializer.construct(this.schema, this.mapper, {});
+    // NFA-thread materializer: each thread carries its own binding-tree
+    // cursor, so a failed subtree can't corrupt the surviving alternatives.
+    // See ../doc/threaded-materializer.md.  A MaterializationError thrown
+    // here propagates to the app's materialization error report.
+    const materializer = new this.mapModule.ThreadedMaterializer(this.schema, {staticVars: this.staticVars});
     this.shapeMap.forEach(pair => {
-      try {
-        const binder = this.mapper.binder(this.resultBindings);
-        const resM = materializer.validate(binder, ShExWebApp.StringToRdfJs.n3idTerm2RdfJs(pair.node), pair.shape);
-        if ("errors" in resM) {
-          this.renderEntry({
-            node: pair.node,
-            shape: pair.shape,
-            status: "errors" in resM ? "nonconformant" : "conformant",
-            appinfo: resM,
-            elapsed: -1
-          })
-        } else {
-          // console.log("g:", ShExWebApp.Util.valToTurtle(resM));
-          generatedGraph.addQuads(ShExWebApp.Util.valToN3js(resM, RdfJs.DataFactory));
-        }
-      } catch (e) {
-        console.dir(e);
-      }
+      const shape = !pair.shape || pair.shape === ShExWebApp.Validator.Start ? undefined : pair.shape;
+      generatedGraph.addQuads(materializer.materialize(this.resultBindings, pair.node, shape));
     });
     time = new Date() - time;
     $("#shapeMap-tabs").attr("title", "last materialization: " + time + " ms");
@@ -46,8 +32,8 @@ class ShExMapInMainApp extends ShExMapBaseApp {
     return validator;
   }
 
-  getMaterializer (schema, shapeMap, resultBindings) {
-    return new DirectShExMaterializer(schema, shapeMap, resultBindings, this.MapModule, this.Mapper);
+  getMaterializer (schema, shapeMap, resultBindings, staticVars) {
+    return new DirectShExMaterializer(schema, shapeMap, resultBindings, staticVars, this.MapModule);
   }
 }
 

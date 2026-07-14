@@ -140,6 +140,43 @@ describe("ThreadedMaterializer", function () {
         .to.throw(MaterializationError, /v2/);
     });
   });
+
+  describe("shapeExpr composition", function () {
+    const prefixes = "PREFIX : <http://a.example/>\nPREFIX Map: <http://shex.io/extensions/Map/#>\n";
+
+    it("should materialize each ShapeAnd conjunct against the same subject", function () {
+      // mirrors the vpr-FHIR CLI fixture's `start=@<Condition> AND {...}`
+      const store = new RdfJs.Store();
+      store.addQuads(new ThreadedMaterializer(parseSchema(prefixes + [
+        "start = @<S> AND { :t [:const] }",
+        "<S> { :a . %Map:{ :v1 %} }"
+      ].join("\n"))).materialize({"http://a.example/v1": {value: "x"}}, "tag:root"));
+      expect(store.size).to.equal(2);
+      const subjects = store.match(null, null, null).toArray().map(q => q.subject.value);
+      expect(subjects).to.deep.equal(["tag:root", "tag:root"]);
+    });
+
+    it("should limit repetition of subshapes that consume no frame bindings", function () {
+      // <I> is satisfiable forever from its constant; the progress guard
+      // stops the star after one binding-free iteration instead of maxRepeat.
+      const store = new RdfJs.Store();
+      store.addQuads(new ThreadedMaterializer(parseSchema(prefixes + [
+        "start = @<S>",
+        "<S> { :item @<I>* }",
+        "<I> { :tag [:const] }"
+      ].join("\n"))).materialize({}, "_:root"));
+      expect(store.size).to.equal(2); // one :item link + one :tag
+    });
+
+    it("should draw staticVars from globals without consuming them", function () {
+      const store = new RdfJs.Store();
+      store.addQuads(new ThreadedMaterializer(parseSchema(prefixes + [
+        "start = @<S>",
+        "<S> { :a . %Map:{ :v9 %}; :b . %Map:{ :v9 %} }"
+      ].join("\n")), {staticVars: {"http://a.example/v9": {value: "s"}}}).materialize({}, "_:root"));
+      expect(store.size).to.equal(2); // both TCs see the static
+    });
+  });
 });
 
 /* graphEquals/findIsomorphism/mapppedTo/graphToString copied from

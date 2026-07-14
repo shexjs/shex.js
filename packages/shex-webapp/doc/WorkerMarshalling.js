@@ -61,10 +61,12 @@ class WorkerMarshalling {
   static rdfjsTermToJsonTerm (rdfjsTerm) {
     const ret = { termType: rdfjsTerm.termType, value: rdfjsTerm.value };
     if (ret.termType === "Literal") {
+      // datatypeString is an N3.js extension; fall back to the RDF/JS interface
+      const datatype = rdfjsTerm.datatypeString || (rdfjsTerm.datatype && rdfjsTerm.datatype.value);
       if (["http://www.w3.org/2001/XMLSchema#string",
            "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
-          ].indexOf(rdfjsTerm.datatypeString) === -1)
-        ret.datatype = rdfjsTerm.datatypeString;
+          ].indexOf(datatype) === -1)
+        ret.datatype = datatype;
       else if (rdfjsTerm.language)
         ret.language = rdfjsTerm.language;
     };

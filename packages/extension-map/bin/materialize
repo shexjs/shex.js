@@ -109,34 +109,15 @@ Promise.all([ShExNode.load({shexc: [cmds.target]}, null, {index: true}),
     const schema = loads[0].schema;
     const val = loads[1];
     const statics = loads[2];
-    const emptySchema = {type: "Schema"};
-    const fakeValidator = {
-      schema: emptySchema,
-      semActHandler: {
-        results: {},
-        register: () => {}
-      }
-    }
-    // or use a throw-away validator:
-    // const realValidator = require("@shexjs/validator").construct(emptySchema)
 
-    const registered = Mapper.register(fakeValidator, {ShExTerm, ShExUtil})
-    const map = registered.trivialMaterializer(schema);
+    const resultBindings = ShExUtil.valToExtension(val, Mapper.url);
 
-    const resultBindings1 = ShExUtil.valToExtension(val, Mapper.url);
-
-    function _dup (obj) { return JSON.parse(JSON.stringify(obj)); }
-
-    let resultBindings2 = _dup(resultBindings1);
-    const _t = _dup(statics);
-    if (_t && Object.keys(_t).length > 0) {
-      if (!Array.isArray(resultBindings2))
-        resultBindings2 = [resultBindings2];
-      resultBindings2.unshift(_t);
-    }
-    const outputGraph = map.materialize(registered.binder(resultBindings2), cmds.root);
+    // NFA-thread materializer: each thread of the materialization carries its
+    // own binding-tree cursor, and --jsonvars are always-available globals.
+    // See ../doc/threaded-materializer.md.
+    const materializer = new Mapper.ThreadedMaterializer(schema, {staticVars: statics});
     const writer = new N3.Writer({ prefixes: {} });
-    outputGraph.getQuads().forEach(t => { writer.addQuad(t); });
+    writer.addQuads(materializer.materialize(resultBindings, cmds.root));
     writer.end(function (error, result) { console.log(result); });
   }).catch(e => { console.error("stack" in e ? e.stack : e); });
 

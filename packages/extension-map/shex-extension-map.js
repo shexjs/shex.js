@@ -444,6 +444,8 @@ return {
   register: register,
   done: done,
   materializer: materializer,
+  ThreadedMaterializer: require("./lib/ThreadedMaterializer").ThreadedMaterializer,
+  MaterializationError: require("./lib/ThreadedMaterializer").MaterializationError,
   // binder: binder,
   url: MapExt,
   // visitTripleConstraint: myvisitTripleConstraint

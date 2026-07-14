@@ -140,26 +140,17 @@ class ShExMapBaseApp extends ShExBaseApp {
       const outputSchemaIsJSON = outputSchemaText.match(/^\s*\{/);
       const outputSchema = await this.Caches.outputSchema.refresh();
 
-      // const resultBindings = Object.assign(
-      //   await this.Caches.statics.refresh(),
-      //   await this.Caches.bindings.refresh()
-      // );
-
       function _dup (obj) { return JSON.parse(JSON.stringify(obj)); }
-      let resultBindings = _dup(await this.Caches.bindings.refresh());
+      const resultBindings = _dup(await this.Caches.bindings.refresh());
       if (this.Caches.statics.get().trim().length === 0)
         await this.Caches.statics.set("{  }");
-      const _t = await this.Caches.statics.refresh();
-      if (_t && Object.keys(_t).length > 0) {
-        if (!Array.isArray(resultBindings))
-          resultBindings = [resultBindings];
-        resultBindings.unshift(_t);
-      }
+      // statics are handed to the materializer as always-available globals
+      // rather than being spliced into the binding tree as a consumable frame
+      const staticVars = _dup(await this.Caches.statics.refresh()) || {};
 
       const outputShapeMap = [this.fixMaterializationShapeMapEntry($("#createRoot").val(), $("#outputShape").val())];
 
-      await this.Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
-      const materializer = this.getMaterializer(outputSchema, outputShapeMap, resultBindings);
+      const materializer = this.getMaterializer(outputSchema, outputShapeMap, resultBindings, staticVars);
       $("#results div").empty();
       $("#results .status").text("materializing data...").show();
 

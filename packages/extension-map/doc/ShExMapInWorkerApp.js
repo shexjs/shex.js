@@ -1,5 +1,5 @@
 class RemoteShExMaterializer {
-  constructor (schema, shapeMap, resultBindings, resultsWidget, onCancel, workerUrl) {
+  constructor (schema, shapeMap, resultBindings, staticVars, resultsWidget, onCancel, workerUrl) {
     this.generatedGraph = new RdfJs.Store();
     this.created = new Canceleable(
       $("#materialize"),
@@ -10,6 +10,7 @@ class RemoteShExMaterializer {
         queryMap: shapeMap,
         outputSchema: schema,
         resultBindings: resultBindings,
+        staticVars: staticVars,
         options: {track: LOG_PROGRESS},
       },
       this.parseUpdatesAndResults.bind(this),
@@ -24,7 +25,9 @@ class RemoteShExMaterializer {
   parseUpdatesAndResults (msg, workerUICleanup, resolve, reject) {
     switch (msg.data.response) {
     case "update":
-      this.generatedGraph.addQuads(ShExWebApp.Util.valToN3js(msg.data.results, RdfJs.DataFactory));
+      // the ThreadedMaterializer in the worker ships quads, not a val structure
+      this.generatedGraph.addQuads(msg.data.quads.map(
+        q => WorkerMarshalling.jsonTripleToRdfjsTriple(q, RdfJs.DataFactory)));
       break;
 
     case "error":
@@ -54,8 +57,8 @@ class ShExMapInWorkerApp extends ShExMapBaseApp {
     return new RemoteShExValidator(loaded, base, inputData, this.makeRenderer(), this.disableResultsAndValidate.bind(this), "endpoint" in this.Caches.inputData ? this.Caches.inputData.endpoint : null, "ShExMapWorkerThread.js")
   }
 
-  getMaterializer (schema, shapeMap, resultBindings) {
-    return new RemoteShExMaterializer(schema, shapeMap, resultBindings, this.resultsWidget, this.materialize.bind(this), "ShExMapWorkerThread.js");
+  getMaterializer (schema, shapeMap, resultBindings, staticVars) {
+    return new RemoteShExMaterializer(schema, shapeMap, resultBindings, staticVars, this.resultsWidget, this.materialize.bind(this), "ShExMapWorkerThread.js");
   }
 
   makeConsoleTracker () {
