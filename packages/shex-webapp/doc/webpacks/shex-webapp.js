@@ -8240,11 +8240,51 @@ const paneTheme = view_1.EditorView.baseTheme({
     ".shexjs-highlight": { backgroundColor: "#fff3b0" },
     ".shexjs-highlight-match": { backgroundColor: "#c8f0c8" },
     ".shexjs-highlight-fail": { backgroundColor: "#ffcdcd" },
+    ".shexjs-debug-current": { backgroundColor: "#cfe3ff" },
     "&": { border: "1px solid #ddd", fontSize: "13px",
         resize: "vertical", overflow: "hidden" }, // user-resizable, like a textarea
     ".cm-scroller": { overflow: "auto" },
     "&.cm-focused": { outline: "none", borderColor: "#88f" },
+    ".shexjs-breakpoint-gutter": { width: "1em", cursor: "pointer" },
+    ".shexjs-breakpoint-gutter .cm-gutterElement": { color: "#c22", paddingLeft: "2px" },
 });
+// ---------------------------------------------------------------------------
+// breakpoint gutter (debugger; see doc/debugger-design.md)
+const breakpointEffect = state_1.StateEffect.define();
+const breakpointMarker = new class extends view_1.GutterMarker {
+    toDOM() { return document.createTextNode("●"); }
+};
+const breakpointField = state_1.StateField.define({
+    create: () => state_1.RangeSet.empty,
+    update(set, tr) {
+        set = set.map(tr.changes);
+        for (const e of tr.effects)
+            if (e.is(breakpointEffect))
+                set = e.value.on
+                    ? set.update({ add: [breakpointMarker.range(e.value.pos)] })
+                    : set.update({ filter: from => from !== e.value.pos });
+        return set;
+    },
+});
+function toggleBreakpoint(view, pos) {
+    let on = false;
+    view.state.field(breakpointField).between(pos, pos, () => { on = true; });
+    view.dispatch({ effects: breakpointEffect.of({ pos, on: !on }) });
+}
+const breakpointExtension = [
+    breakpointField,
+    (0, view_1.gutter)({
+        class: "shexjs-breakpoint-gutter",
+        markers: view => view.state.field(breakpointField),
+        initialSpacer: () => breakpointMarker,
+        domEventHandlers: {
+            mousedown(view, line) {
+                toggleBreakpoint(view, line.from);
+                return true;
+            },
+        },
+    }),
+];
 // ---------------------------------------------------------------------------
 function lintSourceFor(language, opts) {
     switch (language) {
@@ -8267,6 +8307,7 @@ function makePane(textarea, opts = {}) {
     const extensions = [
         codemirror_1.basicSetup,
         (0, lint_1.lintGutter)(),
+        breakpointExtension,
         highlightField,
         paneTheme,
         view_1.EditorView.updateListener.of(update => {
@@ -8368,6 +8409,14 @@ function makePane(textarea, opts = {}) {
             hoverLeave = leave;
             currentRegion = null;
         },
+        listBreakpoints() {
+            const positions = [];
+            view.state.field(breakpointField).between(0, view.state.doc.length, from => { positions.push(from); });
+            return positions;
+        },
+        toggleBreakpoint(pos) {
+            toggleBreakpoint(view, view.state.doc.lineAt(pos).from);
+        },
         destroy() {
             if (changeTimer !== null) {
                 clearTimeout(changeTimer);
@@ -8442,6 +8491,7 @@ exports.parseTurtle = exports.parseShExC = void 0;
 exports.lineOffsets = lineOffsets;
 exports.yyllocToRange = yyllocToRange;
 exports.millanSourceToRange = millanSourceToRange;
+exports.sourceExcerpt = sourceExcerpt;
 exports.locateInParsed = locateInParsed;
 exports.mapValidationErrors = mapValidationErrors;
 const ShExParser = __importStar(__webpack_require__(8170));
@@ -8473,6 +8523,25 @@ function millanSourceToRange(source) {
     return source && source.startOffset !== undefined
         ? { from: source.startOffset, to: source.endOffset + 1 }
         : null;
+}
+/** sourceExcerpt - a gutter-numbered source line with a caret underline for
+ * `range` (clipped to the range's first line), e.g. for CLI debuggers:
+ *
+ *   7 |   :leaf . %Map:{ :v2 %}
+ *     |   ^^^^^^^^^^^^^^^^^^^^^
+ */
+function sourceExcerpt(text, range) {
+    const starts = lineOffsets(text);
+    let lineNo = 0;
+    while (lineNo + 1 < starts.length && starts[lineNo + 1] <= range.from)
+        ++lineNo;
+    const lineFrom = starts[lineNo];
+    const lineTo = lineNo + 1 < starts.length ? starts[lineNo + 1] : text.length;
+    const line = text.substring(lineFrom, lineTo).replace(/\n$/, "");
+    const gutter = String(lineNo + 1);
+    const caret = " ".repeat(range.from - lineFrom) +
+        "^".repeat(Math.max(1, Math.min(range.to, lineTo) - range.from));
+    return gutter + " | " + line + "\n" + " ".repeat(gutter.length) + " | " + caret + "\n";
 }
 /** memoLast - cache a parse function's most recent results (the live linter
  * and the validation mapper parse the same document text moments apart). */

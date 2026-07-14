@@ -98,6 +98,130 @@ class ShExMapBaseApp extends ShExBaseApp {
   prepareControls () {
     super.prepareControls();
     $("#materialize").on("click", evt => this.materialize(evt));
+    $("#debugMaterialize").on("click", () => { SharedForTests.promise = this.startDebugSession(); });
+    $("#dbgInto").on("click", () => this.debugStep("stepInto"));
+    $("#dbgOver").on("click", () => this.debugStep("stepOver"));
+    $("#dbgOut").on("click", () => this.debugStep("stepOut"));
+    $("#dbgContinue").on("click", () => this.debugStep("continue"));
+    $("#dbgStop").on("click", () => this.endDebugSession(true));
+  }
+
+  /** start a step-through materialization (doc/debugger-design.md phase 3):
+   * gutter breakpoints in the outputSchema pane become constraint
+   * breakpoints; the step buttons drive a MaterializerDebugger. */
+  async startDebugSession () {
+    const pane = this.editorSupport && this.editorSupport.panes.outputSchema;
+    if (!pane) {
+      this.resultsWidget.replace("Enable the language-aware editors (Menu → user interface) to debug materialization.")
+        .removeClass("passes fails").addClass("error");
+      return null;
+    }
+    if (this.Caches.bindings.get().trim().length === 0) {
+      this.resultsWidget.replace("You must validate data against a ShExMap schema to populate mappings bindings.")
+        .removeClass("passes fails").addClass("error");
+      return null;
+    }
+    this.resultsWidget.clear();
+    try {
+      const {outputSchema, resultBindings, staticVars, outputShapeMap} =
+            await this.collectMaterializationInputs();
+      const schemaText = this.Caches.outputSchema.selection.val();
+      const located = ShExWebApp.EditorServices.locateInParsed(schemaText, outputSchema);
+      const pair = outputShapeMap[0];
+      const shape = !pair.shape || pair.shape === ShExWebApp.Validator.Start ? undefined : pair.shape;
+      const materializer = new this.MapModule.ThreadedMaterializer(outputSchema, {staticVars});
+      const dbg = new this.MapModule.MaterializerDebugger(materializer, resultBindings, pair.node, shape);
+
+      // gutter breakpoints (line starts) -> the first constraint on the line
+      const lineStarts = ShExWebApp.EditorServices.lineOffsets(schemaText);
+      pane.listBreakpoints().forEach(pos => {
+        const lineEnd = lineStarts.find(start => start > pos) || schemaText.length;
+        for (let offset = pos; offset < lineEnd; ++offset) {
+          const hit = located.locate.exprAt(offset);
+          if (hit) {
+            dbg.addBreakpoint({tc: hit.expr});
+            break;
+          }
+        }
+      });
+
+      this.debugSession = {dbg, materializer, outputShapeMap, located, pane};
+      $("#debugControls").show();
+      $("#dbgStatus").text("paused before materialization; step or continue");
+      return this.debugSession;
+    } catch (e) {
+      this.reportMaterializationError(e, "starting debugger");
+      return null;
+    }
+  }
+
+  debugStep (command) {
+    const session = this.debugSession;
+    if (!session)
+      return null;
+    const event = session.dbg[command]();
+    this.showDebugEvent(event);
+    if (session.dbg.done)
+      this.endDebugSession(false);
+    return event;
+  }
+
+  showDebugEvent (event) {
+    const session = this.debugSession;
+    if (!event || !session)
+      return;
+    const threadStr = event.thread
+          ? " [" + event.thread.subject + " depth:" + event.thread.depth +
+            " frame:" + event.thread.frame + " consumed:" + event.thread.consumed +
+            " emitted:" + event.thread.emitted + "]"
+          : "";
+    switch (event.type) {
+    case "tripleConstraint": {
+      $("#dbgStatus").text("at <" + event.tc.predicate + ">" + threadStr);
+      const range = session.located.locate.expr(event.tc);
+      session.pane.highlight(range ? [range] : [], "shexjs-debug-current");
+      break;
+    }
+    case "fail":
+      $("#dbgStatus").text("branch died" +
+        (event.failure && event.failure.variable ? ": no binding for <" + event.failure.variable + ">" : "") +
+        threadStr);
+      break;
+    case "return":
+      $("#dbgStatus").text("returned" + threadStr);
+      session.pane.clearHighlights();
+      break;
+    case "done":
+      $("#dbgStatus").text("accepted: " + event.quads.length + " quads");
+      break;
+    case "error":
+      $("#dbgStatus").text("failed: " + event.error.message.split(";")[0]);
+      break;
+    }
+  }
+
+  /** wrap up: on completion render the graph (or the error) as materialize
+   * would; on user stop just dismantle */
+  endDebugSession (stopped) {
+    const session = this.debugSession;
+    if (!session)
+      return;
+    this.debugSession = null;
+    session.pane.clearHighlights();
+    $("#debugControls").hide();
+    if (stopped) {
+      $("#dbgStatus").text("");
+      return;
+    }
+    if (session.dbg.error) {
+      this.reportMaterializationError(session.dbg.error, "materialization (debugged)");
+    } else {
+      this.anchorMaterializationFailures(null, session.materializer.lastReport);
+      const generatedGraph = new RdfJs.Store();
+      generatedGraph.addQuads(session.dbg.quads);
+      $("#results .status").text("materialization results (debugged)").show();
+      this.renderMaterializedGraph(generatedGraph, session.outputShapeMap);
+    }
   }
 
   addEditorPanes () {
@@ -186,22 +310,9 @@ class ShExMapBaseApp extends ShExBaseApp {
       return null;
     }
     this.resultsWidget.start();
-    const parsing = "output schema";
     try {
-      const outputSchemaText = this.Caches.outputSchema.selection.val();
-      const outputSchemaIsJSON = outputSchemaText.match(/^\s*\{/);
-      const outputSchema = await this.Caches.outputSchema.refresh();
-
-      function _dup (obj) { return JSON.parse(JSON.stringify(obj)); }
-      const resultBindings = _dup(await this.Caches.bindings.refresh());
-      if (this.Caches.statics.get().trim().length === 0)
-        await this.Caches.statics.set("{  }");
-      // statics are handed to the materializer as always-available globals
-      // rather than being spliced into the binding tree as a consumable frame
-      const staticVars = _dup(await this.Caches.statics.refresh()) || {};
-
-      const outputShapeMap = [this.fixMaterializationShapeMapEntry($("#createRoot").val(), $("#outputShape").val())];
-
+      const {outputSchema, resultBindings, staticVars, outputShapeMap} =
+            await this.collectMaterializationInputs();
       const materializer = this.getMaterializer(outputSchema, outputShapeMap, resultBindings, staticVars);
       $("#results div").empty();
       $("#results .status").text("materializing data...").show();
@@ -214,7 +325,33 @@ class ShExMapBaseApp extends ShExBaseApp {
       this.anchorMaterializationFailures(null, materializer.lastReport);
       this.currentRenderer.finish();
       $("#results .status").text("materialization results").show();
+      this.renderMaterializedGraph(generatedGraph, outputShapeMap);
+      return { materializationResults: generatedGraph };
+    } catch (e) {
+      this.reportMaterializationError(e, "materialization");
+    }
+  }
 
+  /** the inputs to a materialization (shared by materializeAsync and the
+   * debugger): parsed output schema, a deep copy of the bindings and static
+   * vars, and the createRoot/outputShape pair */
+  async collectMaterializationInputs () {
+    const _dup = (obj) => JSON.parse(JSON.stringify(obj));
+    const outputSchema = await this.Caches.outputSchema.refresh();
+    const resultBindings = _dup(await this.Caches.bindings.refresh());
+    if (this.Caches.statics.get().trim().length === 0)
+      await this.Caches.statics.set("{  }");
+    // statics are handed to the materializer as always-available globals
+    // rather than being spliced into the binding tree as a consumable frame
+    const staticVars = _dup(await this.Caches.statics.refresh()) || {};
+    const outputShapeMap = [this.fixMaterializationShapeMapEntry($("#createRoot").val(), $("#outputShape").val())];
+    return {outputSchema, resultBindings, staticVars, outputShapeMap};
+  }
+
+  /** render a materialized graph into #results (shared by materializeAsync
+   * and the debugger's completion) */
+  renderMaterializedGraph (generatedGraph, outputShapeMap) {
+    try {
       // Extract rdf:Collection heads.
       const lists = generatedGraph.extractLists({
         remove: true // Remove quads involved in lists (RDF Collections).
@@ -271,9 +408,8 @@ class ShExMapBaseApp extends ShExBaseApp {
         }
       });
       this.resultsWidget.finish();
-      return { materializationResults: generatedGraph };
     } catch (e) {
-      this.reportMaterializationError(e, "materialization");
+      this.reportMaterializationError(e, "rendering materialization");
     }
   }
 

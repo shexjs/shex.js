@@ -445,6 +445,7 @@ return {
   done: done,
   materializer: materializer,
   ThreadedMaterializer: require("./lib/ThreadedMaterializer").ThreadedMaterializer,
+  MaterializerDebugger: require("./lib/ThreadedMaterializer").MaterializerDebugger,
   MaterializationError: require("./lib/ThreadedMaterializer").MaterializationError,
   // binder: binder,
   url: MapExt,

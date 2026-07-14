@@ -378,7 +378,11 @@ ul {
         </div>
         <div>
           <div id="outactions" style="float:right; margin-right: .1em;">
-            <button id="materialize">materialize (ctl-\)</button> <input id="outputShape" type="text" value="" class="schema context-menu-one btn btn-neutral"/> from <input id="createRoot" type="text" value="" class="data"/>
+            <button id="materialize">materialize (ctl-\)</button> <button id="debugMaterialize" title="step through materialization (set breakpoints in the output schema's gutter)">🐞</button> <input id="outputShape" type="text" value="" class="schema context-menu-one btn btn-neutral"/> from <input id="createRoot" type="text" value="" class="data"/>
+            <span id="debugControls" style="display:none">
+              <button id="dbgContinue" title="continue">▶</button><button id="dbgInto" title="step into">⤵</button><button id="dbgOver" title="step over">⏭</button><button id="dbgOut" title="step out">⤴</button><button id="dbgStop" title="stop">⏹</button>
+              <span id="dbgStatus" style="font-size: small"></span>
+            </span>
           </div>
         </div>
       </div>

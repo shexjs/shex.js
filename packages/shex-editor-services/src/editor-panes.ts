@@ -13,8 +13,8 @@
  */
 
 import {basicSetup} from "codemirror";
-import {EditorView, Decoration, DecorationSet} from "@codemirror/view";
-import {StateField, StateEffect, Extension} from "@codemirror/state";
+import {EditorView, Decoration, DecorationSet, gutter, GutterMarker} from "@codemirror/view";
+import {StateField, StateEffect, Extension, RangeSet} from "@codemirror/state";
 import {StreamLanguage, StreamParser} from "@codemirror/language";
 import {linter, setDiagnostics, lintGutter, LintSource} from "@codemirror/lint";
 import {CompletionContext, CompletionResult, Completion} from "@codemirror/autocomplete";
@@ -101,6 +101,10 @@ export interface Pane {
   /** replace the set of mouse-over-sensitive ranges; `leave` fires when the
    * mouse leaves them all */
   setHoverRegions (regions: HoverRegion[], leave?: () => void): void;
+  /** character offsets of gutter breakpoints (line starts) */
+  listBreakpoints (): number[];
+  /** toggle a gutter breakpoint at a character offset's line */
+  toggleBreakpoint (pos: number): void;
   /** remove the editor and restore the textarea (with the current text) */
   destroy (): void;
 }
@@ -176,11 +180,55 @@ const paneTheme = EditorView.baseTheme({
   ".shexjs-highlight": {backgroundColor: "#fff3b0"},
   ".shexjs-highlight-match": {backgroundColor: "#c8f0c8"},
   ".shexjs-highlight-fail": {backgroundColor: "#ffcdcd"},
+  ".shexjs-debug-current": {backgroundColor: "#cfe3ff"},
   "&": {border: "1px solid #ddd", fontSize: "13px",
         resize: "vertical", overflow: "hidden"}, // user-resizable, like a textarea
   ".cm-scroller": {overflow: "auto"},
   "&.cm-focused": {outline: "none", borderColor: "#88f"},
+  ".shexjs-breakpoint-gutter": {width: "1em", cursor: "pointer"},
+  ".shexjs-breakpoint-gutter .cm-gutterElement": {color: "#c22", paddingLeft: "2px"},
 });
+
+// ---------------------------------------------------------------------------
+// breakpoint gutter (debugger; see doc/debugger-design.md)
+
+const breakpointEffect = StateEffect.define<{pos: number, on: boolean}>();
+const breakpointMarker = new class extends GutterMarker {
+  toDOM () { return document.createTextNode("●"); }
+};
+const breakpointField = StateField.define<RangeSet<GutterMarker>>({
+  create: () => RangeSet.empty,
+  update (set, tr) {
+    set = set.map(tr.changes);
+    for (const e of tr.effects)
+      if (e.is(breakpointEffect))
+        set = e.value.on
+          ? set.update({add: [breakpointMarker.range(e.value.pos)]})
+          : set.update({filter: from => from !== e.value.pos});
+    return set;
+  },
+});
+
+function toggleBreakpoint (view: EditorView, pos: number): void {
+  let on = false;
+  view.state.field(breakpointField).between(pos, pos, () => { on = true; });
+  view.dispatch({effects: breakpointEffect.of({pos, on: !on})});
+}
+
+const breakpointExtension: Extension = [
+  breakpointField,
+  gutter({
+    class: "shexjs-breakpoint-gutter",
+    markers: view => view.state.field(breakpointField),
+    initialSpacer: () => breakpointMarker,
+    domEventHandlers: {
+      mousedown (view, line) {
+        toggleBreakpoint(view, line.from);
+        return true;
+      },
+    },
+  }),
+];
 
 // ---------------------------------------------------------------------------
 
@@ -213,6 +261,7 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
   const extensions: Extension[] = [
     basicSetup,
     lintGutter(),
+    breakpointExtension,
     highlightField,
     paneTheme,
     EditorView.updateListener.of(update => {
@@ -318,6 +367,15 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
       hoverRegions = regions || [];
       hoverLeave = leave;
       currentRegion = null;
+    },
+    listBreakpoints (): number[] {
+      const positions: number[] = [];
+      view.state.field(breakpointField).between(0, view.state.doc.length,
+                                                from => { positions.push(from); });
+      return positions;
+    },
+    toggleBreakpoint (pos: number): void {
+      toggleBreakpoint(view, view.state.doc.lineAt(pos).from);
     },
     destroy (): void {
       if (changeTimer !== null) {
