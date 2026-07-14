@@ -18751,6 +18751,29 @@ class ThreadedMaterializer {
     const nfa = this._compileShapeExprNFA(shapeLabel || this.schema.start
                                           || runtimeError("no shape given and no start in schema"));
     const failures = [];
+    // for this.lastReport: which variables the schema referenced, and which
+    // were available at all (a typo'd variable name silently prunes every
+    // branch that needs it -- e.g. a starred subshape collapses to zero
+    // iterations -- so surface never-bound variables and unused statics)
+    const report = {referenced: new Set()};
+    const availableVars = new Set(Object.keys(this.globals));
+    frames.forEach(frame => Object.keys(frame).forEach(v => availableVars.add(v)));
+    const finishReport = (error) => {
+      const seen = new Set();
+      this.lastReport = {
+        unboundVariables: failures.filter(f => {
+          const key = f.variable + "\t" + (f.tc ? f.tc.predicate : "");
+          if (!f.variable || availableVars.has(f.variable) || seen.has(key))
+            return false;
+          seen.add(key);
+          return true;
+        }),
+        unusedStatics: Object.keys(this.globals).filter(g => !report.referenced.has(g)),
+      };
+      if (error)
+        error.report = this.lastReport;
+      return error;
+    };
     const stack = [{
       nfa, stateNo: nfa.start,
       subject: createRoot || "_:root",
@@ -18762,14 +18785,16 @@ class ThreadedMaterializer {
 
     while (stack.length > 0) {
       if (++steps > this.maxSteps)
-        throw new MaterializationError("exceeded maxSteps=" + this.maxSteps, failures);
+        throw finishReport(new MaterializationError("exceeded maxSteps=" + this.maxSteps, failures));
       const th = stack.pop();
       const st = th.nfa.states[th.stateNo];
       switch (st.type) {
 
       case "Match":
-        if (th.callStack === null)
+        if (th.callStack === null) {
+          finishReport(null);
           return collectQuads(th.quads); // accept: greedy-first materialization
+        }
         { // return from a shape-reference call
           const frame = th.callStack;
           // vacuous-descend rule: greedy entry into an OPTIONAL shape-valued
@@ -18813,14 +18838,14 @@ class ThreadedMaterializer {
       }
 
       case "TC":
-        this._stepTripleConstraint(th, st, frames, stack, failures);
+        this._stepTripleConstraint(th, st, frames, stack, failures, report);
         break;
 
       default:
         runtimeError("unexpected NFA state type " + st.type);
       }
     }
-    throw new MaterializationError("no thread reached an accepting state", failures);
+    throw finishReport(new MaterializationError("no thread reached an accepting state", failures));
   }
 
   /** _stepTripleConstraint - one TC visit synthesizes exactly one instance of
@@ -18830,7 +18855,7 @@ class ThreadedMaterializer {
    *  - singleton value set: emit the constant.
    *  - shape-valued: invent a bnode, link it, and call into the sub-shape NFA.
    */
-  _stepTripleConstraint (th, st, frames, stack, failures) {
+  _stepTripleConstraint (th, st, frames, stack, failures, report) {
     const tc = st.tc;
     const mapExts = (tc.semActs || []).filter(ext => ext.name === MapExt);
 
@@ -18842,6 +18867,7 @@ class ThreadedMaterializer {
         const m = code.match(variablePattern);
         if (m) {
           const varName = m[1] ? m[1] : this._expandPrefix(m[2], m[3]);
+          report.referenced.add(varName);
           const hit = cursorGet(frames, this.globals, cursor, varName);
           if (hit === null) {
             failures.push({predicate: tc.predicate, tc, variable: varName, frame: cursor.idx});
@@ -18852,6 +18878,7 @@ class ThreadedMaterializer {
         } else if (functionPattern.test(code)) {
           try { // e.g. regex(...)/hashmap(...): lower() pulls variables via get()
             const adapter = {get: (v) => {
+              report.referenced.add(v);
               const hit = cursorGet(frames, this.globals, cursor, v);
               if (hit === null)
                 return undefined;

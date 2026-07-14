@@ -140,6 +140,42 @@ describe("ThreadedMaterializer", function () {
         .to.throw(MaterializationError, /v2/);
     });
 
+    it("should report never-bound variables when a star silently collapses", function () {
+      // a typo'd variable in a required constraint under a * kills every
+      // iteration: materialization "succeeds" with an empty graph, so the
+      // report is the only tell
+      const schema = parseSchema(prefixes + [
+        "start = @<S>",
+        "<S> { :item @<I>* }",
+        "<I> { :val . %Map:{ :v1 %}; :oops . %Map:{ :typo %} }",
+      ].join("\n"));
+      const tm = new ThreadedMaterializer(schema, {staticVars: {"http://a.example/unrelated": {value: "x"}}});
+      const quads = tm.materialize([[{"http://a.example/v1": {value: "a"}},
+                                     {"http://a.example/v1": {value: "b"}}]], "_:root");
+      expect(quads.length, "collapses to an empty graph").to.equal(0);
+      const report = tm.lastReport;
+      expect(report.unboundVariables.map(f => f.variable))
+        .to.deep.equal(["http://a.example/typo"]);
+      expect(report.unboundVariables[0].tc.predicate).to.equal("http://a.example/oops");
+      expect(report.unusedStatics).to.deep.equal(["http://a.example/unrelated"]);
+    });
+
+    it("should keep the report quiet on healthy runs", function () {
+      // benignly-exhausted variables (the loop-termination dead ends) are
+      // not "unbound"; referenced statics are not "unused"
+      const schema = parseSchema(prefixes + [
+        "start = @<S>",
+        "<S> { :item @<I>* }",
+        "<I> { :val . %Map:{ :v1 %}; :konst . %Map:{ :stat %} }",
+      ].join("\n"));
+      const tm = new ThreadedMaterializer(schema, {staticVars: {"http://a.example/stat": {value: "s"}}});
+      const quads = tm.materialize([[{"http://a.example/v1": {value: "a"}},
+                                     {"http://a.example/v1": {value: "b"}}]], "_:root");
+      expect(quads.length).to.be.above(0);
+      expect(tm.lastReport.unboundVariables).to.deep.equal([]);
+      expect(tm.lastReport.unusedStatics).to.deep.equal([]);
+    });
+
     it("should reference the failing TripleConstraint from failure records", function () {
       // editors anchor materialization failures via schema._exprLocations,
       // keyed by these tc objects

@@ -130,27 +130,44 @@ class ShExMapBaseApp extends ShExBaseApp {
     return { materializationError };
   }
 
-  /** anchor a MaterializationError's failures (which reference their
-   * TripleConstraints by identity) in the output-schema editor pane */
-  anchorMaterializationFailures (e) {
+  /** anchor materialization problems in the editor panes: a
+   * MaterializationError's failures (which reference their TripleConstraints
+   * by identity) as errors, and the materializer's report as warnings --
+   * variables bound NOWHERE (e.g. a typo'd name silently collapsing a
+   * starred subshape to zero iterations) on their constraints, and statics
+   * that nothing references on their keys in the statics pane. */
+  anchorMaterializationFailures (e, lastReport) {
     const pane = this.editorSupport && this.editorSupport.panes.outputSchema;
     if (!pane)
       return;
     try {
-      if (!e || !Array.isArray(e.failures)) {
-        pane.setDiagnostics([]);
-        return;
-      }
+      const report = lastReport || (e && e.report) || {};
       const located = ShExWebApp.EditorServices.locateInParsed(
         this.Caches.outputSchema.selection.val(), this.Caches.outputSchema.parsed);
-      pane.setDiagnostics(e.failures.map(failure => {
+      const anchored = (failure, severity, message) => {
         const range = failure.tc ? located.locate.expr(failure.tc) : null;
-        return range && {
-          from: range.from, to: range.to, severity: "error",
-          message: failure.variable ? "no binding for <" + failure.variable + ">"
-            : (failure.error || failure.code || "materialization failure"),
-        };
-      }).filter(diagnostic => diagnostic));
+        return range && {from: range.from, to: range.to, severity, message};
+      };
+      pane.setDiagnostics([]
+        .concat((e && Array.isArray(e.failures) ? e.failures : []).map(failure => anchored(
+          failure, "error",
+          failure.variable ? "no binding for <" + failure.variable + ">"
+            : (failure.error || failure.code || "materialization failure"))))
+        .concat((report.unboundVariables || []).map(failure => anchored(
+          failure, "warning",
+          "<" + failure.variable + "> is bound nowhere (bindings or statics); branches needing it were abandoned")))
+        .filter(diagnostic => diagnostic));
+      const staticsPane = this.editorSupport.panes.statics;
+      if (staticsPane) {
+        const staticsText = this.Caches.statics.selection.val();
+        staticsPane.setDiagnostics((report.unusedStatics || []).map(key => {
+          const at = staticsText.indexOf("\"" + key + "\"");
+          return at !== -1 && {
+            from: at, to: at + key.length + 2, severity: "warning",
+            message: "static variable never referenced by the output schema",
+          };
+        }).filter(diagnostic => diagnostic));
+      }
     } catch (err) {
       console.warn("editor diagnostics failed:", err);
     }
@@ -192,7 +209,9 @@ class ShExMapBaseApp extends ShExBaseApp {
       // a MaterializationError propagates to the outer catch, which anchors
       // its failures in the output-schema editor pane
       const generatedGraph = await materializer.invoke();
-      this.anchorMaterializationFailures(null); // clear stale marks on success
+      // on success: clear stale error marks, but surface never-bound
+      // variables and unreferenced statics as warnings
+      this.anchorMaterializationFailures(null, materializer.lastReport);
       this.currentRenderer.finish();
       $("#results .status").text("materialization results").show();
 

@@ -17,6 +17,7 @@ class DirectShExMaterializer {
       const shape = !pair.shape || pair.shape === ShExWebApp.Validator.Start ? undefined : pair.shape;
       generatedGraph.addQuads(materializer.materialize(this.resultBindings, pair.node, shape));
     });
+    this.lastReport = materializer.lastReport; // unbound-variable / unused-static warnings
     time = new Date() - time;
     $("#shapeMap-tabs").attr("title", "last materialization: " + time + " ms");
     $("#results .status").text("rendering results...").show();
