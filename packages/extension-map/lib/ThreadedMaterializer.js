@@ -150,6 +150,26 @@ class ThreadedMaterializer {
    * Returns an array of RdfJs quads.
    */
   materialize (bindingTree, createRoot, shapeLabel) {
+    // drain the step generator; debuggers drive run() themselves
+    const it = this.run(bindingTree, createRoot, shapeLabel);
+    let step = it.next();
+    while (!step.done)
+      step = it.next();
+    return step.value;
+  }
+
+  /** run - the materialization as a generator of debugger step events (see
+   * MaterializerDebugger and doc/debugger-design.md at the repository root).
+   * Yields, in traversal order:
+   *   {type: "tripleConstraint", tc, thread}  before synthesizing a constraint
+   *   {type: "fail", failure, thread}         a branch died (its emissions and
+   *                                           cursor marks are discarded)
+   *   {type: "return", thread}                a subshape call completed
+   * and returns the accepted quads (or throws MaterializationError).
+   * thread = {subject, depth (subshape call depth), frame (binding-frame
+   * cursor), consumed (bindings consumed), emitted (quads so far)}.
+   */
+  * run (bindingTree, createRoot, shapeLabel) {
     const frames = normalizeBindingTree(bindingTree);
     const nfa = this._compileShapeExprNFA(shapeLabel || this.schema.start
                                           || runtimeError("no shape given and no start in schema"));
@@ -199,6 +219,10 @@ class ThreadedMaterializer {
           return collectQuads(th.quads); // accept: greedy-first materialization
         }
         { // return from a shape-reference call
+          // the return event belongs to the caller's level: step-out from
+          // inside the call lands here
+          yield {type: "return",
+                 thread: Object.assign(threadView(th), {depth: stackDepth(th.callStack) - 1})};
           const frame = th.callStack;
           // vacuous-descend rule: greedy entry into an OPTIONAL shape-valued
           // constraint whose subshape then emitted nothing and consumed
@@ -240,9 +264,17 @@ class ThreadedMaterializer {
         break;
       }
 
-      case "TC":
+      case "TC": {
+        yield {type: "tripleConstraint", tc: st.tc, thread: threadView(th)};
+        const stackLen = stack.length;
+        const failuresLen = failures.length;
         this._stepTripleConstraint(th, st, frames, stack, failures, report);
+        if (stack.length === stackLen) // no successors: this branch died
+          yield {type: "fail",
+                 failure: failures.length > failuresLen ? failures[failures.length - 1] : null,
+                 thread: threadView(th)};
         break;
+      }
 
       default:
         runtimeError("unexpected NFA state type " + st.type);
@@ -498,6 +530,114 @@ function splitNFAs (parts) {
   return {states, start: split};
 }
 
+/** threadView - the inspectable snapshot of a thread shipped in debugger
+ * step events. */
+function threadView (th) {
+  let emitted = 0;
+  for (let node = th.quads; node !== null; node = node.prev)
+    ++emitted;
+  return {
+    subject: th.subject,
+    depth: stackDepth(th.callStack),
+    frame: th.cursor.idx,
+    consumed: th.cursor.n,
+    emitted,
+  };
+}
+
+/** MaterializerDebugger - step-through control over a materialization (see
+ * doc/debugger-design.md).  Drives ThreadedMaterializer.run() one event at a
+ * time; entirely synchronous, so UIs can wrap it however they like.
+ *
+ *   const dbg = new MaterializerDebugger(materializer, bindings, "tag:root");
+ *   dbg.addBreakpoint({predicate: "http://a.example/p"});
+ *   let at = dbg.continue();        // runs to the breakpoint (or completion)
+ *   at = dbg.stepInto();            // next event, entering subshape calls
+ *   at = dbg.stepOver();            // next event at the same depth or above
+ *   at = dbg.stepOut();             // next event above the current depth
+ *   ... dbg.done, dbg.quads, dbg.error
+ *
+ * Breakpoints: {tc} a schema TripleConstraint object (e.g. from
+ * locate.exprAt(offset) under an editor gutter click), {predicate} its IRI
+ * (survives structured clone), or {subject} the lexical (N3id)
+ * representation of a subject node being synthesized.
+ */
+class MaterializerDebugger {
+  constructor (materializer, bindingTree, createRoot, shapeLabel) {
+    this.materializer = materializer;
+    this.generator = materializer.run(bindingTree, createRoot, shapeLabel);
+    this.breakpoints = {tcs: new Set(), predicates: new Set(), subjects: new Set()};
+    this.current = null; // last step event
+    this.done = false;
+    this.quads = null;   // set when done without error
+    this.error = null;   // set when materialization failed
+  }
+
+  addBreakpoint ({tc, predicate, subject}) {
+    if (tc) this.breakpoints.tcs.add(tc);
+    if (predicate) this.breakpoints.predicates.add(predicate);
+    if (subject) this.breakpoints.subjects.add(subject);
+    return this;
+  }
+
+  removeBreakpoint ({tc, predicate, subject}) {
+    if (tc) this.breakpoints.tcs.delete(tc);
+    if (predicate) this.breakpoints.predicates.delete(predicate);
+    if (subject) this.breakpoints.subjects.delete(subject);
+    return this;
+  }
+
+  _hitsBreakpoint (event) {
+    if (event.type !== "tripleConstraint")
+      return false;
+    return this.breakpoints.tcs.has(event.tc) ||
+      this.breakpoints.predicates.has(event.tc.predicate) ||
+      this.breakpoints.subjects.has(event.thread.subject);
+  }
+
+  _advance (stopWhen) {
+    if (this.done)
+      return this.current;
+    while (true) {
+      let step;
+      try {
+        step = this.generator.next();
+      } catch (e) {
+        this.done = true;
+        this.error = e;
+        return this.current = {type: "error", error: e};
+      }
+      if (step.done) {
+        this.done = true;
+        this.quads = step.value;
+        return this.current = {type: "done", quads: step.value};
+      }
+      if (stopWhen(step.value) || this._hitsBreakpoint(step.value))
+        return this.current = step.value;
+    }
+  }
+
+  /** pause at the very next event (descending into subshape calls) */
+  stepInto () { return this._advance(() => true); }
+
+  /** pause at the next event at the current call depth or above (skipping
+   * the interior of subshape calls) */
+  stepOver () {
+    const depth = this.current && this.current.thread ? this.current.thread.depth : 0;
+    return this._advance(event => event.thread && event.thread.depth <= depth);
+  }
+
+  /** pause when the current subshape call completes (or anything shallower,
+   * e.g. backtracking into a sibling branch) */
+  stepOut () {
+    const depth = this.current && this.current.thread ? this.current.thread.depth : 0;
+    return this._advance(event => event.thread && event.thread.depth < depth);
+  }
+
+  /** run to the next breakpoint, or to completion */
+  continue () { return this._advance(() => false); }
+}
+
 function collectQuads (quadList) {
   const triples = [];
   for (let node = quadList; node !== null; node = node.prev)
@@ -531,4 +671,4 @@ function runtimeError () {
   throw new MaterializationError(Array.prototype.join.call(arguments, ""));
 }
 
-module.exports = {ThreadedMaterializer, normalizeBindingTree, MaterializationError};
+module.exports = {ThreadedMaterializer, MaterializerDebugger, normalizeBindingTree, MaterializationError};

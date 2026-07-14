@@ -8560,6 +8560,30 @@ function locateInParsed(text, schema) {
                     ? yyllocToRange(schema._exprLocations.get(tc), starts)
                     : null;
             },
+            exprAt: (offset) => {
+                if (!schema || !schema._exprLocations)
+                    return null;
+                let best = null;
+                for (const [expr, loc] of schema._exprLocations) {
+                    const range = yyllocToRange(loc, starts);
+                    if (range && range.from <= offset && offset < range.to &&
+                        (!best || range.to - range.from < best.range.to - best.range.from))
+                        best = { expr, range };
+                }
+                return best;
+            },
+            shapeAt: (offset) => {
+                if (!schema || !schema._locations)
+                    return null;
+                let best = null;
+                for (const label of Object.keys(schema._locations)) {
+                    const range = yyllocToRange(schema._locations[label], starts);
+                    if (range && range.from <= offset && offset < range.to &&
+                        (!best || range.to - range.from < best.range.to - best.range.from))
+                        best = { label, range };
+                }
+                return best;
+            },
         },
     };
 }
