@@ -12,7 +12,10 @@ const X = require('../lib/ExitCode'); // short name for brevity in tests
 const HTTPTEST = "HTTPTEST" in process.env ?
       process.env.HTTPTEST :
       TestUtils.startLocalServer(
-        "localhost", // some loopback address or local IP address
+        "127.0.0.1", // a literal address: the name "localhost" resolves to
+                     // [::1, 127.0.0.1] and Node's Happy Eyeballs connect
+                     // races nock's socket passthrough into "read EINVAL"
+                     // on Linux (seen on CI Nodes 20 and 22)
         "/shexSpec/shex.js/main/packages/shex-cli/test/", // use the same path as rawgit, in case it's ever helpful
         __dirname, // server root
       );
