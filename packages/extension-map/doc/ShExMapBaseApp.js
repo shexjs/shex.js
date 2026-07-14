@@ -372,7 +372,7 @@ class ShExMapBaseApp extends ShExBaseApp {
             // debug: true,
           });
           const db = ShExWebApp.RdfJsDb(generatedGraph, null); // no query tracker needed
-          const validator = new ShExWebApp.Validator(outputSchema, db, {
+          const validator = new ShExWebApp.Validator(this.Caches.outputSchema.parsed, db, {
             results: "api",
             regexModule: ShExWebApp["eval-simple-1err"],
           });
