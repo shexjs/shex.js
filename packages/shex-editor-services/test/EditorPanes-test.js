@@ -68,6 +68,29 @@ describe("EditorPanes", function () {
     }
   });
 
+  it("should complete prefixes, shape labels and predicates", function () {
+    const {completionSource, lexicalize} = require("../lib/editor-panes");
+    const {EditorState} = require("@codemirror/state");
+    const {CompletionContext} = require("@codemirror/autocomplete");
+
+    expect(lexicalize("http://a.example/S", {"": "http://a.example/"})).to.equal(":S");
+    expect(lexicalize("http://other.example/x", {"": "http://a.example/"})).to.equal("<http://other.example/x>");
+
+    const source = completionSource(() => ({
+      prefixes: {"": "http://a.example/", xsd: "http://www.w3.org/2001/XMLSchema#"},
+      shapeLabels: ["http://a.example/S"],
+      predicates: ["http://a.example/p"],
+    }));
+    const state = EditorState.create({doc: ":S { :p @"});
+    const result = source(new CompletionContext(state, state.doc.length, true));
+    expect(result, "completion result").to.exist;
+    const labels = result.options.map(o => o.label);
+    expect(labels).to.include("xsd:");   // prefix
+    expect(labels).to.include(":S");     // shape label
+    expect(labels).to.include("@:S");    // shape ref form
+    expect(labels).to.include(":p");     // predicate
+  });
+
   it("should tokenize ShExC approximately", function () {
     const {StringStream} = require("@codemirror/language");
     const kinds = [];

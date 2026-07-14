@@ -149,6 +149,20 @@ describe("EditorServices", function () {
       expect(slice(schemaText, fail.anchors.shapeLabel)).to.equal("<T>");
     });
 
+    it("should anchor errors from structured-clone results (worker app)", function () {
+      // postMessage clones validation results, breaking object identity with
+      // the schema; the (shape, predicate) fallback must still anchor
+      const results = validate(schemaParsed, dataText);
+      const cloned = JSON.parse(JSON.stringify(results)); // harsher than structured clone
+      const mapped = EditorServices.mapValidationErrors(cloned, schemaParsed, dataParsed);
+
+      const schemaTexts = mapped.schema.map(d => slice(schemaText, d));
+      expect(schemaTexts, "anchored via predicate lookup despite lost identity")
+        .to.include(":val xsd:integer");
+      const dataTexts = mapped.data.map(d => slice(dataText, d));
+      expect(dataTexts).to.include('"not a number"');
+    });
+
     it("should never paint sibling constraints of a failure", function () {
       // regression: a NodeConstraintViolation nested in a TypeMismatch used
       // to fall back to the whole shape declaration, painting the healthy

@@ -139,6 +139,23 @@ describe("ThreadedMaterializer", function () {
       expect(() => materializeToStore(prefixes + "start = @<S>\n<S> { :a . %Map:{ :v2 %} }", v1Binding))
         .to.throw(MaterializationError, /v2/);
     });
+
+    it("should reference the failing TripleConstraint from failure records", function () {
+      // editors anchor materialization failures via schema._exprLocations,
+      // keyed by these tc objects
+      const schema = parseSchema(prefixes + "start = @<S>\n<S> { :a . %Map:{ :v2 %} }");
+      try {
+        new ThreadedMaterializer(schema).materialize(v1Binding, "_:root");
+        throw Error("expected MaterializationError");
+      } catch (e) {
+        expect(e).to.be.an.instanceof(MaterializationError);
+        const failure = e.failures.find(f => f.tc);
+        expect(failure, "failure with tc reference").to.exist;
+        expect(failure.tc.predicate).to.equal("http://a.example/a");
+        expect(schema._exprLocations.has(failure.tc), "tc identity resolves a location").to.equal(true);
+        expect(e.message, "tc not serialized into the message").not.to.include('"type":"TripleConstraint"');
+      }
+    });
   });
 
   describe("shapeExpr composition", function () {

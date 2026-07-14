@@ -1623,7 +1623,29 @@ class EditorSupport {
     return this.panes[name] = ShExWebApp.EditorPanes.makePane(textarea, {
       language,
       getBase: () => cache.meta && cache.meta.base,
+      completions: () => this.completionSets(language, cache),
     });
+  }
+
+  /** live autocomplete vocabulary: prefixes from the panes' metas, shape
+   * labels and constraint predicates from the relevant parsed schema */
+  completionSets (language, cache) {
+    const {inputSchema, inputData} = this.app.Caches;
+    // a ShExC pane completes from its own schema (e.g. shexmap's
+    // outputSchema); the data pane completes from the input schema
+    const schemaCache = language === "shexc" ? cache : inputSchema;
+    const schema = schemaCache.parsed;
+    const prefixes = Object.assign({},
+                                   inputData.meta && inputData.meta.prefixes,
+                                   inputSchema.meta && inputSchema.meta.prefixes,
+                                   cache.meta && cache.meta.prefixes);
+    const predicates = schema && schema._exprLocations
+          ? [...new Set([...schema._exprLocations.keys()].map(tc => tc.predicate))]
+          : [];
+    const shapeLabels = schema && schema._index ? Object.keys(schema._index.shapeExprs) : [];
+    return language === "turtle"
+      ? {prefixes, predicates}
+      : {prefixes, predicates, shapeLabels};
   }
 
   /** does the fixed shape map expect this entry to be nonconformant

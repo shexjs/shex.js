@@ -21,6 +21,7 @@
   },
   "main": "./lib/editor-services.js",
   "dependencies": {
+    "@codemirror/autocomplete": "^6.18.0",
     "@codemirror/lang-json": "^6.0.2",
     "@codemirror/language": "^6.11.3",
     "@codemirror/lint": "^6.9.1",

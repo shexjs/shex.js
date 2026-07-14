@@ -14,10 +14,22 @@
 >   hover on `.inputShape`/`.shapeMap .schema`); ShExMapBaseApp adds
 >   bindings/statics (JSON) and outputSchema (ShExC) panes. Bundles rebuilt
 >   (~+0.9 MB unminified for CM6+chevrotain).
-> - Not yet: worker-app error mapping (identity loss over postMessage),
->   `RdfJsDb(MillanDataset)` single-parse, Lezer/tree-sitter mode,
->   autocomplete, materialization-failure anchoring in the outputSchema pane
->   (phase 4 items below).
+> - Phase 4 (mostly done): error leaves carry predicates so the
+>   (shape, predicate) lookup anchors even when object identity is lost to a
+>   structured clone — the worker app's results map app-side with no worker
+>   changes.  parseShExC/parseTurtle memoize their latest results (the live
+>   linter and the validation mapper share one parse).
+>   MaterializationError failures reference their TripleConstraints, and the
+>   ShExMap app anchors them in the outputSchema pane (main-thread app; the
+>   worker materializer still ships only a message).  Autocomplete offers
+>   prefixes, shape labels (plain and @ref) and constraint predicates in the
+>   ShExC and Turtle panes.
+> - Still open: `RdfJsDb(MillanDataset)` as the validation store (blocked on
+>   the app's N3-specific API surface — getQuads/removeQuad in proof-graph,
+>   remainder and slurp flows — and N3 internalization dropping term
+>   sources), Lezer/tree-sitter ShExC mode, shape-map text as a managed
+>   editor, worker-side materialization-failure ranges, and the millan
+>   subject-source trailing-whitespace nit (upstream).
 > - **Needs manual browser testing**: jsdom verifies the proxy contract and
 >   services, but nobody has clicked `?editors=1` in a real browser yet.
 >   `npm run serve` (the zero-dependency `shex-serve` in `@shexjs/webapp`)

@@ -8654,6 +8654,8 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CHANGE_DEBOUNCE_MS = exports.languages = exports.shexcStreamParser = void 0;
+exports.lexicalize = lexicalize;
+exports.completionSource = completionSource;
 exports.makePane = makePane;
 const codemirror_1 = __webpack_require__(1301);
 const view_1 = __webpack_require__(9905);
@@ -8663,6 +8665,42 @@ const lint_1 = __webpack_require__(6793);
 const lang_json_1 = __webpack_require__(5533);
 const turtle_1 = __webpack_require__(2903);
 const EditorServices = __importStar(__webpack_require__(9017));
+/** lexicalize - shortest lexical form for an IRI under the given prefixes */
+function lexicalize(iri, prefixes) {
+    let best = null;
+    for (const [prefix, ns] of Object.entries(prefixes || {}))
+        if (ns.length > 0 && iri.startsWith(ns) && (!best || ns.length > best[1].length))
+            best = [prefix, ns];
+    if (best) {
+        const local = iri.substring(best[1].length);
+        if (/^[A-Za-z0-9_.-]*$/.test(local))
+            return best[0] + ":" + local;
+    }
+    return "<" + iri + ">";
+}
+/** completionSource - a CodeMirror autocomplete source over the app-supplied
+ * vocabulary: prefix declarations, shape labels (plain and @ref forms) and
+ * predicates. */
+function completionSource(getSets) {
+    return (context) => {
+        const word = context.matchBefore(/@?[<A-Za-z_:][^\s;,|(){}[\]]*/);
+        if (!word && !context.explicit)
+            return null;
+        const sets = getSets() || {};
+        const prefixes = sets.prefixes || {};
+        const options = [];
+        Object.keys(prefixes).forEach(prefix => options.push({ label: prefix + ":", type: "namespace", detail: prefixes[prefix] }));
+        (sets.shapeLabels || []).forEach(iri => {
+            const lex = lexicalize(iri, prefixes);
+            options.push({ label: lex, type: "class", detail: "shape" });
+            options.push({ label: "@" + lex, type: "class", detail: "shape ref" });
+        });
+        (sets.predicates || []).forEach(iri => options.push({ label: lexicalize(iri, prefixes), type: "property" }));
+        return options.length
+            ? { from: word ? word.from : context.pos, options, validFor: /^@?[<A-Za-z_:][^\s]*$/ }
+            : null;
+    };
+}
 const shexcKeywords = /^(?:PREFIX|BASE|IMPORT|START|EXTERNAL|ABSTRACT|CLOSED|EXTRA|NOT|AND|OR|IF|MININCLUSIVE|MAXINCLUSIVE|MINEXCLUSIVE|MAXEXCLUSIVE|LENGTH|MINLENGTH|MAXLENGTH|TOTALDIGITS|FRACTIONDIGITS|IRI|BNODE|NONLITERAL|LITERAL)\b/i;
 exports.shexcStreamParser = {
     name: "shexc",
@@ -8792,8 +8830,15 @@ function makePane(textarea, opts = {}) {
             }
         }),
     ];
-    if (opts.language && exports.languages[opts.language])
+    if (opts.language === "shexc" || opts.language === "turtle") {
+        const lang = language_1.StreamLanguage.define(opts.language === "shexc" ? exports.shexcStreamParser : turtle_1.turtle);
+        extensions.push(lang);
+        if (opts.completions) // basicSetup's autocompletion() reads languageData
+            extensions.push(lang.data.of({ autocomplete: completionSource(opts.completions) }));
+    }
+    else if (opts.language && exports.languages[opts.language]) {
         extensions.push(exports.languages[opts.language]());
+    }
     const lintSource = opts.lint === false ? null : lintSourceFor(opts.language, opts);
     if (lintSource)
         extensions.push((0, lint_1.linter)(lintSource, { delay: 500 }));
@@ -8935,12 +8980,11 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.parseTurtle = exports.parseShExC = void 0;
 exports.lineOffsets = lineOffsets;
 exports.yyllocToRange = yyllocToRange;
 exports.millanSourceToRange = millanSourceToRange;
-exports.parseShExC = parseShExC;
 exports.locateInParsed = locateInParsed;
-exports.parseTurtle = parseTurtle;
 exports.mapValidationErrors = mapValidationErrors;
 const ShExParser = __importStar(__webpack_require__(8170));
 const millan_1 = __webpack_require__(9111);
@@ -8972,11 +9016,32 @@ function millanSourceToRange(source) {
         ? { from: source.startOffset, to: source.endOffset + 1 }
         : null;
 }
+/** memoLast - cache a parse function's most recent results (the live linter
+ * and the validation mapper parse the same document text moments apart). */
+function memoLast(fn, keyOf, size = 4) {
+    const cache = new Map(); // insertion-ordered
+    return (text, opts) => {
+        const key = keyOf(opts) + " " + text;
+        if (cache.has(key)) {
+            const hit = cache.get(key);
+            cache.delete(key); // refresh recency
+            cache.set(key, hit);
+            return hit;
+        }
+        const ret = fn(text, opts);
+        cache.set(key, ret);
+        if (cache.size > size)
+            cache.delete(cache.keys().next().value);
+        return ret;
+    };
+}
 /** parseShExC - parse a ShExC document, returning the schema (when it
  * parses), diagnostics for parse errors, and range lookups for shapes,
  * expressions (e.g. TripleConstraints) and shape references.
+ * Memoized on (text, base): repeated calls with unchanged text are free.
  */
-function parseShExC(text, opts = {}) {
+exports.parseShExC = memoLast(parseShExCUncached, opts => (opts && opts.base) || "");
+function parseShExCUncached(text, opts = {}) {
     const starts = lineOffsets(text);
     const parser = ShExParser.construct(opts.base || "urn:editor:schema", opts.prefixes || {}, Object.assign({ index: true }, opts.schemaOptions));
     let schema = null;
@@ -9060,7 +9125,9 @@ function findTripleConstraint(schema, shapeLabel, predicate) {
     })(decl);
     return found;
 }
-function parseTurtle(text, opts = {}) {
+/** Memoized on (text, baseIRI); see parseShExC. */
+exports.parseTurtle = memoLast(parseTurtleUncached, opts => (opts && opts.baseIRI) || "");
+function parseTurtleUncached(text, opts = {}) {
     const { dataset, errors, semanticErrors, emitterErrors } = millan_1.rdfjs.parseTurtleToRdfjs(text, {
         baseIRI: opts.baseIRI || "urn:editor:data",
         sourceURL: opts.sourceURL,
@@ -9135,9 +9202,13 @@ function rangeOfNode(dataset, node) {
 // error types that anchor a diagnostic (as opposed to containers to recurse
 // through); each entry renders a message and picks its anchors
 const ErrorLeaves = {
+    // Note each leaf also carries `predicate` where known: object identity
+    // doesn't survive a structured clone (worker-app results), so the
+    // (shape, predicate) lookup is the anchor that always works.
     TypeMismatch: (err, _ctx) => ({
         message: `${termStr(err.triple.object)} doesn't satisfy ${err.constraint ? constraintStr(err.constraint) : "the constraint"}`,
         schemaObj: err.constraint,
+        predicate: err.constraint ? err.constraint.predicate : err.triple.predicate,
         triple: err.triple,
     }),
     MissingProperty: (err, ctx) => ({
@@ -9155,18 +9226,26 @@ const ErrorLeaves = {
         triples: err.unexpectedTriples,
         node: ctx.node,
     }),
-    NodeConstraintViolation: (err, ctx) => ({
-        message: firstLine((err.errors || [])[0] || "node constraint violation"),
-        schemaObj: ctx.constraint, // usually nested in a TypeMismatch
-        triple: ctx.triple,
-        node: ctx.node,
-    }),
-    SemActFailure: (_err, ctx) => ({
-        message: "semantic action failure",
-        schemaObj: ctx.constraint,
-        triple: ctx.triple,
-        node: ctx.node,
-    }),
+    NodeConstraintViolation: (err, ctx) => {
+        var _a;
+        return ({
+            message: firstLine((err.errors || [])[0] || "node constraint violation"),
+            schemaObj: ctx.constraint, // usually nested in a TypeMismatch
+            predicate: ((_a = ctx.constraint) === null || _a === void 0 ? void 0 : _a.predicate) || (ctx.triple && ctx.triple.predicate),
+            triple: ctx.triple,
+            node: ctx.node,
+        });
+    },
+    SemActFailure: (_err, ctx) => {
+        var _a;
+        return ({
+            message: "semantic action failure",
+            schemaObj: ctx.constraint,
+            predicate: ((_a = ctx.constraint) === null || _a === void 0 ? void 0 : _a.predicate) || (ctx.triple && ctx.triple.predicate),
+            triple: ctx.triple,
+            node: ctx.node,
+        });
+    },
 };
 function termStr(t) {
     return typeof t === "object" ? JSON.stringify(t.value) : "<" + t + ">";
@@ -18566,7 +18645,10 @@ const UNBOUNDED = -1;
 class MaterializationError extends Error {
   constructor (message, failures) {
     super(failures && failures.length
-          ? message + "; deepest failures: " + JSON.stringify(failures.slice(-3))
+          ? message + "; deepest failures: " + JSON.stringify(
+            // `tc` is the schema object (for editors to anchor on); its
+            // serialization would bloat the message
+            failures.slice(-3).map(f => Object.assign({}, f, {tc: undefined})))
           : message);
     this.failures = failures || [];
   }
@@ -18762,7 +18844,7 @@ class ThreadedMaterializer {
           const varName = m[1] ? m[1] : this._expandPrefix(m[2], m[3]);
           const hit = cursorGet(frames, this.globals, cursor, varName);
           if (hit === null) {
-            failures.push({predicate: tc.predicate, variable: varName, frame: cursor.idx});
+            failures.push({predicate: tc.predicate, tc, variable: varName, frame: cursor.idx});
             return; // unbound required variable: this thread dies
           }
           cursor = hit.cursor;
@@ -18778,11 +18860,11 @@ class ThreadedMaterializer {
             }};
             objects.push(extensions.lower(code, adapter, this.prefixes));
           } catch (e) {
-            failures.push({predicate: tc.predicate, code, error: e.message});
+            failures.push({predicate: tc.predicate, tc, code, error: e.message});
             return;
           }
         } else {
-          failures.push({predicate: tc.predicate, code, error: "unrecognized Map code"});
+          failures.push({predicate: tc.predicate, tc, code, error: "unrecognized Map code"});
           return;
         }
       }
@@ -18803,7 +18885,7 @@ class ThreadedMaterializer {
 
     if (valueExpr && ["Shape", "ShapeAnd", "ShapeOr"].indexOf(valueExpr.type) !== -1) {
       if (stackDepth(th.callStack) >= this.maxCallDepth) {
-        failures.push({predicate: tc.predicate, error: "exceeded maxCallDepth"});
+        failures.push({predicate: tc.predicate, tc, error: "exceeded maxCallDepth"});
         return;
       }
       const bnode = "_:tm" + th.bnode;
@@ -18820,7 +18902,7 @@ class ThreadedMaterializer {
       return;
     }
 
-    failures.push({predicate: tc.predicate,
+    failures.push({predicate: tc.predicate, tc,
                    error: "cannot synthesize valueExpr of type "
                    + (valueExpr ? valueExpr.type : "undefined")
                    + " without a Map semAct"});

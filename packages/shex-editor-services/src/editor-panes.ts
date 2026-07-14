@@ -17,6 +17,7 @@ import {EditorView, Decoration, DecorationSet} from "@codemirror/view";
 import {StateField, StateEffect, Extension} from "@codemirror/state";
 import {StreamLanguage, StreamParser} from "@codemirror/language";
 import {linter, setDiagnostics, lintGutter, LintSource} from "@codemirror/lint";
+import {CompletionContext, CompletionResult, Completion} from "@codemirror/autocomplete";
 import {json, jsonParseLinter} from "@codemirror/lang-json";
 import {turtle} from "@codemirror/legacy-modes/mode/turtle";
 import * as EditorServices from "./editor-services";
@@ -24,12 +25,61 @@ import {Diagnostic, Range} from "./editor-services";
 
 export type PaneLanguage = "shexc" | "turtle" | "json";
 
+/** completion vocabulary, supplied live by the application */
+export interface CompletionSets {
+  prefixes?: {[prefix: string]: string};
+  shapeLabels?: string[];
+  predicates?: string[];
+}
+
 export interface MakePaneOptions {
   language?: PaneLanguage;
   /** base IRI supplier for the live parsers (e.g. () => cache.meta.base) */
   getBase?: () => string | undefined;
   /** false disables live parse diagnostics */
   lint?: boolean;
+  /** enables autocomplete of prefixes, shape labels and predicates */
+  completions?: () => CompletionSets;
+}
+
+/** lexicalize - shortest lexical form for an IRI under the given prefixes */
+export function lexicalize (iri: string, prefixes: {[prefix: string]: string}): string {
+  let best: [string, string] | null = null;
+  for (const [prefix, ns] of Object.entries(prefixes || {}))
+    if (ns.length > 0 && iri.startsWith(ns) && (!best || ns.length > best[1].length))
+      best = [prefix, ns];
+  if (best) {
+    const local = iri.substring(best[1].length);
+    if (/^[A-Za-z0-9_.-]*$/.test(local))
+      return best[0] + ":" + local;
+  }
+  return "<" + iri + ">";
+}
+
+/** completionSource - a CodeMirror autocomplete source over the app-supplied
+ * vocabulary: prefix declarations, shape labels (plain and @ref forms) and
+ * predicates. */
+export function completionSource (getSets: () => CompletionSets) {
+  return (context: CompletionContext): CompletionResult | null => {
+    const word = context.matchBefore(/@?[<A-Za-z_:][^\s;,|(){}[\]]*/);
+    if (!word && !context.explicit)
+      return null;
+    const sets = getSets() || {};
+    const prefixes = sets.prefixes || {};
+    const options: Completion[] = [];
+    Object.keys(prefixes).forEach(prefix =>
+      options.push({label: prefix + ":", type: "namespace", detail: prefixes[prefix]}));
+    (sets.shapeLabels || []).forEach(iri => {
+      const lex = lexicalize(iri, prefixes);
+      options.push({label: lex, type: "class", detail: "shape"});
+      options.push({label: "@" + lex, type: "class", detail: "shape ref"});
+    });
+    (sets.predicates || []).forEach(iri =>
+      options.push({label: lexicalize(iri, prefixes), type: "property"}));
+    return options.length
+      ? {from: word ? word.from : context.pos, options, validFor: /^@?[<A-Za-z_:][^\s]*$/}
+      : null;
+  };
 }
 
 /** a document range that reacts to the mouse entering it */
@@ -184,8 +234,14 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
       }
     }),
   ];
-  if (opts.language && languages[opts.language])
+  if (opts.language === "shexc" || opts.language === "turtle") {
+    const lang = StreamLanguage.define(opts.language === "shexc" ? shexcStreamParser : turtle);
+    extensions.push(lang);
+    if (opts.completions) // basicSetup's autocompletion() reads languageData
+      extensions.push(lang.data.of({autocomplete: completionSource(opts.completions)}));
+  } else if (opts.language && languages[opts.language]) {
     extensions.push(languages[opts.language]());
+  }
   const lintSource = opts.lint === false ? null : lintSourceFor(opts.language, opts);
   if (lintSource)
     extensions.push(linter(lintSource, {delay: 500}));

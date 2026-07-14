@@ -123,9 +123,37 @@ class ShExMapBaseApp extends ShExBaseApp {
 
   reportMaterializationError (materializationError, currentAction) {
     $("#results .status").text("materialization errors:").show();
+    if (materializationError && Array.isArray(materializationError.failures))
+      materializationError.inputError = true; // schema/bindings problem, not a bug
     this.resultsWidget.failMessage(materializationError, currentAction);
-    console.error(materializationError); // dump details to console.
+    this.anchorMaterializationFailures(materializationError);
     return { materializationError };
+  }
+
+  /** anchor a MaterializationError's failures (which reference their
+   * TripleConstraints by identity) in the output-schema editor pane */
+  anchorMaterializationFailures (e) {
+    const pane = this.editorSupport && this.editorSupport.panes.outputSchema;
+    if (!pane)
+      return;
+    try {
+      if (!e || !Array.isArray(e.failures)) {
+        pane.setDiagnostics([]);
+        return;
+      }
+      const located = ShExWebApp.EditorServices.locateInParsed(
+        this.Caches.outputSchema.selection.val(), this.Caches.outputSchema.parsed);
+      pane.setDiagnostics(e.failures.map(failure => {
+        const range = failure.tc ? located.locate.expr(failure.tc) : null;
+        return range && {
+          from: range.from, to: range.to, severity: "error",
+          message: failure.variable ? "no binding for <" + failure.variable + ">"
+            : (failure.error || failure.code || "materialization failure"),
+        };
+      }).filter(diagnostic => diagnostic));
+    } catch (err) {
+      console.warn("editor diagnostics failed:", err);
+    }
   }
 
   async materialize () {
@@ -161,8 +189,10 @@ class ShExMapBaseApp extends ShExBaseApp {
       $("#results div").empty();
       $("#results .status").text("materializing data...").show();
 
-      const generatedGraph = await materializer.invoke()
-            .catch(e => this.reportValidationError(e, "materializing"));
+      // a MaterializationError propagates to the outer catch, which anchors
+      // its failures in the output-schema editor pane
+      const generatedGraph = await materializer.invoke();
+      this.anchorMaterializationFailures(null); // clear stale marks on success
       this.currentRenderer.finish();
       $("#results .status").text("materialization results").show();
 

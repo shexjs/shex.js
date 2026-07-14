@@ -48,7 +48,10 @@ const UNBOUNDED = -1;
 class MaterializationError extends Error {
   constructor (message, failures) {
     super(failures && failures.length
-          ? message + "; deepest failures: " + JSON.stringify(failures.slice(-3))
+          ? message + "; deepest failures: " + JSON.stringify(
+            // `tc` is the schema object (for editors to anchor on); its
+            // serialization would bloat the message
+            failures.slice(-3).map(f => Object.assign({}, f, {tc: undefined})))
           : message);
     this.failures = failures || [];
   }
@@ -244,7 +247,7 @@ class ThreadedMaterializer {
           const varName = m[1] ? m[1] : this._expandPrefix(m[2], m[3]);
           const hit = cursorGet(frames, this.globals, cursor, varName);
           if (hit === null) {
-            failures.push({predicate: tc.predicate, variable: varName, frame: cursor.idx});
+            failures.push({predicate: tc.predicate, tc, variable: varName, frame: cursor.idx});
             return; // unbound required variable: this thread dies
           }
           cursor = hit.cursor;
@@ -260,11 +263,11 @@ class ThreadedMaterializer {
             }};
             objects.push(extensions.lower(code, adapter, this.prefixes));
           } catch (e) {
-            failures.push({predicate: tc.predicate, code, error: e.message});
+            failures.push({predicate: tc.predicate, tc, code, error: e.message});
             return;
           }
         } else {
-          failures.push({predicate: tc.predicate, code, error: "unrecognized Map code"});
+          failures.push({predicate: tc.predicate, tc, code, error: "unrecognized Map code"});
           return;
         }
       }
@@ -285,7 +288,7 @@ class ThreadedMaterializer {
 
     if (valueExpr && ["Shape", "ShapeAnd", "ShapeOr"].indexOf(valueExpr.type) !== -1) {
       if (stackDepth(th.callStack) >= this.maxCallDepth) {
-        failures.push({predicate: tc.predicate, error: "exceeded maxCallDepth"});
+        failures.push({predicate: tc.predicate, tc, error: "exceeded maxCallDepth"});
         return;
       }
       const bnode = "_:tm" + th.bnode;
@@ -302,7 +305,7 @@ class ThreadedMaterializer {
       return;
     }
 
-    failures.push({predicate: tc.predicate,
+    failures.push({predicate: tc.predicate, tc,
                    error: "cannot synthesize valueExpr of type "
                    + (valueExpr ? valueExpr.type : "undefined")
                    + " without a Map semAct"});
