@@ -233,6 +233,7 @@ case 1:
           };
           shexj._sourceMap = yy._sourceMap;
           shexj._locations = yy.locations;
+          shexj._exprLocations = yy._exprLocations;
         }
         return shexj;
       
@@ -475,17 +476,17 @@ case 93:
  // t: 1dotRefLNex1
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
         const namePos = $$[$0].indexOf(':');
-        this.$ = yy.addSourceMap(yy.expandPrefix($$[$0].substr(0, namePos), yy) + $$[$0].substr(namePos + 1)); // ShapeRef
+        this.$ = yy.addSourceMap(yy.expandPrefix($$[$0].substr(0, namePos), yy) + $$[$0].substr(namePos + 1), this._$); // ShapeRef
       
 break;
 case 94:
  // t: 1dotRefNS1
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
-        this.$ = yy.addSourceMap(yy.expandPrefix($$[$0].substr(0, $$[$0].length - 1), yy)); // ShapeRef
+        this.$ = yy.addSourceMap(yy.expandPrefix($$[$0].substr(0, $$[$0].length - 1), yy), this._$); // ShapeRef
       
 break;
 case 95:
-this.$ = yy.addSourceMap($$[$0]) // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1;
+this.$ = yy.addSourceMap($$[$0], this._$) // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1;
 break;
 case 96:
 
@@ -719,7 +720,7 @@ case 166:
       
 break;
 case 168:
-this.$ = yy.addSourceMap($$[$0]) // t: 2EachInclude1;
+this.$ = yy.addSourceMap($$[$0], this._$) // t: 2EachInclude1;
 break;
 case 173:
 
@@ -758,6 +759,14 @@ case 176:
         ); // t: 1dot, 1inversedot
         if ($$[$0-1].length)
           this.$["annotations"] = $$[$0-1]; // t: 1dotAnnot3, 1inversedotAnnot3 : 1dot
+        // editors anchor validation errors here; an empty senseFlags
+        // production would pull the merged @\$ start back to the token
+        // before the constraint, so start from senseFlags/predicate instead
+        const tcStart = _$[_$.length - ($$[$0-5] !== undefined ? 6 : 5)];
+        yy.addExprLocation(this.$, {
+          first_line: tcStart.first_line, first_column: tcStart.first_column,
+          last_line: this._$.last_line, last_column: this._$.last_column
+        });
       
 break;
 case 179:
@@ -910,7 +919,7 @@ case 223:
 this.$ = $$[$0] ? { type: "LanguageStem", stem: $$[$0-1] } /* t: 1val1languageStemMinuslanguageStem3 */ : $$[$0-1] // t: 1val1languageStemMinuslanguage3;
 break;
 case 224:
-this.$ = yy.addSourceMap($$[$0]) // Inclusion // t: 2groupInclude1;
+this.$ = yy.addSourceMap($$[$0], this._$) // Inclusion // t: 2groupInclude1;
 break;
 case 225:
 this.$ = { type: "Annotation", predicate: $$[$0-1], object: $$[$0] } // t: 1dotAnnotIRIREF;

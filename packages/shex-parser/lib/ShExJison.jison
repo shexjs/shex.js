@@ -429,6 +429,7 @@ shexDoc:
           };
           shexj._sourceMap = yy._sourceMap;
           shexj._locations = yy.locations;
+          shexj._exprLocations = yy._exprLocations;
         }
         return shexj;
       }
@@ -764,13 +765,13 @@ shapeRef:
       ATPNAME_LN	{ // t: 1dotRefLNex1
         $1 = $1.substr(1, $1.length-1);
         const namePos = $1.indexOf(':');
-        $$ = yy.addSourceMap(yy.expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1)); // ShapeRef
+        $$ = yy.addSourceMap(yy.expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1), this._$); // ShapeRef
       }
     | ATPNAME_NS	{ // t: 1dotRefNS1
         $1 = $1.substr(1, $1.length-1);
-        $$ = yy.addSourceMap(yy.expandPrefix($1.substr(0, $1.length - 1), yy)); // ShapeRef
+        $$ = yy.addSourceMap(yy.expandPrefix($1.substr(0, $1.length - 1), yy), this._$); // ShapeRef
       }
-    | '@' shapeExprLabel	-> yy.addSourceMap($2) // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
+    | '@' shapeExprLabel	-> yy.addSourceMap($2, this._$) // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
     ;
 
 litNodeConstraint:
@@ -1023,7 +1024,7 @@ unaryTripleExpr:
     ;
 
 _O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C:
-      '$' tripleExprLabel	-> yy.addSourceMap($2) // t: 2EachInclude1
+      '$' tripleExprLabel	-> yy.addSourceMap($2, this._$) // t: 2EachInclude1
     ;
 
 _Q_O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C_E_Opt:
@@ -1076,6 +1077,14 @@ tripleConstraint:
         ); // t: 1dot, 1inversedot
         if ($5.length)
           $$["annotations"] = $5; // t: 1dotAnnot3, 1inversedotAnnot3 : 1dot
+        // editors anchor validation errors here; an empty senseFlags
+        // production would pull the merged @\$ start back to the token
+        // before the constraint, so start from senseFlags/predicate instead
+        const tcStart = _$[_$.length - ($1 !== undefined ? 6 : 5)];
+        yy.addExprLocation($$, {
+          first_line: tcStart.first_line, first_column: tcStart.first_column,
+          last_line: this._$.last_line, last_column: this._$.last_column
+        });
       }
     ;
 
@@ -1258,7 +1267,7 @@ languageExclusion:
     ;
 
 include:
-      '&' tripleExprLabel	-> yy.addSourceMap($2) // Inclusion // t: 2groupInclude1
+      '&' tripleExprLabel	-> yy.addSourceMap($2, this._$) // Inclusion // t: 2groupInclude1
     ;
 
 annotation:

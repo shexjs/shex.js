@@ -15,6 +15,8 @@ ShExWebApp = (function () {
     ShapeMapParser:       shapeMap.Parser,
     JsYaml:               require("js-yaml"),
     DcTap:                require("dctap").DcTap,
+    EditorServices:       require("@shexjs/editor-services"),
+    EditorPanes:          require("@shexjs/editor-services/lib/editor-panes"),
   })
 })()
 

@@ -1,0 +1,54 @@
+{
+  "name": "@shexjs/editor-services",
+  "version": "1.0.0-alpha.29",
+  "description": "range-aware parsing and validation-error mapping for language-sensitive ShEx editors",
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
+  "keywords": [
+    "shex",
+    "shape expressions",
+    "rdf",
+    "editor",
+    "codemirror",
+    "diagnostics"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./lib/editor-services.js",
+  "dependencies": {
+    "@codemirror/lang-json": "^6.0.2",
+    "@codemirror/language": "^6.11.3",
+    "@codemirror/lint": "^6.9.1",
+    "@codemirror/legacy-modes": "^6.5.2",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.6",
+    "@shexjs/parser": "^1.0.0-alpha.28",
+    "codemirror": "^6.0.2",
+    "millan": "github:ericprud/millan#rdfjs-interface"
+  },
+  "devDependencies": {
+    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.29",
+    "@shexjs/validator": "^1.0.0-alpha.29",
+    "n3": "^1.20.4"
+  },
+  "scripts": {
+    "test": "cd ../.. && mocha packages/shex-editor-services/test/*test.js",
+    "build": "tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shexjs/shex.js"
+  },
+  "bugs": {
+    "url": "https://github.com/shexjs/shex.js/issues"
+  },
+  "types": "./src/editor-services.ts"
+}

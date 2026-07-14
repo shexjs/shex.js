@@ -35,6 +35,14 @@ packages/shape-map/lib/ShapeMapJison.js: packages/shape-map/lib/ShapeMapJison.ji
 	$(JISON) -n ShapeMapJison -t javascript -p lalr -o $@ $^
 
 .PHONY: ALL
-ALL: packages/eval-validator-api/lib/validator-api.js packages/neighborhood-api/lib/neighborhood-api.js packages/shex-term/lib/shex-term.js packages/eval-simple-1err/lib/eval-simple-1err.js packages/eval-threaded-nerr/lib/eval-threaded-nerr.js packages/shex-validator/lib/shex-validator.js packages/shex-validator/lib/shex-xsd.js packages/shex-parser/lib/ShExJison.js packages/shape-map/lib/ShapeMapJison.js
+ALL: packages/eval-validator-api/lib/validator-api.js packages/neighborhood-api/lib/neighborhood-api.js packages/shex-term/lib/shex-term.js packages/eval-simple-1err/lib/eval-simple-1err.js packages/eval-threaded-nerr/lib/eval-threaded-nerr.js packages/shex-validator/lib/shex-validator.js packages/shex-validator/lib/shex-xsd.js packages/shex-parser/lib/ShExJison.js packages/shape-map/lib/ShapeMapJison.js packages/shex-editor-services/lib/editor-services.js packages/shex-webapp/lib/shex-serve.js
 #ALL: packages/eval-validator-api/lib/validator-api.js packages/neighborhood-api/lib/neighborhood-api.js packages/shex-term/lib/shex-term.js packages/eval-simple-1err/lib/eval-simple-1err.js packages/shex-validator/lib/shex-validator.js packages/shex-validator/lib/shex-xsd.js
 
+
+# @shexjs/editor-services
+packages/shex-editor-services/lib/editor-services.js: packages/shex-editor-services/src/editor-services.ts packages/shex-editor-services/src/editor-panes.ts packages/shex-editor-services/package.json packages/shex-editor-services/tsconfig.json
+	(cd packages/shex-editor-services && npm run build)
+
+# @shexjs/webapp shex-serve
+packages/shex-webapp/lib/shex-serve.js: packages/shex-webapp/src/shex-serve.ts packages/shex-webapp/package.json packages/shex-webapp/tsconfig.json
+	(cd packages/shex-webapp && npm run build)

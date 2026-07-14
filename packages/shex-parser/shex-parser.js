@@ -21,7 +21,7 @@ class ShExCParserState {
   }
 
   reset () {
-    this._prefixes = this._imports = this._sourceMap = this.shapes = this.productions = this.start = this.startActs = null; // Reset state.
+    this._prefixes = this._imports = this._sourceMap = this._exprLocations = this.shapes = this.productions = this.start = this.startActs = null; // Reset state.
     this._base = this._baseIRI = this._baseIRIPath = this._baseIRIRoot = null;
   }
 
@@ -212,13 +212,25 @@ class ShExCParserState {
       this.productions[label] = production;
   }
 
-  addSourceMap (obj) {
+  addSourceMap (obj, location) {
     if (!this._sourceMap)
       this._sourceMap = new Map();
     let list = this._sourceMap.get(obj)
     if (!list)
       this._sourceMap.set(obj, list = []);
-    list.push(this.lexer.yylloc);
+    // the production's own location; lexer.yylloc (the historical fallback)
+    // is the lookahead token, one past the reference
+    list.push(location || this.lexer.yylloc);
+    return obj;
+  }
+
+  // Records the source extent of a schema object (e.g. a TripleConstraint)
+  // keyed by object identity, so editors can anchor validation errors --
+  // validator results reference these same objects.
+  addExprLocation (obj, location) {
+    if (!this._exprLocations)
+      this._exprLocations = new Map();
+    this._exprLocations.set(obj, location);
     return obj;
   }
 

@@ -275,8 +275,22 @@ Generated artifacts are committed, so these are only needed after changing the c
 
 ``` shell
 npm run parser-all      # regenerate the Jison parsers (ShExC and ShapeMap)
+npm run compile         # make ALL: recompile the TypeScript packages' lib/ output
 npm run webpack         # rebuild the browser bundles in packages/*/doc/webpacks/
 ```
+
+To try the web apps locally, serve the repository root with any static web
+server (the pages reference scripts across `packages/*` by relative path).
+Apache pointed at the checkout works; so does the zero-dependency server that
+ships in `@shexjs/webapp`:
+
+``` shell
+npm run serve           # prints the shex-simple / shexmap-simple URLs
+                        # (npx shex-serve [--port N] [--root DIR] outside the repo)
+```
+
+Add `?editors=1` to either app URL for the language-aware CodeMirror editors
+(see [doc/editor-integration-plan.md](doc/editor-integration-plan.md)).
 
 To add a dependency to one package, use npm's `--workspace` flag from the repo root, e.g. `npm install promise-worker --workspace=@shexjs/webapp`.
 Development tooling (mocha, webpack, eslint...) lives in the root `devDependencies`.

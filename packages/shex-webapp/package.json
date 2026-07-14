@@ -20,6 +20,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@shexjs/editor-services": "^1.0.0-alpha.29",
     "@shexjs/eval-simple-1err": "^1.0.0-alpha.29",
     "@shexjs/eval-threaded-nerr": "^1.0.0-alpha.29",
     "@shexjs/loader": "^1.0.0-alpha.28",
@@ -47,7 +48,8 @@
     "webpack-analyzer": "webpack --config webpack.config.js --mode production --profile --json > ./doc/webpacks/shex-webapp-stats.json && webpack-bundle-analyzer ./doc/webpacks/shex-webapp-stats.json",
     "webpack-jquery-components": "webpack --config webpack-jquery-components.config.js --mode development",
     "webpack-monitor": "WEBPACK_MONITOR=true webpack --config webpack.config.js --mode production",
-    "webpack-n3js": "webpack --config webpack-n3js.config.js --mode development"
+    "webpack-n3js": "webpack --config webpack-n3js.config.js --mode development",
+    "build": "tsc"
   },
   "devDependencies": {
     "jquery": "^3.7.1",
@@ -67,5 +69,8 @@
   "pre-commit": [
     "lint",
     "test"
-  ]
+  ],
+  "bin": {
+    "shex-serve": "bin/shex-serve"
+  }
 }

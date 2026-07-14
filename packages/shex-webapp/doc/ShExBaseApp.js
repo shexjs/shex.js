@@ -904,16 +904,17 @@ class ShapeMapCache extends InterfaceCache {
           rows: '1',
           type: 'text',
           class: 'data focus'
-        }).text(node).on("change", this.markEditMapDirty);
+        }).text(node).on("change", () => this.markEditMapDirty()); // bound: bare method loses `this`
         const joinerElt = $("<span>", {
           class: 'shapeMap-joiner'
         }).append("@").addClass(pair.status);
         joinerElt.append(
-          $("<input>", {style: "border: none; width: .2em;", readonly: "readonly"}).val(pair.status === "nonconformant" ? "!" : " ").on("click", function (evt) {
-            const status = $(this).parent().hasClass("nonconformant") ? "conformant" : "nonconformant";
-            $(this).parent().removeClass("conformant nonconformant");
-            $(this).parent().addClass(status);
-            $(this).val(status === "nonconformant" ? "!" : "");
+          $("<input>", {style: "border: none; width: .2em;", readonly: "readonly"}).val(pair.status === "nonconformant" ? "!" : " ").on("click", (evt) => {
+            const parent = $(evt.target).parent();
+            const status = parent.hasClass("nonconformant") ? "conformant" : "nonconformant";
+            parent.removeClass("conformant nonconformant");
+            parent.addClass(status);
+            $(evt.target).val(status === "nonconformant" ? "!" : "");
             this.markEditMapDirty();
             evt.preventDefault();
           })
@@ -925,7 +926,7 @@ class ShapeMapCache extends InterfaceCache {
           type: 'text',
           value: shape,
           class: 'schema inputShape'
-        }).on("change", this.markEditMapDirty);
+        }).on("change", () => this.markEditMapDirty()); // bound: bare method loses `this`
         const addElt = $("<button/>", {
           class: "addPair",
           title: "add a node/shape pair"}).text("+");
@@ -1448,9 +1449,11 @@ class ShExResultsRenderer {
   constructor (resultsWidget, caches) {
     this.resultsWidget = resultsWidget;
     this.caches = caches;
+    this.entries = []; // collected for editor diagnostics (EditorSupport)
   }
 
   async entry (entry) {
+    this.entries.push(entry);
     const fails = entry.status === "nonconformant";
 
     // locate FixedMap entry
@@ -1560,11 +1563,102 @@ class ShExResultsRenderer {
     // } catch (e) {
     //   console.dir(e);
     // }
+    if (this.caches.editorSupport)
+      this.caches.editorSupport.reportValidation(this.entries);
     this.resultsWidget.finish();
   }
 
   failure (e, action, text) {
     this.resultsWidget.failMessage(e, action, text);
+  }
+}
+
+/** EditorSupport - optional CodeMirror panes over the app's textareas
+ * (?editors=1): live parse diagnostics, validation-error anchoring in both
+ * the schema and data panes, and shape-map ↔ shape-declaration highlights.
+ * See doc/editor-integration-plan.md in the repository root.
+ */
+class EditorSupport {
+  constructor (app) {
+    this.app = app;
+    this.panes = {};
+  }
+
+  addPane (name, cache, language) {
+    const textarea = cache.selection[0];
+    if (!textarea)
+      return null;
+    return this.panes[name] = ShExWebApp.EditorPanes.makePane(textarea, {
+      language,
+      getBase: () => cache.meta && cache.meta.base,
+    });
+  }
+
+  /** map validation results onto the schema and data editors */
+  reportValidation (entries) {
+    const {inputSchema, inputData} = this.app.Caches;
+    if (!this.panes.inputSchema || !inputSchema.parsed)
+      return;
+    try {
+      const located = ShExWebApp.EditorServices.locateInParsed(
+        inputSchema.selection.val(), inputSchema.parsed);
+      const dataParsed = this.panes.inputData
+            ? ShExWebApp.EditorServices.parseTurtle(
+                inputData.selection.val(), {baseIRI: inputData.meta && inputData.meta.base})
+            : null;
+      const mapped = ShExWebApp.EditorServices.mapValidationErrors(
+        entries.map(e => e.appinfo), located, dataParsed);
+      this.lastMapped = mapped; // introspection for tests/debugging
+      this.panes.inputSchema.setDiagnostics(mapped.schema);
+      if (this.panes.inputData)
+        this.panes.inputData.setDiagnostics(mapped.data);
+    } catch (e) {
+      console.warn("editor diagnostics failed:", e);
+    }
+  }
+
+  /** highlight a shape's declaration in the schema pane */
+  highlightShape (label) {
+    const {inputSchema} = this.app.Caches;
+    if (!this.panes.inputSchema || !inputSchema.parsed)
+      return;
+    const located = ShExWebApp.EditorServices.locateInParsed(
+      inputSchema.selection.val(), inputSchema.parsed);
+    const range = located.locate.shape(label);
+    this.panes.inputSchema.highlight(range ? [range] : []);
+  }
+
+  clearShapeHighlight () {
+    if (this.panes.inputSchema)
+      this.panes.inputSchema.clearHighlights();
+  }
+
+  /** hovering a shape lexical form (fixed-map inputs, result entries)
+   * highlights its declaration */
+  enableShapeHover () {
+    const lexToLabel = (lex) => {
+      try {
+        const term = this.app.Caches.inputSchema.meta.lexToTerm(lex.trim());
+        return typeof term === "string" ? term : null; // skip Start et al.
+      } catch (e) {
+        return null;
+      }
+    };
+    $(document).on("mouseenter.shexjsEditors", ".inputShape, .shapeMap .schema", (evt) => {
+      const elt = $(evt.currentTarget);
+      const label = lexToLabel(elt.is("input") ? elt.val() : elt.text());
+      if (label)
+        this.highlightShape(label);
+    }).on("mouseleave.shexjsEditors", ".inputShape, .shapeMap .schema", () => {
+      this.clearShapeHighlight();
+    });
+  }
+
+  /** tear down every pane (restoring the textareas) and the hover handlers */
+  destroy () {
+    $(document).off(".shexjsEditors");
+    Object.values(this.panes).forEach(pane => pane && pane.destroy());
+    this.panes = {};
   }
 }
 
@@ -1597,6 +1691,7 @@ class ShExBaseApp {
       {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
       {queryStringParm: "success",      location: $("#success"),         deflt: "proof"     },
       {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr" },
+      {queryStringParm: "editors",      location: $("#editors"),         deflt: ""          },
     ]);
     this.keyDownHandlers = [
       this.validateKeyDown.bind(this),
@@ -1605,12 +1700,47 @@ class ShExBaseApp {
 
     ShExWebApp.ShapeMap.Start = ShExWebApp.Validator.Start;
   }
+  /** The Menu → "user interface" editors select (?editors=1 in permalinks)
+   * replaces the textareas with language-aware CodeMirror panes (when the
+   * webpack bundle includes EditorPanes); the textareas stay in the DOM as
+   * live value proxies so caches/permalinks/tests are unaffected.  Toggling
+   * off restores the plain textareas with the current text -- handy for
+   * comparing editor and textarea behaviors.
+   */
+  setEditors () {
+    const want = "EditorPanes" in ShExWebApp && $("#editors").val() === "1";
+    if (want && !this.editorSupport) {
+      this.editorSupport = new EditorSupport(this);
+      // ShExResultsRenderer reaches editorSupport through its caches
+      // reference; non-enumerable so the many Object.keys(Caches) iterations
+      // (textarea handlers, query parameters, ...) never mistake it for a
+      // cache.
+      Object.defineProperty(this.Caches, "editorSupport",
+                            {value: this.editorSupport, enumerable: false, configurable: true});
+      this.addEditorPanes();
+      this.editorSupport.enableShapeHover();
+    } else if (!want && this.editorSupport) {
+      this.editorSupport.destroy();
+      delete this.Caches.editorSupport;
+      this.editorSupport = null;
+    }
+  }
+
+  /** which caches get panes; subclasses add theirs */
+  addEditorPanes () {
+    this.editorSupport.addPane("inputSchema", this.Caches.inputSchema, "shexc");
+    this.editorSupport.addPane("inputData", this.Caches.inputData, "turtle");
+  }
+
   async start () {
     SharedForTests = {Caches: this.Caches, /*DefaultBase*/} // an object to share state with a test harness
     this.prepareControls();
     const dndPromise = this.prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
     const loads = this.loadSearchParameters();
-    const ready = Promise.all([ dndPromise, loads ]);
+    const ready = Promise.all([ dndPromise, loads ]).then(resolved => {
+      this.setEditors(); // after ?editors=... has reached the menu select
+      return resolved;
+    });
     if ('_testCallback' in window) {
       SharedForTests.promise = ready.then(ab => ({drop: ab[0], loads: ab[1]}));
       window._testCallback(SharedForTests);
@@ -1650,6 +1780,7 @@ class ShExBaseApp {
     $("#interface").on("change", this.setInterface.bind(this));
     $("#success").on("change", this.setInterface.bind(this));
     $("#regexpEngine").on("change", this.toggleControls.bind(this));
+    $("#editors").on("change", () => this.setEditors());
     $("#validate").on("click", this.disableResultsAndValidate.bind(this));
     $("#download-results-button").on("click", this.downloadResults.bind(this));
 

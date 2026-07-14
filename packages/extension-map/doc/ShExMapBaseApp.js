@@ -100,6 +100,13 @@ class ShExMapBaseApp extends ShExBaseApp {
     $("#materialize").on("click", evt => this.materialize(evt));
   }
 
+  addEditorPanes () {
+    super.addEditorPanes();
+    this.editorSupport.addPane("bindings", this.Caches.bindings, "json");
+    this.editorSupport.addPane("statics", this.Caches.statics, "json");
+    this.editorSupport.addPane("outputSchema", this.Caches.outputSchema, "shexc");
+  }
+
   makeRenderer () {
     return this.currentRenderer = new ShExMapResultsRenderer(this.resultsWidget, this.Caches, this.MapModule.url)
   }

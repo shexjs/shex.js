@@ -18,6 +18,8 @@ ShExWebApp = (function () {
     Map:                  require("."),
     StringToRdfJs:        require("./lib/stringToRdfJs"),
     NestedTurtleWriter:   require("./lib/NestedWriter"),
+    EditorServices:       require("@shexjs/editor-services"),
+    EditorPanes:          require("@shexjs/editor-services/lib/editor-panes"),
   })
 })()
 

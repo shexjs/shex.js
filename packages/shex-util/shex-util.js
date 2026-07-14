@@ -254,6 +254,7 @@ const ShExUtil = {
     delete schema["_base"];
     delete schema["_locations"];
     delete schema["_sourceMap"];
+    delete schema["_exprLocations"];
     return schema;
   },
 
@@ -386,6 +387,7 @@ const ShExUtil = {
     delete ret._sourceMap;
     let locations = ret._locations;
     delete ret._locations;
+    delete ret._exprLocations;
     // Don't delete ret.productions as it's part of the AS.
 
     class MyVisitor extends ShExVisitor {
