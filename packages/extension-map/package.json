@@ -17,7 +17,8 @@
   "license": "MIT",
   "main": "./shex-extension-map.js",
   "bin": {
-    "shexmap-materialize": "bin/materialize"
+    "shexmap-materialize": "bin/materialize",
+    "shexmap-debug": "bin/shexmap-debug"
   },
   "engines": {
     "node": ">=18"

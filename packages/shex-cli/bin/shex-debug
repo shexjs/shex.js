@@ -1,0 +1,100 @@
+#!/usr/bin/env node
+
+/** shex-debug -- step through a ShEx validation (see doc/debugger-design.md
+ * in the shexjs/shex.js repository).
+ *
+ * shex-debug -x schema.shex -d data.ttl -n node [-s shape]
+ *
+ * Commands are read from stdin (s/n/o/c/b/bs/bn/info/l/h/q); blocking on
+ * the prompt is the suspension mechanism, so this runs single-threaded.
+ * Stepping granularity is shape-level (the validator's tracker); local
+ * files only, IMPORTs not followed (source positions are per-document).
+ */
+"use strict";
+
+const FS = require("fs");
+const N3 = require("n3");
+const ShExParser = require("@shexjs/parser");
+const {ShExDebugRepl} = require("../lib/ShExDebugRepl");
+
+const CommandLineOptions = [
+  { name: "help", alias: "h", type: Boolean },
+  { name: "shex", alias: "x", type: String, typeLabel: "file", description: "ShExC schema file" },
+  { name: "data", alias: "d", type: String, typeLabel: "file", description: "Turtle data file" },
+  { name: "node", alias: "n", type: String, typeLabel: "IRI", description: "focus node (absolute IRI, pname or _:label)" },
+  { name: "shape", alias: "s", type: String, typeLabel: "IRI", description: "shape label (default: start)" },
+];
+const cmds = require("command-line-args")(CommandLineOptions);
+
+function usage (exitCode) {
+  console.error(require("command-line-usage")([
+    { header: "shex-debug",
+      content: "step through the validation of a node against a shape; commands on stdin" },
+    { header: "Synopsis", content: "shex-debug -x <schema> -d <data> -n <node> [-s <shape>]" },
+    { header: "Options", optionList: CommandLineOptions },
+  ]));
+  process.exit(exitCode);
+}
+
+if (cmds.help || !cmds.shex || !cmds.data || !cmds.node)
+  usage(1); // family convention: usage always exits 1 (c.f. materialize)
+
+/** readLineSync - blocking stdin line reader: the debugger's suspension */
+function readLineSync (promptStr) {
+  process.stdout.write(promptStr);
+  const buf = Buffer.alloc(1);
+  let line = "";
+  while (true) {
+    let n;
+    try {
+      n = FS.readSync(0, buf, 0, 1);
+    } catch (e) {
+      if (e.code === "EAGAIN")
+        continue;
+      throw e;
+    }
+    if (n === 0)
+      return line.length ? line : null; // EOF
+    const ch = buf.toString("utf8");
+    if (ch === "\n")
+      return line;
+    line += ch;
+  }
+}
+
+/** resolveTerm - pname via prefixes, else IRI reference resolved against
+ * base (shex-validate convention: -n resolves against the data source, -s
+ * against the schema source) */
+function resolveTerm (lex, prefixes, base) {
+  if (lex.startsWith("_:"))
+    return lex;
+  const m = lex.match(/^([A-Za-z_][\w.-]*)?:(?!\/)(.*)$/);
+  if (m && prefixes[m[1] || ""] !== undefined)
+    return prefixes[m[1] || ""] + m[2];
+  const iri = lex.startsWith("<") && lex.endsWith(">") ? lex.slice(1, -1) : lex;
+  try {
+    return new URL(iri, base).href;
+  } catch (e) {
+    return iri;
+  }
+}
+
+try {
+  const schemaText = FS.readFileSync(cmds.shex, "utf8");
+  const schema = ShExParser.construct("file://" + cmds.shex, {}, {index: true}).parse(schemaText);
+  const parser = new N3.Parser({baseIRI: "file://" + cmds.data, format: "text/turtle"});
+  const graph = new N3.Store();
+  graph.addQuads(parser.parse(FS.readFileSync(cmds.data, "utf8")));
+  const dataPrefixes = parser._prefixes || {};
+
+  const node = resolveTerm(cmds.node, dataPrefixes, "file://" + cmds.data);
+  const shape = cmds.shape
+        ? resolveTerm(cmds.shape, schema._prefixes || {}, "file://" + cmds.shex)
+        : undefined;
+
+  const repl = new ShExDebugRepl(schemaText, schema, graph, {prompt: readLineSync});
+  process.exit(repl.run(node, shape));
+} catch (e) {
+  console.error("stack" in e ? e.stack : String(e));
+  process.exit(3);
+}

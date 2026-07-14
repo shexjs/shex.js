@@ -23,6 +23,11 @@ const AllTests = {
     // Map/BPDAMFHIR/BPFHIR.ttl -n tag:BPfhir123 --extension
     // ../shex-extension-map.js` with the checkout path neutralized)
     { name: "bp-pipeline", args: ["--target", "Map/BPDAMFHIR/BPunitsDAM.shex", "--root", "tag:b0"], stdin: "Map/BPDAMFHIR/BPFHIR-validation.val", resultMatch: "systolic>[\\s\\S]*\"110\"[\\s\\S]*diastolic>[\\s\\S]*\"70\"", status: 0 }
+  ],
+  "shexmap-debug": [
+    // stdin is the command channel: set a predicate breakpoint, continue to
+    // it, continue to completion
+    { name: "debug-bindings", args: ["--target", "../examples/BPdam-schema.shex", "--bindings", "../examples/BP-simple-bindings.json", "-r", "tag:b0"], stdin: "Map/debug-commands.txt", resultMatch: "breakpoint on predicate :systolic[\\s\\S]*at :systolic[\\s\\S]*accepted: 7 quads", status: 0 }
   ]
 };
 
