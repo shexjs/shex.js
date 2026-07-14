@@ -84,6 +84,11 @@ return class ShExHumanErrorWriter {
     }
     case "SemActViolation":
       return [val.message];
+    case "FeasibilityViolation":
+      return ["Triple " + val.triple.subject + " " + val.triple.predicate + " " + n3ify(val.triple.object)
+              + " can be assigned to no triple constraint in any solution."];
+    case "ResultReference":
+      return ["see " + val.ref];
     default:
       debugger; // console.log(val);
       throw Error("unknown shapeExpression type \"" + val.type + "\" in " + JSON.stringify(val));

@@ -242,6 +242,55 @@ TypeError: this.options.validateExtern is not a function
 ```
 
 
+# Testing
+
+Run this package's tests from `packages/`:
+``` shell
+cd .. && npx mocha -C shex-validator/test/Validation-test.js
+```
+
+## Selecting tests
+
+Set `TESTS` to a regular expression matched against test ids, schema and data
+file names to run a subset:
+``` shell
+TESTS='vitals-RESTRICTS' npx mocha -C shex-validator/test/Validation-test.js
+```
+
+## Regenerating reference results (`REGEN=1`)
+
+`Validation-test.js` compares validation output against the reference results
+in `test/val/` (as mapped by `test/val/test-result-map.json`). When an
+intentional change to the validator alters the ShExResults structures, set
+`REGEN=1` to rewrite the reference file of any test whose (canonicalized)
+result no longer matches, instead of failing the assertion:
+``` shell
+TESTS='(ExtendsRepeatedP-pass|2dot_fail-empty-err)' REGEN=1 npx mocha -C shex-validator/test/Validation-test.js
+```
+The run reports the regenerated tests as passing; review the rewritten files
+with `git diff` (or ediff) and commit the ones that reflect the intended
+change. Always scope `REGEN` with `TESTS` to the tests you mean to regenerate —
+an unscoped `REGEN=1` run will absorb *any* mismatch, including real
+regressions. Tests without an entry in `test-result-map.json` only check
+conformance status and are unaffected.
+
+## Result names
+
+When validating EXTENDS hierarchies, the first result for each extension/subgraph
+pair carries a `"resultName"`; identical re-examinations in later partitions emit
+`{"type": "ResultReference", "ref": <resultName>}` instead of repeating it. A
+result name is the focus node followed by a
+[ShExPath](https://github.com/shexSpec/ShapePath.js) expression addressing the
+extension: a labeled extension by its shape-declaration selector,
+```
+<http://a.example/s>@<http://a.example/#B>
+```
+an inline extension by a child step in the extending shape
+(`…@<label>/extends[0]` — the `extends` step parallels the grammar's
+`shapeExprs[i]` and is proposed for shape-path-core, which predates EXTENDS).
+Only when the same node and extension are validated against a *different*
+subgraph is a disambiguating `#2`, `#3`, … appended.
+
 # Lerna Monorepo
 
 This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM packages. These packages are located in `packages/*`:

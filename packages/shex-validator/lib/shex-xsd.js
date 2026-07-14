@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.testFacets = exports.testKnownTypes = exports.getNumericDatatype = void 0;
+exports.getNumericDatatype = getNumericDatatype;
+exports.testKnownTypes = testKnownTypes;
+exports.testFacets = testFacets;
 const XSD = "http://www.w3.org/2001/XMLSchema#";
 const integerDatatypes = [
     XSD + "integer",
@@ -167,7 +169,6 @@ function getNumericDatatype(value) {
                 ? value.datatype.value
                 : null;
 }
-exports.getNumericDatatype = getNumericDatatype;
 function testKnownTypes(value, validationError, ldify, datatype, numeric, label) {
     if (value.termType !== "Literal") {
         validationError(`mismatched datatype: ${JSON.stringify(ldify(value))} is not a literal with datatype ${datatype}`);
@@ -187,7 +188,6 @@ function testKnownTypes(value, validationError, ldify, datatype, numeric, label)
             validationError(`illegal dateTime value: ${label}`);
     }
 }
-exports.testKnownTypes = testKnownTypes;
 function testFacets(valueExpr, label, validationError, numeric) {
     if (valueExpr.pattern !== undefined) {
         const regexp = valueExpr.flags !== undefined ?
@@ -233,5 +233,4 @@ function testFacets(valueExpr, label, validationError, numeric) {
         }
     }
 }
-exports.testFacets = testFacets;
 //# sourceMappingURL=shex-xsd.js.map

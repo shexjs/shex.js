@@ -68,7 +68,8 @@
                         }
                       }
                     ]
-                  }
+                  },
+                  "resultName": "<http://a.example/pass-bottom>@<http://a.example/G0>"
                 }
               ]
             },
@@ -121,7 +122,8 @@
                 }
               ]
             }
-          }
+          },
+          "resultName": "<http://a.example/pass-bottom>@<http://a.example/G0-0>"
         },
         {
           "type": "ShapeTest",
@@ -184,7 +186,8 @@
                         }
                       }
                     ]
-                  }
+                  },
+                  "resultName": "<http://a.example/pass-bottom>@<http://a.example/G0>"
                 }
               ]
             },
@@ -237,7 +240,8 @@
                 }
               ]
             }
-          }
+          },
+          "resultName": "<http://a.example/pass-bottom>@<http://a.example/G0-1>"
         }
       ]
     },

@@ -183,7 +183,7 @@ describe("A ShEx validator", function () {
                }
              }) : valFile; // !! replace with ShExUtil.absolutizeResults(JSON.parse(fs.readFileSync(valFile, "utf8")))
 
-             doIt(report, absoluteVal, {results: "val"});
+             doIt(report, absoluteVal, {results: "val", valFilePath: valFile ? __dirname + "/" + valFile : null});
            });
 
         if (!EARL && test.result) {
@@ -285,18 +285,33 @@ describe("A ShEx validator", function () {
                       if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
                       if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
                       if (params.results !== "api") {
+                        // REGEN=1 rewrites the reference file when the (canonicalized) result
+                        // differs, so reference diffs can be reviewed with ediff and committed.
+                        const regen = "REGEN" in process.env && params.valFilePath
+                              ? (canonWas, canonNow) => {
+                                if (JSON.stringify(canonNow) !== JSON.stringify(canonWas))
+                                  fs.writeFileSync(params.valFilePath, JSON.stringify(validationResult, null, 2) + "\n");
+                                return true;
+                              }
+                              : null;
                         if (test["@type"] === "sht:ValidationFailure") {
                           assert(!validationResult || "errors" in validationResult, "test expected to fail");
                           if (referenceResult) {
                             // console.log(JSON.stringify(validationResult, null, 2)); // , "\n---\n", JSON.stringify(referenceResult, null, 2));
-                            expect(canonicalizeJ(validationResult)).to.deep.equal(canonicalizeJ(referenceResult));
+                            if (regen)
+                              regen(canonicalizeJ(referenceResult), canonicalizeJ(validationResult));
+                            else
+                              expect(canonicalizeJ(validationResult)).to.deep.equal(canonicalizeJ(referenceResult));
                           }
                           ShExUtil.errsToSimple(validationResult);
                         } else {
                           assert(validationResult && !("errors" in validationResult), "test expected to succeed; got " + JSON.stringify(validationResult));
                           if (referenceResult !== null) {
                             // console.log(JSON.stringify(validationResult, null, 2), "\n---\n", JSON.stringify(referenceResult, null, 2));
-                            expect(canonicalizeJ(validationResult, {})).to.deep.equal(canonicalizeJ(referenceResult, {}));
+                            if (regen)
+                              regen(canonicalizeJ(referenceResult, {}), canonicalizeJ(validationResult, {}));
+                            else
+                              expect(canonicalizeJ(validationResult, {})).to.deep.equal(canonicalizeJ(referenceResult, {}));
                           }
                           ShExUtil.valToValues(validationResult);
                         }
