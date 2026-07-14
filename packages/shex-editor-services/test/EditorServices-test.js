@@ -112,6 +112,79 @@ describe("EditorServices", function () {
       expect(slice(dataText, pair.data)).to.equal('"not a number"');
     });
 
+    it("should pair matched constraints with data triples (conformant hover anchors)", function () {
+      const goodData = [
+        "PREFIX : <http://a.example/>",
+        'PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>',
+        '<x> :name "hi" ;',
+        "    :ref <y> .",
+        '<y> :val 42 .',
+      ].join("\n");
+      const goodParsed = EditorServices.parseTurtle(goodData, {baseIRI: base});
+      const results = validate(schemaParsed, goodData);
+      expect(results[0].status).to.equal("conformant");
+      const mapped = EditorServices.mapValidationErrors(results, schemaParsed, goodParsed);
+
+      expect(mapped.schema, "no failure squiggles on a conformant result").to.deep.equal([]);
+      const matches = mapped.pairs.filter(p => p.status === "conformant");
+      expect(matches.length).to.be.above(0);
+
+      // the nested <y> :val 42 match: constraint, shape label and all three terms
+      const valMatch = matches.find(p => p.schema && slice(schemaText, p.schema) === ":val xsd:integer");
+      expect(valMatch, "match for :val constraint").to.exist;
+      expect(slice(schemaText, valMatch.anchors.shapeLabel)).to.equal("<T>");
+      expect(slice(goodData, valMatch.anchors.subject)).to.equal("<y>");
+      expect(slice(goodData, valMatch.anchors.predicate)).to.equal(":val");
+      expect(slice(goodData, valMatch.anchors.object)).to.equal("42");
+    });
+
+    it("should carry term anchors on failures too", function () {
+      const results = validate(schemaParsed, dataText);
+      const mapped = EditorServices.mapValidationErrors(results, schemaParsed, dataParsed);
+      const fail = mapped.pairs.find(p => p.status === "nonconformant" && p.anchors.object &&
+                                     slice(dataText, p.anchors.object) === '"not a number"');
+      expect(fail, "failure pair anchored on the offending literal").to.exist;
+      expect(slice(dataText, fail.anchors.subject)).to.equal("<y>");
+      expect(slice(dataText, fail.anchors.predicate)).to.equal(":val");
+      expect(slice(schemaText, fail.anchors.shapeLabel)).to.equal("<T>");
+    });
+
+    it("should never paint sibling constraints of a failure", function () {
+      // regression: a NodeConstraintViolation nested in a TypeMismatch used
+      // to fall back to the whole shape declaration, painting the healthy
+      // :subject constraint red with the :status error's message
+      const obsSchema = [
+        "PREFIX : <http://a.example/>",
+        "<ObservationShape> {",
+        '  :status ["preliminary" "final"] ;',
+        "  :subject @<PatientShape>",
+        "}",
+        "<PatientShape> { :name . }",
+      ].join("\n");
+      const obsData = [
+        "PREFIX : <http://a.example/>",
+        '<obs> :status "bogus" ;',
+        "      :subject <pat> .",
+        '<pat> :name "Sue" .',
+      ].join("\n");
+      const obsParsed = EditorServices.parseShExC(obsSchema, {base});
+      const obsData_ = EditorServices.parseTurtle(obsData, {baseIRI: base});
+      const store = new N3.Store();
+      store.addQuads(new N3.Parser({baseIRI: base, format: "text/turtle"}).parse(obsData));
+      const validator = new ShExValidator(obsParsed.schema, RdfJsDb(store), {noCache: true});
+      const results = validator.validateShapeMap([{node: base + "obs", shape: base + "ObservationShape"}]);
+      const mapped = EditorServices.mapValidationErrors(results, obsParsed, obsData_);
+
+      expect(mapped.schema.length).to.be.above(0);
+      mapped.schema.forEach(diag => {
+        const sliced = obsSchema.substring(diag.from, diag.to);
+        expect(sliced, diag.message).not.to.include(":subject");
+        expect(sliced.startsWith(":status") || sliced === "<ObservationShape>",
+               "anchored on the failing constraint or the shape label, got " + JSON.stringify(sliced))
+          .to.equal(true);
+      });
+    });
+
     it("should anchor a missing property on the constraint and the focus node", function () {
       const missingData = `PREFIX : <http://a.example/>\n<x> :name "hi" .\n`;
       const missingParsed = EditorServices.parseTurtle(missingData, {baseIRI: base});

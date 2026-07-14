@@ -8111,7 +8111,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.languages = exports.shexcStreamParser = void 0;
+exports.CHANGE_DEBOUNCE_MS = exports.languages = exports.shexcStreamParser = void 0;
 exports.makePane = makePane;
 const codemirror_1 = __webpack_require__(1301);
 const view_1 = __webpack_require__(9905);
@@ -8200,8 +8200,11 @@ const highlightField = state_1.StateField.define({
 });
 const paneTheme = view_1.EditorView.baseTheme({
     ".shexjs-highlight": { backgroundColor: "#fff3b0" },
-    ".shexjs-highlight-pair": { backgroundColor: "#ffd6d6" },
-    "&": { border: "1px solid #ddd", fontSize: "13px" },
+    ".shexjs-highlight-match": { backgroundColor: "#c8f0c8" },
+    ".shexjs-highlight-fail": { backgroundColor: "#ffcdcd" },
+    "&": { border: "1px solid #ddd", fontSize: "13px",
+        resize: "vertical", overflow: "hidden" }, // user-resizable, like a textarea
+    ".cm-scroller": { overflow: "auto" },
     "&.cm-focused": { outline: "none", borderColor: "#88f" },
 });
 // ---------------------------------------------------------------------------
@@ -8218,9 +8221,11 @@ function lintSourceFor(language, opts) {
     }
 }
 /** makePane - replace `textarea` with a CodeMirror 6 editor. */
+exports.CHANGE_DEBOUNCE_MS = 350;
 function makePane(textarea, opts = {}) {
     const nativeValue = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(textarea).constructor.prototype, "value")
         || Object.getOwnPropertyDescriptor(textarea, "value");
+    let changeTimer = null;
     const extensions = [
         codemirror_1.basicSetup,
         (0, lint_1.lintGutter)(),
@@ -8229,11 +8234,19 @@ function makePane(textarea, opts = {}) {
         view_1.EditorView.updateListener.of(update => {
             if (update.docChanged) {
                 nativeValue.set.call(textarea, update.state.doc.toString());
-                // "change" for handlers that react to new content; "keyup" because
-                // the apps' cache dirty-tracking listens for typing (a stale cache
-                // means validate ignores the edit)
-                textarea.dispatchEvent(new Event("change", { bubbles: true }));
-                textarea.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true }));
+                // "keyup" fires immediately: the apps' cache dirty-tracking listens
+                // for typing (a stale cache means validate ignores the edit).
+                const KeyboardEventCtor = typeof KeyboardEvent !== "undefined" ? KeyboardEvent : Event;
+                textarea.dispatchEvent(new KeyboardEventCtor("keyup", { bubbles: true }));
+                // "change" is debounced to typing pauses: a textarea fires it on
+                // blur, and per-keystroke change handlers re-parse half-typed
+                // documents (e.g. an unclosed quote swallowing following lines).
+                if (changeTimer !== null)
+                    clearTimeout(changeTimer);
+                changeTimer = setTimeout(() => {
+                    changeTimer = null;
+                    textarea.dispatchEvent(new Event("change", { bubbles: true }));
+                }, exports.CHANGE_DEBOUNCE_MS);
             }
         }),
     ];
@@ -8244,8 +8257,38 @@ function makePane(textarea, opts = {}) {
         extensions.push((0, lint_1.linter)(lintSource, { delay: 500 }));
     const view = new view_1.EditorView({ doc: textarea.value, extensions });
     view.dom.classList.add("shexjs-editor-pane");
+    // match the textarea's rendered size (measured before it's hidden); fall
+    // back to its rows attribute where there's no layout (e.g. jsdom)
+    view.dom.style.width = textarea.offsetWidth ? textarea.offsetWidth + "px"
+        : (textarea.style.width || "100%");
+    view.dom.style.height = textarea.offsetHeight ? textarea.offsetHeight + "px"
+        : `calc(${textarea.rows || 20} * 1.4em)`;
     textarea.parentNode.insertBefore(view.dom, textarea);
     textarea.style.display = "none";
+    // hover regions (validation match/failure cross-highlighting)
+    let hoverRegions = [];
+    let hoverLeave;
+    let currentRegion = null;
+    const clearHover = () => {
+        if (currentRegion) {
+            currentRegion = null;
+            if (hoverLeave)
+                hoverLeave();
+        }
+    };
+    view.contentDOM.addEventListener("mousemove", (e) => {
+        const pos = view.posAtCoords({ x: e.clientX, y: e.clientY });
+        const hit = pos === null ? null
+            : hoverRegions.find(r => pos >= r.from && pos < r.to) || null;
+        if (hit !== currentRegion) {
+            currentRegion = hit;
+            if (hit)
+                hit.enter();
+            else if (hoverLeave)
+                hoverLeave();
+        }
+    });
+    view.contentDOM.addEventListener("mouseleave", clearHover);
     // live proxy: application code keeps talking to the textarea
     Object.defineProperty(textarea, "value", {
         configurable: true,
@@ -8265,17 +8308,26 @@ function makePane(textarea, opts = {}) {
         setDiagnostics(diagnostics) {
             view.dispatch((0, lint_1.setDiagnostics)(view.state, diagnostics.filter(d => d.to >= d.from && d.to <= view.state.doc.length)));
         },
-        highlight(ranges, cls = "shexjs-highlight") {
+        highlight(ranges, cls = "shexjs-highlight", opts = {}) {
             const inRange = (ranges || []).filter(clampRange).sort((a, b) => a.from - b.from);
             const decos = inRange.map(r => view_1.Decoration.mark({ class: cls }).range(r.from, r.to));
             view.dispatch({ effects: setHighlightsEffect.of(view_1.Decoration.set(decos, true)) });
-            if (inRange.length)
+            if (inRange.length && opts.scroll !== false)
                 view.dispatch({ effects: view_1.EditorView.scrollIntoView(inRange[0].from) });
         },
         clearHighlights() {
             view.dispatch({ effects: setHighlightsEffect.of(view_1.Decoration.none) });
         },
+        setHoverRegions(regions, leave) {
+            hoverRegions = regions || [];
+            hoverLeave = leave;
+            currentRegion = null;
+        },
         destroy() {
+            if (changeTimer !== null) {
+                clearTimeout(changeTimer);
+                changeTimer = null;
+            }
             const text = view.state.doc.toString();
             delete textarea.value; // restore the prototype accessor
             textarea.value = text;
@@ -8417,6 +8469,18 @@ function locateInParsed(text, schema) {
             shape: (label) => schema && schema._locations
                 ? yyllocToRange(schema._locations[label], starts)
                 : null,
+            shapeLabel: (label) => {
+                const decl = schema && schema._locations
+                    ? yyllocToRange(schema._locations[label], starts) : null;
+                if (!decl)
+                    return null;
+                // the declaration starts with (ABSTRACT)? <label>; take the label token
+                const lead = /^\s*(?:abstract\s+)?/i.exec(text.slice(decl.from))[0].length;
+                const token = /^\S+/.exec(text.slice(decl.from + lead));
+                return token
+                    ? { from: decl.from + lead, to: decl.from + lead + token[0].length }
+                    : decl;
+            },
             expr: (obj) => schema && schema._exprLocations
                 ? yyllocToRange(schema._exprLocations.get(obj), starts)
                 : null,
@@ -8494,16 +8558,29 @@ function ldTermToRdfJs(ld) {
         ? { termType: "BlankNode", value: ld.substr(2) }
         : { termType: "NamedNode", value: ld };
 }
-/** rangeOfTriple - locate a validation error's TestedTriple in the parsed
- * data; prefers the object term's own range (that's usually the offending
- * value), falling back to the quad's assertion site. */
-function rangeOfTriple(dataset, triple) {
+/** trimRange - drop trailing whitespace from a range (some term sources
+ * include following trivia). */
+function trimRange(range, text) {
+    if (!range)
+        return null;
+    let to = range.to;
+    while (to > range.from && /\s/.test(text[to - 1]))
+        --to;
+    return to === range.to ? range : { from: range.from, to };
+}
+/** tripleAnchors - locate a validation result's TestedTriple in the parsed
+ * data, returning per-term ranges (millan terms carry their own source). */
+function tripleAnchors(dataset, triple, text) {
     const matches = [...dataset.match(ldTermToRdfJs(triple.subject), ldTermToRdfJs(triple.predicate), ldTermToRdfJs(triple.object))];
     if (matches.length === 0)
         return null;
     const quad = matches[0];
-    return millanSourceToRange(quad.object && quad.object.source) ||
-        millanSourceToRange(quad.source);
+    return {
+        subject: trimRange(millanSourceToRange(quad.subject && quad.subject.source), text),
+        predicate: trimRange(millanSourceToRange(quad.predicate && quad.predicate.source), text),
+        object: trimRange(millanSourceToRange(quad.object && quad.object.source)
+            || millanSourceToRange(quad.source), text),
+    };
 }
 /** rangeOfNode - anchor for node-level errors (e.g. MissingProperty): the
  * first assertion where the node appears as subject. */
@@ -8538,10 +8615,14 @@ const ErrorLeaves = {
     }),
     NodeConstraintViolation: (err, ctx) => ({
         message: firstLine((err.errors || [])[0] || "node constraint violation"),
+        schemaObj: ctx.constraint, // usually nested in a TypeMismatch
+        triple: ctx.triple,
         node: ctx.node,
     }),
     SemActFailure: (_err, ctx) => ({
         message: "semantic action failure",
+        schemaObj: ctx.constraint,
+        triple: ctx.triple,
         node: ctx.node,
     }),
 };
@@ -8575,41 +8656,67 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed) {
         seen.add(node);
         if (Array.isArray(node))
             return node.forEach(n => walk(n, ctx));
-        // track focus node / shape context on the way down
-        if (node.node !== undefined || node.shape !== undefined)
+        // track focus node / shape / enclosing-error context on the way down
+        if (node.node !== undefined || node.shape !== undefined ||
+            node.constraint !== undefined || node.triple !== undefined)
             ctx = { node: node.node !== undefined ? node.node : ctx.node,
-                shape: node.shape !== undefined ? node.shape : ctx.shape };
+                shape: node.shape !== undefined ? node.shape : ctx.shape,
+                constraint: node.constraint !== undefined ? node.constraint : ctx.constraint,
+                triple: node.triple !== undefined ? node.triple : ctx.triple };
         if (node.type in ErrorLeaves)
-            emit(ErrorLeaves[node.type](node, ctx), node, ctx);
+            emit("nonconformant", ErrorLeaves[node.type](node, ctx), node, ctx);
+        // successful matches: each TestedTriple under a TripleConstraintSolutions
+        // pairs a schema constraint with a data triple
+        if (node.type === "TripleConstraintSolutions" && Array.isArray(node.solutions))
+            node.solutions.forEach((sol) => {
+                if (sol && sol.type === "TestedTriple")
+                    emit("conformant", {
+                        message: `${termStr(sol.object)} matched <${node.predicate}>`,
+                        predicate: node.predicate,
+                        triple: sol,
+                    }, node, ctx);
+            });
         for (const key of ["errors", "appinfo", "solutions", "solution",
             "expressions", "referenced", "unexpectedTriples"])
             if (key in node)
                 walk(node[key], ctx);
     })(valResult, {});
-    function emit(leaf, err, ctx) {
+    function emit(status, leaf, err, ctx) {
         const schemaRange = (leaf.schemaObj && shexcParsed.locate.expr(leaf.schemaObj)) ||
             (leaf.predicate && ctx.shape && shexcParsed.locate.constraint(ctx.shape, leaf.predicate)) ||
-            (ctx.shape && shexcParsed.locate.shape(ctx.shape)) ||
+            // last resort: just the shape's label token -- never the whole
+            // declaration, which would paint innocent constraints red
+            (ctx.shape && shexcParsed.locate.shapeLabel(ctx.shape)) ||
             null;
+        const anchors = {
+            shapeLabel: ctx.shape ? shexcParsed.locate.shapeLabel(ctx.shape) : null,
+            subject: null, predicate: null, object: null,
+        };
         let dataRange = null;
         if (turtleParsed && turtleParsed.dataset) {
-            if (leaf.triple)
-                dataRange = rangeOfTriple(turtleParsed.dataset, leaf.triple);
-            else if (leaf.triples && leaf.triples.length)
-                dataRange = rangeOfTriple(turtleParsed.dataset, leaf.triples[0]);
+            const triple = leaf.triple || (leaf.triples && leaf.triples[0]) || null;
+            if (triple) {
+                const termRanges = tripleAnchors(turtleParsed.dataset, triple, turtleParsed.text);
+                if (termRanges)
+                    Object.assign(anchors, termRanges);
+                dataRange = anchors.object;
+            }
             if (!dataRange && leaf.node !== undefined && leaf.node !== null)
                 dataRange = rangeOfNode(turtleParsed.dataset, leaf.node);
         }
         pairs.push({
             id: pairs.length,
             type: err.type,
+            status,
             message: leaf.message,
             schema: schemaRange,
             data: dataRange,
+            anchors,
         });
     }
+    // squiggles come from failures only; conformant pairs drive hover highlights
     const toDiagnostics = (side) => pairs
-        .filter(p => p[side])
+        .filter(p => p.status === "nonconformant" && p[side])
         .map(p => ({ from: p[side].from, to: p[side].to, severity: "error",
         message: p.message, pair: p.id }));
     return { schema: toDiagnostics("schema"), data: toDiagnostics("data"), pairs };

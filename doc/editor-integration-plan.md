@@ -25,6 +25,11 @@
 > - `@shexjs/editor-services` is TypeScript (`src/*.ts` → committed `lib/`,
 >   built by `npm run compile` / per-package `npm run build`), as is
 >   `shex-serve`.
+> - Validation results drive cross-pane hover highlighting: matched (green)
+>   and failed (red) constraint↔triple pairs; hovering a TripleConstraint
+>   also lights its shape's label, hovering a triple's object also lights
+>   the subject and predicate. Panes adopt the size of the textareas they
+>   replace (and stay user-resizable).
 > - Editors are a Menu → "user interface" select (`editors=` in permalinks)
 >   and toggle live: panes tear down back to the plain textareas with the
 >   current text, for comparing behaviors. Panes dispatch synthetic `keyup`

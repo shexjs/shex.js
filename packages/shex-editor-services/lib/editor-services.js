@@ -122,6 +122,18 @@ function locateInParsed(text, schema) {
             shape: (label) => schema && schema._locations
                 ? yyllocToRange(schema._locations[label], starts)
                 : null,
+            shapeLabel: (label) => {
+                const decl = schema && schema._locations
+                    ? yyllocToRange(schema._locations[label], starts) : null;
+                if (!decl)
+                    return null;
+                // the declaration starts with (ABSTRACT)? <label>; take the label token
+                const lead = /^\s*(?:abstract\s+)?/i.exec(text.slice(decl.from))[0].length;
+                const token = /^\S+/.exec(text.slice(decl.from + lead));
+                return token
+                    ? { from: decl.from + lead, to: decl.from + lead + token[0].length }
+                    : decl;
+            },
             expr: (obj) => schema && schema._exprLocations
                 ? yyllocToRange(schema._exprLocations.get(obj), starts)
                 : null,
@@ -199,16 +211,29 @@ function ldTermToRdfJs(ld) {
         ? { termType: "BlankNode", value: ld.substr(2) }
         : { termType: "NamedNode", value: ld };
 }
-/** rangeOfTriple - locate a validation error's TestedTriple in the parsed
- * data; prefers the object term's own range (that's usually the offending
- * value), falling back to the quad's assertion site. */
-function rangeOfTriple(dataset, triple) {
+/** trimRange - drop trailing whitespace from a range (some term sources
+ * include following trivia). */
+function trimRange(range, text) {
+    if (!range)
+        return null;
+    let to = range.to;
+    while (to > range.from && /\s/.test(text[to - 1]))
+        --to;
+    return to === range.to ? range : { from: range.from, to };
+}
+/** tripleAnchors - locate a validation result's TestedTriple in the parsed
+ * data, returning per-term ranges (millan terms carry their own source). */
+function tripleAnchors(dataset, triple, text) {
     const matches = [...dataset.match(ldTermToRdfJs(triple.subject), ldTermToRdfJs(triple.predicate), ldTermToRdfJs(triple.object))];
     if (matches.length === 0)
         return null;
     const quad = matches[0];
-    return millanSourceToRange(quad.object && quad.object.source) ||
-        millanSourceToRange(quad.source);
+    return {
+        subject: trimRange(millanSourceToRange(quad.subject && quad.subject.source), text),
+        predicate: trimRange(millanSourceToRange(quad.predicate && quad.predicate.source), text),
+        object: trimRange(millanSourceToRange(quad.object && quad.object.source)
+            || millanSourceToRange(quad.source), text),
+    };
 }
 /** rangeOfNode - anchor for node-level errors (e.g. MissingProperty): the
  * first assertion where the node appears as subject. */
@@ -243,10 +268,14 @@ const ErrorLeaves = {
     }),
     NodeConstraintViolation: (err, ctx) => ({
         message: firstLine((err.errors || [])[0] || "node constraint violation"),
+        schemaObj: ctx.constraint, // usually nested in a TypeMismatch
+        triple: ctx.triple,
         node: ctx.node,
     }),
     SemActFailure: (_err, ctx) => ({
         message: "semantic action failure",
+        schemaObj: ctx.constraint,
+        triple: ctx.triple,
         node: ctx.node,
     }),
 };
@@ -280,41 +309,67 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed) {
         seen.add(node);
         if (Array.isArray(node))
             return node.forEach(n => walk(n, ctx));
-        // track focus node / shape context on the way down
-        if (node.node !== undefined || node.shape !== undefined)
+        // track focus node / shape / enclosing-error context on the way down
+        if (node.node !== undefined || node.shape !== undefined ||
+            node.constraint !== undefined || node.triple !== undefined)
             ctx = { node: node.node !== undefined ? node.node : ctx.node,
-                shape: node.shape !== undefined ? node.shape : ctx.shape };
+                shape: node.shape !== undefined ? node.shape : ctx.shape,
+                constraint: node.constraint !== undefined ? node.constraint : ctx.constraint,
+                triple: node.triple !== undefined ? node.triple : ctx.triple };
         if (node.type in ErrorLeaves)
-            emit(ErrorLeaves[node.type](node, ctx), node, ctx);
+            emit("nonconformant", ErrorLeaves[node.type](node, ctx), node, ctx);
+        // successful matches: each TestedTriple under a TripleConstraintSolutions
+        // pairs a schema constraint with a data triple
+        if (node.type === "TripleConstraintSolutions" && Array.isArray(node.solutions))
+            node.solutions.forEach((sol) => {
+                if (sol && sol.type === "TestedTriple")
+                    emit("conformant", {
+                        message: `${termStr(sol.object)} matched <${node.predicate}>`,
+                        predicate: node.predicate,
+                        triple: sol,
+                    }, node, ctx);
+            });
         for (const key of ["errors", "appinfo", "solutions", "solution",
             "expressions", "referenced", "unexpectedTriples"])
             if (key in node)
                 walk(node[key], ctx);
     })(valResult, {});
-    function emit(leaf, err, ctx) {
+    function emit(status, leaf, err, ctx) {
         const schemaRange = (leaf.schemaObj && shexcParsed.locate.expr(leaf.schemaObj)) ||
             (leaf.predicate && ctx.shape && shexcParsed.locate.constraint(ctx.shape, leaf.predicate)) ||
-            (ctx.shape && shexcParsed.locate.shape(ctx.shape)) ||
+            // last resort: just the shape's label token -- never the whole
+            // declaration, which would paint innocent constraints red
+            (ctx.shape && shexcParsed.locate.shapeLabel(ctx.shape)) ||
             null;
+        const anchors = {
+            shapeLabel: ctx.shape ? shexcParsed.locate.shapeLabel(ctx.shape) : null,
+            subject: null, predicate: null, object: null,
+        };
         let dataRange = null;
         if (turtleParsed && turtleParsed.dataset) {
-            if (leaf.triple)
-                dataRange = rangeOfTriple(turtleParsed.dataset, leaf.triple);
-            else if (leaf.triples && leaf.triples.length)
-                dataRange = rangeOfTriple(turtleParsed.dataset, leaf.triples[0]);
+            const triple = leaf.triple || (leaf.triples && leaf.triples[0]) || null;
+            if (triple) {
+                const termRanges = tripleAnchors(turtleParsed.dataset, triple, turtleParsed.text);
+                if (termRanges)
+                    Object.assign(anchors, termRanges);
+                dataRange = anchors.object;
+            }
             if (!dataRange && leaf.node !== undefined && leaf.node !== null)
                 dataRange = rangeOfNode(turtleParsed.dataset, leaf.node);
         }
         pairs.push({
             id: pairs.length,
             type: err.type,
+            status,
             message: leaf.message,
             schema: schemaRange,
             data: dataRange,
+            anchors,
         });
     }
+    // squiggles come from failures only; conformant pairs drive hover highlights
     const toDiagnostics = (side) => pairs
-        .filter(p => p[side])
+        .filter(p => p.status === "nonconformant" && p[side])
         .map(p => ({ from: p[side].from, to: p[side].to, severity: "error",
         message: p.message, pair: p.id }));
     return { schema: toDiagnostics("schema"), data: toDiagnostics("data"), pairs };

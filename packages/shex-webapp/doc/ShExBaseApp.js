@@ -824,7 +824,13 @@ class ShapeMapCache extends InterfaceCache {
       await this.caches.inputData.refresh();
       const smparser = ShExWebApp.ShapeMapParser.construct(
         this.meta.base, this.caches.inputSchema.meta, this.caches.inputData.meta);
-      const sm = smparser.parse(shapeMap);
+      let sm;
+      try {
+        sm = smparser.parse(shapeMap);
+      } catch (e) {
+        e.inputError = true;
+        throw e;
+      }
       this.removeEditMapPair(null);
       this.addEditMapPairs(sm.length ? sm : null);
       const ret = await this.copyEditMapToFixedMap();
@@ -1301,6 +1307,14 @@ class ShapeMapCache extends InterfaceCache {
   }
 }
 
+/** mark an exception as caused by user input (ShExC/Turtle/ShapeMap text):
+ * it renders in the results widget and editor diagnostics but stays off
+ * console.error, which is reserved for programming errors. */
+function asInputError (e) {
+  e.inputError = true;
+  return e;
+}
+
 class ShExCParser {
   constructor () {
     this.shexParserOptions = {index: true, duplicateShape: "abort"};
@@ -1309,7 +1323,12 @@ class ShExCParser {
   parseString (text, meta, base) {
     this.shexParserOptions.duplicateShape = $("#duplicateShape").val();
     this.shexParser._setBase(base);
-    const ret = this.shexParser.parse(text);
+    let ret;
+    try {
+      ret = this.shexParser.parse(text);
+    } catch (e) {
+      throw asInputError(e);
+    }
     // ret = ShExWebApp.Util.canonicalize(ret, DefaultBase);
     meta.base = ret._base; // base set above.
     meta.prefixes = ret._prefixes || {}; // @@ revisit after separating shexj from meta and indexes
@@ -1333,7 +1352,12 @@ class TurtleParser {
       format: "text/turtle",
       blankNodePrefix: ""
     });
-    const quads = parser.parse(text);
+    let quads;
+    try {
+      quads = parser.parse(text);
+    } catch (e) {
+      throw asInputError(e);
+    }
     if (quads !== undefined)
       ret.addQuads(quads);
     meta.base = parser._base;
@@ -1341,7 +1365,12 @@ class TurtleParser {
     return ret;
   }
   termToLd (lex, resolver) { // returns ShExJ objectValue
-    const nz = new RdfJs.Lexer().tokenize(lex + " ");
+    let nz;
+    try {
+      nz = new RdfJs.Lexer().tokenize(lex + " ");
+    } catch (e) {
+      throw asInputError(e);
+    }
     switch (nz[0].type) {
     case "IRI": return resolver._resolveAbsoluteIRI(nz[0]);
     case "prefixed": return expand(nz[0]);
@@ -1433,7 +1462,10 @@ class ResultsWidget {
   failMessage (e, action, text) {
     if (e instanceof FlowControlError)
       return;
-    console.error(e);
+    if (e.inputError) // user-input (ShExC/Turtle/ShapeMap) problems render in
+      console.debug("input error " + action + ":", e.message); // the UI; only
+    else              // programming errors deserve the console error channel
+      console.error(e);
     $("#results .status").empty().text("Errors encountered:").show()
     const div = $("<div/>").addClass("error");
     div.append($("<h3/>").text("error " + action + ":\n"));
@@ -1594,7 +1626,21 @@ class EditorSupport {
     });
   }
 
-  /** map validation results onto the schema and data editors */
+  /** does the fixed shape map expect this entry to be nonconformant
+   * (node@!shape)?  Same lookup the results renderer uses for ✓/✗. */
+  expectsNonconformant (entry) {
+    const shapeString = entry.shape === ShExWebApp.Validator.Start ? START_SHAPE_INDEX_ENTRY : entry.shape;
+    return $("#fixedMap .pair" +
+             "[data-node='" + entry.node + "']" +
+             "[data-shape='" + shapeString + "']")
+      .find(".shapeMap-joiner").hasClass("nonconformant");
+  }
+
+  /** map validation results onto the schema and data editors.  Error
+   * squiggles reflect the EXPECTED outcome: an entry validated as
+   * node@!shape that duly fails gets no error marks (its failure pairs stay
+   * hoverable in red to show why it failed), while one that unexpectedly
+   * conforms gets an error on the shape declaration. */
   reportValidation (entries) {
     const {inputSchema, inputData} = this.app.Caches;
     if (!this.panes.inputSchema || !inputSchema.parsed)
@@ -1606,15 +1652,73 @@ class EditorSupport {
             ? ShExWebApp.EditorServices.parseTurtle(
                 inputData.selection.val(), {baseIRI: inputData.meta && inputData.meta.base})
             : null;
-      const mapped = ShExWebApp.EditorServices.mapValidationErrors(
-        entries.map(e => e.appinfo), located, dataParsed);
-      this.lastMapped = mapped; // introspection for tests/debugging
-      this.panes.inputSchema.setDiagnostics(mapped.schema);
+      const merged = {schema: [], data: [], pairs: []};
+      entries.forEach(entry => {
+        const mapped = ShExWebApp.EditorServices.mapValidationErrors(
+          entry.appinfo, located, dataParsed);
+        mapped.pairs.forEach(p => { p.id += merged.pairs.length; });
+        merged.pairs.push.apply(merged.pairs, mapped.pairs);
+        const actualFail = entry.status === "nonconformant";
+        if (!this.expectsNonconformant(entry)) {
+          merged.schema.push.apply(merged.schema, mapped.schema);
+          merged.data.push.apply(merged.data, mapped.data);
+        } else if (!actualFail) {
+          // unexpected conformance: flag the shape declaration and the node
+          const message = entry.node + " matched " + entry.shape
+                + " though the shape map expected nonconformance";
+          const shapeRange = typeof entry.shape === "string" ? located.locate.shape(entry.shape) : null;
+          if (shapeRange)
+            merged.schema.push(Object.assign({severity: "error", message}, shapeRange));
+          const anchored = mapped.pairs.find(p => p.anchors.subject);
+          if (anchored)
+            merged.data.push(Object.assign({severity: "error", message}, anchored.anchors.subject));
+        } // else: expected failure -- no error marks
+      });
+      this.lastMapped = merged; // introspection for tests/debugging
+      this.panes.inputSchema.setDiagnostics(merged.schema);
       if (this.panes.inputData)
-        this.panes.inputData.setDiagnostics(mapped.data);
+        this.panes.inputData.setDiagnostics(merged.data);
+      this.setPairHovers(merged.pairs);
     } catch (e) {
       console.warn("editor diagnostics failed:", e);
     }
+  }
+
+  /** cross-pane hover highlighting for validation matches and failures:
+   * hovering a matched/failed TripleConstraint highlights it, its shape's
+   * label and the data triple's object; hovering the object highlights the
+   * whole data triple and the constraint.  Green for matches, red for
+   * failures. */
+  setPairHovers (pairs) {
+    const schemaPane = this.panes.inputSchema;
+    const dataPane = this.panes.inputData;
+    if (!schemaPane || !dataPane)
+      return;
+    const clearBoth = () => {
+      schemaPane.clearHighlights();
+      dataPane.clearHighlights();
+    };
+    const show = (pair, hoveredSide) => {
+      const cls = pair.status === "conformant" ? "shexjs-highlight-match" : "shexjs-highlight-fail";
+      const schemaRanges = [pair.schema]
+            .concat(hoveredSide === "schema" ? [pair.anchors.shapeLabel] : [])
+            .filter(r => r);
+      const dataRanges = (hoveredSide === "data"
+                          ? [pair.anchors.object, pair.anchors.subject, pair.anchors.predicate]
+                          : [pair.anchors.object])
+            .filter(r => r);
+      // don't auto-scroll the pane the mouse is in
+      schemaPane.highlight(schemaRanges, cls, {scroll: hoveredSide !== "schema"});
+      dataPane.highlight(dataRanges, cls, {scroll: hoveredSide !== "data"});
+    };
+    schemaPane.setHoverRegions(
+      pairs.filter(p => p.schema)
+        .map(p => ({from: p.schema.from, to: p.schema.to, enter: () => show(p, "schema")})),
+      clearBoth);
+    dataPane.setHoverRegions(
+      pairs.filter(p => p.anchors.object)
+        .map(p => ({from: p.anchors.object.from, to: p.anchors.object.to, enter: () => show(p, "data")})),
+      clearBoth);
   }
 
   /** highlight a shape's declaration in the schema pane */
@@ -2143,8 +2247,7 @@ class ShExBaseApp {
         } }
       }
     } catch (e) {
-      this.resultsWidget.failMessage(e, currentAction);
-      console.error(e); // dump details to console.
+      this.resultsWidget.failMessage(e, currentAction); // decides console policy
       return { inputError: e };
     }
 

@@ -157,6 +157,96 @@ if (!TEST_browser) {
       await shared.promise;
       expect($("#results .fails").length, "fails: " + $("#results").text().substring(0, 120)).to.equal(0);
       expect($("#results .passes").length, "conformant result rendered").to.be.above(0);
+
+      // conformant matches become cross-pane hover pairs
+      const pairs = shared.Caches.editorSupport.lastMapped.pairs;
+      const match = pairs.find(p => p.status === "conformant" && p.anchors.object);
+      expect(match, "conformant hover pair").to.exist;
+      const dataText = $("#inputData textarea").first().val();
+      expect(dataText.substring(match.anchors.object.from, match.anchors.object.to))
+        .to.equal('"not a number"');
+      expect(dataText.substring(match.anchors.subject.from, match.anchors.subject.to))
+        .to.equal(":x");
+    });
+
+    it("should not mark expected failures (node@!shape) as errors", async function () {
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      set("#inputSchema textarea", [
+        "PREFIX : <http://a.example/>",
+        "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>",
+        ":S { :p xsd:integer }",
+      ].join("\n"));
+      set("#inputData textarea", [
+        "PREFIX : <http://a.example/>",
+        ':x :p "not a number" .',
+      ].join("\n"));
+      set("#textMap", "<http://a.example/x>@!<http://a.example/S>"); // expected to fail
+      await shared.promise;
+      $("#validate").trigger("click");
+      await shared.promise;
+
+      expect($("#results .passes").length, "expected failure renders as a pass").to.be.above(0);
+      const mapped = shared.Caches.editorSupport.lastMapped;
+      expect(mapped.schema, "no error marks for an expected failure").to.deep.equal([]);
+      expect(mapped.data).to.deep.equal([]);
+      // ... but the failure pairs stay hoverable to show why it failed
+      expect(mapped.pairs.some(p => p.status === "nonconformant")).to.equal(true);
+    });
+
+    it("should mark unexpected conformance of node@!shape as an error", async function () {
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      set("#inputData textarea", [
+        "PREFIX : <http://a.example/>",
+        ":x :p 42 .", // conforms, though the map still expects failure
+      ].join("\n"));
+      await shared.promise;
+      $("#validate").trigger("click");
+      await shared.promise;
+
+      expect($("#results .fails").length, "unexpected conformance renders as a fail").to.be.above(0);
+      const mapped = shared.Caches.editorSupport.lastMapped;
+      expect(mapped.schema.length, "error mark on the shape declaration").to.be.above(0);
+      expect(mapped.schema[0].message).to.include("expected nonconformance");
+    });
+
+    it("should keep mid-edit parse errors off console.error", async function () {
+      const errors = [];
+      const origError = dom.window.console.error;
+      dom.window.console.error = (...args) => { errors.push(args.map(String).join(" ")); };
+      try {
+        // an unclosed quote mid-edit: the next line gets swallowed into the
+        // string and the word after it becomes a syntax error
+        const dataTextarea = $("#inputData textarea").first();
+        dataTextarea.val([
+          "PREFIX : <http://a.example/>",
+          ':x :p "not yet closed',
+          ":x :q :y .",
+        ].join("\n"));
+        dataTextarea.trigger("change"); // as the pane's debounced change would
+        await shared.promise;           // dataInputHandler -> copyTextMapToEditMap
+        await new Promise(resolve => setTimeout(resolve, 50));
+      } finally {
+        dom.window.console.error = origError;
+      }
+      // jsdom has no layout, so CodeMirror's measure loop logs
+      // getClientRects noise there; it can't occur in a real browser
+      const appErrors = errors.filter(e => !/getClientRects/.test(e));
+      expect(appErrors, "console.error stays clean of input errors").to.deep.equal([]);
+    });
+
+    it("should size the panes like the textareas they replace", function () {
+      // jsdom has no layout, so the rows-based fallback applies
+      const paneStyle = $("#inputSchema .shexjs-editor-pane")[0].style;
+      expect(paneStyle.height, "height set").to.not.equal("");
+      expect(paneStyle.width, "width set").to.not.equal("");
     });
 
     it("should toggle editors off and on from the menu select", function () {

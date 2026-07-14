@@ -46,7 +46,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.languages = exports.shexcStreamParser = void 0;
+exports.CHANGE_DEBOUNCE_MS = exports.languages = exports.shexcStreamParser = void 0;
 exports.makePane = makePane;
 const codemirror_1 = require("codemirror");
 const view_1 = require("@codemirror/view");
@@ -135,8 +135,11 @@ const highlightField = state_1.StateField.define({
 });
 const paneTheme = view_1.EditorView.baseTheme({
     ".shexjs-highlight": { backgroundColor: "#fff3b0" },
-    ".shexjs-highlight-pair": { backgroundColor: "#ffd6d6" },
-    "&": { border: "1px solid #ddd", fontSize: "13px" },
+    ".shexjs-highlight-match": { backgroundColor: "#c8f0c8" },
+    ".shexjs-highlight-fail": { backgroundColor: "#ffcdcd" },
+    "&": { border: "1px solid #ddd", fontSize: "13px",
+        resize: "vertical", overflow: "hidden" }, // user-resizable, like a textarea
+    ".cm-scroller": { overflow: "auto" },
     "&.cm-focused": { outline: "none", borderColor: "#88f" },
 });
 // ---------------------------------------------------------------------------
@@ -153,9 +156,11 @@ function lintSourceFor(language, opts) {
     }
 }
 /** makePane - replace `textarea` with a CodeMirror 6 editor. */
+exports.CHANGE_DEBOUNCE_MS = 350;
 function makePane(textarea, opts = {}) {
     const nativeValue = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(textarea).constructor.prototype, "value")
         || Object.getOwnPropertyDescriptor(textarea, "value");
+    let changeTimer = null;
     const extensions = [
         codemirror_1.basicSetup,
         (0, lint_1.lintGutter)(),
@@ -164,11 +169,19 @@ function makePane(textarea, opts = {}) {
         view_1.EditorView.updateListener.of(update => {
             if (update.docChanged) {
                 nativeValue.set.call(textarea, update.state.doc.toString());
-                // "change" for handlers that react to new content; "keyup" because
-                // the apps' cache dirty-tracking listens for typing (a stale cache
-                // means validate ignores the edit)
-                textarea.dispatchEvent(new Event("change", { bubbles: true }));
-                textarea.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true }));
+                // "keyup" fires immediately: the apps' cache dirty-tracking listens
+                // for typing (a stale cache means validate ignores the edit).
+                const KeyboardEventCtor = typeof KeyboardEvent !== "undefined" ? KeyboardEvent : Event;
+                textarea.dispatchEvent(new KeyboardEventCtor("keyup", { bubbles: true }));
+                // "change" is debounced to typing pauses: a textarea fires it on
+                // blur, and per-keystroke change handlers re-parse half-typed
+                // documents (e.g. an unclosed quote swallowing following lines).
+                if (changeTimer !== null)
+                    clearTimeout(changeTimer);
+                changeTimer = setTimeout(() => {
+                    changeTimer = null;
+                    textarea.dispatchEvent(new Event("change", { bubbles: true }));
+                }, exports.CHANGE_DEBOUNCE_MS);
             }
         }),
     ];
@@ -179,8 +192,38 @@ function makePane(textarea, opts = {}) {
         extensions.push((0, lint_1.linter)(lintSource, { delay: 500 }));
     const view = new view_1.EditorView({ doc: textarea.value, extensions });
     view.dom.classList.add("shexjs-editor-pane");
+    // match the textarea's rendered size (measured before it's hidden); fall
+    // back to its rows attribute where there's no layout (e.g. jsdom)
+    view.dom.style.width = textarea.offsetWidth ? textarea.offsetWidth + "px"
+        : (textarea.style.width || "100%");
+    view.dom.style.height = textarea.offsetHeight ? textarea.offsetHeight + "px"
+        : `calc(${textarea.rows || 20} * 1.4em)`;
     textarea.parentNode.insertBefore(view.dom, textarea);
     textarea.style.display = "none";
+    // hover regions (validation match/failure cross-highlighting)
+    let hoverRegions = [];
+    let hoverLeave;
+    let currentRegion = null;
+    const clearHover = () => {
+        if (currentRegion) {
+            currentRegion = null;
+            if (hoverLeave)
+                hoverLeave();
+        }
+    };
+    view.contentDOM.addEventListener("mousemove", (e) => {
+        const pos = view.posAtCoords({ x: e.clientX, y: e.clientY });
+        const hit = pos === null ? null
+            : hoverRegions.find(r => pos >= r.from && pos < r.to) || null;
+        if (hit !== currentRegion) {
+            currentRegion = hit;
+            if (hit)
+                hit.enter();
+            else if (hoverLeave)
+                hoverLeave();
+        }
+    });
+    view.contentDOM.addEventListener("mouseleave", clearHover);
     // live proxy: application code keeps talking to the textarea
     Object.defineProperty(textarea, "value", {
         configurable: true,
@@ -200,17 +243,26 @@ function makePane(textarea, opts = {}) {
         setDiagnostics(diagnostics) {
             view.dispatch((0, lint_1.setDiagnostics)(view.state, diagnostics.filter(d => d.to >= d.from && d.to <= view.state.doc.length)));
         },
-        highlight(ranges, cls = "shexjs-highlight") {
+        highlight(ranges, cls = "shexjs-highlight", opts = {}) {
             const inRange = (ranges || []).filter(clampRange).sort((a, b) => a.from - b.from);
             const decos = inRange.map(r => view_1.Decoration.mark({ class: cls }).range(r.from, r.to));
             view.dispatch({ effects: setHighlightsEffect.of(view_1.Decoration.set(decos, true)) });
-            if (inRange.length)
+            if (inRange.length && opts.scroll !== false)
                 view.dispatch({ effects: view_1.EditorView.scrollIntoView(inRange[0].from) });
         },
         clearHighlights() {
             view.dispatch({ effects: setHighlightsEffect.of(view_1.Decoration.none) });
         },
+        setHoverRegions(regions, leave) {
+            hoverRegions = regions || [];
+            hoverLeave = leave;
+            currentRegion = null;
+        },
         destroy() {
+            if (changeTimer !== null) {
+                clearTimeout(changeTimer);
+                changeTimer = null;
+            }
             const text = view.state.doc.toString();
             delete textarea.value; // restore the prototype accessor
             textarea.value = text;

@@ -19,7 +19,7 @@ describe("EditorPanes", function () {
     // CodeMirror touches these at construction time; restore after so other
     // tests' typeof-window browser detection is unaffected.
     saved = {};
-    for (const key of ["window", "document", "navigator", "Event", "MutationObserver", "requestAnimationFrame", "cancelAnimationFrame"]) {
+    for (const key of ["window", "document", "navigator", "Event", "KeyboardEvent", "MutationObserver", "requestAnimationFrame", "cancelAnimationFrame"]) {
       saved[key] = Object.getOwnPropertyDescriptor(global, key);
       try {
         Object.defineProperty(global, key, {configurable: true, value: dom.window[key === "window" ? "window" : key] || dom.window[key]});
@@ -37,21 +37,27 @@ describe("EditorPanes", function () {
     }
   });
 
-  it("should proxy the textarea value in both directions", function () {
+  it("should proxy the textarea value in both directions", async function () {
     const textarea = dom.window.document.getElementById("t");
-    const pane = makePane(textarea, {language: "shexc", lint: false});
+    const {makePane: mk, CHANGE_DEBOUNCE_MS} = require("../lib/editor-panes");
+    const pane = mk(textarea, {language: "shexc", lint: false});
     try {
       // reads see the editor document
       expect(textarea.value).to.equal("initial");
       // writes (e.g. jQuery .val(v) from the caches) reach the editor
       textarea.value = "PREFIX : <http://a.example/>";
       expect(pane.view.state.doc.toString()).to.equal("PREFIX : <http://a.example/>");
-      // editor edits write back and fire a change event for the app's dirty tracking
-      let changes = 0;
+      // editor edits write back; keyup (dirty-tracking) fires immediately,
+      // change (re-parse handlers) is debounced to typing pauses
+      let keyups = 0, changes = 0;
+      textarea.addEventListener("keyup", () => ++keyups);
       textarea.addEventListener("change", () => ++changes);
       pane.view.dispatch({changes: {from: 0, to: 0, insert: "# note\n"}});
       expect(textarea.value.split("\n")[0]).to.equal("# note");
-      expect(changes).to.equal(1);
+      expect(keyups, "immediate keyup").to.equal(1);
+      expect(changes, "change not yet fired").to.equal(0);
+      await new Promise(resolve => setTimeout(resolve, CHANGE_DEBOUNCE_MS + 100));
+      expect(changes, "debounced change").to.equal(1);
 
       // diagnostics and highlights accept editor-services ranges
       pane.setDiagnostics([{from: 0, to: 6, severity: "error", message: "test"}]);
