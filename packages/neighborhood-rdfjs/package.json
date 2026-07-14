@@ -18,7 +18,7 @@
   "main": "./lib/neighborhood-rdfjs.js",
   "types": "./lib/neighborhood-rdfjs.d.ts",
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=18"
   },
   "dependencies": {
     "@shexjs/eval-validator-api": "^1.0.0-alpha.29",

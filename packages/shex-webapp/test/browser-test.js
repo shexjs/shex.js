@@ -24,8 +24,6 @@ let expect = require("chai").expect
 const node_fetch = require("node-fetch")
 const jsdom = require("jsdom")
 const { JSDOM } = jsdom
-// JsDom only accepts it's own implementation of Blob
-const Blob = require('jsdom/lib/jsdom/living/generated/Blob')
 const ShExParser = require('@shexjs/parser')
 let SharedForTests = null // gets set by shex-simple.js
 
@@ -33,11 +31,26 @@ const [[GitRootServer]] = require('../../../tools/testServer')
       .startServer(
         [ { url: 'http://localhost:9999/shex.js/',
             fromDir: Path.join(__dirname, '../../..') }
-        ],
-        [ { url: 'https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.21/jquery.csv.js',
-            file: Path.join(__dirname, 'static/jquery.csv-1.0.21.js') }
         ]
       )
+
+// jsdom fetches <script src> subresources itself (via undici, invisible to
+// nock); serve pinned remote scripts from local copies.
+const StaticResources = {
+  'https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.21/jquery.csv.js':
+    Path.join(__dirname, 'static/jquery.csv-1.0.21.js')
+}
+const StaticResourceConfig = {
+  interceptors: [
+    jsdom.requestInterceptor((request, context) => {
+      if (request.url in StaticResources)
+        return new Response(Fs.readFileSync(StaticResources[request.url], 'utf8'), {
+          headers: { "Content-Type": "text/javascript" }
+        })
+      // undefined lets the request proceed to the network (localhost:9999)
+    })
+  ]
+}
 
 if (!TEST_browser) {
   console.warn("Skipping browser-tests; to activate these tests, set environment variable TEST_browser=true");
@@ -410,12 +423,12 @@ if (!TEST_browser) {
         })
 
         it("single test without URLs as simple object", async function () {
-          // Construction of JsDom's internal Blob is idiomatic. Have fun in the debugger!
-          const manifest = Blob.create(dom.window, [
+          // jsdom needs its own Blob implementation; window.File is a named one
+          const manifest = new dom.window.File(
             [Fs.readFileSync(Manifest_InlineOne)],
+            Path.parse(Manifest_InlineOne).name,
             {type: "application/json"}
-          ])
-          manifest.name = Path.parse(Manifest_InlineOne).name
+          )
           await dropFiles("#manifestDrop", [manifest])
           const schema = $('#manifestDrop').find('button').slice(0, 1)
           expect(schema.text()).to.equal('1dotOr2dot_pass_p1')
@@ -636,7 +649,7 @@ async function loadPage (page, searchParms) {
     return new JSDOM(Fs.readFileSync(base, 'utf8'), {
       url: url,
       runScripts: "dangerously",
-      resources: "usable"
+      resources: StaticResourceConfig
     })
   }
 }

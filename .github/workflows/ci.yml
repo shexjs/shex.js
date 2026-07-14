@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags-ignore: ["v*"] # like the retired .travis.yml's `if: tag IS blank`
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CLI_TIMEOUT: 10000
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22, 24, 26]
+    steps:
+      - uses: actions/checkout@v4
+      - name: clone shexTest main alongside the checkout
+        run: git clone --depth=1 --branch=main https://github.com/shexSpec/shexTest.git ../shexTest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - run: npm ci
+      - run: npm run test-all
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run check-branch-deps
+
+  webpack:
+    # the doc/webpacks bundles are checked in; make sure they still build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run webpack
+
+  coverage:
+    runs-on: ubuntu-latest
+    continue-on-error: true # coverage reporting must not gate merges
+    steps:
+      - uses: actions/checkout@v4
+      - name: clone shexTest main alongside the checkout
+        run: git clone --depth=1 --branch=main https://github.com/shexSpec/shexTest.git ../shexTest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run coverage
+      - uses: coverallsapp/github-action@v2
+        with:
+          file: coverage/lcov.info

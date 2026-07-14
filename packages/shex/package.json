@@ -16,7 +16,7 @@
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=18"
   },
   "dependencies": {
     "@shexjs/cli": "^1.0.0-alpha.29",

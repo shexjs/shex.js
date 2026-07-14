@@ -1,6 +1,6 @@
 [![NPM Version](https://badge.fury.io/js/shex.png)](https://npmjs.org/package/shex)
-[![Build Status](https://travis-ci.org/shexSpec/shex.js.svg?branch=main)](https://travis-ci.org/shexSpec/shex.js)
-[![Coverage Status](https://coveralls.io/repos/github/shexSpec/shex.js/badge.svg?branch=jest)](https://coveralls.io/github/shexSpec/shex.js?branch=hest)
+[![CI](https://github.com/shexjs/shex.js/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/shexjs/shex.js/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/github/shexjs/shex.js/badge.svg?branch=main)](https://coveralls.io/github/shexjs/shex.js?branch=main)
 [![ShapeExpressions Gitter chat https://gitter.im/shapeExpressions/Lobby](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/shapeExpressions/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1213693.svg)](https://doi.org/10.5281/zenodo.1213693)
 

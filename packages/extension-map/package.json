@@ -20,7 +20,7 @@
     "shexmap-materialize": "bin/materialize"
   },
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=18"
   },
   "dependencies": {
     "@rdfjs/types": "^1.1.0",

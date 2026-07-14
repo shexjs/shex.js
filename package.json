@@ -23,20 +23,19 @@
   "license": "MIT",
   "main": "./shex.js",
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=18"
   },
   "devDependencies": {
     "chai": "^4.5.0",
-    "coveralls": "^3.1.0",
     "cross-spawn": "^7.0.3",
     "css-loader": "^7.1.2",
     "eslint": "^9.9.0",
     "file-loader": "^6.2.0",
-    "jsdom": "^24.1.1",
+    "jsdom": "^29.1.1",
     "lerna": "^8.1.7",
     "mocha": "^11.7.6",
-    "nock": "^13.5.4",
-    "nyc": "^17.0.0",
+    "nock": "^14.0.16",
+    "nyc": "^18.0.0",
     "pre-commit": "^1.2.2",
     "shex-test": "github:shexSpec/shexTest#main",
     "source-map-support": "^0.5.21",
@@ -62,12 +61,10 @@
     "earl999": "mocha packages/*/test/*test.js -C -R mocha-earl-reporter test/Parser-Writer-test.js test/Validation-test.js",
     "earl": "cd test && make Parser-Writer-test && make Validation-test",
     "lint": "eslint packages/shex-cli/test/findPath.js",
-    "travisRepo": "./tools/travisRepo.sh",
+    "check-branch-deps": "./tools/checkBranchDeps.sh",
     "browserify-all": "./tools/browserify-all.js #; npm run n3-browserify",
     "coverage": "nyc npm run test-all",
-    "coveralls": "cat ./coverage/lcov.info | coveralls",
     "parser-all": "(cd packages/shex-parser/ && npm run parser) && (cd packages/shape-map/ && npm run parser)",
-    "travis-deploy-once": "travis-deploy-once",
     "webpack": "(cd packages/shex-webapp/ && npm run webpack) && (cd packages/extension-map/ && npm run webpack)",
     "webpack-analyzer": "cd packages/shex-webapp && npm run webpack-analyzer",
     "webpack-monitor": "if [ -d ./node_modules/webpack-monitor ]; then (cd packages/shex-webapp && npm run webpack-monitor) else echo \"You need to install webpack-monitor\"; fi"
@@ -85,7 +82,7 @@
   "pre-commit": [
     "lint",
     "test",
-    "travisRepo"
+    "check-branch-deps"
   ],
   "nyc": {
     "exclude": [

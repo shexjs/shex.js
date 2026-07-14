@@ -17,7 +17,7 @@
   "license": "MIT",
   "main": "./shape-map.js",
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=18"
   },
   "scripts": {
     "parser": "ts-jison -n ShapeMapJison -t javascript -p lalr -o ./lib/ShapeMapJison.js ./lib/ShapeMapJison.jison",

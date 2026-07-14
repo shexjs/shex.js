@@ -18,7 +18,7 @@
   "main": "./lib/validator-api.js",
   "types": "./src/validator-api.ts",
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=18"
   },
   "dependencies": {
     "@shexjs/term": "^1.0.0-alpha.27"

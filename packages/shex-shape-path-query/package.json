@@ -18,7 +18,7 @@
   "main": "./shape-path-query.js",
   "type": "commonjs",
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=18"
   },
   "dependencies": {
     "@shexjs/extension-map": "^1.0.0-alpha.29",

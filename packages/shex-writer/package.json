@@ -16,7 +16,7 @@
   "license": "MIT",
   "main": "./shex-writer.js",
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=18"
   },
   "dependencies": {
     "relativize-url": "^0.1.0"

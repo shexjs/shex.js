@@ -18,7 +18,7 @@
   "main": "./lib/shex-term.js",
   "types": "./src/shex-term.ts",
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=18"
   },
   "dependencies": {
     "@rdfjs/types": "^1.1.0",

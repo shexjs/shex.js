@@ -18,7 +18,7 @@
   "main": "./lib/eval-simple-1err.js",
   "types": "./src/eval-simple-1err.ts",
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=18"
   },
   "dependencies": {
     "@rdfjs/types": "^1.1.0",
