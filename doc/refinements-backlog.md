@@ -2,6 +2,8 @@
 
 Deferred improvements proposed along the way (editors, materializer,
 toolchain).  Roughly grouped; items link to the docs that motivated them.
+An actionable, sized consolidation of these lives in
+[sonnet-task-list.md](sonnet-task-list.md).
 
 ## Parsing / source ranges
 
@@ -88,11 +90,12 @@ toolchain).  Roughly grouped; items link to the docs that motivated them.
 - Static-only optional subshapes still emit one island per repetition
   window (the progress guard caps, not eliminates); a
   "must consume ≥1 frame binding" mode could tighten it.
-- Debugger phases 5–6 (regex-engine `debugHooks` for TC-level validation
-  events; browser validation debugging via worker + Atomics; a unified
-  panel) per doc/debugger-design.md — phases 1–4 (MaterializerDebugger,
-  `shexmap-debug`, the shexmap-simple 🐞 panel, `shex-debug`,
-  `shex-serve --coi`) shipped.
+- Remaining debugger work per doc/debugger-design.md: live
+  whole-validation browser stepping (worker + Atomics) and a unified
+  panel — phases 1–5 plus the capture+replay half of 6
+  (MaterializerDebugger, `shexmap-debug`, both apps' 🐞 panels,
+  `shex-debug`, `shex-serve --coi`, `debugHooks`, `MatchDebugger`)
+  shipped.
 - `ShExMapDebugRepl` and `ShExDebugRepl` share command grammar and
   prompt/IO plumbing by parallel construction; extract a common REPL
   skeleton before a third debugger appears.
