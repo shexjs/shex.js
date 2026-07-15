@@ -113,23 +113,47 @@ it's free, because nothing was ever shared.
 
 ### Scheduling and acceptance
 
-The worklist is a stack with greedy priority: prefer another repetition,
-prefer the emitting arm of an optional, prefer the first `OneOf` disjunct.
-The first thread to reach `Match` with an empty call stack is accepted, so the
-result is the greedy-maximal materialization — "repeat starred elements while
-bindings remain", which is what the old materializer approximated with its
-`checkValueExpr`-until-failure loop, minus the state corruption.
+The worklist is a stack with greedy priority — prefer another repetition,
+prefer the emitting arm of an optional, prefer the first `OneOf` disjunct —
+with one demotion: a `TC` whose variable lookup has to **advance the frame
+cursor** is a choice point, not a fait accompli.  Its continuation is parked
+on a deferred queue (resumed oldest-first, so the greedy leader stays in
+front) while every alternative that can still consume from the current frame
+explores first.  Without this, `( card:phone %{ :tel } | card:mbox
+%{ :email } )+` over frames `[{use,email},{use,email},{use,tel}]` pairs
+frame 0's `:use` with frame 2's `:tel` and, being first, that mix would win
+(the `splits` example in ../examples/manifest.json demonstrates exactly
+this with both disjunct orderings).
+
+Acceptance is no longer first-past-the-post.  Every accepting thread is
+recorded — deduplicated on *which bindings it consumed*, so variants that
+differ only in constant emissions collapse onto the most-emitting one — and
+`materialize()` returns the accept that consumed the most bindings (ties:
+fewest bindings forfeited by cursor advances, then most quads emitted, then
+discovery order).  The full list is exposed as `materializer.accepts`
+(`{quads, consumed, skipped, thread}`), `materializer.chosen` marks the
+winner, and `lastReport.alternatives` counts them, so UIs can hand the
+choice to the user when the materialization is ambiguous (the `ambiguous`
+example; shexmap-simple renders the alternatives as buttons, and
+`shexmap-debug`'s `t` command lists them).
 
 This DFS scheduling makes the prototype equivalent to a backtracking regex
 engine. Nothing in the thread structure depends on that choice: stepping all
-threads in lockstep (PikeVM style, as `rbenx` does) works identically, needs a
-dedup key of `(stateNo, callStack, cursor)`, and changes acceptance from
-"first accept" to "pick the accept with the most bindings consumed".
+threads in lockstep (PikeVM style, as `rbenx` does) works identically and
+needs a dedup key of `(stateNo, callStack, cursor)` — which would also
+subsume the exploration budget below.
 
 Guards: unbounded cardinalities clamp at `maxRepeat` (50, like
-`MAX_MAX_CARD`), cyclic shape references die at `maxCallDepth`, and a global
-`maxSteps` bounds pathological fan-out. Dead ends are recorded and reported in
-`MaterializationError` when no thread accepts.
+`MAX_MAX_CARD`), cyclic shape references die at `maxCallDepth`, a global
+`maxSteps` bounds pathological fan-out, and once one thread has accepted,
+`exploreSteps` (default 10000) bounds how long the search keeps hunting for
+better/alternative materializations before settling for the best so far
+(`lastReport.explorationTruncated` says whether it settled); `maxAccepts`
+caps the alternatives list.  Optional constraints that are *always*
+synthesizable (constants, staticVar-only Map codes) compile without a skip
+arm — skipping them gains nothing and their variants would multiply the
+search space.  Dead ends are recorded and reported in `MaterializationError`
+when no thread accepts.
 
 ### Semantic differences from the current materializer
 

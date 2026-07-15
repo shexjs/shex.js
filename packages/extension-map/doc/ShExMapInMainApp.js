@@ -18,6 +18,8 @@ class DirectShExMaterializer {
       generatedGraph.addQuads(materializer.materialize(this.resultBindings, pair.node, shape));
     });
     this.lastReport = materializer.lastReport; // unbound-variable / unused-static warnings
+    this.accepts = materializer.accepts;       // all viable materializations
+    this.chosen = materializer.chosen;         // ... and the one returned
     time = new Date() - time;
     $("#shapeMap-tabs").attr("title", "last materialization: " + time + " ms");
     $("#results .status").text("rendering results...").show();

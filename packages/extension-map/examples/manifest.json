@@ -81,10 +81,26 @@
     "schemaLabel": "splits",
     "threadedOnly": true,
     "schemaURL": "contact-schema.shex",
-    "dataLabel": "Ann",
+    "dataLabel": "Ann-phone-mbox",
     "dataURL": "contact-Ann.ttl",
-    "queryMap": "<PersonX>@START",
-    "outputSchemaURL": "card-schema.shex",
+    "queryMap": "<PersonX>@<Person>",
+    "outputSchemaURL": "card-schema-phone-mbox.shex",
+    "outputShape": "<Card>",
+    "staticVars": {
+    },
+    "createRoot": "<tag:card1>",
+    "status": "conformant",
+    "expectedBindingsURL": "splits-bindings.json",
+    "outputDataURL": "splits-out.ttl"
+  },
+  {
+    "schemaLabel": "splits",
+    "threadedOnly": true,
+    "schemaURL": "contact-schema.shex",
+    "dataLabel": "Ann-mbox-phone",
+    "dataURL": "contact-Ann.ttl",
+    "queryMap": "<PersonX>@<Person>",
+    "outputSchemaURL": "card-schema-mbox-phone.shex",
     "outputShape": "<Card>",
     "staticVars": {
     },
@@ -95,11 +111,11 @@
   },
   {
     "schemaLabel": "ambiguous",
-    "schemaURL": "contact-schema.shex",
+    "schemaURL": "contact-flat-schema.shex",
     "dataLabel": "Bob",
     "dataURL": "contact-Bob.ttl",
     "queryMap": "<PersonY>@START",
-    "outputSchemaURL": "card-schema.shex",
+    "outputSchemaURL": "card-flat-schema.shex",
     "outputShape": "<Card>",
     "staticVars": {
     },

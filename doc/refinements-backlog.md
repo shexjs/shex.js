@@ -73,7 +73,15 @@ toolchain).  Roughly grouped; items link to the docs that motivated them.
 ## Materializer (see also doc/threaded-materializer.md)
 
 - PikeVM-style breadth-parallel stepping (dedupe on state+callStack+cursor)
-  and the lazy-DFA/TDFA determinization sketched in the doc.
+  and the lazy-DFA/TDFA determinization sketched in the doc.  The worklist
+  dedup would subsume today's post-accept `exploreSteps` budget (which can
+  settle for a suboptimal accept on large inputs,
+  `lastReport.explorationTruncated`).
+- Acceptance heuristic (most consumed, fewest skipped, most emitted) is a
+  first cut; alternatives are surfaced for the user to choose, but ranking
+  could weigh e.g. WHICH bindings were forfeited or shape coverage.
+- The worker app (shexmap-simple-worker) doesn't ship `accepts` across
+  postMessage -- no alternatives chooser there.
 - `ShapeAnd`/`ShapeOr` compile support is prototype-grade: no cycle guard
   in `_compileShapeExprNFA` for And/Or reference cycles; `ShapeNot`
   synthesis unsupported.

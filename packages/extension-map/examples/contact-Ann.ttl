@@ -1,4 +1,13 @@
 PREFIX : <http://contact.example/>
 
 <PersonX> :name "Ann" ;
-          :email "ann@mail.example" .
+  :contact [
+    :use "work" ;
+    :email "ann@work.example"
+  ] , [
+    :use "home" ;
+    :email "ann@home.example"
+  ], [
+    :use "home" ;
+    :tel "+1.2.34.56.789"
+  ] .

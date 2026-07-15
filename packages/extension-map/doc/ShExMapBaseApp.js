@@ -161,6 +161,7 @@ class ShExMapBaseApp extends ShExBaseApp {
       return null;
     const event = session.dbg[command]();
     this.showDebugEvent(event);
+    this.updateThreadList();
     if (session.dbg.done)
       this.endDebugSession(false);
     return event;
@@ -173,6 +174,7 @@ class ShExMapBaseApp extends ShExBaseApp {
     const threadStr = event.thread
           ? " [" + event.thread.subject + " depth:" + event.thread.depth +
             " frame:" + event.thread.frame + " consumed:" + event.thread.consumed +
+            (event.thread.skipped ? " skipped:" + event.thread.skipped : "") +
             " emitted:" + event.thread.emitted + "]"
           : "";
     switch (event.type) {
@@ -187,17 +189,95 @@ class ShExMapBaseApp extends ShExBaseApp {
         (event.failure && event.failure.variable ? ": no binding for <" + event.failure.variable + ">" : "") +
         threadStr);
       break;
+    case "advance":
+      $("#dbgStatus").text("advance to frame " + event.toFrame + " at <" + event.tc.predicate +
+                           "> -- deferred so in-frame alternatives go first" + threadStr);
+      break;
+    case "accept":
+      $("#dbgStatus").text("thread accepted: " + event.quads.length + " quads" + threadStr);
+      break;
     case "return":
       $("#dbgStatus").text("returned" + threadStr);
       session.pane.clearHighlights();
       break;
     case "done":
-      $("#dbgStatus").text("accepted: " + event.quads.length + " quads");
+      $("#dbgStatus").text("accepted: " + event.quads.length + " quads" +
+                           (event.accepts && event.accepts.length > 1
+                            ? " (1 of " + event.accepts.length + " viable)"
+                            : ""));
       break;
     case "error":
       $("#dbgStatus").text("failed: " + event.error.message.split(";")[0]);
       break;
     }
+  }
+
+  /** the debugger's threads pane: accepted threads then pending ones;
+   * hovering or clicking one renders its (partial) graph in #results */
+  updateThreadList () {
+    const session = this.debugSession;
+    const list = $("#dbgThreads").empty();
+    if (!session)
+      return;
+    const preview = (quads, complete, label) => () => this.previewThread(quads, complete, label);
+    (session.materializer.accepts || []).forEach((a, i) => {
+      const label = "accepted thread " + (i + 1) + ": " + a.quads.length + " quads, " +
+            a.consumed + " bindings consumed" + (a.skipped ? ", " + a.skipped + " skipped" : "");
+      list.append($("<button/>", {class: "dbgThread", title: label + " -- click to render"})
+                  .text("✓" + (i + 1) + " " + a.quads.length + "q")
+                  .on("mouseenter click", preview(a.quads, true, label)));
+    });
+    session.dbg.threads().forEach((t, i) => {
+      const kind = t.deferred ? "deferred" : "pending";
+      const label = kind + " thread: subject " + t.subject + ", frame " + t.frame +
+            ", depth " + t.depth + ", " + t.emitted + " quads emitted";
+      list.append($("<button/>", {class: "dbgThread", title: label + " -- click to render its partial graph"})
+                  .text((t.deferred ? "⏸" : "▶") + "f" + t.frame + " " + t.emitted + "q")
+                  .on("mouseenter click", preview(t.quads, false, label)));
+    });
+  }
+
+  /** render one thread's emissions in #results: accepted threads get the
+   * validating NestedTurtleWriter rendering (as at end of materialization),
+   * partial ones a plain serialization */
+  previewThread (quads, complete, label) {
+    const session = this.debugSession;
+    $("#results div").empty();
+    $("#results .status").text(label).show();
+    const store = new RdfJs.Store();
+    store.addQuads(quads);
+    if (complete && session) {
+      this.renderMaterializedGraph(store, session.outputShapeMap);
+    } else {
+      const writer = new RdfJs.Writer({prefixes: this.Caches.outputSchema.parsed._prefixes});
+      writer.addQuads(store.getQuads());
+      writer.end((error, result) => this.addResult(error, result));
+      this.resultsWidget.finish();
+    }
+  }
+
+  /** when several threads accepted, offer them in #results (the chosen one
+   * starred); clicking an alternative renders it */
+  renderAcceptAlternatives (materializer, outputShapeMap) {
+    const accepts = materializer.accepts || [];
+    if (accepts.length < 2)
+      return;
+    const div = $("<div/>", {class: "dbgAlternatives"}).append(
+      accepts.length + " viable materializations (showing the most-consuming): ");
+    accepts.forEach((a, i) => {
+      div.append($("<button/>", {title: a.quads.length + " quads, " + a.consumed +
+                                 " bindings consumed" + (a.skipped ? ", " + a.skipped + " skipped" : "")})
+                 .text((a === materializer.chosen ? "★" : "") + (i + 1))
+                 .on("click", () => {
+                   $("#results div").empty();
+                   $("#results .status").text("materialization alternative " + (i + 1)).show();
+                   const store = new RdfJs.Store();
+                   store.addQuads(a.quads);
+                   this.renderMaterializedGraph(store, outputShapeMap);
+                   this.renderAcceptAlternatives(materializer, outputShapeMap);
+                 }));
+    });
+    this.resultsWidget.append(div);
   }
 
   /** wrap up: on completion render the graph (or the error) as materialize
@@ -209,6 +289,7 @@ class ShExMapBaseApp extends ShExBaseApp {
     this.debugSession = null;
     session.pane.clearHighlights();
     $("#debugControls").hide();
+    $("#dbgThreads").empty();
     if (stopped) {
       $("#dbgStatus").text("");
       return;
@@ -221,6 +302,7 @@ class ShExMapBaseApp extends ShExBaseApp {
       generatedGraph.addQuads(session.dbg.quads);
       $("#results .status").text("materialization results (debugged)").show();
       this.renderMaterializedGraph(generatedGraph, session.outputShapeMap);
+      this.renderAcceptAlternatives(session.materializer, session.outputShapeMap);
     }
   }
 
@@ -323,9 +405,11 @@ class ShExMapBaseApp extends ShExBaseApp {
       // on success: clear stale error marks, but surface never-bound
       // variables and unreferenced statics as warnings
       this.anchorMaterializationFailures(null, materializer.lastReport);
-      this.currentRenderer.finish();
+      if (this.currentRenderer) // absent when bindings were pasted, not validated
+        this.currentRenderer.finish();
       $("#results .status").text("materialization results").show();
       this.renderMaterializedGraph(generatedGraph, outputShapeMap);
+      this.renderAcceptAlternatives(materializer, outputShapeMap);
       return { materializationResults: generatedGraph };
     } catch (e) {
       this.reportMaterializationError(e, "materialization");

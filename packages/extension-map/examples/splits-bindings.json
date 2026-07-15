@@ -1,8 +1,33 @@
-{
-  "http://contact.example/name": {
-    "value": "Ann"
+[
+  {
+    "http://contact.example/name": {
+      "value": "Ann"
+    }
   },
-  "http://contact.example/email": {
-    "value": "ann@mail.example"
-  }
-}
+  [
+    {
+      "http://contact.example/use": {
+        "value": "work"
+      },
+      "http://contact.example/email": {
+        "value": "ann@work.example"
+      }
+    },
+    {
+      "http://contact.example/use": {
+        "value": "home"
+      },
+      "http://contact.example/email": {
+        "value": "ann@home.example"
+      }
+    },
+    {
+      "http://contact.example/use": {
+        "value": "home"
+      },
+      "http://contact.example/tel": {
+        "value": "+1.2.34.56.789"
+      }
+    }
+  ]
+]

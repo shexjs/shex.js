@@ -98,4 +98,50 @@ describe("ShExMapDebugRepl", function () {
     expect(code).to.equal(0);
     expect(transcript).to.include("warning: :typo is bound nowhere");
   });
+
+  // the splits/ambiguous fixture: a pessimally-ordered OneOf over a
+  // three-frame binding tree (see examples/card-schema-phone-mbox.shex)
+  const cardSchema = prefixes + [
+    "PREFIX card: <http://card.example/ns#>",
+    "start = @<Card>",
+    "<Card> {",
+    "  card:fullName . %Map:{ :name %} ;",
+    "  ( card:phone @<Tel> |",
+    "    card:mbox @<Email> )+",
+    "}",
+    "<Tel> { card:use . %Map:{ :use %} ; card:val . %Map:{ :tel %} }",
+    "<Email> { card:use . %Map:{ :use %} ; card:val . %Map:{ :email %} }",
+  ].join("\n");
+  const cardBindings = [
+    {"http://a.example/name": {value: "Ann"}},
+    [
+      {"http://a.example/use": {value: "work"}, "http://a.example/email": {value: "w@x"}},
+      {"http://a.example/use": {value: "home"}, "http://a.example/email": {value: "h@x"}},
+      {"http://a.example/use": {value: "home"}, "http://a.example/tel": {value: "+1"}},
+    ],
+  ];
+
+  it("should defer a frame-advancing thread with an advance event", function () {
+    // pessimal ordering: <Tel>'s :tel lookup at frame 0 must jump to frame 2
+    const {transcript} = session(["s", "s", "s", "s", "s", "t", "q"],
+                                 {schemaText: cardSchema, bindings: cardBindings});
+    expect(transcript).to.match(/advance to frame 2 for card:val/);
+    expect(transcript).to.include("deferred so in-frame alternatives go first");
+    expect(transcript).to.match(/T\d+ pending:/); // the sibling mbox disjunct
+  });
+
+  it("should choose the most-consuming accept and list the alternatives", function () {
+    const {code, transcript} = session(["c", "t", "t 1"],
+                                       {schemaText: cardSchema, bindings: cardBindings});
+    expect(code).to.equal(0);
+    expect(transcript).to.match(/accepted: 10 quads \(chose \d of \d+ viable materializations/);
+    expect(transcript).to.match(/consumed 7, skipped 1 {2}<- chosen/);
+    expect(transcript).to.match(/consumed 3, skipped 4/); // the cross-frame mix, demoted
+    expect(transcript).to.match(/card:fullName "Ann"/);   // t 1 prints a graph
+  });
+
+  it("should expose accepts through the done event and the debugger", function () {
+    const {transcript} = session([], {schemaText: cardSchema, bindings: cardBindings});
+    expect(transcript).to.include("viable materializations");
+  });
 });

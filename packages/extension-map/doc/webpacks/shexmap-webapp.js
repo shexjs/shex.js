@@ -18737,17 +18737,28 @@ if (true)
  *   subject   - N3id term whose arcs we are emitting
  *   repeats   - {reptStateNo: count} for counted repetitions (this instance)
  *   callStack - persistent list of {nfa, outs, subject, repeats, parent}
- *   cursor    - {idx, used} pointer into the normalized binding frames
+ *   cursor    - {idx, used, n, sk} pointer into the normalized binding frames
  *   quads     - persistent list of emitted {s, p, o} N3id triples
  *   bnode     - counter for inventing intermediate blank nodes
  *
  * Scheduling here is depth-first with greedy priority (prefer another
  * repetition / the emitting arm of an optional / the first OneOf disjunct),
- * so the first accepting thread is the greedy-maximal materialization --
- * equivalent to a backtracking regex engine.  The same thread structure can
- * be stepped breadth-parallel (PikeVM style) by deduplicating threads on
- * (stateNo, callStack, cursor); see ../doc/threaded-materializer.md, which
- * also discusses determinizing this machine into a DFA.
+ * with one demotion: a TC whose variable lookup has to ADVANCE the frame
+ * cursor is a choice point, not a fait accompli.  Its continuation is parked
+ * on a deferred stack so every alternative that can still consume from the
+ * current frame (other disjuncts, the exit arm of a repetition) explores
+ * first, and the advance -- which forfeits any unused bindings it skips --
+ * remains a fallback.  Without this, a pessimally-ordered OneOf pairs
+ * bindings across frames (e.g. frame 0's :use with frame 2's :tel) and that
+ * mix would win by being first.
+ *
+ * Acceptance: every distinct accepting thread is collected (bounded by
+ * maxAccepts); materialize() returns the one that consumed the most bindings
+ * (ties: fewest forfeited by advances, then discovery order).  The accepts
+ * array is exposed for UIs to offer the choice when the materialization is
+ * ambiguous.  See ../doc/threaded-materializer.md, which also discusses
+ * stepping this machine breadth-parallel (PikeVM style) or determinizing it
+ * into a DFA.
  */
 
 
@@ -18832,6 +18843,9 @@ function normalizeBindingTree (tree) {
  * null if no unused binding remains -- unlike binder(), failure poisons
  * nothing.  cursor.n counts consumed frame bindings (globals don't count);
  * Rept states use it to demand progress from repeated subexpressions.
+ * cursor.sk accumulates the unused bindings abandoned by forward scans (the
+ * cursor never moves backward, so skipping past them forfeits them); the
+ * acceptance heuristic prefers threads that forfeited less.
  */
 function cursorGet (frames, globals, cursor, varName) {
   if (varName in globals) // staticVars: always available, never consumed
@@ -18841,7 +18855,12 @@ function cursorGet (frames, globals, cursor, varName) {
     if (varName in frames[i] && !(key in cursor.used)) {
       const used = Object.assign({}, cursor.used);
       used[key] = true;
-      return {value: frames[i][varName], cursor: {idx: i, used, n: cursor.n + 1}};
+      let sk = cursor.sk;
+      for (let j = cursor.idx; j < i; ++j) // abandoned by advancing past frames idx..i-1
+        for (const v of Object.keys(frames[j]))
+          if (!((j + " " + v) in used))
+            ++sk;
+      return {value: frames[i][varName], cursor: {idx: i, used, n: cursor.n + 1, sk}};
     }
   }
   return null;
@@ -18856,6 +18875,10 @@ class ThreadedMaterializer {
     this.maxRepeat = options.maxRepeat || 50;       // clamp unbounded cardinalities
     this.maxCallDepth = options.maxCallDepth || 50; // guard cyclic shape references
     this.maxSteps = options.maxSteps || 1000000;    // guard thread explosions
+    this.maxAccepts = options.maxAccepts || 20;     // stop collecting alternatives here
+    // once one thread has accepted, how many more steps to spend looking for
+    // better/alternative materializations before settling for the best so far
+    this.exploreSteps = options.exploreSteps || 10000;
     this._nfaCache = new Map();
   }
 
@@ -18878,12 +18901,22 @@ class ThreadedMaterializer {
    *   {type: "tripleConstraint", tc, thread}  before synthesizing a constraint
    *   {type: "fail", failure, thread}         a branch died (its emissions and
    *                                           cursor marks are discarded)
+   *   {type: "advance", tc, thread, toFrame}  the constraint's variable lookup
+   *                                           advanced the frame cursor: the
+   *                                           thread is deferred so in-frame
+   *                                           alternatives explore first
    *   {type: "return", thread}                a subshape call completed
-   * and returns the accepted quads (or throws MaterializationError).
-   * thread = {subject, depth (subshape call depth), frame (binding-frame
-   * cursor), consumed (bindings consumed), emitted (quads so far)}.
+   *   {type: "accept", thread, quads}         a thread reached an accepting
+   *                                           state (exploration continues)
+   * and returns the chosen quads (or throws MaterializationError); all
+   * distinct accepts land in this.accepts = [{quads, consumed, skipped,
+   * thread}].  thread = {subject, depth (subshape call depth), frame
+   * (binding-frame cursor), consumed (bindings consumed), skipped (bindings
+   * forfeited by advances), emitted (quads so far)}.
    */
   * run (bindingTree, createRoot, shapeLabel) {
+    this.accepts = null;
+    this.chosen = null;
     const frames = normalizeBindingTree(bindingTree);
     const nfa = this._compileShapeExprNFA(shapeLabel || this.schema.start
                                           || runtimeError("no shape given and no start in schema"));
@@ -18895,6 +18928,10 @@ class ThreadedMaterializer {
     const report = {referenced: new Set()};
     const availableVars = new Set(Object.keys(this.globals));
     frames.forEach(frame => Object.keys(frame).forEach(v => availableVars.add(v)));
+    const accepts = [];
+    this.accepts = accepts; // live: debuggers list accepts-so-far mid-run
+    const acceptBySig = new Map(); // consumed-bindings signature -> accept
+    const quadSigs = new Set();    // graph signatures already recorded
     const finishReport = (error) => {
       const seen = new Set();
       this.lastReport = {
@@ -18906,31 +18943,78 @@ class ThreadedMaterializer {
           return true;
         }),
         unusedStatics: Object.keys(this.globals).filter(g => !report.referenced.has(g)),
+        alternatives: accepts.length,
+        explorationTruncated: truncated,
       };
       if (error)
         error.report = this.lastReport;
       return error;
     };
+    // a perfect accept consumed every frame binding; nothing can beat it
+    const totalFrameBindings = frames.reduce((n, f) => n + Object.keys(f).length, 0);
     const stack = [{
       nfa, stateNo: nfa.start,
       subject: createRoot || "_:root",
       repeats: {}, callStack: null,
-      cursor: {idx: 0, used: {}, n: 0},
+      cursor: {idx: 0, used: {}, n: 0, sk: 0},
       quads: null, bnode: 0
     }];
+    // threads whose last constraint advanced the frame cursor wait here until
+    // every in-frame alternative has been explored
+    const deferred = [];
+    this._live = {stack, deferred}; // liveThreads() inspects these
     let steps = 0;
+    let acceptedAtStep = null; // step count at the first accept
+    let truncated = false;     // exploration stopped by a budget, not exhaustion
 
-    while (stack.length > 0) {
-      if (++steps > this.maxSteps)
+    search:
+    while (stack.length > 0 || deferred.length > 0) {
+      if (++steps > this.maxSteps) {
+        if (accepts.length > 0) { // settle for the best found so far
+          truncated = true;
+          break;
+        }
         throw finishReport(new MaterializationError("exceeded maxSteps=" + this.maxSteps, failures));
-      const th = stack.pop();
+      }
+      if (acceptedAtStep !== null && steps - acceptedAtStep > this.exploreSteps) {
+        truncated = true;
+        break;
+      }
+      // deferred threads resume oldest-first: the greedy leader deferred at a
+      // frame boundary gets back in front of the variants deferred after it
+      const th = stack.length > 0 ? stack.pop() : deferred.shift();
       const st = th.nfa.states[th.stateNo];
       switch (st.type) {
 
       case "Match":
-        if (th.callStack === null) {
-          finishReport(null);
-          return collectQuads(th.quads); // accept: greedy-first materialization
+        if (th.callStack === null) { // an accepting thread; keep exploring
+          // accepts are identified by WHICH bindings they consumed: variants
+          // that differ only in constant emissions (e.g. skipped optional
+          // constants) collapse onto the most-emitting one, as do
+          // identical graphs
+          const sig = Object.keys(th.cursor.used).sort().join("|");
+          const qsig = quadSignature(th.quads);
+          if (quadSigs.has(qsig))
+            break;
+          quadSigs.add(qsig);
+          const existing = acceptBySig.get(sig);
+          const quads = collectQuads(th.quads);
+          if (existing) {
+            if (quads.length > existing.quads.length)
+              Object.assign(existing, {quads, skipped: th.cursor.sk, thread: threadView(th)});
+            break;
+          }
+          const accept = {quads, consumed: th.cursor.n,
+                          skipped: th.cursor.sk, thread: threadView(th)};
+          acceptBySig.set(sig, accept);
+          accepts.push(accept);
+          if (acceptedAtStep === null)
+            acceptedAtStep = steps;
+          yield {type: "accept", thread: threadView(th), quads: accept.quads};
+          if (accept.consumed >= totalFrameBindings // perfect: unbeatable
+              || accepts.length >= this.maxAccepts)
+            break search;
+          break;
         }
         { // return from a shape-reference call
           // the return event belongs to the caller's level: step-out from
@@ -18980,13 +19064,25 @@ class ThreadedMaterializer {
 
       case "TC": {
         yield {type: "tripleConstraint", tc: st.tc, thread: threadView(th)};
-        const stackLen = stack.length;
+        const succs = [];
         const failuresLen = failures.length;
-        this._stepTripleConstraint(th, st, frames, stack, failures, report);
-        if (stack.length === stackLen) // no successors: this branch died
+        this._stepTripleConstraint(th, st, frames, succs, failures, report);
+        if (succs.length === 0) { // no successors: this branch died
           yield {type: "fail",
                  failure: failures.length > failuresLen ? failures[failures.length - 1] : null,
                  thread: threadView(th)};
+        } else if (succs[0].cursor.idx > th.cursor.idx) {
+          // the lookup advanced the frame cursor: that's a choice, not a
+          // consequence -- park the continuation so alternatives that can
+          // still consume from the current frame explore first
+          yield {type: "advance", tc: st.tc, thread: threadView(th),
+                 toFrame: succs[0].cursor.idx};
+          for (const s of succs)
+            deferred.push(s);
+        } else {
+          for (const s of succs)
+            stack.push(s);
+        }
         break;
       }
 
@@ -18994,7 +19090,21 @@ class ThreadedMaterializer {
         runtimeError("unexpected NFA state type " + st.type);
       }
     }
-    throw finishReport(new MaterializationError("no thread reached an accepting state", failures));
+
+    if (accepts.length === 0)
+      throw finishReport(new MaterializationError("no thread reached an accepting state", failures));
+    finishReport(null);
+    // most bindings consumed; ties: fewest forfeited by advances, then most
+    // emitted, then discovery (greedy) order
+    let best = accepts[0];
+    for (const a of accepts)
+      if (a.consumed > best.consumed
+          || (a.consumed === best.consumed
+              && (a.skipped < best.skipped
+                  || (a.skipped === best.skipped && a.quads.length > best.quads.length))))
+        best = a;
+    this.chosen = best;
+    return best.quads;
   }
 
   /** _stepTripleConstraint - one TC visit synthesizes exactly one instance of
@@ -19003,8 +19113,10 @@ class ThreadedMaterializer {
    *    cursor; any unbound variable kills the thread (rollback comes free).
    *  - singleton value set: emit the constant.
    *  - shape-valued: invent a bnode, link it, and call into the sub-shape NFA.
+   * Successor threads go into succs; the caller schedules them (immediately,
+   * or deferred when the cursor advanced).
    */
-  _stepTripleConstraint (th, st, frames, stack, failures, report) {
+  _stepTripleConstraint (th, st, frames, succs, failures, report) {
     const tc = st.tc;
     const mapExts = (tc.semActs || []).filter(ext => ext.name === MapExt);
 
@@ -19047,7 +19159,7 @@ class ThreadedMaterializer {
       let quads = th.quads;
       for (const o of objects)
         quads = {q: this._triple(tc, th.subject, o), prev: quads};
-      st.outs.forEach(out => stack.push(Object.assign({}, th, {stateNo: out, cursor, quads})));
+      st.outs.forEach(out => succs.push(Object.assign({}, th, {stateNo: out, cursor, quads})));
       return;
     }
 
@@ -19055,7 +19167,7 @@ class ThreadedMaterializer {
     if (valueExpr && valueExpr.type === "NodeConstraint"
         && valueExpr.values && valueExpr.values.length === 1) {
       const quads = {q: this._triple(tc, th.subject, n3ify(valueExpr.values[0])), prev: th.quads};
-      st.outs.forEach(out => stack.push(Object.assign({}, th, {stateNo: out, quads})));
+      st.outs.forEach(out => succs.push(Object.assign({}, th, {stateNo: out, quads})));
       return;
     }
 
@@ -19067,7 +19179,7 @@ class ThreadedMaterializer {
       const bnode = "_:tm" + th.bnode;
       const sub = this._compileShapeExprNFA(valueExpr);
       const quads = {q: this._triple(tc, th.subject, bnode), prev: th.quads};
-      stack.push(Object.assign({}, th, {
+      succs.push(Object.assign({}, th, {
         nfa: sub, stateNo: sub.start,
         subject: bnode, repeats: {},
         callStack: {nfa: th.nfa, outs: st.outs, subject: th.subject, repeats: th.repeats, parent: th.callStack,
@@ -19082,6 +19194,24 @@ class ThreadedMaterializer {
                    error: "cannot synthesize valueExpr of type "
                    + (valueExpr ? valueExpr.type : "undefined")
                    + " without a Map semAct"});
+  }
+
+  /** liveThreads - snapshot of the current worklist for debugger UIs: the
+   * inspectable view of every pending thread (exploration order: main stack
+   * first, then deferred) with its partial emissions as RdfJs quads.  Empty
+   * before run() starts and after it finishes.
+   */
+  liveThreads () {
+    if (!this._live)
+      return [];
+    const view = (th, isDeferred) => Object.assign(
+      threadView(th), {deferred: isDeferred, quads: collectQuads(th.quads)});
+    const ret = [];
+    for (let i = this._live.stack.length - 1; i >= 0; --i) // top of stack first
+      ret.push(view(this._live.stack[i], false));
+    for (const th of this._live.deferred) // resumed oldest-first
+      ret.push(view(th, true));
+    return ret;
   }
 
   _triple (tc, subject, object) {
@@ -19104,6 +19234,25 @@ class ThreadedMaterializer {
       shapeExpr = "shapeExpr" in decl ? decl.shapeExpr : decl;
     }
     return shapeExpr;
+  }
+
+  /** _alwaysSynthesizable - can this TripleConstraint's instance be emitted
+   * whatever the cursor position?  True for singleton-value constants without
+   * Map semActs and for Map semActs whose variables are all staticVars
+   * (always readable, never consumed). */
+  _alwaysSynthesizable (tc) {
+    const mapExts = (tc.semActs || []).filter(ext => ext.name === MapExt);
+    if (mapExts.length > 0)
+      return mapExts.every(ext => {
+        const m = ext.code.match(variablePattern);
+        if (!m)
+          return false; // function codes may consume frame bindings
+        const varName = m[1] ? m[1] : this._expandPrefix(m[2], m[3]);
+        return varName in this.globals;
+      });
+    const valueExpr = tc.valueExpr === undefined ? undefined : this._resolveShapeExpr(tc.valueExpr);
+    return !!(valueExpr && valueExpr.type === "NodeConstraint"
+              && valueExpr.values && valueExpr.values.length === 1);
   }
 
   /** _compileShapeExprNFA - compile any shapeExpr to an NFA (cached per
@@ -19185,6 +19334,10 @@ class ThreadedMaterializer {
       }
       const min = "min" in expr ? expr.min : 1;
       const max = "max" in expr ? (expr.max === UNBOUNDED ? Infinity : expr.max) : 1;
+      if (min === 0 && max === 1 && expr.type === "TripleConstraint"
+          && this._alwaysSynthesizable(expr))
+        return pair; // skipping a constant/static gains nothing: emit greedily
+                     // and spare the search the 2^optionals variant space
       if (min === 0 && expr.type === "TripleConstraint")
         states[pair.start].skippable = true; // enables the vacuous-descend rule
       if (min === 1 && max === 1)
@@ -19255,8 +19408,18 @@ function threadView (th) {
     depth: stackDepth(th.callStack),
     frame: th.cursor.idx,
     consumed: th.cursor.n,
+    skipped: th.cursor.sk || 0,
     emitted,
   };
+}
+
+/** quadSignature - order-insensitive identity of a thread's emissions, for
+ * deduplicating accepting threads that produce the same graph. */
+function quadSignature (quadList) {
+  const keys = [];
+  for (let node = quadList; node !== null; node = node.prev)
+    keys.push(node.q.s + " " + node.q.p + " " + node.q.o);
+  return keys.sort().join("\n");
 }
 
 /** MaterializerDebugger - step-through control over a materialization (see
@@ -19324,7 +19487,8 @@ class MaterializerDebugger {
       if (step.done) {
         this.done = true;
         this.quads = step.value;
-        return this.current = {type: "done", quads: step.value};
+        this.accepts = this.materializer.accepts || [];
+        return this.current = {type: "done", quads: step.value, accepts: this.accepts};
       }
       if (stopWhen(step.value) || this._hitsBreakpoint(step.value))
         return this.current = step.value;
@@ -19350,6 +19514,10 @@ class MaterializerDebugger {
 
   /** run to the next breakpoint, or to completion */
   continue () { return this._advance(() => false); }
+
+  /** snapshot of the pending threads (exploration order), each with its
+   * partial emissions as quads; accepted threads live in this.accepts */
+  threads () { return this.materializer.liveThreads(); }
 }
 
 function collectQuads (quadList) {

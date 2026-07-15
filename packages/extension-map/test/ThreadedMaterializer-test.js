@@ -83,6 +83,83 @@ describe("ThreadedMaterializer", function () {
     });
   });
 
+  // A TC whose variable lookup advances the frame cursor is deferred so
+  // in-frame alternatives explore first; all accepting threads are collected
+  // and materialize() returns the most-consuming one.
+  describe("frame-advance splitting and acceptance", function () {
+    const prefixes = "PREFIX : <http://a.example/>\nPREFIX Map: <http://shex.io/extensions/Map/#>\n";
+    // pessimal ordering: :tel (frame 2) is tried before :email (frame 0)
+    const cardSchema = prefixes + [
+      "start = @<Card>",
+      "<Card> { :fullName . %Map:{ :name %} ;",
+      "         ( :phone @<T> | :mbox @<E> )+ }",
+      "<T> { :use . %Map:{ :use %} ; :val . %Map:{ :tel %} }",
+      "<E> { :use . %Map:{ :use %} ; :val . %Map:{ :email %} }",
+    ].join("\n");
+    const tree = [
+      {"http://a.example/name": {value: "Ann"}},
+      [{"http://a.example/use": {value: "work"}, "http://a.example/email": {value: "w@x"}},
+       {"http://a.example/use": {value: "home"}, "http://a.example/email": {value: "h@x"}},
+       {"http://a.example/use": {value: "home"}, "http://a.example/tel": {value: "+1"}}],
+    ];
+
+    it("should not let a cross-frame pairing beat in-frame consumption", function () {
+      const m = new ThreadedMaterializer(parseSchema(cardSchema));
+      const store = new RdfJs.Store();
+      store.addQuads(m.materialize(tree, "tag:card"));
+      // the winner pairs each :use with ITS frame's value: 2 mbox + 1 phone
+      const vals = store.match(null, RdfJs.DataFactory.namedNode("http://a.example/val"), null)
+            .toArray().map(q => q.object.value).sort();
+      expect(vals).to.deep.equal(["+1", "h@x", "w@x"]);
+      expect(m.chosen.consumed).to.equal(7);
+      // the cross-frame mix (frame 0's :use with frame 2's :tel) is merely an
+      // alternative, penalized by the bindings it skipped over
+      const mix = m.accepts.find(a => a.skipped === 4);
+      expect(mix, "the demoted cross-frame accept").to.exist;
+      expect(mix.consumed).to.equal(3);
+    });
+
+    it("should yield advance events when a lookup moves the cursor", function () {
+      const m = new ThreadedMaterializer(parseSchema(cardSchema));
+      const events = [];
+      const it2 = m.run(tree, "tag:card");
+      for (let step = it2.next(); !step.done; step = it2.next())
+        events.push(step.value);
+      const advance = events.find(e => e.type === "advance");
+      expect(advance, "an advance event").to.exist;
+      expect(advance.toFrame).to.be.above(advance.thread.frame);
+      expect(events.filter(e => e.type === "accept").length).to.equal(m.accepts.length);
+    });
+
+    it("should collapse constant-only variants onto one accept", function () {
+      // the optional constants multiply threads but not accepts; the kept
+      // variant is the constant-maximal one
+      const m = new ThreadedMaterializer(parseSchema(prefixes + [
+        "start = @<S>",
+        "<S> { :a [:c1]? ; :b [:c2]? ; :v . %Map:{ :v1 %} }",
+      ].join("\n")));
+      const store = new RdfJs.Store();
+      store.addQuads(m.materialize({"http://a.example/v1": {value: "x"}}, "_:root"));
+      expect(m.accepts.length).to.equal(1);
+      expect(store.size).to.equal(3); // both constants emitted
+    });
+
+    it("should expose a tie as multiple accepts and keep the greedy winner", function () {
+      const m = new ThreadedMaterializer(parseSchema(prefixes + [
+        "start = @<S>",
+        "<S> { :p . %Map:{ :v1 %} | :q . %Map:{ :v2 %} }",
+      ].join("\n")));
+      const store = new RdfJs.Store();
+      store.addQuads(m.materialize({"http://a.example/v1": {value: "x"},
+                                    "http://a.example/v2": {value: "y"}}, "_:root"));
+      expect(m.accepts.length).to.equal(2);
+      expect(m.chosen).to.equal(m.accepts[0]); // greedy tie-break: first disjunct
+      expect(store.match(null, null, null).toArray()[0].predicate.value)
+        .to.equal("http://a.example/p");
+      expect(m.lastReport.alternatives).to.equal(2);
+    });
+  });
+
   // These are the cases that motivated the prototype: a failing branch must
   // not corrupt the binding cursor of the surviving branch.
   describe("backtracking", function () {

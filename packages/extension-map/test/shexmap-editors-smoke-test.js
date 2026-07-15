@@ -120,5 +120,61 @@ if (!TEST_browser) {
       expect($("#debugControls").css("display")).to.equal("none");
       expect(shared.Caches.editorSupport.panes.outputSchema, "pane survives").to.exist;
     });
+
+    // both OneOf disjuncts viable -> two accepting threads -> the
+    // materialization is ambiguous and the app offers the alternatives
+    const ambiguousSchemaText = [
+      "PREFIX : <http://a.example/>",
+      "PREFIX Map: <http://shex.io/extensions/Map/#>",
+      "start = @:Card",
+      ":Card {",
+      "  :fullName . %Map:{ :name %} ;",
+      "  ( :phone . %Map:{ :tel %} |",
+      "    :mbox . %Map:{ :email %} )",
+      "}",
+    ].join("\n");
+    const ambiguousBindings = JSON.stringify({
+      "http://a.example/name": {value: "Bob"},
+      "http://a.example/tel": {value: "+1"},
+      "http://a.example/email": {value: "bob@x"},
+    });
+
+    it("should list threads while stepping and offer viable alternatives at completion", async function () {
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      set("#outputSchema textarea", ambiguousSchemaText);
+      set("#bindings1 textarea", ambiguousBindings);
+      $("#createRoot").val("<tag:card>");
+      $("#outputShape").val("<http://a.example/Card>");
+
+      $("#debugMaterialize").trigger("click");
+      await shared.promise;
+      $("#dbgInto").trigger("click"); // at :fullName
+      $("#dbgInto").trigger("click"); // at :phone; the mbox disjunct is pending
+      expect($("#dbgThreads button").length, "pending threads listed").to.be.above(0);
+      $("#dbgThreads button").first().trigger("mouseenter"); // partial preview
+      expect($("#results").text()).to.include("thread");
+
+      $("#dbgContinue").trigger("click"); // to completion
+      expect($("#dbgStatus").text()).to.include("viable");
+      expect($("#debugControls").css("display")).to.equal("none");
+      expect($("#results").text()).to.include("2 viable materializations");
+      expect($("#results").text()).to.include('"+1"'); // chosen: first disjunct
+
+      // pick the other accepted thread
+      $("#results .dbgAlternatives button").last().trigger("click");
+      expect($("#results").text()).to.include('"bob@x"');
+      expect($("#results").text()).to.include("2 viable materializations"); // chooser re-rendered
+    });
+
+    it("should offer the alternatives after a plain materialize too", async function () {
+      $("#materialize").trigger("click");
+      await shared.promise;
+      expect($("#results").text()).to.include("2 viable materializations");
+      expect($("#results").text()).to.include('"+1"');
+    });
   });
 }

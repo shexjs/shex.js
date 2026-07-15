@@ -59,10 +59,18 @@ One vocabulary for both engines (materializer emits the first three today):
 ```
 {type: "tripleConstraint", tc, thread}   about to evaluate/synthesize a constraint
 {type: "fail", failure, thread}          a branch/alternative died
+{type: "advance", tc, thread, toFrame}   materialization: the constraint's lookup
+                                         advanced the binding-frame cursor; the
+                                         thread defers so in-frame alternatives
+                                         explore first
 {type: "return", thread}                 a subshape call completed (depth = caller's)
+{type: "accept", thread, quads}          materialization: a thread accepted
+                                         (exploration continues; all accepts are
+                                         collected and the best is chosen)
 {type: "enterShape", node, shape, thread}   validation: focus node enters a shape
 {type: "exitShape", node, shape, result, thread}
-{type: "done" | "error", ...}
+{type: "done" | "error", ...}            done carries accepts[] for the UIs'
+                                         alternatives choosers / thread lists
 ```
 
 `thread` is the inspectable snapshot: for the materializer
