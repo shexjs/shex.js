@@ -291,9 +291,11 @@ npm run serve           # prints the shex-simple / shexmap-simple URLs
 
 Add `?editors=1` to either app URL for the language-aware CodeMirror editors
 (see [doc/editor-integration-plan.md](doc/editor-integration-plan.md)).
-With the editors on, shexmap-simple's 🐞 button steps through a
-materialization with breakpoints; `shexmap-debug` and `shex-debug` are the
-command-line equivalents (see [doc/debugger-design.md](doc/debugger-design.md)).
+With the editors on, the 🐞 buttons step through a materialization
+(shexmap-simple) or any of a validation's triple-expression matches (both
+apps) with schema-gutter breakpoints and a live threads pane;
+`shexmap-debug` and `shex-debug` are the command-line equivalents (see
+[doc/debugger-design.md](doc/debugger-design.md)).
 `shex-serve --coi` sends the cross-origin-isolation headers that
 browser-side validation debugging will need.
 

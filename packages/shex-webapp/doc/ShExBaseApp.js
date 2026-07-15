@@ -1908,6 +1908,11 @@ class ShExBaseApp {
     $("#regexpEngine").on("change", this.toggleControls.bind(this));
     $("#editors").on("change", () => this.setEditors());
     $("#validate").on("click", this.disableResultsAndValidate.bind(this));
+    $("#debugValidate").on("click", () => { SharedForTests.promise = this.startValidationDebugSession(); });
+    $("#valDbgInto").on("click", () => this.valDebugStep("stepInto"));
+    $("#valDbgOver").on("click", () => this.valDebugStep("stepOver"));
+    $("#valDbgContinue").on("click", () => this.valDebugStep("continue"));
+    $("#valDbgStop").on("click", () => this.endValidationDebugSession());
     $("#download-results-button").on("click", this.downloadResults.bind(this));
 
     $("#loadForm").dialog({
@@ -2170,6 +2175,200 @@ class ShExBaseApp {
           resolve(await this.callValidator());
       }, 0);
     })
+  }
+
+  /** startValidationDebugSession - step-through debugging of the
+   * triple-expression matches in a validation (doc/debugger-design.md):
+   * the validation runs to completion with eval-simple-1err recording
+   * every regexEngine.match() invocation; any of them can then be
+   * replayed one NFA event at a time.  Gutter breakpoints in the schema
+   * pane become constraint breakpoints.  A validation thread's aspects
+   * are its position in the state machine, its repeat counts and its
+   * matched-triples partition -- previewValThread renders them. */
+  async startValidationDebugSession () {
+    const pane = this.editorSupport && this.editorSupport.panes.inputSchema;
+    if (!pane) {
+      this.resultsWidget.replace("Enable the language-aware editors (Menu → user interface) to debug validation.")
+        .removeClass("passes fails").addClass("error");
+      return null;
+    }
+    this.resultsWidget.clear();
+    let currentAction = "starting validation debugger";
+    try {
+      currentAction = "parsing input schema";
+      const schema = await this.Caches.inputSchema.refresh();
+      currentAction = "parsing input data";
+      const inputData = await this.Caches.inputData.refresh();
+      currentAction = "parsing shape map";
+      const fixedMap = $("#fixedMap tr").map((idx, tr) =>
+        this.fixValidationShapeMapEntry($(tr).find("input.focus").val(), $(tr).find("input.inputShape").val())
+      ).get();
+      if (fixedMap.length === 0) {
+        this.resultsWidget.replace("Add a node@shape pair to the fixed shape map to debug its validation.")
+          .removeClass("passes fails").addClass("error");
+        return null;
+      }
+      currentAction = "validating (recording matches)";
+      const schemaText = this.Caches.inputSchema.selection.val();
+      const located = ShExWebApp.EditorServices.locateInParsed(schemaText, schema);
+      const {module, captures} = ShExWebApp.capturingRegexModule(ShExWebApp["eval-simple-1err"]);
+      const validator = new ShExWebApp.Validator(schema, inputData, {
+        results: "api", regexModule: module,
+        ignoreClosed: $("#ignoreClosed").is(":checked"),
+      });
+      const results = validator.validateShapeMap(fixedMap);
+      if (captures.length === 0) {
+        this.resultsWidget.replace("This validation never matched a triple expression (nothing to step through).")
+          .removeClass("passes fails").addClass("error");
+        return null;
+      }
+      this.valDebugSession = {captures, located, pane, schema, results};
+      const select = $("#valDbgMatches").empty();
+      captures.forEach((cap, i) =>
+        select.append($("<option/>", {value: i}).text(this.matchCaptureLabel(cap, schema))));
+      select.off("change").on("change", () => this.pickValidationMatch(parseInt(select.val(), 10)));
+      $("#valDebugControls").show();
+      this.pickValidationMatch(0);
+      return this.valDebugSession;
+    } catch (e) {
+      this.reportValidationError(e, currentAction);
+      return null;
+    }
+  }
+
+  matchCaptureLabel (cap, schema) {
+    const index = schema._index || {};
+    const label = Object.keys(index.shapeExprs || {}).find(l => {
+      const decl = index.shapeExprs[l];
+      return decl === cap.shape || decl.shapeExpr === cap.shape;
+    });
+    const node = cap.node.termType === "BlankNode" ? "_:" + cap.node.value : cap.node.value;
+    return node + "@" + (label || "?");
+  }
+
+  /** (re)arm the debugger on one recorded match */
+  pickValidationMatch (captureNo) {
+    const session = this.valDebugSession;
+    if (!session)
+      return null;
+    const cap = session.captures[captureNo];
+    const dbg = new ShExWebApp.MatchDebugger(cap.engine, cap.node, cap.constraintToTripleMapping, cap.semActHandler);
+    // gutter breakpoints (line starts) -> the first constraint on the line
+    const schemaText = this.Caches.inputSchema.selection.val();
+    const lineStarts = ShExWebApp.EditorServices.lineOffsets(schemaText);
+    session.pane.listBreakpoints().forEach(pos => {
+      const lineEnd = lineStarts.find(start => start > pos) || schemaText.length;
+      for (let offset = pos; offset < lineEnd; ++offset) {
+        const hit = session.located.locate.exprAt(offset);
+        if (hit) {
+          dbg.addBreakpoint({tc: hit.expr});
+          break;
+        }
+      }
+    });
+    session.dbg = dbg;
+    session.capture = cap;
+    $("#valDbgStatus").text("paused before matching " + $("#valDbgMatches option:selected").text() +
+                            "; step or continue");
+    $("#valDbgThreads").empty();
+    return dbg;
+  }
+
+  valDebugStep (command) {
+    const session = this.valDebugSession;
+    if (!session || !session.dbg)
+      return null;
+    const event = session.dbg[command]();
+    this.showValDebugEvent(event);
+    this.updateValThreadList();
+    return event;
+  }
+
+  showValDebugEvent (event) {
+    const session = this.valDebugSession;
+    if (!event || !session)
+      return;
+    const threadStr = event.thread
+          ? " [state:" + event.thread.stateNo +
+            " matched:" + event.thread.matched.reduce((n, m) => n + m.triples.length, 0) +
+            (Object.keys(event.thread.repeats).length
+             ? " repeats:" + JSON.stringify(event.thread.repeats) : "") + "]"
+          : "";
+    const gen = "generation" in event ? " gen:" + event.generation : "";
+    switch (event.type) {
+    case "constraint": {
+      $("#valDbgStatus").text("at <" + event.tc.predicate + ">" + gen + threadStr);
+      const range = session.located.locate.expr(event.tc);
+      session.pane.highlight(range ? [range] : [], "shexjs-debug-current");
+      break;
+    }
+    case "fail":
+      $("#valDbgStatus").text("thread died at <" + event.tc.predicate + ">" + gen + threadStr);
+      break;
+    case "accept":
+      $("#valDbgStatus").text("thread accepted" + gen + threadStr);
+      break;
+    case "done":
+      $("#valDbgStatus").text("match finished: " +
+        (session.dbg.result && !("errors" in session.dbg.result) ? "matched" : "failed") +
+        "; pick another match or ⏹");
+      session.pane.clearHighlights();
+      break;
+    case "error":
+      $("#valDbgStatus").text("failed: " + event.error.message);
+      break;
+    }
+  }
+
+  /** the debugger's threads pane: this generation's threads (• = already
+   * advanced into the next); hover or click renders a thread's aspects */
+  updateValThreadList () {
+    const session = this.valDebugSession;
+    const list = $("#valDbgThreads").empty();
+    if (!session || !session.dbg)
+      return;
+    session.dbg.threads().forEach(t => {
+      const label = (t.next ? "advanced" : "current") + " thread at state " + t.stateNo +
+            (t.tc ? " <" + t.tc.predicate + ">" : " (" + t.at + ")");
+      list.append($("<button/>", {class: "dbgThread", title: label + " -- click for its state"})
+                  .text((t.next ? "•" : "") + "s" + t.stateNo)
+                  .on("mouseenter click", () => this.previewValThread(t, label)));
+    });
+  }
+
+  /** the aspects specific to a validation thread: position in the state
+   * machine (highlighted in the schema pane), repeat counts, and the
+   * partition of matched triples */
+  previewValThread (t, label) {
+    const session = this.valDebugSession;
+    if (!session)
+      return;
+    if (t.tc) {
+      const range = session.located.locate.expr(t.tc);
+      session.pane.highlight(range ? [range] : [], "shexjs-debug-current");
+    }
+    const lines = [label];
+    if (Object.keys(t.repeats).length)
+      lines.push("repeat counts (by Rept state): " +
+                 Object.entries(t.repeats).map(([s, n]) => "s" + s + "×" + n).join(", "));
+    lines.push(t.matched.length === 0 ? "matched partition: (empty)" : "matched partition:");
+    t.matched.forEach(m => m.triples.forEach(tr => lines.push("  " + tr + "  -> <" + m.predicate + ">")));
+    if (t.errors)
+      lines.push("errors: " + t.errors);
+    $("#results div").empty();
+    $("#results .status").text("validation thread").show();
+    this.resultsWidget.append($("<pre/>", {class: "dbgThreadState"}).text(lines.join("\n")));
+  }
+
+  endValidationDebugSession () {
+    const session = this.valDebugSession;
+    if (!session)
+      return;
+    this.valDebugSession = null;
+    session.pane.clearHighlights();
+    $("#valDebugControls").hide();
+    $("#valDbgStatus").text("");
+    $("#valDbgThreads").empty();
   }
 
   async callValidator (done) {

@@ -204,6 +204,7 @@ class ThreadedMaterializer {
     this.accepts = null;
     this.chosen = null;
     const frames = normalizeBindingTree(bindingTree);
+    this.frames = frames; // exposed so UIs can render binding-tree state
     const nfa = this._compileShapeExprNFA(shapeLabel || this.schema.start
                                           || runtimeError("no shape given and no start in schema"));
     const failures = [];
@@ -291,7 +292,8 @@ class ThreadedMaterializer {
             break;
           }
           const accept = {quads, consumed: th.cursor.n,
-                          skipped: th.cursor.sk, thread: threadView(th)};
+                          skipped: th.cursor.sk, thread: threadView(th),
+                          used: Object.keys(th.cursor.used)};
           acceptBySig.set(sig, accept);
           accepts.push(accept);
           if (acceptedAtStep === null)
@@ -491,7 +493,8 @@ class ThreadedMaterializer {
     if (!this._live)
       return [];
     const view = (th, isDeferred) => Object.assign(
-      threadView(th), {deferred: isDeferred, quads: collectQuads(th.quads)});
+      threadView(th), {deferred: isDeferred, quads: collectQuads(th.quads),
+                       used: Object.keys(th.cursor.used)}); // "<frame> <var>" marks
     const ret = [];
     for (let i = this._live.stack.length - 1; i >= 0; --i) // top of stack first
       ret.push(view(this._live.stack[i], false));

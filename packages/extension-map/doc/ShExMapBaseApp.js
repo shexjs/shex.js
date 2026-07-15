@@ -219,13 +219,13 @@ class ShExMapBaseApp extends ShExBaseApp {
     const list = $("#dbgThreads").empty();
     if (!session)
       return;
-    const preview = (quads, complete, label) => () => this.previewThread(quads, complete, label);
+    const preview = (t, complete, label) => () => this.previewThread(t, complete, label);
     (session.materializer.accepts || []).forEach((a, i) => {
       const label = "accepted thread " + (i + 1) + ": " + a.quads.length + " quads, " +
             a.consumed + " bindings consumed" + (a.skipped ? ", " + a.skipped + " skipped" : "");
       list.append($("<button/>", {class: "dbgThread", title: label + " -- click to render"})
                   .text("✓" + (i + 1) + " " + a.quads.length + "q")
-                  .on("mouseenter click", preview(a.quads, true, label)));
+                  .on("mouseenter click", preview({quads: a.quads, used: a.used, frame: a.thread.frame}, true, label)));
     });
     session.dbg.threads().forEach((t, i) => {
       const kind = t.deferred ? "deferred" : "pending";
@@ -233,19 +233,45 @@ class ShExMapBaseApp extends ShExBaseApp {
             ", depth " + t.depth + ", " + t.emitted + " quads emitted";
       list.append($("<button/>", {class: "dbgThread", title: label + " -- click to render its partial graph"})
                   .text((t.deferred ? "⏸" : "▶") + "f" + t.frame + " " + t.emitted + "q")
-                  .on("mouseenter click", preview(t.quads, false, label)));
+                  .on("mouseenter click", preview(t, false, label)));
     });
   }
 
-  /** render one thread's emissions in #results: accepted threads get the
-   * validating NestedTurtleWriter rendering (as at end of materialization),
-   * partial ones a plain serialization */
-  previewThread (quads, complete, label) {
+  /** the aspects specific to a materialization thread: its private view of
+   * the binding tree (frame cursor and consumed marks) ... */
+  bindingStateText (thread) {
+    const session = this.debugSession;
+    const frames = session && session.materializer.frames;
+    if (!frames || !thread.used)
+      return null;
+    const usedSet = new Set(thread.used);
+    const prefixes = this.Caches.outputSchema.parsed._prefixes || {};
+    const pname = (iri) => {
+      for (const [prefix, ns] of Object.entries(prefixes))
+        if (ns.length && iri.startsWith(ns))
+          return prefix + ":" + iri.substring(ns.length);
+      return "<" + iri + ">";
+    };
+    return "binding tree (✓ = consumed by this thread; → = cursor):\n" +
+      frames.map((frame, i) =>
+        (i === thread.frame ? "→ " : "  ") + "frame " + i + ":  " +
+        Object.keys(frame).map(v => pname(v) + (usedSet.has(i + " " + v) ? " ✓" : "")).join("  ")
+      ).join("\n");
+  }
+
+  /** render one thread's aspects in #results: its binding-tree state and its
+   * generated graph -- accepted threads get the validating
+   * NestedTurtleWriter rendering (as at end of materialization), partial
+   * ones a plain serialization */
+  previewThread (thread, complete, label) {
     const session = this.debugSession;
     $("#results div").empty();
     $("#results .status").text(label).show();
+    const bindingState = this.bindingStateText(thread);
+    if (bindingState)
+      this.resultsWidget.append($("<pre/>", {class: "dbgBindingState"}).text(bindingState));
     const store = new RdfJs.Store();
-    store.addQuads(quads);
+    store.addQuads(thread.quads);
     if (complete && session) {
       this.renderMaterializedGraph(store, session.outputShapeMap);
     } else {

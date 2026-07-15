@@ -157,6 +157,9 @@ if (!TEST_browser) {
       expect($("#dbgThreads button").length, "pending threads listed").to.be.above(0);
       $("#dbgThreads button").first().trigger("mouseenter"); // partial preview
       expect($("#results").text()).to.include("thread");
+      // ... including the thread's private view of the binding tree
+      expect($("#results").text()).to.include("binding tree");
+      expect($("#results").text()).to.match(/frame 0:.*:name ✓/);
 
       $("#dbgContinue").trigger("click"); // to completion
       expect($("#dbgStatus").text()).to.include("viable");

@@ -97,6 +97,20 @@ toolchain).  Roughly grouped; items link to the docs that motivated them.
   prompt/IO plumbing by parallel construction; extract a common REPL
   skeleton before a third debugger appears.
 
+## Validation debugger (capture + replay)
+
+- Replaying a captured match re-dispatches its semantic actions --
+  harmless for Test/Map in practice, but a recording semActHandler shim
+  would make replay side-effect-free.
+- Only eval-simple-1err is steppable; eval-threaded-nerr's recursive
+  matcher would need its own generator refactor for a `runMatch`.
+- The threads pane renders the matched partition as text; highlighting
+  the partition's triples in the *data* pane (millan ranges, like error
+  anchoring) is the natural next step.
+- Live whole-validation stepping in the browser still needs the
+  worker + Atomics gate (design doc phase 6); `shex-debug` covers it in
+  terminals.
+
 ## Validation engines
 
 - `debugHooks.onConstraint` shipped in both engines (doc/debugger-design.md

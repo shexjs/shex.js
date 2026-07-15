@@ -11,6 +11,8 @@ ShExWebApp = (function () {
     Parser:               require("@shexjs/parser"),
     "eval-simple-1err":   require("@shexjs/eval-simple-1err").RegexpModule,
     "eval-threaded-nerr": require("@shexjs/eval-threaded-nerr").RegexpModule,
+    MatchDebugger:        require("@shexjs/eval-simple-1err").MatchDebugger,
+    capturingRegexModule: require("@shexjs/eval-validator-api").capturingRegexModule,
     ShapeMap:             shapeMap,
     ShapeMapParser:       shapeMap.Parser,
     JsYaml:               require("js-yaml"),

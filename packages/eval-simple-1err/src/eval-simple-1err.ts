@@ -283,6 +283,24 @@ interface Repeats {
   [key: string]: number;
 }
 
+/** the inspectable snapshot of a regex thread shipped in debugger events:
+ * where it is in the state machine, its repetition counters, and the
+ * partition of matched triples it has committed to so far. */
+export interface MatchThreadView {
+  stateNo: number;
+  at: string; // the constraint's predicate, "match", or "control"
+  tc?: ShExJ.TripleConstraint;
+  repeats: Repeats;
+  matched: {predicate: string, triples: string[]}[];
+  errors: number;
+  next?: boolean; // true: already stepped into the coming generation
+}
+
+export type MatchDebugEvent =
+    {type: "constraint", tc: ShExJ.TripleConstraint, generation: number, thread: MatchThreadView}
+  | {type: "fail", tc: ShExJ.TripleConstraint, generation: number, thread: MatchThreadView}
+  | {type: "accept", generation: number, thread: MatchThreadView};
+
 class RegExpThread {
   constructor(
       public state: number = -1,
@@ -307,6 +325,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
   private readonly start: number;
   private readonly shape: ShExJ.Shape;
   private readonly debugHooks?: RegexDebugHooks;
+  private _live: (() => {clist: RegExpThread[], nlist: RegExpThread[]}) | null = null;
 
   constructor(shape: ShExJ.Shape, states: RegExpState[], startNo: number, matchstate: number, debugHooks?: RegexDebugHooks) {
     this.shape = shape;
@@ -317,8 +336,30 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
   }
 
   match(node: RdfJsTerm, constraintToTripleMapping: ConstraintToTripleResults, semActHandler: SemActDispatcher, trace: object[] | null): shapeExprTest {
+    // drain the step generator; debuggers drive runMatch() themselves
+    const it = this.runMatch(node, constraintToTripleMapping, semActHandler, trace);
+    let step = it.next();
+    while (!step.done)
+      step = it.next();
+    return step.value;
+  }
+
+  /** runMatch - the NFA simulation as a generator of debugger step events
+   * (c.f. ThreadedMaterializer.run; doc/debugger-design.md).  Yields
+   * {type: "constraint", tc, generation, thread}  a thread about to consume
+   *                                               triples for a constraint
+   * {type: "fail", tc, generation, thread}        ...and it spawned nothing
+   * {type: "accept", generation, thread}          a thread reached the end
+   *                                               state with all triples
+   *                                               accounted for
+   * and returns the shapeExprTest.  liveThreads() snapshots the worklist
+   * between events.
+   */
+  * runMatch(node: RdfJsTerm, constraintToTripleMapping: ConstraintToTripleResults, semActHandler: SemActDispatcher, trace: object[] | null): Generator<MatchDebugEvent, shapeExprTest> {
     const thisEvalSimple1ErrRegexEngine = this;
     let clist: RegExpThread[] = [], nlist: RegExpThread[] = []; // list of {state:state number, repeats:stateNo->repetitionCount}
+    let generation = 0;
+    this._live = () => ({clist, nlist}); // closes over the swapped lists
     const allTriples = constraintToTripleMapping.reduce<Set<RdfJsQuad>>((allTriples, _tripleConstraint, tripleResult) => {
       tripleResult.forEach(res => allTriples.add(res.triple));
       return allTriples;
@@ -342,6 +383,8 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
         // may be an Accept state
         if (state instanceof TripleConstraintState) {
           const tripleConstraint = state.c;
+          yield {type: "constraint", tc: tripleConstraint, generation,
+                 thread: this.threadView(thread)};
           if (this.debugHooks && this.debugHooks.onConstraint)
             this.debugHooks.onConstraint(tripleConstraint, {
               node,
@@ -364,6 +407,9 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
               }
             })());
           }
+          if (nlist.length === nlistlen)
+            yield {type: "fail", tc: tripleConstraint, generation,
+                   thread: this.threadView(thread)};
         }
         if (trace)
           // @ts-ignore
@@ -380,6 +426,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
       const t = clist;
       clist = nlist;
       nlist = t;
+      ++generation;
       const longerChosen = clist.reduce<RegExpThread | null>((ret, elt) => {
         const matchedAll =
             elt.matched.reduce<number>((ret, m) => {
@@ -387,8 +434,10 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
             }, 0) === allTriples.size;
         return ret !== null ? ret : (elt.state === thisEvalSimple1ErrRegexEngine.end && matchedAll) ? elt : null;
       }, null)
-      if (longerChosen)
+      if (longerChosen) {
         chosen = longerChosen;
+        yield {type: "accept", generation, thread: this.threadView(longerChosen)};
+      }
     }
     if (chosen === null)
       return reportError([]);
@@ -450,6 +499,37 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
     return "errors" in chosen.matched ?
         chosen.matched :
         this.matchedToResult(chosen.matched, constraintToTripleMapping, semActHandler);
+  }
+
+  /** the inspectable snapshot of one regex thread */
+  threadView (thread: RegExpThread): MatchThreadView {
+    const state = this.states[thread.state];
+    const term = (t: RdfJsTerm) => t.termType === "Literal" ? JSON.stringify(t.value)
+          : t.termType === "BlankNode" ? "_:" + t.value : t.value;
+    return {
+      stateNo: thread.state,
+      at: state instanceof TripleConstraintState ? state.c.predicate
+        : state instanceof MatchState ? "match" : "control",
+      tc: state instanceof TripleConstraintState ? state.c : undefined,
+      repeats: Object.assign({}, thread.repeats),
+      matched: thread.matched.map(m => ({
+        predicate: m.c.predicate,
+        triples: m.triples.map(t => term(t.subject) + " " + term(t.predicate) + " " + term(t.object)),
+      })),
+      errors: thread.errors.length,
+    };
+  }
+
+  /** snapshot of the worklist for debugger UIs: this generation's threads,
+   * then (flagged next: true) the ones already advanced into the coming
+   * generation.  Empty before the first runMatch(); after completion it
+   * shows the final generation. */
+  liveThreads (): MatchThreadView[] {
+    if (!this._live)
+      return [];
+    const {clist, nlist} = this._live();
+    return clist.map(th => this.threadView(th))
+      .concat(nlist.map(th => Object.assign(this.threadView(th), {next: true})));
   }
 
   addStates (nlist: RegExpThread[], thread: RegExpThread, taken: RdfJsQuad[]) {
@@ -682,3 +762,84 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
       return ret;
     }
   }
+
+/** MatchDebugger - step-through control over one shape's NFA simulation
+ * (c.f. MaterializerDebugger in @shexjs/extension-map).  Drives
+ * runMatch() one event at a time; entirely synchronous.
+ *
+ *   const engine = RegexpModule.compile(schema, shape, index);
+ *   const dbg = new MatchDebugger(engine, node, tc2t, semActHandler);
+ *   dbg.addBreakpoint({predicate: "http://a.example/p"});
+ *   let at = dbg.continue();   // to the breakpoint (or completion)
+ *   at = dbg.stepInto();       // next event
+ *   at = dbg.stepOver();       // next generation (all threads stepped once)
+ *   dbg.threads();             // worklist snapshot: state-machine position,
+ *                              // repeats, matched-triples partition
+ *   ... dbg.done, dbg.result, dbg.error
+ */
+export class MatchDebugger {
+  private readonly engine: EvalSimple1ErrRegexEngine;
+  private readonly generator: Generator<MatchDebugEvent, shapeExprTest>;
+  public breakpoints = {tcs: new Set<ShExJ.TripleConstraint>(), predicates: new Set<string>()};
+  public current: MatchDebugEvent | {type: "done", result: shapeExprTest} | {type: "error", error: Error} | null = null;
+  public done = false;
+  public result: shapeExprTest | null = null;
+  public error: Error | null = null;
+
+  constructor (engine: ValidatorRegexEngine, node: RdfJsTerm,
+               constraintToTripleMapping: ConstraintToTripleResults,
+               semActHandler: SemActDispatcher) {
+    this.engine = engine as EvalSimple1ErrRegexEngine;
+    if (typeof this.engine.runMatch !== "function")
+      throw Error("MatchDebugger needs " + RegexpModule.name + "'s steppable engine");
+    this.generator = this.engine.runMatch(node, constraintToTripleMapping, semActHandler, null);
+  }
+
+  addBreakpoint ({tc, predicate}: {tc?: ShExJ.TripleConstraint, predicate?: string}) {
+    if (tc) this.breakpoints.tcs.add(tc);
+    if (predicate) this.breakpoints.predicates.add(predicate);
+    return this;
+  }
+
+  protected _hitsBreakpoint (event: MatchDebugEvent) {
+    return event.type === "constraint" &&
+      (this.breakpoints.tcs.has(event.tc) || this.breakpoints.predicates.has(event.tc.predicate));
+  }
+
+  protected _advance (stopWhen: (ev: MatchDebugEvent) => boolean) {
+    if (this.done)
+      return this.current;
+    while (true) {
+      let step;
+      try {
+        step = this.generator.next();
+      } catch (e) {
+        this.done = true;
+        this.error = e as Error;
+        return this.current = {type: "error", error: this.error};
+      }
+      if (step.done) {
+        this.done = true;
+        this.result = step.value;
+        return this.current = {type: "done", result: step.value};
+      }
+      if (stopWhen(step.value) || this._hitsBreakpoint(step.value))
+        return this.current = step.value;
+    }
+  }
+
+  /** pause at the very next event */
+  stepInto () { return this._advance(() => true); }
+
+  /** run the rest of this generation; pause in the next one */
+  stepOver () {
+    const generation = this.current && "generation" in this.current ? this.current.generation : -1;
+    return this._advance(event => event.generation > generation);
+  }
+
+  /** run to the next breakpoint, or to completion */
+  continue () { return this._advance(() => false); }
+
+  /** worklist snapshot (see liveThreads) */
+  threads () { return this.engine.liveThreads(); }
+}

@@ -364,7 +364,13 @@ ul {
           </div>
         </div>
         <div style="clear:both; padding-top: .5em;">
-          <button id="validate">validate (ctl-enter)</button>
+          <button id="validate">validate (ctl-enter)</button> <button id="debugValidate" title="step through a triple-expression match (enable the language-aware editors; gutter clicks in the schema set breakpoints)">🐞</button>
+          <span id="valDebugControls" style="display:none">
+            <select id="valDbgMatches" title="which recorded node@shape match to step through"></select>
+            <button id="valDbgContinue" title="continue">▶</button><button id="valDbgInto" title="step">⤵</button><button id="valDbgOver" title="run to the next generation">⏭</button><button id="valDbgStop" title="stop">⏹</button>
+            <span id="valDbgStatus" style="font-size: small"></span>
+            <span id="valDbgThreads" title="this generation's threads (• = already advanced); hover or click for a thread's state" style="font-size: small"></span>
+          </span>
         </div>
       </div>
       <div class="panel">

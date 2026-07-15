@@ -22,8 +22,18 @@ node**.
 > engines take optional `debugHooks.onConstraint` (threaded through
 > `ShExValidator`'s options), and `shex-debug` steps into them --
 > `b LINE` prefers the constraint on the line, `bp PRED` breaks on a
-> predicate.  Still designed-only: the browser validation panel over
-> worker + Atomics (phase 6).
+> predicate.
+> Browser validation debugging shipped as **capture + replay** (see §1):
+> the validate-side 🐞 in shex-simple/shexmap-simple reruns the
+> validation with `capturingRegexModule` recording every
+> `regexEngine.match()` invocation, then replays any recorded
+> node@shape match through eval-simple-1err's `runMatch()` generator /
+> `MatchDebugger` -- schema-gutter breakpoints, ▶⤵⏭⏹ stepping (⏭ = next
+> NFA generation), and a threads pane whose hover/click renders a
+> thread's aspects: state-machine position (highlighted in the schema
+> pane), repeat counts, and its matched-triples partition.  Still
+> designed-only: LIVE whole-validation stepping in the browser (worker +
+> Atomics, phase 6) -- the CLI `shex-debug` already steps live.
 
 ## 1. The central problem: suspending an engine
 
@@ -34,7 +44,8 @@ them, matched to what we own:
 | technique | applies to | why |
 |---|---|---|
 | **generator refactor** (engine yields step events; a driver decides when to call `next()`) | ThreadedMaterializer — done | we own the code and it was already a flat interpreter loop; the sync `materialize()` just drains the generator, so non-debug behavior is byte-identical |
-| **worker + `Atomics.wait`** (engine runs synchronously in a Worker; each step event posts to the UI and blocks on a SharedArrayBuffer until the UI signals resume) | ShExValidator | the validator and its regex engines are deeply recursive synchronous code; a generator refactor would be invasive. Blocking a worker is the standard trick for pausing sync code, and the web apps already have the worker scaffolding (`ShExWorkerThread.js`, `WorkerMarshalling`) |
+| **worker + `Atomics.wait`** (engine runs synchronously in a Worker; each step event posts to the UI and blocks on a SharedArrayBuffer until the UI signals resume) | live whole-validation stepping in a browser | the recursive `ShExValidator` proper can't yield mid-flight on the main thread; blocking a worker is the standard trick, and the web apps already have the worker scaffolding (`ShExWorkerThread.js`, `WorkerMarshalling`) |
+| **capture + generator replay** (`capturingRegexModule` records every `match()`'s inputs during a free-running validation; `eval-simple-1err.runMatch()` -- its PikeVM loop was already a flat worklist -- replays any of them as a steppable generator) | triple-expression matches in the browser — done | no suspension needed at all: the validation has already finished when stepping starts, so the main thread pauses simply by not calling `next()` |
 | async/await rewrite | (rejected) | would fork the validator API and slow the hot path |
 
 `Atomics.wait` requires `SharedArrayBuffer`, which requires cross-origin
@@ -169,8 +180,12 @@ single-threaded) — `shexmap-debug` can ship first.
 5. ✅ Validator TC-level events: regex-engine `debugHooks.onConstraint`
    in both engines, a `debugHooks` validator option, and constraint
    stepping/breakpoints (`b LINE`, `bp PRED`) in `shex-debug`.
-6. Browser validation debugging (worker gate + Atomics) and a unified
-   panel over both engines.
+6. Browser validation debugging:
+   - ✅ triple-expression matches via capture + replay
+     (`capturingRegexModule` + `MatchDebugger`) with per-thread
+     state-machine position / repeats / matched-partition views;
+   - live whole-validation stepping (worker gate + Atomics) and a
+     unified panel over both engines remain.
 
 ## 8. Risks / notes
 

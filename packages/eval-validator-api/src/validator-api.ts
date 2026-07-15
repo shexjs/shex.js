@@ -57,6 +57,40 @@ export interface ValidatorRegexModule {
   compile(schema: ShExJ.Schema, shape: ShExJ.Shape, index: SchemaIndex, debugHooks?: RegexDebugHooks): ValidatorRegexEngine
 }
 
+/** one recorded regexEngine.match() invocation, replayable by a debugger
+ * (e.g. eval-simple-1err's MatchDebugger) */
+export interface MatchCapture {
+  shape: ShExJ.Shape;
+  node: RdfJs.Term;
+  constraintToTripleMapping: ConstraintToTripleResults;
+  semActHandler: SemActDispatcher;
+  engine: ValidatorRegexEngine;
+  result: shapeExprTest;
+}
+
+/** capturingRegexModule - wrap a regex module so every match() run during a
+ * validation is recorded with its inputs; a debugger can then replay any of
+ * them step by step (doc/debugger-design.md).  Note that replay re-dispatches
+ * the match's semantic actions. */
+export function capturingRegexModule (inner: ValidatorRegexModule): {module: ValidatorRegexModule, captures: MatchCapture[]} {
+  const captures: MatchCapture[] = [];
+  const module: ValidatorRegexModule = {
+    name: inner.name + "-capturing",
+    description: inner.description + " (recording match invocations)",
+    compile: (schema, shape, index, debugHooks) => {
+      const engine = inner.compile(schema, shape, index, debugHooks);
+      return {
+        match: (node, constraintToTripleMapping, semActHandler, trace) => {
+          const result = engine.match(node, constraintToTripleMapping, semActHandler, trace);
+          captures.push({shape, node, constraintToTripleMapping, semActHandler, engine, result});
+          return result;
+        }
+      };
+    }
+  };
+  return {module, captures};
+}
+
 export interface ValidatorRegexEngine {
   match(
     point: RdfJs.Term,

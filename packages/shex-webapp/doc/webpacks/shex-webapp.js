@@ -5921,7 +5921,7 @@ if (true)
 var __webpack_unused_export__;
 
 __webpack_unused_export__ = ({ value: true });
-exports.a = void 0;
+exports.b9 = exports.aq = void 0;
 const term_1 = __webpack_require__(2130);
 var ControlType;
 (function (ControlType) {
@@ -5983,7 +5983,7 @@ class RegExpPair {
     }
 }
 const UNBOUNDED = -1;
-exports.a = {
+exports.aq = {
     name: "eval-simple-1err",
     description: "simple regular expression engine with n out states",
     /* compile - compile regular expression and index triple constraints
@@ -6145,6 +6145,7 @@ class RegExpThread {
 }
 class EvalSimple1ErrRegexEngine {
     constructor(shape, states, startNo, matchstate, debugHooks) {
+        this._live = null;
         this.shape = shape;
         this.end = matchstate;
         this.states = states;
@@ -6152,8 +6153,29 @@ class EvalSimple1ErrRegexEngine {
         this.debugHooks = debugHooks;
     }
     match(node, constraintToTripleMapping, semActHandler, trace) {
+        // drain the step generator; debuggers drive runMatch() themselves
+        const it = this.runMatch(node, constraintToTripleMapping, semActHandler, trace);
+        let step = it.next();
+        while (!step.done)
+            step = it.next();
+        return step.value;
+    }
+    /** runMatch - the NFA simulation as a generator of debugger step events
+     * (c.f. ThreadedMaterializer.run; doc/debugger-design.md).  Yields
+     * {type: "constraint", tc, generation, thread}  a thread about to consume
+     *                                               triples for a constraint
+     * {type: "fail", tc, generation, thread}        ...and it spawned nothing
+     * {type: "accept", generation, thread}          a thread reached the end
+     *                                               state with all triples
+     *                                               accounted for
+     * and returns the shapeExprTest.  liveThreads() snapshots the worklist
+     * between events.
+     */
+    *runMatch(node, constraintToTripleMapping, semActHandler, trace) {
         const thisEvalSimple1ErrRegexEngine = this;
         let clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
+        let generation = 0;
+        this._live = () => ({ clist, nlist }); // closes over the swapped lists
         const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
             tripleResult.forEach(res => allTriples.add(res.triple));
             return allTriples;
@@ -6176,6 +6198,8 @@ class EvalSimple1ErrRegexEngine {
                 // may be an Accept state
                 if (state instanceof TripleConstraintState) {
                     const tripleConstraint = state.c;
+                    yield { type: "constraint", tc: tripleConstraint, generation,
+                        thread: this.threadView(thread) };
                     if (this.debugHooks && this.debugHooks.onConstraint)
                         this.debugHooks.onConstraint(tripleConstraint, {
                             node,
@@ -6199,6 +6223,9 @@ class EvalSimple1ErrRegexEngine {
                             }
                         })());
                     }
+                    if (nlist.length === nlistlen)
+                        yield { type: "fail", tc: tripleConstraint, generation,
+                            thread: this.threadView(thread) };
                 }
                 if (trace)
                     // @ts-ignore
@@ -6214,14 +6241,17 @@ class EvalSimple1ErrRegexEngine {
             const t = clist;
             clist = nlist;
             nlist = t;
+            ++generation;
             const longerChosen = clist.reduce((ret, elt) => {
                 const matchedAll = elt.matched.reduce((ret, m) => {
                     return ret + m.triples.length; // count matched triples
                 }, 0) === allTriples.size;
                 return ret !== null ? ret : (elt.state === thisEvalSimple1ErrRegexEngine.end && matchedAll) ? elt : null;
             }, null);
-            if (longerChosen)
+            if (longerChosen) {
                 chosen = longerChosen;
+                yield { type: "accept", generation, thread: this.threadView(longerChosen) };
+            }
         }
         if (chosen === null)
             return reportError([]);
@@ -6282,6 +6312,35 @@ class EvalSimple1ErrRegexEngine {
         return "errors" in chosen.matched ?
             chosen.matched :
             this.matchedToResult(chosen.matched, constraintToTripleMapping, semActHandler);
+    }
+    /** the inspectable snapshot of one regex thread */
+    threadView(thread) {
+        const state = this.states[thread.state];
+        const term = (t) => t.termType === "Literal" ? JSON.stringify(t.value)
+            : t.termType === "BlankNode" ? "_:" + t.value : t.value;
+        return {
+            stateNo: thread.state,
+            at: state instanceof TripleConstraintState ? state.c.predicate
+                : state instanceof MatchState ? "match" : "control",
+            tc: state instanceof TripleConstraintState ? state.c : undefined,
+            repeats: Object.assign({}, thread.repeats),
+            matched: thread.matched.map(m => ({
+                predicate: m.c.predicate,
+                triples: m.triples.map(t => term(t.subject) + " " + term(t.predicate) + " " + term(t.object)),
+            })),
+            errors: thread.errors.length,
+        };
+    }
+    /** snapshot of the worklist for debugger UIs: this generation's threads,
+     * then (flagged next: true) the ones already advanced into the coming
+     * generation.  Empty before the first runMatch(); after completion it
+     * shows the final generation. */
+    liveThreads() {
+        if (!this._live)
+            return [];
+        const { clist, nlist } = this._live();
+        return clist.map(th => this.threadView(th))
+            .concat(nlist.map(th => Object.assign(this.threadView(th), { next: true })));
     }
     addStates(nlist, thread, taken) {
         const state = this.states[thread.state];
@@ -6489,6 +6548,78 @@ class EvalSimple1ErrRegexEngine {
     }
 }
 EvalSimple1ErrRegexEngine.algorithm = "rbenx"; // rename at will; only used for debugging
+/** MatchDebugger - step-through control over one shape's NFA simulation
+ * (c.f. MaterializerDebugger in @shexjs/extension-map).  Drives
+ * runMatch() one event at a time; entirely synchronous.
+ *
+ *   const engine = RegexpModule.compile(schema, shape, index);
+ *   const dbg = new MatchDebugger(engine, node, tc2t, semActHandler);
+ *   dbg.addBreakpoint({predicate: "http://a.example/p"});
+ *   let at = dbg.continue();   // to the breakpoint (or completion)
+ *   at = dbg.stepInto();       // next event
+ *   at = dbg.stepOver();       // next generation (all threads stepped once)
+ *   dbg.threads();             // worklist snapshot: state-machine position,
+ *                              // repeats, matched-triples partition
+ *   ... dbg.done, dbg.result, dbg.error
+ */
+class MatchDebugger {
+    constructor(engine, node, constraintToTripleMapping, semActHandler) {
+        this.breakpoints = { tcs: new Set(), predicates: new Set() };
+        this.current = null;
+        this.done = false;
+        this.result = null;
+        this.error = null;
+        this.engine = engine;
+        if (typeof this.engine.runMatch !== "function")
+            throw Error("MatchDebugger needs " + exports.aq.name + "'s steppable engine");
+        this.generator = this.engine.runMatch(node, constraintToTripleMapping, semActHandler, null);
+    }
+    addBreakpoint({ tc, predicate }) {
+        if (tc)
+            this.breakpoints.tcs.add(tc);
+        if (predicate)
+            this.breakpoints.predicates.add(predicate);
+        return this;
+    }
+    _hitsBreakpoint(event) {
+        return event.type === "constraint" &&
+            (this.breakpoints.tcs.has(event.tc) || this.breakpoints.predicates.has(event.tc.predicate));
+    }
+    _advance(stopWhen) {
+        if (this.done)
+            return this.current;
+        while (true) {
+            let step;
+            try {
+                step = this.generator.next();
+            }
+            catch (e) {
+                this.done = true;
+                this.error = e;
+                return this.current = { type: "error", error: this.error };
+            }
+            if (step.done) {
+                this.done = true;
+                this.result = step.value;
+                return this.current = { type: "done", result: step.value };
+            }
+            if (stopWhen(step.value) || this._hitsBreakpoint(step.value))
+                return this.current = step.value;
+        }
+    }
+    /** pause at the very next event */
+    stepInto() { return this._advance(() => true); }
+    /** run the rest of this generation; pause in the next one */
+    stepOver() {
+        const generation = this.current && "generation" in this.current ? this.current.generation : -1;
+        return this._advance(event => event.generation > generation);
+    }
+    /** run to the next breakpoint, or to completion */
+    continue() { return this._advance(() => false); }
+    /** worklist snapshot (see liveThreads) */
+    threads() { return this.engine.liveThreads(); }
+}
+exports.b9 = MatchDebugger;
 //# sourceMappingURL=eval-simple-1err.js.map
 
 /***/ },
@@ -6823,6 +6954,7 @@ var __webpack_unused_export__;
 
 __webpack_unused_export__ = ({ value: true });
 exports.MapArray = void 0;
+exports.$ = capturingRegexModule;
 class MapArray {
     constructor() {
         this.data = new Map(); // public 'cause I don't know how to fix reduce to use this.data
@@ -6850,6 +6982,28 @@ class MapArray {
     }
 }
 exports.MapArray = MapArray;
+/** capturingRegexModule - wrap a regex module so every match() run during a
+ * validation is recorded with its inputs; a debugger can then replay any of
+ * them step by step (doc/debugger-design.md).  Note that replay re-dispatches
+ * the match's semantic actions. */
+function capturingRegexModule(inner) {
+    const captures = [];
+    const module = {
+        name: inner.name + "-capturing",
+        description: inner.description + " (recording match invocations)",
+        compile: (schema, shape, index, debugHooks) => {
+            const engine = inner.compile(schema, shape, index, debugHooks);
+            return {
+                match: (node, constraintToTripleMapping, semActHandler, trace) => {
+                    const result = engine.match(node, constraintToTripleMapping, semActHandler, trace);
+                    captures.push({ shape, node, constraintToTripleMapping, semActHandler, engine, result });
+                    return result;
+                }
+            };
+        }
+    };
+    return { module, captures };
+}
 
 
 /***/ },
@@ -16332,8 +16486,10 @@ ShExWebApp = (function () {
     Writer:               __webpack_require__(530),
     Loader:               __webpack_require__(6702),
     Parser:               __webpack_require__(8170),
-    "eval-simple-1err":   (__webpack_require__(1636)/* .RegexpModule */ .a),
+    "eval-simple-1err":   (__webpack_require__(1636)/* .RegexpModule */ .aq),
     "eval-threaded-nerr": (__webpack_require__(4516)/* .RegexpModule */ .a),
+    MatchDebugger:        (__webpack_require__(1636)/* .MatchDebugger */ .b9),
+    capturingRegexModule: (__webpack_require__(4085)/* .capturingRegexModule */ .$),
     ShapeMap:             shapeMap,
     ShapeMapParser:       shapeMap.Parser,
     JsYaml:               __webpack_require__(9515),

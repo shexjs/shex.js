@@ -27,6 +27,7 @@
     "@rdfjs/types": "^1.1.0",
     "@shexjs/editor-services": "^1.0.0-alpha.29",
     "@shexjs/eval-simple-1err": "^1.0.0-alpha.29",
+    "@shexjs/eval-validator-api": "^1.0.0-alpha.29",
     "@shexjs/eval-threaded-nerr": "^1.0.0-alpha.29",
     "@shexjs/loader": "^1.0.0-alpha.28",
     "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.29",

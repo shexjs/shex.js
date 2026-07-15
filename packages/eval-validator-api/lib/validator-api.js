@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MapArray = void 0;
+exports.capturingRegexModule = capturingRegexModule;
 class MapArray {
     constructor() {
         this.data = new Map(); // public 'cause I don't know how to fix reduce to use this.data
@@ -28,3 +29,25 @@ class MapArray {
     }
 }
 exports.MapArray = MapArray;
+/** capturingRegexModule - wrap a regex module so every match() run during a
+ * validation is recorded with its inputs; a debugger can then replay any of
+ * them step by step (doc/debugger-design.md).  Note that replay re-dispatches
+ * the match's semantic actions. */
+function capturingRegexModule(inner) {
+    const captures = [];
+    const module = {
+        name: inner.name + "-capturing",
+        description: inner.description + " (recording match invocations)",
+        compile: (schema, shape, index, debugHooks) => {
+            const engine = inner.compile(schema, shape, index, debugHooks);
+            return {
+                match: (node, constraintToTripleMapping, semActHandler, trace) => {
+                    const result = engine.match(node, constraintToTripleMapping, semActHandler, trace);
+                    captures.push({ shape, node, constraintToTripleMapping, semActHandler, engine, result });
+                    return result;
+                }
+            };
+        }
+    };
+    return { module, captures };
+}

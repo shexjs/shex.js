@@ -249,6 +249,65 @@ if (!TEST_browser) {
       expect(paneStyle.width, "width set").to.not.equal("");
     });
 
+    it("should step through a triple-expression match with a thread list", async function () {
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      set("#inputSchema textarea", [
+        "PREFIX : <http://a.example/>",
+        ":S {",
+        "  :p . ;",
+        "  (:q . ;", // gutter breakpoints are line-granular: :q needs its own line
+        "   :r .){1,2}",
+        "}",
+      ].join("\n"));
+      set("#inputData textarea", [
+        "PREFIX : <http://a.example/>",
+        ":x :p 0 ; :q 1 ; :r 2 ; :q 3 ; :r 4 .",
+      ].join("\n"));
+      set("#textMap", "<http://a.example/x>@<http://a.example/S>");
+      await shared.promise;
+
+      // a gutter breakpoint on the :q constraint's line
+      const pane = shared.Caches.editorSupport.panes.inputSchema;
+      const schemaText = $("#inputSchema textarea").first().val();
+      pane.toggleBreakpoint(schemaText.indexOf(":q ."));
+
+      $("#debugValidate").trigger("click");
+      const session = await shared.promise;
+      expect(session, "session started: " + $("#results").text().substring(0, 120)).to.exist;
+      expect($("#valDebugControls").css("display")).not.to.equal("none");
+      expect($("#valDbgMatches option").length, "one recorded match").to.equal(1);
+      expect($("#valDbgMatches option").first().text()).to.include("x@");
+
+      // step into: the first constraint event, with live threads listed
+      $("#valDbgInto").trigger("click");
+      expect($("#valDbgStatus").text()).to.include("at <http://a.example/p>");
+      expect($("#valDbgThreads button").length, "threads listed").to.be.above(0);
+
+      // continue runs to the :q gutter breakpoint
+      expect(session.pane.listBreakpoints().length, "gutter breakpoint listed").to.equal(1);
+      expect([...session.dbg.breakpoints.tcs][0].predicate, "breakpoint constraint")
+        .to.equal("http://a.example/q");
+      $("#valDbgContinue").trigger("click");
+      expect($("#valDbgStatus").text()).to.include("at <http://a.example/q>");
+
+      // a thread's aspects: state-machine position, repeats, matched partition
+      $("#valDbgThreads button").first().trigger("mouseenter");
+      expect($("#results").text()).to.include("matched partition");
+
+      // run past the remaining breakpoint hits to the end of the match
+      for (let i = 0; i < 10 && !$("#valDbgStatus").text().includes("match finished"); ++i)
+        $("#valDbgContinue").trigger("click");
+      expect($("#valDbgStatus").text()).to.include("match finished: matched");
+
+      $("#valDbgStop").trigger("click");
+      expect($("#valDebugControls").css("display")).to.equal("none");
+      pane.toggleBreakpoint(schemaText.indexOf(":q .")); // clean up the gutter
+    });
+
     it("should toggle editors off and on from the menu select", function () {
       const schemaTextarea = $("#inputSchema textarea").first();
       const before = schemaTextarea.val();

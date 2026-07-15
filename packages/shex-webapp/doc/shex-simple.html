@@ -2,7 +2,7 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>ShEx2 — Simple Online Validator</title>
+    <title>ShEx2 â Simple Online Validator</title>
     <meta name="description" content="simple ShEx2 demo" />
     <script src="webpacks/jquery-components.min.js"></script>
     <style>
@@ -218,9 +218,9 @@ ul {
     </svg>
 
     <div id="title">
-      <img src="ShEx-bones-min.svg" class="ShExLogo" alt="ShEx Icon"/><h1 style="float:left;">ShEx2 — Simple Online Validator</h1>
+      <img src="ShEx-bones-min.svg" class="ShExLogo" alt="ShEx Icon"/><h1 style="float:left;">ShEx2 â Simple Online Validator</h1>
       <!-- <ul id="navlist" style="float:left; padding-left: 1em;"> -->
-      <!--   <li>‣ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
+      <!--   <li>â£ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
       <!-- </ul> -->
       <form id="menuForm">
           <button id="menu-button" title="click for menu">
@@ -297,7 +297,7 @@ ul {
 
     <div id="inputarea">
       <div id="inputSchema" class="panel">
-        <h2 class="status"> </h2>
+        <h2 class="status">Â </h2>
         <textarea rows="25" class="schema droparea" style="width: 100%" spellcheck="false"></textarea>
         <div>
           <div id="manifestDrop" class="droparea">
@@ -341,7 +341,7 @@ ul {
         </div>
       </div>
       <div id="inputData" class="panel">
-        <h2 class="status"> </h2>
+        <h2 class="status">Â </h2>
         <textarea rows="25" class="data droparea" style="width: 100%" spellcheck="false"></textarea>
         <div style="margin-left: .1em;">
           <div class="passes" style="float:left; display:none;">
@@ -364,11 +364,17 @@ ul {
           </div>
         </div>
         <div style="clear:both; padding-top: .5em;"/>
-            <button id="validate">validate (ctl-enter)</button>
+            <button id="validate">validate (ctl-enter)</button> <button id="debugValidate" title="step through a triple-expression match (enable the language-aware editors; gutter clicks in the schema set breakpoints)">🐞</button>
+            <span id="valDebugControls" style="display:none">
+              <select id="valDbgMatches" title="which recorded node@shape match to step through"></select>
+              <button id="valDbgContinue" title="continue">▶</button><button id="valDbgInto" title="step">⤵</button><button id="valDbgOver" title="run to the next generation">⏭</button><button id="valDbgStop" title="stop">⏹</button>
+              <span id="valDbgStatus" style="font-size: small"></span>
+              <span id="valDbgThreads" title="this generation's threads (• = already advanced); hover or click for a thread's state" style="font-size: small"></span>
+            </span>
       </div>
     </div>
     <div id="results">
-      <h2 class="status"> </h2>
+      <h2 class="status">Â </h2>
       <div></div>
     </div>
     <script src="webpacks/n3js.js"></script>
