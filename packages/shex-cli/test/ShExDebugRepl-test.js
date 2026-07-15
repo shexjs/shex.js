@@ -1,4 +1,5 @@
-/** Tests for the shex-debug REPL: shape-level validation stepping over
+/** Tests for the shex-debug REPL: shape-level (tracker) and
+ * constraint-level (regex-engine debugHooks) validation stepping over
  * injectable I/O (the bin only adds a blocking stdin reader).
  */
 "use strict";
@@ -53,23 +54,42 @@ describe("ShExDebugRepl", function () {
     expect(transcript).to.include("conformant");
   });
 
-  it("should step over the nested shape", function () {
+  it("should step over the nested shape and its constraints", function () {
     // first pause is enter :x@<S>; stepping over must skip enter :y@<T>
-    // (depth 2) and land on exit :x (depth 1)
+    // (depth 2) and every constraint event, landing on exit :x (depth 1)
     const {transcript} = session(["n", "c"]);
     const untilExit = transcript.split(/exit/)[0];
     expect(untilExit).not.to.match(/enter :y@/);
+    expect(untilExit).not.to.match(/^at :/m);
     expect(transcript).to.match(/exit {2}:x@.*-> ok/);
     expect(transcript).to.include("conformant");
   });
 
-  it("should break on a shape set by label and by position", function () {
+  it("should step into constraint events", function () {
+    const {transcript} = session(["s", "s", "s", "s", "s", "s", "s", "s"]);
+    expect(transcript).to.match(/at :name for :x \(1 candidate triple\)/);
+    expect(transcript).to.match(/at :ref for :x/);
+    expect(transcript).to.match(/at :val for :y/);
+    expect(transcript).to.include(":name xsd:string ;"); // constraint excerpt
+    expect(transcript).to.include("conformant");
+  });
+
+  it("should break on a predicate", function () {
+    const {transcript} = session(["bp :val", "c", "c"]);
+    expect(transcript).to.include("breakpoint on predicate :val");
+    expect(transcript).to.match(/at :val for :y/);
+    expect(transcript).to.include("conformant");
+  });
+
+  it("should break on a shape by label and on a constraint by position", function () {
     const tLine = schemaText.split("\n").findIndex(l => l.startsWith("<T>")) + 1;
     const byLabel = session(["bs <T>", "c", "c", "c"]);
     expect(byLabel.transcript).to.match(/breakpoint on shape .*T/);
     expect(byLabel.transcript).to.match(/enter :y@/);
+    // a position breakpoint prefers the constraint on that line
     const byPosition = session(["b " + tLine, "c", "c", "c"]);
-    expect(byPosition.transcript).to.match(/enter :y@/);
+    expect(byPosition.transcript).to.match(/breakpoint on .*:val/);
+    expect(byPosition.transcript).to.match(/at :val for :y/);
   });
 
   it("should break on the lexical form of a focus node", function () {

@@ -5988,7 +5988,7 @@ exports.a = {
     description: "simple regular expression engine with n out states",
     /* compile - compile regular expression and index triple constraints
      */
-    compile: (_schema, shape, index) => {
+    compile: (_schema, shape, index, debugHooks) => {
         const expression = shape.expression;
         return NFA();
         function NFA() {
@@ -6002,7 +6002,7 @@ exports.a = {
                 patch(pair.tail, matchstate);
                 startNo = pair.start;
             }
-            return new EvalSimple1ErrRegexEngine(shape, states, startNo, matchstate);
+            return new EvalSimple1ErrRegexEngine(shape, states, startNo, matchstate, debugHooks);
             function maybeAddRept(expr, start, tail) {
                 if ((expr.min == undefined || expr.min === 1) &&
                     (expr.max == undefined || expr.max === 1))
@@ -6144,11 +6144,12 @@ class RegExpThread {
     }
 }
 class EvalSimple1ErrRegexEngine {
-    constructor(shape, states, startNo, matchstate) {
+    constructor(shape, states, startNo, matchstate, debugHooks) {
         this.shape = shape;
         this.end = matchstate;
         this.states = states;
         this.start = startNo;
+        this.debugHooks = debugHooks;
     }
     match(node, constraintToTripleMapping, semActHandler, trace) {
         const thisEvalSimple1ErrRegexEngine = this;
@@ -6175,6 +6176,11 @@ class EvalSimple1ErrRegexEngine {
                 // may be an Accept state
                 if (state instanceof TripleConstraintState) {
                     const tripleConstraint = state.c;
+                    if (this.debugHooks && this.debugHooks.onConstraint)
+                        this.debugHooks.onConstraint(tripleConstraint, {
+                            node,
+                            triples: constraintToTripleMapping.get(tripleConstraint).map(pair => pair.triple),
+                        });
                     let min = state.c.min !== undefined ? state.c.min : 1;
                     let max = state.c.max !== undefined ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
                     if (!thread.avail.has(tripleConstraint))
@@ -6259,7 +6265,7 @@ class EvalSimple1ErrRegexEngine {
                         if (!threadMatches.has(triple)) {
                             const error = {
                                 type: "ExcessTripleViolation",
-                                property: lastState.c.predicate,
+                                property: lastState.c.predicate, // TODO: needed?
                                 triple: triple,
                             };
                             if (valueExpr)
@@ -6521,17 +6527,20 @@ exports.a = {
     description: "emulation of regular expression engine with error permutations",
     /* compile - compile regular expression and index triple constraints
      */
-    compile: (_schema, shape, index) => {
-        return new EvalThreadedNErrRegexEngine(shape, index); // not called if there's no expression
+    compile: (_schema, shape, index, debugHooks) => {
+        return new EvalThreadedNErrRegexEngine(shape, index, debugHooks); // not called if there's no expression
     }
 };
 class EvalThreadedNErrRegexEngine {
-    constructor(shape, index) {
+    constructor(shape, index, debugHooks) {
         this.shape = shape;
         this.index = index;
+        this.debugHooks = debugHooks;
+        this.node = null; // the focus node while match() runs
         this.outerExpression = shape.expression;
     }
     match(node, constraintToTripleMapping, semActHandler, _trace) {
+        this.node = node;
         const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
             tripleResult.forEach(res => allTriples.add(res.triple));
             return allTriples;
@@ -6656,6 +6665,11 @@ class EvalThreadedNErrRegexEngine {
     }
     // Early return in case of insufficient matching triples
     matchTripleConstraint(constraint, min, max, thread, constraintToTripleMapping, semActHandler) {
+        if (this.debugHooks && this.debugHooks.onConstraint)
+            this.debugHooks.onConstraint(constraint, {
+                node: this.node,
+                triples: constraintToTripleMapping.get(constraint).map(pair => pair.triple),
+            });
         if (thread.avail.get(constraint) === undefined)
             thread.avail.set(constraint, constraintToTripleMapping.get(constraint).map(pair => pair.triple));
         const taken = thread.avail.get(constraint).splice(0, min);
@@ -13637,13 +13651,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ShExValidator = exports.ShapeExprValidationContext = exports.InterfaceOptions = void 0;
 exports.resultMapToShapeExprTest = resultMapToShapeExprTest;
@@ -14147,7 +14171,7 @@ class ShExValidator {
         const allT2TCs = new TripleToTripleConstraints(t2tcs, extendsTCs, tc2exts);
         const partitionErrors = [];
         // only construct a regexp engine if shape has a triple expression
-        const regexEngine = shape.expression === undefined ? null : this.regexModule.compile(this.schema, shape, this.index);
+        const regexEngine = shape.expression === undefined ? null : this.regexModule.compile(this.schema, shape, this.index, this.options.debugHooks);
         const extendsResultCache = new Map();
         let firstPruned = null; // fallback for classic error reporting
         let triedSome = false;

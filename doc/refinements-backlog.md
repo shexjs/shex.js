@@ -91,8 +91,9 @@ toolchain).  Roughly grouped; items link to the docs that motivated them.
 
 ## Validation engines
 
-- `debugHooks.onConstraint` in `eval-threaded-nerr`/`eval-simple-1err` for
-  constraint-level debug events (doc/debugger-design.md §4).
+- `debugHooks.onConstraint` shipped in both engines (doc/debugger-design.md
+  §4); a richer payload (the engine's thread/backtracking state, pass/fail
+  per candidate triple) and an `onConstraintResult` counterpart remain.
 - Formalize the validator `tracker` as the shape-level debug event source.
 
 ## Toolchain / modernization leftovers

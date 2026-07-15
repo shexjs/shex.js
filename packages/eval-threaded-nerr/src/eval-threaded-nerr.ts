@@ -3,6 +3,7 @@ import {rdfJsTerm2Ld, SchemaIndex} from "@shexjs/term";
 import type {Quad as RdfJsQuad, Term as RdfJsTerm} from '@rdfjs/types';
 import {
   ConstraintToTripleResults,
+  RegexDebugHooks,
   SemActDispatcher,
   ValidatorRegexEngine,
   ValidatorRegexModule
@@ -88,8 +89,8 @@ export const RegexpModule: ValidatorRegexModule = {
 
   /* compile - compile regular expression and index triple constraints
    */
-  compile: (_schema: ShExJ.Schema, shape: ShExJ.Shape, index: SchemaIndex): ValidatorRegexEngine => {
-    return new EvalThreadedNErrRegexEngine(shape, index); // not called if there's no expression
+  compile: (_schema: ShExJ.Schema, shape: ShExJ.Shape, index: SchemaIndex, debugHooks?: RegexDebugHooks): ValidatorRegexEngine => {
+    return new EvalThreadedNErrRegexEngine(shape, index, debugHooks); // not called if there's no expression
   }
 }
 
@@ -108,15 +109,18 @@ interface TripleTestedErrors {
 
 class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
   public outerExpression: ShExJ.tripleExprOrRef;
+  protected node: RdfJsTerm | null = null; // the focus node while match() runs
   constructor(
       public shape: ShExJ.Shape,
       public index: SchemaIndex,
+      public debugHooks?: RegexDebugHooks,
   ) {
     this.outerExpression = shape.expression!;
   }
 
   match (node: RdfJsTerm, constraintToTripleMapping: ConstraintToTripleResults,
          semActHandler: SemActDispatcher, _trace: object[] | null): shapeExprTest {
+    this.node = node;
     const allTriples = constraintToTripleMapping.reduce<Set<RdfJsQuad>>(
         (allTriples, _tripleConstraint, tripleResult) => {
             tripleResult.forEach(res => allTriples.add(res.triple));
@@ -266,6 +270,11 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
   matchTripleConstraint (constraint: ShExJ.TripleConstraint, min: number, max: number,
                          thread: RegexpThread, constraintToTripleMapping: ConstraintToTripleResults,
                          semActHandler: SemActDispatcher): RegexpThread[] {
+    if (this.debugHooks && this.debugHooks.onConstraint)
+      this.debugHooks.onConstraint(constraint, {
+        node: this.node!,
+        triples: constraintToTripleMapping.get(constraint)!.map(pair => pair.triple),
+      });
     if (thread.avail.get(constraint) === undefined)
       thread.avail.set(constraint, constraintToTripleMapping.get(constraint)!.map(pair => pair.triple));
     const taken = thread.avail.get(constraint)!.splice(0, min);

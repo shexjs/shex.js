@@ -18,8 +18,11 @@ node**.
 > events (shape-level stepping; suspension is just blocking on stdin — no
 > worker needed in a terminal), and `shex-serve --coi` sends the COOP/COEP
 > headers browser-side suspension will need.
-> Still designed-only: TC-level validation events (regex-engine
-> `debugHooks`, §4/phase 5) and the browser validation panel over
+> Constraint-level validation events shipped too (phase 5): both regex
+> engines take optional `debugHooks.onConstraint` (threaded through
+> `ShExValidator`'s options), and `shex-debug` steps into them --
+> `b LINE` prefers the constraint on the line, `bp PRED` breaks on a
+> predicate.  Still designed-only: the browser validation panel over
 > worker + Atomics (phase 6).
 
 ## 1. The central problem: suspending an engine
@@ -155,7 +158,9 @@ single-threaded) — `shexmap-debug` can ship first.
 4. ✅ Validator shape-level stepping (CLI): `shex-debug` REPL over the
    tracker (blocking stdin is the suspension — a terminal debugger needs
    no worker); `--coi` in shex-serve for the browser side to come.
-5. Validator TC-level events: regex-engine `debugHooks`.
+5. ✅ Validator TC-level events: regex-engine `debugHooks.onConstraint`
+   in both engines, a `debugHooks` validator option, and constraint
+   stepping/breakpoints (`b LINE`, `bp PRED`) in `shex-debug`.
 6. Browser validation debugging (worker gate + Atomics) and a unified
    panel over both engines.
 

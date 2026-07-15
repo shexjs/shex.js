@@ -27,17 +27,20 @@ exports.RegexpModule = {
     description: "emulation of regular expression engine with error permutations",
     /* compile - compile regular expression and index triple constraints
      */
-    compile: (_schema, shape, index) => {
-        return new EvalThreadedNErrRegexEngine(shape, index); // not called if there's no expression
+    compile: (_schema, shape, index, debugHooks) => {
+        return new EvalThreadedNErrRegexEngine(shape, index, debugHooks); // not called if there's no expression
     }
 };
 class EvalThreadedNErrRegexEngine {
-    constructor(shape, index) {
+    constructor(shape, index, debugHooks) {
         this.shape = shape;
         this.index = index;
+        this.debugHooks = debugHooks;
+        this.node = null; // the focus node while match() runs
         this.outerExpression = shape.expression;
     }
     match(node, constraintToTripleMapping, semActHandler, _trace) {
+        this.node = node;
         const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
             tripleResult.forEach(res => allTriples.add(res.triple));
             return allTriples;
@@ -162,6 +165,11 @@ class EvalThreadedNErrRegexEngine {
     }
     // Early return in case of insufficient matching triples
     matchTripleConstraint(constraint, min, max, thread, constraintToTripleMapping, semActHandler) {
+        if (this.debugHooks && this.debugHooks.onConstraint)
+            this.debugHooks.onConstraint(constraint, {
+                node: this.node,
+                triples: constraintToTripleMapping.get(constraint).map(pair => pair.triple),
+            });
         if (thread.avail.get(constraint) === undefined)
             thread.avail.set(constraint, constraintToTripleMapping.get(constraint).map(pair => pair.triple));
         const taken = thread.avail.get(constraint).splice(0, min);

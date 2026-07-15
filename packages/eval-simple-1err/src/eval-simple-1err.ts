@@ -3,6 +3,7 @@ import {rdfJsTerm2Ld, SchemaIndex} from "@shexjs/term";
 import type {Quad as RdfJsQuad, Term as RdfJsTerm} from '@rdfjs/types';
 import {
   ConstraintToTripleResults,
+  RegexDebugHooks,
   SemActDispatcher,
   ValidatorRegexEngine,
   ValidatorRegexModule
@@ -111,7 +112,7 @@ export const RegexpModule: ValidatorRegexModule = {
 
   /* compile - compile regular expression and index triple constraints
    */
-  compile: (_schema: ShExJ.Schema, shape: ShExJ.Shape, index: SchemaIndex): ValidatorRegexEngine => {
+  compile: (_schema: ShExJ.Schema, shape: ShExJ.Shape, index: SchemaIndex, debugHooks?: RegexDebugHooks): ValidatorRegexEngine => {
     const expression = shape.expression;
     return NFA();
 
@@ -126,7 +127,7 @@ export const RegexpModule: ValidatorRegexModule = {
         patch(pair.tail, matchstate);
         startNo = pair.start;
       }
-      return new EvalSimple1ErrRegexEngine(shape, states, startNo, matchstate);
+      return new EvalSimple1ErrRegexEngine(shape, states, startNo, matchstate, debugHooks);
 
       function maybeAddRept(expr: ShExJ.EachOf | ShExJ.OneOf, start: number, tail: number[]): RegExpPair {
         if ((expr.min == undefined || expr.min === 1) &&
@@ -305,12 +306,14 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
   private readonly states: RegExpState[];
   private readonly start: number;
   private readonly shape: ShExJ.Shape;
+  private readonly debugHooks?: RegexDebugHooks;
 
-  constructor(shape: ShExJ.Shape, states: RegExpState[], startNo: number, matchstate: number) {
+  constructor(shape: ShExJ.Shape, states: RegExpState[], startNo: number, matchstate: number, debugHooks?: RegexDebugHooks) {
     this.shape = shape;
     this.end = matchstate;
     this.states = states;
     this.start = startNo;
+    this.debugHooks = debugHooks;
   }
 
   match(node: RdfJsTerm, constraintToTripleMapping: ConstraintToTripleResults, semActHandler: SemActDispatcher, trace: object[] | null): shapeExprTest {
@@ -339,6 +342,11 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
         // may be an Accept state
         if (state instanceof TripleConstraintState) {
           const tripleConstraint = state.c;
+          if (this.debugHooks && this.debugHooks.onConstraint)
+            this.debugHooks.onConstraint(tripleConstraint, {
+              node,
+              triples: constraintToTripleMapping.get(tripleConstraint)!.map(pair => pair.triple),
+            });
           let min = state.c.min !== undefined ? state.c.min : 1;
           let max = state.c.max !== undefined ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
           if (!thread.avail.has(tripleConstraint))

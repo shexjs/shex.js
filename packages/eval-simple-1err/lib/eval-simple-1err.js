@@ -67,7 +67,7 @@ exports.RegexpModule = {
     description: "simple regular expression engine with n out states",
     /* compile - compile regular expression and index triple constraints
      */
-    compile: (_schema, shape, index) => {
+    compile: (_schema, shape, index, debugHooks) => {
         const expression = shape.expression;
         return NFA();
         function NFA() {
@@ -81,7 +81,7 @@ exports.RegexpModule = {
                 patch(pair.tail, matchstate);
                 startNo = pair.start;
             }
-            return new EvalSimple1ErrRegexEngine(shape, states, startNo, matchstate);
+            return new EvalSimple1ErrRegexEngine(shape, states, startNo, matchstate, debugHooks);
             function maybeAddRept(expr, start, tail) {
                 if ((expr.min == undefined || expr.min === 1) &&
                     (expr.max == undefined || expr.max === 1))
@@ -223,11 +223,12 @@ class RegExpThread {
     }
 }
 class EvalSimple1ErrRegexEngine {
-    constructor(shape, states, startNo, matchstate) {
+    constructor(shape, states, startNo, matchstate, debugHooks) {
         this.shape = shape;
         this.end = matchstate;
         this.states = states;
         this.start = startNo;
+        this.debugHooks = debugHooks;
     }
     match(node, constraintToTripleMapping, semActHandler, trace) {
         const thisEvalSimple1ErrRegexEngine = this;
@@ -254,6 +255,11 @@ class EvalSimple1ErrRegexEngine {
                 // may be an Accept state
                 if (state instanceof TripleConstraintState) {
                     const tripleConstraint = state.c;
+                    if (this.debugHooks && this.debugHooks.onConstraint)
+                        this.debugHooks.onConstraint(tripleConstraint, {
+                            node,
+                            triples: constraintToTripleMapping.get(tripleConstraint).map(pair => pair.triple),
+                        });
                     let min = state.c.min !== undefined ? state.c.min : 1;
                     let max = state.c.max !== undefined ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
                     if (!thread.avail.has(tripleConstraint))
@@ -338,7 +344,7 @@ class EvalSimple1ErrRegexEngine {
                         if (!threadMatches.has(triple)) {
                             const error = {
                                 type: "ExcessTripleViolation",
-                                property: lastState.c.predicate,
+                                property: lastState.c.predicate, // TODO: needed?
                                 triple: triple,
                             };
                             if (valueExpr)

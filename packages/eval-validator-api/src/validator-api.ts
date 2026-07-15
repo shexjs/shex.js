@@ -42,10 +42,19 @@ export type ConstraintToTripleResults = MapArray<TripleConstraint, TripleResult>
 
 export type T2TcPartition = Map<RdfJsQuad, TripleConstraint>;
 
+/** RegexDebugHooks - optional callbacks a debugger hangs inside the match
+ * loop (doc/debugger-design.md §4).  onConstraint fires each time the
+ * engine (re)considers a TripleConstraint -- including re-visits while
+ * backtracking -- with the candidate triples it matches against. */
+export interface RegexDebugHooks {
+  onConstraint?: (constraint: TripleConstraint,
+                  ctx: {node: RdfJs.Term, triples: RdfJsQuad[]}) => void;
+}
+
 export interface ValidatorRegexModule {
   name: string;
   description: string;
-  compile(schema: ShExJ.Schema, shape: ShExJ.Shape, index: SchemaIndex): ValidatorRegexEngine
+  compile(schema: ShExJ.Schema, shape: ShExJ.Shape, index: SchemaIndex, debugHooks?: RegexDebugHooks): ValidatorRegexEngine
 }
 
 export interface ValidatorRegexEngine {

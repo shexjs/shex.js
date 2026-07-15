@@ -6,6 +6,7 @@ import * as ShExTerm from "@shexjs/term";
 import {InternalSchema, rdfJsTerm2Ld, SchemaIndex, ShapeMap, ShapeMapEntry} from "@shexjs/term";
 import {
   QueryTracker,
+  RegexDebugHooks,
   SemActDispatcher,
   SemActHandler,
   T2TcPartition,
@@ -87,6 +88,8 @@ interface ValidatorOptions {
   noCache?: boolean;
   semActs?: SemActCodeIndex;
   validateExtern?: (point: RdfJsTerm, shapeLabel: LabelOrStart, ctx: ShapeExprValidationContext) => shapeExprTest;
+  /** debugger callbacks forwarded to the regex engine (doc/debugger-design.md §4) */
+  debugHooks?: RegexDebugHooks;
 }
 
 export interface ShExJsResultMapEntry extends ShapeMapEntry {
@@ -701,7 +704,7 @@ export class ShExValidator {
     const allT2TCs = new TripleToTripleConstraints(t2tcs, extendsTCs, tc2exts);
     const partitionErrors: error[][] = [];
     // only construct a regexp engine if shape has a triple expression
-    const regexEngine = shape.expression === undefined ? null : this.regexModule.compile(this.schema, shape, this.index);
+    const regexEngine = shape.expression === undefined ? null : this.regexModule.compile(this.schema, shape, this.index, this.options.debugHooks);
 
     const extendsResultCache: ExtendsResultCache = new Map();
     let firstPruned: T2TcPartition | null = null; // fallback for classic error reporting
