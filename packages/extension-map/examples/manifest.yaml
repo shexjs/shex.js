@@ -321,3 +321,28 @@
   status: conformant
   expectedBindingsURL: symmetric-bindings.json
   outputDataURL: symmetric-out.ttl
+- schemaLabel: splits
+  threadedOnly: true
+  schemaURL: contact-schema.shex
+  dataLabel: Ann
+  dataURL: contact-Ann.ttl
+  queryMap: "<PersonX>@START"
+  outputSchemaURL: card-schema.shex
+  outputShape: "<Card>"
+  staticVars: {}
+  createRoot: "<tag:card1>"
+  status: conformant
+  expectedBindingsURL: splits-bindings.json
+  outputDataURL: splits-out.ttl
+- schemaLabel: ambiguous
+  schemaURL: contact-schema.shex
+  dataLabel: Bob
+  dataURL: contact-Bob.ttl
+  queryMap: "<PersonY>@START"
+  outputSchemaURL: card-schema.shex
+  outputShape: "<Card>"
+  staticVars: {}
+  createRoot: "<tag:card2>"
+  status: conformant
+  expectedBindingsURL: ambiguous-bindings.json
+  outputDataURL: ambiguous-out.ttl

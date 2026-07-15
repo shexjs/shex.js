@@ -1,0 +1,8 @@
+{
+  "http://contact.example/name": {
+    "value": "Ann"
+  },
+  "http://contact.example/email": {
+    "value": "ann@mail.example"
+  }
+}

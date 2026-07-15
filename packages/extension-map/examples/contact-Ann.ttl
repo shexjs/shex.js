@@ -1,0 +1,4 @@
+PREFIX : <http://contact.example/>
+
+<PersonX> :name "Ann" ;
+          :email "ann@mail.example" .

@@ -1,0 +1,4 @@
+PREFIX card: <http://card.example/ns#>
+
+<tag:card1> card:fullName "Ann" ;
+            card:mbox "ann@mail.example" .

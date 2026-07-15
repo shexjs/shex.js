@@ -46,7 +46,7 @@ function loadAndRun (srcSchemas, targetSchemas, inputDataFilePath, node, createR
 
 }
 
-async function run (srcSchema, targetSchema, inputDataP, smapP, createRoot, expectedBindings, expectedRdfP, mapstr, testTrivial) {
+async function run (srcSchema, targetSchema, inputDataP, smapP, createRoot, expectedBindings, expectedRdfP, mapstr, testTrivial, bindingsOnly) {
   const [inputData, smap, expectedRdf] = await Promise.all([inputDataP, smapP, expectedRdfP])
   // console.log([inputData.graph.size, JSON.stringify(smap), expectedRdf.graph.size])
 
@@ -68,6 +68,9 @@ async function run (srcSchema, targetSchema, inputDataP, smapP, createRoot, expe
     else
       expect(resultBindings).to.deep.equal(expectedBindings);
   }
+
+  if (bindingsOnly) // the legacy materializers below can't split threads
+    return
 
   if (testTrivial)
     testGraph(trivial(registered, targetSchema, resultBindings, createRoot), expectedRdf.graph, mapstr)
@@ -163,8 +166,15 @@ describe('Examples manifest', function () {
     const dataSummary = "dataURL" in manifest
           ? manifest.dataURL
           : manifest.data.length + ' chars of turtle'
-    it(mapstr + ' should map ' + dataSummary + " to " + manifest.outputDataURL, async function () {
-      return run(manifest.inputSchema, manifest.outputSchema, manifest.inputDataP, manifest.smapP, createRoot, manifest.expectedBindings, manifest.expectedDataP, mapstr, false)
+    // threadedOnly entries demonstrate ThreadedMaterializer-specific
+    // behavior (thread splits) beyond the legacy materializer tested here;
+    // validate the bindings they produce and leave the materialization to
+    // ThreadedMaterializer-test
+    const what = manifest.threadedOnly
+          ? ' should produce ' + manifest.expectedBindingsURL + ' from '
+          : ' should map '
+    it(mapstr + what + dataSummary + (manifest.threadedOnly ? "" : " to " + manifest.outputDataURL), async function () {
+      return run(manifest.inputSchema, manifest.outputSchema, manifest.inputDataP, manifest.smapP, createRoot, manifest.expectedBindings, manifest.expectedDataP, mapstr, false, manifest.threadedOnly)
     })
   })
 })
