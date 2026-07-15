@@ -102,8 +102,22 @@ toolchain).  Roughly grouped; items link to the docs that motivated them.
 - Replaying a captured match re-dispatches its semantic actions --
   harmless for Test/Map in practice, but a recording semActHandler shim
   would make replay side-effect-free.
-- Only eval-simple-1err is steppable; eval-threaded-nerr's recursive
-  matcher would need its own generator refactor for a `runMatch`.
+- Only eval-simple-1err is steppable.  A threaded-nerr `runMatch` is a
+  rewrite, not an annotation: the matcher recurses
+  (matchTripleExpression/matchRepeat with an evalGroup closure, reduces
+  that can't host yields), so every frame becomes a generator with
+  `yield*` overhead on the DEFAULT engine's hot path -- avoiding that
+  means maintaining plain + steppable matchers side by side.  Its
+  "threads" are also error-permutation carriers in a backtracking DFS
+  (no worklist/generation to snapshot), so it wants a call-stack
+  stepper, not a threads pane.  Worth doing only when debugging
+  threaded-nerr's own behavior (WHY these N errors) becomes a goal.
+- Cheaper engine-fidelity fix for the 🐞 capture run (which currently
+  forces eval-simple-1err for the whole validation): capture with the
+  user's selected engine -- `constraintToTripleMapping` is
+  engine-independent -- and compile an eval-simple-1err stepper per
+  captured shape for replay; note in the UI that the replay engine
+  may diagnose differently (1err vs nerr).
 - The threads pane renders the matched partition as text; highlighting
   the partition's triples in the *data* pane (millan ranges, like error
   anchoring) is the natural next step.
