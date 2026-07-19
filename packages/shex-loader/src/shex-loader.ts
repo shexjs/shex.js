@@ -9,77 +9,166 @@
  *   return promise of {contents, url}
  */
 
-const ShExLoaderCjsModule = function (config = {}) {
+const ShExUtil = require("@shexjs/util");
+const {Merger} = require("@shexjs/util/lib/Merger");
+const ShExParser = require("@shexjs/parser");
 
-  const ShExUtil = require("@shexjs/util");
-  const {Merger} = require("@shexjs/util/lib/Merger");
-  const ShExParser = require("@shexjs/parser");
-
-  class WebError extends Error {
-    constructor (msg, url) {
-      super(msg)
-      this.url = url
-    }
+class WebError extends Error {
+  url: string | undefined;
+  constructor (msg: string, url?: string) {
+    super(msg)
+    this.url = url
   }
+}
 
-  class FetchError extends WebError {
-    constructor (msg, url, status, text) {
-      super(msg, url)
-      this.status = status
-      this.text = text
-    }
+class FetchError extends WebError {
+  status: number;
+  text: string | (() => Promise<string>);
+  constructor (msg: string, url: string, status: number, text: string | (() => Promise<string>)) {
+    super(msg, url)
+    this.status = status
+    this.text = text
   }
+}
 
-  class ResourceError extends WebError {
-    constructor (msg, url) {
-      super(msg)
-      this.url = url
-    }
+class ResourceError extends WebError {
+  constructor (msg: string, url: string) {
+    super(msg)
+    this.url = url
   }
+}
 
-  class ResourceLoadControler {
-    constructor (src) {
-      this.schemasSeen = src.map(p => typeof p === "object" ? p.url : p) // loaded URLs
-      this.promise = new Promise((resolve, reject) => {
-        this.resolve = resolve
-        this.reject = reject
-      })
-      this.toLoad = []
-      this.results = []
-      this.loaded = 0
-    }
-    add (promise) {
-      this.toLoad.push(promise)
-      const index = this.toLoad.length - 1
-      promise.then(value => {
-        ++this.loaded
-        this.results[index] = value
-        if (this.loaded === this.toLoad.length) {
-          this.resolve(this.results)
-        }
-      }, error => this.reject(error));
-      return promise
-    }
-    allLoaded () {
-      return this.toLoad.length > 0
-        ? this.promise
-        : Promise.resolve([])
-    }
-    loadNovelUrl (url, oldUrl = null) {
-      if (this.schemasSeen.indexOf(url) !== -1)
-        return false
-      this.schemasSeen.push(url)
-      if (oldUrl) {
-        const oldI = this.schemasSeen.indexOf(oldUrl)
-        if (oldI !== -1) {
-          this.schemasSeen.splice(oldI, 1)
-        }
+/** A resource which is already loaded or a URL string to load one from. */
+type LoaderSource = string | { url: string, text?: string, schema?: any, graph?: any };
+
+class ResourceLoadControler {
+  schemasSeen: string[];
+  promise: Promise<any[]>;
+  resolve!: (results: any[]) => void;
+  reject!: (error: any) => void;
+  toLoad: Promise<any>[];
+  results: any[];
+  loaded: number;
+
+  constructor (src: LoaderSource[]) {
+    this.schemasSeen = src.map(p => typeof p === "object" ? p.url : p) // loaded URLs
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = resolve
+      this.reject = reject
+    })
+    this.toLoad = []
+    this.results = []
+    this.loaded = 0
+  }
+  add (promise: Promise<any>): Promise<any> {
+    this.toLoad.push(promise)
+    const index = this.toLoad.length - 1
+    promise.then(value => {
+      ++this.loaded
+      this.results[index] = value
+      if (this.loaded === this.toLoad.length) {
+        this.resolve(this.results)
       }
-      return true
-    }
+    }, error => this.reject(error));
+    return promise
   }
+  allLoaded (): Promise<any[]> {
+    return this.toLoad.length > 0
+      ? this.promise
+      : Promise.resolve([])
+  }
+  loadNovelUrl (url: string, oldUrl: string | null = null): boolean {
+    if (this.schemasSeen.indexOf(url) !== -1)
+      return false
+    this.schemasSeen.push(url)
+    if (oldUrl) {
+      const oldI = this.schemasSeen.indexOf(oldUrl)
+      if (oldI !== -1) {
+        this.schemasSeen.splice(oldI, 1)
+      }
+    }
+    return true
+  }
+}
 
-  const loader = {
+/** A loaded ShEx extension (e.g. @shexjs/extension-map). */
+interface ShExExtensionI {
+  url: string;
+  register (validator: any, api: { ShExTerm: any }): void;
+  done (validator: any): void;
+}
+
+/** Result of a GET request. */
+interface LoadedResourceI {
+  text: string;
+  url: string;
+}
+
+/** Result of a load() call. */
+interface LoadResultI {
+  schema: any;
+  data: any;
+  schemaMeta: any[];
+  dataMeta: any[];
+}
+
+/** Schema inputs accepted by load(). */
+interface SchemaInputI {
+  shexc?: LoaderSource[];
+  json?: LoaderSource[];
+  turtle?: LoaderSource[];
+}
+
+/** Data inputs accepted by load(). */
+interface DataInputI {
+  turtle?: LoaderSource[];
+  jsonld?: LoaderSource[];
+}
+
+/** Configuration passed to the ShExLoader factory. */
+interface ConfigI {
+  /** Override the default no-op extension loader. */
+  loadExtensions?: (globs: string[]) => Record<string, ShExExtensionI>;
+  /** HTTP fetch implementation (e.g. node-fetch). */
+  fetch?: (url: string, options?: any) => Promise<any>;
+  /** RDF/JS DataFactory + Store implementation (e.g. N3). */
+  rdfjs?: any;
+  /** jsonld library instance. */
+  jsonld?: any;
+  /** Options forwarded to jsonld.toRDF(). */
+  jsonLdOptions?: any;
+}
+
+/** The object returned by the ShExLoader factory. */
+interface LoaderI {
+  load (
+    schema: SchemaInputI | null,
+    data: DataInputI | null,
+    schemaOptions?: any,
+    dataOptions?: any,
+  ): Promise<LoadResultI>;
+
+  /** Load ShEx validator extensions matching the given globs. */
+  loadExtensions (globs: string[]): Record<string, ShExExtensionI>;
+
+  /** Fetch a URL, returning its text content and resolved URL. */
+  GET (url: string, mediaType?: string): Promise<LoadedResourceI>;
+
+  loadSchemaImports (
+    schema: any,
+    importers: string[],
+    resourceLoadControler: ResourceLoadControler,
+    schemaOptions?: any,
+  ): any;
+
+  ResourceLoadControler: typeof ResourceLoadControler;
+  WebError: typeof WebError;
+  FetchError: typeof FetchError;
+}
+
+function ShExLoaderCjsModule (config: ConfigI = {}): LoaderI {
+
+  const loader: LoaderI = {
     load: load,
     loadExtensions: config.loadExtensions || LoadNoExtensions,
     GET,
@@ -89,16 +178,16 @@ const ShExLoaderCjsModule = function (config = {}) {
     FetchError,
   };
   return loader
-  
-  async function GET (url, mediaType) {
+
+  async function GET (url: string, mediaType?: string): Promise<LoadedResourceI> {
     let m;
     return (m = url.match("^data:([^,]+),(.*)$"))
       ? Promise.resolve({text: m[2], url: m[0]}) // Read from data: URL
       : (url.match("^(blob:)?[a-z]+://."))
-      ? myHttpRequest(url, mediaType) // whatever fetch handles
+      ? myHttpRequest(url, mediaType)  // whatever fetch handles
       : (() => { throw new WebError(`Unrecognized URL protocol ${url}`) })()
 
-    async function myHttpRequest(url, mediaType) {
+    async function myHttpRequest (url: string, _mediaType?: string): Promise<LoadedResourceI> {
       if (typeof config.fetch !== "function")
         throw new WebError(`Unable to fetch ${url} with fetch=${config.fetch}`)
       let resp
@@ -108,7 +197,7 @@ const ShExLoaderCjsModule = function (config = {}) {
             'Accept': 'text/shex,text/turtle,*/*'
           }
         })
-      } catch (e) {
+      } catch (e: any) {
         // DNS failure
         // no route to host
         // connection refused
@@ -121,7 +210,7 @@ const ShExLoaderCjsModule = function (config = {}) {
     }
   }
 
-  function addMeta (url, mediaType, metaList) {
+  function addMeta (url: string, mediaType: string, metaList: any[]) {
       const meta = {
         mediaType,
         url,
@@ -132,7 +221,7 @@ const ShExLoaderCjsModule = function (config = {}) {
       return meta
     }
 
-  async function mergeSchema (obj, mediaType, resourceLoadControler, options, importers) {
+  async function mergeSchema (obj: any, mediaType: string, resourceLoadControler: ResourceLoadControler, options: any, importers: string[]) {
     if (!("schema" in obj))
       throw Error(`Bad parameter to mergeSchema; ${summarize(obj)} is not a loaded schema`)
     if (obj.schema.type !== "Schema")
@@ -140,51 +229,50 @@ const ShExLoaderCjsModule = function (config = {}) {
     try {
       loadSchemaImports(obj.schema, importers.concat([obj.url]), resourceLoadControler, options);
       return {mediaType, url: obj.url, importers, schema: obj.schema};
-    } catch (e) {
+    } catch (e: any) {
       const e2 = Error("error merging schema object " + obj.schema + ": " + e)
       e2.stack = e.stack
       throw e2
     }
 
-    function summarize (o) {
-      const marker = Math.random()
-      const shallow = Object.keys(obj).reduce((acc, k) => {
+    function summarize (_o: any): string {
+      const marker = String(Math.random())
+      const shallow = Object.keys(obj).reduce((acc: any, k) => {
         acc[k] = typeof obj[k] === "object" ? marker : obj[k]
         return acc
       }, {})
-      return JSON.stringify(shallow).replace(new RegExp(marker, 'g'), "\u2026")
+      return JSON.stringify(shallow).replace(new RegExp(marker, 'g'), "…")
     }
   }
 
-  async function mergeGraph (obj, mediaType, _resourceLoadControler, options, importers) {
+  async function mergeGraph (obj: any, mediaType: string, _resourceLoadControler: ResourceLoadControler, _options: any, importers: string[]) {
     try {
       // loadOwlImports(obj.graph, importers.concat([obj.url]), resourceLoadControler, options)
-      const graph = Array.isArray(typeof obj.graph)
+      const graph = Array.isArray(obj.graph)
             ? obj.graph
             : obj.graph.getQuads()
       return {mediaType, url: obj.url, importers, graph}
-    } catch (e) {
+    } catch (e: any) {
       const e2 = Error("error merging graph object " + obj.graph + ": " + e)
       e2.stack = e.stack
       throw e2
     }
   }
 
-  function loadSchemaImports (schema, importers, resourceLoadControler, schemaOptions) {
+  function loadSchemaImports (schema: any, importers: string[], resourceLoadControler: ResourceLoadControler, schemaOptions: any): any {
     if (!("imports" in schema))
       return schema
     if (schemaOptions.keepImports) {
       return schema
     }
     const ret = Object.assign({}, schema)
-    const imports = ret.imports
     delete ret.imports // @@ needed? useful?
 
     schema.imports.map(
-      i => "iriTransform" in schemaOptions ? schemaOptions.iriTransform(i) : i
+      (i: string) => "iriTransform" in schemaOptions ? schemaOptions.iriTransform(i) : i
     ).filter(
-      i => resourceLoadControler.loadNovelUrl(i)
-    ).map(i => {
+      (i: string) => resourceLoadControler.loadNovelUrl(i)
+    ).map((i: string) => {
       resourceLoadControler.add(loader.GET(i).then(loaded => {
         const meta = {
           // mediaType: mediaType,
@@ -205,7 +293,7 @@ const ShExLoaderCjsModule = function (config = {}) {
     return ret
   }
 
-  async function loadList (src, metaList, mediaType, parserWrapper, merger, options, resourceLoadControler, importers) {
+  async function loadList (src: LoaderSource[], metaList: any[], mediaType: string, parserWrapper: Function, merger: Function, options: any, resourceLoadControler: ResourceLoadControler, importers: string[]) {
     return src.map(
       p => {
         const meta = addMeta(typeof p === "string" ? p : p.url, mediaType, metaList)
@@ -222,7 +310,7 @@ const ShExLoaderCjsModule = function (config = {}) {
             ret = parserWrapper(p.text, mediaType, p.url, meta, options, resourceLoadControler, importers);
           } else {
             ret = merger(p, mediaType, resourceLoadControler, options, importers);
-            meta.importers = importers;
+            (meta as any).importers = importers;
           }
         }
         resourceLoadControler.add(ret);
@@ -245,14 +333,14 @@ const ShExLoaderCjsModule = function (config = {}) {
    * @returns {Promise<{schema: any, dataMeta: *[], data: (*|null), schemaMeta: *[]}>}
    * @constructor
    */
-  async function load (schema, data, schemaOptions = {}, dataOptions = {}) {
-    const returns = {
+  async function load (schema: SchemaInputI | null, data: DataInputI | null, schemaOptions: any = {}, dataOptions: any = {}): Promise<LoadResultI> {
+    const returns: LoadResultI = {
       schema: ShExUtil.emptySchema(),
       data: config.rdfjs ? new config.rdfjs.Store() : null,
       schemaMeta: [],
       dataMeta: []
     };
-    let allSchemas, allGraphs;
+    let allSchemas: ResourceLoadControler, allGraphs: ResourceLoadControler;
 
     // gather all the potentially remote inputs
     {
@@ -279,7 +367,7 @@ const ShExLoaderCjsModule = function (config = {}) {
                                                       allGraphs.allLoaded()])
     const left = {schema: returns.schema, schemaMeta: returns.schemaMeta[0]};
     // const merger = new Merger(left, schemaOptions.collisionPolicy, true);
-    schemaSrcs.forEach((sSrc, idx) => {
+    schemaSrcs.forEach((sSrc) => {
       const {schema, ...schemaMeta} = sSrc;
       /*merger*/new Merger(left, schemaOptions.collisionPolicy, true).merge({schema, schemaMeta});
       delete sSrc.schema;
@@ -299,7 +387,7 @@ const ShExLoaderCjsModule = function (config = {}) {
     return returns
   }
 
-  function parseShExC (text, mediaType, url, meta, schemaOptions, resourceLoadControler, importers) {
+  function parseShExC (text: string, mediaType: string, url: string, meta: any, schemaOptions: any, resourceLoadControler: ResourceLoadControler, importers: string[]): Promise<any> {
     const parser = schemaOptions && "parser" in schemaOptions ?
         schemaOptions.parser :
         ShExParser.construct(url, {}, schemaOptions)
@@ -311,7 +399,7 @@ const ShExLoaderCjsModule = function (config = {}) {
       if (schema.base === url) delete schema.base
       loadSchemaImports(schema, importers.concat([url]), resourceLoadControler, schemaOptions)
       return Promise.resolve({mediaType, url, importers, schema})
-    } catch (e) {
+    } catch (e: any) {
       const locStr = e.location
             ? `(${e.location.first_line}:${e.location.first_column})`
             : ''
@@ -320,13 +408,13 @@ const ShExLoaderCjsModule = function (config = {}) {
     }
   }
 
-  function parseShExJ (text, mediaType, url, meta, schemaOptions, resourceLoadControler, importers) {
+  function parseShExJ (text: string, mediaType: string, url: string, meta: any, schemaOptions: any, resourceLoadControler: ResourceLoadControler, importers: string[]): Promise<any> {
     try {
       const s = ShExUtil.ShExJtoAS(JSON.parse(text))
       meta.prefixes = {}
       meta.importers = importers;
       meta.base = null
-      loadSchemaImports(s, importers.concat([url]), resourceLoadControler)
+      loadSchemaImports(s, importers.concat([url]), resourceLoadControler, schemaOptions || {})
       return Promise.resolve({mediaType, url, importers, schema: s})
     } catch (e) {
       const e2 = Error("error parsing JSON " + url + ": " + e)
@@ -335,7 +423,7 @@ const ShExLoaderCjsModule = function (config = {}) {
     }
   }
 
-  async function parseShExR (text, mediaType, url, meta, schemaOptions, resourceLoadControler, importers) {
+  async function parseShExR (text: string, mediaType: string, url: string, meta: any, schemaOptions: any, resourceLoadControler: ResourceLoadControler, importers: string[]): Promise<any> {
     try {
       const x = await parseTurtle(text, mediaType, url, meta, schemaOptions, resourceLoadControler, importers)
       const graph = new config.rdfjs.Store();
@@ -348,11 +436,11 @@ const ShExLoaderCjsModule = function (config = {}) {
       const schemaRoot = graph.getQuads(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
       const val = graphParser.validate(schemaRoot, schemaOptions.graphParser.validator.Start);
       if ("errors" in val)
-        throw ResourceError(`${url} did not validate as a ShEx schema: ${JSON.stringify(val.errors, null, 2)}`, url)
+        throw new ResourceError(`${url} did not validate as a ShEx schema: ${JSON.stringify(val.errors, null, 2)}`, url)
       const schema = ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val))));
-      await loadSchemaImports(schema, importers.concat([url]), resourceLoadControler); // shouldn't be any
+      await loadSchemaImports(schema, importers.concat([url]), resourceLoadControler, schemaOptions || {}); // shouldn't be any
       return Promise.resolve({mediaType, url, importers, schema})
-    } catch (e) {
+    } catch (e: any) {
       const e2 = Error("error parsing Turtle schema " + url + ": " + e)
       if (typeof e === "object" && "stack" in e)
         e2.stack = e.stack
@@ -360,12 +448,12 @@ const ShExLoaderCjsModule = function (config = {}) {
     }
   }
 
-  function parseTurtle (text, mediaType, url, meta, dataOptions, resourceLoadControler, importers) {
+  function parseTurtle (text: string, mediaType: string, url: string, meta: any, _dataOptions: any, _resourceLoadControler: ResourceLoadControler, importers: string[]): Promise<any> {
     return new Promise(function (resolve, reject) {
-      const graph = []
+      const graph: any[] = []
       new config.rdfjs.Parser({baseIRI: url, blankNodePrefix: "", format: "text/turtle"}).
         parse(text,
-              function (error, quad, prefixes) {
+              function (this: any, error: any, quad: any, prefixes: any) {
                 if (prefixes) {
                   meta.prefixes = prefixes
                   // data.addPrefixes(prefixes)
@@ -383,7 +471,7 @@ const ShExLoaderCjsModule = function (config = {}) {
     })
   }
 
-  async function parseJSONLD (text, mediaType, url, meta, dataOptions, resourceLoadControler, importers) {
+  async function parseJSONLD (text: string, mediaType: string, url: string, meta: any, dataOptions: any, resourceLoadControler: ResourceLoadControler, importers: string[]): Promise<any> {
     const struct = JSON.parse(text)
     try {
       const nquads = await config.jsonld.toRDF(struct, Object.assign(
@@ -397,7 +485,7 @@ const ShExLoaderCjsModule = function (config = {}) {
       meta.base = url;    // @@ take from @context.base? (or vocab?)
       meta.importers = importers;
       return parseTurtle(nquads, mediaType, url, meta, dataOptions, resourceLoadControler, importers)
-    } catch (lderr) {
+    } catch (lderr: any) {
       let e = lderr
       if ("details" in e) e = e.details
       if ("cause" in e) e = e.cause
@@ -405,8 +493,21 @@ const ShExLoaderCjsModule = function (config = {}) {
     }
   }
 
-  function LoadNoExtensions (globs) { return []; }
+  function LoadNoExtensions (_globs: string[]): Record<string, ShExExtensionI> { return [] as unknown as Record<string, ShExExtensionI>; }
 }
 
-if (typeof require !== "undefined" && typeof exports !== "undefined")
-  module.exports = ShExLoaderCjsModule
+/* Type aliases so consumers can keep using e.g. `ShExLoader.Config` and
+ * `ShExLoader.Loader` (see @shexjs/node's shex-node.d.ts).  The namespace
+ * holds only types, so the runtime export stays the bare factory function.
+ */
+namespace ShExLoaderCjsModule {
+  export type ShExExtension = ShExExtensionI;
+  export type LoadedResource = LoadedResourceI;
+  export type LoadResult = LoadResultI;
+  export type SchemaInput = SchemaInputI;
+  export type DataInput = DataInputI;
+  export type Config = ConfigI;
+  export type Loader = LoaderI;
+}
+
+export = ShExLoaderCjsModule;

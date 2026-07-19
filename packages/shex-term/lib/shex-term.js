@@ -23,7 +23,11 @@
  * [RdfJsTerm](https://rdf.js.org/data-model-spec/#term-interface)
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.rdfJsTerm2Ld = exports.ld2RdfJsTerm = exports.shExJsTerm2Turtle = exports.rdfJsTerm2Turtle = exports.Terminals = exports.XsdString = exports.RdfLangString = void 0;
+exports.Terminals = exports.XsdString = exports.RdfLangString = void 0;
+exports.rdfJsTerm2Turtle = rdfJsTerm2Turtle;
+exports.shExJsTerm2Turtle = shExJsTerm2Turtle;
+exports.ld2RdfJsTerm = ld2RdfJsTerm;
+exports.rdfJsTerm2Ld = rdfJsTerm2Ld;
 const RelativizeIri = require("relativize-url").relativize;
 // import {relativize as RelativizeIri} from "relativize-url"; // someone should lecture the maintainer
 const rdf_data_factory_1 = require("rdf-data-factory");
@@ -63,7 +67,6 @@ function rdfJsTerm2Turtle(node, meta) {
         default: throw Error(`rdfJsTerm2Turtle: unknown RDFJS node type: ${JSON.stringify(node)}`);
     }
 }
-exports.rdfJsTerm2Turtle = rdfJsTerm2Turtle;
 function shExJsTerm2Turtle(node, meta = { base: "", prefixes: {} }, aForType) {
     if (typeof node === "string") {
         if (node.startsWith("_:")) {
@@ -92,7 +95,6 @@ function shExJsTerm2Turtle(node, meta = { base: "", prefixes: {} }, aForType) {
         throw Error("Unknown internal term type: " + JSON.stringify(node));
     }
 }
-exports.shExJsTerm2Turtle = shExJsTerm2Turtle;
 // Characters in literals that require escaping
 const escape = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/;
 const escapeAll = /["\\\t\n\r\b\f\u0000-\u0019]|[\ud800-\udbff][\udc00-\udfff]/g;
@@ -141,7 +143,6 @@ function ld2RdfJsTerm(ld) {
         default: throw Error(`Unrecognized JSON-LD-style term: ${JSON.stringify(ld)}`);
     }
 }
-exports.ld2RdfJsTerm = ld2RdfJsTerm;
 function rdfJsTerm2Ld(term) {
     switch (term.termType) {
         case "NamedNode": return term.value;
@@ -161,7 +162,6 @@ function rdfJsTerm2Ld(term) {
             throw Error(`Unrecognized termType ${term.termType} ${term.value}`);
     }
 }
-exports.rdfJsTerm2Ld = rdfJsTerm2Ld;
 function iri2Turtle(iri, meta = { base: "", prefixes: {} }, aForType = true) {
     const { base, prefixes = {} } = meta;
     if (aForType && iri === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")

@@ -16,7 +16,7 @@
   ],
   "license": "MIT",
   "main": "./lib/neighborhood-rdfjs.js",
-  "types": "./lib/neighborhood-rdfjs.d.ts",
+  "types": "./src/neighborhood-rdfjs.ts",
   "engines": {
     "node": ">=18"
   },
@@ -26,7 +26,11 @@
     "@shexjs/term": "^1.0.0-alpha.27"
   },
   "scripts": {
+    "build": "tsc",
     "test": "cd .. && mocha -C -R dot"
+  },
+  "devDependencies": {
+    "@rdfjs/types": "^1.1.0"
   },
   "publishConfig": {
     "access": "public"

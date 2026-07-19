@@ -12,6 +12,14 @@ export interface Neighborhood {
   outgoing: RdfJs.Quad[];
 }
 
+/** Tracks the queries a NeighborhoodDb makes on behalf of a validator,
+ * e.g. to log or slurp the retrieved triples.
+ */
+export interface DbQueryTracker {
+  start (isIncoming: boolean, term: RdfJsTerm, shapeLabel: string | typeof Start): void;
+  end (quads: RdfJs.Quad[], time: number): void;
+}
+
 export interface NeighborhoodDb {
   getSubjects(): RdfJs.Term[];
   getPredicates(): RdfJs.Term[];

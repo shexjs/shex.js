@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sparqlOrder = exports.Start = void 0;
+exports.Start = void 0;
+exports.sparqlOrder = sparqlOrder;
 exports.Start = { term: "START" };
 /* sparqlOrder - sort triples by subject following SPARQL partial ordering.
  */
@@ -8,7 +9,6 @@ function sparqlOrder(l, r) {
     const [lprec, rprec] = [prec(l), prec(r)];
     return lprec === rprec ? l.value.localeCompare(r.value) : lprec - rprec;
 }
-exports.sparqlOrder = sparqlOrder;
 const termType2Prec = {
     'BlankNode': 1,
     'Literal': 2,

@@ -559,7 +559,7 @@ export class ShExValidator {
       return extensions.children;
 
       function makeSchemaVisitor () {
-        const schemaVisitor = new (ShExVisitor as any)();
+        const schemaVisitor = new ShExVisitor();
         let curLabel: string;
         // let curAbstract; -- not yet used
         const oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
@@ -574,7 +574,7 @@ export class ShExValidator {
         schemaVisitor.visitShape = function (shape: ShExJ.Shape) {
           if (shape.extends !== undefined) {
             shape.extends.forEach(ext => {
-              const extendsVisitor = new (ShExVisitor as any)();
+              const extendsVisitor = new ShExVisitor();
               extendsVisitor.visitExpression = function (_expr: tripleExpr, ..._args: never[]) { return "null"; }
               extendsVisitor.visitShapeRef = function (reference: string, ..._args: never[]) {
                 extensions.add(reference, curLabel);
@@ -1076,7 +1076,7 @@ export class ShExValidator {
    */
   TripleConstraintsVisitor (labelToTcs: { [id: string]: ShExJ.TripleConstraint[] }) {
     const _ShExValidator = this;
-    const visitor = new (ShExVisitor as any)(labelToTcs);
+    const visitor = new ShExVisitor(labelToTcs);
 
     function emptyShapeExpr () { return []; }
 

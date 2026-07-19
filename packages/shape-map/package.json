@@ -15,14 +15,15 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shape-map.js",
+  "main": "./lib/shape-map.js",
   "engines": {
     "node": ">=18"
   },
   "scripts": {
     "parser": "ts-jison -n ShapeMapJison -t javascript -p lalr -o ./lib/ShapeMapJison.js ./lib/ShapeMapJison.jison",
     "test": "cd .. && mocha -C -R dot",
-    "browser": "browserify shex.js -s ShEx -o browser/shape-map-browserify.js && uglifyjs browser/shape-map-browserify.js --comments -mco browser/shape-map-browserify.min.js"
+    "browser": "browserify shex.js -s ShEx -o browser/shape-map-browserify.js && uglifyjs browser/shape-map-browserify.js --comments -mco browser/shape-map-browserify.min.js",
+    "build": "tsc"
   },
   "publishConfig": {
     "access": "public"
@@ -41,5 +42,6 @@
   },
   "devDependencies": {
     "@ts-jison/parser-generator": "^0.4.1-alpha.2"
-  }
+  },
+  "types": "./src/shape-map.ts"
 }

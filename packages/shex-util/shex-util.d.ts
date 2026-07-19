@@ -5,7 +5,6 @@ import * as ShExJ from 'shexj';
 export {};
 
 export function version(): any;
-export function index(schema: any): Index;
 export function getAST(schema: any): any;
 export function ShExJtoAS(schema: any): any;
 export function AStoShExJ(schema: any, abbreviate: any): any;
@@ -37,11 +36,11 @@ export function absolutizeShapeMap(parsed: any, base: any): any;
 export function errsToSimple(val: any): any;
 export function resolvePrefixedIRI(prefixedIri: any, prefixes: any): any;
 export function parsePassedNode(passedValue: any, meta: any, deflt: any, known: any, reportUnknown: any): any;
-export function executeQueryPromise(query: any, endpoint: any): any;
-export function executeQuery(query: any, endpoint: any): any;
+export function executeQueryPromise(query: string, endpoint: string, dataFactory: RdfJs.DataFactory): Promise<RdfJs.Term[][]>;
+export function executeQuery(query: string, endpoint: string, dataFactory: RdfJs.DataFactory): RdfJs.Term[][];
 export function unescapeText(string: any, replacements: any): any;
 
 export interface Index {
   shapeExprs: { [key: string]: ShExJ.ShapeDecl; }
-  tripelExprs: { [key: string]: ShExJ.tripleExpr; }
+  tripleExprs: { [key: string]: ShExJ.tripleExpr; }
 }

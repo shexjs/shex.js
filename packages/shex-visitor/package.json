@@ -15,15 +15,17 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-visitor.js",
-  "types": "./shex-visitor.d.ts",
+  "main": "./lib/shex-visitor.js",
+  "types": "./src/shex-visitor.ts",
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
-    "@rdfjs/types": "^1.1.0"
+    "@rdfjs/types": "^1.1.0",
+    "@shexjs/term": "^1.0.0-alpha.27"
   },
   "scripts": {
+    "build": "tsc",
     "test": "cd .. && mocha -C -R dot",
     "browser999": "browserify shex.js -s ShEx -o browser/shex-visitor-browserify.js && uglifyjs browser/shex-visitor-browserify.js --comments -mco browser/shex-visitor-browserify.min.js"
   },

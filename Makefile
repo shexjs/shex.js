@@ -12,30 +12,58 @@ packages/eval-validator-api/lib/validator-api.js: packages/eval-validator-api/sr
 packages/neighborhood-api/lib/neighborhood-api.js: packages/neighborhood-api/src/neighborhood-api.ts packages/shex-term/lib/shex-term.js packages/shex-term/shexv.d.ts packages/neighborhood-api/package.json packages/neighborhood-api/tsconfig.json
 	(cd packages/neighborhood-api && tsc)
 
+# @shexjs/neighborhood-rdfjs
+packages/neighborhood-rdfjs/lib/neighborhood-rdfjs.js: packages/neighborhood-rdfjs/src/neighborhood-rdfjs.ts packages/neighborhood-api/lib/neighborhood-api.js packages/neighborhood-rdfjs/package.json packages/neighborhood-rdfjs/tsconfig.json
+	(cd packages/neighborhood-rdfjs && tsc)
+
+# @shexjs/neighborhood-sparql
+packages/neighborhood-sparql/lib/neighborhood-sparql.js: packages/neighborhood-sparql/src/neighborhood-sparql.ts packages/neighborhood-api/lib/neighborhood-api.js packages/shex-term/lib/shex-term.js packages/shex-visitor/lib/shex-visitor.js packages/neighborhood-sparql/package.json packages/neighborhood-sparql/tsconfig.json
+	(cd packages/neighborhood-sparql && tsc)
+
 # @shexjs/term
 packages/shex-term/lib/shex-term.js: packages/shex-term/src/shex-term.ts packages/shex-term/shexv.d.ts packages/shex-term/package.json packages/shex-term/tsconfig.json
 	(cd packages/shex-term && tsc)
 
+# @shexjs/visitor
+packages/shex-visitor/lib/shex-visitor.js: packages/shex-visitor/src/shex-visitor.ts packages/shex-term/lib/shex-term.js packages/shex-term/shexv.d.ts packages/shex-visitor/package.json packages/shex-visitor/tsconfig.json
+	(cd packages/shex-visitor && tsc)
+
+# @shexjs/writer
+packages/shex-writer/lib/shex-writer.js: packages/shex-writer/src/shex-writer.ts packages/shex-writer/package.json packages/shex-writer/tsconfig.json
+	(cd packages/shex-writer && tsc)
+
+# @shexjs/loader
+packages/shex-loader/lib/shex-loader.js: packages/shex-loader/src/shex-loader.ts packages/shex-parser/lib/shex-parser.js packages/shex-loader/package.json packages/shex-loader/tsconfig.json
+	(cd packages/shex-loader && tsc)
+
 # @shexjs/eval-simple-1err
-packages/eval-simple-1err/lib/eval-simple-1err.js: packages/eval-simple-1err/src/eval-simple-1err.ts packages/eval-validator-api/lib/validator-api.js packages/shex-term/lib/shex-term.js packages/shex-term/shexv.d.ts packages/shex-visitor/shex-visitor.d.ts packages/eval-simple-1err/package.json packages/eval-simple-1err/tsconfig.json
+packages/eval-simple-1err/lib/eval-simple-1err.js: packages/eval-simple-1err/src/eval-simple-1err.ts packages/eval-validator-api/lib/validator-api.js packages/shex-term/lib/shex-term.js packages/shex-term/shexv.d.ts packages/shex-visitor/lib/shex-visitor.js packages/eval-simple-1err/package.json packages/eval-simple-1err/tsconfig.json
 	(cd packages/eval-simple-1err && tsc)
 
 # @shexjs/eval-threaded-nerr
-packages/eval-threaded-nerr/lib/eval-threaded-nerr.js: packages/eval-threaded-nerr/src/eval-threaded-nerr.ts packages/eval-validator-api/lib/validator-api.js packages/shex-term/lib/shex-term.js packages/shex-term/shexv.d.ts packages/shex-visitor/shex-visitor.d.ts packages/eval-threaded-nerr/package.json packages/eval-threaded-nerr/tsconfig.json
+packages/eval-threaded-nerr/lib/eval-threaded-nerr.js: packages/eval-threaded-nerr/src/eval-threaded-nerr.ts packages/eval-validator-api/lib/validator-api.js packages/shex-term/lib/shex-term.js packages/shex-term/shexv.d.ts packages/shex-visitor/lib/shex-visitor.js packages/eval-threaded-nerr/package.json packages/eval-threaded-nerr/tsconfig.json
 	(cd packages/eval-threaded-nerr && tsc)
 
 # @shexjs/validator
-packages/shex-validator/lib/shex-validator.js packages/shex-validator/lib/shex-xsd.js: packages/shex-validator/src/shex-validator.ts packages/shex-validator/src/shex-xsd.ts packages/neighborhood-api/lib/neighborhood-api.js packages/eval-validator-api/lib/validator-api.js packages/shex-term/lib/shex-term.js packages/shex-term/shexv.d.ts packages/shex-visitor/shex-visitor.d.ts packages/shex-validator/package.json packages/shex-validator/tsconfig.json
+packages/shex-validator/lib/shex-validator.js packages/shex-validator/lib/shex-xsd.js: packages/shex-validator/src/shex-validator.ts packages/shex-validator/src/shex-xsd.ts packages/neighborhood-api/lib/neighborhood-api.js packages/eval-validator-api/lib/validator-api.js packages/shex-term/lib/shex-term.js packages/shex-term/shexv.d.ts packages/shex-visitor/lib/shex-visitor.js packages/shex-validator/package.json packages/shex-validator/tsconfig.json
 	(cd packages/shex-validator && tsc)
 
 packages/shex-parser/lib/ShExJison.js: packages/shex-parser/lib/ShExJison.jison
 	$(JISON) -n ShExJison -t javascript -p lr -o $@ $^
 
+# @shexjs/parser (wrapper around the generated ShExJison parser)
+packages/shex-parser/lib/shex-parser.js: packages/shex-parser/src/shex-parser.ts packages/shex-parser/lib/ShExJison.js packages/shex-parser/package.json packages/shex-parser/tsconfig.json
+	(cd packages/shex-parser && tsc)
+
 packages/shape-map/lib/ShapeMapJison.js: packages/shape-map/lib/ShapeMapJison.jison
 	$(JISON) -n ShapeMapJison -t javascript -p lalr -o $@ $^
 
+# shape-map (wrapper around the generated ShapeMapJison parser)
+packages/shape-map/lib/shape-map.js: packages/shape-map/src/shape-map.ts packages/shape-map/src/ShapeMapParser.ts packages/shape-map/src/ShapeMapSymbols.ts packages/shape-map/lib/ShapeMapJison.js packages/shape-map/package.json packages/shape-map/tsconfig.json
+	(cd packages/shape-map && tsc)
+
 .PHONY: ALL
-ALL: packages/eval-validator-api/lib/validator-api.js packages/neighborhood-api/lib/neighborhood-api.js packages/shex-term/lib/shex-term.js packages/eval-simple-1err/lib/eval-simple-1err.js packages/eval-threaded-nerr/lib/eval-threaded-nerr.js packages/shex-validator/lib/shex-validator.js packages/shex-validator/lib/shex-xsd.js packages/shex-parser/lib/ShExJison.js packages/shape-map/lib/ShapeMapJison.js packages/shex-editor-services/lib/editor-services.js packages/shex-webapp/lib/shex-serve.js
+ALL: packages/eval-validator-api/lib/validator-api.js packages/neighborhood-api/lib/neighborhood-api.js packages/neighborhood-rdfjs/lib/neighborhood-rdfjs.js packages/neighborhood-sparql/lib/neighborhood-sparql.js packages/shex-term/lib/shex-term.js packages/shex-visitor/lib/shex-visitor.js packages/shex-writer/lib/shex-writer.js packages/shex-loader/lib/shex-loader.js packages/eval-simple-1err/lib/eval-simple-1err.js packages/eval-threaded-nerr/lib/eval-threaded-nerr.js packages/shex-validator/lib/shex-validator.js packages/shex-validator/lib/shex-xsd.js packages/shex-parser/lib/ShExJison.js packages/shex-parser/lib/shex-parser.js packages/shape-map/lib/ShapeMapJison.js packages/shape-map/lib/shape-map.js packages/shex-editor-services/lib/editor-services.js packages/shex-webapp/lib/shex-serve.js
 #ALL: packages/eval-validator-api/lib/validator-api.js packages/neighborhood-api/lib/neighborhood-api.js packages/shex-term/lib/shex-term.js packages/eval-simple-1err/lib/eval-simple-1err.js packages/shex-validator/lib/shex-validator.js packages/shex-validator/lib/shex-xsd.js
 
 

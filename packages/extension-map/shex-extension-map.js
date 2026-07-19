@@ -11,7 +11,7 @@ const ShExMapCjsModule = function (config) {
 
 const ShExTerm = require("@shexjs/term");
 const extensions = require("./lib/extensions");
-const {ShExVisitor} = require("@shexjs/visitor");
+const {ShExVisitor, ShExIndexVisitor} = require("@shexjs/visitor");
 const ShExUtil = require("@shexjs/util");
 const N3Util = require("n3/lib/N3Util");
 const N3DataFactory = require("n3/lib/N3DataFactory").default;
@@ -194,7 +194,7 @@ function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, s
 
 function trivialMaterializer (schema, nextBNode) {
   let blankNodeCount = 0;
-  const index = schema._index || ShExUtil.index(schema);
+  const index = schema._index || ShExIndexVisitor.index(schema);
   nextBNode = nextBNode || function () {
     return '_:b' + blankNodeCount++;
   };

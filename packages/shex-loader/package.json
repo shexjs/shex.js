@@ -15,7 +15,7 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-loader.js",
+  "main": "./lib/shex-loader.js",
   "engines": {
     "node": ">=18"
   },
@@ -24,7 +24,8 @@
     "@shexjs/util": "^1.0.0-alpha.28"
   },
   "scripts": {
-    "test": "cd ../.. && npm run test"
+    "test": "cd ../.. && npm run test",
+    "build": "tsc"
   },
   "publishConfig": {
     "access": "public"
@@ -35,5 +36,6 @@
   },
   "bugs": {
     "url": "https://github.com/shexSpec/grammar/issues"
-  }
+  },
+  "types": "./src/shex-loader.ts"
 }

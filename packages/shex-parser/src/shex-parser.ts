@@ -1,42 +1,85 @@
-const ShExParserCjsModule = (function () {
+/** Wrapper around the generated ShExJison parser which manages base IRI
+ * resolution, prefix expansion, blank node generation and error recovery.
+ */
+import * as ShExJ from 'shexj';
 
-const ShExJisonParser = require('./lib/ShExJison').ShExJisonParser;
+const ShExJisonParser = require('./ShExJison').ShExJisonParser;
 
 const schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
     dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
 
-class ShExCParserState {
-  constructor () {
-    this.blankId = 0;
-    this._fileName = undefined; // for debugging
-    this.EmptyObject = {  };
-    this.EmptyShape = { type: "Shape" };
-    this.skipped = { // space eaten by whitespace and comments
-      first_line: 0,
-      first_column: 0,
-      last_line: 0,
-      last_column: 0,
-    };
-    this.locations = {  };
-  }
+export interface Location {
+  filename?: string | null;
+  first_line: number;
+  first_column: number;
+  last_line: number;
+  last_column: number;
+}
+
+export interface SchemaOptions {
+  /** what to do when a shape label is defined twice: "replace", "ignore" or (default) error */
+  duplicateShape?: "replace" | "ignore" | string;
+  /** receives the parsed base and prefixes */
+  meta?: { base?: string | null, prefixes?: { [prefix: string]: string } };
+  index?: boolean;
+  [key: string]: any;
+}
+
+export interface ShExParser {
+  parse (input: string, base?: string | null, options?: SchemaOptions, filename?: string | null): ShExJ.Schema;
+  _setBase (base: string | null): void;
+  yy: any;
+}
+
+export class ShExCParserState {
+  blankId = 0;
+  _fileName: string | null | undefined = undefined; // for debugging
+  EmptyObject = {  };
+  EmptyShape: ShExJ.Shape = { type: "Shape" };
+  skipped = { // space eaten by whitespace and comments
+    first_line: 0,
+    first_column: 0,
+    last_line: 0,
+    last_column: 0,
+  };
+  locations: { [label: string]: Location } = {  };
+
+  _prefixes: { [prefix: string]: string } | null = null;
+  _imports: string[] | null = null;
+  _sourceMap: Map<object, Location[]> | null = null;
+  _exprLocations: Map<object, Location> | null = null;
+  shapes: { [label: string]: any } | null = null;
+  productions: { [label: string]: any } | null = null;
+  start: any = null;
+  startActs: any = null;
+  _base: string | null = null;
+  _basePath: string | undefined;
+  _baseRoot: string | undefined;
+  _baseScheme: string | undefined;
+  _baseIRI: null = null;
+  _baseIRIPath: null = null;
+  _baseIRIRoot: null = null;
+  options: SchemaOptions = {};
+  lexer: any;
+  recoverable: ((e: Error) => void) | undefined;
 
   reset () {
     this._prefixes = this._imports = this._sourceMap = this._exprLocations = this.shapes = this.productions = this.start = this.startActs = null; // Reset state.
     this._base = this._baseIRI = this._baseIRIPath = this._baseIRIRoot = null;
   }
 
-  _setFileName (fn) { this._fileName = fn; }
+  _setFileName (fn: string | null | undefined) { this._fileName = fn; }
 
   // Creates a new blank node identifier
   blank () {
     return '_:b' + this.blankId++;
   };
-  _resetBlanks (value) { this.blankId = value === undefined ? 0 : value; }
+  _resetBlanks (value?: number) { this.blankId = value === undefined ? 0 : value; }
 
   // N3.js:lib/N3Parser.js<0.4.5>:58 with
   //   s/this\./ShExJisonParser./g
   // ### `_setBase` sets the base IRI to resolve relative IRIs.
-  _setBase (baseIRI) {
+  _setBase (baseIRI: string | null) {
     if (!baseIRI)
       baseIRI = null;
 
@@ -47,9 +90,9 @@ class ShExCParserState {
     // Set base IRI and its components
     if (this._base = baseIRI) {
       this._basePath   = baseIRI.replace(/[^\/?]*(?:\?.*)?$/, '');
-      baseIRI = baseIRI.match(schemeAuthority);
-      this._baseRoot   = baseIRI[0];
-      this._baseScheme = baseIRI[1];
+      const match = baseIRI.match(schemeAuthority)!;
+      this._baseRoot   = match[0];
+      this._baseScheme = match[1];
     }
   }
 
@@ -58,14 +101,14 @@ class ShExCParserState {
   //   s/token/iri/
   // ### `_resolveIRI` resolves a relative IRI token against the base path,
   // assuming that a base path has been set and that the IRI is indeed relative.
-  _resolveIRI (iri) {
+  _resolveIRI (iri: string): string | null {
     switch (iri[0]) {
     // An empty relative IRI indicates the base IRI
     case undefined: return this._base;
     // Resolve relative fragment IRIs against the base IRI
     case '#': return this._base + iri;
     // Resolve relative query string IRIs by replacing the query string
-    case '?': return this._base.replace(/(?:\?.*)?$/, iri);
+    case '?': return this._base!.replace(/(?:\?.*)?$/, iri);
     // Resolve root-relative IRIs at the root of the base IRI
     case '/':
       // Resolve scheme-relative IRIs to the scheme
@@ -78,7 +121,7 @@ class ShExCParserState {
   }
 
   // ### `_removeDotSegments` resolves './' and '../' path segments in an IRI as per RFC3986.
-  _removeDotSegments (iri) {
+  _removeDotSegments (iri: string): string {
     // Don't modify the IRI if it does not contain any dot segments
     if (!dotSegments.test(iri))
       return iri;
@@ -140,7 +183,7 @@ class ShExCParserState {
     return result + iri.substring(segmentStart);
   }
 
-  error (e) {
+  error (e: Error & { hash?: any }) {
     const hash = {
       text: this.lexer.match,
       // token: this.terminals_[symbol] || symbol,
@@ -154,19 +197,18 @@ class ShExCParserState {
       this.recoverable(e)
     } else {
       throw e;
-      this.reset();
     }
   }
 
   // Expand declared prefix or throw Error
-  expandPrefix (prefix) {
-    if (!(prefix in this._prefixes))
+  expandPrefix (prefix: string): string {
+    if (!(prefix in this._prefixes!))
       this.error(new Error('Parse error; unknown prefix "' + prefix + ':"'));
-    return this._prefixes[prefix];
+    return this._prefixes![prefix];
   }
 
   // Add a shape to the list of shape(Expr)s
-  addShape (label, shape, start, end) {
+  addShape (label: string, shape: any, start: Location, end: Location) {
     if (shape === this.EmptyShape)
       shape = { type: "Shape" };
     if (this.productions && label in this.productions)
@@ -184,7 +226,7 @@ class ShExCParserState {
     }
   }
 
-  makeLocation (start, end) {
+  makeLocation (start: Location, end: Location): Location {
     if (end.first_line === this.skipped.last_line && end.first_column === this.skipped.last_column)
       end = this.skipped
     return {
@@ -198,7 +240,7 @@ class ShExCParserState {
 
 
   // Add a production to the map
-  addProduction (label, production) {
+  addProduction (label: string, production: any) {
     if (this.shapes && label in this.shapes)
       this.error(new Error("Structural error: "+label+" is a shape expression"));
     if (!this.productions)
@@ -212,7 +254,7 @@ class ShExCParserState {
       this.productions[label] = production;
   }
 
-  addSourceMap (obj, location) {
+  addSourceMap (obj: object, location?: Location) {
     if (!this._sourceMap)
       this._sourceMap = new Map();
     let list = this._sourceMap.get(obj)
@@ -227,7 +269,7 @@ class ShExCParserState {
   // Records the source extent of a schema object (e.g. a TripleConstraint)
   // keyed by object identity, so editors can anchor validation errors --
   // validator results reference these same objects.
-  addExprLocation (obj, location) {
+  addExprLocation (obj: object, location: Location) {
     if (!this._exprLocations)
       this._exprLocations = new Map();
     this._exprLocations.set(obj, location);
@@ -237,26 +279,26 @@ class ShExCParserState {
 }
 
 // Creates a ShEx parser with the given pre-defined prefixes
-const prepareParser = function (baseIRI, prefixes, schemaOptions) {
+const prepareParser = function (baseIRI: string | null, prefixes?: { [prefix: string]: string } | null, schemaOptions?: SchemaOptions): ShExParser {
                                                                                 schemaOptions = schemaOptions || {};
   // Create a copy of the prefixes
-  const prefixesCopy = {};
+  const prefixesCopy: { [prefix: string]: string } = {};
   for (const prefix in prefixes || {})
-    prefixesCopy[prefix] = prefixes[prefix];
+    prefixesCopy[prefix] = prefixes![prefix];
 
   // Create a new parser with the given prefixes
   // (Workaround for https://github.com/zaach/jison/issues/241)
   const parser = new ShExJisonParser(ShExCParserState);
   const oldParse = parser.parse;
 
-  function runParser (input, base = baseIRI, options = schemaOptions, filename = null) {
-    const parserState = globalThis.PS = new ShExCParserState();
+  function runParser (input: string, base: string | null = baseIRI, options: SchemaOptions = schemaOptions!, _filename: string | null = null): ShExJ.Schema {
+    const parserState = (globalThis as any).PS = new ShExCParserState();
     parserState._prefixes = Object.create(prefixesCopy);
     parserState._imports = [];
     parserState._setBase(base);
     parserState._setFileName(baseIRI);
-    parserState.options = schemaOptions;
-    let errors = [];
+    parserState.options = schemaOptions!;
+    let errors: any[] = [];
     parserState.recoverable = e =>
       errors.push(e);
     let ret = null;
@@ -266,8 +308,8 @@ const prepareParser = function (baseIRI, prefixes, schemaOptions) {
       errors.push(e);
     }
     if ("meta" in options) {
-      options.meta.base = parserState._base;
-      options.meta.prefixes = parserState._prefixes;
+      options.meta!.base = parserState._base;
+      options.meta!.prefixes = parserState._prefixes!;
     }
     parserState.reset();
     errors.forEach(e => {
@@ -283,7 +325,7 @@ const prepareParser = function (baseIRI, prefixes, schemaOptions) {
       errors[0].parsed = ret;
       throw errors[0];
     } else if (errors.length) {
-      const all = new Error("" + errors.length  + " parser errors:\n" + errors.map(
+      const all: any = new Error("" + errors.length  + " parser errors:\n" + errors.map(
         e => contextError(e, parser.yy.lexer)
       ).join("\n"));
       all.errors = errors;
@@ -294,12 +336,12 @@ const prepareParser = function (baseIRI, prefixes, schemaOptions) {
     }
   }
   parser.parse = runParser;
-  parser._setBase = function (base) {
+  parser._setBase = function (base: string | null) {
     baseIRI = base;
   }
   return parser;
 
-  function contextError (e, lexer) {
+  function contextError (e: any, _lexer: any) {
     // use the lexer's pretty-printing
     const line = e.location.first_line;
     const col  = e.location.first_column + 1;
@@ -308,10 +350,4 @@ const prepareParser = function (baseIRI, prefixes, schemaOptions) {
   }
 }
 
-return {
-  construct: prepareParser
-};
-})();
-
-if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = ShExParserCjsModule;
+export const construct = prepareParser;
