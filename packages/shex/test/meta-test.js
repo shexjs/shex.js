@@ -41,7 +41,7 @@ describe("shex meta-package", function () {
 
   it("should declare every package the index requires", function () {
     const deps = require("../package.json").dependencies;
-    const indexSource = Fs.readFileSync(Path.join(__dirname, "../shex.js"), "utf8");
+    const indexSource = Fs.readFileSync(Path.join(__dirname, "../src/shex.ts"), "utf8");
     const required = [...indexSource.matchAll(/require\("([^"]+)"\)/g)].map(m => m[1])
           .filter(pkg => pkg !== require("../package.json").name); // doc-comment example
     required.forEach(pkg => {

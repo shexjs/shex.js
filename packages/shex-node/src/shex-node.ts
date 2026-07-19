@@ -6,33 +6,41 @@
  *   `file:` read from flle system relative to cwd
  * loadExtensions: added function to dynamically load ShEx Validator extensions
  */
+import ShExLoader = require("@shexjs/loader");
 
-const ShExNodeCjsModule = function (config = {}) {
+const Fs = require('fs')
+const Path = require('path')
+const Glob = require("glob").glob
 
-  class ResourceError extends Error {
-    constructor (resource, error) {
-      super(ResourceError.tweakMessage(resource, error));
-      this.origError = error; // for stack
-    }
-    static tweakMessage (resource, error) {
-      return error.message + '\n  resource: ' + resource;
-    }
+class ResourceError extends Error {
+  origError: Error;
+
+  constructor (resource: string, error: Error) {
+    super(ResourceError.tweakMessage(resource, error));
+    this.origError = error; // for stack
   }
+  static tweakMessage (resource: string, error: Error): string {
+    return error.message + '\n  resource: ' + resource;
+  }
+}
 
-  const Fs = require('fs')
-  const Glob = require("glob").glob
-  const ShExLoader = require("@shexjs/loader")
-  const FileColonUrlRe = "^file://[^/]*(/.*)$";
-  const myLoaderOpts = {
+const FileColonUrlRe = "^file://[^/]*(/.*)$";
+
+/**
+ * Extends @shexjs/loader with:
+ * - `file:` URL and filesystem path support
+ * - stdin (`-`) support
+ * - Dynamic loading of ShEx extensions via loadExtensions()
+ */
+function ShExNodeCjsModule (config: ShExNodeCjsModule.Config = {}): ShExLoader.Loader {
+
+  const myLoaderOpts: any = {
     loadExtensions: LoadExtensions,
   }
 
-
   const NodeDocLoader = config?.jsonld?.documentLoaders?.node()
   if (NodeDocLoader) {
-    myLoaderOpts.jsonLdOptions = { documentLoader }
-
-    async function documentLoader (url, options) {
+    const documentLoader = async function (url: string, _options?: any) {
       const m = url.match(FileColonUrlRe);
       if (m) {
         return Fs.promises.access(m[1], Fs.constants.F_OK)
@@ -43,30 +51,28 @@ const ShExNodeCjsModule = function (config = {}) {
               documentUrl: url
             }
           })
-          .catch(error => Error(`Unable to read ${m[1]}`))
+          .catch(() => Error(`Unable to read ${m![1]}`))
         // console.log("HERE", m)
       } else {
         const ret = await NodeDocLoader(url)
         return ret
       }
     }
+    myLoaderOpts.jsonLdOptions = { documentLoader }
   }
   const newLoader = ShExLoader(Object.assign(myLoaderOpts, config))
 
   const oldGet = newLoader.GET
-  newLoader.GET = async function (url, mediaType) {
-    const FS = require("fs")
-    const Path = require("path")
-
+  newLoader.GET = async function (url: string, mediaType?: string) {
     return url === "-"
-      ? new Promise(function (fulfill, reject) {
-        const inputChunks = [];
+      ? new Promise<ShExLoader.LoadedResource>(function (fulfill, reject) {
+        const inputChunks: string[] = [];
 
         //process.stdin.resume(); is old mode needed?
         process.stdin.setEncoding("utf8");
 
         process.stdin.on("data", function (chunk) {
-          inputChunks.push(chunk);
+          inputChunks.push(chunk as unknown as string);
         });
 
         process.stdin.on("end", function () {
@@ -79,14 +85,14 @@ const ShExNodeCjsModule = function (config = {}) {
       })
       : url.match("^(blob:)?[a-z]+://.") && !url.match(FileColonUrlRe)
       ? oldGet(url, mediaType)
-      : new Promise(function (fulfill, reject) {
+      : new Promise<ShExLoader.LoadedResource>(function (fulfill, reject) {
         let filename = url;
         const fileURLmatch = filename.match(FileColonUrlRe);
         if (fileURLmatch)
           filename = fileURLmatch[1];
-        if ("cwd" in config)
+        if (config.cwd !== undefined)
           filename = Path.join(config.cwd, filename)
-        FS.readFile(filename, "utf8", function (error, text) {
+        Fs.readFile(filename, "utf8", function (error: Error | null, text: string) {
           if (error) {
             reject(new ResourceError(url, error));
           } else {
@@ -98,15 +104,14 @@ const ShExNodeCjsModule = function (config = {}) {
 
   return newLoader
 
-  function LoadExtensions (globs) {
-    const NodePath = require('path')
+  function LoadExtensions (globs: string[]): Record<string, ShExLoader.ShExExtension> {
     return (globs || []).reduce(
-      (list, glob) =>
+      (list: string[], glob) =>
         list.concat(Glob.sync(glob))
       , []).
-      reduce(function (ret, extPath) {
+      reduce(function (ret: Record<string, ShExLoader.ShExExtension>, extPath) {
         try {
-	  const absPath = NodePath.resolve(extPath)
+	  const absPath = Path.resolve(extPath)
 	  const rawModule = require(absPath)
 	  const t = typeof rawModule === 'function' ? rawModule(Object.assign({Validator: {}}, config)) : rawModule
 	  ret[t.url] = t
@@ -119,7 +124,12 @@ const ShExNodeCjsModule = function (config = {}) {
   }
 }
 
-// return { load: LoadPromise, loadExtensions: LoadExtensions, GET: GET, loadShExImports_NotUsed: loadShExImports_NotUsed };
+namespace ShExNodeCjsModule {
+  /** ShExNode config extends ShExLoader.Config with Node.js-specific options. */
+  export interface Config extends ShExLoader.Config {
+    /** Working directory used to resolve relative file paths. */
+    cwd?: string;
+  }
+}
 
-if (typeof require !== "undefined" && typeof exports !== "undefined")
-  module.exports = ShExNodeCjsModule;
+export = ShExNodeCjsModule;

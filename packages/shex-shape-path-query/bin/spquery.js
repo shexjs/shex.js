@@ -22,7 +22,7 @@ process.env._INCLUDE_DEPTH = oldDepth
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
 const ShapeMap = require('shape-map');
 
-const SPQuery = require('../shape-path-query')
+const SPQuery = require('../lib/shape-path-query')
 const N3 = require("n3")
 
 const Base = 'file://' + __dirname

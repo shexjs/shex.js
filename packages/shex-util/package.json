@@ -15,7 +15,7 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-util.js",
+  "main": "./lib/shex-util.js",
   "engines": {
     "node": ">=18"
   },
@@ -28,7 +28,8 @@
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
-    "browser": "browserify shex.js -s ShEx -o browser/shex-util-browserify.js && uglifyjs browser/shex-util-browserify.js --comments -mco browser/shex-util-browserify.min.js"
+    "browser": "browserify shex.js -s ShEx -o browser/shex-util-browserify.js && uglifyjs browser/shex-util-browserify.js --comments -mco browser/shex-util-browserify.min.js",
+    "build": "tsc"
   },
   "publishConfig": {
     "access": "public"
@@ -42,5 +43,6 @@
   },
   "devDependencies": {
     "@types/shexj": "^2.1.7"
-  }
+  },
+  "types": "./src/shex-util.ts"
 }

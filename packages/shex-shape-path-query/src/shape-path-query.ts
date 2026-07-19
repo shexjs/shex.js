@@ -1,10 +1,13 @@
-const {ShExValidator, resultMapToShapeExprTest} = require('@shexjs/validator')
-const ShExUtil = require('@shexjs/util')
-const ShExTerm = require('@shexjs/term')
-const ShExMap = require('@shexjs/extension-map')
+/** ShapePath query interface for ShEx.js: evaluate a ShapePath-selected node
+ * set against data by binding ShExMap variables to the selected schema nodes.
+ */
+import {ShExValidator, resultMapToShapeExprTest} from '@shexjs/validator';
+import * as ShExUtil from '@shexjs/util';
+import * as ShExTerm from '@shexjs/term';
+const ShExMap = require('@shexjs/extension-map');
 const MapModule = ShExMap({...ShExTerm, Validator: {}})
 
-async function shapePathQuery (schema, nodeSet, db, smap) {
+export async function shapePathQuery (schema: any, nodeSet: any[], db: any, smap: any): Promise<any[]> {
   // Add ShExMap annotations to each element of the nodeSet.
   // ShExMap binds variables which we use to capture schema matches.
   const vars = nodeSet.map((shexNode) => {
@@ -31,8 +34,6 @@ async function shapePathQuery (schema, nodeSet, db, smap) {
     // Return values extracted from data.
     let resultBindings = ShExUtil.valToExtension(valRes, MapModule.url)
     if (!Array.isArray(resultBindings)) resultBindings = [ resultBindings ]
-    return vars.flatMap(v => resultBindings.map(b => b[v]))
+    return vars.flatMap(v => resultBindings.map((b: any) => b[v]))
   }
 }
-
-module.exports = { shapePathQuery }

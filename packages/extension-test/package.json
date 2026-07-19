@@ -15,7 +15,7 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-extension-test.js",
+  "main": "./lib/shex-extension-test.js",
   "engines": {
     "node": ">=18"
   },
@@ -24,7 +24,8 @@
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
-    "browser": "../../node_modules/.bin/browserify shex-extension-test.js -s testExtension -o browser/shex-extension-test-browserify.js && ../../node_modules/.bin/uglifyjs browser/shex-extension-test-browserify.js --comments -mco browser/shex-extension-test-browserify.min.js"
+    "browser": "../../node_modules/.bin/browserify shex-extension-test.js -s testExtension -o browser/shex-extension-test-browserify.js && ../../node_modules/.bin/uglifyjs browser/shex-extension-test-browserify.js --comments -mco browser/shex-extension-test-browserify.min.js",
+    "build": "tsc"
   },
   "publishConfig": {
     "access": "public"
@@ -35,5 +36,6 @@
   },
   "bugs": {
     "url": "https://github.com/shexSpec/grammar/issues"
-  }
+  },
+  "types": "./src/shex-extension-test.ts"
 }

@@ -1,5 +1,5 @@
 const TestExt = "http://shex.io/extensions/Test/";
-function register (validator, api) {
+function register (validator: any, api: any) {
   if (api === undefined || !('ShExTerm' in api))
     throw Error('SemAct extensions must be called with register(validator, {ShExTerm, ...)')
 
@@ -18,13 +18,13 @@ function register (validator, api) {
        * @param {object} extensionStorage - place where the extension writes into the result structure.
        * @return {bool} false if the extension failed or did not accept the ctx object.
        */
-      dispatch: function (code, ctx, extensionStorage) {
+      dispatch: function (code: string, ctx: any, _extensionStorage: any) {
         const langMatch = code.match(pattern);
         if (!langMatch) {
           throw Error("Invocation error: " + TestExt + " code \"" + code + "\" didn't match " + pattern);
         }
         const terms = langMatch[2];
-        const args = [];
+        const args: string[] = [];
         const termMatcher = new RegExp(` *${term} *,?`, 'g'); // commas already enforced above
         let termMatch = null;
         while ((termMatch = termMatcher.exec(terms)) !== null) {
@@ -37,10 +37,10 @@ function register (validator, api) {
         validator.semActHandler.results[TestExt].push(line);
         return langMatch[1] === "fail" ? [{type: "SemActFailure", errors: [`fail(${line})`]}] : [];
 
-        function parseStr (wrapped) {
+        function parseStr (wrapped: string): string {
           return wrapped.substring(1, wrapped.length -1);
         }
-        function parsePos (pos) {
+        function parsePos (pos: string): string {
           const t = ctx.triples[0];
           return pos === "s" ? t.subject.value :
             pos === "p" ? t.predicate.value :
@@ -53,12 +53,12 @@ function register (validator, api) {
   return validator.semActHandler.results[TestExt];
 }
 
-function done (validator) {
+function done (validator: any) {
   if (validator.semActHandler.results[TestExt].length === 0)
     delete validator.semActHandler.results[TestExt];
 }
 
-module.exports = {
+export = {
   name: "Test",
   description: `Simple test extension used in the shexTest test suite
 url: ${TestExt}`,

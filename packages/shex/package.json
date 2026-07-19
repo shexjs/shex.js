@@ -18,7 +18,7 @@
   "engines": {
     "node": ">=18"
   },
-  "main": "shex.js",
+  "main": "./lib/shex.js",
   "dependencies": {
     "@shexjs/cli": "^1.0.0-alpha.29",
     "@shexjs/extension-map": "^1.0.0-alpha.29",
@@ -35,7 +35,8 @@
     "shape-map": "^1.0.0-alpha.26"
   },
   "scripts": {
-    "test": "cd ../.. && mocha packages/shex/test/*test.js"
+    "test": "cd ../.. && mocha packages/shex/test/*test.js",
+    "build": "tsc"
   },
   "publishConfig": {
     "access": "public"
@@ -46,5 +47,6 @@
   },
   "bugs": {
     "url": "https://github.com/shexjs/shex.js/issues"
-  }
+  },
+  "types": "./src/shex.ts"
 }

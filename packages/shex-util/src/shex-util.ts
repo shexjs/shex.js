@@ -1,13 +1,17 @@
 // **ShExUtil** provides ShEx utility functions
 
-const ShExUtilCjsModule = (function () {
-const ShExTerm = require("@shexjs/term");
-const {ShExVisitor, ShExIndexVisitor} = require('@shexjs/visitor')
+import * as ShExTerm from "@shexjs/term";
+import {ShExVisitor, ShExIndexVisitor} from '@shexjs/visitor';
+import * as ShExJ from 'shexj';
 const Hierarchy = require('hierarchy-closure')
-const ShExHumanErrorWriter = require('./shex-human-error-writer.js')
+import ShExHumanErrorWriter = require('./shex-human-error-writer');
 
-const SX = {};
-SX._namespace = "http://www.w3.org/ns/shex#";
+// runs in browsers (bundled) as well as node; not typed in the node-only lib
+declare const XMLHttpRequest: any;
+
+interface Namespace { _namespace: string; [localName: string]: string }
+
+const SX: Namespace = { _namespace: "http://www.w3.org/ns/shex#" };
 ["Schema", "@context", "imports", "startActs", "start", "shapes",
  "ShapeDecl", "ShapeOr", "ShapeAnd", "shapeExprs", "nodeKind",
  "NodeConstraint", "iri", "bnode", "nonliteral", "literal", "datatype", "length", "minlength", "maxlength", "pattern", "flags", "mininclusive", "minexclusive", "maxinclusive", "maxexclusive", "totaldigits", "fractiondigits", "values",
@@ -23,13 +27,11 @@ SX._namespace = "http://www.w3.org/ns/shex#";
  "Annotation", "object"].forEach(p => {
   SX[p] = SX._namespace+p;
 });
-const RDF = {};
-RDF._namespace = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+const RDF: Namespace = { _namespace: "http://www.w3.org/1999/02/22-rdf-syntax-ns#" };
 ["type", "first", "rest", "nil"].forEach(p => {
   RDF[p] = RDF._namespace+p;
 });
-const OWL = {}
-OWL._namespace = "http://www.w3.org/2002/07/owl#";
+const OWL: Namespace = { _namespace: "http://www.w3.org/2002/07/owl#" };
 ["Thing"].forEach(p => {
   OWL[p] = OWL._namespace+p;
 });
@@ -37,62 +39,164 @@ OWL._namespace = "http://www.w3.org/2002/07/owl#";
 const Missed = {}; // singleton
 const UNBOUNDED = -1;
 
-function extend (base) {
+function extend (base: any, ...extensions: any[]): any {
   if (!base) base = {};
-  for (let i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
+  for (let i = 0, l = extensions.length, arg; i < l && (arg = extensions[i] || {}); i++)
     for (let name in arg)
       base[name] = arg[name];
   return base;
 }
 
-  function isShapeRef (expr) {
-    return typeof expr === "string" // test for JSON-LD @ID
+class MissingReferenceError extends Error {
+  reference: string;
+  known: string[];
+
+  constructor (ref: string, labelStr: string, known: string[]) {
+    super(`Structural error: reference to ${ref} not found in ${labelStr}`);
+    this.reference = ref;
+    this.known = known;
   }
 
-  let isInclusion = isShapeRef;
-
-
-  class MissingReferenceError extends Error {
-    constructor (ref, labelStr, known) {
-      super(`Structural error: reference to ${ref} not found in ${labelStr}`);
-      this.reference = ref;
-      this.known = known;
-    }
-
-    /** append directly after `error.message`
-     */
-    notFoundIn () {
-      return ":\n" + this.known.map(
-        u => u.substr(0, 2) === '_:' ? u : '<' + u + '>'
-      ).join("\n        ") + ".";
-    }
+  /** append directly after `error.message`
+   */
+  notFoundIn (): string {
+    return ":\n" + this.known.map(
+      u => u.substr(0, 2) === '_:' ? u : '<' + u + '>'
+    ).join("\n        ") + ".";
   }
-  class MissingDeclRefError extends MissingReferenceError {
-    constructor (ref, known) {
-      super(ref, "shape declarations", known);
-    }
+}
+class MissingDeclRefError extends MissingReferenceError {
+  constructor (ref: string, known: string[]) {
+    super(ref, "shape declarations", known);
   }
-  class MissingTripleExprRefError extends MissingReferenceError {
-    constructor (ref, known) {
-      super(ref, "triple expressions", known);
-    }
+}
+class MissingTripleExprRefError extends MissingReferenceError {
+  constructor (ref: string, known: string[]) {
+    super(ref, "triple expressions", known);
   }
+}
+
+/** Walks a schema checking structure: reference targets, circular refs, negation cycles.
+ * (Hoisted to module scope so that both validateSchema and HierarchyVisitor share it.)
+ */
+class SchemaStructureValidator extends ShExVisitor {
+  schema: any;
+  options: any;
+  negativeDeps: any;
+  positiveDeps: any;
+  currentLabel: string | null;
+  currentExtra: string[] | null;
+  currentNegated: boolean;
+  inTE: boolean;
+  index: any;
+
+  constructor (schema: any, options: any, negativeDeps: any, positiveDeps: any) {
+    super();
+    this.schema = schema;
+    this.options = options;
+    this.negativeDeps = negativeDeps;
+    this.positiveDeps = positiveDeps;
+
+    this.currentLabel = null;
+    this.currentExtra = null;
+    this.currentNegated = false;
+    this.inTE = false;
+    this.index = schema.index || ShExIndexVisitor.index(schema);
+  }
+
+  visitShape (shape: ShExJ.Shape, ...args: any[]): any {
+    const lastExtra = this.currentExtra;
+    this.currentExtra = shape.extra || null;
+    const ret = super.visitShape(shape, ...args);
+    this.currentExtra = lastExtra;
+    return ret;
+  };
+
+  visitShapeNot (shapeNot: ShExJ.ShapeNot, ...args: any[]): any {
+    const lastNegated = this.currentNegated;
+    this.currentNegated = !this.currentNegated;
+    const ret = super.visitShapeNot(shapeNot, ...args);
+    this.currentNegated = lastNegated;
+    return ret;
+  };
+
+  visitTripleConstraint (expr: ShExJ.TripleConstraint, ...args: any[]): any {
+    const lastNegated = this.currentNegated;
+    if (this.currentExtra && this.currentExtra.indexOf(expr.predicate) !== -1)
+      this.currentNegated = !this.currentNegated;
+    this.inTE = true;
+    const ret = super.visitTripleConstraint(expr, ...args);
+    this.inTE = false;
+    this.currentNegated = lastNegated;
+    return ret;
+  };
+
+  visitShapeRef (shapeRef: ShExJ.shapeDeclRef, ...args: any[]): any {
+    if (!(shapeRef in this.index.shapeExprs)) {
+      const error = this.firstError(new MissingDeclRefError(shapeRef, Object.keys(this.index.shapeExprs)), shapeRef);
+      if (this.options.missingReferent) {
+        this.options.missingReferent(error, (this.schema._locations || {})[this.currentLabel!]);
+      } else {
+        throw error;
+      }
+    }
+    if (!this.inTE && shapeRef === this.currentLabel)
+      throw this.firstError(Error("Structural error: circular reference to " + this.currentLabel + "."), shapeRef);
+    if (!this.options.skipCycleCheck)
+      (this.currentNegated ? this.negativeDeps : this.positiveDeps).add(this.currentLabel, shapeRef);
+    return super.visitShapeRef(shapeRef, ...args);
+  };
+
+  visitInclusion (inclusion: ShExJ.tripleExprRef, ...args: any[]): any {
+    if (!this.index.tripleExprs[inclusion])
+      throw this.firstError(new MissingTripleExprRefError(inclusion, Object.keys(this.index.tripleExprs)), inclusion);
+    // if (refd.type !== "Shape")
+    //   throw Error("Structural error: " + inclusion + " is not a simple shape.");
+    return super.visitInclusion(inclusion, ...args);
+  };
+
+  firstError (e: Error & { location?: any }, obj: any): Error {
+    if ("_sourceMap" in this.schema)
+      e.location = (this.schema._sourceMap.get(obj) || [undefined])[0];
+    return e;
+  }
+
+  static validate (schema: any, options: any): void {
+    const negativeDeps = Hierarchy.create();
+    const positiveDeps = Hierarchy.create();
+    const visitor = new SchemaStructureValidator(schema, options, negativeDeps, positiveDeps);
+
+    (schema.shapes || []).forEach(function (shape: any) {
+      visitor.currentLabel = shape.id;
+      visitor.visitShapeDecl(shape, shape.id);
+      visitor.currentLabel = null;
+    });
+    let circs = Object.keys(negativeDeps.children).filter(
+      k => negativeDeps.children[k].filter(
+        (k2: string) => k2 in negativeDeps.children && negativeDeps.children[k2].indexOf(k) !== -1
+          || k2 in positiveDeps.children && positiveDeps.children[k2].indexOf(k) !== -1
+      ).length > 0
+    );
+    if (circs.length)
+      throw visitor.firstError(Error("Structural error: circular negative dependencies on " + circs.join(',') + "."), circs[0]);
+  }
+}
 
 const ShExUtil = {
 
   SX: SX,
   RDF: RDF,
-  version: function () {
+  version: function (): string {
     return "0.5.0";
   },
 
   /* getAST - compile a traditional regular expression abstract syntax tree.
    * Tested but not used at present.
    */
-  getAST: function (schema) {
+  getAST: function (schema: any): any {
     return {
       type: "AST",
-      shapes: schema.shapes.reduce(function (ret, shape) {
+      shapes: schema.shapes.reduce(function (ret: any, shape: any) {
         ret[shape.id] = {
           type: "ASTshape",
           expression: _compileShapeToAST(shape.shapeExpr.expression, [], schema)
@@ -105,44 +209,55 @@ const ShExUtil = {
      *
      * currently tested but not used.
      */
-    function _compileShapeToAST (expression, tripleConstraints, schema) {
+    function _compileShapeToAST (expression: any, tripleConstraints: any[], schema: any): any {
 
-      function Epsilon () {
-        this.type = "Epsilon";
+      class Epsilon {
+        type = "Epsilon";
       }
 
-      function TripleConstraint (ordinal, predicate, inverse, negated, valueExpr) {
-        this.type = "TripleConstraint";
-        // this.ordinal = ordinal; @@ does 1card25
-        this.inverse = !!inverse;
-        this.negated = !!negated;
-        this.predicate = predicate;
-        if (valueExpr !== undefined)
-          this.valueExpr = valueExpr;
+      class TripleConstraint {
+        type = "TripleConstraint";
+        inverse: boolean;
+        negated: boolean;
+        predicate: string;
+        valueExpr: any;
+
+        constructor (_ordinal: number, predicate: string, inverse: boolean, negated: boolean, valueExpr: any) {
+          // this.ordinal = ordinal; @@ does 1card25
+          this.inverse = !!inverse;
+          this.negated = !!negated;
+          this.predicate = predicate;
+          if (valueExpr !== undefined)
+            this.valueExpr = valueExpr;
+        }
       }
 
-      function Choice (disjuncts) {
-        this.type = "Choice";
-        this.disjuncts = disjuncts;
+      class Choice {
+        type = "Choice";
+        disjuncts: any[];
+        constructor (disjuncts: any[]) { this.disjuncts = disjuncts; }
       }
 
-      function EachOf (conjuncts) {
-        this.type = "EachOf";
-        this.conjuncts = conjuncts;
+      class EachOf {
+        type = "EachOf";
+        conjuncts: any[];
+        constructor (conjuncts: any[]) { this.conjuncts = conjuncts; }
       }
 
-      function SemActs (expression, semActs) {
-        this.type = "SemActs";
-        this.expression = expression;
-        this.semActs = semActs;
+      class SemActs {
+        type = "SemActs";
+        expression: any;
+        semActs: any;
+        constructor (expression: any, semActs: any) { this.expression = expression; this.semActs = semActs; }
       }
 
-      function KleeneStar (expression) {
-        this.type = "KleeneStar";
-        this.expression = expression;
+      class KleeneStar {
+        type = "KleeneStar";
+        expression: any;
+        constructor (expression: any) { this.expression = expression; }
       }
 
-      function _compileExpression (expr, schema) {
+      function _compileExpression (expr: any, schema: any): any {
         let repeated, container;
 
         /* _repeat: map expr with a min and max cardinality to a corresponding AST with Groups and Stars.
@@ -156,7 +271,7 @@ const ShExUtil = {
 
            @@TODO: favor Plus over Star if Epsilon not in expr.
         */
-        function _repeat (expr, min, max) {
+        function _repeat (expr: any, min: number | undefined, max: number | undefined): any {
           if (min === undefined) { min = 1; }
           if (max === undefined) { max = 1; }
 
@@ -164,14 +279,14 @@ const ShExUtil = {
 
           const opts = max === UNBOUNDED ?
                 new KleeneStar(expr) :
-                Array.from(Array(max - min)).reduce(function (ret, elt, ord) {
+                Array.from(Array(max - min)).reduce(function (ret, _elt, ord) {
                   return ord === 0 ?
                     new Choice([expr, new Epsilon]) :
                     new Choice([new EachOf([expr, ret]), new Epsilon]);
                 }, undefined);
 
           const reqd = min !== 0 ?
-                new EachOf(Array.from(Array(min)).map(function (ret) {
+                new EachOf(Array.from(Array(min)).map(function () {
                   return expr; // @@ something with ret
                 }).concat(opts)) : opts;
           return reqd;
@@ -194,7 +309,7 @@ const ShExUtil = {
         }
 
         else if (expr.type === "OneOf") {
-          container = new Choice(expr.expressions.map(function (e) {
+          container = new Choice(expr.expressions.map(function (e: any) {
             return _compileExpression(e, schema);
           }));
           repeated = _repeat(container, expr.min, expr.max);
@@ -202,7 +317,7 @@ const ShExUtil = {
         }
 
         else if (expr.type === "EachOf") {
-          container = new EachOf(expr.expressions.map(function (e) {
+          container = new EachOf(expr.expressions.map(function (e: any) {
             return _compileExpression(e, schema);
           }));
           repeated = _repeat(container, expr.min, expr.max);
@@ -216,38 +331,27 @@ const ShExUtil = {
     }
   },
 
-  // tests
-  // console.warn("HERE:", ShExJtoAS({"type":"Schema","shapes":[{"id":"http://all.example/S1","type":"Shape","expression":
-  //  { "id":"http://all.example/S1e", "type":"EachOf","expressions":[ ] },
-  // // { "id":"http://all.example/S1e","type":"TripleConstraint","predicate":"http://all.example/p1"},
-  // "extra":["http://all.example/p3","http://all.example/p1","http://all.example/p2"]
-  // }]}).shapes['http://all.example/S1']);
-
-  ShExJtoAS: function (schema) {
-    const _ShExUtil = this;
-    // 2.1- > 2.2
-    const updated2_1to2_2 = (schema.shapes || []).reduce((acc, sh, ord) => {
-      if (sh.type === "ShapeDecl")
-        return acc;
-      const id = sh.id;
-      delete sh.id;
-      const newDecl = {
-        type: "ShapeDecl",
-        id: id,
-        shapeExpr: sh,
-      };
-      schema.shapes[ord] = newDecl;
-      return acc.concat([newDecl]);
-    }, []);
-    // if (updated2_1to2_2.length > 0)
-    //   console.log("Updated 2.1 -> 2.2: " + updated2_1to2_2.map(decl => decl.id).join(", "));
+  ShExJtoAS: function (schema: any): any {
+    (schema.shapes || []).forEach((sh: any, ord: number) => {
+      // 2.1- > 2.2
+      if (sh.type !== "ShapeDecl") {
+        const id = sh.id;
+        delete sh.id;
+        const newDecl = {
+          type: "ShapeDecl",
+          id: id,
+          shapeExpr: sh,
+        };
+        schema.shapes[ord] = newDecl;
+      }
+    });
     schema._prefixes = schema._prefixes || {  };
     // schema._base = schema._prefixes || ""; // leave undefined to signal no provided base
     schema._index = ShExIndexVisitor.index(schema);
     return schema;
   },
 
-  AStoShExJ: function (schema) {
+  AStoShExJ: function (schema: any): any {
     schema["@context"] = schema["@context"] || "http://www.w3.org/ns/shex.jsonld";
     delete schema["_index"];
     delete schema["_prefixes"];
@@ -258,42 +362,23 @@ const ShExUtil = {
     return schema;
   },
 
-  // tests
-  // const shexr = ShExUtil.ShExRtoShExJ({ "type": "Schema", "shapes": [
-  //   { "id": "http://a.example/S1", "type": "Shape",
-  //     "expression": {
-  //       "type": "TripleConstraint", "predicate": "http://a.example/p1",
-  //       "valueExpr": {
-  //         "type": "ShapeAnd", "shapeExprs": [
-  //           { "type": "NodeConstraint", "nodeKind": "bnode" },
-  //           { "id": "http://a.example/S2", "type": "Shape",
-  //             "expression": {
-  //               "type": "TripleConstraint", "predicate": "http://a.example/p2" } }
-  //           //            "http://a.example/S2"
-  //         ] } } },
-  //   { "id": "http://a.example/S2", "type": "Shape",
-  //     "expression": {
-  //       "type": "TripleConstraint", "predicate": "http://a.example/p2" } }
-  // ] });
-  // console.warn("HERE:", shexr.shapes[0].expression.valueExpr);
-  // ShExUtil.ShExJtoAS(shexr);
-  // console.warn("THERE:", shexr.shapes["http://a.example/S1"].expression.valueExpr);
-
-
-  ShExRtoShExJ: function (schema) {
+  ShExRtoShExJ: function (schema: any): any {
     // compile a list of known shapeExprs
     const knownShapeExprs = new Map();
     if ("shapes" in schema)
-      schema.shapes.forEach(sh => knownShapeExprs.set(sh.id, null))
+      schema.shapes.forEach((sh: any) => knownShapeExprs.set(sh.id, null))
 
     class ShExRVisitor extends ShExVisitor {
-      constructor (knownShapeExprs) {
+      knownShapeExprs: Map<string, any>;
+      knownTripleExpressions: { [id: string]: { refCount: number, expr: any } };
+
+      constructor (knownShapeExprs: Map<string, any>) {
         super()
         this.knownShapeExprs = knownShapeExprs;
         this.knownTripleExpressions = {};
       }
 
-      visitShapeExpr (expr, ...args) {
+      visitShapeExpr (expr: any, ...args: any[]): any {
         if (typeof expr === "string")
           return expr;
         if ("id" in expr) {
@@ -301,7 +386,7 @@ const ShExUtil = {
             const already = this.knownShapeExprs.get(expr.id);
             if (typeof expr.expression === "object") {
               if (!already)
-                this.knownShapeExprs.set(expr.id, super.visitShapeExpr(expr, label));
+                this.knownShapeExprs.set(expr.id, super.visitShapeExpr(expr, ...args));
             }
             return expr.id;
           }
@@ -310,7 +395,7 @@ const ShExUtil = {
         return super.visitShapeExpr(expr, ...args);
       };
 
-      visitTripleExpr (expr, ...args) {
+      visitTripleExpr (expr: any, ...args: any[]): any {
         if (typeof expr === "string") { // shortcut for recursive references e.g. 1Include1
           return expr;
         } else if ("id" in expr) {
@@ -325,7 +410,7 @@ const ShExUtil = {
         return ret;
       }
 
-      cleanIds () {
+      cleanIds (): void {
         for (let k in this.knownTripleExpressions) {
           const known = this.knownTripleExpressions[k];
           if (known.refCount === 1 && known.expr.id.startsWith("_:"))
@@ -339,16 +424,16 @@ const ShExUtil = {
     if ("start" in schema)
       schema.start = v.visitShapeExpr(schema.start);
     if ("shapes" in schema)
-      schema.shapes = schema.shapes.map(sh => v.visitShapeDecl(sh));
+      schema.shapes = schema.shapes.map((sh: any) => v.visitShapeDecl(sh));
 
     // remove extraneous BNode IDs
     v.cleanIds();
     return schema;
   },
 
-  valGrep: function (obj, type, f) {
+  valGrep: function (obj: any, type: string, f: (o: any) => any): any[] {
     const _ShExUtil = this;
-    const ret = [];
+    const ret: any[] = [];
     for (let i in obj) {
       const o = obj[i];
       if (typeof o === "object") {
@@ -360,8 +445,8 @@ const ShExUtil = {
     return ret;
   },
 
-  valToN3js: function (res, factory) {
-    return this.valGrep(res, "TestedTriple", function (t) {
+  valToN3js: function (res: any, _factory: any): any[] {
+    return this.valGrep(res, "TestedTriple", function (t: any) {
       const ret = JSON.parse(JSON.stringify(t));
       if (typeof t.object === "object")
         ret.object = ("\"" + t.object.value + "\"" + (
@@ -376,28 +461,29 @@ const ShExUtil = {
   /* canonicalize: move all tripleExpression references to their first expression.
    *
    */
-  canonicalize: function (schema, trimIRI) {
+  canonicalize: function (schema: any, trimIRI?: string): any {
     const ret = JSON.parse(JSON.stringify(schema));
     ret["@context"] = ret["@context"] || "http://www.w3.org/ns/shex.jsonld";
     delete ret._prefixes;
     delete ret._base;
     let index = ret._index || ShExIndexVisitor.index(schema);
     delete ret._index;
-    let sourceMap = ret._sourceMap;
     delete ret._sourceMap;
-    let locations = ret._locations;
     delete ret._locations;
     delete ret._exprLocations;
     // Don't delete ret.productions as it's part of the AS.
 
     class MyVisitor extends ShExVisitor {
-      constructor(index) {
+      index: any;
+      knownExpressions: string[];
+
+      constructor(index: any) {
         super();
         this.index = index;
         this.knownExpressions = [];
       }
 
-      visitInclusion (inclusion) {
+      visitInclusion (inclusion: string): any {
         if (this.knownExpressions.indexOf(inclusion) === -1 &&
             inclusion in this.index.tripleExprs) {
           this.knownExpressions.push(inclusion)
@@ -406,7 +492,7 @@ const ShExUtil = {
         return super.visitInclusion(inclusion);
       }
 
-      visitTripleExpr (expression) {
+      visitTripleExpr (expression: any): any {
         if (typeof expression === "object" && "id" in expression) {
           if (this.knownExpressions.indexOf(expression.id) === -1) {
             this.knownExpressions.push(expression.id)
@@ -417,15 +503,14 @@ const ShExUtil = {
         return super.visitTripleExpr(expression);
       }
 
-      visitExtra (l) {
+      visitExtra (l: string[]): any {
         return l.slice().sort();
-        return ret;
       }
     }
 
-    v = new MyVisitor(index);
+    const v = new MyVisitor(index);
     if (trimIRI) {
-      v.visitIRI = function (i) {
+      v.visitIRI = function (i: string) {
         return i.replace(trimIRI, "");
       }
       if ("imports" in ret)
@@ -441,13 +526,13 @@ const ShExUtil = {
     return ret;
   },
 
-  BiDiClosure: function () {
+  BiDiClosure: function (): any {
     return {
-      needs: {},
-      neededBy: {},
-      inCycle: [],
-      test: function () {
-        function expect (l, r) { const ls = JSON.stringify(l), rs = JSON.stringify(r); if (ls !== rs) throw Error(ls+" !== "+rs); }
+      needs: {} as { [key: string]: any[] },
+      neededBy: {} as { [key: string]: any[] },
+      inCycle: [] as any[],
+      test: function (this: any) {
+        function expect (l: any, r: any) { const ls = JSON.stringify(l), rs = JSON.stringify(r); if (ls !== rs) throw Error(ls+" !== "+rs); }
         // this.add(1, 2); expect(this.needs, { 1:[2]                     }); expect(this.neededBy, { 2:[1]                     });
         // this.add(3, 4); expect(this.needs, { 1:[2], 3:[4]              }); expect(this.neededBy, { 2:[1], 4:[3]              });
         // this.add(2, 3); expect(this.needs, { 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 2:[1], 3:[2,1], 4:[3,2,1] });
@@ -464,7 +549,7 @@ const ShExUtil = {
         expect(this.needs,    { 1:[2,3,4,5,6,7,8], 2:[3,4,5,6,7,8], 3:[4,5,6,7,8], 4:[5,6,7,8], 5:[6,7,8], 6:[7,8], 7:[8] });
         expect(this.neededBy, { 2:[1], 3:[2,1], 4:[3,2,1], 5:[4,3,2,1], 6:[5,4,3,2,1], 7:[6,5,4,3,2,1], 8:[7,6,5,4,3,2,1] });
       },
-      add: function (needer, needie, negated) {
+      add: function (this: any, needer: any, needie: any, _negated?: any) {
         const r = this;
         if (!(needer in r.needs))
           r.needs[needer] = [];
@@ -473,39 +558,39 @@ const ShExUtil = {
 
         // // [].concat.apply(r.needs[needer], [needie], r.needs[needie]). emitted only last element
         r.needs[needer] = r.needs[needer].concat([needie], r.needs[needie]).
-          filter(function (el, ord, l) { return el !== undefined && l.indexOf(el) === ord; });
+          filter(function (el: any, ord: number, l: any[]) { return el !== undefined && l.indexOf(el) === ord; });
         // // [].concat.apply(r.neededBy[needie], [needer], r.neededBy[needer]). emitted only last element
         r.neededBy[needie] = r.neededBy[needie].concat([needer], r.neededBy[needer]).
-          filter(function (el, ord, l) { return el !== undefined && l.indexOf(el) === ord; });
+          filter(function (el: any, ord: number, l: any[]) { return el !== undefined && l.indexOf(el) === ord; });
 
-        if (needer in this.neededBy) this.neededBy[needer].forEach(function (e) {
+        if (needer in this.neededBy) this.neededBy[needer].forEach(function (e: any) {
           r.needs[e] = r.needs[e].concat([needie], r.needs[needie]).
-            filter(function (el, ord, l) { return el !== undefined && l.indexOf(el) === ord; });
+            filter(function (el: any, ord: number, l: any[]) { return el !== undefined && l.indexOf(el) === ord; });
         });
 
-        if (needie in this.needs) this.needs[needie].forEach(function (e) {
+        if (needie in this.needs) this.needs[needie].forEach(function (e: any) {
           r.neededBy[e] = r.neededBy[e].concat([needer], r.neededBy[needer]).
-            filter(function (el, ord, l) { return el !== undefined && l.indexOf(el) === ord; })
+            filter(function (el: any, ord: number, l: any[]) { return el !== undefined && l.indexOf(el) === ord; })
         });
         // this.neededBy[needie].push(needer);
 
         if (r.needs[needer].indexOf(needer) !== -1)
           r.inCycle = r.inCycle.concat(r.needs[needer]);
       },
-      trim: function () {
-        function _trim (a) {
+      trim: function (this: any) {
+        function _trim (a: any[]) {
           // filter(function (el, ord, l) { return l.indexOf(el) === ord; })
           for (let i = a.length-1; i > -1; --i)
             if (a.indexOf(a[i]) < i)
               a.splice(i, i+1);
         }
-        for (k in this.needs)
+        for (const k in this.needs)
           _trim(this.needs[k]);
-        for (k in this.neededBy)
+        for (const k in this.neededBy)
           _trim(this.neededBy[k]);
       },
-      foundIn: {},
-      addIn: function (tripleExpr, shapeExpr) {
+      foundIn: {} as { [tripleExpr: string]: string },
+      addIn: function (this: any, tripleExpr: string, shapeExpr: string) {
         this.foundIn[tripleExpr] = shapeExpr;
       }
     }
@@ -515,13 +600,13 @@ const ShExUtil = {
    *   no: don't do anything; just report nestable shapes
    *   transform: function to change shape labels
    */
-  nestShapes: function (schema, options = {}) {
+  nestShapes: function (schema: any, options: any = {}): any {
     const _ShExUtil = this;
     const index = schema._index || ShExIndexVisitor.index(schema);
     if (!('no' in options)) { options.no = false }
 
     let shapeLabels = Object.keys(index.shapeExprs || [])
-    let shapeReferences = {}
+    let shapeReferences: { [key: string]: any[] } = {}
     shapeLabels.forEach(label => {
       const shape = index.shapeExprs[label].shapeExpr
       noteReference(label, null) // just note the shape so we have a complete list at the end
@@ -529,12 +614,12 @@ const ShExUtil = {
         if ('extends' in shape) {
           shape.extends.forEach(
              // !!! assumes simple reference, not e.g. AND
-            parent => noteReference(parent, shape)
+            (parent: string) => noteReference(parent, shape)
           )
         }
         if ('expression' in shape) {
-          (_ShExUtil.simpleTripleConstraints(shape) || []).forEach(tc => {
-            let target = _ShExUtil.getValueType(tc.valueExpr, true)
+          (_ShExUtil.simpleTripleConstraints(shape) || []).forEach((tc: any) => {
+            let target = _ShExUtil.getValueType(tc.valueExpr)
             noteReference(target, {type: 'tc', shapeLabel: label, tc: tc})
           })
         }
@@ -544,7 +629,7 @@ const ShExUtil = {
         throw Error('nestShapes currently only supports Shapes and NodeConstraints')
       }
     })
-    let nestables = Object.keys(shapeReferences).filter(
+    let nestables: { [key: string]: any } = Object.keys(shapeReferences).filter(
       label => shapeReferences[label].length === 1
         && shapeReferences[label][0].type === 'tc' // no inheritance support yet
         && label in index.shapeExprs
@@ -553,7 +638,7 @@ const ShExUtil = {
     ).filter(
       nestable => !('noNestPattern' in options)
         || !nestable.match(RegExp(options.noNestPattern))
-    ).reduce((acc, label) => {
+    ).reduce((acc: { [key: string]: any }, label) => {
       acc[label] = {
         referrer: shapeReferences[label][0].shapeLabel,
         predicate: shapeReferences[label][0].tc.predicate
@@ -561,16 +646,16 @@ const ShExUtil = {
       return acc
     }, {})
     if (!options.no) {
-      let oldToNew = {}
+      let oldToNew: { [key: string]: string } = {}
 
       if (options.rename) {
         if (!('transform' in options)) {
           options.transform = (function () {
-            let map = shapeLabels.reduce((acc, k, idx) => {
+            let map = shapeLabels.reduce((acc: { [key: string]: string }, k, idx) => {
               acc[k] = '_:renamed' + idx
               return acc
             }, {})
-            return function (id, shapeExpr) {
+            return function (id: string, _shapeExpr: any) {
               return map[id]
             }
           })()
@@ -612,12 +697,12 @@ const ShExUtil = {
         })
 
         // Restore old order for more concise diffs.
-        let shapesCopy = {}
+        let shapesCopy: { [key: string]: any } = {}
         shapeLabels.forEach(label => shapesCopy[label] = index.shapeExprs[label])
         index.shapeExprs = shapesCopy
       } else {
-        const doomed = []
-        const ids = schema.shapes.map(s => s.id)
+        const doomed: number[] = []
+        const ids = schema.shapes.map((s: any) => s.id)
         Object.keys(nestables).forEach(oldName => {
           const borged = index.shapeExprs[oldName].shapeExpr
           // In principle, the ShExJ shouldn't have a Decl if the above criteria are met,
@@ -642,7 +727,7 @@ const ShExUtil = {
     // console.dir(shapeReferences)
     return nestables
 
-    function noteReference (id, reference) {
+    function noteReference (id: string, reference: any) {
       if (!(id in shapeReferences)) {
         shapeReferences[id] = []
       }
@@ -655,7 +740,7 @@ const ShExUtil = {
   /** @@TODO tests
    *
    */
-  getPredicateUsage: function (schema, untyped = {}) {
+  getPredicateUsage: function (schema: any, untyped: any = {}): any {
     const _ShExUtil = this;
 
     // populate shapeHierarchy
@@ -664,7 +749,7 @@ const ShExUtil = {
       let shapeExpr = schema.shapes[label].shapeExpr
       if (shapeExpr.type === 'Shape') {
         (shapeExpr.extends || []).forEach(
-          superShape => shapeHierarchy.add(superShape.reference, label)
+          (superShape: any) => shapeHierarchy.add(superShape.reference, label)
         )
       }
     })
@@ -673,12 +758,12 @@ const ShExUtil = {
         shapeHierarchy.parents[label] = []
     })
 
-    let predicates = { } // IRI->{ uses: [shapeLabel], commonType: shapeExpr }
+    let predicates: { [predicate: string]: any } = { } // IRI->{ uses: [shapeLabel], commonType: shapeExpr }
     Object.keys(schema.shapes).forEach(shapeLabel => {
       let shapeExpr = schema.shapes[shapeLabel].shapeExpr
       if (shapeExpr.type === 'Shape') {
         let tcs = _ShExUtil.simpleTripleConstraints(shapeExpr) || []
-        tcs.forEach(tc => {
+        tcs.forEach((tc: any) => {
           let newType = _ShExUtil.getValueType(tc.valueExpr)
           if (!(tc.predicate in predicates)) {
             predicates[tc.predicate] = {
@@ -720,7 +805,7 @@ const ShExUtil = {
               if (idx === -1) {
                 let intersection = shapeHierarchy.parents[curType]
                     ? shapeHierarchy.parents[curType].filter(
-                      lab => -1 !== shapeHierarchy.parents[newType].indexOf(lab)
+                      (lab: string) => -1 !== shapeHierarchy.parents[newType].indexOf(lab)
                     )
                     : []
                 if (intersection.length === 0) {
@@ -752,7 +837,7 @@ const ShExUtil = {
   /** @@TODO tests
    *
    */
-  simpleTripleConstraints: function (shape) {
+  simpleTripleConstraints: function (shape: any): any[] {
     if (!('expression' in shape)) {
       return []
     }
@@ -761,14 +846,14 @@ const ShExUtil = {
     }
     if (shape.expression.type === 'EachOf' &&
         !(shape.expression.expressions.find(
-          expr => expr.type !== 'TripleConstraint'
+          (expr: any) => expr.type !== 'TripleConstraint'
         ))) {
           return shape.expression.expressions
         }
     throw Error('can\'t (yet) express ' + JSON.stringify(shape))
   },
 
-  getValueType: function (valueExpr) {
+  getValueType: function (valueExpr: any): any {
     if (typeof valueExpr === 'string') { return valueExpr }
     if (valueExpr.reference) { return valueExpr.reference }
     if (valueExpr.nodeKind === 'iri') { return OWL.Thing } // !! push this test to callers
@@ -781,14 +866,14 @@ const ShExUtil = {
    * or inclusion.
    * TODO: rewrite in terms of Visitor.
    */
-  getDependencies: function (schema, ret) {
+  getDependencies: function (schema: any, ret?: any): any {
     ret = ret || this.BiDiClosure();
-    (schema.shapes || []).forEach(function (shapeDecl) {
-      function _walkShapeExpression (shapeExpr, negated) {
+    (schema.shapes || []).forEach(function (shapeDecl: any) {
+      function _walkShapeExpression (shapeExpr: any, negated: number) {
         if (typeof shapeExpr === "string") { // ShapeRef
           ret.add(shapeDecl.id, shapeExpr);
         } else if (shapeExpr.type === "ShapeOr" || shapeExpr.type === "ShapeAnd") {
-          shapeExpr.shapeExprs.forEach(function (expr) {
+          shapeExpr.shapeExprs.forEach(function (expr: any) {
             _walkShapeExpression(expr, negated);
           });
         } else if (shapeExpr.type === "ShapeNot") {
@@ -802,15 +887,15 @@ const ShExUtil = {
           throw Error("expected Shape{And,Or,Ref,External} or NodeConstraint in " + JSON.stringify(shapeExpr));
       }
 
-      function _walkShape (shape, negated) {
-        function _walkTripleExpression (tripleExpr, negated) {
-          function _exprGroup (exprs, negated) {
+      function _walkShape (shape: any, negated: number) {
+        function _walkTripleExpression (tripleExpr: any, negated: number) {
+          function _exprGroup (exprs: any[], negated?: number) {
             exprs.forEach(function (nested) {
-              _walkTripleExpression(nested, negated) // ?? negation allowed?
+              _walkTripleExpression(nested, negated as number) // ?? negation allowed?
             });
           }
 
-          function _walkTripleConstraint (tc, negated) {
+          function _walkTripleConstraint (tc: any, negated: number) {
             if (tc.valueExpr)
               _walkShapeExpression(tc.valueExpr, negated);
             if (negated && ret.inCycle.indexOf(shapeDecl.id) !== -1) // illDefined/negatedRefCycle.err
@@ -834,7 +919,7 @@ const ShExUtil = {
 
         (["extends", "restricts"]).forEach(attr => {
         if (shape[attr] && shape[attr].length > 0)
-          shape[attr].forEach(function (i) {
+          shape[attr].forEach(function (i: any) {
             ret.add(shapeDecl.id, i);
           });
         })
@@ -854,9 +939,9 @@ const ShExUtil = {
    * @deps: (optional) dependency tree from getDependencies.
    *        map(shapeLabel -> [shapeLabel])
    */
-  partition: function (schema, includes, deps, cantFind) {
+  partition: function (schema: any, includes: string | string[], deps?: any, cantFind?: (what: string, why: string) => void): any {
     const inputIndex = schema._index || ShExIndexVisitor.index(schema)
-    const outputIndex = { shapeExprs: new Map(), tripleExprs: new Map() };
+    const outputIndex: any = { shapeExprs: new Map(), tripleExprs: new Map() };
     includes = includes instanceof Array ? includes : [includes];
 
     // build dependency tree if not passed one
@@ -867,7 +952,7 @@ const ShExUtil = {
                        why + " dependency " + what :
                        what));
     };
-    const partition = {};
+    const partition: any = {};
     for (let k in schema)
       partition[k] = k === "shapes" ? [] : schema[k];
     includes.forEach(function (i) {
@@ -878,7 +963,7 @@ const ShExUtil = {
         partition.shapes.push(adding);
         outputIndex.shapeExprs[adding.id] = adding;
         if (i in deps.needs)
-          deps.needs[i].forEach(function (n) {
+          deps.needs[i].forEach(function (n: string) {
             // Turn any needed TE into an SE.
             if (n in deps.foundIn)
               n = deps.foundIn[n];
@@ -889,10 +974,10 @@ const ShExUtil = {
               partition.shapes.push(needed);
               outputIndex.shapeExprs[needed.id] = needed;
             } else
-              cantFind(n, i);
+              cantFind!(n, i);
           });
       } else {
-        cantFind(i, "supplied");
+        cantFind!(i, "supplied");
       }
     });
     return partition;
@@ -904,29 +989,29 @@ const ShExUtil = {
    *
    * @schema: input schema
    */
-  flatten: function (schema, deps, cantFind) {
+  flatten: function (schema: any, _deps?: any, _cantFind?: any): any {
     const v = new ShExVisitor();
     return v.visitSchema(schema);
   },
 
   // @@ put predicateUsage here
 
-  emptySchema: function () {
+  emptySchema: function (): { type: "Schema" } {
     return {
       type: "Schema"
     };
   },
 
-  absolutizeResults: function (parsed, base) {
+  absolutizeResults: function (parsed: any, base: string): any {
     // !! duplicate of Validation-test.js:84: const referenceResult = parseJSONFile(resultsFile...)
-    function mapFunction (k, obj) {
+    function mapFunction (k: string, obj: any) {
       // resolve relative URLs in results file
       if (["shape", "reference", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
           (typeof obj[k] === "string" && !obj[k].startsWith("_:"))) { // !! needs ShExTerm.ldTermIsIri
         obj[k] = new URL(obj[k], base).href;
       }}
 
-    function resolveRelativeURLs (obj) {
+    function resolveRelativeURLs (obj: any) {
       Object.keys(obj).forEach(function (k) {
         if (typeof obj[k] === "object") {
           resolveRelativeURLs(obj[k]);
@@ -940,13 +1025,13 @@ const ShExUtil = {
     return parsed;
   },
 
-  getProofGraph: function (res, db, dataFactory) {
-    function _dive1 (solns) {
+  getProofGraph: function (res: any, db: any, dataFactory: any): any {
+    function _dive1 (solns: any): void {
       if (solns.type === "NodeConstraintTest") {
       } else if (solns.type === "SolutionList" ||
                  solns.type === "ShapeAndResults" ||
                  solns.type === "ExtensionResults") {
-        solns.solutions.forEach(s => {
+        solns.solutions.forEach((s: any) => {
           if (s.solution) // no .solution for <S> {}
             _dive1(s.solution);
         });
@@ -957,16 +1042,16 @@ const ShExUtil = {
           _dive1(solns.solution);
       } else if (solns.type === "OneOfSolutions" ||
                  solns.type === "EachOfSolutions") {
-        solns.solutions.forEach(s => {
+        solns.solutions.forEach((s: any) => {
           _dive1(s);
         });
       } else if (solns.type === "OneOfSolution" ||
                  solns.type === "EachOfSolution") {
-        solns.expressions.forEach(s => {
+        solns.expressions.forEach((s: any) => {
           _dive1(s);
         });
       } else if (solns.type === "TripleConstraintSolutions") {
-        solns.solutions.map(s => {
+        solns.solutions.map((s: any) => {
           if (s.type !== "TestedTriple")
             throw Error("unexpected result type: " + s.type);
           const subject = ShExTerm.ld2RdfJsTerm(s.subject);
@@ -995,109 +1080,12 @@ const ShExUtil = {
   MissingDeclRefError,
   MissingTripleExprRefError,
 
-  HierarchyVisitor: function (schemaP, optionsP, negativeDepsP, positiveDepsP) {
-
+  HierarchyVisitor: function (schemaP: any, optionsP: any, negativeDepsP: any, positiveDepsP: any): any {
     const visitor = new SchemaStructureValidator(schemaP, optionsP, negativeDepsP, positiveDepsP);
     return visitor;
   },
 
-  validateSchema: function (schema, options) { // obselete, but may need other validations in the future.
-
-    // Stand-alone class but left in function scope to minimize symbol space
-    class SchemaStructureValidator extends ShExVisitor {
-      constructor (schema, options, negativeDeps, positiveDeps) {
-        super();
-        this.schema = schema;
-        this.options = options;
-        this.negativeDeps = negativeDeps;
-        this.positiveDeps = positiveDeps;
-
-        this.currentLabel = null;
-        this.currentExtra = null;
-        this.currentNegated = false;
-        this.inTE = false;
-        this.index = schema.index || ShExIndexVisitor.index(schema);
-      }
-
-      visitShape (shape, ...args) {
-        const lastExtra = this.currentExtra;
-        this.currentExtra = shape.extra;
-        const ret = super.visitShape(shape, ...args);
-        this.currentExtra = lastExtra;
-        return ret;
-      };
-
-      visitShapeNot (shapeNot, ...args) {
-        const lastNegated = this.currentNegated;
-        this.currentNegated ^= true;
-        const ret = super.visitShapeNot(shapeNot, ...args);
-        this.currentNegated = lastNegated;
-        return ret;
-      };
-
-      visitTripleConstraint (expr, ...args) {
-        const lastNegated = this.currentNegated;
-        if (this.currentExtra && this.currentExtra.indexOf(expr.predicate) !== -1)
-          this.currentNegated ^= true;
-        this.inTE = true;
-        const ret = super.visitTripleConstraint(expr, ...args);
-        this.inTE = false;
-        this.currentNegated = lastNegated;
-        return ret;
-      };
-
-      visitShapeRef (shapeRef, ...args) {
-        if (!(shapeRef in this.index.shapeExprs)) {
-          const error = this.firstError(new MissingDeclRefError(shapeRef, Object.keys(this.index.shapeExprs)), shapeRef);
-          if (this.options.missingReferent) {
-            this.options.missingReferent(error, (this.schema._locations || {})[this.currentLabel]);
-          } else {
-            throw error;
-          }
-        }
-        if (!this.inTE && shapeRef === this.currentLabel)
-          throw this.firstError(Error("Structural error: circular reference to " + this.currentLabel + "."), shapeRef);
-        if (!this.options.skipCycleCheck)
-          (this.currentNegated ? this.negativeDeps : this.positiveDeps).add(this.currentLabel, shapeRef);
-        return super.visitShapeRef(shapeRef, ...args);
-      };
-
-      visitInclusion (inclusion, ...args) {
-        let refd;
-        if (!(refd = this.index.tripleExprs[inclusion]))
-          throw this.firstError(new MissingTripleExprRefError(inclusion, Object.keys(this.index.tripleExprs)), inclusion);
-        // if (refd.type !== "Shape")
-        //   throw Error("Structural error: " + inclusion + " is not a simple shape.");
-        return super.visitInclusion(inclusion, ...args);
-      };
-
-      firstError(e, obj) {
-        if ("_sourceMap" in this.schema)
-          e.location = (this.schema._sourceMap.get(obj) || [undefined])[0];
-        return e;
-      }
-
-      static validate (schema, options) {
-        const negativeDeps = Hierarchy.create();
-        const positiveDeps = Hierarchy.create();
-        const visitor = new SchemaStructureValidator(schema, options, negativeDeps, positiveDeps);
-
-        (schema.shapes || []).forEach(function (shape) {
-          visitor.currentLabel = shape.id;
-          visitor.visitShapeDecl(shape, shape.id);
-          visitor.currentLabel = null;
-        });
-        let circs = Object.keys(negativeDeps.children).filter(
-          k => negativeDeps.children[k].filter(
-            k2 => k2 in negativeDeps.children && negativeDeps.children[k2].indexOf(k) !== -1
-              || k2 in positiveDeps.children && positiveDeps.children[k2].indexOf(k) !== -1
-          ).length > 0
-        );
-        if (circs.length)
-          throw visitor.firstError(Error("Structural error: circular negative dependencies on " + circs.join(',') + "."), circs[0]);
-      }
-    }
-
+  validateSchema: function (schema: any, options: any): void { // obselete, but may need other validations in the future.
     SchemaStructureValidator.validate(schema, options);
   },
 
@@ -1106,20 +1094,20 @@ const ShExUtil = {
    * @schema: input schema
    * @@TODO
    */
-  isWellDefined: function (schema, options) {
+  isWellDefined: function (schema: any, options: any): any {
     this.validateSchema(schema, options);
     // const deps = this.getDependencies(schema);
     return schema;
   },
 
-  walkVal: function (val, cb) {
+  walkVal: function (val: any, cb: (sln: any) => any): any {
     const _ShExUtil = this;
     if (typeof val === "string") { // ShapeRef
       return null; // 1NOTRefOR1dot_pass-inOR
     }
     switch (val.type) {
     case "SolutionList": // dependent_shape
-      return val.solutions.reduce((ret, exp) => {
+      return val.solutions.reduce((ret: any, exp: any) => {
         const n = _ShExUtil.walkVal(exp, cb);
         if (n)
           Object.keys(n).forEach(k => {
@@ -1134,15 +1122,16 @@ const ShExUtil = {
       return _ShExUtil.walkVal(val.shapeExpr, cb);
     case "NodeConstraint": // 1iri_pass-iri
       return null;
-    case "ShapeTest": // 0_empty
-      const vals = [];
+    case "ShapeTest": { // 0_empty
+      const vals: any[] = [];
       visitSolution(val, vals); // A ShapeTest is a sort of Solution.
-      const ret = vals.length
+      const ret: any = vals.length
             ? {'http://shex.io/reflex': vals}
             : {};
       if ("solution" in val)
         Object.assign(ret, _ShExUtil.walkVal(val.solution, cb))
       return Object.keys(ret).length ? ret : null;
+    }
     case "Shape": // 1NOTNOTdot_passIv1
       return null;
     case "ShapeNotTest": // 1NOT_vsANDvs__passIv1
@@ -1156,7 +1145,7 @@ const ShExUtil = {
     case "ShapeOrResults": // 1dotRefOR3_passShape1
       return _ShExUtil.walkVal(val.solution, cb);
     case "ShapeOr": // 1NOT_literalORvs__passIo1
-      return val.shapeExprs.reduce((ret, exp) => {
+      return val.shapeExprs.reduce((ret: any, exp: any) => {
         const n = _ShExUtil.walkVal(exp, cb);
         if (n)
           Object.keys(n).forEach(k => {
@@ -1169,7 +1158,7 @@ const ShExUtil = {
       }, {});
     case "ShapeAndResults": // 1iriRef1_pass-iri
     case "ExtensionResults": // extends-abstract-multi-empty_pass-missingOptRef1
-      return val.solutions.reduce((ret, exp) => {
+      return val.solutions.reduce((ret: any, exp: any) => {
         const n = _ShExUtil.walkVal(exp, cb);
         if (n)
           Object.keys(n).forEach(k => {
@@ -1181,7 +1170,7 @@ const ShExUtil = {
         return ret;
       }, {});
     case "ShapeAnd": // 1NOT_literalANDvs__passIv1
-      return val.shapeExprs.reduce((ret, exp) => {
+      return val.shapeExprs.reduce((ret: any, exp: any) => {
         const n = _ShExUtil.walkVal(exp, cb);
         if (n)
           Object.keys(n).forEach(k => {
@@ -1193,7 +1182,10 @@ const ShExUtil = {
         return ret;
       }, {});
     case "ExtendedResults": // extends-abstract-multi-empty_pass-missingOptRef1
-      return (["extensions", "local"]).reduce((ret, exp) => {
+      // (walks the attribute *names*, so always returns {}; descending into
+      // val.extensions/val.local would hit e.g. ResultReference vals which
+      // walkVal doesn't handle -- see vitals-RESTRICTS tests)
+      return (["extensions", "local"]).reduce((ret: any, exp) => {
         const n = _ShExUtil.walkVal(exp, cb);
         if (n)
           Object.keys(n).forEach(k => {
@@ -1207,8 +1199,8 @@ const ShExUtil = {
     case "EachOfSolutions":
     case "OneOfSolutions":
       // 1dotOne2dot_pass_p1
-      return val.solutions.reduce((ret, sln) => {
-        sln.expressions.forEach(exp => {
+      return val.solutions.reduce((ret: any, sln: any) => {
+        sln.expressions.forEach((exp: any) => {
           const n = _ShExUtil.walkVal(exp, cb);
           if (n)
             Object.keys(n).forEach(k => {
@@ -1222,10 +1214,10 @@ const ShExUtil = {
       }, {});
     case "TripleConstraintSolutions": // 1dot_pass-noOthers
       if ("solutions" in val) {
-        const ret = {};
-        const vals = [];
+        const ret: any = {};
+        const vals: any[] = [];
         ret[val.predicate] = vals;
-        val.solutions.forEach(sln => visitSolution(sln, vals));
+        val.solutions.forEach((sln: any) => visitSolution(sln, vals));
         return vals.length ? ret : null;
       } else {
         return null;
@@ -1236,56 +1228,56 @@ const ShExUtil = {
       // console.log(val);
       throw Error("unknown shapeExpression type in " + JSON.stringify(val));
     }
-    return val;
 
-        function visitSolution (sln, vals) {
-          const toAdd = [];
-          if (chaseList(sln.referenced, toAdd)) { // parse 1val1IRIREF.ttl
-            [].push.apply(vals, toAdd);
-          } else { // 1dot_pass-noOthers
-            const newElt = cb(sln) || {};
-            if ("referenced" in sln) {
-              const t = _ShExUtil.walkVal(sln.referenced, cb);
-              if (t)
-                newElt.nested = t;
-            }
-            if (Object.keys(newElt).length > 0)
-              vals.push(newElt);
-          }
-          function chaseList (li) {
-            if (!li) return false;
-            if (li.node === RDF.nil) return true;
-            if ("solution" in li && "solutions" in li.solution &&
-                li.solution.solutions.length === 1 &&
-                "expressions" in li.solution.solutions[0] &&
-                li.solution.solutions[0].expressions.length === 2 &&
-                "predicate" in li.solution.solutions[0].expressions[0] &&
-                li.solution.solutions[0].expressions[0].predicate === RDF.first &&
-                li.solution.solutions[0].expressions[1].predicate === RDF.rest) {
-              const expressions = li.solution.solutions[0].expressions;
-              const ent = expressions[0];
-              const rest = expressions[1].solutions[0];
-              const member = ent.solutions[0];
-              let newElt = cb(member);
-              if ("referenced" in member) {
-                const t = _ShExUtil.walkVal(member.referenced, cb);
-                if (t) {
-                  if (newElt)
-                    newElt.nested = t;
-                  else
-                    newElt = t;
-                }
-              }
-              if (newElt)
-                vals.push(newElt);
-              return rest.object === RDF.nil ?
-                true :
-                chaseList(rest.referenced.type === "ShapeOrResults" // heuristic for `nil OR @<list>` idiom
-                          ? rest.referenced.solution
-                          : rest.referenced);
-            }
-          }
+    function visitSolution (sln: any, vals: any[]): void {
+      const toAdd: any[] = [];
+      if (chaseList(sln.referenced)) { // parse 1val1IRIREF.ttl
+        [].push.apply(vals, toAdd as never[]);
+      } else { // 1dot_pass-noOthers
+        const newElt = cb(sln) || {};
+        if ("referenced" in sln) {
+          const t = _ShExUtil.walkVal(sln.referenced, cb);
+          if (t)
+            newElt.nested = t;
         }
+        if (Object.keys(newElt).length > 0)
+          vals.push(newElt);
+      }
+      function chaseList (li: any): boolean | undefined {
+        if (!li) return false;
+        if (li.node === RDF.nil) return true;
+        if ("solution" in li && "solutions" in li.solution &&
+            li.solution.solutions.length === 1 &&
+            "expressions" in li.solution.solutions[0] &&
+            li.solution.solutions[0].expressions.length === 2 &&
+            "predicate" in li.solution.solutions[0].expressions[0] &&
+            li.solution.solutions[0].expressions[0].predicate === RDF.first &&
+            li.solution.solutions[0].expressions[1].predicate === RDF.rest) {
+          const expressions = li.solution.solutions[0].expressions;
+          const ent = expressions[0];
+          const rest = expressions[1].solutions[0];
+          const member = ent.solutions[0];
+          let newElt = cb(member);
+          if ("referenced" in member) {
+            const t = _ShExUtil.walkVal(member.referenced, cb);
+            if (t) {
+              if (newElt)
+                newElt.nested = t;
+              else
+                newElt = t;
+            }
+          }
+          if (newElt)
+            vals.push(newElt);
+          return rest.object === RDF.nil ?
+            true :
+            chaseList(rest.referenced.type === "ShapeOrResults" // heuristic for `nil OR @<list>` idiom
+                      ? rest.referenced.solution
+                      : rest.referenced);
+        }
+        return undefined;
+      }
+    }
   },
 
   /**
@@ -1293,27 +1285,27 @@ const ShExUtil = {
    * @exports
    * @returns {@code {p1:[{p2: v2},{p3: v3}]}}
    */
-  valToValues: function (val) {
-    return this.walkVal (val, function (sln) {
+  valToValues: function (val: any): any {
+    return this.walkVal (val, function (sln: any) {
       return "object" in sln ? { ldterm: sln.object } : null;
     });
   },
 
-  valToExtension: function (val, lookfor) {
-    const map = this.walkVal (val, function (sln) {
+  valToExtension: function (val: any, lookfor: string): any {
+    const map = this.walkVal (val, function (sln: any) {
       return "extensions" in sln ? { extensions: sln.extensions } : null;
     });
-    function extensions (obj) {
-      const list = [];
-      let crushed = {};
-      function crush (elt) {
+    function extensions (obj: any): any {
+      const list: any[] = [];
+      let crushed: any = {};
+      function crush (elt: any) {
         if (crushed === null)
           return elt;
         if (Array.isArray(elt)) {
           crushed = null;
           return elt;
         }
-        for (k in elt) {
+        for (const k in elt) {
           if (k in crushed) {
             crushed = null
             return elt;
@@ -1350,36 +1342,13 @@ const ShExUtil = {
    *   <Schema> a :Schema; :shapes (<#S1> <#S2>).
    *   <#S1> a :ShapeDecl; :shapeExpr [ a :ShapeNot; :shapeExpr <#S2> ].
    *   <#S2> a :ShapeDecl; :shapeExpr [ a :Shape; :expression [ a :TripleConstraint; :predicate <#p3> ] ].
-   * will parse into a property tree with <#S2> duplicated inside <#S1>:
-   *   {  "rdf:type": [ { "ldterm": ":Schema" } ], ":shapes": [
-   *       { "ldterm": "#S1", "nested": {
-   *           "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
-   *             { "ldterm": "_:b41", "nested": {
-   *                  "rdf:type": [ { "ldterm": ":ShapeNot" } ], ":shapeExpr": [
-   *                   { "ldterm": "#S2", "nested": {
-   *                        "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
-   *                         { "ldterm": "_:b42", "nested": {
-   *                              "rdf:type": [ { "ldterm": ":Shape" } ], ":expression": [
-   *                               { "ldterm": "_:b43", "nested": {
-   *                                    "rdf:type": [ { "ldterm": ":TripleConstraint" } ], ":predicate": [ { "ldterm": "#p3" } ] } }
-   *                             ] } }
-   *                       ] } }
-   *                 ] } }
-   *           ] } },
-   *       { "ldterm": "#S2", "nested": {
-   *            "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
-   *             { "ldterm": "_:b42", "nested": {
-   *                  "rdf:type": [ { "ldterm": ":Shape" } ], ":expression": [
-   *                   { "ldterm": "_:b43", "nested": {
-   *                        "rdf:type": [ { "ldterm": ":TripleConstraint" } ], ":predicate": [ { "ldterm": "#p3" } ] } }
-   *                 ] } }
-   *           ] } }
-   *     ] }
-   * This method de-duplicates and normalizes all moves all ShapeDecls to be immediate children of the :shapes collection.
+   * will parse into a property tree with <#S2> duplicated inside <#S1>.
+   * This method de-duplicates and moves all ShapeDecls to be immediate children
+   * of the :shapes collection.
    * @exports
    * @returns ShEx schema
    */
-  valuesToSchema: function (values) {
+  valuesToSchema: function (values: any): any {
     // console.log(JSON.stringify(values, null, "  "));
     const v = values;
     const t = values[RDF.type][0].ldterm;
@@ -1388,13 +1357,13 @@ const ShExUtil = {
        *           startActs:[SemAct+]? start:(shapeDeclOrExpr|labeledShapeExpr)?
        *           shapes:[labeledShapeExpr+]? }
        */
-      const ret = {
+      const ret: any = {
         "@context": "http://www.w3.org/ns/shex.jsonld",
         type: "Schema"
       }
       if (SX.startActs in v)
-        ret.startActs = v[SX.startActs].map(e => {
-          const ret = {
+        ret.startActs = v[SX.startActs].map((e: any) => {
+          const ret: any = {
             type: "SemAct",
             name: e.nested[SX.name][0].ldterm
           };
@@ -1403,15 +1372,14 @@ const ShExUtil = {
           return ret;
         });
       if (SX.imports in v)
-        ret.imports = v[SX.imports].map(e => {
+        ret.imports = v[SX.imports].map((e: any) => {
           return e.ldterm;
         });
       if (values[SX.start])
         ret.start = extend({id: values[SX.start][0].ldterm}, shapeDeclOrExpr(values[SX.start][0].nested));
       const shapes = values[SX.shapes];
       if (shapes) {
-        ret.shapes = shapes.map(v => {
-          var t = v.nested[RDF.type][0].ldterm;
+        ret.shapes = shapes.map((v: any) => {
           const obj = shapeDeclOrExpr(v.nested)
           return extend({id: v.ldterm}, obj);
         });
@@ -1421,21 +1389,21 @@ const ShExUtil = {
     } else {
       throw Error("unknown schema type in " + JSON.stringify(values));
     }
-    function findType (v, elts, f) {
+    function findType (v: any, elts: any, f: (v: any) => any): any {
       const t = v[RDF.type][0].ldterm.substr(SX._namespace.length);
       const elt = elts[t];
       if (!elt)
         return Missed;
       if (elt.nary) {
-        const ret = {
+        const ret: any = {
           type: t,
         };
-        ret[elt.prop] = v[SX[elt.prop]].map(e => {
+        ret[elt.prop] = v[SX[elt.prop]].map((e: any) => {
           return valueOf(e);
         });
         return ret;
       } else {
-        const ret = {
+        const ret: any = {
           type: t
         };
         if (elt.prop) {
@@ -1444,14 +1412,14 @@ const ShExUtil = {
         return ret;
       }
 
-      function valueOf (x) {
+      function valueOf (x: any) {
         return elt.expr && "nested" in x ? extend({ id: x.ldterm, }, f(x.nested)) : x.ldterm;
       }
     }
     /* transform ShapeDecls and shapeExprs. called from .shapes and .valueExpr.
      * The calls from .valueExpr can be Shapes or ShapeDecls because the ShExR graph is not yet normalized.
      */
-    function shapeDeclOrExpr (v) {
+    function shapeDeclOrExpr (v: any): any {
       // <#shapeDeclOrExpr> @<#ShapeDecl> OR @<#shapeExpr>
       // shapeExpr = ShapeOr | ShapeAnd | ShapeNot | NodeConstraint | Shape | ShapeRef | ShapeExternal;
       const elts = { "ShapeAnd"     : { nary: true , expr: true , prop: "shapeExprs" },
@@ -1465,7 +1433,7 @@ const ShExUtil = {
 
       const t = v[RDF.type][0].ldterm;
       if (t === SX.ShapeDecl) {
-        const ret = { type: "ShapeDecl" };
+        const ret: any = { type: "ShapeDecl" };
         ["abstract"].forEach(a => {
           if (SX[a] in v)
             ret[a] = !!v[SX[a]][0].ldterm.value;
@@ -1485,7 +1453,7 @@ const ShExUtil = {
         });
         ["extra", "extends", "restricts"].forEach(a => {
           if (SX[a] in v)
-            ret[a] = v[SX[a]].map(e => { return e.ldterm; });
+            ret[a] = v[SX[a]].map((e: any) => { return e.ldterm; });
         });
         if (SX.expression in v) {
           ret.expression =
@@ -1494,7 +1462,7 @@ const ShExUtil = {
             v[SX.expression][0].ldterm;
         }
         if (SX.annotation in v)
-          ret.annotations = v[SX.annotation].map(e => {
+          ret.annotations = v[SX.annotation].map((e: any) => {
             return {
               type: "Annotation",
               predicate: e.nested[SX.predicate][0].ldterm,
@@ -1502,8 +1470,8 @@ const ShExUtil = {
             };
           });
         if (SX.semActs in v)
-          ret.semActs = v[SX.semActs].map(e => {
-            const ret = {
+          ret.semActs = v[SX.semActs].map((e: any) => {
+            const ret: any = {
               type: "SemAct",
               name: e.nested[SX.name][0].ldterm
             };
@@ -1513,9 +1481,9 @@ const ShExUtil = {
           });
         return ret;
       } else if (t === SX.NodeConstraint) {
-        const ret = { type: "NodeConstraint" };
+        const ret: any = { type: "NodeConstraint" };
         if (SX.values in v)
-          ret.values = v[SX.values].map(v1 => { return objectValue(v1); });
+          ret.values = v[SX.values].map((v1: any) => { return objectValue(v1); });
         if (SX.nodeKind in v)
           ret.nodeKind = v[SX.nodeKind][0].ldterm.substr(SX._namespace.length);
         ["length", "minlength", "maxlength", "mininclusive", "maxinclusive", "minexclusive", "maxexclusive", "totaldigits", "fractiondigits"].forEach(a => {
@@ -1535,7 +1503,7 @@ const ShExUtil = {
 
     }
 
-    function objectValue (v, expectString) {
+    function objectValue (v: any, expectString?: boolean): any {
       if ("nested" in v) {
         const t = v.nested[RDF.type][0].ldterm;
         if ([SX.IriStem, SX.LiteralStem, SX.LanguageStem].indexOf(t) !== -1) {
@@ -1559,7 +1527,7 @@ const ShExUtil = {
               stem = { type: "Wildcard" };
             }
           }
-          const ret = {
+          const ret: any = {
             type: t.substr(SX._namespace.length),
             stem: stem.type !== "Wildcard" ? stem.value : stem
           };
@@ -1584,7 +1552,7 @@ const ShExUtil = {
             //                                 sx:stem:[{"ldterm":{"value":"fr-be"}}]}},
             //    {"ldterm":"_:b853","nested":{a:[{"ldterm":sx:LanguageStem}],
             //                                 sx:stem:[{"ldterm":{"value":"fr-ch"}}]}}]
-            ret.exclusions = v.nested[SX.exclusion].map(v1 => {
+            ret.exclusions = v.nested[SX.exclusion].map((v1: any) => {
               return objectValue(v1, t !== SX.IriStemRange);
             });
           }
@@ -1597,7 +1565,7 @@ const ShExUtil = {
       }
     }
 
-    function tripleExpr (v) {
+    function tripleExpr (v: any): any {
       // tripleExpr = EachOf | OneOf | TripleConstraint | Inclusion ;
       const elts = { "EachOf"   : { nary: true , expr: true , prop: "expressions" },
                    "OneOf"    : { nary: true , expr: true , prop: "expressions" },
@@ -1610,7 +1578,7 @@ const ShExUtil = {
 
       const t = v[RDF.type][0].ldterm;
       if (t === SX.TripleConstraint) {
-        const ret = {
+        const ret: any = {
           type: "TripleConstraint",
           predicate: v[SX.predicate][0].ldterm
         };
@@ -1626,7 +1594,7 @@ const ShExUtil = {
         throw Error("unknown tripleExpr type in " + JSON.stringify(v));
       }
     }
-    function minMaxAnnotSemActs (v, ret) {
+    function minMaxAnnotSemActs (v: any, ret: any): any {
       if (SX.min in v)
         ret.min = parseInt(v[SX.min][0].ldterm.value);
       if (SX.max in v) {
@@ -1635,7 +1603,7 @@ const ShExUtil = {
           ret.max = UNBOUNDED;
       }
       if (SX.annotation in v)
-        ret.annotations = v[SX.annotation].map(e => {
+        ret.annotations = v[SX.annotation].map((e: any) => {
           return {
             type: "Annotation",
             predicate: e.nested[SX.predicate][0].ldterm,
@@ -1643,8 +1611,8 @@ const ShExUtil = {
           };
         });
       if (SX.semActs in v)
-        ret.semActs = v[SX.semActs].map(e => {
-          const ret = {
+        ret.semActs = v[SX.semActs].map((e: any) => {
+          const ret: any = {
             type: "SemAct",
             name: e.nested[SX.name][0].ldterm
           };
@@ -1655,8 +1623,8 @@ const ShExUtil = {
       return ret;
     }
   },
-  simpleToShapeMap: function (x) {
-    return Object.keys(x).reduce((ret, k) => {
+  simpleToShapeMap: function (x: { [node: string]: string[] }): { node: string, shape: string }[] {
+    return Object.keys(x).reduce((ret: { node: string, shape: string }[], k) => {
       x[k].forEach(s => {
         ret.push({node: k, shape: s });
       });
@@ -1664,7 +1632,7 @@ const ShExUtil = {
     }, []);
   },
 
-  absolutizeShapeMap: function (parsed, base) {
+  absolutizeShapeMap: function (parsed: { node: string, shape: string }[], base: string): { node: string, shape: string }[] {
     return parsed.map(elt => {
       return Object.assign(elt, {
         node: new URL(elt.node, base).href,
@@ -1673,12 +1641,12 @@ const ShExUtil = {
     });
   },
 
-  errsToSimple: function (val) {
+  errsToSimple: function (val: any): string[] {
     return new ShExHumanErrorWriter().write(val);
   },
 
   // static
-  resolvePrefixedIRI: function (prefixedIri, prefixes) {
+  resolvePrefixedIRI: function (prefixedIri: string, prefixes: { [prefix: string]: string }): string | null {
     const colon = prefixedIri.indexOf(":");
     if (colon === -1)
       return null;
@@ -1686,7 +1654,7 @@ const ShExUtil = {
     return prefix === undefined ? null : prefix + prefixedIri.substr(colon+1);
   },
 
-  parsePassedNode: function (passedValue, meta, deflt, known, reportUnknown) {
+  parsePassedNode: function (passedValue: string | undefined, meta: any, deflt?: (() => string) | null, known?: ((str: string) => boolean) | null, reportUnknown?: ((str: string) => string) | null): string {
     if (passedValue === undefined || passedValue.length === 0)
       return known && known(meta.base) ? meta.base : deflt ? deflt() : this.NotSupplied;
     if (passedValue[0] === "_" && passedValue[1] === ":")
@@ -1710,23 +1678,22 @@ const ShExUtil = {
       return quoted;
     }
     if (!meta)
-      return known(passedValue) ? passedValue : this.UnknownIRI;
+      return known!(passedValue) ? passedValue : this.UnknownIRI;
     const relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
     if (relIRI)
       passedValue = passedValue.substr(1, passedValue.length-2);
     const t = new URL(passedValue, (meta.base === "" || !meta.base ? undefined : meta.base)).href; // fall back to base-less mode
-    if (known(t))
+    if (known!(t))
       return t;
     if (!relIRI) {
       const t2 = this.resolvePrefixedIRI(passedValue, meta.prefixes);
-      if (t2 !== null && known(t2))
+      if (t2 !== null && known!(t2))
         return t2;
     }
     return reportUnknown ? reportUnknown(t) : this.UnknownIRI;
   },
 
-  executeQueryPromise: function (query, endpoint, dataFactory) {
-    let rows;
+  executeQueryPromise: function (query: string, endpoint: string, dataFactory: any): Promise<any[][]> {
     if (!endpoint)
       throw Error(`Can't execute a SPARQL query with no endpoint`);
 
@@ -1739,8 +1706,7 @@ const ShExUtil = {
       })// .then(x => new Promise(resolve => setTimeout(() => resolve(x), 1000)));
   },
 
-  executeQuery: function (query, endpoint, dataFactory) {
-    let rows;
+  executeQuery: function (query: string, endpoint: string, dataFactory: any): any[][] {
     const queryURL = endpoint + "?query=" + encodeURIComponent(query);
     const xhr = new XMLHttpRequest();
     xhr.open("GET", queryURL, false);
@@ -1752,11 +1718,11 @@ const ShExUtil = {
     return this.parseSparqlJsonResults(jsonObject, dataFactory);
   },
 
-  parseSparqlJsonResults: function (jsonObject, dataFactory) {
+  parseSparqlJsonResults: function (jsonObject: any, dataFactory: any): any[][] {
     const selects = jsonObject.head.vars;
-    return jsonObject.results.bindings.map(row => {
+    return jsonObject.results.bindings.map((row: any) => {
       // spec: https://www.w3.org/TR/rdf-sparql-json-res/#variable-binding-results
-      return selects.map(sel => {
+      return selects.map((sel: string) => {
         if (!(sel in row))
           return null;
         const elt = row[sel];
@@ -1780,60 +1746,16 @@ const ShExUtil = {
     });
   },
 
-/* TO ADD? XML results format parsed with jquery:
-  // parse..._dom(new window.DOMParser().parseFromString(str, "text/xml"));
-
-  parseSparqlXmlResults_dom: function (doc, dataFactory) {
-    Array.from(X.querySelectorAll('sparql > results > result')).map(row => {
-      Array.from(row.querySelectorAll("binding")).map(elt => {
-        const typed = Array.from(elt.children)[0];
-        const text = typed.textContent;
-
-        switch (elt.tagName) {
-        case "uri": return dataFactory.namedNode(text);
-        case "bnode": return dataFactory.blankNode(text);
-        case "literal":
-          const datatype = typed.getAttribute("datatype");
-          const lang = typed.getAttribute("xml:lang");
-          return dataFactory.literal(text, lang ? lang : datatype ? dataFactory.namedNode(datatype) : undefined);
-        default: throw "unknown XML results type: " + elt.tagName;
-        }
-      })
-    })
-  },
-
-  parseSparqlXmlResults_jquery: function (jqObj, dataFactory) {
-    $(jqObj).find("sparql > results > result").
-      each((_, row) => {
-        rows.push($(row).find("binding > *:nth-child(1)").
-          map((idx, elt) => {
-            elt = $(elt);
-            const text = elt.text();
-
-            switch (elt.prop("tagName")) {
-            case "uri": return dataFactory.namedNode(text);
-            case "bnode": return dataFactory.blankNode(text);
-            case "literal":
-              const datatype = elt.attr("datatype");
-              const lang = elt.attr("xml:lang");
-              return dataFactory.literal(text, lang ? lang : datatype ? dataFactory.namedNode(datatype) : undefined);
-            default: throw "unknown XML results type: " + elt.prop("tagName");
-            }
-          }).get());
-      });
-  }
-*/
-
   NotSupplied: "-- not supplied --", UnknownIRI: "-- not found --",
 
   /**
    * unescape numerics and allowed single-character escapes.
    * throws: if there are any unallowed sequences
    */
-  unescapeText: function (string, replacements) {
+  unescapeText: function (string: string, replacements: { [key: string]: string }): string {
     const regex = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\(.)/g;
     try {
-      string = string.replace(regex, function (sequence, unicode4, unicode8, escapedChar) {
+      string = string.replace(regex, function (_sequence, unicode4, unicode8, escapedChar) {
         let charCode;
         if (unicode4) {
           charCode = parseInt(unicode4, 16);
@@ -1860,23 +1782,24 @@ const ShExUtil = {
 };
 
 // Add the ShExUtil functions to the given object or its prototype
-function AddShExUtil(parent, toPrototype) {
+function AddShExUtil(parent: any, toPrototype?: boolean): any {
   for (let name in ShExUtil)
     if (!toPrototype)
-      parent[name] = ShExUtil[name];
+      parent[name] = (ShExUtil as any)[name];
     else
-      parent.prototype[name] = ApplyToThis(ShExUtil[name]);
+      parent.prototype[name] = ApplyToThis((ShExUtil as any)[name]);
 
   return parent;
 }
 
 // Returns a function that applies `f` to the `this` object
-function ApplyToThis(f) {
-  return function (a) { return f(this, a); };
+function ApplyToThis(f: any) {
+  return function (this: any, a: any) { return f(this, a); };
 }
 
-return AddShExUtil(AddShExUtil);
-})();
-
-if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = ShExUtilCjsModule; // node environment
+/* The runtime export keeps the historical callable form: a function
+ * (AddShExUtil) carrying all of the ShExUtil members as properties.
+ * The declared type is just the member object, which is what consumers use.
+ */
+const exported = AddShExUtil(AddShExUtil) as typeof ShExUtil;
+export = exported;

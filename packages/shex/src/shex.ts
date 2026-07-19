@@ -8,9 +8,8 @@
  *   const schema = ShEx.Parser.construct(base).parse(shexc);
  *   const validator = new ShEx.Validator.ShExValidator(schema, ShEx.RdfJsDb(graph));
  */
-"use strict";
 
-module.exports = {
+export = {
   Parser: require("@shexjs/parser"),          // .construct(base, prefixes, opts).parse(shexc)
   Writer: require("@shexjs/writer"),          // serialize ShExJ as ShExC
   Validator: require("@shexjs/validator"),    // {ShExValidator, ...}

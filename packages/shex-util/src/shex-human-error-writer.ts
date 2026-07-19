@@ -1,16 +1,16 @@
-const ShExHumanErrorWriterCjsModule = (function () {
-const ShExTerm = require("@shexjs/term");
-const XSD = {}
+/** ShExHumanErrorWriter - render validation failures as indented human-readable text.
+ */
+const XSD: { [key: string]: string } = {}
 XSD._namespace = "http://www.w3.org/2001/XMLSchema#";
 ["anyURI", "string"].forEach(p => {
   XSD[p] = XSD._namespace+p;
 });
 
-return class ShExHumanErrorWriter {
-  write (val) {
+class ShExHumanErrorWriter {
+  write (val: any): string[] {
     const _HumanErrorWriter = this;
     if (Array.isArray(val)) {
-      return val.reduce((ret, e) => {
+      return val.reduce((ret: string[], e) => {
         const nested = _HumanErrorWriter.write(e).map(s => "  " + s);
         return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
       }, []);
@@ -20,49 +20,49 @@ return class ShExHumanErrorWriter {
 
     switch (val.type) {
     case "FailureList":
-      return val.errors.reduce((ret, e) => {
+      return val.errors.reduce((ret: string[], e: any) => {
         return ret.concat(_HumanErrorWriter.write(e));
       }, []);
     case "Failure":
-      return ["validating " + val.node + " as " + val.shape + ":"].concat(errorList(val.errors).reduce((ret, e) => {
+      return ["validating " + val.node + " as " + val.shape + ":"].concat(errorList(val.errors).reduce((ret: string[], e: any) => {
         const nested = _HumanErrorWriter.write(e).map(s => "  " + s);
         return ret.length > 0 ? ret.concat(["  OR"]).concat(nested) : nested.map(s => "  " + s);
       }, []));
     case "TypeMismatch": {
       const nested = Array.isArray(val.errors) ?
-          val.errors.reduce((ret, e) => {
+          val.errors.reduce((ret: string[], e: any) => {
             return ret.concat((typeof e === "string" ? [e] : _HumanErrorWriter.write(e)).map(s => "  " + s));
           }, []) :
-          "  " + (typeof e === "string" ? [val.errors] : _HumanErrorWriter.write(val.errors));
+          "  " + _HumanErrorWriter.write(val.errors);
       return ["validating " + n3ify(val.triple.object) + ":"].concat(nested);
     }
     case "RestrictionError": {
       const nested = val.errors.constructor === Array ?
-          val.errors.reduce((ret, e) => {
+          val.errors.reduce((ret: string[], e: any) => {
             return ret.concat((typeof e === "string" ? [e] : _HumanErrorWriter.write(e)).map(s => "  " + s));
           }, []) :
-          "  " + (typeof e === "string" ? [val.errors] : _HumanErrorWriter.write(val.errors));
+          "  " + _HumanErrorWriter.write(val.errors);
       return ["validating restrictions on " + n3ify(val.focus) + ":"].concat(nested);
     }
     case "ShapeAndFailure":
       return Array.isArray(val.errors) ?
-          val.errors.reduce((ret, e) => {
+          val.errors.reduce((ret: string[], e: any) => {
             return ret.concat((typeof e === "string" ? [e] : _HumanErrorWriter.write(e)).map(s => "  " + s));
           }, []) :
-          "  " + (typeof e === "string" ? [val.errors] : _HumanErrorWriter.write(val.errors));
+          ("  " + _HumanErrorWriter.write(val.errors)) as unknown as string[];
     case "ShapeOrFailure":
       return Array.isArray(val.errors) ?
-          val.errors.reduce((ret, e) => {
+          val.errors.reduce((ret: string[], e: any) => {
             return ret.concat(" OR " + (typeof e === "string" ? [e] : _HumanErrorWriter.write(e)));
           }, []) :
-          " OR " + (typeof e === "string" ? [val.errors] : _HumanErrorWriter.write(val.errors));
+          (" OR " + _HumanErrorWriter.write(val.errors)) as unknown as string[];
     case "ShapeNotFailure":
       return ["Node " + val.errors.node + " expected to NOT pass " + val.errors.shape];
     case "ExcessTripleViolation":
       return ["validating " + n3ify(val.triple.object) + ": exceeds cardinality"];
     case "ClosedShapeViolation":
       return ["Unexpected triple(s): {"].concat(
-        val.unexpectedTriples.map(t => {
+        val.unexpectedTriples.map((t: any) => {
           return "  " + t.subject + " " + t.predicate + " " + n3ify(t.object) + " ."
         })
       ).concat(["}"]);
@@ -76,10 +76,10 @@ return class ShExHumanErrorWriter {
       return ["Abstract Shape: " + val.shape];
     case "SemActFailure": {
       const nested = Array.isArray(val.errors) ?
-          val.errors.reduce((ret, e) => {
+          val.errors.reduce((ret: string[], e: any) => {
             return ret.concat((typeof e === "string" ? [e] : _HumanErrorWriter.write(e)).map(s => "  " + s));
           }, []) :
-          "  " + (typeof e === "string" ? [val.errors] : _HumanErrorWriter.write(val.errors));
+          "  " + _HumanErrorWriter.write(val.errors);
       return ["rejected by semantic action:"].concat(nested);
     }
     case "SemActViolation":
@@ -93,7 +93,7 @@ return class ShExHumanErrorWriter {
       debugger; // console.log(val);
       throw Error("unknown shapeExpression type \"" + val.type + "\" in " + JSON.stringify(val));
     }
-    function errorList (errors) {
+    function errorList (errors: any[]): any[] {
       return errors.reduce(function (acc, e) {
         const attrs = Object.keys(e);
         return acc.concat(
@@ -104,13 +104,13 @@ return class ShExHumanErrorWriter {
     }
   }
 
-  nodeConstraintToSimple (nc) {
+  nodeConstraintToSimple (nc: any): string[] {
     const elts = [];
     if ('nodeKind' in nc) elts.push(`be a ${nc.nodeKind.toUpperCase()}`);
     if ('datatype' in nc) elts.push(`have datatype ${nc.datatype}`);
     if ('length' in nc) elts.push(`have length ${nc.length}`);
-    if ('minlength' in nc) elts.push(`have length at least ${nc.length}`);
-    if ('maxlength' in nc) elts.push(`have length at most ${nc.length}`);
+    if ('minlength' in nc) elts.push(`have length at least ${nc.minlength}`);
+    if ('maxlength' in nc) elts.push(`have length at most ${nc.maxlength}`);
     if ('pattern' in nc) elts.push(`match regex /${nc.pattern}/${nc.flags ? nc.flags : ''}`);
     if ('mininclusive' in nc) elts.push(`have value at least ${nc.mininclusive}`);
     if ('minexclusive' in nc) elts.push(`have value more than ${nc.minexclusive}`);
@@ -123,7 +123,7 @@ return class ShExHumanErrorWriter {
   }
 
   // static
-  valuesToSimple (values) {
+  valuesToSimple (values: any[]): string[] {
     return values.map(v => {
       // non stems
       /* IRIREF */ if (typeof v === 'string') return `<${v}>`;
@@ -131,7 +131,7 @@ return class ShExHumanErrorWriter {
       /* Language */ if (v.type === 'Language') return `literal with langauge tag ${v.languageTag}`;
 
       // stems and stem ranges
-      const [undefined, type, range] = v.type.match(/^(Iri|Literal|Language)Stem(Range)?$/);
+      const [, type] = v.type.match(/^(Iri|Literal|Language)Stem(Range)?$/);
       let str = type.toLowerCase();
 
       if (typeof v.stem !== "object")
@@ -139,7 +139,7 @@ return class ShExHumanErrorWriter {
 
       if ("exclusions" in v)
         str += ` excluding ${
-v.exclusions.map(excl => typeof excl === "string"
+v.exclusions.map((excl: any) => typeof excl === "string"
  ? excl
  : "anything starting with " + excl.stem).join(' or ')
 }`;
@@ -148,14 +148,14 @@ v.exclusions.map(excl => typeof excl === "string"
     })
   }
 
-  objectLiteralToSimple (v) {
-    return `"${v}` +
+  objectLiteralToSimple (v: any): string {
+    return `"${v.value}"` +
       ('type' in v && v.type !== XSD.string ? `^^<${v.type}>` : '') +
       ('language' in v ? `@${v.language}` : '')
   }
 }
 
-function trim (str, desired, skip) {
+function trim (str: string, desired: number, skip: RegExp): string {
   if (str.length <= desired)
     return str;
   --desired; // leave room for '…'
@@ -164,7 +164,7 @@ function trim (str, desired, skip) {
   return str.slice(0, desired) + '…';
 }
 
-function n3ify (ldterm) {
+function n3ify (ldterm: any): string {
   if (typeof ldterm !== "object")
     return ldterm;
   const ret = "\"" + ldterm.value + "\"";
@@ -175,7 +175,4 @@ function n3ify (ldterm) {
   return ret;
 }
 
-})()
-
-if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = ShExHumanErrorWriterCjsModule; // node environment
+export = ShExHumanErrorWriter;
