@@ -258,6 +258,7 @@ This repo uses [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces)
 - [`@shexjs/webapp`](packages/shex-webapp#readme) -- the shex-simple WEBApp
 - [`@shexjs/shape-path-query`](packages/shex-shape-path-query#readme) -- traverse ShEx schemas with a path language
 - [`@shexjs/extension-test`](packages/extension-test#readme) -- a small language for testing semantic actions in ShEx implementations ([more](http://shex.io/extensions/Test/))
+- [`@shexjs/extension-wasi-test`](packages/extension-wasi-test#readme) -- the Test extension reimplemented in hand-written WebAssembly, printing via WASI fd_write
 - [`@shexjs/extension-map`](packages/extension-map#readme) -- an extension for transforming data from one schema to another ([more](http://shex.io/extensions/Map/))
 - [`@shexjs/extension-eval`](packages/extension-eval#readme) -- simple extension which evaluates Javascript semantic action code ([more](http://shex.io/extensions/Eval/))
 
