@@ -34,7 +34,8 @@ function register(validator, api) {
             validator.semActHandler.results[TestExt].push(line);
             return langMatch[1] === "fail" ? [{ type: "SemActFailure", errors: [`fail(${line})`] }] : [];
             function parseStr(wrapped) {
-                return wrapped.substring(1, wrapped.length - 1);
+                // strip delimiters, then decode the sanctioned escapes in one pass
+                return wrapped.substring(1, wrapped.length - 1).replace(/\\([\\"'])/g, "$1");
             }
             function parsePos(pos) {
                 const t = ctx.triples[0];

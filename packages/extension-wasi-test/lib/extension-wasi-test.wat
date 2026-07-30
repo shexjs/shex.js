@@ -19,8 +19,9 @@
 ;;   position   ::= "s" | "p" | "o"
 ;;
 ;; Semantics (mirroring shex-extension-test.js):
-;;   - each string arg contributes its body VERBATIM — outer quotes stripped,
-;;     escape sequences NOT decoded (parity with parseStr()'s bare substring);
+;;   - each string arg contributes its body with the outer quotes stripped and
+;;     the two escape sequences decoded — \\ and \<quote> each yield their
+;;     second character — per the Test extension definition;
 ;;   - each position arg contributes the RDF term .value of the matched
 ;;     triple's subject/predicate/object, supplied by the host as UTF-8;
 ;;   - the args are concatenated (no separator) into "the line";
@@ -148,8 +149,9 @@
   ;; ---------------------------------------------------------------------------
   ;; parseQuoted: scan a quoted string whose opening quote $q (0x22 or 0x27)
   ;; has already been consumed; $i indexes the first body byte.  Validates the
-  ;; escape rule (backslash may be followed only by backslash or $q), then
-  ;; appends the body — escapes and all — VERBATIM (parity with parseStr()).
+  ;; escape rule (backslash may be followed only by backslash or $q) and
+  ;; appends the body with each escape decoded to its second character: plain
+  ;; runs are flushed with bulk copies, escaped characters as single bytes.
   ;; Multi-byte UTF-8 passes through untouched: every continuation byte is
   ;; >= 0x80 and so can't collide with quote or backslash.
   ;; -> the index just past the closing quote, or a negative status.
@@ -176,11 +178,22 @@
             (if (i32.and (i32.ne (local.get $b) (i32.const 0x5c))
                          (i32.ne (local.get $b) (local.get $q)))
               (then (return (i32.const -1))))   ;; NO_MATCH: bad escape
-            (local.set $i (i32.add (local.get $i) (i32.const 2))))
+            ;; flush the plain run [start, i), then the escape's second character
+            (local.set $rc (call $append (i32.add (local.get $p) (local.get $start))
+                                         (i32.sub (local.get $i) (local.get $start))))
+            (if (i32.ne (local.get $rc) (i32.const 0))
+              (then (return (local.get $rc))))
+            (local.set $rc (call $append (i32.add (i32.add (local.get $p) (local.get $i))
+                                                  (i32.const 1))
+                                 (i32.const 1)))
+            (if (i32.ne (local.get $rc) (i32.const 0))
+              (then (return (local.get $rc))))
+            (local.set $i (i32.add (local.get $i) (i32.const 2)))
+            (local.set $start (local.get $i)))
           (else
             (local.set $i (i32.add (local.get $i) (i32.const 1)))))
         (br $more)))
-    ;; append the body [start, i) verbatim
+    ;; append the trailing plain run [start, i)
     (local.set $rc (call $append (i32.add (local.get $p) (local.get $start))
                                  (i32.sub (local.get $i) (local.get $start))))
     (if (i32.ne (local.get $rc) (i32.const 0))

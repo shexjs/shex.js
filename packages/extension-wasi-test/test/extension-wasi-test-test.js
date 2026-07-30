@@ -112,9 +112,9 @@ describe("@shexjs/extension-wasi-test", function () {
       expect(results[results.length - 1]).to.equal("abhttp://a.example/n1val-1");
     });
 
-    it("should keep escape sequences verbatim like the reference parseStr()", function () {
-      dispatch('print("a\\"b")', T); // code: print("a\"b")
-      expect(results[results.length - 1]).to.equal('a\\"b');
+    it("should decode the sanctioned escape sequences like the reference parseStr()", function () {
+      dispatch('print("a\\"b\\\\c")', T); // code: print("a\"b\\c")
+      expect(results[results.length - 1]).to.equal('a"b\\c');
     });
 
     it("should round-trip non-ASCII arguments and term values", function () {
@@ -139,7 +139,7 @@ describe("@shexjs/extension-wasi-test", function () {
     it("should have printed each line plus a newline through WASI fd_write", function () {
       expect(cap.read()).to.equal([
         "abc", "nope", "http://a.example/n1 val-1", "abhttp://a.example/n1val-1",
-        'a\\"b', "éΔ☃😀",
+        'a"b\\c', "éΔ☃😀",
       ].map(line => line + "\n").join(""));
     });
   }));

@@ -513,6 +513,7 @@
   "#1dotCode3_pass": "1dotCode3_pass.val",
   "#1dotNoCode3_pass": "1dotNoCode3_pass.val",
   "#1dotCodeWithEscapes1_pass": "1dotCodeWithEscapes1_pass.val",
+  "#1dotCode1_with_backslash_pass": "1dotCode1_with_backslash_pass.val",
   "#1dotShapeCode1_pass": "1dotShapeCode1_pass.val",
   "#1dotShapeNoCode1_pass": "1dotShapeNoCode1_pass.val",
   "#open3EachdotcloseCode1-p1p2p3": "open3EachdotcloseCode1-p1p2p3.val",

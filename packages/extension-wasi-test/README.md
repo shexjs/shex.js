@@ -47,8 +47,9 @@ ex:S { ex:p1 . %<http://shex.io/extensions/Test/>{ print(s, ' ', o) %} }
 ```
 
 Each `print(...)`/`fail(...)` invocation concatenates its arguments — quoted
-strings verbatim (outer quotes stripped, escapes **not** decoded, mirroring the
-reference implementation) and `s`/`p`/`o` as the matched triple's term
+strings with the outer quotes stripped and the two sanctioned escapes decoded
+(`\\` and `\<quote>` each yield their second character, per the extension
+definition) and `s`/`p`/`o` as the matched triple's term
 `.value`s — collects the line in
 `validator.semActHandler.results["http://shex.io/extensions/Test/"]`, and
 writes the line plus `"\n"` to WASI fd 1 as a single gathered `fd_write`
