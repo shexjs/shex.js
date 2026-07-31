@@ -819,9 +819,12 @@ class ShapeMapCache extends InterfaceCache {
     this.textMap.removeClass("error");
     const shapeMap = this.textMap.val();
     this.resultsWidget.clear();
+    let currentAction = "parsing input schema";
     try {
       await this.caches.inputSchema.refresh();
+      currentAction = "parsing input data";
       await this.caches.inputData.refresh();
+      currentAction = "parsing Query Map";
       const smparser = ShExWebApp.ShapeMapParser.construct(
         this.meta.base, this.caches.inputSchema.meta, this.caches.inputData.meta);
       let sm;
@@ -839,7 +842,7 @@ class ShapeMapCache extends InterfaceCache {
       return ret;
     } catch (e) {
       this.textMap.addClass("error");
-      this.resultsWidget.failMessage(e, "parsing Query Map");
+      this.resultsWidget.failMessage(e, currentAction);
       this.makeFreshEditMap()
       return [e];
     }
