@@ -12,6 +12,19 @@ const Path = require("path");
 const builtins = new Set(require("module").builtinModules);
 
 const packagesDir = Path.join(__dirname, "../..");
+// untracked files can't ship in a published tarball, so don't audit them
+let trackedFiles = null;
+try {
+  trackedFiles = new Set(
+    require("child_process")
+      .execSync("git ls-files -z", {cwd: packagesDir, encoding: "utf8"})
+      .split("\0").filter(Boolean)
+  );
+} catch (e) { // not a git checkout; audit everything
+}
+const isTracked = (path) =>
+      trackedFiles === null
+      || trackedFiles.has(Path.relative(packagesDir, path).split(Path.sep).join("/"));
 // not part of the shipped runtime code:
 const SKIP_DIRS = new Set(["test", "node_modules", "doc", "examples", "browser", "webpacks", "coverage", "tools"]);
 const isBuildConfig = (name) => /\.config\.js$/.test(name);
@@ -39,6 +52,8 @@ describe("workspace packages", function () {
           } else if (isBuildConfig(entry.name)) {
             // webpack et al. run from the repo root with root devDependencies
           } else if (/\.(js|cjs)$/.test(entry.name) || (d.endsWith(Path.sep + "bin") && !/\./.test(entry.name))) {
+            if (!isTracked(Path.join(d, entry.name)))
+              return;
             const src = Fs.readFileSync(Path.join(d, entry.name), "utf8");
             for (const m of src.matchAll(/require\s*\(\s*["']([^"'.][^"']*)["']\s*\)/g)) {
               let name = m[1].replace(/^node:/, "");
