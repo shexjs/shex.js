@@ -51,6 +51,11 @@ if (!TEST_browser) {
         pretendToBeVisual: true,
       });
       dom.window.fetch = node_fetch;
+      // jsdom does no layout and omits these Range methods; CodeMirror's
+      // measure loop calls them on every frame and handles empty results.
+      dom.window.Range.prototype.getClientRects = function () { return []; };
+      dom.window.Range.prototype.getBoundingClientRect =
+        function () { return {x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0, width: 0, height: 0}; };
       shared = await new Promise((resolve, reject) => {
         dom.window._testCallback = (parm) => {
           if (parm instanceof Error)

@@ -49,13 +49,23 @@ if (!TEST_browser) {
     let dom, $, shared;
     before(async function () {
       const base = Path.join(__dirname, "../../..", page);
+      // forward page console traffic except console.debug, the app's channel
+      // for reporting user-input errors (e.g. mid-edit parse failures)
+      const virtualConsole = new jsdom.VirtualConsole().forwardTo(console);
+      virtualConsole.removeAllListeners("debug");
       dom = new JSDOM(Fs.readFileSync(base, "utf8"), {
         url: GitRootServer.urlFor(page + "?editors=1"),
         runScripts: "dangerously",
         resources: StaticResourceConfig,
         pretendToBeVisual: true, // CodeMirror needs rAF etc.
+        virtualConsole,
       });
       dom.window.fetch = node_fetch;
+      // jsdom does no layout and omits these Range methods; CodeMirror's
+      // measure loop calls them on every frame and handles empty results.
+      dom.window.Range.prototype.getClientRects = function () { return []; };
+      dom.window.Range.prototype.getBoundingClientRect =
+        function () { return {x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0, width: 0, height: 0}; };
       shared = await new Promise((resolve, reject) => {
         dom.window._testCallback = (parm) => {
           if (parm instanceof Error)
