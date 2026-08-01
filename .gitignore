@@ -34,6 +34,18 @@ da-web/
 
 *-stats.json
 
+# webpack bundles: built locally with `npm run webpacks-all`, or on push to
+# main by .github/workflows/webapps-site.yml which publishes them (with the
+# webapp pages) to the `gh-pages` branch; fetch prebuilt ones with
+# tools/sync-webpacks.sh.
+# (jquery-components.* and its hashed png/font assets stay committed: they
+# were built in 2023 against jquery-ui 1.12; rebuilding against current
+# jquery-ui changes the dialog markup the apps and tests rely on.)
+packages/shex-webapp/doc/webpacks/n3js*.js
+packages/shex-webapp/doc/webpacks/shex-webapp*.js
+packages/shex-webapp/doc/webpacks/*.LICENSE.txt
+packages/extension-map/doc/webpacks/
+
 .coveralls.yml
 .nyc_output/
 

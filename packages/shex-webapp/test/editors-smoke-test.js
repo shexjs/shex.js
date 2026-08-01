@@ -61,6 +61,9 @@ if (!TEST_browser) {
         virtualConsole,
       });
       dom.window.fetch = node_fetch;
+      // jsdom lacks the CSS namespace; jquery-ui ≥1.14 calls CSS.escape.
+      if (!dom.window.CSS)
+        dom.window.CSS = { escape: s => String(s).replace(/[^a-zA-Z0-9_\u00A0-\uFFFF-]/g, c => `\\${c}`) };
       // jsdom does no layout and omits these Range methods; CodeMirror's
       // measure loop calls them on every frame and handles empty results.
       dom.window.Range.prototype.getClientRects = function () { return []; };

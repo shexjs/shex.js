@@ -1,4 +1,5 @@
 importScripts("../../shex-webapp/doc/webpacks/n3js.js");
+importScripts("../../shex-webapp/doc/webpacks/shex-webapp.js");
 importScripts("./webpacks/shexmap-webapp.js");
 importScripts("../../shex-webapp/doc/WorkerMarshalling.js");
 

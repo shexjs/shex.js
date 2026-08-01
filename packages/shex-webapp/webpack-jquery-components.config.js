@@ -12,7 +12,10 @@ var config = {
   output: {
     filename: "[name].js",
     path: Path.resolve(__dirname, DocDir, WebPacksDir),
-    publicPath: WebPacksDir,
+    // 'auto' resolves asset URLs (fonts/images referenced from CSS) relative
+    // to the bundle's own URL; css-loader's `new URL(..., baseURI)` output
+    // needs the runtime that webpack only emits for 'auto'.
+    publicPath: "auto",
   },
   module: {
     rules: [
@@ -22,13 +25,11 @@ var config = {
       },
       {
         test: /\.(png|svg|jpg|gif)$/,
-        use: ["file-loader"]
+        type: "asset/resource"
       },
       {
         test: /\.(woff|woff2|eot|ttf|otf)$/,
-        use: [
-           'file-loader'
-        ]
+        type: "asset/resource"
       }
     ]
   },

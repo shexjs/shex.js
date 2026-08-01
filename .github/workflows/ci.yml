@@ -29,6 +29,9 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: npm
       - run: npm ci
+      # browser tests load the webapp pages, whose webpack bundles are
+      # gitignored (see webapps-site.yml) and so must be built first
+      - run: npm run webpacks-all
       - run: npm run test-all
 
   lint:

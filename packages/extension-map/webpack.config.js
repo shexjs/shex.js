@@ -15,11 +15,33 @@ const WebpackMonitor = !!JSON.parse(process.env["WEBPACK_MONITOR"] || "false")
       })
       : []
 
+/* Modules provided by shex-webapp's bundle: resolved from the ShExWebApp
+ * global's module registry at runtime, so this bundle only packs the ShExMap
+ * extension itself. Load webpacks/n3js.js and (shex-webapp's)
+ * webpacks/shex-webapp.js before this bundle.
+ */
+const FromCoreBundle = [
+  "@shexjs/term", "@shexjs/util", "@shexjs/visitor",
+  "@shexjs/neighborhood-rdfjs", "@shexjs/neighborhood-sparql",
+  "@shexjs/validator", "@shexjs/writer", "@shexjs/loader", "@shexjs/parser",
+  "@shexjs/eval-simple-1err", "@shexjs/eval-threaded-nerr",
+  "@shexjs/eval-validator-api",
+  "@shexjs/editor-services", "@shexjs/editor-services/lib/editor-panes",
+  "shape-map", "js-yaml", "dctap",
+];
+
 module.exports = {
   entry: {
     "shexmap-webapp"    : "./shexmap-webapp.js",
     "shexmap-webapp.min": "./shexmap-webapp.js",
   },
+  externals: Object.assign(
+    {
+      "@shexjs/webapp": "var ShExWebApp",
+      "n3":             "var N3js",
+    },
+    ...FromCoreBundle.map(id => ({[id]: `var ShExWebApp.Modules[${JSON.stringify(id)}]`}))
+  ),
   output: {
     filename: "[name].js",
     path: Path.resolve(__dirname, DocDir, WebPacksDir),

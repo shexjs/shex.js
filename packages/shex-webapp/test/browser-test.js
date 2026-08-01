@@ -623,6 +623,9 @@ async function loadPage (page, searchParms) {
   let dom = getDom(page, searchParms)
   // stamp('dom')
   dom.window.fetch = node_fetch
+  // jsdom lacks the CSS namespace; jquery-ui ≥1.14 calls CSS.escape.
+  if (!dom.window.CSS)
+    dom.window.CSS = { escape: s => String(s).replace(/[^a-zA-Z0-9_\u00A0-\uFFFF-]/g, c => `\\${c}`) }
 
   await new Promise((resolve, reject) => {
     dom.window._testCallback = (parm, results) => {

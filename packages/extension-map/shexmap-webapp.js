@@ -1,29 +1,19 @@
-ShExWebApp = (function () {
-  const shapeMap = require("shape-map")
-  return Object.assign({}, {
-    ShExTerm:             require('@shexjs/term'),
-    Util:                 require('@shexjs/util'),
-    RdfJsDb:              require('@shexjs/neighborhood-rdfjs').ctor,
-    SparqlDb:             require('@shexjs/neighborhood-sparql').ctor,
-    Validator:            require('@shexjs/validator').ShExValidator,
-    Writer:               require('@shexjs/writer'),
-    Loader:               require("@shexjs/loader"),
-    Parser:               require("@shexjs/parser"),
-    "eval-simple-1err":   require("@shexjs/eval-simple-1err").RegexpModule,
-    "eval-threaded-nerr": require("@shexjs/eval-threaded-nerr").RegexpModule,
-    MatchDebugger:        require("@shexjs/eval-simple-1err").MatchDebugger,
-    capturingRegexModule: require("@shexjs/eval-validator-api").capturingRegexModule,
-    ShapeMap:             shapeMap,
-    ShapeMapParser:       shapeMap.Parser,
-    JsYaml:               require("js-yaml"),
-    DcTap:                require("dctap").DcTap,
-    Map:                  require("."),
-    StringToRdfJs:        require("./lib/stringToRdfJs"),
-    NestedTurtleWriter:   require("./lib/NestedWriter"),
-    EditorServices:       require("@shexjs/editor-services"),
-    EditorPanes:          require("@shexjs/editor-services/lib/editor-panes"),
-  })
-})()
+/* ShExMap webapp bundle entry: extends the ShExWebApp global created by
+ * ../shex-webapp/doc/webpacks/shex-webapp.js with the ShExMap extension.
+ *
+ * In HTML (and worker importScripts), load n3js.js and shex-webapp.js before
+ * this bundle: webpack `externals` (see webpack.config.js) resolve the shared
+ * modules to ShExWebApp.Modules / N3js at runtime instead of bundling a
+ * second copy of every module.
+ *
+ * Under node, require("@shexjs/webapp") resolves normally, so this module
+ * exports the same superset object it always did.
+ */
+ShExWebApp = Object.assign(require("@shexjs/webapp"), {
+  Map:                require("."),
+  StringToRdfJs:      require("./lib/stringToRdfJs"),
+  NestedTurtleWriter: require("./lib/NestedWriter"),
+})
 
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
   module.exports = ShExWebApp;
