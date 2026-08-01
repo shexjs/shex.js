@@ -122,7 +122,11 @@ class EmptyTracker {
 }
 class ShapeExprValidationContext {
     constructor(parent, label, // Can only be Start if it's the root of a context list.
-    depth = 0, tracker = new EmptyTracker(), seen = {}, matchTarget = null, subGraph = null) {
+    depth = 0, tracker = new EmptyTracker(), seen = {}, matchTarget = null, subGraph = null,
+    // The subGraph is the partition an extending CLOSED shape allocated to this
+    // extension: every triple in it must be consumed, as any left over would be
+    // unmatched in the extending shape's closed neighborhood.
+    partitionClosed = false) {
         this.parent = parent;
         this.label = label;
         this.depth = depth;
@@ -130,18 +134,19 @@ class ShapeExprValidationContext {
         this.seen = seen;
         this.matchTarget = matchTarget;
         this.subGraph = subGraph;
+        this.partitionClosed = partitionClosed;
     }
     checkShapeLabel(label) {
-        return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, this.matchTarget, this.subGraph);
+        return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, this.matchTarget, this.subGraph, this.partitionClosed);
     }
     followTripleConstraint() {
-        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, null);
+        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, null, false);
     }
-    checkExtendsPartition(subGraph) {
-        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, subGraph);
+    checkExtendsPartition(subGraph, partitionClosed) {
+        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, subGraph, partitionClosed);
     }
     checkExtendingClass(label, matchTarget) {
-        return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph);
+        return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph, this.partitionClosed);
     }
 }
 exports.ShapeExprValidationContext = ShapeExprValidationContext;
@@ -734,7 +739,11 @@ class ShExValidator {
         });
         const errors = [];
         // Triples not mapped to triple constraints are not allowed in closed shapes.
-        if (shape.closed && unexpectedTriples.length > 0 && !this.options.ignoreClosed) {
+        // ctx.partitionClosed: this shape is an extension of a CLOSED shape, validated
+        // against the partition allocated to it — triples the partition search assigned
+        // here but this shape's match doesn't consume are unmatched in the extending
+        // shape's closed neighborhood (e.g. allocated to an untaken OR disjunct).
+        if ((shape.closed || ctx.partitionClosed) && unexpectedTriples.length > 0 && !this.options.ignoreClosed) {
             errors.push({
                 type: "ClosedShapeViolation",
                 unexpectedTriples: unexpectedTriples.map(q => {
@@ -846,7 +855,9 @@ class ShExValidator {
                     passes.push(reference);
                 continue;
             }
-            ctx = ctx.checkExtendsPartition(subgraph); // new context with subgraph
+            // new context with subgraph; closedness propagates through the inheritance
+            // chain so an ancestor's ancestors must consume their allocations too
+            ctx = ctx.checkExtendsPartition(subgraph, expr.closed === true || ctx.partitionClosed);
             const sub = this.validateShapeExpr(focus, extend, ctx);
             // Name the result <focus node><ShExPath>: the part after the focus is a ShExPath
             // (shape-path-core) expression addressing the extension — a labeled extension by
