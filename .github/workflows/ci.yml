@@ -19,8 +19,11 @@ jobs:
         node-version: [20, 22, 24, 26]
     steps:
       - uses: actions/checkout@v4
-      - name: clone shexTest main alongside the checkout
-        run: git clone --depth=1 --branch=main https://github.com/shexSpec/shexTest.git ../shexTest
+      - name: clone shexTest alongside the checkout, on the ref the shex-test dependency names
+        # package.json is the single switch (guarded on main by check-branch-deps)
+        run: |
+          REF=$(sed -n 's|.*"shex-test": "github:shexSpec/shexTest#\([^"]*\)".*|\1|p' package.json)
+          git clone --depth=1 --branch="${REF:-main}" https://github.com/shexSpec/shexTest.git ../shexTest
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
@@ -57,8 +60,11 @@ jobs:
     continue-on-error: true # coverage reporting must not gate merges
     steps:
       - uses: actions/checkout@v4
-      - name: clone shexTest main alongside the checkout
-        run: git clone --depth=1 --branch=main https://github.com/shexSpec/shexTest.git ../shexTest
+      - name: clone shexTest alongside the checkout, on the ref the shex-test dependency names
+        # package.json is the single switch (guarded on main by check-branch-deps)
+        run: |
+          REF=$(sed -n 's|.*"shex-test": "github:shexSpec/shexTest#\([^"]*\)".*|\1|p' package.json)
+          git clone --depth=1 --branch="${REF:-main}" https://github.com/shexSpec/shexTest.git ../shexTest
       - uses: actions/setup-node@v4
         with:
           node-version: 24

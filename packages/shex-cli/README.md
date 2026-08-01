@@ -158,6 +158,13 @@ For example, loading [`@shexjs/extension-map`](../extension-map#readme) as above
     --extension node_modules/@shexjs/extension-map/shex-extension-map.js \
   | ./node_modules/.bin/shexmap-materialize -t bpdam.shex
 ```
+Extensions needn't be implemented in Javascript:
+[`@shexjs/extension-wasi-test`](../extension-wasi-test#readme) implements the
+[Test extension](http://shex.io/extensions/Test/) in hand-written WebAssembly,
+printing through WASI's `fd_write`:
+```sh
+    --extension node_modules/@shexjs/extension-wasi-test/shex-extension-wasi-test.js
+```
 
 ## conversion
 
