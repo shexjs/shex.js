@@ -1,0 +1,58 @@
+name: webapps-site
+
+# Build the doc/webpacks bundles (gitignored on main; jquery-components.* and
+# its hashed assets stay committed — see .gitignore) and publish the orphan
+# `gh-pages` branch: the full main tree (so every URL GitHub Pages served
+# from main keeps working, CNAME included) plus
+#
+#   index.html    <- doc/webapps-index.html (webapps landing page)
+#   .nojekyll     (serve the tree as-is; test fixtures confuse Jekyll)
+#   packages/{shex-webapp,extension-map}/doc/webpacks/  (the built bundles)
+#
+# The repo-relative layout is preserved because the pages reference each other
+# relatively (e.g. shexmap-simple.html loads
+# ../../shex-webapp/doc/webpacks/shex-webapp.js).
+#
+# Two consumers:
+#  - GitHub Pages (Pages source: "Deploy from a branch", gh-pages /root):
+#    serves https://shex.js.org/ per the CNAME.
+#  - shex.io: tools/sync-webpacks.sh copies the branch's doc/webpacks trees
+#    into a plain clone's working tree.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push to the gh-pages branch
+    steps:
+      - uses: actions/checkout@v4
+      - name: clone shexTest alongside the checkout, on the ref the shex-test dependency names
+        run: |
+          REF=$(sed -n 's|.*"shex-test": "github:shexSpec/shexTest#\([^"]*\)".*|\1|p' package.json)
+          git clone --depth=1 --branch="${REF:-main}" https://github.com/shexSpec/shexTest.git ../shexTest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run webpacks-all
+      - name: publish site to the gh-pages branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          cp doc/webapps-index.html index.html
+          touch .nojekyll
+          git checkout --orphan gh-pages-build
+          git rm -rfq --cached .
+          # full main tree (`add -A` respects .gitignore, so no node_modules),
+          # plus the ignored built bundles, the landing page and the Jekyll bypass
+          git add -A .
+          git add -f index.html .nojekyll \
+            packages/shex-webapp/doc/webpacks packages/extension-map/doc/webpacks
+          git commit -q -m "webapps site built from $GITHUB_SHA"
+          git push -f origin HEAD:gh-pages

@@ -1,0 +1,52 @@
+{
+  "name": "shex",
+  "version": "1.0.0-alpha.29",
+  "description": "Shape Expressions meta package",
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
+  "keywords": [
+    "shex",
+    "shape expressions",
+    "rdf",
+    "query",
+    "parser"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./lib/shex.js",
+  "dependencies": {
+    "@shexjs/cli": "^1.0.0-alpha.29",
+    "@shexjs/extension-map": "^1.0.0-alpha.29",
+    "@shexjs/loader": "^1.0.0-alpha.28",
+    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.29",
+    "@shexjs/node": "^1.0.0-alpha.28",
+    "@shexjs/parser": "^1.0.0-alpha.28",
+    "@shexjs/term": "^1.0.0-alpha.27",
+    "@shexjs/util": "^1.0.0-alpha.28",
+    "@shexjs/validator": "^1.0.0-alpha.29",
+    "@shexjs/visitor": "^1.0.0-alpha.27",
+    "@shexjs/webapp": "^1.0.0-alpha.29",
+    "@shexjs/writer": "^1.0.0-alpha.27",
+    "shape-map": "^1.0.0-alpha.26"
+  },
+  "scripts": {
+    "test": "cd ../.. && mocha packages/shex/test/*test.js",
+    "build": "tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shexjs/shex.js"
+  },
+  "bugs": {
+    "url": "https://github.com/shexjs/shex.js/issues"
+  },
+  "types": "./src/shex.ts"
+}

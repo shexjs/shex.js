@@ -1,0 +1,394 @@
+/** Tests for the prototype NFA-thread materializer (lib/ThreadedMaterializer).
+ *
+ * Drives materialization directly from the stored bindings JSON in
+ * examples/manifest.yaml (no validation pass needed) and compares the
+ * output graph to the expected turtle by bnode isomorphism.
+ */
+"use strict";
+
+const expect = require("chai").expect;
+const Fs = require("fs");
+const Path = require("path");
+const JsYaml = require("js-yaml");
+const RdfJs = require("n3");
+const ShExParser = require("@shexjs/parser");
+const ShExTerm = require("@shexjs/term");
+
+const {ThreadedMaterializer, normalizeBindingTree, MaterializationError} = require("../lib/ThreadedMaterializer");
+
+const TESTS = "TESTS" in process.env ? process.env.TESTS.split(/\|/) : null;
+const examplesDir = Path.join(__dirname, "../examples");
+const schemaBase = "http://a.example/schema/";
+
+function parseSchema (text) {
+  return ShExParser.construct(schemaBase, {}, {index: true}).parse(text);
+}
+
+function parseTurtle (text) {
+  const store = new RdfJs.Store();
+  store.addQuads(new RdfJs.Parser({baseIRI: "http://a.example/turtle/", format: "text/turtle"}).parse(text));
+  return store;
+}
+
+describe("ThreadedMaterializer", function () {
+
+  describe("examples manifest", function () {
+    const manifest = JsYaml.load(Fs.readFileSync(Path.join(examplesDir, "manifest.yaml"), "utf8"));
+    manifest.forEach(entry => {
+      const label = entry.schemaLabel + "(" + entry.dataLabel + ")";
+      if (TESTS !== null && !TESTS.find(pat => label.indexOf(pat) !== -1 || label.match(RegExp(pat))))
+        return;
+      it(label + " should materialize " + entry.expectedBindingsURL + " to " + entry.outputDataURL, function () {
+        const schemaText = "outputSchema" in entry
+              ? entry.outputSchema
+              : Fs.readFileSync(Path.join(examplesDir, entry.outputSchemaURL), "utf8");
+        const schema = parseSchema(schemaText);
+        const bindings = JSON.parse(Fs.readFileSync(Path.join(examplesDir, entry.expectedBindingsURL), "utf8"));
+        const createRoot = entry.createRoot.startsWith("_:")
+              ? entry.createRoot
+              : entry.createRoot.substr(1, entry.createRoot.length - 2);
+
+        const materializer = new ThreadedMaterializer(schema);
+        const got = new RdfJs.Store();
+        got.addQuads(materializer.materialize(bindings, createRoot));
+
+        const expected = parseTurtle(Fs.readFileSync(Path.join(examplesDir, entry.outputDataURL), "utf8"));
+        expect(graphEquals(got, expected)).to.equal(
+          true, "got:\n" + graphToString(got) + "\nexpected:\n" + graphToString(expected));
+      });
+    });
+  });
+
+  describe("binding tree normalization", function () {
+    it("should distribute singleton bindings into repeated frames", function () {
+      const tree = JSON.parse(Fs.readFileSync(Path.join(examplesDir, "BPPatient-multi-bindings-bindings.json"), "utf8"));
+      const frames = normalizeBindingTree(tree);
+      expect(frames.length).to.equal(2);
+      frames.forEach(frame => {
+        expect(frame["http://shex.io/extensions/Map/#BPDAM-name"]).to.deep.equal({value: "Sue"});
+      });
+      expect(frames[0]["http://shex.io/extensions/Map/#BPDAM-sysVal"].value).to.equal("110");
+      expect(frames[1]["http://shex.io/extensions/Map/#BPDAM-sysVal"].value).to.equal("111");
+    });
+
+    it("should flatten nested groups, keeping group-level bindings with their frames", function () {
+      const tree = JSON.parse(Fs.readFileSync(Path.join(examplesDir, "BPPatient-2-levels-bindings.json"), "utf8"));
+      const frames = normalizeBindingTree(tree);
+      expect(frames.length).to.equal(4);
+      expect(frames.map(f => f["http://shex.io/extensions/Map/#BPDAM-reportNo"].value))
+        .to.deep.equal(["one", "one", "two", "two"]);
+      frames.forEach(frame => {
+        expect(frame["http://shex.io/extensions/Map/#BPDAM-name"]).to.deep.equal({value: "Sue"});
+      });
+    });
+  });
+
+  // A TC whose variable lookup advances the frame cursor is deferred so
+  // in-frame alternatives explore first; all accepting threads are collected
+  // and materialize() returns the most-consuming one.
+  describe("frame-advance splitting and acceptance", function () {
+    const prefixes = "PREFIX : <http://a.example/>\nPREFIX Map: <http://shex.io/extensions/Map/#>\n";
+    // pessimal ordering: :tel (frame 2) is tried before :email (frame 0)
+    const cardSchema = prefixes + [
+      "start = @<Card>",
+      "<Card> { :fullName . %Map:{ :name %} ;",
+      "         ( :phone @<T> | :mbox @<E> )+ }",
+      "<T> { :use . %Map:{ :use %} ; :val . %Map:{ :tel %} }",
+      "<E> { :use . %Map:{ :use %} ; :val . %Map:{ :email %} }",
+    ].join("\n");
+    const tree = [
+      {"http://a.example/name": {value: "Ann"}},
+      [{"http://a.example/use": {value: "work"}, "http://a.example/email": {value: "w@x"}},
+       {"http://a.example/use": {value: "home"}, "http://a.example/email": {value: "h@x"}},
+       {"http://a.example/use": {value: "home"}, "http://a.example/tel": {value: "+1"}}],
+    ];
+
+    it("should not let a cross-frame pairing beat in-frame consumption", function () {
+      const m = new ThreadedMaterializer(parseSchema(cardSchema));
+      const store = new RdfJs.Store();
+      store.addQuads(m.materialize(tree, "tag:card"));
+      // the winner pairs each :use with ITS frame's value: 2 mbox + 1 phone
+      const vals = store.match(null, RdfJs.DataFactory.namedNode("http://a.example/val"), null)
+            .toArray().map(q => q.object.value).sort();
+      expect(vals).to.deep.equal(["+1", "h@x", "w@x"]);
+      expect(m.chosen.consumed).to.equal(7);
+      // the cross-frame mix (frame 0's :use with frame 2's :tel) is merely an
+      // alternative, penalized by the bindings it skipped over
+      const mix = m.accepts.find(a => a.skipped === 4);
+      expect(mix, "the demoted cross-frame accept").to.exist;
+      expect(mix.consumed).to.equal(3);
+    });
+
+    it("should yield advance events when a lookup moves the cursor", function () {
+      const m = new ThreadedMaterializer(parseSchema(cardSchema));
+      const events = [];
+      const it2 = m.run(tree, "tag:card");
+      for (let step = it2.next(); !step.done; step = it2.next())
+        events.push(step.value);
+      const advance = events.find(e => e.type === "advance");
+      expect(advance, "an advance event").to.exist;
+      expect(advance.toFrame).to.be.above(advance.thread.frame);
+      expect(events.filter(e => e.type === "accept").length).to.equal(m.accepts.length);
+    });
+
+    it("should collapse constant-only variants onto one accept", function () {
+      // the optional constants multiply threads but not accepts; the kept
+      // variant is the constant-maximal one
+      const m = new ThreadedMaterializer(parseSchema(prefixes + [
+        "start = @<S>",
+        "<S> { :a [:c1]? ; :b [:c2]? ; :v . %Map:{ :v1 %} }",
+      ].join("\n")));
+      const store = new RdfJs.Store();
+      store.addQuads(m.materialize({"http://a.example/v1": {value: "x"}}, "_:root"));
+      expect(m.accepts.length).to.equal(1);
+      expect(store.size).to.equal(3); // both constants emitted
+    });
+
+    it("should expose a tie as multiple accepts and keep the greedy winner", function () {
+      const m = new ThreadedMaterializer(parseSchema(prefixes + [
+        "start = @<S>",
+        "<S> { :p . %Map:{ :v1 %} | :q . %Map:{ :v2 %} }",
+      ].join("\n")));
+      const store = new RdfJs.Store();
+      store.addQuads(m.materialize({"http://a.example/v1": {value: "x"},
+                                    "http://a.example/v2": {value: "y"}}, "_:root"));
+      expect(m.accepts.length).to.equal(2);
+      expect(m.chosen).to.equal(m.accepts[0]); // greedy tie-break: first disjunct
+      expect(store.match(null, null, null).toArray()[0].predicate.value)
+        .to.equal("http://a.example/p");
+      expect(m.lastReport.alternatives).to.equal(2);
+    });
+  });
+
+  // These are the cases that motivated the prototype: a failing branch must
+  // not corrupt the binding cursor of the surviving branch.
+  describe("backtracking", function () {
+    const prefixes = "PREFIX : <http://a.example/>\nPREFIX Map: <http://shex.io/extensions/Map/#>\n";
+    const v1Binding = {"http://a.example/v1": {value: "x"}};
+
+    function materializeToStore (schemaText, bindings) {
+      const store = new RdfJs.Store();
+      store.addQuads(new ThreadedMaterializer(parseSchema(schemaText)).materialize(bindings, "_:root"));
+      return store;
+    }
+
+    it("should release bindings consumed by an abandoned optional group", function () {
+      // Greedy entry into the optional group consumes v1 at :a, then dies at
+      // :b (v2 unbound).  The skip-arm thread must still see v1 unused so the
+      // required :c can bind it.  The shared-cursor implementation loses v1.
+      const store = materializeToStore(prefixes + [
+        "start = @<S>",
+        "<S> {",
+        "  (:a . %Map:{ :v1 %}; :b . %Map:{ :v2 %})?;",
+        "  :c . %Map:{ :v1 %}",
+        "}"
+      ].join("\n"), v1Binding);
+      expect(store.size).to.equal(1);
+      expect(store.match(null, null, null).toArray()[0].predicate.value).to.equal("http://a.example/c");
+    });
+
+    it("should fall through to the next OneOf disjunct on an unbound variable", function () {
+      const store = materializeToStore(prefixes + [
+        "start = @<S>",
+        "<S> { :a . %Map:{ :v2 %} | :b . %Map:{ :v1 %} }"
+      ].join("\n"), v1Binding);
+      expect(store.size).to.equal(1);
+      expect(store.match(null, null, null).toArray()[0].predicate.value).to.equal("http://a.example/b");
+    });
+
+    it("should stop repeating a starred subshape when bindings run out", function () {
+      // Two frames feed two repetitions; the third repetition dies inside the
+      // subshape after emitting intermediate triples, all of which must be
+      // discarded with the dead thread.
+      const store = materializeToStore(prefixes + [
+        "start = @<S>",
+        "<S> { :item @<I>* }",
+        "<I> { :tag [:const]; :val . %Map:{ :v1 %} }"
+      ].join("\n"), [[{"http://a.example/v1": {value: "x"}},
+                      {"http://a.example/v1": {value: "y"}}]]);
+      // 2 items x (:item link, :tag const, :val binding) = 6 triples
+      expect(store.size).to.equal(6);
+      expect(store.match(null, RdfJs.DataFactory.namedNode("http://a.example/val"), null).toArray()
+             .map(q => q.object.value).sort()).to.deep.equal(["x", "y"]);
+    });
+
+    it("should report failures when no materialization exists", function () {
+      expect(() => materializeToStore(prefixes + "start = @<S>\n<S> { :a . %Map:{ :v2 %} }", v1Binding))
+        .to.throw(MaterializationError, /v2/);
+    });
+
+    it("should report never-bound variables when a star silently collapses", function () {
+      // a typo'd variable in a required constraint under a * kills every
+      // iteration: materialization "succeeds" with an empty graph, so the
+      // report is the only tell
+      const schema = parseSchema(prefixes + [
+        "start = @<S>",
+        "<S> { :item @<I>* }",
+        "<I> { :val . %Map:{ :v1 %}; :oops . %Map:{ :typo %} }",
+      ].join("\n"));
+      const tm = new ThreadedMaterializer(schema, {staticVars: {"http://a.example/unrelated": {value: "x"}}});
+      const quads = tm.materialize([[{"http://a.example/v1": {value: "a"}},
+                                     {"http://a.example/v1": {value: "b"}}]], "_:root");
+      expect(quads.length, "collapses to an empty graph").to.equal(0);
+      const report = tm.lastReport;
+      expect(report.unboundVariables.map(f => f.variable))
+        .to.deep.equal(["http://a.example/typo"]);
+      expect(report.unboundVariables[0].tc.predicate).to.equal("http://a.example/oops");
+      expect(report.unusedStatics).to.deep.equal(["http://a.example/unrelated"]);
+    });
+
+    it("should keep the report quiet on healthy runs", function () {
+      // benignly-exhausted variables (the loop-termination dead ends) are
+      // not "unbound"; referenced statics are not "unused"
+      const schema = parseSchema(prefixes + [
+        "start = @<S>",
+        "<S> { :item @<I>* }",
+        "<I> { :val . %Map:{ :v1 %}; :konst . %Map:{ :stat %} }",
+      ].join("\n"));
+      const tm = new ThreadedMaterializer(schema, {staticVars: {"http://a.example/stat": {value: "s"}}});
+      const quads = tm.materialize([[{"http://a.example/v1": {value: "a"}},
+                                     {"http://a.example/v1": {value: "b"}}]], "_:root");
+      expect(quads.length).to.be.above(0);
+      expect(tm.lastReport.unboundVariables).to.deep.equal([]);
+      expect(tm.lastReport.unusedStatics).to.deep.equal([]);
+    });
+
+    it("should reference the failing TripleConstraint from failure records", function () {
+      // editors anchor materialization failures via schema._exprLocations,
+      // keyed by these tc objects
+      const schema = parseSchema(prefixes + "start = @<S>\n<S> { :a . %Map:{ :v2 %} }");
+      try {
+        new ThreadedMaterializer(schema).materialize(v1Binding, "_:root");
+        throw Error("expected MaterializationError");
+      } catch (e) {
+        expect(e).to.be.an.instanceof(MaterializationError);
+        const failure = e.failures.find(f => f.tc);
+        expect(failure, "failure with tc reference").to.exist;
+        expect(failure.tc.predicate).to.equal("http://a.example/a");
+        expect(schema._exprLocations.has(failure.tc), "tc identity resolves a location").to.equal(true);
+        expect(e.message, "tc not serialized into the message").not.to.include('"type":"TripleConstraint"');
+      }
+    });
+  });
+
+  describe("shapeExpr composition", function () {
+    const prefixes = "PREFIX : <http://a.example/>\nPREFIX Map: <http://shex.io/extensions/Map/#>\n";
+
+    it("should materialize each ShapeAnd conjunct against the same subject", function () {
+      // mirrors the vpr-FHIR CLI fixture's `start=@<Condition> AND {...}`
+      const store = new RdfJs.Store();
+      store.addQuads(new ThreadedMaterializer(parseSchema(prefixes + [
+        "start = @<S> AND { :t [:const] }",
+        "<S> { :a . %Map:{ :v1 %} }"
+      ].join("\n"))).materialize({"http://a.example/v1": {value: "x"}}, "tag:root"));
+      expect(store.size).to.equal(2);
+      const subjects = store.match(null, null, null).toArray().map(q => q.subject.value);
+      expect(subjects).to.deep.equal(["tag:root", "tag:root"]);
+    });
+
+    it("should limit repetition of subshapes that consume no frame bindings", function () {
+      // <I> is satisfiable forever from its constant; the progress guard
+      // stops the star after one binding-free iteration instead of maxRepeat.
+      const store = new RdfJs.Store();
+      store.addQuads(new ThreadedMaterializer(parseSchema(prefixes + [
+        "start = @<S>",
+        "<S> { :item @<I>* }",
+        "<I> { :tag [:const] }"
+      ].join("\n"))).materialize({}, "_:root"));
+      expect(store.size).to.equal(2); // one :item link + one :tag
+    });
+
+    it("should draw staticVars from globals without consuming them", function () {
+      const store = new RdfJs.Store();
+      store.addQuads(new ThreadedMaterializer(parseSchema(prefixes + [
+        "start = @<S>",
+        "<S> { :a . %Map:{ :v9 %}; :b . %Map:{ :v9 %} }"
+      ].join("\n")), {staticVars: {"http://a.example/v9": {value: "s"}}}).materialize({}, "_:root"));
+      expect(store.size).to.equal(2); // both TCs see the static
+    });
+  });
+});
+
+/* graphEquals/findIsomorphism/mapppedTo/graphToString copied from
+ * ./Map-test.js -- candidates for a shared test util. */
+function graphToString (g) {
+  let output = "";
+  const w = new RdfJs.Writer({
+    write: function (chunk, encoding, done) { output += chunk; done && done(); },
+  });
+  w.addQuads([...g.match(null, null, null, null)]);
+  return "{\n" + output + "\n}";
+}
+
+function graphEquals (left, right, leftToRight) {
+  if (left.size !== right.size)
+    return false;
+
+  leftToRight = leftToRight || {};
+  const rightToLeft = Object.keys(leftToRight).reduce(function (ret, from) {
+    ret[leftToRight[from]] = from;
+    return ret;
+  }, {});
+
+  return findIsomorphism([...left.match(null, null, null, null)],
+                         right, leftToRight, rightToLeft);
+}
+
+function findIsomorphism (g, right, l2r, r2l) {
+  if (g.length === 0)
+    return true;
+  const matchTarget = g.pop();
+
+  const rights = [...right.match(
+    mapppedTo(matchTarget.subject, l2r),
+    matchTarget.predicate,
+    mapppedTo(matchTarget.object, l2r),
+    null
+  )];
+
+  const ret = !!rights.find(function (triple) {
+    const trialMappings = [];
+    function add (from, to) {
+      if (mapppedTo(from, l2r) === null) {
+        if (mapppedTo(to, r2l) === null) {
+          const leftKey = ShExTerm.rdfJsTerm2Turtle(from);
+          const rightKey = ShExTerm.rdfJsTerm2Turtle(to);
+          l2r[leftKey] = to;
+          r2l[rightKey] = from;
+          trialMappings.push({from, leftKey, rightKey});
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        return true;
+      }
+    }
+
+    if (!add(matchTarget.subject, triple.subject) ||
+        !add(matchTarget.object, triple.object) ||
+        !findIsomorphism(g, right, l2r, r2l)) {
+      for (const {leftKey, rightKey} of trialMappings) {
+        delete r2l[rightKey];
+        delete l2r[leftKey];
+      }
+      return false;
+    } else
+      return true;
+  });
+
+  if (!ret) {
+    g.push(matchTarget);
+  }
+
+  return ret;
+}
+
+function mapppedTo (term, mapping) {
+  if (term.termType === "BlankNode") {
+    const key = ShExTerm.rdfJsTerm2Turtle(term);
+    return (key in mapping) ? mapping[key] : null;
+  } else {
+    return term;
+  }
+}

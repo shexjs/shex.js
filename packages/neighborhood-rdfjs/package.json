@@ -1,0 +1,45 @@
+{
+  "name": "@shexjs/neighborhood-rdfjs",
+  "version": "1.0.0-alpha.29",
+  "description": "Implementation of @shexjs/neighborhood-api which gets data from an @rdfjs/dataset",
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
+  "keywords": [
+    "shex",
+    "shape expressions",
+    "rdf",
+    "query",
+    "parser"
+  ],
+  "license": "MIT",
+  "main": "./lib/neighborhood-rdfjs.js",
+  "types": "./src/neighborhood-rdfjs.ts",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@shexjs/eval-validator-api": "^1.0.0-alpha.29",
+    "@shexjs/neighborhood-api": "^1.0.0-alpha.28",
+    "@shexjs/term": "^1.0.0-alpha.27"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "cd .. && mocha -C -R dot"
+  },
+  "devDependencies": {
+    "@rdfjs/types": "^1.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shexjs/shex.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shexSpec/grammar/issues"
+  }
+}
