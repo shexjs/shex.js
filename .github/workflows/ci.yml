@@ -73,6 +73,8 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      # coverage runs test-all, whose browser tests need the webpack bundles
+      - run: npm run webpacks-all
       - run: npm run coverage
       - uses: coverallsapp/github-action@v2
         with:
