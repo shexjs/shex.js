@@ -3,7 +3,7 @@ function register (validator: any, api: any) {
   if (api === undefined || !('ShExTerm' in api))
     throw Error('SemAct extensions must be called with register(validator, {ShExTerm, ...)')
 
-  const term = `(?:("(?:[^\\\\"]|\\\\\\\\|\\\\")*"|'(?:[^\\\\']|\\\\\\\\|\\\\')*')|([spo]))`;
+  const term = `(?:("(?:[^\\\\"]|\\\\\\\\|\\\\")*"|'(?:[^\\\\']|\\\\\\\\|\\\\')*')|([spon]))`;
   const pattern = new RegExp(`^ *(fail|print) *\\((( *${term} *,)* *${term}) *\\) *$`);
 
   validator.semActHandler.results[TestExt] = [];
@@ -42,11 +42,15 @@ function register (validator: any, api: any) {
           return wrapped.substring(1, wrapped.length -1).replace(/\\([\\"'])/g, "$1");
         }
         function parsePos (pos: string): string {
-          const t = ctx.triples[0];
-          return pos === "s" ? t.subject.value :
-            pos === "p" ? t.predicate.value :
-            pos === "o" ? t.object.value :
-            "???";
+          const node = pos === "n"
+                ? asRdfJsTerm(ctx.node) // focus node; LD form when ctx is a NodeConstraintTest
+                : ctx.triples[0][pos === "s" ? "subject" : pos === "p" ? "predicate" : "object"];
+          return node.termType === "Literal" && node.datatype.value !== api.ShExTerm.XsdString
+            ? api.ShExTerm.rdfJsTerm2Turtle(node)
+            : node.value;
+        }
+        function asRdfJsTerm (node: any): any {
+          return typeof node === "object" && "termType" in node ? node : api.ShExTerm.ld2RdfJsTerm(node);
         }
       }
     }

@@ -1484,6 +1484,7 @@ const ShExUtil = {
                     ret.flags = v[SX.flags][0].ldterm.value;
                 if (SX.datatype in v)
                     ret.datatype = v[SX.datatype][0].ldterm;
+                minMaxAnnotSemActs(v, ret);
                 return ret;
             }
             else {
