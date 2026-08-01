@@ -43,14 +43,11 @@ function register (validator: any, api: any) {
         }
         function parsePos (pos: string): string {
           const node = pos === "n"
-                ? asRdfJsTerm(ctx.node) // focus node; LD form when ctx is a NodeConstraintTest
+                ? ctx.node
                 : ctx.triples[0][pos === "s" ? "subject" : pos === "p" ? "predicate" : "object"];
           return node.termType === "Literal" && node.datatype.value !== api.ShExTerm.XsdString
             ? api.ShExTerm.rdfJsTerm2Turtle(node)
             : node.value;
-        }
-        function asRdfJsTerm (node: any): any {
-          return typeof node === "object" && "termType" in node ? node : api.ShExTerm.ld2RdfJsTerm(node);
         }
       }
     }

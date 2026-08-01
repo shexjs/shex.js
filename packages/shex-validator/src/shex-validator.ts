@@ -675,7 +675,7 @@ export class ShExValidator {
   // TODO: should this be called for and, or, not?
   protected evaluateShapeExprSemActs(ret: shapeExprTest, shapeExpr: NodeConstraint, point: RdfJsTerm, shapeLabel: LabelOrStart) {
     if (!("errors" in ret) && shapeExpr.semActs !== undefined) {
-      const semActErrors = this.semActHandler.dispatchAll((shapeExpr as any).semActs, Object.assign({node: point}, ret), ret)
+      const semActErrors = this.semActHandler.dispatchAll((shapeExpr as any).semActs, Object.assign({}, ret, {node: point}), ret)
       if (semActErrors.length)
           // some semAct aborted
         return {type: "Failure", node: rdfJsTerm2Ld(point), shape: shapeLabel, errors: semActErrors} as Failure;

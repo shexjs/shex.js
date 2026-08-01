@@ -39,14 +39,11 @@ function register(validator, api) {
             }
             function parsePos(pos) {
                 const node = pos === "n"
-                    ? asRdfJsTerm(ctx.node) // focus node; LD form when ctx is a NodeConstraintTest
+                    ? ctx.node
                     : ctx.triples[0][pos === "s" ? "subject" : pos === "p" ? "predicate" : "object"];
                 return node.termType === "Literal" && node.datatype.value !== api.ShExTerm.XsdString
                     ? api.ShExTerm.rdfJsTerm2Turtle(node)
                     : node.value;
-            }
-            function asRdfJsTerm(node) {
-                return typeof node === "object" && "termType" in node ? node : api.ShExTerm.ld2RdfJsTerm(node);
             }
         }
     });
