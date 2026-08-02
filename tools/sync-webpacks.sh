@@ -3,8 +3,9 @@
 #
 # The bundles are gitignored on main; .github/workflows/webapps-site.yml
 # rebuilds them on every push to main and publishes a complete webapps site
-# (bundles included) to the orphan `gh-pages` branch. This script copies that
+# (bundles included) to the `gh-pages` branch. This script copies that
 # branch's doc/webpacks trees into the working tree (they stay untracked).
+# (A deployment can also simply clone gh-pages itself and `git pull`.)
 #
 # Use it:
 #  - on shex.io, after `git pull` of main (e.g. from cron or a post-merge hook):
