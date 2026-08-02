@@ -1,0 +1,7 @@
+<http://a.example/S1> {
+   ( <http://a.example/p1> .;
+     <http://a.example/p2> .;
+     <http://a.example/p3> .
+   ) %<http://shex.io/extensions/Test/>{ print("group semAct") %}
+   %<http://shex.io/extensions/WASI/>{ (data (i32.const 8192) "group semAct") (func $main (call $put (i32.const 8192) (i32.const 12)) (call $nl)) %}
+}
