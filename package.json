@@ -101,5 +101,8 @@
       "lcov",
       "text"
     ]
+  },
+  "overrides": {
+    "brace-expansion": "5.0.8"
   }
 }
