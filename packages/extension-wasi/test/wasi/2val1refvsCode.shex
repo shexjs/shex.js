@@ -1,0 +1,12 @@
+<http://a.example/S> {
+  <http://a.example/p1> [1 5]
+     %<http://shex.io/extensions/Test/>{ print(o) %}
+     %<http://shex.io/extensions/WASI/>{ (func $main (call $put_o) (call $nl)) %} ;
+  <http://a.example/p2> @<http://a.example/NC>
+     %<http://shex.io/extensions/Test/>{ print(o) %}
+     %<http://shex.io/extensions/WASI/>{ (func $main (call $put_o) (call $nl)) %} ;
+}
+
+<http://a.example/NC> [2 6]
+     %<http://shex.io/extensions/Test/>{ print(n) %}
+     %<http://shex.io/extensions/WASI/>{ (func $main (call $put_n) (call $nl)) %}

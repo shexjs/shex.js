@@ -1,0 +1,20 @@
+{
+  "name": "@shexjs/extension-wasi",
+  "version": "1.0.0-alpha.1",
+  "description": "generic WASI semantic-action extension: the action code is a WebAssembly (WAT) WASI command run per invocation",
+  "author": "ericP <eric@w3.org> (http://www.w3.org/People/Eric/)",
+  "license": "MIT",
+  "main": "shex-extension-wasi.js",
+  "scripts": {
+    "test": "cd ../.. && mocha -C -R dot packages/extension-wasi/test/*test.js",
+    "gen-tests": "node tools/gen-tests.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shexSpec/shex.js.git",
+    "directory": "packages/extension-wasi"
+  },
+  "dependencies": {
+    "wabt": "^1.0.36"
+  }
+}
