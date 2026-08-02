@@ -4,9 +4,14 @@
  *
  * Where the Test extension <http://shex.io/extensions/Test/> interprets a
  * tiny fixed grammar (print/fail), this extension's semantic-action code IS A
- * PROGRAM: the WebAssembly Text (WAT) source of a WASI command module.  Each
- * invocation compiles (cached) and runs the module under
- * wasi_snapshot_preview1 with the evaluation context passed as WASI argv:
+ * PROGRAM in WebAssembly Text (WAT): either a complete WASI command module
+ * (code beginning with "(module"), or — the common, compact form — a list of
+ * module fields completed by the library prelude (lib/prelude.wat), which
+ * supplies the WASI imports, memory, argv loading and print helpers
+ * ($put/$println, $put_s/p/o/n, $println_s/p/o/n, $fail) and calls the
+ * author's (func $main …).  Each invocation compiles (cached) and runs the
+ * module under wasi_snapshot_preview1 with the evaluation context passed as
+ * WASI argv:
  *
  *   argv[0] = "http://shex.io/extensions/WASI/"
  *   argv[1..] = one "<letter>=<value>" per in-scope binding:
@@ -59,6 +64,26 @@ function ready () {
 
 const moduleCache = new Map(); // WAT text -> WebAssembly.Module
 
+let preludeText = null;
+function prelude () {
+  if (preludeText === null)
+    preludeText = require("fs").readFileSync(
+      require("path").join(__dirname, "lib", "prelude.wat"), "utf8");
+  return preludeText;
+}
+
+/** Complete a semantic action's WAT: code beginning with "(module" is a
+ * standalone module; anything else is module fields (typically just
+ * `(func $main …)` and data segments) composed with the library prelude.
+ * The prelude comes first — WAT requires imports before other definitions —
+ * so wabt error line numbers are offset by its length.
+ */
+function composeWat (code) {
+  return code.trimStart().startsWith("(module")
+    ? code
+    : "(module\n" + prelude() + code + "\n)\n";
+}
+
 function compile (code) {
   if (moduleCache.has(code))
     return moduleCache.get(code);
@@ -66,7 +91,7 @@ function compile (code) {
     throw Error("Invocation error: " + WasiExt + " not initialized; `await extension.ready()` before validating");
   let parsed;
   try {
-    parsed = wabt.parseWat("semact.wat", code, {});
+    parsed = wabt.parseWat("semact.wat", composeWat(code), {});
   } catch (e) {
     throw Error("Invocation error: " + WasiExt + " WAT didn't compile: " + e.message);
   }
@@ -262,7 +287,7 @@ url: ${WasiExt}`,
     configure: function (overrides) {
       return makeModule(Object.assign({}, opts, overrides));
     },
-    _internals: {compile, runShim, runNodeWasi, ctxArgs, moduleCache},
+    _internals: {compile, composeWat, prelude, runShim, runNodeWasi, ctxArgs, moduleCache},
   };
 }
 

@@ -1,4 +1,5 @@
 <http://a.example/S1> {
    <http://a.example/p1> .
+     %<http://shex.io/extensions/Test/>%
      %<http://shex.io/extensions/WASI/>%
 }

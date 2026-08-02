@@ -5,10 +5,58 @@ The generic WASI semantic-action extension,
 
 Where the [Test extension](http://shex.io/extensions/Test/) interprets a tiny
 fixed grammar (`print`/`fail`), this extension's semantic-action code **is a
-program**: the [WebAssembly Text](https://webassembly.github.io/spec/core/text/index.html)
-source of a [WASI](https://wasi.dev/) command module.  Each invocation
-compiles the module (cached per code text, via [wabt](https://github.com/WebAssembly/wabt))
+program** in [WebAssembly Text](https://webassembly.github.io/spec/core/text/index.html),
+run as a [WASI](https://wasi.dev/) command.  Each invocation compiles the
+module (cached per code text, via [wabt](https://github.com/WebAssembly/wabt))
 and runs it under `wasi_snapshot_preview1`.
+
+The code takes one of two forms:
+
+- **standalone** — code beginning with `(module` is compiled as-is: a
+  self-contained WASI command importing only `wasi_snapshot_preview1`;
+- **library** (the compact, common form) — anything else is a list of module
+  *fields*, completed by [`lib/prelude.wat`](lib/prelude.wat): the prelude
+  supplies the WASI imports, exported memory, argv loading and print
+  helpers, and an exported `_start` that calls the author's
+  `(func $main …)`.  A whole `print(o)` is:
+
+  ```
+  %<http://shex.io/extensions/WASI/>{ (func $main (call $println_o)) %}
+  ```
+
+The composed module still imports only `wasi_snapshot_preview1`, so any WASI
+host that performs the same composition (the prelude text is part of this
+extension's definition) runs the same actions.
+
+### the library
+
+| helper | effect |
+|--------|--------|
+| `$put (ptr len)` | write bytes to fd 1 |
+| `$nl ()` | write `"\n"` |
+| `$println (ptr len)` | `$put` then `$nl` |
+| `$put_s` `$put_p` `$put_o` `$put_n` | write a binding's value (exit 2 if absent) |
+| `$println_s` `$println_p` `$println_o` `$println_n` | ditto, newline-terminated |
+| `$fail ()` | exit 1 — a `SemActFailure` |
+| `$strlen (ptr) → len` | NUL-terminated string length |
+
+Author data segments start at offset **8192** (below that is the prelude's
+argv/scratch space):
+
+```
+%<http://shex.io/extensions/WASI/>{
+(data (i32.const 8192) "spo: ")
+(func $main
+  (call $put (i32.const 8192) (i32.const 5))
+  (call $put_s) (call $put_p) (call $put_o)
+  (call $nl))
+%}
+```
+
+This is enough to express everything
+[`@shexjs/extension-wasi-test`](../extension-wasi-test#readme)'s Wasm-side
+Test-grammar interpreter can do, without the interpreter: each `print`/`fail`
+becomes a few library calls (see the generated suite below).
 
 ## the contract
 
@@ -68,9 +116,14 @@ WasiExt.done(validator);
 [`test/wasi/`](test/wasi/) holds every shexTest validation test bearing the
 `sht:SemanticAction` trait (except the `shapeExtern*` four, which carry the
 trait for the ExternalShape mechanism and contain no code), re-coded for this
-extension by [`tools/gen-tests.js`](tools/gen-tests.js): each
-`%<…Test/>{ print(o) %}` becomes a `%<…WASI/>{ (module …) %}` whose WAT
-prints the same line — `$write_arg` playing the role of a `_wasi_println(o)`.
+extension by [`tools/gen-tests.js`](tools/gen-tests.js): after each
+`%<…Test/>{ print(o) %}` it appends a library-form
+`%<…WASI/>{ (func $main (call $put_o) (call $nl)) %}` printing the same
+line.  The original bytes are untouched, so the recoded schemas diff against
+shexTest's as pure additions and **do double duty**: an implementation
+registering the Test extension fires the Test acts (unregistered WASI acts
+are skipped), one registering this extension fires the WASI acts — the suite
+verifies both give the same results.
 The mocha suite runs each test under both extensions and requires identical
 validation status and result lines, plus agreement with the manifest's
 `mf:extensionResults` where declared.

@@ -58,9 +58,7 @@ function parseTestCode (code) {
 }
 
 // ── WAT emission ─────────────────────────────────────────────────────────────
-const LITERALS_BASE = 1024; // literal pool (incl. "\n")
-const ARGV_PTRS = 48;       // argv pointer array
-const ARGV_BUF = 4096;      // argv string buffer
+const USER_DATA = 8192; // where the library prelude's memory map hands over
 
 function watString (bytes) { // WAT data-segment string with hex escapes
   return [...bytes].map(b =>
@@ -69,71 +67,32 @@ function watString (bytes) { // WAT data-segment string with hex escapes
       : "\\" + b.toString(16).padStart(2, "0")).join("");
 }
 
-/** emit a WASI command module performing one Test print/fail */
+/** emit single-line module fields (completed by lib/prelude.wat) performing
+ * one Test print/fail: string parts become data segments printed with $put,
+ * position parts become $put_s/p/o/n calls, one $nl ends the line, fail
+ * exits 1.  WAT is whitespace-insensitive, so one line suffices and the act
+ * sits visually parallel to the Test act it shadows. */
 function watFor (testCode) {
   const {verb, parts} = parseTestCode(testCode);
   const encoder = new TextEncoder();
-  // literal pool: "\n" first, then each string part
-  let pool = Buffer.from("\n");
+  let pool = Buffer.alloc(0);
   const litRefs = parts.map(p => {
     if (!("str" in p)) return null;
     const bytes = encoder.encode(p.str);
-    const ref = {ptr: LITERALS_BASE + pool.length, len: bytes.length};
+    const ref = {ptr: USER_DATA + pool.length, len: bytes.length};
     pool = Buffer.concat([pool, Buffer.from(bytes)]);
     return ref;
   });
   const calls = parts.map((p, i) =>
     "str" in p
-      ? `    (call $write (i32.const ${litRefs[i].ptr}) (i32.const ${litRefs[i].len}))`
-      : `    (call $write_arg (i32.const ${p.pos.charCodeAt(0)})) ;; ${p.pos}`);
-  return `(module
-  ;; WASI re-coding of Test semantic action \`${verb}(${parts.map(p => "str" in p ? JSON.stringify(p.str) : p.pos).join(", ")})\`
-  (import "wasi_snapshot_preview1" "args_sizes_get" (func $args_sizes_get (param i32 i32) (result i32)))
-  (import "wasi_snapshot_preview1" "args_get" (func $args_get (param i32 i32) (result i32)))
-  (import "wasi_snapshot_preview1" "fd_write" (func $fd_write (param i32 i32 i32 i32) (result i32)))
-  (import "wasi_snapshot_preview1" "proc_exit" (func $proc_exit (param i32)))
-  (memory (export "memory") 1)
-  ;; 0:argc 4:argv_buf_size 16:iovec 32:nwritten ${ARGV_PTRS}:argv[] ${LITERALS_BASE}:literals ${ARGV_BUF}:argv text
-  (data (i32.const ${LITERALS_BASE}) "${watString(pool)}")
-  (func $write (param $ptr i32) (param $len i32)
-    (i32.store (i32.const 16) (local.get $ptr))
-    (i32.store (i32.const 20) (local.get $len))
-    (drop (call $fd_write (i32.const 1) (i32.const 16) (i32.const 1) (i32.const 32))))
-  (func $strlen (param $p i32) (result i32)
-    (local $e i32)
-    (local.set $e (local.get $p))
-    (block $done
-      (loop $l
-        (br_if $done (i32.eqz (i32.load8_u (local.get $e))))
-        (local.set $e (i32.add (local.get $e) (i32.const 1)))
-        (br $l)))
-    (i32.sub (local.get $e) (local.get $p)))
-  ;; print the value of the "<letter>=<value>" argument; exit(2) if absent
-  (func $write_arg (param $letter i32)
-    (local $i i32)
-    (local $p i32)
-    (local.set $i (i32.const 1))
-    (block $done
-      (loop $l
-        (br_if $done (i32.ge_u (local.get $i) (i32.load (i32.const 0))))
-        (local.set $p (i32.load (i32.add (i32.const ${ARGV_PTRS}) (i32.mul (local.get $i) (i32.const 4)))))
-        (if (i32.and (i32.eq (i32.load8_u (local.get $p)) (local.get $letter))
-                     (i32.eq (i32.load8_u (i32.add (local.get $p) (i32.const 1))) (i32.const 61)))
-          (then
-            (call $write (i32.add (local.get $p) (i32.const 2))
-                         (call $strlen (i32.add (local.get $p) (i32.const 2))))
-            (return)))
-        (local.set $i (i32.add (local.get $i) (i32.const 1)))
-        (br $l)))
-    (call $proc_exit (i32.const 2)))
-  (func (export "_start")
-    (drop (call $args_sizes_get (i32.const 0) (i32.const 4)))
-    (drop (call $args_get (i32.const ${ARGV_PTRS}) (i32.const ${ARGV_BUF})))
-${calls.join("\n")}
-    (call $write (i32.const ${LITERALS_BASE}) (i32.const 1)) ;; "\\n"${verb === "fail" ? `
-    (call $proc_exit (i32.const 1)) ;; fail` : ""}
-  ) ;; end _start
-) ;; end module`;
+      ? `(call $put (i32.const ${litRefs[i].ptr}) (i32.const ${litRefs[i].len}))`
+      : `(call $put_${p.pos})`);
+  if (verb === "fail")
+    calls.push("(call $nl)", "(call $fail)");
+  else
+    calls.push("(call $nl)");
+  return (pool.length ? `(data (i32.const ${USER_DATA}) "${watString(pool)}") ` : "")
+    + `(func $main ${calls.join(" ")})`;
 }
 
 // ── schema transformation ───────────────────────────────────────────────────
@@ -142,11 +101,19 @@ ${calls.join("\n")}
 const semactRe = new RegExp(
   `%<${TestUrl.replace(/[/.]/g, "\\$&")}(#[^>]*)?>(?:\\{((?:[^%\\\\]|\\\\[%\\\\]|\\\\u[0-9a-fA-F]{4}|\\\\U[0-9a-fA-F]{8})*)%\\}|%)`, "g");
 
+/** Append a WASI act after each Test act, leaving the original bytes
+ * untouched — the recoded schema does double duty (Test and WASI
+ * implementations each fire the acts they register) and diffs against the
+ * shexTest original as pure additions. */
 function recode (shexc) {
-  return shexc.replace(semactRe, (_, frag, code) =>
-    code === undefined
+  return shexc.replace(semactRe, (match, frag, code, offset) => {
+    const lineStart = shexc.lastIndexOf("\n", offset - 1) + 1;
+    const indent = shexc.slice(lineStart).match(/^[ \t]*/)[0];
+    const wasi = code === undefined
       ? `%<${WasiUrl}${frag || ""}>%`
-      : `%<${WasiUrl}${frag || ""}>{\n${escapeShexCode(watFor(unescapeShexCode(code)))}\n%}`);
+      : `%<${WasiUrl}${frag || ""}>{ ${escapeShexCode(watFor(unescapeShexCode(code)))} %}`;
+    return match + "\n" + indent + wasi;
+  });
 }
 
 // ── main ─────────────────────────────────────────────────────────────────────

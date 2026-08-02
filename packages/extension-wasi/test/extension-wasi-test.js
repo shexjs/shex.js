@@ -57,11 +57,14 @@ function runOne (schemaFile, schemaURL, extension, semActsFile, entry) {
   const results = extension.register(validator, {ShExTerm});
   // The NoCode tests name their acts with fragments (…Test/#a) whose code
   // arrives via options.semActs; dispatchAll only routes names with a
-  // registered handler, so alias the extension's handler under each.
-  // (The stock Validation-test harness doesn't, which is why those tests'
-  // extensionResults are never actually compared there.)
+  // registered handler, so alias the extension's handler under each of ITS
+  // names (the .semact files carry both extensions' codes — acts of the
+  // unregistered extension stay unrouted, which is what lets the recoded
+  // schemas do double duty).  (The stock Validation-test harness aliases
+  // nothing, which is why those tests' extensionResults are never actually
+  // compared there.)
   Object.keys(options.semActs || {}).forEach(name => {
-    if (name !== extension.url)
+    if (name !== extension.url && name.startsWith(extension.url))
       validator.semActHandler.register(name, validator.semActHandler.handlers[extension.url]);
   });
   const map = [{node: new URL(entry.focus, dataURL).href,
@@ -113,6 +116,64 @@ describe("@shexjs/extension-wasi", function () {
         it("should print what the manifest's extensionResults declare", function () {
           expect(subject.results).to.deep.equal(entry.expectedPrints);
         });
+
+      it("should do double duty: the recoded schema under the Test extension", function () {
+        const wasiSchema = Path.join(WasiDir, entry.schema);
+        const dual = runOne(wasiSchema, "file://" + Path.join(ShexTestDir, "schemas", entry.schema), TestExtension,
+                            entry.semActs ? Path.join(WasiDir, entry.semActs) : null,
+                            entry);
+        expect(dual.status).to.equal(reference.status);
+        expect(dual.results).to.deep.equal(reference.results);
+      });
+    });
+  });
+
+  describe("standalone modules", function () {
+    // code beginning with "(module" bypasses the library prelude entirely
+    const standalone = `(module
+  (import "wasi_snapshot_preview1" "fd_write" (func $fd_write (param i32 i32 i32 i32) (result i32)))
+  (memory (export "memory") 1)
+  (data (i32.const 64) "standalone\\0a")
+  (func (export "_start")
+    (i32.store (i32.const 16) (i32.const 64))
+    (i32.store (i32.const 20) (i32.const 11))
+    (drop (call $fd_write (i32.const 1) (i32.const 16) (i32.const 1) (i32.const 32)))))`;
+
+    it("should run a self-contained WASI command untouched", function () {
+      const validator = {semActHandler: {results: {}, handlers: {}, register (n, h) { this.handlers[n] = h; }}};
+      const results = WasiExtension.register(validator, {ShExTerm});
+      const failures = validator.semActHandler.handlers[WasiUrl].dispatch(standalone, null, {});
+      expect(failures).to.deep.equal([]);
+      expect(results).to.deep.equal(["standalone"]);
+    });
+  });
+
+  describe("library prelude", function () {
+    function dispatchLib (code, ctx) {
+      const validator = {semActHandler: {results: {}, handlers: {}, register (n, h) { this.handlers[n] = h; }}};
+      const results = WasiExtension.register(validator, {ShExTerm});
+      const failures = validator.semActHandler.handlers[WasiUrl].dispatch(code, ctx, {});
+      return {failures, results};
+    }
+    const T = {triples: [{subject: {termType: "NamedNode", value: "http://a.example/s1"},
+                          predicate: {termType: "NamedNode", value: "http://a.example/p1"},
+                          object: {termType: "NamedNode", value: "http://a.example/o1"}}]};
+
+    it("should supply argv loading and println helpers", function () {
+      const {failures, results} = dispatchLib("(func $main (call $println_s) (call $println_o))", T);
+      expect(failures).to.deep.equal([]);
+      expect(results).to.deep.equal(["http://a.example/s1", "http://a.example/o1"]);
+    });
+
+    it("should report $fail as a SemActFailure", function () {
+      const {failures} = dispatchLib("(func $main (call $fail))", T);
+      expect(failures.length).to.equal(1);
+      expect(failures[0].type).to.equal("SemActFailure");
+    });
+
+    it("should turn a missing binding into an invocation error", function () {
+      expect(() => dispatchLib("(func $main (call $println_n))", T))
+        .to.throw(/exited with status 2/);
     });
   });
 
