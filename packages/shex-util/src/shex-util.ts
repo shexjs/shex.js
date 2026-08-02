@@ -76,6 +76,43 @@ class MissingTripleExprRefError extends MissingReferenceError {
   }
 }
 
+/** A recorded shape-expression dependency: deciding `from` requires deciding `to`
+ * for the same node. `neg` counts an odd number of enclosing NOTs (or an EXTRA
+ * predicate); `viaTE` marks references mediated by a triple constraint's valueExpr.
+ */
+interface DepEdge { from: string; to: string; neg: boolean; viaTE: boolean; }
+
+/** Tarjan's strongly connected components over the labels appearing in edges.
+ * @returns map from label to component number
+ */
+function stronglyConnectedComponents (edges: DepEdge[]): Map<string, number> {
+  const adj = new Map<string, string[]>();
+  edges.forEach(e => {
+    if (!adj.has(e.from)) adj.set(e.from, []);
+    if (!adj.has(e.to)) adj.set(e.to, []);
+    adj.get(e.from)!.push(e.to);
+  });
+  const index = new Map<string, number>(), low = new Map<string, number>();
+  const stack: string[] = [], onStack = new Set<string>();
+  const comp = new Map<string, number>();
+  let counter = 0, nComps = 0;
+  function visit (v: string): void {
+    index.set(v, counter); low.set(v, counter); ++counter;
+    stack.push(v); onStack.add(v);
+    for (const w of adj.get(v)!) {
+      if (!index.has(w)) { visit(w); low.set(v, Math.min(low.get(v)!, low.get(w)!)); }
+      else if (onStack.has(w)) low.set(v, Math.min(low.get(v)!, index.get(w)!));
+    }
+    if (low.get(v) === index.get(v)) {
+      let w;
+      do { w = stack.pop()!; onStack.delete(w); comp.set(w, nComps); } while (w !== v);
+      ++nComps;
+    }
+  }
+  for (const v of adj.keys()) if (!index.has(v)) visit(v);
+  return comp;
+}
+
 /** Walks a schema checking structure: reference targets, circular refs, negation cycles.
  * (Hoisted to module scope so that both validateSchema and HierarchyVisitor share it.)
  */
@@ -89,6 +126,7 @@ class SchemaStructureValidator extends ShExVisitor {
   currentNegated: boolean;
   inTE: boolean;
   index: any;
+  depEdges: DepEdge[] = [];
 
   constructor (schema: any, options: any, negativeDeps: any, positiveDeps: any) {
     super();
@@ -124,9 +162,10 @@ class SchemaStructureValidator extends ShExVisitor {
     const lastNegated = this.currentNegated;
     if (this.currentExtra && this.currentExtra.indexOf(expr.predicate) !== -1)
       this.currentNegated = !this.currentNegated;
+    const lastInTE = this.inTE;
     this.inTE = true;
     const ret = super.visitTripleConstraint(expr, ...args);
-    this.inTE = false;
+    this.inTE = lastInTE;
     this.currentNegated = lastNegated;
     return ret;
   };
@@ -142,8 +181,10 @@ class SchemaStructureValidator extends ShExVisitor {
     }
     if (!this.inTE && shapeRef === this.currentLabel)
       throw this.firstError(Error("Structural error: circular reference to " + this.currentLabel + "."), shapeRef);
-    if (!this.options.skipCycleCheck)
+    if (!this.options.skipCycleCheck) {
       (this.currentNegated ? this.negativeDeps : this.positiveDeps).add(this.currentLabel, shapeRef);
+      this.depEdges.push({from: this.currentLabel!, to: shapeRef, neg: this.currentNegated, viaTE: this.inTE});
+    }
     return super.visitShapeRef(shapeRef, ...args);
   };
 
@@ -171,14 +212,32 @@ class SchemaStructureValidator extends ShExVisitor {
       visitor.visitShapeDecl(shape, shape.id);
       visitor.currentLabel = null;
     });
-    let circs = Object.keys(negativeDeps.children).filter(
-      k => negativeDeps.children[k].filter(
-        (k2: string) => k2 in negativeDeps.children && negativeDeps.children[k2].indexOf(k) !== -1
-          || k2 in positiveDeps.children && positiveDeps.children[k2].indexOf(k) !== -1
-      ).length > 0
-    );
-    if (circs.length)
-      throw visitor.firstError(Error("Structural error: circular negative dependencies on " + circs.join(',') + "."), circs[0]);
+
+    const declOrder = new Map<string, number>();
+    (schema.shapes || []).forEach((shape: any, i: number) => declOrder.set(shape.id, i));
+    const byDecl = (a: string, b: string) =>
+          (declOrder.has(a) ? declOrder.get(a)! : Infinity) - (declOrder.has(b) ? declOrder.get(b)! : Infinity);
+    /* Members of the offending cycle, earliest-declared first; the error is
+     * anchored at the first reference to the earliest-declared member. */
+    const cycleMembers = (edges: DepEdge[], offending: (e: DepEdge, comp: Map<string, number>) => boolean): string[] => {
+      const comp = stronglyConnectedComponents(edges);
+      const cyclic = new Set(edges.filter(e => comp.get(e.from) === comp.get(e.to) && offending(e, comp))
+                             .map(e => comp.get(e.from)!));
+      return [...comp.keys()].filter(k => cyclic.has(comp.get(k)!)).sort(byDecl);
+    };
+
+    /* Shape expression reference requirement: no cycle among same-node
+     * dependencies, i.e. references (including EXTENDS) not mediated by a
+     * triple constraint's valueExpr. */
+    const refCirc = cycleMembers(visitor.depEdges.filter(e => !e.viaTE), () => true);
+    if (refCirc.length)
+      throw visitor.firstError(Error("Structural error: circular reference to " + refCirc[0] + "."), refCirc[0]);
+
+    /* Negation requirement: no strongly connected component may contain a
+     * negated dependency (stratified negation). */
+    const negCirc = cycleMembers(visitor.depEdges, e => e.neg);
+    if (negCirc.length)
+      throw visitor.firstError(Error("Structural error: circular negative dependencies on " + negCirc.join(',') + "."), negCirc[0]);
   }
 }
 
@@ -1496,6 +1555,7 @@ const ShExUtil = {
           ret.flags = v[SX.flags][0].ldterm.value;
         if (SX.datatype in v)
           ret.datatype = v[SX.datatype][0].ldterm;
+        minMaxAnnotSemActs(v, ret);
         return ret;
       } else {
         throw Error("unknown shapeDeclOrExpr type in " + JSON.stringify(v));

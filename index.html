@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>shex.js webapps</title>
+    <title>ShEx.js WebApps</title>
     <link rel="icon" href="packages/shex-webapp/doc/ShEx-bones-min.svg"/>
     <style>
       body {
@@ -31,6 +31,14 @@
       .app li { margin: .3em 0; }
       .app a { font-weight: bold; }
       .variant { font-size: .85em; color: #666; }
+      .local-dev {
+        margin-top: 1.5em;
+        padding: .8em 1em;
+        border: 1px dashed #999;
+        border-radius: .5em;
+        background-color: #fffbe8;
+        font-size: .9em;
+      }
       footer { margin-top: 2em; font-size: .85em; color: #666; }
       @media (max-width: 34em) { .apps { grid-template-columns: 1fr; } }
     </style>
@@ -38,7 +46,7 @@
   <body>
     <header>
       <img src="packages/shex-webapp/doc/ShEx-bones-min.svg" alt="ShEx logo"/>
-      <h1>shex.js webapps</h1>
+      <h1>ShEx.js WebApps</h1>
     </header>
     <p class="blurb">
       In-browser demos of the <a href="https://github.com/shexSpec/shex.js">shex.js</a>
@@ -52,8 +60,8 @@
         <h2>ShEx validator</h2>
         <p>Validate RDF data against a ShEx schema (ShExC, ShExJ or ShExR).</p>
         <ul>
-          <li><a href="packages/shex-webapp/doc/shex-simple.html">shex-simple</a> <span class="variant">— single-threaded</span></li>
-          <li><a href="packages/shex-webapp/doc/shex-worker.html">shex-worker</a> <span class="variant">— in a Web Worker</span></li>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html">shex-simple</a> <span class="variant">— single-threaded</span> (<a href="packages/shex-webapp/doc/shex-simple.html?editors=1">LSE</a>)</li>
+          <li><a href="packages/shex-webapp/doc/shex-worker.html">shex-worker</a> <span class="variant">— in a Web Worker</span> (<a href="packages/shex-webapp/doc/shex-worker.html?editors=1">LSE</a>)</li>
         </ul>
       </div>
       <div class="app shexmap">
@@ -61,14 +69,13 @@
         <p>Validate with the <a href="http://shex.io/extensions/Map/">Map extension</a>,
           capture bindings, and materialize them into another RDF graph.</p>
         <ul>
-          <li><a href="packages/extension-map/doc/shexmap-simple.html">shexmap-simple</a> <span class="variant">— single-threaded</span></li>
-          <li><a href="packages/extension-map/doc/shexmap-worker.html">shexmap-worker</a> <span class="variant">— in a Web Worker</span></li>
+          <li><a href="packages/extension-map/doc/shexmap-simple.html">shexmap-simple</a> <span class="variant">— single-threaded</span> (<a href="packages/extension-map/doc/shexmap-simple.html?editors=1">LSE</a>)</li>
+          <li><a href="packages/extension-map/doc/shexmap-worker.html">shexmap-worker</a> <span class="variant">— in a Web Worker</span> (<a href="packages/extension-map/doc/shexmap-worker.html?editors=1">LSE</a>)</li>
         </ul>
       </div>
     </div>
     <footer>
       Built from <a href="https://github.com/shexSpec/shex.js">shexSpec/shex.js</a>
-      by <code>.github/workflows/webapps-site.yml</code>.
     </footer>
   </body>
 </html>

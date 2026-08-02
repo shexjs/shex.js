@@ -1,23 +1,31 @@
 name: webapps-site
 
 # Build the doc/webpacks bundles (gitignored on main; jquery-components.* and
-# its hashed assets stay committed — see .gitignore) and publish the orphan
-# `gh-pages` branch: the full main tree (so every URL GitHub Pages served
-# from main keeps working, CNAME included) plus
+# its hashed assets stay committed — see .gitignore) and publish the `gh-pages`
+# branch: the full main tree (so every URL GitHub Pages served from main keeps
+# working, CNAME included) plus
 #
-#   index.html    <- doc/webapps-index.html (webapps landing page)
-#   .nojekyll     (serve the tree as-is; test fixtures confuse Jekyll)
 #   packages/{shex-webapp,extension-map}/doc/webpacks/  (the built bundles)
+#   .nojekyll     (serve the tree as-is; test fixtures confuse Jekyll)
+#
+# and with the <!-- STRIP-FOR-PUBLICATION --> … <!-- /STRIP-FOR-PUBLICATION -->
+# block (clone-local instructions) removed from /index.html.
 #
 # The repo-relative layout is preserved because the pages reference each other
 # relatively (e.g. shexmap-simple.html loads
 # ../../shex-webapp/doc/webpacks/shex-webapp.js).
 #
-# Two consumers:
+# Each publish commits ON TOP of the existing gh-pages history so consumers
+# can update with a plain `git pull`:
 #  - GitHub Pages (Pages source: "Deploy from a branch", gh-pages /root):
 #    serves https://shex.js.org/ per the CNAME.
-#  - shex.io: tools/sync-webpacks.sh copies the branch's doc/webpacks trees
-#    into a plain clone's working tree.
+#  - shex.io: a clone checked out on gh-pages, updated by its /update CGI's
+#    `git pull` loop. (tools/sync-webpacks.sh remains for main checkouts that
+#    just want the bundles.)
+# The branch accumulates ~8MB of bundles per publish; to shed old history,
+# delete the gh-pages branch on GitHub — the next publish recreates it from
+# scratch (gh-pages clones then need one `git fetch origin gh-pages &&
+# git reset --hard origin/gh-pages`).
 
 on:
   push:
@@ -45,14 +53,24 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          cp doc/webapps-index.html index.html
+          # Drop the clone-local notice from the landing page. sed ranges are
+          # line-based, so the block may span any number of lines; each marker
+          # must sit on its own line (marker lines are deleted whole).
+          sed -i '/<!-- STRIP-FOR-PUBLICATION -->/,/<!-- \/STRIP-FOR-PUBLICATION -->/d' index.html
+          if grep -q 'STRIP-FOR-PUBLICATION' index.html; then
+            echo 'index.html still mentions STRIP-FOR-PUBLICATION after stripping (unbalanced markers?)' >&2
+            exit 1
+          fi
           touch .nojekyll
-          git checkout --orphan gh-pages-build
-          git rm -rfq --cached .
-          # full main tree (`add -A` respects .gitignore, so no node_modules),
-          # plus the ignored built bundles, the landing page and the Jekyll bypass
+          # stage the full tree (`add -A` respects .gitignore, so no
+          # node_modules) plus the ignored built bundles
           git add -A .
-          git add -f index.html .nojekyll \
+          git add -f .nojekyll \
             packages/shex-webapp/doc/webpacks packages/extension-map/doc/webpacks
-          git commit -q -m "webapps site built from $GITHUB_SHA"
-          git push -f origin HEAD:gh-pages
+          # commit on top of the existing gh-pages history; if the branch was
+          # deleted (to shed old bundle history), start it afresh
+          git fetch origin gh-pages || true
+          PARENT=$(git rev-parse --verify --quiet origin/gh-pages || true)
+          TREE=$(git write-tree)
+          COMMIT=$(git commit-tree $TREE ${PARENT:+-p $PARENT} -m "webapps site built from $GITHUB_SHA")
+          git push origin $COMMIT:refs/heads/gh-pages

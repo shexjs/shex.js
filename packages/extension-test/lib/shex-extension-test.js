@@ -3,7 +3,7 @@ const TestExt = "http://shex.io/extensions/Test/";
 function register(validator, api) {
     if (api === undefined || !('ShExTerm' in api))
         throw Error('SemAct extensions must be called with register(validator, {ShExTerm, ...)');
-    const term = `(?:("(?:[^\\\\"]|\\\\\\\\|\\\\")*"|'(?:[^\\\\']|\\\\\\\\|\\\\')*')|([spo]))`;
+    const term = `(?:("(?:[^\\\\"]|\\\\\\\\|\\\\")*"|'(?:[^\\\\']|\\\\\\\\|\\\\')*')|([spon]))`;
     const pattern = new RegExp(`^ *(fail|print) *\\((( *${term} *,)* *${term}) *\\) *$`);
     validator.semActHandler.results[TestExt] = [];
     validator.semActHandler.register(TestExt, {
@@ -38,11 +38,12 @@ function register(validator, api) {
                 return wrapped.substring(1, wrapped.length - 1).replace(/\\([\\"'])/g, "$1");
             }
             function parsePos(pos) {
-                const t = ctx.triples[0];
-                return pos === "s" ? t.subject.value :
-                    pos === "p" ? t.predicate.value :
-                        pos === "o" ? t.object.value :
-                            "???";
+                const node = pos === "n"
+                    ? ctx.node
+                    : ctx.triples[0][pos === "s" ? "subject" : pos === "p" ? "predicate" : "object"];
+                return node.termType === "Literal" && node.datatype.value !== api.ShExTerm.XsdString
+                    ? api.ShExTerm.rdfJsTerm2Turtle(node)
+                    : node.value;
             }
         }
     });

@@ -306,6 +306,11 @@ class ShExWriter {
                 _ShExWriter._error("unexpected nodeKind: " + v.nodeKind); // !!!!
             this._fillNodeConstraint(pieces, v, done);
             this._annotations(pieces, v.annotations, "  ");
+            if (v.semActs)
+                v.semActs.forEach(function (act) {
+                    _ShExWriter._expect(act, "type", "SemAct");
+                    pieces.push(" %", _ShExWriter._encodePredicate(act.name), ("code" in act ? "{" + escapeCode(act.code) + "%" + "}" : "%"));
+                });
             return pieces;
         }
         catch (error) {

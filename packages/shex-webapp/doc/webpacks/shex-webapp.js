@@ -25935,12 +25935,58 @@ class MissingTripleExprRefError extends MissingReferenceError {
         super(ref, "triple expressions", known);
     }
 }
+/** Tarjan's strongly connected components over the labels appearing in edges.
+ * @returns map from label to component number
+ */
+function stronglyConnectedComponents(edges) {
+    const adj = new Map();
+    edges.forEach(e => {
+        if (!adj.has(e.from))
+            adj.set(e.from, []);
+        if (!adj.has(e.to))
+            adj.set(e.to, []);
+        adj.get(e.from).push(e.to);
+    });
+    const index = new Map(), low = new Map();
+    const stack = [], onStack = new Set();
+    const comp = new Map();
+    let counter = 0, nComps = 0;
+    function visit(v) {
+        index.set(v, counter);
+        low.set(v, counter);
+        ++counter;
+        stack.push(v);
+        onStack.add(v);
+        for (const w of adj.get(v)) {
+            if (!index.has(w)) {
+                visit(w);
+                low.set(v, Math.min(low.get(v), low.get(w)));
+            }
+            else if (onStack.has(w))
+                low.set(v, Math.min(low.get(v), index.get(w)));
+        }
+        if (low.get(v) === index.get(v)) {
+            let w;
+            do {
+                w = stack.pop();
+                onStack.delete(w);
+                comp.set(w, nComps);
+            } while (w !== v);
+            ++nComps;
+        }
+    }
+    for (const v of adj.keys())
+        if (!index.has(v))
+            visit(v);
+    return comp;
+}
 /** Walks a schema checking structure: reference targets, circular refs, negation cycles.
  * (Hoisted to module scope so that both validateSchema and HierarchyVisitor share it.)
  */
 class SchemaStructureValidator extends visitor_1.ShExVisitor {
     constructor(schema, options, negativeDeps, positiveDeps) {
         super();
+        this.depEdges = [];
         this.schema = schema;
         this.options = options;
         this.negativeDeps = negativeDeps;
@@ -25971,9 +26017,10 @@ class SchemaStructureValidator extends visitor_1.ShExVisitor {
         const lastNegated = this.currentNegated;
         if (this.currentExtra && this.currentExtra.indexOf(expr.predicate) !== -1)
             this.currentNegated = !this.currentNegated;
+        const lastInTE = this.inTE;
         this.inTE = true;
         const ret = super.visitTripleConstraint(expr, ...args);
-        this.inTE = false;
+        this.inTE = lastInTE;
         this.currentNegated = lastNegated;
         return ret;
     }
@@ -25990,8 +26037,10 @@ class SchemaStructureValidator extends visitor_1.ShExVisitor {
         }
         if (!this.inTE && shapeRef === this.currentLabel)
             throw this.firstError(Error("Structural error: circular reference to " + this.currentLabel + "."), shapeRef);
-        if (!this.options.skipCycleCheck)
+        if (!this.options.skipCycleCheck) {
             (this.currentNegated ? this.negativeDeps : this.positiveDeps).add(this.currentLabel, shapeRef);
+            this.depEdges.push({ from: this.currentLabel, to: shapeRef, neg: this.currentNegated, viaTE: this.inTE });
+        }
         return super.visitShapeRef(shapeRef, ...args);
     }
     ;
@@ -26017,10 +26066,28 @@ class SchemaStructureValidator extends visitor_1.ShExVisitor {
             visitor.visitShapeDecl(shape, shape.id);
             visitor.currentLabel = null;
         });
-        let circs = Object.keys(negativeDeps.children).filter(k => negativeDeps.children[k].filter((k2) => k2 in negativeDeps.children && negativeDeps.children[k2].indexOf(k) !== -1
-            || k2 in positiveDeps.children && positiveDeps.children[k2].indexOf(k) !== -1).length > 0);
-        if (circs.length)
-            throw visitor.firstError(Error("Structural error: circular negative dependencies on " + circs.join(',') + "."), circs[0]);
+        const declOrder = new Map();
+        (schema.shapes || []).forEach((shape, i) => declOrder.set(shape.id, i));
+        const byDecl = (a, b) => (declOrder.has(a) ? declOrder.get(a) : Infinity) - (declOrder.has(b) ? declOrder.get(b) : Infinity);
+        /* Members of the offending cycle, earliest-declared first; the error is
+         * anchored at the first reference to the earliest-declared member. */
+        const cycleMembers = (edges, offending) => {
+            const comp = stronglyConnectedComponents(edges);
+            const cyclic = new Set(edges.filter(e => comp.get(e.from) === comp.get(e.to) && offending(e, comp))
+                .map(e => comp.get(e.from)));
+            return [...comp.keys()].filter(k => cyclic.has(comp.get(k))).sort(byDecl);
+        };
+        /* Shape expression reference requirement: no cycle among same-node
+         * dependencies, i.e. references (including EXTENDS) not mediated by a
+         * triple constraint's valueExpr. */
+        const refCirc = cycleMembers(visitor.depEdges.filter(e => !e.viaTE), () => true);
+        if (refCirc.length)
+            throw visitor.firstError(Error("Structural error: circular reference to " + refCirc[0] + "."), refCirc[0]);
+        /* Negation requirement: no strongly connected component may contain a
+         * negated dependency (stratified negation). */
+        const negCirc = cycleMembers(visitor.depEdges, e => e.neg);
+        if (negCirc.length)
+            throw visitor.firstError(Error("Structural error: circular negative dependencies on " + negCirc.join(',') + "."), negCirc[0]);
     }
 }
 const ShExUtil = {
@@ -27326,6 +27393,7 @@ const ShExUtil = {
                     ret.flags = v[SX.flags][0].ldterm.value;
                 if (SX.datatype in v)
                     ret.datatype = v[SX.datatype][0].ldterm;
+                minMaxAnnotSemActs(v, ret);
                 return ret;
             }
             else {
@@ -27963,7 +28031,11 @@ class EmptyTracker {
 }
 class ShapeExprValidationContext {
     constructor(parent, label, // Can only be Start if it's the root of a context list.
-    depth = 0, tracker = new EmptyTracker(), seen = {}, matchTarget = null, subGraph = null) {
+    depth = 0, tracker = new EmptyTracker(), seen = {}, matchTarget = null, subGraph = null,
+    // The subGraph is the partition an extending CLOSED shape allocated to this
+    // extension: every triple in it must be consumed, as any left over would be
+    // unmatched in the extending shape's closed neighborhood.
+    partitionClosed = false) {
         this.parent = parent;
         this.label = label;
         this.depth = depth;
@@ -27971,18 +28043,19 @@ class ShapeExprValidationContext {
         this.seen = seen;
         this.matchTarget = matchTarget;
         this.subGraph = subGraph;
+        this.partitionClosed = partitionClosed;
     }
     checkShapeLabel(label) {
-        return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, this.matchTarget, this.subGraph);
+        return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, this.matchTarget, this.subGraph, this.partitionClosed);
     }
     followTripleConstraint() {
-        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, null);
+        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, null, false);
     }
-    checkExtendsPartition(subGraph) {
-        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, subGraph);
+    checkExtendsPartition(subGraph, partitionClosed) {
+        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, subGraph, partitionClosed);
     }
     checkExtendingClass(label, matchTarget) {
-        return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph);
+        return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph, this.partitionClosed);
     }
 }
 exports.ShapeExprValidationContext = ShapeExprValidationContext;
@@ -28350,7 +28423,7 @@ class ShExValidator {
     // TODO: should this be called for and, or, not?
     evaluateShapeExprSemActs(ret, shapeExpr, point, shapeLabel) {
         if (!("errors" in ret) && shapeExpr.semActs !== undefined) {
-            const semActErrors = this.semActHandler.dispatchAll(shapeExpr.semActs, Object.assign({ node: point }, ret), ret);
+            const semActErrors = this.semActHandler.dispatchAll(shapeExpr.semActs, Object.assign({}, ret, { node: point }), ret);
             if (semActErrors.length)
                 // some semAct aborted
                 return { type: "Failure", node: (0, term_1.rdfJsTerm2Ld)(point), shape: shapeLabel, errors: semActErrors };
@@ -28573,7 +28646,11 @@ class ShExValidator {
         });
         const errors = [];
         // Triples not mapped to triple constraints are not allowed in closed shapes.
-        if (shape.closed && unexpectedTriples.length > 0 && !this.options.ignoreClosed) {
+        // ctx.partitionClosed: this shape is an extension of a CLOSED shape, validated
+        // against the partition allocated to it — triples the partition search assigned
+        // here but this shape's match doesn't consume are unmatched in the extending
+        // shape's closed neighborhood (e.g. allocated to an untaken OR disjunct).
+        if ((shape.closed || ctx.partitionClosed) && unexpectedTriples.length > 0 && !this.options.ignoreClosed) {
             errors.push({
                 type: "ClosedShapeViolation",
                 unexpectedTriples: unexpectedTriples.map(q => {
@@ -28685,7 +28762,9 @@ class ShExValidator {
                     passes.push(reference);
                 continue;
             }
-            ctx = ctx.checkExtendsPartition(subgraph); // new context with subgraph
+            // new context with subgraph; closedness propagates through the inheritance
+            // chain so an ancestor's ancestors must consume their allocations too
+            ctx = ctx.checkExtendsPartition(subgraph, expr.closed === true || ctx.partitionClosed);
             const sub = this.validateShapeExpr(focus, extend, ctx);
             // Name the result <focus node><ShExPath>: the part after the focus is a ShExPath
             // (shape-path-core) expression addressing the extension — a labeled extension by
@@ -29219,6 +29298,7 @@ function runtimeError(...args) {
     throw e;
 }
 //# sourceMappingURL=shex-validator.js.map
+
 
 /***/ },
 
@@ -30101,6 +30181,11 @@ class ShExWriter {
                 _ShExWriter._error("unexpected nodeKind: " + v.nodeKind); // !!!!
             this._fillNodeConstraint(pieces, v, done);
             this._annotations(pieces, v.annotations, "  ");
+            if (v.semActs)
+                v.semActs.forEach(function (act) {
+                    _ShExWriter._expect(act, "type", "SemAct");
+                    pieces.push(" %", _ShExWriter._encodePredicate(act.name), ("code" in act ? "{" + escapeCode(act.code) + "%" + "}" : "%"));
+                });
             return pieces;
         }
         catch (error) {

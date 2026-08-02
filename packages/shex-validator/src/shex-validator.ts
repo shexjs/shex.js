@@ -229,23 +229,27 @@ export class ShapeExprValidationContext {
       public tracker: QueryTracker = new EmptyTracker(),
       public seen: SeenIndex = {},
       public matchTarget: MatchTarget | null = null,
-      public subGraph: NeighborhoodDb | null = null) {
+      public subGraph: NeighborhoodDb | null = null,
+      // The subGraph is the partition an extending CLOSED shape allocated to this
+      // extension: every triple in it must be consumed, as any left over would be
+      // unmatched in the extending shape's closed neighborhood.
+      public partitionClosed: boolean = false) {
   }
 
   public checkShapeLabel(label: LabelOrStart): ShapeExprValidationContext {
-    return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, this.matchTarget, this.subGraph);
+    return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, this.matchTarget, this.subGraph, this.partitionClosed);
   }
 
   public followTripleConstraint(): ShapeExprValidationContext {
-    return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, null);
+    return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, null, false);
   }
 
-  public checkExtendsPartition(subGraph: NeighborhoodDb): ShapeExprValidationContext {
-    return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, subGraph);
+  public checkExtendsPartition(subGraph: NeighborhoodDb, partitionClosed: boolean): ShapeExprValidationContext {
+    return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, subGraph, partitionClosed);
   }
 
   public checkExtendingClass(label: LabelOrStart, matchTarget: MatchTarget | null): ShapeExprValidationContext {
-    return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph);
+    return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph, this.partitionClosed);
   }
 }
 
@@ -671,7 +675,7 @@ export class ShExValidator {
   // TODO: should this be called for and, or, not?
   protected evaluateShapeExprSemActs(ret: shapeExprTest, shapeExpr: NodeConstraint, point: RdfJsTerm, shapeLabel: LabelOrStart) {
     if (!("errors" in ret) && shapeExpr.semActs !== undefined) {
-      const semActErrors = this.semActHandler.dispatchAll((shapeExpr as any).semActs, Object.assign({node: point}, ret), ret)
+      const semActErrors = this.semActHandler.dispatchAll((shapeExpr as any).semActs, Object.assign({}, ret, {node: point}), ret)
       if (semActErrors.length)
           // some semAct aborted
         return {type: "Failure", node: rdfJsTerm2Ld(point), shape: shapeLabel, errors: semActErrors} as Failure;
@@ -913,7 +917,11 @@ export class ShExValidator {
     const errors: error[] = [];
 
     // Triples not mapped to triple constraints are not allowed in closed shapes.
-    if (shape.closed && unexpectedTriples.length > 0 && !this.options.ignoreClosed) {
+    // ctx.partitionClosed: this shape is an extension of a CLOSED shape, validated
+    // against the partition allocated to it — triples the partition search assigned
+    // here but this shape's match doesn't consume are unmatched in the extending
+    // shape's closed neighborhood (e.g. allocated to an untaken OR disjunct).
+    if ((shape.closed || ctx.partitionClosed) && unexpectedTriples.length > 0 && !this.options.ignoreClosed) {
       errors.push({
         type: "ClosedShapeViolation",
         unexpectedTriples: unexpectedTriples.map(q => {
@@ -1039,7 +1047,9 @@ export class ShExValidator {
         continue;
       }
 
-      ctx = ctx.checkExtendsPartition(subgraph); // new context with subgraph
+      // new context with subgraph; closedness propagates through the inheritance
+      // chain so an ancestor's ancestors must consume their allocations too
+      ctx = ctx.checkExtendsPartition(subgraph, expr.closed === true || ctx.partitionClosed);
       const sub = this.validateShapeExpr(focus, extend, ctx);
       // Name the result <focus node><ShExPath>: the part after the focus is a ShExPath
       // (shape-path-core) expression addressing the extension — a labeled extension by
