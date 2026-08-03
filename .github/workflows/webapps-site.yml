@@ -38,7 +38,7 @@ jobs:
     permissions:
       contents: write # push to the gh-pages branch
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: clone shexTest alongside the checkout, on the ref the shex-test dependency names
         run: |
           REF=$(sed -n 's|.*"shex-test": "github:shexSpec/shexTest#\([^"]*\)".*|\1|p' package.json)
