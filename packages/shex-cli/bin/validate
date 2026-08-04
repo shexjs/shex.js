@@ -88,6 +88,7 @@ const CommandLineOptions = [
   { name: "list",                  type: Boolean },
   { name: "track",                 type: Boolean , description: "display graph nodes touched by validation" },
   { name: "slurp",                 type: Boolean , description: "record minimal neighborhoods needed by validation" },
+  { name: "provenance",            type: Boolean , description: "parse Turtle data with source tracking and attach each matched triple's source ranges to the results" },
   { name: "slurp-all",             type: Boolean , description: "record complete neighborhoods visited by validation. implies --slurp; may be the same as --slurp, depending on the databse" },
   { name: "help",      alias: "h", type: Boolean , description: "print usage information and quit" },
   { name: "node",      alias: "n", type: String, typeLabel: "RDFTerm",   multiple: false, defaultValue: undefined, description: "node to validate" },
@@ -483,6 +484,22 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions, cmd
             metaToResolver(schemaAndData.schemaMeta[0]),
             metaToResolver(schemaAndData.dataMeta[0]))
           : null;
+    let provSources = null;
+    if (valParms.provenance) {
+      if (valParms.endpoint || valParms.jsonld.length)
+        abort("--provenance requires Turtle data files (-d)", ExitCode.bad_argument);
+      // reparse the data with source tracking and validate over THOSE quads,
+      // so results' blank node labels align with the provenance index
+      const {parseTurtle} = await import("lezer-turtle/emit");
+      const store = new N3.Store();
+      provSources = await Promise.all(valParms.dataURL.map(async u => {
+        const body = await ShExNode.GET(u);
+        const parsed = parseTurtle(body.text, {factory: N3.DataFactory, baseIRI: body.url});
+        parsed.quads.forEach(q => store.addQuad(q));
+        return {source: body.url, provenance: parsed.provenance, diagnostics: parsed.diagnostics};
+      }));
+      schemaAndData.data = store;
+    }
     schemaAndData.data = valParms.endpoint
       ? SparqlDb(valParms.endpoint, queryTracker, {allOutgoing: valParms["slurp-all"]})
       : RdfJsDb(schemaAndData.data, queryTracker);
@@ -535,6 +552,8 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions, cmd
             ? Object.assign({}, {noResults: true}, validatorOptions)
             : validatorOptions;
       const res = (await findNodesAndValidate(schemaAndData, valParms, valOpts2, schemaAndData.schema.start, cmds)).results;
+      if (provSources)
+        attachProvenance(res, provSources);
 
       if (cmds["dry-run"])
         return res || ExitCode.dry_run;
@@ -640,6 +659,32 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions, cmd
     return meta
       ? { _base: meta.url, _basePath: meta.url, meta: {prefixes: meta.prefixes} }
       : {url: "foo:bar", prefixes: {}} ;
+  }
+}
+
+/* attachProvenance - decorate every TestedTriple in a validation result with
+ * the source ranges of its utterances, looked up by canonical quad value in
+ * the per-file provenance indexes built when --provenance re-parsed the data.
+ */
+function attachProvenance (result, provSources) {
+  walk(result);
+  function walk (node) {
+    if (Array.isArray(node))
+      return node.forEach(walk);
+    if (node === null || typeof node !== "object")
+      return;
+    if (node.type === "TestedTriple" && "subject" in node) {
+      const quad = N3.DataFactory.quad(ShExTerm.ld2RdfJsTerm(node.subject),
+                                       ShExTerm.ld2RdfJsTerm(node.predicate),
+                                       ShExTerm.ld2RdfJsTerm(node.object));
+      const utterances = provSources.flatMap(
+        ({source, provenance}) => provenance.get(quad).map(
+          utt => ({source,
+                   subject: utt.subject, predicate: utt.predicate, object: utt.object})));
+      if (utterances.length > 0)
+        node.provenance = utterances;
+    }
+    Object.values(node).forEach(walk);
   }
 }
 

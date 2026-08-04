@@ -24,18 +24,18 @@
     "@codemirror/autocomplete": "^6.18.0",
     "@codemirror/lang-json": "^6.0.2",
     "@codemirror/language": "^6.11.3",
-    "@codemirror/lint": "^6.9.1",
     "@codemirror/legacy-modes": "^6.5.2",
+    "@codemirror/lint": "^6.9.1",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.6",
     "@shexjs/parser": "^1.0.0-alpha.28",
     "codemirror": "^6.0.2",
-    "millan": "github:ericprud/millan#rdfjs-interface"
+    "lezer-turtle": "github:ericprud/lezer-turtle",
+    "n3": "^1.20.4"
   },
   "devDependencies": {
     "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.29",
-    "@shexjs/validator": "^1.0.0-alpha.29",
-    "n3": "^1.20.4"
+    "@shexjs/validator": "^1.0.0-alpha.29"
   },
   "scripts": {
     "test": "cd ../.. && mocha packages/shex-editor-services/test/*test.js",

@@ -77,7 +77,10 @@ describe("EditorServices", function () {
       expect(parsed.diagnostics).to.deep.equal([]);
       const offending = [...parsed.dataset].find(
         q => q.object.termType === "Literal" && q.object.value === "not a number");
-      expect(slice(dataText, EditorServices.millanSourceToRange(offending.object.source)))
+      // the provenance index resolves quads by value, even ones the store
+      // reconstructed, to their source utterances
+      const [utt] = parsed.provenance.get(offending);
+      expect(slice(dataText, {from: utt.object[0].start, to: utt.object[0].end}))
         .to.equal('"not a number"');
     });
 
@@ -86,6 +89,236 @@ describe("EditorServices", function () {
         "PREFIX : <http://a.example/>\n<x> :p 1 .\n<broken> :q\n", {baseIRI: base});
       expect(parsed.diagnostics.length).to.be.above(0);
       expect(parsed.dataset.size).to.be.above(0); // quads before the error survive
+    });
+  });
+
+  describe("repeated properties", function () {
+    // packages/shex-webapp/examples/manifest.yaml "repeated properties":
+    // four :p constraints must anchor pairs to their own ranges
+    const rSchema = [
+      "PREFIX : <http://hl7.org/fhir/>",
+      "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>",
+      "",
+      "<#S1> {",
+      "  :p xsd:integer ;",
+      "  :p xsd:decimal ;",
+      "  :p @<#S2> ;",
+      "  :p IRI",
+      "}",
+      "",
+      "<#S2> {",
+      "  :q [5]",
+      "}",
+      ""].join("\n");
+    const rData = [
+      "PREFIX : <http://hl7.org/fhir/>",
+      "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>",
+      "",
+      "<#n1>",
+      "  :p 1.1 ;",
+      "  :p <#n2> ;",
+      "  :p <#n3> ;",
+      "  :p 4 ;",
+      ".",
+      "",
+      "<#n3> :q 5 .",
+      ""].join("\n");
+
+    const schemaParsed = EditorServices.parseShExC(rSchema, {base});
+    const dataParsed = EditorServices.parseTurtle(rData, {baseIRI: base});
+    const store = new N3.Store(dataParsed.quads);
+    const validator = new ShExValidator(schemaParsed.schema, RdfJsDb(store), {noCache: true});
+    const results = validator.validateShapeMap([{node: base + "#n1", shape: base + "#S1"}]);
+
+    it("should validate conformant", function () {
+      expect(results[0].status).to.equal("conformant");
+    });
+
+    const mapped = EditorServices.mapValidationErrors(results, schemaParsed, dataParsed);
+    const s1Pairs = mapped.pairs.filter(
+      p => p.status === "conformant" && p.schema && p.triple
+        && p.triple.predicate === "http://hl7.org/fhir/p");
+
+    it("should give each repeated-property constraint its own schema range", function () {
+      expect(s1Pairs.length).to.equal(4);
+      const ranges = new Set(s1Pairs.map(p => p.schema.from + "-" + p.schema.to));
+      expect(ranges.size).to.equal(4);
+    });
+
+    it("should couple each data triple to the constraint that matched it", function () {
+      const bySchemaText = Object.fromEntries(
+        s1Pairs.map(p => [slice(rSchema, p.schema).replace(/\s+/g, " ").trim(),
+                          slice(rData, p.anchors.object)]));
+      // xsd:decimal can only have matched 1.1, xsd:integer only 4
+      expect(bySchemaText[":p xsd:decimal"]).to.equal("1.1");
+      expect(bySchemaText[":p xsd:integer"]).to.equal("4");
+    });
+
+    it("should anchor the subject for every pair", function () {
+      s1Pairs.forEach(p => {
+        expect(p.anchors.subject, "subject anchor").not.to.equal(null);
+        expect(slice(rData, p.anchors.subject)).to.equal("<#n1>");
+      });
+    });
+  });
+
+  describe("nested shapes and blank node properties", function () {
+    // gist.github.com/ericprud/95bdee44bdf824c1d2c9d9d1fa2257c6: inline
+    // shapes two deep (:r { :s { :t ["t"] } }) matched by nested bnode
+    // property lists in the data
+    const nSchema = [
+      "PREFIX : <http://hl7.org/fhir/>",
+      "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>",
+      "",
+      "<#S1> CLOSED {",
+      "  :p xsd:integer ;",
+      "  :p IRI ;",
+      "  :p xsd:decimal ;",
+      "  :p @<#S2> ;",
+      "  :r {",
+      "    :s {",
+      "      :t [\"t\"]",
+      "    }",
+      "  }",
+      "}",
+      "",
+      "<#S2> {",
+      "  :q [5]",
+      "}",
+      ""].join("\n");
+    const nData = [
+      "PREFIX : <http://hl7.org/fhir/>",
+      "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>",
+      "",
+      "<#n1>",
+      "  :p 1.1 ;",
+      "  :p <#n3> ;",
+      "  :r [",
+      "    :s [",
+      "      :t \"t\"",
+      "    ]",
+      "  ] ;",
+      "  :p <#n2> ;",
+      "  :p 4 ;",
+      ".",
+      "",
+      "<#n3> :q 5 .",
+      ""].join("\n");
+
+    const schemaParsed = EditorServices.parseShExC(nSchema, {base});
+    const dataParsed = EditorServices.parseTurtle(nData, {baseIRI: base});
+    // validate against an independent N3 parse so bnode labels diverge from
+    // the provenance parse (as in the webapp, whose validation store comes
+    // from the app's own parser)
+    const store = new N3.Store(new N3.Parser({baseIRI: base}).parse(nData));
+    const validator = new ShExValidator(schemaParsed.schema, RdfJsDb(store), {noCache: true});
+    const results = validator.validateShapeMap([{node: base + "#n1", shape: base + "#S1"}]);
+
+    it("should validate conformant", function () {
+      expect(results[0].status).to.equal("conformant");
+    });
+
+    const mapped = EditorServices.mapValidationErrors(results, schemaParsed, dataParsed);
+    const P = "http://hl7.org/fhir/";
+    const byPred = pred => mapped.pairs.filter(
+      p => p.status === "conformant" && p.triple && p.triple.predicate === P + pred);
+    const slices = (text, ranges) => (ranges || []).map(r => slice(text, r));
+
+    it("should anchor the outermost bnode-object constraint (:r)", function () {
+      const [rPair] = byPred("r");
+      expect(rPair, ":r pair").to.exist;
+      // the constraint's own extent is its delimiters, not the nested body
+      expect(slices(nSchema, rPair.schemaParts)).to.deep.equal([":r {", "}"]);
+      expect(rPair.schemaPath).to.deep.equal([]);
+      // IRI subject: the term itself; bnode object: just its [ ] delimiters
+      expect(slice(nData, rPair.anchors.subject)).to.equal("<#n1>");
+      expect(rPair.anchors.subjectParts).to.equal(undefined);
+      expect(slices(nData, rPair.anchors.objectParts)).to.deep.equal(["[", "]"]);
+    });
+
+    it("should anchor the middle constraint (:s) with its path", function () {
+      const [sPair] = byPred("s");
+      expect(sPair, ":s pair").to.exist;
+      expect(slices(nSchema, sPair.schemaParts)).to.deep.equal([":s {", "}"]);
+      expect(slices(nSchema, sPair.schemaPath)).to.deep.equal([":r"]);
+      // both its subject and object are bnode property lists
+      expect(slices(nData, sPair.anchors.subjectParts)).to.deep.equal(["[", "]"]);
+      expect(slices(nData, sPair.anchors.objectParts)).to.deep.equal(["[", "]"]);
+      // ... and its subject is the same bnode :r points at
+      const [rPair] = byPred("r");
+      expect(sPair.anchors.subjectParts).to.deep.equal(rPair.anchors.objectParts);
+    });
+
+    it("should anchor the deepest constraint (:t) with the full path", function () {
+      const [tPair] = byPred("t");
+      expect(tPair, ":t pair").to.exist;
+      // no inline shape of its own: a single contiguous part
+      expect(slices(nSchema, tPair.schemaParts)).to.deep.equal([":t [\"t\"]"]);
+      expect(slices(nSchema, tPair.schemaPath)).to.deep.equal([":r", ":s"]);
+      expect(slices(nData, tPair.anchors.subjectParts)).to.deep.equal(["[", "]"]);
+      expect(slice(nData, tPair.anchors.object)).to.equal("\"t\"");
+      expect(tPair.anchors.objectParts).to.equal(undefined);
+      // its subject is the bnode :s points at
+      const [sPair] = byPred("s");
+      expect(tPair.anchors.subjectParts).to.deep.equal(sPair.anchors.objectParts);
+    });
+
+    it("should still couple the repeated :p properties correctly", function () {
+      const bySchemaText = Object.fromEntries(
+        byPred("p").map(p => [slice(nSchema, p.schema).replace(/\s+/g, " ").trim(),
+                              slice(nData, p.anchors.object)]));
+      expect(bySchemaText[":p xsd:decimal"]).to.equal("1.1");
+      expect(bySchemaText[":p xsd:integer"]).to.equal("4");
+    });
+  });
+
+  describe("stringifyWithOffsets", function () {
+    const results = {type: "ShapeTest", solution: {type: "TripleConstraintSolutions", solutions: [
+      {type: "TestedTriple", subject: "s", predicate: "p", object: {value: "o1"}},
+      {type: "TestedTriple", subject: "s", predicate: "p", object: {value: "o2"}, skipMe: undefined},
+    ]}};
+
+    it("should serialize exactly like JSON.stringify", function () {
+      const {text} = EditorServices.stringifyWithOffsets(results, () => false);
+      expect(text).to.equal(JSON.stringify(results, null, 2));
+    });
+
+    it("should map each target object to its own range", function () {
+      const {text, ranges} = EditorServices.stringifyWithOffsets(
+        results, o => o && o.type === "TestedTriple");
+      expect(ranges.length).to.equal(2);
+      ranges.forEach((r, i) => {
+        const parsed = JSON.parse(text.slice(r.from, r.to));
+        expect(parsed.object.value).to.equal("o" + (i + 1));
+        expect(r.target).to.equal(results.solution.solutions[i]);
+      });
+    });
+
+    it("should record subject/predicate/object member ranges", function () {
+      // a nested solution: the outer triple's members must exclude it
+      const nested = {type: "ShapeTest", solution: {type: "TripleConstraintSolutions", solutions: [
+        {type: "TestedTriple", subject: "s", predicate: "p", object: "_:b0",
+         referenced: {type: "ShapeTest", node: "_:b0", solution: {
+           type: "TripleConstraintSolutions", solutions: [
+             {type: "TestedTriple", subject: "_:b0", predicate: "q", object: {value: "o"}}]}}},
+      ]}};
+      const {text, ranges} = EditorServices.stringifyWithOffsets(
+        nested, o => o && o.type === "TestedTriple");
+      expect(ranges.length).to.equal(2);
+      const [inner, outer] = ranges; // depth-first: nested target closes first
+      [inner, outer].forEach(r => {
+        ["subject", "predicate", "object"].forEach(k => {
+          expect(r.fields, "fields").to.exist;
+          const fieldText = text.slice(r.fields[k].from, r.fields[k].to);
+          expect(fieldText).to.include(JSON.stringify(k) + ":");
+        });
+      });
+      expect(text.slice(outer.fields.object.from, outer.fields.object.to))
+        .to.equal('"object": "_:b0"');
+      // the outer members stop before the nested solution's range
+      ["subject", "predicate", "object"].forEach(k => {
+        expect(outer.fields[k].to).to.be.at.most(inner.from);
+      });
     });
   });
 

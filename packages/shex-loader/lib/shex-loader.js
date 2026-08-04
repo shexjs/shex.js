@@ -390,7 +390,7 @@ function ShExLoaderCjsModule(config = {}) {
             const struct = JSON.parse(text);
             try {
                 const nquads = yield config.jsonld.toRDF(struct, Object.assign({
-                    format: "application/nquads",
+                    format: "application/n-quads", // jsonld ≥ 5 dropped the "application/nquads" alias
                     base: url
                 }, config.jsonLdOptions || {}));
                 meta.prefixes = {}; // @@ take from @context?
@@ -399,12 +399,15 @@ function ShExLoaderCjsModule(config = {}) {
                 return parseTurtle(nquads, mediaType, url, meta, dataOptions, resourceLoadControler, importers);
             }
             catch (lderr) {
-                let e = lderr;
-                if ("details" in e)
-                    e = e.details;
-                if ("cause" in e)
-                    e = e.cause;
-                throw new ResourceError("error parsing JSON-ld " + url + ": " + e, url);
+                // a JsonLdError carries the story in .message and (possibly nested
+                // in .details) a .cause; render each layer rather than "[object Object]"
+                let msg = lderr && lderr.message ? lderr.message : String(lderr);
+                const details = lderr && lderr.details;
+                if (details) {
+                    const cause = details.cause;
+                    msg += " " + (cause && cause.message ? cause.message : JSON.stringify(details));
+                }
+                throw new ResourceError("error parsing JSON-ld " + url + ": " + msg, url);
             }
         });
     }

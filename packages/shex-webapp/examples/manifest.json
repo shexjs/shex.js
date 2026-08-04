@@ -1,5 +1,13 @@
 [
   {
+    "schemaLabel": "repeated properties",
+    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<#S1> {\n  :p xsd:integer ;\n  :p IRI ;\n  :p xsd:decimal ;\n  :p @<#S2>\n}\n\n<#S2> {\n  :q [5]\n}\n",
+    "dataLabel": "passing data",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<#n1>\n  :p 1.1 ;\n  :p <#n3> ;\n  :p <#n2> ;\n  :p 4 ;\n.\n\n<#n3> :q 5 .\n",
+    "queryMap": "<#n1>@<#S1>\n",
+    "status": "conformant"
+  },
+  {
     "schemaLabel": "clinical observation",
     "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
     "dataLabel": "with birthdate",

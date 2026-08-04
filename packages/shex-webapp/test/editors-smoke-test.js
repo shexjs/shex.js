@@ -12,8 +12,9 @@ const Fs = require("fs");
 const Path = require("path");
 const expect = require("chai").expect;
 const node_fetch = require("node-fetch");
-const jsdom = require("jsdom");
-const {JSDOM} = jsdom;
+// jsdom's engines outpace the packages' own; required lazily under
+// TEST_browser (c.f. browser-test.js)
+let jsdom, JSDOM, StaticResourceConfig;
 
 const [[GitRootServer]] = require("../../../tools/testServer")
       .startServer(
@@ -28,20 +29,21 @@ const StaticResources = {
   "https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.21/jquery.csv.js":
     Path.join(__dirname, "static/jquery.csv-1.0.21.js")
 };
-const StaticResourceConfig = {
-  interceptors: [
-    jsdom.requestInterceptor((request, _context) => {
-      if (request.url in StaticResources)
-        return new Response(Fs.readFileSync(StaticResources[request.url], "utf8"), {
-          headers: { "Content-Type": "text/javascript" }
-        });
-    })
-  ]
-};
-
 if (!TEST_browser) {
   console.warn("Skipping editors-smoke-tests; to activate these tests, set environment variable TEST_browser=true");
 } else {
+  jsdom = require("jsdom");
+  ({JSDOM} = jsdom);
+  StaticResourceConfig = {
+    interceptors: [
+      jsdom.requestInterceptor((request, _context) => {
+        if (request.url in StaticResources)
+          return new Response(Fs.readFileSync(StaticResources[request.url], "utf8"), {
+            headers: { "Content-Type": "text/javascript" }
+          });
+      })
+    ]
+  };
   describe("shex-simple with ?editors=1", function () {
     this.timeout(20000);
     const page = "packages/shex-webapp/doc/shex-simple.html";
@@ -228,6 +230,68 @@ if (!TEST_browser) {
       const mapped = shared.Caches.editorSupport.lastMapped;
       expect(mapped.schema.length, "error mark on the shape declaration").to.be.above(0);
       expect(mapped.schema[0].message).to.include("expected nonconformance");
+    });
+
+    it("should fit the appinfo results pane and hover TestedTriples back to schema and data", async function () {
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      set("#textMap", "<http://a.example/x>@<http://a.example/S>"); // conformant again
+      await shared.promise;
+      const origInterface = $("#interface").val();
+      $("#interface").val("appinfo");
+      try {
+        $("#validate").trigger("click");
+        await shared.promise;
+
+        const es = shared.Caches.editorSupport;
+        const rw = es.app.resultsWidget;
+        expect(rw.resultPanes.length, "appinfo pane created").to.be.above(0);
+        const {pane, ranges} = rw.resultPanes[0];
+        expect(ranges.length, "TestedTriples mapped").to.be.above(0);
+        // fitted to the bottom of the window; scrolls internally
+        expect(pane.dom.style.height).to.match(/^\d+px$/);
+
+        // hovering a TestedTriple highlights its constraint and its triple:
+        // swap in a spy pane and re-derive the hover regions
+        const spy = {
+          regions: null, highlights: [],
+          setHoverRegions (regions, _leave) { this.regions = regions; },
+          highlight (rs, cls, opts) { this.highlights.push({rs, cls, opts}); },
+          clearHighlights () {},
+        };
+        rw.resultPanes[0] = {pane: spy, ranges};
+        const calls = {schema: [], data: []};
+        const origSchema = es.panes.inputSchema.highlight;
+        const origData = es.panes.inputData.highlight;
+        es.panes.inputSchema.highlight = (rs, cls, opts) => calls.schema.push({rs, cls, opts});
+        es.panes.inputData.highlight = (rs, cls, opts) => calls.data.push({rs, cls, opts});
+        try {
+          es.setPairHovers(es.lastMapped.pairs);
+          expect(spy.regions.length, "a hover region per TestedTriple").to.be.above(0);
+          spy.regions[0].enter();
+          const schemaText = $("#inputSchema textarea").first().val();
+          expect(calls.schema.length, "schema highlighted").to.be.above(0);
+          expect(calls.schema[0].rs.map(r => schemaText.substring(r.from, r.to)))
+            .to.include(":p xsd:integer");
+          const dataText = $("#inputData textarea").first().val();
+          expect(calls.data.length, "data highlighted").to.be.above(0);
+          const dataSlices = calls.data[0].rs.map(r => dataText.substring(r.from, r.to));
+          expect(dataSlices).to.include("42");
+          expect(dataSlices).to.include(":x");
+          // the pane the mouse is in doesn't auto-scroll
+          expect(spy.highlights.length, "hovered TestedTriple highlighted in place").to.be.above(0);
+          expect(spy.highlights[0].opts.scroll).to.equal(false);
+        } finally {
+          es.panes.inputSchema.highlight = origSchema;
+          es.panes.inputData.highlight = origData;
+          rw.resultPanes[0] = {pane, ranges};
+        }
+      } finally {
+        $("#interface").val(origInterface);
+      }
     });
 
     it("should keep mid-edit parse errors off console.error", async function () {

@@ -10,7 +10,9 @@ const Fs = require("fs");
 const Path = require("path");
 const expect = require("chai").expect;
 const node_fetch = require("node-fetch");
-const {JSDOM} = require("jsdom");
+// jsdom's engines outpace the packages' own; required lazily under
+// TEST_browser (c.f. browser-test.js)
+let JSDOM;
 
 const [[GitRootServer]] = require("../../../tools/testServer")
       .startServer(
@@ -37,6 +39,7 @@ const bindingsJson = JSON.stringify({
 if (!TEST_browser) {
   console.warn("Skipping shexmap-editors-smoke-tests; to activate these tests, set environment variable TEST_browser=true");
 } else {
+  ({JSDOM} = require("jsdom"));
   describe("shexmap-simple with ?editors=1", function () {
     this.timeout(20000);
     const page = "packages/extension-map/doc/shexmap-simple.html";

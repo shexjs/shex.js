@@ -14,12 +14,12 @@
 
 import {basicSetup} from "codemirror";
 import {EditorView, Decoration, DecorationSet, gutter, GutterMarker} from "@codemirror/view";
-import {StateField, StateEffect, Extension, RangeSet} from "@codemirror/state";
-import {StreamLanguage, StreamParser} from "@codemirror/language";
+import {StateField, StateEffect, Extension, RangeSet, EditorState} from "@codemirror/state";
+import {StreamLanguage, StreamParser, LRLanguage} from "@codemirror/language";
 import {linter, setDiagnostics, lintGutter, LintSource} from "@codemirror/lint";
 import {CompletionContext, CompletionResult, Completion} from "@codemirror/autocomplete";
 import {json, jsonParseLinter} from "@codemirror/lang-json";
-import {turtle} from "@codemirror/legacy-modes/mode/turtle";
+import {parser as lezerTurtleParser} from "lezer-turtle";
 import * as EditorServices from "./editor-services";
 import {Diagnostic, Range} from "./editor-services";
 
@@ -154,11 +154,90 @@ export const shexcStreamParser: StreamParser<ShExCState> = {
   },
 };
 
+/** Turtle via the incremental, error-recovering lezer-turtle grammar
+ * (RDF 1.2; the same parse tree that powers provenance tracking). */
+const turtleLanguage = LRLanguage.define({parser: lezerTurtleParser});
+
 export const languages: {[lang in PaneLanguage]: () => Extension} = {
   shexc: () => StreamLanguage.define(shexcStreamParser),
-  turtle: () => StreamLanguage.define(turtle),
+  turtle: () => turtleLanguage,
   json: () => json(),
 };
+
+/** makeJsonPane - a read-only, syntax-highlighted JSON view (e.g. for
+ * validation results) sharing the highlight machinery of editor panes:
+ * highlight(ranges, cls, {scroll}) marks and scrolls to result regions;
+ * setHoverRegions supports results → schema/data cross-highlighting. */
+export function makeJsonPane (text: string): {
+  dom: HTMLElement,
+  highlight (ranges: Range[], cls?: string, opts?: {scroll?: boolean}): void,
+  clearHighlights (): void,
+  setHoverRegions (regions: HoverRegion[], leave?: () => void): void,
+} {
+  const view = new EditorView({doc: text, extensions: [
+    basicSetup,
+    json(),
+    highlightField,
+    paneTheme,
+    EditorView.editable.of(false),
+    EditorState.readOnly.of(true),
+  ]});
+  view.dom.classList.add("shexjs-editor-pane", "shexjs-json-pane");
+  const setHoverRegions = attachHoverRegions(view);
+  const clampRange = (r: Range | null): r is Range =>
+    !!r && r.from >= 0 && r.to <= view.state.doc.length && r.to > r.from;
+  return {
+    dom: view.dom,
+    highlight (ranges: Range[], cls = "shexjs-highlight", opts: {scroll?: boolean} = {}): void {
+      const inRange = (ranges || []).filter(clampRange).sort((a, b) => a.from - b.from);
+      const decos = inRange.map(r => Decoration.mark({class: cls}).range(r.from, r.to));
+      view.dispatch({effects: setHighlightsEffect.of(Decoration.set(decos, true))});
+      if (inRange.length && opts.scroll !== false)
+        view.dispatch({effects: EditorView.scrollIntoView(inRange[0].from, {y: "center"})});
+    },
+    clearHighlights (): void {
+      view.dispatch({effects: setHighlightsEffect.of(Decoration.none)});
+    },
+    setHoverRegions,
+  };
+}
+
+/** track mouse-over-sensitive ranges on a view; returns the function that
+ * replaces the region set (the makePane/makeJsonPane setHoverRegions API) */
+function attachHoverRegions (view: EditorView): (regions: HoverRegion[], leave?: () => void) => void {
+  let hoverRegions: HoverRegion[] = [];
+  let hoverLeave: (() => void) | undefined;
+  let currentRegion: HoverRegion | null = null;
+  const clearHover = () => {
+    if (currentRegion) {
+      currentRegion = null;
+      if (hoverLeave)
+        hoverLeave();
+    }
+  };
+  view.contentDOM.addEventListener("mousemove", (e: MouseEvent) => {
+    const pos = view.posAtCoords({x: e.clientX, y: e.clientY});
+    // smallest containing region wins: nested constructs (inline shapes,
+    // bnode property lists) sit inside their parents' regions
+    const hit = pos === null ? null
+          : hoverRegions.reduce((best: HoverRegion | null, r) =>
+              pos >= r.from && pos < r.to && (!best || r.to - r.from < best.to - best.from)
+                ? r : best, null);
+    if (hit !== currentRegion) {
+      currentRegion = hit;
+      if (hit)
+        hit.enter();
+      else if (hoverLeave)
+        hoverLeave();
+    }
+  });
+  view.contentDOM.addEventListener("mouseleave", clearHover);
+  return (regions, leave) => {
+    hoverRegions = regions || [];
+    hoverLeave = leave;
+    currentRegion = null;
+  };
+}
 
 // ---------------------------------------------------------------------------
 // range highlights (shape-map hover, error-pair flashes)
@@ -284,7 +363,7 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
     }),
   ];
   if (opts.language === "shexc" || opts.language === "turtle") {
-    const lang = StreamLanguage.define(opts.language === "shexc" ? shexcStreamParser : turtle);
+    const lang = opts.language === "shexc" ? StreamLanguage.define(shexcStreamParser) : turtleLanguage;
     extensions.push(lang);
     if (opts.completions) // basicSetup's autocompletion() reads languageData
       extensions.push(lang.data.of({autocomplete: completionSource(opts.completions)}));
@@ -307,29 +386,7 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
   textarea.style.display = "none";
 
   // hover regions (validation match/failure cross-highlighting)
-  let hoverRegions: HoverRegion[] = [];
-  let hoverLeave: (() => void) | undefined;
-  let currentRegion: HoverRegion | null = null;
-  const clearHover = () => {
-    if (currentRegion) {
-      currentRegion = null;
-      if (hoverLeave)
-        hoverLeave();
-    }
-  };
-  view.contentDOM.addEventListener("mousemove", (e: MouseEvent) => {
-    const pos = view.posAtCoords({x: e.clientX, y: e.clientY});
-    const hit = pos === null ? null
-          : hoverRegions.find(r => pos >= r.from && pos < r.to) || null;
-    if (hit !== currentRegion) {
-      currentRegion = hit;
-      if (hit)
-        hit.enter();
-      else if (hoverLeave)
-        hoverLeave();
-    }
-  });
-  view.contentDOM.addEventListener("mouseleave", clearHover);
+  const setHoverRegions = attachHoverRegions(view);
 
   // live proxy: application code keeps talking to the textarea
   Object.defineProperty(textarea, "value", {
@@ -363,11 +420,7 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
     clearHighlights (): void {
       view.dispatch({effects: setHighlightsEffect.of(Decoration.none)});
     },
-    setHoverRegions (regions: HoverRegion[], leave?: () => void): void {
-      hoverRegions = regions || [];
-      hoverLeave = leave;
-      currentRegion = null;
-    },
+    setHoverRegions,
     listBreakpoints (): number[] {
       const positions: number[] = [];
       view.state.field(breakpointField).between(0, view.state.doc.length,
