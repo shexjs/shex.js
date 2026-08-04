@@ -77,7 +77,10 @@ describe("EditorServices", function () {
       expect(parsed.diagnostics).to.deep.equal([]);
       const offending = [...parsed.dataset].find(
         q => q.object.termType === "Literal" && q.object.value === "not a number");
-      expect(slice(dataText, EditorServices.millanSourceToRange(offending.object.source)))
+      // the provenance index resolves quads by value, even ones the store
+      // reconstructed, to their source utterances
+      const [utt] = parsed.provenance.get(offending);
+      expect(slice(dataText, {from: utt.object[0].start, to: utt.object[0].end}))
         .to.equal('"not a number"');
     });
 

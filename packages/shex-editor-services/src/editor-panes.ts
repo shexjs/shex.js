@@ -15,11 +15,11 @@
 import {basicSetup} from "codemirror";
 import {EditorView, Decoration, DecorationSet, gutter, GutterMarker} from "@codemirror/view";
 import {StateField, StateEffect, Extension, RangeSet} from "@codemirror/state";
-import {StreamLanguage, StreamParser} from "@codemirror/language";
+import {StreamLanguage, StreamParser, LRLanguage} from "@codemirror/language";
 import {linter, setDiagnostics, lintGutter, LintSource} from "@codemirror/lint";
 import {CompletionContext, CompletionResult, Completion} from "@codemirror/autocomplete";
 import {json, jsonParseLinter} from "@codemirror/lang-json";
-import {turtle} from "@codemirror/legacy-modes/mode/turtle";
+import {parser as lezerTurtleParser} from "lezer-turtle";
 import * as EditorServices from "./editor-services";
 import {Diagnostic, Range} from "./editor-services";
 
@@ -154,9 +154,13 @@ export const shexcStreamParser: StreamParser<ShExCState> = {
   },
 };
 
+/** Turtle via the incremental, error-recovering lezer-turtle grammar
+ * (RDF 1.2; the same parse tree that powers provenance tracking). */
+const turtleLanguage = LRLanguage.define({parser: lezerTurtleParser});
+
 export const languages: {[lang in PaneLanguage]: () => Extension} = {
   shexc: () => StreamLanguage.define(shexcStreamParser),
-  turtle: () => StreamLanguage.define(turtle),
+  turtle: () => turtleLanguage,
   json: () => json(),
 };
 
@@ -284,7 +288,7 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
     }),
   ];
   if (opts.language === "shexc" || opts.language === "turtle") {
-    const lang = StreamLanguage.define(opts.language === "shexc" ? shexcStreamParser : turtle);
+    const lang = opts.language === "shexc" ? StreamLanguage.define(shexcStreamParser) : turtleLanguage;
     extensions.push(lang);
     if (opts.completions) // basicSetup's autocompletion() reads languageData
       extensions.push(lang.data.of({autocomplete: completionSource(opts.completions)}));

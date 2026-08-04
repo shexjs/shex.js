@@ -56,7 +56,7 @@ const state_1 = require("@codemirror/state");
 const language_1 = require("@codemirror/language");
 const lint_1 = require("@codemirror/lint");
 const lang_json_1 = require("@codemirror/lang-json");
-const turtle_1 = require("@codemirror/legacy-modes/mode/turtle");
+const lezer_turtle_1 = require("lezer-turtle");
 const EditorServices = __importStar(require("./editor-services"));
 /** lexicalize - shortest lexical form for an IRI under the given prefixes */
 function lexicalize(iri, prefixes) {
@@ -152,9 +152,12 @@ exports.shexcStreamParser = {
         return null;
     },
 };
+/** Turtle via the incremental, error-recovering lezer-turtle grammar
+ * (RDF 1.2; the same parse tree that powers provenance tracking). */
+const turtleLanguage = language_1.LRLanguage.define({ parser: lezer_turtle_1.parser });
 exports.languages = {
     shexc: () => language_1.StreamLanguage.define(exports.shexcStreamParser),
-    turtle: () => language_1.StreamLanguage.define(turtle_1.turtle),
+    turtle: () => turtleLanguage,
     json: () => (0, lang_json_1.json)(),
 };
 // ---------------------------------------------------------------------------
@@ -265,7 +268,7 @@ function makePane(textarea, opts = {}) {
         }),
     ];
     if (opts.language === "shexc" || opts.language === "turtle") {
-        const lang = language_1.StreamLanguage.define(opts.language === "shexc" ? exports.shexcStreamParser : turtle_1.turtle);
+        const lang = opts.language === "shexc" ? language_1.StreamLanguage.define(exports.shexcStreamParser) : turtleLanguage;
         extensions.push(lang);
         if (opts.completions) // basicSetup's autocompletion() reads languageData
             extensions.push(lang.data.of({ autocomplete: completionSource(opts.completions) }));
