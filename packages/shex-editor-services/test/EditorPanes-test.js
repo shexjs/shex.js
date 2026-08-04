@@ -5,16 +5,24 @@
 "use strict";
 
 const expect = require("chai").expect;
-const {JSDOM} = require("jsdom");
+// jsdom's engines outpace the packages' own (e.g. jsdom 30 wants Node ≥ 22
+// while the libraries claim ≥ 18): required lazily so these DOM-hosted
+// tests skip, rather than crash the whole run, where it can't load
+let jsdom;
 
 describe("EditorPanes", function () {
   let dom, saved, makePane, shexcStreamParser;
 
   before(function () {
-    dom = new JSDOM("<body><div><textarea id='t'>initial</textarea></div></body>", {
+    try {
+      jsdom = require("jsdom");
+    } catch (e) {
+      this.skip(); // Node too old for jsdom
+    }
+    dom = new jsdom.JSDOM("<body><div><textarea id='t'>initial</textarea></div></body>", {
       url: "http://localhost/",
       pretendToBeVisual: true,
-      virtualConsole: new (require("jsdom").VirtualConsole)(), // swallow layout noise
+      virtualConsole: new jsdom.VirtualConsole(), // swallow layout noise
     });
     // CodeMirror touches these at construction time; restore after so other
     // tests' typeof-window browser detection is unaffected.
@@ -29,6 +37,8 @@ describe("EditorPanes", function () {
   });
 
   after(function () {
+    if (!saved)
+      return; // before() skipped: nothing to restore
     for (const [key, desc] of Object.entries(saved)) {
       if (desc === undefined)
         delete global[key];

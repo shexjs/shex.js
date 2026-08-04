@@ -67,6 +67,9 @@
       .stoppable { background-color: red; }
       #results div:disabled { background-color: #fff; }
       #results div { width: 99%; border: none; }
+      /* the 99% width above must not reach into CodeMirror internals
+         (appinfo results panes): 99%-wide gutters push the code offscreen */
+      #results .cm-editor div { width: unset; }
       #results div:disabled.passes { color: #373; }
       #results div:disabled.fails  { color: #733; }
       #results div:disabled.error  { color: #300; }
@@ -255,6 +258,10 @@ ul {
               <li class="menuitem"><input type="checkbox" id="skipCycleCheck" checked/><label for="skipCycleCheck">skip cycle check</label></li>
               <li class="menuitem"><input type="checkbox" id="ignoreClosed"/><label for="ignoreClosed">ignore closed-ness of shapes</label></li>
               <li class="menuitem" id="permalink"><a>Permalink</a></li>
+              <li class="menuitem"><span id="createGist"><a>Create Gist</a></span> |
+                <a id="gistToken" title="get this token" href="https://github.com/settings/tokens/new?scopes=gist&amp;description=shex-simple" target="_blank">get token</a>
+                <a id="gistInstructions" style="float:right">help</a>
+              </li>
               <li class="menuitem" id="about-button">About</li>
             </ul>
           </div>
@@ -264,6 +271,24 @@ ul {
         <h1>Load <span class="whatToLoad"></span></h1>
         <p class="menuitem"><label for="loadInput" style="float: left;">from </label><input id="loadInput" style="width: 80%;"/></p>
         <p class="validateTips">Enter a URL.</p>
+      </div>
+      <div id="gistHelp">
+        <h1>Create Gist</h1>
+        <p>
+          <b>Create Gist</b> publishes the current schema, data and query map
+          as a <a href="https://gist.github.com/" target="_blank">github gist</a>
+          (you'll be prompted for a title), opens the new gist in another window
+          (popup blockers permitting; its address is also printed to the browser
+          console), and reloads this page with the gist as its manifest (a
+          permalink to share).
+        </p>
+        <p>It needs a github token with "gist" scope, remembered in this browser's localStorage:</p>
+        <ol>
+          <li><a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=shex-simple" target="_blank">get token</a>
+            (github &rarr; Settings &rarr; Developer settings &rarr; Personal access tokens &rarr; Tokens (classic))</li>
+          <li>press [Generate token] and copy it</li>
+          <li>press <b>Create Gist</b> and paste it into the token prompt.</li>
+        </ol>
       </div>
       <div id="about">
         <h1>About shex-simple</h1>

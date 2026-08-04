@@ -10,6 +10,9 @@ const LOG_PROGRESS = false;
 const EXTENSION_sparql = "http://www.w3.org/ns/shex#Extensions-sparql";
 const SPARQL_get_items_limit = 50;
 const MENU_ITEM_materialize = "- materialize -"
+const GIST_TOKEN_KEY = "githubGistToken"; // localStorage key for Menu → Create Gist
+const GIST_INLINE_LINES = 15; // longer texts become separate gist files
+const GIST_CREATED_KEY = "shexjsCreatedGist"; // sessionStorage handoff across the post-create reload
 
 const DefaultBase = location.origin + location.pathname;
 let SharedForTests = null; // testing global used by browser-test
@@ -1435,6 +1438,9 @@ class ResultsWidget {
   constructor () {
     this.resultsElt = document.querySelector("#results div");
     this.resultsSel = $("#results div");
+    // appinfo renderings: [{pane, ranges}] linking TestedTriple objects (by
+    // identity) to their {from, to} in the rendered results JSON
+    this.resultPanes = [];
   }
   replace (text) {
     return this.resultsSel.text(text);
@@ -1443,6 +1449,7 @@ class ResultsWidget {
     return this.resultsSel.append(text);
   }
   clear () {
+    this.resultPanes = [];
     this.resultsSel.removeClass("passes fails error");
     $("#results .status").text("").hide();
     $("#shapeMap-tabs").removeAttr("title");
@@ -1459,7 +1466,10 @@ class ResultsWidget {
     this.resultsSel.animate({height:height}, 100);
   }
   text () {
-    return $(this.resultsElt).text();
+    // CodeMirror virtualizes long documents, so read appinfo panes' raw text
+    return $(this.resultsElt).children().map(
+      (_, el) => $(el).data("rawText") !== undefined ? $(el).data("rawText") : el.textContent
+    ).get().join("\n");
   }
 
   failMessage (e, action, text) {
@@ -1500,6 +1510,7 @@ class ShExResultsRenderer {
     const klass = (fails ^ fixedMapEntry.find(".shapeMap-joiner").hasClass("nonconformant")) ? "fails" : "passes";
     const resultStr = fails ? "✗" : "✓";
     let elt = null;
+    let appinfoPane = null;
 
     if (!fails) {
       if ($("#success").val() === "query" || $("#success").val() === "remainder") {
@@ -1549,12 +1560,31 @@ class ShExResultsRenderer {
             acc[key] = entry[key];
           return acc
         }, {});
-        // falling through to default covers the appinfo case
-      default:
         elt = $("<pre/>").text(JSON.stringify(renderMe, null, "  ")).addClass(klass);
+        break;
+
+      default: // appinfo: syntax-highlighted JSON with TestedTriples mapped
+        try {
+          const {text, ranges} = ShExWebApp.EditorServices.stringifyWithOffsets(
+            renderMe, o => o && o.type === "TestedTriple");
+          const pane = ShExWebApp.EditorPanes.makeJsonPane(text);
+          elt = $("<div/>").addClass(klass).append(pane.dom).data("rawText", text);
+          this.resultsWidget.resultPanes.push({pane, ranges});
+          appinfoPane = pane;
+        } catch (e) {
+          console.warn("falling back to plain results JSON:", e);
+          elt = $("<pre/>").text(JSON.stringify(renderMe, null, "  ")).addClass(klass);
+        }
       }
     }
     this.resultsWidget.append(elt);
+    if (appinfoPane) {
+      // fit the pane to the bottom of the window so schema, data and results
+      // stay visible together; without a height the pane grows to its content
+      // and hover-scrolling to a TestedTriple scrolls the whole page
+      const top = appinfoPane.dom.getBoundingClientRect().top;
+      appinfoPane.dom.style.height = Math.max(200, window.innerHeight - top - 12) + "px";
+    }
 
     // update the FixedMap
     fixedMapEntry.addClass(klass).find("a").text(resultStr);
@@ -1719,31 +1749,86 @@ class EditorSupport {
     const dataPane = this.panes.inputData;
     if (!schemaPane || !dataPane)
       return;
-    const clearBoth = () => {
+    const resultPanes = this.app.resultsWidget.resultPanes;
+    const clearAll = () => {
       schemaPane.clearHighlights();
       dataPane.clearHighlights();
+      resultPanes.forEach(({pane}) => pane.clearHighlights());
     };
-    const show = (pair, hoveredSide) => {
-      const cls = pair.status === "conformant" ? "shexjs-highlight-match" : "shexjs-highlight-fail";
-      const schemaRanges = [pair.schema]
-            .concat(hoveredSide === "schema" ? [pair.anchors.shapeLabel] : [])
+    // a constraint with cardinality > 1 yields one pair per matched triple,
+    // all sharing a schema range: group them so hovering the constraint
+    // highlights every matched triple
+    const bySchemaRange = new Map();
+    pairs.filter(p => p.schema).forEach(p => {
+      const key = p.schema.from + "-" + p.schema.to;
+      if (!bySchemaRange.has(key))
+        bySchemaRange.set(key, []);
+      bySchemaRange.get(key).push(p);
+    });
+    // a TestedTriple's subject/predicate/object member lines (its full range
+    // would also paint any nested solutions)
+    const termRanges = (r) => r.fields
+          ? ["subject", "predicate", "object"].map(k => r.fields[k]).filter(f => f)
+          : [{from: r.from, to: r.to}];
+    const showInResults = (group, cls, scroll) => {
+      resultPanes.forEach(({pane, ranges}) => {
+        const hits = ranges.filter(r => group.some(p => p.triple === r.target));
+        if (hits.length)
+          pane.highlight(hits.flatMap(termRanges), cls, {scroll});
+        else
+          pane.clearHighlights();
+      });
+    };
+    // a constraint's highlight is its parts (e.g. ":s {" and "}", skipping
+    // an inline-shape body); a bnode subject/object highlights as its
+    // [ ] delimiters rather than the whole property list
+    const constraintRanges = (p) => p.schemaParts || (p.schema ? [p.schema] : []);
+    const anchorRanges = (p, term) =>
+      p.anchors[term + "Parts"] || (p.anchors[term] ? [p.anchors[term]] : []);
+    const show = (group, hoveredSide) => {
+      const lead = group[0];
+      const cls = group.some(p => p.status !== "conformant")
+            ? "shexjs-highlight-fail" : "shexjs-highlight-match";
+      const schemaRanges = group.flatMap(constraintRanges)
+            .concat(hoveredSide === "schema"
+                    // connect a (possibly nested) constraint back to its
+                    // labeled shape: enclosing predicates, then the label
+                    ? group.flatMap(p => p.schemaPath || []).concat([lead.anchors.shapeLabel])
+                    : [])
             .filter(r => r);
-      const dataRanges = (hoveredSide === "data"
-                          ? [pair.anchors.object, pair.anchors.subject, pair.anchors.predicate]
-                          : [pair.anchors.object])
-            .filter(r => r);
+      const dataRanges = group.flatMap(p => [].concat(
+        anchorRanges(p, "object"), anchorRanges(p, "subject"), anchorRanges(p, "predicate")));
       // don't auto-scroll the pane the mouse is in
       schemaPane.highlight(schemaRanges, cls, {scroll: hoveredSide !== "schema"});
       dataPane.highlight(dataRanges, cls, {scroll: hoveredSide !== "data"});
+      showInResults(group, cls, hoveredSide !== "results");
     };
     schemaPane.setHoverRegions(
-      pairs.filter(p => p.schema)
-        .map(p => ({from: p.schema.from, to: p.schema.to, enter: () => show(p, "schema")})),
-      clearBoth);
+      [...bySchemaRange.values()].flatMap(group =>
+        constraintRanges(group[0]).map(r => ({
+          from: r.from, to: r.to, enter: () => show(group, "schema"),
+        }))),
+      clearAll);
+    // both the object and the predicate trigger data-side hovers
     dataPane.setHoverRegions(
-      pairs.filter(p => p.anchors.object)
-        .map(p => ({from: p.anchors.object.from, to: p.anchors.object.to, enter: () => show(p, "data")})),
-      clearBoth);
+      pairs.flatMap(p => [].concat(anchorRanges(p, "object"), anchorRanges(p, "predicate"))
+        .map(r => ({from: r.from, to: r.to, enter: () => show([p], "data")}))),
+      clearAll);
+    // hovering a TestedTriple in an appinfo results pane highlights its
+    // constraint in the schema and its triple in the data
+    resultPanes.forEach(({pane, ranges}) => {
+      if (!pane.setHoverRegions)
+        return;
+      pane.setHoverRegions(
+        ranges.reduce((acc, r) => {
+          const pair = pairs.find(p => p.triple === r.target);
+          return pair
+            ? acc.concat(termRanges(r).map(f => (
+                {from: f.from, to: f.to, enter: () => show([pair], "results")})))
+            : acc;
+        }, []),
+        clearAll);
+    });
   }
 
   /** highlight a shape's declaration in the schema pane */
@@ -1905,6 +1990,15 @@ class ShExBaseApp {
    * set up UI buttons handlers
    */
   prepareControls () {
+    // re-log a just-created gist's address: the post-create navigation
+    // cleared the console it was first printed to
+    try {
+      const gistTrace = sessionStorage.getItem(GIST_CREATED_KEY);
+      if (gistTrace) {
+        sessionStorage.removeItem(GIST_CREATED_KEY);
+        console.log(gistTrace);
+      }
+    } catch (e) { /* private mode */ }
     $("#menu-button").on("click", this.toggleControls.bind(this));
     $("#interface").on("change", this.setInterface.bind(this));
     $("#success").on("change", this.setInterface.bind(this));
@@ -1917,6 +2011,7 @@ class ShExBaseApp {
     $("#valDbgContinue").on("click", () => this.valDebugStep("continue"));
     $("#valDbgStop").on("click", () => this.endValidationDebugSession());
     $("#download-results-button").on("click", this.downloadResults.bind(this));
+    $("#createGist").on("click", (evt) => { SharedForTests.promise = this.createGist(evt); });
 
     $("#loadForm").dialog({
       autoOpen: false,
@@ -1986,6 +2081,21 @@ class ShExBaseApp {
 
     $("#about-button").click(evt => {
       $("#about").dialog("open");
+    });
+
+    $("#gistHelp").dialog({
+      autoOpen: false,
+      modal: true,
+      width: "50%",
+      buttons: {
+        "Dismiss": function () { $(this).dialog("close"); }
+      },
+    });
+
+    $("#gistInstructions").on("click", evt => {
+      evt.preventDefault();
+      this.toggleControls(); // close the menu; the dialog replaces it
+      $("#gistHelp").dialog("open");
     });
 
     $("#shapeMap-tabs").tabs({
@@ -2713,6 +2823,97 @@ class ShExBaseApp {
     }, []));
     const s = parms.join("&");
     return location.origin + location.pathname + "?" + s;
+  }
+
+  /** Menu → "Create Gist": publish the current schema, data and query map as
+   * a github gist (modeled on
+   * <https://gist.github.com/ericprud/4c2b0a7eac60e3b8eade6fd35215d715>) and
+   * reload this page with ?manifestURL= pointing at the gist's .manifest.yaml.
+   * Texts over GIST_INLINE_LINES lines become separate schema.shex/data.ttl/
+   * queryMap.qm files referenced by relative schemaURL/dataURL/queryMapURL. */
+  async createGist (evt) {
+    if (evt) evt.preventDefault();
+    this.toggleControls();
+    const title = prompt("Title for this gist:", "");
+    if (title === null)
+      return null; // canceled
+    const token = localStorage.getItem(GIST_TOKEN_KEY)
+          || prompt("Creating a gist requires a github token with \"gist\" scope\n"
+                    + "(menu → \"get token\" creates one; menu → \"instructions\" explains;\n"
+                    + "remembered in this browser's localStorage):");
+    if (!token)
+      return null;
+    await this.Caches.shapeMap.copyEditMapToTextMap();
+    const status = $("#results .fails").length ? "nonconformant" : "conformant";
+    const files = {};
+    const part = (parm, fileName, text) => {
+      if (text.split("\n").length > GIST_INLINE_LINES) {
+        files[fileName] = {content: text};
+        return `  ${parm}URL: ${fileName}\n`;
+      }
+      return `  ${parm}: |\n` + text.replace(/\n+$/, "").split("\n")
+        .map(l => l.length ? "    " + l : "").join("\n") + "\n";
+    };
+    files[".manifest.yaml"] =
+      { content: "- schemaLabel: schema\n"
+        + part("schema", "schema.shex", this.Caches.inputSchema.selection.val())
+        + "  dataLabel: data\n"
+        + part("data", "data.ttl", this.Caches.inputData.selection.val())
+        + part("queryMap", "queryMap.qm", $("#textMap").val())
+        + `  status: ${status}\n` };
+    const ghApi = async (url, method, body) => {
+      const resp = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json",
+                   "Accept": "application/vnd.github+json",
+                   "Authorization": "token " + token },
+        body: JSON.stringify(body),
+      });
+      if (!resp.ok) {
+        if (resp.status === 401)
+          localStorage.removeItem(GIST_TOKEN_KEY); // stale token; re-prompt next time
+        throw Error(`${method} ${url} → ${resp.status} ${await resp.text()}`);
+      }
+      return resp.json();
+    };
+    try {
+      const created = await ghApi("https://api.github.com/gists", "POST",
+                                  {description: title || "ShEx validation example", public: true, files});
+      localStorage.setItem(GIST_TOKEN_KEY, token);
+      // sha-less raw URL: always the latest revision, and relative
+      // schemaURL/dataURL/queryMapURL references resolve beside it (per-file
+      // blob-sha raw_urls don't serve sibling files)
+      const gistBase = `https://gist.githubusercontent.com/${created.owner.login}/${created.id}/raw/`;
+      const simplePath = (location.pathname.match(/\/packages\/.*$/)
+                          || ["/packages/shex-webapp/doc/shex-simple.html"])[0];
+      const md = `the [manifest](${created.html_url}#file-manifest-yaml) can be used in:\n`
+            + `* ShEx.JS [shex-simple interface](https://shex.js.org${simplePath}`
+            + `?manifestURL=${gistBase}.manifest.yaml)\n`;
+      const mdName = `-${title ? title.replace(/[\/\\]/g, "-") + " " : ""}ShEx Validation Manifest.md`;
+      const patched = await ghApi(created.url, "PATCH",
+                                  {files: {[mdName]: {content: md}}});
+      // pin the address bar's manifestURL to the created revision so the
+      // permalink outlives later edits to the gist
+      const manifestURL = "history" in patched && patched.history.length
+            ? `${gistBase}${patched.history[0].version}/.manifest.yaml`
+            : gistBase + ".manifest.yaml";
+      const parms = this.QueryParams
+            .filter(q => this.Getables.indexOf(q) === -1) // controls only; content comes from the gist
+            .map(q => q.queryStringParm + "=" + encodeURIComponent(q.location.val()))
+            .concat(["manifestURL=" + encodeURIComponent(manifestURL)]);
+      const search = "?" + parms.join("&");
+      // the created gist's address (a popup here proved to break the
+      // reload); stashed so the reloaded page can log it again -- the
+      // navigation clears the console
+      const trace = `created gist: ${created.html_url} manifest: ${manifestURL}`;
+      console.log(trace);
+      try { sessionStorage.setItem(GIST_CREATED_KEY, trace); } catch (e) { /* private mode */ }
+      location.search = search; // navigates: reload from the gist manifest
+      return search; // for tests, which can't navigate
+    } catch (e) {
+      this.resultsWidget.failMessage(e, "creating gist");
+      return null;
+    }
   }
 
   downloadResults (evt) {

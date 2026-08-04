@@ -51,7 +51,7 @@ async function run (cmds) {
       let ctx = JSON.parse(Fs.readFileSync(Path.resolve(process.argv[1], '../../../../TODO/shex.jsonld')));
       struct['@context'] = ctx // 'file://' + Path.resolve(process.argv[1], '../../../../doc/shex.jsonld');
       try {
-        const nquads = await Jsonld.toRDF(struct, {format: "application/nquads"});
+        const nquads = await Jsonld.toRDF(struct, {format: "application/n-quads"}); // jsonld ≥ 5 dropped the "application/nquads" alias
         const p = new N3.Parser({ format: 'N-Triples' })
         const w = new N3.Writer(null, {
           base: schemaMeta[0].base,

@@ -7872,20 +7872,6 @@ module.exports = new Type('tag:yaml.org,2002:timestamp', {
 
 /***/ },
 
-/***/ 9111
-(module, exports, __webpack_require__) {
-
-/* module decorator */ module = __webpack_require__.nmd(module);
-!function(t,e){ true?module.exports=e():0}("undefined"!=typeof self?self:this,()=>(()=>{var t={834(t){"use strict";t.exports=t=>{if("string"!=typeof t)throw new TypeError("Expected a string");return t.replace(/[|\\{}()[\]^$+*?.]/g,"\\$&").replace(/-/g,"\\x2d")}},142(t,e,i){t=i.nmd(t);var s="__lodash_hash_undefined__",n=9007199254740991,r="[object Arguments]",a="[object Array]",o="[object Boolean]",h="[object Date]",c="[object Error]",l="[object Function]",E="[object Map]",u="[object Number]",L="[object Object]",U="[object Promise]",S="[object RegExp]",p="[object Set]",R="[object String]",T="[object Symbol]",d="[object WeakMap]",N="[object ArrayBuffer]",O="[object DataView]",A=/^\[object .+?Constructor\]$/,f=/^(?:0|[1-9]\d*)$/,C={};C["[object Float32Array]"]=C["[object Float64Array]"]=C["[object Int8Array]"]=C["[object Int16Array]"]=C["[object Int32Array]"]=C["[object Uint8Array]"]=C["[object Uint8ClampedArray]"]=C["[object Uint16Array]"]=C["[object Uint32Array]"]=!0,C[r]=C[a]=C[N]=C[o]=C[O]=C[h]=C[c]=C[l]=C[E]=C[u]=C[L]=C[S]=C[p]=C[R]=C[d]=!1;var m="object"==typeof i.g&&i.g&&i.g.Object===Object&&i.g,I="object"==typeof self&&self&&self.Object===Object&&self,y=m||I||Function("return this")(),B=e&&!e.nodeType&&e,_=B&&t&&!t.nodeType&&t,P=_&&_.exports===B,M=P&&m.process,g=function(){try{return M&&M.binding&&M.binding("util")}catch(t){}}(),k=g&&g.isTypedArray;function v(t,e){for(var i=-1,s=null==t?0:t.length;++i<s;)if(e(t[i],i,t))return!0;return!1}function b(t){var e=-1,i=Array(t.size);return t.forEach(function(t,s){i[++e]=[s,t]}),i}function D(t){var e=-1,i=Array(t.size);return t.forEach(function(t){i[++e]=t}),i}var x,G,w,F=Array.prototype,j=Function.prototype,V=Object.prototype,H=y["__core-js_shared__"],$=j.toString,K=V.hasOwnProperty,W=(x=/[^.]+$/.exec(H&&H.keys&&H.keys.IE_PROTO||""))?"Symbol(src)_1."+x:"",q=V.toString,Y=RegExp("^"+$.call(K).replace(/[\\^$.*+?()[\]{}|]/g,"\\$&").replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g,"$1.*?")+"$"),Q=P?y.Buffer:void 0,z=y.Symbol,X=y.Uint8Array,J=V.propertyIsEnumerable,Z=F.splice,tt=z?z.toStringTag:void 0,et=Object.getOwnPropertySymbols,it=Q?Q.isBuffer:void 0,st=(G=Object.keys,w=Object,function(t){return G(w(t))}),nt=gt(y,"DataView"),rt=gt(y,"Map"),at=gt(y,"Promise"),ot=gt(y,"Set"),ht=gt(y,"WeakMap"),ct=gt(Object,"create"),lt=Dt(nt),Et=Dt(rt),ut=Dt(at),Lt=Dt(ot),Ut=Dt(ht),St=z?z.prototype:void 0,pt=St?St.valueOf:void 0;function Rt(t){var e=-1,i=null==t?0:t.length;for(this.clear();++e<i;){var s=t[e];this.set(s[0],s[1])}}function Tt(t){var e=-1,i=null==t?0:t.length;for(this.clear();++e<i;){var s=t[e];this.set(s[0],s[1])}}function dt(t){var e=-1,i=null==t?0:t.length;for(this.clear();++e<i;){var s=t[e];this.set(s[0],s[1])}}function Nt(t){var e=-1,i=null==t?0:t.length;for(this.__data__=new dt;++e<i;)this.add(t[e])}function Ot(t){var e=this.__data__=new Tt(t);this.size=e.size}function At(t,e){var i=wt(t),s=!i&&Gt(t),n=!i&&!s&&Ft(t),r=!i&&!s&&!n&&Kt(t),a=i||s||n||r,o=a?function(t,e){for(var i=-1,s=Array(t);++i<t;)s[i]=e(i);return s}(t.length,String):[],h=o.length;for(var c in t)!e&&!K.call(t,c)||a&&("length"==c||n&&("offset"==c||"parent"==c)||r&&("buffer"==c||"byteLength"==c||"byteOffset"==c)||bt(c,h))||o.push(c);return o}function ft(t,e){for(var i=t.length;i--;)if(xt(t[i][0],e))return i;return-1}function Ct(t){return null==t?void 0===t?"[object Undefined]":"[object Null]":tt&&tt in Object(t)?function(t){var e=K.call(t,tt),i=t[tt];try{t[tt]=void 0;var s=!0}catch(t){}var n=q.call(t);s&&(e?t[tt]=i:delete t[tt]);return n}(t):function(t){return q.call(t)}(t)}function mt(t){return $t(t)&&Ct(t)==r}function It(t,e,i,s,n){return t===e||(null==t||null==e||!$t(t)&&!$t(e)?t!=t&&e!=e:function(t,e,i,s,n,l){var U=wt(t),d=wt(e),A=U?a:vt(t),f=d?a:vt(e),C=(A=A==r?L:A)==L,m=(f=f==r?L:f)==L,I=A==f;if(I&&Ft(t)){if(!Ft(e))return!1;U=!0,C=!1}if(I&&!C)return l||(l=new Ot),U||Kt(t)?_t(t,e,i,s,n,l):function(t,e,i,s,n,r,a){switch(i){case O:if(t.byteLength!=e.byteLength||t.byteOffset!=e.byteOffset)return!1;t=t.buffer,e=e.buffer;case N:return!(t.byteLength!=e.byteLength||!r(new X(t),new X(e)));case o:case h:case u:return xt(+t,+e);case c:return t.name==e.name&&t.message==e.message;case S:case R:return t==e+"";case E:var l=b;case p:var L=1&s;if(l||(l=D),t.size!=e.size&&!L)return!1;var U=a.get(t);if(U)return U==e;s|=2,a.set(t,e);var d=_t(l(t),l(e),s,n,r,a);return a.delete(t),d;case T:if(pt)return pt.call(t)==pt.call(e)}return!1}(t,e,A,i,s,n,l);if(!(1&i)){var y=C&&K.call(t,"__wrapped__"),B=m&&K.call(e,"__wrapped__");if(y||B){var _=y?t.value():t,P=B?e.value():e;return l||(l=new Ot),n(_,P,i,s,l)}}if(!I)return!1;return l||(l=new Ot),function(t,e,i,s,n,r){var a=1&i,o=Pt(t),h=o.length,c=Pt(e),l=c.length;if(h!=l&&!a)return!1;var E=h;for(;E--;){var u=o[E];if(!(a?u in e:K.call(e,u)))return!1}var L=r.get(t);if(L&&r.get(e))return L==e;var U=!0;r.set(t,e),r.set(e,t);var S=a;for(;++E<h;){var p=t[u=o[E]],R=e[u];if(s)var T=a?s(R,p,u,e,t,r):s(p,R,u,t,e,r);if(!(void 0===T?p===R||n(p,R,i,s,r):T)){U=!1;break}S||(S="constructor"==u)}if(U&&!S){var d=t.constructor,N=e.constructor;d==N||!("constructor"in t)||!("constructor"in e)||"function"==typeof d&&d instanceof d&&"function"==typeof N&&N instanceof N||(U=!1)}return r.delete(t),r.delete(e),U}(t,e,i,s,n,l)}(t,e,i,s,It,n))}function yt(t){return!(!Ht(t)||function(t){return!!W&&W in t}(t))&&(jt(t)?Y:A).test(Dt(t))}function Bt(t){if(i=(e=t)&&e.constructor,s="function"==typeof i&&i.prototype||V,e!==s)return st(t);var e,i,s,n=[];for(var r in Object(t))K.call(t,r)&&"constructor"!=r&&n.push(r);return n}function _t(t,e,i,s,n,r){var a=1&i,o=t.length,h=e.length;if(o!=h&&!(a&&h>o))return!1;var c=r.get(t);if(c&&r.get(e))return c==e;var l=-1,E=!0,u=2&i?new Nt:void 0;for(r.set(t,e),r.set(e,t);++l<o;){var L=t[l],U=e[l];if(s)var S=a?s(U,L,l,e,t,r):s(L,U,l,t,e,r);if(void 0!==S){if(S)continue;E=!1;break}if(u){if(!v(e,function(t,e){if(a=e,!u.has(a)&&(L===t||n(L,t,i,s,r)))return u.push(e);var a})){E=!1;break}}else if(L!==U&&!n(L,U,i,s,r)){E=!1;break}}return r.delete(t),r.delete(e),E}function Pt(t){return function(t,e,i){var s=e(t);return wt(t)?s:function(t,e){for(var i=-1,s=e.length,n=t.length;++i<s;)t[n+i]=e[i];return t}(s,i(t))}(t,Wt,kt)}function Mt(t,e){var i,s,n=t.__data__;return("string"==(s=typeof(i=e))||"number"==s||"symbol"==s||"boolean"==s?"__proto__"!==i:null===i)?n["string"==typeof e?"string":"hash"]:n.map}function gt(t,e){var i=function(t,e){return null==t?void 0:t[e]}(t,e);return yt(i)?i:void 0}Rt.prototype.clear=function(){this.__data__=ct?ct(null):{},this.size=0},Rt.prototype.delete=function(t){var e=this.has(t)&&delete this.__data__[t];return this.size-=e?1:0,e},Rt.prototype.get=function(t){var e=this.__data__;if(ct){var i=e[t];return i===s?void 0:i}return K.call(e,t)?e[t]:void 0},Rt.prototype.has=function(t){var e=this.__data__;return ct?void 0!==e[t]:K.call(e,t)},Rt.prototype.set=function(t,e){var i=this.__data__;return this.size+=this.has(t)?0:1,i[t]=ct&&void 0===e?s:e,this},Tt.prototype.clear=function(){this.__data__=[],this.size=0},Tt.prototype.delete=function(t){var e=this.__data__,i=ft(e,t);return!(i<0)&&(i==e.length-1?e.pop():Z.call(e,i,1),--this.size,!0)},Tt.prototype.get=function(t){var e=this.__data__,i=ft(e,t);return i<0?void 0:e[i][1]},Tt.prototype.has=function(t){return ft(this.__data__,t)>-1},Tt.prototype.set=function(t,e){var i=this.__data__,s=ft(i,t);return s<0?(++this.size,i.push([t,e])):i[s][1]=e,this},dt.prototype.clear=function(){this.size=0,this.__data__={hash:new Rt,map:new(rt||Tt),string:new Rt}},dt.prototype.delete=function(t){var e=Mt(this,t).delete(t);return this.size-=e?1:0,e},dt.prototype.get=function(t){return Mt(this,t).get(t)},dt.prototype.has=function(t){return Mt(this,t).has(t)},dt.prototype.set=function(t,e){var i=Mt(this,t),s=i.size;return i.set(t,e),this.size+=i.size==s?0:1,this},Nt.prototype.add=Nt.prototype.push=function(t){return this.__data__.set(t,s),this},Nt.prototype.has=function(t){return this.__data__.has(t)},Ot.prototype.clear=function(){this.__data__=new Tt,this.size=0},Ot.prototype.delete=function(t){var e=this.__data__,i=e.delete(t);return this.size=e.size,i},Ot.prototype.get=function(t){return this.__data__.get(t)},Ot.prototype.has=function(t){return this.__data__.has(t)},Ot.prototype.set=function(t,e){var i=this.__data__;if(i instanceof Tt){var s=i.__data__;if(!rt||s.length<199)return s.push([t,e]),this.size=++i.size,this;i=this.__data__=new dt(s)}return i.set(t,e),this.size=i.size,this};var kt=et?function(t){return null==t?[]:(t=Object(t),function(t,e){for(var i=-1,s=null==t?0:t.length,n=0,r=[];++i<s;){var a=t[i];e(a,i,t)&&(r[n++]=a)}return r}(et(t),function(e){return J.call(t,e)}))}:function(){return[]},vt=Ct;function bt(t,e){return!!(e=e??n)&&("number"==typeof t||f.test(t))&&t>-1&&t%1==0&&t<e}function Dt(t){if(null!=t){try{return $.call(t)}catch(t){}try{return t+""}catch(t){}}return""}function xt(t,e){return t===e||t!=t&&e!=e}(nt&&vt(new nt(new ArrayBuffer(1)))!=O||rt&&vt(new rt)!=E||at&&vt(at.resolve())!=U||ot&&vt(new ot)!=p||ht&&vt(new ht)!=d)&&(vt=function(t){var e=Ct(t),i=e==L?t.constructor:void 0,s=i?Dt(i):"";if(s)switch(s){case lt:return O;case Et:return E;case ut:return U;case Lt:return p;case Ut:return d}return e});var Gt=mt(function(){return arguments}())?mt:function(t){return $t(t)&&K.call(t,"callee")&&!J.call(t,"callee")},wt=Array.isArray;var Ft=it||function(){return!1};function jt(t){if(!Ht(t))return!1;var e=Ct(t);return e==l||"[object GeneratorFunction]"==e||"[object AsyncFunction]"==e||"[object Proxy]"==e}function Vt(t){return"number"==typeof t&&t>-1&&t%1==0&&t<=n}function Ht(t){var e=typeof t;return null!=t&&("object"==e||"function"==e)}function $t(t){return null!=t&&"object"==typeof t}var Kt=k?function(t){return function(e){return t(e)}}(k):function(t){return $t(t)&&Vt(t.length)&&!!C[Ct(t)]};function Wt(t){return null!=(e=t)&&Vt(e.length)&&!jt(e)?At(t):Bt(t);// removed by dead control flow
- var e; }t.exports=function(t,e){return It(t,e)}},961(t,e,i){"use strict";i.r(e);var s=i(59),n=i(384),r=i(788);const a=/\-?(?:0|[1-9][0-9]*)/,o=/[eE][+-]?[0-9]+/,h=n.y.and(/"/,n.y.many(n.y.or(/[\u0009\u0020\u0021\u0023-\u005B\u005D-\uFFFF]/,/\\u[0-9A-Fa-f]{4}/,/\\["\\/bfnrt]/)),/"/),c=/true|false/,l=/null/,E=/on/,u=[],L=t=>{const e=[p];return t.pattern!==c&&t.pattern!==l&&e.push(R),t.pattern!==E&&e.push(T),S({name:t.name,pattern:t.pattern,longer_alt:p,categories:e})},U=t=>S(Object.assign(Object.assign({},t),{categories:[N]})),S=t=>{const e=(0,s.Ey)(t);return u.push(e),e},p=(0,s.Ey)({name:"Name",pattern:/[_A-Za-z][_0-9A-Za-z]*/}),R=(0,s.Ey)({name:"EnumValueToken",pattern:s.JG.NA}),T=(0,s.Ey)({name:"FragmentName",pattern:s.JG.NA}),d=(0,s.Ey)({name:"StringValueToken",pattern:s.JG.NA}),N=(0,s.Ey)({name:"Punctuator",pattern:s.JG.NA});p.CATEGORIES.push(R,T);const O={WhiteSpace:S({name:"WhiteSpace",pattern:/[ \t]+/,group:s.JG.SKIPPED}),UnicodeBOM:S({name:"UnicodeBOM",pattern:"\\uFFFE",group:s.JG.SKIPPED}),LineTerminator:S({name:"LineTerminator",pattern:/\n\r|\r|\n/,group:s.JG.SKIPPED}),Comment:S({name:"Comment",pattern:/#[^\n\r]*/,group:s.JG.SKIPPED}),Comma:S({name:"Comma",pattern:",",group:s.JG.SKIPPED})},A={Bang:U({name:"Bang",pattern:"!"}),Dollar:U({name:"Dollar",pattern:"$"}),LParen:U({name:"LParen",pattern:"("}),RParen:U({name:"RParen",pattern:")"}),Spread:U({name:"Spread",pattern:"..."}),Colon:U({name:"Colon",pattern:":"}),Equals:U({name:"Equals",pattern:"="}),At:U({name:"At",pattern:"@"}),LBracket:U({name:"LBracket",pattern:"["}),RBracket:U({name:"RBracket",pattern:"]"}),LCurly:U({name:"LCurly",pattern:"{"}),RCurly:U({name:"RCurly",pattern:"}"}),Pipe:U({name:"Pipe",pattern:"|"}),Amp:U({name:"Amp",pattern:"&"}),Punctuator:N},f={FloatValueToken:S({name:"FloatValueToken",pattern:n.y.and(a,n.y.or(n.y.and(/\.[0-9]+/,n.y.option(o)),o))}),IntValueToken:S({name:"IntValueToken",pattern:a}),BlockStringToken:S({name:"BlockStringToken",pattern:r.STRING_LITERAL_LONG2,categories:[d]}),StringToken:S({name:"StringToken",pattern:h,categories:[d]}),BooleanValueToken:S({name:"BooleanValueToken",pattern:c,longer_alt:p}),NullValueToken:S({name:"NullValueToken",pattern:l,longer_alt:p}),EnumValueToken:R,FragmentName:T,Name:p,StringValueToken:d},C={Query:L({name:"Query",pattern:"query"}),Mutation:L({name:"Mutation",pattern:"mutation"}),Subscription:L({name:"Subscription",pattern:"subscription"}),Fragment:L({name:"Fragment",pattern:"fragment"}),On:L({name:"On",pattern:E}),Schema:L({name:"Schema",pattern:"schema"}),Extend:L({name:"Extend",pattern:"extend"}),Scalar:L({name:"Scalar",pattern:"scalar"}),TypeToken:L({name:"TypeToken",pattern:"type"}),Implements:L({name:"Implements",pattern:"implements"}),Interface:L({name:"Interface",pattern:"interface"}),Union:L({name:"Union",pattern:"union"}),Enum:L({name:"Enum",pattern:"enum"}),Input:L({name:"Input",pattern:"input"}),DirectiveToken:L({name:"DirectiveToken",pattern:"directive"}),QUERY:L({name:"QUERY",pattern:"QUERY"}),MUTATION:L({name:"MUTATION",pattern:"MUTATION"}),SUBSCRIPTION:L({name:"SUBSCRIPTION",pattern:"SUBSCRIPTION"}),FRAGMENT_DEFINITION:L({name:"FRAGMENT_DEFINITION",pattern:"FRAGMENT_DEFINITION"}),FRAGMENT_SPREAD:L({name:"FRAGMENT_SPREAD",pattern:"FRAGMENT_SPREAD"}),INLINE_FRAGMENT:L({name:"INLINE_FRAGMENT",pattern:"INLINE_FRAGMENT"}),SCHEMA:L({name:"SCHEMA",pattern:"SCHEMA"}),SCALAR:L({name:"SCALAR",pattern:"SCALAR"}),OBJECT:L({name:"OBJECT",pattern:"OBJECT"}),FIELD_DEFINITION:L({name:"FIELD_DEFINITION",pattern:"FIELD_DEFINITION"}),FIELD:L({name:"FIELD",pattern:"FIELD"}),ARGUMENT_DEFINITION:L({name:"ARGUMENT_DEFINITION",pattern:"ARGUMENT_DEFINITION"}),INTERFACE:L({name:"INTERFACE",pattern:"INTERFACE"}),UNION:L({name:"UNION",pattern:"UNION"}),ENUM_VALUE:L({name:"ENUM_VALUE",pattern:"ENUM_VALUE"}),ENUM:L({name:"ENUM",pattern:"ENUM"}),INPUT_OBJECT:L({name:"INPUT_OBJECT",pattern:"INPUT_OBJECT"}),INPUT_FIELD_DEFINITION:L({name:"INPUT_FIELD_DEFINITION",pattern:"INPUT_FIELD_DEFINITION"})},m=Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({},O),A),f),C),{Name:p}),I=(0,s.Ey)({name:"StardogDirective",pattern:s.JG.NA}),y=(0,s.Ey)({name:"SparqlReceivingStardogDirective",pattern:s.JG.NA}),B=(0,s.Ey)({name:"StardogArgument",pattern:s.JG.NA}),_=(0,s.Ey)({name:"TopLevel",pattern:s.JG.NA}),P=["optional","bind","hide","skip","include","filter","prefix","config"].sort().reduce((t,e)=>{const i=`${e[0].toUpperCase()}${e.slice(1)}DirectiveToken`,n=[p,R,T,I];["prefix","config"].includes(e)&&n.push(_),["bind","skip","include","filter"].includes(e)&&n.push(y);const r=(0,s.Ey)({name:i,pattern:e,categories:n,longer_alt:p});return Object.assign(Object.assign({},t),{tokenMap:Object.assign(Object.assign({},t.tokenMap),{[i]:r}),orderedTokens:t.orderedTokens.concat(r)})},{tokenMap:{},orderedTokens:[]}),M=["orderBy","first","to","if","alias","graph","offset","limit","iri"].sort().reduce((t,e)=>{const i=`${e[0].toUpperCase()}${e.slice(1)}ArgumentToken`,n=[p,R,T,B];["orderBy","first","limit","offset"].includes(e)&&n.push(_);const r=(0,s.Ey)({name:i,pattern:e,categories:n,longer_alt:p});return Object.assign(Object.assign({},t),{tokenMap:Object.assign(Object.assign({},t.tokenMap),{[i]:r}),orderedTokens:t.orderedTokens.concat(r)})},{tokenMap:{},orderedTokens:[]}),g=(0,s.Ey)({name:"OrderByArgumentFieldPropertyToken",pattern:"field",categories:[p,R,T],longer_alt:p}),k=(0,s.Ey)({name:"OrderByArgumentDescPropertyToken",pattern:"desc",categories:[p,R,T],longer_alt:p}),v=Object.assign(Object.assign(Object.assign(Object.assign({},m),P.tokenMap),M.tokenMap),{OrderByArgumentFieldPropertyToken:g,OrderByArgumentDescPropertyToken:k,StardogDirective:I,SparqlReceivingStardogDirective:y,StardogArgument:B,TopLevel:_}),b=[...u,...P.orderedTokens,...M.orderedTokens,g,k,I,y,B,_],D=[T,R,p,d,N];u.push(...D),b.push(...D),i.d(e,["graphQlTokenMap",0,m,"graphQlTokens",0,u,"stardogGraphQlTokenMap",0,v,"stardogGraphQlTokens",0,b])},194(t,e,i){"use strict";i.d(e,["$",0,(...t)=>t])},788(t,e,i){"use strict";i.r(e);var s=i(384);const n=/[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]|[\uD800-\uDBFF][\uDC00-\uDFFF]/,r=/\d+/,a=/(\d*\.\d+)|(\d+\.\d*)/,o=/[eE][+-]?\d+/,h=/\\[tbnrf"'\\]/,c=/[\u0020\u0009\u000d\u000a]/,l=/[0-9A-Fa-f]/,E=/\\[_~.\-!\$&'()*+,=\/?#@%;]/,u=s.y.or(n,/_/),L=s.y.or(u,/-/,/\d/,/\u00b7/,/[\u0300-\u036f]/,/[\u203f-\u2040]/),U=s.y.and(n,s.y.option(s.y.and(s.y.many(s.y.or(L,/\./)),L))),S=s.y.and(/%/,l,l),p=s.y.or(S,E),R=s.y.and(s.y.or(u,/:/,/\d/,p),s.y.option(s.y.and(s.y.many(s.y.or(L,/\./,/:/,p)),s.y.or(L,/:/,p)))),T=s.y.and(s.y.or(u,/\d/),s.y.many(s.y.or(u,/\d/,/\u00b7/,/[\u0300-\u036f]/,/[\u203f-\u2040]/))),d=s.y.and(/\[/,s.y.many(c),/\]/),N=s.y.and(/\(/,s.y.many(c),/\)/),O=s.y.and(/'/,s.y.many(s.y.or(/[^\u0027\u005C\u000A\u000D]/,h)),/'/),A=s.y.and(/"/,s.y.many(s.y.or(/[^\u0022\u005C\u000A\u000D]/,h)),/"/),f=s.y.and(/'''/,s.y.many(s.y.and(s.y.option(s.y.or(/'/,/''/)),s.y.or(/[^'\\]/,h))),/'''/),C=s.y.and(/"""/,s.y.many(s.y.and(s.y.option(s.y.or(/"/,/""/)),s.y.or(/[^"\\]/,h))),/"""/),m=s.y.or(s.y.and(/\d+\.\d*/,o),s.y.and(/\.\d+/,o),s.y.and(/\d+/,o)),I=s.y.and(/\+/,r),y=s.y.and(/\+/,a),B=s.y.and(/\+/,m),_=s.y.and(/-/,r),P=s.y.and(/-/,a),M=s.y.and(/-/,m),g=s.y.and(/\?/,T),k=s.y.and(/\$/,T),v=s.y.and(/_:/,s.y.or(u,/\d/),s.y.option(s.y.and(s.y.many(s.y.or(L,/\./)),L))),b=s.y.and(s.y.option(U),/:/),D=s.y.and(b,R);i.d(e,["ANON",0,d,"BLANK_NODE_LABEL",0,v,"CATCH_ALL",0,/[\s\S]*/,"CATCH_ALL_AT_LEAST_ONE",0,/[\s\S]+/,"DECIMAL",0,a,"DECIMAL_NEGATIVE",0,P,"DECIMAL_POSITIVE",0,y,"DOUBLE",0,m,"DOUBLE_NEGATIVE",0,M,"DOUBLE_POSITIVE",0,B,"ECHAR",0,h,"EXPONENT",0,o,"HEX",0,l,"INTEGER",0,r,"INTEGER_NEGATIVE",0,_,"INTEGER_POSITIVE",0,I,"IRIREF",0,/<[^<>\\{}|\^`\u0000-\u0020]*>/,"LANGTAG",0,/@[a-zA-Z]+(-[a-zA-Z0-9]+)*/,"LANG_DIR",0,/@[a-zA-Z]+(-[a-zA-Z0-9]+)*(--[a-zA-Z]+)?/,"NIL",0,N,"PERCENT",0,S,"PLX",0,p,"PNAME_LN",0,D,"PNAME_NS",0,b,"PN_CHARS",0,L,"PN_CHARS_BASE",0,n,"PN_CHARS_U",0,u,"PN_LOCAL",0,R,"PN_LOCAL_ESC",0,E,"PN_PREFIX",0,U,"STRING_LITERAL1",0,O,"STRING_LITERAL2",0,A,"STRING_LITERAL_LONG1",0,f,"STRING_LITERAL_LONG2",0,C,"VAR1",0,g,"VAR2",0,k,"VARNAME",0,T,"WS",0,c])},384(t,e,i){"use strict";const s={or:(...t)=>new RegExp(t.map(({source:t})=>`(${t})`).join("|")),and:(...t)=>new RegExp(t.map(({source:t})=>`(${t})`).join("")),option:t=>new RegExp(`(${t.source})?`),many:t=>new RegExp(`(${t.source})*`)};i.d(e,["y",0,s])},311(t,e,i){"use strict";const s=/\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\[uU]|\\(.)/g,n={"\\":"\\","'":"'",'"':'"',n:"\n",r:"\r",t:"\t",f:"\f",b:"\b",_:"_","~":"~",".":".","-":"-","!":"!",$:"$","&":"&","(":"(",")":")","*":"*","+":"+",",":",",";":";","=":"=","/":"/","?":"?","#":"#","@":"@","%":"%"};i.d(e,["BC",0,/^"((?:[^"\\\r\n]|\\.)*)"(?=[^"])/,"BG",0,/^'((?:[^'\\\r\n]|\\.)*)'(?=[^'])/,"Dm",0,/^"([^"\\\r\n]+)"/,"E0",0,/[\x00-\x20<>\\"\{\}\|\^\`]/,"V9",0,/^<([^\x00-\x20<>\\"\{\}\|\^\`]*)>[ \t]*/,"dR",0,/^'''([^'\\]*(?:(?:\\.|'(?!''))[^'\\]*)*)'''/,"dv",0,/^"""([^"\\]*(?:(?:\\.|"(?!""))[^"\\]*)*)"""/,"eq",0,/^<((?:[^ <>{}\\]|\\[uU])+)>[ \t]*/,"hB",0,/^'([^'\\\r\n]+)'/,"x4",0,t=>{try{return t.replace(s,(t,e,i,s)=>{if(e)return String.fromCharCode(parseInt(e,16));if(i){let t=parseInt(i,16);return t<=65535?String.fromCharCode(t):String.fromCharCode(55296+(t-=65536)/1024,56320+(1023&t))}{const t=n[s];if(!t)throw new Error;return t}})}catch(t){return null}}])},323(t,e,i){"use strict";i.r(e),i.d(e,{categoryTokenMap:()=>U,categoryTokens:()=>S,getShaclTokenMap:()=>f,getShaclTokenTypes:()=>y});var s=i(59),n=Number.isNaN||function(t){return"number"==typeof t&&t!=t};function r(t,e){return t===e||!(!n(t)||!n(e))}function a(t,e){if(t.length!==e.length)return!1;for(var i=0;i<t.length;i++)if(!r(t[i],e[i]))return!1;return!0}function o(t,e){void 0===e&&(e=a);var i=null;function s(){for(var s=[],n=0;n<arguments.length;n++)s[n]=arguments[n];if(i&&i.lastThis===this&&e(s,i.lastArgs))return i.lastResult;var r=t.apply(this,s);return i={lastResult:r,lastArgs:s,lastThis:this},r}return s.clear=function(){i=null},s}var h=i(194),c=i(142),l=i.n(c);const{turtleTokenTypes:E,turtleTokenMap:u}=i(400),{sparqlTokenMap:L}=i(489),U={ManyIriTakingPredicate:(0,s.Ey)({name:"ManyIriTakingPredicate",pattern:s.JG.NA}),SingleIriTakingPredicate:(0,s.Ey)({name:"SingleIriTakingPredicate",pattern:s.JG.NA}),NodeKindIRI:(0,s.Ey)({name:"NodeKindIRI",pattern:s.JG.NA}),IntTakingPredicate:(0,s.Ey)({name:"IntTakingPredicate",pattern:s.JG.NA}),StringLiteralQuoteTakingPredicate:(0,s.Ey)({name:"StringLiteralQuoteTakingPredicate",pattern:s.JG.NA}),LangStringTakingPredicate:(0,s.Ey)({name:"LangStringTakingPredicate",pattern:s.JG.NA}),BooleanTakingPredicate:(0,s.Ey)({name:"BooleanTakingPredicate",pattern:s.JG.NA}),ShapeExpectingPredicate:(0,s.Ey)({name:"ShapeExpectingPredicate",pattern:s.JG.NA}),AnyLiteralTakingPredicate:(0,s.Ey)({name:"AnyLiteralTakingPredicate",pattern:s.JG.NA})},S=Object.keys(U).map(t=>U[t]),p={ManyIriTakingPredicate:(0,h.$)("equals","disjoint","lessThan","lessThanOrEquals","targetClass","targetSubjectsOf","targetObjectsOf"),SingleIriTakingPredicate:(0,h.$)("class","datatype","severity"),NodeKindIRI:(0,h.$)("IRI","BlankNode","Literal","BlankNodeOrIRI","BlankNodeOrLiteral","IRIOrLiteral"),IntTakingPredicate:(0,h.$)("minCount","maxCount","minLength","maxLength","qualifiedMinCount","qualifiedMaxCount"),StringLiteralQuoteTakingPredicate:(0,h.$)("pattern","flags","prefix","namespace"),LangStringTakingPredicate:(0,h.$)("message","labelTemplate"),BooleanTakingPredicate:(0,h.$)("uniqueLang","qualifiedValueShapesDisjoint","closed","deactivated","optional"),ShapeExpectingPredicate:(0,h.$)("not","node","property","qualifiedValueShape","sparql","declare","prefixes","parameter","nodeValidator","propertyValidator","validator"),AnyLiteralTakingPredicate:(0,h.$)("minExclusive","minInclusive","maxExclusive","maxInclusive"),other:(0,h.$)("Shape","NodeShape","PropertyShape","targetNode","message","path","alternativePath","inversePath","zeroOrMorePath","oneOrMorePath","zeroOrOnePath","nodeKind","languageIn","and","or","xone","ignoredProperties","hasValue","in","select","ask")},R=(0,h.$)("boolean","integer","string","date","dateTime","anyURI"),T=Object.keys(p).reduce((t,e)=>(p[e].forEach(i=>t[i]=e),t),{}),d=Object.keys(T),N=R.reduce((t,e)=>{const i=`SHACL_xsd_${e}`,n=`${i}_IRI`,r=(0,s.Ey)({name:i,pattern:s.JG.NA});return Object.assign(Object.assign({},t),{[i]:r,[n]:(0,s.Ey)({name:n,pattern:`<http://www.w3.org/2001/XMLSchema#${e}`,categories:[r,u.IRIREF]})})},{}),O=d.reduce((t,e)=>{const i=T[e],n=U[i],r=`SHACL_${e}`,a=`${r}_IRI`,o=(0,s.Ey)({name:r,pattern:s.JG.NA,categories:n?[n]:[]});return Object.assign(Object.assign({},t),{[r]:o,[a]:(0,s.Ey)({name:a,pattern:`<http://www.w3.org/ns/shacl#${e}>`,categories:[o,u.IRIREF]})})},N),A=t=>e=>`${t}:${e}`,f=o(t=>{const e=A(t.shacl),i=A(t.xsd),n=d.reduce((t,i)=>{const n=`SHACL_${i}`,r=`${n}_prefixed`;return Object.assign(Object.assign({},t),{[r]:(0,s.Ey)({name:r,pattern:e(i),categories:[t[n],u.PNAME_LN]})})},O);return R.reduce((t,e)=>{const n=`SHACL_xsd_${e}`,r=`${n}_prefixed`;return Object.assign(Object.assign({},t),{[r]:(0,s.Ey)({name:r,pattern:`${i(e)}`,categories:[t[n],u.PNAME_LN]})})},n)},l()),C=E.indexOf(L.PNAME_NS),m=E.indexOf(u.IRIREF),I=(t,e)=>{const[i,s,...n]=t.split("_"),[r,a,...o]=e.split("_"),h=("xsd"===s?n[0]:s).toLowerCase(),c=("xsd"===a?o[0]:a).toLowerCase();if(h===c){const t="xsd"===s?n[1]:n[0],e="xsd"===a?o[1]:o[0];return t&&e?0:t?1:-1}return h<c?1:c<h?-1:0},y=o(t=>{const e=f(t),{pnameTokens:i,iriTokens:s}=Object.keys(e).sort(I).reduce((t,i)=>(i.endsWith("_IRI")?(m<C&&t.iriTokens.push(e[i.slice(0,-4)]),t.iriTokens.push(e[i])):i.endsWith("_prefixed")&&(C<m&&t.pnameTokens.push(e[i.slice(0,-9)]),t.pnameTokens.push(e[i])),t),{pnameTokens:[],iriTokens:[]});return C<m?[...E.slice(0,C),...S,...i,...E.slice(C,m),...s,...E.slice(m)]:[...E.slice(0,m),...S,...s,...E.slice(m,C),...i,...E.slice(C)]},l())},421(t,e,i){"use strict";i.r(e);var s=i(59),n=i(35);const{sparqlTokenMap:r,stardogSparqlTokens:a}=i(489),o=/^\s*to\s*{/i,h=/((?:.|\s)*?)to\s*{/i,c=(t,e,i)=>{for(let s,n=0;n<t.length;n++)if(s=t[n],s===e){const e=t.slice(n+1);if(i.exec(e)){return[t.slice(0,n)]}continue}return null},l=Object.assign(Object.assign({},r),{Template:(0,n.y)({name:"Template"}),Sql:(0,n.y)({name:"Sql"}),GraphQl:(0,n.y)({name:"GraphQl"}),Json:(0,n.y)({name:"Json"}),Csv:(0,n.y)({name:"Csv"}),Mapping:(0,n.y)({name:"Mapping"}),SqlBlock:(0,s.Ey)({name:"SqlBlock",pattern:(t,e=0,i)=>{const[s,n]=i.slice(-2);if(!s||!n||s.tokenType.name!==l.Sql.name||n.tokenType.name!==l.LCurly.name)return null;const r=t.slice(e);return c(r,"}",o)},line_breaks:!0}),JsonBlock:(0,s.Ey)({name:"JsonBlock",pattern:(t,e=0,i)=>{const[s]=i.slice(-1);if(!s||s.tokenType.name!==l.Json.name)return null;const n=t.slice(e),r=h.exec(n);if(!r)return null;return r.slice(1)},line_breaks:!0}),GraphQlBlock:(0,s.Ey)({name:"GraphQlBlock",pattern:(t,e=0,i)=>{const[s,n]=i.slice(-2);if(!s||!n||s.tokenType.name!==l.GraphQl.name||n.tokenType.name!==l.LCurly.name)return null;const r=t.slice(e);return c(r,"}",o)},line_breaks:!0})}),E=[...[l.Template,l.Sql,l.GraphQl,l.Json,l.Csv,l.Mapping,l.SqlBlock,l.JsonBlock,l.GraphQlBlock],...a];i.d(e,["smsTokenMap",0,l,"smsTokenTypes",0,E])},8(t,e,i){"use strict";i.d(e,{s:()=>BaseSparqlParser});var s=i(59);const{sparqlTokenMap:n}=i(489);class BaseSparqlParser extends s.cA{constructor(t={},e){super(e,Object.assign({recoveryEnabled:!0},t.config)),this.supportsRdf12=!0,this.tokenize=t=>this.lexer.tokenize(t).tokens,this.parse=(t,e=this.SparqlDoc)=>{const i=this.lexer.tokenize(t);this.input=i.tokens;const s=i.groups.comments||[],n=e.call(this);return{errors:this.errors,comments:s,cst:n}},this.parseGroupGraphPattern=t=>this.parse(t,this.GroupGraphPattern),this.parseTriplesBlock=t=>this.parse(t,this.TriplesBlock),this.SparqlDoc=this.RULE("SparqlDoc",()=>{this.MANY(()=>this.OR([{ALT:()=>this.SUBRULE(this.Prologue)},{ALT:()=>this.SUBRULE(this.QueryUnit)},{ALT:()=>this.SUBRULE(this.UpdateUnit)}]))}),this.QueryUnit=this.RULE("QueryUnit",()=>{this.SUBRULE(this.Query)}),this.Query=this.RULE("Query",()=>{this.OR([{ALT:()=>this.SUBRULE(this.SelectQuery)},{ALT:()=>this.SUBRULE(this.ConstructQuery)},{ALT:()=>this.SUBRULE(this.DescribeQuery)},{ALT:()=>this.SUBRULE(this.AskQuery)}]),this.SUBRULE(this.ValuesClause)}),this.Constant=this.RULE("Constant",()=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.RDFLiteral)},{ALT:()=>this.SUBRULE(this.NumericLiteral)},{ALT:()=>this.SUBRULE(this.BooleanLiteral)}])}),this.MaxLength=this.RULE("MaxLength",()=>{this.CONSUME(n.MAX_LENGTH),this.CONSUME(n.INTEGER)}),this.UpdateUnit=this.RULE("UpdateUnit",()=>{this.SUBRULE(this.Update)}),this.Prologue=this.RULE("Prologue",()=>{this.AT_LEAST_ONE(()=>this.OR([{ALT:()=>this.SUBRULE(this.BaseDecl)},{ALT:()=>this.SUBRULE(this.PrefixDecl)},{ALT:()=>this.SUBRULE(this.VersionDecl)}]))}),this.VersionDecl=this.RULE("VersionDecl",()=>{this.CONSUME(n.VERSION),this.SUBRULE(this.VersionSpecifier)}),this.VersionSpecifier=this.RULE("VersionSpecifier",()=>{this.OR([{ALT:()=>this.CONSUME(n.STRING_LITERAL1)},{ALT:()=>this.CONSUME(n.STRING_LITERAL2)}])}),this.BaseDecl=this.RULE("BaseDecl",()=>{this.CONSUME(n.BASE),this.CONSUME(n.IRIREF)}),this.PrefixDecl=this.RULE("PrefixDecl",()=>{this.CONSUME(n.PREFIX),this.CONSUME(n.PNAME_NS),this.CONSUME(n.IRIREF)}),this.SelectQuery=this.RULE("SelectQuery",()=>{this.SUBRULE(this.SelectClause),this.MANY(()=>this.SUBRULE(this.DatasetClause)),this.SUBRULE(this.WhereClause),this.SUBRULE(this.SolutionModifier)}),this.SubSelect=this.RULE("SubSelect",()=>{this.SUBRULE(this.SelectClause),this.SUBRULE(this.WhereClause),this.SUBRULE(this.SolutionModifier),this.SUBRULE(this.ValuesClause)}),this.SelectClause=this.RULE("SelectClause",()=>{this.CONSUME(n.SELECT),this.OPTION(()=>this.OR([{ALT:()=>this.CONSUME(n.DISTINCT)},{ALT:()=>this.CONSUME(n.REDUCED)}])),this.OR1([{ALT:()=>{this.AT_LEAST_ONE(()=>this.OR2([{ALT:()=>this.SUBRULE(this.Var)},{ALT:()=>{this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.AS),this.SUBRULE1(this.Var),this.CONSUME(n.RParen)}}]))}},{ALT:()=>this.CONSUME(n.Star)}])}),this.ConstructQuery=this.RULE("ConstructQuery",()=>{this.CONSUME(n.CONSTRUCT),this.OR([{ALT:()=>{this.SUBRULE(this.ConstructTemplate),this.MANY(()=>this.SUBRULE(this.DatasetClause)),this.SUBRULE(this.WhereClause)}},{ALT:()=>{this.MANY1(()=>this.SUBRULE1(this.DatasetClause)),this.CONSUME(n.WHERE),this.CONSUME(n.LCurly),this.OPTION(()=>this.SUBRULE(this.TriplesTemplate)),this.CONSUME(n.RCurly)}}]),this.SUBRULE(this.SolutionModifier)}),this.DescribeQuery=this.RULE("DescribeQuery",()=>{this.CONSUME(n.DESCRIBE),this.OR([{ALT:()=>{this.AT_LEAST_ONE(()=>this.SUBRULE(this.VarOrIri))}},{ALT:()=>this.CONSUME(n.Star)}]),this.MANY(()=>this.SUBRULE(this.DatasetClause)),this.OPTION(()=>this.SUBRULE(this.WhereClause)),this.SUBRULE(this.SolutionModifier)}),this.AskQuery=this.RULE("AskQuery",()=>{this.CONSUME(n.ASK),this.MANY(()=>this.SUBRULE(this.DatasetClause)),this.SUBRULE(this.WhereClause),this.SUBRULE(this.SolutionModifier)}),this.DatasetClause=this.RULE("DatasetClause",()=>{this.CONSUME(n.FROM),this.OR([{ALT:()=>this.SUBRULE(this.DefaultGraphClause)},{ALT:()=>this.SUBRULE(this.NamedGraphClause)}])}),this.DefaultGraphClause=this.RULE("DefaultGraphClause",()=>{this.SUBRULE(this.SourceSelector)}),this.NamedGraphClause=this.RULE("NamedGraphClause",()=>{this.CONSUME(n.NAMED),this.SUBRULE(this.SourceSelector)}),this.SourceSelector=this.RULE("SourceSelector",()=>{this.SUBRULE(this.iri)}),this.WhereClause=this.RULE("WhereClause",()=>{this.OPTION(()=>this.CONSUME(n.WHERE)),this.SUBRULE(this.GroupGraphPattern)}),this.SolutionModifier=this.RULE("SolutionModifier",()=>{this.OPTION(()=>this.SUBRULE(this.GroupClause)),this.OPTION1(()=>this.SUBRULE(this.HavingClause)),this.OPTION2(()=>this.SUBRULE(this.OrderClause)),this.OPTION3(()=>this.SUBRULE(this.LimitOffsetClause))}),this.GroupClause=this.RULE("GroupClause",()=>{this.CONSUME(n.GROUP_BY),this.AT_LEAST_ONE(()=>this.SUBRULE(this.GroupCondition))}),this.GroupCondition=this.RULE("GroupCondition",()=>{this.OR([{ALT:()=>this.SUBRULE(this.BuiltInCall)},{ALT:()=>this.SUBRULE(this.FunctionCall)},{ALT:()=>{this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.OPTION(()=>{this.CONSUME(n.AS),this.SUBRULE(this.Var)}),this.CONSUME(n.RParen)}},{ALT:()=>this.SUBRULE1(this.Var)}])}),this.HavingClause=this.RULE("HavingClause",()=>{this.CONSUME(n.HAVING),this.SUBRULE(this.HavingCondition)}),this.HavingCondition=this.RULE("HavingCondition",()=>{this.SUBRULE(this.Constraint)}),this.OrderClause=this.RULE("OrderClause",()=>{this.CONSUME(n.ORDER_BY),this.AT_LEAST_ONE(()=>this.SUBRULE(this.OrderCondition))}),this.OrderCondition=this.RULE("OrderCondition",()=>{this.OR([{ALT:()=>{this.OR1([{ALT:()=>this.CONSUME(n.ASC)},{ALT:()=>this.CONSUME(n.DESC)}]),this.SUBRULE(this.BrackettedExpression)}},{ALT:()=>this.SUBRULE(this.Constraint)},{ALT:()=>this.SUBRULE(this.Var)}])}),this.LimitOffsetClause=this.RULE("LimitOffsetClause",()=>{this.OR([{ALT:()=>{this.SUBRULE(this.LimitClause),this.OPTION(()=>this.SUBRULE(this.OffsetClause))}},{ALT:()=>{this.SUBRULE1(this.OffsetClause),this.OPTION1(()=>this.SUBRULE1(this.LimitClause))}}])}),this.OffsetClause=this.RULE("OffsetClause",()=>{this.CONSUME(n.OFFSET),this.CONSUME(n.INTEGER)}),this.LimitClause=this.RULE("LimitClause",()=>{this.CONSUME(n.LIMIT),this.CONSUME(n.INTEGER)}),this.ValuesClause=this.RULE("ValuesClause",()=>{this.OPTION(()=>{this.CONSUME(n.VALUES),this.SUBRULE(this.DataBlock)})}),this.Update=this.RULE("Update",()=>{this.SUBRULE(this.Update1),this.OPTION(()=>{this.CONSUME(n.Semicolon),this.SUBRULE(this.Update)})}),this.Update1=this.RULE("Update1",()=>{this.OR([{ALT:()=>this.SUBRULE(this.Load)},{ALT:()=>this.SUBRULE(this.Clear)},{ALT:()=>this.SUBRULE(this.Drop)},{ALT:()=>this.SUBRULE(this.Add)},{ALT:()=>this.SUBRULE(this.Move)},{ALT:()=>this.SUBRULE(this.Copy)},{ALT:()=>this.SUBRULE(this.Create)},{ALT:()=>this.SUBRULE(this.InsertData)},{ALT:()=>this.SUBRULE(this.DeleteData)},{ALT:()=>this.SUBRULE(this.DeleteWhere)},{ALT:()=>this.SUBRULE(this.Modify)}])}),this.Load=this.RULE("Load",()=>{this.CONSUME(n.LOAD),this.OPTION(()=>this.CONSUME(n.SILENT)),this.SUBRULE(this.iri),this.OPTION1(()=>{this.CONSUME(n.INTO),this.SUBRULE(this.GraphRef)})}),this.Clear=this.RULE("Clear",()=>{this.CONSUME(n.CLEAR),this.OPTION(()=>this.CONSUME(n.SILENT)),this.SUBRULE(this.GraphRefAll)}),this.Drop=this.RULE("Drop",()=>{this.CONSUME(n.DROP),this.OPTION(()=>this.CONSUME(n.SILENT)),this.SUBRULE(this.GraphRefAll)}),this.Create=this.RULE("Create",()=>{this.CONSUME(n.CREATE),this.OPTION(()=>this.CONSUME(n.SILENT)),this.SUBRULE(this.GraphRefAll)}),this.Add=this.RULE("Add",()=>{this.CONSUME(n.ADD),this.OPTION(()=>this.CONSUME(n.SILENT)),this.SUBRULE(this.GraphOrDefault),this.CONSUME(n.TO),this.SUBRULE1(this.GraphOrDefault)}),this.Move=this.RULE("Move",()=>{this.CONSUME(n.MOVE),this.OPTION(()=>this.CONSUME(n.SILENT)),this.SUBRULE(this.GraphOrDefault),this.CONSUME(n.TO),this.SUBRULE1(this.GraphOrDefault)}),this.Copy=this.RULE("Copy",()=>{this.CONSUME(n.COPY),this.OPTION(()=>this.CONSUME(n.SILENT)),this.SUBRULE(this.GraphOrDefault),this.CONSUME(n.TO),this.SUBRULE1(this.GraphOrDefault)}),this.InsertData=this.RULE("InsertData",()=>{this.CONSUME(n.INSERT_DATA),this.SUBRULE(this.QuadData)}),this.DeleteData=this.RULE("DeleteData",()=>{this.CONSUME(n.DELETE_DATA),this.SUBRULE(this.QuadData)}),this.DeleteWhere=this.RULE("DeleteWhere",()=>{this.CONSUME(n.DELETE_WHERE),this.SUBRULE(this.QuadPattern)}),this.Modify=this.RULE("Modify",()=>{this.OPTION(()=>{this.CONSUME(n.WITH),this.SUBRULE(this.iri)}),this.OR([{ALT:()=>{this.SUBRULE(this.DeleteClause),this.OPTION1(()=>this.SUBRULE(this.InsertClause))}},{ALT:()=>this.SUBRULE1(this.InsertClause)}]),this.MANY(()=>this.SUBRULE(this.UsingClause)),this.CONSUME(n.WHERE),this.SUBRULE(this.GroupGraphPattern)}),this.DeleteClause=this.RULE("DeleteClause",()=>{this.CONSUME(n.DELETE),this.SUBRULE(this.QuadPattern)}),this.InsertClause=this.RULE("InsertClause",()=>{this.CONSUME(n.INSERT),this.SUBRULE(this.QuadPattern)}),this.UsingClause=this.RULE("UsingClause",()=>{this.CONSUME(n.USING),this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>{this.CONSUME(n.NAMED),this.SUBRULE1(this.iri)}}])}),this.GraphOrDefault=this.RULE("GraphOrDefault",()=>{this.OR([{ALT:()=>this.CONSUME(n.DEFAULT)},{ALT:()=>{this.OPTION(()=>this.CONSUME(n.GRAPH)),this.SUBRULE(this.iri)}}])}),this.GraphRef=this.RULE("GraphRef",()=>{this.CONSUME(n.GRAPH),this.SUBRULE(this.iri)}),this.GraphRefAll=this.RULE("GraphRefAll",()=>{this.OR([{ALT:()=>this.SUBRULE(this.GraphRef)},{ALT:()=>this.CONSUME(n.DEFAULT)},{ALT:()=>this.CONSUME(n.NAMED)},{ALT:()=>this.CONSUME(n.ALL)}])}),this.QuadPattern=this.RULE("QuadPattern",()=>{this.CONSUME(n.LCurly),this.SUBRULE(this.Quads),this.CONSUME(n.RCurly)}),this.QuadData=this.RULE("QuadData",()=>{this.CONSUME(n.LCurly),this.SUBRULE(this.Quads),this.CONSUME(n.RCurly)}),this.Quads=this.RULE("Quads",()=>{this.OPTION(()=>this.SUBRULE(this.TriplesTemplate)),this.MANY(()=>{this.SUBRULE(this.QuadsNotTriples),this.OPTION1(()=>this.CONSUME(n.Period)),this.OPTION2(()=>this.SUBRULE1(this.TriplesTemplate))})}),this.QuadsNotTriples=this.RULE("QuadsNotTriples",()=>{this.CONSUME(n.GRAPH),this.SUBRULE(this.VarOrIri),this.CONSUME(n.LCurly),this.OPTION(()=>this.SUBRULE(this.TriplesTemplate)),this.CONSUME(n.RCurly)}),this.TriplesTemplate=this.RULE("TriplesTemplate",()=>{this.SUBRULE(this.TriplesSameSubject),this.OPTION(()=>{this.CONSUME(n.Period),this.OPTION1(()=>this.SUBRULE(this.TriplesTemplate))})}),this.GroupGraphPattern=this.RULE("GroupGraphPattern",()=>{this.CONSUME(n.LCurly),this.OR([{ALT:()=>this.SUBRULE(this.SubSelect)},{ALT:()=>this.SUBRULE(this.GroupGraphPatternSub)}]),this.CONSUME(n.RCurly)}),this.GroupGraphPatternSub=this.RULE("GroupGraphPatternSub",()=>{this.OPTION(()=>this.SUBRULE(this.TriplesBlock)),this.MANY(()=>{this.SUBRULE(this.GraphPatternNotTriples),this.OPTION1(()=>this.CONSUME(n.Period)),this.OPTION2(()=>this.SUBRULE1(this.TriplesBlock))})}),this.TriplesBlock=this.RULE("TriplesBlock",()=>{this.SUBRULE(this.TriplesSameSubjectPath),this.OPTION(()=>{this.CONSUME(n.Period),this.OPTION1(()=>this.SUBRULE(this.TriplesBlock))})}),this.GraphPatternNotTriples=this.RULE("GraphPatternNotTriples",()=>{this.OR([{ALT:()=>this.SUBRULE(this.GroupOrUnionGraphPattern)},{ALT:()=>this.SUBRULE(this.OptionalGraphPattern)},{ALT:()=>this.SUBRULE(this.MinusGraphPattern)},{ALT:()=>this.SUBRULE(this.GraphGraphPattern)},{ALT:()=>this.SUBRULE(this.ServiceGraphPattern)},{ALT:()=>this.SUBRULE(this.Filter)},{ALT:()=>this.SUBRULE(this.Bind)},{ALT:()=>this.SUBRULE(this.InlineData)}])}),this.OptionalGraphPattern=this.RULE("OptionalGraphPattern",()=>{this.CONSUME(n.OPTIONAL),this.SUBRULE(this.GroupGraphPattern)}),this.GraphGraphPattern=this.RULE("GraphGraphPattern",()=>{this.CONSUME(n.GRAPH),this.SUBRULE(this.VarOrIri),this.SUBRULE(this.GroupGraphPattern)}),this.ServiceGraphPattern=this.RULE("ServiceGraphPattern",()=>{this.CONSUME(n.SERVICE),this.OPTION(()=>this.CONSUME(n.SILENT)),this.SUBRULE(this.VarOrIri),this.SUBRULE(this.GroupGraphPattern)}),this.Bind=this.RULE("Bind",()=>{this.CONSUME(n.BIND),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.AS),this.SUBRULE(this.Var),this.CONSUME(n.RParen)}),this.InlineData=this.RULE("InlineData",()=>{this.CONSUME(n.VALUES),this.SUBRULE(this.DataBlock)}),this.DataBlock=this.RULE("DataBlock",()=>{this.OR([{ALT:()=>this.SUBRULE(this.InlineDataOneVar)},{ALT:()=>this.SUBRULE(this.InlineDataFull)}])}),this.InlineDataOneVar=this.RULE("InlineDataOneVar",()=>{this.SUBRULE(this.Var),this.CONSUME(n.LCurly),this.MANY(()=>this.SUBRULE(this.DataBlockValue)),this.CONSUME(n.RCurly)}),this.InlineDataFull=this.RULE("InlineDataFull",()=>{this.OR([{ALT:()=>this.CONSUME(n.NIL)},{ALT:()=>{this.CONSUME(n.LParen),this.MANY(()=>this.SUBRULE(this.Var)),this.CONSUME(n.RParen)}}]),this.CONSUME(n.LCurly),this.MANY1(()=>this.OR1([{ALT:()=>{this.CONSUME1(n.LParen),this.MANY2(()=>this.SUBRULE(this.DataBlockValue)),this.CONSUME1(n.RParen)}},{ALT:()=>this.CONSUME1(n.NIL)}])),this.CONSUME(n.RCurly)}),this.DataBlockValue=this.RULE("DataBlockValue",()=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.RDFLiteral)},{ALT:()=>this.SUBRULE(this.NumericLiteral)},{ALT:()=>this.SUBRULE(this.BooleanLiteral)},{ALT:()=>this.CONSUME(n.UNDEF)},{GATE:()=>this.supportsRdf12,ALT:()=>this.SUBRULE(this.TripleTermData)}])}),this.MinusGraphPattern=this.RULE("MinusGraphPattern",()=>{this.CONSUME(n.MINUS),this.SUBRULE(this.GroupGraphPattern)}),this.GroupOrUnionGraphPattern=this.RULE("GroupOrUnionGraphPattern",()=>{this.SUBRULE(this.GroupGraphPattern),this.MANY(()=>{this.CONSUME(n.UNION),this.SUBRULE1(this.GroupGraphPattern)})}),this.Filter=this.RULE("Filter",()=>{this.CONSUME(n.FILTER),this.SUBRULE(this.Constraint)}),this.Constraint=this.RULE("Constraint",()=>{this.OR([{ALT:()=>this.SUBRULE(this.BrackettedExpression)},{ALT:()=>this.SUBRULE(this.BuiltInCall)},{ALT:()=>this.SUBRULE(this.FunctionCall)}])}),this.FunctionCall=this.RULE("FunctionCall",()=>{this.SUBRULE(this.iri),this.SUBRULE(this.ArgList)}),this.ArgList=this.RULE("ArgList",()=>{this.OR([{ALT:()=>this.CONSUME(n.NIL)},{ALT:()=>{this.CONSUME(n.LParen),this.OPTION(()=>this.CONSUME(n.DISTINCT)),this.SUBRULE(this.Expression),this.MANY(()=>{this.CONSUME(n.Comma),this.SUBRULE1(this.Expression)}),this.CONSUME(n.RParen)}}])}),this.ExpressionList=this.RULE("ExpressionList",()=>{this.OR([{ALT:()=>this.CONSUME(n.NIL)},{ALT:()=>{this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.MANY(()=>{this.CONSUME(n.Comma),this.SUBRULE1(this.Expression)}),this.CONSUME(n.RParen)}}])}),this.ConstructTemplate=this.RULE("ConstructTemplate",()=>{this.CONSUME(n.LCurly),this.OPTION(()=>this.SUBRULE(this.ConstructTriples)),this.CONSUME(n.RCurly)}),this.ConstructTriples=this.RULE("ConstructTriples",()=>{this.SUBRULE(this.TriplesSameSubject),this.OPTION(()=>{this.CONSUME(n.Period),this.OPTION1(()=>this.SUBRULE(this.ConstructTriples))})}),this.TriplesSameSubject=this.RULE("TriplesSameSubject",()=>{this.OR([{ALT:()=>{this.SUBRULE(this.VarOrTerm),this.SUBRULE(this.PropertyListNotEmpty)}},{ALT:()=>{this.SUBRULE(this.TriplesNode),this.SUBRULE(this.PropertyList)}},{GATE:()=>this.supportsRdf12,ALT:()=>this.SUBRULE(this.ReifiedTripleBlock)}])}),this.PropertyList=this.RULE("PropertyList",()=>{this.OPTION(()=>this.SUBRULE(this.PropertyListNotEmpty))}),this.PropertyListNotEmpty=this.RULE("PropertyListNotEmpty",()=>{this.SUBRULE(this.Verb),this.SUBRULE(this.ObjectList),this.MANY(()=>{this.CONSUME(n.Semicolon),this.OPTION(()=>{this.SUBRULE1(this.Verb),this.SUBRULE1(this.ObjectList)})})}),this.Verb=this.RULE("Verb",()=>{this.OR([{ALT:()=>this.SUBRULE(this.VarOrIri)},{ALT:()=>this.CONSUME(n.A)}])}),this.ObjectList=this.RULE("ObjectList",()=>{this.AT_LEAST_ONE_SEP({SEP:n.Comma,DEF:()=>this.SUBRULE(this.Object)})}),this.Object=this.RULE("Object",()=>{this.SUBRULE(this.GraphNode),this.OPTION({GATE:()=>this.supportsRdf12,DEF:()=>this.SUBRULE(this.Annotation)})}),this.TriplesSameSubjectPath=this.RULE("TriplesSameSubjectPath",()=>{this.OR([{ALT:()=>{this.SUBRULE(this.VarOrTerm),this.SUBRULE(this.PropertyListPathNotEmpty)}},{ALT:()=>{this.SUBRULE(this.TriplesNodePath),this.SUBRULE(this.PropertyListPath)}},{GATE:()=>this.supportsRdf12,ALT:()=>this.SUBRULE(this.ReifiedTripleBlockPath)}])}),this.PropertyListPath=this.RULE("PropertyListPath",()=>{this.OPTION(()=>this.SUBRULE(this.PropertyListPathNotEmpty))}),this.PropertyListPathNotEmpty=this.RULE("PropertyListPathNotEmpty",()=>{this.OR([{ALT:()=>this.SUBRULE(this.VerbPath)},{ALT:()=>this.SUBRULE(this.VerbSimple)}]),this.SUBRULE(this.ObjectListPath),this.MANY(()=>{this.CONSUME(n.Semicolon),this.OPTION(()=>{this.OR1([{ALT:()=>this.SUBRULE1(this.VerbPath)},{ALT:()=>this.SUBRULE1(this.VerbSimple)}]),this.SUBRULE1(this.ObjectListPath)})})}),this.VerbPath=this.RULE("VerbPath",()=>{this.SUBRULE(this.Path)}),this.VerbSimple=this.RULE("VerbSimple",()=>{this.SUBRULE(this.Var)}),this.ObjectListPath=this.RULE("ObjectListPath",()=>{this.AT_LEAST_ONE_SEP({SEP:n.Comma,DEF:()=>this.SUBRULE(this.ObjectPath)})}),this.ObjectPath=this.RULE("ObjectPath",()=>{this.SUBRULE(this.GraphNodePath),this.OPTION({GATE:()=>this.supportsRdf12,DEF:()=>this.SUBRULE(this.AnnotationPath)})}),this.Path=this.RULE("Path",()=>{this.SUBRULE(this.PathAlternative)}),this.PathAlternative=this.RULE("PathAlternative",()=>{this.AT_LEAST_ONE_SEP({SEP:n.Pipe,DEF:()=>this.SUBRULE(this.PathSequence)})}),this.PathSequence=this.RULE("PathSequence",()=>{this.AT_LEAST_ONE_SEP({SEP:n.ForwardSlash,DEF:()=>this.SUBRULE(this.PathEltOrInverse)})}),this.PathElt=this.RULE("PathElt",()=>{this.SUBRULE(this.PathPrimary),this.OPTION(()=>this.SUBRULE(this.PathMod))}),this.PathEltOrInverse=this.RULE("PathEltOrInverse",()=>{this.OPTION(()=>this.CONSUME(n.Caret)),this.SUBRULE(this.PathElt)}),this.PathMod=this.RULE("PathMod",()=>{this.OR([{ALT:()=>this.CONSUME(n.QuestionMark)},{ALT:()=>this.CONSUME(n.Star)},{ALT:()=>this.CONSUME(n.Plus)}])}),this.PathPrimary=this.RULE("PathPrimary",()=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.CONSUME(n.A)},{ALT:()=>{this.CONSUME(n.Bang),this.SUBRULE(this.PathNegatedPropertySet)}},{ALT:()=>{this.CONSUME(n.LParen),this.SUBRULE(this.Path),this.CONSUME(n.RParen)}}])}),this.PathNegatedPropertySet=this.RULE("PathNegatedPropertySet",()=>{this.OR([{ALT:()=>this.SUBRULE(this.PathOneInPropertySet)},{ALT:()=>{this.CONSUME(n.LParen),this.MANY_SEP({SEP:n.Pipe,DEF:()=>this.SUBRULE1(this.PathOneInPropertySet)}),this.CONSUME(n.RParen)}}])}),this.PathOneInPropertySet=this.RULE("PathOneInPropertySet",()=>{this.OPTION(()=>this.CONSUME(n.Caret)),this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.CONSUME(n.A)}])}),this.Integer=this.RULE("Integer",()=>{this.CONSUME(n.INTEGER)}),this.TriplesNode=this.RULE("TriplesNode",()=>{this.OR([{ALT:()=>this.SUBRULE(this.Collection)},{ALT:()=>this.SUBRULE(this.BlankNodePropertyList)}])}),this.BlankNodePropertyList=this.RULE("BlankNodePropertyList",()=>{this.CONSUME(n.LBracket),this.SUBRULE(this.PropertyListNotEmpty),this.CONSUME(n.RBracket)}),this.TriplesNodePath=this.RULE("TriplesNodePath",()=>{this.OR([{ALT:()=>this.SUBRULE(this.CollectionPath)},{ALT:()=>this.SUBRULE(this.BlankNodePropertyListPath)}])}),this.BlankNodePropertyListPath=this.RULE("BlankNodePropertyListPath",()=>{this.CONSUME(n.LBracket),this.SUBRULE(this.PropertyListPathNotEmpty),this.CONSUME(n.RBracket)}),this.Collection=this.RULE("Collection",()=>{this.CONSUME(n.LParen),this.AT_LEAST_ONE(()=>this.SUBRULE(this.GraphNode)),this.CONSUME(n.RParen)}),this.CollectionPath=this.RULE("CollectionPath",()=>{this.CONSUME(n.LParen),this.AT_LEAST_ONE(()=>this.SUBRULE(this.GraphNodePath)),this.CONSUME(n.RParen)}),this.GraphNode=this.RULE("GraphNode",()=>{this.OR([{ALT:()=>this.SUBRULE(this.VarOrTerm)},{ALT:()=>this.SUBRULE(this.TriplesNode)},{GATE:()=>this.supportsRdf12,ALT:()=>this.SUBRULE(this.ReifiedTriple)}])}),this.GraphNodePath=this.RULE("GraphNodePath",()=>{this.OR([{ALT:()=>this.SUBRULE(this.VarOrTerm)},{ALT:()=>this.SUBRULE(this.TriplesNodePath)},{GATE:()=>this.supportsRdf12,ALT:()=>this.SUBRULE(this.ReifiedTriple)}])}),this.VarOrTerm=this.RULE("VarOrTerm",()=>{this.OR([{ALT:()=>this.SUBRULE(this.Var)},{ALT:()=>this.SUBRULE(this.GraphTerm)},{GATE:()=>this.supportsRdf12,ALT:()=>this.SUBRULE(this.TripleTerm)}])}),this.VarOrIri=this.RULE("VarOrIri",()=>{this.OR([{ALT:()=>this.SUBRULE(this.Var)},{ALT:()=>this.SUBRULE(this.iri)}])}),this.Var=this.RULE("Var",()=>{this.OR([{ALT:()=>this.CONSUME(n.VAR1)},{ALT:()=>this.CONSUME(n.VAR2)}])}),this.GraphTerm=this.RULE("GraphTerm",()=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.RDFLiteral)},{ALT:()=>this.SUBRULE(this.NumericLiteral)},{ALT:()=>this.SUBRULE(this.BooleanLiteral)},{ALT:()=>this.SUBRULE(this.BlankNode)},{ALT:()=>this.CONSUME(n.NIL)}])}),this.Expression=this.RULE("Expression",()=>{this.SUBRULE(this.ConditionalOrExpression)}),this.ConditionalOrExpression=this.RULE("ConditionalOrExpression",()=>{this.AT_LEAST_ONE_SEP({SEP:n.LogicalOr,DEF:()=>this.SUBRULE(this.ConditionalAndExpression)})}),this.ConditionalAndExpression=this.RULE("ConditionalAndExpression",()=>{this.AT_LEAST_ONE_SEP({SEP:n.LogicalAnd,DEF:()=>this.SUBRULE(this.ValueLogical)})}),this.ValueLogical=this.RULE("ValueLogical",()=>{this.SUBRULE(this.RelationalExpression)}),this.RelationalExpression=this.RULE("RelationalExpression",()=>{this.SUBRULE(this.NumericExpression),this.OPTION(()=>this.OR([{ALT:()=>{this.OR1([{ALT:()=>this.CONSUME(n.Equals)},{ALT:()=>this.CONSUME(n.NotEquals)},{ALT:()=>this.CONSUME(n.LessThan)},{ALT:()=>this.CONSUME(n.GreaterThan)},{ALT:()=>this.CONSUME(n.LessThanEquals)},{ALT:()=>this.CONSUME(n.GreaterThanEquals)}]),this.SUBRULE1(this.NumericExpression)}},{ALT:()=>{this.CONSUME(n.IN),this.SUBRULE(this.ExpressionList)}},{ALT:()=>{this.CONSUME(n.NOT_IN),this.SUBRULE1(this.ExpressionList)}}]))}),this.NumericExpression=this.RULE("NumericExpression",()=>{this.SUBRULE(this.AdditiveExpression)}),this.AdditiveExpression=this.RULE("AdditiveExpression",()=>{this.SUBRULE(this.MultiplicativeExpression),this.MANY(()=>this.OR([{ALT:()=>{this.OR1([{ALT:()=>this.CONSUME(n.Plus)},{ALT:()=>this.CONSUME(n.Minus)}]),this.SUBRULE1(this.MultiplicativeExpression)}},{ALT:()=>{this.OR2([{ALT:()=>this.SUBRULE(this.NumericLiteralPositive)},{ALT:()=>this.SUBRULE(this.NumericLiteralNegative)}]),this.MANY1(()=>this.OR3([{ALT:()=>{this.OR4([{ALT:()=>this.CONSUME(n.Star)},{ALT:()=>this.CONSUME(n.ForwardSlash)}]),this.SUBRULE1(this.UnaryExpression)}}]))}}]))}),this.MultiplicativeExpression=this.RULE("MultiplicativeExpression",()=>{this.SUBRULE(this.UnaryExpression),this.MANY(()=>this.OR([{ALT:()=>{this.CONSUME(n.Star),this.SUBRULE1(this.UnaryExpression)}},{ALT:()=>{this.CONSUME(n.ForwardSlash),this.SUBRULE2(this.UnaryExpression)}}]))}),this.UnaryExpression=this.RULE("UnaryExpression",()=>{this.OR([{ALT:()=>{this.CONSUME(n.Bang),this.SUBRULE(this.PrimaryExpression)}},{ALT:()=>{this.CONSUME(n.Plus),this.SUBRULE1(this.PrimaryExpression)}},{ALT:()=>{this.CONSUME(n.Minus),this.SUBRULE2(this.PrimaryExpression)}},{ALT:()=>this.SUBRULE3(this.PrimaryExpression)}])}),this.PrimaryExpression=this.RULE("PrimaryExpression",()=>{this.OR([{ALT:()=>this.SUBRULE(this.BrackettedExpression)},{ALT:()=>this.SUBRULE(this.BuiltInCall)},{ALT:()=>this.SUBRULE(this.iriOrFunction)},{ALT:()=>this.SUBRULE(this.RDFLiteral)},{ALT:()=>this.SUBRULE(this.NumericLiteral)},{ALT:()=>this.SUBRULE(this.BooleanLiteral)},{ALT:()=>this.SUBRULE(this.Var)},{GATE:()=>this.supportsRdf12,ALT:()=>this.SUBRULE(this.ExprTripleTerm)}])}),this.BrackettedExpression=this.RULE("BrackettedExpression",()=>{this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_STR=this.RULE("BuiltInCall_STR",()=>{this.CONSUME(n.STR),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_LANG=this.RULE("BuiltInCall_LANG",()=>{this.CONSUME(n.LANG),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_LANGMATCHES=this.RULE("BuiltInCall_LANGMATCHES",()=>{this.CONSUME(n.LANGMATCHES),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.Comma),this.SUBRULE1(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_DATATYPE=this.RULE("BuiltInCall_DATATYPE",()=>{this.CONSUME(n.DATATYPE),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_BOUND=this.RULE("BuiltInCall_BOUND",()=>{this.CONSUME(n.BOUND),this.CONSUME(n.LParen),this.SUBRULE(this.Var),this.CONSUME(n.RParen)}),this.BuiltInCall_IRI=this.RULE("BuiltInCall_IRI",()=>{this.CONSUME(n.IRI),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_URI=this.RULE("BuiltInCall_URI",()=>{this.CONSUME(n.URI),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_BNODE=this.RULE("BuiltInCall_BNODE",()=>{this.CONSUME(n.BNODE),this.OR([{ALT:()=>{this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}},{ALT:()=>this.CONSUME(n.NIL)}])}),this.BuiltInCall_RAND=this.RULE("BuiltInCall_RAND",()=>{this.CONSUME(n.RAND),this.CONSUME(n.NIL)}),this.BuiltInCall_ABS=this.RULE("BuiltInCall_ABS",()=>{this.CONSUME(n.ABS),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_CEIL=this.RULE("BuiltInCall_CEIL",()=>{this.CONSUME(n.CEIL),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_FLOOR=this.RULE("BuiltInCall_FLOOR",()=>{this.CONSUME(n.FLOOR),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_ROUND=this.RULE("BuiltInCall_ROUND",()=>{this.CONSUME(n.ROUND),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_CONCAT=this.RULE("BuiltInCall_CONCAT",()=>{this.CONSUME(n.CONCAT),this.SUBRULE(this.ExpressionList)}),this.BuiltInCall_STRLEN=this.RULE("BuiltInCall_STRLEN",()=>{this.CONSUME(n.STRLEN),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_UCASE=this.RULE("BuiltInCall_UCASE",()=>{this.CONSUME(n.UCASE),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_LCASE=this.RULE("BuiltInCall_LCASE",()=>{this.CONSUME(n.LCASE),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_ENCODE_FOR_URI=this.RULE("BuiltInCall_ENCODE_FOR_URI",()=>{this.CONSUME(n.ENCODE_FOR_URI),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_CONTAINS=this.RULE("BuiltInCall_CONTAINS",()=>{this.CONSUME(n.CONTAINS),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.Comma),this.SUBRULE1(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_STRSTARTS=this.RULE("BuiltInCall_STRSTARTS",()=>{this.CONSUME(n.STRSTARTS),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.Comma),this.SUBRULE1(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_STRENDS=this.RULE("BuiltInCall_STRENDS",()=>{this.CONSUME(n.STRENDS),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.Comma),this.SUBRULE1(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_STRBEFORE=this.RULE("BuiltInCall_STRBEFORE",()=>{this.CONSUME(n.STRBEFORE),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.Comma),this.SUBRULE1(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_STRAFTER=this.RULE("BuiltInCall_STRAFTER",()=>{this.CONSUME(n.STRAFTER),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.Comma),this.SUBRULE1(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_YEAR=this.RULE("BuiltInCall_YEAR",()=>{this.CONSUME(n.YEAR),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_MONTH=this.RULE("BuiltInCall_MONTH",()=>{this.CONSUME(n.MONTH),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_DAY=this.RULE("BuiltInCall_DAY",()=>{this.CONSUME(n.DAY),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_HOURS=this.RULE("BuiltInCall_HOURS",()=>{this.CONSUME(n.HOURS),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_MINUTES=this.RULE("BuiltInCall_MINUTES",()=>{this.CONSUME(n.MINUTES),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_SECONDS=this.RULE("BuiltInCall_SECONDS",()=>{this.CONSUME(n.SECONDS),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_TIMEZONE=this.RULE("BuiltInCall_TIMEZONE",()=>{this.CONSUME(n.TIMEZONE),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_TZ=this.RULE("BuiltInCall_TZ",()=>{this.CONSUME(n.TZ),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_NOW=this.RULE("BuiltInCall_NOW",()=>{this.CONSUME(n.NOW),this.CONSUME(n.NIL)}),this.BuiltInCall_UUID=this.RULE("BuiltInCall_UUID",()=>{this.CONSUME(n.UUID),this.CONSUME(n.NIL)}),this.BuiltInCall_STRUUID=this.RULE("BuiltInCall_STRUUID",()=>{this.CONSUME(n.STRUUID),this.CONSUME(n.NIL)}),this.BuiltInCall_MD5=this.RULE("BuiltInCall_MD5",()=>{this.CONSUME(n.MD5),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_SHA1=this.RULE("BuiltInCall_SHA1",()=>{this.CONSUME(n.SHA1),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_SHA256=this.RULE("BuiltInCall_SHA256",()=>{this.CONSUME(n.SHA256),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_SHA384=this.RULE("BuiltInCall_SHA384",()=>{this.CONSUME(n.SHA384),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_SHA512=this.RULE("BuiltInCall_SHA512",()=>{this.CONSUME(n.SHA512),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_COALESCE=this.RULE("BuiltInCall_COALESCE",()=>{this.CONSUME(n.COALESCE),this.SUBRULE(this.ExpressionList)}),this.BuiltInCall_IF=this.RULE("BuiltInCall_IF",()=>{this.CONSUME(n.IF),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.Comma),this.SUBRULE1(this.Expression),this.CONSUME1(n.Comma),this.SUBRULE2(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_STRLANG=this.RULE("BuiltInCall_STRLANG",()=>{this.CONSUME(n.STRLANG),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.Comma),this.SUBRULE1(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_STRDT=this.RULE("BuiltInCall_STRDT",()=>{this.CONSUME(n.STRDT),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.Comma),this.SUBRULE1(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_sameTerm=this.RULE("BuiltInCall_sameTerm",()=>{this.CONSUME(n.sameTerm),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.Comma),this.SUBRULE1(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_isIRI=this.RULE("BuiltInCall_isIRI",()=>{this.CONSUME(n.isIRI),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_isURI=this.RULE("BuiltInCall_isURI",()=>{this.CONSUME(n.isURI),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_isBLANK=this.RULE("BuiltInCall_isBLANK",()=>{this.CONSUME(n.isBLANK),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_isLITERAL=this.RULE("BuiltInCall_isLITERAL",()=>{this.CONSUME(n.isLITERAL),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_isNUMERIC=this.RULE("BuiltInCall_isNUMERIC",()=>{this.CONSUME(n.isNUMERIC),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall=this.RULE("BuiltInCall",()=>{this.OR([{ALT:()=>this.SUBRULE(this.Aggregate)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STR)},{ALT:()=>this.SUBRULE(this.BuiltInCall_LANG)},{ALT:()=>this.SUBRULE(this.BuiltInCall_LANGMATCHES)},{ALT:()=>this.SUBRULE(this.BuiltInCall_DATATYPE)},{ALT:()=>this.SUBRULE(this.BuiltInCall_BOUND)},{ALT:()=>this.SUBRULE(this.BuiltInCall_IRI)},{ALT:()=>this.SUBRULE(this.BuiltInCall_URI)},{ALT:()=>this.SUBRULE(this.BuiltInCall_BNODE)},{ALT:()=>this.SUBRULE(this.BuiltInCall_RAND)},{ALT:()=>this.SUBRULE(this.BuiltInCall_ABS)},{ALT:()=>this.SUBRULE(this.BuiltInCall_CEIL)},{ALT:()=>this.SUBRULE(this.BuiltInCall_FLOOR)},{ALT:()=>this.SUBRULE(this.BuiltInCall_ROUND)},{ALT:()=>this.SUBRULE(this.BuiltInCall_CONCAT)},{ALT:()=>this.SUBRULE(this.SubstringExpression)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STRLEN)},{ALT:()=>this.SUBRULE(this.StrReplaceExpression)},{ALT:()=>this.SUBRULE(this.BuiltInCall_UCASE)},{ALT:()=>this.SUBRULE(this.BuiltInCall_LCASE)},{ALT:()=>this.SUBRULE(this.BuiltInCall_ENCODE_FOR_URI)},{ALT:()=>this.SUBRULE(this.BuiltInCall_CONTAINS)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STRSTARTS)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STRENDS)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STRBEFORE)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STRAFTER)},{ALT:()=>this.SUBRULE(this.BuiltInCall_YEAR)},{ALT:()=>this.SUBRULE(this.BuiltInCall_MONTH)},{ALT:()=>this.SUBRULE(this.BuiltInCall_DAY)},{ALT:()=>this.SUBRULE(this.BuiltInCall_HOURS)},{ALT:()=>this.SUBRULE(this.BuiltInCall_MINUTES)},{ALT:()=>this.SUBRULE(this.BuiltInCall_SECONDS)},{ALT:()=>this.SUBRULE(this.BuiltInCall_TIMEZONE)},{ALT:()=>this.SUBRULE(this.BuiltInCall_TZ)},{ALT:()=>this.SUBRULE(this.BuiltInCall_NOW)},{ALT:()=>this.SUBRULE(this.BuiltInCall_UUID)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STRUUID)},{ALT:()=>this.SUBRULE(this.BuiltInCall_MD5)},{ALT:()=>this.SUBRULE(this.BuiltInCall_SHA1)},{ALT:()=>this.SUBRULE(this.BuiltInCall_SHA256)},{ALT:()=>this.SUBRULE(this.BuiltInCall_SHA384)},{ALT:()=>this.SUBRULE(this.BuiltInCall_SHA512)},{ALT:()=>this.SUBRULE(this.BuiltInCall_COALESCE)},{ALT:()=>this.SUBRULE(this.BuiltInCall_IF)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STRLANG)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STRDT)},{ALT:()=>this.SUBRULE(this.BuiltInCall_sameTerm)},{ALT:()=>this.SUBRULE(this.BuiltInCall_isIRI)},{ALT:()=>this.SUBRULE(this.BuiltInCall_isURI)},{ALT:()=>this.SUBRULE(this.BuiltInCall_isBLANK)},{ALT:()=>this.SUBRULE(this.BuiltInCall_isLITERAL)},{ALT:()=>this.SUBRULE(this.BuiltInCall_isNUMERIC)},{ALT:()=>this.SUBRULE(this.RegexExpression)},{ALT:()=>this.SUBRULE(this.ExistsFunction)},{ALT:()=>this.SUBRULE(this.NotExistsFunction)},{ALT:()=>this.SUBRULE(this.BuiltInCall_LANGDIR)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STRLANGDIR)},{ALT:()=>this.SUBRULE(this.BuiltInCall_hasLANG)},{ALT:()=>this.SUBRULE(this.BuiltInCall_hasLANGDIR)},{ALT:()=>this.SUBRULE(this.BuiltInCall_isTRIPLE)},{ALT:()=>this.SUBRULE(this.BuiltInCall_TRIPLE)},{ALT:()=>this.SUBRULE(this.BuiltInCall_SUBJECT)},{ALT:()=>this.SUBRULE(this.BuiltInCall_PREDICATE)},{ALT:()=>this.SUBRULE(this.BuiltInCall_OBJECT)}])}),this.RegexExpression=this.RULE("RegexExpression",()=>{this.CONSUME(n.REGEX),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.Comma),this.SUBRULE1(this.Expression),this.OPTION(()=>{this.CONSUME1(n.Comma),this.SUBRULE2(this.Expression)}),this.CONSUME(n.RParen)}),this.SubstringExpression=this.RULE("SubstringExpression",()=>{this.CONSUME(n.SUBSTR),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.Comma),this.SUBRULE1(this.Expression),this.OPTION(()=>{this.CONSUME1(n.Comma),this.SUBRULE2(this.Expression)}),this.CONSUME(n.RParen)}),this.StrReplaceExpression=this.RULE("StrReplaceExpression",()=>{this.CONSUME(n.REPLACE),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.Comma),this.SUBRULE1(this.Expression),this.CONSUME1(n.Comma),this.SUBRULE2(this.Expression),this.OPTION(()=>{this.CONSUME2(n.Comma),this.SUBRULE3(this.Expression)}),this.CONSUME(n.RParen)}),this.ExistsFunction=this.RULE("ExistsFunction",()=>{this.CONSUME(n.EXISTS),this.SUBRULE(this.GroupGraphPattern)}),this.NotExistsFunction=this.RULE("NotExistsFunction",()=>{this.CONSUME(n.NOT_EXISTS),this.SUBRULE(this.GroupGraphPattern)}),this.Count=this.RULE("Count",()=>{this.CONSUME(n.COUNT),this.CONSUME1(n.LParen),this.OPTION(()=>this.CONSUME2(n.DISTINCT)),this.OR([{ALT:()=>this.CONSUME3(n.Star)},{ALT:()=>this.SUBRULE(this.Expression)}]),this.CONSUME(n.RParen)}),this.Sum=this.RULE("Sum",()=>{this.CONSUME(n.SUM),this.CONSUME1(n.LParen),this.OPTION(()=>this.CONSUME2(n.DISTINCT)),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.Min=this.RULE("Min",()=>{this.CONSUME(n.MIN),this.CONSUME1(n.LParen),this.OPTION(()=>this.CONSUME2(n.DISTINCT)),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.Max=this.RULE("Max",()=>{this.CONSUME(n.MAX),this.CONSUME1(n.LParen),this.OPTION(()=>this.CONSUME2(n.DISTINCT)),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.Avg=this.RULE("Avg",()=>{this.CONSUME(n.AVG),this.CONSUME1(n.LParen),this.OPTION(()=>this.CONSUME2(n.DISTINCT)),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.Sample=this.RULE("Sample",()=>{this.CONSUME(n.SAMPLE),this.CONSUME1(n.LParen),this.OPTION(()=>this.CONSUME2(n.DISTINCT)),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.GroupConcat=this.RULE("GroupConcat",()=>{this.CONSUME(n.GROUP_CONCAT),this.CONSUME1(n.LParen),this.OPTION(()=>this.CONSUME2(n.DISTINCT)),this.SUBRULE(this.Expression),this.OPTION1(()=>{this.CONSUME(n.Semicolon),this.CONSUME(n.SEPARATOR),this.CONSUME(n.Equals),this.SUBRULE(this.String)}),this.CONSUME(n.RParen)}),this.Aggregate=this.RULE("Aggregate",()=>{this.OR([{ALT:()=>this.SUBRULE(this.Count)},{ALT:()=>this.SUBRULE(this.Sum)},{ALT:()=>this.SUBRULE(this.Min)},{ALT:()=>this.SUBRULE(this.Max)},{ALT:()=>this.SUBRULE(this.Avg)},{ALT:()=>this.SUBRULE(this.Sample)},{ALT:()=>this.SUBRULE(this.GroupConcat)}])}),this.iriOrFunction=this.RULE("iriOrFunction",()=>{this.SUBRULE(this.iri),this.OPTION(()=>this.SUBRULE(this.ArgList))}),this.RDFLiteral=this.RULE("RDFLiteral",()=>{this.SUBRULE(this.String),this.OPTION(()=>this.OR([{ALT:()=>this.CONSUME(n.LANG_DIR)},{ALT:()=>{this.CONSUME(n.DoubleCaret),this.SUBRULE(this.iri)}}]))}),this.NumericLiteral=this.RULE("NumericLiteral",()=>{this.OR([{ALT:()=>this.SUBRULE(this.NumericLiteralUnsigned)},{ALT:()=>this.SUBRULE(this.NumericLiteralPositive)},{ALT:()=>this.SUBRULE(this.NumericLiteralNegative)}])}),this.NumericLiteralUnsigned=this.RULE("NumericLiteralUnsigned",()=>{this.OR([{ALT:()=>this.CONSUME(n.INTEGER)},{ALT:()=>this.CONSUME(n.DECIMAL)},{ALT:()=>this.CONSUME(n.DOUBLE)}])}),this.NumericLiteralPositive=this.RULE("NumericLiteralPositive",()=>{this.OR([{ALT:()=>this.CONSUME(n.INTEGER_POSITIVE)},{ALT:()=>this.CONSUME(n.DECIMAL_POSITIVE)},{ALT:()=>this.CONSUME(n.DOUBLE_POSITIVE)}])}),this.NumericLiteralNegative=this.RULE("NumericLiteralNegative",()=>{this.OR([{ALT:()=>this.CONSUME(n.INTEGER_NEGATIVE)},{ALT:()=>this.CONSUME(n.DECIMAL_NEGATIVE)},{ALT:()=>this.CONSUME(n.DOUBLE_NEGATIVE)}])}),this.BooleanLiteral=this.RULE("BooleanLiteral",()=>{this.OR([{ALT:()=>this.CONSUME(n.TRUE)},{ALT:()=>this.CONSUME(n.FALSE)}])}),this.String=this.RULE("String",()=>{this.OR([{ALT:()=>this.CONSUME(n.STRING_LITERAL1)},{ALT:()=>this.CONSUME(n.STRING_LITERAL2)},{ALT:()=>this.CONSUME(n.STRING_LITERAL_LONG1)},{ALT:()=>this.CONSUME(n.STRING_LITERAL_LONG2)}])}),this.iri=this.RULE("iri",()=>{this.OR([{ALT:()=>this.CONSUME(n.IRIREF)},{ALT:()=>this.SUBRULE(this.PrefixedName)}])}),this.PrefixedName=this.RULE("PrefixedName",()=>{this.OR([{ALT:()=>this.CONSUME(n.PNAME_LN)},{ALT:()=>this.CONSUME(n.PNAME_NS)}])}),this.BlankNode=this.RULE("BlankNode",()=>{this.OR([{ALT:()=>this.CONSUME(n.BLANK_NODE_LABEL)},{ALT:()=>this.CONSUME(n.ANON)}])}),this.ReifiedTripleBlock=this.RULE("ReifiedTripleBlock",()=>{this.SUBRULE(this.ReifiedTriple),this.SUBRULE(this.PropertyList)}),this.ReifiedTripleBlockPath=this.RULE("ReifiedTripleBlockPath",()=>{this.SUBRULE(this.ReifiedTriple),this.SUBRULE(this.PropertyListPath)}),this.Reifier=this.RULE("Reifier",()=>{this.CONSUME(n.Tilde),this.OPTION(()=>this.SUBRULE(this.VarOrReifierId))}),this.VarOrReifierId=this.RULE("VarOrReifierId",()=>{this.OR([{ALT:()=>this.SUBRULE(this.Var)},{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.BlankNode)}])}),this.ReifiedTriple=this.RULE("ReifiedTriple",()=>{this.CONSUME(n.LEmbed),this.SUBRULE(this.ReifiedTripleSubject),this.SUBRULE(this.Verb),this.SUBRULE(this.ReifiedTripleObject),this.OPTION(()=>this.SUBRULE(this.Reifier)),this.CONSUME(n.REmbed)}),this.ReifiedTripleSubject=this.RULE("ReifiedTripleSubject",()=>{this.OR([{ALT:()=>this.SUBRULE(this.Var)},{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.RDFLiteral)},{ALT:()=>this.SUBRULE(this.NumericLiteral)},{ALT:()=>this.SUBRULE(this.BooleanLiteral)},{ALT:()=>this.SUBRULE(this.BlankNode)},{ALT:()=>this.SUBRULE(this.ReifiedTriple)},{ALT:()=>this.SUBRULE(this.TripleTerm)}])}),this.ReifiedTripleObject=this.RULE("ReifiedTripleObject",()=>{this.OR([{ALT:()=>this.SUBRULE(this.Var)},{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.RDFLiteral)},{ALT:()=>this.SUBRULE(this.NumericLiteral)},{ALT:()=>this.SUBRULE(this.BooleanLiteral)},{ALT:()=>this.SUBRULE(this.BlankNode)},{ALT:()=>this.SUBRULE(this.ReifiedTriple)},{ALT:()=>this.SUBRULE(this.TripleTerm)}])}),this.TripleTerm=this.RULE("TripleTerm",()=>{this.CONSUME(n.LTripleTerm),this.SUBRULE(this.TripleTermSubject),this.SUBRULE(this.Verb),this.SUBRULE(this.TripleTermObject),this.CONSUME(n.RTripleTerm)}),this.TripleTermSubject=this.RULE("TripleTermSubject",()=>{this.OR([{ALT:()=>this.SUBRULE(this.Var)},{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.RDFLiteral)},{ALT:()=>this.SUBRULE(this.NumericLiteral)},{ALT:()=>this.SUBRULE(this.BooleanLiteral)},{ALT:()=>this.SUBRULE(this.BlankNode)},{ALT:()=>this.SUBRULE(this.TripleTerm)}])}),this.TripleTermObject=this.RULE("TripleTermObject",()=>{this.OR([{ALT:()=>this.SUBRULE(this.Var)},{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.RDFLiteral)},{ALT:()=>this.SUBRULE(this.NumericLiteral)},{ALT:()=>this.SUBRULE(this.BooleanLiteral)},{ALT:()=>this.SUBRULE(this.BlankNode)},{ALT:()=>this.SUBRULE(this.TripleTerm)}])}),this.TripleTermData=this.RULE("TripleTermData",()=>{this.CONSUME(n.LTripleTerm),this.SUBRULE(this.TripleTermDataSubject),this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.CONSUME(n.A)}]),this.SUBRULE(this.TripleTermDataObject),this.CONSUME(n.RTripleTerm)}),this.TripleTermDataSubject=this.RULE("TripleTermDataSubject",()=>{this.SUBRULE(this.iri)}),this.TripleTermDataObject=this.RULE("TripleTermDataObject",()=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.RDFLiteral)},{ALT:()=>this.SUBRULE(this.NumericLiteral)},{ALT:()=>this.SUBRULE(this.BooleanLiteral)},{ALT:()=>this.SUBRULE(this.TripleTermData)}])}),this.ExprTripleTerm=this.RULE("ExprTripleTerm",()=>{this.CONSUME(n.LTripleTerm),this.SUBRULE(this.ExprTripleTermSubject),this.SUBRULE(this.Verb),this.SUBRULE(this.ExprTripleTermObject),this.CONSUME(n.RTripleTerm)}),this.ExprTripleTermSubject=this.RULE("ExprTripleTermSubject",()=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.Var)}])}),this.ExprTripleTermObject=this.RULE("ExprTripleTermObject",()=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.RDFLiteral)},{ALT:()=>this.SUBRULE(this.NumericLiteral)},{ALT:()=>this.SUBRULE(this.BooleanLiteral)},{ALT:()=>this.SUBRULE(this.Var)},{ALT:()=>this.SUBRULE(this.ExprTripleTerm)}])}),this.Annotation=this.RULE("Annotation",()=>{this.AT_LEAST_ONE(()=>this.OR([{ALT:()=>this.SUBRULE(this.Reifier)},{ALT:()=>this.SUBRULE(this.AnnotationBlock)}]))}),this.AnnotationPath=this.RULE("AnnotationPath",()=>{this.AT_LEAST_ONE(()=>this.OR([{ALT:()=>this.SUBRULE(this.Reifier)},{ALT:()=>this.SUBRULE(this.AnnotationBlockPath)}]))}),this.AnnotationBlock=this.RULE("AnnotationBlock",()=>{this.CONSUME(n.LAnnotation),this.SUBRULE(this.PropertyListNotEmpty),this.CONSUME(n.RAnnotation)}),this.AnnotationBlockPath=this.RULE("AnnotationBlockPath",()=>{this.CONSUME(n.LAnnotation),this.SUBRULE(this.PropertyListPathNotEmpty),this.CONSUME(n.RAnnotation)}),this.BuiltInCall_LANGDIR=this.RULE("BuiltInCall_LANGDIR",()=>{this.CONSUME(n.LANGDIR),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_STRLANGDIR=this.RULE("BuiltInCall_STRLANGDIR",()=>{this.CONSUME(n.STRLANGDIR),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.Comma),this.SUBRULE1(this.Expression),this.CONSUME1(n.Comma),this.SUBRULE2(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_hasLANG=this.RULE("BuiltInCall_hasLANG",()=>{this.CONSUME(n.hasLANG),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_hasLANGDIR=this.RULE("BuiltInCall_hasLANGDIR",()=>{this.CONSUME(n.hasLANGDIR),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_isTRIPLE=this.RULE("BuiltInCall_isTRIPLE",()=>{this.CONSUME(n.isTRIPLE),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_TRIPLE=this.RULE("BuiltInCall_TRIPLE",()=>{this.CONSUME(n.TRIPLE),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.Comma),this.SUBRULE1(this.Expression),this.CONSUME1(n.Comma),this.SUBRULE2(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_SUBJECT=this.RULE("BuiltInCall_SUBJECT",()=>{this.CONSUME(n.SUBJECT),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_PREDICATE=this.RULE("BuiltInCall_PREDICATE",()=>{this.CONSUME(n.PREDICATE),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.BuiltInCall_OBJECT=this.RULE("BuiltInCall_OBJECT",()=>{this.CONSUME(n.OBJECT),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.RParen)}),this.lexer=new s.JG(e)}}},211(t,e,i){"use strict";i.d(e,{h:()=>StardogSparqlParser});var s=i(8);const{sparqlTokenMap:n,stardogSparqlTokens:r}=i(489);class StardogSparqlParser extends s.s{constructor(t,e=r,i){super(t,e),this.supportsRdf12=!1,this.ValidateQuery=this.RULE("ValidateQuery",()=>{this.CONSUME(n.VALIDATE),this.OR([{ALT:()=>this.CONSUME(n.ALL)},{ALT:()=>this.SUBRULE(this.MultiGraphRef)},{ALT:()=>{this.AT_LEAST_ONE(()=>this.SUBRULE1(this.iri)),this.OPTION(()=>this.SUBRULE2(this.MultiGraphRef))}}]),this.OPTION1(()=>this.SUBRULE3(this.UsingShapesClause)),this.OPTION2(()=>this.SUBRULE4(this.LimitClause)),this.OPTION3(()=>this.SUBRULE5(this.LimitPerShapeClause))}),this.MultiGraphRef=this.RULE("MultiGraphRef",()=>{this.CONSUME(n.GRAPH),this.AT_LEAST_ONE(()=>this.SUBRULE(this.iri))}),this.UsingShapesClause=this.RULE("UsingShapesClause",()=>{this.CONSUME(n.USING),this.CONSUME(n.SHAPES),this.OR([{ALT:()=>this.AT_LEAST_ONE(()=>this.SUBRULE(this.iri))},{ALT:()=>this.SUBRULE1(this.MultiGraphRef)},{ALT:()=>this.SUBRULE2(this.QuadData)}])}),this.LimitPerShapeClause=this.RULE("LimitPerShapeClause",()=>{this.CONSUME(n.LIMIT),this.CONSUME(n.PER),this.CONSUME(n.SHAPE),this.CONSUME(n.INTEGER)}),this.Query=this.OVERRIDE_RULE("Query",()=>{this.OR([{ALT:()=>this.SUBRULE(this.SelectQuery)},{ALT:()=>this.SUBRULE(this.ConstructQuery)},{ALT:()=>this.SUBRULE(this.DescribeQuery)},{ALT:()=>this.SUBRULE(this.AskQuery)},{ALT:()=>this.SUBRULE(this.PathQuery)},{ALT:()=>this.SUBRULE(this.ValidateQuery)}]),this.SUBRULE(this.ValuesClause)}),this.PathQuery=this.RULE("PathQuery",()=>{this.SUBRULE(this.PathSpec),this.MANY(()=>this.SUBRULE(this.DatasetClause)),this.CONSUME(n.START),this.SUBRULE(this.PathTerminal),this.CONSUME(n.END),this.SUBRULE1(this.PathTerminal),this.SUBRULE(this.Via),this.OPTION(()=>this.SUBRULE(this.MaxLength)),this.SUBRULE(this.SolutionModifier)}),this.Via=this.RULE("Via",()=>{this.CONSUME(n.VIA),this.OR([{ALT:()=>this.SUBRULE(this.GroupGraphPattern)},{ALT:()=>this.SUBRULE(this.Var)},{ALT:()=>this.SUBRULE(this.Path)}])}),this.PathTerminal=this.RULE("PathTerminal",()=>{this.SUBRULE(this.Var),this.OPTION(()=>{this.OR([{ALT:()=>{this.CONSUME(n.Equals),this.SUBRULE(this.Constant)}},{ALT:()=>this.SUBRULE(this.GroupGraphPattern)}])})}),this.PathSpec=this.RULE("PathSpec",()=>{this.OR([{ALT:()=>this.CONSUME(n.PATHS)},{ALT:()=>this.CONSUME(n.PATHS_SHORTEST)},{ALT:()=>this.CONSUME(n.PATHS_ALL)}]),this.OPTION1(()=>this.CONSUME(n.CYCLIC))}),this.GraphPatternNotTriples=this.OVERRIDE_RULE("GraphPatternNotTriples",()=>{this.OR([{ALT:()=>this.SUBRULE(this.GroupOrUnionGraphPattern)},{ALT:()=>this.SUBRULE(this.OptionalGraphPattern)},{ALT:()=>this.SUBRULE(this.MinusGraphPattern)},{ALT:()=>this.SUBRULE(this.GraphGraphPattern)},{ALT:()=>this.SUBRULE(this.ServiceGraphPattern)},{ALT:()=>this.SUBRULE(this.Filter)},{ALT:()=>this.SUBRULE(this.Bind)},{ALT:()=>this.SUBRULE(this.Unnest)},{ALT:()=>this.SUBRULE(this.InlineData)}])}),this.TriplesSameSubject=this.OVERRIDE_RULE("TriplesSameSubject",()=>{this.OR([{ALT:()=>{this.SUBRULE(this.VarOrTerm),this.SUBRULE(this.PropertyListNotEmpty)}},{ALT:()=>{this.SUBRULE(this.EmbeddedTriplePattern),this.SUBRULE1(this.PropertyListNotEmpty,{ARGS:[!0]})}},{ALT:()=>{this.SUBRULE(this.TriplesNode),this.SUBRULE(this.PropertyList)}}])}),this.PropertyListNotEmpty=this.OVERRIDE_RULE("PropertyListNotEmpty",t=>{this.SUBRULE(this.Verb),this.OR([{ALT:()=>{this.SUBRULE(this.ObjectList)}},{GATE:()=>!t,ALT:()=>{this.SUBRULE(this.EmbeddedPropertyList),this.SUBRULE(this.Object)}}]),this.MANY(()=>{this.CONSUME(n.Semicolon),this.OPTION(()=>{this.SUBRULE1(this.Verb),this.OR1([{ALT:()=>{this.SUBRULE1(this.ObjectList)}},{GATE:()=>!t,ALT:()=>{this.SUBRULE1(this.EmbeddedPropertyList),this.SUBRULE1(this.Object)}}])})})}),this.EmbeddedPropertyList=this.RULE("EmbeddedPropertyList",()=>{this.CONSUME(n.LCurly),this.SUBRULE(this.PropertyListNotEmpty,{ARGS:[!0]}),this.CONSUME(n.RCurly)}),this.Object=this.OVERRIDE_RULE("Object",()=>{this.OR([{ALT:()=>this.SUBRULE(this.GraphNode)},{ALT:()=>this.SUBRULE(this.EmbeddedTriplePattern)}])}),this.GraphNode=this.OVERRIDE_RULE("GraphNode",()=>{this.OR([{ALT:()=>this.SUBRULE(this.VarOrTerm)},{ALT:()=>this.SUBRULE(this.TriplesNode)}])}),this.TriplesSameSubjectPath=this.OVERRIDE_RULE("TriplesSameSubjectPath",()=>{this.OR([{ALT:()=>{this.SUBRULE(this.VarOrTerm),this.SUBRULE(this.PropertyListPathNotEmpty)}},{ALT:()=>{this.SUBRULE(this.EmbeddedTriplePattern),this.SUBRULE1(this.PropertyListPathNotEmpty,{ARGS:[!0]})}},{ALT:()=>{this.SUBRULE(this.TriplesNodePath),this.SUBRULE(this.PropertyListPath)}}])}),this.PropertyListPathNotEmpty=this.OVERRIDE_RULE("PropertyListPathNotEmpty",t=>{this.OR([{ALT:()=>{this.OR1([{ALT:()=>this.SUBRULE(this.VerbPath)},{ALT:()=>this.SUBRULE1(this.VerbSimple)}]),this.SUBRULE(this.ObjectListPath)}},{GATE:()=>!t,ALT:()=>{this.SUBRULE(this.Verb),this.SUBRULE(this.EmbeddedPropertyListPath),this.SUBRULE(this.ObjectPath)}}]),this.MANY(()=>{this.CONSUME(n.Semicolon),this.OPTION(()=>{this.OR2([{ALT:()=>{this.OR3([{ALT:()=>this.SUBRULE1(this.VerbPath)},{ALT:()=>this.SUBRULE2(this.VerbSimple)}]),this.SUBRULE1(this.ObjectListPath)}},{GATE:()=>!t,ALT:()=>{this.SUBRULE1(this.Verb),this.SUBRULE1(this.EmbeddedPropertyListPath),this.SUBRULE1(this.ObjectPath)}}])})})}),this.EmbeddedPropertyListPath=this.RULE("EmbeddedPropertyListPath",()=>{this.CONSUME(n.LCurly),this.SUBRULE(this.PropertyListPathNotEmpty,{ARGS:[!0]}),this.CONSUME(n.RCurly)}),this.GraphNodePath=this.OVERRIDE_RULE("GraphNodePath",()=>{this.OR([{ALT:()=>this.SUBRULE(this.VarOrTermOrEmbeddedTriplePattern)},{ALT:()=>this.SUBRULE(this.TriplesNodePath)}])}),this.EmbeddedTriplePattern=this.RULE("EmbeddedTriplePattern",()=>{this.CONSUME(n.LEmbed),this.SUBRULE(this.VarOrBlankNodeOrIriOrLit),this.SUBRULE(this.Verb),this.SUBRULE1(this.VarOrBlankNodeOrIriOrLit),this.CONSUME(n.REmbed)}),this.VarOrTermOrEmbeddedTriplePattern=this.RULE("VarOrTermOrEmbeddedTriplePattern",()=>{this.OR([{ALT:()=>this.SUBRULE(this.Var)},{ALT:()=>this.SUBRULE(this.GraphTerm)},{ALT:()=>this.SUBRULE(this.EmbeddedTriplePattern)}])}),this.Bind=this.OVERRIDE_RULE("Bind",()=>{this.CONSUME(n.BIND),this.CONSUME(n.LParen),this.SUBRULE(this.ExpressionOrEmbeddedTriplePattern),this.CONSUME(n.AS),this.SUBRULE(this.Var),this.CONSUME(n.RParen)}),this.ExpressionOrEmbeddedTriplePattern=this.RULE("ExpressionOrEmbeddedTriplePattern",()=>{this.OR([{ALT:()=>this.SUBRULE(this.Expression)},{ALT:()=>this.SUBRULE(this.EmbeddedTriplePattern)}])}),this.VarOrBlankNodeOrIriOrLit=this.RULE("VarOrBlankNodeOrIriOrLit",()=>{this.OR([{ALT:()=>this.SUBRULE(this.Var)},{ALT:()=>this.SUBRULE(this.BlankNode)},{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.RDFLiteral)},{ALT:()=>this.SUBRULE(this.NumericLiteral)},{ALT:()=>this.SUBRULE(this.BooleanLiteral)}])}),this.Unnest=this.RULE("Unnest",()=>{this.CONSUME(n.UNNEST),this.CONSUME(n.LParen),this.SUBRULE(this.Expression),this.CONSUME(n.AS),this.SUBRULE(this.Var),this.CONSUME(n.RParen)}),this.BuiltInCall=this.OVERRIDE_RULE("BuiltInCall",()=>{this.OR([{ALT:()=>this.SUBRULE(this.Aggregate)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STR)},{ALT:()=>this.SUBRULE(this.BuiltInCall_LANG)},{ALT:()=>this.SUBRULE(this.BuiltInCall_LANGMATCHES)},{ALT:()=>this.SUBRULE(this.BuiltInCall_DATATYPE)},{ALT:()=>this.SUBRULE(this.BuiltInCall_BOUND)},{ALT:()=>this.SUBRULE(this.BuiltInCall_IRI)},{ALT:()=>this.SUBRULE(this.BuiltInCall_URI)},{ALT:()=>this.SUBRULE(this.BuiltInCall_BNODE)},{ALT:()=>this.SUBRULE(this.BuiltInCall_RAND)},{ALT:()=>this.SUBRULE(this.BuiltInCall_ABS)},{ALT:()=>this.SUBRULE(this.BuiltInCall_CEIL)},{ALT:()=>this.SUBRULE(this.BuiltInCall_FLOOR)},{ALT:()=>this.SUBRULE(this.BuiltInCall_ROUND)},{ALT:()=>this.SUBRULE(this.BuiltInCall_CONCAT)},{ALT:()=>this.SUBRULE(this.SubstringExpression)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STRLEN)},{ALT:()=>this.SUBRULE(this.StrReplaceExpression)},{ALT:()=>this.SUBRULE(this.BuiltInCall_UCASE)},{ALT:()=>this.SUBRULE(this.BuiltInCall_LCASE)},{ALT:()=>this.SUBRULE(this.BuiltInCall_ENCODE_FOR_URI)},{ALT:()=>this.SUBRULE(this.BuiltInCall_CONTAINS)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STRSTARTS)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STRENDS)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STRBEFORE)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STRAFTER)},{ALT:()=>this.SUBRULE(this.BuiltInCall_YEAR)},{ALT:()=>this.SUBRULE(this.BuiltInCall_MONTH)},{ALT:()=>this.SUBRULE(this.BuiltInCall_DAY)},{ALT:()=>this.SUBRULE(this.BuiltInCall_HOURS)},{ALT:()=>this.SUBRULE(this.BuiltInCall_MINUTES)},{ALT:()=>this.SUBRULE(this.BuiltInCall_SECONDS)},{ALT:()=>this.SUBRULE(this.BuiltInCall_TIMEZONE)},{ALT:()=>this.SUBRULE(this.BuiltInCall_TZ)},{ALT:()=>this.SUBRULE(this.BuiltInCall_NOW)},{ALT:()=>this.SUBRULE(this.BuiltInCall_UUID)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STRUUID)},{ALT:()=>this.SUBRULE(this.BuiltInCall_MD5)},{ALT:()=>this.SUBRULE(this.BuiltInCall_SHA1)},{ALT:()=>this.SUBRULE(this.BuiltInCall_SHA256)},{ALT:()=>this.SUBRULE(this.BuiltInCall_SHA384)},{ALT:()=>this.SUBRULE(this.BuiltInCall_SHA512)},{ALT:()=>this.SUBRULE(this.BuiltInCall_COALESCE)},{ALT:()=>this.SUBRULE(this.BuiltInCall_IF)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STRLANG)},{ALT:()=>this.SUBRULE(this.BuiltInCall_STRDT)},{ALT:()=>this.SUBRULE(this.BuiltInCall_sameTerm)},{ALT:()=>this.SUBRULE(this.BuiltInCall_isIRI)},{ALT:()=>this.SUBRULE(this.BuiltInCall_isURI)},{ALT:()=>this.SUBRULE(this.BuiltInCall_isBLANK)},{ALT:()=>this.SUBRULE(this.BuiltInCall_isLITERAL)},{ALT:()=>this.SUBRULE(this.BuiltInCall_isNUMERIC)},{ALT:()=>this.SUBRULE(this.RegexExpression)},{ALT:()=>this.SUBRULE(this.ExistsFunction)},{ALT:()=>this.SUBRULE(this.NotExistsFunction)},{ALT:()=>this.SUBRULE(this.StardogOrCustomFunction)}])}),this.StardogOrCustomFunction=this.RULE("StardogOrCustomFunction",()=>{this.CONSUME(n.UNKNOWN),this.SUBRULE(this.ExpressionList)}),this.ConstructTemplate=this.OVERRIDE_RULE("ConstructTemplate",()=>{this.CONSUME(n.LCurly),this.OPTION(()=>this.SUBRULE(this.Quads)),this.CONSUME(n.RCurly)}),i||this.performSelfAnalysis()}}},264(t,e,i){"use strict";i.d(e,{E:()=>W3SpecSparqlParser});var s=i(8);const{baseTokens:n}=i(489);class W3SpecSparqlParser extends s.s{constructor(t){super(t,n),this.performSelfAnalysis()}}},771(t,e,i){"use strict";i.d(e,{StardogSparqlParser:()=>s.h});i(8),i(264);var s=i(211);i(489);const{keywords:n}=i(35),{terminals:r}=i(718)},35(t,e,i){"use strict";i.d(e,{y:()=>a,keywords:()=>h});var s=i(59),n=function(t,e){var i={};for(var s in t)Object.prototype.hasOwnProperty.call(t,s)&&e.indexOf(s)<0&&(i[s]=t[s]);if(null!=t&&"function"==typeof Object.getOwnPropertySymbols){var n=0;for(s=Object.getOwnPropertySymbols(t);n<s.length;n++)e.indexOf(s[n])<0&&Object.prototype.propertyIsEnumerable.call(t,s[n])&&(i[s[n]]=t[s[n]])}return i};var r=function(t,e){var i={};for(var s in t)Object.prototype.hasOwnProperty.call(t,s)&&e.indexOf(s)<0&&(i[s]=t[s]);if(null!=t&&"function"==typeof Object.getOwnPropertySymbols){var n=0;for(s=Object.getOwnPropertySymbols(t);n<s.length;n++)e.indexOf(s[n])<0&&Object.prototype.propertyIsEnumerable.call(t,s[n])&&(i[s[n]]=t[s[n]])}return i};const a=t=>{var{longer_alt:e=o}=t,i=r(t,["longer_alt"]);return(t=>{var{name:e,pattern:i}=t,r=n(t,["name","pattern"]);return(0,s.Ey)(Object.assign({name:e,pattern:i||new RegExp(e,"i")},r))})(Object.assign({longer_alt:e},i))},o=(0,s.Ey)({name:"UNKNOWN",pattern:/\w+/i}),h={SELECT:a({name:"SELECT"}),CONSTRUCT:a({name:"CONSTRUCT"}),DISTINCT:a({name:"DISTINCT"}),START:a({name:"START"}),END:a({name:"END"}),VIA:a({name:"VIA"}),PATHS:a({name:"PATHS"}),PATHS_ALL:a({name:"PATHS_ALL",pattern:/PATHS ALL/i}),PATHS_SHORTEST:a({name:"PATHS_SHORTEST",pattern:/PATHS SHORTEST/i}),CYCLIC:a({name:"CYCLIC"}),AS:a({name:"AS"}),WHERE:a({name:"WHERE"}),A:a({name:"A",pattern:/a/}),GROUP_BY:a({name:"GROUP_BY",pattern:/GROUP BY/i}),ORDER_BY:a({name:"ORDER_BY",pattern:/ORDER BY/i}),BY:a({name:"BY"}),BASE:a({name:"BASE"}),PREFIX:a({name:"PREFIX"}),DESCRIBE:a({name:"DESCRIBE"}),ASK:a({name:"ASK"}),FROM:a({name:"FROM"}),REDUCED:a({name:"REDUCED"}),NAMED:a({name:"NAMED"}),HAVING:a({name:"HAVING"}),ASC:a({name:"ASC"}),DESC:a({name:"DESC"}),OFFSET:a({name:"OFFSET"}),LIMIT:a({name:"LIMIT"}),VALUES:a({name:"VALUES"}),LOAD:a({name:"LOAD"}),SILENT:a({name:"SILENT"}),INTO:a({name:"INTO"}),CLEAR:a({name:"CLEAR"}),DROP:a({name:"DROP"}),CREATE:a({name:"CREATE"}),ADD:a({name:"ADD"}),TO:a({name:"TO"}),MOVE:a({name:"MOVE"}),COPY:a({name:"COPY"}),INSERT_DATA:a({name:"INSERT_DATA",pattern:/INSERT +DATA/i}),DELETE_DATA:a({name:"DELETE_DATA",pattern:/DELETE +DATA/i}),DELETE_WHERE:a({name:"DELETE_WHERE",pattern:/DELETE +WHERE/i}),WITH:a({name:"WITH"}),DELETE:a({name:"DELETE"}),INSERT:a({name:"INSERT"}),USING:a({name:"USING"}),DEFAULT:a({name:"DEFAULT"}),GRAPH:a({name:"GRAPH"}),ALL:a({name:"ALL"}),OPTIONAL:a({name:"OPTIONAL"}),SERVICE:a({name:"SERVICE"}),BIND:a({name:"BIND"}),UNNEST:a({name:"UNNEST"}),UNDEF:a({name:"UNDEF"}),MINUS:a({name:"MINUS"}),UNION:a({name:"UNION"}),FILTER:a({name:"FILTER"}),STR:a({name:"STR"}),LANG:a({name:"LANG"}),LANGMATCHES:a({name:"LANGMATCHES"}),DATATYPE:a({name:"DATATYPE"}),BOUND:a({name:"BOUND"}),IRI:a({name:"IRI"}),URI:a({name:"URI"}),BNODE:a({name:"BNODE"}),RAND:a({name:"RAND"}),ABS:a({name:"ABS"}),CEIL:a({name:"CEIL"}),FLOOR:a({name:"FLOOR"}),ROUND:a({name:"ROUND"}),CONCAT:a({name:"CONCAT"}),STRLEN:a({name:"STRLEN"}),UCASE:a({name:"UCASE"}),LCASE:a({name:"LCASE"}),ENCODE_FOR_URI:a({name:"ENCODE_FOR_URI"}),CONTAINS:a({name:"CONTAINS"}),STRSTARTS:a({name:"STRSTARTS"}),STRENDS:a({name:"STRENDS"}),STRBEFORE:a({name:"STRBEFORE"}),STRAFTER:a({name:"STRAFTER"}),YEAR:a({name:"YEAR"}),MONTH:a({name:"MONTH"}),DAY:a({name:"DAY"}),HOURS:a({name:"HOURS"}),MINUTES:a({name:"MINUTES"}),SECONDS:a({name:"SECONDS"}),TIMEZONE:a({name:"TIMEZONE"}),TZ:a({name:"TZ"}),NOW:a({name:"NOW"}),UUID:a({name:"UUID"}),STRUUID:a({name:"STRUUID"}),MD5:a({name:"MD5"}),SHA1:a({name:"SHA1"}),SHA256:a({name:"SHA256"}),SHA384:a({name:"SHA384"}),SHA512:a({name:"SHA512"}),COALESCE:a({name:"COALESCE"}),IF:a({name:"IF"}),STRLANG:a({name:"STRLANG"}),STRDT:a({name:"STRDT"}),sameTerm:a({name:"sameTerm"}),isIRI:a({name:"isIRI"}),isURI:a({name:"isURI"}),isBLANK:a({name:"isBLANK"}),isLITERAL:a({name:"isLITERAL"}),isNUMERIC:a({name:"isNUMERIC"}),REGEX:a({name:"REGEX"}),SUBSTR:a({name:"SUBSTR"}),REPLACE:a({name:"REPLACE"}),EXISTS:a({name:"EXISTS"}),NOT_EXISTS:a({name:"NOT_EXISTS",pattern:/NOT EXISTS/i}),COUNT:a({name:"COUNT"}),SUM:a({name:"SUM"}),MIN:a({name:"MIN"}),AVG:a({name:"AVG"}),SAMPLE:a({name:"SAMPLE"}),GROUP_CONCAT:a({name:"GROUP_CONCAT"}),SEPARATOR:a({name:"SEPARATOR"}),VERSION:a({name:"VERSION"}),LANGDIR:a({name:"LANGDIR"}),STRLANGDIR:a({name:"STRLANGDIR"}),hasLANG:a({name:"hasLANG"}),hasLANGDIR:a({name:"hasLANGDIR"}),isTRIPLE:a({name:"isTRIPLE"}),TRIPLE:a({name:"TRIPLE"}),SUBJECT:a({name:"SUBJECT"}),PREDICATE:a({name:"PREDICATE"}),OBJECT:a({name:"OBJECT"}),TRUE:a({name:"TRUE"}),FALSE:a({name:"FALSE"}),IN:a({name:"IN"}),NOT_IN:a({name:"NOT_IN",pattern:/NOT IN/i}),MAX_LENGTH:a({name:"MAX_LENGTH",pattern:/MAX LENGTH/i}),MAX:a({name:"MAX"}),VALIDATE:a({name:"VALIDATE"}),SHAPES:a({name:"SHAPES"}),SHAPE:a({name:"SHAPE"}),PER:a({name:"PER"}),UNKNOWN:o}},718(t,e,i){"use strict";var s=i(59),n=i(788);const r=(0,s.Ey)({name:"STRING_LITERAL_LONG1",pattern:n.STRING_LITERAL_LONG1}),a=(0,s.Ey)({name:"STRING_LITERAL_LONG2",pattern:n.STRING_LITERAL_LONG2}),o=(0,s.Ey)({name:"PNAME_LN",pattern:n.PNAME_LN}),h={IRIREF:(0,s.Ey)({name:"IRIREF",pattern:n.IRIREF,label:"<http://example.com>"}),LANGTAG:(0,s.Ey)({name:"LANGTAG",pattern:n.LANGTAG}),LANG_DIR:(0,s.Ey)({name:"LANG_DIR",pattern:n.LANG_DIR}),INTEGER:(0,s.Ey)({name:"INTEGER",pattern:n.INTEGER}),DECIMAL:(0,s.Ey)({name:"DECIMAL",pattern:n.DECIMAL}),DOUBLE:(0,s.Ey)({name:"DOUBLE",pattern:n.DOUBLE}),INTEGER_POSITIVE:(0,s.Ey)({name:"INTEGER_POSITIVE",pattern:n.INTEGER_POSITIVE}),DECIMAL_POSITIVE:(0,s.Ey)({name:"DECIMAL_POSITIVE",pattern:n.DECIMAL_POSITIVE}),DOUBLE_POSITIVE:(0,s.Ey)({name:"DOUBLE_POSITIVE",pattern:n.DOUBLE_POSITIVE}),INTEGER_NEGATIVE:(0,s.Ey)({name:"INTEGER_NEGATIVE",pattern:n.INTEGER_NEGATIVE}),DECIMAL_NEGATIVE:(0,s.Ey)({name:"DECIMAL_NEGATIVE",pattern:n.DECIMAL_NEGATIVE}),DOUBLE_NEGATIVE:(0,s.Ey)({name:"DOUBLE_NEGATIVE",pattern:n.DOUBLE_NEGATIVE}),STRING_LITERAL_LONG1:r,STRING_LITERAL_LONG2:a,STRING_LITERAL1:(0,s.Ey)({name:"STRING_LITERAL1",pattern:n.STRING_LITERAL1,longer_alt:r}),STRING_LITERAL2:(0,s.Ey)({name:"STRING_LITERAL2",pattern:n.STRING_LITERAL2,longer_alt:a}),NIL:(0,s.Ey)({name:"NIL",pattern:n.NIL,label:"()"}),ANON:(0,s.Ey)({name:"ANON",pattern:n.ANON,label:"[]"}),PNAME_LN:o,PNAME_NS:(0,s.Ey)({name:"PNAME_NS",pattern:n.PNAME_NS,longer_alt:o}),BLANK_NODE_LABEL:(0,s.Ey)({name:"BLANK_NODE_LABEL",pattern:n.BLANK_NODE_LABEL}),VAR1:(0,s.Ey)({name:"VAR1",pattern:n.VAR1,label:"?foo"}),VAR2:(0,s.Ey)({name:"VAR2",pattern:n.VAR2,label:"?bar"}),PERCENT:(0,s.Ey)({name:"PERCENT",pattern:n.PERCENT})};i.d(e,["terminals",0,h])},489(t,e,i){"use strict";i.r(e);var s=i(59),n=i(718),r=i(35);const a={IRIREF:n.terminals.IRIREF,LANGTAG:n.terminals.LANGTAG,LANG_DIR:n.terminals.LANG_DIR,INTEGER:n.terminals.INTEGER,DECIMAL:n.terminals.DECIMAL,DOUBLE:n.terminals.DOUBLE,INTEGER_POSITIVE:n.terminals.INTEGER_POSITIVE,DECIMAL_POSITIVE:n.terminals.DECIMAL_POSITIVE,DOUBLE_POSITIVE:n.terminals.DOUBLE_POSITIVE,INTEGER_NEGATIVE:n.terminals.INTEGER_NEGATIVE,DECIMAL_NEGATIVE:n.terminals.DECIMAL_NEGATIVE,DOUBLE_NEGATIVE:n.terminals.DOUBLE_NEGATIVE,STRING_LITERAL1:n.terminals.STRING_LITERAL1,STRING_LITERAL2:n.terminals.STRING_LITERAL2,STRING_LITERAL_LONG1:n.terminals.STRING_LITERAL_LONG1,STRING_LITERAL_LONG2:n.terminals.STRING_LITERAL_LONG2,NIL:n.terminals.NIL,ANON:n.terminals.ANON,PNAME_NS:n.terminals.PNAME_NS,PNAME_LN:n.terminals.PNAME_LN,BLANK_NODE_LABEL:n.terminals.BLANK_NODE_LABEL,VAR1:n.terminals.VAR1,VAR2:n.terminals.VAR2,PERCENT:n.terminals.PERCENT,Comment:(0,s.Ey)({name:"Comment",pattern:/#[^\n]*/,group:"comments"}),LCurly:(0,s.Ey)({name:"LCurly",pattern:"{"}),RCurly:(0,s.Ey)({name:"RCurly",pattern:"}"}),LParen:(0,s.Ey)({name:"LParen",pattern:"("}),RParen:(0,s.Ey)({name:"RParen",pattern:")"}),WhiteSpace:(0,s.Ey)({name:"WhiteSpace",pattern:/\s+/,group:s.JG.SKIPPED,line_breaks:!0}),Star:(0,s.Ey)({name:"Star",pattern:"*"}),UNKNOWN:r.keywords.UNKNOWN,Period:(0,s.Ey)({name:"Period",pattern:"."}),QuestionMark:(0,s.Ey)({name:"QuestionMark",pattern:"?"}),Plus:(0,s.Ey)({name:"Plus",pattern:"+"}),Minus:(0,s.Ey)({name:"Minus",pattern:"-"}),LBracket:(0,s.Ey)({name:"LBracket",pattern:"["}),RBracket:(0,s.Ey)({name:"RBracket",pattern:"]"}),Semicolon:(0,s.Ey)({name:"Semicolon",pattern:";"}),Comma:(0,s.Ey)({name:"Comma",pattern:","}),Pipe:(0,s.Ey)({name:"Pipe",pattern:"|"}),ForwardSlash:(0,s.Ey)({name:"ForwardSlash",pattern:"/"}),Caret:(0,s.Ey)({name:"Caret",pattern:"^"}),DoubleCaret:(0,s.Ey)({name:"DoubleCaret",pattern:"^^"}),Bang:(0,s.Ey)({name:"Bang",pattern:"!"}),LogicalOr:(0,s.Ey)({name:"LogicalOr",pattern:"||"}),LogicalAnd:(0,s.Ey)({name:"LogicalAnd",pattern:"&&"}),Equals:(0,s.Ey)({name:"Equals",pattern:"="}),NotEquals:(0,s.Ey)({name:"NotEquals",pattern:"!="}),LessThan:(0,s.Ey)({name:"LessThan",pattern:"<"}),GreaterThan:(0,s.Ey)({name:"GreaterThan",pattern:">"}),LessThanEquals:(0,s.Ey)({name:"LessThanEquals",pattern:"<="}),GreaterThanEquals:(0,s.Ey)({name:"GreaterThanEquals",pattern:">="}),LEmbed:(0,s.Ey)({name:"LEmbed",pattern:"<<"}),REmbed:(0,s.Ey)({name:"REmbed",pattern:">>"}),LTripleTerm:(0,s.Ey)({name:"LTripleTerm",pattern:"<<("}),RTripleTerm:(0,s.Ey)({name:"RTripleTerm",pattern:")>>"}),LAnnotation:(0,s.Ey)({name:"LAnnotation",pattern:"{|"}),RAnnotation:(0,s.Ey)({name:"RAnnotation",pattern:"|}"}),Tilde:(0,s.Ey)({name:"Tilde",pattern:"~"}),SELECT:r.keywords.SELECT,CONSTRUCT:r.keywords.CONSTRUCT,DISTINCT:r.keywords.DISTINCT,START:r.keywords.START,END:r.keywords.END,VIA:r.keywords.VIA,CYCLIC:r.keywords.CYCLIC,PATHS_SHORTEST:r.keywords.PATHS_SHORTEST,PATHS_ALL:r.keywords.PATHS_ALL,PATHS:r.keywords.PATHS,AS:r.keywords.AS,WHERE:r.keywords.WHERE,A:r.keywords.A,GROUP_BY:r.keywords.GROUP_BY,ORDER_BY:r.keywords.ORDER_BY,BY:r.keywords.BY,BASE:r.keywords.BASE,PREFIX:r.keywords.PREFIX,VERSION:r.keywords.VERSION,LANGDIR:r.keywords.LANGDIR,STRLANGDIR:r.keywords.STRLANGDIR,hasLANG:r.keywords.hasLANG,hasLANGDIR:r.keywords.hasLANGDIR,isTRIPLE:r.keywords.isTRIPLE,TRIPLE:r.keywords.TRIPLE,SUBJECT:r.keywords.SUBJECT,PREDICATE:r.keywords.PREDICATE,OBJECT:r.keywords.OBJECT,DESCRIBE:r.keywords.DESCRIBE,ASK:r.keywords.ASK,FROM:r.keywords.FROM,REDUCED:r.keywords.REDUCED,NAMED:r.keywords.NAMED,HAVING:r.keywords.HAVING,ASC:r.keywords.ASC,DESC:r.keywords.DESC,OFFSET:r.keywords.OFFSET,LIMIT:r.keywords.LIMIT,VALUES:r.keywords.VALUES,LOAD:r.keywords.LOAD,SILENT:r.keywords.SILENT,INTO:r.keywords.INTO,CLEAR:r.keywords.CLEAR,DROP:r.keywords.DROP,CREATE:r.keywords.CREATE,ADD:r.keywords.ADD,TO:r.keywords.TO,MOVE:r.keywords.MOVE,COPY:r.keywords.COPY,INSERT_DATA:r.keywords.INSERT_DATA,DELETE_DATA:r.keywords.DELETE_DATA,DELETE_WHERE:r.keywords.DELETE_WHERE,WITH:r.keywords.WITH,DELETE:r.keywords.DELETE,INSERT:r.keywords.INSERT,USING:r.keywords.USING,DEFAULT:r.keywords.DEFAULT,GRAPH:r.keywords.GRAPH,ALL:r.keywords.ALL,OPTIONAL:r.keywords.OPTIONAL,SERVICE:r.keywords.SERVICE,BIND:r.keywords.BIND,UNNEST:r.keywords.UNNEST,UNDEF:r.keywords.UNDEF,MINUS:r.keywords.MINUS,UNION:r.keywords.UNION,FILTER:r.keywords.FILTER,STR:r.keywords.STR,LANG:r.keywords.LANG,LANGMATCHES:r.keywords.LANGMATCHES,DATATYPE:r.keywords.DATATYPE,BOUND:r.keywords.BOUND,IRI:r.keywords.IRI,URI:r.keywords.URI,BNODE:r.keywords.BNODE,RAND:r.keywords.RAND,ABS:r.keywords.ABS,CEIL:r.keywords.CEIL,FLOOR:r.keywords.FLOOR,ROUND:r.keywords.ROUND,CONCAT:r.keywords.CONCAT,STRLEN:r.keywords.STRLEN,UCASE:r.keywords.UCASE,LCASE:r.keywords.LCASE,ENCODE_FOR_URI:r.keywords.ENCODE_FOR_URI,CONTAINS:r.keywords.CONTAINS,STRSTARTS:r.keywords.STRSTARTS,STRENDS:r.keywords.STRENDS,STRBEFORE:r.keywords.STRBEFORE,STRAFTER:r.keywords.STRAFTER,YEAR:r.keywords.YEAR,MONTH:r.keywords.MONTH,DAY:r.keywords.DAY,HOURS:r.keywords.HOURS,MINUTES:r.keywords.MINUTES,SECONDS:r.keywords.SECONDS,TIMEZONE:r.keywords.TIMEZONE,TZ:r.keywords.TZ,NOW:r.keywords.NOW,UUID:r.keywords.UUID,STRUUID:r.keywords.STRUUID,MD5:r.keywords.MD5,SHA1:r.keywords.SHA1,SHA256:r.keywords.SHA256,SHA384:r.keywords.SHA384,SHA512:r.keywords.SHA512,COALESCE:r.keywords.COALESCE,IF:r.keywords.IF,STRLANG:r.keywords.STRLANG,STRDT:r.keywords.STRDT,sameTerm:r.keywords.sameTerm,isIRI:r.keywords.isIRI,isURI:r.keywords.isURI,isBLANK:r.keywords.isBLANK,isLITERAL:r.keywords.isLITERAL,isNUMERIC:r.keywords.isNUMERIC,REGEX:r.keywords.REGEX,SUBSTR:r.keywords.SUBSTR,REPLACE:r.keywords.REPLACE,EXISTS:r.keywords.EXISTS,NOT_EXISTS:r.keywords.NOT_EXISTS,COUNT:r.keywords.COUNT,SUM:r.keywords.SUM,MIN:r.keywords.MIN,AVG:r.keywords.AVG,SAMPLE:r.keywords.SAMPLE,GROUP_CONCAT:r.keywords.GROUP_CONCAT,SEPARATOR:r.keywords.SEPARATOR,TRUE:r.keywords.TRUE,FALSE:r.keywords.FALSE,IN:r.keywords.IN,NOT_IN:r.keywords.NOT_IN,MAX_LENGTH:r.keywords.MAX_LENGTH,MAX:r.keywords.MAX,VALIDATE:r.keywords.VALIDATE,SHAPES:r.keywords.SHAPES,SHAPE:r.keywords.SHAPE,PER:r.keywords.PER},o=[a.NIL,a.ANON,a.LAnnotation,a.RAnnotation,a.LCurly,a.RCurly,a.LParen,a.RTripleTerm,a.RParen,a.Tilde,a.WhiteSpace,a.IRIREF,a.LANG_DIR,a.DOUBLE,a.DECIMAL,a.INTEGER,a.DOUBLE_POSITIVE,a.DECIMAL_POSITIVE,a.INTEGER_POSITIVE,a.DOUBLE_NEGATIVE,a.DECIMAL_NEGATIVE,a.INTEGER_NEGATIVE,a.STRING_LITERAL1,a.STRING_LITERAL2,a.STRING_LITERAL_LONG1,a.STRING_LITERAL_LONG2,a.PNAME_NS,a.PNAME_LN,a.BLANK_NODE_LABEL,a.VAR1,a.VAR2,a.Comment,a.SELECT,a.CONSTRUCT,a.DISTINCT,a.Star,a.WHERE,a.GROUP_BY,a.ORDER_BY,a.BY,a.Period,a.QuestionMark,a.Plus,a.Minus,a.LBracket,a.RBracket,a.PERCENT,a.BASE,a.PREFIX,a.VERSION,a.DESCRIBE,a.ASK,a.FROM,a.REDUCED,a.NAMED,a.HAVING,a.ASC,a.DESC,a.OFFSET,a.LIMIT,a.VALUES,a.LOAD,a.SILENT,a.INTO,a.AS,a.CLEAR,a.DROP,a.CREATE,a.ADD,a.TO,a.MOVE,a.COPY,a.INSERT_DATA,a.DELETE_DATA,a.DELETE_WHERE,a.WITH,a.DELETE,a.INSERT,a.USING,a.DEFAULT,a.GRAPH,a.ALL,a.OPTIONAL,a.SERVICE,a.BIND,a.UNDEF,a.MINUS,a.UNION,a.FILTER,a.LANGMATCHES,a.LANGDIR,a.LANG,a.DATATYPE,a.BOUND,a.IRI,a.URI,a.BNODE,a.RAND,a.ABS,a.CEIL,a.FLOOR,a.ROUND,a.CONCAT,a.STRLEN,a.UCASE,a.LCASE,a.ENCODE_FOR_URI,a.CONTAINS,a.STRSTARTS,a.STRENDS,a.STRBEFORE,a.STRAFTER,a.YEAR,a.MONTH,a.DAY,a.HOURS,a.MINUTES,a.SECONDS,a.TIMEZONE,a.TZ,a.NOW,a.UUID,a.STRUUID,a.MD5,a.SHA1,a.SHA256,a.SHA384,a.SHA512,a.COALESCE,a.IF,a.STRLANGDIR,a.STRLANG,a.STRDT,a.STR,a.sameTerm,a.isIRI,a.isURI,a.isBLANK,a.isLITERAL,a.isNUMERIC,a.hasLANGDIR,a.hasLANG,a.isTRIPLE,a.TRIPLE,a.SUBJECT,a.PREDICATE,a.OBJECT,a.REGEX,a.SUBSTR,a.REPLACE,a.EXISTS,a.NOT_EXISTS,a.COUNT,a.SUM,a.MIN,a.MAX_LENGTH,a.MAX,a.AVG,a.SAMPLE,a.GROUP_CONCAT,a.SEPARATOR,a.TRUE,a.FALSE,a.Semicolon,a.Comma,a.ForwardSlash,a.DoubleCaret,a.Caret,a.LogicalOr,a.Pipe,a.LogicalAnd,a.NotEquals,a.Bang,a.Equals,a.LessThanEquals,a.GreaterThanEquals,a.LTripleTerm,a.LEmbed,a.REmbed,a.LessThan,a.GreaterThan,a.IN,a.NOT_IN,a.A,a.UNKNOWN],h=[a.START,a.END,a.VIA,a.CYCLIC,a.PATHS_SHORTEST,a.PATHS_ALL,a.PATHS],c=[...h,a.UNNEST,a.VALIDATE,a.SHAPES,a.SHAPE,a.PER],l=o.indexOf(a.SELECT),E=[...o.slice(0,l),...c,...o.slice(l)],u=[...o,...c];i.d(e,["baseTokens",0,o,"nonStandardTokens",0,c,"pathsTokens",0,h,"sparqlTokenMap",0,a,"sparqlTokenTypes",0,u,"stardogSparqlTokens",0,E])},532(t,e,i){"use strict";i.r(e);var s=i(59),n=i(788);const{turtleTokenTypes:r,turtleTokenMap:a}=i(400),{sparqlTokenMap:o}=i(489);var h;!function(t){t.TURTLE="turtle",t.IFCLAUSE="ifclause",t.THENCLAUSE="thenclause"}(h||(h={}));const c=(0,s.Ey)({name:"Rule",pattern:/rule/i}),l=(0,s.Ey)({name:"If",pattern:/if/i,push_mode:h.IFCLAUSE}),E=(0,s.Ey)({name:"Then",pattern:/then/i,push_mode:h.THENCLAUSE}),u=(0,s.Ey)({name:"EndThen",pattern:"}",pop_mode:!0}),L=(0,s.Ey)({name:"GroupGraphPattern",pattern:(t,e=0)=>{if("{"!==t[e])return null;let i,s=1;for(i=e+1;i<t.length&&s>0;i++)"{"===t[i]?s++:"}"===t[i]&&s--;return s>0?null:n.CATCH_ALL_AT_LEAST_ONE.exec(t.slice(e,i))},line_breaks:!0,pop_mode:!0}),U=(0,s.Ey)({name:"TriplesBlock",pattern:/[^{}]+/,line_breaks:!0}),S=r.indexOf(a.IRIREF),p={modes:{[h.TURTLE]:[...r.slice(0,S+1),c,l,E,...r.slice(S+1)],[h.IFCLAUSE]:[a.WhiteSpace,L],[h.THENCLAUSE]:[a.WhiteSpace,o.LCurly,u,U]},defaultMode:h.TURTLE},R={Rule:c,If:l,Then:E,EndThen:u,GroupGraphPattern:L,TriplesBlock:U},T=[c,l,E,u,o.LCurly,...r,L,U];i.d(e,["multiModeLexerDefinition",0,p,"srsTokenMap",0,R,"srsTokenTypes",0,T])},344(t,e,i){"use strict";i.r(e);var s=i(400),n=i(489);const{turtleTokenTypes:r}=i(400),a=Object.assign({GRAPH:n.sparqlTokenMap.GRAPH},s.turtleTokenMap),o=r.indexOf(s.turtleTokenMap.PN_CHARS_BASE),h=[...r.slice(0,o),n.sparqlTokenMap.GRAPH,...r.slice(o)];i.d(e,["trigTokenMap",0,a,"trigTokenTypes",0,h])},400(t,e,i){"use strict";i.r(e);var s=i(59),n=i(384),r=i(788),a=i(311);const{sparqlTokenMap:o}=i(489),h=/[\0-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/,c={Comment:(0,s.Ey)({name:"Comment",pattern:/#[^\n]*/,group:"comments"}),LBracket:o.LBracket,RBracket:o.RBracket,LCurly:o.LCurly,RCurly:o.RCurly,LParen:o.LParen,RParen:o.RParen,Period:o.Period,WhiteSpace:o.WhiteSpace,TRUE:(0,s.Ey)({name:"TRUE",pattern:/true/}),FALSE:(0,s.Ey)({name:"FALSE",pattern:/false/}),DoubleCaret:o.DoubleCaret,LEmbed:o.LEmbed,REmbed:o.REmbed,LTripleTerm:o.LTripleTerm,RTripleTerm:o.RTripleTerm,LAnnotation:o.LAnnotation,RAnnotation:o.RAnnotation,Tilde:o.Tilde,Comma:o.Comma,Semicolon:o.Semicolon,A:o.A,PREFIX:o.PREFIX,BASE:o.BASE,VERSION:o.VERSION,PNAME_NS:o.PNAME_NS,PNAME_LN:o.PNAME_LN,BLANK_NODE_LABEL:o.BLANK_NODE_LABEL,TTL_BASE:(0,s.Ey)({name:"TTL_BASE",pattern:/@base/}),TTL_PREFIX:(0,s.Ey)({name:"TTL_PREFIX",pattern:/@prefix/}),TTL_VERSION:(0,s.Ey)({name:"TTL_VERSION",pattern:/@version/}),LANG_DIR:o.LANG_DIR,INTEGER:(0,s.Ey)({name:"INTEGER",pattern:n.y.and(n.y.option(/[+-]/),/\d+/)}),DECIMAL:(0,s.Ey)({name:"DECIMAL",pattern:n.y.and(n.y.option(/[+-]/),/(\d*\.\d+)/)}),DOUBLE:(0,s.Ey)({name:"DOUBLE",pattern:n.y.and(n.y.option(/[+-]/),n.y.or(n.y.and(/\d+\.\d*/,r.EXPONENT),n.y.and(/\.\d+/,r.EXPONENT),n.y.and(/\d+/,r.EXPONENT)))}),EXPONENT:(0,s.Ey)({name:"EXPONENT",pattern:r.EXPONENT}),ECHAR:(0,s.Ey)({name:"ECHAR",pattern:r.ECHAR}),ANON:o.ANON,PLX:(0,s.Ey)({name:"PLX",pattern:r.PLX}),PERCENT:o.PERCENT,HEX:(0,s.Ey)({name:"HEX",pattern:r.HEX}),STRING_LITERAL_LONG_SINGLE_QUOTE:(0,s.Ey)({name:"STRING_LITERAL_LONG_SINGLE_QUOTE",pattern:(t,e=0)=>{const i=a.dR.exec(t.slice(e));return i&&null!==(0,a.x4)(i[1])?i:null},line_breaks:!0}),STRING_LITERAL_LONG_QUOTE:(0,s.Ey)({name:"STRING_LITERAL_LONG_QUOTE",pattern:(t,e=0)=>{const i=a.dv.exec(t.slice(e));return i&&null!==(0,a.x4)(i[1])?i:null},line_breaks:!0}),STRING_LITERAL_QUOTE:(0,s.Ey)({name:"STRING_LITERAL_QUOTE",pattern:(t,e=0)=>{const i=t.slice(e);let s=a.Dm.exec(i);return s||(s=a.BC.exec(i),s?null===(0,a.x4)(s[1])?null:s:null)},line_breaks:!1}),STRING_LITERAL_SINGLE_QUOTE:(0,s.Ey)({name:"STRING_LITERAL_SINGLE_QUOTE",pattern:(t,e=0)=>{const i=t.slice(e);let s=a.hB.exec(i);return s||(s=a.BG.exec(i),s?null===(0,a.x4)(s[1])?null:s:null)},line_breaks:!1}),UCHAR:(0,s.Ey)({name:"UCHAR",pattern:(t,e=0)=>h.exec(t.slice(e)),line_breaks:!1}),IRIREF:(0,s.Ey)({name:"IRIREF",pattern:(t,e=0)=>{const i=t.slice(e);let s=a.V9.exec(i);if(s)return s;if(s=a.eq.exec(i),!s)return null;const n=(0,a.x4)(s[1]);return null===n||a.E0.test(n)?null:s},line_breaks:!1}),PN_CHARS_BASE:(0,s.Ey)({name:"PN_CHARS_BASE",pattern:r.PN_CHARS_BASE}),PN_CHARS_U:(0,s.Ey)({name:"PN_CHARS_U",pattern:r.PN_CHARS_U}),PN_CHARS:(0,s.Ey)({name:"PN_CHARS",pattern:r.PN_CHARS}),PN_PREFIX:(0,s.Ey)({name:"PN_PREFIX",pattern:r.PN_PREFIX}),PN_LOCAL:(0,s.Ey)({name:"PN_LOCAL",pattern:r.PN_LOCAL}),PN_LOCAL_ESC:(0,s.Ey)({name:"PN_LOCAL_ESC",pattern:r.PN_LOCAL_ESC}),UNKNOWN:o.UNKNOWN},l=[c.Comment,o.ANON,o.LBracket,o.RBracket,c.LAnnotation,c.RAnnotation,o.LCurly,o.RCurly,o.LParen,c.RTripleTerm,o.RParen,c.Tilde,o.WhiteSpace,c.TRUE,c.FALSE,o.Comma,o.Semicolon,o.PNAME_NS,o.A,o.PREFIX,o.BASE,c.VERSION,o.PNAME_LN,o.BLANK_NODE_LABEL,c.TTL_BASE,c.TTL_PREFIX,c.TTL_VERSION,c.LANG_DIR,c.DOUBLE,c.DECIMAL,o.Period,o.DoubleCaret,c.LTripleTerm,c.LEmbed,c.REmbed,c.IRIREF,c.STRING_LITERAL_LONG_SINGLE_QUOTE,c.STRING_LITERAL_LONG_QUOTE,c.STRING_LITERAL_QUOTE,c.STRING_LITERAL_SINGLE_QUOTE,c.INTEGER,c.EXPONENT,c.PLX,o.PERCENT,c.HEX,c.PN_CHARS_BASE,c.PN_CHARS_U,c.PN_CHARS,c.PN_PREFIX,c.PN_LOCAL,c.PN_LOCAL_ESC,c.ECHAR,c.UCHAR,c.UNKNOWN];i.d(e,["turtleTokenMap",0,c,"turtleTokenTypes",0,l])},59(t,e,i){"use strict";i.d(e,{cA:()=>Th,JG:()=>ma,X2:()=>jo,Ey:()=>xa,G:()=>Fa});const s=function(t,e){for(var i=-1,s=null==t?0:t.length;++i<s&&!1!==e(t[i],i,t););return t};const n=function(t){return function(e,i,s){for(var n=-1,r=Object(e),a=s(e),o=a.length;o--;){var h=a[t?o:++n];if(!1===i(r[h],h,r))break}return e}}();const r=function(t,e){for(var i=-1,s=Array(t);++i<t;)s[i]=e(i);return s};const a="object"==typeof i.g&&i.g&&i.g.Object===Object&&i.g;var o="object"==typeof self&&self&&self.Object===Object&&self;const h=a||o||Function("return this")();const c=h.Symbol;var l=Object.prototype,E=l.hasOwnProperty,u=l.toString,L=c?c.toStringTag:void 0;const U=function(t){var e=E.call(t,L),i=t[L];try{t[L]=void 0;var s=!0}catch(t){}var n=u.call(t);return s&&(e?t[L]=i:delete t[L]),n};var S=Object.prototype.toString;const p=function(t){return S.call(t)};var R=c?c.toStringTag:void 0;const T=function(t){return null==t?void 0===t?"[object Undefined]":"[object Null]":R&&R in Object(t)?U(t):p(t)};const d=function(t){return null!=t&&"object"==typeof t};const N=function(t){return d(t)&&"[object Arguments]"==T(t)};var O=Object.prototype,A=O.hasOwnProperty,f=O.propertyIsEnumerable,C=N(function(){return arguments}())?N:function(t){return d(t)&&A.call(t,"callee")&&!f.call(t,"callee")};const m=C;const I=Array.isArray;const y=function(){return!1};var B= true&&exports&&!exports.nodeType&&exports,_=B&&"object"=="object"&&module&&!module.nodeType&&module,P=_&&_.exports===B?h.Buffer:void 0;const M=(P?P.isBuffer:void 0)||y;var g=/^(?:0|[1-9]\d*)$/;const k=function(t,e){var i=typeof t;return!!(e=e??9007199254740991)&&("number"==i||"symbol"!=i&&g.test(t))&&t>-1&&t%1==0&&t<e};const v=function(t){return"number"==typeof t&&t>-1&&t%1==0&&t<=9007199254740991};var b={};b["[object Float32Array]"]=b["[object Float64Array]"]=b["[object Int8Array]"]=b["[object Int16Array]"]=b["[object Int32Array]"]=b["[object Uint8Array]"]=b["[object Uint8ClampedArray]"]=b["[object Uint16Array]"]=b["[object Uint32Array]"]=!0,b["[object Arguments]"]=b["[object Array]"]=b["[object ArrayBuffer]"]=b["[object Boolean]"]=b["[object DataView]"]=b["[object Date]"]=b["[object Error]"]=b["[object Function]"]=b["[object Map]"]=b["[object Number]"]=b["[object Object]"]=b["[object RegExp]"]=b["[object Set]"]=b["[object String]"]=b["[object WeakMap]"]=!1;const D=function(t){return d(t)&&v(t.length)&&!!b[T(t)]};const x=function(t){return function(e){return t(e)}};var G= true&&exports&&!exports.nodeType&&exports,w=G&&"object"=="object"&&module&&!module.nodeType&&module,F=w&&w.exports===G&&a.process;const j=function(){try{var t=w&&w.require&&w.require("util").types;return t||F&&F.binding&&F.binding("util")}catch(t){}}();var V=j&&j.isTypedArray;const H=V?x(V):D;var $=Object.prototype.hasOwnProperty;const K=function(t,e){var i=I(t),s=!i&&m(t),n=!i&&!s&&M(t),a=!i&&!s&&!n&&H(t),o=i||s||n||a,h=o?r(t.length,String):[],c=h.length;for(var l in t)!e&&!$.call(t,l)||o&&("length"==l||n&&("offset"==l||"parent"==l)||a&&("buffer"==l||"byteLength"==l||"byteOffset"==l)||k(l,c))||h.push(l);return h};var W=Object.prototype;const q=function(t){var e=t&&t.constructor;return t===("function"==typeof e&&e.prototype||W)};const Y=function(t,e){return function(i){return t(e(i))}};const Q=Y(Object.keys,Object);var z=Object.prototype.hasOwnProperty;const X=function(t){if(!q(t))return Q(t);var e=[];for(var i in Object(t))z.call(t,i)&&"constructor"!=i&&e.push(i);return e};const J=function(t){var e=typeof t;return null!=t&&("object"==e||"function"==e)};const Z=function(t){if(!J(t))return!1;var e=T(t);return"[object Function]"==e||"[object GeneratorFunction]"==e||"[object AsyncFunction]"==e||"[object Proxy]"==e};const tt=function(t){return null!=t&&v(t.length)&&!Z(t)};const et=function(t){return tt(t)?K(t):X(t)};const it=function(t,e){return function(i,s){if(null==i)return i;if(!tt(i))return t(i,s);for(var n=i.length,r=e?n:-1,a=Object(i);(e?r--:++r<n)&&!1!==s(a[r],r,a););return i}}(function(t,e){return t&&n(t,e,et)});const st=function(t){return t};const nt=function(t){return"function"==typeof t?t:st};const rt=function(t,e){return(I(t)?s:it)(t,nt(e))};const at=function(t,e){for(var i=-1,s=null==t?0:t.length,n=Array(s);++i<s;)n[i]=e(t[i],i,t);return n};const ot=function(t,e){return at(e,function(e){return t[e]})};const ht=function(t){return null==t?[]:ot(t,et(t))};const ct=h["__core-js_shared__"];var lt,Et=(lt=/[^.]+$/.exec(ct&&ct.keys&&ct.keys.IE_PROTO||""))?"Symbol(src)_1."+lt:"";const ut=function(t){return!!Et&&Et in t};var Lt=Function.prototype.toString;const Ut=function(t){if(null!=t){try{return Lt.call(t)}catch(t){}try{return t+""}catch(t){}}return""};var St=/^\[object .+?Constructor\]$/,pt=Function.prototype,Rt=Object.prototype,Tt=pt.toString,dt=Rt.hasOwnProperty,Nt=RegExp("^"+Tt.call(dt).replace(/[\\^$.*+?()[\]{}|]/g,"\\$&").replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g,"$1.*?")+"$");const Ot=function(t){return!(!J(t)||ut(t))&&(Z(t)?Nt:St).test(Ut(t))};const At=function(t,e){return null==t?void 0:t[e]};const ft=function(t,e){var i=At(t,e);return Ot(i)?i:void 0};const Ct=ft(h,"DataView");const mt=ft(h,"Map");const It=ft(h,"Promise");const yt=ft(h,"Set");const Bt=ft(h,"WeakMap");var _t="[object Map]",Pt="[object Promise]",Mt="[object Set]",gt="[object WeakMap]",kt="[object DataView]",vt=Ut(Ct),bt=Ut(mt),Dt=Ut(It),xt=Ut(yt),Gt=Ut(Bt),wt=T;(Ct&&wt(new Ct(new ArrayBuffer(1)))!=kt||mt&&wt(new mt)!=_t||It&&wt(It.resolve())!=Pt||yt&&wt(new yt)!=Mt||Bt&&wt(new Bt)!=gt)&&(wt=function(t){var e=T(t),i="[object Object]"==e?t.constructor:void 0,s=i?Ut(i):"";if(s)switch(s){case vt:return kt;case bt:return _t;case Dt:return Pt;case xt:return Mt;case Gt:return gt}return e});const Ft=wt;var jt=Object.prototype.hasOwnProperty;const Vt=function(t){if(null==t)return!0;if(tt(t)&&(I(t)||"string"==typeof t||"function"==typeof t.splice||M(t)||H(t)||m(t)))return!t.length;var e=Ft(t);if("[object Map]"==e||"[object Set]"==e)return!t.size;if(q(t))return!X(t).length;for(var i in t)if(jt.call(t,i))return!1;return!0};const Ht=function(){this.__data__=[],this.size=0};const $t=function(t,e){return t===e||t!=t&&e!=e};const Kt=function(t,e){for(var i=t.length;i--;)if($t(t[i][0],e))return i;return-1};var Wt=Array.prototype.splice;const qt=function(t){var e=this.__data__,i=Kt(e,t);return!(i<0)&&(i==e.length-1?e.pop():Wt.call(e,i,1),--this.size,!0)};const Yt=function(t){var e=this.__data__,i=Kt(e,t);return i<0?void 0:e[i][1]};const Qt=function(t){return Kt(this.__data__,t)>-1};const zt=function(t,e){var i=this.__data__,s=Kt(i,t);return s<0?(++this.size,i.push([t,e])):i[s][1]=e,this};function Xt(t){var e=-1,i=null==t?0:t.length;for(this.clear();++e<i;){var s=t[e];this.set(s[0],s[1])}}Xt.prototype.clear=Ht,Xt.prototype.delete=qt,Xt.prototype.get=Yt,Xt.prototype.has=Qt,Xt.prototype.set=zt;const Jt=Xt;const Zt=function(){this.__data__=new Jt,this.size=0};const te=function(t){var e=this.__data__,i=e.delete(t);return this.size=e.size,i};const ee=function(t){return this.__data__.get(t)};const ie=function(t){return this.__data__.has(t)};const se=ft(Object,"create");const ne=function(){this.__data__=se?se(null):{},this.size=0};const re=function(t){var e=this.has(t)&&delete this.__data__[t];return this.size-=e?1:0,e};var ae=Object.prototype.hasOwnProperty;const oe=function(t){var e=this.__data__;if(se){var i=e[t];return"__lodash_hash_undefined__"===i?void 0:i}return ae.call(e,t)?e[t]:void 0};var he=Object.prototype.hasOwnProperty;const ce=function(t){var e=this.__data__;return se?void 0!==e[t]:he.call(e,t)};const le=function(t,e){var i=this.__data__;return this.size+=this.has(t)?0:1,i[t]=se&&void 0===e?"__lodash_hash_undefined__":e,this};function Ee(t){var e=-1,i=null==t?0:t.length;for(this.clear();++e<i;){var s=t[e];this.set(s[0],s[1])}}Ee.prototype.clear=ne,Ee.prototype.delete=re,Ee.prototype.get=oe,Ee.prototype.has=ce,Ee.prototype.set=le;const ue=Ee;const Le=function(){this.size=0,this.__data__={hash:new ue,map:new(mt||Jt),string:new ue}};const Ue=function(t){var e=typeof t;return"string"==e||"number"==e||"symbol"==e||"boolean"==e?"__proto__"!==t:null===t};const Se=function(t,e){var i=t.__data__;return Ue(e)?i["string"==typeof e?"string":"hash"]:i.map};const pe=function(t){var e=Se(this,t).delete(t);return this.size-=e?1:0,e};const Re=function(t){return Se(this,t).get(t)};const Te=function(t){return Se(this,t).has(t)};const de=function(t,e){var i=Se(this,t),s=i.size;return i.set(t,e),this.size+=i.size==s?0:1,this};function Ne(t){var e=-1,i=null==t?0:t.length;for(this.clear();++e<i;){var s=t[e];this.set(s[0],s[1])}}Ne.prototype.clear=Le,Ne.prototype.delete=pe,Ne.prototype.get=Re,Ne.prototype.has=Te,Ne.prototype.set=de;const Oe=Ne;const Ae=function(t,e){var i=this.__data__;if(i instanceof Jt){var s=i.__data__;if(!mt||s.length<199)return s.push([t,e]),this.size=++i.size,this;i=this.__data__=new Oe(s)}return i.set(t,e),this.size=i.size,this};function fe(t){var e=this.__data__=new Jt(t);this.size=e.size}fe.prototype.clear=Zt,fe.prototype.delete=te,fe.prototype.get=ee,fe.prototype.has=ie,fe.prototype.set=Ae;const Ce=fe;const me=function(t){return this.__data__.set(t,"__lodash_hash_undefined__"),this};const Ie=function(t){return this.__data__.has(t)};function ye(t){var e=-1,i=null==t?0:t.length;for(this.__data__=new Oe;++e<i;)this.add(t[e])}ye.prototype.add=ye.prototype.push=me,ye.prototype.has=Ie;const Be=ye;const _e=function(t,e){for(var i=-1,s=null==t?0:t.length;++i<s;)if(e(t[i],i,t))return!0;return!1};const Pe=function(t,e){return t.has(e)};const Me=function(t,e,i,s,n,r){var a=1&i,o=t.length,h=e.length;if(o!=h&&!(a&&h>o))return!1;var c=r.get(t),l=r.get(e);if(c&&l)return c==e&&l==t;var E=-1,u=!0,L=2&i?new Be:void 0;for(r.set(t,e),r.set(e,t);++E<o;){var U=t[E],S=e[E];if(s)var p=a?s(S,U,E,e,t,r):s(U,S,E,t,e,r);if(void 0!==p){if(p)continue;u=!1;break}if(L){if(!_e(e,function(t,e){if(!Pe(L,e)&&(U===t||n(U,t,i,s,r)))return L.push(e)})){u=!1;break}}else if(U!==S&&!n(U,S,i,s,r)){u=!1;break}}return r.delete(t),r.delete(e),u};const ge=h.Uint8Array;const ke=function(t){var e=-1,i=Array(t.size);return t.forEach(function(t,s){i[++e]=[s,t]}),i};const ve=function(t){var e=-1,i=Array(t.size);return t.forEach(function(t){i[++e]=t}),i};var be=c?c.prototype:void 0,De=be?be.valueOf:void 0;const xe=function(t,e,i,s,n,r,a){switch(i){case"[object DataView]":if(t.byteLength!=e.byteLength||t.byteOffset!=e.byteOffset)return!1;t=t.buffer,e=e.buffer;case"[object ArrayBuffer]":return!(t.byteLength!=e.byteLength||!r(new ge(t),new ge(e)));case"[object Boolean]":case"[object Date]":case"[object Number]":return $t(+t,+e);case"[object Error]":return t.name==e.name&&t.message==e.message;case"[object RegExp]":case"[object String]":return t==e+"";case"[object Map]":var o=ke;case"[object Set]":var h=1&s;if(o||(o=ve),t.size!=e.size&&!h)return!1;var c=a.get(t);if(c)return c==e;s|=2,a.set(t,e);var l=Me(o(t),o(e),s,n,r,a);return a.delete(t),l;case"[object Symbol]":if(De)return De.call(t)==De.call(e)}return!1};const Ge=function(t,e){for(var i=-1,s=e.length,n=t.length;++i<s;)t[n+i]=e[i];return t};const we=function(t,e,i){var s=e(t);return I(t)?s:Ge(s,i(t))};const Fe=function(t,e){for(var i=-1,s=null==t?0:t.length,n=0,r=[];++i<s;){var a=t[i];e(a,i,t)&&(r[n++]=a)}return r};const je=function(){return[]};var Ve=Object.prototype.propertyIsEnumerable,He=Object.getOwnPropertySymbols;const $e=He?function(t){return null==t?[]:(t=Object(t),Fe(He(t),function(e){return Ve.call(t,e)}))}:je;const Ke=function(t){return we(t,et,$e)};var We=Object.prototype.hasOwnProperty;const qe=function(t,e,i,s,n,r){var a=1&i,o=Ke(t),h=o.length;if(h!=Ke(e).length&&!a)return!1;for(var c=h;c--;){var l=o[c];if(!(a?l in e:We.call(e,l)))return!1}var E=r.get(t),u=r.get(e);if(E&&u)return E==e&&u==t;var L=!0;r.set(t,e),r.set(e,t);for(var U=a;++c<h;){var S=t[l=o[c]],p=e[l];if(s)var R=a?s(p,S,l,e,t,r):s(S,p,l,t,e,r);if(!(void 0===R?S===p||n(S,p,i,s,r):R)){L=!1;break}U||(U="constructor"==l)}if(L&&!U){var T=t.constructor,d=e.constructor;T==d||!("constructor"in t)||!("constructor"in e)||"function"==typeof T&&T instanceof T&&"function"==typeof d&&d instanceof d||(L=!1)}return r.delete(t),r.delete(e),L};var Ye="[object Arguments]",Qe="[object Array]",ze="[object Object]",Xe=Object.prototype.hasOwnProperty;const Je=function(t,e,i,s,n,r){var a=I(t),o=I(e),h=a?Qe:Ft(t),c=o?Qe:Ft(e),l=(h=h==Ye?ze:h)==ze,E=(c=c==Ye?ze:c)==ze,u=h==c;if(u&&M(t)){if(!M(e))return!1;a=!0,l=!1}if(u&&!l)return r||(r=new Ce),a||H(t)?Me(t,e,i,s,n,r):xe(t,e,h,i,s,n,r);if(!(1&i)){var L=l&&Xe.call(t,"__wrapped__"),U=E&&Xe.call(e,"__wrapped__");if(L||U){var S=L?t.value():t,p=U?e.value():e;return r||(r=new Ce),n(S,p,i,s,r)}}return!!u&&(r||(r=new Ce),qe(t,e,i,s,n,r))};const Ze=function t(e,i,s,n,r){return e===i||(null==e||null==i||!d(e)&&!d(i)?e!=e&&i!=i:Je(e,i,s,n,t,r))};const ti=function(t,e,i,s){var n=i.length,r=n,a=!s;if(null==t)return!r;for(t=Object(t);n--;){var o=i[n];if(a&&o[2]?o[1]!==t[o[0]]:!(o[0]in t))return!1}for(;++n<r;){var h=(o=i[n])[0],c=t[h],l=o[1];if(a&&o[2]){if(void 0===c&&!(h in t))return!1}else{var E=new Ce;if(s)var u=s(c,l,h,t,e,E);if(!(void 0===u?Ze(l,c,3,s,E):u))return!1}}return!0};const ei=function(t){return t==t&&!J(t)};const ii=function(t){for(var e=et(t),i=e.length;i--;){var s=e[i],n=t[s];e[i]=[s,n,ei(n)]}return e};const si=function(t,e){return function(i){return null!=i&&(i[t]===e&&(void 0!==e||t in Object(i)))}};const ni=function(t){var e=ii(t);return 1==e.length&&e[0][2]?si(e[0][0],e[0][1]):function(i){return i===t||ti(i,t,e)}};const ri=function(t){return"symbol"==typeof t||d(t)&&"[object Symbol]"==T(t)};var ai=/\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\\]|\\.)*?\1)\]/,oi=/^\w*$/;const hi=function(t,e){if(I(t))return!1;var i=typeof t;return!("number"!=i&&"symbol"!=i&&"boolean"!=i&&null!=t&&!ri(t))||(oi.test(t)||!ai.test(t)||null!=e&&t in Object(e))};function ci(t,e){if("function"!=typeof t||null!=e&&"function"!=typeof e)throw new TypeError("Expected a function");var i=function(){var s=arguments,n=e?e.apply(this,s):s[0],r=i.cache;if(r.has(n))return r.get(n);var a=t.apply(this,s);return i.cache=r.set(n,a)||r,a};return i.cache=new(ci.Cache||Oe),i}ci.Cache=Oe;const li=ci;var Ei=/[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|$))/g,ui=/\\(\\)?/g;const Li=function(t){var e=li(t,function(t){return 500===i.size&&i.clear(),t}),i=e.cache;return e}(function(t){var e=[];return 46===t.charCodeAt(0)&&e.push(""),t.replace(Ei,function(t,i,s,n){e.push(s?n.replace(ui,"$1"):i||t)}),e});var Ui=c?c.prototype:void 0,Si=Ui?Ui.toString:void 0;const pi=function t(e){if("string"==typeof e)return e;if(I(e))return at(e,t)+"";if(ri(e))return Si?Si.call(e):"";var i=e+"";return"0"==i&&1/e==-1/0?"-0":i};const Ri=function(t){return null==t?"":pi(t)};const Ti=function(t,e){return I(t)?t:hi(t,e)?[t]:Li(Ri(t))};const di=function(t){if("string"==typeof t||ri(t))return t;var e=t+"";return"0"==e&&1/t==-1/0?"-0":e};const Ni=function(t,e){for(var i=0,s=(e=Ti(e,t)).length;null!=t&&i<s;)t=t[di(e[i++])];return i&&i==s?t:void 0};const Oi=function(t,e,i){var s=null==t?void 0:Ni(t,e);return void 0===s?i:s};const Ai=function(t,e){return null!=t&&e in Object(t)};const fi=function(t,e,i){for(var s=-1,n=(e=Ti(e,t)).length,r=!1;++s<n;){var a=di(e[s]);if(!(r=null!=t&&i(t,a)))break;t=t[a]}return r||++s!=n?r:!!(n=null==t?0:t.length)&&v(n)&&k(a,n)&&(I(t)||m(t))};const Ci=function(t,e){return null!=t&&fi(t,e,Ai)};const mi=function(t,e){return hi(t)&&ei(e)?si(di(t),e):function(i){var s=Oi(i,t);return void 0===s&&s===e?Ci(i,t):Ze(e,s,3)}};const Ii=function(t){return function(e){return null==e?void 0:e[t]}};const yi=function(t){return function(e){return Ni(e,t)}};const Bi=function(t){return hi(t)?Ii(di(t)):yi(t)};const _i=function(t){return"function"==typeof t?t:null==t?st:"object"==typeof t?I(t)?mi(t[0],t[1]):ni(t):Bi(t)};const Pi=function(t,e){var i=-1,s=tt(t)?Array(t.length):[];return it(t,function(t,n,r){s[++i]=e(t,n,r)}),s};const Mi=function(t,e){return(I(t)?at:Pi)(t,_i(e,3))};var gi=Object.prototype.hasOwnProperty;const ki=function(t,e){return null!=t&&gi.call(t,e)};const vi=function(t,e){return null!=t&&fi(t,e,ki)};const bi=function(){try{var t=ft(Object,"defineProperty");return t({},"",{}),t}catch(t){}}();const Di=function(t,e,i){"__proto__"==e&&bi?bi(t,e,{configurable:!0,enumerable:!0,value:i,writable:!0}):t[e]=i};var xi=Object.prototype.hasOwnProperty;const Gi=function(t,e,i){var s=t[e];xi.call(t,e)&&$t(s,i)&&(void 0!==i||e in t)||Di(t,e,i)};const wi=function(t,e,i,s){var n=!i;i||(i={});for(var r=-1,a=e.length;++r<a;){var o=e[r],h=s?s(i[o],t[o],o,i,t):void 0;void 0===h&&(h=t[o]),n?Di(i,o,h):Gi(i,o,h)}return i};const Fi=function(t,e){return t&&wi(e,et(e),t)};const ji=function(t){var e=[];if(null!=t)for(var i in Object(t))e.push(i);return e};var Vi=Object.prototype.hasOwnProperty;const Hi=function(t){if(!J(t))return ji(t);var e=q(t),i=[];for(var s in t)("constructor"!=s||!e&&Vi.call(t,s))&&i.push(s);return i};const $i=function(t){return tt(t)?K(t,!0):Hi(t)};const Ki=function(t,e){return t&&wi(e,$i(e),t)};var Wi= true&&exports&&!exports.nodeType&&exports,qi=Wi&&"object"=="object"&&module&&!module.nodeType&&module,Yi=qi&&qi.exports===Wi?h.Buffer:void 0,Qi=Yi?Yi.allocUnsafe:void 0;const zi=function(t,e){if(e)return t.slice();var i=t.length,s=Qi?Qi(i):new t.constructor(i);return t.copy(s),s};const Xi=function(t,e){var i=-1,s=t.length;for(e||(e=Array(s));++i<s;)e[i]=t[i];return e};const Ji=function(t,e){return wi(t,$e(t),e)};const Zi=Y(Object.getPrototypeOf,Object);const ts=Object.getOwnPropertySymbols?function(t){for(var e=[];t;)Ge(e,$e(t)),t=Zi(t);return e}:je;const es=function(t,e){return wi(t,ts(t),e)};const is=function(t){return we(t,$i,ts)};var ss=Object.prototype.hasOwnProperty;const ns=function(t){var e=t.length,i=new t.constructor(e);return e&&"string"==typeof t[0]&&ss.call(t,"index")&&(i.index=t.index,i.input=t.input),i};const rs=function(t){var e=new t.constructor(t.byteLength);return new ge(e).set(new ge(t)),e};const as=function(t,e){var i=e?rs(t.buffer):t.buffer;return new t.constructor(i,t.byteOffset,t.byteLength)};var os=/\w*$/;const hs=function(t){var e=new t.constructor(t.source,os.exec(t));return e.lastIndex=t.lastIndex,e};var cs=c?c.prototype:void 0,ls=cs?cs.valueOf:void 0;const Es=function(t){return ls?Object(ls.call(t)):{}};const us=function(t,e){var i=e?rs(t.buffer):t.buffer;return new t.constructor(i,t.byteOffset,t.length)};const Ls=function(t,e,i){var s=t.constructor;switch(e){case"[object ArrayBuffer]":return rs(t);case"[object Boolean]":case"[object Date]":return new s(+t);case"[object DataView]":return as(t,i);case"[object Float32Array]":case"[object Float64Array]":case"[object Int8Array]":case"[object Int16Array]":case"[object Int32Array]":case"[object Uint8Array]":case"[object Uint8ClampedArray]":case"[object Uint16Array]":case"[object Uint32Array]":return us(t,i);case"[object Map]":case"[object Set]":return new s;case"[object Number]":case"[object String]":return new s(t);case"[object RegExp]":return hs(t);case"[object Symbol]":return Es(t)}};var Us=Object.create;const Ss=function(){function t(){}return function(e){if(!J(e))return{};if(Us)return Us(e);t.prototype=e;var i=new t;return t.prototype=void 0,i}}();const ps=function(t){return"function"!=typeof t.constructor||q(t)?{}:Ss(Zi(t))};const Rs=function(t){return d(t)&&"[object Map]"==Ft(t)};var Ts=j&&j.isMap;const ds=Ts?x(Ts):Rs;const Ns=function(t){return d(t)&&"[object Set]"==Ft(t)};var Os=j&&j.isSet;const As=Os?x(Os):Ns;var fs="[object Arguments]",Cs="[object Function]",ms="[object Object]",Is={};Is[fs]=Is["[object Array]"]=Is["[object ArrayBuffer]"]=Is["[object DataView]"]=Is["[object Boolean]"]=Is["[object Date]"]=Is["[object Float32Array]"]=Is["[object Float64Array]"]=Is["[object Int8Array]"]=Is["[object Int16Array]"]=Is["[object Int32Array]"]=Is["[object Map]"]=Is["[object Number]"]=Is[ms]=Is["[object RegExp]"]=Is["[object Set]"]=Is["[object String]"]=Is["[object Symbol]"]=Is["[object Uint8Array]"]=Is["[object Uint8ClampedArray]"]=Is["[object Uint16Array]"]=Is["[object Uint32Array]"]=!0,Is["[object Error]"]=Is[Cs]=Is["[object WeakMap]"]=!1;const ys=function t(e,i,n,r,a,o){var h,c=1&i,l=2&i,E=4&i;if(n&&(h=a?n(e,r,a,o):n(e)),void 0!==h)return h;if(!J(e))return e;var u=I(e);if(u){if(h=ns(e),!c)return Xi(e,h)}else{var L=Ft(e),U=L==Cs||"[object GeneratorFunction]"==L;if(M(e))return zi(e,c);if(L==ms||L==fs||U&&!a){if(h=l||U?{}:ps(e),!c)return l?es(e,Ki(h,e)):Ji(e,Fi(h,e))}else{if(!Is[L])return a?e:{};h=Ls(e,L,c)}}o||(o=new Ce);var S=o.get(e);if(S)return S;o.set(e,h),As(e)?e.forEach(function(s){h.add(t(s,i,n,s,e,o))}):ds(e)&&e.forEach(function(s,r){h.set(r,t(s,i,n,r,e,o))});var p=u?void 0:(E?l?is:Ke:l?$i:et)(e);return s(p||e,function(s,r){p&&(s=e[r=s]),Gi(h,r,t(s,i,n,r,e,o))}),h};const Bs=function(t){return ys(t,4)};function _s(t){function e(){}e.prototype=t;const i=new e;function s(){return typeof i.bar}return s(),s(),t}const Ps=function(t,e,i){var s=-1,n=t.length;e<0&&(e=-e>n?0:n+e),(i=i>n?n:i)<0&&(i+=n),n=e>i?0:i-e>>>0,e>>>=0;for(var r=Array(n);++s<n;)r[s]=t[s+e];return r};var Ms=/\s/;const gs=function(t){for(var e=t.length;e--&&Ms.test(t.charAt(e)););return e};var ks=/^\s+/;const vs=function(t){return t?t.slice(0,gs(t)+1).replace(ks,""):t};var bs=/^[-+]0x[0-9a-f]+$/i,Ds=/^0b[01]+$/i,xs=/^0o[0-7]+$/i,Gs=parseInt;const ws=function(t){if("number"==typeof t)return t;if(ri(t))return NaN;if(J(t)){var e="function"==typeof t.valueOf?t.valueOf():t;t=J(e)?e+"":e}if("string"!=typeof t)return 0===t?t:+t;t=vs(t);var i=Ds.test(t);return i||xs.test(t)?Gs(t.slice(2),i?2:8):bs.test(t)?NaN:+t};var Fs=1/0;const js=function(t){return t?(t=ws(t))===Fs||t===-1/0?17976931348623157e292*(t<0?-1:1):t==t?t:0:0===t?t:0};const Vs=function(t){var e=js(t),i=e%1;return e==e?i?e-i:e:0};const Hs=function(t,e,i){var s=null==t?0:t.length;return s?(e=i||void 0===e?1:Vs(e),Ps(t,e<0?0:e,s)):[]};const $s=function(t){return"string"==typeof t||!I(t)&&d(t)&&"[object String]"==T(t)};const Ks=function(t,e,i){switch(i.length){case 0:return t.call(e);case 1:return t.call(e,i[0]);case 2:return t.call(e,i[0],i[1]);case 3:return t.call(e,i[0],i[1],i[2])}return t.apply(e,i)};var Ws=Math.max;const qs=function(t,e,i){return e=Ws(void 0===e?t.length-1:e,0),function(){for(var s=arguments,n=-1,r=Ws(s.length-e,0),a=Array(r);++n<r;)a[n]=s[e+n];n=-1;for(var o=Array(e+1);++n<e;)o[n]=s[n];return o[e]=i(a),Ks(t,this,o)}};const Ys=function(t){return function(){return t}};const Qs=bi?function(t,e){return bi(t,"toString",{configurable:!0,enumerable:!1,value:Ys(e),writable:!0})}:st;var zs=Date.now;const Xs=function(t){var e=0,i=0;return function(){var s=zs(),n=16-(s-i);if(i=s,n>0){if(++e>=800)return arguments[0]}else e=0;return t.apply(void 0,arguments)}};const Js=Xs(Qs);const Zs=function(t,e){return Js(qs(t,e,st),t+"")};const tn=function(t,e,i){if(!J(i))return!1;var s=typeof e;return!!("number"==s?tt(i)&&k(e,i.length):"string"==s&&e in i)&&$t(i[e],t)};const en=function(t){return Zs(function(e,i){var s=-1,n=i.length,r=n>1?i[n-1]:void 0,a=n>2?i[2]:void 0;for(r=t.length>3&&"function"==typeof r?(n--,r):void 0,a&&tn(i[0],i[1],a)&&(r=n<3?void 0:r,n=1),e=Object(e);++s<n;){var o=i[s];o&&t(e,o,s,r)}return e})};var sn=Object.prototype.hasOwnProperty;const nn=en(function(t,e){if(q(e)||tt(e))wi(e,et(e),t);else for(var i in e)sn.call(e,i)&&Gi(t,i,e[i])});const rn=function(t,e,i,s){if(!J(t))return t;for(var n=-1,r=(e=Ti(e,t)).length,a=r-1,o=t;null!=o&&++n<r;){var h=di(e[n]),c=i;if("__proto__"===h||"constructor"===h||"prototype"===h)return t;if(n!=a){var l=o[h];void 0===(c=s?s(l,h,o):void 0)&&(c=J(l)?l:k(e[n+1])?[]:{})}Gi(o,h,c),o=o[h]}return t};const an=function(t,e,i){for(var s=-1,n=e.length,r={};++s<n;){var a=e[s],o=Ni(t,a);i(o,a)&&rn(r,Ti(a,t),o)}return r};const on=function(t,e){if(null==t)return{};var i=at(is(t),function(t){return[t]});return e=_i(e),an(t,i,function(t,i){return e(t,i[0])})};const hn=function(t){return d(t)&&"[object RegExp]"==T(t)};var cn=j&&j.isRegExp;const ln=cn?x(cn):hn;function En(t){return $s((e=t).LABEL)&&""!==e.LABEL?t.LABEL:t.name;// removed by dead control flow
- var e; }class un{get definition(){return this._definition}set definition(t){this._definition=t}constructor(t){this._definition=t}accept(t){t.visit(this),rt(this.definition,e=>{e.accept(t)})}}class Ln extends un{constructor(t){super([]),this.idx=1,nn(this,on(t,t=>void 0!==t))}set definition(t){}get definition(){return void 0!==this.referencedRule?this.referencedRule.definition:[]}accept(t){t.visit(this)}}class Un extends un{constructor(t){super(t.definition),this.orgText="",nn(this,on(t,t=>void 0!==t))}}class Sn extends un{constructor(t){super(t.definition),this.ignoreAmbiguities=!1,nn(this,on(t,t=>void 0!==t))}}class pn extends un{constructor(t){super(t.definition),this.idx=1,nn(this,on(t,t=>void 0!==t))}}class Rn extends un{constructor(t){super(t.definition),this.idx=1,nn(this,on(t,t=>void 0!==t))}}class Tn extends un{constructor(t){super(t.definition),this.idx=1,nn(this,on(t,t=>void 0!==t))}}class dn extends un{constructor(t){super(t.definition),this.idx=1,nn(this,on(t,t=>void 0!==t))}}class Nn extends un{constructor(t){super(t.definition),this.idx=1,nn(this,on(t,t=>void 0!==t))}}class On extends un{get definition(){return this._definition}set definition(t){this._definition=t}constructor(t){super(t.definition),this.idx=1,this.ignoreAmbiguities=!1,this.hasPredicates=!1,nn(this,on(t,t=>void 0!==t))}}class An{constructor(t){this.idx=1,nn(this,on(t,t=>void 0!==t))}accept(t){t.visit(this)}}function fn(t){function e(t){return Mi(t,fn)}if(t instanceof Ln){const e={type:"NonTerminal",name:t.nonTerminalName,idx:t.idx};return $s(t.label)&&(e.label=t.label),e}if(t instanceof Sn)return{type:"Alternative",definition:e(t.definition)};if(t instanceof pn)return{type:"Option",idx:t.idx,definition:e(t.definition)};if(t instanceof Rn)return{type:"RepetitionMandatory",idx:t.idx,definition:e(t.definition)};if(t instanceof Tn)return{type:"RepetitionMandatoryWithSeparator",idx:t.idx,separator:fn(new An({terminalType:t.separator})),definition:e(t.definition)};if(t instanceof Nn)return{type:"RepetitionWithSeparator",idx:t.idx,separator:fn(new An({terminalType:t.separator})),definition:e(t.definition)};if(t instanceof dn)return{type:"Repetition",idx:t.idx,definition:e(t.definition)};if(t instanceof On)return{type:"Alternation",idx:t.idx,definition:e(t.definition)};if(t instanceof An){const e={type:"Terminal",name:t.terminalType.name,label:En(t.terminalType),idx:t.idx};$s(t.label)&&(e.terminalLabel=t.label);const i=t.terminalType.PATTERN;return t.terminalType.PATTERN&&(e.pattern=ln(i)?i.source:i),e}if(t instanceof Un)return{type:"Rule",name:t.name,orgText:t.orgText,definition:e(t.definition)};throw Error("non exhaustive match")}class Cn{visit(t){const e=t;switch(e.constructor){case Ln:return this.visitNonTerminal(e);case Sn:return this.visitAlternative(e);case pn:return this.visitOption(e);case Rn:return this.visitRepetitionMandatory(e);case Tn:return this.visitRepetitionMandatoryWithSeparator(e);case Nn:return this.visitRepetitionWithSeparator(e);case dn:return this.visitRepetition(e);case On:return this.visitAlternation(e);case An:return this.visitTerminal(e);case Un:return this.visitRule(e);default:throw Error("non exhaustive match")}}visitNonTerminal(t){}visitAlternative(t){}visitOption(t){}visitRepetition(t){}visitRepetitionMandatory(t){}visitRepetitionMandatoryWithSeparator(t){}visitRepetitionWithSeparator(t){}visitAlternation(t){}visitTerminal(t){}visitRule(t){}}const mn=function(t,e){var i;return it(t,function(t,s,n){return!(i=e(t,s,n))}),!!i};const In=function(t,e,i){var s=I(t)?_e:mn;return i&&tn(t,e,i)&&(e=void 0),s(t,_i(e,3))};const yn=function(t,e,i,s){for(var n=t.length,r=i+(s?1:-1);s?r--:++r<n;)if(e(t[r],r,t))return r;return-1};const Bn=function(t){return t!=t};const _n=function(t,e,i){for(var s=i-1,n=t.length;++s<n;)if(t[s]===e)return s;return-1};const Pn=function(t,e,i){return e==e?_n(t,e,i):yn(t,Bn,i)};var Mn=Math.max;const gn=function(t,e,i,s){t=tt(t)?t:ht(t),i=i&&!s?Vs(i):0;var n=t.length;return i<0&&(i=Mn(n+i,0)),$s(t)?i<=n&&t.indexOf(e,i)>-1:!!n&&Pn(t,e,i)>-1};const kn=function(t,e){for(var i=-1,s=null==t?0:t.length;++i<s;)if(!e(t[i],i,t))return!1;return!0};const vn=function(t,e){var i=!0;return it(t,function(t,s,n){return i=!!e(t,s,n)}),i};const bn=function(t,e,i){var s=I(t)?kn:vn;return i&&tn(t,e,i)&&(e=void 0),s(t,_i(e,3))};function Dn(t,e=[]){return!!(t instanceof pn||t instanceof dn||t instanceof Nn)||(t instanceof On?In(t.definition,t=>Dn(t,e)):!(t instanceof Ln&&gn(e,t))&&(t instanceof un&&(t instanceof Ln&&e.push(t),bn(t.definition,t=>Dn(t,e)))))}function xn(t){if(t instanceof Ln)return"SUBRULE";if(t instanceof pn)return"OPTION";if(t instanceof On)return"OR";if(t instanceof Rn)return"AT_LEAST_ONE";if(t instanceof Tn)return"AT_LEAST_ONE_SEP";if(t instanceof Nn)return"MANY_SEP";if(t instanceof dn)return"MANY";if(t instanceof An)return"CONSUME";throw Error("non exhaustive match")}class Gn{walk(t,e=[]){rt(t.definition,(i,s)=>{const n=Hs(t.definition,s+1);if(i instanceof Ln)this.walkProdRef(i,n,e);else if(i instanceof An)this.walkTerminal(i,n,e);else if(i instanceof Sn)this.walkFlat(i,n,e);else if(i instanceof pn)this.walkOption(i,n,e);else if(i instanceof Rn)this.walkAtLeastOne(i,n,e);else if(i instanceof Tn)this.walkAtLeastOneSep(i,n,e);else if(i instanceof Nn)this.walkManySep(i,n,e);else if(i instanceof dn)this.walkMany(i,n,e);else{if(!(i instanceof On))throw Error("non exhaustive match");this.walkOr(i,n,e)}})}walkTerminal(t,e,i){}walkProdRef(t,e,i){}walkFlat(t,e,i){const s=e.concat(i);this.walk(t,s)}walkOption(t,e,i){const s=e.concat(i);this.walk(t,s)}walkAtLeastOne(t,e,i){const s=[new pn({definition:t.definition})].concat(e,i);this.walk(t,s)}walkAtLeastOneSep(t,e,i){const s=wn(t,e,i);this.walk(t,s)}walkMany(t,e,i){const s=[new pn({definition:t.definition})].concat(e,i);this.walk(t,s)}walkManySep(t,e,i){const s=wn(t,e,i);this.walk(t,s)}walkOr(t,e,i){const s=e.concat(i);rt(t.definition,t=>{const e=new Sn({definition:[t]});this.walk(e,s)})}}function wn(t,e,i){return[new pn({definition:[new An({terminalType:t.separator})].concat(t.definition)})].concat(e,i)}const Fn=function(t,e){return!!(null==t?0:t.length)&&Pn(t,e,0)>-1};const jn=function(t,e,i){for(var s=-1,n=null==t?0:t.length;++s<n;)if(i(e,t[s]))return!0;return!1};const Vn=function(){};var Hn=yt&&1/ve(new yt([,-0]))[1]==1/0?function(t){return new yt(t)}:Vn;const $n=Hn;const Kn=function(t,e,i){var s=-1,n=Fn,r=t.length,a=!0,o=[],h=o;if(i)a=!1,n=jn;else if(r>=200){var c=e?null:$n(t);if(c)return ve(c);a=!1,n=Pe,h=new Be}else h=e?[]:o;t:for(;++s<r;){var l=t[s],E=e?e(l):l;if(l=i||0!==l?l:0,a&&E==E){for(var u=h.length;u--;)if(h[u]===E)continue t;e&&h.push(E),o.push(l)}else n(h,E,i)||(h!==o&&h.push(E),o.push(l))}return o};const Wn=function(t){return t&&t.length?Kn(t):[]};var qn=c?c.isConcatSpreadable:void 0;const Yn=function(t){return I(t)||m(t)||!!(qn&&t&&t[qn])};const Qn=function t(e,i,s,n,r){var a=-1,o=e.length;for(s||(s=Yn),r||(r=[]);++a<o;){var h=e[a];i>0&&s(h)?i>1?t(h,i-1,s,n,r):Ge(r,h):n||(r[r.length]=h)}return r};const zn=function(t){return(null==t?0:t.length)?Qn(t,1):[]};function Xn(t){if(t instanceof Ln)return Xn(t.referencedRule);if(t instanceof An)return[t.terminalType];if(function(t){return t instanceof Sn||t instanceof pn||t instanceof dn||t instanceof Rn||t instanceof Tn||t instanceof Nn||t instanceof An||t instanceof Un}(t))return function(t){let e=[];const i=t.definition;let s,n=0,r=i.length>n,a=!0;for(;r&&a;)s=i[n],a=Dn(s),e=e.concat(Xn(s)),n+=1,r=i.length>n;return Wn(e)}(t);if(function(t){return t instanceof On}(t))return function(t){const e=Mi(t.definition,t=>Xn(t));return Wn(zn(e))}(t);throw Error("non exhaustive match")}class Jn extends Gn{constructor(t){super(),this.topProd=t,this.follows={}}startWalking(){return this.walk(this.topProd),this.follows}walkTerminal(t,e,i){}walkProdRef(t,e,i){const s=(n=t.referencedRule,r=t.idx,n.name+r+"_~IN~_"+this.topProd.name);var n,r;const a=e.concat(i),o=Xn(new Sn({definition:a}));this.follows[s]=o}}const Zn=function(t){return void 0===t};function tr(t){return t.charCodeAt(0)}function er(t,e){Array.isArray(t)?t.forEach(function(t){e.push(t)}):e.push(t)}function ir(t,e){if(!0===t[e])throw"duplicate flag "+e;t[e];t[e]=!0}function sr(t){if(void 0===t)throw Error("Internal Error - Should never get here!");return!0}function nr(){throw Error("Internal Error - Should never get here!")}function rr(t){return"Character"===t.type}const ar=[];for(let t=tr("0");t<=tr("9");t++)ar.push(t);const or=[tr("_")].concat(ar);for(let t=tr("a");t<=tr("z");t++)or.push(t);for(let t=tr("A");t<=tr("Z");t++)or.push(t);const hr=[tr(" "),tr("\f"),tr("\n"),tr("\r"),tr("\t"),tr("\v"),tr("\t"),tr(" "),tr(" "),tr(" "),tr(" "),tr(" "),tr(" "),tr(" "),tr(" "),tr(" "),tr(" "),tr(" "),tr(" "),tr(" "),tr("\u2028"),tr("\u2029"),tr(" "),tr(" "),tr("　"),tr("\ufeff")],cr=/[0-9a-fA-F]/,lr=/[0-9]/,Er=/[1-9]/;class ur{visitChildren(t){for(const e in t){const i=t[e];t.hasOwnProperty(e)&&(void 0!==i.type?this.visit(i):Array.isArray(i)&&i.forEach(t=>{this.visit(t)},this))}}visit(t){switch(t.type){case"Pattern":this.visitPattern(t);break;case"Flags":this.visitFlags(t);break;case"Disjunction":this.visitDisjunction(t);break;case"Alternative":this.visitAlternative(t);break;case"StartAnchor":this.visitStartAnchor(t);break;case"EndAnchor":this.visitEndAnchor(t);break;case"WordBoundary":this.visitWordBoundary(t);break;case"NonWordBoundary":this.visitNonWordBoundary(t);break;case"Lookahead":this.visitLookahead(t);break;case"NegativeLookahead":this.visitNegativeLookahead(t);break;case"Lookbehind":this.visitLookbehind(t);break;case"NegativeLookbehind":this.visitNegativeLookbehind(t);break;case"Character":this.visitCharacter(t);break;case"Set":this.visitSet(t);break;case"Group":this.visitGroup(t);break;case"GroupBackReference":this.visitGroupBackReference(t);break;case"Quantifier":this.visitQuantifier(t)}this.visitChildren(t)}visitPattern(t){}visitFlags(t){}visitDisjunction(t){}visitAlternative(t){}visitStartAnchor(t){}visitEndAnchor(t){}visitWordBoundary(t){}visitNonWordBoundary(t){}visitLookahead(t){}visitNegativeLookahead(t){}visitLookbehind(t){}visitNegativeLookbehind(t){}visitCharacter(t){}visitSet(t){}visitGroup(t){}visitGroupBackReference(t){}visitQuantifier(t){}}var Lr=Object.prototype,Ur=Lr.hasOwnProperty;const Sr=Zs(function(t,e){t=Object(t);var i=-1,s=e.length,n=s>2?e[2]:void 0;for(n&&tn(e[0],e[1],n)&&(s=1);++i<s;)for(var r=e[i],a=$i(r),o=-1,h=a.length;++o<h;){var c=a[o],l=t[c];(void 0===l||$t(l,Lr[c])&&!Ur.call(t,c))&&(t[c]=r[c])}return t});const pr=function(t,e){var i=[];return it(t,function(t,s,n){e(t,s,n)&&i.push(t)}),i};const Rr=function(t){if("function"!=typeof t)throw new TypeError("Expected a function");return function(){var e=arguments;switch(e.length){case 0:return!t.call(this);case 1:return!t.call(this,e[0]);case 2:return!t.call(this,e[0],e[1]);case 3:return!t.call(this,e[0],e[1],e[2])}return!t.apply(this,e)}};const Tr=function(t,e){return(I(t)?Fe:pr)(t,Rr(_i(e,3)))};var dr=Math.max;const Nr=function(t,e,i){var s=null==t?0:t.length;if(!s)return-1;var n=null==i?0:Vs(i);return n<0&&(n=dr(s+n,0)),Pn(t,e,n)};const Or=function(t,e,i,s){var n=-1,r=null==t?0:t.length;for(s&&r&&(i=t[++n]);++n<r;)i=e(i,t[n],n,t);return i};const Ar=function(t,e,i,s,n){return n(t,function(t,n,r){i=s?(s=!1,t):e(i,t,n,r)}),i};const fr=function(t,e,i){var s=I(t)?Or:Ar,n=arguments.length<3;return s(t,_i(e,4),i,n,it)};const Cr=function(t,e){return(I(t)?Fe:pr)(t,_i(e,3))};const mr=function(t,e,i,s){var n=-1,r=Fn,a=!0,o=t.length,h=[],c=e.length;if(!o)return h;i&&(e=at(e,x(i))),s?(r=jn,a=!1):e.length>=200&&(r=Pe,a=!1,e=new Be(e));t:for(;++n<o;){var l=t[n],E=null==i?l:i(l);if(l=s||0!==l?l:0,a&&E==E){for(var u=c;u--;)if(e[u]===E)continue t;h.push(l)}else r(e,E,s)||h.push(l)}return h};const Ir=function(t){return d(t)&&tt(t)};var yr=Zs(function(t,e){return Ir(t)?mr(t,Qn(e,1,Ir,!0)):[]});const Br=yr;const _r=function(t){for(var e=-1,i=null==t?0:t.length,s=0,n=[];++e<i;){var r=t[e];r&&(n[s++]=r)}return n};const Pr=function(t){return t&&t.length?t[0]:void 0};const Mr=function(t){return function(e,i,s){var n=Object(e);if(!tt(e)){var r=_i(i,3);e=et(e),i=function(t){return r(n[t],t,n)}}var a=t(e,i,s);return a>-1?n[r?e[a]:a]:void 0}};var gr=Math.max;const kr=Mr(function(t,e,i){var s=null==t?0:t.length;if(!s)return-1;var n=null==i?0:Vs(i);return n<0&&(n=gr(s+n,0)),yn(t,_i(e,3),n)});function vr(t){console&&console.error&&console.error(`Error: ${t}`)}function br(t){console&&console.warn&&console.warn(`Warning: ${t}`)}let Dr={};const xr=new class{constructor(){this.idx=0,this.input="",this.groupIdx=0}saveState(){return{idx:this.idx,input:this.input,groupIdx:this.groupIdx}}restoreState(t){this.idx=t.idx,this.input=t.input,this.groupIdx=t.groupIdx}pattern(t){this.idx=0,this.input=t,this.groupIdx=0,this.consumeChar("/");const e=this.disjunction();this.consumeChar("/");const i={type:"Flags",loc:{begin:this.idx,end:t.length},global:!1,ignoreCase:!1,multiLine:!1,unicode:!1,sticky:!1};for(;this.isRegExpFlag();)switch(this.popChar()){case"g":ir(i,"global");break;case"i":ir(i,"ignoreCase");break;case"m":ir(i,"multiLine");break;case"u":ir(i,"unicode");break;case"y":ir(i,"sticky")}if(this.idx!==this.input.length)throw Error("Redundant input: "+this.input.substring(this.idx));return{type:"Pattern",flags:i,value:e,loc:this.loc(0)}}disjunction(){const t=[],e=this.idx;for(t.push(this.alternative());"|"===this.peekChar();)this.consumeChar("|"),t.push(this.alternative());return{type:"Disjunction",value:t,loc:this.loc(e)}}alternative(){const t=[],e=this.idx;for(;this.isTerm();)t.push(this.term());return{type:"Alternative",value:t,loc:this.loc(e)}}term(){return this.isAssertion()?this.assertion():this.atom()}assertion(){const t=this.idx;switch(this.popChar()){case"^":return{type:"StartAnchor",loc:this.loc(t)};case"$":return{type:"EndAnchor",loc:this.loc(t)};case"\\":switch(this.popChar()){case"b":return{type:"WordBoundary",loc:this.loc(t)};case"B":return{type:"NonWordBoundary",loc:this.loc(t)}}throw Error("Invalid Assertion Escape");case"(":let e;switch(this.consumeChar("?"),this.popChar()){case"=":e="Lookahead";break;case"!":e="NegativeLookahead";break;case"<":switch(this.popChar()){case"=":e="Lookbehind";break;case"!":e="NegativeLookbehind"}}sr(e);const i=this.disjunction();return this.consumeChar(")"),{type:e,value:i,loc:this.loc(t)}}return nr()}quantifier(t=!1){let e;const i=this.idx;switch(this.popChar()){case"*":e={atLeast:0,atMost:1/0};break;case"+":e={atLeast:1,atMost:1/0};break;case"?":e={atLeast:0,atMost:1};break;case"{":const i=this.integerIncludingZero();switch(this.popChar()){case"}":e={atLeast:i,atMost:i};break;case",":let t;this.isDigit()?(t=this.integerIncludingZero(),e={atLeast:i,atMost:t}):e={atLeast:i,atMost:1/0},this.consumeChar("}")}if(!0===t&&void 0===e)return;sr(e)}if(!0!==t||void 0!==e)return sr(e)?("?"===this.peekChar(0)?(this.consumeChar("?"),e.greedy=!1):e.greedy=!0,e.type="Quantifier",e.loc=this.loc(i),e):void 0}atom(){let t;const e=this.idx;switch(this.peekChar()){case".":t=this.dotAll();break;case"\\":t=this.atomEscape();break;case"[":t=this.characterClass();break;case"(":t=this.group()}return void 0===t&&this.isPatternCharacter()&&(t=this.patternCharacter()),sr(t)?(t.loc=this.loc(e),this.isQuantifier()&&(t.quantifier=this.quantifier()),t):nr()}dotAll(){return this.consumeChar("."),{type:"Set",complement:!0,value:[tr("\n"),tr("\r"),tr("\u2028"),tr("\u2029")]}}atomEscape(){switch(this.consumeChar("\\"),this.peekChar()){case"1":case"2":case"3":case"4":case"5":case"6":case"7":case"8":case"9":return this.decimalEscapeAtom();case"d":case"D":case"s":case"S":case"w":case"W":return this.characterClassEscape();case"f":case"n":case"r":case"t":case"v":return this.controlEscapeAtom();case"c":return this.controlLetterEscapeAtom();case"0":return this.nulCharacterAtom();case"x":return this.hexEscapeSequenceAtom();case"u":return this.regExpUnicodeEscapeSequenceAtom();default:return this.identityEscapeAtom()}}decimalEscapeAtom(){return{type:"GroupBackReference",value:this.positiveInteger()}}characterClassEscape(){let t,e=!1;switch(this.popChar()){case"d":t=ar;break;case"D":t=ar,e=!0;break;case"s":t=hr;break;case"S":t=hr,e=!0;break;case"w":t=or;break;case"W":t=or,e=!0}return sr(t)?{type:"Set",value:t,complement:e}:nr()}controlEscapeAtom(){let t;switch(this.popChar()){case"f":t=tr("\f");break;case"n":t=tr("\n");break;case"r":t=tr("\r");break;case"t":t=tr("\t");break;case"v":t=tr("\v")}return sr(t)?{type:"Character",value:t}:nr()}controlLetterEscapeAtom(){this.consumeChar("c");const t=this.popChar();if(!1===/[a-zA-Z]/.test(t))throw Error("Invalid ");return{type:"Character",value:t.toUpperCase().charCodeAt(0)-64}}nulCharacterAtom(){return this.consumeChar("0"),{type:"Character",value:tr("\0")}}hexEscapeSequenceAtom(){return this.consumeChar("x"),this.parseHexDigits(2)}regExpUnicodeEscapeSequenceAtom(){return this.consumeChar("u"),this.parseHexDigits(4)}identityEscapeAtom(){return{type:"Character",value:tr(this.popChar())}}classPatternCharacterAtom(){switch(this.peekChar()){case"\n":case"\r":case"\u2028":case"\u2029":case"\\":case"]":throw Error("TBD");default:return{type:"Character",value:tr(this.popChar())}}}characterClass(){const t=[];let e=!1;for(this.consumeChar("["),"^"===this.peekChar(0)&&(this.consumeChar("^"),e=!0);this.isClassAtom();){const e=this.classAtom();e.type;if(rr(e)&&this.isRangeDash()){this.consumeChar("-");const i=this.classAtom();i.type;if(rr(i)){if(i.value<e.value)throw Error("Range out of order in character class");t.push({from:e.value,to:i.value})}else er(e.value,t),t.push(tr("-")),er(i.value,t)}else er(e.value,t)}return this.consumeChar("]"),{type:"Set",complement:e,value:t}}classAtom(){switch(this.peekChar()){case"]":case"\n":case"\r":case"\u2028":case"\u2029":throw Error("TBD");case"\\":return this.classEscape();default:return this.classPatternCharacterAtom()}}classEscape(){switch(this.consumeChar("\\"),this.peekChar()){case"b":return this.consumeChar("b"),{type:"Character",value:tr("\b")};case"d":case"D":case"s":case"S":case"w":case"W":return this.characterClassEscape();case"f":case"n":case"r":case"t":case"v":return this.controlEscapeAtom();case"c":return this.controlLetterEscapeAtom();case"0":return this.nulCharacterAtom();case"x":return this.hexEscapeSequenceAtom();case"u":return this.regExpUnicodeEscapeSequenceAtom();default:return this.identityEscapeAtom()}}group(){let t=!0;if(this.consumeChar("("),"?"===this.peekChar(0))this.consumeChar("?"),this.consumeChar(":"),t=!1;else this.groupIdx++;const e=this.disjunction();this.consumeChar(")");const i={type:"Group",capturing:t,value:e};return t&&(i.idx=this.groupIdx),i}positiveInteger(){let t=this.popChar();if(!1===Er.test(t))throw Error("Expecting a positive integer");for(;lr.test(this.peekChar(0));)t+=this.popChar();return parseInt(t,10)}integerIncludingZero(){let t=this.popChar();if(!1===lr.test(t))throw Error("Expecting an integer");for(;lr.test(this.peekChar(0));)t+=this.popChar();return parseInt(t,10)}patternCharacter(){const t=this.popChar();switch(t){case"\n":case"\r":case"\u2028":case"\u2029":case"^":case"$":case"\\":case".":case"*":case"+":case"?":case"(":case")":case"[":case"|":throw Error("TBD");default:return{type:"Character",value:tr(t)}}}isRegExpFlag(){switch(this.peekChar(0)){case"g":case"i":case"m":case"u":case"y":return!0;default:return!1}}isRangeDash(){return"-"===this.peekChar()&&this.isClassAtom(1)}isDigit(){return lr.test(this.peekChar(0))}isClassAtom(t=0){switch(this.peekChar(t)){case"]":case"\n":case"\r":case"\u2028":case"\u2029":return!1;default:return!0}}isTerm(){return this.isAtom()||this.isAssertion()}isAtom(){if(this.isPatternCharacter())return!0;switch(this.peekChar(0)){case".":case"\\":case"[":case"(":return!0;default:return!1}}isAssertion(){switch(this.peekChar(0)){case"^":case"$":return!0;case"\\":switch(this.peekChar(1)){case"b":case"B":return!0;default:return!1}case"(":return"?"===this.peekChar(1)&&("="===this.peekChar(2)||"!"===this.peekChar(2)||"<"===this.peekChar(2)&&("="===this.peekChar(3)||"!"===this.peekChar(3)));default:return!1}}isQuantifier(){const t=this.saveState();try{return void 0!==this.quantifier(!0)}catch(t){return!1}finally{this.restoreState(t)}}isPatternCharacter(){switch(this.peekChar()){case"^":case"$":case"\\":case".":case"*":case"+":case"?":case"(":case")":case"[":case"|":case"/":case"\n":case"\r":case"\u2028":case"\u2029":return!1;default:return!0}}parseHexDigits(t){let e="";for(let i=0;i<t;i++){const t=this.popChar();if(!1===cr.test(t))throw Error("Expecting a HexDecimal digits");e+=t}return{type:"Character",value:parseInt(e,16)}}peekChar(t=0){return this.input[this.idx+t]}popChar(){const t=this.peekChar(0);return this.consumeChar(void 0),t}consumeChar(t){if(void 0!==t&&this.input[this.idx]!==t)throw Error("Expected: '"+t+"' but found: '"+this.input[this.idx]+"' at offset: "+this.idx);if(this.idx>=this.input.length)throw Error("Unexpected end of input");this.idx++}loc(t){return{begin:t,end:this.idx}}};function Gr(t){const e=t.toString();if(Dr.hasOwnProperty(e))return Dr[e];{const t=xr.pattern(e);return Dr[e]=t,t}}const wr="Complement Sets are not supported for first char optimization",Fr='Unable to use "first char" lexer optimizations:\n';function jr(t,e=!1){try{const e=Gr(t);return Vr(e.value,{},e.flags.ignoreCase)}catch(i){if(i.message===wr)e&&br(`${Fr}\tUnable to optimize: < ${t.toString()} >\n\tComplement Sets cannot be automatically optimized.\n\tThis will disable the lexer's first char optimizations.\n\tSee: https://chevrotain.io/docs/guide/resolving_lexer_errors.html#COMPLEMENT for details.`);else{let i="";e&&(i="\n\tThis will disable the lexer's first char optimizations.\n\tSee: https://chevrotain.io/docs/guide/resolving_lexer_errors.html#REGEXP_PARSING for details."),vr(`${Fr}\n\tFailed parsing: < ${t.toString()} >\n\tUsing the @chevrotain/regexp-to-ast library\n\tPlease open an issue at: https://github.com/chevrotain/chevrotain/issues`+i)}}return[]}function Vr(t,e,i){switch(t.type){case"Disjunction":for(let s=0;s<t.value.length;s++)Vr(t.value[s],e,i);break;case"Alternative":const s=t.value;for(let t=0;t<s.length;t++){const n=s[t];switch(n.type){case"EndAnchor":case"GroupBackReference":case"Lookahead":case"NegativeLookahead":case"Lookbehind":case"NegativeLookbehind":case"StartAnchor":case"WordBoundary":case"NonWordBoundary":continue}const r=n;switch(r.type){case"Character":Hr(r.value,e,i);break;case"Set":if(!0===r.complement)throw Error(wr);rt(r.value,t=>{if("number"==typeof t)Hr(t,e,i);else{const s=t;if(!0===i)for(let t=s.from;t<=s.to;t++)Hr(t,e,i);else{for(let t=s.from;t<=s.to&&t<256;t++)Hr(t,e,i);if(s.to>=256){const t=s.from>=256?s.from:256,i=s.to,n=la(t),r=la(i);for(let t=n;t<=r;t++)e[t]=t}}}});break;case"Group":Vr(r.value,e,i);break;default:throw Error("Non Exhaustive Match")}const a=void 0!==r.quantifier&&0===r.quantifier.atLeast;if("Group"===r.type&&!1===Kr(r)||"Group"!==r.type&&!1===a)break}break;default:throw Error("non exhaustive match!")}return ht(e)}function Hr(t,e,i){const s=la(t);e[s]=s,!0===i&&function(t,e){const i=String.fromCharCode(t),s=i.toUpperCase();if(s!==i){const t=la(s.charCodeAt(0));e[t]=t}else{const t=i.toLowerCase();if(t!==i){const i=la(t.charCodeAt(0));e[i]=i}}}(t,e)}function $r(t,e){return kr(t.value,t=>{if("number"==typeof t)return gn(e,t);{const i=t;return void 0!==kr(e,t=>i.from<=t&&t<=i.to)}})}function Kr(t){const e=t.quantifier;return!(!e||0!==e.atLeast)||!!t.value&&(I(t.value)?bn(t.value,Kr):Kr(t.value))}class Wr extends ur{constructor(t){super(),this.targetCharCodes=t,this.found=!1}visitChildren(t){if(!0!==this.found){switch(t.type){case"Lookahead":return void this.visitLookahead(t);case"NegativeLookahead":return void this.visitNegativeLookahead(t);case"Lookbehind":return void this.visitLookbehind(t);case"NegativeLookbehind":return void this.visitNegativeLookbehind(t)}super.visitChildren(t)}}visitCharacter(t){gn(this.targetCharCodes,t.value)&&(this.found=!0)}visitSet(t){t.complement?void 0===$r(t,this.targetCharCodes)&&(this.found=!0):void 0!==$r(t,this.targetCharCodes)&&(this.found=!0)}}function qr(t,e){if(e instanceof RegExp){const i=Gr(e),s=new Wr(t);return s.visit(i),s.found}return void 0!==kr(e,e=>gn(t,e.charCodeAt(0)))}const Yr="PATTERN",Qr="defaultMode",zr="modes";function Xr(t,e){const i=(e=Sr(e,{debug:!1,safeMode:!1,positionTracking:"full",lineTerminatorCharacters:["\r","\n"],tracer:(t,e)=>e()})).tracer;let s;i("initCharCodeToOptimizedIndexMap",()=>{!function(){if(Vt(ca)){ca=new Array(65536);for(let t=0;t<65536;t++)ca[t]=t>255?255+~~(t/255):t}}()}),i("Reject Lexer.NA",()=>{s=Tr(t,t=>t[Yr]===ma.NA)});let n,r,a,o,h,c,l,E,u,L,U,S=!1;i("Transform Patterns",()=>{S=!1,n=Mi(s,t=>{const e=t[Yr];if(ln(e)){const t=e.source;return 1!==t.length||"^"===t||"$"===t||"."===t||e.ignoreCase?2!==t.length||"\\"!==t[0]||gn(["d","D","s","S","t","r","n","t","0","c","b","B","f","v","w","W"],t[1])?ea(e):t[1]:t}if(Z(e))return S=!0,{exec:e};if("object"==typeof e)return S=!0,e;if("string"==typeof e){if(1===e.length)return e;{const t=e.replace(/[\\^$.*+?()[\]{}|]/g,"\\$&");return ea(new RegExp(t))}}throw Error("non exhaustive match")})}),i("misc mapping",()=>{r=Mi(s,t=>t.tokenTypeIdx),a=Mi(s,t=>{const e=t.GROUP;if(e!==ma.SKIPPED){if($s(e))return e;if(Zn(e))return!1;throw Error("non exhaustive match")}}),o=Mi(s,t=>{const e=t.LONGER_ALT;if(e){return I(e)?Mi(e,t=>Nr(s,t)):[Nr(s,e)]}}),h=Mi(s,t=>t.PUSH_MODE),c=Mi(s,t=>vi(t,"POP_MODE"))}),i("Line Terminator Handling",()=>{const t=oa(e.lineTerminatorCharacters);l=Mi(s,t=>!1),"onlyOffset"!==e.positionTracking&&(l=Mi(s,e=>vi(e,"LINE_BREAKS")?!!e.LINE_BREAKS:!1===aa(e,t)&&qr(t,e.PATTERN)))}),i("Misc Mapping #2",()=>{E=Mi(s,sa),u=Mi(n,na),L=fr(s,(t,e)=>{const i=e.GROUP;return $s(i)&&i!==ma.SKIPPED&&(t[i]=[]),t},{}),U=Mi(n,(t,e)=>({pattern:n[e],longerAlt:o[e],canLineTerminator:l[e],isCustom:E[e],short:u[e],group:a[e],push:h[e],pop:c[e],tokenTypeIdx:r[e],tokenType:s[e]}))});let p=!0,R=[];return e.safeMode||i("First Char Optimization",()=>{R=fr(s,(t,i,s)=>{if("string"==typeof i.PATTERN){const e=la(i.PATTERN.charCodeAt(0));ha(t,e,U[s])}else if(I(i.START_CHARS_HINT)){let e;rt(i.START_CHARS_HINT,i=>{const n=la("string"==typeof i?i.charCodeAt(0):i);e!==n&&(e=n,ha(t,n,U[s]))})}else if(ln(i.PATTERN))if(i.PATTERN.unicode)p=!1,e.ensureOptimizations&&vr(`${Fr}\tUnable to analyze < ${i.PATTERN.toString()} > pattern.\n\tThe regexp unicode flag is not currently supported by the regexp-to-ast library.\n\tThis will disable the lexer's first char optimizations.\n\tFor details See: https://chevrotain.io/docs/guide/resolving_lexer_errors.html#UNICODE_OPTIMIZE`);else{const n=jr(i.PATTERN,e.ensureOptimizations);Vt(n)&&(p=!1),rt(n,e=>{ha(t,e,U[s])})}else e.ensureOptimizations&&vr(`${Fr}\tTokenType: <${i.name}> is using a custom token pattern without providing <start_chars_hint> parameter.\n\tThis will disable the lexer's first char optimizations.\n\tFor details See: https://chevrotain.io/docs/guide/resolving_lexer_errors.html#CUSTOM_OPTIMIZE`),p=!1;return t},[])}),{emptyGroups:L,patternIdxToConfig:U,charCodeToPatternIdxToConfig:R,hasCustom:S,canBeOptimized:p}}function Jr(t,e){let i=[];const s=function(t){const e=Cr(t,t=>!vi(t,Yr)),i=Mi(e,t=>({message:"Token Type: ->"+t.name+"<- missing static 'PATTERN' property",type:fa.MISSING_PATTERN,tokenTypes:[t]})),s=Br(t,e);return{errors:i,valid:s}}(t);i=i.concat(s.errors);const n=function(t){const e=Cr(t,t=>{const e=t[Yr];return!(ln(e)||Z(e)||vi(e,"exec")||$s(e))}),i=Mi(e,t=>({message:"Token Type: ->"+t.name+"<- static 'PATTERN' can only be a RegExp, a Function matching the {CustomPatternMatcherFunc} type or an Object matching the {ICustomPattern} interface.",type:fa.INVALID_PATTERN,tokenTypes:[t]})),s=Br(t,e);return{errors:i,valid:s}}(s.valid),r=n.valid;return i=i.concat(n.errors),i=i.concat(function(t){let e=[];const i=Cr(t,t=>ln(t[Yr]));return e=e.concat(function(t){class e extends ur{constructor(){super(...arguments),this.found=!1}visitEndAnchor(t){this.found=!0}}const i=Cr(t,t=>{const i=t.PATTERN;try{const t=Gr(i),s=new e;return s.visit(t),s.found}catch(t){return Zr.test(i.source)}}),s=Mi(i,t=>({message:"Unexpected RegExp Anchor Error:\n\tToken Type: ->"+t.name+"<- static 'PATTERN' cannot contain end of input anchor '$'\n\tSee chevrotain.io/docs/guide/resolving_lexer_errors.html#ANCHORS\tfor details.",type:fa.EOI_ANCHOR_FOUND,tokenTypes:[t]}));return s}(i)),e=e.concat(function(t){class e extends ur{constructor(){super(...arguments),this.found=!1}visitStartAnchor(t){this.found=!0}}const i=Cr(t,t=>{const i=t.PATTERN;try{const t=Gr(i),s=new e;return s.visit(t),s.found}catch(t){return ta.test(i.source)}}),s=Mi(i,t=>({message:"Unexpected RegExp Anchor Error:\n\tToken Type: ->"+t.name+"<- static 'PATTERN' cannot contain start of input anchor '^'\n\tSee https://chevrotain.io/docs/guide/resolving_lexer_errors.html#ANCHORS\tfor details.",type:fa.SOI_ANCHOR_FOUND,tokenTypes:[t]}));return s}(i)),e=e.concat(function(t){const e=Cr(t,t=>{const e=t[Yr];return e instanceof RegExp&&(e.multiline||e.global)}),i=Mi(e,t=>({message:"Token Type: ->"+t.name+"<- static 'PATTERN' may NOT contain global('g') or multiline('m')",type:fa.UNSUPPORTED_FLAGS_FOUND,tokenTypes:[t]}));return i}(i)),e=e.concat(function(t){const e=[];let i=Mi(t,i=>fr(t,(t,s)=>(i.PATTERN.source!==s.PATTERN.source||gn(e,s)||s.PATTERN===ma.NA||(e.push(s),t.push(s)),t),[]));i=_r(i);const s=Cr(i,t=>t.length>1),n=Mi(s,t=>{const e=Mi(t,t=>t.name);return{message:`The same RegExp pattern ->${Pr(t).PATTERN}<-has been used in all of the following Token Types: ${e.join(", ")} <-`,type:fa.DUPLICATE_PATTERNS_FOUND,tokenTypes:t}});return n}(i)),e=e.concat(function(t){const e=Cr(t,t=>t.PATTERN.test("")),i=Mi(e,t=>({message:"Token Type: ->"+t.name+"<- static 'PATTERN' must not match an empty string",type:fa.EMPTY_MATCH_PATTERN,tokenTypes:[t]}));return i}(i)),e}(r)),i=i.concat(function(t){const e=Cr(t,t=>{if(!vi(t,"GROUP"))return!1;const e=t.GROUP;return e!==ma.SKIPPED&&e!==ma.NA&&!$s(e)}),i=Mi(e,t=>({message:"Token Type: ->"+t.name+"<- static 'GROUP' can only be Lexer.SKIPPED/Lexer.NA/A String",type:fa.INVALID_GROUP_TYPE_FOUND,tokenTypes:[t]}));return i}(r)),i=i.concat(function(t,e){const i=Cr(t,t=>void 0!==t.PUSH_MODE&&!gn(e,t.PUSH_MODE)),s=Mi(i,t=>({message:`Token Type: ->${t.name}<- static 'PUSH_MODE' value cannot refer to a Lexer Mode ->${t.PUSH_MODE}<-which does not exist`,type:fa.PUSH_MODE_DOES_NOT_EXIST,tokenTypes:[t]}));return s}(r,e)),i=i.concat(function(t){const e=[],i=fr(t,(t,e,i)=>{const s=e.PATTERN;return s===ma.NA||($s(s)?t.push({str:s,idx:i,tokenType:e}):ln(s)&&(n=s,void 0===kr([".","\\","[","]","|","^","$","(",")","?","*","+","{"],t=>-1!==n.source.indexOf(t)))&&t.push({str:s.source,idx:i,tokenType:e})),t;// removed by dead control flow
- var n; },[]);return rt(t,(t,s)=>{rt(i,({str:i,idx:n,tokenType:r})=>{if(s<n&&function(t,e){if(ln(e)){if(/(\(\?=)|(\(\?!)|(\(\?<=)|(\(\?<!)/.test(e.source))return!1;const i=e.exec(t);return null!==i&&0===i.index}if(Z(e))return e(t,0,[],{});if(vi(e,"exec"))return e.exec(t,0,[],{});if("string"==typeof e)return e===t;throw Error("non exhaustive match")}(i,t.PATTERN)){const i=`Token: ->${r.name}<- can never be matched.\nBecause it appears AFTER the Token Type ->${t.name}<-in the lexer's definition.\nSee https://chevrotain.io/docs/guide/resolving_lexer_errors.html#UNREACHABLE`;e.push({message:i,type:fa.UNREACHABLE_PATTERN,tokenTypes:[t,r]})}})}),e}(r)),i}const Zr=/[^\\][$]/;const ta=/[^\\[][\^]|^\^/;function ea(t){const e=t.ignoreCase?"iy":"y";return new RegExp(`${t.source}`,e)}function ia(t,e,i){const s=[];let n=!1;const r=_r(zn(ht(t.modes))),a=Tr(r,t=>t[Yr]===ma.NA),o=oa(i);return e&&rt(a,t=>{const e=aa(t,o);if(!1!==e){const i=function(t,e){if(e.issue===fa.IDENTIFY_TERMINATOR)return`Warning: unable to identify line terminator usage in pattern.\n\tThe problem is in the <${t.name}> Token Type\n\t Root cause: ${e.errMsg}.\n\tFor details See: https://chevrotain.io/docs/guide/resolving_lexer_errors.html#IDENTIFY_TERMINATOR`;if(e.issue===fa.CUSTOM_LINE_BREAK)return`Warning: A Custom Token Pattern should specify the <line_breaks> option.\n\tThe problem is in the <${t.name}> Token Type\n\tFor details See: https://chevrotain.io/docs/guide/resolving_lexer_errors.html#CUSTOM_LINE_BREAK`;throw Error("non exhaustive match")}(t,e),n={message:i,type:e.issue,tokenType:t};s.push(n)}else vi(t,"LINE_BREAKS")?!0===t.LINE_BREAKS&&(n=!0):qr(o,t.PATTERN)&&(n=!0)}),e&&!n&&s.push({message:"Warning: No LINE_BREAKS Found.\n\tThis Lexer has been defined to track line and column information,\n\tBut none of the Token Types can be identified as matching a line terminator.\n\tSee https://chevrotain.io/docs/guide/resolving_lexer_errors.html#LINE_BREAKS \n\tfor details.",type:fa.NO_LINE_BREAKS_FLAGS}),s}function sa(t){const e=t.PATTERN;if(ln(e))return!1;if(Z(e))return!0;if(vi(e,"exec"))return!0;if($s(e))return!1;throw Error("non exhaustive match")}function na(t){return!(!$s(t)||1!==t.length)&&t.charCodeAt(0)}const ra={test:function(t){const e=t.length;for(let i=this.lastIndex;i<e;i++){const e=t.charCodeAt(i);if(10===e)return this.lastIndex=i+1,!0;if(13===e)return 10===t.charCodeAt(i+1)?this.lastIndex=i+2:this.lastIndex=i+1,!0}return!1},lastIndex:0};function aa(t,e){if(vi(t,"LINE_BREAKS"))return!1;if(ln(t.PATTERN)){try{qr(e,t.PATTERN)}catch(t){return{issue:fa.IDENTIFY_TERMINATOR,errMsg:t.message}}return!1}if($s(t.PATTERN))return!1;if(sa(t))return{issue:fa.CUSTOM_LINE_BREAK};throw Error("non exhaustive match")}function oa(t){return Mi(t,t=>$s(t)?t.charCodeAt(0):t)}function ha(t,e,i){void 0===t[e]?t[e]=[i]:t[e].push(i)}let ca=[];function la(t){return t<256?t:ca[t]}const Ea=function(t){var e=null==t?0:t.length;return e?t[e-1]:void 0};function ua(t){const e=(new Date).getTime(),i=t();return{time:(new Date).getTime()-e,value:i}}function La(t,e){const i=t.tokenTypeIdx;return i===e.tokenTypeIdx||!0===e.isParent&&!0===e.categoryMatchesMap[i]}function Ua(t,e){return t.tokenTypeIdx===e.tokenTypeIdx}let Sa=1;const pa={};function Ra(t){const e=function(t){let e=Bs(t),i=t,s=!0;for(;s;){i=_r(zn(Mi(i,t=>t.CATEGORIES)));const t=Br(i,e);e=e.concat(t),Vt(t)?s=!1:i=t}return e}(t);!function(t){rt(t,t=>{da(t)||(pa[Sa]=t,t.tokenTypeIdx=Sa++),Na(t)&&!I(t.CATEGORIES)&&(t.CATEGORIES=[t.CATEGORIES]),Na(t)||(t.CATEGORIES=[]),vi(t,"categoryMatches")||(t.categoryMatches=[]),function(t){return vi(t,"categoryMatchesMap")}(t)||(t.categoryMatchesMap={})})}(e),function(t){rt(t,t=>{Ta([],t)})}(e),function(t){rt(t,t=>{t.categoryMatches=[],rt(t.categoryMatchesMap,(e,i)=>{t.categoryMatches.push(pa[i].tokenTypeIdx)})})}(e),rt(e,t=>{t.isParent=t.categoryMatches.length>0})}function Ta(t,e){rt(t,t=>{e.categoryMatchesMap[t.tokenTypeIdx]=!0}),rt(e.CATEGORIES,i=>{const s=t.concat(e);gn(s,i)||Ta(s,i)})}function da(t){return vi(t,"tokenTypeIdx")}function Na(t){return vi(t,"CATEGORIES")}function Oa(t){return vi(t,"tokenTypeIdx")}const Aa={buildUnableToPopLexerModeMessage:t=>`Unable to pop Lexer Mode after encountering Token ->${t.image}<- The Mode Stack is empty`,buildUnexpectedCharactersMessage:(t,e,i,s,n,r)=>`unexpected character: ->${t.charAt(e)}<- at offset: ${e}, skipped ${i} characters.`};var fa;!function(t){t[t.MISSING_PATTERN=0]="MISSING_PATTERN",t[t.INVALID_PATTERN=1]="INVALID_PATTERN",t[t.EOI_ANCHOR_FOUND=2]="EOI_ANCHOR_FOUND",t[t.UNSUPPORTED_FLAGS_FOUND=3]="UNSUPPORTED_FLAGS_FOUND",t[t.DUPLICATE_PATTERNS_FOUND=4]="DUPLICATE_PATTERNS_FOUND",t[t.INVALID_GROUP_TYPE_FOUND=5]="INVALID_GROUP_TYPE_FOUND",t[t.PUSH_MODE_DOES_NOT_EXIST=6]="PUSH_MODE_DOES_NOT_EXIST",t[t.MULTI_MODE_LEXER_WITHOUT_DEFAULT_MODE=7]="MULTI_MODE_LEXER_WITHOUT_DEFAULT_MODE",t[t.MULTI_MODE_LEXER_WITHOUT_MODES_PROPERTY=8]="MULTI_MODE_LEXER_WITHOUT_MODES_PROPERTY",t[t.MULTI_MODE_LEXER_DEFAULT_MODE_VALUE_DOES_NOT_EXIST=9]="MULTI_MODE_LEXER_DEFAULT_MODE_VALUE_DOES_NOT_EXIST",t[t.LEXER_DEFINITION_CANNOT_CONTAIN_UNDEFINED=10]="LEXER_DEFINITION_CANNOT_CONTAIN_UNDEFINED",t[t.SOI_ANCHOR_FOUND=11]="SOI_ANCHOR_FOUND",t[t.EMPTY_MATCH_PATTERN=12]="EMPTY_MATCH_PATTERN",t[t.NO_LINE_BREAKS_FLAGS=13]="NO_LINE_BREAKS_FLAGS",t[t.UNREACHABLE_PATTERN=14]="UNREACHABLE_PATTERN",t[t.IDENTIFY_TERMINATOR=15]="IDENTIFY_TERMINATOR",t[t.CUSTOM_LINE_BREAK=16]="CUSTOM_LINE_BREAK",t[t.MULTI_MODE_LEXER_LONGER_ALT_NOT_IN_CURRENT_MODE=17]="MULTI_MODE_LEXER_LONGER_ALT_NOT_IN_CURRENT_MODE"}(fa||(fa={}));const Ca={deferDefinitionErrorsHandling:!1,positionTracking:"full",lineTerminatorsPattern:/\n|\r\n?/g,lineTerminatorCharacters:["\n","\r"],ensureOptimizations:!1,safeMode:!1,errorMessageProvider:Aa,traceInitPerf:!1,skipValidations:!1,recoveryEnabled:!0};Object.freeze(Ca);class ma{constructor(t,e=Ca){if(this.lexerDefinition=t,this.lexerDefinitionErrors=[],this.lexerDefinitionWarning=[],this.patternIdxToConfig={},this.charCodeToPatternIdxToConfig={},this.modes=[],this.emptyGroups={},this.trackStartLines=!0,this.trackEndLines=!0,this.hasCustom=!1,this.canModeBeOptimized={},this.TRACE_INIT=(t,e)=>{if(!0===this.traceInitPerf){this.traceInitIndent++;const i=new Array(this.traceInitIndent+1).join("\t");this.traceInitIndent<this.traceInitMaxIdent&&console.log(`${i}--\x3e <${t}>`);const{time:s,value:n}=ua(e),r=s>10?console.warn:console.log;return this.traceInitIndent<this.traceInitMaxIdent&&r(`${i}<-- <${t}> time: ${s}ms`),this.traceInitIndent--,n}return e()},"boolean"==typeof e)throw Error("The second argument to the Lexer constructor is now an ILexerConfig Object.\na boolean 2nd argument is no longer supported");this.config=nn({},Ca,e);const i=this.config.traceInitPerf;!0===i?(this.traceInitMaxIdent=1/0,this.traceInitPerf=!0):"number"==typeof i&&(this.traceInitMaxIdent=i,this.traceInitPerf=!0),this.traceInitIndent=-1,this.TRACE_INIT("Lexer Constructor",()=>{let i,s=!0;this.TRACE_INIT("Lexer Config handling",()=>{if(this.config.lineTerminatorsPattern===Ca.lineTerminatorsPattern)this.config.lineTerminatorsPattern=ra;else if(this.config.lineTerminatorCharacters===Ca.lineTerminatorCharacters)throw Error("Error: Missing <lineTerminatorCharacters> property on the Lexer config.\n\tFor details See: https://chevrotain.io/docs/guide/resolving_lexer_errors.html#MISSING_LINE_TERM_CHARS");if(e.safeMode&&e.ensureOptimizations)throw Error('"safeMode" and "ensureOptimizations" flags are mutually exclusive.');this.trackStartLines=/full|onlyStart/i.test(this.config.positionTracking),this.trackEndLines=/full/i.test(this.config.positionTracking),I(t)?i={modes:{defaultMode:Bs(t)},defaultMode:Qr}:(s=!1,i=Bs(t))}),!1===this.config.skipValidations&&(this.TRACE_INIT("performRuntimeChecks",()=>{this.lexerDefinitionErrors=this.lexerDefinitionErrors.concat(function(t){const e=[];return vi(t,Qr)||e.push({message:"A MultiMode Lexer cannot be initialized without a <"+Qr+"> property in its definition\n",type:fa.MULTI_MODE_LEXER_WITHOUT_DEFAULT_MODE}),vi(t,zr)||e.push({message:"A MultiMode Lexer cannot be initialized without a <modes> property in its definition\n",type:fa.MULTI_MODE_LEXER_WITHOUT_MODES_PROPERTY}),vi(t,zr)&&vi(t,Qr)&&!vi(t.modes,t.defaultMode)&&e.push({message:`A MultiMode Lexer cannot be initialized with a ${Qr}: <${t.defaultMode}>which does not exist\n`,type:fa.MULTI_MODE_LEXER_DEFAULT_MODE_VALUE_DOES_NOT_EXIST}),vi(t,zr)&&rt(t.modes,(t,i)=>{rt(t,(s,n)=>{if(Zn(s))e.push({message:`A Lexer cannot be initialized using an undefined Token Type. Mode:<${i}> at index: <${n}>\n`,type:fa.LEXER_DEFINITION_CANNOT_CONTAIN_UNDEFINED});else if(vi(s,"LONGER_ALT")){const n=I(s.LONGER_ALT)?s.LONGER_ALT:[s.LONGER_ALT];rt(n,n=>{Zn(n)||gn(t,n)||e.push({message:`A MultiMode Lexer cannot be initialized with a longer_alt <${n.name}> on token <${s.name}> outside of mode <${i}>\n`,type:fa.MULTI_MODE_LEXER_LONGER_ALT_NOT_IN_CURRENT_MODE})})}})}),e}(i,this.trackStartLines,this.config.lineTerminatorCharacters))}),this.TRACE_INIT("performWarningRuntimeChecks",()=>{this.lexerDefinitionWarning=this.lexerDefinitionWarning.concat(ia(i,this.trackStartLines,this.config.lineTerminatorCharacters))})),i.modes=i.modes?i.modes:{},rt(i.modes,(t,e)=>{i.modes[e]=Tr(t,t=>Zn(t))});const n=et(i.modes);if(rt(i.modes,(t,i)=>{this.TRACE_INIT(`Mode: <${i}> processing`,()=>{if(this.modes.push(i),!1===this.config.skipValidations&&this.TRACE_INIT("validatePatterns",()=>{this.lexerDefinitionErrors=this.lexerDefinitionErrors.concat(Jr(t,n))}),Vt(this.lexerDefinitionErrors)){let s;Ra(t),this.TRACE_INIT("analyzeTokenTypes",()=>{s=Xr(t,{lineTerminatorCharacters:this.config.lineTerminatorCharacters,positionTracking:e.positionTracking,ensureOptimizations:e.ensureOptimizations,safeMode:e.safeMode,tracer:this.TRACE_INIT})}),this.patternIdxToConfig[i]=s.patternIdxToConfig,this.charCodeToPatternIdxToConfig[i]=s.charCodeToPatternIdxToConfig,this.emptyGroups=nn({},this.emptyGroups,s.emptyGroups),this.hasCustom=s.hasCustom||this.hasCustom,this.canModeBeOptimized[i]=s.canBeOptimized}})}),this.defaultMode=i.defaultMode,!Vt(this.lexerDefinitionErrors)&&!this.config.deferDefinitionErrorsHandling){const t=Mi(this.lexerDefinitionErrors,t=>t.message).join("-----------------------\n");throw new Error("Errors detected in definition of Lexer:\n"+t)}rt(this.lexerDefinitionWarning,t=>{br(t.message)}),this.TRACE_INIT("Choosing sub-methods implementations",()=>{if(s&&(this.handleModes=Vn),!1===this.trackStartLines&&(this.computeNewColumn=st),!1===this.trackEndLines&&(this.updateTokenEndLineColumnLocation=Vn),/full/i.test(this.config.positionTracking))this.createTokenInstance=this.createFullToken;else if(/onlyStart/i.test(this.config.positionTracking))this.createTokenInstance=this.createStartOnlyToken;else{if(!/onlyOffset/i.test(this.config.positionTracking))throw Error(`Invalid <positionTracking> config option: "${this.config.positionTracking}"`);this.createTokenInstance=this.createOffsetOnlyToken}this.hasCustom?(this.addToken=this.addTokenUsingPush,this.handlePayload=this.handlePayloadWithCustom):(this.addToken=this.addTokenUsingMemberAccess,this.handlePayload=this.handlePayloadNoCustom)}),this.TRACE_INIT("Failed Optimization Warnings",()=>{const t=fr(this.canModeBeOptimized,(t,e,i)=>(!1===e&&t.push(i),t),[]);if(e.ensureOptimizations&&!Vt(t))throw Error(`Lexer Modes: < ${t.join(", ")} > cannot be optimized.\n\t Disable the "ensureOptimizations" lexer config flag to silently ignore this and run the lexer in an un-optimized mode.\n\t Or inspect the console log for details on how to resolve these issues.`)}),this.TRACE_INIT("clearRegExpParserCache",()=>{Dr={}}),this.TRACE_INIT("toFastProperties",()=>{_s(this)})})}tokenize(t,e=this.defaultMode){if(!Vt(this.lexerDefinitionErrors)){const t=Mi(this.lexerDefinitionErrors,t=>t.message).join("-----------------------\n");throw new Error("Unable to Tokenize because Errors detected in definition of Lexer:\n"+t)}return this.tokenizeInternal(t,e)}tokenizeInternal(t,e){let i,s,n,r,a,o,h,c,l,E,u,L,U,S,p;const R=t,T=R.length;let d=0,N=0;const O=this.hasCustom?0:Math.floor(t.length/10),A=new Array(O),f=[];let C=this.trackStartLines?1:void 0,m=this.trackStartLines?1:void 0;const y=function(t){const e={},i=et(t);return rt(i,i=>{const s=t[i];if(!I(s))throw Error("non exhaustive match");e[i]=[]}),e}(this.emptyGroups),B=this.trackStartLines,_=this.config.lineTerminatorsPattern;let P=0,M=[],g=[];const k=[],v=[];Object.freeze(v);let b=!1;const D=t=>{if(1===k.length&&void 0===t.tokenType.PUSH_MODE){const e=this.config.errorMessageProvider.buildUnableToPopLexerModeMessage(t);f.push({offset:t.startOffset,line:t.startLine,column:t.startColumn,length:t.image.length,message:e})}else{k.pop();const t=Ea(k);M=this.patternIdxToConfig[t],g=this.charCodeToPatternIdxToConfig[t],P=M.length;const e=this.canModeBeOptimized[t]&&!1===this.config.safeMode;b=!(!g||!e)}};function x(t){k.push(t),g=this.charCodeToPatternIdxToConfig[t],M=this.patternIdxToConfig[t],P=M.length,P=M.length;const e=this.canModeBeOptimized[t]&&!1===this.config.safeMode;b=!(!g||!e)}let G;x.call(this,e);const w=this.config.recoveryEnabled;for(;d<T;){o=null,l=-1;const e=R.charCodeAt(d);let O;if(b){const t=la(e),i=g[t];O=void 0!==i?i:v}else O=M;const I=O.length;for(i=0;i<I;i++){G=O[i];const s=G.pattern;h=null;const E=G.short;if(!1!==E?e===E&&(l=1,o=s):!0===G.isCustom?(p=s.exec(R,d,A,y),null!==p?(o=p[0],l=o.length,void 0!==p.payload&&(h=p.payload)):o=null):(s.lastIndex=d,l=this.matchLength(s,t,d)),-1!==l){if(a=G.longerAlt,void 0!==a){o=t.substring(d,d+l);const e=a.length;for(n=0;n<e;n++){const e=M[a[n]],i=e.pattern;if(c=null,!0===e.isCustom?(p=i.exec(R,d,A,y),null!==p?(r=p[0],void 0!==p.payload&&(c=p.payload)):r=null):(i.lastIndex=d,r=this.match(i,t,d)),r&&r.length>o.length){o=r,l=r.length,h=c,G=e;break}}}break}}if(-1!==l){if(E=G.group,void 0!==E&&(o=null!==o?o:t.substring(d,d+l),u=G.tokenTypeIdx,L=this.createTokenInstance(o,d,u,G.tokenType,C,m,l),this.handlePayload(L,h),!1===E?N=this.addToken(A,N,L):y[E].push(L)),!0===B&&!0===G.canLineTerminator){let e,i,s=0;_.lastIndex=0;do{o=null!==o?o:t.substring(d,d+l),e=_.test(o),!0===e&&(i=_.lastIndex-1,s++)}while(!0===e);0!==s?(C+=s,m=l-i,this.updateTokenEndLineColumnLocation(L,E,i,s,C,m,l)):m=this.computeNewColumn(m,l)}else m=this.computeNewColumn(m,l);d+=l,this.handleModes(G,D,x,L)}else{const e=d,i=C,n=m;let r=!1===w;for(;!1===r&&d<T;)for(d++,s=0;s<P;s++){const e=M[s],i=e.pattern,n=e.short;if(!1!==n?R.charCodeAt(d)===n&&(r=!0):!0===e.isCustom?r=null!==i.exec(R,d,A,y):(i.lastIndex=d,r=null!==i.exec(t)),!0===r)break}if(U=d-e,m=this.computeNewColumn(m,U),S=this.config.errorMessageProvider.buildUnexpectedCharactersMessage(R,e,U,i,n,Ea(k)),f.push({offset:e,line:i,column:n,length:U,message:S}),!1===w)break}}return this.hasCustom||(A.length=N),{tokens:A,groups:y,errors:f}}handleModes(t,e,i,s){if(!0===t.pop){const n=t.push;e(s),void 0!==n&&i.call(this,n)}else void 0!==t.push&&i.call(this,t.push)}updateTokenEndLineColumnLocation(t,e,i,s,n,r,a){let o,h;void 0!==e&&(o=i===a-1,h=o?-1:0,1===s&&!0===o||(t.endLine=n+h,t.endColumn=r-1-h))}computeNewColumn(t,e){return t+e}createOffsetOnlyToken(t,e,i,s){return{image:t,startOffset:e,tokenTypeIdx:i,tokenType:s}}createStartOnlyToken(t,e,i,s,n,r){return{image:t,startOffset:e,startLine:n,startColumn:r,tokenTypeIdx:i,tokenType:s}}createFullToken(t,e,i,s,n,r,a){return{image:t,startOffset:e,endOffset:e+a-1,startLine:n,endLine:n,startColumn:r,endColumn:r+a-1,tokenTypeIdx:i,tokenType:s}}addTokenUsingPush(t,e,i){return t.push(i),e}addTokenUsingMemberAccess(t,e,i){return t[e]=i,++e}handlePayloadNoCustom(t,e){}handlePayloadWithCustom(t,e){null!==e&&(t.payload=e)}match(t,e,i){return!0===t.test(e)?e.substring(i,t.lastIndex):null}matchLength(t,e,i){return!0===t.test(e)?t.lastIndex-i:-1}}function Ia(t){return ya(t)?t.LABEL:t.name}function ya(t){return $s(t.LABEL)&&""!==t.LABEL}ma.SKIPPED="This marks a skipped Token pattern, this means each token identified by it will be consumed and then thrown into oblivion, this can be used to for example to completely ignore whitespace.",ma.NA=/NOT_APPLICABLE/;const Ba="parent",_a="categories",Pa="label",Ma="group",ga="push_mode",ka="pop_mode",va="longer_alt",ba="line_breaks",Da="start_chars_hint";function xa(t){return function(t){const e=t.pattern,i={};i.name=t.name,Zn(e)||(i.PATTERN=e);if(vi(t,Ba))throw"The parent property is no longer supported.\nSee: https://github.com/chevrotain/chevrotain/issues/564#issuecomment-349062346 for details.";vi(t,_a)&&(i.CATEGORIES=t[_a]);Ra([i]),vi(t,Pa)&&(i.LABEL=t[Pa]);vi(t,Ma)&&(i.GROUP=t[Ma]);vi(t,ka)&&(i.POP_MODE=t[ka]);vi(t,ga)&&(i.PUSH_MODE=t[ga]);vi(t,va)&&(i.LONGER_ALT=t[va]);vi(t,ba)&&(i.LINE_BREAKS=t[ba]);vi(t,Da)&&(i.START_CHARS_HINT=t[Da]);return i}(t)}const Ga=xa({name:"EOF",pattern:ma.NA});function wa(t,e,i,s,n,r,a,o){return{image:e,startOffset:i,endOffset:s,startLine:n,endLine:r,startColumn:a,endColumn:o,tokenTypeIdx:t.tokenTypeIdx,tokenType:t}}function Fa(t,e){return La(t,e)}Ra([Ga]);const ja={buildMismatchTokenMessage:({expected:t,actual:e,previous:i,ruleName:s})=>`Expecting ${ya(t)?`--\x3e ${Ia(t)} <--`:`token of type --\x3e ${t.name} <--`} but found --\x3e '${e.image}' <--`,buildNotAllInputParsedMessage:({firstRedundant:t,ruleName:e})=>"Redundant input, expecting EOF but found: "+t.image,buildNoViableAltMessage({expectedPathsPerAlt:t,actual:e,previous:i,customUserDescription:s,ruleName:n}){const r="Expecting: ",a="\nbut found: '"+Pr(e).image+"'";if(s)return r+s+a;{const e=fr(t,(t,e)=>t.concat(e),[]),i=Mi(e,t=>`[${Mi(t,t=>Ia(t)).join(", ")}]`);return r+`one of these possible Token sequences:\n${Mi(i,(t,e)=>`  ${e+1}. ${t}`).join("\n")}`+a}},buildEarlyExitMessage({expectedIterationPaths:t,actual:e,customUserDescription:i,ruleName:s}){const n="Expecting: ",r="\nbut found: '"+Pr(e).image+"'";if(i)return n+i+r;return n+`expecting at least one iteration which starts with one of these possible Token sequences::\n  <${Mi(t,t=>`[${Mi(t,t=>Ia(t)).join(",")}]`).join(" ,")}>`+r}};Object.freeze(ja);const Va={buildRuleNotFoundError:(t,e)=>"Invalid grammar, reference to a rule which is not defined: ->"+e.nonTerminalName+"<-\ninside top level rule: ->"+t.name+"<-"},Ha={buildDuplicateFoundError(t,e){const i=t.name,s=Pr(e),n=s.idx,r=xn(s),a=(o=s)instanceof An?o.terminalType.name:o instanceof Ln?o.nonTerminalName:"";var o;let h=`->${r}${n>0?n:""}<- ${a?`with argument: ->${a}<-`:""}\n                  appears more than once (${e.length} times) in the top level rule: ->${i}<-.                  \n                  For further details see: https://chevrotain.io/docs/FAQ.html#NUMERICAL_SUFFIXES \n                  `;return h=h.replace(/[ \t]+/g," "),h=h.replace(/\s\s+/g,"\n"),h},buildNamespaceConflictError:t=>`Namespace conflict found in grammar.\nThe grammar has both a Terminal(Token) and a Non-Terminal(Rule) named: <${t.name}>.\nTo resolve this make sure each Terminal and Non-Terminal names are unique\nThis is easy to accomplish by using the convention that Terminal names start with an uppercase letter\nand Non-Terminal names start with a lower case letter.`,buildAlternationPrefixAmbiguityError(t){const e=Mi(t.prefixPath,t=>Ia(t)).join(", "),i=0===t.alternation.idx?"":t.alternation.idx;return`Ambiguous alternatives: <${t.ambiguityIndices.join(" ,")}> due to common lookahead prefix\nin <OR${i}> inside <${t.topLevelRule.name}> Rule,\n<${e}> may appears as a prefix path in all these alternatives.\nSee: https://chevrotain.io/docs/guide/resolving_grammar_errors.html#COMMON_PREFIX\nFor Further details.`},buildAlternationAmbiguityError(t){const e=0===t.alternation.idx?"":t.alternation.idx,i=0===t.prefixPath.length;let s=`Ambiguous Alternatives Detected: <${t.ambiguityIndices.join(" ,")}> in <OR${e}> inside <${t.topLevelRule.name}> Rule,\n`;if(i)s+="These alternatives are all empty (match no tokens), making them indistinguishable.\nOnly the last alternative may be empty.\n";else{s+=`<${Mi(t.prefixPath,t=>Ia(t)).join(", ")}> may appears as a prefix path in all these alternatives.\n`}return s+="See: https://chevrotain.io/docs/guide/resolving_grammar_errors.html#AMBIGUOUS_ALTERNATIVES\nFor Further details.",s},buildEmptyRepetitionError(t){let e=xn(t.repetition);0!==t.repetition.idx&&(e+=t.repetition.idx);return`The repetition <${e}> within Rule <${t.topLevelRule.name}> can never consume any tokens.\nThis could lead to an infinite loop.`},buildTokenNameError:t=>"deprecated",buildEmptyAlternationError:t=>`Ambiguous empty alternative: <${t.emptyChoiceIdx+1}> in <OR${t.alternation.idx}> inside <${t.topLevelRule.name}> Rule.\nOnly the last alternative may be an empty alternative.`,buildTooManyAlternativesError:t=>`An Alternation cannot have more than 256 alternatives:\n<OR${t.alternation.idx}> inside <${t.topLevelRule.name}> Rule.\n has ${t.alternation.definition.length+1} alternatives.`,buildLeftRecursionError(t){const e=t.topLevelRule.name;return`Left Recursion found in grammar.\nrule: <${e}> can be invoked from itself (directly or indirectly)\nwithout consuming any Tokens. The grammar path that causes this is: \n ${`${e} --\x3e ${Mi(t.leftRecursionPath,t=>t.name).concat([e]).join(" --\x3e ")}`}\n To fix this refactor your grammar to remove the left recursion.\nsee: https://en.wikipedia.org/wiki/LL_parser#Left_factoring.`},buildInvalidRuleNameError:t=>"deprecated",buildDuplicateRuleNameError(t){let e;e=t.topLevelRule instanceof Un?t.topLevelRule.name:t.topLevelRule;return`Duplicate definition, rule: ->${e}<- is already defined in the grammar: ->${t.grammarName}<-`}};class $a extends Cn{constructor(t,e){super(),this.nameToTopRule=t,this.errMsgProvider=e,this.errors=[]}resolveRefs(){rt(ht(this.nameToTopRule),t=>{this.currTopLevel=t,t.accept(this)})}visitNonTerminal(t){const e=this.nameToTopRule[t.nonTerminalName];if(e)t.referencedRule=e;else{const e=this.errMsgProvider.buildRuleNotFoundError(this.currTopLevel,t);this.errors.push({message:e,type:ph.UNRESOLVED_SUBRULE_REF,ruleName:this.currTopLevel.name,unresolvedRefName:t.nonTerminalName})}}}const Ka=function(t,e){return Qn(Mi(t,e),1)};const Wa=function(t,e,i,s){for(var n=-1,r=null==t?0:t.length;++n<r;){var a=t[n];e(s,a,i(a),t)}return s};const qa=function(t,e,i,s){return it(t,function(t,n,r){e(s,t,i(t),r)}),s};const Ya=function(t,e){return function(i,s){var n=I(i)?Wa:qa,r=e?e():{};return n(i,t,_i(s,2),r)}};var Qa=Object.prototype.hasOwnProperty;const za=Ya(function(t,e,i){Qa.call(t,i)?t[i].push(e):Di(t,i,[e])});const Xa=function(t,e,i){var s=null==t?0:t.length;return s?(e=i||void 0===e?1:Vs(e),Ps(t,0,(e=s-e)<0?0:e)):[]};class Ja extends Gn{constructor(t,e){super(),this.topProd=t,this.path=e,this.possibleTokTypes=[],this.nextProductionName="",this.nextProductionOccurrence=0,this.found=!1,this.isAtEndOfPath=!1}startWalking(){if(this.found=!1,this.path.ruleStack[0]!==this.topProd.name)throw Error("The path does not start with the walker's top Rule!");return this.ruleStack=Bs(this.path.ruleStack).reverse(),this.occurrenceStack=Bs(this.path.occurrenceStack).reverse(),this.ruleStack.pop(),this.occurrenceStack.pop(),this.updateExpectedNext(),this.walk(this.topProd),this.possibleTokTypes}walk(t,e=[]){this.found||super.walk(t,e)}walkProdRef(t,e,i){if(t.referencedRule.name===this.nextProductionName&&t.idx===this.nextProductionOccurrence){const s=e.concat(i);this.updateExpectedNext(),this.walk(t.referencedRule,s)}}updateExpectedNext(){Vt(this.ruleStack)?(this.nextProductionName="",this.nextProductionOccurrence=0,this.isAtEndOfPath=!0):(this.nextProductionName=this.ruleStack.pop(),this.nextProductionOccurrence=this.occurrenceStack.pop())}}class Za extends Ja{constructor(t,e){super(t,e),this.path=e,this.nextTerminalName="",this.nextTerminalOccurrence=0,this.nextTerminalName=this.path.lastTok.name,this.nextTerminalOccurrence=this.path.lastTokOccurrence}walkTerminal(t,e,i){if(this.isAtEndOfPath&&t.terminalType.name===this.nextTerminalName&&t.idx===this.nextTerminalOccurrence&&!this.found){const t=e.concat(i),s=new Sn({definition:t});this.possibleTokTypes=Xn(s),this.found=!0}}}class to extends Gn{constructor(t,e){super(),this.topRule=t,this.occurrence=e,this.result={token:void 0,occurrence:void 0,isEndOfRule:void 0}}startWalking(){return this.walk(this.topRule),this.result}}class eo extends to{walkMany(t,e,i){if(t.idx===this.occurrence){const t=Pr(e.concat(i));this.result.isEndOfRule=void 0===t,t instanceof An&&(this.result.token=t.terminalType,this.result.occurrence=t.idx)}else super.walkMany(t,e,i)}}class io extends to{walkManySep(t,e,i){if(t.idx===this.occurrence){const t=Pr(e.concat(i));this.result.isEndOfRule=void 0===t,t instanceof An&&(this.result.token=t.terminalType,this.result.occurrence=t.idx)}else super.walkManySep(t,e,i)}}class so extends to{walkAtLeastOne(t,e,i){if(t.idx===this.occurrence){const t=Pr(e.concat(i));this.result.isEndOfRule=void 0===t,t instanceof An&&(this.result.token=t.terminalType,this.result.occurrence=t.idx)}else super.walkAtLeastOne(t,e,i)}}class no extends to{walkAtLeastOneSep(t,e,i){if(t.idx===this.occurrence){const t=Pr(e.concat(i));this.result.isEndOfRule=void 0===t,t instanceof An&&(this.result.token=t.terminalType,this.result.occurrence=t.idx)}else super.walkAtLeastOneSep(t,e,i)}}function ro(t,e,i=[]){i=Bs(i);let s=[],n=0;function r(r){const a=ro(r.concat(Hs(t,n+1)),e,i);return s.concat(a)}for(;i.length<e&&n<t.length;){const e=t[n];if(e instanceof Sn)return r(e.definition);if(e instanceof Ln)return r(e.definition);if(e instanceof pn)s=r(e.definition);else{if(e instanceof Rn){return r(e.definition.concat([new dn({definition:e.definition})]))}if(e instanceof Tn){return r([new Sn({definition:e.definition}),new dn({definition:[new An({terminalType:e.separator})].concat(e.definition)})])}if(e instanceof Nn){const t=e.definition.concat([new dn({definition:[new An({terminalType:e.separator})].concat(e.definition)})]);s=r(t)}else if(e instanceof dn){const t=e.definition.concat([new dn({definition:e.definition})]);s=r(t)}else{if(e instanceof On)return rt(e.definition,t=>{!1===Vt(t.definition)&&(s=r(t.definition))}),s;if(!(e instanceof An))throw Error("non exhaustive match");i.push(e.terminalType)}}n++}return s.push({partialPath:i,suffixDef:Hs(t,n)}),s}function ao(t,e,i,s){const n="EXIT_NONE_TERMINAL",r=[n],a="EXIT_ALTERNATIVE";let o=!1;const h=e.length,c=h-s-1,l=[],E=[];for(E.push({idx:-1,def:t,ruleStack:[],occurrenceStack:[]});!Vt(E);){const t=E.pop();if(t===a){o&&Ea(E).idx<=c&&E.pop();continue}const s=t.def,u=t.idx,L=t.ruleStack,U=t.occurrenceStack;if(Vt(s))continue;const S=s[0];if(S===n){const t={idx:u,def:Hs(s),ruleStack:Xa(L),occurrenceStack:Xa(U)};E.push(t)}else if(S instanceof An)if(u<h-1){const t=u+1;if(i(e[t],S.terminalType)){const e={idx:t,def:Hs(s),ruleStack:L,occurrenceStack:U};E.push(e)}}else{if(u!==h-1)throw Error("non exhaustive match");l.push({nextTokenType:S.terminalType,nextTokenOccurrence:S.idx,ruleStack:L,occurrenceStack:U}),o=!0}else if(S instanceof Ln){const t=Bs(L);t.push(S.nonTerminalName);const e=Bs(U);e.push(S.idx);const i={idx:u,def:S.definition.concat(r,Hs(s)),ruleStack:t,occurrenceStack:e};E.push(i)}else if(S instanceof pn){const t={idx:u,def:Hs(s),ruleStack:L,occurrenceStack:U};E.push(t),E.push(a);const e={idx:u,def:S.definition.concat(Hs(s)),ruleStack:L,occurrenceStack:U};E.push(e)}else if(S instanceof Rn){const t=new dn({definition:S.definition,idx:S.idx}),e={idx:u,def:S.definition.concat([t],Hs(s)),ruleStack:L,occurrenceStack:U};E.push(e)}else if(S instanceof Tn){const t=new An({terminalType:S.separator}),e=new dn({definition:[t].concat(S.definition),idx:S.idx}),i={idx:u,def:S.definition.concat([e],Hs(s)),ruleStack:L,occurrenceStack:U};E.push(i)}else if(S instanceof Nn){const t={idx:u,def:Hs(s),ruleStack:L,occurrenceStack:U};E.push(t),E.push(a);const e=new An({terminalType:S.separator}),i=new dn({definition:[e].concat(S.definition),idx:S.idx}),n={idx:u,def:S.definition.concat([i],Hs(s)),ruleStack:L,occurrenceStack:U};E.push(n)}else if(S instanceof dn){const t={idx:u,def:Hs(s),ruleStack:L,occurrenceStack:U};E.push(t),E.push(a);const e=new dn({definition:S.definition,idx:S.idx}),i={idx:u,def:S.definition.concat([e],Hs(s)),ruleStack:L,occurrenceStack:U};E.push(i)}else if(S instanceof On)for(let t=S.definition.length-1;t>=0;t--){const e={idx:u,def:S.definition[t].definition.concat(Hs(s)),ruleStack:L,occurrenceStack:U};E.push(e),E.push(a)}else if(S instanceof Sn)E.push({idx:u,def:S.definition.concat(Hs(s)),ruleStack:L,occurrenceStack:U});else{if(!(S instanceof Un))throw Error("non exhaustive match");E.push(oo(S,u,L,U))}}return l}function oo(t,e,i,s){const n=Bs(i);n.push(t.name);const r=Bs(s);return r.push(1),{idx:e,def:t.definition,ruleStack:n,occurrenceStack:r}}var ho;function co(t){if(t instanceof pn||"Option"===t)return ho.OPTION;if(t instanceof dn||"Repetition"===t)return ho.REPETITION;if(t instanceof Rn||"RepetitionMandatory"===t)return ho.REPETITION_MANDATORY;if(t instanceof Tn||"RepetitionMandatoryWithSeparator"===t)return ho.REPETITION_MANDATORY_WITH_SEPARATOR;if(t instanceof Nn||"RepetitionWithSeparator"===t)return ho.REPETITION_WITH_SEPARATOR;if(t instanceof On||"Alternation"===t)return ho.ALTERNATION;throw Error("non exhaustive match")}function lo(t,e,i,s){const n=t.length,r=bn(t,t=>bn(t,t=>1===t.length));if(e)return function(e){const s=Mi(e,t=>t.GATE);for(let e=0;e<n;e++){const n=t[e],r=n.length,a=s[e];if(void 0===a||!1!==a.call(this))t:for(let t=0;t<r;t++){const s=n[t],r=s.length;for(let t=0;t<r;t++){const e=this.LA_FAST(t+1);if(!1===i(e,s[t]))continue t}return e}}};if(r&&!s){const e=Mi(t,t=>zn(t)),i=fr(e,(t,e,i)=>(rt(e,e=>{vi(t,e.tokenTypeIdx)||(t[e.tokenTypeIdx]=i),rt(e.categoryMatches,e=>{vi(t,e)||(t[e]=i)})}),t),{});return function(){const t=this.LA_FAST(1);return i[t.tokenTypeIdx]}}return function(){for(let e=0;e<n;e++){const s=t[e],n=s.length;t:for(let t=0;t<n;t++){const n=s[t],r=n.length;for(let t=0;t<r;t++){const e=this.LA_FAST(t+1);if(!1===i(e,n[t]))continue t}return e}}}}function Eo(t,e,i){const s=bn(t,t=>1===t.length),n=t.length;if(s&&!i){const e=zn(t);if(1===e.length&&Vt(e[0].categoryMatches)){const t=e[0].tokenTypeIdx;return function(){return this.LA_FAST(1).tokenTypeIdx===t}}{const t=fr(e,(t,e,i)=>(t[e.tokenTypeIdx]=!0,rt(e.categoryMatches,e=>{t[e]=!0}),t),[]);return function(){const e=this.LA_FAST(1);return!0===t[e.tokenTypeIdx]}}}return function(){t:for(let i=0;i<n;i++){const s=t[i],n=s.length;for(let t=0;t<n;t++){const i=this.LA_FAST(t+1);if(!1===e(i,s[t]))continue t}return!0}return!1}}!function(t){t[t.OPTION=0]="OPTION",t[t.REPETITION=1]="REPETITION",t[t.REPETITION_MANDATORY=2]="REPETITION_MANDATORY",t[t.REPETITION_MANDATORY_WITH_SEPARATOR=3]="REPETITION_MANDATORY_WITH_SEPARATOR",t[t.REPETITION_WITH_SEPARATOR=4]="REPETITION_WITH_SEPARATOR",t[t.ALTERNATION=5]="ALTERNATION"}(ho||(ho={}));class uo extends Gn{constructor(t,e,i){super(),this.topProd=t,this.targetOccurrence=e,this.targetProdType=i}startWalking(){return this.walk(this.topProd),this.restDef}checkIsTarget(t,e,i,s){return t.idx===this.targetOccurrence&&this.targetProdType===e&&(this.restDef=i.concat(s),!0)}walkOption(t,e,i){this.checkIsTarget(t,ho.OPTION,e,i)||super.walkOption(t,e,i)}walkAtLeastOne(t,e,i){this.checkIsTarget(t,ho.REPETITION_MANDATORY,e,i)||super.walkOption(t,e,i)}walkAtLeastOneSep(t,e,i){this.checkIsTarget(t,ho.REPETITION_MANDATORY_WITH_SEPARATOR,e,i)||super.walkOption(t,e,i)}walkMany(t,e,i){this.checkIsTarget(t,ho.REPETITION,e,i)||super.walkOption(t,e,i)}walkManySep(t,e,i){this.checkIsTarget(t,ho.REPETITION_WITH_SEPARATOR,e,i)||super.walkOption(t,e,i)}}class Lo extends Cn{constructor(t,e,i){super(),this.targetOccurrence=t,this.targetProdType=e,this.targetRef=i,this.result=[]}checkIsTarget(t,e){t.idx!==this.targetOccurrence||this.targetProdType!==e||void 0!==this.targetRef&&t!==this.targetRef||(this.result=t.definition)}visitOption(t){this.checkIsTarget(t,ho.OPTION)}visitRepetition(t){this.checkIsTarget(t,ho.REPETITION)}visitRepetitionMandatory(t){this.checkIsTarget(t,ho.REPETITION_MANDATORY)}visitRepetitionMandatoryWithSeparator(t){this.checkIsTarget(t,ho.REPETITION_MANDATORY_WITH_SEPARATOR)}visitRepetitionWithSeparator(t){this.checkIsTarget(t,ho.REPETITION_WITH_SEPARATOR)}visitAlternation(t){this.checkIsTarget(t,ho.ALTERNATION)}}function Uo(t){const e=new Array(t);for(let i=0;i<t;i++)e[i]=[];return e}function So(t){let e=[""];for(let i=0;i<t.length;i++){const s=t[i],n=[];for(let t=0;t<e.length;t++){const i=e[t];n.push(i+"_"+s.tokenTypeIdx);for(let t=0;t<s.categoryMatches.length;t++){const e="_"+s.categoryMatches[t];n.push(i+e)}}e=n}return e}function po(t,e,i){for(let s=0;s<t.length;s++){if(s===i)continue;const n=t[s];for(let t=0;t<e.length;t++){if(!0===n[e[t]])return!1}}return!0}function Ro(t,e){const i=Mi(t,t=>ro([t],1)),s=Uo(i.length),n=Mi(i,t=>{const e={};return rt(t,t=>{const i=So(t.partialPath);rt(i,t=>{e[t]=!0})}),e});let r=i;for(let t=1;t<=e;t++){const i=r;r=Uo(i.length);for(let a=0;a<i.length;a++){const o=i[a];for(let i=0;i<o.length;i++){const h=o[i].partialPath,c=o[i].suffixDef,l=So(h);if(po(n,l,a)||Vt(c)||h.length===e){const t=s[a];if(!1===Oo(t,h)){t.push(h);for(let t=0;t<l.length;t++){const e=l[t];n[a][e]=!0}}}else{const e=ro(c,t+1,h);r[a]=r[a].concat(e),rt(e,t=>{const e=So(t.partialPath);rt(e,t=>{n[a][t]=!0})})}}}}return s}function To(t,e,i,s){const n=new Lo(t,ho.ALTERNATION,s);return e.accept(n),Ro(n.result,i)}function No(t,e,i,s){const n=new Lo(t,i);e.accept(n);const r=n.result,a=new uo(e,t,i).startWalking();return Ro([new Sn({definition:r}),new Sn({definition:a})],s)}function Oo(t,e){t:for(let i=0;i<t.length;i++){const s=t[i];if(s.length===e.length){for(let t=0;t<s.length;t++){const i=e[t],n=s[t];if(!1===(i===n||void 0!==n.categoryMatchesMap[i.tokenTypeIdx]))continue t}return!0}}return!1}function Ao(t){return bn(t,t=>bn(t,t=>bn(t,t=>Vt(t.categoryMatches))))}function fo(t,e,i,s){const n=Ka(t,t=>function(t,e){const i=new Io;t.accept(i);const s=i.allProductions,n=za(s,Co),r=on(n,t=>t.length>1),a=Mi(ht(r),i=>{const s=Pr(i),n=e.buildDuplicateFoundError(t,i),r=xn(s),a={message:n,type:ph.DUPLICATE_PRODUCTIONS,ruleName:t.name,dslName:r,occurrence:s.idx},o=mo(s);return o&&(a.parameter=o),a});return a}(t,i)),r=function(t,e,i){const s=[],n=Mi(e,t=>t.name);return rt(t,t=>{const e=t.name;if(gn(n,e)){const n=i.buildNamespaceConflictError(t);s.push({message:n,type:ph.CONFLICT_TOKENS_RULES_NAMESPACE,ruleName:e})}}),s}(t,e,i),a=Ka(t,t=>function(t,e){const i=new _o;t.accept(i);const s=i.alternations,n=Ka(s,i=>i.definition.length>255?[{message:e.buildTooManyAlternativesError({topLevelRule:t,alternation:i}),type:ph.TOO_MANY_ALTS,ruleName:t.name,occurrence:i.idx}]:[]);return n}(t,i)),o=Ka(t,e=>function(t,e,i,s){const n=[],r=fr(e,(e,i)=>i.name===t.name?e+1:e,0);if(r>1){const e=s.buildDuplicateRuleNameError({topLevelRule:t,grammarName:i});n.push({message:e,type:ph.DUPLICATE_RULE_NAME,ruleName:t.name})}return n}(e,t,s,i));return n.concat(r,a,o)}function Co(t){return`${xn(t)}_#_${t.idx}_#_${mo(t)}`}function mo(t){return t instanceof An?t.terminalType.name:t instanceof Ln?t.nonTerminalName:""}class Io extends Cn{constructor(){super(...arguments),this.allProductions=[]}visitNonTerminal(t){this.allProductions.push(t)}visitOption(t){this.allProductions.push(t)}visitRepetitionWithSeparator(t){this.allProductions.push(t)}visitRepetitionMandatory(t){this.allProductions.push(t)}visitRepetitionMandatoryWithSeparator(t){this.allProductions.push(t)}visitRepetition(t){this.allProductions.push(t)}visitAlternation(t){this.allProductions.push(t)}visitTerminal(t){this.allProductions.push(t)}}function yo(t,e,i,s=[]){const n=[],r=Bo(e.definition);if(Vt(r))return[];{const e=t.name;gn(r,t)&&n.push({message:i.buildLeftRecursionError({topLevelRule:t,leftRecursionPath:s}),type:ph.LEFT_RECURSION,ruleName:e});const a=Br(r,s.concat([t])),o=Ka(a,e=>{const n=Bs(s);return n.push(e),yo(t,e,i,n)});return n.concat(o)}}function Bo(t){let e=[];if(Vt(t))return e;const i=Pr(t);if(i instanceof Ln)e.push(i.referencedRule);else if(i instanceof Sn||i instanceof pn||i instanceof Rn||i instanceof Tn||i instanceof Nn||i instanceof dn)e=e.concat(Bo(i.definition));else if(i instanceof On)e=zn(Mi(i.definition,t=>Bo(t.definition)));else if(!(i instanceof An))throw Error("non exhaustive match");const s=Dn(i),n=t.length>1;if(s&&n){const i=Hs(t);return e.concat(Bo(i))}return e}class _o extends Cn{constructor(){super(...arguments),this.alternations=[]}visitAlternation(t){this.alternations.push(t)}}function Po(t,e,i){const s=new _o;t.accept(s);let n=s.alternations;n=Tr(n,t=>!0===t.ignoreAmbiguities);const r=Ka(n,s=>{const n=s.idx,r=s.maxLookahead||e,a=To(n,t,r,s),o=function(t,e,i,s){const n=[],r=fr(t,(i,s,r)=>(!0===e.definition[r].ignoreAmbiguities||rt(s,s=>{const a=[r];rt(t,(t,i)=>{r!==i&&Oo(t,s)&&!0!==e.definition[i].ignoreAmbiguities&&a.push(i)}),a.length>1&&!Oo(n,s)&&(n.push(s),i.push({alts:a,path:s}))}),i),[]),a=Mi(r,t=>{const n=Mi(t.alts,t=>t+1);return{message:s.buildAlternationAmbiguityError({topLevelRule:i,alternation:e,ambiguityIndices:n,prefixPath:t.path}),type:ph.AMBIGUOUS_ALTS,ruleName:i.name,occurrence:e.idx,alternatives:t.alts}});return a}(a,s,t,i),h=function(t,e,i,s){const n=fr(t,(t,e,i)=>{const s=Mi(e,t=>({idx:i,path:t}));return t.concat(s)},[]),r=_r(Ka(n,t=>{if(!0===e.definition[t.idx].ignoreAmbiguities)return[];const r=t.idx,a=t.path,o=Cr(n,t=>{return!0!==e.definition[t.idx].ignoreAmbiguities&&t.idx<r&&(i=t.path,s=a,i.length<s.length&&bn(i,(t,e)=>{const i=s[e];return t===i||i.categoryMatchesMap[t.tokenTypeIdx]}));// removed by dead control flow
- var i, s; });return Mi(o,t=>{const n=[t.idx+1,r+1],a=0===e.idx?"":e.idx;return{message:s.buildAlternationPrefixAmbiguityError({topLevelRule:i,alternation:e,ambiguityIndices:n,prefixPath:t.path}),type:ph.AMBIGUOUS_PREFIX_ALTS,ruleName:i.name,occurrence:a,alternatives:n}})}));return r}(a,s,t,i);return o.concat(h)});return r}class Mo extends Cn{constructor(){super(...arguments),this.allProductions=[]}visitRepetitionWithSeparator(t){this.allProductions.push(t)}visitRepetitionMandatory(t){this.allProductions.push(t)}visitRepetitionMandatoryWithSeparator(t){this.allProductions.push(t)}visitRepetition(t){this.allProductions.push(t)}}function go(t){const e=Sr(t,{errMsgProvider:Va}),i={};return rt(t.rules,t=>{i[t.name]=t}),function(t,e){const i=new $a(t,e);return i.resolveRefs(),i.errors}(i,e.errMsgProvider)}const ko="MismatchedTokenException",vo="NoViableAltException",bo="EarlyExitException",Do="NotAllInputParsedException",xo=[ko,vo,bo,Do];function Go(t){return gn(xo,t.name)}Object.freeze(xo);class wo extends Error{constructor(t,e){super(t),this.token=e,this.resyncedTokens=[],Object.setPrototypeOf(this,new.target.prototype),Error.captureStackTrace&&Error.captureStackTrace(this,this.constructor)}}class Fo extends wo{constructor(t,e,i){super(t,e),this.previousToken=i,this.name=ko}}class jo extends wo{constructor(t,e,i){super(t,e),this.previousToken=i,this.name=vo}}class Vo extends wo{constructor(t,e){super(t,e),this.name=Do}}class Ho extends wo{constructor(t,e,i){super(t,e),this.previousToken=i,this.name=bo}}const $o={},Ko="InRuleRecoveryException";class Wo extends Error{constructor(t){super(t),this.name=Ko}}function qo(t,e,i,s,n,r,a){const o=this.getKeyForAutomaticLookahead(s,n);let h=this.firstAfterRepMap[o];if(void 0===h){const t=this.getCurrRuleFullName();h=new r(this.getGAstProductions()[t],n).startWalking(),this.firstAfterRepMap[o]=h}let c=h.token,l=h.occurrence;const E=h.isEndOfRule;0===this.RULE_STACK_IDX&&E&&void 0===c&&(c=Ga,l=1),void 0!==c&&void 0!==l&&this.shouldInRepetitionRecoveryBeTried(c,l,a)&&this.tryInRepetitionRecovery(t,e,i,c)}function Yo(t,e,i){return i|e|t}class Qo{constructor(t){var e;this.maxLookahead=null!==(e=null==t?void 0:t.maxLookahead)&&void 0!==e?e:Uh.maxLookahead}validate(t){const e=this.validateNoLeftRecursion(t.rules);if(Vt(e)){const i=this.validateEmptyOrAlternatives(t.rules),s=this.validateAmbiguousAlternationAlternatives(t.rules,this.maxLookahead),n=this.validateSomeNonEmptyLookaheadPath(t.rules,this.maxLookahead);return[...e,...i,...s,...n]}return e}validateNoLeftRecursion(t){return Ka(t,t=>yo(t,t,Ha))}validateEmptyOrAlternatives(t){return Ka(t,t=>function(t,e){const i=new _o;t.accept(i);const s=i.alternations;return Ka(s,i=>{const s=Xa(i.definition);return Ka(s,(s,n)=>{const r=ao([s],[],La,1);return Vt(r)?[{message:e.buildEmptyAlternationError({topLevelRule:t,alternation:i,emptyChoiceIdx:n}),type:ph.NONE_LAST_EMPTY_ALT,ruleName:t.name,occurrence:i.idx,alternative:n+1}]:[]})})}(t,Ha))}validateAmbiguousAlternationAlternatives(t,e){return Ka(t,t=>Po(t,e,Ha))}validateSomeNonEmptyLookaheadPath(t,e){return function(t,e,i){const s=[];return rt(t,t=>{const n=new Mo;t.accept(n);const r=n.allProductions;rt(r,n=>{const r=co(n),a=n.maxLookahead||e,o=No(n.idx,t,r,a)[0];if(Vt(zn(o))){const e=i.buildEmptyRepetitionError({topLevelRule:t,repetition:n});s.push({message:e,type:ph.NO_NON_EMPTY_LOOKAHEAD,ruleName:t.name})}})}),s}(t,e,Ha)}buildLookaheadForAlternation(t){return function(t,e,i,s,n,r){const a=To(t,e,i);return r(a,s,Ao(a)?Ua:La,n)}(t.prodOccurrence,t.rule,t.maxLookahead,t.hasPredicates,t.dynamicTokensEnabled,lo)}buildLookaheadForOptional(t){return function(t,e,i,s,n,r){const a=No(t,e,n,i),o=Ao(a)?Ua:La;return r(a[0],o,s)}(t.prodOccurrence,t.rule,t.maxLookahead,t.dynamicTokensEnabled,co(t.prodType),Eo)}}const zo=new class extends Cn{constructor(){super(...arguments),this.dslMethods={option:[],alternation:[],repetition:[],repetitionWithSeparator:[],repetitionMandatory:[],repetitionMandatoryWithSeparator:[]}}reset(){this.dslMethods={option:[],alternation:[],repetition:[],repetitionWithSeparator:[],repetitionMandatory:[],repetitionMandatoryWithSeparator:[]}}visitOption(t){this.dslMethods.option.push(t)}visitRepetitionWithSeparator(t){this.dslMethods.repetitionWithSeparator.push(t)}visitRepetitionMandatory(t){this.dslMethods.repetitionMandatory.push(t)}visitRepetitionMandatoryWithSeparator(t){this.dslMethods.repetitionMandatoryWithSeparator.push(t)}visitRepetition(t){this.dslMethods.repetition.push(t)}visitAlternation(t){this.dslMethods.alternation.push(t)}};function Xo(t,e){!0===isNaN(t.startOffset)?(t.startOffset=e.startOffset,t.endOffset=e.endOffset):t.endOffset<e.endOffset==!0&&(t.endOffset=e.endOffset)}function Jo(t,e){!0===isNaN(t.startOffset)?(t.startOffset=e.startOffset,t.startColumn=e.startColumn,t.startLine=e.startLine,t.endOffset=e.endOffset,t.endColumn=e.endColumn,t.endLine=e.endLine):t.endOffset<e.endOffset==!0&&(t.endOffset=e.endOffset,t.endColumn=e.endColumn,t.endLine=e.endLine)}function Zo(t,e){Object.defineProperty(t,"name",{enumerable:!1,configurable:!0,writable:!1,value:e})}function th(t,e){const i=et(t),s=i.length;for(let n=0;n<s;n++){const s=t[i[n]],r=s.length;for(let t=0;t<r;t++){const i=s[t];void 0===i.tokenTypeIdx&&this[i.name](i.children,e)}}}function eh(t,e){const i=function(){};Zo(i,t+"BaseSemantics");const s={visit:function(t,e){if(I(t)&&(t=t[0]),!Zn(t))return this[t.name](t.children,e)},validateVisitor:function(){const t=function(t,e){const i=function(t,e){const i=Cr(e,e=>!1===Z(t[e])),s=Mi(i,e=>({msg:`Missing visitor method: <${e}> on ${t.constructor.name} CST Visitor.`,type:ih.MISSING_METHOD,methodName:e}));return _r(s)}(t,e);return i}(this,e);if(!Vt(t)){const e=Mi(t,t=>t.msg);throw Error(`Errors Detected in CST Visitor <${this.constructor.name}>:\n\t${e.join("\n\n").replace(/\n/g,"\n\t")}`)}}};return(i.prototype=s).constructor=i,i._RULE_NAMES=e,i}var ih;!function(t){t[t.REDUNDANT_METHOD=0]="REDUNDANT_METHOD",t[t.MISSING_METHOD=1]="MISSING_METHOD"}(ih||(ih={}));const sh={description:"This Object indicates the Parser is during Recording Phase"};Object.freeze(sh);const nh=!0,rh=Math.pow(2,8)-1,ah=xa({name:"RECORDING_PHASE_TOKEN",pattern:ma.NA});Ra([ah]);const oh=wa(ah,"This IToken indicates the Parser is in Recording Phase\n\tSee: https://chevrotain.io/docs/guide/internals.html#grammar-recording for details",-1,-1,-1,-1,-1,-1);Object.freeze(oh);const hh={name:"This CSTNode indicates the Parser is in Recording Phase\n\tSee: https://chevrotain.io/docs/guide/internals.html#grammar-recording for details",children:{}};function ch(t,e,i,s=!1){uh(i);const n=Ea(this.recordingProdStack),r=Z(e)?e:e.DEF,a=new t({definition:[],idx:i});return s&&(a.separator=e.SEP),vi(e,"MAX_LOOKAHEAD")&&(a.maxLookahead=e.MAX_LOOKAHEAD),this.recordingProdStack.push(a),r.call(this),n.definition.push(a),this.recordingProdStack.pop(),sh}function lh(t,e){uh(e);const i=Ea(this.recordingProdStack),s=!1===I(t),n=!1===s?t:t.DEF,r=new On({definition:[],idx:e,ignoreAmbiguities:s&&!0===t.IGNORE_AMBIGUITIES});vi(t,"MAX_LOOKAHEAD")&&(r.maxLookahead=t.MAX_LOOKAHEAD);const a=In(n,t=>Z(t.GATE));return r.hasPredicates=a,i.definition.push(r),rt(n,t=>{const e=new Sn({definition:[]});r.definition.push(e),vi(t,"IGNORE_AMBIGUITIES")?e.ignoreAmbiguities=t.IGNORE_AMBIGUITIES:vi(t,"GATE")&&(e.ignoreAmbiguities=!0),this.recordingProdStack.push(e),t.ALT.call(this),this.recordingProdStack.pop()}),sh}function Eh(t){return 0===t?"":`${t}`}function uh(t){if(t<0||t>rh){const e=new Error(`Invalid DSL Method idx value: <${t}>\n\tIdx value must be a none negative value smaller than ${rh+1}`);throw e.KNOWN_RECORDER_ERROR=!0,e}}const Lh=wa(Ga,"",NaN,NaN,NaN,NaN,NaN,NaN);Object.freeze(Lh);const Uh=Object.freeze({recoveryEnabled:!1,maxLookahead:3,dynamicTokensEnabled:!1,outputCst:!0,errorMessageProvider:ja,nodeLocationTracking:"none",traceInitPerf:!1,skipValidations:!1}),Sh=Object.freeze({recoveryValueFunc:()=>{},resyncEnabled:!0});var ph,Rh;!function(t){t[t.INVALID_RULE_NAME=0]="INVALID_RULE_NAME",t[t.DUPLICATE_RULE_NAME=1]="DUPLICATE_RULE_NAME",t[t.INVALID_RULE_OVERRIDE=2]="INVALID_RULE_OVERRIDE",t[t.DUPLICATE_PRODUCTIONS=3]="DUPLICATE_PRODUCTIONS",t[t.UNRESOLVED_SUBRULE_REF=4]="UNRESOLVED_SUBRULE_REF",t[t.LEFT_RECURSION=5]="LEFT_RECURSION",t[t.NONE_LAST_EMPTY_ALT=6]="NONE_LAST_EMPTY_ALT",t[t.AMBIGUOUS_ALTS=7]="AMBIGUOUS_ALTS",t[t.CONFLICT_TOKENS_RULES_NAMESPACE=8]="CONFLICT_TOKENS_RULES_NAMESPACE",t[t.INVALID_TOKEN_NAME=9]="INVALID_TOKEN_NAME",t[t.NO_NON_EMPTY_LOOKAHEAD=10]="NO_NON_EMPTY_LOOKAHEAD",t[t.AMBIGUOUS_PREFIX_ALTS=11]="AMBIGUOUS_PREFIX_ALTS",t[t.TOO_MANY_ALTS=12]="TOO_MANY_ALTS",t[t.CUSTOM_LOOKAHEAD_VALIDATION=13]="CUSTOM_LOOKAHEAD_VALIDATION"}(ph||(ph={}));class Parser{static performSelfAnalysis(t){throw Error("The **static** `performSelfAnalysis` method has been deprecated.\t\nUse the **instance** method with the same name instead.")}performSelfAnalysis(){this.TRACE_INIT("performSelfAnalysis",()=>{let t;this.selfAnalysisDone=!0;const e=this.className;this.TRACE_INIT("toFastProps",()=>{_s(this)}),this.TRACE_INIT("Grammar Recording",()=>{try{this.enableRecording(),rt(this.definedRulesNames,t=>{const e=this[t].originalGrammarAction;let i;this.TRACE_INIT(`${t} Rule`,()=>{i=this.topLevelRuleRecord(t,e)}),this.gastProductionsCache[t]=i})}finally{this.disableRecording()}});let i=[];if(this.TRACE_INIT("Grammar Resolving",()=>{i=go({rules:ht(this.gastProductionsCache)}),this.definitionErrors=this.definitionErrors.concat(i)}),this.TRACE_INIT("Grammar Validations",()=>{if(Vt(i)&&!1===this.skipValidations){const i=(t={rules:ht(this.gastProductionsCache),tokenTypes:ht(this.tokensMap),errMsgProvider:Ha,grammarName:e},fo((t=Sr(t,{errMsgProvider:Ha})).rules,t.tokenTypes,t.errMsgProvider,t.grammarName)),s=function(t){const e=t.lookaheadStrategy.validate({rules:t.rules,tokenTypes:t.tokenTypes,grammarName:t.grammarName});return Mi(e,t=>Object.assign({type:ph.CUSTOM_LOOKAHEAD_VALIDATION},t))}({lookaheadStrategy:this.lookaheadStrategy,rules:ht(this.gastProductionsCache),tokenTypes:ht(this.tokensMap),grammarName:e});this.definitionErrors=this.definitionErrors.concat(i,s)}var t}),Vt(this.definitionErrors)&&(this.recoveryEnabled&&this.TRACE_INIT("computeAllProdsFollows",()=>{const t=function(t){const e={};return rt(t,t=>{const i=new Jn(t).startWalking();nn(e,i)}),e}(ht(this.gastProductionsCache));this.resyncFollows=t}),this.TRACE_INIT("ComputeLookaheadFunctions",()=>{var t,e;null===(e=(t=this.lookaheadStrategy).initialize)||void 0===e||e.call(t,{rules:ht(this.gastProductionsCache)}),this.preComputeLookaheadFunctions(ht(this.gastProductionsCache))})),!Parser.DEFER_DEFINITION_ERRORS_HANDLING&&!Vt(this.definitionErrors))throw t=Mi(this.definitionErrors,t=>t.message),new Error(`Parser Definition Errors detected:\n ${t.join("\n-------------------------------\n")}`)})}constructor(t,e){this.definitionErrors=[],this.selfAnalysisDone=!1;const i=this;if(i.initErrorHandler(e),i.initLexerAdapter(),i.initLooksAhead(e),i.initRecognizerEngine(t,e),i.initRecoverable(e),i.initTreeBuilder(e),i.initContentAssist(),i.initGastRecorder(e),i.initPerformanceTracer(e),vi(e,"ignoredIssues"))throw new Error("The <ignoredIssues> IParserConfig property has been deprecated.\n\tPlease use the <IGNORE_AMBIGUITIES> flag on the relevant DSL method instead.\n\tSee: https://chevrotain.io/docs/guide/resolving_grammar_errors.html#IGNORING_AMBIGUITIES\n\tFor further details.");this.skipValidations=vi(e,"skipValidations")?e.skipValidations:Uh.skipValidations}}Parser.DEFER_DEFINITION_ERRORS_HANDLING=!1,Rh=Parser,[class{initRecoverable(t){this.firstAfterRepMap={},this.resyncFollows={},this.recoveryEnabled=vi(t,"recoveryEnabled")?t.recoveryEnabled:Uh.recoveryEnabled,this.recoveryEnabled&&(this.attemptInRepetitionRecovery=qo)}getTokenToInsert(t){const e=wa(t,"",NaN,NaN,NaN,NaN,NaN,NaN);return e.isInsertedInRecovery=!0,e}canTokenTypeBeInsertedInRecovery(t){return!0}canTokenTypeBeDeletedInRecovery(t){return!0}tryInRepetitionRecovery(t,e,i,s){const n=this.findReSyncTokenType(),r=this.exportLexerState(),a=[];let o=!1;const h=this.LA_FAST(1);let c=this.LA_FAST(1);const l=()=>{const t=this.LA(0),e=this.errorMessageProvider.buildMismatchTokenMessage({expected:s,actual:h,previous:t,ruleName:this.getCurrRuleFullName()}),i=new Fo(e,h,this.LA(0));i.resyncedTokens=Xa(a),this.SAVE_ERROR(i)};for(;!o;){if(this.tokenMatcher(c,s))return void l();if(i.call(this))return l(),void t.apply(this,e);this.tokenMatcher(c,n)?o=!0:(c=this.SKIP_TOKEN(),this.addToResyncTokens(c,a))}this.importLexerState(r)}shouldInRepetitionRecoveryBeTried(t,e,i){return!1!==i&&!this.tokenMatcher(this.LA_FAST(1),t)&&!this.isBackTracking()&&!this.canPerformInRuleRecovery(t,this.getFollowsForInRuleRecovery(t,e))}getFollowsForInRuleRecovery(t,e){const i=this.getCurrentGrammarPath(t,e);return this.getNextPossibleTokenTypes(i)}tryInRuleRecovery(t,e){if(this.canRecoverWithSingleTokenInsertion(t,e))return this.getTokenToInsert(t);if(this.canRecoverWithSingleTokenDeletion(t)){const t=this.SKIP_TOKEN();return this.consumeToken(),t}throw new Wo("sad sad panda")}canPerformInRuleRecovery(t,e){return this.canRecoverWithSingleTokenInsertion(t,e)||this.canRecoverWithSingleTokenDeletion(t)}canRecoverWithSingleTokenInsertion(t,e){if(!this.canTokenTypeBeInsertedInRecovery(t))return!1;if(Vt(e))return!1;const i=this.LA_FAST(1);return void 0!==kr(e,t=>this.tokenMatcher(i,t))}canRecoverWithSingleTokenDeletion(t){return!!this.canTokenTypeBeDeletedInRecovery(t)&&this.tokenMatcher(this.LA(2),t)}isInCurrentRuleReSyncSet(t){const e=this.getCurrFollowKey(),i=this.getFollowSetFromFollowKey(e);return gn(i,t)}findReSyncTokenType(){const t=this.flattenFollowSet();let e=this.LA_FAST(1),i=2;for(;;){const s=kr(t,t=>Fa(e,t));if(void 0!==s)return s;e=this.LA(i),i++}}getCurrFollowKey(){if(0===this.RULE_STACK_IDX)return $o;const t=this.currRuleShortName,e=this.getLastExplicitRuleOccurrenceIndex(),i=this.getPreviousExplicitRuleShortName();return{ruleName:this.shortRuleNameToFullName(t),idxInCallingRule:e,inRule:this.shortRuleNameToFullName(i)}}buildFullFollowKeyStack(){const t=this.RULE_STACK,e=this.RULE_OCCURRENCE_STACK,i=this.RULE_STACK_IDX+1,s=new Array(i);for(let n=0;n<i;n++)s[n]=0===n?$o:{ruleName:this.shortRuleNameToFullName(t[n]),idxInCallingRule:e[n],inRule:this.shortRuleNameToFullName(t[n-1])};return s}flattenFollowSet(){const t=Mi(this.buildFullFollowKeyStack(),t=>this.getFollowSetFromFollowKey(t));return zn(t)}getFollowSetFromFollowKey(t){if(t===$o)return[Ga];const e=t.ruleName+t.idxInCallingRule+"_~IN~_"+t.inRule;return this.resyncFollows[e]}addToResyncTokens(t,e){return this.tokenMatcher(t,Ga)||e.push(t),e}reSyncTo(t){const e=[];let i=this.LA_FAST(1);for(;!1===this.tokenMatcher(i,t);)i=this.SKIP_TOKEN(),this.addToResyncTokens(i,e);return Xa(e)}attemptInRepetitionRecovery(t,e,i,s,n,r,a){}getCurrentGrammarPath(t,e){return{ruleStack:this.getHumanReadableRuleStack(),occurrenceStack:this.RULE_OCCURRENCE_STACK.slice(0,this.RULE_OCCURRENCE_STACK_IDX+1),lastTok:t,lastTokOccurrence:e}}getHumanReadableRuleStack(){const t=this.RULE_STACK_IDX+1,e=new Array(t);for(let i=0;i<t;i++)e[i]=this.shortRuleNameToFullName(this.RULE_STACK[i]);return e}},class{initLooksAhead(t){this.dynamicTokensEnabled=vi(t,"dynamicTokensEnabled")?t.dynamicTokensEnabled:Uh.dynamicTokensEnabled,this.maxLookahead=vi(t,"maxLookahead")?t.maxLookahead:Uh.maxLookahead,this.lookaheadStrategy=vi(t,"lookaheadStrategy")?t.lookaheadStrategy:new Qo({maxLookahead:this.maxLookahead}),this.lookAheadFuncsCache=new Map}preComputeLookaheadFunctions(t){rt(t,t=>{this.TRACE_INIT(`${t.name} Rule Lookahead`,()=>{const{alternation:e,repetition:i,option:s,repetitionMandatory:n,repetitionMandatoryWithSeparator:r,repetitionWithSeparator:a}=function(t){zo.reset(),t.accept(zo);const e=zo.dslMethods;return zo.reset(),e}(t);rt(e,e=>{const i=0===e.idx?"":e.idx;this.TRACE_INIT(`${xn(e)}${i}`,()=>{const i=this.lookaheadStrategy.buildLookaheadForAlternation({prodOccurrence:e.idx,rule:t,maxLookahead:e.maxLookahead||this.maxLookahead,hasPredicates:e.hasPredicates,dynamicTokensEnabled:this.dynamicTokensEnabled}),s=Yo(this.fullRuleNameToShort[t.name],256,e.idx);this.setLaFuncCache(s,i)})}),rt(i,e=>{this.computeLookaheadFunc(t,e.idx,768,"Repetition",e.maxLookahead,xn(e))}),rt(s,e=>{this.computeLookaheadFunc(t,e.idx,512,"Option",e.maxLookahead,xn(e))}),rt(n,e=>{this.computeLookaheadFunc(t,e.idx,1024,"RepetitionMandatory",e.maxLookahead,xn(e))}),rt(r,e=>{this.computeLookaheadFunc(t,e.idx,1536,"RepetitionMandatoryWithSeparator",e.maxLookahead,xn(e))}),rt(a,e=>{this.computeLookaheadFunc(t,e.idx,1280,"RepetitionWithSeparator",e.maxLookahead,xn(e))})})})}computeLookaheadFunc(t,e,i,s,n,r){this.TRACE_INIT(`${r}${0===e?"":e}`,()=>{const r=this.lookaheadStrategy.buildLookaheadForOptional({prodOccurrence:e,rule:t,maxLookahead:n||this.maxLookahead,dynamicTokensEnabled:this.dynamicTokensEnabled,prodType:s}),a=Yo(this.fullRuleNameToShort[t.name],i,e);this.setLaFuncCache(a,r)})}getKeyForAutomaticLookahead(t,e){return Yo(this.currRuleShortName,t,e)}getLaFuncFromCache(t){return this.lookAheadFuncsCache.get(t)}setLaFuncCache(t,e){this.lookAheadFuncsCache.set(t,e)}},class{initTreeBuilder(t){if(this.CST_STACK=[],this.outputCst=t.outputCst,this.nodeLocationTracking=vi(t,"nodeLocationTracking")?t.nodeLocationTracking:Uh.nodeLocationTracking,this.outputCst)if(/full/i.test(this.nodeLocationTracking))this.recoveryEnabled?(this.setNodeLocationFromToken=Jo,this.setNodeLocationFromNode=Jo,this.cstPostRule=Vn,this.setInitialNodeLocation=this.setInitialNodeLocationFullRecovery):(this.setNodeLocationFromToken=Vn,this.setNodeLocationFromNode=Vn,this.cstPostRule=this.cstPostRuleFull,this.setInitialNodeLocation=this.setInitialNodeLocationFullRegular);else if(/onlyOffset/i.test(this.nodeLocationTracking))this.recoveryEnabled?(this.setNodeLocationFromToken=Xo,this.setNodeLocationFromNode=Xo,this.cstPostRule=Vn,this.setInitialNodeLocation=this.setInitialNodeLocationOnlyOffsetRecovery):(this.setNodeLocationFromToken=Vn,this.setNodeLocationFromNode=Vn,this.cstPostRule=this.cstPostRuleOnlyOffset,this.setInitialNodeLocation=this.setInitialNodeLocationOnlyOffsetRegular);else{if(!/none/i.test(this.nodeLocationTracking))throw Error(`Invalid <nodeLocationTracking> config option: "${t.nodeLocationTracking}"`);this.setNodeLocationFromToken=Vn,this.setNodeLocationFromNode=Vn,this.cstPostRule=Vn,this.setInitialNodeLocation=Vn}else this.cstInvocationStateUpdate=Vn,this.cstFinallyStateUpdate=Vn,this.cstPostTerminal=Vn,this.cstPostNonTerminal=Vn,this.cstPostRule=Vn}setInitialNodeLocationOnlyOffsetRecovery(t){t.location={startOffset:NaN,endOffset:NaN}}setInitialNodeLocationOnlyOffsetRegular(t){t.location={startOffset:this.LA_FAST(1).startOffset,endOffset:NaN}}setInitialNodeLocationFullRecovery(t){t.location={startOffset:NaN,startLine:NaN,startColumn:NaN,endOffset:NaN,endLine:NaN,endColumn:NaN}}setInitialNodeLocationFullRegular(t){const e=this.LA_FAST(1);t.location={startOffset:e.startOffset,startLine:e.startLine,startColumn:e.startColumn,endOffset:NaN,endLine:NaN,endColumn:NaN}}cstInvocationStateUpdate(t){const e={name:t,children:Object.create(null)};this.setInitialNodeLocation(e),this.CST_STACK.push(e)}cstFinallyStateUpdate(){this.CST_STACK.pop()}cstPostRuleFull(t){const e=this.LA(0),i=t.location;i.startOffset<=e.startOffset==1?(i.endOffset=e.endOffset,i.endLine=e.endLine,i.endColumn=e.endColumn):(i.startOffset=NaN,i.startLine=NaN,i.startColumn=NaN)}cstPostRuleOnlyOffset(t){const e=this.LA(0),i=t.location;i.startOffset<=e.startOffset==1?i.endOffset=e.endOffset:i.startOffset=NaN}cstPostTerminal(t,e){const i=this.CST_STACK[this.CST_STACK.length-1];var s,n,r;n=e,r=t,void 0===(s=i).children[r]?s.children[r]=[n]:s.children[r].push(n),this.setNodeLocationFromToken(i.location,e)}cstPostNonTerminal(t,e){const i=this.CST_STACK[this.CST_STACK.length-1];!function(t,e,i){void 0===t.children[e]?t.children[e]=[i]:t.children[e].push(i)}(i,e,t),this.setNodeLocationFromNode(i.location,t.location)}getBaseCstVisitorConstructor(){if(Zn(this.baseCstVisitorConstructor)){const t=eh(this.className,et(this.gastProductionsCache));return this.baseCstVisitorConstructor=t,t}return this.baseCstVisitorConstructor}getBaseCstVisitorConstructorWithDefaults(){if(Zn(this.baseCstVisitorWithDefaultsConstructor)){const t=function(t,e,i){const s=function(){};Zo(s,t+"BaseSemanticsWithDefaults");const n=Object.create(i.prototype);return rt(e,t=>{n[t]=th}),(s.prototype=n).constructor=s,s}(this.className,et(this.gastProductionsCache),this.getBaseCstVisitorConstructor());return this.baseCstVisitorWithDefaultsConstructor=t,t}return this.baseCstVisitorWithDefaultsConstructor}getPreviousExplicitRuleShortName(){return this.RULE_STACK[this.RULE_STACK_IDX-1]}getLastExplicitRuleOccurrenceIndex(){return this.RULE_OCCURRENCE_STACK[this.RULE_OCCURRENCE_STACK_IDX]}},class{initLexerAdapter(){this.tokVector=[],this.tokVectorLength=0,this.currIdx=-1}set input(t){if(!0!==this.selfAnalysisDone)throw Error("Missing <performSelfAnalysis> invocation at the end of the Parser's constructor.");this.reset(),this.tokVector=t,this.tokVectorLength=t.length}get input(){return this.tokVector}SKIP_TOKEN(){return this.currIdx<=this.tokVectorLength-2?(this.consumeToken(),this.LA_FAST(1)):Lh}LA_FAST(t){const e=this.currIdx+t;return this.tokVector[e]}LA(t){const e=this.currIdx+t;return e<0||this.tokVectorLength<=e?Lh:this.tokVector[e]}consumeToken(){this.currIdx++}exportLexerState(){return this.currIdx}importLexerState(t){this.currIdx=t}resetLexerState(){this.currIdx=-1}moveToTerminatedState(){this.currIdx=this.tokVectorLength-1}getLexerPosition(){return this.exportLexerState()}},class{initRecognizerEngine(t,e){if(this.className=this.constructor.name,this.shortRuleNameToFull={},this.fullRuleNameToShort={},this.ruleShortNameIdx=256,this.tokenMatcher=Ua,this.subruleIdx=0,this.currRuleShortName=0,this.definedRulesNames=[],this.tokensMap={},this.isBackTrackingStack=[],this.RULE_STACK=[],this.RULE_STACK_IDX=-1,this.RULE_OCCURRENCE_STACK=[],this.RULE_OCCURRENCE_STACK_IDX=-1,this.gastProductionsCache={},vi(e,"serializedGrammar"))throw Error("The Parser's configuration can no longer contain a <serializedGrammar> property.\n\tSee: https://chevrotain.io/docs/changes/BREAKING_CHANGES.html#_6-0-0\n\tFor Further details.");if(I(t)){if(Vt(t))throw Error("A Token Vocabulary cannot be empty.\n\tNote that the first argument for the parser constructor\n\tis no longer a Token vector (since v4.0).");if("number"==typeof t[0].startOffset)throw Error("The Parser constructor no longer accepts a token vector as the first argument.\n\tSee: https://chevrotain.io/docs/changes/BREAKING_CHANGES.html#_4-0-0\n\tFor Further details.")}if(I(t))this.tokensMap=fr(t,(t,e)=>(t[e.name]=e,t),{});else if(vi(t,"modes")&&bn(zn(ht(t.modes)),Oa)){const e=zn(ht(t.modes)),i=Wn(e);this.tokensMap=fr(i,(t,e)=>(t[e.name]=e,t),{})}else{if(!J(t))throw new Error("<tokensDictionary> argument must be An Array of Token constructors, A dictionary of Token constructors or an IMultiModeLexerDefinition");this.tokensMap=Bs(t)}this.tokensMap.EOF=Ga;const i=vi(t,"modes")?zn(ht(t.modes)):ht(t),s=bn(i,t=>Vt(t.categoryMatches));this.tokenMatcher=s?Ua:La,Ra(ht(this.tokensMap))}defineRule(t,e,i){if(this.selfAnalysisDone)throw Error(`Grammar rule <${t}> may not be defined after the 'performSelfAnalysis' method has been called'\nMake sure that all grammar rule definitions are done before 'performSelfAnalysis' is called.`);const s=vi(i,"resyncEnabled")?i.resyncEnabled:Sh.resyncEnabled,n=vi(i,"recoveryValueFunc")?i.recoveryValueFunc:Sh.recoveryValueFunc,r=this.ruleShortNameIdx<<12;let a;return this.ruleShortNameIdx++,this.shortRuleNameToFull[r]=t,this.fullRuleNameToShort[t]=r,a=!0===this.outputCst?function(...i){try{this.ruleInvocationStateUpdate(r,t,this.subruleIdx),e.apply(this,i);const s=this.CST_STACK[this.CST_STACK.length-1];return this.cstPostRule(s),s}catch(t){return this.invokeRuleCatch(t,s,n)}finally{this.ruleFinallyStateUpdate()}}:function(...i){try{return this.ruleInvocationStateUpdate(r,t,this.subruleIdx),e.apply(this,i)}catch(t){return this.invokeRuleCatch(t,s,n)}finally{this.ruleFinallyStateUpdate()}},Object.assign(function(...e){this.onBeforeParse(t);try{return a.apply(this,e)}finally{this.onAfterParse(t)}},{ruleName:t,originalGrammarAction:e,coreRule:a})}invokeRuleCatch(t,e,i){const s=0===this.RULE_STACK_IDX,n=e&&!this.isBackTracking()&&this.recoveryEnabled;if(Go(t)){const e=t;if(n){const s=this.findReSyncTokenType();if(this.isInCurrentRuleReSyncSet(s)){if(e.resyncedTokens=this.reSyncTo(s),this.outputCst){const t=this.CST_STACK[this.CST_STACK.length-1];return t.recoveredNode=!0,t}return i(t)}if(this.outputCst){const t=this.CST_STACK[this.CST_STACK.length-1];t.recoveredNode=!0,e.partialCstResult=t}throw e}if(s)return this.moveToTerminatedState(),i(t);throw e}throw t}optionInternal(t,e){const i=this.getKeyForAutomaticLookahead(512,e);return this.optionInternalLogic(t,e,i)}optionInternalLogic(t,e,i){let s,n=this.getLaFuncFromCache(i);if("function"!=typeof t){s=t.DEF;const e=t.GATE;if(void 0!==e){const t=n;n=()=>e.call(this)&&t.call(this)}}else s=t;if(!0===n.call(this))return s.call(this)}atLeastOneInternal(t,e){const i=this.getKeyForAutomaticLookahead(1024,t);return this.atLeastOneInternalLogic(t,e,i)}atLeastOneInternalLogic(t,e,i){let s,n=this.getLaFuncFromCache(i);if("function"!=typeof e){s=e.DEF;const t=e.GATE;if(void 0!==t){const e=n;n=()=>t.call(this)&&e.call(this)}}else s=e;if(!0!==n.call(this))throw this.raiseEarlyExitException(t,ho.REPETITION_MANDATORY,e.ERR_MSG);{let t=this.doSingleRepetition(s);for(;!0===n.call(this)&&!0===t;)t=this.doSingleRepetition(s)}this.attemptInRepetitionRecovery(this.atLeastOneInternal,[t,e],n,1024,t,so)}atLeastOneSepFirstInternal(t,e){const i=this.getKeyForAutomaticLookahead(1536,t);this.atLeastOneSepFirstInternalLogic(t,e,i)}atLeastOneSepFirstInternalLogic(t,e,i){const s=e.DEF,n=e.SEP;if(!0!==this.getLaFuncFromCache(i).call(this))throw this.raiseEarlyExitException(t,ho.REPETITION_MANDATORY_WITH_SEPARATOR,e.ERR_MSG);{s.call(this);const e=()=>this.tokenMatcher(this.LA_FAST(1),n);for(;!0===this.tokenMatcher(this.LA_FAST(1),n);)this.CONSUME(n),s.call(this);this.attemptInRepetitionRecovery(this.repetitionSepSecondInternal,[t,n,e,s,no],e,1536,t,no)}}manyInternal(t,e){const i=this.getKeyForAutomaticLookahead(768,t);return this.manyInternalLogic(t,e,i)}manyInternalLogic(t,e,i){let s,n=this.getLaFuncFromCache(i);if("function"!=typeof e){s=e.DEF;const t=e.GATE;if(void 0!==t){const e=n;n=()=>t.call(this)&&e.call(this)}}else s=e;let r=!0;for(;!0===n.call(this)&&!0===r;)r=this.doSingleRepetition(s);this.attemptInRepetitionRecovery(this.manyInternal,[t,e],n,768,t,eo,r)}manySepFirstInternal(t,e){const i=this.getKeyForAutomaticLookahead(1280,t);this.manySepFirstInternalLogic(t,e,i)}manySepFirstInternalLogic(t,e,i){const s=e.DEF,n=e.SEP;if(!0===this.getLaFuncFromCache(i).call(this)){s.call(this);const e=()=>this.tokenMatcher(this.LA_FAST(1),n);for(;!0===this.tokenMatcher(this.LA_FAST(1),n);)this.CONSUME(n),s.call(this);this.attemptInRepetitionRecovery(this.repetitionSepSecondInternal,[t,n,e,s,io],e,1280,t,io)}}repetitionSepSecondInternal(t,e,i,s,n){for(;i();)this.CONSUME(e),s.call(this);this.attemptInRepetitionRecovery(this.repetitionSepSecondInternal,[t,e,i,s,n],i,1536,t,n)}doSingleRepetition(t){const e=this.getLexerPosition();return t.call(this),this.getLexerPosition()>e}orInternal(t,e){const i=this.getKeyForAutomaticLookahead(256,e),s=I(t)?t:t.DEF,n=this.getLaFuncFromCache(i).call(this,s);if(void 0!==n)return s[n].ALT.call(this);this.raiseNoAltException(e,t.ERR_MSG)}ruleFinallyStateUpdate(){this.RULE_STACK_IDX--,this.RULE_OCCURRENCE_STACK_IDX--,this.RULE_STACK_IDX>=0&&(this.currRuleShortName=this.RULE_STACK[this.RULE_STACK_IDX]),this.cstFinallyStateUpdate()}subruleInternal(t,e,i){let s;try{const n=void 0!==i?i.ARGS:void 0;return this.subruleIdx=e,s=t.coreRule.apply(this,n),this.cstPostNonTerminal(s,void 0!==i&&void 0!==i.LABEL?i.LABEL:t.ruleName),s}catch(e){throw this.subruleInternalError(e,i,t.ruleName)}}subruleInternalError(t,e,i){throw Go(t)&&void 0!==t.partialCstResult&&(this.cstPostNonTerminal(t.partialCstResult,void 0!==e&&void 0!==e.LABEL?e.LABEL:i),delete t.partialCstResult),t}consumeInternal(t,e,i){let s;try{const e=this.LA_FAST(1);!0===this.tokenMatcher(e,t)?(this.consumeToken(),s=e):this.consumeInternalError(t,e,i)}catch(i){s=this.consumeInternalRecovery(t,e,i)}return this.cstPostTerminal(void 0!==i&&void 0!==i.LABEL?i.LABEL:t.name,s),s}consumeInternalError(t,e,i){let s;const n=this.LA(0);throw s=void 0!==i&&i.ERR_MSG?i.ERR_MSG:this.errorMessageProvider.buildMismatchTokenMessage({expected:t,actual:e,previous:n,ruleName:this.getCurrRuleFullName()}),this.SAVE_ERROR(new Fo(s,e,n))}consumeInternalRecovery(t,e,i){if(!this.recoveryEnabled||"MismatchedTokenException"!==i.name||this.isBackTracking())throw i;{const s=this.getFollowsForInRuleRecovery(t,e);try{return this.tryInRuleRecovery(t,s)}catch(t){throw t.name===Ko?i:t}}}saveRecogState(){const t=this.errors,e=this.RULE_STACK.slice(0,this.RULE_STACK_IDX+1);return{errors:t,lexerState:this.exportLexerState(),RULE_STACK:e,CST_STACK:this.CST_STACK}}reloadRecogState(t){this.errors=t.errors,this.importLexerState(t.lexerState);const e=t.RULE_STACK;for(let t=0;t<e.length;t++)this.RULE_STACK[t]=e[t];this.RULE_STACK_IDX=e.length-1,this.RULE_STACK_IDX>=0&&(this.currRuleShortName=this.RULE_STACK[this.RULE_STACK_IDX])}ruleInvocationStateUpdate(t,e,i){this.RULE_OCCURRENCE_STACK[++this.RULE_OCCURRENCE_STACK_IDX]=i,this.RULE_STACK[++this.RULE_STACK_IDX]=t,this.currRuleShortName=t,this.cstInvocationStateUpdate(e)}isBackTracking(){return 0!==this.isBackTrackingStack.length}getCurrRuleFullName(){const t=this.currRuleShortName;return this.shortRuleNameToFull[t]}shortRuleNameToFullName(t){return this.shortRuleNameToFull[t]}isAtEndOfInput(){return this.tokenMatcher(this.LA(1),Ga)}reset(){this.resetLexerState(),this.subruleIdx=0,this.currRuleShortName=0,this.isBackTrackingStack=[],this.errors=[],this.RULE_STACK_IDX=-1,this.RULE_OCCURRENCE_STACK_IDX=-1,this.CST_STACK=[]}onBeforeParse(t){for(let t=0;t<this.maxLookahead+1;t++)this.tokVector.push(Lh)}onAfterParse(t){if(!1===this.isAtEndOfInput()){const t=this.LA(1),e=this.errorMessageProvider.buildNotAllInputParsedMessage({firstRedundant:t,ruleName:this.getCurrRuleFullName()});this.SAVE_ERROR(new Vo(e,t))}for(;this.tokVector.at(-1)===Lh;)this.tokVector.pop()}},class{ACTION(t){return t.call(this)}consume(t,e,i){return this.consumeInternal(e,t,i)}subrule(t,e,i){return this.subruleInternal(e,t,i)}option(t,e){return this.optionInternal(e,t)}or(t,e){return this.orInternal(e,t)}many(t,e){return this.manyInternal(t,e)}atLeastOne(t,e){return this.atLeastOneInternal(t,e)}CONSUME(t,e){return this.consumeInternal(t,0,e)}CONSUME1(t,e){return this.consumeInternal(t,1,e)}CONSUME2(t,e){return this.consumeInternal(t,2,e)}CONSUME3(t,e){return this.consumeInternal(t,3,e)}CONSUME4(t,e){return this.consumeInternal(t,4,e)}CONSUME5(t,e){return this.consumeInternal(t,5,e)}CONSUME6(t,e){return this.consumeInternal(t,6,e)}CONSUME7(t,e){return this.consumeInternal(t,7,e)}CONSUME8(t,e){return this.consumeInternal(t,8,e)}CONSUME9(t,e){return this.consumeInternal(t,9,e)}SUBRULE(t,e){return this.subruleInternal(t,0,e)}SUBRULE1(t,e){return this.subruleInternal(t,1,e)}SUBRULE2(t,e){return this.subruleInternal(t,2,e)}SUBRULE3(t,e){return this.subruleInternal(t,3,e)}SUBRULE4(t,e){return this.subruleInternal(t,4,e)}SUBRULE5(t,e){return this.subruleInternal(t,5,e)}SUBRULE6(t,e){return this.subruleInternal(t,6,e)}SUBRULE7(t,e){return this.subruleInternal(t,7,e)}SUBRULE8(t,e){return this.subruleInternal(t,8,e)}SUBRULE9(t,e){return this.subruleInternal(t,9,e)}OPTION(t){return this.optionInternal(t,0)}OPTION1(t){return this.optionInternal(t,1)}OPTION2(t){return this.optionInternal(t,2)}OPTION3(t){return this.optionInternal(t,3)}OPTION4(t){return this.optionInternal(t,4)}OPTION5(t){return this.optionInternal(t,5)}OPTION6(t){return this.optionInternal(t,6)}OPTION7(t){return this.optionInternal(t,7)}OPTION8(t){return this.optionInternal(t,8)}OPTION9(t){return this.optionInternal(t,9)}OR(t){return this.orInternal(t,0)}OR1(t){return this.orInternal(t,1)}OR2(t){return this.orInternal(t,2)}OR3(t){return this.orInternal(t,3)}OR4(t){return this.orInternal(t,4)}OR5(t){return this.orInternal(t,5)}OR6(t){return this.orInternal(t,6)}OR7(t){return this.orInternal(t,7)}OR8(t){return this.orInternal(t,8)}OR9(t){return this.orInternal(t,9)}MANY(t){this.manyInternal(0,t)}MANY1(t){this.manyInternal(1,t)}MANY2(t){this.manyInternal(2,t)}MANY3(t){this.manyInternal(3,t)}MANY4(t){this.manyInternal(4,t)}MANY5(t){this.manyInternal(5,t)}MANY6(t){this.manyInternal(6,t)}MANY7(t){this.manyInternal(7,t)}MANY8(t){this.manyInternal(8,t)}MANY9(t){this.manyInternal(9,t)}MANY_SEP(t){this.manySepFirstInternal(0,t)}MANY_SEP1(t){this.manySepFirstInternal(1,t)}MANY_SEP2(t){this.manySepFirstInternal(2,t)}MANY_SEP3(t){this.manySepFirstInternal(3,t)}MANY_SEP4(t){this.manySepFirstInternal(4,t)}MANY_SEP5(t){this.manySepFirstInternal(5,t)}MANY_SEP6(t){this.manySepFirstInternal(6,t)}MANY_SEP7(t){this.manySepFirstInternal(7,t)}MANY_SEP8(t){this.manySepFirstInternal(8,t)}MANY_SEP9(t){this.manySepFirstInternal(9,t)}AT_LEAST_ONE(t){this.atLeastOneInternal(0,t)}AT_LEAST_ONE1(t){return this.atLeastOneInternal(1,t)}AT_LEAST_ONE2(t){this.atLeastOneInternal(2,t)}AT_LEAST_ONE3(t){this.atLeastOneInternal(3,t)}AT_LEAST_ONE4(t){this.atLeastOneInternal(4,t)}AT_LEAST_ONE5(t){this.atLeastOneInternal(5,t)}AT_LEAST_ONE6(t){this.atLeastOneInternal(6,t)}AT_LEAST_ONE7(t){this.atLeastOneInternal(7,t)}AT_LEAST_ONE8(t){this.atLeastOneInternal(8,t)}AT_LEAST_ONE9(t){this.atLeastOneInternal(9,t)}AT_LEAST_ONE_SEP(t){this.atLeastOneSepFirstInternal(0,t)}AT_LEAST_ONE_SEP1(t){this.atLeastOneSepFirstInternal(1,t)}AT_LEAST_ONE_SEP2(t){this.atLeastOneSepFirstInternal(2,t)}AT_LEAST_ONE_SEP3(t){this.atLeastOneSepFirstInternal(3,t)}AT_LEAST_ONE_SEP4(t){this.atLeastOneSepFirstInternal(4,t)}AT_LEAST_ONE_SEP5(t){this.atLeastOneSepFirstInternal(5,t)}AT_LEAST_ONE_SEP6(t){this.atLeastOneSepFirstInternal(6,t)}AT_LEAST_ONE_SEP7(t){this.atLeastOneSepFirstInternal(7,t)}AT_LEAST_ONE_SEP8(t){this.atLeastOneSepFirstInternal(8,t)}AT_LEAST_ONE_SEP9(t){this.atLeastOneSepFirstInternal(9,t)}RULE(t,e,i=Sh){if(gn(this.definedRulesNames,t)){const e={message:Ha.buildDuplicateRuleNameError({topLevelRule:t,grammarName:this.className}),type:ph.DUPLICATE_RULE_NAME,ruleName:t};this.definitionErrors.push(e)}this.definedRulesNames.push(t);const s=this.defineRule(t,e,i);return this[t]=s,s}OVERRIDE_RULE(t,e,i=Sh){const s=function(t,e,i){const s=[];let n;return gn(e,t)||(n=`Invalid rule override, rule: ->${t}<- cannot be overridden in the grammar: ->${i}<-as it is not defined in any of the super grammars `,s.push({message:n,type:ph.INVALID_RULE_OVERRIDE,ruleName:t})),s}(t,this.definedRulesNames,this.className);this.definitionErrors=this.definitionErrors.concat(s);const n=this.defineRule(t,e,i);return this[t]=n,n}BACKTRACK(t,e){var i;const s=null!==(i=t.coreRule)&&void 0!==i?i:t;return function(){this.isBackTrackingStack.push(1);const t=this.saveRecogState();try{return s.apply(this,e),!0}catch(t){if(Go(t))return!1;throw t}finally{this.reloadRecogState(t),this.isBackTrackingStack.pop()}}}getGAstProductions(){return this.gastProductionsCache}getSerializedGastProductions(){return t=ht(this.gastProductionsCache),Mi(t,fn);// removed by dead control flow
- var t; }},class{initErrorHandler(t){this._errors=[],this.errorMessageProvider=vi(t,"errorMessageProvider")?t.errorMessageProvider:Uh.errorMessageProvider}SAVE_ERROR(t){if(Go(t))return t.context={ruleStack:this.getHumanReadableRuleStack(),ruleOccurrenceStack:this.RULE_OCCURRENCE_STACK.slice(0,this.RULE_OCCURRENCE_STACK_IDX+1)},this._errors.push(t),t;throw Error("Trying to save an Error which is not a RecognitionException")}get errors(){return Bs(this._errors)}set errors(t){this._errors=t}raiseEarlyExitException(t,e,i){const s=this.getCurrRuleFullName(),n=No(t,this.getGAstProductions()[s],e,this.maxLookahead)[0],r=[];for(let t=1;t<=this.maxLookahead;t++)r.push(this.LA(t));const a=this.errorMessageProvider.buildEarlyExitMessage({expectedIterationPaths:n,actual:r,previous:this.LA(0),customUserDescription:i,ruleName:s});throw this.SAVE_ERROR(new Ho(a,this.LA(1),this.LA(0)))}raiseNoAltException(t,e){const i=this.getCurrRuleFullName(),s=To(t,this.getGAstProductions()[i],this.maxLookahead),n=[];for(let t=1;t<=this.maxLookahead;t++)n.push(this.LA(t));const r=this.LA(0),a=this.errorMessageProvider.buildNoViableAltMessage({expectedPathsPerAlt:s,actual:n,previous:r,customUserDescription:e,ruleName:this.getCurrRuleFullName()});throw this.SAVE_ERROR(new jo(a,this.LA(1),r))}},class{initContentAssist(){}computeContentAssist(t,e){const i=this.gastProductionsCache[t];if(Zn(i))throw Error(`Rule ->${t}<- does not exist in this grammar.`);return ao([i],e,this.tokenMatcher,this.maxLookahead)}getNextPossibleTokenTypes(t){const e=Pr(t.ruleStack),i=this.getGAstProductions()[e];return new Za(i,t).startWalking()}},class{initGastRecorder(t){this.recordingProdStack=[],this.RECORDING_PHASE=!1}enableRecording(){this.RECORDING_PHASE=!0,this.TRACE_INIT("Enable Recording",()=>{for(let t=0;t<10;t++){const e=t>0?t:"";this[`CONSUME${e}`]=function(e,i){return this.consumeInternalRecord(e,t,i)},this[`SUBRULE${e}`]=function(e,i){return this.subruleInternalRecord(e,t,i)},this[`OPTION${e}`]=function(e){return this.optionInternalRecord(e,t)},this[`OR${e}`]=function(e){return this.orInternalRecord(e,t)},this[`MANY${e}`]=function(e){this.manyInternalRecord(t,e)},this[`MANY_SEP${e}`]=function(e){this.manySepFirstInternalRecord(t,e)},this[`AT_LEAST_ONE${e}`]=function(e){this.atLeastOneInternalRecord(t,e)},this[`AT_LEAST_ONE_SEP${e}`]=function(e){this.atLeastOneSepFirstInternalRecord(t,e)}}this.consume=function(t,e,i){return this.consumeInternalRecord(e,t,i)},this.subrule=function(t,e,i){return this.subruleInternalRecord(e,t,i)},this.option=function(t,e){return this.optionInternalRecord(e,t)},this.or=function(t,e){return this.orInternalRecord(e,t)},this.many=function(t,e){this.manyInternalRecord(t,e)},this.atLeastOne=function(t,e){this.atLeastOneInternalRecord(t,e)},this.ACTION=this.ACTION_RECORD,this.BACKTRACK=this.BACKTRACK_RECORD,this.LA=this.LA_RECORD})}disableRecording(){this.RECORDING_PHASE=!1,this.TRACE_INIT("Deleting Recording methods",()=>{const t=this;for(let e=0;e<10;e++){const i=e>0?e:"";delete t[`CONSUME${i}`],delete t[`SUBRULE${i}`],delete t[`OPTION${i}`],delete t[`OR${i}`],delete t[`MANY${i}`],delete t[`MANY_SEP${i}`],delete t[`AT_LEAST_ONE${i}`],delete t[`AT_LEAST_ONE_SEP${i}`]}delete t.consume,delete t.subrule,delete t.option,delete t.or,delete t.many,delete t.atLeastOne,delete t.ACTION,delete t.BACKTRACK,delete t.LA})}ACTION_RECORD(t){}BACKTRACK_RECORD(t,e){return()=>!0}LA_RECORD(t){return Lh}topLevelRuleRecord(t,e){try{const i=new Un({definition:[],name:t});return i.name=t,this.recordingProdStack.push(i),e.call(this),this.recordingProdStack.pop(),i}catch(t){if(!0!==t.KNOWN_RECORDER_ERROR)try{t.message=t.message+'\n\t This error was thrown during the "grammar recording phase" For more info see:\n\thttps://chevrotain.io/docs/guide/internals.html#grammar-recording'}catch(e){throw t}throw t}}optionInternalRecord(t,e){return ch.call(this,pn,t,e)}atLeastOneInternalRecord(t,e){ch.call(this,Rn,e,t)}atLeastOneSepFirstInternalRecord(t,e){ch.call(this,Tn,e,t,nh)}manyInternalRecord(t,e){ch.call(this,dn,e,t)}manySepFirstInternalRecord(t,e){ch.call(this,Nn,e,t,nh)}orInternalRecord(t,e){return lh.call(this,t,e)}subruleInternalRecord(t,e,i){if(uh(e),!t||!1===vi(t,"ruleName")){const i=new Error(`<SUBRULE${Eh(e)}> argument is invalid expecting a Parser method reference but got: <${JSON.stringify(t)}>\n inside top level rule: <${this.recordingProdStack[0].name}>`);throw i.KNOWN_RECORDER_ERROR=!0,i}const s=Ea(this.recordingProdStack),n=t.ruleName,r=new Ln({idx:e,nonTerminalName:n,label:null==i?void 0:i.LABEL,referencedRule:void 0});return s.definition.push(r),this.outputCst?hh:sh}consumeInternalRecord(t,e,i){if(uh(e),!da(t)){const i=new Error(`<CONSUME${Eh(e)}> argument is invalid expecting a TokenType reference but got: <${JSON.stringify(t)}>\n inside top level rule: <${this.recordingProdStack[0].name}>`);throw i.KNOWN_RECORDER_ERROR=!0,i}const s=Ea(this.recordingProdStack),n=new An({idx:e,terminalType:t,label:null==i?void 0:i.LABEL});return s.definition.push(n),oh}},class{initPerformanceTracer(t){if(vi(t,"traceInitPerf")){const e=t.traceInitPerf,i="number"==typeof e;this.traceInitMaxIdent=i?e:1/0,this.traceInitPerf=i?e>0:e}else this.traceInitMaxIdent=0,this.traceInitPerf=Uh.traceInitPerf;this.traceInitIndent=-1}TRACE_INIT(t,e){if(!0===this.traceInitPerf){this.traceInitIndent++;const i=new Array(this.traceInitIndent+1).join("\t");this.traceInitIndent<this.traceInitMaxIdent&&console.log(`${i}--\x3e <${t}>`);const{time:s,value:n}=ua(e),r=s>10?console.warn:console.log;return this.traceInitIndent<this.traceInitMaxIdent&&r(`${i}<-- <${t}> time: ${s}ms`),this.traceInitIndent--,n}return e()}}].forEach(t=>{const e=t.prototype;Object.getOwnPropertyNames(e).forEach(i=>{if("constructor"===i)return;const s=Object.getOwnPropertyDescriptor(e,i);s&&(s.get||s.set)?Object.defineProperty(Rh.prototype,i,s):Rh.prototype[i]=t.prototype[i]})});class Th extends Parser{constructor(t,e=Uh){const i=Bs(e);i.outputCst=!0,super(t,i)}}}};const e={};function i(s){const n=e[s];if(void 0!==n)return n.exports;const r=e[s]={id:s,loaded:!1,exports:{}};return t[s](r,r.exports,i),r.loaded=!0,r.exports}i.n=t=>{const e=t&&t.__esModule?()=>t.default:()=>t;return i.d(e,{a:e}),e},i.d=(t,e)=>{if(Array.isArray(e))for(var s=0;s<e.length;){var n=e[s++],r=e[s++];i.o(t,n)?0===r&&s++:0===r?Object.defineProperty(t,n,{enumerable:!0,value:e[s++]}):Object.defineProperty(t,n,{enumerable:!0,get:r})}else for(var n in e)i.o(e,n)&&!i.o(t,n)&&Object.defineProperty(t,n,{enumerable:!0,get:e[n]})},i.g=function(){if("object"==typeof globalThis)return globalThis;try{return this||new Function("return this")()}catch(t){if("object"==typeof window)return window}}(),i.o=(t,e)=>Object.prototype.hasOwnProperty.call(t,e),i.r=t=>{Symbol.toStringTag&&Object.defineProperty(t,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(t,"__esModule",{value:!0})},i.nmd=t=>(t.paths=[],t.children||(t.children=[]),t);let s={};return(()=>{"use strict";i.r(s),i.d(s,{BaseGraphQlParser:()=>BaseGraphQlParser,BaseSparqlParser:()=>BaseSparqlParser.s,ShaclParser:()=>Q,SmsParser:()=>SmsParser,SrsParser:()=>SrsParser,StandardGraphQlParser:()=>StandardGraphQlParser,StardogGraphQlParser:()=>StardogGraphQlParser,StardogSparqlParser:()=>StardogSparqlParser.h,TrigParser:()=>TrigParser,TurtleParser:()=>TurtleParser,W3SpecSparqlParser:()=>W3SpecSparqlParser.E,getAsTypedTuple:()=>Tt.$,getFirstChildCstElementByRuleStack:()=>E,graphQlTokens:()=>ee,graphQlUtils:()=>lt,isCstNode:()=>c,isIToken:()=>l,matchers:()=>Yt,rdfjs:()=>e,shaclTokens:()=>te,smsTokens:()=>Zt,sparqlKeywords:()=>Wt.keywords,sparqlTerminals:()=>qt.terminals,sparqlTokens:()=>Qt,srsTokens:()=>Xt,traverse:()=>o,trigTokens:()=>Jt,turtleTokens:()=>zt,unsafeTraverse:()=>h});var t={};i.r(t),i.d(t,{c:()=>jt,V:()=>Ft});var e={};i.r(e),i.d(e,{BlankNode:()=>Ot,CstToQuadsEmitter:()=>jt,DefaultGraph:()=>ft,EmitterError:()=>t.EmitterError,EmitterOptions:()=>t.EmitterOptions,Literal:()=>mt,MillanDataset:()=>gt,NamedNode:()=>Nt,Quad:()=>It,Variable:()=>At,commonIris:()=>_t,defaultGraphInstance:()=>Ct,parseTrigToRdfjs:()=>Kt,parseTurtleToRdfjs:()=>$t,quadKey:()=>Mt,resolveIri:()=>Ft,termKey:()=>Pt});var BaseSparqlParser=i(8),StardogSparqlParser=i(211),W3SpecSparqlParser=i(264),n=i(59);const{turtleTokenTypes:r,turtleTokenMap:a}=i(400);class TurtleParser extends n.cA{constructor(t={},e=r,i=e,s=!0){super(e,Object.assign({recoveryEnabled:!0},t)),this.namespacesMap={},this.semanticErrors=[],this.resetManagedState=()=>{this.namespacesMap={},this.semanticErrors=[]},this.tokenize=t=>this.lexer.tokenize(t).tokens,this.parse=(t,e="standard")=>{this.input=this.lexer.tokenize(t).tokens;const i=this.turtleDoc(e),s=[...this.errors],n=[...this.semanticErrors];return this.resetManagedState(),{errors:s,semanticErrors:n,cst:i}},this.turtleDoc=this.RULE("turtleDoc",t=>{const e="stardog"===t;this.MANY(()=>this.SUBRULE(this.statement,{ARGS:[e]}))}),this.statement=this.RULE("statement",t=>{this.OR([{ALT:()=>this.SUBRULE(this.directive)},{ALT:()=>{this.SUBRULE(this.triples,{ARGS:[t]}),this.CONSUME(a.Period)}}])}),this.directive=this.RULE("directive",()=>{this.OR([{ALT:()=>this.SUBRULE(this.prefixID)},{ALT:()=>this.SUBRULE(this.base)},{ALT:()=>this.SUBRULE(this.version)},{ALT:()=>this.SUBRULE(this.sparqlPrefix)},{ALT:()=>this.SUBRULE(this.sparqlBase)},{ALT:()=>this.SUBRULE(this.sparqlVersion)}])}),this.prefixID=this.RULE("prefixID",()=>{this.CONSUME(a.TTL_PREFIX);const t=this.CONSUME(a.PNAME_NS),e=this.CONSUME(a.IRIREF);this.ACTION(()=>{const i=t.image.slice(0,-1),s=e.image;this.namespacesMap[i]=s}),this.CONSUME(a.Period)}),this.base=this.RULE("base",()=>{this.CONSUME(a.TTL_BASE),this.CONSUME(a.IRIREF),this.CONSUME(a.Period)}),this.sparqlBase=this.RULE("sparqlBase",()=>{this.CONSUME(a.BASE),this.CONSUME(a.IRIREF)}),this.version=this.RULE("version",()=>{this.CONSUME(a.TTL_VERSION),this.SUBRULE(this.VersionSpecifier),this.CONSUME(a.Period)}),this.sparqlVersion=this.RULE("sparqlVersion",()=>{this.CONSUME(a.VERSION),this.SUBRULE(this.VersionSpecifier)}),this.VersionSpecifier=this.RULE("VersionSpecifier",()=>{this.OR([{ALT:()=>this.CONSUME(a.STRING_LITERAL_QUOTE)},{ALT:()=>this.CONSUME(a.STRING_LITERAL_SINGLE_QUOTE)}])}),this.sparqlPrefix=this.RULE("sparqlPrefix",()=>{this.CONSUME(a.PREFIX);const t=this.CONSUME(a.PNAME_NS),e=this.CONSUME(a.IRIREF);this.ACTION(()=>{const i=t.image.slice(0,-1),s=e.image;this.namespacesMap[i]=s})}),this.triples=this.RULE("triples",t=>{this.OR([{ALT:()=>{this.SUBRULE(this.subject,{ARGS:[t]}),this.SUBRULE1(this.predicateObjectList,{ARGS:[t]})}},{GATE:()=>Boolean(t),ALT:()=>{this.SUBRULE(this.EmbeddedTriplePattern),this.SUBRULE(this.predicateObjectList)}},{ALT:()=>{this.SUBRULE(this.blankNodePropertyList,{ARGS:[t]}),this.OPTION(()=>this.SUBRULE2(this.predicateObjectList,{ARGS:[t]}))}},{GATE:()=>!1===t,ALT:()=>{this.SUBRULE(this.reifiedTriple),this.OPTION1(()=>this.SUBRULE3(this.predicateObjectList,{ARGS:[t]}))}}])}),this.EmbeddedTriplePattern=this.RULE("EmbeddedTriplePattern",()=>{this.CONSUME(a.LEmbed),this.SUBRULE(this.triples),this.CONSUME(a.REmbed)}),this.predicateObjectList=this.RULE("predicateObjectList",t=>{this.SUBRULE(this.verb),this.OR([{ALT:()=>this.SUBRULE(this.objectList,{ARGS:[t]})},{GATE:()=>Boolean(t),ALT:()=>{this.SUBRULE(this.EmbeddedPredicateObjectList),this.SUBRULE(this.object,{ARGS:[t]})}}]),this.MANY(()=>{this.CONSUME(a.Semicolon),this.OPTION(()=>{this.SUBRULE1(this.verb),this.OR1([{ALT:()=>this.SUBRULE1(this.objectList,{ARGS:[t]})},{GATE:()=>Boolean(t),ALT:()=>{this.SUBRULE1(this.EmbeddedPredicateObjectList),this.SUBRULE1(this.object,{ARGS:[t]})}}])})})}),this.EmbeddedPredicateObjectList=this.RULE("EmbeddedPredicateObjectList",()=>{this.CONSUME(a.LCurly),this.SUBRULE(this.predicateObjectList),this.CONSUME(a.RCurly)}),this.subject=this.RULE("subject",t=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.BlankNode)},{ALT:()=>this.SUBRULE(this.collection,{ARGS:[t]})}])}),this.predicate=this.RULE("predicate",()=>{this.SUBRULE(this.iri)}),this.objectList=this.RULE("objectList",t=>{this.SUBRULE(this.object,{ARGS:[t]}),this.OPTION({GATE:()=>!1===t,DEF:()=>this.SUBRULE(this.annotation)}),this.MANY(()=>{this.CONSUME(a.Comma),this.SUBRULE1(this.object,{ARGS:[t]}),this.OPTION1({GATE:()=>!1===t,DEF:()=>this.SUBRULE1(this.annotation)})})}),this.verb=this.RULE("verb",()=>{this.OR([{ALT:()=>this.SUBRULE(this.predicate)},{ALT:()=>this.CONSUME(a.A)}])}),this.literal=this.RULE("literal",()=>{this.OR([{ALT:()=>this.SUBRULE(this.RDFLiteral)},{ALT:()=>this.SUBRULE(this.NumericLiteral)},{ALT:()=>this.SUBRULE(this.BooleanLiteral)}])}),this.blankNodePropertyList=this.RULE("blankNodePropertyList",t=>{this.CONSUME(a.LBracket),this.SUBRULE(this.predicateObjectList,{ARGS:[t]}),this.CONSUME(a.RBracket)}),this.object=this.RULE("object",t=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.BlankNode)},{ALT:()=>this.SUBRULE(this.collection,{ARGS:[t]})},{ALT:()=>this.SUBRULE(this.blankNodePropertyList,{ARGS:[t]})},{ALT:()=>this.SUBRULE(this.literal)},{GATE:()=>!1===t,ALT:()=>this.SUBRULE(this.tripleTerm)},{GATE:()=>!1===t,ALT:()=>this.SUBRULE(this.reifiedTriple)}])}),this.collection=this.RULE("collection",t=>{this.CONSUME(a.LParen),this.MANY(()=>this.SUBRULE(this.object,{ARGS:[t]})),this.CONSUME(a.RParen)}),this.NumericLiteral=this.RULE("NumericLiteral",()=>{this.OR([{ALT:()=>this.CONSUME(a.INTEGER)},{ALT:()=>this.CONSUME(a.DECIMAL)},{ALT:()=>this.CONSUME(a.DOUBLE)}])}),this.RDFLiteral=this.RULE("RDFLiteral",()=>{this.SUBRULE(this.String),this.OPTION(()=>{this.OR([{ALT:()=>this.CONSUME(a.LANG_DIR)},{ALT:()=>{this.CONSUME(a.DoubleCaret),this.SUBRULE(this.iri)}}])})}),this.BooleanLiteral=this.RULE("BooleanLiteral",()=>{this.OR([{ALT:()=>this.CONSUME(a.TRUE)},{ALT:()=>this.CONSUME(a.FALSE)}])}),this.String=this.RULE("String",()=>{this.OR([{ALT:()=>this.CONSUME(a.STRING_LITERAL_QUOTE)},{ALT:()=>this.CONSUME(a.STRING_LITERAL_SINGLE_QUOTE)},{ALT:()=>this.CONSUME(a.STRING_LITERAL_LONG_SINGLE_QUOTE)},{ALT:()=>this.CONSUME(a.STRING_LITERAL_LONG_QUOTE)}])}),this.iri=this.RULE("iri",()=>{this.OR([{ALT:()=>this.CONSUME(a.IRIREF)},{ALT:()=>this.SUBRULE(this.PrefixedName)}])}),this.PrefixedName=this.RULE("PrefixedName",()=>{const t=this.OR([{ALT:()=>this.CONSUME(a.PNAME_LN)},{ALT:()=>this.CONSUME(a.PNAME_NS)}]);this.ACTION(()=>{t.image.slice(0,t.image.indexOf(":"))in this.namespacesMap||this.semanticErrors.push({name:"NoNamespacePrefixError",message:"A prefix was used for which there was no namespace defined.",token:t,context:{ruleStack:this.getHumanReadableRuleStack(),ruleOccurrenceStack:[...this.RULE_OCCURRENCE_STACK]},resyncedTokens:[]})})}),this.BlankNode=this.RULE("BlankNode",()=>{this.OR([{ALT:()=>this.CONSUME(a.BLANK_NODE_LABEL)},{ALT:()=>this.CONSUME(a.ANON)}])}),this.reifier=this.RULE("reifier",()=>{this.CONSUME(a.Tilde),this.OPTION(()=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.BlankNode)}])})}),this.reifiedTriple=this.RULE("reifiedTriple",()=>{this.CONSUME(a.LEmbed),this.SUBRULE(this.rtSubject),this.SUBRULE(this.verb),this.SUBRULE(this.rtObject),this.OPTION(()=>this.SUBRULE(this.reifier)),this.CONSUME(a.REmbed)}),this.rtSubject=this.RULE("rtSubject",()=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.BlankNode)},{ALT:()=>this.SUBRULE(this.reifiedTriple)}])}),this.rtObject=this.RULE("rtObject",()=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.BlankNode)},{ALT:()=>this.SUBRULE(this.literal)},{ALT:()=>this.SUBRULE(this.tripleTerm)},{ALT:()=>this.SUBRULE(this.reifiedTriple)}])}),this.tripleTerm=this.RULE("tripleTerm",()=>{this.CONSUME(a.LTripleTerm),this.SUBRULE(this.ttSubject),this.SUBRULE(this.verb),this.SUBRULE(this.ttObject),this.CONSUME(a.RTripleTerm)}),this.ttSubject=this.RULE("ttSubject",()=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.BlankNode)}])}),this.ttObject=this.RULE("ttObject",()=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.BlankNode)},{ALT:()=>this.SUBRULE(this.literal)},{ALT:()=>this.SUBRULE(this.tripleTerm)}])}),this.annotation=this.RULE("annotation",()=>{this.AT_LEAST_ONE(()=>{this.OR([{ALT:()=>this.SUBRULE(this.reifier)},{ALT:()=>this.SUBRULE(this.annotationBlock)}])})}),this.annotationBlock=this.RULE("annotationBlock",()=>{this.CONSUME(a.LAnnotation),this.SUBRULE(this.predicateObjectList,{ARGS:[!1]}),this.CONSUME(a.RAnnotation)}),this.lexer=new n.JG(i),s&&this.performSelfAnalysis()}}const o=(t,e)=>{L(t,null,e)},h=(t,e)=>{L(t,null,e,!1)};function c(t){return Boolean(t&&"name"in t)}function l(t){return Boolean(t&&"tokenType"in t)}function E(t,e){if(!t||!t.length)return e;let i=e;for(const e of t){if(!c(i)||!i.children[e])return;i=i.children[e][0]}return i}class u{constructor({node:t,parentCtx:e}){this.node=Object.assign({},t),this.parentCtx=Object.assign({},e)}}const L=(t,e=new u({node:t}),i,s=!0)=>{if(!c(t))return i(s?Object.assign({},e):e);const{children:n}=t;Object.keys(n).forEach(t=>{const r=n[t];r.length&&r.forEach(t=>{const n=s?new u({node:t,parentCtx:e}):{node:t,parentCtx:e};i(n,e=>{let r=n;e&&(r=s?new u({node:e.node,parentCtx:e.parentCtx}):{node:e.node,parentCtx:e.parentCtx}),L(t,r,i,s)})})})},U=Object.freeze(["","rdf","rdfs","xsd","owl","stardog"].reduce((t,e)=>Object.assign(Object.assign({},t),{[e]:!0}),{}));var S=i(771);const p=t=>new class extends t{constructor(){super(),this.groupGraphPatterns=[],this.triplesBlocks=[],this.IfClause=t=>{const{GroupGraphPattern:e}=t;this.$storePlaceholderTokenReplacement({tokenStore:this.groupGraphPatterns,originalTokenContext:e,subParserRule:this.sparqlParser.parseGroupGraphPattern.bind(this.sparqlParser)})},this.ThenClause=t=>{const{TriplesBlock:e}=t;this.$storePlaceholderTokenReplacement({tokenStore:this.triplesBlocks,originalTokenContext:e,subParserRule:this.sparqlParser.parseTriplesBlock.bind(this.sparqlParser)})},this.$storePlaceholderTokenReplacement=({tokenStore:t,originalTokenContext:e=[],subParserRule:i})=>{const[s]=e;if(!s||"string"!=typeof s.image)return;const n=this.$getPlaceholderTokenReplacement(s,i);t.push({parseResult:n,originalToken:s})},this.$getPlaceholderTokenReplacement=(t,e)=>{const{image:i,startOffset:s,startLine:n,startColumn:r}=t;let a="";for(let t=1;t<(n||1);t++)a+="\n";for(let t=1;t<(r||1);t++)a+=" ";return a.length<s&&(a=`${" ".repeat(s-a.length)}${a}`),e(`${a}${i}`)},this.$getGroupGraphPatterns=()=>this.groupGraphPatterns,this.$getTriplesBlocks=()=>this.triplesBlocks,this.$resetState=()=>{this.groupGraphPatterns=[],this.triplesBlocks=[]},this.sparqlParser=new S.StardogSparqlParser,this.validateVisitor()}};function R(t,e){return t.concat(e.parseResult.errors)}function T(t,e,i,s){const n=i.find(e=>e.originalToken===t);return n&&(e.children[s]=[n.parseResult.cst]),n}var d=i(489);const N=/(?:[A-Z]+Expression|ValueLogical)$/i,O=()=>!1,A={[d.sparqlTokenMap.EXISTS.name]:"ExistsFunction",[d.sparqlTokenMap.NOT_EXISTS.name]:"NotExistsFunction",[d.sparqlTokenMap.NOW.name]:"BuiltInCall_NOW",[d.sparqlTokenMap.LEmbed.name]:"LeftEmbed",[d.sparqlTokenMap.REmbed.name]:"RightEmbed"},f=Object.keys(A),C=[d.sparqlTokenMap.DOUBLE,d.sparqlTokenMap.DECIMAL,d.sparqlTokenMap.INTEGER,d.sparqlTokenMap.DOUBLE_POSITIVE,d.sparqlTokenMap.DECIMAL_POSITIVE,d.sparqlTokenMap.INTEGER_POSITIVE,d.sparqlTokenMap.DOUBLE_NEGATIVE,d.sparqlTokenMap.DECIMAL_NEGATIVE,d.sparqlTokenMap.INTEGER_NEGATIVE,d.sparqlTokenMap.STRING_LITERAL1,d.sparqlTokenMap.STRING_LITERAL2,d.sparqlTokenMap.STRING_LITERAL_LONG1,d.sparqlTokenMap.STRING_LITERAL_LONG2].map(t=>t.name),m=t=>Boolean(t&&t.node);function I(t,e,i,s,n=O){if(!t)return[];const r=[];let a=t;for(;c(a.node)&&!i.includes(a.node.name);){if(n(a))return[];a=a.parentCtx}for(;c(a.node);){if(r.unshift(a.node.name),n(a))return[];a=a.parentCtx}for("string"==typeof s&&r.unshift(s),a=e;a;){if(c(a.node)&&(r.unshift(a.node.name),n(a)))return[];a=a.parentCtx}return["SrsDoc",...r]}const y=({name:t,message:e,node:i,ruleStack:s})=>({name:t,message:e,token:i,context:{ruleStack:s,ruleOccurrenceStack:[]},resyncedTokens:[]}),B=(t,e,i,s)=>y({name:"NoNamespacePrefixError",message:`A prefix ("${t.image}") was used for which there was no namespace defined.`,node:t,ruleStack:I(e,i,["PrefixedName"],s)}),_=(t,e,i,s="GroupGraphPattern")=>y({name:"DisallowedTokenError",message:`Token ${t.tokenType.name} cannot be used in Stardog Rules.`,node:t,ruleStack:I(e,i,[A[t.tokenType.name]],s)}),P=(t,e,i,s)=>{let n=null,r=!1,a=null;const o=I(e,i,["Expression","TriplesSameSubjectPath"],s,t=>{const{node:e,parentCtx:i}=t,s=e.name;if("PropertyListPathNotEmpty"===s)return n=t,!1;if(!r&&N.test(s))return r=i.node.children[s].length>1,!1;const o="Expression"===s,h="TriplesSameSubjectPath"===s;if(!o&&!h)return!1;const c=o&&!r&&(t=>{if(!m(t))return!1;const e=t.node.name;return"Bind"===e||"ExpressionOrEmbeddedTriplePattern"===e&&m(t.parentCtx)&&"Bind"===t.parentCtx.node.name})(i),l=h&&(!n||"TriplesSameSubjectPath"!==n.parentCtx.node.name);return!c&&!l||(a=c?"Bind":"TriplesBlock",!1)});if(0!==o.length)return y({name:"DisallowedLiteralError",message:`Token ${t.tokenType.name} (${t.image}) cannot be used as a subject inside of a ${a} in Stardog Rules Syntax.`,node:t,ruleStack:o})};const{sparqlTokenMap:M}=i(489),{srsTokenMap:g,srsTokenTypes:k,multiModeLexerDefinition:v}=i(532);class SrsParser extends TurtleParser{constructor(t){super(Object.assign({recoveryEnabled:!0},t),k,v,!1),this.baseNamespacesMap=Object.freeze(Object.assign({},U)),this.namespacesMap={},this.visitCst=t=>{if(this.sparqlSrsVisitor)this.sparqlSrsVisitor.$resetState();else{const t=this.getBaseCstVisitorConstructorWithDefaults();this.sparqlSrsVisitor=p(t)}this.sparqlSrsVisitor.visit(t,this.input)},this.getSparqlRulesFromVisitor=t=>(this.visitCst(t),{groupGraphPatterns:this.sparqlSrsVisitor.$getGroupGraphPatterns(),triplesBlocks:this.sparqlSrsVisitor.$getTriplesBlocks()}),this.resetManagedState=()=>{this.namespacesMap=Object.assign({},U),this.semanticErrors=[]},this.setBaseNamespaces=t=>{this.baseNamespacesMap=Object.assign({},t)},this.tokenize=t=>this.lexer.tokenize(t).tokens,this.parse=(t,e="standard")=>{this.resetManagedState(),this.input=this.lexer.tokenize(t).tokens;const i=this.SrsDoc(e),{groupGraphPatterns:s,triplesBlocks:n}=this.getSparqlRulesFromVisitor(i),r=[...this.errors,...s.reduce(R,[]),...n.reduce(R,[])],a=[...this.semanticErrors];return h(i,(t,e)=>{const{node:i,parentCtx:h}=t;if(c(i))return e();const l=i.tokenType.name;if("GroupGraphPattern"!==l&&"TriplesBlock"!==l)return;const E=h.node;if("IfClause"===E.name){const e=T(i,E,s,"GroupGraphPattern");e&&function({cst:t,namespacesMap:e,fullCtx:i,errors:s,semanticErrors:n}){o(t,(t,r)=>{const{node:a,parentCtx:o}=t;if(c(a))return r();const{name:h}=a.tokenType;if(f.some(t=>t===h)&&s.push(_(a,o,i)),C.some(t=>t===a.tokenType.name)){const t=P(a,o,i,"GroupGraphPattern");t&&s.push(t)}if("PNAME_NS"===h||"PNAME_LN"===h){const t=a.image.split(":").shift();e[t]||n.push(B(a,o,i,"GroupGraphPattern"))}})}({fullCtx:t,namespacesMap:Object.assign(Object.assign({},this.baseNamespacesMap),this.namespacesMap),cst:e.parseResult.cst,errors:r,semanticErrors:a})}else if("ThenClause"===E.name){const e=T(i,E,n,"TriplesBlock");e&&function({cst:t,namespacesMap:e,errors:i,semanticErrors:s,fullCtx:n}){o(t,(t,r)=>{const{node:a,parentCtx:o}=t;if(c(a))return r();const{name:h}=a.tokenType;if(C.some(t=>t===a.tokenType.name)){const t=P(a,o,n,"GroupGraphPattern");t&&i.push(t)}if(h!==d.sparqlTokenMap.LEmbed.name&&h!==d.sparqlTokenMap.REmbed.name||i.push(_(a,o,n,"TriplesBlock")),"PNAME_NS"===h||"PNAME_LN"===h){const t=a.image.split(":").shift();e[t]||s.push(B(a,o,n,"TriplesBlock"))}})}({fullCtx:t,namespacesMap:Object.assign(Object.assign({},this.baseNamespacesMap),this.namespacesMap),cst:e.parseResult.cst,errors:r,semanticErrors:a})}}),{semanticErrors:a,errors:r,cst:i}},this.SrsDoc=this.RULE("SrsDoc",t=>{const e="stardog"===t;this.SUBRULE(this.turtleDoc,{ARGS:[t]}),this.MANY(()=>{this.SUBRULE(this.RuleDoc),this.MANY1(()=>{this.SUBRULE(this.triples,{ARGS:[e]}),this.CONSUME(M.Period)})})}),this.RuleDoc=this.RULE("RuleDoc",()=>{this.OPTION(()=>this.SUBRULE(this.RuleClause)),this.SUBRULE(this.IfClause),this.SUBRULE(this.ThenClause)}),this.RuleClause=this.RULE("RuleClause",()=>{this.CONSUME(g.Rule),this.SUBRULE(this.iri)}),this.IfClause=this.RULE("IfClause",()=>{this.CONSUME(g.If),this.CONSUME(g.GroupGraphPattern)}),this.ThenClause=this.RULE("ThenClause",()=>{this.CONSUME(g.Then),this.CONSUME(M.LCurly),this.CONSUME(g.TriplesBlock),this.CONSUME(g.EndThen)}),this.lexer=new n.JG(v),this.performSelfAnalysis()}}const{trigTokenMap:b,trigTokenTypes:D}=i(344);class TrigParser extends TurtleParser{constructor(t,e=D,i=D,s=!0){super(t,e,i,!1),this.parse=(t,e="standard")=>{this.input=this.lexer.tokenize(t).tokens;const i=this.trigDoc(e),s=[...this.errors],n=[...this.semanticErrors];return this.resetManagedState(),{errors:s,semanticErrors:n,cst:i}},this.trigDoc=this.RULE("trigDoc",t=>{const e="stardog"===t;this.MANY(()=>{this.OR([{ALT:()=>this.SUBRULE(this.directive)},{ALT:()=>this.SUBRULE(this.block,{ARGS:[e]})}])})}),this.block=this.RULE("block",t=>{this.OR([{ALT:()=>this.SUBRULE(this.triplesOrGraph,{ARGS:[t]})},{ALT:()=>this.SUBRULE(this.wrappedGraph,{ARGS:[t]})},{ALT:()=>this.SUBRULE(this.triples2,{ARGS:[t]})},{ALT:()=>{this.CONSUME(b.GRAPH),this.SUBRULE(this.labelOrSubject),this.SUBRULE1(this.wrappedGraph,{ARGS:[t]})}}])}),this.triplesOrGraph=this.RULE("triplesOrGraph",t=>{let e=!1,i=!1;this.OR([{ALT:()=>this.SUBRULE(this.labelOrSubject)},{GATE:()=>Boolean(t),ALT:()=>{const t=this.SUBRULE(this.EmbeddedTriplePattern);e="EmbeddedTriplePattern"===t.name}},{GATE:()=>!1===t,ALT:()=>{const t=this.SUBRULE(this.reifiedTriple);i="reifiedTriple"===t.name}}]),this.OR1([{GATE:()=>!e&&!i,ALT:()=>this.SUBRULE(this.wrappedGraph,{ARGS:[t]})},{GATE:()=>!i,ALT:()=>{this.SUBRULE(this.predicateObjectList,{ARGS:[t]}),this.CONSUME(b.Period)}},{GATE:()=>i,ALT:()=>{this.OPTION(()=>this.SUBRULE1(this.predicateObjectList,{ARGS:[t]})),this.CONSUME1(b.Period)}}])}),this.triples2=this.RULE("triples2",t=>{this.OR([{ALT:()=>{this.SUBRULE(this.blankNodePropertyList,{ARGS:[t]}),this.OPTION(()=>this.SUBRULE(this.predicateObjectList,{ARGS:[t]})),this.CONSUME(b.Period)}},{ALT:()=>{this.SUBRULE(this.collection,{ARGS:[t]}),this.SUBRULE1(this.predicateObjectList,{ARGS:[t]}),this.CONSUME1(b.Period)}}])}),this.wrappedGraph=this.RULE("wrappedGraph",t=>{this.CONSUME(b.LCurly),this.OPTION(()=>this.SUBRULE(this.triplesBlock,{ARGS:[t]})),this.CONSUME(b.RCurly)}),this.triplesBlock=this.RULE("triplesBlock",t=>{this.SUBRULE(this.triples,{ARGS:[t]}),this.OPTION(()=>{this.CONSUME(b.Period),this.OPTION1(()=>this.SUBRULE(this.triplesBlock,{ARGS:[t]}))})}),this.labelOrSubject=this.RULE("labelOrSubject",()=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.BlankNode)}])}),s&&this.performSelfAnalysis()}}const{smsTokenTypes:x,smsTokenMap:G}=i(421);class SmsParser extends S.StardogSparqlParser{constructor(t){super(Object.assign({recoveryEnabled:!0},t),x,!0),this.parse=t=>{this.input=this.tokenize(t);const e=this.MappingDoc();return{errors:this.errors,cst:e}},this.MappingDoc=this.RULE("MappingDoc",()=>{this.MANY(()=>this.SUBRULE(this.PrefixDecl)),this.OPTION(()=>{this.SUBRULE(this.MappingClause),this.MANY1(()=>{this.CONSUME(G.Semicolon),this.SUBRULE1(this.MappingClause)})})}),this.MappingClause=this.RULE("MappingClause",()=>{this.SUBRULE(this.MappingDecl),this.SUBRULE(this.FromClause),this.SUBRULE(this.ToClause),this.SUBRULE(this.WhereClause)}),this.MappingDecl=this.RULE("MappingDecl",()=>{this.CONSUME(G.Mapping),this.OPTION(()=>this.SUBRULE(this.iri))}),this.FromClause=this.RULE("FromClause",()=>{this.CONSUME(G.FROM),this.OR([{ALT:()=>this.SUBRULE(this.SqlClause)},{ALT:()=>this.SUBRULE(this.JsonClause)},{ALT:()=>this.SUBRULE(this.GraphQlClause)},{ALT:()=>this.SUBRULE(this.CsvClause)}])}),this.JsonClause=this.RULE("JsonClause",()=>{this.CONSUME(G.Json),this.CONSUME(G.JsonBlock)}),this.GraphQlClause=this.RULE("GraphQlClause",()=>{this.CONSUME(G.GraphQl),this.CONSUME(G.LCurly),this.CONSUME(G.GraphQlBlock),this.CONSUME(G.RCurly)}),this.SqlClause=this.RULE("SqlClause",()=>{this.CONSUME(G.Sql),this.CONSUME(G.LCurly),this.CONSUME(G.SqlBlock),this.CONSUME(G.RCurly)}),this.CsvClause=this.RULE("CsvClause",()=>{this.CONSUME(G.Csv),this.OPTION(()=>{this.CONSUME(G.LCurly),this.CONSUME(G.RCurly)})}),this.ToClause=this.RULE("ToClause",()=>{this.CONSUME(G.TO),this.SUBRULE(this.ConstructTemplate)}),this.WhereClause=this.OVERRIDE_RULE("WhereClause",()=>{this.CONSUME(G.WHERE),this.CONSUME(G.LCurly),this.MANY(()=>this.SUBRULE(this.Bind)),this.CONSUME(G.RCurly)}),this.Bind=this.OVERRIDE_RULE("Bind",()=>{this.CONSUME(G.BIND),this.CONSUME(G.LParen),this.SUBRULE(this.BindExpression),this.CONSUME(G.AS),this.SUBRULE(this.Var),this.CONSUME(G.RParen)}),this.BindExpression=this.RULE("BindExpression",()=>{this.OR([{ALT:()=>this.SUBRULE(this.TemplateFunc)},{ALT:()=>this.SUBRULE(this.Expression)}])}),this.TemplateFunc=this.RULE("TemplateFunc",()=>{this.CONSUME(G.Template),this.CONSUME(G.LParen),this.SUBRULE(this.String),this.CONSUME(G.RParen)}),this.Object=this.OVERRIDE_RULE("Object",()=>{this.SUBRULE(this.GraphNode)}),this.performSelfAnalysis()}}var w=i(834),F=i.n(w);const j=t=>{let e=t;for(;e.children;){const t=Object.keys(e.children)[0];e=e.children[t][0]}return e},V=(t,e)=>{e.forEach(e=>{const i=e.children[Object.keys(e.children)[0]][0];switch(i.name){case"shaclVerbShape":{const e=j(i).image.toLowerCase();if(!("a"===e||"rdf:type"===e||"<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>"===e))return;Object.keys(i.children).forEach(e=>{if("shaclShapeType"!==e)return;const s=i.children[e][0];s.children.SHACL_NodeShape?t.types.push({type:"NodeShape",token:j(s)}):s.children.SHACL_PropertyShape&&t.types.push({type:"PropertyShape",token:j(s)})});break}case"shaclPredicateIRI":i.children.SingleIriTakingPredicate?t.predicates.push({type:"SingleIriTakingPredicate",token:j(i.children.SingleIriTakingPredicate[0])}):i.children.ManyIriTakingPredicate&&t.predicates.push({type:"ManyIriTakingPredicate",token:j(i.children.ManyIriTakingPredicate[0])});break;case"shaclNodeKind":t.predicates.push({type:"nodeKind",token:i.children.SHACL_nodeKind[0]});break;case"shaclTargetNode":t.predicates.push({type:"targetNode",token:i.children.SHACL_targetNode[0]});break;case"shaclPropertyPath":t.predicates.push({type:"path",token:i.children.SHACL_path[0]});break;case"shaclLiteralConstraint":t.predicates.push({type:"LiteralConstraint",token:j(i)});break;case"shaclListTakingConstraint":t.predicates.push({type:"ListTakingConstraint",token:j(i)});break;case"shaclShapeExpectingConstraint":t.predicates.push({type:"ShapeExpectingPredicate",token:i.children.ShapeExpectingPredicate[0]});break;case"shaclHasValueConstraint":t.predicates.push({type:"hasValue",token:i.children.SHACL_hasValue[0]});break;default:console.log(`SHACL predicateObjectList with name ${i.name} not recognized.`)}})},H=t=>{const e=t.blankNodePropertyList[0],i=e.children.predicateObjectList[0],s=t.predicateObjectList?t.predicateObjectList[0]:null;if(!c(i)&&!c(s))return;const n=s&&s.children&&s.children.shaclRulePredicateObjectList?[...i.children.shaclRulePredicateObjectList||[],...s.children.shaclRulePredicateObjectList]:i.children.shaclRulePredicateObjectList;if(!n)return;const r={subject:{type:"blankNodePropertyList",token:j(e)},types:[],predicates:[]};return V(r,n),r},$=t=>new class extends t{constructor(){super(),this.triples=t=>{if(t.subject){const e=t.predicateObjectList[0];if(!c(e))return;const i=e.children.shaclRulePredicateObjectList;if(!i)return;const s={subject:{type:"collection"===Object.keys(t.subject[0].children)[0]?"collection":"subject",token:j(t.subject[0])},types:[],predicates:[]};V(s,i),this.shapes.push(s),this.visit(t.subject),this.visit(e)}else{const e=H(t);if(!e)return;this.shapes.push(e),this.visit(t.blankNodePropertyList),t.predicateObjectList&&this.visit(t.predicateObjectList)}},this.shaclShape=t=>{if(!t.blankNodePropertyList)return;const e=H(t);e&&(this.shapes.push(e),this.visit(t.blankNodePropertyList))},this.$resetState=()=>{this.shapes=[]},this.$validateShapes=({shacl:t})=>{const e=[],i=(t=>new RegExp(`(?:shacl#|${F()(t)}:)(\\S+?)>?$`))(t);let s=0;const n=this.shapes.reduce((t,e)=>{const{image:i}=e.subject.token,n="["===i?"bnode"+ ++s:i;if(t[n]){const i=t[n];t[n]={subjects:[...i.subjects,e.subject],types:[...i.types,...e.types],predicates:[...i.predicates,...e.predicates]}}else t[n]={subjects:[e.subject],types:e.types,predicates:e.predicates};return t},{});return Object.keys(n).forEach(s=>{const{subjects:r,types:a,predicates:o}=n[s];let h;a.forEach(({type:t})=>{h&&t!==h?e.push({name:"ShapeTypeError",message:"A SHACL shape can be at most one of NodeShape or PropertyShape.",token:r[0].token}):h||(h=t)});const c=[],l={};o.forEach(e=>{const{image:s}=e.token,n=((t,e)=>{const i=e.exec(t);if(i)return i[1]})(s,i),r=n?`${t}:${n}`:s;r===`${t}:path`?c.push(e):(l[r]||(l[r]=[]),l[r].push(e))}),c.length>0&&("NodeShape"===h?e.push({name:"ShapePropertyError",message:"SHACL instances of `NodeShape` cannot have a value for the `path` property.",token:c[0].token}):h="PropertyShape",c.length>1&&e.push({name:"ShapePropertyError",message:"A shape can have at most one value for sh:path.",token:c[1].token})),"NodeShape"===h?["minCount","maxCount","uniqueLang","lessThan","lessThanOrEquals","qualifiedValueShape"].forEach(i=>{const s=`${t}:${i}`;l[s]&&e.push({name:"ShapePropertyError",message:`A NodeShape cannot have any value for ${s}.`,token:l[s][0].token})}):["deactivated","severity","datatype","nodeKind","minCount","maxCount","minExclusive","minInclusive","maxExclusive","maxInclusive","minLength","maxLength","languageIn","uniqueLang","in"].forEach(i=>{const s=`${t}:${i}`;l[s]&&l[s].length>1&&e.push({name:"ShapePropertyError",message:`A shape can have at most one value for ${s}.`,token:l[s][1].token})})}),{validationErrors:e}},this.validateVisitor(),this.shapes=[]}},{getShaclTokenTypes:K,getShaclTokenMap:W,categoryTokenMap:q}=i(323),{turtleTokenMap:Y}=i(400);class Q extends TurtleParser{constructor(t,e={shacl:"sh",xsd:"xsd"}){super(Object.assign({recoveryEnabled:!0},t),K(e),K(e),!1),this.isShaclRuleNext=()=>this.shaclPredicateStarters.some(t=>(0,n.G)(this.LA(1),t))||this.shaclShapeTypes.some(t=>(0,n.G)(this.LA(2),t)),this.validateWithVisitor=t=>{if(this.shaclVisitor)this.shaclVisitor.$resetState();else{const t=this.getBaseCstVisitorConstructorWithDefaults();this.shaclVisitor=$(t)}return this.shaclVisitor.visit(t),this.shaclVisitor.$validateShapes(this.prefixes)},this.tokenize=t=>this.lexer.tokenize(t).tokens,this.parse=t=>{this.input=this.tokenize(t);const e=this.turtleDoc(),{validationErrors:i}=this.validateWithVisitor(e);return{errors:[...this.errors],semanticErrors:[...this.semanticErrors,...i],cst:e}},this.predicateObjectList=this.OVERRIDE_RULE("predicateObjectList",()=>{this.OR({DEF:[{GATE:this.isShaclRuleNext,ALT:()=>{this.SUBRULE(this.shaclRulePredicateObjectList)}},{GATE:()=>!this.isShaclRuleNext(),ALT:()=>{this.SUBRULE(this.verb),this.SUBRULE(this.objectList)}}],MAX_LOOKAHEAD:1,IGNORE_AMBIGUITIES:!0}),this.MANY(()=>{this.CONSUME(Y.Semicolon),this.OPTION(()=>{this.OR1({DEF:[{GATE:this.isShaclRuleNext,ALT:()=>{this.SUBRULE1(this.shaclRulePredicateObjectList)}},{GATE:()=>!this.isShaclRuleNext(),ALT:()=>{this.SUBRULE1(this.verb),this.SUBRULE1(this.objectList)}}],MAX_LOOKAHEAD:1,IGNORE_AMBIGUITIES:!0})})})}),this.shaclRulePredicateObjectList=this.RULE("shaclRulePredicateObjectList",()=>{this.OR({MAX_LOOKAHEAD:1,IGNORE_AMBIGUITIES:!0,DEF:[{ALT:()=>this.SUBRULE(this.shaclPredicateIRI)},{ALT:()=>this.SUBRULE(this.shaclNodeKind)},{ALT:()=>this.SUBRULE(this.shaclTargetNode)},{ALT:()=>this.SUBRULE(this.shaclPropertyPath)},{ALT:()=>this.SUBRULE(this.shaclLiteralConstraint)},{ALT:()=>this.SUBRULE(this.shaclListTakingConstraint)},{ALT:()=>this.SUBRULE(this.shaclShapeExpectingConstraint)},{ALT:()=>this.SUBRULE(this.shaclHasValueConstraint)},{ALT:()=>this.SUBRULE(this.shaclVerbShape)}]})}),this.shaclPredicateIRI=this.RULE("shaclPredicateIRI",()=>{this.OR([{ALT:()=>{this.CONSUME(q.SingleIriTakingPredicate),this.SUBRULE(this.iri)}},{ALT:()=>{this.CONSUME(q.ManyIriTakingPredicate),this.SUBRULE1(this.iri),this.MANY(()=>{this.CONSUME(Y.Comma),this.SUBRULE2(this.iri)})}}])}),this.shaclNodeKind=this.RULE("shaclNodeKind",()=>{this.CONSUME(this.shaclTokenMap.SHACL_nodeKind),this.CONSUME(q.NodeKindIRI)}),this.shaclTargetNode=this.RULE("shaclTargetNode",()=>{this.CONSUME(this.shaclTokenMap.SHACL_targetNode),this.SUBRULE(this.shaclIRIOrLiteral),this.MANY(()=>{this.CONSUME(Y.Comma),this.SUBRULE1(this.shaclIRIOrLiteral)})}),this.shaclVerbShape=this.RULE("shaclVerbShape",()=>{this.SUBRULE(this.verb),this.SUBRULE(this.shaclShapeType),this.MANY(()=>{this.CONSUME(Y.Comma),this.SUBRULE1(this.shaclShapeType)})}),this.shaclShapeType=this.RULE("shaclShapeType",()=>{this.OR([{ALT:()=>this.CONSUME(this.shaclTokenMap.SHACL_Shape)},{ALT:()=>this.CONSUME(this.shaclTokenMap.SHACL_NodeShape)},{ALT:()=>this.CONSUME(this.shaclTokenMap.SHACL_PropertyShape)}])}),this.shaclPropertyPath=this.RULE("shaclPropertyPath",()=>{this.CONSUME(this.shaclTokenMap.SHACL_path),this.SUBRULE(this.shaclPropertyPathPath)}),this.shaclPropertyPathPath=this.RULE("shaclPropertyPathPath",()=>{this.OR([{ALT:()=>this.SUBRULE(this.shaclPredicatePath)},{ALT:()=>this.SUBRULE(this.shaclSequencePath)},{ALT:()=>this.SUBRULE(this.shaclAlternativePath)},{ALT:()=>this.SUBRULE(this.shaclInversePath)},{ALT:()=>this.SUBRULE(this.shaclZeroOrMorePath)},{ALT:()=>this.SUBRULE(this.shaclOneOrMorePath)},{ALT:()=>this.SUBRULE(this.shaclZeroOrOnePath)}])}),this.shaclPredicatePath=this.RULE("shaclPredicatePath",()=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>{this.CONSUME(Y.LParen),this.SUBRULE1(this.iri),this.CONSUME(Y.RParen)}}])}),this.shaclSequencePath=this.RULE("shaclSequencePath",()=>{this.CONSUME(Y.LParen),this.SUBRULE(this.shaclPropertyPathPath),this.AT_LEAST_ONE(()=>this.SUBRULE1(this.shaclPropertyPathPath)),this.OPTION(()=>this.CONSUME(Y.Semicolon)),this.CONSUME(Y.RParen)}),this.shaclAlternativePath=this.RULE("shaclAlternativePath",()=>{this.CONSUME(Y.LBracket),this.CONSUME(this.shaclTokenMap.SHACL_alternativePath),this.SUBRULE(this.shaclPropertyPathPath),this.OPTION(()=>this.CONSUME(Y.Semicolon)),this.CONSUME(Y.RBracket)}),this.shaclInversePath=this.RULE("shaclInversePath",()=>{this.CONSUME(Y.LBracket),this.CONSUME(this.shaclTokenMap.SHACL_inversePath),this.SUBRULE(this.shaclPropertyPathPath),this.OPTION(()=>this.CONSUME(Y.Semicolon)),this.CONSUME(Y.RBracket)}),this.shaclZeroOrMorePath=this.RULE("shaclZeroOrMorePath",()=>{this.CONSUME(Y.LBracket),this.CONSUME(this.shaclTokenMap.SHACL_zeroOrMorePath),this.SUBRULE(this.shaclPropertyPathPath),this.OPTION(()=>this.CONSUME(Y.Semicolon)),this.CONSUME(Y.RBracket)}),this.shaclOneOrMorePath=this.RULE("shaclOneOrMorePath",()=>{this.CONSUME(Y.LBracket),this.CONSUME(this.shaclTokenMap.SHACL_oneOrMorePath),this.SUBRULE(this.shaclPropertyPathPath),this.OPTION(()=>this.CONSUME(Y.Semicolon)),this.CONSUME(Y.RBracket)}),this.shaclZeroOrOnePath=this.RULE("shaclZeroOrOnePath",()=>{this.CONSUME(Y.LBracket),this.CONSUME(this.shaclTokenMap.SHACL_zeroOrOnePath),this.SUBRULE(this.shaclPropertyPathPath),this.OPTION(()=>this.CONSUME(Y.Semicolon)),this.CONSUME(Y.RBracket)}),this.shaclLiteralConstraint=this.RULE("shaclLiteralConstraint",()=>{this.OR([{ALT:()=>this.SUBRULE(this.shaclIntConstraint)},{ALT:()=>this.SUBRULE(this.shaclStringConstraint)},{ALT:()=>this.SUBRULE(this.shaclStringLiteralQuoteConstraint)},{ALT:()=>this.SUBRULE(this.shaclLangStringConstraint)},{ALT:()=>this.SUBRULE(this.shaclBooleanConstraint)},{ALT:()=>this.SUBRULE(this.shaclAnyLiteralConstraint)}])}),this.shaclIntConstraint=this.RULE("shaclIntConstraint",()=>{this.CONSUME(q.IntTakingPredicate),this.OR([{ALT:()=>this.CONSUME(Y.INTEGER)},{ALT:()=>this.SUBRULE(this.shaclXsdInteger)}])}),this.shaclStringConstraint=this.RULE("shaclStringConstraint",()=>{this.OR([{ALT:()=>this.CONSUME(this.shaclTokenMap.SHACL_select)},{ALT:()=>this.CONSUME(this.shaclTokenMap.SHACL_ask)}]),this.SUBRULE(this.String)}),this.shaclStringLiteralQuoteConstraint=this.RULE("shaclStringLiteralQuoteConstraint",()=>{this.CONSUME(q.StringLiteralQuoteTakingPredicate),this.CONSUME(Y.STRING_LITERAL_QUOTE),this.OPTION(()=>{this.OR([{ALT:()=>this.CONSUME(Y.LANG_DIR)},{ALT:()=>{this.CONSUME(Y.DoubleCaret),this.CONSUME(this.shaclTokenMap.SHACL_xsd_string)}},{ALT:()=>{this.CONSUME1(Y.DoubleCaret),this.CONSUME(this.shaclTokenMap.SHACL_xsd_anyURI)}}])})}),this.shaclLangStringConstraint=this.RULE("shaclLangStringConstraint",()=>{this.CONSUME(q.LangStringTakingPredicate),this.SUBRULE(this.String),this.OPTION(()=>{this.OR([{ALT:()=>this.CONSUME(Y.LANG_DIR)},{ALT:()=>{this.CONSUME(Y.DoubleCaret),this.CONSUME(this.shaclTokenMap.SHACL_xsd_string)}}])})}),this.shaclBooleanConstraint=this.RULE("shaclBooleanConstraint",()=>{this.CONSUME(q.BooleanTakingPredicate),this.OR([{ALT:()=>this.CONSUME(Y.TRUE)},{ALT:()=>this.CONSUME(Y.FALSE)},{ALT:()=>this.SUBRULE(this.shaclXsdBoolean)}])}),this.shaclAnyLiteralConstraint=this.RULE("shaclAnyLiteralConstraint",()=>{this.CONSUME(q.AnyLiteralTakingPredicate),this.SUBRULE(this.literal)}),this.shaclListTakingConstraint=this.RULE("shaclListTakingConstraint",()=>{this.OR([{ALT:()=>this.SUBRULE(this.shaclLanguageInConstraint)},{ALT:()=>this.SUBRULE(this.shaclShapeListTakingConstraint)},{ALT:()=>this.SUBRULE(this.shaclIRIListTakingConstraint)},{ALT:()=>this.SUBRULE(this.shaclShapeOrLiteralListTakingConstraint)}])}),this.shaclLanguageInConstraint=this.RULE("shaclLanguageInConstraint",()=>{this.CONSUME(this.shaclTokenMap.SHACL_languageIn),this.SUBRULE(this.shaclStringCollection)}),this.shaclStringCollection=this.RULE("shaclStringCollection",()=>{this.CONSUME(Y.LParen),this.MANY(()=>{this.CONSUME(Y.STRING_LITERAL_QUOTE)}),this.CONSUME(Y.RParen)}),this.shaclShapeListTakingConstraint=this.RULE("shaclShapeListTakingConstraint",()=>{this.OR([{ALT:()=>this.CONSUME(this.shaclTokenMap.SHACL_and)},{ALT:()=>this.CONSUME(this.shaclTokenMap.SHACL_or)},{ALT:()=>this.CONSUME(this.shaclTokenMap.SHACL_xone)}]),this.SUBRULE(this.shaclShapeCollection)}),this.shaclShapeCollection=this.RULE("shaclShapeCollection",()=>{this.CONSUME(Y.LParen),this.MANY(()=>{this.SUBRULE(this.shaclShape)}),this.CONSUME(Y.RParen)}),this.shaclIRIListTakingConstraint=this.RULE("shaclIRIListTakingConstraint",()=>{this.CONSUME(this.shaclTokenMap.SHACL_ignoredProperties),this.SUBRULE(this.shaclIRICollection)}),this.shaclIRICollection=this.RULE("shaclIRICollection",()=>{this.CONSUME(Y.LParen),this.MANY(()=>{this.SUBRULE(this.iri)}),this.CONSUME(Y.RParen)}),this.shaclShapeOrLiteralListTakingConstraint=this.RULE("shaclShapeOrLiteralListTakingConstraint",()=>{this.CONSUME(this.shaclTokenMap.SHACL_in),this.SUBRULE(this.shaclShapeOrLiteralCollection)}),this.shaclShapeOrLiteralCollection=this.RULE("shaclShapeOrLiteralCollection",()=>{this.CONSUME(Y.LParen),this.MANY(()=>{this.SUBRULE(this.shaclShapeOrLiteral)}),this.CONSUME(Y.RParen)}),this.shaclShapeExpectingConstraint=this.RULE("shaclShapeExpectingConstraint",()=>{this.CONSUME(q.ShapeExpectingPredicate),this.SUBRULE(this.shaclShape)}),this.shaclHasValueConstraint=this.RULE("shaclHasValueConstraint",()=>{this.CONSUME(this.shaclTokenMap.SHACL_hasValue),this.SUBRULE(this.shaclShapeOrLiteral)}),this.shaclShape=this.RULE("shaclShape",()=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.blankNodePropertyList)},{ALT:()=>this.SUBRULE(this.BlankNode)}])}),this.shaclShapeOrLiteral=this.RULE("shaclShapeOrLiteral",()=>{this.OR([{ALT:()=>this.SUBRULE(this.shaclShape)},{ALT:()=>this.SUBRULE(this.literal)}])}),this.shaclIRIOrLiteral=this.RULE("shaclIRIOrLiteral",()=>{this.OR([{ALT:()=>this.SUBRULE(this.iri)},{ALT:()=>this.SUBRULE(this.literal)}])}),this.shaclXsdBoolean=this.RULE("shaclXsdBoolean",()=>{this.SUBRULE(this.shaclStringWithDoubleCaret),this.CONSUME(this.shaclTokenMap.SHACL_xsd_boolean)}),this.shaclXsdString=this.RULE("shaclXsdString",()=>{this.SUBRULE(this.shaclStringWithDoubleCaret),this.CONSUME(this.shaclTokenMap.SHACL_xsd_string)}),this.shaclXsdInteger=this.RULE("shaclXsdInteger",()=>{this.SUBRULE(this.shaclStringWithDoubleCaret),this.CONSUME(this.shaclTokenMap.SHACL_xsd_integer)}),this.shaclXsdDate=this.RULE("shaclXsdDate",()=>{this.SUBRULE(this.shaclStringWithDoubleCaret),this.CONSUME(this.shaclTokenMap.SHACL_xsd_date)}),this.shaclXsdAnyURI=this.RULE("shaclXsdAnyURI",()=>{this.SUBRULE(this.shaclStringWithDoubleCaret),this.CONSUME(this.shaclTokenMap.SHACL_xsd_anyURI)}),this.shaclStringWithDoubleCaret=this.RULE("shaclStringWithDoubleCaret",()=>{this.SUBRULE(this.String),this.CONSUME(Y.DoubleCaret)}),this.prefixes=e,this.lexer=new n.JG(K(e)),this.shaclTokenMap=W(e),this.shaclPredicateStarters=[q.ManyIriTakingPredicate,q.SingleIriTakingPredicate,q.IntTakingPredicate,q.StringLiteralQuoteTakingPredicate,q.LangStringTakingPredicate,q.BooleanTakingPredicate,q.AnyLiteralTakingPredicate,q.ShapeExpectingPredicate,this.shaclTokenMap.SHACL_nodeKind,this.shaclTokenMap.SHACL_targetNode,this.shaclTokenMap.SHACL_path,this.shaclTokenMap.SHACL_hasValue,this.shaclTokenMap.SHACL_languageIn,this.shaclTokenMap.SHACL_and,this.shaclTokenMap.SHACL_or,this.shaclTokenMap.SHACL_xone,this.shaclTokenMap.SHACL_in,this.shaclTokenMap.SHACL_ignoredProperties],this.shaclShapeTypes=[this.shaclTokenMap.SHACL_Shape,this.shaclTokenMap.SHACL_NodeShape,this.shaclTokenMap.SHACL_PropertyShape],this.performSelfAnalysis()}}const{graphQlTokenMap:z}=i(961);class BaseGraphQlParser extends n.cA{raiseNoAltException(t,e){const i=this.LA(0),s=this.LA(1),r=e||`Expecting: one of the alternatives of <${this.getCurrRuleFullName()}> but found: '${s.image}'`;throw this.SAVE_ERROR(new n.X2(r,s,i))}getFollowsForInRuleRecovery(t,e){return[]}constructor(t={},e){super(e,Object.assign({recoveryEnabled:!0},t.config)),this.chevrotainAttemptInRepetitionRecovery=this.attemptInRepetitionRecovery,this.repetitionRecoveryIdx=-1,this.attemptInRepetitionRecovery=(...t)=>{const e=this.currIdx;if(e===this.repetitionRecoveryIdx)return;const i=this.repetitionRecoveryIdx;this.repetitionRecoveryIdx=e;try{this.chevrotainAttemptInRepetitionRecovery(...t)}finally{this.repetitionRecoveryIdx=i}},this.tokenize=t=>this.lexer.tokenize(t).tokens,this.parse=(t,e=this.Document)=>{this.input=this.lexer.tokenize(t).tokens;const i=e.call(this);return{errors:this.errors,cst:i}},this.Document=this.RULE("Document",()=>{this.AT_LEAST_ONE(()=>this.SUBRULE(this.Definition))}),this.Definition=this.RULE("Definition",()=>{this.OR([{ALT:()=>this.SUBRULE(this.ExecutableDefinition)},{ALT:()=>this.SUBRULE(this.TypeSystemDefinition)},{ALT:()=>this.SUBRULE(this.TypeSystemExtension)}])}),this.ExecutableDefinition=this.RULE("ExecutableDefinition",()=>{this.OR([{ALT:()=>this.SUBRULE(this.OperationDefinition)},{ALT:()=>this.SUBRULE(this.FragmentDefinition)}])}),this.OperationDefinition=this.RULE("OperationDefinition",()=>{this.OR([{ALT:()=>this.SUBRULE(this.SelectionSet)},{ALT:()=>{this.SUBRULE(this.OperationType),this.OPTION(()=>this.CONSUME(z.Name)),this.OPTION1(()=>this.SUBRULE(this.VariableDefinitions)),this.OPTION2(()=>this.SUBRULE(this.Directives)),this.SUBRULE1(this.SelectionSet)}}])}),this.OperationType=this.RULE("OperationType",()=>{this.OR([{ALT:()=>this.CONSUME(z.Query)},{ALT:()=>this.CONSUME(z.Mutation)},{ALT:()=>this.CONSUME(z.Subscription)}])}),this.SelectionSet=this.RULE("SelectionSet",()=>{this.CONSUME(z.LCurly),this.AT_LEAST_ONE(()=>this.SUBRULE(this.Selection)),this.CONSUME(z.RCurly)}),this.Selection=this.RULE("Selection",()=>{this.OR([{ALT:()=>this.SUBRULE(this.Field)},{ALT:()=>this.SUBRULE(this.InlineFragment)},{ALT:()=>this.SUBRULE(this.FragmentSpread)}])}),this.Field=this.RULE("Field",()=>{this.OPTION(()=>this.SUBRULE(this.Alias)),this.CONSUME(z.Name),this.OPTION1(()=>this.SUBRULE(this.Arguments,{ARGS:[!1]})),this.OPTION2(()=>this.SUBRULE(this.Directives)),this.OPTION3(()=>this.SUBRULE(this.SelectionSet))}),this.Alias=this.RULE("Alias",()=>{this.CONSUME(z.Name),this.CONSUME(z.Colon)}),this.Arguments=this.RULE("Arguments",t=>{this.CONSUME(z.LParen),this.AT_LEAST_ONE(()=>this.SUBRULE(this.Argument,{ARGS:[t]})),this.CONSUME(z.RParen)}),this.Argument=this.RULE("Argument",t=>{this.SUBRULE(this.Alias),this.SUBRULE(this.Value,{ARGS:[t]})}),this.FragmentSpread=this.RULE("FragmentSpread",()=>{this.CONSUME(z.Spread),this.CONSUME(z.FragmentName),this.OPTION(()=>this.SUBRULE(this.Directives))}),this.InlineFragment=this.RULE("InlineFragment",()=>{this.CONSUME(z.Spread),this.OPTION(()=>this.SUBRULE(this.TypeCondition)),this.OPTION1(()=>this.SUBRULE(this.Directives)),this.SUBRULE(this.SelectionSet)}),this.FragmentDefinition=this.RULE("FragmentDefinition",()=>{this.CONSUME(z.Fragment),this.CONSUME(z.FragmentName),this.SUBRULE(this.TypeCondition),this.OPTION(()=>this.SUBRULE(this.Directives)),this.SUBRULE(this.SelectionSet)}),this.TypeCondition=this.RULE("TypeCondition",()=>{this.CONSUME(z.On),this.SUBRULE(this.NamedType)}),this.Value=this.RULE("Value",t=>{this.OR([{GATE:()=>!t,ALT:()=>this.SUBRULE(this.Variable)},{ALT:()=>this.SUBRULE(this.IntValue)},{ALT:()=>this.SUBRULE(this.FloatValue)},{ALT:()=>this.SUBRULE(this.StringValue)},{ALT:()=>this.SUBRULE(this.BooleanValue)},{ALT:()=>this.SUBRULE(this.NullValue)},{ALT:()=>this.SUBRULE(this.EnumValue)},{ALT:()=>this.SUBRULE(this.ListValue,{ARGS:[t]})},{ALT:()=>this.SUBRULE(this.ObjectValue,{ARGS:[t]})}])}),this.IntValue=this.RULE("IntValue",()=>{this.CONSUME(z.IntValueToken)}),this.FloatValue=this.RULE("FloatValue",()=>{this.CONSUME(z.FloatValueToken)}),this.StringValue=this.RULE("StringValue",()=>{this.CONSUME(z.StringValueToken)}),this.BooleanValue=this.RULE("BooleanValue",()=>{this.CONSUME(z.BooleanValueToken)}),this.NullValue=this.RULE("NullValue",()=>{this.CONSUME(z.NullValueToken)}),this.EnumValue=this.RULE("EnumValue",()=>{this.CONSUME(z.EnumValueToken)}),this.ListValue=this.RULE("ListValue",t=>{this.CONSUME(z.LBracket),this.MANY(()=>this.SUBRULE(this.Value,{ARGS:[t]})),this.CONSUME(z.RBracket)}),this.ObjectValue=this.RULE("ObjectValue",t=>{this.CONSUME(z.LCurly),this.MANY(()=>this.SUBRULE(this.ObjectField,{ARGS:[t]})),this.CONSUME(z.RCurly)}),this.ObjectField=this.RULE("ObjectField",t=>{this.SUBRULE(this.Alias),this.SUBRULE(this.Value,{ARGS:[t]})}),this.VariableDefinitions=this.RULE("VariableDefinitions",()=>{this.CONSUME(z.LParen),this.AT_LEAST_ONE(()=>this.SUBRULE(this.VariableDefinition)),this.CONSUME(z.RParen)}),this.VariableDefinition=this.RULE("VariableDefinition",()=>{this.SUBRULE(this.Variable),this.CONSUME(z.Colon),this.SUBRULE(this.Type),this.OPTION(()=>this.SUBRULE(this.DefaultValue))}),this.Variable=this.RULE("Variable",()=>{this.CONSUME(z.Dollar),this.CONSUME(z.Name)}),this.DefaultValue=this.RULE("DefaultValue",()=>{this.CONSUME(z.Equals),this.SUBRULE(this.Value,{ARGS:[!0]})}),this.Type=this.RULE("Type",()=>{this.OR([{ALT:()=>this.SUBRULE(this.NamedType)},{ALT:()=>this.SUBRULE(this.ListType)}]),this.OPTION(()=>this.CONSUME(z.Bang))}),this.NamedType=this.RULE("NamedType",()=>{this.CONSUME(z.Name)}),this.ListType=this.RULE("ListType",()=>{this.CONSUME(z.LBracket),this.SUBRULE(this.Type),this.CONSUME(z.RBracket)}),this.Directives=this.RULE("Directives",t=>{this.AT_LEAST_ONE(()=>this.SUBRULE(this.Directive,{ARGS:[t]}))}),this.Directive=this.RULE("Directive",t=>{this.CONSUME(z.At),this.CONSUME(z.Name),this.OPTION(()=>this.SUBRULE(this.Arguments,{ARGS:[t]}))}),this.TypeSystemDefinition=this.RULE("TypeSystemDefinition",()=>{this.OR([{ALT:()=>this.SUBRULE(this.SchemaDefinition)},{ALT:()=>this.SUBRULE(this.TypeDefinition)},{ALT:()=>this.SUBRULE(this.DirectiveDefinition)}])}),this.TypeSystemExtension=this.RULE("TypeSystemExtension",()=>{this.OR([{ALT:()=>this.SUBRULE(this.SchemaExtension)},{ALT:()=>this.SUBRULE(this.TypeExtension)}])}),this.SchemaDefinition=this.RULE("SchemaDefinition",()=>{this.CONSUME(z.Schema),this.OPTION(()=>this.SUBRULE(this.Directives,{ARGS:[!0]})),this.CONSUME(z.LCurly),this.AT_LEAST_ONE(()=>this.SUBRULE(this.OperationTypeDefinition)),this.CONSUME(z.RCurly)}),this.SchemaExtension=this.RULE("SchemaExtension",()=>{this.CONSUME(z.Extend),this.CONSUME(z.Schema),this.OR([{ALT:()=>{this.SUBRULE(this.Directives,{ARGS:[!0]}),this.OPTION(()=>this.SUBRULE1(this.OperationTypeDefinitionList))}},{ALT:()=>this.SUBRULE(this.OperationTypeDefinitionList)}])}),this.OperationTypeDefinitionList=this.RULE("OperationTypeDefinitionList",()=>{this.CONSUME(z.LCurly),this.AT_LEAST_ONE(()=>this.SUBRULE(this.OperationTypeDefinition)),this.CONSUME(z.RCurly)}),this.OperationTypeDefinition=this.RULE("OperationTypeDefinition",()=>{this.SUBRULE(this.OperationType),this.CONSUME(z.Colon),this.SUBRULE(this.NamedType)}),this.Description=this.RULE("Description",()=>{this.SUBRULE(this.StringValue)}),this.TypeDefinition=this.RULE("TypeDefinition",()=>{this.OR([{ALT:()=>this.SUBRULE(this.ScalarTypeDefinition)},{ALT:()=>this.SUBRULE(this.ObjectTypeDefinition)},{ALT:()=>this.SUBRULE(this.InterfaceTypeDefinition)},{ALT:()=>this.SUBRULE(this.UnionTypeDefinition)},{ALT:()=>this.SUBRULE(this.EnumTypeDefinition)},{ALT:()=>this.SUBRULE(this.InputObjectTypeDefinition)}])}),this.TypeExtension=this.RULE("TypeExtension",()=>{this.OR([{ALT:()=>this.SUBRULE(this.ScalarTypeExtension)},{ALT:()=>this.SUBRULE(this.ObjectTypeExtension)},{ALT:()=>this.SUBRULE(this.InterfaceTypeExtension)},{ALT:()=>this.SUBRULE(this.UnionTypeExtension)},{ALT:()=>this.SUBRULE(this.EnumTypeExtension)},{ALT:()=>this.SUBRULE(this.InputObjectTypeExtension)}])}),this.ScalarTypeDefinition=this.RULE("ScalarTypeDefinition",()=>{this.OPTION(()=>this.SUBRULE(this.Description)),this.CONSUME(z.Scalar),this.CONSUME(z.Name),this.OPTION1(()=>this.SUBRULE(this.Directives,{ARGS:[!0]}))}),this.ScalarTypeExtension=this.RULE("ScalarTypeExtension",()=>{this.CONSUME(z.Extend),this.CONSUME(z.Scalar),this.CONSUME(z.Name),this.SUBRULE(this.Directives,{ARGS:[!0]})}),this.ObjectTypeDefinition=this.RULE("ObjectTypeDefinition",()=>{this.OPTION(()=>this.SUBRULE(this.Description)),this.CONSUME(z.TypeToken),this.CONSUME(z.Name),this.OPTION1(()=>this.SUBRULE(this.ImplementsInterfaces)),this.OPTION2(()=>this.SUBRULE1(this.Directives,{ARGS:[!0]})),this.OPTION3(()=>this.SUBRULE(this.FieldsDefinition))}),this.ObjectTypeExtension=this.RULE("ObjectTypeExtension",()=>{this.CONSUME(z.Extend),this.CONSUME(z.TypeToken),this.CONSUME(z.Name),this.OR([{ALT:()=>{this.SUBRULE(this.ImplementsInterfaces),this.OPTION(()=>this.SUBRULE1(this.Directives,{ARGS:[!0]})),this.OPTION1(()=>this.SUBRULE(this.FieldsDefinition))}},{ALT:()=>{this.SUBRULE(this.Directives,{ARGS:[!0]}),this.OPTION2(()=>this.SUBRULE1(this.FieldsDefinition))}},{ALT:()=>this.SUBRULE2(this.FieldsDefinition)}])}),this.ImplementsInterfaces=this.RULE("ImplementsInterfaces",()=>{this.CONSUME(z.Implements),this.OPTION(()=>this.CONSUME(z.Amp)),this.SUBRULE(this.NamedType),this.MANY(()=>{this.CONSUME1(z.Amp),this.SUBRULE1(this.NamedType)})}),this.FieldsDefinition=this.RULE("FieldsDefinition",()=>{this.CONSUME(z.LCurly),this.AT_LEAST_ONE(()=>this.SUBRULE(this.FieldDefinition)),this.CONSUME(z.RCurly)}),this.FieldDefinition=this.RULE("FieldDefinition",()=>{this.OPTION(()=>this.SUBRULE(this.Description)),this.CONSUME(z.Name),this.OPTION1(()=>this.SUBRULE(this.ArgumentsDefinition)),this.CONSUME(z.Colon),this.SUBRULE(this.Type),this.OPTION2(()=>this.SUBRULE(this.Directives,{ARGS:[!0]}))}),this.ArgumentsDefinition=this.RULE("ArgumentsDefinition",()=>{this.CONSUME(z.LParen),this.AT_LEAST_ONE(()=>this.SUBRULE(this.InputValueDefinition)),this.CONSUME(z.RParen)}),this.InputValueDefinition=this.RULE("InputValueDefinition",()=>{this.OPTION(()=>this.SUBRULE(this.Description)),this.CONSUME(z.Name),this.CONSUME(z.Colon),this.SUBRULE(this.Type),this.OPTION1(()=>this.SUBRULE(this.DefaultValue)),this.OPTION2(()=>this.SUBRULE(this.Directives,{ARGS:[!0]}))}),this.InterfaceTypeDefinition=this.RULE("InterfaceTypeDefinition",()=>{this.OPTION(()=>this.SUBRULE(this.Description)),this.CONSUME(z.Interface),this.CONSUME(z.Name),this.OPTION2(()=>this.SUBRULE(this.Directives,{ARGS:[!0]})),this.OPTION3(()=>this.SUBRULE(this.FieldsDefinition))}),this.InterfaceTypeExtension=this.RULE("InterfaceTypeExtension",()=>{this.CONSUME(z.Extend),this.CONSUME(z.Interface),this.CONSUME(z.Name),this.OR([{ALT:()=>{this.SUBRULE(this.Directives,{ARGS:[!0]}),this.OPTION(()=>this.SUBRULE(this.FieldsDefinition))}},{ALT:()=>this.SUBRULE1(this.FieldsDefinition)}])}),this.UnionTypeDefinition=this.RULE("UnionTypeDefinition",()=>{this.OPTION(()=>this.SUBRULE(this.Description)),this.CONSUME(z.Union),this.CONSUME(z.Name),this.OPTION1(()=>this.SUBRULE(this.Directives,{ARGS:[!0]})),this.OPTION2(()=>this.SUBRULE(this.UnionMemberTypes))}),this.UnionMemberTypes=this.RULE("UnionMemberTypes",()=>{this.CONSUME(z.Equals),this.OPTION(()=>this.CONSUME(z.Pipe)),this.SUBRULE(this.NamedType),this.MANY(()=>{this.CONSUME1(z.Pipe),this.SUBRULE1(this.NamedType)})}),this.UnionTypeExtension=this.RULE("UnionTypeExtension",()=>{this.CONSUME(z.Extend),this.CONSUME(z.Union),this.CONSUME(z.Name),this.OR([{ALT:()=>{this.SUBRULE(this.Directives,{ARGS:[!0]}),this.OPTION(()=>this.SUBRULE(this.UnionMemberTypes))}},{ALT:()=>this.SUBRULE1(this.UnionMemberTypes)}])}),this.EnumTypeDefinition=this.RULE("EnumTypeDefinition",()=>{this.OPTION(()=>this.SUBRULE(this.Description)),this.CONSUME(z.Enum),this.CONSUME(z.Name),this.OPTION1(()=>this.SUBRULE(this.Directives,{ARGS:[!0]})),this.OPTION2(()=>this.SUBRULE(this.EnumValuesDefinition))}),this.EnumValuesDefinition=this.RULE("EnumValuesDefinition",()=>{this.CONSUME(z.LCurly),this.AT_LEAST_ONE(()=>this.SUBRULE(this.EnumValueDefinition)),this.CONSUME(z.RCurly)}),this.EnumValueDefinition=this.RULE("EnumValueDefinition",()=>{this.OPTION(()=>this.SUBRULE(this.Description)),this.SUBRULE(this.EnumValue),this.OPTION1(()=>this.SUBRULE(this.Directives,{ARGS:[!0]}))}),this.EnumTypeExtension=this.RULE("EnumTypeExtension",()=>{this.CONSUME(z.Extend),this.CONSUME(z.Enum),this.CONSUME(z.Name),this.OR([{ALT:()=>{this.SUBRULE(this.Directives,{ARGS:[!0]}),this.OPTION(()=>this.SUBRULE(this.EnumValuesDefinition))}},{ALT:()=>this.SUBRULE1(this.EnumValuesDefinition)}])}),this.InputObjectTypeDefinition=this.RULE("InputObjectTypeDefinition",()=>{this.OPTION(()=>this.SUBRULE(this.Description)),this.CONSUME(z.Input),this.CONSUME(z.Name),this.OPTION1(()=>this.SUBRULE(this.Directives,{ARGS:[!0]})),this.OPTION2(()=>this.SUBRULE(this.InputFieldsDefinition))}),this.InputFieldsDefinition=this.RULE("InputFieldsDefinition",()=>{this.CONSUME(z.LCurly),this.AT_LEAST_ONE(()=>this.SUBRULE(this.InputValueDefinition)),this.CONSUME(z.RCurly)}),this.InputObjectTypeExtension=this.RULE("InputObjectTypeExtension",()=>{this.CONSUME(z.Extend),this.CONSUME(z.Input),this.CONSUME(z.Name),this.OR([{ALT:()=>{this.SUBRULE(this.Directives,{ARGS:[!0]}),this.OPTION(()=>this.SUBRULE1(this.InputFieldsDefinition))}},{ALT:()=>this.SUBRULE(this.InputFieldsDefinition)}])}),this.DirectiveDefinition=this.RULE("DirectiveDefinition",()=>{this.OPTION(()=>this.SUBRULE(this.Description)),this.CONSUME(z.DirectiveToken),this.CONSUME(z.At),this.CONSUME(z.Name),this.OPTION1(()=>this.SUBRULE(this.ArgumentsDefinition)),this.CONSUME(z.On),this.SUBRULE(this.DirectiveLocations)}),this.DirectiveLocations=this.RULE("DirectiveLocations",()=>{this.OPTION(()=>this.CONSUME(z.Pipe)),this.SUBRULE(this.DirectiveLocation),this.MANY(()=>{this.CONSUME1(z.Pipe),this.SUBRULE1(this.DirectiveLocation)})}),this.DirectiveLocation=this.RULE("DirectiveLocation",()=>{this.OR([{ALT:()=>this.SUBRULE(this.ExecutableDirectiveLocation)},{ALT:()=>this.SUBRULE(this.TypeSystemDirectiveLocation)}])}),this.ExecutableDirectiveLocation=this.RULE("ExecutableDirectiveLocation",()=>{this.OR([{ALT:()=>this.CONSUME(z.QUERY)},{ALT:()=>this.CONSUME(z.MUTATION)},{ALT:()=>this.CONSUME(z.SUBSCRIPTION)},{ALT:()=>this.CONSUME(z.FIELD)},{ALT:()=>this.CONSUME(z.FRAGMENT_DEFINITION)},{ALT:()=>this.CONSUME(z.FRAGMENT_SPREAD)},{ALT:()=>this.CONSUME(z.INLINE_FRAGMENT)}])}),this.TypeSystemDirectiveLocation=this.RULE("TypeSystemDirectiveLocation",()=>{this.OR([{ALT:()=>this.CONSUME(z.SCHEMA)},{ALT:()=>this.CONSUME(z.SCALAR)},{ALT:()=>this.CONSUME(z.OBJECT)},{ALT:()=>this.CONSUME(z.FIELD_DEFINITION)},{ALT:()=>this.CONSUME(z.ARGUMENT_DEFINITION)},{ALT:()=>this.CONSUME(z.INTERFACE)},{ALT:()=>this.CONSUME(z.UNION)},{ALT:()=>this.CONSUME(z.ENUM)},{ALT:()=>this.CONSUME(z.ENUM_VALUE)},{ALT:()=>this.CONSUME(z.INPUT_OBJECT)},{ALT:()=>this.CONSUME(z.INPUT_FIELD_DEFINITION)}])}),this.lexer=new n.JG(e)}}const{graphQlTokens:X}=i(961);class StandardGraphQlParser extends BaseGraphQlParser{constructor(t){super(t,X),this.performSelfAnalysis()}}const{stardogGraphQlTokenMap:J}=i(961),{ToArgumentToken:Z,IfArgumentToken:tt,AliasArgumentToken:et,GraphArgumentToken:it,BindDirectiveToken:st,ConfigDirectiveToken:nt,SkipDirectiveToken:rt,IncludeDirectiveToken:at,FilterDirectiveToken:ot}=J,ht=[rt,at,ot],ct=[st,...ht];const lt={getArgumentNodes:function(t){if(!t||!t.Arguments)return[];const[e]=t.Arguments;return c(e)&&e.children.Argument||[]},getArgumentTokenTypesForDirectiveNameToken:function(t){return(0,n.G)(t,st)?[Z]:(0,n.G)(t,nt)?[et,it]:ht.some(e=>(0,n.G)(t,e))?[tt]:[]},isSparqlReceivingStardogDirective:function(t){return ct.some(e=>(0,n.G)(t,e))}},{getArgumentNodes:Et,getArgumentTokenTypesForDirectiveNameToken:ut,isSparqlReceivingStardogDirective:Lt}=lt;function Ut({allowedArgumentTokenTypes:t,directiveImage:e,errorAccumulator:i,numMinimumArguments:s,suppliedArgumentNodes:n}){const r=n.length,a=t.length,o=`valid arguments: ${t.map(t=>`\`${t.PATTERN}\``).join(", ")}`,h="ArgumentArityError";if(r<s){const t=`requires ${s} argument${s>1?"s":""}`;i.stardogGraphQlErrors.push({name:h,message:`The ${e} directive ${t} (${o})`})}else r>a&&i.stardogGraphQlErrors.push({name:h,message:`Too many arguments provided to ${e} directive (${o})`})}function St({allowedArgumentTokenTypes:t,directiveImage:e,errorAccumulator:i,sparqlParser:s,suppliedArgumentNodes:n}){const r=`valid arguments: ${t.map(t=>`\`${t.PATTERN}\``).join(", ")}`;n.forEach(n=>{const a=E(["Alias","Name"],n);if(!l(a))return;const o=a.tokenType.name;if(t.some(t=>t.name===o)){const t=E(["Value","StringValue","StringValueToken"],n);if(!l(t))return;const{errors:e}=function(t,e){const i=t.image.slice(1,-1);return e.parse(i,e.Expression)}(t,s);e.length>0&&i.sparqlErrors.push(...function(t,e,i=0){const{startOffset:s,endOffset:n,startColumn:r,endColumn:a}=e;return t.map(t=>{const{token:o}=t,{startOffset:h,endOffset:c,startColumn:l,endColumn:E}=o;return Object.assign(Object.assign({},t),{token:Object.assign(Object.assign({},o),{startOffset:s+(h||0)+i,endOffset:n+(c||0)+i,startColumn:r+(l||0)+i,endColumn:a+(E||0)+i,startLine:e.startLine,endLine:e.endLine})})})}(e,t,1))}else i.stardogGraphQlErrors.push({name:"InvalidArgumentError",message:`Invalid argument \`${a.image}\` for ${e} directive (${r})`})})}const pt=(t,e)=>{const i=new StardogSparqlParser.h;return new class extends t{constructor(){super(),this.sparqlErrors=[],this.stardogGraphQlErrors=[],this.visit=(...t)=>(super.visit(...t),{sparqlErrors:this.sparqlErrors,stardogGraphQlErrors:this.stardogGraphQlErrors}),this.Directive=t=>{if(!t.Name||!t.Name[0])return;const[s]=t.Name;if(!Lt(s))return;const n=function(t,e,i){const s={stardogGraphQlErrors:[],sparqlErrors:[]};return function({validatorOptions:t,validators:e}){e.forEach(e=>e(t))}({validatorOptions:{allowedArgumentTokenTypes:ut(e),directiveImage:e.tokenType.PATTERN,errorAccumulator:s,numMinimumArguments:1,sparqlParser:i,suppliedArgumentNodes:t},validators:[Ut,St]}),s}(Et(t),s,i);if(n.stardogGraphQlErrors.length>0){const t=e.getHumanReadableRuleStack(),i=e.RULE_OCCURRENCE_STACK;this.stardogGraphQlErrors.push(...n.stardogGraphQlErrors.map(e=>Object.assign(Object.assign({},e),{token:s,context:{ruleStack:t,ruleOccurrenceStack:i},resyncedTokens:[]})))}this.sparqlErrors.push(...n.sparqlErrors.map(t=>Object.assign(Object.assign({},t),{name:`SPARQL Error: ${t.name}`})))},this.$resetState=()=>{this.stardogGraphQlErrors=[],this.sparqlErrors=[]},this.validateVisitor()}}},{stardogGraphQlTokens:Rt}=i(961);class StardogGraphQlParser extends BaseGraphQlParser{constructor(t){super(t,Rt),this.visitCst=t=>{if(this.stardogGraphQlVisitor)this.stardogGraphQlVisitor.$resetState();else{const t=this.getBaseCstVisitorConstructorWithDefaults();this.stardogGraphQlVisitor=pt(t,this)}return this.stardogGraphQlVisitor.visit(t,this.input)},this.parse=(t,e=this.Document)=>{this.input=this.tokenize(t);const i=e.call(this),{sparqlErrors:s,stardogGraphQlErrors:n}=this.visitCst(i);return{errors:[...this.errors,...n,...s],cst:i}},this.performSelfAnalysis()}}var Tt=i(194),dt=i(311);class Nt{constructor(t,e){this.value=t,this.source=e,this.termType="NamedNode"}equals(t){return Boolean(t)&&t.termType===this.termType&&t.value===this.value}}class Ot{constructor(t,e){this.value=t,this.source=e,this.termType="BlankNode"}equals(t){return Boolean(t)&&t.termType===this.termType&&t.value===this.value}}class At{constructor(t,e){this.value=t,this.source=e,this.termType="Variable"}equals(t){return Boolean(t)&&t.termType===this.termType&&t.value===this.value}}class ft{constructor(){this.termType="DefaultGraph",this.value=""}equals(t){return Boolean(t)&&t.termType===this.termType}}const Ct=new ft;class mt{constructor(t,e,i,s,n){this.value=t,this.language=e,this.direction=i,this.datatype=s,this.source=n,this.termType="Literal"}equals(t){return Boolean(t)&&t.termType===this.termType&&t.value===this.value&&(t.language||"")===this.language&&(t.direction||"")===this.direction&&Boolean(t.datatype)&&t.datatype.value===this.datatype.value}}class It{constructor(t,e,i,s,n){this.subject=t,this.predicate=e,this.object=i,this.graph=s,this.source=n,this.termType="Quad",this.value=""}equals(t){return Boolean(t)&&t.termType===this.termType&&this.subject.equals(t.subject)&&this.predicate.equals(t.predicate)&&this.object.equals(t.object)&&this.graph.equals(t.graph)}}const yt="http://www.w3.org/1999/02/22-rdf-syntax-ns#",Bt="http://www.w3.org/2001/XMLSchema#",_t={rdfType:`${yt}type`,rdfFirst:`${yt}first`,rdfRest:`${yt}rest`,rdfNil:`${yt}nil`,rdfReifies:`${yt}reifies`,rdfLangString:`${yt}langString`,rdfDirLangString:`${yt}dirLangString`,xsdString:`${Bt}string`,xsdInteger:`${Bt}integer`,xsdDecimal:`${Bt}decimal`,xsdDouble:`${Bt}double`,xsdBoolean:`${Bt}boolean`},Pt=t=>{switch(t.termType){case"NamedNode":return`<${t.value}>`;case"BlankNode":return`_:${t.value}`;case"Variable":return`?${t.value}`;case"DefaultGraph":return"";case"Literal":{const e=t,i=e.language?`@${e.language}${e.direction?`--${e.direction}`:""}`:`^^<${e.datatype.value}>`;return`${JSON.stringify(e.value)}${i}`}case"Quad":{const e=t;return`<<(${Pt(e.subject)} ${Pt(e.predicate)} ${Pt(e.object)})>>`}}},Mt=t=>`${Pt(t.subject)} ${Pt(t.predicate)} ${Pt(t.object)} ${Pt(t.graph)}`;class gt{constructor(){this.byKey=new Map}get size(){return this.byKey.size}get totalSize(){let t=0;return this.byKey.forEach(e=>t+=e.length),t}add(t){const e=Mt(t),i=this.byKey.get(e);return i?i.push(t):this.byKey.set(e,[t]),this}delete(t){return this.byKey.delete(Mt(t)),this}has(t){return this.byKey.has(Mt(t))}occurrences(t){return[...this.byKey.get(Mt(t))||[]]}sourcesOf(t){return this.occurrences(t).map(t=>t.source)}match(t,e,i,s){const n=new gt;return this.byKey.forEach(r=>{const a=r[0];t&&!a.subject.equals(t)||e&&!a.predicate.equals(e)||i&&!a.object.equals(i)||s&&!a.graph.equals(s)||r.forEach(t=>n.add(t))}),n}[Symbol.iterator](){const t=this.byKey.values();return{next(){const{done:e,value:i}=t.next();return e?{done:!0,value:void 0}:{done:!1,value:i[0]}}}}forEach(t){this.byKey.forEach(e=>t(e[0]))}}const kt=t=>"children"in t,vt=t=>{if(!kt(t)){const e=t;return{startOffset:e.startOffset,endOffset:e.endOffset,startLine:e.startLine,startColumn:e.startColumn,endLine:e.endLine,endColumn:e.endColumn}}let e,i;if(Object.keys(t.children).forEach(s=>{t.children[s].forEach(t=>{const s=vt(t);s&&((!e||s.startOffset<e.startOffset)&&(e=s),(!i||s.endOffset>i.endOffset)&&(i=s))})}),e&&i)return{startOffset:e.startOffset,endOffset:i.endOffset,startLine:e.startLine,startColumn:e.startColumn,endLine:i.endLine,endColumn:i.endColumn}},bt=t=>{const e=[];return Object.keys(t.children).forEach(i=>{t.children[i].forEach(t=>e.push(t))}),e.sort((t,e)=>{var i,s,n,r;return(null!==(s=null===(i=vt(t))||void 0===i?void 0:i.startOffset)&&void 0!==s?s:0)-(null!==(r=null===(n=vt(e))||void 0===n?void 0:n.startOffset)&&void 0!==r?r:0)})},Dt=(t,e)=>t.children[e]&&t.children[e][0],xt=(t,e)=>{if(!kt(t)){const i=t;return void(i.tokenType&&"BLANK_NODE_LABEL"===i.tokenType.name&&e.add(i.image.slice(2)))}Object.keys(t.children).forEach(i=>{t.children[i].forEach(t=>xt(t,e))})},Gt=/^[A-Za-z][A-Za-z0-9+.-]*:/,wt=t=>{const e=[];return t.split("/").forEach((t,i,s)=>{if("."!==t)return".."===t?(e.length>1&&e.pop(),void(i===s.length-1&&e.push(""))):void e.push(t);i===s.length-1&&e.push("")}),e.join("/")},Ft=(t,e)=>{if(Gt.test(e)||!t)return e;const i=t.indexOf("#"),s=-1===i?t:t.slice(0,i);if(""===e)return s;if(e.startsWith("#"))return s+e;const n=Gt.exec(s),r=n?n[0]:"",a=s.slice(r.length),o=a.startsWith("//")?(a.slice(2)+"/").indexOf("/")+2:0,h=a.slice(0,o),c=a.slice(o).replace(/[?].*$/,"");if(e.startsWith("//"))return r+e;if(e.startsWith("/"))return r+h+wt(e);e.indexOf("?");if(e.startsWith("?"))return r+h+c+e;const l=c.lastIndexOf("/"),E=(-1===l?"":c.slice(0,l+1))+e;return r+h+wt(E)};class jt{constructor(t={}){this.dataset=new gt,this.errors=[],this.namespaces={},this.blankNodeCounter=0,this.documentBlankNodeLabels=new Set,this.currentGraph=Ct,this.sourceURL=t.sourceURL,this.base=t.baseIRI||t.sourceURL}emitTurtleDoc(t){return xt(t,this.documentBlankNodeLabels),(t.children.statement||[]).forEach(t=>this.statement(t)),{dataset:this.dataset,errors:this.errors}}emitTrigDoc(t){return xt(t,this.documentBlankNodeLabels),bt(t).forEach(t=>{kt(t)&&("directive"===t.name?this.directive(t):"block"===t.name&&this.block(t))}),{dataset:this.dataset,errors:this.errors}}error(t,e){this.errors.push({message:t,source:e&&this.locate(e)})}locate(t){return this.sourceURL?Object.assign(Object.assign({},t),{sourceURL:this.sourceURL}):t}freshBlankNode(t){let e="anon-"+this.blankNodeCounter++;for(;this.documentBlankNodeLabels.has(e);)e="anon-"+this.blankNodeCounter++;return new Ot(e,t&&this.locate(t))}addQuad(t,e,i,s){this.dataset.add(new It(t,e,i,this.currentGraph,s&&this.locate(s)))}namedNode(t,e){return new Nt(t,e&&this.locate(e))}statement(t){const e=Dt(t,"directive");if(e)return void this.directive(e);const i=Dt(t,"triples");i&&this.triples(i)}directive(t){const e=Dt(t,"prefixID")||Dt(t,"sparqlPrefix");if(e){const t=Dt(e,"PNAME_NS"),i=Dt(e,"IRIREF");if(t&&i){const e=t.image.slice(0,-1);this.namespaces[e]=Ft(this.base,this.iriRefValue(i))}return}const i=Dt(t,"base")||Dt(t,"sparqlBase");if(i){const t=Dt(i,"IRIREF");t&&(this.base=Ft(this.base,this.iriRefValue(t)))}}iriRefValue(t){const e=t.image.trimEnd().slice(1,-1),i=(0,dt.x4)(e);return null===i?e:i}iri(t){const e=Dt(t,"IRIREF");if(e)return this.namedNode(Ft(this.base,this.iriRefValue(e)),vt(e));const i=Dt(t,"PrefixedName"),s=Dt(i,"PNAME_LN")||Dt(i,"PNAME_NS"),n=s.image,r=n.indexOf(":"),a=n.slice(0,r),o=n.slice(r+1),h=(0,dt.x4)(o),c=this.namespaces[a];return void 0===c&&this.error(`Unknown prefix: '${a}:'`,vt(s)),this.namedNode((c||"")+(null===h?o:h),vt(s))}blankNode(t){const e=Dt(t,"BLANK_NODE_LABEL");return e?new Ot(e.image.slice(2),this.locate(vt(e))):this.freshBlankNode(vt(t))}literal(t){const e=Dt(t,"RDFLiteral");if(e)return this.rdfLiteral(e);const i=Dt(t,"NumericLiteral");if(i){const t=Dt(i,"INTEGER"),e=Dt(i,"DECIMAL"),s=t||e||Dt(i,"DOUBLE"),n=t?_t.xsdInteger:e?_t.xsdDecimal:_t.xsdDouble;return new mt(s.image,"","",new Nt(n),this.locate(vt(s)))}const s=Dt(t,"BooleanLiteral"),n=Dt(s,"TRUE")||Dt(s,"FALSE");return new mt(n.image,"","",new Nt(_t.xsdBoolean),this.locate(vt(n)))}rdfLiteral(t){const e=Dt(t,"String"),i=bt(e)[0].image,s=/^("""|''')/.test(i)?3:1,n=i.slice(s,-s),r=(0,dt.x4)(n),a=Dt(t,"LANG_DIR"),o=Dt(t,"DoubleCaret"),h=Dt(t,"iri");let c,l="",E="";if(a){const t=a.image.slice(1),e=t.indexOf("--");-1!==e?(l=t.slice(0,e).toLowerCase(),E=t.slice(e+2).toLowerCase(),c=new Nt(_t.rdfDirLangString)):(l=t.toLowerCase(),c=new Nt(_t.rdfLangString))}else if(h&&o){const t=this.iri(h);c=new Nt(t.value,this.locate((u=vt(o),L=vt(h),u&&L?{startOffset:u.startOffset,endOffset:L.endOffset,startLine:u.startLine,startColumn:u.startColumn,endLine:L.endLine,endColumn:L.endColumn}:u||L)))}else c=new Nt(_t.xsdString);var u,L;return new mt(null===r?n:r,l,E,c,this.locate(vt(t)))}collection(t){const e=t.children.object||[];if(0===e.length)return this.namedNode(_t.rdfNil,vt(t));const i=this.namedNode(_t.rdfFirst),s=this.namedNode(_t.rdfRest),n=e.map(()=>this.freshBlankNode(vt(t)));return e.forEach((t,e)=>{const r=vt(t);this.addQuad(n[e],i,this.objectTerm(t),r),this.addQuad(n[e],s,e+1<n.length?n[e+1]:this.namedNode(_t.rdfNil),r)}),n[0]}blankNodePropertyList(t){const e=this.freshBlankNode(vt(t)),i=Dt(t,"predicateObjectList");return i&&this.predicateObjectList(e,i),e}tripleTerm(t){const e=this.simpleTerm(Dt(t,"ttSubject")),i=this.verb(Dt(t,"verb")),s=this.simpleTerm(Dt(t,"ttObject"));return new It(e,i,s,Ct,this.locate(vt(t)))}simpleTerm(t){const e=Dt(t,"iri");if(e)return this.iri(e);const i=Dt(t,"BlankNode");if(i)return this.blankNode(i);const s=Dt(t,"literal");if(s)return this.literal(s);const n=Dt(t,"tripleTerm");if(n)return this.tripleTerm(n);const r=Dt(t,"reifiedTriple");return r?this.reifiedTriple(r):(this.error("Unsupported term",vt(t)),this.freshBlankNode(vt(t)))}reifiedTriple(t){const e=vt(t),i=this.simpleTerm(Dt(t,"rtSubject")),s=this.verb(Dt(t,"verb")),n=this.simpleTerm(Dt(t,"rtObject")),r=Dt(t,"reifier"),a=r?this.reifierTerm(r):this.freshBlankNode(e);return this.addQuad(a,this.namedNode(_t.rdfReifies),new It(i,s,n,Ct,this.locate(e)),e),a}reifierTerm(t){const e=Dt(t,"iri");if(e)return this.iri(e);const i=Dt(t,"BlankNode");return i?this.blankNode(i):this.freshBlankNode(vt(t))}annotation(t,e,i,s){const n=t=>new It(e,i,s,Ct,t&&this.locate(t));let r=null;bt(t).forEach(t=>{if(!kt(t))return;const e=vt(t);if("reifier"===t.name){const i=this.reifierTerm(t);this.addQuad(i,this.namedNode(_t.rdfReifies),n(e),e),r=i}else if("annotationBlock"===t.name){let i=r;i||(i=this.freshBlankNode(e),this.addQuad(i,this.namedNode(_t.rdfReifies),n(e),e));const s=Dt(t,"predicateObjectList");s&&this.predicateObjectList(i,s),r=null}})}triples(t){const e=Dt(t,"subject");if(e){const i=this.subjectTerm(e);return void this.predicateObjectList(i,Dt(t,"predicateObjectList"))}const i=Dt(t,"blankNodePropertyList");if(i){const e=this.blankNodePropertyList(i),s=Dt(t,"predicateObjectList");return void(s&&this.predicateObjectList(e,s))}const s=Dt(t,"reifiedTriple");if(s){const e=this.reifiedTriple(s),i=Dt(t,"predicateObjectList");return void(i&&this.predicateObjectList(e,i))}const n=Dt(t,"EmbeddedTriplePattern");n&&this.error("Stardog-mode embedded triple patterns are not RDF; parse with mode 'standard' to emit RDF/JS quads",vt(n))}subjectTerm(t){const e=Dt(t,"iri");if(e)return this.iri(e);const i=Dt(t,"BlankNode");return i?this.blankNode(i):this.collection(Dt(t,"collection"))}verb(t){const e=Dt(t,"A");if(e)return this.namedNode(_t.rdfType,vt(e));const i=Dt(t,"predicate");return i?this.iri(Dt(i,"iri")):this.iri(Dt(t,"iri"))}predicateObjectList(t,e){const i=e.children.verb||[],s=e.children.objectList||[];i.forEach((e,i)=>{const n=s[i];if(!n)return;const r=this.verb(e);this.objectList(t,r,n)})}objectList(t,e,i){let s=null;bt(i).forEach(i=>{if(kt(i))if("object"===i.name){const n=vt(i),r=this.objectTerm(i);this.addQuad(t,e,r,n),s={term:r,range:n}}else"annotation"===i.name&&s&&this.annotation(i,t,e,s.term)})}objectTerm(t){const e=Dt(t,"iri");if(e)return this.iri(e);const i=Dt(t,"BlankNode");if(i)return this.blankNode(i);const s=Dt(t,"collection");if(s)return this.collection(s);const n=Dt(t,"blankNodePropertyList");if(n)return this.blankNodePropertyList(n);const r=Dt(t,"literal");if(r)return this.literal(r);const a=Dt(t,"tripleTerm");if(a)return this.tripleTerm(a);const o=Dt(t,"reifiedTriple");return o?this.reifiedTriple(o):(this.error("Unsupported object term",vt(t)),this.freshBlankNode(vt(t)))}block(t){const e=Dt(t,"GRAPH"),i=Dt(t,"labelOrSubject"),s=Dt(t,"wrappedGraph");if(e&&i&&s)return void this.inGraph(this.labelOrSubjectTerm(i),()=>this.wrappedGraph(s));const n=Dt(t,"triplesOrGraph");if(n)return void this.triplesOrGraph(n);if(s)return void this.wrappedGraph(s);const r=Dt(t,"triples2");r&&this.triples2(r)}labelOrSubjectTerm(t){const e=Dt(t,"iri");return e?this.iri(e):this.blankNode(Dt(t,"BlankNode"))}inGraph(t,e){const i=this.currentGraph;this.currentGraph=t;try{e()}finally{this.currentGraph=i}}wrappedGraph(t){const e=Dt(t,"triplesBlock");e&&this.triplesBlock(e)}triplesBlock(t){const e=Dt(t,"triples");e&&this.triples(e);const i=Dt(t,"triplesBlock");i&&this.triplesBlock(i)}triplesOrGraph(t){const e=Dt(t,"labelOrSubject"),i=Dt(t,"wrappedGraph");if(e&&i)return void this.inGraph(this.labelOrSubjectTerm(e),()=>this.wrappedGraph(i));const s=Dt(t,"predicateObjectList");if(e&&s)return void this.predicateObjectList(this.labelOrSubjectTerm(e),s);const n=Dt(t,"reifiedTriple");if(n){const t=this.reifiedTriple(n);s&&this.predicateObjectList(t,s)}}triples2(t){const e=Dt(t,"blankNodePropertyList"),i=Dt(t,"predicateObjectList");if(e){const t=this.blankNodePropertyList(e);return void(i&&this.predicateObjectList(t,i))}const s=Dt(t,"collection");s&&i&&this.predicateObjectList(this.collection(s),i)}}const Vt=new TurtleParser,Ht=new TrigParser,$t=(t,e={})=>{const{cst:i,errors:s,semanticErrors:n}=Vt.parse(t,"standard"),{dataset:r,errors:a}=new jt(e).emitTurtleDoc(i);return{dataset:r,errors:s,semanticErrors:n,emitterErrors:a}},Kt=(t,e={})=>{const{cst:i,errors:s,semanticErrors:n}=Ht.parse(t,"standard"),{dataset:r,errors:a}=new jt(e).emitTrigDoc(i);return{dataset:r,errors:s,semanticErrors:n,emitterErrors:a}};var Wt=i(35),qt=i(718),Yt=i(788);const Qt=i(489),zt=i(400),Xt=i(532),Jt=i(344),Zt=i(421),te=i(323),ee=i(961)})(),s})());
-//# sourceMappingURL=millan.js.map
-
-/***/ },
-
 /***/ 1103
 (module, __unused_webpack_exports, __webpack_require__) {
 
@@ -22473,6 +22459,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CHANGE_DEBOUNCE_MS = exports.languages = exports.shexcStreamParser = void 0;
 exports.lexicalize = lexicalize;
 exports.completionSource = completionSource;
+exports.makeJsonPane = makeJsonPane;
 exports.makePane = makePane;
 const codemirror_1 = __webpack_require__(1301);
 const view_1 = __webpack_require__(9905);
@@ -22480,7 +22467,7 @@ const state_1 = __webpack_require__(3109);
 const language_1 = __webpack_require__(734);
 const lint_1 = __webpack_require__(6793);
 const lang_json_1 = __webpack_require__(5533);
-const turtle_1 = __webpack_require__(2903);
+const lezer_turtle_1 = __webpack_require__(1799);
 const EditorServices = __importStar(__webpack_require__(9017));
 /** lexicalize - shortest lexical form for an IRI under the given prefixes */
 function lexicalize(iri, prefixes) {
@@ -22576,11 +22563,80 @@ exports.shexcStreamParser = {
         return null;
     },
 };
+/** Turtle via the incremental, error-recovering lezer-turtle grammar
+ * (RDF 1.2; the same parse tree that powers provenance tracking). */
+const turtleLanguage = language_1.LRLanguage.define({ parser: lezer_turtle_1.parser });
 exports.languages = {
     shexc: () => language_1.StreamLanguage.define(exports.shexcStreamParser),
-    turtle: () => language_1.StreamLanguage.define(turtle_1.turtle),
+    turtle: () => turtleLanguage,
     json: () => (0, lang_json_1.json)(),
 };
+/** makeJsonPane - a read-only, syntax-highlighted JSON view (e.g. for
+ * validation results) sharing the highlight machinery of editor panes:
+ * highlight(ranges, cls, {scroll}) marks and scrolls to result regions;
+ * setHoverRegions supports results → schema/data cross-highlighting. */
+function makeJsonPane(text) {
+    const view = new view_1.EditorView({ doc: text, extensions: [
+            codemirror_1.basicSetup,
+            (0, lang_json_1.json)(),
+            highlightField,
+            paneTheme,
+            view_1.EditorView.editable.of(false),
+            state_1.EditorState.readOnly.of(true),
+        ] });
+    view.dom.classList.add("shexjs-editor-pane", "shexjs-json-pane");
+    const setHoverRegions = attachHoverRegions(view);
+    const clampRange = (r) => !!r && r.from >= 0 && r.to <= view.state.doc.length && r.to > r.from;
+    return {
+        dom: view.dom,
+        highlight(ranges, cls = "shexjs-highlight", opts = {}) {
+            const inRange = (ranges || []).filter(clampRange).sort((a, b) => a.from - b.from);
+            const decos = inRange.map(r => view_1.Decoration.mark({ class: cls }).range(r.from, r.to));
+            view.dispatch({ effects: setHighlightsEffect.of(view_1.Decoration.set(decos, true)) });
+            if (inRange.length && opts.scroll !== false)
+                view.dispatch({ effects: view_1.EditorView.scrollIntoView(inRange[0].from, { y: "center" }) });
+        },
+        clearHighlights() {
+            view.dispatch({ effects: setHighlightsEffect.of(view_1.Decoration.none) });
+        },
+        setHoverRegions,
+    };
+}
+/** track mouse-over-sensitive ranges on a view; returns the function that
+ * replaces the region set (the makePane/makeJsonPane setHoverRegions API) */
+function attachHoverRegions(view) {
+    let hoverRegions = [];
+    let hoverLeave;
+    let currentRegion = null;
+    const clearHover = () => {
+        if (currentRegion) {
+            currentRegion = null;
+            if (hoverLeave)
+                hoverLeave();
+        }
+    };
+    view.contentDOM.addEventListener("mousemove", (e) => {
+        const pos = view.posAtCoords({ x: e.clientX, y: e.clientY });
+        // smallest containing region wins: nested constructs (inline shapes,
+        // bnode property lists) sit inside their parents' regions
+        const hit = pos === null ? null
+            : hoverRegions.reduce((best, r) => pos >= r.from && pos < r.to && (!best || r.to - r.from < best.to - best.from)
+                ? r : best, null);
+        if (hit !== currentRegion) {
+            currentRegion = hit;
+            if (hit)
+                hit.enter();
+            else if (hoverLeave)
+                hoverLeave();
+        }
+    });
+    view.contentDOM.addEventListener("mouseleave", clearHover);
+    return (regions, leave) => {
+        hoverRegions = regions || [];
+        hoverLeave = leave;
+        currentRegion = null;
+    };
+}
 // ---------------------------------------------------------------------------
 // range highlights (shape-map hover, error-pair flashes)
 const setHighlightsEffect = state_1.StateEffect.define();
@@ -22689,7 +22745,7 @@ function makePane(textarea, opts = {}) {
         }),
     ];
     if (opts.language === "shexc" || opts.language === "turtle") {
-        const lang = language_1.StreamLanguage.define(opts.language === "shexc" ? exports.shexcStreamParser : turtle_1.turtle);
+        const lang = opts.language === "shexc" ? language_1.StreamLanguage.define(exports.shexcStreamParser) : turtleLanguage;
         extensions.push(lang);
         if (opts.completions) // basicSetup's autocompletion() reads languageData
             extensions.push(lang.data.of({ autocomplete: completionSource(opts.completions) }));
@@ -22711,29 +22767,7 @@ function makePane(textarea, opts = {}) {
     textarea.parentNode.insertBefore(view.dom, textarea);
     textarea.style.display = "none";
     // hover regions (validation match/failure cross-highlighting)
-    let hoverRegions = [];
-    let hoverLeave;
-    let currentRegion = null;
-    const clearHover = () => {
-        if (currentRegion) {
-            currentRegion = null;
-            if (hoverLeave)
-                hoverLeave();
-        }
-    };
-    view.contentDOM.addEventListener("mousemove", (e) => {
-        const pos = view.posAtCoords({ x: e.clientX, y: e.clientY });
-        const hit = pos === null ? null
-            : hoverRegions.find(r => pos >= r.from && pos < r.to) || null;
-        if (hit !== currentRegion) {
-            currentRegion = hit;
-            if (hit)
-                hit.enter();
-            else if (hoverLeave)
-                hoverLeave();
-        }
-    });
-    view.contentDOM.addEventListener("mouseleave", clearHover);
+    const setHoverRegions = attachHoverRegions(view);
     // live proxy: application code keeps talking to the textarea
     Object.defineProperty(textarea, "value", {
         configurable: true,
@@ -22763,11 +22797,7 @@ function makePane(textarea, opts = {}) {
         clearHighlights() {
             view.dispatch({ effects: setHighlightsEffect.of(view_1.Decoration.none) });
         },
-        setHoverRegions(regions, leave) {
-            hoverRegions = regions || [];
-            hoverLeave = leave;
-            currentRegion = null;
-        },
+        setHoverRegions,
         listBreakpoints() {
             const positions = [];
             view.state.field(breakpointField).between(0, view.state.doc.length, from => { positions.push(from); });
@@ -22849,12 +22879,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseTurtle = exports.parseShExC = void 0;
 exports.lineOffsets = lineOffsets;
 exports.yyllocToRange = yyllocToRange;
-exports.millanSourceToRange = millanSourceToRange;
 exports.sourceExcerpt = sourceExcerpt;
 exports.locateInParsed = locateInParsed;
 exports.mapValidationErrors = mapValidationErrors;
+exports.stringifyWithOffsets = stringifyWithOffsets;
 const ShExParser = __importStar(__webpack_require__(4822));
-const millan_1 = __webpack_require__(9111);
+const emit_1 = __webpack_require__(2388);
+const RdfJs = __importStar(__webpack_require__(4957));
 const XSD_STRING = "http://www.w3.org/2001/XMLSchema#string";
 const RDF_LANGSTRING = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
 // ---------------------------------------------------------------------------
@@ -22875,13 +22906,6 @@ function yyllocToRange(loc, starts) {
         from: starts[loc.first_line - 1] + loc.first_column,
         to: starts[Math.min(loc.last_line, starts.length) - 1] + loc.last_column,
     };
-}
-/** millanSourceToRange - millan SourceRange (inclusive endOffset) to
- * {from, to}. */
-function millanSourceToRange(source) {
-    return source && source.startOffset !== undefined
-        ? { from: source.startOffset, to: source.endOffset + 1 }
-        : null;
 }
 /** sourceExcerpt - a gutter-numbered source line with a caret underline for
  * `range` (clipped to the range's first line), e.g. for CLI debuggers:
@@ -22907,7 +22931,7 @@ function sourceExcerpt(text, range) {
 function memoLast(fn, keyOf, size = 4) {
     const cache = new Map(); // insertion-ordered
     return (text, opts) => {
-        const key = keyOf(opts) + " " + text;
+        const key = keyOf(opts) + "\u0000" + text;
         if (cache.has(key)) {
             const hit = cache.get(key);
             cache.delete(key); // refresh recency
@@ -22955,6 +22979,26 @@ function parseShExCUncached(text, opts = {}) {
  */
 function locateInParsed(text, schema) {
     const starts = lineOffsets(text);
+    const tcRange = (tc) => schema && schema._exprLocations
+        ? yyllocToRange(schema._exprLocations.get(tc), starts)
+        : null;
+    /** just the predicate side of a constraint: its range clipped before any
+     * inline-shape body and stripped of trailing whitespace and brace */
+    const predicateRange = (tc) => {
+        const range = tcRange(tc);
+        if (!range)
+            return null;
+        const nested = schema && schema._exprLocations
+            ? nestedConstraintExtent(tc, schema._exprLocations, starts) : null;
+        if (nested && nested.from > range.from && nested.from <= range.to) {
+            let to = nested.from;
+            while (to > range.from && /[\s{]/.test(text[to - 1]))
+                --to;
+            if (to > range.from)
+                return { from: range.from, to };
+        }
+        return range;
+    };
     return {
         text,
         schema,
@@ -22982,11 +23026,41 @@ function locateInParsed(text, schema) {
                     .map(loc => yyllocToRange(loc, starts))
                     .filter((r) => r !== null)
                 : [],
-            constraint: (shapeLabel, predicate) => {
-                const tc = findTripleConstraint(schema, shapeLabel, predicate);
-                return tc && schema && schema._exprLocations
-                    ? yyllocToRange(schema._exprLocations.get(tc), starts)
-                    : null;
+            constraint: (shapeLabel, predicate, occurrence = 0) => {
+                const paths = findConstraintPaths(schema, shapeLabel, predicate);
+                const hit = paths[occurrence] || paths[0] || null;
+                return hit ? predicateRange(hit.tc) : null;
+            },
+            constraintAnchors: (shapeLabel, predicate, occurrence = 0) => {
+                const paths = findConstraintPaths(schema, shapeLabel, predicate);
+                const hit = paths[occurrence] || paths[0] || null;
+                const range = hit && tcRange(hit.tc);
+                if (!range)
+                    return null;
+                // a constraint with an inline-shape valueExpr lexically contains
+                // that shape's own constraints; highlight only its delimiters
+                // (":s {" and "}") so nested shapes don't highlight with their
+                // parent, and record the path of enclosing predicates back to the
+                // labeled shape
+                const nested = nestedConstraintExtent(hit.tc, schema._exprLocations, starts);
+                const parts = [];
+                if (nested && nested.from > range.from && nested.to <= range.to) {
+                    let headTo = nested.from; // keep the opening brace, drop the whitespace
+                    while (headTo > range.from && /\s/.test(text[headTo - 1]))
+                        --headTo;
+                    parts.push(headTo > range.from ? { from: range.from, to: headTo } : range);
+                    let tailFrom = nested.to;
+                    while (tailFrom < range.to && /\s/.test(text[tailFrom]))
+                        ++tailFrom;
+                    if (tailFrom < range.to)
+                        parts.push({ from: tailFrom, to: range.to });
+                }
+                else
+                    parts.push(range);
+                const path = hit.ancestors
+                    .map(predicateRange)
+                    .filter((r) => r !== null);
+                return { parts, path };
             },
             exprAt: (offset) => {
                 if (!schema || !schema._exprLocations)
@@ -23016,14 +23090,26 @@ function locateInParsed(text, schema) {
     };
 }
 function firstLine(str) { return String(str).split("\n", 1)[0]; }
-function findTripleConstraint(schema, shapeLabel, predicate) {
+/** every TripleConstraint on `predicate` under `shapeLabel` (including
+ * ones nested in inline-shape valueExprs -- validation results reach them
+ * under the enclosing labeled shape), each with the stack of constraints
+ * enclosing it, outermost first */
+function findConstraintPaths(schema, shapeLabel, predicate) {
     const decl = schema && schema._index && schema._index.shapeExprs[shapeLabel];
-    let found = null;
+    const found = [];
+    const stack = [];
     (function walk(expr) {
-        if (!expr || typeof expr !== "object" || found)
+        if (!expr || typeof expr !== "object")
             return;
-        if (expr.type === "TripleConstraint" && expr.predicate === predicate)
-            found = expr;
+        if (expr.type === "TripleConstraint") {
+            if (expr.predicate === predicate)
+                found.push({ tc: expr, ancestors: stack.slice() });
+            if (expr.valueExpr && typeof expr.valueExpr === "object") {
+                stack.push(expr);
+                walk(expr.valueExpr);
+                stack.pop();
+            }
+        }
         else if (expr.expressions)
             expr.expressions.forEach(walk);
         else if (expr.expression)
@@ -23035,47 +23121,64 @@ function findTripleConstraint(schema, shapeLabel, predicate) {
     })(decl);
     return found;
 }
+/** lexical extent (min from, max to) of the constraints nested under a
+ * TripleConstraint's inline-shape valueExpr (null when none) */
+function nestedConstraintExtent(tc, locations, starts) {
+    let min = null, max = null;
+    (function walk(expr) {
+        if (!expr || typeof expr !== "object")
+            return;
+        if (expr.type === "TripleConstraint") {
+            const range = yyllocToRange(locations.get(expr), starts);
+            if (range) {
+                if (min === null || range.from < min)
+                    min = range.from;
+                if (max === null || range.to > max)
+                    max = range.to;
+            }
+            if (expr.valueExpr && typeof expr.valueExpr === "object")
+                walk(expr.valueExpr);
+        }
+        else if (expr.expressions)
+            expr.expressions.forEach(walk);
+        else if (expr.expression)
+            walk(expr.expression);
+        else if (expr.shapeExpr)
+            walk(expr.shapeExpr);
+        else if (expr.shapeExprs)
+            expr.shapeExprs.forEach(walk);
+    })(tc.valueExpr && typeof tc.valueExpr === "object" ? tc.valueExpr : null);
+    return min === null ? null : { from: min, to: max };
+}
 /** Memoized on (text, baseIRI); see parseShExC. */
 exports.parseTurtle = memoLast(parseTurtleUncached, opts => (opts && opts.baseIRI) || "");
 function parseTurtleUncached(text, opts = {}) {
-    const { dataset, errors, semanticErrors, emitterErrors } = millan_1.rdfjs.parseTurtleToRdfjs(text, {
+    const { quads, provenance, diagnostics: lezerDiagnostics } = (0, emit_1.parseTurtle)(text, {
+        factory: RdfJs.DataFactory,
         baseIRI: opts.baseIRI || "urn:editor:data",
-        sourceURL: opts.sourceURL,
     });
-    const diagnostics = [];
-    errors.concat(semanticErrors).forEach((err) => {
-        const token = err.token && !isNaN(err.token.startOffset) ? err.token : null;
-        diagnostics.push({
-            severity: "error",
-            message: firstLine(err.message),
-            from: token ? token.startOffset : text.length,
-            to: token ? token.endOffset + 1 : text.length,
-        });
-    });
-    emitterErrors.forEach((err) => {
-        const range = millanSourceToRange(err.source) || { from: 0, to: 0 };
-        diagnostics.push(Object.assign({ severity: "error", message: firstLine(err.message) }, range));
-    });
-    return { text, dataset, diagnostics };
+    const diagnostics = lezerDiagnostics.map((d) => ({
+        severity: "error",
+        message: firstLine(d.message),
+        from: d.start,
+        to: Math.max(d.end, d.start + 1),
+    }));
+    return { text, dataset: new RdfJs.Store(quads), quads, provenance, diagnostics };
 }
 // ---------------------------------------------------------------------------
 // validation-error mapping
-/** ldTermToRdfJs - a ShExJson (LD) term as found in validation results to a
- * plain RDF/JS term structure that millan terms' equals() accepts. */
+/** ldTermToRdfJs - a ShExJson (LD) term as found in validation results to
+ * an RDF/JS term (for canonical-key provenance lookups and store matches). */
 function ldTermToRdfJs(ld) {
+    const F = RdfJs.DataFactory;
     if (typeof ld === "object")
-        return {
-            termType: "Literal",
-            value: ld.value,
-            language: ld.language || "",
-            datatype: {
-                termType: "NamedNode",
-                value: ld.type || (ld.language ? RDF_LANGSTRING : XSD_STRING),
-            },
-        };
+        return F.literal(ld.value, ld.language || (ld.type ? F.namedNode(ld.type) : undefined));
     return ld.startsWith("_:")
-        ? { termType: "BlankNode", value: ld.substr(2) }
-        : { termType: "NamedNode", value: ld };
+        ? F.blankNode(ld.substr(2))
+        : F.namedNode(ld);
+}
+function uttRange(spans) {
+    return spans && spans.length ? { from: spans[0].start, to: spans[0].end } : null;
 }
 /** trimRange - drop trailing whitespace from a range (some term sources
  * include following trivia). */
@@ -23087,27 +23190,73 @@ function trimRange(range, text) {
         --to;
     return to === range.to ? range : { from: range.from, to };
 }
-/** tripleAnchors - locate a validation result's TestedTriple in the parsed
- * data, returning per-term ranges (millan terms carry their own source). */
-function tripleAnchors(dataset, triple, text) {
-    const matches = [...dataset.match(ldTermToRdfJs(triple.subject), ldTermToRdfJs(triple.predicate), ldTermToRdfJs(triple.object))];
-    if (matches.length === 0)
+/** alignQuad - find the parsed quad a validation-result triple denotes */
+function alignQuad(parsed, s, p, o, bnodes) {
+    const direct = RdfJs.DataFactory.quad(s, p, o);
+    if (parsed.provenance.get(direct).length) // labels aligned (same parser fed the validator)
+        return direct;
+    const sB = s.termType === "BlankNode", oB = o.termType === "BlankNode";
+    if (!sB && !oB)
         return null;
-    const quad = matches[0];
+    const sBound = sB ? bnodes.toProv.get(s.value) : null;
+    const oBound = oB ? bnodes.toProv.get(o.value) : null;
+    const fits = (bound, actual) => bound ? actual.equals(bound)
+        : actual.termType === "BlankNode" && !bnodes.used.has(actual.value);
+    for (const q of parsed.quads) {
+        if (!q.predicate.equals(p))
+            continue;
+        if (sB ? !fits(sBound, q.subject) : !q.subject.equals(s))
+            continue;
+        if (oB ? !fits(oBound, q.object) : !q.object.equals(o))
+            continue;
+        if (sB && !sBound) {
+            bnodes.toProv.set(s.value, q.subject);
+            bnodes.used.add(q.subject.value);
+        }
+        if (oB && !oBound) {
+            bnodes.toProv.set(o.value, q.object);
+            bnodes.used.add(q.object.value);
+        }
+        return q;
+    }
+    return null;
+}
+/** tripleAnchors - locate a validation result's TestedTriple in the parsed
+ * data via the provenance index (utterance ranges per position). */
+function tripleAnchors(parsed, triple, text, bnodes) {
+    const quad = alignQuad(parsed, ldTermToRdfJs(triple.subject), ldTermToRdfJs(triple.predicate), ldTermToRdfJs(triple.object), bnodes);
+    const [utt] = quad ? parsed.provenance.get(quad) : [];
+    if (!utt)
+        return null;
+    // a blank node's source form is its whole [ property list ]; highlight
+    // just the delimiters so the contents read as their own triples
+    const delims = (range, term) => range && term.termType === "BlankNode" && range.to - range.from >= 2 &&
+        text[range.from] === "[" && text[range.to - 1] === "]"
+        ? [{ from: range.from, to: range.from + 1 }, { from: range.to - 1, to: range.to }]
+        : undefined;
+    const subject = trimRange(uttRange(utt.subject), text);
+    const object = trimRange(uttRange(utt.object), text);
     return {
-        subject: trimRange(millanSourceToRange(quad.subject && quad.subject.source), text),
-        predicate: trimRange(millanSourceToRange(quad.predicate && quad.predicate.source), text),
-        object: trimRange(millanSourceToRange(quad.object && quad.object.source)
-            || millanSourceToRange(quad.source), text),
+        subject,
+        predicate: trimRange(uttRange(utt.predicate), text),
+        object,
+        subjectParts: delims(subject, quad.subject),
+        objectParts: delims(object, quad.object),
     };
 }
 /** rangeOfNode - anchor for node-level errors (e.g. MissingProperty): the
  * first assertion where the node appears as subject. */
-function rangeOfNode(dataset, node) {
-    const matches = [...dataset.match(ldTermToRdfJs(node))];
-    return matches.length
-        ? millanSourceToRange(matches[0].subject.source) || millanSourceToRange(matches[0].source)
-        : null;
+function rangeOfNode(parsed, node, bnodes) {
+    let term = ldTermToRdfJs(node);
+    if (term.termType === "BlankNode")
+        term = bnodes.toProv.get(term.value) || term;
+    for (const quad of parsed.quads)
+        if (quad.subject.equals(term)) {
+            const [utt] = parsed.provenance.get(quad);
+            if (utt)
+                return uttRange(utt.subject);
+        }
+    return null;
 }
 // error types that anchor a diagnostic (as opposed to containers to recurse
 // through); each entry renders a message and picks its anchors
@@ -23181,6 +23330,7 @@ function constraintStr(tc) {
 function mapValidationErrors(valResult, shexcParsed, turtleParsed) {
     const pairs = [];
     const seen = new Set();
+    const bnodes = { toProv: new Map(), used: new Set() };
     (function walk(node, ctx) {
         if (!node || typeof node !== "object" || seen.has(node))
             return;
@@ -23193,32 +23343,45 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed) {
             ctx = { node: node.node !== undefined ? node.node : ctx.node,
                 shape: node.shape !== undefined ? node.shape : ctx.shape,
                 constraint: node.constraint !== undefined ? node.constraint : ctx.constraint,
-                triple: node.triple !== undefined ? node.triple : ctx.triple };
+                triple: node.triple !== undefined ? node.triple : ctx.triple,
+                tcOrdinals: node.shape !== undefined ? new Map() : ctx.tcOrdinals };
         if (node.type in ErrorLeaves)
             emit("nonconformant", ErrorLeaves[node.type](node, ctx), node, ctx);
         // successful matches: each TestedTriple under a TripleConstraintSolutions
         // pairs a schema constraint with a data triple
-        if (node.type === "TripleConstraintSolutions" && Array.isArray(node.solutions))
+        if (node.type === "TripleConstraintSolutions" && Array.isArray(node.solutions)) {
+            // one ordinal per constraint *node* (its several solutions share it)
+            const ordinal = ctx.tcOrdinals ? (ctx.tcOrdinals.get(node.predicate) || 0) : 0;
+            if (ctx.tcOrdinals)
+                ctx.tcOrdinals.set(node.predicate, ordinal + 1);
             node.solutions.forEach((sol) => {
                 if (sol && sol.type === "TestedTriple")
                     emit("conformant", {
                         message: `${termStr(sol.object)} matched <${node.predicate}>`,
                         predicate: node.predicate,
+                        constraintOrdinal: ordinal,
                         triple: sol,
                     }, node, ctx);
             });
+        }
         for (const key of ["errors", "appinfo", "solutions", "solution",
             "expressions", "referenced", "unexpectedTriples"])
             if (key in node)
                 walk(node[key], ctx);
     })(valResult, {});
     function emit(status, leaf, err, ctx) {
+        const ca = leaf.predicate && ctx.shape
+            ? shexcParsed.locate.constraintAnchors(ctx.shape, leaf.predicate, leaf.constraintOrdinal || 0)
+            : null;
         const schemaRange = (leaf.schemaObj && shexcParsed.locate.expr(leaf.schemaObj)) ||
-            (leaf.predicate && ctx.shape && shexcParsed.locate.constraint(ctx.shape, leaf.predicate)) ||
+            (ca && ca.parts[0]) ||
             // last resort: just the shape's label token -- never the whole
             // declaration, which would paint innocent constraints red
             (ctx.shape && shexcParsed.locate.shapeLabel(ctx.shape)) ||
             null;
+        // parts/path describe the constraint; only attach them when the
+        // constraint anchor is what schemaRange resolved to
+        const viaConstraint = ca && schemaRange === ca.parts[0] ? ca : null;
         const anchors = {
             shapeLabel: ctx.shape ? shexcParsed.locate.shapeLabel(ctx.shape) : null,
             subject: null, predicate: null, object: null,
@@ -23227,13 +23390,13 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed) {
         if (turtleParsed && turtleParsed.dataset) {
             const triple = leaf.triple || (leaf.triples && leaf.triples[0]) || null;
             if (triple) {
-                const termRanges = tripleAnchors(turtleParsed.dataset, triple, turtleParsed.text);
+                const termRanges = tripleAnchors(turtleParsed, triple, turtleParsed.text, bnodes);
                 if (termRanges)
                     Object.assign(anchors, termRanges);
                 dataRange = anchors.object;
             }
             if (!dataRange && leaf.node !== undefined && leaf.node !== null)
-                dataRange = rangeOfNode(turtleParsed.dataset, leaf.node);
+                dataRange = rangeOfNode(turtleParsed, leaf.node, bnodes);
         }
         pairs.push({
             id: pairs.length,
@@ -23243,6 +23406,9 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed) {
             schema: schemaRange,
             data: dataRange,
             anchors,
+            schemaParts: viaConstraint ? viaConstraint.parts : undefined,
+            schemaPath: viaConstraint ? viaConstraint.path : undefined,
+            triple: leaf.triple || (leaf.triples && leaf.triples[0]) || null,
         });
     }
     // squiggles come from failures only; conformant pairs drive hover highlights
@@ -23251,6 +23417,67 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed) {
         .map(p => ({ from: p[side].from, to: p[side].to, severity: "error",
         message: p.message, pair: p.id }));
     return { schema: toDiagnostics("schema"), data: toDiagnostics("data"), pairs };
+}
+const TERM_MEMBERS = ["subject", "predicate", "object"];
+/** stringifyWithOffsets - JSON.stringify(value, null, indent)-identical
+ * serialization that also records the {from, to} character range of every
+ * object `isTarget` accepts (e.g. TestedTriples in validation results), so
+ * a rendered results pane can highlight and scroll to them. */
+function stringifyWithOffsets(value, isTarget, indent = 2) {
+    const ranges = [];
+    const pieces = [];
+    let len = 0;
+    const push = (str) => { pieces.push(str); len += str.length; };
+    function ser(v, depth) {
+        if (v === undefined || typeof v === "function")
+            return false;
+        if (v === null || typeof v !== "object") {
+            push(JSON.stringify(v));
+            return true;
+        }
+        const start = len;
+        const pad = " ".repeat(indent * (depth + 1));
+        const padEnd = " ".repeat(indent * depth);
+        const fields = {};
+        if (Array.isArray(v)) {
+            if (v.length === 0)
+                push("[]");
+            else {
+                push("[\n");
+                v.forEach((item, i) => {
+                    push(pad);
+                    if (!ser(item, depth + 1))
+                        push("null");
+                    push(i < v.length - 1 ? ",\n" : "\n");
+                });
+                push(padEnd + "]");
+            }
+        }
+        else {
+            const keys = Object.keys(v).filter(k => v[k] !== undefined && typeof v[k] !== "function");
+            if (keys.length === 0)
+                push("{}");
+            else {
+                push("{\n");
+                keys.forEach((k, i) => {
+                    const kFrom = len + pad.length;
+                    push(pad + JSON.stringify(k) + ": ");
+                    ser(v[k], depth + 1);
+                    if (TERM_MEMBERS.indexOf(k) !== -1)
+                        fields[k] = { from: kFrom, to: len };
+                    push(i < keys.length - 1 ? ",\n" : "\n");
+                });
+                push(padEnd + "}");
+            }
+        }
+        if (isTarget(v))
+            ranges.push(Object.keys(fields).length
+                ? { target: v, from: start, to: len, fields }
+                : { target: v, from: start, to: len });
+        return true;
+    }
+    ser(value, 0);
+    return { text: pieces.join(""), ranges };
 }
 //# sourceMappingURL=editor-services.js.map
 
@@ -23652,7 +23879,7 @@ function ShExLoaderCjsModule(config = {}) {
             const struct = JSON.parse(text);
             try {
                 const nquads = yield config.jsonld.toRDF(struct, Object.assign({
-                    format: "application/nquads",
+                    format: "application/n-quads", // jsonld ≥ 5 dropped the "application/nquads" alias
                     base: url
                 }, config.jsonLdOptions || {}));
                 meta.prefixes = {}; // @@ take from @context?
@@ -23661,12 +23888,15 @@ function ShExLoaderCjsModule(config = {}) {
                 return parseTurtle(nquads, mediaType, url, meta, dataOptions, resourceLoadControler, importers);
             }
             catch (lderr) {
-                let e = lderr;
-                if ("details" in e)
-                    e = e.details;
-                if ("cause" in e)
-                    e = e.cause;
-                throw new ResourceError("error parsing JSON-ld " + url + ": " + e, url);
+                // a JsonLdError carries the story in .message and (possibly nested
+                // in .details) a .cause; render each layer rather than "[object Object]"
+                let msg = lderr && lderr.message ? lderr.message : String(lderr);
+                const details = lderr && lderr.details;
+                if (details) {
+                    const cause = details.cause;
+                    msg += " " + (cause && cause.message ? cause.message : JSON.stringify(details));
+                }
+                throw new ResourceError("error parsing JSON-ld " + url + ": " + msg, url);
             }
         });
     }
@@ -37463,161 +37693,6 @@ exports.toggleFold = toggleFold;
 exports.unfoldAll = unfoldAll;
 exports.unfoldCode = unfoldCode;
 exports.unfoldEffect = unfoldEffect;
-
-
-/***/ },
-
-/***/ 2903
-(__unused_webpack_module, exports) {
-
-"use strict";
-var __webpack_unused_export__;
-
-
-__webpack_unused_export__ = ({ value: true });
-
-var curPunc;
-
-function wordRegexp(words) {
-  return new RegExp("^(?:" + words.join("|") + ")$", "i");
-}
-wordRegexp([]);
-var keywords = wordRegexp(["@prefix", "@base", "a"]);
-var operatorChars = /[*+\-<>=&|]/;
-
-function tokenBase(stream, state) {
-  var ch = stream.next();
-  curPunc = null;
-  if (ch == "<" && !stream.match(/^[\s\u00a0=]/, false)) {
-    stream.match(/^[^\s\u00a0>]*>?/);
-    return "atom";
-  }
-  else if (ch == "\"" || ch == "'") {
-    state.tokenize = tokenLiteral(ch);
-    return state.tokenize(stream, state);
-  }
-  else if (/[{}\(\),\.;\[\]]/.test(ch)) {
-    curPunc = ch;
-    return null;
-  }
-  else if (ch == "#") {
-    stream.skipToEnd();
-    return "comment";
-  }
-  else if (operatorChars.test(ch)) {
-    stream.eatWhile(operatorChars);
-    return null;
-  }
-  else if (ch == ":") {
-    return "operator";
-  } else {
-    stream.eatWhile(/[_\w\d]/);
-    if(stream.peek() == ":") {
-      return "variableName.special";
-    } else {
-      var word = stream.current();
-
-      if(keywords.test(word)) {
-        return "meta";
-      }
-
-      if(ch >= "A" && ch <= "Z") {
-        return "comment";
-      } else {
-        return "keyword";
-      }
-    }
-    // removed by dead control flow
- var word; 
-  }
-}
-
-function tokenLiteral(quote) {
-  return function(stream, state) {
-    var escaped = false, ch;
-    while ((ch = stream.next()) != null) {
-      if (ch == quote && !escaped) {
-        state.tokenize = tokenBase;
-        break;
-      }
-      escaped = !escaped && ch == "\\";
-    }
-    return "string";
-  };
-}
-
-function pushContext(state, type, col) {
-  state.context = {prev: state.context, indent: state.indent, col: col, type: type};
-}
-function popContext(state) {
-  state.indent = state.context.indent;
-  state.context = state.context.prev;
-}
-
-const turtle = {
-  name: "turtle",
-  startState: function() {
-    return {tokenize: tokenBase,
-            context: null,
-            indent: 0,
-            col: 0};
-  },
-
-  token: function(stream, state) {
-    if (stream.sol()) {
-      if (state.context && state.context.align == null) state.context.align = false;
-      state.indent = stream.indentation();
-    }
-    if (stream.eatSpace()) return null;
-    var style = state.tokenize(stream, state);
-
-    if (style != "comment" && state.context && state.context.align == null && state.context.type != "pattern") {
-      state.context.align = true;
-    }
-
-    if (curPunc == "(") pushContext(state, ")", stream.column());
-    else if (curPunc == "[") pushContext(state, "]", stream.column());
-    else if (curPunc == "{") pushContext(state, "}", stream.column());
-    else if (/[\]\}\)]/.test(curPunc)) {
-      while (state.context && state.context.type == "pattern") popContext(state);
-      if (state.context && curPunc == state.context.type) popContext(state);
-    }
-    else if (curPunc == "." && state.context && state.context.type == "pattern") popContext(state);
-    else if (/atom|string|variable/.test(style) && state.context) {
-      if (/[\}\]]/.test(state.context.type))
-        pushContext(state, "pattern", stream.column());
-      else if (state.context.type == "pattern" && !state.context.align) {
-        state.context.align = true;
-        state.context.col = stream.column();
-      }
-    }
-
-    return style;
-  },
-
-  indent: function(state, textAfter, cx) {
-    var firstChar = textAfter && textAfter.charAt(0);
-    var context = state.context;
-    if (/[\]\}]/.test(firstChar))
-      while (context && context.type == "pattern") context = context.prev;
-
-    var closing = context && firstChar == context.type;
-    if (!context)
-      return 0;
-    else if (context.type == "pattern")
-      return context.col;
-    else if (context.align)
-      return context.col + (closing ? 0 : 1);
-    else
-      return context.indent + (closing ? 0 : cx.unit);
-  },
-
-  languageData: {
-    commentTokens: {line: "#"}
-  }
-};
-
-exports.turtle = turtle;
 
 
 /***/ },
@@ -61392,6 +61467,5623 @@ exports.keyName = keyName;
 exports.shift = shift;
 
 
+/***/ },
+
+/***/ 9066
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   PH: () => (/* binding */ Tree),
+/* harmony export */   Qj: () => (/* binding */ IterMode),
+/* harmony export */   Z6: () => (/* binding */ NodeType),
+/* harmony export */   fI: () => (/* binding */ NodeSet),
+/* harmony export */   iX: () => (/* binding */ Parser),
+/* harmony export */   uY: () => (/* binding */ NodeProp)
+/* harmony export */ });
+/* unused harmony exports MountedTree, NodeWeakMap, TreeBuffer, TreeCursor, TreeFragment, parseMixed */
+/**
+The default maximum length of a `TreeBuffer` node.
+*/
+const DefaultBufferLength = 1024;
+let nextPropID = 0;
+class Range {
+    constructor(from, to) {
+        this.from = from;
+        this.to = to;
+    }
+}
+/**
+Each [node type](#common.NodeType) or [individual tree](#common.Tree)
+can have metadata associated with it in props. Instances of this
+class represent prop names.
+*/
+class NodeProp {
+    /**
+    Create a new node prop type.
+    */
+    constructor(config = {}) {
+        this.id = nextPropID++;
+        this.perNode = !!config.perNode;
+        this.deserialize = config.deserialize || (() => {
+            throw new Error("This node type doesn't define a deserialize function");
+        });
+        this.combine = config.combine || null;
+    }
+    /**
+    This is meant to be used with
+    [`NodeSet.extend`](#common.NodeSet.extend) or
+    [`LRParser.configure`](#lr.ParserConfig.props) to compute
+    prop values for each node type in the set. Takes a [match
+    object](#common.NodeType^match) or function that returns undefined
+    if the node type doesn't get this prop, and the prop's value if
+    it does.
+    */
+    add(match) {
+        if (this.perNode)
+            throw new RangeError("Can't add per-node props to node types");
+        if (typeof match != "function")
+            match = NodeType.match(match);
+        return (type) => {
+            let result = match(type);
+            return result === undefined ? null : [this, result];
+        };
+    }
+}
+/**
+Prop that is used to describe matching delimiters. For opening
+delimiters, this holds an array of node names (written as a
+space-separated string when declaring this prop in a grammar)
+for the node types of closing delimiters that match it.
+*/
+NodeProp.closedBy = new NodeProp({ deserialize: str => str.split(" ") });
+/**
+The inverse of [`closedBy`](#common.NodeProp^closedBy). This is
+attached to closing delimiters, holding an array of node names
+of types of matching opening delimiters.
+*/
+NodeProp.openedBy = new NodeProp({ deserialize: str => str.split(" ") });
+/**
+Used to assign node types to groups (for example, all node
+types that represent an expression could be tagged with an
+`"Expression"` group).
+*/
+NodeProp.group = new NodeProp({ deserialize: str => str.split(" ") });
+/**
+Attached to nodes to indicate these should be
+[displayed](https://codemirror.net/docs/ref/#language.syntaxTree)
+in a bidirectional text isolate, so that direction-neutral
+characters on their sides don't incorrectly get associated with
+surrounding text. You'll generally want to set this for nodes
+that contain arbitrary text, like strings and comments, and for
+nodes that appear _inside_ arbitrary text, like HTML tags. When
+not given a value, in a grammar declaration, defaults to
+`"auto"`.
+*/
+NodeProp.isolate = new NodeProp({ deserialize: value => {
+        if (value && value != "rtl" && value != "ltr" && value != "auto")
+            throw new RangeError("Invalid value for isolate: " + value);
+        return value || "auto";
+    } });
+/**
+The hash of the [context](#lr.ContextTracker.constructor)
+that the node was parsed in, if any. Used to limit reuse of
+contextual nodes.
+*/
+NodeProp.contextHash = new NodeProp({ perNode: true });
+/**
+The distance beyond the end of the node that the tokenizer
+looked ahead for any of the tokens inside the node. (The LR
+parser only stores this when it is larger than 25, for
+efficiency reasons.)
+*/
+NodeProp.lookAhead = new NodeProp({ perNode: true });
+/**
+This per-node prop is used to replace a given node, or part of a
+node, with another tree. This is useful to include trees from
+different languages in mixed-language parsers.
+*/
+NodeProp.mounted = new NodeProp({ perNode: true });
+/**
+A mounted tree, which can be [stored](#common.NodeProp^mounted) on
+a tree node to indicate that parts of its content are
+represented by another tree.
+*/
+class MountedTree {
+    constructor(
+    /**
+    The inner tree.
+    */
+    tree, 
+    /**
+    If this is null, this tree replaces the entire node (it will
+    be included in the regular iteration instead of its host
+    node). If not, only the given ranges are considered to be
+    covered by this tree. This is used for trees that are mixed in
+    a way that isn't strictly hierarchical. Such mounted trees are
+    only entered by [`resolveInner`](#common.Tree.resolveInner)
+    and [`enter`](#common.SyntaxNode.enter).
+    */
+    overlay, 
+    /**
+    The parser used to create this subtree.
+    */
+    parser, 
+    /**
+    [Indicates](#common.IterMode.EnterBracketed) that the nested
+    content is delineated with some kind
+    of bracket token.
+    */
+    bracketed = false) {
+        this.tree = tree;
+        this.overlay = overlay;
+        this.parser = parser;
+        this.bracketed = bracketed;
+    }
+    /**
+    @internal
+    */
+    static get(tree) {
+        return tree && tree.props && tree.props[NodeProp.mounted.id];
+    }
+}
+const noProps = Object.create(null);
+/**
+Each node in a syntax tree has a node type associated with it.
+*/
+class NodeType {
+    /**
+    @internal
+    */
+    constructor(
+    /**
+    The name of the node type. Not necessarily unique, but if the
+    grammar was written properly, different node types with the
+    same name within a node set should play the same semantic
+    role.
+    */
+    name, 
+    /**
+    @internal
+    */
+    props, 
+    /**
+    The id of this node in its set. Corresponds to the term ids
+    used in the parser.
+    */
+    id, 
+    /**
+    @internal
+    */
+    flags = 0) {
+        this.name = name;
+        this.props = props;
+        this.id = id;
+        this.flags = flags;
+    }
+    /**
+    Define a node type.
+    */
+    static define(spec) {
+        let props = spec.props && spec.props.length ? Object.create(null) : noProps;
+        let flags = (spec.top ? 1 /* NodeFlag.Top */ : 0) | (spec.skipped ? 2 /* NodeFlag.Skipped */ : 0) |
+            (spec.error ? 4 /* NodeFlag.Error */ : 0) | (spec.name == null ? 8 /* NodeFlag.Anonymous */ : 0);
+        let type = new NodeType(spec.name || "", props, spec.id, flags);
+        if (spec.props)
+            for (let src of spec.props) {
+                if (!Array.isArray(src))
+                    src = src(type);
+                if (src) {
+                    if (src[0].perNode)
+                        throw new RangeError("Can't store a per-node prop on a node type");
+                    props[src[0].id] = src[1];
+                }
+            }
+        return type;
+    }
+    /**
+    Retrieves a node prop for this type. Will return `undefined` if
+    the prop isn't present on this node.
+    */
+    prop(prop) { return this.props[prop.id]; }
+    /**
+    True when this is the top node of a grammar.
+    */
+    get isTop() { return (this.flags & 1 /* NodeFlag.Top */) > 0; }
+    /**
+    True when this node is produced by a skip rule.
+    */
+    get isSkipped() { return (this.flags & 2 /* NodeFlag.Skipped */) > 0; }
+    /**
+    Indicates whether this is an error node.
+    */
+    get isError() { return (this.flags & 4 /* NodeFlag.Error */) > 0; }
+    /**
+    When true, this node type doesn't correspond to a user-declared
+    named node, for example because it is used to cache repetition.
+    */
+    get isAnonymous() { return (this.flags & 8 /* NodeFlag.Anonymous */) > 0; }
+    /**
+    Returns true when this node's name or one of its
+    [groups](#common.NodeProp^group) matches the given string.
+    */
+    is(name) {
+        if (typeof name == 'string') {
+            if (this.name == name)
+                return true;
+            let group = this.prop(NodeProp.group);
+            return group ? group.indexOf(name) > -1 : false;
+        }
+        return this.id == name;
+    }
+    /**
+    Create a function from node types to arbitrary values by
+    specifying an object whose property names are node or
+    [group](#common.NodeProp^group) names. Often useful with
+    [`NodeProp.add`](#common.NodeProp.add). You can put multiple
+    names, separated by spaces, in a single property name to map
+    multiple node names to a single value.
+    */
+    static match(map) {
+        let direct = Object.create(null);
+        for (let prop in map)
+            for (let name of prop.split(" "))
+                direct[name] = map[prop];
+        return (node) => {
+            for (let groups = node.prop(NodeProp.group), i = -1; i < (groups ? groups.length : 0); i++) {
+                let found = direct[i < 0 ? node.name : groups[i]];
+                if (found)
+                    return found;
+            }
+        };
+    }
+}
+/**
+An empty dummy node type to use when no actual type is available.
+*/
+NodeType.none = new NodeType("", Object.create(null), 0, 8 /* NodeFlag.Anonymous */);
+/**
+A node set holds a collection of node types. It is used to
+compactly represent trees by storing their type ids, rather than a
+full pointer to the type object, in a numeric array. Each parser
+[has](#lr.LRParser.nodeSet) a node set, and [tree
+buffers](#common.TreeBuffer) can only store collections of nodes
+from the same set. A set can have a maximum of 2**16 (65536) node
+types in it, so that the ids fit into 16-bit typed array slots.
+*/
+class NodeSet {
+    /**
+    Create a set with the given types. The `id` property of each
+    type should correspond to its position within the array.
+    */
+    constructor(
+    /**
+    The node types in this set, by id.
+    */
+    types) {
+        this.types = types;
+        for (let i = 0; i < types.length; i++)
+            if (types[i].id != i)
+                throw new RangeError("Node type ids should correspond to array positions when creating a node set");
+    }
+    /**
+    Create a copy of this set with some node properties added. The
+    arguments to this method can be created with
+    [`NodeProp.add`](#common.NodeProp.add).
+    */
+    extend(...props) {
+        let newTypes = [];
+        for (let type of this.types) {
+            let newProps = null;
+            for (let source of props) {
+                let add = source(type);
+                if (add) {
+                    if (!newProps)
+                        newProps = Object.assign({}, type.props);
+                    let value = add[1], prop = add[0];
+                    if (prop.combine && prop.id in newProps)
+                        value = prop.combine(newProps[prop.id], value);
+                    newProps[prop.id] = value;
+                }
+            }
+            newTypes.push(newProps ? new NodeType(type.name, newProps, type.id, type.flags) : type);
+        }
+        return new NodeSet(newTypes);
+    }
+}
+const CachedNode = new WeakMap(), CachedInnerNode = new WeakMap();
+/**
+Options that control iteration. Can be combined with the `|`
+operator to enable multiple ones.
+*/
+var IterMode;
+(function (IterMode) {
+    /**
+    When enabled, iteration will only visit [`Tree`](#common.Tree)
+    objects, not nodes packed into
+    [`TreeBuffer`](#common.TreeBuffer)s.
+    */
+    IterMode[IterMode["ExcludeBuffers"] = 1] = "ExcludeBuffers";
+    /**
+    Enable this to make iteration include anonymous nodes (such as
+    the nodes that wrap repeated grammar constructs into a balanced
+    tree).
+    */
+    IterMode[IterMode["IncludeAnonymous"] = 2] = "IncludeAnonymous";
+    /**
+    By default, regular [mounted](#common.NodeProp^mounted) nodes
+    replace their base node in iteration. Enable this to ignore them
+    instead.
+    */
+    IterMode[IterMode["IgnoreMounts"] = 4] = "IgnoreMounts";
+    /**
+    This option only applies in
+    [`enter`](#common.SyntaxNode.enter)-style methods. It tells the
+    library to not enter mounted overlays if one covers the given
+    position.
+    */
+    IterMode[IterMode["IgnoreOverlays"] = 8] = "IgnoreOverlays";
+    /**
+    When set, positions on the boundary of a mounted overlay tree
+    that has its [`bracketed`](#common.NestedParse.bracketed) flag
+    set will enter that tree regardless of side. Only supported in
+    [`enter`](#common.SyntaxNode.enter), not in cursors.
+    */
+    IterMode[IterMode["EnterBracketed"] = 16] = "EnterBracketed";
+})(IterMode || (IterMode = {}));
+/**
+A piece of syntax tree. There are two ways to approach these
+trees: the way they are actually stored in memory, and the
+convenient way.
+
+Syntax trees are stored as a tree of `Tree` and `TreeBuffer`
+objects. By packing detail information into `TreeBuffer` leaf
+nodes, the representation is made a lot more memory-efficient.
+
+However, when you want to actually work with tree nodes, this
+representation is very awkward, so most client code will want to
+use the [`TreeCursor`](#common.TreeCursor) or
+[`SyntaxNode`](#common.SyntaxNode) interface instead, which provides
+a view on some part of this data structure, and can be used to
+move around to adjacent nodes.
+*/
+class Tree {
+    /**
+    Construct a new tree. See also [`Tree.build`](#common.Tree^build).
+    */
+    constructor(
+    /**
+    The type of the top node.
+    */
+    type, 
+    /**
+    This node's child nodes.
+    */
+    children, 
+    /**
+    The positions (offsets relative to the start of this tree) of
+    the children.
+    */
+    positions, 
+    /**
+    The total length of this tree
+    */
+    length, 
+    /**
+    Per-node [node props](#common.NodeProp) to associate with this node.
+    */
+    props) {
+        this.type = type;
+        this.children = children;
+        this.positions = positions;
+        this.length = length;
+        /**
+        @internal
+        */
+        this.props = null;
+        if (props && props.length) {
+            this.props = Object.create(null);
+            for (let [prop, value] of props)
+                this.props[typeof prop == "number" ? prop : prop.id] = value;
+        }
+    }
+    /**
+    @internal
+    */
+    toString() {
+        let mounted = MountedTree.get(this);
+        if (mounted && !mounted.overlay)
+            return mounted.tree.toString();
+        let children = "";
+        for (let ch of this.children) {
+            let str = ch.toString();
+            if (str) {
+                if (children)
+                    children += ",";
+                children += str;
+            }
+        }
+        return !this.type.name ? children :
+            (/\W/.test(this.type.name) && !this.type.isError ? JSON.stringify(this.type.name) : this.type.name) +
+                (children.length ? "(" + children + ")" : "");
+    }
+    /**
+    Get a [tree cursor](#common.TreeCursor) positioned at the top of
+    the tree. Mode can be used to [control](#common.IterMode) which
+    nodes the cursor visits.
+    */
+    cursor(mode = 0) {
+        return new TreeCursor(this.topNode, mode);
+    }
+    /**
+    Get a [tree cursor](#common.TreeCursor) pointing into this tree
+    at the given position and side (see
+    [`moveTo`](#common.TreeCursor.moveTo).
+    */
+    cursorAt(pos, side = 0, mode = 0) {
+        let scope = CachedNode.get(this) || this.topNode;
+        let cursor = new TreeCursor(scope);
+        cursor.moveTo(pos, side);
+        CachedNode.set(this, cursor._tree);
+        return cursor;
+    }
+    /**
+    Get a [syntax node](#common.SyntaxNode) object for the top of the
+    tree.
+    */
+    get topNode() {
+        return new TreeNode(this, 0, 0, null);
+    }
+    /**
+    Get the [syntax node](#common.SyntaxNode) at the given position.
+    If `side` is -1, this will move into nodes that end at the
+    position. If 1, it'll move into nodes that start at the
+    position. With 0, it'll only enter nodes that cover the position
+    from both sides.
+    
+    Note that this will not enter
+    [overlays](#common.MountedTree.overlay), and you often want
+    [`resolveInner`](#common.Tree.resolveInner) instead.
+    */
+    resolve(pos, side = 0) {
+        let node = resolveNode(CachedNode.get(this) || this.topNode, pos, side, false);
+        CachedNode.set(this, node);
+        return node;
+    }
+    /**
+    Like [`resolve`](#common.Tree.resolve), but will enter
+    [overlaid](#common.MountedTree.overlay) nodes, producing a syntax node
+    pointing into the innermost overlaid tree at the given position
+    (with parent links going through all parent structure, including
+    the host trees).
+    */
+    resolveInner(pos, side = 0) {
+        let node = resolveNode(CachedInnerNode.get(this) || this.topNode, pos, side, true);
+        CachedInnerNode.set(this, node);
+        return node;
+    }
+    /**
+    In some situations, it can be useful to iterate through all
+    nodes around a position, including those in overlays that don't
+    directly cover the position. This method gives you an iterator
+    that will produce all nodes, from small to big, around the given
+    position.
+    */
+    resolveStack(pos, side = 0) {
+        return stackIterator(this, pos, side);
+    }
+    /**
+    Iterate over the tree and its children, calling `enter` for any
+    node that touches the `from`/`to` region (if given) before
+    running over such a node's children, and `leave` (if given) when
+    leaving the node. When `enter` returns `false`, that node will
+    not have its children iterated over (or `leave` called).
+    */
+    iterate(spec) {
+        let { enter, leave, from = 0, to = this.length } = spec;
+        let mode = spec.mode || 0, anon = (mode & IterMode.IncludeAnonymous) > 0;
+        for (let c = this.cursor(mode | IterMode.IncludeAnonymous);;) {
+            let entered = false;
+            if (c.from <= to && c.to >= from && (!anon && c.type.isAnonymous || enter(c) !== false)) {
+                if (c.firstChild())
+                    continue;
+                entered = true;
+            }
+            for (;;) {
+                if (entered && leave && (anon || !c.type.isAnonymous))
+                    leave(c);
+                if (c.nextSibling())
+                    break;
+                if (!c.parent())
+                    return;
+                entered = true;
+            }
+        }
+    }
+    /**
+    Get the value of the given [node prop](#common.NodeProp) for this
+    node. Works with both per-node and per-type props.
+    */
+    prop(prop) {
+        return !prop.perNode ? this.type.prop(prop) : this.props ? this.props[prop.id] : undefined;
+    }
+    /**
+    Returns the node's [per-node props](#common.NodeProp.perNode) in a
+    format that can be passed to the [`Tree`](#common.Tree)
+    constructor.
+    */
+    get propValues() {
+        let result = [];
+        if (this.props)
+            for (let id in this.props)
+                result.push([+id, this.props[id]]);
+        return result;
+    }
+    /**
+    Balance the direct children of this tree, producing a copy of
+    which may have children grouped into subtrees with type
+    [`NodeType.none`](#common.NodeType^none).
+    */
+    balance(config = {}) {
+        return this.children.length <= 8 /* Balance.BranchFactor */ ? this :
+            balanceRange(NodeType.none, this.children, this.positions, 0, this.children.length, 0, this.length, (children, positions, length) => new Tree(this.type, children, positions, length, this.propValues), config.makeTree || ((children, positions, length) => new Tree(NodeType.none, children, positions, length)));
+    }
+    /**
+    Build a tree from a postfix-ordered buffer of node information,
+    or a cursor over such a buffer.
+    */
+    static build(data) { return buildTree(data); }
+}
+/**
+The empty tree
+*/
+Tree.empty = new Tree(NodeType.none, [], [], 0);
+class FlatBufferCursor {
+    constructor(buffer, index) {
+        this.buffer = buffer;
+        this.index = index;
+    }
+    get id() { return this.buffer[this.index - 4]; }
+    get start() { return this.buffer[this.index - 3]; }
+    get end() { return this.buffer[this.index - 2]; }
+    get size() { return this.buffer[this.index - 1]; }
+    get pos() { return this.index; }
+    next() { this.index -= 4; }
+    fork() { return new FlatBufferCursor(this.buffer, this.index); }
+}
+/**
+Tree buffers contain (type, start, end, endIndex) quads for each
+node. In such a buffer, nodes are stored in prefix order (parents
+before children, with the endIndex of the parent indicating which
+children belong to it).
+*/
+class TreeBuffer {
+    /**
+    Create a tree buffer.
+    */
+    constructor(
+    /**
+    The buffer's content.
+    */
+    buffer, 
+    /**
+    The total length of the group of nodes in the buffer.
+    */
+    length, 
+    /**
+    The node set used in this buffer.
+    */
+    set) {
+        this.buffer = buffer;
+        this.length = length;
+        this.set = set;
+    }
+    /**
+    @internal
+    */
+    get type() { return NodeType.none; }
+    /**
+    @internal
+    */
+    toString() {
+        let result = [];
+        for (let index = 0; index < this.buffer.length;) {
+            result.push(this.childString(index));
+            index = this.buffer[index + 3];
+        }
+        return result.join(",");
+    }
+    /**
+    @internal
+    */
+    childString(index) {
+        let id = this.buffer[index], endIndex = this.buffer[index + 3];
+        let type = this.set.types[id], result = type.name;
+        if (/\W/.test(result) && !type.isError)
+            result = JSON.stringify(result);
+        index += 4;
+        if (endIndex == index)
+            return result;
+        let children = [];
+        while (index < endIndex) {
+            children.push(this.childString(index));
+            index = this.buffer[index + 3];
+        }
+        return result + "(" + children.join(",") + ")";
+    }
+    /**
+    @internal
+    */
+    findChild(startIndex, endIndex, dir, pos, side) {
+        let { buffer } = this, pick = -1;
+        for (let i = startIndex; i != endIndex; i = buffer[i + 3]) {
+            if (checkSide(side, pos, buffer[i + 1], buffer[i + 2])) {
+                pick = i;
+                if (dir > 0)
+                    break;
+            }
+        }
+        return pick;
+    }
+    /**
+    @internal
+    */
+    slice(startI, endI, from) {
+        let b = this.buffer;
+        let copy = new Uint16Array(endI - startI), len = 0;
+        for (let i = startI, j = 0; i < endI;) {
+            copy[j++] = b[i++];
+            copy[j++] = b[i++] - from;
+            let to = copy[j++] = b[i++] - from;
+            copy[j++] = b[i++] - startI;
+            len = Math.max(len, to);
+        }
+        return new TreeBuffer(copy, len, this.set);
+    }
+}
+function checkSide(side, pos, from, to) {
+    switch (side) {
+        case -2 /* Side.Before */: return from < pos;
+        case -1 /* Side.AtOrBefore */: return to >= pos && from < pos;
+        case 0 /* Side.Around */: return from < pos && to > pos;
+        case 1 /* Side.AtOrAfter */: return from <= pos && to > pos;
+        case 2 /* Side.After */: return to > pos;
+        case 4 /* Side.DontCare */: return true;
+    }
+}
+function resolveNode(node, pos, side, overlays) {
+    var _a;
+    // Move up to a node that actually holds the position, if possible
+    while (node.from == node.to ||
+        (side < 1 ? node.from >= pos : node.from > pos) ||
+        (side > -1 ? node.to <= pos : node.to < pos)) {
+        let parent = !overlays && node instanceof TreeNode && node.index < 0 ? null : node.parent;
+        if (!parent)
+            return node;
+        node = parent;
+    }
+    let mode = overlays ? 0 : IterMode.IgnoreOverlays;
+    // Must go up out of overlays when those do not overlap with pos
+    if (overlays)
+        for (let scan = node, parent = scan.parent; parent; scan = parent, parent = scan.parent) {
+            if (scan instanceof TreeNode && scan.index < 0 && ((_a = parent.enter(pos, side, mode)) === null || _a === void 0 ? void 0 : _a.from) != scan.from)
+                node = parent;
+        }
+    for (;;) {
+        let inner = node.enter(pos, side, mode);
+        if (!inner)
+            return node;
+        node = inner;
+    }
+}
+class BaseNode {
+    cursor(mode = 0) { return new TreeCursor(this, mode); }
+    getChild(type, before = null, after = null) {
+        let r = getChildren(this, type, before, after);
+        return r.length ? r[0] : null;
+    }
+    getChildren(type, before = null, after = null) {
+        return getChildren(this, type, before, after);
+    }
+    resolve(pos, side = 0) {
+        return resolveNode(this, pos, side, false);
+    }
+    resolveInner(pos, side = 0) {
+        return resolveNode(this, pos, side, true);
+    }
+    matchContext(context) {
+        return matchNodeContext(this.parent, context);
+    }
+    enterUnfinishedNodesBefore(pos) {
+        let scan = this.childBefore(pos), node = this;
+        while (scan) {
+            let last = scan.lastChild;
+            if (!last || last.to != scan.to)
+                break;
+            if (last.type.isError && last.from == last.to) {
+                node = scan;
+                scan = last.prevSibling;
+            }
+            else {
+                scan = last;
+            }
+        }
+        return node;
+    }
+    get node() { return this; }
+    get next() { return this.parent; }
+}
+class TreeNode extends BaseNode {
+    constructor(_tree, from, 
+    // Index in parent node, set to -1 if the node is not a direct child of _parent.node (overlay)
+    index, _parent) {
+        super();
+        this._tree = _tree;
+        this.from = from;
+        this.index = index;
+        this._parent = _parent;
+    }
+    get type() { return this._tree.type; }
+    get name() { return this._tree.type.name; }
+    get to() { return this.from + this._tree.length; }
+    nextChild(i, dir, pos, side, mode = 0) {
+        for (let parent = this;;) {
+            for (let { children, positions } = parent._tree, e = dir > 0 ? children.length : -1; i != e; i += dir) {
+                let next = children[i], start = positions[i] + parent.from, mounted;
+                if (!((mode & IterMode.EnterBracketed) && next instanceof Tree &&
+                    (mounted = MountedTree.get(next)) && !mounted.overlay && mounted.bracketed &&
+                    pos >= start && pos <= start + next.length) &&
+                    !checkSide(side, pos, start, start + next.length))
+                    continue;
+                if (next instanceof TreeBuffer) {
+                    if (mode & IterMode.ExcludeBuffers)
+                        continue;
+                    let index = next.findChild(0, next.buffer.length, dir, pos - start, side);
+                    if (index > -1)
+                        return new BufferNode(new BufferContext(parent, next, i, start), null, index);
+                }
+                else if ((mode & IterMode.IncludeAnonymous) || (!next.type.isAnonymous || hasChild(next))) {
+                    let mounted;
+                    if (!(mode & IterMode.IgnoreMounts) && (mounted = MountedTree.get(next)) && !mounted.overlay)
+                        return new TreeNode(mounted.tree, start, i, parent);
+                    let inner = new TreeNode(next, start, i, parent);
+                    return (mode & IterMode.IncludeAnonymous) || !inner.type.isAnonymous ? inner
+                        : inner.nextChild(dir < 0 ? next.children.length - 1 : 0, dir, pos, side, mode);
+                }
+            }
+            if ((mode & IterMode.IncludeAnonymous) || !parent.type.isAnonymous)
+                return null;
+            if (parent.index >= 0)
+                i = parent.index + dir;
+            else
+                i = dir < 0 ? -1 : parent._parent._tree.children.length;
+            parent = parent._parent;
+            if (!parent)
+                return null;
+        }
+    }
+    get firstChild() { return this.nextChild(0, 1, 0, 4 /* Side.DontCare */); }
+    get lastChild() { return this.nextChild(this._tree.children.length - 1, -1, 0, 4 /* Side.DontCare */); }
+    childAfter(pos) { return this.nextChild(0, 1, pos, 2 /* Side.After */); }
+    childBefore(pos) { return this.nextChild(this._tree.children.length - 1, -1, pos, -2 /* Side.Before */); }
+    prop(prop) { return this._tree.prop(prop); }
+    enter(pos, side, mode = 0) {
+        let mounted;
+        if (!(mode & IterMode.IgnoreOverlays) && (mounted = MountedTree.get(this._tree)) && mounted.overlay) {
+            let rPos = pos - this.from, enterBracketed = (mode & IterMode.EnterBracketed) && mounted.bracketed;
+            for (let { from, to } of mounted.overlay) {
+                if ((side > 0 || enterBracketed ? from <= rPos : from < rPos) &&
+                    (side < 0 || enterBracketed ? to >= rPos : to > rPos))
+                    return new TreeNode(mounted.tree, mounted.overlay[0].from + this.from, -1, this);
+            }
+        }
+        return this.nextChild(0, 1, pos, side, mode);
+    }
+    nextSignificantParent() {
+        let val = this;
+        while (val.type.isAnonymous && val._parent)
+            val = val._parent;
+        return val;
+    }
+    get parent() {
+        return this._parent ? this._parent.nextSignificantParent() : null;
+    }
+    get nextSibling() {
+        return this._parent && this.index >= 0 ? this._parent.nextChild(this.index + 1, 1, 0, 4 /* Side.DontCare */) : null;
+    }
+    get prevSibling() {
+        return this._parent && this.index >= 0 ? this._parent.nextChild(this.index - 1, -1, 0, 4 /* Side.DontCare */) : null;
+    }
+    get tree() { return this._tree; }
+    toTree() { return this._tree; }
+    /**
+    @internal
+    */
+    toString() { return this._tree.toString(); }
+}
+function getChildren(node, type, before, after) {
+    let cur = node.cursor(), result = [];
+    if (!cur.firstChild())
+        return result;
+    if (before != null)
+        for (let found = false; !found;) {
+            found = cur.type.is(before);
+            if (!cur.nextSibling())
+                return result;
+        }
+    for (;;) {
+        if (after != null && cur.type.is(after))
+            return result;
+        if (cur.type.is(type))
+            result.push(cur.node);
+        if (!cur.nextSibling())
+            return after == null ? result : [];
+    }
+}
+function matchNodeContext(node, context, i = context.length - 1) {
+    for (let p = node; i >= 0; p = p.parent) {
+        if (!p)
+            return false;
+        if (!p.type.isAnonymous) {
+            if (context[i] && context[i] != p.name)
+                return false;
+            i--;
+        }
+    }
+    return true;
+}
+class BufferContext {
+    constructor(parent, buffer, index, start) {
+        this.parent = parent;
+        this.buffer = buffer;
+        this.index = index;
+        this.start = start;
+    }
+}
+class BufferNode extends BaseNode {
+    get name() { return this.type.name; }
+    get from() { return this.context.start + this.context.buffer.buffer[this.index + 1]; }
+    get to() { return this.context.start + this.context.buffer.buffer[this.index + 2]; }
+    constructor(context, _parent, index) {
+        super();
+        this.context = context;
+        this._parent = _parent;
+        this.index = index;
+        this.type = context.buffer.set.types[context.buffer.buffer[index]];
+    }
+    child(dir, pos, side) {
+        let { buffer } = this.context;
+        let index = buffer.findChild(this.index + 4, buffer.buffer[this.index + 3], dir, pos - this.context.start, side);
+        return index < 0 ? null : new BufferNode(this.context, this, index);
+    }
+    get firstChild() { return this.child(1, 0, 4 /* Side.DontCare */); }
+    get lastChild() { return this.child(-1, 0, 4 /* Side.DontCare */); }
+    childAfter(pos) { return this.child(1, pos, 2 /* Side.After */); }
+    childBefore(pos) { return this.child(-1, pos, -2 /* Side.Before */); }
+    prop(prop) { return this.type.prop(prop); }
+    enter(pos, side, mode = 0) {
+        if (mode & IterMode.ExcludeBuffers)
+            return null;
+        let { buffer } = this.context;
+        let index = buffer.findChild(this.index + 4, buffer.buffer[this.index + 3], side > 0 ? 1 : -1, pos - this.context.start, side);
+        return index < 0 ? null : new BufferNode(this.context, this, index);
+    }
+    get parent() {
+        return this._parent || this.context.parent.nextSignificantParent();
+    }
+    externalSibling(dir) {
+        return this._parent ? null : this.context.parent.nextChild(this.context.index + dir, dir, 0, 4 /* Side.DontCare */);
+    }
+    get nextSibling() {
+        let { buffer } = this.context;
+        let after = buffer.buffer[this.index + 3];
+        if (after < (this._parent ? buffer.buffer[this._parent.index + 3] : buffer.buffer.length))
+            return new BufferNode(this.context, this._parent, after);
+        return this.externalSibling(1);
+    }
+    get prevSibling() {
+        let { buffer } = this.context;
+        let parentStart = this._parent ? this._parent.index + 4 : 0;
+        if (this.index == parentStart)
+            return this.externalSibling(-1);
+        return new BufferNode(this.context, this._parent, buffer.findChild(parentStart, this.index, -1, 0, 4 /* Side.DontCare */));
+    }
+    get tree() { return null; }
+    toTree() {
+        let children = [], positions = [];
+        let { buffer } = this.context;
+        let startI = this.index + 4, endI = buffer.buffer[this.index + 3];
+        if (endI > startI) {
+            let from = buffer.buffer[this.index + 1];
+            children.push(buffer.slice(startI, endI, from));
+            positions.push(0);
+        }
+        return new Tree(this.type, children, positions, this.to - this.from);
+    }
+    /**
+    @internal
+    */
+    toString() { return this.context.buffer.childString(this.index); }
+}
+function iterStack(heads) {
+    if (!heads.length)
+        return null;
+    let pick = 0, picked = heads[0];
+    for (let i = 1; i < heads.length; i++) {
+        let node = heads[i];
+        if (node.from > picked.from || node.to < picked.to) {
+            picked = node;
+            pick = i;
+        }
+    }
+    let next = picked instanceof TreeNode && picked.index < 0 ? null : picked.parent;
+    let newHeads = heads.slice();
+    if (next)
+        newHeads[pick] = next;
+    else
+        newHeads.splice(pick, 1);
+    return new StackIterator(newHeads, picked);
+}
+class StackIterator {
+    constructor(heads, node) {
+        this.heads = heads;
+        this.node = node;
+    }
+    get next() { return iterStack(this.heads); }
+}
+function stackIterator(tree, pos, side) {
+    let inner = tree.resolveInner(pos, side), layers = null;
+    for (let scan = inner instanceof TreeNode ? inner : inner.context.parent; scan; scan = scan.parent) {
+        if (scan.index < 0) { // This is an overlay root
+            let parent = scan.parent;
+            (layers || (layers = [inner])).push(parent.resolve(pos, side));
+            scan = parent;
+        }
+        else {
+            let mount = MountedTree.get(scan.tree);
+            // Relevant overlay branching off
+            if (mount && mount.overlay && mount.overlay[0].from <= pos && mount.overlay[mount.overlay.length - 1].to >= pos) {
+                let root = new TreeNode(mount.tree, mount.overlay[0].from + scan.from, -1, scan);
+                (layers || (layers = [inner])).push(resolveNode(root, pos, side, false));
+            }
+        }
+    }
+    return layers ? iterStack(layers) : inner;
+}
+/**
+A tree cursor object focuses on a given node in a syntax tree, and
+allows you to move to adjacent nodes.
+*/
+class TreeCursor {
+    /**
+    Shorthand for `.type.name`.
+    */
+    get name() { return this.type.name; }
+    /**
+    @internal
+    */
+    constructor(node, mode = 0) {
+        /**
+        @internal
+        */
+        this.buffer = null;
+        this.stack = [];
+        /**
+        @internal
+        */
+        this.index = 0;
+        this.bufferNode = null;
+        this.mode = mode & ~IterMode.EnterBracketed;
+        if (node instanceof TreeNode) {
+            this.yieldNode(node);
+        }
+        else {
+            this._tree = node.context.parent;
+            this.buffer = node.context;
+            for (let n = node._parent; n; n = n._parent)
+                this.stack.unshift(n.index);
+            this.bufferNode = node;
+            this.yieldBuf(node.index);
+        }
+    }
+    yieldNode(node) {
+        if (!node)
+            return false;
+        this._tree = node;
+        this.type = node.type;
+        this.from = node.from;
+        this.to = node.to;
+        return true;
+    }
+    yieldBuf(index, type) {
+        this.index = index;
+        let { start, buffer } = this.buffer;
+        this.type = type || buffer.set.types[buffer.buffer[index]];
+        this.from = start + buffer.buffer[index + 1];
+        this.to = start + buffer.buffer[index + 2];
+        return true;
+    }
+    /**
+    @internal
+    */
+    yield(node) {
+        if (!node)
+            return false;
+        if (node instanceof TreeNode) {
+            this.buffer = null;
+            return this.yieldNode(node);
+        }
+        this.buffer = node.context;
+        return this.yieldBuf(node.index, node.type);
+    }
+    /**
+    @internal
+    */
+    toString() {
+        return this.buffer ? this.buffer.buffer.childString(this.index) : this._tree.toString();
+    }
+    /**
+    @internal
+    */
+    enterChild(dir, pos, side) {
+        if (!this.buffer)
+            return this.yield(this._tree.nextChild(dir < 0 ? this._tree._tree.children.length - 1 : 0, dir, pos, side, this.mode));
+        let { buffer } = this.buffer;
+        let index = buffer.findChild(this.index + 4, buffer.buffer[this.index + 3], dir, pos - this.buffer.start, side);
+        if (index < 0)
+            return false;
+        this.stack.push(this.index);
+        return this.yieldBuf(index);
+    }
+    /**
+    Move the cursor to this node's first child. When this returns
+    false, the node has no child, and the cursor has not been moved.
+    */
+    firstChild() { return this.enterChild(1, 0, 4 /* Side.DontCare */); }
+    /**
+    Move the cursor to this node's last child.
+    */
+    lastChild() { return this.enterChild(-1, 0, 4 /* Side.DontCare */); }
+    /**
+    Move the cursor to the first child that ends after `pos`.
+    */
+    childAfter(pos) { return this.enterChild(1, pos, 2 /* Side.After */); }
+    /**
+    Move to the last child that starts before `pos`.
+    */
+    childBefore(pos) { return this.enterChild(-1, pos, -2 /* Side.Before */); }
+    /**
+    Move the cursor to the child around `pos`. If side is -1 the
+    child may end at that position, when 1 it may start there. This
+    will also enter [overlaid](#common.MountedTree.overlay)
+    [mounted](#common.NodeProp^mounted) trees unless `overlays` is
+    set to false.
+    */
+    enter(pos, side, mode = this.mode) {
+        if (!this.buffer)
+            return this.yield(this._tree.enter(pos, side, mode));
+        return mode & IterMode.ExcludeBuffers ? false : this.enterChild(1, pos, side);
+    }
+    /**
+    Move to the node's parent node, if this isn't the top node.
+    */
+    parent() {
+        if (!this.buffer)
+            return this.yieldNode((this.mode & IterMode.IncludeAnonymous) ? this._tree._parent : this._tree.parent);
+        if (this.stack.length)
+            return this.yieldBuf(this.stack.pop());
+        let parent = (this.mode & IterMode.IncludeAnonymous) ? this.buffer.parent : this.buffer.parent.nextSignificantParent();
+        this.buffer = null;
+        return this.yieldNode(parent);
+    }
+    /**
+    @internal
+    */
+    sibling(dir) {
+        if (!this.buffer)
+            return !this._tree._parent ? false
+                : this.yield(this._tree.index < 0 ? null
+                    : this._tree._parent.nextChild(this._tree.index + dir, dir, 0, 4 /* Side.DontCare */, this.mode));
+        let { buffer } = this.buffer, d = this.stack.length - 1;
+        if (dir < 0) {
+            let parentStart = d < 0 ? 0 : this.stack[d] + 4;
+            if (this.index != parentStart)
+                return this.yieldBuf(buffer.findChild(parentStart, this.index, -1, 0, 4 /* Side.DontCare */));
+        }
+        else {
+            let after = buffer.buffer[this.index + 3];
+            if (after < (d < 0 ? buffer.buffer.length : buffer.buffer[this.stack[d] + 3]))
+                return this.yieldBuf(after);
+        }
+        return d < 0 ? this.yield(this.buffer.parent.nextChild(this.buffer.index + dir, dir, 0, 4 /* Side.DontCare */, this.mode)) : false;
+    }
+    /**
+    Move to this node's next sibling, if any.
+    */
+    nextSibling() { return this.sibling(1); }
+    /**
+    Move to this node's previous sibling, if any.
+    */
+    prevSibling() { return this.sibling(-1); }
+    atLastNode(dir) {
+        let index, parent, { buffer } = this;
+        if (buffer) {
+            if (dir > 0) {
+                if (this.index < buffer.buffer.buffer.length)
+                    return false;
+            }
+            else {
+                for (let i = 0; i < this.index; i++)
+                    if (buffer.buffer.buffer[i + 3] < this.index)
+                        return false;
+            }
+            ({ index, parent } = buffer);
+        }
+        else {
+            ({ index, _parent: parent } = this._tree);
+        }
+        for (; parent; { index, _parent: parent } = parent) {
+            if (index > -1)
+                for (let i = index + dir, e = dir < 0 ? -1 : parent._tree.children.length; i != e; i += dir) {
+                    let child = parent._tree.children[i];
+                    if ((this.mode & IterMode.IncludeAnonymous) ||
+                        child instanceof TreeBuffer ||
+                        !child.type.isAnonymous ||
+                        hasChild(child))
+                        return false;
+                }
+        }
+        return true;
+    }
+    move(dir, enter) {
+        if (enter && this.enterChild(dir, 0, 4 /* Side.DontCare */))
+            return true;
+        for (;;) {
+            if (this.sibling(dir))
+                return true;
+            if (this.atLastNode(dir) || !this.parent())
+                return false;
+        }
+    }
+    /**
+    Move to the next node in a
+    [pre-order](https://en.wikipedia.org/wiki/Tree_traversal#Pre-order,_NLR)
+    traversal, going from a node to its first child or, if the
+    current node is empty or `enter` is false, its next sibling or
+    the next sibling of the first parent node that has one.
+    */
+    next(enter = true) { return this.move(1, enter); }
+    /**
+    Move to the next node in a last-to-first pre-order traversal. A
+    node is followed by its last child or, if it has none, its
+    previous sibling or the previous sibling of the first parent
+    node that has one.
+    */
+    prev(enter = true) { return this.move(-1, enter); }
+    /**
+    Move the cursor to the innermost node that covers `pos`. If
+    `side` is -1, it will enter nodes that end at `pos`. If it is 1,
+    it will enter nodes that start at `pos`.
+    */
+    moveTo(pos, side = 0) {
+        // Move up to a node that actually holds the position, if possible
+        while (this.from == this.to ||
+            (side < 1 ? this.from >= pos : this.from > pos) ||
+            (side > -1 ? this.to <= pos : this.to < pos))
+            if (!this.parent())
+                break;
+        // Then scan down into child nodes as far as possible
+        while (this.enterChild(1, pos, side)) { }
+        return this;
+    }
+    /**
+    Get a [syntax node](#common.SyntaxNode) at the cursor's current
+    position.
+    */
+    get node() {
+        if (!this.buffer)
+            return this._tree;
+        let cache = this.bufferNode, result = null, depth = 0;
+        if (cache && cache.context == this.buffer) {
+            scan: for (let index = this.index, d = this.stack.length; d >= 0;) {
+                for (let c = cache; c; c = c._parent)
+                    if (c.index == index) {
+                        if (index == this.index)
+                            return c;
+                        result = c;
+                        depth = d + 1;
+                        break scan;
+                    }
+                index = this.stack[--d];
+            }
+        }
+        for (let i = depth; i < this.stack.length; i++)
+            result = new BufferNode(this.buffer, result, this.stack[i]);
+        return this.bufferNode = new BufferNode(this.buffer, result, this.index);
+    }
+    /**
+    Get the [tree](#common.Tree) that represents the current node, if
+    any. Will return null when the node is in a [tree
+    buffer](#common.TreeBuffer).
+    */
+    get tree() {
+        return this.buffer ? null : this._tree._tree;
+    }
+    /**
+    Iterate over the current node and all its descendants, calling
+    `enter` when entering a node and `leave`, if given, when leaving
+    one. When `enter` returns `false`, any children of that node are
+    skipped, and `leave` isn't called for it.
+    */
+    iterate(enter, leave) {
+        for (let depth = 0;;) {
+            let mustLeave = false;
+            if (this.type.isAnonymous || enter(this) !== false) {
+                if (this.firstChild()) {
+                    depth++;
+                    continue;
+                }
+                if (!this.type.isAnonymous)
+                    mustLeave = true;
+            }
+            for (;;) {
+                if (mustLeave && leave)
+                    leave(this);
+                mustLeave = this.type.isAnonymous;
+                if (!depth)
+                    return;
+                if (this.nextSibling())
+                    break;
+                this.parent();
+                depth--;
+                mustLeave = true;
+            }
+        }
+    }
+    /**
+    Test whether the current node matches a given context—a sequence
+    of direct parent node names. Empty strings in the context array
+    are treated as wildcards.
+    */
+    matchContext(context) {
+        if (!this.buffer)
+            return matchNodeContext(this.node.parent, context);
+        let { buffer } = this.buffer, { types } = buffer.set;
+        for (let i = context.length - 1, d = this.stack.length - 1; i >= 0; d--) {
+            if (d < 0)
+                return matchNodeContext(this._tree, context, i);
+            let type = types[buffer.buffer[this.stack[d]]];
+            if (!type.isAnonymous) {
+                if (context[i] && context[i] != type.name)
+                    return false;
+                i--;
+            }
+        }
+        return true;
+    }
+}
+function hasChild(tree) {
+    return tree.children.some(ch => ch instanceof TreeBuffer || !ch.type.isAnonymous || hasChild(ch));
+}
+function buildTree(data) {
+    var _a;
+    let { buffer, nodeSet, maxBufferLength = DefaultBufferLength, reused = [], minRepeatType = nodeSet.types.length } = data;
+    let cursor = Array.isArray(buffer) ? new FlatBufferCursor(buffer, buffer.length) : buffer;
+    let types = nodeSet.types;
+    let contextHash = 0, lookAhead = 0;
+    function takeNode(parentStart, minPos, children, positions, inRepeat, depth) {
+        let { id, start, end, size } = cursor;
+        let lookAheadAtStart = lookAhead, contextAtStart = contextHash;
+        if (size < 0) {
+            cursor.next();
+            if (size == -1 /* SpecialRecord.Reuse */) {
+                let node = reused[id];
+                children.push(node);
+                positions.push(start - parentStart);
+                return;
+            }
+            else if (size == -3 /* SpecialRecord.ContextChange */) { // Context change
+                contextHash = id;
+                return;
+            }
+            else if (size == -4 /* SpecialRecord.LookAhead */) {
+                lookAhead = id;
+                return;
+            }
+            else {
+                throw new RangeError(`Unrecognized record size: ${size}`);
+            }
+        }
+        let type = types[id], node, buffer;
+        let startPos = start - parentStart;
+        if (end - start <= maxBufferLength && (buffer = findBufferSize(cursor.pos - minPos, inRepeat))) {
+            // Small enough for a buffer, and no reused nodes inside
+            let data = new Uint16Array(buffer.size - buffer.skip);
+            let endPos = cursor.pos - buffer.size, index = data.length;
+            while (cursor.pos > endPos)
+                index = copyToBuffer(buffer.start, data, index);
+            node = new TreeBuffer(data, end - buffer.start, nodeSet);
+            startPos = buffer.start - parentStart;
+        }
+        else { // Make it a node
+            let endPos = cursor.pos - size;
+            cursor.next();
+            let localChildren = [], localPositions = [];
+            let localInRepeat = id >= minRepeatType ? id : -1;
+            let lastGroup = 0, lastEnd = end;
+            while (cursor.pos > endPos) {
+                if (localInRepeat >= 0 && cursor.id == localInRepeat && cursor.size >= 0) {
+                    if (cursor.end <= lastEnd - maxBufferLength) {
+                        makeRepeatLeaf(localChildren, localPositions, start, lastGroup, cursor.end, lastEnd, localInRepeat, lookAheadAtStart, contextAtStart);
+                        lastGroup = localChildren.length;
+                        lastEnd = cursor.end;
+                    }
+                    cursor.next();
+                }
+                else if (depth > 2500 /* CutOff.Depth */) {
+                    takeFlatNode(start, endPos, localChildren, localPositions);
+                }
+                else {
+                    takeNode(start, endPos, localChildren, localPositions, localInRepeat, depth + 1);
+                }
+            }
+            if (localInRepeat >= 0 && lastGroup > 0 && lastGroup < localChildren.length)
+                makeRepeatLeaf(localChildren, localPositions, start, lastGroup, start, lastEnd, localInRepeat, lookAheadAtStart, contextAtStart);
+            localChildren.reverse();
+            localPositions.reverse();
+            if (localInRepeat > -1 && lastGroup > 0) {
+                let make = makeBalanced(type, contextAtStart);
+                node = balanceRange(type, localChildren, localPositions, 0, localChildren.length, 0, end - start, make, make);
+            }
+            else {
+                node = makeTree(type, localChildren, localPositions, end - start, lookAheadAtStart - end, contextAtStart);
+            }
+        }
+        children.push(node);
+        positions.push(startPos);
+    }
+    function takeFlatNode(parentStart, minPos, children, positions) {
+        let nodes = []; // Temporary, inverted array of leaf nodes found, with absolute positions
+        let nodeCount = 0, stopAt = -1;
+        while (cursor.pos > minPos) {
+            let { id, start, end, size } = cursor;
+            if (size > 4) { // Not a leaf
+                cursor.next();
+            }
+            else if (stopAt > -1 && start < stopAt) {
+                break;
+            }
+            else {
+                if (stopAt < 0)
+                    stopAt = end - maxBufferLength;
+                nodes.push(id, start, end);
+                nodeCount++;
+                cursor.next();
+            }
+        }
+        if (nodeCount) {
+            let buffer = new Uint16Array(nodeCount * 4);
+            let start = nodes[nodes.length - 2];
+            for (let i = nodes.length - 3, j = 0; i >= 0; i -= 3) {
+                buffer[j++] = nodes[i];
+                buffer[j++] = nodes[i + 1] - start;
+                buffer[j++] = nodes[i + 2] - start;
+                buffer[j++] = j;
+            }
+            children.push(new TreeBuffer(buffer, nodes[2] - start, nodeSet));
+            positions.push(start - parentStart);
+        }
+    }
+    function makeBalanced(type, contextHash) {
+        return (children, positions, length) => {
+            let lookAhead = 0, lastI = children.length - 1, last, lookAheadProp;
+            if (lastI >= 0 && (last = children[lastI]) instanceof Tree) {
+                if (!lastI && last.type == type && last.length == length)
+                    return last;
+                if (lookAheadProp = last.prop(NodeProp.lookAhead))
+                    lookAhead = positions[lastI] + last.length + lookAheadProp;
+            }
+            return makeTree(type, children, positions, length, lookAhead, contextHash);
+        };
+    }
+    function makeRepeatLeaf(children, positions, base, i, from, to, type, lookAhead, contextHash) {
+        let localChildren = [], localPositions = [];
+        while (children.length > i) {
+            localChildren.push(children.pop());
+            localPositions.push(positions.pop() + base - from);
+        }
+        children.push(makeTree(nodeSet.types[type], localChildren, localPositions, to - from, lookAhead - to, contextHash));
+        positions.push(from - base);
+    }
+    function makeTree(type, children, positions, length, lookAhead, contextHash, props) {
+        if (contextHash) {
+            let pair = [NodeProp.contextHash, contextHash];
+            props = props ? [pair].concat(props) : [pair];
+        }
+        if (lookAhead > 25) {
+            let pair = [NodeProp.lookAhead, lookAhead];
+            props = props ? [pair].concat(props) : [pair];
+        }
+        return new Tree(type, children, positions, length, props);
+    }
+    function findBufferSize(maxSize, inRepeat) {
+        // Scan through the buffer to find previous siblings that fit
+        // together in a TreeBuffer, and don't contain any reused nodes
+        // (which can't be stored in a buffer).
+        // If `inRepeat` is > -1, ignore node boundaries of that type for
+        // nesting, but make sure the end falls either at the start
+        // (`maxSize`) or before such a node.
+        let fork = cursor.fork();
+        let size = 0, start = 0, skip = 0, minStart = fork.end - maxBufferLength;
+        let result = { size: 0, start: 0, skip: 0 };
+        scan: for (let minPos = fork.pos - maxSize; fork.pos > minPos;) {
+            let nodeSize = fork.size;
+            // Pretend nested repeat nodes of the same type don't exist
+            if (fork.id == inRepeat && nodeSize >= 0) {
+                // Except that we store the current state as a valid return
+                // value.
+                result.size = size;
+                result.start = start;
+                result.skip = skip;
+                skip += 4;
+                size += 4;
+                fork.next();
+                continue;
+            }
+            let startPos = fork.pos - nodeSize;
+            if (nodeSize < 0 || startPos < minPos || fork.start < minStart)
+                break;
+            let localSkipped = fork.id >= minRepeatType ? 4 : 0;
+            let nodeStart = fork.start;
+            fork.next();
+            while (fork.pos > startPos) {
+                if (fork.size < 0) {
+                    if (fork.size == -3 /* SpecialRecord.ContextChange */ || fork.size == -4 /* SpecialRecord.LookAhead */)
+                        localSkipped += 4;
+                    else
+                        break scan;
+                }
+                else if (fork.id >= minRepeatType) {
+                    localSkipped += 4;
+                }
+                fork.next();
+            }
+            start = nodeStart;
+            size += nodeSize;
+            skip += localSkipped;
+        }
+        if (inRepeat < 0 || size == maxSize) {
+            result.size = size;
+            result.start = start;
+            result.skip = skip;
+        }
+        return result.size > 4 ? result : undefined;
+    }
+    function copyToBuffer(bufferStart, buffer, index) {
+        let { id, start, end, size } = cursor;
+        cursor.next();
+        if (size >= 0 && id < minRepeatType) {
+            let startIndex = index;
+            if (size > 4) {
+                let endPos = cursor.pos - (size - 4);
+                while (cursor.pos > endPos)
+                    index = copyToBuffer(bufferStart, buffer, index);
+            }
+            buffer[--index] = startIndex;
+            buffer[--index] = end - bufferStart;
+            buffer[--index] = start - bufferStart;
+            buffer[--index] = id;
+        }
+        else if (size == -3 /* SpecialRecord.ContextChange */) {
+            contextHash = id;
+        }
+        else if (size == -4 /* SpecialRecord.LookAhead */) {
+            lookAhead = id;
+        }
+        return index;
+    }
+    let children = [], positions = [];
+    while (cursor.pos > 0)
+        takeNode(data.start || 0, data.bufferStart || 0, children, positions, -1, 0);
+    let length = (_a = data.length) !== null && _a !== void 0 ? _a : (children.length ? positions[0] + children[0].length : 0);
+    return new Tree(types[data.topID], children.reverse(), positions.reverse(), length);
+}
+const nodeSizeCache = new WeakMap;
+function nodeSize(balanceType, node) {
+    if (!balanceType.isAnonymous || node instanceof TreeBuffer || node.type != balanceType)
+        return 1;
+    let size = nodeSizeCache.get(node);
+    if (size == null) {
+        size = 1;
+        for (let child of node.children) {
+            if (child.type != balanceType || !(child instanceof Tree)) {
+                size = 1;
+                break;
+            }
+            size += nodeSize(balanceType, child);
+        }
+        nodeSizeCache.set(node, size);
+    }
+    return size;
+}
+function balanceRange(
+// The type the balanced tree's inner nodes.
+balanceType, 
+// The direct children and their positions
+children, positions, 
+// The index range in children/positions to use
+from, to, 
+// The start position of the nodes, relative to their parent.
+start, 
+// Length of the outer node
+length, 
+// Function to build the top node of the balanced tree
+mkTop, 
+// Function to build internal nodes for the balanced tree
+mkTree) {
+    let total = 0;
+    for (let i = from; i < to; i++)
+        total += nodeSize(balanceType, children[i]);
+    let maxChild = Math.ceil((total * 1.5) / 8 /* Balance.BranchFactor */);
+    let localChildren = [], localPositions = [];
+    function divide(children, positions, from, to, offset) {
+        for (let i = from; i < to;) {
+            let groupFrom = i, groupStart = positions[i], groupSize = nodeSize(balanceType, children[i]);
+            i++;
+            for (; i < to; i++) {
+                let nextSize = nodeSize(balanceType, children[i]);
+                if (groupSize + nextSize >= maxChild)
+                    break;
+                groupSize += nextSize;
+            }
+            if (i == groupFrom + 1) {
+                if (groupSize > maxChild) {
+                    let only = children[groupFrom]; // Only trees can have a size > 1
+                    divide(only.children, only.positions, 0, only.children.length, positions[groupFrom] + offset);
+                    continue;
+                }
+                localChildren.push(children[groupFrom]);
+            }
+            else {
+                let length = positions[i - 1] + children[i - 1].length - groupStart;
+                localChildren.push(balanceRange(balanceType, children, positions, groupFrom, i, groupStart, length, null, mkTree));
+            }
+            localPositions.push(groupStart + offset - start);
+        }
+    }
+    divide(children, positions, from, to, 0);
+    return (mkTop || mkTree)(localChildren, localPositions, length);
+}
+/**
+Provides a way to associate values with pieces of trees. As long
+as that part of the tree is reused, the associated values can be
+retrieved from an updated tree.
+*/
+class NodeWeakMap {
+    constructor() {
+        this.map = new WeakMap();
+    }
+    setBuffer(buffer, index, value) {
+        let inner = this.map.get(buffer);
+        if (!inner)
+            this.map.set(buffer, inner = new Map);
+        inner.set(index, value);
+    }
+    getBuffer(buffer, index) {
+        let inner = this.map.get(buffer);
+        return inner && inner.get(index);
+    }
+    /**
+    Set the value for this syntax node.
+    */
+    set(node, value) {
+        if (node instanceof BufferNode)
+            this.setBuffer(node.context.buffer, node.index, value);
+        else if (node instanceof TreeNode)
+            this.map.set(node.tree, value);
+    }
+    /**
+    Retrieve value for this syntax node, if it exists in the map.
+    */
+    get(node) {
+        return node instanceof BufferNode ? this.getBuffer(node.context.buffer, node.index)
+            : node instanceof TreeNode ? this.map.get(node.tree) : undefined;
+    }
+    /**
+    Set the value for the node that a cursor currently points to.
+    */
+    cursorSet(cursor, value) {
+        if (cursor.buffer)
+            this.setBuffer(cursor.buffer.buffer, cursor.index, value);
+        else
+            this.map.set(cursor.tree, value);
+    }
+    /**
+    Retrieve the value for the node that a cursor currently points
+    to.
+    */
+    cursorGet(cursor) {
+        return cursor.buffer ? this.getBuffer(cursor.buffer.buffer, cursor.index) : this.map.get(cursor.tree);
+    }
+}
+
+/**
+Tree fragments are used during [incremental
+parsing](#common.Parser.startParse) to track parts of old trees
+that can be reused in a new parse. An array of fragments is used
+to track regions of an old tree whose nodes might be reused in new
+parses. Use the static
+[`applyChanges`](#common.TreeFragment^applyChanges) method to
+update fragments for document changes.
+*/
+class TreeFragment {
+    /**
+    Construct a tree fragment. You'll usually want to use
+    [`addTree`](#common.TreeFragment^addTree) and
+    [`applyChanges`](#common.TreeFragment^applyChanges) instead of
+    calling this directly.
+    */
+    constructor(
+    /**
+    The start of the unchanged range pointed to by this fragment.
+    This refers to an offset in the _updated_ document (as opposed
+    to the original tree).
+    */
+    from, 
+    /**
+    The end of the unchanged range.
+    */
+    to, 
+    /**
+    The tree that this fragment is based on.
+    */
+    tree, 
+    /**
+    The offset between the fragment's tree and the document that
+    this fragment can be used against. Add this when going from
+    document to tree positions, subtract it to go from tree to
+    document positions.
+    */
+    offset, openStart = false, openEnd = false) {
+        this.from = from;
+        this.to = to;
+        this.tree = tree;
+        this.offset = offset;
+        this.open = (openStart ? 1 /* Open.Start */ : 0) | (openEnd ? 2 /* Open.End */ : 0);
+    }
+    /**
+    Whether the start of the fragment represents the start of a
+    parse, or the end of a change. (In the second case, it may not
+    be safe to reuse some nodes at the start, depending on the
+    parsing algorithm.)
+    */
+    get openStart() { return (this.open & 1 /* Open.Start */) > 0; }
+    /**
+    Whether the end of the fragment represents the end of a
+    full-document parse, or the start of a change.
+    */
+    get openEnd() { return (this.open & 2 /* Open.End */) > 0; }
+    /**
+    Create a set of fragments from a freshly parsed tree, or update
+    an existing set of fragments by replacing the ones that overlap
+    with a tree with content from the new tree. When `partial` is
+    true, the parse is treated as incomplete, and the resulting
+    fragment has [`openEnd`](#common.TreeFragment.openEnd) set to
+    true.
+    */
+    static addTree(tree, fragments = [], partial = false) {
+        let result = [new TreeFragment(0, tree.length, tree, 0, false, partial)];
+        for (let f of fragments)
+            if (f.to > tree.length)
+                result.push(f);
+        return result;
+    }
+    /**
+    Apply a set of edits to an array of fragments, removing or
+    splitting fragments as necessary to remove edited ranges, and
+    adjusting offsets for fragments that moved.
+    */
+    static applyChanges(fragments, changes, minGap = 128) {
+        if (!changes.length)
+            return fragments;
+        let result = [];
+        let fI = 1, nextF = fragments.length ? fragments[0] : null;
+        for (let cI = 0, pos = 0, off = 0;; cI++) {
+            let nextC = cI < changes.length ? changes[cI] : null;
+            let nextPos = nextC ? nextC.fromA : 1e9;
+            if (nextPos - pos >= minGap)
+                while (nextF && nextF.from < nextPos) {
+                    let cut = nextF;
+                    if (pos >= cut.from || nextPos <= cut.to || off) {
+                        let fFrom = Math.max(cut.from, pos) - off, fTo = Math.min(cut.to, nextPos) - off;
+                        cut = fFrom >= fTo ? null : new TreeFragment(fFrom, fTo, cut.tree, cut.offset + off, cI > 0, !!nextC);
+                    }
+                    if (cut)
+                        result.push(cut);
+                    if (nextF.to > nextPos)
+                        break;
+                    nextF = fI < fragments.length ? fragments[fI++] : null;
+                }
+            if (!nextC)
+                break;
+            pos = nextC.toA;
+            off = nextC.toA - nextC.toB;
+        }
+        return result;
+    }
+}
+/**
+A superclass that parsers should extend.
+*/
+class Parser {
+    /**
+    Start a parse, returning a [partial parse](#common.PartialParse)
+    object. [`fragments`](#common.TreeFragment) can be passed in to
+    make the parse incremental.
+    
+    By default, the entire input is parsed. You can pass `ranges`,
+    which should be a sorted array of non-empty, non-overlapping
+    ranges, to parse only those ranges. The tree returned in that
+    case will start at `ranges[0].from`.
+    */
+    startParse(input, fragments, ranges) {
+        if (typeof input == "string")
+            input = new StringInput(input);
+        ranges = !ranges ? [new Range(0, input.length)] : ranges.length ? ranges.map(r => new Range(r.from, r.to)) : [new Range(0, 0)];
+        return this.createParse(input, fragments || [], ranges);
+    }
+    /**
+    Run a full parse, returning the resulting tree.
+    */
+    parse(input, fragments, ranges) {
+        let parse = this.startParse(input, fragments, ranges);
+        for (;;) {
+            let done = parse.advance();
+            if (done)
+                return done;
+        }
+    }
+}
+class StringInput {
+    constructor(string) {
+        this.string = string;
+    }
+    get length() { return this.string.length; }
+    chunk(from) { return this.string.slice(from); }
+    get lineChunks() { return false; }
+    read(from, to) { return this.string.slice(from, to); }
+}
+
+/**
+Create a parse wrapper that, after the inner parse completes,
+scans its tree for mixed language regions with the `nest`
+function, runs the resulting [inner parses](#common.NestedParse),
+and then [mounts](#common.NodeProp^mounted) their results onto the
+tree.
+*/
+function parseMixed(nest) {
+    return (parse, input, fragments, ranges) => new MixedParse(parse, nest, input, fragments, ranges);
+}
+class InnerParse {
+    constructor(parser, parse, overlay, bracketed, target, from) {
+        this.parser = parser;
+        this.parse = parse;
+        this.overlay = overlay;
+        this.bracketed = bracketed;
+        this.target = target;
+        this.from = from;
+    }
+}
+function checkRanges(ranges) {
+    if (!ranges.length || ranges.some(r => r.from >= r.to))
+        throw new RangeError("Invalid inner parse ranges given: " + JSON.stringify(ranges));
+}
+class ActiveOverlay {
+    constructor(parser, predicate, mounts, index, start, bracketed, target, prev) {
+        this.parser = parser;
+        this.predicate = predicate;
+        this.mounts = mounts;
+        this.index = index;
+        this.start = start;
+        this.bracketed = bracketed;
+        this.target = target;
+        this.prev = prev;
+        this.depth = 0;
+        this.ranges = [];
+    }
+}
+const stoppedInner = new NodeProp({ perNode: true });
+class MixedParse {
+    constructor(base, nest, input, fragments, ranges) {
+        this.nest = nest;
+        this.input = input;
+        this.fragments = fragments;
+        this.ranges = ranges;
+        this.inner = [];
+        this.innerDone = 0;
+        this.baseTree = null;
+        this.stoppedAt = null;
+        this.baseParse = base;
+    }
+    advance() {
+        if (this.baseParse) {
+            let done = this.baseParse.advance();
+            if (!done)
+                return null;
+            this.baseParse = null;
+            this.baseTree = done;
+            this.startInner();
+            if (this.stoppedAt != null)
+                for (let inner of this.inner)
+                    inner.parse.stopAt(this.stoppedAt);
+        }
+        if (this.innerDone == this.inner.length) {
+            let result = this.baseTree;
+            if (this.stoppedAt != null)
+                result = new Tree(result.type, result.children, result.positions, result.length, result.propValues.concat([[stoppedInner, this.stoppedAt]]));
+            return result;
+        }
+        let inner = this.inner[this.innerDone], done = inner.parse.advance();
+        if (done) {
+            this.innerDone++;
+            // This is a somewhat dodgy but super helpful hack where we
+            // patch up nodes created by the inner parse (and thus
+            // presumably not aliased anywhere else) to hold the information
+            // about the inner parse.
+            let props = Object.assign(Object.create(null), inner.target.props);
+            props[NodeProp.mounted.id] = new MountedTree(done, inner.overlay, inner.parser, inner.bracketed);
+            inner.target.props = props;
+        }
+        return null;
+    }
+    get parsedPos() {
+        if (this.baseParse)
+            return 0;
+        let pos = this.input.length;
+        for (let i = this.innerDone; i < this.inner.length; i++) {
+            if (this.inner[i].from < pos)
+                pos = Math.min(pos, this.inner[i].parse.parsedPos);
+        }
+        return pos;
+    }
+    stopAt(pos) {
+        this.stoppedAt = pos;
+        if (this.baseParse)
+            this.baseParse.stopAt(pos);
+        else
+            for (let i = this.innerDone; i < this.inner.length; i++)
+                this.inner[i].parse.stopAt(pos);
+    }
+    startInner() {
+        let fragmentCursor = new FragmentCursor(this.fragments);
+        let overlay = null;
+        let covered = null;
+        let cursor = new TreeCursor(new TreeNode(this.baseTree, this.ranges[0].from, 0, null), IterMode.IncludeAnonymous | IterMode.IgnoreMounts);
+        scan: for (let nest, isCovered;;) {
+            let enter = true, range;
+            if (this.stoppedAt != null && cursor.from >= this.stoppedAt) {
+                enter = false;
+            }
+            else if (fragmentCursor.hasNode(cursor)) {
+                if (overlay) {
+                    let match = overlay.mounts.find(m => m.frag.from <= cursor.from && m.frag.to >= cursor.to && m.mount.overlay);
+                    if (match)
+                        for (let r of match.mount.overlay) {
+                            let from = r.from + match.pos, to = r.to + match.pos;
+                            if (from >= cursor.from && to <= cursor.to && !overlay.ranges.some(r => r.from < to && r.to > from))
+                                overlay.ranges.push({ from, to });
+                        }
+                }
+                enter = false;
+            }
+            else if (covered && (isCovered = checkCover(covered.ranges, cursor.from, cursor.to))) {
+                enter = isCovered != 2 /* Cover.Full */;
+            }
+            else if (!cursor.type.isAnonymous && (nest = this.nest(cursor, this.input)) &&
+                (cursor.from < cursor.to || !nest.overlay)) {
+                if (!cursor.tree) {
+                    materialize(cursor);
+                    // materialize create one more level of nesting
+                    // we need to add depth to active overlay for going backwards
+                    if (overlay)
+                        overlay.depth++;
+                    if (covered)
+                        covered.depth++;
+                }
+                let oldMounts = fragmentCursor.findMounts(cursor.from, nest.parser);
+                if (typeof nest.overlay == "function") {
+                    overlay = new ActiveOverlay(nest.parser, nest.overlay, oldMounts, this.inner.length, cursor.from, !!nest.bracketed, cursor.tree, overlay);
+                }
+                else {
+                    let ranges = punchRanges(this.ranges, nest.overlay ||
+                        (cursor.from < cursor.to ? [new Range(cursor.from, cursor.to)] : []));
+                    if (ranges.length)
+                        checkRanges(ranges);
+                    if (ranges.length || !nest.overlay)
+                        this.inner.push(new InnerParse(nest.parser, ranges.length ? nest.parser.startParse(this.input, enterFragments(oldMounts, ranges), ranges)
+                            : nest.parser.startParse(""), nest.overlay ? nest.overlay.map(r => new Range(r.from - cursor.from, r.to - cursor.from)) : null, !!nest.bracketed, cursor.tree, ranges.length ? ranges[0].from : cursor.from));
+                    if (!nest.overlay)
+                        enter = false;
+                    else if (ranges.length)
+                        covered = { ranges, depth: 0, prev: covered };
+                }
+            }
+            else if (overlay && (range = overlay.predicate(cursor))) {
+                if (range === true)
+                    range = new Range(cursor.from, cursor.to);
+                if (range.from < range.to) {
+                    let last = overlay.ranges.length - 1;
+                    if (last >= 0 && overlay.ranges[last].to == range.from)
+                        overlay.ranges[last] = { from: overlay.ranges[last].from, to: range.to };
+                    else
+                        overlay.ranges.push(range);
+                }
+            }
+            if (enter && cursor.firstChild()) {
+                if (overlay)
+                    overlay.depth++;
+                if (covered)
+                    covered.depth++;
+            }
+            else {
+                for (;;) {
+                    if (cursor.nextSibling())
+                        break;
+                    if (!cursor.parent())
+                        break scan;
+                    if (overlay && !--overlay.depth) {
+                        let ranges = punchRanges(this.ranges, overlay.ranges);
+                        if (ranges.length) {
+                            checkRanges(ranges);
+                            this.inner.splice(overlay.index, 0, new InnerParse(overlay.parser, overlay.parser.startParse(this.input, enterFragments(overlay.mounts, ranges), ranges), overlay.ranges.map(r => new Range(r.from - overlay.start, r.to - overlay.start)), overlay.bracketed, overlay.target, ranges[0].from));
+                        }
+                        overlay = overlay.prev;
+                    }
+                    if (covered && !--covered.depth)
+                        covered = covered.prev;
+                }
+            }
+        }
+    }
+}
+function checkCover(covered, from, to) {
+    for (let range of covered) {
+        if (range.from >= to)
+            break;
+        if (range.to > from)
+            return range.from <= from && range.to >= to ? 2 /* Cover.Full */ : 1 /* Cover.Partial */;
+    }
+    return 0 /* Cover.None */;
+}
+// Take a piece of buffer and convert it into a stand-alone
+// TreeBuffer.
+function sliceBuf(buf, startI, endI, nodes, positions, off) {
+    if (startI < endI) {
+        let from = buf.buffer[startI + 1];
+        nodes.push(buf.slice(startI, endI, from));
+        positions.push(from - off);
+    }
+}
+// This function takes a node that's in a buffer, and converts it, and
+// its parent buffer nodes, into a Tree. This is again acting on the
+// assumption that the trees and buffers have been constructed by the
+// parse that was ran via the mix parser, and thus aren't shared with
+// any other code, making violations of the immutability safe.
+function materialize(cursor) {
+    let { node } = cursor, stack = [];
+    let buffer = node.context.buffer;
+    // Scan up to the nearest tree
+    do {
+        stack.push(cursor.index);
+        cursor.parent();
+    } while (!cursor.tree);
+    // Find the index of the buffer in that tree
+    let base = cursor.tree, i = base.children.indexOf(buffer);
+    let buf = base.children[i], b = buf.buffer, newStack = [i];
+    // Split a level in the buffer, putting the nodes before and after
+    // the child that contains `node` into new buffers.
+    function split(startI, endI, type, innerOffset, length, stackPos) {
+        let targetI = stack[stackPos];
+        let children = [], positions = [];
+        sliceBuf(buf, startI, targetI, children, positions, innerOffset);
+        let from = b[targetI + 1], to = b[targetI + 2];
+        newStack.push(children.length);
+        let child = stackPos
+            ? split(targetI + 4, b[targetI + 3], buf.set.types[b[targetI]], from, to - from, stackPos - 1)
+            : node.toTree();
+        children.push(child);
+        positions.push(from - innerOffset);
+        sliceBuf(buf, b[targetI + 3], endI, children, positions, innerOffset);
+        return new Tree(type, children, positions, length);
+    }
+    base.children[i] = split(0, b.length, NodeType.none, 0, buf.length, stack.length - 1);
+    // Move the cursor back to the target node
+    for (let index of newStack) {
+        let tree = cursor.tree.children[index], pos = cursor.tree.positions[index];
+        cursor.yield(new TreeNode(tree, pos + cursor.from, index, cursor._tree));
+    }
+}
+class StructureCursor {
+    constructor(root, offset) {
+        this.offset = offset;
+        this.done = false;
+        this.cursor = root.cursor(IterMode.IncludeAnonymous | IterMode.IgnoreMounts);
+    }
+    // Move to the first node (in pre-order) that starts at or after `pos`.
+    moveTo(pos) {
+        let { cursor } = this, p = pos - this.offset;
+        while (!this.done && cursor.from < p) {
+            if (cursor.to >= pos && cursor.enter(p, 1, IterMode.IgnoreOverlays | IterMode.ExcludeBuffers)) ;
+            else if (cursor.to <= pos) {
+                if (!cursor.next(false))
+                    this.done = true;
+                // Moved to next node
+            }
+            else {
+                break;
+            }
+        }
+    }
+    hasNode(cursor) {
+        this.moveTo(cursor.from);
+        if (!this.done && this.cursor.from + this.offset == cursor.from && this.cursor.tree) {
+            for (let tree = this.cursor.tree;;) {
+                if (tree == cursor.tree)
+                    return true;
+                if (tree.children.length && tree.positions[0] == 0 && tree.children[0] instanceof Tree)
+                    tree = tree.children[0];
+                else
+                    break;
+            }
+        }
+        return false;
+    }
+}
+class FragmentCursor {
+    constructor(fragments) {
+        var _a;
+        this.fragments = fragments;
+        this.curTo = 0;
+        this.fragI = 0;
+        if (fragments.length) {
+            let first = this.curFrag = fragments[0];
+            this.curTo = (_a = first.tree.prop(stoppedInner)) !== null && _a !== void 0 ? _a : first.to;
+            this.inner = new StructureCursor(first.tree, -first.offset);
+        }
+        else {
+            this.curFrag = this.inner = null;
+        }
+    }
+    hasNode(node) {
+        while (this.curFrag && node.from >= this.curTo)
+            this.nextFrag();
+        return this.curFrag && this.curFrag.from <= node.from && this.curTo >= node.to && this.inner.hasNode(node);
+    }
+    nextFrag() {
+        var _a;
+        this.fragI++;
+        if (this.fragI == this.fragments.length) {
+            this.curFrag = this.inner = null;
+        }
+        else {
+            let frag = this.curFrag = this.fragments[this.fragI];
+            this.curTo = (_a = frag.tree.prop(stoppedInner)) !== null && _a !== void 0 ? _a : frag.to;
+            this.inner = new StructureCursor(frag.tree, -frag.offset);
+        }
+    }
+    findMounts(pos, parser) {
+        var _a;
+        let result = [];
+        if (this.inner) {
+            this.inner.cursor.moveTo(pos, 1);
+            for (let pos = this.inner.cursor.node; pos; pos = pos.parent) {
+                let mount = (_a = pos.tree) === null || _a === void 0 ? void 0 : _a.prop(NodeProp.mounted);
+                if (mount && mount.parser == parser) {
+                    for (let i = this.fragI; i < this.fragments.length; i++) {
+                        let frag = this.fragments[i];
+                        if (frag.from >= pos.to)
+                            break;
+                        if (frag.tree == this.curFrag.tree)
+                            result.push({
+                                frag,
+                                pos: pos.from - frag.offset,
+                                mount
+                            });
+                    }
+                }
+            }
+        }
+        return result;
+    }
+}
+function punchRanges(outer, ranges) {
+    let copy = null, current = ranges;
+    for (let i = 1, j = 0; i < outer.length; i++) {
+        let gapFrom = outer[i - 1].to, gapTo = outer[i].from;
+        for (; j < current.length; j++) {
+            let r = current[j];
+            if (r.from >= gapTo)
+                break;
+            if (r.to <= gapFrom)
+                continue;
+            if (!copy)
+                current = copy = ranges.slice();
+            if (r.from < gapFrom) {
+                copy[j] = new Range(r.from, gapFrom);
+                if (r.to > gapTo)
+                    copy.splice(j + 1, 0, new Range(gapTo, r.to));
+            }
+            else if (r.to > gapTo) {
+                copy[j--] = new Range(gapTo, r.to);
+            }
+            else {
+                copy.splice(j--, 1);
+            }
+        }
+    }
+    return current;
+}
+function findCoverChanges(a, b, from, to) {
+    let iA = 0, iB = 0, inA = false, inB = false, pos = -1e9;
+    let result = [];
+    for (;;) {
+        let nextA = iA == a.length ? 1e9 : inA ? a[iA].to : a[iA].from;
+        let nextB = iB == b.length ? 1e9 : inB ? b[iB].to : b[iB].from;
+        if (inA != inB) {
+            let start = Math.max(pos, from), end = Math.min(nextA, nextB, to);
+            if (start < end)
+                result.push(new Range(start, end));
+        }
+        pos = Math.min(nextA, nextB);
+        if (pos == 1e9)
+            break;
+        if (nextA == pos) {
+            if (!inA)
+                inA = true;
+            else {
+                inA = false;
+                iA++;
+            }
+        }
+        if (nextB == pos) {
+            if (!inB)
+                inB = true;
+            else {
+                inB = false;
+                iB++;
+            }
+        }
+    }
+    return result;
+}
+// Given a number of fragments for the outer tree, and a set of ranges
+// to parse, find fragments for inner trees mounted around those
+// ranges, if any.
+function enterFragments(mounts, ranges) {
+    let result = [];
+    for (let { pos, mount, frag } of mounts) {
+        let startPos = pos + (mount.overlay ? mount.overlay[0].from : 0), endPos = startPos + mount.tree.length;
+        let from = Math.max(frag.from, startPos), to = Math.min(frag.to, endPos);
+        if (mount.overlay) {
+            let overlay = mount.overlay.map(r => new Range(r.from + pos, r.to + pos));
+            let changes = findCoverChanges(ranges, overlay, from, to);
+            for (let i = 0, pos = from;; i++) {
+                let last = i == changes.length, end = last ? to : changes[i].from;
+                if (end > pos)
+                    result.push(new TreeFragment(pos, end, mount.tree, -startPos, frag.from >= pos || frag.openStart, frag.to <= end || frag.openEnd));
+                if (last)
+                    break;
+                pos = changes[i].to;
+            }
+        }
+        else {
+            result.push(new TreeFragment(from, to, mount.tree, -startPos, frag.from >= startPos || frag.openStart, frag.to <= endPos || frag.openEnd));
+        }
+    }
+    return result;
+}
+
+
+
+
+/***/ },
+
+/***/ 2388
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   parseTurtle: () => (/* binding */ parseTurtle)
+/* harmony export */ });
+/* unused harmony exports termKey, quadKey, ProvenanceIndex, resolveIri */
+/* harmony import */ var _parser_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3881);
+/**
+ * RDF/JS quad emitter for the lezer-turtle parse tree, with source
+ * provenance tracked on the side.
+ *
+ * parseTurtle(text, {baseIRI, factory, dialect, blankNodePrefix}) returns
+ *   {quads, provenance, diagnostics, prefixes, base, tree}
+ * where provenance is a ProvenanceIndex: a multiset of quad *utterances*
+ * layered over the set of quads.  Quads stay plain RDF/JS objects (equality
+ * via .equals()); each utterance records the source ranges of the syntax
+ * that gave rise to each position:
+ *
+ *   {quad, subject: Range[], predicate: Range[], object: Range[], graph: Range[]}
+ *
+ * Ranges are {start, end} character offsets (UTF-16, as Lezer counts).
+ * Ranges come in arrays because a position's provenance can be split or
+ * synthetic: a blank node property list's subject is its whole  [ … ]
+ * bracket span, collection cell quads (rdf:first/rest) carry item and
+ * collection spans, and annotation-derived reification quads point at the
+ * ~reifier / {| … |} syntax.
+ *
+ * The index is keyed canonically (an N-Quads-shaped string), NOT by object
+ * identity — RDF/JS makes no same-object guarantee, and stores like
+ * N3.Store reconstruct quads on read — so looking up a quad you got back
+ * from a store works.
+ */
+
+
+
+const RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+const XSD = "http://www.w3.org/2001/XMLSchema#";
+
+// ── canonical keys ─────────────────────────────────────────────────────────
+function termKey (term) {
+  switch (term.termType) {
+  case "NamedNode": return `<${term.value}>`;
+  case "BlankNode": return `_:${term.value}`;
+  case "Literal": {
+    const val = `"${term.value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\r/g, "\\r")}"`;
+    if (term.language)
+      return val + "@" + term.language + (term.direction ? "--" + term.direction : "");
+    if (term.datatype && term.datatype.value !== XSD + "string")
+      return val + "^^<" + term.datatype.value + ">";
+    return val;
+  }
+  case "DefaultGraph": return "";
+  case "Variable": return "?" + term.value;
+  case "Quad": return `<<(${termKey(term.subject)} ${termKey(term.predicate)} ${termKey(term.object)})>>`;
+  default: throw Error("termKey: unknown termType " + term.termType);
+  }
+}
+
+function quadKey (quad) {
+  return `${termKey(quad.subject)} ${termKey(quad.predicate)} ${termKey(quad.object)} ${termKey(quad.graph)}`;
+}
+
+class ProvenanceIndex {
+  constructor () { this._map = new Map(); }
+
+  _add (quad, utterance) {
+    const key = quadKey(quad);
+    if (!this._map.has(key))
+      this._map.set(key, []);
+    this._map.get(key).push(utterance);
+  }
+
+  /** utterances of a quad (empty array if never uttered) */
+  get (quad) { return this._map.get(quadKey(quad)) || []; }
+
+  /** number of distinct quads uttered */
+  get size () { return this._map.size; }
+
+  [Symbol.iterator] () { return this._map.values(); }
+}
+
+// ── IRI resolution (RFC 3986, without WHATWG normalization) ───────────────
+function resolveIri (iri, base) {
+  if (/^[A-Za-z][A-Za-z0-9+.-]*:/.test(iri) || !base)
+    return iri;
+  const b = splitIri(base);
+  if (iri === "") return base;
+  if (iri.startsWith("#")) return b.scheme + b.authority + b.path + iri;
+  if (iri.startsWith("?")) return b.scheme + b.authority + b.path.replace(/\?.*/, "") + iri;
+  if (iri.startsWith("//")) return b.scheme + iri;
+  if (iri.startsWith("/")) return b.scheme + b.authority + removeDotSegments(iri);
+  const dir = b.path.replace(/\?.*/, "").replace(/[^/]*$/, "");
+  return b.scheme + b.authority + removeDotSegments(dir + iri);
+}
+function splitIri (iri) {
+  const m = iri.match(/^([A-Za-z][A-Za-z0-9+.-]*:)(\/\/[^/?#]*)?([^#]*)/);
+  return {scheme: m[1], authority: m[2] || "", path: m[3] || ""};
+}
+function removeDotSegments (path) {
+  const out = [];
+  for (const seg of path.split("/")) {
+    if (seg === ".") continue;
+    else if (seg === "..") { if (out.length > 1) out.pop(); }
+    else out.push(seg);
+  }
+  let ret = out.join("/");
+  if ((path.endsWith("/.") || path.endsWith("/..")) && !ret.endsWith("/")) ret += "/";
+  return ret;
+}
+
+// ── string unescaping ─────────────────────────────────────────────────────
+const echars = {t: "\t", b: "\b", n: "\n", r: "\r", f: "\f", '"': '"', "'": "'", "\\": "\\"};
+function unescapeString (s) {
+  return s.replace(/\\(?:u([0-9a-fA-F]{4})|U([0-9a-fA-F]{8})|(.))/g,
+                   (_, u4, u8, e) => u4 || u8
+                     ? String.fromCodePoint(parseInt(u4 || u8, 16))
+                     : echars[e] !== undefined ? echars[e] : e);
+}
+function unescapeIri (s) {
+  return s.replace(/\\(?:u([0-9a-fA-F]{4})|U([0-9a-fA-F]{8}))/g,
+                   (_, u4, u8) => String.fromCodePoint(parseInt(u4 || u8, 16)));
+}
+function unescapePnLocal (s) {
+  return s.replace(/\\([_~.\-!$&'()*+,;=/?#@%])/g, "$1");
+}
+
+// ── the emitter ────────────────────────────────────────────────────────────
+function parseTurtle (text, options = {}) {
+  if (!options.factory)
+    throw Error("parseTurtle: supply options.factory (an RDF/JS DataFactory, e.g. N3.DataFactory)");
+  const factory = options.factory;
+  const state = {
+    text,
+    factory,
+    base: options.baseIRI || null,
+    prefixes: Object.create(null),
+    bnodeN: 0,
+    bnodePrefix: options.blankNodePrefix !== undefined ? options.blankNodePrefix : "df_",
+    quads: [],
+    prov: new ProvenanceIndex(),
+    diagnostics: [],
+    graph: factory.defaultGraph(),
+    graphRanges: [],
+  };
+  const tree = _parser_js__WEBPACK_IMPORTED_MODULE_0__/* .parser */ .K.configure(options.dialect ? {dialect: options.dialect} : {}).parse(text);
+
+  // one tree-wide scan catches every error-recovery point, however nested
+  tree.iterate({enter: n => {
+    if (n.type.isError)
+      state.diagnostics.push({start: n.from, end: n.to, message: "syntax error"});
+  }});
+
+  for (let child = tree.topNode.firstChild; child; child = child.nextSibling) {
+    switch (child.name) {
+    case "Directive": directive(child.firstChild, state); break;
+    case "Triples": triples(child, state); break;
+    case "Block": block(child, state); break;
+    default:
+      if (child.type.isError) diagnose(state, child, "syntax error");
+    }
+  }
+
+  return {
+    quads: state.quads,
+    provenance: state.prov,
+    diagnostics: state.diagnostics,
+    prefixes: state.prefixes,
+    base: state.base,
+    tree,
+  };
+}
+
+function src (state, node) { return state.text.slice(node.from, node.to); }
+function range (node) { return {start: node.from, end: node.to}; }
+function freshBnode (state) { return state.factory.blankNode(state.bnodePrefix + state.bnodeN++); }
+
+function diagnose (state, node, message) {
+  state.diagnostics.push({start: node.from, end: node.to, message});
+}
+
+function directive (node, state) {
+  if (!node) return;
+  const iriNode = node.getChild("IRIREF");
+  switch (node.name) {
+  case "PrefixID": case "SparqlPrefix": {
+    const ns = node.getChild("PNAME_NS");
+    if (ns && iriNode)
+      state.prefixes[src(state, ns).slice(0, -1)] =
+        resolveIri(unescapeIri(src(state, iriNode).slice(1, -1)), state.base);
+    break;
+  }
+  case "Base": case "SparqlBase":
+    if (iriNode) {
+      const raw = unescapeIri(src(state, iriNode).slice(1, -1));
+      if (!/^[A-Za-z][A-Za-z0-9+.-]*:/.test(raw) && /^[^/?#]*:/.test(raw))
+        diagnose(state, iriNode, "colon in first path segment of relative IRI");
+      state.base = resolveIri(raw, state.base);
+    }
+    break;
+  case "Version": case "SparqlVersion": {
+    const spec = node.getChild("VersionSpecifier");
+    if (spec) {
+      const v = src(state, spec.firstChild).slice(1, -1);
+      if (!/^[0-9]+\.[0-9]+$/.test(v))
+        diagnose(state, spec, `unrecognized version "${v}"`);
+    }
+    break;
+  }
+  }
+}
+
+// names of nodes that evaluate to a term (the inlined `iri`, `literal` etc.
+// rules expose these directly)
+const termNodes = new Set([
+  "IRIREF", "PrefixedName", "BlankNode", "Collection", "BlankNodePropertyList",
+  "RDFLiteral", "NumericLiteral", "BooleanLiteral", "TripleTerm", "ReifiedTriple",
+]);
+
+/** evaluate any term-producing node to {term, ranges} */
+function term (node, state) {
+  const r = [range(node)];
+  switch (node.name) {
+  case "IRIREF": {
+    const raw = unescapeIri(src(state, node).slice(1, -1));
+    // RFC 3986: a relative reference's first path segment may not contain ":"
+    if (!/^[A-Za-z][A-Za-z0-9+.-]*:/.test(raw) && /^[^/?#]*:/.test(raw))
+      diagnose(state, node, "colon in first path segment of relative IRI");
+    return {term: state.factory.namedNode(resolveIri(raw, state.base)), ranges: r};
+  }
+  case "PrefixedName": {
+    const s = src(state, node);
+    const colon = s.indexOf(":");
+    const prefix = s.slice(0, colon), local = s.slice(colon + 1);
+    if (!(prefix in state.prefixes)) {
+      diagnose(state, node, `undefined prefix "${prefix}:"`);
+      return {term: state.factory.namedNode("urn:error:undefined-prefix:" + prefix), ranges: r};
+    }
+    return {term: state.factory.namedNode(state.prefixes[prefix] + unescapePnLocal(local)), ranges: r};
+  }
+  case "BlankNode": {
+    const label = node.getChild("BLANK_NODE_LABEL");
+    if (label)
+      return {term: state.factory.blankNode(src(state, label).slice(2)), ranges: r};
+    return {term: freshBnode(state), ranges: r}; // Anon
+  }
+  case "Collection": return collection(node, state);
+  case "BlankNodePropertyList": return blankNodePropertyList(node, state);
+  case "RDFLiteral": return rdfLiteral(node, state);
+  case "NumericLiteral": {
+    const tok = node.firstChild;
+    const dt = {INTEGER: "integer", DECIMAL: "decimal", DOUBLE: "double"}[tok.name];
+    return {term: state.factory.literal(src(state, tok), state.factory.namedNode(XSD + dt)), ranges: r};
+  }
+  case "BooleanLiteral":
+    return {term: state.factory.literal(src(state, node), state.factory.namedNode(XSD + "boolean")), ranges: r};
+  case "TripleTerm": return tripleTerm(node, state);
+  case "ReifiedTriple": return reifiedTriple(node, state);
+  default:
+    diagnose(state, node, `expected term, got ${node.name}`);
+    return {term: freshBnode(state), ranges: r};
+  }
+}
+
+function firstTermChild (node) {
+  for (let child = node.firstChild; child; child = child.nextSibling)
+    if (termNodes.has(child.name))
+      return child;
+  return null;
+}
+
+function emit (state, s, p, o, g) {
+  const quad = state.factory.quad(s.term, p.term, o.term, (g || {term: state.graph}).term);
+  state.quads.push(quad);
+  state.prov._add(quad, {
+    quad,
+    subject: s.ranges,
+    predicate: p.ranges,
+    object: o.ranges,
+    graph: g ? g.ranges : state.graphRanges,
+  });
+}
+
+function block (node, state) { // TriG
+  const wrapped = node.getChild("WrappedGraph");
+  const labelNode = firstTermChild(node); // labelOrSubject is inlined
+  const outerGraph = state.graph, outerRanges = state.graphRanges;
+  if (labelNode) {
+    const label = term(labelNode, state);
+    state.graph = label.term;
+    state.graphRanges = label.ranges;
+  }
+  if (wrapped)
+    for (let child = wrapped.firstChild; child; child = child.nextSibling)
+      if (child.name === "Triples")
+        triples(child, state);
+      else if (child.type.isError)
+        diagnose(state, child, "syntax error in graph block");
+  state.graph = outerGraph;
+  state.graphRanges = outerRanges;
+}
+
+function triples (node, state) {
+  let subject = null;
+  for (let child = node.firstChild; child; child = child.nextSibling) {
+    switch (child.name) {
+    case "Subject":
+      subject = term(child.firstChild, state);
+      break;
+    case "BlankNodePropertyList":
+    case "ReifiedTriple":
+      subject = term(child, state);
+      break;
+    case "PredicateObjectList":
+      predicateObjectList(child, state, subject);
+      break;
+    default:
+      if (child.type.isError) diagnose(state, child, "syntax error in triples");
+    }
+  }
+}
+
+function predicateObjectList (node, state, subject) {
+  let verb = null;
+  for (let child = node.firstChild; child; child = child.nextSibling) {
+    switch (child.name) {
+    case "Verb": verb = readVerb(child, state); break;
+    case "ObjectList": objectList(child, state, subject, verb); break;
+    default:
+      if (child.type.isError) diagnose(state, child, "syntax error in predicate-object list");
+    }
+  }
+}
+
+function readVerb (node, state) {
+  const type = node.getChild("RdfTypeKw");
+  if (type)
+    return {term: state.factory.namedNode(RDF + "type"), ranges: [range(type)]};
+  const pred = node.getChild("Predicate");
+  return term((pred || node).firstChild, state);
+}
+
+function objectList (node, state, subject, verb) {
+  let lastObject = null;
+  let lastReifier = null; // reifier available for a following annotation block
+  for (let child = node.firstChild; child; child = child.nextSibling) {
+    switch (child.name) {
+    case "Object":
+      lastObject = term(child.firstChild, state);
+      lastReifier = null;
+      emit(state, subject, verb, lastObject);
+      break;
+    case "Annotation":
+      for (let a = child.firstChild; a; a = a.nextSibling) {
+        if (a.name === "Reifier") {
+          lastReifier = annotationReifier(a, state, subject, verb, lastObject);
+        } else if (a.name === "AnnotationBlock") {
+          const reifier = lastReifier || annotationReifier(a, state, subject, verb, lastObject);
+          const pol = a.getChild("PredicateObjectList");
+          if (pol)
+            predicateObjectList(pol, state, reifier);
+          lastReifier = null;
+        }
+      }
+      break;
+    default:
+      if (child.type.isError) diagnose(state, child, "syntax error in object list");
+    }
+  }
+}
+
+/** emit `reifier rdf:reifies <<(s p o)>>` for a ~reifier or bare {| block */
+function annotationReifier (node, state, subject, verb, obj) {
+  const explicit = node.name === "Reifier" ? firstTermChild(node) : null;
+  const reifier = explicit
+        ? Object.assign(term(explicit, state), {ranges: [range(node)]})
+        : {term: freshBnode(state), ranges: [range(node)]};
+  const tt = {term: state.factory.quad(subject.term, verb.term, obj.term), ranges: obj.ranges};
+  emit(state, reifier,
+       {term: state.factory.namedNode(RDF + "reifies"), ranges: [range(node)]},
+       tt);
+  return reifier;
+}
+
+function blankNodePropertyList (node, state) {
+  const bnode = {term: freshBnode(state), ranges: [range(node)]};
+  const pol = node.getChild("PredicateObjectList");
+  if (pol)
+    predicateObjectList(pol, state, bnode);
+  return bnode;
+}
+
+function collection (node, state) {
+  const items = [];
+  for (let child = node.firstChild; child; child = child.nextSibling)
+    if (child.name === "Object")
+      items.push({node: child, value: term(child.firstChild, state)});
+  const nil = {term: state.factory.namedNode(RDF + "nil"), ranges: [range(node)]};
+  if (items.length === 0)
+    return nil;
+  let head = null, prev = null;
+  for (const item of items) {
+    const cell = {term: freshBnode(state), ranges: [range(item.node)]};
+    if (prev)
+      emit(state, prev, {term: state.factory.namedNode(RDF + "rest"), ranges: [range(node)]}, cell);
+    else
+      head = cell;
+    emit(state, cell, {term: state.factory.namedNode(RDF + "first"), ranges: [range(item.node)]}, item.value);
+    prev = cell;
+  }
+  emit(state, prev, {term: state.factory.namedNode(RDF + "rest"), ranges: [range(node)]}, nil);
+  return {term: head.term, ranges: [range(node)]};
+}
+
+function rdfLiteral (node, state) {
+  const r = [range(node)];
+  const str = node.getChild("String").firstChild;
+  const raw = src(state, str);
+  const long = str.name.includes("LONG");
+  const value = unescapeString(raw.slice(long ? 3 : 1, long ? -3 : -1));
+  const lang = node.getChild("LANG_DIR");
+  if (lang)
+    return {term: state.factory.literal(value, src(state, lang).slice(1)), ranges: r};
+  const dt = firstTermChild(node); // the ^^ iri
+  if (dt)
+    return {term: state.factory.literal(value, term(dt, state).term), ranges: r};
+  return {term: state.factory.literal(value), ranges: r};
+}
+
+/** collect [subjectTermNode, Verb, objectTermNode] of a TripleTerm/ReifiedTriple */
+function ttParts (node, state) {
+  let s = null, v = null, o = null;
+  for (let child = node.firstChild; child; child = child.nextSibling) {
+    if (child.name === "Verb")
+      v = readVerb(child, state);
+    else if (child.name === "Reifier")
+      continue;
+    else if (termNodes.has(child.name)) {
+      if (s === null && v === null) s = term(child, state);
+      else if (o === null) o = term(child, state);
+    }
+  }
+  return [s, v, o];
+}
+
+function tripleTerm (node, state) {
+  const [s, v, o] = ttParts(node, state);
+  if (s === null || v === null || o === null) {
+    diagnose(state, node, "incomplete triple term");
+    return {term: freshBnode(state), ranges: [range(node)]};
+  }
+  return {term: state.factory.quad(s.term, v.term, o.term), ranges: [range(node)]};
+}
+
+/** `<< s v o ~r? >>` evaluates to the reifier; emits r rdf:reifies <<(s v o)>> */
+function reifiedTriple (node, state) {
+  const reifierNode = node.getChild("Reifier");
+  // evaluate s/v/o first, but the Reifier's explicit term (if any) separately
+  let s = null, v = null, o = null;
+  for (let child = node.firstChild; child; child = child.nextSibling) {
+    if (child.name === "Verb")
+      v = readVerb(child, state);
+    else if (child.name === "Reifier")
+      break; // s v o precede the reifier
+    else if (termNodes.has(child.name)) {
+      if (v === null) s = term(child, state);
+      else o = term(child, state);
+    }
+  }
+  if (s === null || v === null || o === null) {
+    diagnose(state, node, "incomplete reified triple");
+    return {term: freshBnode(state), ranges: [range(node)]};
+  }
+  const explicit = reifierNode && firstTermChild(reifierNode);
+  const reifier = explicit
+        ? Object.assign(term(explicit, state), {ranges: [range(reifierNode)]})
+        : {term: freshBnode(state), ranges: [range(node)]};
+  const tt = {term: state.factory.quad(s.term, v.term, o.term), ranges: [range(node)]};
+  emit(state, reifier,
+       {term: state.factory.namedNode(RDF + "reifies"), ranges: [range(reifierNode || node)]},
+       tt);
+  return {term: reifier.term, ranges: [range(node)]};
+}
+
+
+/***/ },
+
+/***/ 1799
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  parser: () => (/* binding */ src_parser)
+});
+
+// UNUSED EXPORTS: ProvenanceIndex, parseTurtle, quadKey, resolveIri, termKey
+
+// EXTERNAL MODULE: ../../node_modules/@lezer/common/dist/index.js
+var dist = __webpack_require__(9066);
+;// ../../node_modules/@lezer/highlight/dist/index.js
+/* unused harmony import specifier */ var NodeProp;
+
+
+let nextTagID = 0;
+/**
+Highlighting tags are markers that denote a highlighting category.
+They are [associated](#highlight.styleTags) with parts of a syntax
+tree by a language mode, and then mapped to an actual CSS style by
+a [highlighter](#highlight.Highlighter).
+
+Because syntax tree node types and highlight styles have to be
+able to talk the same language, CodeMirror uses a mostly _closed_
+[vocabulary](#highlight.tags) of syntax tags (as opposed to
+traditional open string-based systems, which make it hard for
+highlighting themes to cover all the tokens produced by the
+various languages).
+
+It _is_ possible to [define](#highlight.Tag^define) your own
+highlighting tags for system-internal use (where you control both
+the language package and the highlighter), but such tags will not
+be picked up by regular highlighters (though you can derive them
+from standard tags to allow highlighters to fall back to those).
+*/
+class Tag {
+    /**
+    @internal
+    */
+    constructor(
+    /**
+    The optional name of the base tag @internal
+    */
+    name, 
+    /**
+    The set of this tag and all its parent tags, starting with
+    this one itself and sorted in order of decreasing specificity.
+    */
+    set, 
+    /**
+    The base unmodified tag that this one is based on, if it's
+    modified @internal
+    */
+    base, 
+    /**
+    The modifiers applied to this.base @internal
+    */
+    modified) {
+        this.name = name;
+        this.set = set;
+        this.base = base;
+        this.modified = modified;
+        /**
+        @internal
+        */
+        this.id = nextTagID++;
+    }
+    toString() {
+        let { name } = this;
+        for (let mod of this.modified)
+            if (mod.name)
+                name = `${mod.name}(${name})`;
+        return name;
+    }
+    static define(nameOrParent, parent) {
+        let name = typeof nameOrParent == "string" ? nameOrParent : "?";
+        if (nameOrParent instanceof Tag)
+            parent = nameOrParent;
+        if (parent === null || parent === void 0 ? void 0 : parent.base)
+            throw new Error("Can not derive from a modified tag");
+        let tag = new Tag(name, [], null, []);
+        tag.set.push(tag);
+        if (parent)
+            for (let t of parent.set)
+                tag.set.push(t);
+        return tag;
+    }
+    /**
+    Define a tag _modifier_, which is a function that, given a tag,
+    will return a tag that is a subtag of the original. Applying the
+    same modifier to a twice tag will return the same value (`m1(t1)
+    == m1(t1)`) and applying multiple modifiers will, regardless or
+    order, produce the same tag (`m1(m2(t1)) == m2(m1(t1))`).
+    
+    When multiple modifiers are applied to a given base tag, each
+    smaller set of modifiers is registered as a parent, so that for
+    example `m1(m2(m3(t1)))` is a subtype of `m1(m2(t1))`,
+    `m1(m3(t1)`, and so on.
+    */
+    static defineModifier(name) {
+        let mod = new Modifier(name);
+        return (tag) => {
+            if (tag.modified.indexOf(mod) > -1)
+                return tag;
+            return Modifier.get(tag.base || tag, tag.modified.concat(mod).sort((a, b) => a.id - b.id));
+        };
+    }
+}
+let nextModifierID = 0;
+class Modifier {
+    constructor(name) {
+        this.name = name;
+        this.instances = [];
+        this.id = nextModifierID++;
+    }
+    static get(base, mods) {
+        if (!mods.length)
+            return base;
+        let exists = mods[0].instances.find(t => t.base == base && sameArray(mods, t.modified));
+        if (exists)
+            return exists;
+        let set = [], tag = new Tag(base.name, set, base, mods);
+        for (let m of mods)
+            m.instances.push(tag);
+        let configs = powerSet(mods);
+        for (let parent of base.set)
+            if (!parent.modified.length)
+                for (let config of configs)
+                    set.push(Modifier.get(parent, config));
+        return tag;
+    }
+}
+function sameArray(a, b) {
+    return a.length == b.length && a.every((x, i) => x == b[i]);
+}
+function powerSet(array) {
+    let sets = [[]];
+    for (let i = 0; i < array.length; i++) {
+        for (let j = 0, e = sets.length; j < e; j++) {
+            sets.push(sets[j].concat(array[i]));
+        }
+    }
+    return sets.sort((a, b) => b.length - a.length);
+}
+/**
+This function is used to add a set of tags to a language syntax
+via [`NodeSet.extend`](#common.NodeSet.extend) or
+[`LRParser.configure`](#lr.LRParser.configure).
+
+The argument object maps node selectors to [highlighting
+tags](#highlight.Tag) or arrays of tags.
+
+Node selectors may hold one or more (space-separated) node paths.
+Such a path can be a [node name](#common.NodeType.name), or
+multiple node names (or `*` wildcards) separated by slash
+characters, as in `"Block/Declaration/VariableName"`. Such a path
+matches the final node but only if its direct parent nodes are the
+other nodes mentioned. A `*` in such a path matches any parent,
+but only a single level—wildcards that match multiple parents
+aren't supported, both for efficiency reasons and because Lezer
+trees make it rather hard to reason about what they would match.)
+
+A path can be ended with `/...` to indicate that the tag assigned
+to the node should also apply to all child nodes, even if they
+match their own style (by default, only the innermost style is
+used).
+
+When a path ends in `!`, as in `Attribute!`, no further matching
+happens for the node's child nodes, and the entire node gets the
+given style.
+
+In this notation, node names that contain `/`, `!`, `*`, or `...`
+must be quoted as JSON strings.
+
+For example:
+
+```javascript
+parser.configure({props: [
+  styleTags({
+    // Style Number and BigNumber nodes
+    "Number BigNumber": tags.number,
+    // Style Escape nodes whose parent is String
+    "String/Escape": tags.escape,
+    // Style anything inside Attributes nodes
+    "Attributes!": tags.meta,
+    // Add a style to all content inside Italic nodes
+    "Italic/...": tags.emphasis,
+    // Style InvalidString nodes as both `string` and `invalid`
+    "InvalidString": [tags.string, tags.invalid],
+    // Style the node named "/" as punctuation
+    '"/"': tags.punctuation
+  })
+]})
+```
+*/
+function styleTags(spec) {
+    let byName = Object.create(null);
+    for (let prop in spec) {
+        let tags = spec[prop];
+        if (!Array.isArray(tags))
+            tags = [tags];
+        for (let part of prop.split(" "))
+            if (part) {
+                let pieces = [], mode = 2 /* Mode.Normal */, rest = part;
+                for (let pos = 0;;) {
+                    if (rest == "..." && pos > 0 && pos + 3 == part.length) {
+                        mode = 1 /* Mode.Inherit */;
+                        break;
+                    }
+                    let m = /^"(?:[^"\\]|\\.)*?"|[^\/!]+/.exec(rest);
+                    if (!m)
+                        throw new RangeError("Invalid path: " + part);
+                    pieces.push(m[0] == "*" ? "" : m[0][0] == '"' ? JSON.parse(m[0]) : m[0]);
+                    pos += m[0].length;
+                    if (pos == part.length)
+                        break;
+                    let next = part[pos++];
+                    if (pos == part.length && next == "!") {
+                        mode = 0 /* Mode.Opaque */;
+                        break;
+                    }
+                    if (next != "/")
+                        throw new RangeError("Invalid path: " + part);
+                    rest = part.slice(pos);
+                }
+                let last = pieces.length - 1, inner = pieces[last];
+                if (!inner)
+                    throw new RangeError("Invalid path: " + part);
+                let rule = new Rule(tags, mode, last > 0 ? pieces.slice(0, last) : null);
+                byName[inner] = rule.sort(byName[inner]);
+            }
+    }
+    return ruleNodeProp.add(byName);
+}
+const ruleNodeProp = new dist/* NodeProp */.uY({
+    combine(a, b) {
+        let cur, root, take;
+        while (a || b) {
+            if (!a || b && a.depth >= b.depth) {
+                take = b;
+                b = b.next;
+            }
+            else {
+                take = a;
+                a = a.next;
+            }
+            if (cur && cur.mode == take.mode && !take.context && !cur.context)
+                continue;
+            let copy = new Rule(take.tags, take.mode, take.context);
+            if (cur)
+                cur.next = copy;
+            else
+                root = copy;
+            cur = copy;
+        }
+        return root;
+    }
+});
+class Rule {
+    constructor(tags, mode, context, next) {
+        this.tags = tags;
+        this.mode = mode;
+        this.context = context;
+        this.next = next;
+    }
+    get opaque() { return this.mode == 0 /* Mode.Opaque */; }
+    get inherit() { return this.mode == 1 /* Mode.Inherit */; }
+    sort(other) {
+        if (!other || other.depth < this.depth) {
+            this.next = other;
+            return this;
+        }
+        other.next = this.sort(other.next);
+        return other;
+    }
+    get depth() { return this.context ? this.context.length : 0; }
+}
+Rule.empty = new Rule([], 2 /* Mode.Normal */, null);
+/**
+Define a [highlighter](#highlight.Highlighter) from an array of
+tag/class pairs. Classes associated with more specific tags will
+take precedence.
+*/
+function tagHighlighter(tags, options) {
+    let map = Object.create(null);
+    for (let style of tags) {
+        if (!Array.isArray(style.tag))
+            map[style.tag.id] = style.class;
+        else
+            for (let tag of style.tag)
+                map[tag.id] = style.class;
+    }
+    let { scope, all = null } = options || {};
+    return {
+        style: (tags) => {
+            let cls = all;
+            for (let tag of tags) {
+                for (let sub of tag.set) {
+                    let tagClass = map[sub.id];
+                    if (tagClass) {
+                        cls = cls ? cls + " " + tagClass : tagClass;
+                        break;
+                    }
+                }
+            }
+            return cls;
+        },
+        scope
+    };
+}
+function highlightTags(highlighters, tags) {
+    let result = null;
+    for (let highlighter of highlighters) {
+        let value = highlighter.style(tags);
+        if (value)
+            result = result ? result + " " + value : value;
+    }
+    return result;
+}
+/**
+Highlight the given [tree](#common.Tree) with the given
+[highlighter](#highlight.Highlighter). Often, the higher-level
+[`highlightCode`](#highlight.highlightCode) function is easier to
+use.
+*/
+function highlightTree(tree, highlighter, 
+/**
+Assign styling to a region of the text. Will be called, in order
+of position, for any ranges where more than zero classes apply.
+`classes` is a space separated string of CSS classes.
+*/
+putStyle, 
+/**
+The start of the range to highlight.
+*/
+from = 0, 
+/**
+The end of the range.
+*/
+to = tree.length) {
+    let builder = new HighlightBuilder(from, Array.isArray(highlighter) ? highlighter : [highlighter], putStyle);
+    builder.highlightRange(tree.cursor(), from, to, "", builder.highlighters);
+    builder.flush(to);
+}
+/**
+Highlight the given tree with the given highlighter, calling
+`putText` for every piece of text, either with a set of classes or
+with the empty string when unstyled, and `putBreak` for every line
+break.
+*/
+function highlightCode(code, tree, highlighter, putText, putBreak, from = 0, to = code.length) {
+    let pos = from;
+    function writeTo(p, classes) {
+        if (p <= pos)
+            return;
+        for (let text = code.slice(pos, p), i = 0;;) {
+            let nextBreak = text.indexOf("\n", i);
+            let upto = nextBreak < 0 ? text.length : nextBreak;
+            if (upto > i)
+                putText(text.slice(i, upto), classes);
+            if (nextBreak < 0)
+                break;
+            putBreak();
+            i = nextBreak + 1;
+        }
+        pos = p;
+    }
+    highlightTree(tree, highlighter, (from, to, classes) => {
+        writeTo(from, "");
+        writeTo(to, classes);
+    }, from, to);
+    writeTo(to, "");
+}
+class HighlightBuilder {
+    constructor(at, highlighters, span) {
+        this.at = at;
+        this.highlighters = highlighters;
+        this.span = span;
+        this.class = "";
+    }
+    startSpan(at, cls) {
+        if (cls != this.class) {
+            this.flush(at);
+            if (at > this.at)
+                this.at = at;
+            this.class = cls;
+        }
+    }
+    flush(to) {
+        if (to > this.at && this.class)
+            this.span(this.at, to, this.class);
+    }
+    highlightRange(cursor, from, to, inheritedClass, highlighters) {
+        let { type, from: start, to: end } = cursor;
+        if (start >= to || end <= from)
+            return;
+        if (type.isTop)
+            highlighters = this.highlighters.filter(h => !h.scope || h.scope(type));
+        let cls = inheritedClass;
+        let rule = getStyleTags(cursor) || Rule.empty;
+        let tagCls = highlightTags(highlighters, rule.tags);
+        if (tagCls) {
+            if (cls)
+                cls += " ";
+            cls += tagCls;
+            if (rule.mode == 1 /* Mode.Inherit */)
+                inheritedClass += (inheritedClass ? " " : "") + tagCls;
+        }
+        this.startSpan(Math.max(from, start), cls);
+        if (rule.opaque)
+            return;
+        let mounted = cursor.tree && cursor.tree.prop(NodeProp.mounted);
+        if (mounted && mounted.overlay) {
+            let inner = cursor.node.enter(mounted.overlay[0].from + start, 1);
+            let innerHighlighters = this.highlighters.filter(h => !h.scope || h.scope(mounted.tree.type));
+            let hasChild = cursor.firstChild();
+            for (let i = 0, pos = start;; i++) {
+                let next = i < mounted.overlay.length ? mounted.overlay[i] : null;
+                let nextPos = next ? next.from + start : end;
+                let rangeFrom = Math.max(from, pos), rangeTo = Math.min(to, nextPos);
+                if (rangeFrom < rangeTo && hasChild) {
+                    while (cursor.from < rangeTo) {
+                        this.highlightRange(cursor, rangeFrom, rangeTo, inheritedClass, highlighters);
+                        this.startSpan(Math.min(rangeTo, cursor.to), cls);
+                        if (cursor.to >= nextPos || !cursor.nextSibling())
+                            break;
+                    }
+                }
+                if (!next || nextPos > to)
+                    break;
+                pos = next.to + start;
+                if (pos > from) {
+                    this.highlightRange(inner.cursor(), Math.max(from, next.from + start), Math.min(to, pos), "", innerHighlighters);
+                    this.startSpan(Math.min(to, pos), cls);
+                }
+            }
+            if (hasChild)
+                cursor.parent();
+        }
+        else if (cursor.firstChild()) {
+            if (mounted)
+                inheritedClass = "";
+            do {
+                if (cursor.to <= from)
+                    continue;
+                if (cursor.from >= to)
+                    break;
+                this.highlightRange(cursor, from, to, inheritedClass, highlighters);
+                this.startSpan(Math.min(to, cursor.to), cls);
+            } while (cursor.nextSibling());
+            cursor.parent();
+        }
+    }
+}
+/**
+Match a syntax node's [highlight rules](#highlight.styleTags). If
+there's a match, return its set of tags, and whether it is
+opaque (uses a `!`) or applies to all child nodes (`/...`).
+*/
+function getStyleTags(node) {
+    let rule = node.type.prop(ruleNodeProp);
+    while (rule && rule.context && !node.matchContext(rule.context))
+        rule = rule.next;
+    return rule || null;
+}
+const t = Tag.define;
+const comment = t(), dist_name = t(), typeName = t(dist_name), propertyName = t(dist_name), literal = t(), string = t(literal), number = t(literal), content = t(), heading = t(content), keyword = t(), operator = t(), punctuation = t(), bracket = t(punctuation), meta = t();
+/**
+The default set of highlighting [tags](#highlight.Tag).
+
+This collection is heavily biased towards programming languages,
+and necessarily incomplete. A full ontology of syntactic
+constructs would fill a stack of books, and be impractical to
+write themes for. So try to make do with this set. If all else
+fails, [open an
+issue](https://github.com/codemirror/codemirror.next) to propose a
+new tag, or [define](#highlight.Tag^define) a local custom tag for
+your use case.
+
+Note that it is not obligatory to always attach the most specific
+tag possible to an element—if your grammar can't easily
+distinguish a certain type of element (such as a local variable),
+it is okay to style it as its more general variant (a variable).
+
+For tags that extend some parent tag, the documentation links to
+the parent.
+*/
+const tags = {
+    /**
+    A comment.
+    */
+    comment,
+    /**
+    A line [comment](#highlight.tags.comment).
+    */
+    lineComment: t(comment),
+    /**
+    A block [comment](#highlight.tags.comment).
+    */
+    blockComment: t(comment),
+    /**
+    A documentation [comment](#highlight.tags.comment).
+    */
+    docComment: t(comment),
+    /**
+    Any kind of identifier.
+    */
+    name: dist_name,
+    /**
+    The [name](#highlight.tags.name) of a variable.
+    */
+    variableName: t(dist_name),
+    /**
+    A type [name](#highlight.tags.name).
+    */
+    typeName: typeName,
+    /**
+    A tag name (subtag of [`typeName`](#highlight.tags.typeName)).
+    */
+    tagName: t(typeName),
+    /**
+    A property or field [name](#highlight.tags.name).
+    */
+    propertyName: propertyName,
+    /**
+    An attribute name (subtag of [`propertyName`](#highlight.tags.propertyName)).
+    */
+    attributeName: t(propertyName),
+    /**
+    The [name](#highlight.tags.name) of a class.
+    */
+    className: t(dist_name),
+    /**
+    A label [name](#highlight.tags.name).
+    */
+    labelName: t(dist_name),
+    /**
+    A namespace [name](#highlight.tags.name).
+    */
+    namespace: t(dist_name),
+    /**
+    The [name](#highlight.tags.name) of a macro.
+    */
+    macroName: t(dist_name),
+    /**
+    A literal value.
+    */
+    literal,
+    /**
+    A string [literal](#highlight.tags.literal).
+    */
+    string,
+    /**
+    A documentation [string](#highlight.tags.string).
+    */
+    docString: t(string),
+    /**
+    A character literal (subtag of [string](#highlight.tags.string)).
+    */
+    character: t(string),
+    /**
+    An attribute value (subtag of [string](#highlight.tags.string)).
+    */
+    attributeValue: t(string),
+    /**
+    A number [literal](#highlight.tags.literal).
+    */
+    number,
+    /**
+    An integer [number](#highlight.tags.number) literal.
+    */
+    integer: t(number),
+    /**
+    A floating-point [number](#highlight.tags.number) literal.
+    */
+    float: t(number),
+    /**
+    A boolean [literal](#highlight.tags.literal).
+    */
+    bool: t(literal),
+    /**
+    Regular expression [literal](#highlight.tags.literal).
+    */
+    regexp: t(literal),
+    /**
+    An escape [literal](#highlight.tags.literal), for example a
+    backslash escape in a string.
+    */
+    escape: t(literal),
+    /**
+    A color [literal](#highlight.tags.literal).
+    */
+    color: t(literal),
+    /**
+    A URL [literal](#highlight.tags.literal).
+    */
+    url: t(literal),
+    /**
+    A language keyword.
+    */
+    keyword,
+    /**
+    The [keyword](#highlight.tags.keyword) for the self or this
+    object.
+    */
+    self: t(keyword),
+    /**
+    The [keyword](#highlight.tags.keyword) for null.
+    */
+    null: t(keyword),
+    /**
+    A [keyword](#highlight.tags.keyword) denoting some atomic value.
+    */
+    atom: t(keyword),
+    /**
+    A [keyword](#highlight.tags.keyword) that represents a unit.
+    */
+    unit: t(keyword),
+    /**
+    A modifier [keyword](#highlight.tags.keyword).
+    */
+    modifier: t(keyword),
+    /**
+    A [keyword](#highlight.tags.keyword) that acts as an operator.
+    */
+    operatorKeyword: t(keyword),
+    /**
+    A control-flow related [keyword](#highlight.tags.keyword).
+    */
+    controlKeyword: t(keyword),
+    /**
+    A [keyword](#highlight.tags.keyword) that defines something.
+    */
+    definitionKeyword: t(keyword),
+    /**
+    A [keyword](#highlight.tags.keyword) related to defining or
+    interfacing with modules.
+    */
+    moduleKeyword: t(keyword),
+    /**
+    An operator.
+    */
+    operator,
+    /**
+    An [operator](#highlight.tags.operator) that dereferences something.
+    */
+    derefOperator: t(operator),
+    /**
+    Arithmetic-related [operator](#highlight.tags.operator).
+    */
+    arithmeticOperator: t(operator),
+    /**
+    Logical [operator](#highlight.tags.operator).
+    */
+    logicOperator: t(operator),
+    /**
+    Bit [operator](#highlight.tags.operator).
+    */
+    bitwiseOperator: t(operator),
+    /**
+    Comparison [operator](#highlight.tags.operator).
+    */
+    compareOperator: t(operator),
+    /**
+    [Operator](#highlight.tags.operator) that updates its operand.
+    */
+    updateOperator: t(operator),
+    /**
+    [Operator](#highlight.tags.operator) that defines something.
+    */
+    definitionOperator: t(operator),
+    /**
+    Type-related [operator](#highlight.tags.operator).
+    */
+    typeOperator: t(operator),
+    /**
+    Control-flow [operator](#highlight.tags.operator).
+    */
+    controlOperator: t(operator),
+    /**
+    Program or markup punctuation.
+    */
+    punctuation,
+    /**
+    [Punctuation](#highlight.tags.punctuation) that separates
+    things.
+    */
+    separator: t(punctuation),
+    /**
+    Bracket-style [punctuation](#highlight.tags.punctuation).
+    */
+    bracket,
+    /**
+    Angle [brackets](#highlight.tags.bracket) (usually `<` and `>`
+    tokens).
+    */
+    angleBracket: t(bracket),
+    /**
+    Square [brackets](#highlight.tags.bracket) (usually `[` and `]`
+    tokens).
+    */
+    squareBracket: t(bracket),
+    /**
+    Parentheses (usually `(` and `)` tokens). Subtag of
+    [bracket](#highlight.tags.bracket).
+    */
+    paren: t(bracket),
+    /**
+    Braces (usually `{` and `}` tokens). Subtag of
+    [bracket](#highlight.tags.bracket).
+    */
+    brace: t(bracket),
+    /**
+    Content, for example plain text in XML or markup documents.
+    */
+    content,
+    /**
+    [Content](#highlight.tags.content) that represents a heading.
+    */
+    heading,
+    /**
+    A level 1 [heading](#highlight.tags.heading).
+    */
+    heading1: t(heading),
+    /**
+    A level 2 [heading](#highlight.tags.heading).
+    */
+    heading2: t(heading),
+    /**
+    A level 3 [heading](#highlight.tags.heading).
+    */
+    heading3: t(heading),
+    /**
+    A level 4 [heading](#highlight.tags.heading).
+    */
+    heading4: t(heading),
+    /**
+    A level 5 [heading](#highlight.tags.heading).
+    */
+    heading5: t(heading),
+    /**
+    A level 6 [heading](#highlight.tags.heading).
+    */
+    heading6: t(heading),
+    /**
+    A prose [content](#highlight.tags.content) separator (such as a horizontal rule).
+    */
+    contentSeparator: t(content),
+    /**
+    [Content](#highlight.tags.content) that represents a list.
+    */
+    list: t(content),
+    /**
+    [Content](#highlight.tags.content) that represents a quote.
+    */
+    quote: t(content),
+    /**
+    [Content](#highlight.tags.content) that is emphasized.
+    */
+    emphasis: t(content),
+    /**
+    [Content](#highlight.tags.content) that is styled strong.
+    */
+    strong: t(content),
+    /**
+    [Content](#highlight.tags.content) that is part of a link.
+    */
+    link: t(content),
+    /**
+    [Content](#highlight.tags.content) that is styled as code or
+    monospace.
+    */
+    monospace: t(content),
+    /**
+    [Content](#highlight.tags.content) that has a strike-through
+    style.
+    */
+    strikethrough: t(content),
+    /**
+    Inserted text in a change-tracking format.
+    */
+    inserted: t(),
+    /**
+    Deleted text.
+    */
+    deleted: t(),
+    /**
+    Changed text.
+    */
+    changed: t(),
+    /**
+    An invalid or unsyntactic element.
+    */
+    invalid: t(),
+    /**
+    Metadata or meta-instruction.
+    */
+    meta,
+    /**
+    [Metadata](#highlight.tags.meta) that applies to the entire
+    document.
+    */
+    documentMeta: t(meta),
+    /**
+    [Metadata](#highlight.tags.meta) that annotates or adds
+    attributes to a given syntactic element.
+    */
+    annotation: t(meta),
+    /**
+    Processing instruction or preprocessor directive. Subtag of
+    [meta](#highlight.tags.meta).
+    */
+    processingInstruction: t(meta),
+    /**
+    [Modifier](#highlight.Tag^defineModifier) that indicates that a
+    given element is being defined. Expected to be used with the
+    various [name](#highlight.tags.name) tags.
+    */
+    definition: Tag.defineModifier("definition"),
+    /**
+    [Modifier](#highlight.Tag^defineModifier) that indicates that
+    something is constant. Mostly expected to be used with
+    [variable names](#highlight.tags.variableName).
+    */
+    constant: Tag.defineModifier("constant"),
+    /**
+    [Modifier](#highlight.Tag^defineModifier) used to indicate that
+    a [variable](#highlight.tags.variableName) or [property
+    name](#highlight.tags.propertyName) is being called or defined
+    as a function.
+    */
+    function: Tag.defineModifier("function"),
+    /**
+    [Modifier](#highlight.Tag^defineModifier) that can be applied to
+    [names](#highlight.tags.name) to indicate that they belong to
+    the language's standard environment.
+    */
+    standard: Tag.defineModifier("standard"),
+    /**
+    [Modifier](#highlight.Tag^defineModifier) that indicates a given
+    [names](#highlight.tags.name) is local to some scope.
+    */
+    local: Tag.defineModifier("local"),
+    /**
+    A generic variant [modifier](#highlight.Tag^defineModifier) that
+    can be used to tag language-specific alternative variants of
+    some common tag. It is recommended for themes to define special
+    forms of at least the [string](#highlight.tags.string) and
+    [variable name](#highlight.tags.variableName) tags, since those
+    come up a lot.
+    */
+    special: Tag.defineModifier("special")
+};
+for (let name in tags) {
+    let val = tags[name];
+    if (val instanceof Tag)
+        val.name = name;
+}
+/**
+This is a highlighter that adds stable, predictable classes to
+tokens, for styling with external CSS.
+
+The following tags are mapped to their name prefixed with `"tok-"`
+(for example `"tok-comment"`):
+
+* [`link`](#highlight.tags.link)
+* [`heading`](#highlight.tags.heading)
+* [`emphasis`](#highlight.tags.emphasis)
+* [`strong`](#highlight.tags.strong)
+* [`keyword`](#highlight.tags.keyword)
+* [`atom`](#highlight.tags.atom)
+* [`bool`](#highlight.tags.bool)
+* [`url`](#highlight.tags.url)
+* [`labelName`](#highlight.tags.labelName)
+* [`inserted`](#highlight.tags.inserted)
+* [`deleted`](#highlight.tags.deleted)
+* [`literal`](#highlight.tags.literal)
+* [`string`](#highlight.tags.string)
+* [`number`](#highlight.tags.number)
+* [`variableName`](#highlight.tags.variableName)
+* [`typeName`](#highlight.tags.typeName)
+* [`namespace`](#highlight.tags.namespace)
+* [`className`](#highlight.tags.className)
+* [`macroName`](#highlight.tags.macroName)
+* [`propertyName`](#highlight.tags.propertyName)
+* [`operator`](#highlight.tags.operator)
+* [`comment`](#highlight.tags.comment)
+* [`meta`](#highlight.tags.meta)
+* [`punctuation`](#highlight.tags.punctuation)
+* [`invalid`](#highlight.tags.invalid)
+
+In addition, these mappings are provided:
+
+* [`regexp`](#highlight.tags.regexp),
+  [`escape`](#highlight.tags.escape), and
+  [`special`](#highlight.tags.special)[`(string)`](#highlight.tags.string)
+  are mapped to `"tok-string2"`
+* [`special`](#highlight.tags.special)[`(variableName)`](#highlight.tags.variableName)
+  to `"tok-variableName2"`
+* [`local`](#highlight.tags.local)[`(variableName)`](#highlight.tags.variableName)
+  to `"tok-variableName tok-local"`
+* [`definition`](#highlight.tags.definition)[`(variableName)`](#highlight.tags.variableName)
+  to `"tok-variableName tok-definition"`
+* [`definition`](#highlight.tags.definition)[`(propertyName)`](#highlight.tags.propertyName)
+  to `"tok-propertyName tok-definition"`
+*/
+const classHighlighter = tagHighlighter([
+    { tag: tags.link, class: "tok-link" },
+    { tag: tags.heading, class: "tok-heading" },
+    { tag: tags.emphasis, class: "tok-emphasis" },
+    { tag: tags.strong, class: "tok-strong" },
+    { tag: tags.keyword, class: "tok-keyword" },
+    { tag: tags.atom, class: "tok-atom" },
+    { tag: tags.bool, class: "tok-bool" },
+    { tag: tags.url, class: "tok-url" },
+    { tag: tags.labelName, class: "tok-labelName" },
+    { tag: tags.inserted, class: "tok-inserted" },
+    { tag: tags.deleted, class: "tok-deleted" },
+    { tag: tags.literal, class: "tok-literal" },
+    { tag: tags.string, class: "tok-string" },
+    { tag: tags.number, class: "tok-number" },
+    { tag: [tags.regexp, tags.escape, tags.special(tags.string)], class: "tok-string2" },
+    { tag: tags.variableName, class: "tok-variableName" },
+    { tag: tags.local(tags.variableName), class: "tok-variableName tok-local" },
+    { tag: tags.definition(tags.variableName), class: "tok-variableName tok-definition" },
+    { tag: tags.special(tags.variableName), class: "tok-variableName2" },
+    { tag: tags.definition(tags.propertyName), class: "tok-propertyName tok-definition" },
+    { tag: tags.typeName, class: "tok-typeName" },
+    { tag: tags.namespace, class: "tok-namespace" },
+    { tag: tags.className, class: "tok-className" },
+    { tag: tags.macroName, class: "tok-macroName" },
+    { tag: tags.propertyName, class: "tok-propertyName" },
+    { tag: tags.operator, class: "tok-operator" },
+    { tag: tags.comment, class: "tok-comment" },
+    { tag: tags.meta, class: "tok-meta" },
+    { tag: tags.invalid, class: "tok-invalid" },
+    { tag: tags.punctuation, class: "tok-punctuation" }
+]);
+
+
+
+// EXTERNAL MODULE: ../../node_modules/lezer-turtle/src/parser.js + 1 modules
+var parser = __webpack_require__(3881);
+// EXTERNAL MODULE: ../../node_modules/lezer-turtle/src/emit.js
+var emit = __webpack_require__(2388);
+;// ../../node_modules/lezer-turtle/src/index.js
+/**
+ * lezer-turtle — incremental Lezer grammar for RDF 1.2 Turtle and TriG
+ * (dialect "trig"), plus an RDF/JS quad emitter with source provenance
+ * (see ./emit.js).
+ */
+
+
+
+const src_parser = parser/* parser */.K.configure({
+  props: [
+    styleTags({
+      IRIREF: tags.url,
+      PrefixedName: tags.namespace,
+      BLANK_NODE_LABEL: tags.variableName,
+      "STRING_LITERAL_QUOTE STRING_LITERAL_SINGLE_QUOTE STRING_LITERAL_LONG_QUOTE STRING_LITERAL_LONG_SINGLE_QUOTE": tags.string,
+      "INTEGER DECIMAL DOUBLE": tags.number,
+      "TrueKw FalseKw": tags.bool,
+      LANG_DIR: tags.modifier,
+      "AtPrefixKw AtBaseKw AtVersionKw PrefixKw BaseKw VersionKw GraphKw": tags.definitionKeyword,
+      RdfTypeKw: tags.keyword,
+      Comment: tags.lineComment,
+      "( )": tags.paren,
+      "[ ]": tags.squareBracket,
+    }),
+  ],
+});
+
+
+
+
+/***/ },
+
+/***/ 3881
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  K: () => (/* binding */ parser)
+});
+
+// EXTERNAL MODULE: ../../node_modules/@lezer/common/dist/index.js
+var dist = __webpack_require__(9066);
+;// ../../node_modules/@lezer/lr/dist/index.js
+
+
+/**
+A parse stack. These are used internally by the parser to track
+parsing progress. They also provide some properties and methods
+that external code such as a tokenizer can use to get information
+about the parse state.
+*/
+class Stack {
+    /**
+    @internal
+    */
+    constructor(
+    /**
+    The parse that this stack is part of @internal
+    */
+    p, 
+    /**
+    Holds state, input pos, buffer index triplets for all but the
+    top state @internal
+    */
+    stack, 
+    /**
+    The current parse state @internal
+    */
+    state, 
+    // The position at which the next reduce should take place. This
+    // can be less than `this.pos` when skipped expressions have been
+    // added to the stack (which should be moved outside of the next
+    // reduction)
+    /**
+    @internal
+    */
+    reducePos, 
+    /**
+    The input position up to which this stack has parsed.
+    */
+    pos, 
+    /**
+    The dynamic score of the stack, including dynamic precedence
+    and error-recovery penalties
+    @internal
+    */
+    score, 
+    // The output buffer. Holds (type, start, end, size) quads
+    // representing nodes created by the parser, where `size` is
+    // amount of buffer array entries covered by this node.
+    /**
+    @internal
+    */
+    buffer, 
+    // The base offset of the buffer. When stacks are split, the split
+    // instance shared the buffer history with its parent up to
+    // `bufferBase`, which is the absolute offset (including the
+    // offset of previous splits) into the buffer at which this stack
+    // starts writing.
+    /**
+    @internal
+    */
+    bufferBase, 
+    /**
+    @internal
+    */
+    curContext, 
+    /**
+    @internal
+    */
+    lookAhead = 0, 
+    // A parent stack from which this was split off, if any. This is
+    // set up so that it always points to a stack that has some
+    // additional buffer content, never to a stack with an equal
+    // `bufferBase`.
+    /**
+    @internal
+    */
+    parent) {
+        this.p = p;
+        this.stack = stack;
+        this.state = state;
+        this.reducePos = reducePos;
+        this.pos = pos;
+        this.score = score;
+        this.buffer = buffer;
+        this.bufferBase = bufferBase;
+        this.curContext = curContext;
+        this.lookAhead = lookAhead;
+        this.parent = parent;
+    }
+    /**
+    @internal
+    */
+    toString() {
+        return `[${this.stack.filter((_, i) => i % 3 == 0).concat(this.state)}]@${this.pos}${this.score ? "!" + this.score : ""}`;
+    }
+    // Start an empty stack
+    /**
+    @internal
+    */
+    static start(p, state, pos = 0) {
+        let cx = p.parser.context;
+        return new Stack(p, [], state, pos, pos, 0, [], 0, cx ? new StackContext(cx, cx.start) : null, 0, null);
+    }
+    /**
+    The stack's current [context](#lr.ContextTracker) value, if
+    any. Its type will depend on the context tracker's type
+    parameter, or it will be `null` if there is no context
+    tracker.
+    */
+    get context() { return this.curContext ? this.curContext.context : null; }
+    // Push a state onto the stack, tracking its start position as well
+    // as the buffer base at that point.
+    /**
+    @internal
+    */
+    pushState(state, start) {
+        this.stack.push(this.state, start, this.bufferBase + this.buffer.length);
+        this.state = state;
+    }
+    // Apply a reduce action
+    /**
+    @internal
+    */
+    reduce(action) {
+        var _a;
+        let depth = action >> 19 /* Action.ReduceDepthShift */, type = action & 65535 /* Action.ValueMask */;
+        let { parser } = this.p;
+        let lookaheadRecord = this.reducePos < this.pos - 25 /* Lookahead.Margin */ && this.setLookAhead(this.pos);
+        let dPrec = parser.dynamicPrecedence(type);
+        if (dPrec)
+            this.score += dPrec;
+        if (depth == 0) {
+            if (type < parser.minRepeatTerm && this.reducePos < this.pos)
+                this.reducePos = this.pos;
+            this.pushState(parser.getGoto(this.state, type, true), this.reducePos);
+            // Zero-depth reductions are a special case—they add stuff to
+            // the stack without popping anything off.
+            if (type < parser.minRepeatTerm)
+                this.storeNode(type, this.reducePos, this.reducePos, lookaheadRecord ? 8 : 4, true);
+            this.reduceContext(type, this.reducePos);
+            return;
+        }
+        // Find the base index into `this.stack`, content after which will
+        // be dropped. Note that with `StayFlag` reductions we need to
+        // consume two extra frames (the dummy parent node for the skipped
+        // expression and the state that we'll be staying in, which should
+        // be moved to `this.state`).
+        let base = this.stack.length - ((depth - 1) * 3) - (action & 262144 /* Action.StayFlag */ ? 6 : 0);
+        let start = base ? this.stack[base - 2] : this.p.ranges[0].from;
+        if (type < parser.minRepeatTerm && start == this.reducePos && this.reducePos < this.pos)
+            this.reducePos = this.pos;
+        let size = this.reducePos - start;
+        // This is a kludge to try and detect overly deep left-associative
+        // trees, which will not increase the parse stack depth and thus
+        // won't be caught by the regular stack-depth limit check.
+        if (size >= 2000 /* Recover.MinBigReduction */ && !((_a = this.p.parser.nodeSet.types[type]) === null || _a === void 0 ? void 0 : _a.isAnonymous)) {
+            if (start == this.p.lastBigReductionStart) {
+                this.p.bigReductionCount++;
+                this.p.lastBigReductionSize = size;
+            }
+            else if (this.p.lastBigReductionSize < size) {
+                this.p.bigReductionCount = 1;
+                this.p.lastBigReductionStart = start;
+                this.p.lastBigReductionSize = size;
+            }
+        }
+        let bufferBase = base ? this.stack[base - 1] : 0, count = this.bufferBase + this.buffer.length - bufferBase;
+        // Store normal terms or `R -> R R` repeat reductions
+        if (type < parser.minRepeatTerm || (action & 131072 /* Action.RepeatFlag */)) {
+            let pos = parser.stateFlag(this.state, 1 /* StateFlag.Skipped */) ? this.pos : this.reducePos;
+            this.storeNode(type, start, pos, count + 4, true);
+        }
+        if (action & 262144 /* Action.StayFlag */) {
+            this.state = this.stack[base];
+        }
+        else {
+            let baseStateID = this.stack[base - 3];
+            this.state = parser.getGoto(baseStateID, type, true);
+        }
+        while (this.stack.length > base)
+            this.stack.pop();
+        this.reduceContext(type, start);
+    }
+    // Shift a value into the buffer
+    /**
+    @internal
+    */
+    storeNode(term, start, end, size = 4, mustSink = false) {
+        if (term == 0 /* Term.Err */ &&
+            (!this.stack.length || this.stack[this.stack.length - 1] < this.buffer.length + this.bufferBase)) {
+            // Try to omit/merge adjacent error nodes
+            let top = this.buffer.length;
+            if (top > 0 && this.buffer[top - 4] == 0 /* Term.Err */ && this.buffer[top - 1] > -1) {
+                if (start == end)
+                    return;
+                if (this.buffer[top - 2] >= start) {
+                    this.buffer[top - 2] = end;
+                    return;
+                }
+            }
+        }
+        if (!mustSink || this.pos == end) { // Simple case, just append
+            this.buffer.push(term, start, end, size);
+        }
+        else { // There may be skipped nodes that have to be moved forward
+            let index = this.buffer.length;
+            if (index > 0 && (this.buffer[index - 4] != 0 /* Term.Err */ || this.buffer[index - 1] < 0)) {
+                let mustMove = false;
+                for (let scan = index; scan > 0 && this.buffer[scan - 2] > end; scan -= 4) {
+                    if (this.buffer[scan - 1] >= 0) {
+                        mustMove = true;
+                        break;
+                    }
+                }
+                if (mustMove)
+                    while (index > 0 && this.buffer[index - 2] > end) {
+                        // Move this record forward
+                        this.buffer[index] = this.buffer[index - 4];
+                        this.buffer[index + 1] = this.buffer[index - 3];
+                        this.buffer[index + 2] = this.buffer[index - 2];
+                        this.buffer[index + 3] = this.buffer[index - 1];
+                        index -= 4;
+                        if (size > 4)
+                            size -= 4;
+                    }
+            }
+            this.buffer[index] = term;
+            this.buffer[index + 1] = start;
+            this.buffer[index + 2] = end;
+            this.buffer[index + 3] = size;
+        }
+    }
+    // Apply a shift action
+    /**
+    @internal
+    */
+    shift(action, type, start, end) {
+        if (action & 131072 /* Action.GotoFlag */) {
+            this.pushState(action & 65535 /* Action.ValueMask */, this.pos);
+        }
+        else if ((action & 262144 /* Action.StayFlag */) == 0) { // Regular shift
+            let nextState = action, { parser } = this.p;
+            this.pos = end;
+            let skipped = parser.stateFlag(nextState, 1 /* StateFlag.Skipped */);
+            // Skipped or zero-length non-tree tokens don't move reducePos
+            if (!skipped && (end > start || type <= parser.maxNode))
+                this.reducePos = end;
+            this.pushState(nextState, skipped ? start : Math.min(start, this.reducePos));
+            this.shiftContext(type, start);
+            if (type <= parser.maxNode)
+                this.buffer.push(type, start, end, 4);
+        }
+        else { // Shift-and-stay, which means this is a skipped token
+            this.pos = end;
+            this.shiftContext(type, start);
+            if (type <= this.p.parser.maxNode)
+                this.buffer.push(type, start, end, 4);
+        }
+    }
+    // Apply an action
+    /**
+    @internal
+    */
+    apply(action, next, nextStart, nextEnd) {
+        if (action & 65536 /* Action.ReduceFlag */)
+            this.reduce(action);
+        else
+            this.shift(action, next, nextStart, nextEnd);
+    }
+    // Add a prebuilt (reused) node into the buffer.
+    /**
+    @internal
+    */
+    useNode(value, next) {
+        let index = this.p.reused.length - 1;
+        if (index < 0 || this.p.reused[index] != value) {
+            this.p.reused.push(value);
+            index++;
+        }
+        let start = this.pos;
+        this.reducePos = this.pos = start + value.length;
+        this.pushState(next, start);
+        this.buffer.push(index, start, this.reducePos, -1 /* size == -1 means this is a reused value */);
+        if (this.curContext)
+            this.updateContext(this.curContext.tracker.reuse(this.curContext.context, value, this, this.p.stream.reset(this.pos - value.length)));
+    }
+    // Split the stack. Due to the buffer sharing and the fact
+    // that `this.stack` tends to stay quite shallow, this isn't very
+    // expensive.
+    /**
+    @internal
+    */
+    split() {
+        let parent = this;
+        let off = parent.buffer.length;
+        // Leave off top error node, if there, because that might be
+        // merged with other nodes.
+        if (off && parent.buffer[off - 4] == 0 /* Term.Err */)
+            off -= 4;
+        // Because the top of the buffer (after this.pos) may be mutated
+        // to reorder reductions and skipped tokens, and shared buffers
+        // should be immutable, this copies any outstanding skipped tokens
+        // to the new buffer, and puts the base pointer before them.
+        while (off > 0 && parent.buffer[off - 2] > parent.reducePos)
+            off -= 4;
+        let buffer = parent.buffer.slice(off), base = parent.bufferBase + off;
+        // Make sure parent points to an actual parent with content, if there is such a parent.
+        while (parent && base == parent.bufferBase)
+            parent = parent.parent;
+        return new Stack(this.p, this.stack.slice(), this.state, this.reducePos, this.pos, this.score, buffer, base, this.curContext, this.lookAhead, parent);
+    }
+    // Try to recover from an error by 'deleting' (ignoring) one token.
+    /**
+    @internal
+    */
+    recoverByDelete(next, nextEnd) {
+        let isNode = next <= this.p.parser.maxNode;
+        if (isNode)
+            this.storeNode(next, this.pos, nextEnd, 4);
+        this.storeNode(0 /* Term.Err */, this.pos, nextEnd, isNode ? 8 : 4);
+        this.pos = this.reducePos = nextEnd;
+        this.score -= 190 /* Recover.Delete */;
+    }
+    /**
+    Check if the given term would be able to be shifted (optionally
+    after some reductions) on this stack. This can be useful for
+    external tokenizers that want to make sure they only provide a
+    given token when it applies.
+    */
+    canShift(term) {
+        for (let sim = new SimulatedStack(this);;) {
+            let action = this.p.parser.stateSlot(sim.state, 4 /* ParseState.DefaultReduce */) || this.p.parser.hasAction(sim.state, term);
+            if (action == 0)
+                return false;
+            if ((action & 65536 /* Action.ReduceFlag */) == 0)
+                return true;
+            sim.reduce(action);
+        }
+    }
+    // Apply up to Recover.MaxNext recovery actions that conceptually
+    // inserts some missing token or rule.
+    /**
+    @internal
+    */
+    recoverByInsert(next) {
+        if (this.stack.length >= 300 /* Recover.MaxInsertStackDepth */)
+            return [];
+        let nextStates = this.p.parser.nextStates(this.state);
+        if (nextStates.length > 4 /* Recover.MaxNext */ << 1 || this.stack.length >= 120 /* Recover.DampenInsertStackDepth */) {
+            let best = [];
+            for (let i = 0, s; i < nextStates.length; i += 2) {
+                if ((s = nextStates[i + 1]) != this.state && this.p.parser.hasAction(s, next))
+                    best.push(nextStates[i], s);
+            }
+            if (this.stack.length < 120 /* Recover.DampenInsertStackDepth */)
+                for (let i = 0; best.length < 4 /* Recover.MaxNext */ << 1 && i < nextStates.length; i += 2) {
+                    let s = nextStates[i + 1];
+                    if (!best.some((v, i) => (i & 1) && v == s))
+                        best.push(nextStates[i], s);
+                }
+            nextStates = best;
+        }
+        let result = [];
+        for (let i = 0; i < nextStates.length && result.length < 4 /* Recover.MaxNext */; i += 2) {
+            let s = nextStates[i + 1];
+            if (s == this.state)
+                continue;
+            let stack = this.split();
+            stack.pushState(s, this.pos);
+            stack.storeNode(0 /* Term.Err */, stack.pos, stack.pos, 4, true);
+            stack.shiftContext(nextStates[i], this.pos);
+            stack.reducePos = this.pos;
+            stack.score -= 200 /* Recover.Insert */;
+            result.push(stack);
+        }
+        return result;
+    }
+    // Force a reduce, if possible. Return false if that can't
+    // be done.
+    /**
+    @internal
+    */
+    forceReduce() {
+        let { parser } = this.p;
+        let reduce = parser.stateSlot(this.state, 5 /* ParseState.ForcedReduce */);
+        if ((reduce & 65536 /* Action.ReduceFlag */) == 0)
+            return false;
+        if (!parser.validAction(this.state, reduce)) {
+            let depth = reduce >> 19 /* Action.ReduceDepthShift */, term = reduce & 65535 /* Action.ValueMask */;
+            let target = this.stack.length - depth * 3;
+            if (target < 0 || parser.getGoto(this.stack[target], term, false) < 0) {
+                let backup = this.findForcedReduction();
+                if (backup == null)
+                    return false;
+                reduce = backup;
+            }
+            this.storeNode(0 /* Term.Err */, this.pos, this.pos, 4, true);
+            this.score -= 100 /* Recover.Reduce */;
+        }
+        this.reducePos = this.pos;
+        this.reduce(reduce);
+        return true;
+    }
+    /**
+    Try to scan through the automaton to find some kind of reduction
+    that can be applied. Used when the regular ForcedReduce field
+    isn't a valid action. @internal
+    */
+    findForcedReduction() {
+        let { parser } = this.p, seen = [];
+        let explore = (state, depth) => {
+            if (seen.includes(state))
+                return;
+            seen.push(state);
+            return parser.allActions(state, (action) => {
+                if (action & (262144 /* Action.StayFlag */ | 131072 /* Action.GotoFlag */)) ;
+                else if (action & 65536 /* Action.ReduceFlag */) {
+                    let rDepth = (action >> 19 /* Action.ReduceDepthShift */) - depth;
+                    if (rDepth > 1) {
+                        let term = action & 65535 /* Action.ValueMask */, target = this.stack.length - rDepth * 3;
+                        if (target >= 0 && parser.getGoto(this.stack[target], term, false) >= 0)
+                            return (rDepth << 19 /* Action.ReduceDepthShift */) | 65536 /* Action.ReduceFlag */ | term;
+                    }
+                }
+                else {
+                    let found = explore(action, depth + 1);
+                    if (found != null)
+                        return found;
+                }
+            });
+        };
+        return explore(this.state, 0);
+    }
+    /**
+    @internal
+    */
+    forceAll() {
+        while (!this.p.parser.stateFlag(this.state, 2 /* StateFlag.Accepting */)) {
+            if (!this.forceReduce()) {
+                this.storeNode(0 /* Term.Err */, this.pos, this.pos, 4, true);
+                break;
+            }
+        }
+        return this;
+    }
+    /**
+    Check whether this state has no further actions (assumed to be a direct descendant of the
+    top state, since any other states must be able to continue
+    somehow). @internal
+    */
+    get deadEnd() {
+        if (this.stack.length != 3)
+            return false;
+        let { parser } = this.p;
+        return parser.data[parser.stateSlot(this.state, 1 /* ParseState.Actions */)] == 65535 /* Seq.End */ &&
+            !parser.stateSlot(this.state, 4 /* ParseState.DefaultReduce */);
+    }
+    /**
+    Restart the stack (put it back in its start state). Only safe
+    when this.stack.length == 3 (state is directly below the top
+    state). @internal
+    */
+    restart() {
+        this.storeNode(0 /* Term.Err */, this.pos, this.pos, 4, true);
+        this.state = this.stack[0];
+        this.stack.length = 0;
+    }
+    /**
+    @internal
+    */
+    sameState(other) {
+        if (this.state != other.state || this.stack.length != other.stack.length)
+            return false;
+        for (let i = 0; i < this.stack.length; i += 3)
+            if (this.stack[i] != other.stack[i])
+                return false;
+        return true;
+    }
+    /**
+    Get the parser used by this stack.
+    */
+    get parser() { return this.p.parser; }
+    /**
+    Test whether a given dialect (by numeric ID, as exported from
+    the terms file) is enabled.
+    */
+    dialectEnabled(dialectID) { return this.p.parser.dialect.flags[dialectID]; }
+    shiftContext(term, start) {
+        if (this.curContext)
+            this.updateContext(this.curContext.tracker.shift(this.curContext.context, term, this, this.p.stream.reset(start)));
+    }
+    reduceContext(term, start) {
+        if (this.curContext)
+            this.updateContext(this.curContext.tracker.reduce(this.curContext.context, term, this, this.p.stream.reset(start)));
+    }
+    /**
+    @internal
+    */
+    emitContext() {
+        let last = this.buffer.length - 1;
+        if (last < 0 || this.buffer[last] != -3)
+            this.buffer.push(this.curContext.hash, this.pos, this.pos, -3);
+    }
+    /**
+    @internal
+    */
+    emitLookAhead() {
+        let last = this.buffer.length - 1;
+        if (last < 0 || this.buffer[last] != -4)
+            this.buffer.push(this.lookAhead, this.pos, this.pos, -4);
+    }
+    updateContext(context) {
+        if (context != this.curContext.context) {
+            let newCx = new StackContext(this.curContext.tracker, context);
+            if (newCx.hash != this.curContext.hash)
+                this.emitContext();
+            this.curContext = newCx;
+        }
+    }
+    /**
+    @internal
+    */
+    setLookAhead(lookAhead) {
+        if (lookAhead <= this.lookAhead)
+            return false;
+        this.emitLookAhead();
+        this.lookAhead = lookAhead;
+        return true;
+    }
+    /**
+    @internal
+    */
+    close() {
+        if (this.curContext && this.curContext.tracker.strict)
+            this.emitContext();
+        if (this.lookAhead > 0)
+            this.emitLookAhead();
+    }
+}
+class StackContext {
+    constructor(tracker, context) {
+        this.tracker = tracker;
+        this.context = context;
+        this.hash = tracker.strict ? tracker.hash(context) : 0;
+    }
+}
+// Used to cheaply run some reductions to scan ahead without mutating
+// an entire stack
+class SimulatedStack {
+    constructor(start) {
+        this.start = start;
+        this.state = start.state;
+        this.stack = start.stack;
+        this.base = this.stack.length;
+    }
+    reduce(action) {
+        let term = action & 65535 /* Action.ValueMask */, depth = action >> 19 /* Action.ReduceDepthShift */;
+        if (depth == 0) {
+            if (this.stack == this.start.stack)
+                this.stack = this.stack.slice();
+            this.stack.push(this.state, 0, 0);
+            this.base += 3;
+        }
+        else {
+            this.base -= (depth - 1) * 3;
+        }
+        let goto = this.start.p.parser.getGoto(this.stack[this.base - 3], term, true);
+        this.state = goto;
+    }
+}
+// This is given to `Tree.build` to build a buffer, and encapsulates
+// the parent-stack-walking necessary to read the nodes.
+class StackBufferCursor {
+    constructor(stack, pos, index) {
+        this.stack = stack;
+        this.pos = pos;
+        this.index = index;
+        this.buffer = stack.buffer;
+        if (this.index == 0)
+            this.maybeNext();
+    }
+    static create(stack, pos = stack.bufferBase + stack.buffer.length) {
+        return new StackBufferCursor(stack, pos, pos - stack.bufferBase);
+    }
+    maybeNext() {
+        let next = this.stack.parent;
+        if (next != null) {
+            this.index = this.stack.bufferBase - next.bufferBase;
+            this.stack = next;
+            this.buffer = next.buffer;
+        }
+    }
+    get id() { return this.buffer[this.index - 4]; }
+    get start() { return this.buffer[this.index - 3]; }
+    get end() { return this.buffer[this.index - 2]; }
+    get size() { return this.buffer[this.index - 1]; }
+    next() {
+        this.index -= 4;
+        this.pos -= 4;
+        if (this.index == 0)
+            this.maybeNext();
+    }
+    fork() {
+        return new StackBufferCursor(this.stack, this.pos, this.index);
+    }
+}
+
+// See lezer-generator/src/encode.ts for comments about the encoding
+// used here
+function decodeArray(input, Type = Uint16Array) {
+    if (typeof input != "string")
+        return input;
+    let array = null;
+    for (let pos = 0, out = 0; pos < input.length;) {
+        let value = 0;
+        for (;;) {
+            let next = input.charCodeAt(pos++), stop = false;
+            if (next == 126 /* Encode.BigValCode */) {
+                value = 65535 /* Encode.BigVal */;
+                break;
+            }
+            if (next >= 92 /* Encode.Gap2 */)
+                next--;
+            if (next >= 34 /* Encode.Gap1 */)
+                next--;
+            let digit = next - 32 /* Encode.Start */;
+            if (digit >= 46 /* Encode.Base */) {
+                digit -= 46 /* Encode.Base */;
+                stop = true;
+            }
+            value += digit;
+            if (stop)
+                break;
+            value *= 46 /* Encode.Base */;
+        }
+        if (array)
+            array[out++] = value;
+        else
+            array = new Type(value);
+    }
+    return array;
+}
+
+class CachedToken {
+    constructor() {
+        this.start = -1;
+        this.value = -1;
+        this.end = -1;
+        this.extended = -1;
+        this.lookAhead = 0;
+        this.mask = 0;
+        this.context = 0;
+    }
+}
+const nullToken = new CachedToken;
+/**
+[Tokenizers](#lr.ExternalTokenizer) interact with the input
+through this interface. It presents the input as a stream of
+characters, tracking lookahead and hiding the complexity of
+[ranges](#common.Parser.parse^ranges) from tokenizer code.
+*/
+class InputStream {
+    /**
+    @internal
+    */
+    constructor(
+    /**
+    @internal
+    */
+    input, 
+    /**
+    @internal
+    */
+    ranges) {
+        this.input = input;
+        this.ranges = ranges;
+        /**
+        @internal
+        */
+        this.chunk = "";
+        /**
+        @internal
+        */
+        this.chunkOff = 0;
+        /**
+        Backup chunk
+        */
+        this.chunk2 = "";
+        this.chunk2Pos = 0;
+        /**
+        The character code of the next code unit in the input, or -1
+        when the stream is at the end of the input.
+        */
+        this.next = -1;
+        /**
+        @internal
+        */
+        this.token = nullToken;
+        this.rangeIndex = 0;
+        this.pos = this.chunkPos = ranges[0].from;
+        this.range = ranges[0];
+        this.end = ranges[ranges.length - 1].to;
+        this.readNext();
+    }
+    /**
+    @internal
+    */
+    resolveOffset(offset, assoc) {
+        let range = this.range, index = this.rangeIndex;
+        let pos = this.pos + offset;
+        while (pos < range.from) {
+            if (!index)
+                return null;
+            let next = this.ranges[--index];
+            pos -= range.from - next.to;
+            range = next;
+        }
+        while (assoc < 0 ? pos > range.to : pos >= range.to) {
+            if (index == this.ranges.length - 1)
+                return null;
+            let next = this.ranges[++index];
+            pos += next.from - range.to;
+            range = next;
+        }
+        return pos;
+    }
+    /**
+    @internal
+    */
+    clipPos(pos) {
+        if (pos >= this.range.from && pos < this.range.to)
+            return pos;
+        for (let range of this.ranges)
+            if (range.to > pos)
+                return Math.max(pos, range.from);
+        return this.end;
+    }
+    /**
+    Look at a code unit near the stream position. `.peek(0)` equals
+    `.next`, `.peek(-1)` gives you the previous character, and so
+    on.
+    
+    Note that looking around during tokenizing creates dependencies
+    on potentially far-away content, which may reduce the
+    effectiveness incremental parsing—when looking forward—or even
+    cause invalid reparses when looking backward more than 25 code
+    units, since the library does not track lookbehind.
+    */
+    peek(offset) {
+        let idx = this.chunkOff + offset, pos, result;
+        if (idx >= 0 && idx < this.chunk.length) {
+            pos = this.pos + offset;
+            result = this.chunk.charCodeAt(idx);
+        }
+        else {
+            let resolved = this.resolveOffset(offset, 1);
+            if (resolved == null)
+                return -1;
+            pos = resolved;
+            if (pos >= this.chunk2Pos && pos < this.chunk2Pos + this.chunk2.length) {
+                result = this.chunk2.charCodeAt(pos - this.chunk2Pos);
+            }
+            else {
+                let i = this.rangeIndex, range = this.range;
+                while (range.to <= pos)
+                    range = this.ranges[++i];
+                this.chunk2 = this.input.chunk(this.chunk2Pos = pos);
+                if (pos + this.chunk2.length > range.to)
+                    this.chunk2 = this.chunk2.slice(0, range.to - pos);
+                result = this.chunk2.charCodeAt(0);
+            }
+        }
+        if (pos >= this.token.lookAhead)
+            this.token.lookAhead = pos + 1;
+        return result;
+    }
+    /**
+    Accept a token. By default, the end of the token is set to the
+    current stream position, but you can pass an offset (relative to
+    the stream position) to change that.
+    */
+    acceptToken(token, endOffset = 0) {
+        let end = endOffset ? this.resolveOffset(endOffset, -1) : this.pos;
+        if (end == null || end < this.token.start)
+            throw new RangeError("Token end out of bounds");
+        this.token.value = token;
+        this.token.end = end;
+    }
+    /**
+    Accept a token ending at a specific given position.
+    */
+    acceptTokenTo(token, endPos) {
+        this.token.value = token;
+        this.token.end = endPos;
+    }
+    getChunk() {
+        if (this.pos >= this.chunk2Pos && this.pos < this.chunk2Pos + this.chunk2.length) {
+            let { chunk, chunkPos } = this;
+            this.chunk = this.chunk2;
+            this.chunkPos = this.chunk2Pos;
+            this.chunk2 = chunk;
+            this.chunk2Pos = chunkPos;
+            this.chunkOff = this.pos - this.chunkPos;
+        }
+        else {
+            this.chunk2 = this.chunk;
+            this.chunk2Pos = this.chunkPos;
+            let nextChunk = this.input.chunk(this.pos);
+            let end = this.pos + nextChunk.length;
+            this.chunk = end > this.range.to ? nextChunk.slice(0, this.range.to - this.pos) : nextChunk;
+            this.chunkPos = this.pos;
+            this.chunkOff = 0;
+        }
+    }
+    readNext() {
+        if (this.chunkOff >= this.chunk.length) {
+            this.getChunk();
+            if (this.chunkOff == this.chunk.length)
+                return this.next = -1;
+        }
+        return this.next = this.chunk.charCodeAt(this.chunkOff);
+    }
+    /**
+    Move the stream forward N (defaults to 1) code units. Returns
+    the new value of [`next`](#lr.InputStream.next).
+    */
+    advance(n = 1) {
+        this.chunkOff += n;
+        while (this.pos + n >= this.range.to) {
+            if (this.rangeIndex == this.ranges.length - 1)
+                return this.setDone();
+            n -= this.range.to - this.pos;
+            this.range = this.ranges[++this.rangeIndex];
+            this.pos = this.range.from;
+        }
+        this.pos += n;
+        if (this.pos >= this.token.lookAhead)
+            this.token.lookAhead = this.pos + 1;
+        return this.readNext();
+    }
+    setDone() {
+        this.pos = this.chunkPos = this.end;
+        this.range = this.ranges[this.rangeIndex = this.ranges.length - 1];
+        this.chunk = "";
+        return this.next = -1;
+    }
+    /**
+    @internal
+    */
+    reset(pos, token) {
+        if (token) {
+            this.token = token;
+            token.start = pos;
+            token.lookAhead = pos + 1;
+            token.value = token.extended = -1;
+        }
+        else {
+            this.token = nullToken;
+        }
+        if (this.pos != pos) {
+            this.pos = pos;
+            if (pos == this.end) {
+                this.setDone();
+                return this;
+            }
+            while (pos < this.range.from)
+                this.range = this.ranges[--this.rangeIndex];
+            while (pos >= this.range.to)
+                this.range = this.ranges[++this.rangeIndex];
+            if (pos >= this.chunkPos && pos < this.chunkPos + this.chunk.length) {
+                this.chunkOff = pos - this.chunkPos;
+            }
+            else {
+                this.chunk = "";
+                this.chunkOff = 0;
+            }
+            this.readNext();
+        }
+        return this;
+    }
+    /**
+    @internal
+    */
+    read(from, to) {
+        if (from >= this.chunkPos && to <= this.chunkPos + this.chunk.length)
+            return this.chunk.slice(from - this.chunkPos, to - this.chunkPos);
+        if (from >= this.chunk2Pos && to <= this.chunk2Pos + this.chunk2.length)
+            return this.chunk2.slice(from - this.chunk2Pos, to - this.chunk2Pos);
+        if (from >= this.range.from && to <= this.range.to)
+            return this.input.read(from, to);
+        let result = "";
+        for (let r of this.ranges) {
+            if (r.from >= to)
+                break;
+            if (r.to > from)
+                result += this.input.read(Math.max(r.from, from), Math.min(r.to, to));
+        }
+        return result;
+    }
+}
+/**
+@internal
+*/
+class TokenGroup {
+    constructor(data, id) {
+        this.data = data;
+        this.id = id;
+    }
+    token(input, stack) {
+        let { parser } = stack.p;
+        readToken(this.data, input, stack, this.id, parser.data, parser.tokenPrecTable);
+    }
+}
+TokenGroup.prototype.contextual = TokenGroup.prototype.fallback = TokenGroup.prototype.extend = false;
+/**
+@hide
+*/
+class LocalTokenGroup {
+    constructor(data, precTable, elseToken) {
+        this.precTable = precTable;
+        this.elseToken = elseToken;
+        this.data = typeof data == "string" ? decodeArray(data) : data;
+    }
+    token(input, stack) {
+        let start = input.pos, skipped = 0;
+        for (;;) {
+            let atEof = input.next < 0, nextPos = input.resolveOffset(1, 1);
+            readToken(this.data, input, stack, 0, this.data, this.precTable);
+            if (input.token.value > -1)
+                break;
+            if (this.elseToken == null)
+                return;
+            if (!atEof)
+                skipped++;
+            if (nextPos == null)
+                break;
+            input.reset(nextPos, input.token);
+        }
+        if (skipped) {
+            input.reset(start, input.token);
+            input.acceptToken(this.elseToken, skipped);
+        }
+    }
+}
+LocalTokenGroup.prototype.contextual = TokenGroup.prototype.fallback = TokenGroup.prototype.extend = false;
+/**
+`@external tokens` declarations in the grammar should resolve to
+an instance of this class.
+*/
+class ExternalTokenizer {
+    /**
+    Create a tokenizer. The first argument is the function that,
+    given an input stream, scans for the types of tokens it
+    recognizes at the stream's position, and calls
+    [`acceptToken`](#lr.InputStream.acceptToken) when it finds
+    one.
+    */
+    constructor(
+    /**
+    @internal
+    */
+    token, options = {}) {
+        this.token = token;
+        this.contextual = !!options.contextual;
+        this.fallback = !!options.fallback;
+        this.extend = !!options.extend;
+    }
+}
+// Tokenizer data is stored a big uint16 array containing, for each
+// state:
+//
+//  - A group bitmask, indicating what token groups are reachable from
+//    this state, so that paths that can only lead to tokens not in
+//    any of the current groups can be cut off early.
+//
+//  - The position of the end of the state's sequence of accepting
+//    tokens
+//
+//  - The number of outgoing edges for the state
+//
+//  - The accepting tokens, as (token id, group mask) pairs
+//
+//  - The outgoing edges, as (start character, end character, state
+//    index) triples, with end character being exclusive
+//
+// This function interprets that data, running through a stream as
+// long as new states with the a matching group mask can be reached,
+// and updating `input.token` when it matches a token.
+function readToken(data, input, stack, group, precTable, precOffset) {
+    let state = 0, groupMask = 1 << group, { dialect } = stack.p.parser;
+    scan: for (;;) {
+        if ((groupMask & data[state]) == 0)
+            break;
+        let accEnd = data[state + 1];
+        // Check whether this state can lead to a token in the current group
+        // Accept tokens in this state, possibly overwriting
+        // lower-precedence / shorter tokens
+        for (let i = state + 3; i < accEnd; i += 2)
+            if ((data[i + 1] & groupMask) > 0) {
+                let term = data[i];
+                if (dialect.allows(term) &&
+                    (input.token.value == -1 || input.token.value == term ||
+                        overrides(term, input.token.value, precTable, precOffset))) {
+                    input.acceptToken(term);
+                    break;
+                }
+            }
+        let next = input.next, low = 0, high = data[state + 2];
+        // Special case for EOF
+        if (input.next < 0 && high > low && data[accEnd + high * 3 - 3] == 65535 /* Seq.End */) {
+            state = data[accEnd + high * 3 - 1];
+            continue scan;
+        }
+        // Do a binary search on the state's edges
+        for (; low < high;) {
+            let mid = (low + high) >> 1;
+            let index = accEnd + mid + (mid << 1);
+            let from = data[index], to = data[index + 1] || 0x10000;
+            if (next < from)
+                high = mid;
+            else if (next >= to)
+                low = mid + 1;
+            else {
+                state = data[index + 2];
+                input.advance();
+                continue scan;
+            }
+        }
+        break;
+    }
+}
+function findOffset(data, start, term) {
+    for (let i = start, next; (next = data[i]) != 65535 /* Seq.End */; i++)
+        if (next == term)
+            return i - start;
+    return -1;
+}
+function overrides(token, prev, tableData, tableOffset) {
+    let iPrev = findOffset(tableData, tableOffset, prev);
+    return iPrev < 0 || findOffset(tableData, tableOffset, token) < iPrev;
+}
+
+// Environment variable used to control console output
+const verbose = typeof process != "undefined" && process.env && /\bparse\b/.test(process.env.LOG);
+let stackIDs = null;
+function cutAt(tree, pos, side) {
+    let cursor = tree.cursor(dist/* IterMode */.Qj.IncludeAnonymous);
+    cursor.moveTo(pos);
+    for (;;) {
+        if (!(side < 0 ? cursor.childBefore(pos) : cursor.childAfter(pos)))
+            for (;;) {
+                if ((side < 0 ? cursor.to < pos : cursor.from > pos) && !cursor.type.isError)
+                    return side < 0 ? Math.max(0, Math.min(cursor.to - 1, pos - 25 /* Lookahead.Margin */))
+                        : Math.min(tree.length, Math.max(cursor.from + 1, pos + 25 /* Lookahead.Margin */));
+                if (side < 0 ? cursor.prevSibling() : cursor.nextSibling())
+                    break;
+                if (!cursor.parent())
+                    return side < 0 ? 0 : tree.length;
+            }
+    }
+}
+class FragmentCursor {
+    constructor(fragments, nodeSet) {
+        this.fragments = fragments;
+        this.nodeSet = nodeSet;
+        this.i = 0;
+        this.fragment = null;
+        this.safeFrom = -1;
+        this.safeTo = -1;
+        this.trees = [];
+        this.start = [];
+        this.index = [];
+        this.nextFragment();
+    }
+    nextFragment() {
+        let fr = this.fragment = this.i == this.fragments.length ? null : this.fragments[this.i++];
+        if (fr) {
+            this.safeFrom = fr.openStart ? cutAt(fr.tree, fr.from + fr.offset, 1) - fr.offset : fr.from;
+            this.safeTo = fr.openEnd ? cutAt(fr.tree, fr.to + fr.offset, -1) - fr.offset : fr.to;
+            while (this.trees.length) {
+                this.trees.pop();
+                this.start.pop();
+                this.index.pop();
+            }
+            this.trees.push(fr.tree);
+            this.start.push(-fr.offset);
+            this.index.push(0);
+            this.nextStart = this.safeFrom;
+        }
+        else {
+            this.nextStart = 1e9;
+        }
+    }
+    // `pos` must be >= any previously given `pos` for this cursor
+    nodeAt(pos) {
+        if (pos < this.nextStart)
+            return null;
+        while (this.fragment && this.safeTo <= pos)
+            this.nextFragment();
+        if (!this.fragment)
+            return null;
+        for (;;) {
+            let last = this.trees.length - 1;
+            if (last < 0) { // End of tree
+                this.nextFragment();
+                return null;
+            }
+            let top = this.trees[last], index = this.index[last];
+            if (index == top.children.length) {
+                this.trees.pop();
+                this.start.pop();
+                this.index.pop();
+                continue;
+            }
+            let next = top.children[index];
+            let start = this.start[last] + top.positions[index];
+            if (start > pos) {
+                this.nextStart = start;
+                return null;
+            }
+            if (next instanceof dist/* Tree */.PH) {
+                if (start == pos) {
+                    if (start < this.safeFrom)
+                        return null;
+                    let end = start + next.length;
+                    if (end <= this.safeTo) {
+                        let lookAhead = next.prop(dist/* NodeProp */.uY.lookAhead);
+                        if (!lookAhead || end + lookAhead < this.fragment.to)
+                            return next;
+                    }
+                }
+                this.index[last]++;
+                if (start + next.length >= Math.max(this.safeFrom, pos)) { // Enter this node
+                    this.trees.push(next);
+                    this.start.push(start);
+                    this.index.push(0);
+                }
+            }
+            else {
+                this.index[last]++;
+                this.nextStart = start + next.length;
+            }
+        }
+    }
+}
+class TokenCache {
+    constructor(parser, stream) {
+        this.stream = stream;
+        this.tokens = [];
+        this.mainToken = null;
+        this.actions = [];
+        this.tokens = parser.tokenizers.map(_ => new CachedToken);
+    }
+    getActions(stack) {
+        let actionIndex = 0;
+        let main = null;
+        let { parser } = stack.p, { tokenizers } = parser;
+        let mask = parser.stateSlot(stack.state, 3 /* ParseState.TokenizerMask */);
+        let context = stack.curContext ? stack.curContext.hash : 0;
+        let lookAhead = 0;
+        for (let i = 0; i < tokenizers.length; i++) {
+            if (((1 << i) & mask) == 0)
+                continue;
+            let tokenizer = tokenizers[i], token = this.tokens[i];
+            if (main && !tokenizer.fallback)
+                continue;
+            if (tokenizer.contextual || token.start != stack.pos || token.mask != mask || token.context != context) {
+                this.updateCachedToken(token, tokenizer, stack);
+                token.mask = mask;
+                token.context = context;
+            }
+            if (token.lookAhead > token.end + 25 /* Lookahead.Margin */)
+                lookAhead = Math.max(token.lookAhead, lookAhead);
+            if (token.value != 0 /* Term.Err */) {
+                let startIndex = actionIndex;
+                if (token.extended > -1)
+                    actionIndex = this.addActions(stack, token.extended, token.end, actionIndex);
+                actionIndex = this.addActions(stack, token.value, token.end, actionIndex);
+                if (!tokenizer.extend) {
+                    main = token;
+                    if (actionIndex > startIndex)
+                        break;
+                }
+            }
+        }
+        while (this.actions.length > actionIndex)
+            this.actions.pop();
+        if (lookAhead)
+            stack.setLookAhead(lookAhead);
+        if (!main && stack.pos == this.stream.end) {
+            main = new CachedToken;
+            main.value = stack.p.parser.eofTerm;
+            main.start = main.end = stack.pos;
+            actionIndex = this.addActions(stack, main.value, main.end, actionIndex);
+        }
+        this.mainToken = main;
+        return this.actions;
+    }
+    getMainToken(stack) {
+        if (this.mainToken)
+            return this.mainToken;
+        let main = new CachedToken, { pos, p } = stack;
+        main.start = pos;
+        main.end = Math.min(pos + 1, p.stream.end);
+        main.value = pos == p.stream.end ? p.parser.eofTerm : 0 /* Term.Err */;
+        return main;
+    }
+    updateCachedToken(token, tokenizer, stack) {
+        let start = this.stream.clipPos(stack.pos);
+        tokenizer.token(this.stream.reset(start, token), stack);
+        if (token.value > -1) {
+            let { parser } = stack.p;
+            for (let i = 0; i < parser.specialized.length; i++)
+                if (parser.specialized[i] == token.value) {
+                    let result = parser.specializers[i](this.stream.read(token.start, token.end), stack);
+                    if (result >= 0 && stack.p.parser.dialect.allows(result >> 1)) {
+                        if ((result & 1) == 0 /* Specialize.Specialize */)
+                            token.value = result >> 1;
+                        else
+                            token.extended = result >> 1;
+                        break;
+                    }
+                }
+        }
+        else {
+            token.value = 0 /* Term.Err */;
+            token.end = this.stream.clipPos(start + 1);
+        }
+    }
+    putAction(action, token, end, index) {
+        // Don't add duplicate actions
+        for (let i = 0; i < index; i += 3)
+            if (this.actions[i] == action)
+                return index;
+        this.actions[index++] = action;
+        this.actions[index++] = token;
+        this.actions[index++] = end;
+        return index;
+    }
+    addActions(stack, token, end, index) {
+        let { state } = stack, { parser } = stack.p, { data } = parser;
+        for (let set = 0; set < 2; set++) {
+            for (let i = parser.stateSlot(state, set ? 2 /* ParseState.Skip */ : 1 /* ParseState.Actions */);; i += 3) {
+                if (data[i] == 65535 /* Seq.End */) {
+                    if (data[i + 1] == 1 /* Seq.Next */) {
+                        i = pair(data, i + 2);
+                    }
+                    else {
+                        if (index == 0 && data[i + 1] == 2 /* Seq.Other */)
+                            index = this.putAction(pair(data, i + 2), token, end, index);
+                        break;
+                    }
+                }
+                if (data[i] == token)
+                    index = this.putAction(pair(data, i + 1), token, end, index);
+            }
+        }
+        return index;
+    }
+}
+class Parse {
+    constructor(parser, input, fragments, ranges) {
+        this.parser = parser;
+        this.input = input;
+        this.ranges = ranges;
+        this.recovering = 0;
+        this.nextStackID = 0x2654; // ♔, ♕, ♖, ♗, ♘, ♙, ♠, ♡, ♢, ♣, ♤, ♥, ♦, ♧
+        this.minStackPos = 0;
+        this.reused = [];
+        this.stoppedAt = null;
+        this.lastBigReductionStart = -1;
+        this.lastBigReductionSize = 0;
+        this.bigReductionCount = 0;
+        this.stream = new InputStream(input, ranges);
+        this.tokens = new TokenCache(parser, this.stream);
+        this.topTerm = parser.top[1];
+        let { from } = ranges[0];
+        this.stacks = [Stack.start(this, parser.top[0], from)];
+        this.fragments = fragments.length && this.stream.end - from > parser.bufferLength * 4
+            ? new FragmentCursor(fragments, parser.nodeSet) : null;
+    }
+    get parsedPos() {
+        return this.minStackPos;
+    }
+    // Move the parser forward. This will process all parse stacks at
+    // `this.pos` and try to advance them to a further position. If no
+    // stack for such a position is found, it'll start error-recovery.
+    //
+    // When the parse is finished, this will return a syntax tree. When
+    // not, it returns `null`.
+    advance() {
+        let stacks = this.stacks, pos = this.minStackPos;
+        // This will hold stacks beyond `pos`.
+        let newStacks = this.stacks = [];
+        let stopped, stoppedTokens;
+        // If a large amount of reductions happened with the same start
+        // position, force the stack out of that production in order to
+        // avoid creating a tree too deep to recurse through.
+        // (This is an ugly kludge, because unfortunately there is no
+        // straightforward, cheap way to check for this happening, due to
+        // the history of reductions only being available in an
+        // expensive-to-access format in the stack buffers.)
+        if (this.bigReductionCount > 300 /* Rec.MaxLeftAssociativeReductionCount */ && stacks.length == 1) {
+            let [s] = stacks;
+            while (s.forceReduce() && s.stack.length && s.stack[s.stack.length - 2] >= this.lastBigReductionStart) { }
+            this.bigReductionCount = this.lastBigReductionSize = 0;
+        }
+        // Keep advancing any stacks at `pos` until they either move
+        // forward or can't be advanced. Gather stacks that can't be
+        // advanced further in `stopped`.
+        for (let i = 0; i < stacks.length; i++) {
+            let stack = stacks[i];
+            for (;;) {
+                this.tokens.mainToken = null;
+                if (stack.pos > pos) {
+                    newStacks.push(stack);
+                }
+                else if (this.advanceStack(stack, newStacks, stacks)) {
+                    continue;
+                }
+                else {
+                    if (!stopped) {
+                        stopped = [];
+                        stoppedTokens = [];
+                    }
+                    stopped.push(stack);
+                    let tok = this.tokens.getMainToken(stack);
+                    stoppedTokens.push(tok.value, tok.end);
+                }
+                break;
+            }
+        }
+        if (!newStacks.length) {
+            let finished = stopped && findFinished(stopped);
+            if (finished) {
+                if (verbose)
+                    console.log("Finish with " + this.stackID(finished));
+                return this.stackToTree(finished);
+            }
+            if (this.parser.strict) {
+                if (verbose && stopped)
+                    console.log("Stuck with token " + (this.tokens.mainToken ? this.parser.getName(this.tokens.mainToken.value) : "none"));
+                throw new SyntaxError("No parse at " + pos);
+            }
+            if (!this.recovering)
+                this.recovering = 5 /* Rec.Distance */;
+        }
+        if (this.recovering && stopped) {
+            let finished = this.stoppedAt != null && stopped[0].pos > this.stoppedAt ? stopped[0]
+                : this.runRecovery(stopped, stoppedTokens, newStacks);
+            if (finished) {
+                if (verbose)
+                    console.log("Force-finish " + this.stackID(finished));
+                return this.stackToTree(finished.forceAll());
+            }
+        }
+        if (this.recovering) {
+            let maxRemaining = this.recovering == 1 ? 1 : this.recovering * 3 /* Rec.MaxRemainingPerStep */;
+            if (newStacks.length > maxRemaining) {
+                newStacks.sort((a, b) => b.score - a.score);
+                while (newStacks.length > maxRemaining)
+                    newStacks.pop();
+            }
+            if (newStacks.some(s => s.reducePos > pos))
+                this.recovering--;
+        }
+        else if (newStacks.length > 1) {
+            // Prune stacks that are in the same state, or that have been
+            // running without splitting for a while, to avoid getting stuck
+            // with multiple successful stacks running endlessly on.
+            outer: for (let i = 0; i < newStacks.length - 1; i++) {
+                let stack = newStacks[i];
+                for (let j = i + 1; j < newStacks.length; j++) {
+                    let other = newStacks[j];
+                    if (stack.sameState(other) ||
+                        stack.buffer.length > 500 /* Rec.MinBufferLengthPrune */ && other.buffer.length > 500 /* Rec.MinBufferLengthPrune */) {
+                        if (((stack.score - other.score) || (stack.buffer.length - other.buffer.length)) > 0) {
+                            newStacks.splice(j--, 1);
+                        }
+                        else {
+                            newStacks.splice(i--, 1);
+                            continue outer;
+                        }
+                    }
+                }
+            }
+            if (newStacks.length > 12 /* Rec.MaxStackCount */) {
+                newStacks.sort((a, b) => b.score - a.score);
+                newStacks.splice(12 /* Rec.MaxStackCount */, newStacks.length - 12 /* Rec.MaxStackCount */);
+            }
+        }
+        this.minStackPos = newStacks[0].pos;
+        for (let i = 1; i < newStacks.length; i++)
+            if (newStacks[i].pos < this.minStackPos)
+                this.minStackPos = newStacks[i].pos;
+        return null;
+    }
+    stopAt(pos) {
+        if (this.stoppedAt != null && this.stoppedAt < pos)
+            throw new RangeError("Can't move stoppedAt forward");
+        this.stoppedAt = pos;
+    }
+    // Returns an updated version of the given stack, or null if the
+    // stack can't advance normally. When `split` and `stacks` are
+    // given, stacks split off by ambiguous operations will be pushed to
+    // `split`, or added to `stacks` if they move `pos` forward.
+    advanceStack(stack, stacks, split) {
+        let start = stack.pos, { parser } = this;
+        let base = verbose ? this.stackID(stack) + " -> " : "";
+        if (this.stoppedAt != null && start > this.stoppedAt)
+            return stack.forceReduce() ? stack : null;
+        if (this.fragments) {
+            let strictCx = stack.curContext && stack.curContext.tracker.strict, cxHash = strictCx ? stack.curContext.hash : 0;
+            for (let cached = this.fragments.nodeAt(start); cached;) {
+                let match = this.parser.nodeSet.types[cached.type.id] == cached.type ? parser.getGoto(stack.state, cached.type.id) : -1;
+                if (match > -1 && cached.length && (!strictCx || (cached.prop(dist/* NodeProp */.uY.contextHash) || 0) == cxHash)) {
+                    stack.useNode(cached, match);
+                    if (verbose)
+                        console.log(base + this.stackID(stack) + ` (via reuse of ${parser.getName(cached.type.id)})`);
+                    return true;
+                }
+                if (!(cached instanceof dist/* Tree */.PH) || cached.children.length == 0 || cached.positions[0] > 0)
+                    break;
+                let inner = cached.children[0];
+                if (inner instanceof dist/* Tree */.PH && cached.positions[0] == 0)
+                    cached = inner;
+                else
+                    break;
+            }
+        }
+        let defaultReduce = parser.stateSlot(stack.state, 4 /* ParseState.DefaultReduce */);
+        if (defaultReduce > 0) {
+            stack.reduce(defaultReduce);
+            if (verbose)
+                console.log(base + this.stackID(stack) + ` (via always-reduce ${parser.getName(defaultReduce & 65535 /* Action.ValueMask */)})`);
+            return true;
+        }
+        if (stack.stack.length >= 8400 /* Rec.CutDepth */) {
+            while (stack.stack.length > 6000 /* Rec.CutTo */ && stack.forceReduce()) { }
+        }
+        let actions = this.tokens.getActions(stack);
+        for (let i = 0; i < actions.length;) {
+            let action = actions[i++], term = actions[i++], end = actions[i++];
+            let last = i == actions.length || !split;
+            let localStack = last ? stack : stack.split();
+            let main = this.tokens.mainToken;
+            localStack.apply(action, term, main ? main.start : localStack.pos, end);
+            if (verbose)
+                console.log(base + this.stackID(localStack) + ` (via ${(action & 65536 /* Action.ReduceFlag */) == 0 ? "shift"
+                    : `reduce of ${parser.getName(action & 65535 /* Action.ValueMask */)}`} for ${parser.getName(term)} @ ${start}${localStack == stack ? "" : ", split"})`);
+            if (last)
+                return true;
+            else if (localStack.pos > start)
+                stacks.push(localStack);
+            else
+                split.push(localStack);
+        }
+        return false;
+    }
+    // Advance a given stack forward as far as it will go. Returns the
+    // (possibly updated) stack if it got stuck, or null if it moved
+    // forward and was given to `pushStackDedup`.
+    advanceFully(stack, newStacks) {
+        let pos = stack.pos;
+        for (;;) {
+            if (!this.advanceStack(stack, null, null))
+                return false;
+            if (stack.pos > pos) {
+                pushStackDedup(stack, newStacks);
+                return true;
+            }
+        }
+    }
+    runRecovery(stacks, tokens, newStacks) {
+        let finished = null, restarted = false;
+        for (let i = 0; i < stacks.length; i++) {
+            let stack = stacks[i], token = tokens[i << 1], tokenEnd = tokens[(i << 1) + 1];
+            let base = verbose ? this.stackID(stack) + " -> " : "";
+            if (stack.deadEnd) {
+                if (restarted)
+                    continue;
+                restarted = true;
+                stack.restart();
+                if (verbose)
+                    console.log(base + this.stackID(stack) + " (restarted)");
+                let done = this.advanceFully(stack, newStacks);
+                if (done)
+                    continue;
+            }
+            let force = stack.split(), forceBase = base;
+            for (let j = 0; j < 10 /* Rec.ForceReduceLimit */ && force.forceReduce(); j++) {
+                if (verbose)
+                    console.log(forceBase + this.stackID(force) + " (via force-reduce)");
+                let done = this.advanceFully(force, newStacks);
+                if (done)
+                    break;
+                if (verbose)
+                    forceBase = this.stackID(force) + " -> ";
+            }
+            for (let insert of stack.recoverByInsert(token)) {
+                if (verbose)
+                    console.log(base + this.stackID(insert) + " (via recover-insert)");
+                this.advanceFully(insert, newStacks);
+            }
+            if (this.stream.end > stack.pos) {
+                if (tokenEnd == stack.pos) {
+                    tokenEnd++;
+                    token = 0 /* Term.Err */;
+                }
+                stack.recoverByDelete(token, tokenEnd);
+                if (verbose)
+                    console.log(base + this.stackID(stack) + ` (via recover-delete ${this.parser.getName(token)})`);
+                pushStackDedup(stack, newStacks);
+            }
+            else if (!finished || finished.score < force.score) {
+                finished = force;
+            }
+        }
+        return finished;
+    }
+    // Convert the stack's buffer to a syntax tree.
+    stackToTree(stack) {
+        stack.close();
+        return dist/* Tree */.PH.build({ buffer: StackBufferCursor.create(stack),
+            nodeSet: this.parser.nodeSet,
+            topID: this.topTerm,
+            maxBufferLength: this.parser.bufferLength,
+            reused: this.reused,
+            start: this.ranges[0].from,
+            length: stack.pos - this.ranges[0].from,
+            minRepeatType: this.parser.minRepeatTerm });
+    }
+    stackID(stack) {
+        let id = (stackIDs || (stackIDs = new WeakMap)).get(stack);
+        if (!id)
+            stackIDs.set(stack, id = String.fromCodePoint(this.nextStackID++));
+        return id + stack;
+    }
+}
+function pushStackDedup(stack, newStacks) {
+    for (let i = 0; i < newStacks.length; i++) {
+        let other = newStacks[i];
+        if (other.pos == stack.pos && other.sameState(stack)) {
+            if (newStacks[i].score < stack.score)
+                newStacks[i] = stack;
+            return;
+        }
+    }
+    newStacks.push(stack);
+}
+class Dialect {
+    constructor(source, flags, disabled) {
+        this.source = source;
+        this.flags = flags;
+        this.disabled = disabled;
+    }
+    allows(term) { return !this.disabled || this.disabled[term] == 0; }
+}
+const id = x => x;
+/**
+Context trackers are used to track stateful context (such as
+indentation in the Python grammar, or parent elements in the XML
+grammar) needed by external tokenizers. You declare them in a
+grammar file as `@context exportName from "module"`.
+
+Context values should be immutable, and can be updated (replaced)
+on shift or reduce actions.
+
+The export used in a `@context` declaration should be of this
+type.
+*/
+class ContextTracker {
+    /**
+    Define a context tracker.
+    */
+    constructor(spec) {
+        this.start = spec.start;
+        this.shift = spec.shift || id;
+        this.reduce = spec.reduce || id;
+        this.reuse = spec.reuse || id;
+        this.hash = spec.hash || (() => 0);
+        this.strict = spec.strict !== false;
+    }
+}
+/**
+Holds the parse tables for a given grammar, as generated by
+`lezer-generator`, and provides [methods](#common.Parser) to parse
+content with.
+*/
+class LRParser extends dist/* Parser */.iX {
+    /**
+    @internal
+    */
+    constructor(spec) {
+        super();
+        /**
+        @internal
+        */
+        this.wrappers = [];
+        if (spec.version != 14 /* File.Version */)
+            throw new RangeError(`Parser version (${spec.version}) doesn't match runtime version (${14 /* File.Version */})`);
+        let nodeNames = spec.nodeNames.split(" ");
+        this.minRepeatTerm = nodeNames.length;
+        for (let i = 0; i < spec.repeatNodeCount; i++)
+            nodeNames.push("");
+        let topTerms = Object.keys(spec.topRules).map(r => spec.topRules[r][1]);
+        let nodeProps = [];
+        for (let i = 0; i < nodeNames.length; i++)
+            nodeProps.push([]);
+        function setProp(nodeID, prop, value) {
+            nodeProps[nodeID].push([prop, prop.deserialize(String(value))]);
+        }
+        if (spec.nodeProps)
+            for (let propSpec of spec.nodeProps) {
+                let prop = propSpec[0];
+                if (typeof prop == "string")
+                    prop = dist/* NodeProp */.uY[prop];
+                for (let i = 1; i < propSpec.length;) {
+                    let next = propSpec[i++];
+                    if (next >= 0) {
+                        setProp(next, prop, propSpec[i++]);
+                    }
+                    else {
+                        let value = propSpec[i + -next];
+                        for (let j = -next; j > 0; j--)
+                            setProp(propSpec[i++], prop, value);
+                        i++;
+                    }
+                }
+            }
+        this.nodeSet = new dist/* NodeSet */.fI(nodeNames.map((name, i) => dist/* NodeType */.Z6.define({
+            name: i >= this.minRepeatTerm ? undefined : name,
+            id: i,
+            props: nodeProps[i],
+            top: topTerms.indexOf(i) > -1,
+            error: i == 0,
+            skipped: spec.skippedNodes && spec.skippedNodes.indexOf(i) > -1
+        })));
+        if (spec.propSources)
+            this.nodeSet = this.nodeSet.extend(...spec.propSources);
+        this.strict = false;
+        this.bufferLength = (/* inlined export .DefaultBufferLength */1024);
+        let tokenArray = decodeArray(spec.tokenData);
+        this.context = spec.context;
+        this.specializerSpecs = spec.specialized || [];
+        this.specialized = new Uint16Array(this.specializerSpecs.length);
+        for (let i = 0; i < this.specializerSpecs.length; i++)
+            this.specialized[i] = this.specializerSpecs[i].term;
+        this.specializers = this.specializerSpecs.map(getSpecializer);
+        this.states = decodeArray(spec.states, Uint32Array);
+        this.data = decodeArray(spec.stateData);
+        this.goto = decodeArray(spec.goto);
+        this.maxTerm = spec.maxTerm;
+        this.tokenizers = spec.tokenizers.map(value => typeof value == "number" ? new TokenGroup(tokenArray, value) : value);
+        this.topRules = spec.topRules;
+        this.dialects = spec.dialects || {};
+        this.dynamicPrecedences = spec.dynamicPrecedences || null;
+        this.tokenPrecTable = spec.tokenPrec;
+        this.termNames = spec.termNames || null;
+        this.maxNode = this.nodeSet.types.length - 1;
+        this.dialect = this.parseDialect();
+        this.top = this.topRules[Object.keys(this.topRules)[0]];
+    }
+    createParse(input, fragments, ranges) {
+        let parse = new Parse(this, input, fragments, ranges);
+        for (let w of this.wrappers)
+            parse = w(parse, input, fragments, ranges);
+        return parse;
+    }
+    /**
+    Get a goto table entry @internal
+    */
+    getGoto(state, term, loose = false) {
+        let table = this.goto;
+        if (term >= table[0])
+            return -1;
+        for (let pos = table[term + 1];;) {
+            let groupTag = table[pos++], last = groupTag & 1;
+            let target = table[pos++];
+            if (last && loose)
+                return target;
+            for (let end = pos + (groupTag >> 1); pos < end; pos++)
+                if (table[pos] == state)
+                    return target;
+            if (last)
+                return -1;
+        }
+    }
+    /**
+    Check if this state has an action for a given terminal @internal
+    */
+    hasAction(state, terminal) {
+        let data = this.data;
+        for (let set = 0; set < 2; set++) {
+            for (let i = this.stateSlot(state, set ? 2 /* ParseState.Skip */ : 1 /* ParseState.Actions */), next;; i += 3) {
+                if ((next = data[i]) == 65535 /* Seq.End */) {
+                    if (data[i + 1] == 1 /* Seq.Next */)
+                        next = data[i = pair(data, i + 2)];
+                    else if (data[i + 1] == 2 /* Seq.Other */)
+                        return pair(data, i + 2);
+                    else
+                        break;
+                }
+                if (next == terminal || next == 0 /* Term.Err */)
+                    return pair(data, i + 1);
+            }
+        }
+        return 0;
+    }
+    /**
+    @internal
+    */
+    stateSlot(state, slot) {
+        return this.states[(state * 6 /* ParseState.Size */) + slot];
+    }
+    /**
+    @internal
+    */
+    stateFlag(state, flag) {
+        return (this.stateSlot(state, 0 /* ParseState.Flags */) & flag) > 0;
+    }
+    /**
+    @internal
+    */
+    validAction(state, action) {
+        return !!this.allActions(state, a => a == action ? true : null);
+    }
+    /**
+    @internal
+    */
+    allActions(state, action) {
+        let deflt = this.stateSlot(state, 4 /* ParseState.DefaultReduce */);
+        let result = deflt ? action(deflt) : undefined;
+        for (let i = this.stateSlot(state, 1 /* ParseState.Actions */); result == null; i += 3) {
+            if (this.data[i] == 65535 /* Seq.End */) {
+                if (this.data[i + 1] == 1 /* Seq.Next */)
+                    i = pair(this.data, i + 2);
+                else
+                    break;
+            }
+            result = action(pair(this.data, i + 1));
+        }
+        return result;
+    }
+    /**
+    Get the states that can follow this one through shift actions or
+    goto jumps. @internal
+    */
+    nextStates(state) {
+        let result = [];
+        for (let i = this.stateSlot(state, 1 /* ParseState.Actions */);; i += 3) {
+            if (this.data[i] == 65535 /* Seq.End */) {
+                if (this.data[i + 1] == 1 /* Seq.Next */)
+                    i = pair(this.data, i + 2);
+                else
+                    break;
+            }
+            if ((this.data[i + 2] & (65536 /* Action.ReduceFlag */ >> 16)) == 0) {
+                let value = this.data[i + 1];
+                if (!result.some((v, i) => (i & 1) && v == value))
+                    result.push(this.data[i], value);
+            }
+        }
+        return result;
+    }
+    /**
+    Configure the parser. Returns a new parser instance that has the
+    given settings modified. Settings not provided in `config` are
+    kept from the original parser.
+    */
+    configure(config) {
+        // Hideous reflection-based kludge to make it easy to create a
+        // slightly modified copy of a parser.
+        let copy = Object.assign(Object.create(LRParser.prototype), this);
+        if (config.props)
+            copy.nodeSet = this.nodeSet.extend(...config.props);
+        if (config.top) {
+            let info = this.topRules[config.top];
+            if (!info)
+                throw new RangeError(`Invalid top rule name ${config.top}`);
+            copy.top = info;
+        }
+        if (config.tokenizers)
+            copy.tokenizers = this.tokenizers.map(t => {
+                let found = config.tokenizers.find(r => r.from == t);
+                return found ? found.to : t;
+            });
+        if (config.specializers) {
+            copy.specializers = this.specializers.slice();
+            copy.specializerSpecs = this.specializerSpecs.map((s, i) => {
+                let found = config.specializers.find(r => r.from == s.external);
+                if (!found)
+                    return s;
+                let spec = Object.assign(Object.assign({}, s), { external: found.to });
+                copy.specializers[i] = getSpecializer(spec);
+                return spec;
+            });
+        }
+        if (config.contextTracker)
+            copy.context = config.contextTracker;
+        if (config.dialect)
+            copy.dialect = this.parseDialect(config.dialect);
+        if (config.strict != null)
+            copy.strict = config.strict;
+        if (config.wrap)
+            copy.wrappers = copy.wrappers.concat(config.wrap);
+        if (config.bufferLength != null)
+            copy.bufferLength = config.bufferLength;
+        return copy;
+    }
+    /**
+    Tells you whether any [parse wrappers](#lr.ParserConfig.wrap)
+    are registered for this parser.
+    */
+    hasWrappers() {
+        return this.wrappers.length > 0;
+    }
+    /**
+    Returns the name associated with a given term. This will only
+    work for all terms when the parser was generated with the
+    `--names` option. By default, only the names of tagged terms are
+    stored.
+    */
+    getName(term) {
+        return this.termNames ? this.termNames[term] : String(term <= this.maxNode && this.nodeSet.types[term].name || term);
+    }
+    /**
+    The eof term id is always allocated directly after the node
+    types. @internal
+    */
+    get eofTerm() { return this.maxNode + 1; }
+    /**
+    The type of top node produced by the parser.
+    */
+    get topNode() { return this.nodeSet.types[this.top[1]]; }
+    /**
+    @internal
+    */
+    dynamicPrecedence(term) {
+        let prec = this.dynamicPrecedences;
+        return prec == null ? 0 : prec[term] || 0;
+    }
+    /**
+    @internal
+    */
+    parseDialect(dialect) {
+        let values = Object.keys(this.dialects), flags = values.map(() => false);
+        if (dialect)
+            for (let part of dialect.split(" ")) {
+                let id = values.indexOf(part);
+                if (id >= 0)
+                    flags[id] = true;
+            }
+        let disabled = null;
+        for (let i = 0; i < values.length; i++)
+            if (!flags[i]) {
+                for (let j = this.dialects[values[i]], id; (id = this.data[j++]) != 65535 /* Seq.End */;)
+                    (disabled || (disabled = new Uint8Array(this.maxTerm + 1)))[id] = 1;
+            }
+        return new Dialect(dialect, flags, disabled);
+    }
+    /**
+    Used by the output of the parser generator. Not available to
+    user code. @hide
+    */
+    static deserialize(spec) {
+        return new LRParser(spec);
+    }
+}
+function pair(data, off) { return data[off] | (data[off + 1] << 16); }
+function findFinished(stacks) {
+    let best = null;
+    for (let stack of stacks) {
+        let stopped = stack.p.stoppedAt;
+        if ((stack.pos == stack.p.stream.end || stopped != null && stack.pos > stopped) &&
+            stack.p.parser.stateFlag(stack.state, 2 /* StateFlag.Accepting */) &&
+            (!best || best.score < stack.score))
+            best = stack;
+    }
+    return best;
+}
+function getSpecializer(spec) {
+    if (spec.external) {
+        let mask = spec.extend ? 1 /* Specialize.Extend */ : 0 /* Specialize.Specialize */;
+        return (value, stack) => (spec.external(value, stack) << 1) | mask;
+    }
+    return spec.get;
+}
+
+
+
+;// ../../node_modules/lezer-turtle/src/parser.js
+// This file was generated by lezer-generator. You probably shouldn't edit it.
+
+const parser = LRParser.deserialize({
+  version: 14,
+  states: "/YQYQPOOO!ZQPO'#CaO!`QPO'#CeO!eQPO'#CgO!mQPO'#ClO!rQPO'#CnO!eQPO'#CpOOQO'#C_'#C_OOQO'#Ct'#CtOOQO'#EO'#EOO!wQPO'#CzOOQO'#Cv'#CvO#YQPO'#DqO$uQPO'#C}O$|QPO'#CsOOQO'#Cs'#CsO%_QPO'#CrO%mQPO'#CrOOQO'#D}'#D}O&RQPO'#D}O&oQPO'#DtO&vQPO'#DrO!UQPO'#DrOOQO'#Dr'#DrOOQO'#Du'#DuQYQPOOO'XQPO,58{O'^QPO,59POOQO'#Ci'#CiO'cQPO,59RO'hQPO,59WOOQO,59Y,59YOOQO,59[,59[OOQO,59f,59fOOQO'#DS'#DSOOQO'#DR'#DRO#nQPO'#DQO'mQPO,59kO'rQPO'#CzOOQO'#ER'#ERO%_QPO,5:]OOQO'#D`'#D`O'wQPO'#D_OOQO'#De'#DeOOQO'#Di'#DiOOQO'#EP'#EPOOQO'#DO'#DOOOQO'#Dv'#DvO)_QPO,59iOOQO,59i,59iO&vQPO'#DnOOQO,59^,59^OOQO,5:i,5:iO)fQPO'#EWOOQO,5:`,5:`O)nQPO,5:`OOQO'#ET'#ETO!UQPO,5:^OOQO,5:^,5:^OOQO-E7s-E7sO)sQPO1G.gOOQO1G.k1G.kOOQO1G.m1G.mOOQO1G.r1G.rO)xQQO'#DUO*dQPO,59lO*uQQO'#D_OOQO1G/V1G/VO+jQPO1G/wOOQO,59y,59yO,^QPO,59yOOQO-E7t-E7tOOQO1G/T1G/TO%_QPO,5:YO,iQPO,5:rOOQO1G/z1G/zOOQO1G/x1G/xOOQO7+$R7+$RO,pQQO'#DWO%_QPO'#D[OOQO'#Dw'#DwO-^QQO'#DVO-xQPO,59pO.^QPO'#DyO.{QPO1G/WOOQO'#ES'#ESO/^QPO7+%cOOQO1G/e1G/eO/fQPO1G/tOOQO1G0^1G0^OOQO,59r,59rO0YQPO,59vOOQO-E7u-E7uO#nQPO'#DxO0_QPO1G/[O#nQPO,5:eOOQO-E7w-E7wO0sQPO'#DWOOQO<<H}<<H}O0zQPO<<H}OOQO'#EQ'#EQO1PQQO7+%`OOQO1G/b1G/bO)xQQO,5:dOOQO-E7v-E7vOOQO1G0P1G0POOQOAN>iAN>iOOQO<<Hz<<HzOOQO1G0O1G0O",
+  stateData: "1t~O!pOSPOS~OUPOVWOWXOYQO[ROaSOcTOeUOiWOkZOmYOp]O!d[O!geO!ydO~OVjO~OWkO~O^lO_lO~OVnO~OWoO~OVWOWXOiWOlqOwsO~OVWOWXOiWOkZOmvO!d[O~OVWOWXO^yO_yOiWOkZOmYOp]O!TyO!UyO!Y{O!Z{O![{O!^|O!_|O!a!SO!d[O~Oo!RO~P#nOVgXWgXigXwgX!y!wX~OVWOWXOiWOwsO~OVWOWXOiWOwsOSfX!xfX~OS!UO~OVWOWXOiWOkZOmYOp]O!d[O~O!x!WO~P&WOVWOWXOiWOkZOmvO~OW!^O~OS!_O~OS!`O~OW!aO~Ol!eO~OlqO~O!V!gO!W!hOV!RXW!RX^!RX_!RXi!RXk!RXm!RXo!RXp!RX!T!RX!U!RX!Y!RX!Z!RX![!RX!^!RX!_!RX!a!RX!d!RX{!RX!c!RX~Oo!jO~P#nOS!lO!x!zX~O!x!mO~OS!oO~O{!pO}!qOlyP!PyP!QyPSyP!xyP|yP~O!Q!uOltaSta!xta|ta~O!V!gO!W!hOl!RX{!RX}!RX!P!RX!Q!RXS!RX!x!RX!`!RX|!RX~O^yO_yO!TyO!UyO!Y{O!Z{O![{O!^|O!_|O!a!SO~P#YOVWOWXOiWO~O!x!za~P&WOlzX{zX}zX!PzX!QzXSzX!xzX|zX~P&vO{!pO}!qOlyX!PyX!QyXSyX!xyX|yX~O!P#POlxa!QxaSxa!xxa|xa~OVWOWXOiWOwsOl!mX!Q!mXS!mX!x!mX|!mX~O!Q!uOltiSti!xti|ti~O{#TO!c#UO~O^yO_yO!TyO!UyO!Y{O!Z{O![{O!^|O!_|O!a!SO~P&vO|#YO~O!P#POlxi!QxiSxi!xxi|xi~O!czX~P&vO!c#^O~O!`#_O~O!g!x!y~UY[!V!a!dW![!Z!YS!T^!U_iV!gacew!^!_^~",
+  goto: "*z!{PPP!|P#QPPP#QP#QP#UPP#QP#QP#QP#[#d#jP$UPPP$vPP%Y%g%r&P&Z&jP&s&y'PPPP'XPP'^'gPPPP'^PPP'^PPPP'rPP(P(dP(h(r(x)O)V)]PPP(d)c'r*a*d*g*jPP*tTbOiTVOiQmRRpUScOiT!Vd!lX`Odi!l!RXOY[]`adeitx!Q!S!f!h!k!l!p!q!u!z#P#R#TS^OiS_d!lQw[Y!O]t!Q#P#RS!Ye!SQ!w!fS!|!p#TR#W!zqZO[]deit!Q!S!f!l!p!z#P#R#TW_Odi!lZ!O]t!Q#P#RS!P]!QS!bt#RR#Z#PWaOdi!lZ!O]t!Q#P#RQuYS!T`aR!}!qWtY`a!qQ!fxQ!z!kR#R!u_sY`ax!k!q!uQ!ctR#]#RQ!t!bR#`#ZU!r!b!s#ZR#V!xV!r!b!s#Z_}]t!Q!f!z#P#RUz]!Q!fX!dt!z#P#RY!O]t!Q#P#RQ!w!fR#W!zWaOdi!lQw[Y!O]t!Q#P#RR!w!fThOiSgOiQ![fR!n!ZQiOR!]iQ!Q]R!i!QS!s!b#ZR#O!sQ#Q!tR#[#QQ!v!cR#S!vS^OiS_d!l^rY`ax!k!q!uQw[Y!O]t!Q#P#RS!Ye!SQ!w!fQ!y!hS!|!p#TR#W!zR#X!zRx[R!x!fSfOiQ!ZeR!k!SQ!XdR!{!l",
+  nodeNames: "⚠ Comment TurtleDoc Directive . PrefixID AtPrefixKw PNAME_NS IRIREF Base AtBaseKw Version AtVersionKw VersionSpecifier STRING_LITERAL_QUOTE STRING_LITERAL_SINGLE_QUOTE SparqlPrefix PrefixKw SparqlBase BaseKw SparqlVersion VersionKw Triples Subject PrefixedName PNAME_LN BlankNode BLANK_NODE_LABEL ] [ Anon ) ( Collection Object BlankNodePropertyList PredicateObjectList Verb Predicate RdfTypeKw ObjectList Annotation Reifier ~ |} {| AnnotationBlock , ; RDFLiteral String STRING_LITERAL_LONG_QUOTE STRING_LITERAL_LONG_SINGLE_QUOTE LANG_DIR ^^ NumericLiteral INTEGER DECIMAL DOUBLE BooleanLiteral TrueKw FalseKw )>> <<( TripleTerm >> << ReifiedTriple Block GraphKw WrappedGraph",
+  maxTerm: 88,
+  nodeProps: [
+    ["openedBy", 28,"[",31,"(",44,"{|",62,"<<(",65,"<<"],
+    ["closedBy", 29,"]",32,")",45,"|}",63,")>>",66,">>"]
+  ],
+  skippedNodes: [0,1],
+  repeatNodeCount: 5,
+  tokenData: "#1S~R!^XY$}YZ$}]^$}pq$}rs%`st.Ywx.txy7nyz7s{|8W|}:O}!O8W!O!P:T!Q![9a![!]:]!]!^@|!^!_AR!`!aEm!b!cEx!c!dN|!d!e!$P!e!iN|!i!j!*q!j!rN|!r!s!3W!s!xN|!x!y!=h!y!}N|!}#O!Im#P#Q!Ir#Q#R!Iw#R#S!JS#T#U!Na#U#V!$P#V#YN|#Y#Z# z#Z#[!*q#[#dN|#d#e!3W#e#hN|#h#i#)z#i#jN|#j#k!=h#k#oN|#o#p#0`#p#q#0m#q#r#0x#r#s#0}%W%oN|%p&aN|&b1pN|4U4dN|4e$ISN|$I`$IbN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~%SS!p~XY$}YZ$}]^$}pq$}~%cXOY&OZ]&O^r&Ors)ps#O&O#O#P&s#P;'S&O;'S;=`)j<%lO&O~&RXOY&OZ]&O^r&Ors&ns#O&O#O#P&s#P;'S&O;'S;=`)j<%lO&O~&sO^~~&vYrs&Owx&O!w!x'f#O#P&O#U#V&O#Y#Z&O#b#c&O#f#g&O#h#i&O#i#j(h~'iR!Q!['r!c!i'r#T#Z'r~'uR!Q![(O!c!i(O#T#Z(O~(RR!Q![([!c!i([#T#Z([~(_R!Q![(h!c!i(h#T#Z(h~(kR!Q![(t!c!i(t#T#Z(t~(wR!Q![)Q!c!i)Q#T#Z)Q~)TR!Q![)^!c!i)^#T#Z)^~)aR!Q![&O!c!i&O#T#Z&O~)mP;=`<%l&O~)uP^~rs)x~){VOr)xrs*bs#O)x#O#P+c#P;'S)x;'S;=`+]<%lO)x~*eTOr)xrs*ts;'S)x;'S;=`+]<%lO)x~*wTOr)xrs+Ws;'S)x;'S;=`+]<%lO)x~+]O!T~~+`P;=`<%l)x~+fYrs)xwx)x!w!x,U#O#P)x#U#V)x#Y#Z)x#b#c)x#f#g)x#h#i)x#i#j-W~,XR!Q![,b!c!i,b#T#Z,b~,eR!Q![,n!c!i,n#T#Z,n~,qR!Q![,z!c!i,z#T#Z,z~,}R!Q![-W!c!i-W#T#Z-W~-ZR!Q![-d!c!i-d#T#Z-d~-gR!Q![-p!c!i-p#T#Z-p~-sR!Q![-|!c!i-|#T#Z-|~.PR!Q![)x!c!i)x#T#Z)x~._TP~OY.YZ].Y^;'S.Y;'S;=`.n<%lO.Y~.qP;=`<%l.Y~.wXOY/dZ]/d^w/dwx3Ux#O/d#O#P0X#P;'S/d;'S;=`3O<%lO/d~/gXOY/dZ]/d^w/dwx0Sx#O/d#O#P0X#P;'S/d;'S;=`3O<%lO/d~0XO_~~0[Yrs/dwx/d!w!x0z#O#P/d#U#V/d#Y#Z/d#b#c/d#f#g/d#h#i/d#i#j1|~0}R!Q![1W!c!i1W#T#Z1W~1ZR!Q![1d!c!i1d#T#Z1d~1gR!Q![1p!c!i1p#T#Z1p~1sR!Q![1|!c!i1|#T#Z1|~2PR!Q![2Y!c!i2Y#T#Z2Y~2]R!Q![2f!c!i2f#T#Z2f~2iR!Q![2r!c!i2r#T#Z2r~2uR!Q![/d!c!i/d#T#Z/d~3RP;=`<%l/d~3ZP_~wx3^~3aVOw3^wx3vx#O3^#O#P4w#P;'S3^;'S;=`4q<%lO3^~3yTOw3^wx4Yx;'S3^;'S;=`4q<%lO3^~4]TOw3^wx4lx;'S3^;'S;=`4q<%lO3^~4qO!U~~4tP;=`<%l3^~4zYrs3^wx3^!w!x5j#O#P3^#U#V3^#Y#Z3^#b#c3^#f#g3^#h#i3^#i#j6l~5mR!Q![5v!c!i5v#T#Z5v~5yR!Q![6S!c!i6S#T#Z6S~6VR!Q![6`!c!i6`#T#Z6`~6cR!Q![6l!c!i6l#T#Z6l~6oR!Q![6x!c!i6x#T#Z6x~6{R!Q![7U!c!i7U#T#Z7U~7XR!Q![7b!c!i7b#T#Z7b~7eR!Q![3^!c!i3^#T#Z3^~7sOp~R7xPoP!`!a7{Q8OP!`!a8RQ8WO!`Q~8ZQ!O!P8a!Q![9a~8dP!Q![8g~8lR!Z~!Q![8g!g!h8u#X#Y8u~8xR{|9R}!O9R!Q![9X~9UP!Q![9X~9^P![~!Q![9X~9fS!Y~!O!P9r!Q![9a!g!h8u#X#Y8u~9uR!Q![8g!g!h8u#X#Y8u~:TO!P~~:YPS~!Q![8g~:bcV~uv;m!Q![<V![!]<V!c!}<V#O#P?e#R#S<V#T#o<V%W%o<V%p&a<V&b1p<V4U4d<V4e$IS<V$I`$Ib<V$Kh%#t<V&/x&Et<V&FV;'S<V;'S;:j@v?&r?Ah<V?BY?Mn<V~;pR!Q![;y!c!i;y#T#Z;y~;|R!Q![<V!c!i<V#T#Z<V~<[hi~uv;m}!O<V!O!P=v!Q![<V![!]<V!c!}<V#O#P?e#R#S<V#T#o<V$}%O<V%W%o<V%p&a<V&b1p<V1p4U<V4U4d<V4e$IS<V$I`$Ib<V$Je$Jg<V$Kh%#t<V&/x&Et<V&FV;'S<V;'S;:j@v?&r?Ah<V?BY?Mn<V~=yhuv;m}!O<V!O!P=v!Q![<V![!]<V!c!}<V#O#P?e#R#S<V#T#o<V$}%O<V%W%o<V%p&a<V&b1p<V1p4U<V4U4d<V4e$IS<V$I`$Ib<V$Je$Jg<V$Kh%#t<V&/x&Et<V&FV;'S<V;'S;:j@v?&r?Ah<V?BY?Mn<V~?hdqr<Vst<Vtu<Vuv<Vvw<Vwx<Vxy<Vyz<Vz{<V{|<V|}<V}!O<V!O!P<V!P!Q<V!]!^<V!_!`<V!a!b<V!b!c<V#R#S<V#r#s<V~@yP;=`<%l<V~ARO!Q~~AU]qrA}s!^A}!^!_E`!_!`A}!`!aBv!a#OA}#O#PB{#P#QA}#R#SA}#T#oA}#r;'SA};'S;=`EY<%lOA}~BQ[qrA}s!^A}!_!`A}!`!aBv!a#OA}#O#PB{#P#QA}#R#SA}#T#oA}#r;'SA};'S;=`EY<%lOA}~B{OW~~COQ!w!xCU#i#jDW~CXR!Q![Cb!c!iCb#T#ZCb~CeR!Q![Cn!c!iCn#T#ZCn~CqR!Q![Cz!c!iCz#T#ZCz~C}R!Q![DW!c!iDW#T#ZDW~DZR!Q![Dd!c!iDd#T#ZDd~DgR!Q![Dp!c!iDp#T#ZDp~DsR!Q![D|!c!iD|#T#ZD|~EPR!Q![A}!c!iA}#T#ZA}~E]P;=`<%lA}~EeP!d~xyEh~EmO!a~~EpP!`!aEs~ExO!c~~E{W!c!}Fe#T#UFe#U#VGy#V#dFe#d#eIf#e#jFe#j#kLO#k#oFe~FjR!V~}!OFs!c!}Fe#T#oFe~FvS}!OGS!Q![Gh!c!}Gh#T#oGh~GVQ!c!}G]#T#oG]~GbQ!V~!c!}G]#T#oG]~GmS!V~}!OFs!Q![Gh!c!}Gh#T#oGh~HOS!V~}!OFs!c!}Fe#T#UH[#U#oFe~HaT!V~}!OFs!c!}Fe#T#gFe#g#hHp#h#oFe~HuT!V~}!OFs!c!}Fe#T#XFe#X#YIU#Y#oFe~I]RY~!V~}!OFs!c!}Fe#T#oFe~IkT!V~}!OFs!c!}Fe#T#fFe#f#gIz#g#oFe~JPT!V~}!OFs!c!}Fe#T#XFe#X#YJ`#Y#oFe~JeT!V~}!OFs!c!}Fe#T#YFe#Y#ZJt#Z#oFe~JyT!V~}!OFs!c!}Fe#T#]Fe#]#^KY#^#oFe~K_T!V~}!OFs!c!}Fe#T#lFe#l#mKn#m#oFe~KuRU~!V~}!OFs!c!}Fe#T#oFe~LTT!V~}!OFs!c!}Fe#T#XFe#X#YLd#Y#oFe~LiT!V~}!OFs!c!}Fe#T#fFe#f#gLx#g#oFe~L}T!V~}!OFs!c!}Fe#T#gFe#g#hM^#h#oFe~McT!V~}!OFs!c!}Fe#T#]Fe#]#^Mr#^#oFe~MwT!V~}!OFs!c!}Fe#T#cFe#c#dNW#d#oFe~N]T!V~}!OFs!c!}Fe#T#bFe#b#cNl#c#oFe~NsR[~!V~}!OFs!c!}Fe#T#oFe~! Pf}!ON|!O!P!!e!Q![N|![!]:]!c!}N|#R#SN|#T#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!!he}!ON|!O!P!!e!Q![N|!c!}N|#R#SN|#T#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!#|P;=`<%lN|~!$Sh}!ON|!O!P!!e!Q![N|![!]:]!c!d!%n!d!}N|#R#SN|#T#U!%n#U#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!%qj}!ON|!O!P!!e!Q![N|![!]:]!c!uN|!u!v!'c!v!}N|#R#SN|#T#gN|#g#h!'c#h#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!'fj}!ON|!O!P!!e!Q![N|![!]:]!c!gN|!g!h!)W!h!}N|#R#SN|#T#XN|#X#Y!)W#Y#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!)]fc~}!ON|!O!P!!e!Q![N|![!]:]!c!}N|#R#SN|#T#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!*tj}!ON|!O!P!!e!Q![N|![!]:]!c!tN|!t!u!,f!u!}N|#R#SN|#T#fN|#f#g!,f#g#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!,ih}!ON|!O!P!!e!Q![N|![!]:]!c!d!.T!d!}N|#R#SN|#T#U!.T#U#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!.Wj}!ON|!O!P!!e!Q![N|![!]:]!c!rN|!r!s!/x!s!}N|#R#SN|#T#dN|#d#e!/x#e#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!/{j}!ON|!O!P!!e!Q![N|![!]:]!c!jN|!j!k!1m!k!}N|#R#SN|#T#[N|#[#]!1m#]#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!1rf!g~}!ON|!O!P!!e!Q![N|![!]:]!c!}N|#R#SN|#T#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!3Zj}!ON|!O!P!!e!Q![N|![!]:]!c!tN|!t!u!4{!u!}N|#R#SN|#T#fN|#f#g!4{#g#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!5Oj}!ON|!O!P!!e!Q![N|![!]:]!c!gN|!g!h!6p!h!}N|#R#SN|#T#XN|#X#Y!6p#Y#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!6sj}!ON|!O!P!!e!Q![N|![!]:]!c!hN|!h!i!8e!i!}N|#R#SN|#T#YN|#Y#Z!8e#Z#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!8hj}!ON|!O!P!!e!Q![N|![!]:]!c!kN|!k!l!:Y!l!}N|#R#SN|#T#]N|#]#^!:Y#^#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!:]j}!ON|!O!P!!e!Q![N|![!]:]!c!zN|!z!{!;}!{!}N|#R#SN|#T#lN|#l#m!;}#m#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!<Sfa~}!ON|!O!P!!e!Q![N|![!]:]!c!}N|#R#SN|#T#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!=kj}!ON|!O!P!!e!Q![N|![!]:]!c!gN|!g!h!?]!h!}N|#R#SN|#T#XN|#X#Y!?]#Y#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!?`j}!ON|!O!P!!e!Q![N|![!]:]!c!tN|!t!u!AQ!u!}N|#R#SN|#T#fN|#f#g!AQ#g#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!ATj}!ON|!O!P!!e!Q![N|![!]:]!c!uN|!u!v!Bu!v!}N|#R#SN|#T#gN|#g#h!Bu#h#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!Bxj}!ON|!O!P!!e!Q![N|![!]:]!c!kN|!k!l!Dj!l!}N|#R#SN|#T#]N|#]#^!Dj#^#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!Dmj}!ON|!O!P!!e!Q![N|![!]:]!c!qN|!q!r!F_!r!}N|#R#SN|#T#cN|#c#d!F_#d#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!Fbj}!ON|!O!P!!e!Q![N|![!]:]!c!pN|!p!q!HS!q!}N|#R#SN|#T#bN|#b#c!HS#c#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!HXfe~}!ON|!O!P!!e!Q![N|![!]:]!c!}N|#R#SN|#T#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~!IrOm~~!IwOl~~!IzP#Q#R!I}~!JSO!W~~!JVP![!]!JY~!J]`!Q![!K_!c!}!K_#R#S!K_#T#o!K_%W%o!K_%p&a!K_&b1p!K_4U4d!K_4e$IS!K_$I`$Ib!K_$Kh%#t!K_&/x&Et!K_&FV;'S!K_;'S;:j!NZ?&r?Ah!K_?BY?Mn!K_~!Kdek~}!O!K_!O!P!Lu!Q![!K_!c!}!K_#R#S!K_#T#o!K_$}%O!K_%W%o!K_%p&a!K_&b1p!K_1p4U!K_4U4d!K_4e$IS!K_$I`$Ib!K_$Je$Jg!K_$Kh%#t!K_&/x&Et!K_&FV;'S!K_;'S;:j!NZ?&r?Ah!K_?BY?Mn!K_~!Lxe}!O!K_!O!P!Lu!Q![!K_!c!}!K_#R#S!K_#T#o!K_$}%O!K_%W%o!K_%p&a!K_&b1p!K_1p4U!K_4U4d!K_4e$IS!K_$I`$Ib!K_$Je$Jg!K_$Kh%#t!K_&/x&Et!K_&FV;'S!K_;'S;:j!NZ?&r?Ah!K_?BY?Mn!K_~!N^P;=`<%l!K_~!Nffw~}!ON|!O!P!!e!Q![N|![!]:]!c!}N|#R#SN|#T#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~# }g}!ON|!O!P!!e!Q![N|![!]:]!c!}N|#R#SN|#T#U##f#U#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~##ih}!ON|!O!P!!e!Q![N|![!]:]!c!}N|#R#SN|#T#`N|#`#a#%T#a#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~#%Wh}!ON|!O!P!!e!Q![N|![!]:]!c!}N|#R#SN|#T#gN|#g#h#&r#h#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~#&uh}!ON|!O!P!!e!Q![N|![!]:]!c!}N|#R#SN|#T#XN|#X#Y#(a#Y#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~#(ff!_~}!ON|!O!P!!e!Q![N|![!]:]!c!}N|#R#SN|#T#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~#)}h}!ON|!O!P!!e!Q![N|![!]:]!c!}N|#R#SN|#T#fN|#f#g#+i#g#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~#+lh}!ON|!O!P!!e!Q![N|![!]:]!c!}N|#R#SN|#T#iN|#i#j#-W#j#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~#-Zh}!ON|!O!P!!e!Q![N|![!]:]!c!}N|#R#SN|#T#XN|#X#Y#.u#Y#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|~#.zf!^~}!ON|!O!P!!e!Q![N|![!]:]!c!}N|#R#SN|#T#oN|$}%ON|%W%oN|%p&aN|&b1pN|1p4UN|4U4dN|4e$ISN|$I`$IbN|$Je$JgN|$Kh%#tN|&/x&EtN|&FV;'SN|;'S;:j!#y?&r?AhN|?BY?MnN|R#0eP!yP#p#q#0hQ#0mO}Q~#0pP#q#r#0s~#0xO|~~#0}O!x~~#1SO{~",
+  tokenizers: [0, 1],
+  topRules: {"TurtleDoc":[0,2]},
+  dialects: {trig: 742},
+  tokenPrec: 746
+})
+
+
 /***/ }
 
 /******/ 	});
@@ -61408,16 +67100,13 @@ exports.shift = shift;
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		const module = __webpack_module_cache__[moduleId] = {
-/******/ 			id: moduleId,
-/******/ 			loaded: false,
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
 /******/ 		// Execute the module function
 /******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/ 	
-/******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
 /******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
@@ -61464,15 +67153,6 @@ exports.shift = shift;
 /******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
 /******/ 			}
 /******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/node module decorator */
-/******/ 	(() => {
-/******/ 		__webpack_require__.nmd = (module) => {
-/******/ 			module.paths = [];
-/******/ 			if (!module.children) module.children = [];
-/******/ 			return module;
 /******/ 		};
 /******/ 	})();
 /******/ 	

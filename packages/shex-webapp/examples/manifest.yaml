@@ -1,4 +1,35 @@
 ---
+- schemaLabel: repeated properties
+  schema: |
+    PREFIX : <http://hl7.org/fhir/>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    
+    <#S1> {
+      :p xsd:integer ;
+      :p IRI ;
+      :p xsd:decimal ;
+      :p @<#S2>
+    }
+    
+    <#S2> {
+      :q [5]
+    }
+  dataLabel: passing data
+  data: |
+    PREFIX : <http://hl7.org/fhir/>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    
+    <#n1>
+      :p 1.1 ;
+      :p <#n3> ;
+      :p <#n2> ;
+      :p 4 ;
+    .
+    
+    <#n3> :q 5 .
+  queryMap: |
+    <#n1>@<#S1>
+  status: conformant
 - schemaLabel: clinical observation
   schema: |
     PREFIX : <http://hl7.org/fhir/>

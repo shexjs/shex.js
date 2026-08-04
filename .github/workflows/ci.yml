@@ -33,6 +33,12 @@ jobs:
       # gitignored (see webapps-site.yml) and so must be built first
       - run: npm run webpacks-all
       - run: npm run test-all
+        if: matrix.node-version != 20
+      # jsdom's engines outpace the packages' own (jsdom 30 wants Node ≥ 22
+      # while the libraries claim ≥ 18): keep the older-node lane covering
+      # everything but the jsdom-hosted browser tests
+      - run: npm run test-no-browser
+        if: matrix.node-version == 20
 
   lint:
     runs-on: ubuntu-latest
