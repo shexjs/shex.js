@@ -22,8 +22,10 @@ let Fs = require('fs')
 let Path = require('path')
 let expect = require("chai").expect
 const node_fetch = require("node-fetch")
-const jsdom = require("jsdom")
-const { JSDOM } = jsdom
+// jsdom's engines outpace the packages' own (e.g. jsdom 30 wants Node ≥ 22
+// while the libraries claim ≥ 18): required lazily under TEST_browser so the
+// other suites still run wherever the packages themselves do
+let jsdom, JSDOM, StaticResourceConfig
 const ShExParser = require('@shexjs/parser')
 let SharedForTests = null // gets set by shex-simple.js
 
@@ -40,22 +42,23 @@ const StaticResources = {
   'https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.21/jquery.csv.js':
     Path.join(__dirname, 'static/jquery.csv-1.0.21.js')
 }
-const StaticResourceConfig = {
-  interceptors: [
-    jsdom.requestInterceptor((request, context) => {
-      if (request.url in StaticResources)
-        return new Response(Fs.readFileSync(StaticResources[request.url], 'utf8'), {
-          headers: { "Content-Type": "text/javascript" }
-        })
-      // undefined lets the request proceed to the network (localhost:9999)
-    })
-  ]
-}
-
 if (!TEST_browser) {
   console.warn("Skipping browser-tests; to activate these tests, set environment variable TEST_browser=true");
 
 } else {
+  jsdom = require("jsdom");
+  ({ JSDOM } = jsdom);
+  StaticResourceConfig = {
+    interceptors: [
+      jsdom.requestInterceptor((request, context) => {
+        if (request.url in StaticResources)
+          return new Response(Fs.readFileSync(StaticResources[request.url], 'utf8'), {
+            headers: { "Content-Type": "text/javascript" }
+          })
+        // undefined lets the request proceed to the network (localhost:9999)
+      })
+    ]
+  }
   // Some manifests to play with:
   const WebAppExamplesDir = 'packages/shex-webapp/examples/'
   const Manifest_Example = WebAppExamplesDir + 'manifest.json'

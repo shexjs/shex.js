@@ -59,6 +59,7 @@
     "make": "(cd test/ && make test)",
     "test": "mocha packages/*/test/*test.js -C -R dot",
     "test-all": "TEST_cli=true TEST_browser=true TEST_server=true mocha packages/*/test/*test.js -R dot",
+    "test-no-browser": "TEST_cli=true TEST_server=true mocha packages/*/test/*test.js -R dot",
     "test-verbose": "mocha packages/*/test/*test.js && TEST_cli=true mocha packages/*/test/*test.js test/cli-test.js && TEST_browser=true mocha packages/*/test/*test.js test/browser-test.js",
     "earl999": "mocha packages/*/test/*test.js -C -R mocha-earl-reporter test/Parser-Writer-test.js test/Validation-test.js",
     "earl": "cd test && make Parser-Writer-test && make Validation-test",

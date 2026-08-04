@@ -12,8 +12,9 @@ const Fs = require("fs");
 const Path = require("path");
 const expect = require("chai").expect;
 const node_fetch = require("node-fetch");
-const jsdom = require("jsdom");
-const {JSDOM} = jsdom;
+// jsdom's engines outpace the packages' own; required lazily under
+// TEST_browser (c.f. browser-test.js)
+let jsdom, JSDOM, StaticResourceConfig;
 
 const [[GitRootServer]] = require("../../../tools/testServer")
       .startServer(
@@ -28,20 +29,21 @@ const StaticResources = {
   "https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.21/jquery.csv.js":
     Path.join(__dirname, "static/jquery.csv-1.0.21.js")
 };
-const StaticResourceConfig = {
-  interceptors: [
-    jsdom.requestInterceptor((request, _context) => {
-      if (request.url in StaticResources)
-        return new Response(Fs.readFileSync(StaticResources[request.url], "utf8"), {
-          headers: { "Content-Type": "text/javascript" }
-        });
-    })
-  ]
-};
-
 if (!TEST_browser) {
   console.warn("Skipping editors-smoke-tests; to activate these tests, set environment variable TEST_browser=true");
 } else {
+  jsdom = require("jsdom");
+  ({JSDOM} = jsdom);
+  StaticResourceConfig = {
+    interceptors: [
+      jsdom.requestInterceptor((request, _context) => {
+        if (request.url in StaticResources)
+          return new Response(Fs.readFileSync(StaticResources[request.url], "utf8"), {
+            headers: { "Content-Type": "text/javascript" }
+          });
+      })
+    ]
+  };
   describe("shex-simple with ?editors=1", function () {
     this.timeout(20000);
     const page = "packages/shex-webapp/doc/shex-simple.html";
