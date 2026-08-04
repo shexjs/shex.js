@@ -445,4 +445,77 @@ describe("EditorServices", function () {
       expect(mapped.pairs.some(p => /missing expected property/.test(p.message))).to.equal(true);
     });
   });
+
+  /** Two structurally identical inline shapes: the pair anchors must follow
+   * the enclosing predicate (:systolic vs :diastolic), not just be the
+   * first structural match (https://gist.github.com/ericprud/106bcd07b17889e8d830b961dcb1e48f:
+   * hovering :systolic's ":value xsd:float" also highlighted the diastolic
+   * value triple). */
+  describe("nested identical constraints", function () {
+    const bpSchema = `PREFIX : <http://a.example/med#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+<BPunitsDAM> {
+  :systolic {
+    :value xsd:float ;
+    :units xsd:string
+  } ;
+  :diastolic {
+    :value xsd:float ;
+    :units xsd:string
+  }
+}
+`;
+    const bpData = `PREFIX med: <http://a.example/med#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+<tag:b0> med:systolic [ med:value "100"^^xsd:float ; med:units "mmHg" ] ;
+  med:diastolic [ med:value "60"^^xsd:float ; med:units "mmHg" ] .
+`;
+    const med = "http://a.example/med#";
+    let mapped, bpParsed;
+
+    before(function () {
+      bpParsed = EditorServices.parseShExC(bpSchema, {base});
+      const bpData_ = EditorServices.parseTurtle(bpData, {baseIRI: base});
+      const store = new N3.Store();
+      store.addQuads(new N3.Parser({baseIRI: base, format: "text/turtle"}).parse(bpData));
+      const validator = new ShExValidator(bpParsed.schema, RdfJsDb(store), {noCache: true});
+      const results = validator.validateShapeMap([{node: "tag:b0", shape: base + "BPunitsDAM"}]);
+      expect(results[0].status).to.equal("conformant");
+      mapped = EditorServices.mapValidationErrors(results[0].appinfo, bpParsed, bpData_);
+    });
+
+    it("should anchor each nested :value on its own branch", function () {
+      const byObject = (text) => mapped.pairs.find(p =>
+        p.status === "conformant" && p.data && bpData.substring(p.data.from, p.data.to).startsWith(text));
+      const systolicValue = byObject('"100"');
+      const diastolicValue = byObject('"60"');
+      expect(systolicValue, "systolic :value pair").to.exist;
+      expect(diastolicValue, "diastolic :value pair").to.exist;
+      // both read ":value xsd:float" but at different offsets...
+      expect(slice(bpSchema, systolicValue.schema)).to.equal(":value xsd:float");
+      expect(slice(bpSchema, diastolicValue.schema)).to.equal(":value xsd:float");
+      expect(systolicValue.schema.from).not.to.equal(diastolicValue.schema.from);
+      // ... on the right side of the :diastolic declaration
+      const diastolicDecl = bpSchema.indexOf(":diastolic");
+      expect(systolicValue.schema.from).to.be.below(diastolicDecl);
+      expect(diastolicValue.schema.from).to.be.above(diastolicDecl);
+      // the :units pairs split the same way
+      const unitsPairs = mapped.pairs.filter(p =>
+        p.status === "conformant" && p.schema && slice(bpSchema, p.schema).startsWith(":units"));
+      expect(unitsPairs.length).to.equal(2);
+      expect(unitsPairs.map(p => p.schema.from > diastolicDecl).sort()).to.deep.equal([false, true]);
+    });
+
+    it("should select constraints by enclosing-predicate path", function () {
+      const systolic = bpParsed.locate.constraint(base + "BPunitsDAM", med + "value", 0, [med + "systolic"]);
+      const diastolic = bpParsed.locate.constraint(base + "BPunitsDAM", med + "value", 0, [med + "diastolic"]);
+      expect(slice(bpSchema, systolic)).to.equal(":value xsd:float");
+      expect(slice(bpSchema, diastolic)).to.equal(":value xsd:float");
+      expect(systolic.from).to.be.below(bpSchema.indexOf(":diastolic"));
+      expect(diastolic.from).to.be.above(bpSchema.indexOf(":diastolic"));
+      // an unmatched path falls back to the unfiltered candidates
+      const fallback = bpParsed.locate.constraint(base + "BPunitsDAM", med + "value", 0, [med + "nonesuch"]);
+      expect(fallback).to.deep.equal(systolic);
+    });
+  });
 });
