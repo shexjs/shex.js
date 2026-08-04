@@ -222,6 +222,10 @@ function attachHoverRegions(view) {
     });
     view.contentDOM.addEventListener("mouseleave", clearHover);
     return (regions, leave) => {
+        // replacing the region set while one of its regions is hovered would
+        // strand that region's highlights: with currentRegion nulled, the next
+        // mousemove over empty space compares null === null and no leave fires
+        clearHover();
         hoverRegions = regions || [];
         hoverLeave = leave;
         currentRegion = null;
