@@ -196,13 +196,13 @@ function locateInParsed(text, schema) {
                     .map(loc => yyllocToRange(loc, starts))
                     .filter((r) => r !== null)
                 : [],
-            constraint: (shapeLabel, predicate, occurrence = 0) => {
-                const paths = findConstraintPaths(schema, shapeLabel, predicate);
+            constraint: (shapeLabel, predicate, occurrence = 0, path) => {
+                const paths = onConstraintPath(findConstraintPaths(schema, shapeLabel, predicate), path);
                 const hit = paths[occurrence] || paths[0] || null;
                 return hit ? predicateRange(hit.tc) : null;
             },
-            constraintAnchors: (shapeLabel, predicate, occurrence = 0) => {
-                const paths = findConstraintPaths(schema, shapeLabel, predicate);
+            constraintAnchors: (shapeLabel, predicate, occurrence = 0, viaPath) => {
+                const paths = onConstraintPath(findConstraintPaths(schema, shapeLabel, predicate), viaPath);
                 const hit = paths[occurrence] || paths[0] || null;
                 const range = hit && tcRange(hit.tc);
                 if (!range)
@@ -264,6 +264,19 @@ function firstLine(str) { return String(str).split("\n", 1)[0]; }
  * ones nested in inline-shape valueExprs -- validation results reach them
  * under the enclosing labeled shape), each with the stack of constraints
  * enclosing it, outermost first */
+/** the candidates whose chain of enclosing inline constraints matches
+ * `path` (predicates outermost first) -- two structurally identical
+ * constraints nested under different predicates (:systolic's :value vs
+ * :diastolic's) differ only by that chain.  All candidates when no path is
+ * given or none matches (the result tree reached the constraint some way
+ * the schema walk can't see; better an approximate anchor than none). */
+function onConstraintPath(paths, path) {
+    if (!path)
+        return paths;
+    const filtered = paths.filter(p => p.ancestors.length === path.length &&
+        p.ancestors.every((a, i) => a.predicate === path[i]));
+    return filtered.length ? filtered : paths;
+}
 function findConstraintPaths(schema, shapeLabel, predicate) {
     const decl = schema && schema._index && schema._index.shapeExprs[shapeLabel];
     const found = [];
@@ -514,7 +527,11 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed) {
                 shape: node.shape !== undefined ? node.shape : ctx.shape,
                 constraint: node.constraint !== undefined ? node.constraint : ctx.constraint,
                 triple: node.triple !== undefined ? node.triple : ctx.triple,
-                tcOrdinals: node.shape !== undefined ? new Map() : ctx.tcOrdinals };
+                tcOrdinals: node.shape !== undefined ? new Map() : ctx.tcOrdinals,
+                // a shape result boundary: an inline shape continues its
+                // enclosing constraint chain, a referenced one starts fresh
+                constraintPath: node.shape !== undefined ? (ctx.pendingInlinePath || []) : ctx.constraintPath,
+                pendingInlinePath: node.shape !== undefined ? undefined : ctx.pendingInlinePath };
         if (node.type in ErrorLeaves)
             emit("nonconformant", ErrorLeaves[node.type](node, ctx), node, ctx);
         // successful matches: each TestedTriple under a TripleConstraintSolutions
@@ -530,9 +547,14 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed) {
                         message: `${termStr(sol.object)} matched <${node.predicate}>`,
                         predicate: node.predicate,
                         constraintOrdinal: ordinal,
+                        constraintPath: ctx.constraintPath,
                         triple: sol,
                     }, node, ctx);
             });
+            // an inline-shape valueExpr's referenced results anchor under this
+            // constraint: extend the chain for the descent into the solutions
+            if (node.valueExpr && typeof node.valueExpr === "object")
+                ctx = Object.assign(Object.assign({}, ctx), { pendingInlinePath: (ctx.constraintPath || []).concat(node.predicate) });
         }
         for (const key of ["errors", "appinfo", "solutions", "solution",
             "expressions", "referenced", "unexpectedTriples"])
@@ -541,7 +563,7 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed) {
     })(valResult, {});
     function emit(status, leaf, err, ctx) {
         const ca = leaf.predicate && ctx.shape
-            ? shexcParsed.locate.constraintAnchors(ctx.shape, leaf.predicate, leaf.constraintOrdinal || 0)
+            ? shexcParsed.locate.constraintAnchors(ctx.shape, leaf.predicate, leaf.constraintOrdinal || 0, leaf.constraintPath)
             : null;
         const schemaRange = (leaf.schemaObj && shexcParsed.locate.expr(leaf.schemaObj)) ||
             (ca && ca.parts[0]) ||

@@ -67,12 +67,15 @@ export interface Locate {
   /** best-effort range for the `occurrence`th (default first) constraint
    * on `predicate` within `shapeLabel` -- repeated-property shapes have
    * several TripleConstraints with the same predicate */
-  constraint (shapeLabel: string, predicate: string, occurrence?: number): Range | null;
+  constraint (shapeLabel: string, predicate: string, occurrence?: number, path?: string[]): Range | null;
   /** like `constraint` but for highlighting: `parts` is the constraint's
    * extent minus any inline-shape body (discontinuous: [":s {", "}"]),
    * `path` the enclosing constraints' predicate ranges (outermost first)
-   * connecting a nested constraint back to the labeled shape */
-  constraintAnchors (shapeLabel: string, predicate: string, occurrence?: number):
+   * connecting a nested constraint back to the labeled shape.  The optional
+   * `path` argument names the predicates of the enclosing inline
+   * constraints, disambiguating structurally identical constraints nested
+   * under different predicates */
+  constraintAnchors (shapeLabel: string, predicate: string, occurrence?: number, path?: string[]):
       {parts: Range[], path: Range[]} | null;
   /** the innermost expression (e.g. TripleConstraint) whose source range
    * contains `offset` -- editor gutter clicks resolve to schema objects
@@ -309,13 +312,13 @@ export function locateInParsed (text: string, schema: SchemaWithMeta | null): Lo
             .map(loc => yyllocToRange(loc, starts))
             .filter((r): r is Range => r !== null)
         : [],
-      constraint: (shapeLabel: string, predicate: string, occurrence = 0) => {
-        const paths = findConstraintPaths(schema, shapeLabel, predicate);
+      constraint: (shapeLabel: string, predicate: string, occurrence = 0, path?: string[]) => {
+        const paths = onConstraintPath(findConstraintPaths(schema, shapeLabel, predicate), path);
         const hit = paths[occurrence] || paths[0] || null;
         return hit ? predicateRange(hit.tc) : null;
       },
-      constraintAnchors: (shapeLabel: string, predicate: string, occurrence = 0) => {
-        const paths = findConstraintPaths(schema, shapeLabel, predicate);
+      constraintAnchors: (shapeLabel: string, predicate: string, occurrence = 0, viaPath?: string[]) => {
+        const paths = onConstraintPath(findConstraintPaths(schema, shapeLabel, predicate), viaPath);
         const hit = paths[occurrence] || paths[0] || null;
         const range = hit && tcRange(hit.tc);
         if (!range)
@@ -378,6 +381,22 @@ function firstLine (str: unknown): string { return String(str).split("\n", 1)[0]
  * ones nested in inline-shape valueExprs -- validation results reach them
  * under the enclosing labeled shape), each with the stack of constraints
  * enclosing it, outermost first */
+/** the candidates whose chain of enclosing inline constraints matches
+ * `path` (predicates outermost first) -- two structurally identical
+ * constraints nested under different predicates (:systolic's :value vs
+ * :diastolic's) differ only by that chain.  All candidates when no path is
+ * given or none matches (the result tree reached the constraint some way
+ * the schema walk can't see; better an approximate anchor than none). */
+function onConstraintPath (paths: {tc: any, ancestors: any[]}[], path?: string[]):
+    {tc: any, ancestors: any[]}[] {
+  if (!path)
+    return paths;
+  const filtered = paths.filter(p =>
+    p.ancestors.length === path.length &&
+    p.ancestors.every((a, i) => a.predicate === path[i]));
+  return filtered.length ? filtered : paths;
+}
+
 function findConstraintPaths (schema: SchemaWithMeta | null, shapeLabel: string, predicate: string):
     {tc: any, ancestors: any[]}[] {
   const decl = schema && schema._index && schema._index.shapeExprs[shapeLabel];
@@ -573,6 +592,7 @@ interface ErrorLeaf {
   triple?: TestedTriple;
   triples?: TestedTriple[];
   constraintOrdinal?: number;
+  constraintPath?: string[];
   node?: LdTerm;
 }
 
@@ -588,6 +608,15 @@ interface WalkContext {
   tcOrdinals?: Map<string, number>;
   /** nearest enclosing error's triple, for the same reason */
   triple?: TestedTriple;
+  /** predicates of the inline-shape constraints enclosing the current shape
+   * result, outermost first.  An anonymous nested shape's ShapeTest carries
+   * the *enclosing* labeled shape, so this chain is what distinguishes
+   * :systolic's { :value ... } from :diastolic's structurally identical one */
+  constraintPath?: string[];
+  /** set while descending a TripleConstraintSolutions whose valueExpr is an
+   * inline shape expression; the referenced ShapeTest adopts it as its
+   * constraintPath (a shapeExprRef -- a string valueExpr -- resets instead) */
+  pendingInlinePath?: string[];
 }
 
 // error types that anchor a diagnostic (as opposed to containers to recurse
@@ -677,7 +706,11 @@ export function mapValidationErrors (valResult: unknown,
              shape: node.shape !== undefined ? node.shape : ctx.shape,
              constraint: node.constraint !== undefined ? node.constraint : ctx.constraint,
              triple: node.triple !== undefined ? node.triple : ctx.triple,
-             tcOrdinals: node.shape !== undefined ? new Map() : ctx.tcOrdinals};
+             tcOrdinals: node.shape !== undefined ? new Map() : ctx.tcOrdinals,
+             // a shape result boundary: an inline shape continues its
+             // enclosing constraint chain, a referenced one starts fresh
+             constraintPath: node.shape !== undefined ? (ctx.pendingInlinePath || []) : ctx.constraintPath,
+             pendingInlinePath: node.shape !== undefined ? undefined : ctx.pendingInlinePath};
 
     if (node.type in ErrorLeaves)
       emit("nonconformant", ErrorLeaves[node.type](node, ctx), node, ctx);
@@ -695,9 +728,14 @@ export function mapValidationErrors (valResult: unknown,
             message: `${termStr(sol.object)} matched <${node.predicate}>`,
             predicate: node.predicate,
             constraintOrdinal: ordinal,
+            constraintPath: ctx.constraintPath,
             triple: sol,
           }, node, ctx);
       });
+      // an inline-shape valueExpr's referenced results anchor under this
+      // constraint: extend the chain for the descent into the solutions
+      if (node.valueExpr && typeof node.valueExpr === "object")
+        ctx = {...ctx, pendingInlinePath: (ctx.constraintPath || []).concat(node.predicate)};
     }
 
     for (const key of ["errors", "appinfo", "solutions", "solution",
@@ -708,7 +746,8 @@ export function mapValidationErrors (valResult: unknown,
 
   function emit (status: "conformant" | "nonconformant", leaf: ErrorLeaf, err: any, ctx: WalkContext): void {
     const ca = leaf.predicate && ctx.shape
-          ? shexcParsed.locate.constraintAnchors(ctx.shape, leaf.predicate, leaf.constraintOrdinal || 0)
+          ? shexcParsed.locate.constraintAnchors(ctx.shape, leaf.predicate, leaf.constraintOrdinal || 0,
+                                                 leaf.constraintPath)
           : null;
     const schemaRange =
           (leaf.schemaObj && shexcParsed.locate.expr(leaf.schemaObj)) ||
