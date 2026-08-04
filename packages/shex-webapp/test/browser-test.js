@@ -585,6 +585,81 @@ if (!TEST_browser) {
       }).timeout(STARTUP_TIMEOUT)
     })
   })
+
+  describe('WEBapp create gist', function () {
+    this.timeout(SCRIPT_CALLBACK_TIMEOUT)
+    const nock = require('nock')
+    const GistBase = 'https://gist.githubusercontent.com/tester/abc123/raw/'
+    let dom, $, loaded
+    before(async () => {
+      ({ dom, $, loaded } = await loadPage(SHEX_SIMPLE, '?manifest=[]'))
+      dom.window.localStorage.setItem('githubGistToken', 'test-token')
+    })
+    after(() => nock.cleanAll())
+
+    it("should publish a gist and point manifestURL at it", async function () {
+      // schema over 15 lines becomes a separate schema.shex; short data and
+      // queryMap stay inline in .manifest.yaml
+      const longSchema = ['PREFIX : <http://a.example/>']
+            .concat(Array.from({length: 17}, (_, i) => `# pad ${i}`))
+            .concat([':S { :p . }']).join('\n')
+      const shortData = 'PREFIX : <http://a.example/>\n:x :p 42 .'
+      $('#inputSchema textarea.schema').val(longSchema)
+      $('#inputData textarea').val(shortData)
+      await set($, '#textMap', '<http://a.example/x>@<http://a.example/S>')
+      dom.window.prompt = () => 'EJP-RD-LOVD' // the gist-title prompt
+
+      let postedBody, patchedBody
+      nock('https://api.github.com')
+        .post('/gists', body => { postedBody = body; return true })
+        .reply(201, {
+          id: 'abc123',
+          url: 'https://api.github.com/gists/abc123',
+          html_url: 'https://gist.github.com/tester/abc123',
+          owner: {login: 'tester'},
+        })
+        .patch('/gists/abc123', body => { patchedBody = body; return true })
+        .reply(200, {history: [{version: 'sha-2'}, {version: 'sha-1'}]})
+
+      $('#createGist').trigger('click')
+      const search = await SharedForTests.promise
+
+      const manifest = postedBody.files['.manifest.yaml'].content
+      expect(manifest).to.include('- schemaLabel: schema\n  schemaURL: schema.shex\n')
+      expect(postedBody.files['schema.shex'].content).to.equal(longSchema)
+      expect(manifest).to.include('  dataLabel: data\n  data: |\n    PREFIX : <http://a.example/>\n    :x :p 42 .\n')
+      expect(manifest).to.include('  queryMap: |\n    <http://a.example/x>@<http://a.example/S>')
+      expect(manifest).to.include('  status: conformant\n')
+      expect(postedBody.public).to.equal(true)
+      expect(postedBody.description).to.equal('EJP-RD-LOVD')
+
+      const md = patchedBody.files['-EJP-RD-LOVD ShEx Validation Manifest.md'].content
+      expect(md).to.include('(https://gist.github.com/tester/abc123#file-manifest-yaml)')
+      expect(md).to.include('* ShEx.JS [shex-simple interface](https://shex.js.org'
+                            + '/packages/shex-webapp/doc/shex-simple.html'
+                            + `?manifestURL=${GistBase}.manifest.yaml)`)
+      expect(md).not.to.include('rawlink')
+
+      // the reloaded page carries the control values and the pinned manifest
+      expect(search).to.include('interface=')
+      expect(search).to.include('regexpEngine=')
+      expect(search).not.to.include('schema=') // content comes from the gist
+      expect(search).to.include(
+        'manifestURL=' + encodeURIComponent(`${GistBase}sha-2/.manifest.yaml`))
+    }).timeout(STARTUP_TIMEOUT)
+
+    it("should offer token and instructions helpers", function () {
+      const tokenLink = $('#gistToken')
+      expect(tokenLink.attr('href')).to.include('github.com/settings/tokens/new?scopes=gist')
+      expect(tokenLink.attr('target')).to.equal('_blank')
+
+      $('#gistInstructions').trigger('click')
+      expect($('#gistHelp').dialog('isOpen'), 'instructions dialog opens').to.equal(true)
+      // with a live "get token" link inside
+      expect($('#gistHelp a[href*="scopes=gist"]').length).to.be.above(0)
+      $('#gistHelp').dialog('close')
+    })
+  })
 }
 
 async function validationResults ($, expected) {
@@ -655,10 +730,18 @@ async function loadPage (page, searchParms) {
 
   function getDom (page, searchParms) {
     let url = GitRootServer.urlFor(page + searchParms)
+    // forward page console traffic, but drop the expected jsdom complaint
+    // from tests that set location.search (jsdom can't navigate)
+    const virtualConsole = new jsdom.VirtualConsole().forwardTo(console, { jsdomErrors: "none" })
+    virtualConsole.on("jsdomError", e => {
+      if (!String(e.message).includes("Not implemented: navigation"))
+        console.error(e.type === "unhandled-exception" ? e.cause.stack : e.message)
+    })
     return new JSDOM(Fs.readFileSync(base, 'utf8'), {
       url: url,
       runScripts: "dangerously",
-      resources: StaticResourceConfig
+      resources: StaticResourceConfig,
+      virtualConsole
     })
   }
 }
