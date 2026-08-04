@@ -2,7 +2,7 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>ShEx2 â Simple Online Validator</title>
+    <title>ShEx2 - Simple Online Validator</title>
     <meta name="description" content="simple ShEx2 demo" />
     <script src="webpacks/jquery-components.min.js"></script>
     <style>
@@ -67,6 +67,9 @@
       .stoppable { background-color: red; }
       #results div:disabled { background-color: #fff; }
       #results div { width: 99%; border: none; }
+      /* the 99% width above must not reach into CodeMirror internals
+         (appinfo results panes): 99%-wide gutters push the code offscreen */
+      #results .cm-editor div { width: unset; }
       #results div:disabled.passes { color: #373; }
       #results div:disabled.fails  { color: #733; }
       #results div:disabled.error  { color: #300; }
@@ -218,7 +221,7 @@ ul {
     </svg>
 
     <div id="title">
-      <img src="ShEx-bones-min.svg" class="ShExLogo" alt="ShEx Icon"/><h1 style="float:left;">ShEx2 â Simple Online Validator</h1>
+      <img src="ShEx-bones-min.svg" class="ShExLogo" alt="ShEx Icon"/><h1 style="float:left;">ShEx2 - Simple Online Validator</h1>
       <!-- <ul id="navlist" style="float:left; padding-left: 1em;"> -->
       <!--   <li>â£ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
       <!-- </ul> -->

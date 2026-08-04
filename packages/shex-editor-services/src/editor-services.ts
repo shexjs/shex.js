@@ -64,8 +64,16 @@ export interface Locate {
   expr (obj: object): Range | null;
   /** ranges of every @<label> / &<label> reference site */
   refs (label: string): Range[];
-  /** best-effort range for a constraint on `predicate` within `shapeLabel` */
-  constraint (shapeLabel: string, predicate: string): Range | null;
+  /** best-effort range for the `occurrence`th (default first) constraint
+   * on `predicate` within `shapeLabel` -- repeated-property shapes have
+   * several TripleConstraints with the same predicate */
+  constraint (shapeLabel: string, predicate: string, occurrence?: number): Range | null;
+  /** like `constraint` but for highlighting: `parts` is the constraint's
+   * extent minus any inline-shape body (discontinuous: [":s {", "}"]),
+   * `path` the enclosing constraints' predicate ranges (outermost first)
+   * connecting a nested constraint back to the labeled shape */
+  constraintAnchors (shapeLabel: string, predicate: string, occurrence?: number):
+      {parts: Range[], path: Range[]} | null;
   /** the innermost expression (e.g. TripleConstraint) whose source range
    * contains `offset` -- editor gutter clicks resolve to schema objects
    * (e.g. debugger breakpoints) through this */
@@ -103,6 +111,10 @@ export interface PairAnchors {
   subject: Range | null;
   predicate: Range | null;
   object: Range | null;
+  /** discontinuous highlight for a blank-node subject/object: just its
+   * [ and ] delimiters, not the property list between them */
+  subjectParts?: Range[];
+  objectParts?: Range[];
 }
 
 export interface ErrorPair {
@@ -114,6 +126,15 @@ export interface ErrorPair {
   schema: Range | null;
   data: Range | null;
   anchors: PairAnchors;
+  /** discontinuous constraint extent excluding an inline-shape body
+   * (e.g. [":s {", "}"]); absent means `schema` is the whole highlight */
+  schemaParts?: Range[];
+  /** enclosing constraints' predicate ranges, outermost first, connecting
+   * a nested constraint back to its labeled shape */
+  schemaPath?: Range[];
+  /** the matched/failed data triple (same object as in the validation
+   * results, so identity ties a pair to its results-JSON rendering) */
+  triple?: TestedTriple | null;
 }
 
 export interface MappedErrors {
@@ -240,6 +261,27 @@ function parseShExCUncached (text: string, opts: ParseShExCOptions = {}): Parsed
  */
 export function locateInParsed (text: string, schema: SchemaWithMeta | null): LocatedSchema {
   const starts = lineOffsets(text);
+  const tcRange = (tc: any): Range | null =>
+    schema && schema._exprLocations
+      ? yyllocToRange(schema._exprLocations.get(tc), starts)
+      : null;
+  /** just the predicate side of a constraint: its range clipped before any
+   * inline-shape body and stripped of trailing whitespace and brace */
+  const predicateRange = (tc: any): Range | null => {
+    const range = tcRange(tc);
+    if (!range)
+      return null;
+    const nested = schema && schema._exprLocations
+          ? nestedConstraintExtent(tc, schema._exprLocations, starts) : null;
+    if (nested && nested.from > range.from && nested.from <= range.to) {
+      let to = nested.from;
+      while (to > range.from && /[\s{]/.test(text[to - 1]))
+        --to;
+      if (to > range.from)
+        return {from: range.from, to};
+    }
+    return range;
+  };
   return {
     text,
     schema,
@@ -267,11 +309,40 @@ export function locateInParsed (text: string, schema: SchemaWithMeta | null): Lo
             .map(loc => yyllocToRange(loc, starts))
             .filter((r): r is Range => r !== null)
         : [],
-      constraint: (shapeLabel: string, predicate: string) => {
-        const tc = findTripleConstraint(schema, shapeLabel, predicate);
-        return tc && schema && schema._exprLocations
-          ? yyllocToRange(schema._exprLocations.get(tc), starts)
-          : null;
+      constraint: (shapeLabel: string, predicate: string, occurrence = 0) => {
+        const paths = findConstraintPaths(schema, shapeLabel, predicate);
+        const hit = paths[occurrence] || paths[0] || null;
+        return hit ? predicateRange(hit.tc) : null;
+      },
+      constraintAnchors: (shapeLabel: string, predicate: string, occurrence = 0) => {
+        const paths = findConstraintPaths(schema, shapeLabel, predicate);
+        const hit = paths[occurrence] || paths[0] || null;
+        const range = hit && tcRange(hit.tc);
+        if (!range)
+          return null;
+        // a constraint with an inline-shape valueExpr lexically contains
+        // that shape's own constraints; highlight only its delimiters
+        // (":s {" and "}") so nested shapes don't highlight with their
+        // parent, and record the path of enclosing predicates back to the
+        // labeled shape
+        const nested = nestedConstraintExtent(hit!.tc, schema!._exprLocations!, starts);
+        const parts: Range[] = [];
+        if (nested && nested.from > range.from && nested.to <= range.to) {
+          let headTo = nested.from; // keep the opening brace, drop the whitespace
+          while (headTo > range.from && /\s/.test(text[headTo - 1]))
+            --headTo;
+          parts.push(headTo > range.from ? {from: range.from, to: headTo} : range);
+          let tailFrom = nested.to;
+          while (tailFrom < range.to && /\s/.test(text[tailFrom]))
+            ++tailFrom;
+          if (tailFrom < range.to)
+            parts.push({from: tailFrom, to: range.to});
+        } else
+          parts.push(range);
+        const path = hit!.ancestors
+              .map(predicateRange)
+              .filter((r): r is Range => r !== null);
+        return {parts, path};
       },
       exprAt: (offset: number) => {
         if (!schema || !schema._exprLocations)
@@ -303,15 +374,27 @@ export function locateInParsed (text: string, schema: SchemaWithMeta | null): Lo
 
 function firstLine (str: unknown): string { return String(str).split("\n", 1)[0]; }
 
-function findTripleConstraint (schema: SchemaWithMeta | null, shapeLabel: string, predicate: string): object | null {
+/** every TripleConstraint on `predicate` under `shapeLabel` (including
+ * ones nested in inline-shape valueExprs -- validation results reach them
+ * under the enclosing labeled shape), each with the stack of constraints
+ * enclosing it, outermost first */
+function findConstraintPaths (schema: SchemaWithMeta | null, shapeLabel: string, predicate: string):
+    {tc: any, ancestors: any[]}[] {
   const decl = schema && schema._index && schema._index.shapeExprs[shapeLabel];
-  let found: object | null = null;
+  const found: {tc: any, ancestors: any[]}[] = [];
+  const stack: any[] = [];
   (function walk (expr: any): void {
-    if (!expr || typeof expr !== "object" || found)
+    if (!expr || typeof expr !== "object")
       return;
-    if (expr.type === "TripleConstraint" && expr.predicate === predicate)
-      found = expr;
-    else if (expr.expressions)
+    if (expr.type === "TripleConstraint") {
+      if (expr.predicate === predicate)
+        found.push({tc: expr, ancestors: stack.slice()});
+      if (expr.valueExpr && typeof expr.valueExpr === "object") {
+        stack.push(expr);
+        walk(expr.valueExpr);
+        stack.pop();
+      }
+    } else if (expr.expressions)
       expr.expressions.forEach(walk);
     else if (expr.expression)
       walk(expr.expression);
@@ -321,6 +404,33 @@ function findTripleConstraint (schema: SchemaWithMeta | null, shapeLabel: string
       expr.shapeExprs.forEach(walk);
   })(decl);
   return found;
+}
+
+/** lexical extent (min from, max to) of the constraints nested under a
+ * TripleConstraint's inline-shape valueExpr (null when none) */
+function nestedConstraintExtent (tc: any, locations: Map<object, Yylloc>, starts: number[]): Range | null {
+  let min: number | null = null, max: number | null = null;
+  (function walk (expr: any): void {
+    if (!expr || typeof expr !== "object")
+      return;
+    if (expr.type === "TripleConstraint") {
+      const range = yyllocToRange(locations.get(expr), starts);
+      if (range) {
+        if (min === null || range.from < min) min = range.from;
+        if (max === null || range.to > max) max = range.to;
+      }
+      if (expr.valueExpr && typeof expr.valueExpr === "object")
+        walk(expr.valueExpr);
+    } else if (expr.expressions)
+      expr.expressions.forEach(walk);
+    else if (expr.expression)
+      walk(expr.expression);
+    else if (expr.shapeExpr)
+      walk(expr.shapeExpr);
+    else if (expr.shapeExprs)
+      expr.shapeExprs.forEach(walk);
+  })(tc.valueExpr && typeof tc.valueExpr === "object" ? tc.valueExpr : null);
+  return min === null ? null : {from: min, to: max!};
 }
 
 // ---------------------------------------------------------------------------
@@ -378,27 +488,75 @@ function trimRange (range: Range | null, text: string): Range | null {
   return to === range.to ? range : {from: range.from, to};
 }
 
+/** blank-node labels don't survive the trip through the validator (its
+ * store and the provenance parse label bnodes independently), so bnode
+ * positions match structurally: an unbound result label binds to the first
+ * unclaimed parsed bnode that fits and stays bound for the rest of the
+ * walk. */
+interface BnodeAlignment { toProv: Map<string, any>; used: Set<string>; }
+
+/** alignQuad - find the parsed quad a validation-result triple denotes */
+function alignQuad (parsed: ParsedTurtle, s: any, p: any, o: any, bnodes: BnodeAlignment): any {
+  const direct = RdfJs.DataFactory.quad(s, p, o);
+  if (parsed.provenance.get(direct).length) // labels aligned (same parser fed the validator)
+    return direct;
+  const sB = s.termType === "BlankNode", oB = o.termType === "BlankNode";
+  if (!sB && !oB)
+    return null;
+  const sBound = sB ? bnodes.toProv.get(s.value) : null;
+  const oBound = oB ? bnodes.toProv.get(o.value) : null;
+  const fits = (bound: any, actual: any): boolean =>
+    bound ? actual.equals(bound)
+          : actual.termType === "BlankNode" && !bnodes.used.has(actual.value);
+  for (const q of parsed.quads) {
+    if (!q.predicate.equals(p))
+      continue;
+    if (sB ? !fits(sBound, q.subject) : !q.subject.equals(s))
+      continue;
+    if (oB ? !fits(oBound, q.object) : !q.object.equals(o))
+      continue;
+    if (sB && !sBound) { bnodes.toProv.set(s.value, q.subject); bnodes.used.add(q.subject.value); }
+    if (oB && !oBound) { bnodes.toProv.set(o.value, q.object); bnodes.used.add(q.object.value); }
+    return q;
+  }
+  return null;
+}
+
 /** tripleAnchors - locate a validation result's TestedTriple in the parsed
  * data via the provenance index (utterance ranges per position). */
-function tripleAnchors (parsed: ParsedTurtle, triple: TestedTriple, text: string):
-    {subject: Range | null, predicate: Range | null, object: Range | null} | null {
-  const quad = RdfJs.DataFactory.quad(ldTermToRdfJs(triple.subject),
-                                      ldTermToRdfJs(triple.predicate),
-                                      ldTermToRdfJs(triple.object));
-  const [utt] = parsed.provenance.get(quad);
+function tripleAnchors (parsed: ParsedTurtle, triple: TestedTriple, text: string, bnodes: BnodeAlignment):
+    Pick<PairAnchors, "subject" | "predicate" | "object" | "subjectParts" | "objectParts"> | null {
+  const quad = alignQuad(parsed,
+                         ldTermToRdfJs(triple.subject),
+                         ldTermToRdfJs(triple.predicate),
+                         ldTermToRdfJs(triple.object), bnodes);
+  const [utt] = quad ? parsed.provenance.get(quad) : [];
   if (!utt)
     return null;
+  // a blank node's source form is its whole [ property list ]; highlight
+  // just the delimiters so the contents read as their own triples
+  const delims = (range: Range | null, term: any): Range[] | undefined =>
+    range && term.termType === "BlankNode" && range.to - range.from >= 2 &&
+    text[range.from] === "[" && text[range.to - 1] === "]"
+      ? [{from: range.from, to: range.from + 1}, {from: range.to - 1, to: range.to}]
+      : undefined;
+  const subject = trimRange(uttRange(utt.subject), text);
+  const object = trimRange(uttRange(utt.object), text);
   return {
-    subject: trimRange(uttRange(utt.subject), text),
+    subject,
     predicate: trimRange(uttRange(utt.predicate), text),
-    object: trimRange(uttRange(utt.object), text),
+    object,
+    subjectParts: delims(subject, quad.subject),
+    objectParts: delims(object, quad.object),
   };
 }
 
 /** rangeOfNode - anchor for node-level errors (e.g. MissingProperty): the
  * first assertion where the node appears as subject. */
-function rangeOfNode (parsed: ParsedTurtle, node: LdTerm): Range | null {
-  const term = ldTermToRdfJs(node);
+function rangeOfNode (parsed: ParsedTurtle, node: LdTerm, bnodes: BnodeAlignment): Range | null {
+  let term = ldTermToRdfJs(node);
+  if (term.termType === "BlankNode")
+    term = bnodes.toProv.get(term.value) || term;
   for (const quad of parsed.quads)
     if (quad.subject.equals(term)) {
       const [utt] = parsed.provenance.get(quad);
@@ -414,6 +572,7 @@ interface ErrorLeaf {
   predicate?: string;
   triple?: TestedTriple;
   triples?: TestedTriple[];
+  constraintOrdinal?: number;
   node?: LdTerm;
 }
 
@@ -423,6 +582,10 @@ interface WalkContext {
   /** nearest enclosing error's constraint (e.g. a NodeConstraintViolation
    * nested in a TypeMismatch anchors on the TypeMismatch's constraint) */
   constraint?: object;
+  /** occurrence counters for repeated-property constraints, reset per
+   * shape result: the Nth TripleConstraintSolutions on a predicate maps to
+   * the Nth schema constraint with that predicate */
+  tcOrdinals?: Map<string, number>;
   /** nearest enclosing error's triple, for the same reason */
   triple?: TestedTriple;
 }
@@ -498,6 +661,7 @@ export function mapValidationErrors (valResult: unknown,
                                      turtleParsed?: ParsedTurtle | null): MappedErrors {
   const pairs: ErrorPair[] = [];
   const seen = new Set<object>();
+  const bnodes: BnodeAlignment = {toProv: new Map(), used: new Set()};
 
   (function walk (node: any, ctx: WalkContext): void {
     if (!node || typeof node !== "object" || seen.has(node))
@@ -512,22 +676,29 @@ export function mapValidationErrors (valResult: unknown,
       ctx = {node: node.node !== undefined ? node.node : ctx.node,
              shape: node.shape !== undefined ? node.shape : ctx.shape,
              constraint: node.constraint !== undefined ? node.constraint : ctx.constraint,
-             triple: node.triple !== undefined ? node.triple : ctx.triple};
+             triple: node.triple !== undefined ? node.triple : ctx.triple,
+             tcOrdinals: node.shape !== undefined ? new Map() : ctx.tcOrdinals};
 
     if (node.type in ErrorLeaves)
       emit("nonconformant", ErrorLeaves[node.type](node, ctx), node, ctx);
 
     // successful matches: each TestedTriple under a TripleConstraintSolutions
     // pairs a schema constraint with a data triple
-    if (node.type === "TripleConstraintSolutions" && Array.isArray(node.solutions))
+    if (node.type === "TripleConstraintSolutions" && Array.isArray(node.solutions)) {
+      // one ordinal per constraint *node* (its several solutions share it)
+      const ordinal = ctx.tcOrdinals ? (ctx.tcOrdinals.get(node.predicate) || 0) : 0;
+      if (ctx.tcOrdinals)
+        ctx.tcOrdinals.set(node.predicate, ordinal + 1);
       node.solutions.forEach((sol: any) => {
         if (sol && sol.type === "TestedTriple")
           emit("conformant", {
             message: `${termStr(sol.object)} matched <${node.predicate}>`,
             predicate: node.predicate,
+            constraintOrdinal: ordinal,
             triple: sol,
           }, node, ctx);
       });
+    }
 
     for (const key of ["errors", "appinfo", "solutions", "solution",
                        "expressions", "referenced", "unexpectedTriples"])
@@ -536,13 +707,19 @@ export function mapValidationErrors (valResult: unknown,
   })(valResult, {});
 
   function emit (status: "conformant" | "nonconformant", leaf: ErrorLeaf, err: any, ctx: WalkContext): void {
+    const ca = leaf.predicate && ctx.shape
+          ? shexcParsed.locate.constraintAnchors(ctx.shape, leaf.predicate, leaf.constraintOrdinal || 0)
+          : null;
     const schemaRange =
           (leaf.schemaObj && shexcParsed.locate.expr(leaf.schemaObj)) ||
-          (leaf.predicate && ctx.shape && shexcParsed.locate.constraint(ctx.shape, leaf.predicate)) ||
+          (ca && ca.parts[0]) ||
           // last resort: just the shape's label token -- never the whole
           // declaration, which would paint innocent constraints red
           (ctx.shape && shexcParsed.locate.shapeLabel(ctx.shape)) ||
           null;
+    // parts/path describe the constraint; only attach them when the
+    // constraint anchor is what schemaRange resolved to
+    const viaConstraint = ca && schemaRange === ca.parts[0] ? ca : null;
     const anchors: PairAnchors = {
       shapeLabel: ctx.shape ? shexcParsed.locate.shapeLabel(ctx.shape) : null,
       subject: null, predicate: null, object: null,
@@ -551,13 +728,13 @@ export function mapValidationErrors (valResult: unknown,
     if (turtleParsed && turtleParsed.dataset) {
       const triple = leaf.triple || (leaf.triples && leaf.triples[0]) || null;
       if (triple) {
-        const termRanges = tripleAnchors(turtleParsed, triple, turtleParsed.text);
+        const termRanges = tripleAnchors(turtleParsed, triple, turtleParsed.text, bnodes);
         if (termRanges)
           Object.assign(anchors, termRanges);
         dataRange = anchors.object;
       }
       if (!dataRange && leaf.node !== undefined && leaf.node !== null)
-        dataRange = rangeOfNode(turtleParsed, leaf.node);
+        dataRange = rangeOfNode(turtleParsed, leaf.node, bnodes);
     }
     pairs.push({
       id: pairs.length,
@@ -567,6 +744,9 @@ export function mapValidationErrors (valResult: unknown,
       schema: schemaRange,
       data: dataRange,
       anchors,
+      schemaParts: viaConstraint ? viaConstraint.parts : undefined,
+      schemaPath: viaConstraint ? viaConstraint.path : undefined,
+      triple: leaf.triple || (leaf.triples && leaf.triples[0]) || null,
     });
   }
 
@@ -576,4 +756,77 @@ export function mapValidationErrors (valResult: unknown,
         .map(p => ({from: p[side]!.from, to: p[side]!.to, severity: "error" as const,
                     message: p.message, pair: p.id}));
   return {schema: toDiagnostics("schema"), data: toDiagnostics("data"), pairs};
+}
+
+// ---------------------------------------------------------------------------
+// results-JSON offset tracking
+
+export interface OffsetRange {
+  target: any; from: number; to: number;
+  /** targets with subject/predicate/object members also record those
+   * members' ranges, so highlights can skip nested solutions */
+  fields?: {[member: string]: {from: number, to: number}};
+}
+
+const TERM_MEMBERS = ["subject", "predicate", "object"];
+
+/** stringifyWithOffsets - JSON.stringify(value, null, indent)-identical
+ * serialization that also records the {from, to} character range of every
+ * object `isTarget` accepts (e.g. TestedTriples in validation results), so
+ * a rendered results pane can highlight and scroll to them. */
+export function stringifyWithOffsets (value: any, isTarget: (o: any) => boolean, indent = 2):
+    {text: string, ranges: OffsetRange[]} {
+  const ranges: OffsetRange[] = [];
+  const pieces: string[] = [];
+  let len = 0;
+  const push = (str: string) => { pieces.push(str); len += str.length; };
+  function ser (v: any, depth: number): boolean { // false: omit (like JSON.stringify)
+    if (v === undefined || typeof v === "function")
+      return false;
+    if (v === null || typeof v !== "object") {
+      push(JSON.stringify(v));
+      return true;
+    }
+    const start = len;
+    const pad = " ".repeat(indent * (depth + 1));
+    const padEnd = " ".repeat(indent * depth);
+    const fields: {[member: string]: {from: number, to: number}} = {};
+    if (Array.isArray(v)) {
+      if (v.length === 0)
+        push("[]");
+      else {
+        push("[\n");
+        v.forEach((item, i) => {
+          push(pad);
+          if (!ser(item, depth + 1))
+            push("null");
+          push(i < v.length - 1 ? ",\n" : "\n");
+        });
+        push(padEnd + "]");
+      }
+    } else {
+      const keys = Object.keys(v).filter(k => v[k] !== undefined && typeof v[k] !== "function");
+      if (keys.length === 0)
+        push("{}");
+      else {
+        push("{\n");
+        keys.forEach((k, i) => {
+          const kFrom = len + pad.length;
+          push(pad + JSON.stringify(k) + ": ");
+          ser(v[k], depth + 1);
+          if (TERM_MEMBERS.indexOf(k) !== -1)
+            fields[k] = {from: kFrom, to: len};
+          push(i < keys.length - 1 ? ",\n" : "\n");
+        });
+        push(padEnd + "}");
+      }
+    }
+    if (isTarget(v))
+      ranges.push(Object.keys(fields).length
+                  ? {target: v, from: start, to: len, fields}
+                  : {target: v, from: start, to: len});
+    return true;
+  }
+  ser(value, 0);
+  return {text: pieces.join(""), ranges};
 }

@@ -65,6 +65,9 @@
       .stoppable { background-color: red; }
       #results div:disabled { background-color: #fff; }
       #results div { width: 99%; border: none; }
+      /* the 99% width above must not reach into CodeMirror internals
+         (appinfo results panes): 99%-wide gutters push the code offscreen */
+      #results .cm-editor div { width: unset; }
       #results div:disabled.passes { color: #373; }
       #results div:disabled.fails  { color: #733; }
       #results div:disabled.error  { color: #300; }

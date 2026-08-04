@@ -1435,6 +1435,9 @@ class ResultsWidget {
   constructor () {
     this.resultsElt = document.querySelector("#results div");
     this.resultsSel = $("#results div");
+    // appinfo renderings: [{pane, ranges}] linking TestedTriple objects (by
+    // identity) to their {from, to} in the rendered results JSON
+    this.resultPanes = [];
   }
   replace (text) {
     return this.resultsSel.text(text);
@@ -1443,6 +1446,7 @@ class ResultsWidget {
     return this.resultsSel.append(text);
   }
   clear () {
+    this.resultPanes = [];
     this.resultsSel.removeClass("passes fails error");
     $("#results .status").text("").hide();
     $("#shapeMap-tabs").removeAttr("title");
@@ -1459,7 +1463,10 @@ class ResultsWidget {
     this.resultsSel.animate({height:height}, 100);
   }
   text () {
-    return $(this.resultsElt).text();
+    // CodeMirror virtualizes long documents, so read appinfo panes' raw text
+    return $(this.resultsElt).children().map(
+      (_, el) => $(el).data("rawText") !== undefined ? $(el).data("rawText") : el.textContent
+    ).get().join("\n");
   }
 
   failMessage (e, action, text) {
@@ -1500,6 +1507,7 @@ class ShExResultsRenderer {
     const klass = (fails ^ fixedMapEntry.find(".shapeMap-joiner").hasClass("nonconformant")) ? "fails" : "passes";
     const resultStr = fails ? "✗" : "✓";
     let elt = null;
+    let appinfoPane = null;
 
     if (!fails) {
       if ($("#success").val() === "query" || $("#success").val() === "remainder") {
@@ -1549,12 +1557,31 @@ class ShExResultsRenderer {
             acc[key] = entry[key];
           return acc
         }, {});
-        // falling through to default covers the appinfo case
-      default:
         elt = $("<pre/>").text(JSON.stringify(renderMe, null, "  ")).addClass(klass);
+        break;
+
+      default: // appinfo: syntax-highlighted JSON with TestedTriples mapped
+        try {
+          const {text, ranges} = ShExWebApp.EditorServices.stringifyWithOffsets(
+            renderMe, o => o && o.type === "TestedTriple");
+          const pane = ShExWebApp.EditorPanes.makeJsonPane(text);
+          elt = $("<div/>").addClass(klass).append(pane.dom).data("rawText", text);
+          this.resultsWidget.resultPanes.push({pane, ranges});
+          appinfoPane = pane;
+        } catch (e) {
+          console.warn("falling back to plain results JSON:", e);
+          elt = $("<pre/>").text(JSON.stringify(renderMe, null, "  ")).addClass(klass);
+        }
       }
     }
     this.resultsWidget.append(elt);
+    if (appinfoPane) {
+      // fit the pane to the bottom of the window so schema, data and results
+      // stay visible together; without a height the pane grows to its content
+      // and hover-scrolling to a TestedTriple scrolls the whole page
+      const top = appinfoPane.dom.getBoundingClientRect().top;
+      appinfoPane.dom.style.height = Math.max(200, window.innerHeight - top - 12) + "px";
+    }
 
     // update the FixedMap
     fixedMapEntry.addClass(klass).find("a").text(resultStr);
@@ -1719,31 +1746,86 @@ class EditorSupport {
     const dataPane = this.panes.inputData;
     if (!schemaPane || !dataPane)
       return;
-    const clearBoth = () => {
+    const resultPanes = this.app.resultsWidget.resultPanes;
+    const clearAll = () => {
       schemaPane.clearHighlights();
       dataPane.clearHighlights();
+      resultPanes.forEach(({pane}) => pane.clearHighlights());
     };
-    const show = (pair, hoveredSide) => {
-      const cls = pair.status === "conformant" ? "shexjs-highlight-match" : "shexjs-highlight-fail";
-      const schemaRanges = [pair.schema]
-            .concat(hoveredSide === "schema" ? [pair.anchors.shapeLabel] : [])
+    // a constraint with cardinality > 1 yields one pair per matched triple,
+    // all sharing a schema range: group them so hovering the constraint
+    // highlights every matched triple
+    const bySchemaRange = new Map();
+    pairs.filter(p => p.schema).forEach(p => {
+      const key = p.schema.from + "-" + p.schema.to;
+      if (!bySchemaRange.has(key))
+        bySchemaRange.set(key, []);
+      bySchemaRange.get(key).push(p);
+    });
+    // a TestedTriple's subject/predicate/object member lines (its full range
+    // would also paint any nested solutions)
+    const termRanges = (r) => r.fields
+          ? ["subject", "predicate", "object"].map(k => r.fields[k]).filter(f => f)
+          : [{from: r.from, to: r.to}];
+    const showInResults = (group, cls, scroll) => {
+      resultPanes.forEach(({pane, ranges}) => {
+        const hits = ranges.filter(r => group.some(p => p.triple === r.target));
+        if (hits.length)
+          pane.highlight(hits.flatMap(termRanges), cls, {scroll});
+        else
+          pane.clearHighlights();
+      });
+    };
+    // a constraint's highlight is its parts (e.g. ":s {" and "}", skipping
+    // an inline-shape body); a bnode subject/object highlights as its
+    // [ ] delimiters rather than the whole property list
+    const constraintRanges = (p) => p.schemaParts || (p.schema ? [p.schema] : []);
+    const anchorRanges = (p, term) =>
+      p.anchors[term + "Parts"] || (p.anchors[term] ? [p.anchors[term]] : []);
+    const show = (group, hoveredSide) => {
+      const lead = group[0];
+      const cls = group.some(p => p.status !== "conformant")
+            ? "shexjs-highlight-fail" : "shexjs-highlight-match";
+      const schemaRanges = group.flatMap(constraintRanges)
+            .concat(hoveredSide === "schema"
+                    // connect a (possibly nested) constraint back to its
+                    // labeled shape: enclosing predicates, then the label
+                    ? group.flatMap(p => p.schemaPath || []).concat([lead.anchors.shapeLabel])
+                    : [])
             .filter(r => r);
-      const dataRanges = (hoveredSide === "data"
-                          ? [pair.anchors.object, pair.anchors.subject, pair.anchors.predicate]
-                          : [pair.anchors.object])
-            .filter(r => r);
+      const dataRanges = group.flatMap(p => [].concat(
+        anchorRanges(p, "object"), anchorRanges(p, "subject"), anchorRanges(p, "predicate")));
       // don't auto-scroll the pane the mouse is in
       schemaPane.highlight(schemaRanges, cls, {scroll: hoveredSide !== "schema"});
       dataPane.highlight(dataRanges, cls, {scroll: hoveredSide !== "data"});
+      showInResults(group, cls, hoveredSide !== "results");
     };
     schemaPane.setHoverRegions(
-      pairs.filter(p => p.schema)
-        .map(p => ({from: p.schema.from, to: p.schema.to, enter: () => show(p, "schema")})),
-      clearBoth);
+      [...bySchemaRange.values()].flatMap(group =>
+        constraintRanges(group[0]).map(r => ({
+          from: r.from, to: r.to, enter: () => show(group, "schema"),
+        }))),
+      clearAll);
+    // both the object and the predicate trigger data-side hovers
     dataPane.setHoverRegions(
-      pairs.filter(p => p.anchors.object)
-        .map(p => ({from: p.anchors.object.from, to: p.anchors.object.to, enter: () => show(p, "data")})),
-      clearBoth);
+      pairs.flatMap(p => [].concat(anchorRanges(p, "object"), anchorRanges(p, "predicate"))
+        .map(r => ({from: r.from, to: r.to, enter: () => show([p], "data")}))),
+      clearAll);
+    // hovering a TestedTriple in an appinfo results pane highlights its
+    // constraint in the schema and its triple in the data
+    resultPanes.forEach(({pane, ranges}) => {
+      if (!pane.setHoverRegions)
+        return;
+      pane.setHoverRegions(
+        ranges.reduce((acc, r) => {
+          const pair = pairs.find(p => p.triple === r.target);
+          return pair
+            ? acc.concat(termRanges(r).map(f => (
+                {from: f.from, to: f.to, enter: () => show([pair], "results")})))
+            : acc;
+        }, []),
+        clearAll);
+    });
   }
 
   /** highlight a shape's declaration in the schema pane */

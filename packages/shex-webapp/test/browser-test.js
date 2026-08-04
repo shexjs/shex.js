@@ -68,6 +68,12 @@ if (!TEST_browser) {
 
   function abs (file) { return Path.join('/shex.js', file) }
 
+  // Find a manifest button by its label rather than by position so the
+  // example manifests can grow new entries without breaking these tests.
+  function buttonNamed ($, selector, label) {
+    return $(selector).find('button').filter((_, elt) => $(elt).text() === label).slice(0, 1)
+  }
+
   async function set (jquery, selector, value) {
     jquery(selector).val(value)
     jquery(selector).trigger("change")
@@ -107,12 +113,12 @@ if (!TEST_browser) {
           it("should load first example from default manifest", async function () {
             let schema, data
 
-            schema = $('#manifestDrop').find('button').slice(0, 1)
+            schema = buttonNamed($, '#manifestDrop', schemaLabel)
             expect(schema.text()).to.equal(schemaLabel)
             schema.click()
             await SharedForTests.promise
 
-            data = $('.passes').find('button').slice(0, 1)
+            data = buttonNamed($, '.passes', dataLabel)
             expect(data.text()).to.equal(dataLabel)
             data.click()
             await SharedForTests.promise // following tests need data
@@ -181,12 +187,12 @@ if (!TEST_browser) {
         it("should load clinical observation example", async function () {
           let schema, data
 
-          schema = $('#manifestDrop').find('button').slice(0, 1)
+          schema = buttonNamed($, '#manifestDrop', 'clinical observation')
           expect(schema.text()).to.equal('clinical observation')
           schema.click()
           await SharedForTests.promise
 
-          data = $('.passes').find('button').slice(0, 1)
+          data = buttonNamed($, '.passes', 'with birthdate')
           expect(data.text()).to.equal('with birthdate')
           data.click()
           await SharedForTests.promise
