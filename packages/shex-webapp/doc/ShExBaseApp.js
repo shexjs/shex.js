@@ -2066,6 +2066,7 @@ class ShExBaseApp {
     $("#valDbgStop").on("click", () => this.endValidationDebugSession());
     $("#download-results-button").on("click", this.downloadResults.bind(this));
     $("#createGist").on("click", (evt) => { SharedForTests.promise = this.createGist(evt); });
+    $("#updateGist").on("click", (evt) => { SharedForTests.promise = this.updateGist(evt); });
 
     $("#loadForm").dialog({
       autoOpen: false,
@@ -2211,6 +2212,14 @@ class ShExBaseApp {
     }
     if (!("manifest" in iface) && !("manifestURL" in iface)) {
       iface.manifestURL = ["../examples/manifest.json"];
+    }
+
+    // a gist-hosted manifest can be edited in place: reveal Menu → "/Update"
+    const gistManifest = "manifestURL" in iface
+          && iface.manifestURL[0].match(/^https:\/\/gist\.githubusercontent\.com\/([^\/]+)\/([0-9a-f]+)\/raw\/(?:([0-9a-f]+)\/)?/);
+    if (gistManifest) {
+      this.loadedGist = {owner: gistManifest[1], id: gistManifest[2], sha: gistManifest[3]};
+      $("#updateGist").show();
     }
 
     // Load all known query parameters. Save load results into array like:
@@ -2886,58 +2895,11 @@ class ShExBaseApp {
     const title = prompt("Title for this gist:", "");
     if (title === null)
       return null; // canceled
-    const token = localStorage.getItem(GIST_TOKEN_KEY)
-          || prompt("Creating a gist requires a github token with \"gist\" scope\n"
-                    + "(menu → \"get token\" creates one; menu → \"instructions\" explains;\n"
-                    + "remembered in this browser's localStorage):");
+    const token = this.getGistToken();
     if (!token)
       return null;
-    await this.Caches.shapeMap.copyEditMapToTextMap();
-    const status = $("#results .fails").length ? "nonconformant" : "conformant";
-    const files = {};
-    const part = (parm, fileName, text) => {
-      if (text.split("\n").length > GIST_INLINE_LINES) {
-        files[fileName] = {content: text};
-        return `  ${parm}URL: ${fileName}\n`;
-      }
-      return `  ${parm}: |\n` + text.replace(/\n+$/, "").split("\n")
-        .map(l => l.length ? "    " + l : "").join("\n") + "\n";
-    };
-    // each QueryParams entry with a manifest descriptor contributes to the
-    // manifest entry, so each app's input registry declares what a gist records
-    const yamlEntry = this.QueryParams.reduce((acc, q) => {
-      if (!("manifest" in q)) return acc;
-      const m = q.manifest;
-      if ("labelKey" in m)
-        acc += `  ${m.labelKey}: ${m.label}\n`;
-      const text = q.location.val();
-      if (m.asYamlObject) {
-        const obj = JSON.parse(text.trim() || "{}");
-        return acc + (Object.keys(obj).length === 0
-          ? `  ${m.key}: {}\n`
-          : `  ${m.key}:\n` + Object.entries(obj).map(
-              ([k, v]) => `    ${JSON.stringify(k)}: ${JSON.stringify(v)}\n`).join(""));
-      }
-      if ("spillName" in m)
-        return acc + part(m.key, m.spillName, text);
-      return acc + `  ${m.key}: ${JSON.stringify(text)}\n`; // short scalar, quoted
-    }, "") + `  status: ${status}\n`;
-    files[".manifest.yaml"] = { content: "-" + yamlEntry.substring(1) };
-    const ghApi = async (url, method, body) => {
-      const resp = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json",
-                   "Accept": "application/vnd.github+json",
-                   "Authorization": "token " + token },
-        body: JSON.stringify(body),
-      });
-      if (!resp.ok) {
-        if (resp.status === 401)
-          localStorage.removeItem(GIST_TOKEN_KEY); // stale token; re-prompt next time
-        throw Error(`${method} ${url} → ${resp.status} ${await resp.text()}`);
-      }
-      return resp.json();
-    };
+    const files = await this.assembleGistFiles();
+    const ghApi = this.ghApi.bind(this, token);
     try {
       const created = await ghApi("https://api.github.com/gists", "POST",
                                   {description: title || "ShEx validation example", public: true, files});
@@ -2976,6 +2938,123 @@ class ShExBaseApp {
       this.resultsWidget.failMessage(e, "creating gist");
       return null;
     }
+  }
+
+  /** Menu → "Update": publish the current state back to the gist this page's
+   * manifestURL was loaded from (this.loadedGist, revealed by
+   * loadSearchParameters), nulling spill-over files the new revision no
+   * longer references, then reload pinned to the new revision (sha-less raw
+   * URLs are CDN-cached, so reloading unpinned could show stale content). */
+  async updateGist (evt) {
+    if (evt) evt.preventDefault();
+    this.toggleControls();
+    if (!this.loadedGist)
+      return null;
+    const token = this.getGistToken();
+    if (!token)
+      return null;
+    const files = await this.assembleGistFiles();
+    const ghApi = this.ghApi.bind(this, token);
+    try {
+      const gistApiUrl = `https://api.github.com/gists/${this.loadedGist.id}`;
+      const current = await ghApi(gistApiUrl, "GET");
+      // this page may hold a revision somebody -- maybe this user in another
+      // window -- has updated since
+      if (this.loadedGist.sha && current.history && current.history.length
+          && current.history[0].version !== this.loadedGist.sha
+          && !confirm(`This page holds revision ${this.loadedGist.sha.substr(0, 7)}`
+                      + ` but the gist has moved on to ${current.history[0].version.substr(0, 7)}.`
+                      + ` Overwrite the newer revision?`))
+        return null;
+      for (const q of this.QueryParams)
+        if (q.manifest && "spillName" in q.manifest
+            && q.manifest.spillName in current.files && !(q.manifest.spillName in files))
+          files[q.manifest.spillName] = null; // delete spill-overs now recorded inline
+      const patched = await ghApi(gistApiUrl, "PATCH", {files});
+      localStorage.setItem(GIST_TOKEN_KEY, token);
+      const gistBase = `https://gist.githubusercontent.com/${this.loadedGist.owner}/${this.loadedGist.id}/raw/`;
+      const manifestURL = "history" in patched && patched.history.length
+            ? `${gistBase}${patched.history[0].version}/.manifest.yaml`
+            : gistBase + ".manifest.yaml";
+      const parms = this.QueryParams
+            .filter(q => this.Getables.indexOf(q) === -1) // controls only; content comes from the gist
+            .map(q => q.queryStringParm + "=" + encodeURIComponent(q.location.val()))
+            .concat(["manifestURL=" + encodeURIComponent(manifestURL)]);
+      const search = "?" + parms.join("&");
+      const trace = `updated gist: ${current.html_url} manifest: ${manifestURL}`;
+      console.log(trace);
+      try { sessionStorage.setItem(GIST_CREATED_KEY, trace); } catch (e) { /* private mode */ }
+      location.search = search; // navigates: reload from the updated manifest
+      return search; // for tests, which can't navigate
+    } catch (e) {
+      if (/ 404 /.test(e.message))
+        e.message += " (is this your gist? updating needs its owner's token)";
+      this.resultsWidget.failMessage(e, "updating gist");
+      return null;
+    }
+  }
+
+  /** the github token Create/Update Gist use, prompted for once and
+   * remembered in localStorage (cleared again by a 401 in ghApi) */
+  getGistToken () {
+    return localStorage.getItem(GIST_TOKEN_KEY)
+          || prompt("Creating a gist requires a github token with \"gist\" scope\n"
+                    + "(menu → \"get token\" creates one; menu → \"instructions\" explains;\n"
+                    + "remembered in this browser's localStorage):");
+  }
+
+  async ghApi (token, url, method, body) {
+    const resp = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json",
+                 "Accept": "application/vnd.github+json",
+                 "Authorization": "token " + token },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    if (!resp.ok) {
+      if (resp.status === 401)
+        localStorage.removeItem(GIST_TOKEN_KEY); // stale token; re-prompt next time
+      throw Error(`${method} ${url} → ${resp.status} ${await resp.text()}`);
+    }
+    return resp.json();
+  }
+
+  /** the files Create/Update Gist publish: .manifest.yaml holding one entry
+   * built from the QueryParams manifest descriptors, plus a spill-over file
+   * per input whose text is over GIST_INLINE_LINES lines */
+  async assembleGistFiles () {
+    await this.Caches.shapeMap.copyEditMapToTextMap();
+    const status = $("#results .fails").length ? "nonconformant" : "conformant";
+    const files = {};
+    const part = (parm, fileName, text) => {
+      if (text.split("\n").length > GIST_INLINE_LINES) {
+        files[fileName] = {content: text};
+        return `  ${parm}URL: ${fileName}\n`;
+      }
+      return `  ${parm}: |\n` + text.replace(/\n+$/, "").split("\n")
+        .map(l => l.length ? "    " + l : "").join("\n") + "\n";
+    };
+    // each QueryParams entry with a manifest descriptor contributes to the
+    // manifest entry, so each app's input registry declares what a gist records
+    const yamlEntry = this.QueryParams.reduce((acc, q) => {
+      if (!("manifest" in q)) return acc;
+      const m = q.manifest;
+      if ("labelKey" in m)
+        acc += `  ${m.labelKey}: ${m.label}\n`;
+      const text = q.location.val();
+      if (m.asYamlObject) {
+        const obj = JSON.parse(text.trim() || "{}");
+        return acc + (Object.keys(obj).length === 0
+          ? `  ${m.key}: {}\n`
+          : `  ${m.key}:\n` + Object.entries(obj).map(
+              ([k, v]) => `    ${JSON.stringify(k)}: ${JSON.stringify(v)}\n`).join(""));
+      }
+      if ("spillName" in m)
+        return acc + part(m.key, m.spillName, text);
+      return acc + `  ${m.key}: ${JSON.stringify(text)}\n`; // short scalar, quoted
+    }, "") + `  status: ${status}\n`;
+    files[".manifest.yaml"] = { content: "-" + yamlEntry.substring(1) };
+    return files;
   }
 
   downloadResults (evt) {

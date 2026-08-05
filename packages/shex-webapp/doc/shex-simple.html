@@ -255,7 +255,7 @@ ul {
               <li class="menuitem"><input type="checkbox" id="skipCycleCheck" checked/><label for="skipCycleCheck">skip cycle check</label></li>
               <li class="menuitem"><input type="checkbox" id="ignoreClosed"/><label for="ignoreClosed">ignore closed-ness of shapes</label></li>
               <li class="menuitem" id="permalink"><a>Permalink</a></li>
-              <li class="menuitem"><span id="createGist"><a>Create Gist</a></span> |
+              <li class="menuitem"><span id="createGist"><a>Create</a></span><span id="updateGist" style="display:none" title="update the gist this page's manifest was loaded from">/<a>Update</a></span> Gist |
                 <a id="gistToken" title="get this token" href="https://github.com/settings/tokens/new?scopes=gist&amp;description=shex-simple" target="_blank">get token</a>
                 <a id="gistInstructions" style="float:right">help</a>
               </li>
@@ -278,6 +278,11 @@ ul {
           (popup blockers permitting; its address is also printed to the browser
           console), and reloads this page with the gist as its manifest (a
           permalink to share).
+        </p>
+        <p>
+          When this page was loaded from a gist's manifest, <b>Update</b>
+          appears beside it and publishes the current state back to that gist
+          (updating needs the gist owner's token).
         </p>
         <p>It needs a github token with "gist" scope, remembered in this browser's localStorage:</p>
         <ol>
