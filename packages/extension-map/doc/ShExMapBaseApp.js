@@ -5,6 +5,20 @@
  * - ouputSchema (SchemaCache)
  */
 
+/** index of the first "node@shape" separator in an output ShapeMap ('@'
+ * outside <>s), or -1 if there is none yet */
+function outputMapAtIndex (text) {
+  let depth = 0;
+  for (let i = 0; i < text.length; ++i) {
+    switch (text[i]) {
+    case "<": ++depth; break;
+    case ">": --depth; break;
+    case "@": if (depth === 0) return i; break;
+    }
+  }
+  return -1;
+}
+
 class JSONCache extends InterfaceCache {
   constructor (selection) {
     super(selection, null);
@@ -37,8 +51,7 @@ class ShExMapManifestCache extends ManifestCache {
     this.caches.statics.set(JSON.stringify(dataTest.entry.staticVars, null, "  "));
     $("#staticVars .status").text(name);
 
-    $("#outputShape").val(dataTest.entry.outputShape); // targetSchema.start in Map-test
-    $("#createRoot").val(dataTest.entry.createRoot); // createRoot in Map-test
+    $("#outputShapeMap").val(dataTest.entry.outputShapeMap); // "createRoot@outputShape" in Map-test
   }
 }
 
@@ -76,6 +89,37 @@ class ShExMapBaseApp extends ShExBaseApp {
     ];
     Array.prototype.push.apply(this.Getables, parameters);
     Array.prototype.push.apply(this.QueryParams, parameters);
+    // not a cache: a plain input holding "node@shape" pair(s); the node names
+    // a graph root to invent, so there's no data to pick it from
+    this.QueryParams.push({queryStringParm: "output-map", location: $("#outputShapeMap"), deflt: ""});
+    this.Caches.shapeMap.addContextMenus("#outputShapeMap", outputSchema, {
+      // a picked shape replaces only what follows the '@', keeping the
+      // invented node; with no node yet, supply the conventional root
+      applyChoice: (val, key) => {
+        const at = outputMapAtIndex(val);
+        return at === -1
+          ? (val.trim().length ? val.trim() : "_:root") + "@" + key
+          : val.substring(0, at + 1) + key;
+      },
+      // pop the shape list up under the right edge of the '@'
+      menuPosition: ($input, offset) => {
+        const val = $input.val();
+        const at = outputMapAtIndex(val);
+        const y = offset.top + $input.outerHeight();
+        if (at === -1)
+          return {x: offset.left + 10, y};
+        const measure = $("<span/>").css({
+          position: "absolute", visibility: "hidden", whiteSpace: "pre",
+          fontFamily: $input.css("font-family"), fontSize: $input.css("font-size"),
+          fontWeight: $input.css("font-weight"), letterSpacing: $input.css("letter-spacing"),
+        }).text(val.substring(0, at + 1)).appendTo("body");
+        const atRightEdge = measure.width();
+        measure.remove();
+        const textStart = parseFloat($input.css("padding-left")) + parseFloat($input.css("border-left-width"));
+        const x = offset.left + textStart + atRightEdge - $input[0].scrollLeft;
+        return {x: Number.isFinite(x) ? x : offset.left + 10, y}; // measurements NaN where there's no layout
+      },
+    });
     Array.prototype.push.apply(this.keyDownHandlers, [
       (e, code) => {
         if (!e.ctrlKey || e.key !== "\\") return false;
@@ -353,6 +397,31 @@ class ShExMapBaseApp extends ShExBaseApp {
     }
   }
 
+  /**
+   * parse #outputShapeMap's "node@shape" pairs (comma-separated). The node
+   * names a graph root to invent so it can't be picked from the data, hence a
+   * plain text input rather than a QueryMapEditor. Split at '@'s outside
+   * <>s, then resolve each side like any other shape-map entry.
+   */
+  parseMaterializationShapeMap (text) {
+    const pairs = [];
+    let start = 0, at = -1, depth = 0;
+    for (let i = 0; i < text.length; ++i) {
+      switch (text[i]) {
+      case "<": ++depth; break;
+      case ">": --depth; break;
+      case "@": if (depth === 0 && at === -1) at = i; break;
+      case ",": if (depth === 0) { pairs.push([start, at, i]); start = i + 1; at = -1; } break;
+      }
+    }
+    pairs.push([start, at, text.length]);
+    return pairs.map(([from, at, to]) => {
+      if (at === -1)
+        throw Error(`expected "node@shape" in output ShapeMap ${JSON.stringify(text.substring(from, to).trim())}`);
+      return this.fixMaterializationShapeMapEntry(text.substring(from, at).trim(), text.substring(at + 1, to).trim());
+    });
+  }
+
   reportMaterializationError (materializationError, currentAction) {
     $("#results .status").text("materialization errors:").show();
     if (materializationError && Array.isArray(materializationError.failures))
@@ -444,7 +513,7 @@ class ShExMapBaseApp extends ShExBaseApp {
 
   /** the inputs to a materialization (shared by materializeAsync and the
    * debugger): parsed output schema, a deep copy of the bindings and static
-   * vars, and the createRoot/outputShape pair */
+   * vars, and the output ShapeMap */
   async collectMaterializationInputs () {
     const _dup = (obj) => JSON.parse(JSON.stringify(obj));
     const outputSchema = await this.Caches.outputSchema.refresh();
@@ -454,7 +523,7 @@ class ShExMapBaseApp extends ShExBaseApp {
     // statics are handed to the materializer as always-available globals
     // rather than being spliced into the binding tree as a consumable frame
     const staticVars = _dup(await this.Caches.statics.refresh()) || {};
-    const outputShapeMap = [this.fixMaterializationShapeMapEntry($("#createRoot").val(), $("#outputShape").val())];
+    const outputShapeMap = this.parseMaterializationShapeMap($("#outputShapeMap").val());
     return {outputSchema, resultBindings, staticVars, outputShapeMap};
   }
 
@@ -528,9 +597,7 @@ class ShExMapBaseApp extends ShExBaseApp {
       $("<div/>", {class: "passes"}).append(
         $("<span/>", {class: "shapeMap"}).append(
           "# ",
-          $("<span/>", {class: "data"}).text($("#createRoot").val()),
-          $("<span/>", {class: "valStatus"}).text("@"),
-          $("<span/>", {class: "schema"}).text($("#outputShape").val()),
+          $("<span/>", {class: "data"}).text($("#outputShapeMap").val()),
         ),
         $("<pre/>").text(result)
       )

@@ -988,8 +988,13 @@ class ShapeMapCache extends InterfaceCache {
     this.editMap.attr("data-dirty", false);
   }
 
-  /* context menus */
-  addContextMenus (inputSelector, cache) {
+  /* context menus
+   * opts.applyChoice(currentValue, pickedKey) => newValue: how a picked menu
+   *   item lands in the input (default: replace the whole value).
+   * opts.menuPosition ($input, offset) => {x, y}: where to pop the menu up
+   *   (default: just inside the input's top-left corner).
+   */
+  addContextMenus (inputSelector, cache, opts = {}) {
     const _ShapeMapCache = this;
     // !!! terribly stateful; only one context menu at a time!
     const DATA_HANDLE = 'runCallbackThingie'
@@ -1140,10 +1145,11 @@ class ShapeMapCache extends InterfaceCache {
           };
         });
         const _offset = $this.offset();
-        $this.contextMenu({
-          x: _offset.left + 10,
-          y: _offset.top + 10
-        })
+        $this.contextMenu(
+          opts.menuPosition
+            ? opts.menuPosition($this, _offset)
+            : { x: _offset.left + 10, y: _offset.top + 10 }
+        )
         $this.on('contextmenu', rightClickHandler)
       });
     }
@@ -1178,7 +1184,8 @@ class ShapeMapCache extends InterfaceCache {
         // target.scrollLeft = scrollLeft + val.length - nodeLex.length;
         target.scrollLeft = target.scrollWidth;
       } else {
-        $(options.selector).val(key);
+        const $input = $(options.selector);
+        $input.val(opts.applyChoice ? opts.applyChoice($input.val(), key) : key);
       }
     }
 
@@ -2241,13 +2248,6 @@ class ShExBaseApp {
       return callValidator();
     }
 
-    if ("output-map" in iface)
-      parseShapeMap("output-map", (node, shape) => {
-        // only works for one n/s pair
-        $("#createNode").val(node);
-        $("#outputShape").val(shape);
-      });
-    this.Caches.shapeMap.addContextMenus("#outputShape", this.Caches.outputSchema);
     return loaded;
   }
 

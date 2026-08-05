@@ -5,26 +5,24 @@
   dataURL: BPfhir-instance.ttl
   queryMap: "<tag:BPfhir123>@START"
   outputSchemaURL: BPdam-schema.shex
-  outputShape: "<BPunitsDAM>"
+  outputShapeMap: "<tag:b0>@<BPunitsDAM>"
   staticVars:
     http://abc.example/someConstant: '"123-456"'
-  createRoot: "<tag:b0>"
   status: conformant
   expectedBindingsURL: BP-simple-bindings.json
-  outputDataURL: BP-simple-out.ttl
+  expectedOutputDataURL: BP-simple-out.ttl
 - schemaLabel: BP back
   schemaURL: BPdam-schema.shex
   dataLabel: simple
   dataURL: BPdam-instance.ttl
   queryMap: "<tag:b0>@START"
   outputSchemaURL: BPfhir-schema.shex
-  outputShape: "<BPfhir>"
+  outputShapeMap: "<tag:BPfhir123>@<BPfhir>"
   staticVars:
     http://abc.example/anotherConstant: abc-def
-  createRoot: "<tag:BPfhir123>"
   status: conformant
   expectedBindingsURL: BP-simple-bindings.json
-  outputDataURL: BP-back-simple-out.ttl
+  expectedOutputDataURL: BP-back-simple-out.ttl
 - schemaLabel: BPPatient multi-bindings
   schema: |
     PREFIX  : <http://dam.example/med#>
@@ -120,13 +118,12 @@
         fhir:units xsd:string %Map:{ bp:diaUnits %}
       }
     }
-  outputShape: "<collector>"
+  outputShapeMap: "<tag:BPfhir123>@<collector>"
   staticVars:
     http://abc.example/anotherConstant: abc-def
-  createRoot: "<tag:BPfhir123>"
   status: conformant
   expectedBindingsURL: BPPatient-multi-bindings-bindings.json
-  outputDataURL: BPPatient-multi-bindings-out.ttl
+  expectedOutputDataURL: BPPatient-multi-bindings-out.ttl
 - schemaLabel: BPPatient 2 levels
   schema: |
     PREFIX  : <http://dam.example/med#>
@@ -263,12 +260,11 @@
         fhir:units xsd:string %Map:{ bp:diaUnits %}
       }
     }
-  outputShape: "<collector>"
+  outputShapeMap: "<tag:BPfhir123>@<collector>"
   staticVars: {}
-  createRoot: "<tag:BPfhir123>"
   status: conformant
   expectedBindingsURL: BPPatient-2-levels-bindings.json
-  outputDataURL: BPPatient-2-levels-out.ttl
+  expectedOutputDataURL: BPPatient-2-levels-out.ttl
 - schemaLabel: symmetric
   schema: |
     PREFIX    : <http://a.example/>
@@ -315,12 +311,11 @@
       schema:location xsd:string %Map:{ :LocationName %} ;
       schema:address  xsd:string %Map:{ :LocationAddress %}
     }
-  outputShape: "<Concert>"
+  outputShapeMap: "_:root@<Concert>"
   staticVars: {}
-  createRoot: _:root
   status: conformant
   expectedBindingsURL: symmetric-bindings.json
-  outputDataURL: symmetric-out.ttl
+  expectedOutputDataURL: symmetric-out.ttl
 - schemaLabel: splits
   threadedOnly: true
   schemaURL: contact-schema.shex
@@ -328,12 +323,11 @@
   dataURL: contact-Ann.ttl
   queryMap: "<PersonX>@<Person>"
   outputSchemaURL: card-schema-phone-mbox.shex
-  outputShape: "<Card>"
+  outputShapeMap: "<tag:card1>@<Card>"
   staticVars: {}
-  createRoot: "<tag:card1>"
   status: conformant
   expectedBindingsURL: splits-bindings.json
-  outputDataURL: splits-out.ttl
+  expectedOutputDataURL: splits-out.ttl
 - schemaLabel: splits
   threadedOnly: true
   schemaURL: contact-schema.shex
@@ -341,21 +335,19 @@
   dataURL: contact-Ann.ttl
   queryMap: "<PersonX>@<Person>"
   outputSchemaURL: card-schema-mbox-phone.shex
-  outputShape: "<Card>"
+  outputShapeMap: "<tag:card1>@<Card>"
   staticVars: {}
-  createRoot: "<tag:card1>"
   status: conformant
   expectedBindingsURL: splits-bindings.json
-  outputDataURL: splits-out.ttl
+  expectedOutputDataURL: splits-out.ttl
 - schemaLabel: ambiguous
   schemaURL: contact-flat-schema.shex
   dataLabel: Bob
   dataURL: contact-Bob.ttl
   queryMap: "<PersonY>@START"
   outputSchemaURL: card-flat-schema.shex
-  outputShape: "<Card>"
+  outputShapeMap: "<tag:card2>@<Card>"
   staticVars: {}
-  createRoot: "<tag:card2>"
   status: conformant
   expectedBindingsURL: ambiguous-bindings.json
-  outputDataURL: ambiguous-out.ttl
+  expectedOutputDataURL: ambiguous-out.ttl
