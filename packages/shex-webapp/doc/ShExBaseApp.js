@@ -1902,11 +1902,19 @@ class ShExBaseApp {
     const shapeMap = new ShapeMapCache($("#textMap"), {inputSchema, inputData}, this.turtleParser, this.resultsWidget); // @@ rename to #shapeMap
 
     this.Caches = { inputSchema, inputData, extension, shapeMap };
+    // manifest: how this input corresponds to a manifest entry: key (the
+    // entry key; long text may spill to a gist file named spillName,
+    // referenced as <key>URL), labelKey/label (an accompanying label line),
+    // asYamlObject (the entry holds a YAML mapping where the input holds JSON
+    // text). No manifest: no correspondence (controls, testing-only inputs).
     this.Getables = [
-      {queryStringParm: "schema",       location: this.Caches.inputSchema.selection, cache: this.Caches.inputSchema},
-      {queryStringParm: "data",         location: this.Caches.inputData.selection,   cache: this.Caches.inputData  },
+      {queryStringParm: "schema",       location: this.Caches.inputSchema.selection, cache: this.Caches.inputSchema,
+       manifest: {key: "schema", spillName: "schema.shex", labelKey: "schemaLabel", label: "schema"}},
+      {queryStringParm: "data",         location: this.Caches.inputData.selection,   cache: this.Caches.inputData,
+       manifest: {key: "data", spillName: "data.ttl", labelKey: "dataLabel", label: "data"}},
       {queryStringParm: "extension",    location: this.Caches.extension.selection,   cache: this.Caches.extension  },
-      {queryStringParm: "shape-map",    location: $("#textMap"),                     cache: this.Caches.shapeMap   },
+      {queryStringParm: "shape-map",    location: $("#textMap"),                     cache: this.Caches.shapeMap,
+       manifest: {key: "queryMap", spillName: "queryMap.qm"}},
     ];
     this.QueryParams = this.Getables.concat([
       {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
@@ -2825,12 +2833,14 @@ class ShExBaseApp {
     return location.origin + location.pathname + "?" + s;
   }
 
-  /** Menu → "Create Gist": publish the current schema, data and query map as
-   * a github gist (modeled on
-   * <https://gist.github.com/ericprud/4c2b0a7eac60e3b8eade6fd35215d715>) and
-   * reload this page with ?manifestURL= pointing at the gist's .manifest.yaml.
-   * Texts over GIST_INLINE_LINES lines become separate schema.shex/data.ttl/
-   * queryMap.qm files referenced by relative schemaURL/dataURL/queryMapURL. */
+  /** Menu → "Create Gist": publish the inputs this app registered with a
+   * manifest descriptor in its QueryParams (shex-simple: schema, data,
+   * queryMap; shexmap adds staticVars, outputSchema, outputShapeMap) as a
+   * github gist (modeled on
+   * <https://gist.github.com/ericprud/4c2b0a7eac60e3b8eade6fd35215d715>)
+   * and reload this page with ?manifestURL= pointing at the gist's
+   * .manifest.yaml.  Texts over GIST_INLINE_LINES lines become separate
+   * files (each descriptor's spillName) referenced by relative <key>URLs. */
   async createGist (evt) {
     if (evt) evt.preventDefault();
     this.toggleControls();
@@ -2854,13 +2864,26 @@ class ShExBaseApp {
       return `  ${parm}: |\n` + text.replace(/\n+$/, "").split("\n")
         .map(l => l.length ? "    " + l : "").join("\n") + "\n";
     };
-    files[".manifest.yaml"] =
-      { content: "- schemaLabel: schema\n"
-        + part("schema", "schema.shex", this.Caches.inputSchema.selection.val())
-        + "  dataLabel: data\n"
-        + part("data", "data.ttl", this.Caches.inputData.selection.val())
-        + part("queryMap", "queryMap.qm", $("#textMap").val())
-        + `  status: ${status}\n` };
+    // each QueryParams entry with a manifest descriptor contributes to the
+    // manifest entry, so each app's input registry declares what a gist records
+    const yamlEntry = this.QueryParams.reduce((acc, q) => {
+      if (!("manifest" in q)) return acc;
+      const m = q.manifest;
+      if ("labelKey" in m)
+        acc += `  ${m.labelKey}: ${m.label}\n`;
+      const text = q.location.val();
+      if (m.asYamlObject) {
+        const obj = JSON.parse(text.trim() || "{}");
+        return acc + (Object.keys(obj).length === 0
+          ? `  ${m.key}: {}\n`
+          : `  ${m.key}:\n` + Object.entries(obj).map(
+              ([k, v]) => `    ${JSON.stringify(k)}: ${JSON.stringify(v)}\n`).join(""));
+      }
+      if ("spillName" in m)
+        return acc + part(m.key, m.spillName, text);
+      return acc + `  ${m.key}: ${JSON.stringify(text)}\n`; // short scalar, quoted
+    }, "") + `  status: ${status}\n`;
+    files[".manifest.yaml"] = { content: "-" + yamlEntry.substring(1) };
     const ghApi = async (url, method, body) => {
       const resp = await fetch(url, {
         method,

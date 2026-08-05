@@ -12,7 +12,7 @@ const expect = require("chai").expect;
 const node_fetch = require("node-fetch");
 // jsdom's engines outpace the packages' own; required lazily under
 // TEST_browser (c.f. browser-test.js)
-let JSDOM;
+let JSDOM, VirtualConsole, nock;
 
 const [[GitRootServer]] = require("../../../tools/testServer")
       .startServer(
@@ -39,7 +39,8 @@ const bindingsJson = JSON.stringify({
 if (!TEST_browser) {
   console.warn("Skipping shexmap-editors-smoke-tests; to activate these tests, set environment variable TEST_browser=true");
 } else {
-  ({JSDOM} = require("jsdom"));
+  ({JSDOM, VirtualConsole} = require("jsdom"));
+  nock = require("nock");
   describe("shexmap-simple with ?editors=1", function () {
     this.timeout(20000);
     const page = "packages/extension-map/doc/shexmap-simple.html";
@@ -47,11 +48,19 @@ if (!TEST_browser) {
     let dom, $, shared, app;
     before(async function () {
       const base = Path.join(__dirname, "../../..", page);
+      // forward page console traffic, muting only jsdom's "Not implemented:
+      // navigation" from the gist test's post-create reload (c.f. browser-test.js)
+      const virtualConsole = new VirtualConsole().forwardTo(console, {jsdomErrors: "none"});
+      virtualConsole.on("jsdomError", e => {
+        if (!String(e.message).includes("Not implemented: navigation"))
+          console.error(e.type === "unhandled-exception" ? e.cause.stack : e.message);
+      });
       dom = new JSDOM(Fs.readFileSync(base, "utf8"), {
         url: GitRootServer.urlFor(page + "?editors=1"),
         runScripts: "dangerously",
         resources: "usable",
         pretendToBeVisual: true,
+        virtualConsole,
       });
       dom.window.fetch = node_fetch;
       // jsdom lacks the CSS namespace; jquery-ui ≥1.14 calls CSS.escape.
@@ -187,6 +196,37 @@ if (!TEST_browser) {
       await shared.promise;
       expect($("#results").text()).to.include("2 viable materializations");
       expect($("#results").text()).to.include('"+1"');
+    });
+
+    it("should record the shexmap inputs (but not bindings) in a created gist", async function () {
+      dom.window.localStorage.setItem("githubGistToken", "test-token");
+      dom.window.prompt = () => "shexmap gist";
+      let postedBody;
+      nock("https://api.github.com")
+        .post("/gists", body => { postedBody = body; return true })
+        .reply(201, {id: "abc123", url: "https://api.github.com/gists/abc123",
+                     html_url: "https://gist.github.com/tester/abc123", owner: {login: "tester"}})
+        .patch("/gists/abc123", () => true)
+        .reply(200, {history: [{version: "sha-2"}]});
+      try {
+        $("#createGist").trigger("click");
+        const search = await shared.promise;
+        expect(search, "createGist's post-create reload target").to.include("manifestURL=");
+      } finally {
+        nock.cleanAll();
+      }
+      const manifest = postedBody.files[".manifest.yaml"].content;
+      expect(manifest).to.include("- schemaLabel: schema\n");
+      expect(manifest).to.include("  queryMap: ");
+      // ... plus the shexmap-specific inputs, still holding the ambiguous
+      // example from the preceding tests
+      expect(manifest).to.include("  outputSchema: |\n    PREFIX : <http://a.example/>\n");
+      expect(manifest).to.include('  outputShapeMap: "<tag:card>@<http://a.example/Card>"\n');
+      expect(manifest).to.include("  staticVars: {}\n");
+      expect(manifest).to.include("  status: ");
+      // bindings are a validation product (a manifest's expectedBindings
+      // records them for testing), not a gist input
+      expect(manifest).not.to.match(/bindings/i);
     });
   });
 }
