@@ -877,4 +877,44 @@ function runtimeError () {
   throw new MaterializationError(Array.prototype.join.call(arguments, ""));
 }
 
-module.exports = {ThreadedMaterializer, MaterializerDebugger, normalizeBindingTree, MaterializationError};
+/** tripleConstraints - every TripleConstraint of a schema in a deterministic
+ * order: shapes as declared, each expression tree depth-first, descending
+ * into a constraint's inline valueExpr but never following a reference (the
+ * referent is reached through its own declaration).
+ *
+ * Structured clone breaks object identity, so a materialization running in a
+ * worker cannot ship its provenance's TripleConstraints.  Both sides hold
+ * copies of the same schema, though, so an index into this ordering names
+ * the same constraint on either side.
+ */
+function tripleConstraints (schema) {
+  const found = [];
+  const seen = new Set();
+  const shapeExpr = (expr) => {
+    if (!expr || typeof expr !== "object" || seen.has(expr))
+      return; // a string is a reference: reached through its declaration
+    seen.add(expr);
+    switch (expr.type) {
+    case "ShapeDecl": return shapeExpr(expr.shapeExpr);
+    case "ShapeAnd": case "ShapeOr": return (expr.shapeExprs || []).forEach(shapeExpr);
+    case "ShapeNot": return shapeExpr(expr.shapeExpr);
+    case "Shape": return tripleExpr(expr.expression);
+    }
+  };
+  const tripleExpr = (expr) => {
+    if (!expr || typeof expr !== "object" || seen.has(expr))
+      return; // a string is an Inclusion
+    seen.add(expr);
+    switch (expr.type) {
+    case "EachOf": case "OneOf": return (expr.expressions || []).forEach(tripleExpr);
+    case "TripleConstraint":
+      found.push(expr);
+      return shapeExpr(expr.valueExpr);
+    }
+  };
+  (schema.shapes || []).forEach(shapeExpr);
+  return found;
+}
+
+module.exports = {ThreadedMaterializer, MaterializerDebugger, normalizeBindingTree,
+                  MaterializationError, tripleConstraints};

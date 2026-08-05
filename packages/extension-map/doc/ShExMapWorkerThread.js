@@ -77,12 +77,22 @@ try {
     // thread carries its own binding-tree cursor.  Emitted quads are
     // marshalled back to the app, which rebuilds them with its DataFactory.
     const materializer = new MapModule.ThreadedMaterializer(outputSchema, {staticVars: msg.data.staticVars || {}});
+    // per-quad provenance travels as constraint INDEXES: structured clone
+    // breaks object identity, but the app walks its own copy of this schema
+    // the same way to recover its own TripleConstraints
+    const ordinalOf = new Map(MapModule.tripleConstraints(outputSchema).map((tc, i) => [tc, i]));
     materializeMap.forEach(pair => {
       try {
         // a structured-cloned Start marker arrives as a plain object; labels are strings
         const shape = !pair.shape || typeof pair.shape === "object" ? undefined : pair.shape;
         const quads = materializer.materialize(msg.data.resultBindings, pair.node, shape);
-        self.postMessage({ response: "update", quads: quads.map(q => WorkerMarshalling.rdfjsTripleToJsonTriple(q)) });
+        const provenance = (materializer.provenance || []).map(p => ({
+          tcOrdinal: p.tc !== undefined && ordinalOf.has(p.tc) ? ordinalOf.get(p.tc) : null,
+          predicate: p.predicate,
+          src: p.src,
+        }));
+        self.postMessage({ response: "update", provenance,
+                           quads: quads.map(q => WorkerMarshalling.rdfjsTripleToJsonTriple(q)) });
       } catch (e) {
         console.dir(e);
         self.postMessage({ response: "error", exception: `Exception when materializing ${pair.node}@${pair.shape}: ${typeof e === 'object' && e instanceof Error ? e.message : e}` });

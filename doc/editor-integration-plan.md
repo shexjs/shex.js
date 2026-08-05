@@ -251,9 +251,13 @@ a nested shape).  `mapMaterialization` aligns those quads with the rendered
 result Turtle — a fresh serialization, so bnodes align structurally exactly as
 validation results align against the data pane — and the materialized graph
 renders in a Turtle result pane whose triples hover-link to the output-schema
-constraint and the binding that fed them, and back.  Object identity again
-confines this to the main-thread app (see phase 4's worker wrinkle); the
-worker app still gets the pane, without the hovers.
+constraint and the binding that fed them, and back.
+
+The worker app has it too, resolving phase 4's wrinkle for this path rather
+than dodging it: a materialization's provenance names its constraints by
+**index into a deterministic walk of the schema** (`tripleConstraints`), which
+both sides compute over their own copy, so structured clone costs only the
+object identity it was always going to break.
 
 **Phase 4 — consolidation & polish**
 - `RdfJsDb(millanDataset)` directly (drop the double parse) once
