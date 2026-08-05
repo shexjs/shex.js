@@ -624,6 +624,7 @@ if (!TEST_browser) {
         .patch('/gists/abc123', body => { patchedBody = body; return true })
         .reply(200, {history: [{version: 'sha-2'}, {version: 'sha-1'}]})
 
+      expect($('#updateGist')[0].style.display, 'no gist manifest loaded').to.equal('none')
       $('#createGist').trigger('click')
       const search = await SharedForTests.promise
 
@@ -662,6 +663,48 @@ if (!TEST_browser) {
       expect($('#gistHelp a[href*="scopes=gist"]').length).to.be.above(0)
       $('#gistHelp').dialog('close')
     })
+
+    it("should update the gist a manifestURL was loaded from", async function () {
+      const rawManifestPath = '/tester/abc123/raw/sha-1/.manifest.yaml'
+      nock('https://gist.githubusercontent.com')
+        .get(rawManifestPath)
+        .reply(200, '[]', {'Content-Type': 'text/plain'})
+      const { dom: gDom, $: g$ } = await loadPage(
+        SHEX_SIMPLE,
+        '?manifestURL=' + encodeURIComponent('https://gist.githubusercontent.com' + rawManifestPath))
+      expect(g$('#updateGist')[0].style.display, 'Update revealed').to.not.equal('none')
+      gDom.window.localStorage.setItem('githubGistToken', 'test-token')
+      gDom.window.confirm = () => { throw Error('unexpected confirm: page and gist revisions agree') }
+
+      g$('#inputSchema textarea.schema').val('PREFIX : <http://a.example/>\n:S { :p . }')
+      g$('#inputData textarea').val('PREFIX : <http://a.example/>\n:x :p 42 .')
+      await set(g$, '#textMap', '<http://a.example/x>@<http://a.example/S>')
+
+      let patchedBody
+      nock('https://api.github.com')
+        .get('/gists/abc123')
+        .reply(200, {
+          html_url: 'https://gist.github.com/tester/abc123',
+          // schema.shex spilled over in the revision being replaced
+          files: {'.manifest.yaml': {}, 'schema.shex': {}, '-T ShEx Validation Manifest.md': {}},
+          history: [{version: 'sha-1'}],
+        })
+        .patch('/gists/abc123', body => { patchedBody = body; return true })
+        .reply(200, {history: [{version: 'sha-9'}, {version: 'sha-1'}]})
+
+      g$('#updateGist').trigger('click')
+      const search = await SharedForTests.promise
+
+      // the schema is short now: recorded inline, and the stale spill-over deleted
+      expect(patchedBody.files['.manifest.yaml'].content)
+        .to.include('  schema: |\n    PREFIX : <http://a.example/>\n    :S { :p . }\n')
+      expect(patchedBody.files['schema.shex'], 'stale spill-over nulled').to.equal(null)
+      expect(patchedBody.files, 'no unreferenced spill-overs invented').not.to.have.property('data.ttl')
+      expect(patchedBody.files).not.to.have.property('-T ShEx Validation Manifest.md')
+      // the reload pins the updated revision
+      expect(search).to.include(
+        'manifestURL=' + encodeURIComponent('https://gist.githubusercontent.com/tester/abc123/raw/sha-9/.manifest.yaml'))
+    }).timeout(STARTUP_TIMEOUT)
   })
 }
 
