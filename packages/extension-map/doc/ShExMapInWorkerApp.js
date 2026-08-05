@@ -1,6 +1,10 @@
 class RemoteShExMaterializer {
-  constructor (schema, shapeMap, resultBindings, staticVars, resultsWidget, onCancel, workerUrl) {
+  constructor (schema, shapeMap, resultBindings, staticVars, resultsWidget, onCancel, workerUrl, mapModule) {
     this.generatedGraph = new RdfJs.Store();
+    this.provenance = [];
+    // the worker names constraints by their index in this same schema (see
+    // ShExMapWorkerThread's "materialize"), which object identity can't cross
+    this.schemaTcs = mapModule.tripleConstraints(schema);
     this.created = new Canceleable(
       $("#materialize"),
       onCancel,
@@ -24,11 +28,20 @@ class RemoteShExMaterializer {
 
   parseUpdatesAndResults (msg, workerUICleanup, resolve, reject) {
     switch (msg.data.response) {
-    case "update":
+    case "update": {
       // the ThreadedMaterializer in the worker ships quads, not a val structure
-      this.generatedGraph.addQuads(msg.data.quads.map(
-        q => WorkerMarshalling.jsonTripleToRdfjsTriple(q, RdfJs.DataFactory)));
+      const quads = msg.data.quads.map(
+        q => WorkerMarshalling.jsonTripleToRdfjsTriple(q, RdfJs.DataFactory));
+      this.generatedGraph.addQuads(quads);
+      // ... plus each quad's origin, with its constraint index resolved
+      // against this thread's schema so the editor panes can locate it
+      (msg.data.provenance || []).forEach((p, i) => {
+        if (quads[i])
+          this.provenance.push({quad: quads[i], predicate: p.predicate, src: p.src,
+                                tc: p.tcOrdinal === null ? null : this.schemaTcs[p.tcOrdinal]});
+      });
       break;
+    }
 
     case "error":
       if ("exception" in msg.data) {
@@ -58,7 +71,7 @@ class ShExMapInWorkerApp extends ShExMapBaseApp {
   }
 
   getMaterializer (schema, shapeMap, resultBindings, staticVars) {
-    return new RemoteShExMaterializer(schema, shapeMap, resultBindings, staticVars, this.resultsWidget, this.materialize.bind(this), "ShExMapWorkerThread.js");
+    return new RemoteShExMaterializer(schema, shapeMap, resultBindings, staticVars, this.resultsWidget, this.materialize.bind(this), "ShExMapWorkerThread.js", this.MapModule);
   }
 
   makeConsoleTracker () {
