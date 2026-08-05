@@ -95,6 +95,24 @@ if (!TEST_browser) {
       });
     });
 
+    it("should load a picked manifest entry's materialization inputs", async function () {
+      // the default ../examples/manifest.json painted the schema list at boot
+      const schemaLi = $("#inputSchema .manifest li").filter((_, elt) => $(elt).text() === "BP");
+      expect(schemaLi.length, "BP manifest entry").to.equal(1);
+      schemaLi.trigger("click");
+      await shared.promise; // pickSchema paints the data list
+      const dataLi = $("#inputData .passes li").filter((_, elt) => $(elt).text() === "simple");
+      expect(dataLi.length, "BP simple data entry").to.equal(1);
+      dataLi.trigger("click");
+      await shared.promise; // pickData -> queryMapLoaded + loadExtraInputs
+
+      expect($("#outputSchema textarea").first().val(), "fetched via relative outputSchemaURL")
+        .to.include("<BPunitsDAM>");
+      expect(JSON.parse($("#staticVars textarea").first().val()))
+        .to.deep.equal({"http://abc.example/someConstant": "\"123-456\""});
+      expect($("#outputShapeMap").val()).to.equal("<tag:b0>@<BPunitsDAM>");
+    });
+
     it("should step through a materialization with a gutter breakpoint", async function () {
       const set = (selector, value) => {
         const elt = $(selector).first();
@@ -222,7 +240,8 @@ if (!TEST_browser) {
       // example from the preceding tests
       expect(manifest).to.include("  outputSchema: |\n    PREFIX : <http://a.example/>\n");
       expect(manifest).to.include('  outputShapeMap: "<tag:card>@<http://a.example/Card>"\n');
-      expect(manifest).to.include("  staticVars: {}\n");
+      // the BP statics picked from the examples manifest, recorded back out
+      expect(manifest).to.include('  staticVars:\n    "http://abc.example/someConstant": "\\"123-456\\""\n');
       expect(manifest).to.include("  status: ");
       // bindings are a validation product (a manifest's expectedBindings
       // records them for testing), not a gist input

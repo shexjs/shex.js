@@ -29,32 +29,6 @@ class JSONCache extends InterfaceCache {
   }
 }
 
-class ShExMapManifestCache extends ManifestCache {
-  makeDataEntry (dataLabel, idx, elt, base) {
-    const ret = super.makeDataEntry(dataLabel, idx, elt, base);
-    ret.outputSchemaUrl = elt.outputSchemaURL || (elt.outputSchema ? base : undefined)
-    return ret;
-  }
-
-  async queryMapLoaded (dataTest, text) {
-    await super.queryMapLoaded(dataTest, text);
-    /* This is kind of a wart 'cause I haven't made a 3rd level of manifest entry for materialization */
-    if (dataTest.entry.outputSchema === undefined && dataTest.entry.outputSchemaURL) {
-      dataTest.entry.outputSchemaURL = new URL(dataTest.entry.outputSchemaURL, dataTest.url).href; // absolutize
-      const resp = await fetch(dataTest.entry.outputSchemaURL);
-      if (!resp.ok)
-        throw Error("fetch <" + dataTest.entry.outputSchemaURL + "> got error response " + resp.status + ": " + resp.statusText);
-      dataTest.entry.outputSchema = await resp.text();
-    }
-    this.caches.outputSchema.set(dataTest.entry.outputSchema, dataTest.entry.outputSchemaURL);
-    $("#outputSchema .status").text(name);
-    this.caches.statics.set(JSON.stringify(dataTest.entry.staticVars, null, "  "));
-    $("#staticVars .status").text(name);
-
-    $("#outputShapeMap").val(dataTest.entry.outputShapeMap); // "createRoot@outputShape" in Map-test
-  }
-}
-
 class ShExMapResultsRenderer extends ShExResultsRenderer {
   constructor (resultsWidget, caches, mapUrl) {
     super(resultsWidget, caches);
@@ -76,7 +50,9 @@ class ShExMapBaseApp extends ShExBaseApp {
     super(base, validatorClass);
     this.currentRenderer = null;
     this.MapModule = ShExWebApp.Map({rdfjs: RdfJs, Validator: ShExWebApp.Validator});
-    const manifest = new ShExMapManifestCache($("#manifestDrop"), this.Caches, this.resultsWidget);
+    // the base ManifestCache loads this app's extra inputs (staticVars,
+    // outputSchema, outputShapeMap) from the manifest descriptors below
+    const manifest = new ManifestCache($("#manifestDrop"), this.Caches, this.resultsWidget);
     const bindings = new JSONCache($("#bindings1 textarea"));
     const statics = new JSONCache($("#staticVars textarea"));
     const outputSchema = new SchemaCache($("#outputSchema textarea"), null, this.shexcParser, this.turtleParser);
@@ -97,6 +73,7 @@ class ShExMapBaseApp extends ShExBaseApp {
     // a graph root to invent, so there's no data to pick it from
     this.QueryParams.push({queryStringParm: "output-map", location: $("#outputShapeMap"), deflt: "",
                            manifest: {key: "outputShapeMap"}});
+    manifest.queryParams = this.QueryParams; // drives ManifestCache.loadExtraInputs
     this.Caches.shapeMap.addContextMenus("#outputShapeMap", outputSchema, {
       // a picked shape replaces only what follows the '@', keeping the
       // invented node; with no node yet, supply the conventional root
