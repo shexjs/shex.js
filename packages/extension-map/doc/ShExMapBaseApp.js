@@ -49,6 +49,8 @@ class ShExMapBaseApp extends ShExBaseApp {
   constructor (base, validatorClass) {
     super(base, validatorClass);
     this.currentRenderer = null;
+    // Turtle panes rendering materialized graphs: [{pane, text}]
+    this.materializationPanes = [];
     this.MapModule = ShExWebApp.Map({rdfjs: RdfJs, Validator: ShExWebApp.Validator});
     // the base ManifestCache loads this app's extra inputs (staticVars,
     // outputSchema, outputShapeMap) from the manifest descriptors below
@@ -251,7 +253,8 @@ class ShExMapBaseApp extends ShExBaseApp {
             a.consumed + " bindings consumed" + (a.skipped ? ", " + a.skipped + " skipped" : "");
       list.append($("<button/>", {class: "dbgThread", title: label + " -- click to render"})
                   .text("✓" + (i + 1) + " " + a.quads.length + "q")
-                  .on("mouseenter click", preview({quads: a.quads, used: a.used, frame: a.thread.frame}, true, label)));
+                  .on("mouseenter click", preview({quads: a.quads, provenance: a.provenance,
+                                                   used: a.used, frame: a.thread.frame}, true, label)));
     });
     session.dbg.threads().forEach((t, i) => {
       const kind = t.deferred ? "deferred" : "pending";
@@ -291,7 +294,7 @@ class ShExMapBaseApp extends ShExBaseApp {
    * ones a plain serialization */
   previewThread (thread, complete, label) {
     const session = this.debugSession;
-    $("#results div").empty();
+    this.clearResults();
     $("#results .status").text(label).show();
     const bindingState = this.bindingStateText(thread);
     if (bindingState)
@@ -299,11 +302,12 @@ class ShExMapBaseApp extends ShExBaseApp {
     const store = new RdfJs.Store();
     store.addQuads(thread.quads);
     if (complete && session) {
-      this.renderMaterializedGraph(store, session.outputShapeMap);
+      this.renderMaterializedGraph(store, session.outputShapeMap, thread.provenance);
     } else {
       const writer = new RdfJs.Writer({prefixes: this.Caches.outputSchema.parsed._prefixes});
       writer.addQuads(store.getQuads());
       writer.end((error, result) => this.addResult(error, result));
+      this.reportMaterialization(thread.provenance);
       this.resultsWidget.finish();
     }
   }
@@ -321,11 +325,11 @@ class ShExMapBaseApp extends ShExBaseApp {
                                  " bindings consumed" + (a.skipped ? ", " + a.skipped + " skipped" : "")})
                  .text((a === materializer.chosen ? "★" : "") + (i + 1))
                  .on("click", () => {
-                   $("#results div").empty();
+                   this.clearResults();
                    $("#results .status").text("materialization alternative " + (i + 1)).show();
                    const store = new RdfJs.Store();
                    store.addQuads(a.quads);
-                   this.renderMaterializedGraph(store, outputShapeMap);
+                   this.renderMaterializedGraph(store, outputShapeMap, a.provenance);
                    this.renderAcceptAlternatives(materializer, outputShapeMap);
                  }));
     });
@@ -353,7 +357,8 @@ class ShExMapBaseApp extends ShExBaseApp {
       const generatedGraph = new RdfJs.Store();
       generatedGraph.addQuads(session.dbg.quads);
       $("#results .status").text("materialization results (debugged)").show();
-      this.renderMaterializedGraph(generatedGraph, session.outputShapeMap);
+      this.renderMaterializedGraph(generatedGraph, session.outputShapeMap,
+                                   session.materializer.provenance);
       this.renderAcceptAlternatives(session.materializer, session.outputShapeMap);
     }
   }
@@ -473,7 +478,7 @@ class ShExMapBaseApp extends ShExBaseApp {
       const {outputSchema, resultBindings, staticVars, outputShapeMap} =
             await this.collectMaterializationInputs();
       const materializer = this.getMaterializer(outputSchema, outputShapeMap, resultBindings, staticVars);
-      $("#results div").empty();
+      this.clearResults();
       $("#results .status").text("materializing data...").show();
 
       // a MaterializationError propagates to the outer catch, which anchors
@@ -485,7 +490,7 @@ class ShExMapBaseApp extends ShExBaseApp {
       if (this.currentRenderer) // absent when bindings were pasted, not validated
         this.currentRenderer.finish();
       $("#results .status").text("materialization results").show();
-      this.renderMaterializedGraph(generatedGraph, outputShapeMap);
+      this.renderMaterializedGraph(generatedGraph, outputShapeMap, materializer.provenance);
       this.renderAcceptAlternatives(materializer, outputShapeMap);
       return { materializationResults: generatedGraph };
     } catch (e) {
@@ -509,9 +514,18 @@ class ShExMapBaseApp extends ShExBaseApp {
     return {outputSchema, resultBindings, staticVars, outputShapeMap};
   }
 
+  /** empty #results, dropping the panes that rendered into it */
+  clearResults () {
+    this.materializationPanes = [];
+    this.resultsWidget.resultPanes = [];
+    $("#results div").empty();
+  }
+
   /** render a materialized graph into #results (shared by materializeAsync
-   * and the debugger's completion) */
-  renderMaterializedGraph (generatedGraph, outputShapeMap) {
+   * and the debugger's completion).  `provenance` (per generated quad: its
+   * constraint and the bindings its object came from) drives the editors'
+   * cross-pane hover highlighting; absent, the graph just renders. */
+  renderMaterializedGraph (generatedGraph, outputShapeMap, provenance) {
     try {
       // Extract rdf:Collection heads.
       const lists = generatedGraph.extractLists({
@@ -568,23 +582,169 @@ class ShExMapBaseApp extends ShExBaseApp {
           fallbackWriter.end((error, result) => this.addResult(error, result));
         }
       });
+      this.reportMaterialization(provenance);
       this.resultsWidget.finish();
     } catch (e) {
       this.reportMaterializationError(e, "rendering materialization");
     }
   }
 
+  /** map a materialization onto the editor panes (?editors=1), the
+   * materialization counterpart of EditorSupport.reportValidation: each
+   * generated triple in the result pane hover-links to the output-schema
+   * constraint that synthesized it and to the binding (or static) whose
+   * value it carries, and each of those links back to its triples. */
+  reportMaterialization (provenance) {
+    const panes = this.editorSupport && this.editorSupport.panes;
+    if (!panes || !panes.outputSchema || !this.materializationPanes.length
+        || !provenance || !provenance.length)
+      return;
+    try {
+      const located = ShExWebApp.EditorServices.locateInParsed(
+        this.Caches.outputSchema.selection.val(), this.Caches.outputSchema.parsed);
+      // each result pane holds one rendering; pair every generated triple
+      // with its position there
+      const rendered = this.materializationPanes.map(({pane, text}) => ({
+        pane,
+        pairs: ShExWebApp.EditorServices.mapMaterialization(
+          provenance, located,
+          ShExWebApp.EditorServices.parseTurtle(text, {baseIRI: this.Caches.outputSchema.meta.base})),
+      }));
+      // introspection for tests/debugging, as EditorSupport.lastMapped is
+      // for validation
+      this.editorSupport.lastMaterialized = rendered;
+      this.setMaterializationHovers(rendered);
+    } catch (e) {
+      console.warn("materialization diagnostics failed:", e);
+    }
+  }
+
+  /** ranges of a variable's occurrences in the bindings (or statics) pane
+   * text: the JSON keys naming it.  A variable bound in several frames has
+   * several occurrences; `frame` picks one when the counts line up, else
+   * they all highlight. */
+  variableRanges (text, variable, frame) {
+    const key = JSON.stringify(variable);
+    const found = [];
+    for (let at = text.indexOf(key); at !== -1; at = text.indexOf(key, at + 1))
+      found.push({from: at, to: at + key.length});
+    return frame !== null && frame !== undefined && frame < found.length
+      ? [found[frame]]
+      : found;
+  }
+
+  /** cross-pane hover highlighting for a materialization: hovering a
+   * generated triple, its constraint, or its binding highlights all three. */
+  setMaterializationHovers (rendered) {
+    const panes = this.editorSupport.panes;
+    const schemaPane = panes.outputSchema;
+    const bindingsPane = panes.bindings;
+    const staticsPane = panes.statics;
+    const clearAll = () => {
+      schemaPane.clearHighlights();
+      if (bindingsPane) bindingsPane.clearHighlights();
+      if (staticsPane) staticsPane.clearHighlights();
+      rendered.forEach(({pane}) => pane.clearHighlights());
+    };
+    const termRanges = (p) => [].concat(
+      p.anchors.objectParts || (p.anchors.object ? [p.anchors.object] : []),
+      p.anchors.subjectParts || (p.anchors.subject ? [p.anchors.subject] : []),
+      p.anchors.predicate ? [p.anchors.predicate] : []);
+    // a structural triple only links into a nested shape: distinguish it
+    // from one carrying a binding
+    const show = (group, hoveredPane) => {
+      const cls = group.every(p => p.structural)
+            ? "shexjs-highlight" : "shexjs-highlight-match";
+      schemaPane.highlight(
+        group.flatMap(p => p.schemaParts || (p.schema ? [p.schema] : [])),
+        cls, {scroll: hoveredPane !== schemaPane});
+      const bindingsText = bindingsPane ? this.Caches.bindings.selection.val() : "";
+      const staticsText = staticsPane ? this.Caches.statics.selection.val() : "";
+      if (bindingsPane)
+        bindingsPane.highlight(
+          group.filter(p => !p.statics).flatMap(
+            p => p.variables.flatMap(v => this.variableRanges(bindingsText, v, p.frame))),
+          cls, {scroll: hoveredPane !== bindingsPane});
+      if (staticsPane)
+        staticsPane.highlight(
+          group.filter(p => p.statics).flatMap(
+            p => p.variables.flatMap(v => this.variableRanges(staticsText, v, null))),
+          cls, {scroll: hoveredPane !== staticsPane});
+      rendered.forEach(({pane, pairs}) => {
+        const hits = pairs.filter(p => group.some(g => g.quad.equals(p.quad)));
+        pane.highlight(hits.flatMap(termRanges), cls, {scroll: hoveredPane !== pane});
+      });
+    };
+    // ... from a triple in a result pane
+    rendered.forEach(({pane, pairs}) => {
+      pane.setHoverRegions(
+        pairs.flatMap(p => termRanges(p).map(
+          r => ({from: r.from, to: r.to, enter: () => show([p], pane)}))),
+        clearAll);
+    });
+    // ... from a constraint in the output schema: one constraint can have
+    // synthesized many triples (a repeated or nested constraint)
+    const allPairs = rendered.flatMap(({pairs}) => pairs);
+    const bySchema = new Map();
+    allPairs.filter(p => p.schema).forEach(p => {
+      const key = p.schema.from + "-" + p.schema.to;
+      if (!bySchema.has(key))
+        bySchema.set(key, []);
+      bySchema.get(key).push(p);
+    });
+    schemaPane.setHoverRegions(
+      [...bySchema.values()].flatMap(group =>
+        (group[0].schemaParts || [group[0].schema]).map(
+          r => ({from: r.from, to: r.to, enter: () => show(group, schemaPane)}))),
+      clearAll);
+    // ... and from a variable in the bindings/statics panes
+    const varHovers = (pane, cache, wantStatics) => {
+      if (!pane)
+        return;
+      const text = cache.selection.val();
+      const regions = [];
+      const byVariable = new Map();
+      allPairs.filter(p => p.statics === wantStatics).forEach(p => p.variables.forEach(v => {
+        if (!byVariable.has(v))
+          byVariable.set(v, []);
+        byVariable.get(v).push(p);
+      }));
+      byVariable.forEach((group, variable) => {
+        this.variableRanges(text, variable, null).forEach((r, occurrence) => {
+          // an occurrence highlights the triples of the frame it belongs to
+          // when the frames line up one-to-one with the occurrences
+          const forFrame = group.filter(p => p.frame === occurrence);
+          regions.push({from: r.from, to: r.to,
+                        enter: () => show(forFrame.length ? forFrame : group, pane)});
+        });
+      });
+      pane.setHoverRegions(regions, clearAll);
+    };
+    varHovers(bindingsPane, this.Caches.bindings, false);
+    varHovers(staticsPane, this.Caches.statics, true);
+  }
+
   addResult (error, result) {
-    this.resultsWidget.append(
-      $("<div/>", {class: "passes"}).append(
-        $("<span/>", {class: "shapeMap"}).append(
-          "# ",
-          $("<span/>", {class: "data"}).text($("#outputShapeMap").val()),
-        ),
-        $("<pre/>").text(result)
-      )
-    )
-    // this.resultsWidget.append($("<pre/>").text(result));
+    const div = $("<div/>", {class: "passes"}).append(
+      $("<span/>", {class: "shapeMap"}).append(
+        "# ",
+        $("<span/>", {class: "data"}).text($("#outputShapeMap").val()),
+      ));
+    // with the editors on, the materialized graph renders in a Turtle pane
+    // whose triples hover-link back to the output schema and the bindings
+    const pane = this.editorSupport && "EditorPanes" in ShExWebApp
+          ? ShExWebApp.EditorPanes.makeResultPane(result, "turtle")
+          : null;
+    if (pane) {
+      div.append($("<div/>").append(pane.dom).data("rawText", result));
+      this.materializationPanes.push({pane, text: result});
+      this.resultsWidget.resultPanes.push({pane, ranges: []}); // for generic clearing
+    } else {
+      div.append($("<pre/>").text(result));
+    }
+    this.resultsWidget.append(div);
+    if (pane)
+      this.resultsWidget.fitPaneToWindow(pane.dom);
   }
 
   bindingsToTable () {

@@ -247,5 +247,114 @@ if (!TEST_browser) {
       // records them for testing), not a gist input
       expect(manifest).not.to.match(/bindings/i);
     });
+
+    it("should render the materialized graph in a Turtle pane sized to the window", async function () {
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      set("#outputSchema textarea", outputSchemaText);
+      set("#bindings1 textarea", bindingsJson);
+      set("#staticVars textarea", "{}");
+      $("#outputShapeMap").val("<tag:root>@<http://a.example/S>");
+      $("#materialize").trigger("click");
+      await shared.promise;
+
+      const paneDom = $("#results .shexjs-turtle-pane");
+      expect(paneDom.length, "materialization renders in a Turtle pane").to.equal(1);
+      expect(paneDom[0].style.height, "pane fills the remaining height").to.match(/^\d+px$/);
+      expect($("#results").text()).to.include('"one"');
+    });
+
+    it("should tie each materialized triple to its constraint and binding", async function () {
+      const [{pairs}] = shared.Caches.editorSupport.lastMaterialized;
+      expect(pairs.length, "one pair per generated triple").to.equal(2);
+
+      const schemaText = $("#outputSchema textarea").first().val();
+      const resultText = $("#results .shexjs-turtle-pane").parent().data("rawText");
+      const bindingsText = $("#bindings1 textarea").first().val();
+      const at = (text, range) => text.substring(range.from, range.to);
+
+      const one = pairs.find(p => p.variables.indexOf("http://a.example/v1") !== -1);
+      expect(one, "the triple carrying :v1's binding").to.exist;
+      // ... anchored on the constraint that synthesized it ...
+      expect(at(schemaText, one.schema)).to.include(":p .");
+      expect(at(schemaText, one.schema)).to.include("Map:{ :v1 %}");
+      // ... on its object in the rendered Turtle ...
+      expect(at(resultText, one.anchors.object)).to.equal('"one"');
+      // ... and on the binding it read
+      expect(one.statics).to.equal(false);
+      expect(bindingsText.substring(
+        bindingsText.indexOf('"http://a.example/v1"'))).to.include('"one"');
+
+      const two = pairs.find(p => p.variables.indexOf("http://a.example/v2") !== -1);
+      expect(at(schemaText, two.schema)).to.include(":q .");
+      expect(at(resultText, two.anchors.object)).to.equal('"two"');
+    });
+
+    // End to end on the examples manifest's deepest entry: validate to get
+    // bindings, materialize, and check every anchor.  The app renders the
+    // PROOF graph, whose triple order is the validator's rather than the
+    // materializer's, so pairing blank nodes by first fit bound a reading to
+    // a sibling's -- undetectably, since every reading repeats :units "mmHg",
+    // while its distinct :value simply stopped highlighting.
+    it("should anchor repeated identical structures in their own subtrees", async function () {
+      const pick = async (selector, label) => {
+        const li = $(selector).filter((_, elt) => $(elt).text() === label);
+        expect(li.length, label + " in " + selector).to.equal(1);
+        li.trigger("click");
+        await shared.promise;
+      };
+      await pick("#inputSchema .manifest li", "BPPatient 2 levels");
+      await pick("#inputData .passes li", "simple");
+      $("#validate").trigger("click");
+      await shared.promise; // bindings come from the validation
+      expect($("#bindings1 textarea").first().val(), "validation populated the bindings")
+        .to.include("BPDAM-sysVal");
+
+      $("#materialize").trigger("click");
+      await shared.promise;
+      const [{pairs}] = shared.Caches.editorSupport.lastMaterialized;
+      const resultText = $("#results .shexjs-turtle-pane").parent().data("rawText");
+      // four readings, all shaped alike, with distinct values
+      ["100", "60", "101", "61", "110", "70", "111", "71"].forEach(v =>
+        expect(resultText, "rendered " + v).to.include('"' + v + '"'));
+
+      // every anchor lands on its own triple's object ...
+      const unanchored = pairs.filter(p => !p.anchors.object);
+      expect(unanchored.map(p => p.quad.predicate.value), "all anchored").to.deep.equal([]);
+      pairs.forEach(p => {
+        if (p.quad.object.termType !== "Literal")
+          return;
+        const got = resultText.substring(p.anchors.object.from, p.anchors.object.to);
+        expect(got, p.quad.predicate.value + " anchor")
+          .to.include(p.quad.object.value);
+      });
+      // ... and no two triples claim the same span
+      const spots = pairs.map(p => p.anchors.object.from);
+      expect(new Set(spots).size, "distinct anchors").to.equal(spots.length);
+
+      // the tell-tale: each reading's :units must sit in the same blank node
+      // as its own :value, i.e. between that value and the next one
+      const fhir = "http://hl7.org/fhir-rdf/";
+      const values = pairs.filter(p => p.quad.predicate.value === fhir + "value")
+            .sort((a, b) => a.anchors.object.from - b.anchors.object.from);
+      const units = pairs.filter(p => p.quad.predicate.value === fhir + "units")
+            .sort((a, b) => a.anchors.object.from - b.anchors.object.from);
+      expect(values.length).to.equal(8);
+      expect(units.length).to.equal(8);
+      values.forEach((value, i) => {
+        // the i'th :units follows the i'th :value and precedes the next
+        expect(units[i].anchors.object.from, "units " + i + " follows its value")
+          .to.be.above(value.anchors.object.to);
+        if (values[i + 1])
+          expect(units[i].anchors.object.to, "units " + i + " precedes the next value")
+            .to.be.below(values[i + 1].anchors.object.from);
+        // and both belong to the same generated blank node
+        expect(units[i].quad.subject.value, "units " + i + "'s subject")
+          .to.equal(value.quad.subject.value);
+      });
+    });
   });
 }

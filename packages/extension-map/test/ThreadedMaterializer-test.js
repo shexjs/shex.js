@@ -132,6 +132,42 @@ describe("ThreadedMaterializer", function () {
       expect(events.filter(e => e.type === "accept").length).to.equal(m.accepts.length);
     });
 
+    it("should tag each emitted quad with its constraint and binding source", function () {
+      // one quad per kind of provenance: a bnode link into a nested shape,
+      // a bound variable, a static, and a schema constant
+      const schema = parseSchema(prefixes + [
+        "start = @<S>",
+        "<S> { :sub { :v . %Map:{ :v1 %} ;",
+        "             :s . %Map:{ :konst %} ;",
+        "             :c [:c1] } }",
+      ].join("\n"));
+      const m = new ThreadedMaterializer(schema, {
+        staticVars: {"http://a.example/konst": {value: "K"}}});
+      const quads = m.materialize({"http://a.example/v1": {value: "x"}}, "_:root");
+      expect(quads.length).to.equal(4);
+      expect(m.provenance.length, "parallel to the quads").to.equal(quads.length);
+
+      const by = (predicate) => m.provenance[
+        quads.findIndex(q => q.predicate.value === "http://a.example/" + predicate)];
+      // the bnode link carries no binding: it's the structure of the schema
+      expect(by("sub").src).to.deep.equal({structural: true});
+      expect(by("sub").tc, "the constraint that synthesized it").to.exist;
+      expect(by("sub").tc.predicate).to.equal("http://a.example/sub");
+      // a bound variable, from its frame
+      expect(by("v").src).to.deep.equal(
+        {variables: ["http://a.example/v1"], frame: 0, statics: false});
+      // a static: always available, so no frame
+      expect(by("s").src).to.deep.equal(
+        {variables: ["http://a.example/konst"], frame: null, statics: true});
+      // a singleton value set needs no binding at all
+      expect(by("c").src).to.deep.equal({constant: true});
+      // TripleConstraints are recorded by identity, so editors can locate
+      // them in the schema source
+      const subTc = schema.shapes[0].shapeExpr.expression;
+      expect(by("sub").tc).to.equal(subTc);
+      expect(by("v").tc).to.equal(subTc.valueExpr.expression.expressions[0]);
+    });
+
     it("should collapse constant-only variants onto one accept", function () {
       // the optional constants multiply threads but not accepts; the kept
       // variant is the constant-maximal one

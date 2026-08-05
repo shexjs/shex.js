@@ -13,9 +13,13 @@ class DirectShExMaterializer {
     // See ../doc/threaded-materializer.md.  A MaterializationError thrown
     // here propagates to the app's materialization error report.
     const materializer = new this.mapModule.ThreadedMaterializer(this.schema, {staticVars: this.staticVars});
+    this.provenance = [];                      // per-quad origins for the editor panes
     this.shapeMap.forEach(pair => {
       const shape = !pair.shape || pair.shape === ShExWebApp.Validator.Start ? undefined : pair.shape;
-      generatedGraph.addQuads(materializer.materialize(this.resultBindings, pair.node, shape));
+      const quads = materializer.materialize(this.resultBindings, pair.node, shape);
+      generatedGraph.addQuads(quads);
+      quads.forEach((quad, i) => this.provenance.push(
+        Object.assign({quad}, (materializer.provenance || [])[i])));
     });
     this.lastReport = materializer.lastReport; // unbound-variable / unused-static warnings
     this.accepts = materializer.accepts;       // all viable materializations

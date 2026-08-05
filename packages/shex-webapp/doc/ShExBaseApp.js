@@ -1488,6 +1488,13 @@ class ResultsWidget {
     // identity) to their {from, to} in the rendered results JSON
     this.resultPanes = [];
   }
+  /** fit a result pane to the bottom of the window so the inputs and the
+   * results stay visible together; without a height the pane grows to its
+   * content and hover-scrolling within it scrolls the whole page */
+  fitPaneToWindow (paneDom) {
+    const top = paneDom.getBoundingClientRect().top;
+    paneDom.style.height = Math.max(200, window.innerHeight - top - 12) + "px";
+  }
   replace (text) {
     return this.resultsSel.text(text);
   }
@@ -1624,13 +1631,8 @@ class ShExResultsRenderer {
       }
     }
     this.resultsWidget.append(elt);
-    if (appinfoPane) {
-      // fit the pane to the bottom of the window so schema, data and results
-      // stay visible together; without a height the pane grows to its content
-      // and hover-scrolling to a TestedTriple scrolls the whole page
-      const top = appinfoPane.dom.getBoundingClientRect().top;
-      appinfoPane.dom.style.height = Math.max(200, window.innerHeight - top - 12) + "px";
-    }
+    if (appinfoPane)
+      this.resultsWidget.fitPaneToWindow(appinfoPane.dom);
 
     // update the FixedMap
     fixedMapEntry.addClass(klass).find("a").text(resultStr);

@@ -203,6 +203,7 @@ class ThreadedMaterializer {
   * run (bindingTree, createRoot, shapeLabel) {
     this.accepts = null;
     this.chosen = null;
+    this.provenance = null;
     const frames = normalizeBindingTree(bindingTree);
     this.frames = frames; // exposed so UIs can render binding-tree state
     const nfa = this._compileShapeExprNFA(shapeLabel || this.schema.start
@@ -285,13 +286,13 @@ class ThreadedMaterializer {
             break;
           quadSigs.add(qsig);
           const existing = acceptBySig.get(sig);
-          const quads = collectQuads(th.quads);
+          const {quads, provenance} = collectQuadsAndProvenance(th.quads);
           if (existing) {
             if (quads.length > existing.quads.length)
-              Object.assign(existing, {quads, skipped: th.cursor.sk, thread: threadView(th)});
+              Object.assign(existing, {quads, provenance, skipped: th.cursor.sk, thread: threadView(th)});
             break;
           }
-          const accept = {quads, consumed: th.cursor.n,
+          const accept = {quads, provenance, consumed: th.cursor.n,
                           skipped: th.cursor.sk, thread: threadView(th),
                           used: Object.keys(th.cursor.used)};
           acceptBySig.set(sig, accept);
@@ -392,6 +393,8 @@ class ThreadedMaterializer {
                   || (a.skipped === best.skipped && a.quads.length > best.quads.length))))
         best = a;
     this.chosen = best;
+    // provenance of the returned graph, parallel to its quads
+    this.provenance = best.provenance;
     return best.quads;
   }
 
@@ -411,6 +414,7 @@ class ThreadedMaterializer {
     if (mapExts.length > 0) {
       let cursor = th.cursor;
       const objects = [];
+      const sources = []; // provenance, parallel to objects
       for (const ext of mapExts) {
         const code = ext.code;
         const m = code.match(variablePattern);
@@ -422,19 +426,28 @@ class ThreadedMaterializer {
             failures.push({predicate: tc.predicate, tc, variable: varName, frame: cursor.idx});
             return; // unbound required variable: this thread dies
           }
+          const fromStatics = varName in this.globals;
           cursor = hit.cursor;
           objects.push(n3ify(hit.value));
+          sources.push({variables: [varName], frame: fromStatics ? null : cursor.idx, statics: fromStatics});
         } else if (functionPattern.test(code)) {
+          const pulled = []; // the variables lower() consulted, in call order
           try { // e.g. regex(...)/hashmap(...): lower() pulls variables via get()
             const adapter = {get: (v) => {
               report.referenced.add(v);
               const hit = cursorGet(frames, this.globals, cursor, v);
               if (hit === null)
                 return undefined;
+              pulled.push({variable: v, statics: v in this.globals, frame: hit.cursor.idx});
               cursor = hit.cursor;
               return hit.value;
             }};
             objects.push(extensions.lower(code, adapter, this.prefixes));
+            sources.push({
+              variables: pulled.map(p => p.variable),
+              frame: pulled.length && !pulled[0].statics ? pulled[pulled.length - 1].frame : null,
+              statics: pulled.length > 0 && pulled.every(p => p.statics),
+            });
           } catch (e) {
             failures.push({predicate: tc.predicate, tc, code, error: e.message});
             return;
@@ -445,8 +458,9 @@ class ThreadedMaterializer {
         }
       }
       let quads = th.quads;
-      for (const o of objects)
-        quads = {q: this._triple(tc, th.subject, o), prev: quads};
+      objects.forEach((o, i) => {
+        quads = {q: this._triple(tc, th.subject, o, sources[i]), prev: quads};
+      });
       st.outs.forEach(out => succs.push(Object.assign({}, th, {stateNo: out, cursor, quads})));
       return;
     }
@@ -454,7 +468,8 @@ class ThreadedMaterializer {
     const valueExpr = tc.valueExpr === undefined ? undefined : this._resolveShapeExpr(tc.valueExpr);
     if (valueExpr && valueExpr.type === "NodeConstraint"
         && valueExpr.values && valueExpr.values.length === 1) {
-      const quads = {q: this._triple(tc, th.subject, n3ify(valueExpr.values[0])), prev: th.quads};
+      const quads = {q: this._triple(tc, th.subject, n3ify(valueExpr.values[0]), {constant: true}),
+                     prev: th.quads};
       st.outs.forEach(out => succs.push(Object.assign({}, th, {stateNo: out, quads})));
       return;
     }
@@ -466,7 +481,7 @@ class ThreadedMaterializer {
       }
       const bnode = "_:tm" + th.bnode;
       const sub = this._compileShapeExprNFA(valueExpr);
-      const quads = {q: this._triple(tc, th.subject, bnode), prev: th.quads};
+      const quads = {q: this._triple(tc, th.subject, bnode, {structural: true}), prev: th.quads};
       succs.push(Object.assign({}, th, {
         nfa: sub, stateNo: sub.start,
         subject: bnode, repeats: {},
@@ -493,8 +508,9 @@ class ThreadedMaterializer {
     if (!this._live)
       return [];
     const view = (th, isDeferred) => Object.assign(
-      threadView(th), {deferred: isDeferred, quads: collectQuads(th.quads),
-                       used: Object.keys(th.cursor.used)}); // "<frame> <var>" marks
+      threadView(th), {deferred: isDeferred},
+      collectQuadsAndProvenance(th.quads),                  // quads + provenance
+      {used: Object.keys(th.cursor.used)});                 // "<frame> <var>" marks
     const ret = [];
     for (let i = this._live.stack.length - 1; i >= 0; --i) // top of stack first
       ret.push(view(this._live.stack[i], false));
@@ -503,10 +519,16 @@ class ThreadedMaterializer {
     return ret;
   }
 
-  _triple (tc, subject, object) {
-    return tc.inverse
+  /** an emitted triple, tagged with the provenance editor UIs use to tie it
+   * back to the constraint that synthesized it and the binding(s) it read:
+   * src is {variables, frame, statics} | {constant} | {structural} */
+  _triple (tc, subject, object, src) {
+    const q = tc.inverse
       ? {s: object, p: tc.predicate, o: subject}
       : {s: subject, p: tc.predicate, o: object};
+    q.tc = tc;
+    q.src = src;
+    return q;
   }
 
   _expandPrefix (prefix, local) {
@@ -810,14 +832,27 @@ class MaterializerDebugger {
 }
 
 function collectQuads (quadList) {
+  return collectQuadsAndProvenance(quadList).quads;
+}
+
+/** collectQuadsAndProvenance - a thread's emissions as RdfJs quads, with a
+ * parallel provenance array: for each quad, the TripleConstraint that
+ * synthesized it and where its object came from (see _triple).  Editor UIs
+ * use it to tie a materialized triple back to the output schema and the
+ * bindings that fed it. */
+function collectQuadsAndProvenance (quadList) {
   const triples = [];
   for (let node = quadList; node !== null; node = node.prev)
     triples.unshift(node.q);
   const seen = {};
-  return triples.filter(t => {
+  const kept = triples.filter(t => {
     const key = t.s + " " + t.p + " " + t.o;
     return key in seen ? false : (seen[key] = true);
-  }).map(t => n3idQuad2RdfJs(t.s, t.p, t.o));
+  });
+  return {
+    quads: kept.map(t => n3idQuad2RdfJs(t.s, t.p, t.o)),
+    provenance: kept.map(t => ({tc: t.tc, predicate: t.p, src: t.src})),
+  };
 }
 
 function stackDepth (callStack) {
