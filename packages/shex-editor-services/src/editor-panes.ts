@@ -164,25 +164,28 @@ export const languages: {[lang in PaneLanguage]: () => Extension} = {
   json: () => json(),
 };
 
-/** makeJsonPane - a read-only, syntax-highlighted JSON view (e.g. for
- * validation results) sharing the highlight machinery of editor panes:
- * highlight(ranges, cls, {scroll}) marks and scrolls to result regions;
- * setHoverRegions supports results → schema/data cross-highlighting. */
-export function makeJsonPane (text: string): {
-  dom: HTMLElement,
-  highlight (ranges: Range[], cls?: string, opts?: {scroll?: boolean}): void,
-  clearHighlights (): void,
-  setHoverRegions (regions: HoverRegion[], leave?: () => void): void,
-} {
+export interface ResultPane {
+  dom: HTMLElement;
+  highlight (ranges: Range[], cls?: string, opts?: {scroll?: boolean}): void;
+  clearHighlights (): void;
+  setHoverRegions (regions: HoverRegion[], leave?: () => void): void;
+}
+
+/** makeResultPane - a read-only, syntax-highlighted view of a result
+ * document (validation results as JSON, a materialized graph as Turtle)
+ * sharing the highlight machinery of editor panes: highlight(ranges, cls,
+ * {scroll}) marks and scrolls to result regions; setHoverRegions supports
+ * results → schema/data cross-highlighting. */
+export function makeResultPane (text: string, language: PaneLanguage = "json"): ResultPane {
   const view = new EditorView({doc: text, extensions: [
     basicSetup,
-    json(),
+    languages[language](),
     highlightField,
     paneTheme,
     EditorView.editable.of(false),
     EditorState.readOnly.of(true),
   ]});
-  view.dom.classList.add("shexjs-editor-pane", "shexjs-json-pane");
+  view.dom.classList.add("shexjs-editor-pane", "shexjs-" + language + "-pane");
   const setHoverRegions = attachHoverRegions(view);
   const clampRange = (r: Range | null): r is Range =>
     !!r && r.from >= 0 && r.to <= view.state.doc.length && r.to > r.from;
@@ -202,8 +205,13 @@ export function makeJsonPane (text: string): {
   };
 }
 
+/** makeJsonPane - makeResultPane's original JSON-only spelling */
+export function makeJsonPane (text: string): ResultPane {
+  return makeResultPane(text, "json");
+}
+
 /** track mouse-over-sensitive ranges on a view; returns the function that
- * replaces the region set (the makePane/makeJsonPane setHoverRegions API) */
+ * replaces the region set (the makePane/makeResultPane setHoverRegions API) */
 function attachHoverRegions (view: EditorView): (regions: HoverRegion[], leave?: () => void) => void {
   let hoverRegions: HoverRegion[] = [];
   let hoverLeave: (() => void) | undefined;

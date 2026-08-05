@@ -52,6 +52,7 @@ exports.yyllocToRange = yyllocToRange;
 exports.sourceExcerpt = sourceExcerpt;
 exports.locateInParsed = locateInParsed;
 exports.mapValidationErrors = mapValidationErrors;
+exports.mapMaterialization = mapMaterialization;
 exports.stringifyWithOffsets = stringifyWithOffsets;
 const ShExParser = __importStar(require("@shexjs/parser"));
 const emit_1 = require("lezer-turtle/emit");
@@ -169,6 +170,27 @@ function locateInParsed(text, schema) {
         }
         return range;
     };
+    /** an expression's highlight extent: a constraint with an inline-shape
+     * valueExpr lexically contains that shape's own constraints, so highlight
+     * only its delimiters (":s {" and "}") and leave the nested constraints to
+     * highlight on their own */
+    const highlightParts = (tc, range) => {
+        const nested = schema && schema._exprLocations
+            ? nestedConstraintExtent(tc, schema._exprLocations, starts) : null;
+        if (!nested || !(nested.from > range.from && nested.to <= range.to))
+            return [range];
+        const parts = [];
+        let headTo = nested.from; // keep the opening brace, drop the whitespace
+        while (headTo > range.from && /\s/.test(text[headTo - 1]))
+            --headTo;
+        parts.push(headTo > range.from ? { from: range.from, to: headTo } : range);
+        let tailFrom = nested.to;
+        while (tailFrom < range.to && /\s/.test(text[tailFrom]))
+            ++tailFrom;
+        if (tailFrom < range.to)
+            parts.push({ from: tailFrom, to: range.to });
+        return parts;
+    };
     return {
         text,
         schema,
@@ -207,30 +229,15 @@ function locateInParsed(text, schema) {
                 const range = hit && tcRange(hit.tc);
                 if (!range)
                     return null;
-                // a constraint with an inline-shape valueExpr lexically contains
-                // that shape's own constraints; highlight only its delimiters
-                // (":s {" and "}") so nested shapes don't highlight with their
-                // parent, and record the path of enclosing predicates back to the
-                // labeled shape
-                const nested = nestedConstraintExtent(hit.tc, schema._exprLocations, starts);
-                const parts = [];
-                if (nested && nested.from > range.from && nested.to <= range.to) {
-                    let headTo = nested.from; // keep the opening brace, drop the whitespace
-                    while (headTo > range.from && /\s/.test(text[headTo - 1]))
-                        --headTo;
-                    parts.push(headTo > range.from ? { from: range.from, to: headTo } : range);
-                    let tailFrom = nested.to;
-                    while (tailFrom < range.to && /\s/.test(text[tailFrom]))
-                        ++tailFrom;
-                    if (tailFrom < range.to)
-                        parts.push({ from: tailFrom, to: range.to });
-                }
-                else
-                    parts.push(range);
                 const path = hit.ancestors
                     .map(predicateRange)
                     .filter((r) => r !== null);
-                return { parts, path };
+                return { parts: highlightParts(hit.tc, range), path };
+            },
+            exprAnchors: (obj) => {
+                const range = schema && schema._exprLocations
+                    ? yyllocToRange(schema._exprLocations.get(obj), starts) : null;
+                return range ? { parts: highlightParts(obj, range) } : null;
             },
             exprAt: (offset) => {
                 if (!schema || !schema._exprLocations)
@@ -408,7 +415,12 @@ function alignQuad(parsed, s, p, o, bnodes) {
  * data via the provenance index (utterance ranges per position). */
 function tripleAnchors(parsed, triple, text, bnodes) {
     const quad = alignQuad(parsed, ldTermToRdfJs(triple.subject), ldTermToRdfJs(triple.predicate), ldTermToRdfJs(triple.object), bnodes);
-    const [utt] = quad ? parsed.provenance.get(quad) : [];
+    return quad ? quadAnchors(parsed, quad, text) : null;
+}
+/** quadAnchors - the term-level ranges of a quad already located in the
+ * parsed document */
+function quadAnchors(parsed, quad, text) {
+    const [utt] = parsed.provenance.get(quad);
     if (!utt)
         return null;
     // a blank node's source form is its whole [ property list ]; highlight
@@ -609,6 +621,194 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed) {
         .map(p => ({ from: p[side].from, to: p[side].to, severity: "error",
         message: p.message, pair: p.id }));
     return { schema: toDiagnostics("schema"), data: toDiagnostics("data"), pairs };
+}
+/** mapMaterialization - tie each generated triple to its constraint in the
+ * output schema and its position in the rendered result Turtle.
+ *
+ * The rendered Turtle is a fresh serialization, so its blank-node labels are
+ * not the materializer's: quads align structurally, exactly as validation
+ * results align against the data pane (see alignQuad).
+ *
+ * @param provenance per-quad origins, e.g. ThreadedMaterializer's
+ * @param outputParsed located output schema (locateInParsed)
+ * @param resultParsed the rendered Turtle, parsed (parseTurtle)
+ */
+function mapMaterialization(provenance, outputParsed, resultParsed) {
+    const generated = (provenance || []).map(p => p && p.quad).filter(q => q);
+    const bnodes = resultParsed
+        ? alignBnodesBySubtree(generated, resultParsed.quads)
+        : new Map();
+    const pairs = [];
+    (provenance || []).forEach(prov => {
+        const quad = prov && prov.quad;
+        if (!quad)
+            return;
+        const rendered = resultParsed && substituteBnodes(quad, bnodes);
+        const anchors = rendered
+            ? quadAnchors(resultParsed, rendered, resultParsed.text)
+            : null;
+        const schema = prov.tc ? outputParsed.locate.expr(prov.tc) : null;
+        const parts = prov.tc ? outputParsed.locate.exprAnchors(prov.tc) : null;
+        const src = prov.src || {};
+        pairs.push({
+            id: pairs.length,
+            schema,
+            schemaParts: parts ? parts.parts : undefined,
+            anchors: anchors || { subject: null, predicate: null, object: null },
+            variables: src.variables || [],
+            frame: src.frame === undefined ? null : src.frame,
+            statics: src.statics === true,
+            structural: src.structural === true,
+            quad,
+        });
+    });
+    return pairs;
+}
+/** substituteBnodes - a generated quad relabeled with the rendering's blank
+ * nodes, or null when either end failed to align */
+function substituteBnodes(quad, bnodes) {
+    const map = (term) => term.termType === "BlankNode" ? bnodes.get(term.value) || null : term;
+    const subject = map(quad.subject), object = map(quad.object);
+    return subject && object
+        ? RdfJs.DataFactory.quad(subject, quad.predicate, object)
+        : null;
+}
+/** a graph indexed for alignment: arcs by subject, blank nodes, tree roots
+ * (nodes no arc points at) and each blank node's canonical subtree
+ * signature */
+function indexForAlignment(quads) {
+    const arcs = new Map();
+    const bnodes = new Map();
+    const isObject = new Set();
+    for (const q of quads) {
+        if (q.subject.termType === "BlankNode")
+            bnodes.set(q.subject.value, q.subject);
+        if (q.object.termType === "BlankNode") {
+            bnodes.set(q.object.value, q.object);
+            isObject.add(q.object.value);
+        }
+        if (!arcs.has(q.subject.value))
+            arcs.set(q.subject.value, []);
+        arcs.get(q.subject.value).push(q);
+    }
+    const memo = new Map();
+    const signature = (term, seen = new Set()) => {
+        if (term.termType !== "BlankNode")
+            return term.termType + " " + term.value +
+                (term.termType === "Literal"
+                    ? " " + term.language + " " + (term.datatype ? term.datatype.value : "") : "");
+        const key = term.value;
+        const known = memo.get(key);
+        if (known !== undefined)
+            return known;
+        if (seen.has(key))
+            return "<cycle>"; // a materialized graph is a tree, but don't hang on one
+        seen.add(key);
+        const parts = (arcs.get(key) || [])
+            .map(q => q.predicate.value + " " + signature(q.object, seen)).sort();
+        seen.delete(key);
+        const sig = "[" + parts.join("|") + "]";
+        memo.set(key, sig);
+        return sig;
+    };
+    const roots = [];
+    bnodes.forEach((term, key) => {
+        if (!isObject.has(key))
+            roots.push(term);
+    });
+    return { arcs, bnodes, roots, signature };
+}
+/** groupBySignature - terms bucketed by subtree signature */
+function groupBySignature(terms, signature) {
+    const groups = new Map();
+    terms.forEach(term => {
+        const sig = signature(term);
+        if (!groups.has(sig))
+            groups.set(sig, []);
+        groups.get(sig).push(term);
+    });
+    return groups;
+}
+/** alignBnodesBySubtree - pair a generated graph's blank nodes with the
+ * rendering's.
+ *
+ * A rendering is a fresh serialization, so its labels are its own.  Pairing
+ * them positionally (first unclaimed blank node that fits -- all validation
+ * results can do, having one triple at a time to go on) mis-pairs whenever
+ * the rendering's order differs from the generated graph's, and a mis-pair
+ * is worse than no anchor: sibling structures that share a value (every
+ * fhir:units "mmHg") still "match", so the wrong triple highlights.
+ *
+ * Here the whole graph is in hand, so walk it top-down from its roots,
+ * pairing each blank node within its parent's context -- among the arcs
+ * leaving the paired parent on the same predicate, take one whose object's
+ * subtree signature (sorted, recursive) matches.  Structure disambiguates
+ * identical siblings (four reports' `[ fhir:Patient.name "Sue" ]`), and the
+ * signature disambiguates differing ones (systolic vs diastolic).  Blank
+ * nodes that no root reaches fall back to signature groups alone, and
+ * unmatched ones stay unpaired -- no anchor beats a wrong one.
+ */
+function alignBnodesBySubtree(generated, rendered) {
+    const from = indexForAlignment(generated), to = indexForAlignment(rendered);
+    const pairing = new Map();
+    const claimed = new Set();
+    const pair = (genTerm, renTerm) => {
+        pairing.set(genTerm.value, renTerm);
+        claimed.add(renTerm.value);
+    };
+    // tree roots have no parent to place them: pair them by signature alone
+    groupBySignature(from.roots, from.signature).forEach((terms, sig) => {
+        const counterparts = (groupBySignature(to.roots, to.signature).get(sig) || [])
+            .filter(t => !claimed.has(t.value));
+        terms.forEach((term, i) => {
+            if (counterparts[i])
+                pair(term, counterparts[i]);
+        });
+    });
+    // ... then descend, resolving each blank node against its paired parent
+    const resolve = (term) => term.termType === "BlankNode" ? pairing.get(term.value) : term;
+    const stack = [...from.roots];
+    for (const q of generated)
+        if (q.subject.termType !== "BlankNode")
+            stack.push(q.subject);
+    const walked = new Set();
+    while (stack.length) {
+        const genSubject = stack.pop();
+        if (walked.has(genSubject.value))
+            continue;
+        walked.add(genSubject.value);
+        const renSubject = resolve(genSubject);
+        if (!renSubject)
+            continue;
+        const renArcs = to.arcs.get(renSubject.value) || [];
+        for (const arc of from.arcs.get(genSubject.value) || []) {
+            if (arc.object.termType !== "BlankNode")
+                continue;
+            if (!pairing.has(arc.object.value)) {
+                const want = from.signature(arc.object);
+                const hit = renArcs.find(candidate => candidate.predicate.equals(arc.predicate) &&
+                    candidate.object.termType === "BlankNode" &&
+                    !claimed.has(candidate.object.value) &&
+                    to.signature(candidate.object) === want);
+                if (hit)
+                    pair(arc.object, hit.object);
+            }
+            stack.push(arc.object);
+        }
+    }
+    // anything the walk never reached: signature groups alone
+    const strayFrom = [...from.bnodes.values()].filter(t => !pairing.has(t.value));
+    if (strayFrom.length) {
+        const strayTo = groupBySignature([...to.bnodes.values()].filter(t => !claimed.has(t.value)), to.signature);
+        groupBySignature(strayFrom, from.signature).forEach((terms, sig) => {
+            const counterparts = (strayTo.get(sig) || []).filter(t => !claimed.has(t.value));
+            terms.forEach((term, i) => {
+                if (counterparts[i])
+                    pair(term, counterparts[i]);
+            });
+        });
+    }
+    return pairing;
 }
 const TERM_MEMBERS = ["subject", "predicate", "object"];
 /** stringifyWithOffsets - JSON.stringify(value, null, indent)-identical

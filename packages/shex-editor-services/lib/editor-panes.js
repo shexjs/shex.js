@@ -49,6 +49,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CHANGE_DEBOUNCE_MS = exports.languages = exports.shexcStreamParser = void 0;
 exports.lexicalize = lexicalize;
 exports.completionSource = completionSource;
+exports.makeResultPane = makeResultPane;
 exports.makeJsonPane = makeJsonPane;
 exports.makePane = makePane;
 const codemirror_1 = require("codemirror");
@@ -161,20 +162,21 @@ exports.languages = {
     turtle: () => turtleLanguage,
     json: () => (0, lang_json_1.json)(),
 };
-/** makeJsonPane - a read-only, syntax-highlighted JSON view (e.g. for
- * validation results) sharing the highlight machinery of editor panes:
- * highlight(ranges, cls, {scroll}) marks and scrolls to result regions;
- * setHoverRegions supports results → schema/data cross-highlighting. */
-function makeJsonPane(text) {
+/** makeResultPane - a read-only, syntax-highlighted view of a result
+ * document (validation results as JSON, a materialized graph as Turtle)
+ * sharing the highlight machinery of editor panes: highlight(ranges, cls,
+ * {scroll}) marks and scrolls to result regions; setHoverRegions supports
+ * results → schema/data cross-highlighting. */
+function makeResultPane(text, language = "json") {
     const view = new view_1.EditorView({ doc: text, extensions: [
             codemirror_1.basicSetup,
-            (0, lang_json_1.json)(),
+            exports.languages[language](),
             highlightField,
             paneTheme,
             view_1.EditorView.editable.of(false),
             state_1.EditorState.readOnly.of(true),
         ] });
-    view.dom.classList.add("shexjs-editor-pane", "shexjs-json-pane");
+    view.dom.classList.add("shexjs-editor-pane", "shexjs-" + language + "-pane");
     const setHoverRegions = attachHoverRegions(view);
     const clampRange = (r) => !!r && r.from >= 0 && r.to <= view.state.doc.length && r.to > r.from;
     return {
@@ -192,8 +194,12 @@ function makeJsonPane(text) {
         setHoverRegions,
     };
 }
+/** makeJsonPane - makeResultPane's original JSON-only spelling */
+function makeJsonPane(text) {
+    return makeResultPane(text, "json");
+}
 /** track mouse-over-sensitive ranges on a view; returns the function that
- * replaces the region set (the makePane/makeJsonPane setHoverRegions API) */
+ * replaces the region set (the makePane/makeResultPane setHoverRegions API) */
 function attachHoverRegions(view) {
     let hoverRegions = [];
     let hoverLeave;

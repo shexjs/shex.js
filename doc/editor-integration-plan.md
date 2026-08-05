@@ -244,6 +244,17 @@ the schema pane, the offending triple/term in the data pane, hover text from
 identity too, so the output-schema pane gets the same treatment for
 materialization failures.
 
+*Done, plus the successful case:* `ThreadedMaterializer` tags every emitted
+quad with the TripleConstraint that synthesized it and where its object came
+from (bound variable + frame, static, schema constant, or the bnode link into
+a nested shape).  `mapMaterialization` aligns those quads with the rendered
+result Turtle — a fresh serialization, so bnodes align structurally exactly as
+validation results align against the data pane — and the materialized graph
+renders in a Turtle result pane whose triples hover-link to the output-schema
+constraint and the binding that fed them, and back.  Object identity again
+confines this to the main-thread app (see phase 4's worker wrinkle); the
+worker app still gets the pane, without the hovers.
+
 **Phase 4 — consolidation & polish**
 - `RdfJsDb(millanDataset)` directly (drop the double parse) once
   `@shexjs/neighborhood-rdfjs`'s needs (match/getQuads/size) are verified

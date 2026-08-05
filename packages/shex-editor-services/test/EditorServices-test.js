@@ -518,4 +518,97 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
       expect(fallback).to.deep.equal(systolic);
     });
   });
+  describe("mapMaterialization", function () {
+    // two reports, each with a systolic and a diastolic reading: the blank
+    // nodes are structurally identical apart from their values, and every
+    // reading repeats :units "mmHg"
+    const outSchema = `PREFIX : <http://a.example/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX Map: <http://shex.io/extensions/Map/#>
+<Report> {
+  :reading {
+    :value xsd:float %Map:{ :v %} ;
+    :units xsd:string %Map:{ :u %}
+  }+
+}
+`;
+    const located = EditorServices.locateInParsed(
+      outSchema, EditorServices.parseShExC(outSchema, {base}).schema);
+    const F = N3.DataFactory;
+    const {namedNode: N, blankNode: B, literal: L, quad: Q} = F;
+    const value = base + "value", units = base + "units", reading = base + "reading";
+    // as a materializer emits them: one blank node per reading
+    const generated = [
+      Q(N(base + "r"), N(reading), B("tm1")),
+      Q(B("tm1"), N(value), L("100")), Q(B("tm1"), N(units), L("mmHg")),
+      Q(N(base + "r"), N(reading), B("tm2")),
+      Q(B("tm2"), N(value), L("60")), Q(B("tm2"), N(units), L("mmHg")),
+    ];
+    const readingTc = located.schema.shapes[0].shapeExpr.expression;
+    const valueTc = readingTc.valueExpr.expression.expressions[0];
+    const unitsTc = readingTc.valueExpr.expression.expressions[1];
+    const provenance = [
+      {quad: generated[0], tc: readingTc, src: {structural: true}},
+      {quad: generated[1], tc: valueTc, src: {variables: [base + "v"], frame: 0}},
+      {quad: generated[2], tc: unitsTc, src: {variables: [base + "u"], frame: 0}},
+      {quad: generated[3], tc: readingTc, src: {structural: true}},
+      {quad: generated[4], tc: valueTc, src: {variables: [base + "v"], frame: 1}},
+      {quad: generated[5], tc: unitsTc, src: {variables: [base + "u"], frame: 1}},
+    ];
+
+    it("should anchor each triple on its own constraint and rendered term", function () {
+      const rendered = `PREFIX : <http://a.example/>
+:r :reading [ :value "100"; :units "mmHg" ], [ :value "60"; :units "mmHg" ] .
+`;
+      const pairs = EditorServices.mapMaterialization(
+        provenance, located, EditorServices.parseTurtle(rendered, {baseIRI: base}));
+      expect(pairs.length).to.equal(6);
+      expect(pairs.filter(p => !p.anchors.object).length, "all anchored").to.equal(0);
+      const at = (p) => slice(rendered, p.anchors.object);
+      expect(at(pairs[1])).to.equal('"100"');
+      expect(at(pairs[4])).to.equal('"60"');
+      // the two :units triples are indistinguishable by value: they must
+      // still anchor inside their own reading, not each other's
+      expect(pairs[2].anchors.object.from).to.be.below(rendered.indexOf('"60"'));
+      expect(pairs[5].anchors.object.from).to.be.above(rendered.indexOf('"60"'));
+      // the constraint side
+      expect(slice(outSchema, pairs[1].schema)).to.include(":value xsd:float");
+      expect(pairs[1].variables).to.deep.equal([base + "v"]);
+      expect(pairs[0].structural).to.equal(true);
+      // a constraint whose valueExpr is an inline shape highlights as its
+      // delimiters, not the nested constraints
+      expect(pairs[0].schemaParts.length).to.be.above(1);
+    });
+
+    it("should keep identical siblings apart when the rendering reorders them", function () {
+      // the app renders the proof graph, whose order need not be the
+      // materializer's: pairing blank nodes by first fit would bind tm1 to
+      // the "60" reading, and :units "mmHg" would still "match" it
+      const rendered = `PREFIX : <http://a.example/>
+:r :reading [ :value "60"; :units "mmHg" ], [ :value "100"; :units "mmHg" ] .
+`;
+      const pairs = EditorServices.mapMaterialization(
+        provenance, located, EditorServices.parseTurtle(rendered, {baseIRI: base}));
+      expect(pairs.filter(p => !p.anchors.object).length, "all anchored").to.equal(0);
+      expect(slice(rendered, pairs[1].anchors.object)).to.equal('"100"');
+      expect(slice(rendered, pairs[4].anchors.object)).to.equal('"60"');
+      // tm1's :units belongs to the "100" reading, which now renders second
+      expect(pairs[2].anchors.object.from).to.be.above(rendered.indexOf('"100"'));
+      expect(pairs[5].anchors.object.from).to.be.below(rendered.indexOf('"100"'));
+      // no two triples may claim the same span
+      const spots = pairs.map(p => p.anchors.object.from);
+      expect(new Set(spots).size).to.equal(spots.length);
+    });
+
+    it("should leave a triple unanchored rather than guess", function () {
+      const rendered = `PREFIX : <http://a.example/>
+:r :reading [ :value "100"; :units "mmHg" ] .
+`;
+      const pairs = EditorServices.mapMaterialization(
+        provenance, located, EditorServices.parseTurtle(rendered, {baseIRI: base}));
+      expect(pairs.filter(p => p.anchors.object).length, "only the rendered reading").to.equal(3);
+      expect(slice(rendered, pairs[1].anchors.object)).to.equal('"100"');
+      expect(pairs[4].anchors.object, "the absent reading anchors nowhere").to.equal(null);
+    });
+  });
 });
