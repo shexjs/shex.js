@@ -83,15 +83,20 @@ class ShExMapBaseApp extends ShExBaseApp {
     Object.assign(this.Caches, { manifest, bindings, statics, outputSchema, });
     const parameters = [
       {queryStringParm: "manifest",  location: manifest.selection,    cache: manifest, fail: e => $("#manifestDrop li").text(NO_MANIFEST_LOADED)},
+      // bindings are a validation product (the manifests' expectedBindings
+      // record them for testing), so gists don't include them
       {queryStringParm: "bindings",  location: bindings.selection,    cache: bindings    },
-      {queryStringParm: "statics",   location: statics.selection,     cache: statics     },
-      {queryStringParm: "outSchema", location: outputSchema.selection,cache: outputSchema},
+      {queryStringParm: "statics",   location: statics.selection,     cache: statics,
+       manifest: {key: "staticVars", asYamlObject: true}},
+      {queryStringParm: "outSchema", location: outputSchema.selection,cache: outputSchema,
+       manifest: {key: "outputSchema", spillName: "outputSchema.shex"}},
     ];
     Array.prototype.push.apply(this.Getables, parameters);
     Array.prototype.push.apply(this.QueryParams, parameters);
     // not a cache: a plain input holding "node@shape" pair(s); the node names
     // a graph root to invent, so there's no data to pick it from
-    this.QueryParams.push({queryStringParm: "output-map", location: $("#outputShapeMap"), deflt: ""});
+    this.QueryParams.push({queryStringParm: "output-map", location: $("#outputShapeMap"), deflt: "",
+                           manifest: {key: "outputShapeMap"}});
     this.Caches.shapeMap.addContextMenus("#outputShapeMap", outputSchema, {
       // a picked shape replaces only what follows the '@', keeping the
       // invented node; with no node yet, supply the conventional root
