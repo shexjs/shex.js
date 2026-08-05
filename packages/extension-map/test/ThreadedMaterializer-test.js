@@ -38,21 +38,22 @@ describe("ThreadedMaterializer", function () {
       const label = entry.schemaLabel + "(" + entry.dataLabel + ")";
       if (TESTS !== null && !TESTS.find(pat => label.indexOf(pat) !== -1 || label.match(RegExp(pat))))
         return;
-      it(label + " should materialize " + entry.expectedBindingsURL + " to " + entry.outputDataURL, function () {
+      it(label + " should materialize " + entry.expectedBindingsURL + " to " + entry.expectedOutputDataURL, function () {
         const schemaText = "outputSchema" in entry
               ? entry.outputSchema
               : Fs.readFileSync(Path.join(examplesDir, entry.outputSchemaURL), "utf8");
         const schema = parseSchema(schemaText);
         const bindings = JSON.parse(Fs.readFileSync(Path.join(examplesDir, entry.expectedBindingsURL), "utf8"));
-        const createRoot = entry.createRoot.startsWith("_:")
-              ? entry.createRoot
-              : entry.createRoot.substr(1, entry.createRoot.length - 2);
+        const createRootLex = entry.outputShapeMap.match(/^(<[^>]*>|[^@]*)@/)[1]; // node part of "node@shape"
+        const createRoot = createRootLex.startsWith("_:")
+              ? createRootLex
+              : createRootLex.substr(1, createRootLex.length - 2);
 
         const materializer = new ThreadedMaterializer(schema);
         const got = new RdfJs.Store();
         got.addQuads(materializer.materialize(bindings, createRoot));
 
-        const expected = parseTurtle(Fs.readFileSync(Path.join(examplesDir, entry.outputDataURL), "utf8"));
+        const expected = parseTurtle(Fs.readFileSync(Path.join(examplesDir, entry.expectedOutputDataURL), "utf8"));
         expect(graphEquals(got, expected)).to.equal(
           true, "got:\n" + graphToString(got) + "\nexpected:\n" + graphToString(expected));
       });

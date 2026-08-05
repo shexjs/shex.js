@@ -160,9 +160,10 @@ describe('Examples manifest', function () {
     const mapstr = manifest.schemaLabel + '(' + manifest.dataLabel + ')'
     if (TESTS !== null && !TESTS.find(pat => mapstr.indexOf(pat) !== -1 || mapstr.match(RegExp(pat))))
       return;
-    const createRoot = manifest.createRoot.startsWith('_:')
-          ? manifest.createRoot
-          : manifest.createRoot.substr(1, manifest.createRoot.length-2)
+    const createRootLex = manifest.outputShapeMap.match(/^(<[^>]*>|[^@]*)@/)[1] // node part of "node@shape"
+    const createRoot = createRootLex.startsWith('_:')
+          ? createRootLex
+          : createRootLex.substr(1, createRootLex.length-2)
     const dataSummary = "dataURL" in manifest
           ? manifest.dataURL
           : manifest.data.length + ' chars of turtle'
@@ -173,8 +174,8 @@ describe('Examples manifest', function () {
     const what = manifest.threadedOnly
           ? ' should produce ' + manifest.expectedBindingsURL + ' from '
           : ' should map '
-    it(mapstr + what + dataSummary + (manifest.threadedOnly ? "" : " to " + manifest.outputDataURL), async function () {
-      return run(manifest.inputSchema, manifest.outputSchema, manifest.inputDataP, manifest.smapP, createRoot, manifest.expectedBindings, manifest.expectedDataP, mapstr, false, manifest.threadedOnly)
+    it(mapstr + what + dataSummary + (manifest.threadedOnly ? "" : " to " + manifest.expectedOutputDataURL), async function () {
+      return run(manifest.inputSchema, manifest.outputSchema, manifest.inputDataP, manifest.smapP, createRoot, manifest.expectedBindings, manifest.expectedOutputDataP, mapstr, false, manifest.threadedOnly)
     })
   })
 })
@@ -210,9 +211,9 @@ function loadManifest() {
       // materialization inputs
       const outputSchema = ShExParser.construct(schemaBase, {}, {index: true}).parse(manifest.outputSchema)
       const expectedBindings = manifest.expectedBindingsURL ? JSON.parse(Fs.readFileSync(Path.join(examplesDir, manifest.expectedBindingsURL), 'utf8')) : null
-      const expectedDataP = parseTurtle(Fs.readFileSync(Path.join(examplesDir, manifest.outputDataURL), 'utf8'), turtleBase)
-      Awaiting.push(inputDataP, smapP, expectedDataP)
-      return Object.assign(manifest, {inputSchema, outputSchema, inputDataP, smapP, expectedBindings, expectedDataP})
+      const expectedOutputDataP = parseTurtle(Fs.readFileSync(Path.join(examplesDir, manifest.expectedOutputDataURL), 'utf8'), turtleBase)
+      Awaiting.push(inputDataP, smapP, expectedOutputDataP)
+      return Object.assign(manifest, {inputSchema, outputSchema, inputDataP, smapP, expectedBindings, expectedOutputDataP})
     })
 }
 

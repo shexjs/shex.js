@@ -94,8 +94,7 @@ if (!TEST_browser) {
       };
       set("#outputSchema textarea", outputSchemaText);
       set("#bindings1 textarea", bindingsJson);
-      $("#createRoot").val("<tag:root>");
-      $("#outputShape").val("<http://a.example/S>");
+      $("#outputShapeMap").val("<tag:root>@<http://a.example/S>");
 
       // a gutter breakpoint on the :q constraint's line
       const pane = shared.Caches.editorSupport.panes.outputSchema;
@@ -158,8 +157,7 @@ if (!TEST_browser) {
       };
       set("#outputSchema textarea", ambiguousSchemaText);
       set("#bindings1 textarea", ambiguousBindings);
-      $("#createRoot").val("<tag:card>");
-      $("#outputShape").val("<http://a.example/Card>");
+      $("#outputShapeMap").val("<tag:card>@<http://a.example/Card>");
 
       $("#debugMaterialize").trigger("click");
       await shared.promise;
