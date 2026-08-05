@@ -251,10 +251,15 @@ class TurtleCache extends InterfaceCache {
 }
 
 class ManifestCache extends InterfaceCache {
+  // manifest-descriptor keys pickSchema/pickData/queryMapLoaded handle
+  // themselves; loadExtraInputs loads the rest
+  static pickLoadedKeys = ["schema", "data", "queryMap"];
+
   constructor (selection, caches, resultsWidget) {
     super(selection, null);
     this.caches = caches;
     this.resultsWidget = resultsWidget;
+    this.queryParams = null; // the app's QueryParams registry, assigned post-construction
   }
 
   async set (textOrObj, url, source) {
@@ -589,6 +594,40 @@ class ManifestCache extends InterfaceCache {
       } else {
         this.resultsWidget.append($("<div/>").text("No queryMap or queryMapURL supplied in manifest").addClass("warning"));
       }
+
+      await this.loadExtraInputs(dataTest);
+    }
+  }
+
+  /** Load the picked entry's inputs beyond the schema/data/queryMap pick
+   * machinery above, driven by the app's QueryParams manifest descriptors
+   * (assigned post-construction): shexmap's staticVars, outputSchema[URL] and
+   * outputShapeMap; nothing in shex-simple.  <key>URL values resolve against
+   * the manifest's base, and their fetched text memoizes into the entry. */
+  async loadExtraInputs (dataTest) {
+    for (const q of this.queryParams || []) {
+      const m = q.manifest;
+      if (m === undefined || ManifestCache.pickLoadedKeys.indexOf(m.key) !== -1)
+        continue;
+      let value = dataTest.entry[m.key];
+      let url = dataTest.url;
+      if (value === undefined && dataTest.entry[m.key + "URL"] !== undefined) {
+        url = dataTest.entry[m.key + "URL"] = new URL(dataTest.entry[m.key + "URL"], dataTest.url).href;
+        try {
+          value = dataTest.entry[m.key] = await this.fetchOK(url);
+        } catch (e) {
+          this.renderErrorMessage(e, m.key);
+          continue;
+        }
+      }
+      if (m.asYamlObject)
+        value = JSON.stringify(value === undefined ? {} : value, null, "  ");
+      else if (value === undefined)
+        value = "deflt" in q ? q.deflt : ""; // absent in this entry: don't leak the last one's
+      if ("cache" in q)
+        await q.cache.set(value, url);
+      else
+        q.location.val(value);
     }
   }
 
@@ -613,7 +652,7 @@ class ManifestCache extends InterfaceCache {
   }
 
   renderErrorMessage (response, what) {
-    const message = "failed to load " + "queryMap" + " from <" + response.url + ">, got: " + response.status + " " + response.statusText;
+    const message = "failed to load " + what + " from <" + response.url + ">, got: " + response.status + " " + response.statusText;
     this.resultsWidget.append($("<pre/>").text(message).addClass("error"));
     return message;
   }
