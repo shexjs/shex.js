@@ -151,7 +151,6 @@ start=@<#Schema>
 <#TripleConstraint> CLOSED {
   a [sx:TripleConstraint] ;
   sx:inverse [true false] ? ;
-  sx:negated [true false] ? ;
   sx:min xsd:integer ? ;
   sx:max xsd:integer ? ;
   sx:predicate IRI ;

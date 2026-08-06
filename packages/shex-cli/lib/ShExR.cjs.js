@@ -489,14 +489,6 @@ const ShExRSchema = {
                 { "value": "false", "type": "http://www.w3.org/2001/XMLSchema#boolean" }
               ] } },
           { "type": "TripleConstraint",
-            "predicate": "http://www.w3.org/ns/shex#negated", "min": 0, "max": 1,
-            "valueExpr": {
-              "type": "NodeConstraint",
-              "values": [
-                { "value": "true", "type": "http://www.w3.org/2001/XMLSchema#boolean" },
-                { "value": "false", "type": "http://www.w3.org/2001/XMLSchema#boolean" }
-              ] } },
-          { "type": "TripleConstraint",
             "predicate": "http://www.w3.org/ns/shex#min", "min": 0, "max": 1,
             "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } },
           { "type": "TripleConstraint",
