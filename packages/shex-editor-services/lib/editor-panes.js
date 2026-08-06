@@ -315,6 +315,10 @@ function lintSourceFor(language, opts) {
 }
 /** makePane - replace `textarea` with a CodeMirror 6 editor. */
 exports.CHANGE_DEBOUNCE_MS = 350;
+/** marks a document change made by the application (a write through the
+ * textarea proxy) rather than by the user, so the pane doesn't report it as
+ * a typing pause -- see the updateListener in makePane */
+const appEdit = state_1.Annotation.define();
 function makePane(textarea, opts = {}) {
     const nativeValue = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(textarea).constructor.prototype, "value")
         || Object.getOwnPropertyDescriptor(textarea, "value");
@@ -328,13 +332,23 @@ function makePane(textarea, opts = {}) {
         view_1.EditorView.updateListener.of(update => {
             if (update.docChanged) {
                 nativeValue.set.call(textarea, update.state.doc.toString());
-                // "keyup" fires immediately: the apps' cache dirty-tracking listens
-                // for typing (a stale cache means validate ignores the edit).
+                // "keyup" fires immediately, for writes through the proxy too: the
+                // apps' cache dirty-tracking listens for it, and a stale cache means
+                // validate ignores the new text (setTextAreaHandlers).
                 const KeyboardEventCtor = typeof KeyboardEvent !== "undefined" ? KeyboardEvent : Event;
                 textarea.dispatchEvent(new KeyboardEventCtor("keyup", { bubbles: true }));
                 // "change" is debounced to typing pauses: a textarea fires it on
                 // blur, and per-keystroke change handlers re-parse half-typed
                 // documents (e.g. an unclosed quote swallowing following lines).
+                // It says "the user stopped typing", so a write through the proxy
+                // must not raise it -- assigning to a plain textarea's value fires
+                // no change either, and handlers that react to one discard work the
+                // application did meanwhile: dataInputHandler's copyTextMapToEditMap
+                // clears #results, wiping a materialization rendered since.  Any
+                // pending change from a real edit still stands: the application
+                // replacing the text does not mean the user's edit went unmade.
+                if (update.transactions.every(tr => tr.annotation(appEdit)))
+                    return;
                 if (changeTimer !== null)
                     clearTimeout(changeTimer);
                 changeTimer = setTimeout(() => {
@@ -376,7 +390,8 @@ function makePane(textarea, opts = {}) {
             const text = String(v == null ? "" : v);
             nativeValue.set.call(textarea, text);
             if (text !== view.state.doc.toString())
-                view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
+                view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text },
+                    annotations: appEdit.of(true) });
         },
     });
     const clampRange = (r) => r !== null && r.to > r.from && r.to <= view.state.doc.length;
