@@ -69,6 +69,24 @@ describe("EditorPanes", function () {
       await new Promise(resolve => setTimeout(resolve, CHANGE_DEBOUNCE_MS + 100));
       expect(changes, "debounced change").to.equal(1);
 
+      // a write THROUGH the proxy still reports keyup -- the caches' dirty
+      // tracking listens for it -- but raises no change: it isn't a typing
+      // pause, and a change would tell handlers to discard work the
+      // application did meanwhile (copyTextMapToEditMap clears #results)
+      keyups = changes = 0;
+      textarea.value = "PREFIX : <http://b.example/>";
+      expect(pane.view.state.doc.toString()).to.equal("PREFIX : <http://b.example/>");
+      expect(keyups, "keyup keeps the cache dirty-tracking honest").to.equal(1);
+      await new Promise(resolve => setTimeout(resolve, CHANGE_DEBOUNCE_MS + 100));
+      expect(changes, "no change for an application write").to.equal(0);
+
+      // nor does an application write cancel a real edit's pending change
+      changes = 0;
+      pane.view.dispatch({changes: {from: 0, to: 0, insert: "# typed\n"}});
+      textarea.value = "# set\n" + textarea.value;
+      await new Promise(resolve => setTimeout(resolve, CHANGE_DEBOUNCE_MS + 100));
+      expect(changes, "the user edit still reports").to.equal(1);
+
       // diagnostics and highlights accept editor-services ranges
       pane.setDiagnostics([{from: 0, to: 6, severity: "error", message: "test"}]);
       pane.highlight([{from: 0, to: 6}]);
