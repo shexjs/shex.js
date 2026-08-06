@@ -268,11 +268,13 @@ if (!TEST_browser) {
     });
 
     it("should tie each materialized triple to its constraint and binding", async function () {
-      const [{pairs}] = shared.Caches.editorSupport.lastMaterialized;
+      // the rendering comes with the mapping: #results is live DOM that a
+      // debounced pane edit can clear (copyTextMapToEditMap), and these
+      // ranges only mean anything against the text they were mapped onto
+      const [{pairs, text: resultText}] = shared.Caches.editorSupport.lastMaterialized;
       expect(pairs.length, "one pair per generated triple").to.equal(2);
 
       const schemaText = $("#outputSchema textarea").first().val();
-      const resultText = $("#results .shexjs-turtle-pane").parent().data("rawText");
       const bindingsText = $("#bindings1 textarea").first().val();
       const at = (text, range) => text.substring(range.from, range.to);
 
@@ -315,8 +317,7 @@ if (!TEST_browser) {
 
       $("#materialize").trigger("click");
       await shared.promise;
-      const [{pairs}] = shared.Caches.editorSupport.lastMaterialized;
-      const resultText = $("#results .shexjs-turtle-pane").parent().data("rawText");
+      const [{pairs, text: resultText}] = shared.Caches.editorSupport.lastMaterialized;
       // four readings, all shaped alike, with distinct values
       ["100", "60", "101", "61", "110", "70", "111", "71"].forEach(v =>
         expect(resultText, "rendered " + v).to.include('"' + v + '"'));
