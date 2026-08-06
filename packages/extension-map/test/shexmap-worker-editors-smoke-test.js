@@ -162,9 +162,8 @@ if (!TEST_browser) {
       expect(paneDom.length, "materialization renders in a Turtle pane").to.equal(1);
       expect(paneDom[0].style.height, "pane fills the remaining height").to.match(/^\d+px$/);
 
-      const [{pairs}] = shared.Caches.editorSupport.lastMaterialized;
+      const [{pairs, text: resultText}] = shared.Caches.editorSupport.lastMaterialized;
       expect(pairs.length, "one pair per generated triple").to.equal(2);
-      const resultText = paneDom.parent().data("rawText");
       const at = (text, range) => text.substring(range.from, range.to);
 
       const one = pairs.find(p => p.variables.indexOf("http://a.example/v1") !== -1);
@@ -198,8 +197,7 @@ if (!TEST_browser) {
 
       $("#materialize").trigger("click");
       await shared.promise;
-      const [{pairs}] = shared.Caches.editorSupport.lastMaterialized;
-      const resultText = $("#results .shexjs-turtle-pane").parent().data("rawText");
+      const [{pairs, text: resultText}] = shared.Caches.editorSupport.lastMaterialized;
       ["100", "60", "101", "61", "110", "70", "111", "71"].forEach(v =>
         expect(resultText, "rendered " + v).to.include('"' + v + '"'));
 

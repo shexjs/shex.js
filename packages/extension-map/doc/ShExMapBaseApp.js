@@ -603,9 +603,13 @@ class ShExMapBaseApp extends ShExBaseApp {
       const located = ShExWebApp.EditorServices.locateInParsed(
         this.Caches.outputSchema.selection.val(), this.Caches.outputSchema.parsed);
       // each result pane holds one rendering; pair every generated triple
-      // with its position there
+      // with its position there.  The rendering travels with the pairs: the
+      // ranges only mean anything against it, and #results may be cleared
+      // (a debounced pane edit reaches copyTextMapToEditMap) while this
+      // mapping remains the record of what was materialized.
       const rendered = this.materializationPanes.map(({pane, text}) => ({
         pane,
+        text,
         pairs: ShExWebApp.EditorServices.mapMaterialization(
           provenance, located,
           ShExWebApp.EditorServices.parseTurtle(text, {baseIRI: this.Caches.outputSchema.meta.base})),
