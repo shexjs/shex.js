@@ -21,7 +21,7 @@ const AllTests = {
     // validate --extension | materialize round trip over the BPDAMFHIR pair
     // (BPFHIR-validation.val is `validate -x Map/BPDAMFHIR/BPFHIR.shex -d
     // Map/BPDAMFHIR/BPFHIR.ttl -n tag:BPfhir123 --extension
-    // ../shex-extension-map.js` with the checkout path neutralized)
+    // ../lib/shex-extension-map.js` with the checkout path neutralized)
     { name: "bp-pipeline", args: ["--target", "Map/BPDAMFHIR/BPunitsDAM.shex", "--root", "tag:b0"], stdin: "Map/BPDAMFHIR/BPFHIR-validation.val", resultMatch: "systolic>[\\s\\S]*\"110\"[\\s\\S]*diastolic>[\\s\\S]*\"70\"", status: 0 }
   ],
   "shexmap-debug": [

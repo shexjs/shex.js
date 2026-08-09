@@ -3,7 +3,7 @@
  * Motivation: the trivialMaterializer/ShExMaterializer pair walks the target
  * schema depth-first while sharing ONE mutable binder (a pointer into the
  * binding tree plus destructive "used" marks -- see binder() in
- * ../shex-extension-map.js).  When a required node deep in the schema can't be
+ * ./shex-extension-map.ts).  When a required node deep in the schema can't be
  * satisfied, the containing node is eliminated, but the binder's pointer and
  * used-marks are NOT restored, so success depends precariously on visit order.
  *
