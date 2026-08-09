@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@shexjs/eval-validator-api": "^1.0.0-alpha.29",
+    "@shexjs/neighborhood-api": "^1.0.0-alpha.28",
     "@shexjs/term": "^1.0.0-alpha.27",
     "@shexjs/util": "^1.0.0-alpha.28",
     "@shexjs/visitor": "^1.0.0-alpha.27",
@@ -29,7 +30,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "cd .. && mocha -C -R dot"
+    "test": "cd ../.. && TEST_sparql=true mocha packages/neighborhood-sparql/test/*test.js -R dot"
   },
   "devDependencies": {
     "@rdfjs/types": "^1.1.0"
