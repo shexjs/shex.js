@@ -95,8 +95,12 @@ describe("A ShEx validator over SPARQL", function () {
   after(async () => { if (endpoint) await endpoint.close(); });
 
   it(`should mark all tests whose focus is a told blank node with the ToldBNode trait`, () => {
-    assert.isTrue(tests.filter(test => (test.trait || []).includes("ToldBNode")).every(t => t.action.focus.indexOf('_:') == 0),
-                  "a ToldBNode-tagged test doesn't actually mention a blank node");
+    const marked = new Set(tests.filter(t => (t.trait || []).includes("ToldBNode")).map(t => t["@id"]));
+    const founds = new Set(tests.filter(t => typeof t.action.focus === "string" && t.action.focus.startsWith("_:")).map(t => t["@id"]));
+    const missedTraits = founds.difference(marked);
+    const extraTraits = marked.difference(founds);
+    assert.deepEqual([...missedTraits], [], `${missedTraits.size} test(s): [${[...missedTraits].join(', ')}] should have a "ToldBNode" trait`);
+    assert.deepEqual([...extraTraits], [], `${extraTraits.size} test(s): [${[...extraTraits].join(', ')}] should NOT have a "ToldBNode" trait`);
   });
 
   tests.filter(test =>
