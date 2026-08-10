@@ -33,8 +33,9 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ctor = exports.description = exports.name = exports.BNodeIdentityError = void 0;
+exports.dbParams = exports.ctor = exports.description = exports.name = exports.BNodeIdentityError = void 0;
 exports.sparqlDB = sparqlDB;
+exports.fromParams = fromParams;
 const neighborhood_api_1 = require("@shexjs/neighborhood-api");
 const ShExUtil = __importStar(require("@shexjs/util"));
 const visitor_1 = require("@shexjs/visitor");
@@ -658,4 +659,32 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
 exports.name = "neighborhood-sparql";
 exports.description = "Implementation of @shexjs/neighborhood-api which gets data from a SPARQL endpoint";
 exports.ctor = sparqlDB;
+/** What it takes to construct this DB, declared for hosts (the CLI, the
+ * WebApp) that offer several neighborhood implementations.  See the STRAWMAN
+ * notes in @shexjs/neighborhood-api. */
+exports.dbParams = [
+    { name: "endpoint", selector: true, required: true,
+        description: "data query endpoint",
+        schema: { type: "string", format: "uri" },
+        cli: { option: "endpoint", typeLabel: "IRI" } }, // the CLI's historical flag
+    { name: "allOutgoing",
+        description: "fetch every outgoing arc rather than only those the shape needs",
+        schema: { type: "boolean" },
+        cli: { option: "slurp-all" } }, // rides the CLI's existing flag
+    { name: "bnodeDepth",
+        description: "how optimistically to chase blank nodes when describing them (grown on demand)",
+        schema: { type: "integer", default: 4 },
+        cli: { option: "sparql-bnode-depth", typeLabel: "integer" } },
+    { name: "verifyBnodeDescriptions",
+        description: "pessimistically ask the endpoint to confirm each blank node description",
+        schema: { type: "boolean", default: true },
+        cli: { option: "sparql-verify-bnodes" } },
+];
+function fromParams(params, queryTracker) {
+    return sparqlDB(params.endpoint, queryTracker, {
+        allOutgoing: params.allOutgoing,
+        bnodeDepth: params.bnodeDepth,
+        verifyBnodeDescriptions: params.verifyBnodeDescriptions,
+    });
+}
 //# sourceMappingURL=neighborhood-sparql.js.map

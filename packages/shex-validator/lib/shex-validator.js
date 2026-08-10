@@ -122,7 +122,7 @@ class EmptyTracker {
 }
 class ShapeExprValidationContext {
     constructor(parent, label, // Can only be Start if it's the root of a context list.
-    depth = 0, tracker = new EmptyTracker(), seen = {}, matchTarget = null, subGraph = null,
+    depth = 0, tracker = new EmptyTracker(), seen = {}, matchTarget = null, subGraph = null, 
     // The subGraph is the partition an extending CLOSED shape allocated to this
     // extension: every triple in it must be consumed, as any left over would be
     // unmatched in the extending shape's closed neighborhood.

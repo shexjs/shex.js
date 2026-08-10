@@ -11,6 +11,58 @@ API called by [`@shexjs/validator`](../shex-validator#readme) to get a neighborh
 npm install --save @shexjs/neighborhood-api
 ```
 
+## declaring a DB's construction parameters (STRAWMAN)
+
+Each neighborhood implementation needs different things to come to life — an
+rdfjs store wants files (with media types), a SPARQL db wants an endpoint and
+query-strategy flags, a wikidata db wants the page base it appends entity ids
+to. A host that offers several implementations (the CLI, the WebApp)
+shouldn't hard-code each one's needs, so a module may *declare* them by
+exporting, alongside the longstanding `{name, description, ctor}`:
+
+- `dbParams: DbParamSpec[]` — the parameters, in the style of OpenAPI's
+  Parameter/Schema Objects (`type`, `format`, `enum`, `default`, `items` with
+  `contentMediaType`), plus a `cli` hint (`option`, `alias`) for surfacing
+  them in a command line, and a `selector` flag marking the parameter whose
+  presence picks the module;
+- `fromParams(params, queryTracker?)` — a uniform constructor over values
+  keyed by parameter name.
+
+The declaration rides on the *module*, not on `NeighborhoodDb`: parameters
+exist to construct the db, so by the time an instance exists they're spent.
+And because it's a pair of optional exports rather than a required
+interface, a module that ignores all of this still works everywhere it works
+today — the "optional `NeighborhoodParmsDb`" choice, without a new interface
+to implement.
+
+`paramsToCommandLineArgs()` translates specs into
+[`command-line-args`](https://www.npmjs.com/package/command-line-args)
+option definitions, and doubles as the measurement the two vocabularies were
+compared by. What survives the round trip: names, descriptions, the scalar
+types, arrays, defaults, enums. OpenAPI says things `command-line-args`
+can't (`format`, `items.contentMediaType` — how "filenames paired with media
+types" is declared: one array-of-files parameter per media type — and
+`required`, which the host must enforce); `command-line-args` says things
+OpenAPI can't (`alias`, `defaultOption`, `lazyMultiple`, `group`), which is
+why `DbParamSpec` carries a `cli` hint rather than pretending OpenAPI covers
+a command line. `bin/validate` in [`@shexjs/cli`](../shex-cli#readme)
+appends the declared options of its registered modules (`--endpoint …`,
+`--wikidata …`) and constructs whichever module's selector appears.
+
+## loading a neighborhood module into the WebApp (STRAWMAN)
+
+The WebApp wants more from a db than `getNeighborhood`: focus-node
+typeahead, display labels, maybe a module-tuned editor. But a module that
+implements `getNeighborhood()` must not be obliged to ship a javascript
+language-sensitive editor, so `NeighborhoodWebAppDb` extends
+`NeighborhoodDb` with only *optional* affordances (`suggestFocusNodes`,
+`labelOf`, …) — the WebApp feature-tests and falls back to its generic UI,
+and a plain `NeighborhoodDb` loads fine. Construction is already covered by
+`dbParams`/`fromParams` above, rendered as a form instead of command line
+options.
+
+All names and shapes here are negotiable; this is a strawman to refine.
+
 
 # Lerna Monorepo
 

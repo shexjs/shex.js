@@ -35,10 +35,11 @@
  */
 import * as RdfJs from "@rdfjs/types";
 import type {Shape} from "shexj";
-import {DbQueryTracker, Neighborhood, NeighborhoodDb, sparqlOrder, Start} from "@shexjs/neighborhood-api";
+import {DbParamSpec, DbQueryTracker, Neighborhood, NeighborhoodDb, sparqlOrder, Start} from "@shexjs/neighborhood-api";
 import * as N3 from "n3";
 import * as fs from "fs";
 import * as path from "path";
+import {fileURLToPath} from "url";
 import {SiteInfo, WikibaseRdfOptions, wikibaseRdfConverter} from "./wikibase-rdf";
 
 export {SiteInfo};
@@ -142,6 +143,10 @@ export function wikidataDB (queryTracker?: DbQueryTracker, options: WikidataDbOp
         "https://www.wikidata.org/w/api.php?action=sitematrix&format=json&formatversion=2";
 
   const fetchDoc = options.fetchDoc || function (url: string): string {
+    // a file: base makes a directory of captured pages a fully offline
+    // "API": <base><id>.json resolves to a file next to its siblings
+    if (url.startsWith("file://"))
+      return fs.readFileSync(fileURLToPath(url), "utf8");
     const XHR = (globalThis as any).XMLHttpRequest;
     if (!XHR)
       throw Error(`no fetchDoc option and no XMLHttpRequest to fetch ${url} with; ` +
@@ -275,3 +280,30 @@ export function wikidataDB (queryTracker?: DbQueryTracker, options: WikidataDbOp
 export const name = "neighborhood-wikidata";
 export const description = "Implementation of @shexjs/neighborhood-api which synthesizes Wikidata's RDF from entity JSON pages";
 export const ctor = wikidataDB;
+
+/** What it takes to construct this DB, declared for hosts that offer several
+ * neighborhood implementations (STRAWMAN, see @shexjs/neighborhood-api). */
+export const dbParams: DbParamSpec[] = [
+  { name: "base", selector: true, required: true,
+    description: "where entity pages live: <base><id>.json names each page " +
+      "(e.g. https://www.wikidata.org/wiki/Special:EntityData/ or a file: directory of captured pages)",
+    schema: {type: "string", format: "uri"},
+    cli: {option: "wikidata", typeLabel: "IRI"} },
+  { name: "sitematrix",
+    description: "where the site matrix lives (site id -> URL/language/group, needed for sitelink RDF); " +
+      "defaults to the wikidata API",
+    schema: {type: "string", format: "uri"},
+    cli: {option: "wikidata-sitematrix", typeLabel: "IRI"} },
+  { name: "cacheDir",
+    description: "keep fetched entity pages on disk here",
+    schema: {type: "string", format: "file-path"},
+    cli: {option: "wikidata-cache", typeLabel: "dir"} },
+];
+
+export function fromParams (params: { [name: string]: any }, queryTracker?: DbQueryTracker): NeighborhoodDb {
+  return wikidataDB(queryTracker, {
+    entityDataUrl: params.base === undefined ? undefined : (id: string) => `${params.base}${id}.json`,
+    siteMatrixUrl: params.sitematrix,
+    cacheDir: params.cacheDir,
+  });
+}

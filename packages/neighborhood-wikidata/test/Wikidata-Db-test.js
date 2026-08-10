@@ -185,7 +185,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
       it("needs TEST_wikidata=true (and a network)");
       return;
     }
-    const {syncRequest, closeSyncFetch} = require("../../neighborhood-sparql/test/sync-fetch");
+    const {syncRequest, closeSyncFetch} = require("@shexjs/neighborhood-sparql/sync-fetch");
     after(() => closeSyncFetch());
 
     it("should fetch and convert a live entity page", function () {

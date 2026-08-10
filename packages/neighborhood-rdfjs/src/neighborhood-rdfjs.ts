@@ -2,7 +2,7 @@
  */
 import * as RdfJs from "@rdfjs/types";
 import {Shape} from "shexj";
-import {DbQueryTracker, Neighborhood, NeighborhoodDb, sparqlOrder, Start} from "@shexjs/neighborhood-api";
+import {DbParamSpec, DbQueryTracker, Neighborhood, NeighborhoodDb, sparqlOrder, Start} from "@shexjs/neighborhood-api";
 
 /** The subset of an RDF/JS quad store needed by rdfjsDB, satisfied by e.g. an N3.Store.
  */
@@ -60,3 +60,25 @@ export function rdfjsDB (db: RdfJsQuadSource, queryTracker?: DbQueryTracker): Ne
 export const name = "neighborhood-rdfjs";
 export const description = "Implementation of @shexjs/neighborhood-api which gets data from an @rdfjs/dataset";
 export const ctor = rdfjsDB;
+
+/** What it takes to construct this DB, declared for hosts that offer several
+ * neighborhood implementations (STRAWMAN, see @shexjs/neighborhood-api).
+ * "A list of filenames paired with media types" is declared as one
+ * array-of-files parameter per media type -- contentMediaType is the
+ * pairing.  Fetching and parsing them is the host's business (it's async
+ * and needs parsers this module doesn't ship), so `fromParams` takes the
+ * store the host built rather than the file lists. */
+export const dbParams: DbParamSpec[] = [
+  { name: "data", selector: true,
+    description: "Turtle data",
+    schema: {type: "array", items: {type: "string", format: "uri", contentMediaType: "text/turtle"}},
+    cli: {option: "dataURL", alias: "d", typeLabel: "file|URL"} },
+  { name: "jsonld",
+    description: "JSON-LD data",
+    schema: {type: "array", items: {type: "string", format: "uri", contentMediaType: "application/ld+json"}},
+    cli: {option: "jsonld", alias: "l", typeLabel: "file|URL"} },
+];
+
+export function fromParams (params: { [name: string]: any }, queryTracker?: DbQueryTracker): NeighborhoodDb {
+  return rdfjsDB(params.store, queryTracker);
+}

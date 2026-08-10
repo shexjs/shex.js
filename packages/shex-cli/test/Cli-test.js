@@ -141,5 +141,79 @@ if (!TEST_cli) {
 } else {
   // console.log(`Testing CLI programs against HTTP server ${HTTPTEST}`);
   TestUtils.runCliTests(AllTests, __dirname, TIME);
+
+  /* Validate a wikidata item through each query-backed NeighborhoodDb the
+   * CLI can drive.  Both runs walk the same graph -- Q42's and Q5's entity
+   * pages as captured in neighborhood-wikidata's fixtures -- and the same
+   * schema (entity -> statement -> value node, plus a hop into Q5's own
+   * neighborhood): once served as JSON pages from a file: base
+   * (--wikidata), once loaded into a local SPARQL endpoint (--endpoint).
+   * Hand-rolled rather than rows in AllTests because the endpoint has to be
+   * listening before the child spawns, and runCliTests spawns at load time.
+   */
+  describe("validate a wikidata item", function () {
+    const Path = require("path");
+    const Fs = require("fs");
+    const child_process = require("child_process");
+    const chai = require("chai");
+    const expect = chai.expect;
+
+    const wdFixtures = Path.resolve(__dirname, "../../neighborhood-wikidata/test/fixtures");
+    const fixturesUrl = "file://" + wdFixtures + "/";
+    const queryMap = "<http://www.wikidata.org/entity/Q42>@<#human>";
+
+    function validate (args) {
+      return new Promise((resolve, reject) => {
+        const program = child_process.spawn("../bin/validate", args, {cwd: __dirname});
+        let stdout = "", stderr = "";
+        program.stdout.on("data", d => stdout += d);
+        program.stderr.on("data", d => stderr += d);
+        program.on("close", exitCode => resolve({stdout, stderr, exitCode}));
+        program.on("error", reject);
+      });
+    }
+
+    function expectConformant ({stdout, stderr, exitCode}) {
+      expect(stderr).to.equal("");
+      expect(exitCode).to.equal(X.shape_test_pass);
+      const results = JSON.parse(stdout);
+      expect(results.type).to.equal("ShapeTest");
+      expect(results.node).to.equal("http://www.wikidata.org/entity/Q42");
+    }
+
+    it("by neighborhood-wikidata over captured entity pages", async function () {
+      this.timeout(20000);
+      expectConformant(await validate([
+        "-x", "wikidata/human.shex", "-m", queryMap,
+        "--wikidata", fixturesUrl,
+        "--wikidata-sitematrix", fixturesUrl + "sitematrix.json",
+      ]));
+    });
+
+    it("by neighborhood-sparql over an endpoint holding the same synthesized graph", async function () {
+      this.timeout(60000);
+      const {startSparqlTestServer} = require("../../neighborhood-sparql/test/sparql-test-server");
+      const {wikibaseRdfConverter} = require("@shexjs/neighborhood-wikidata/lib/wikibase-rdf");
+      const {siteInfoFromSitematrix} = require("@shexjs/neighborhood-wikidata");
+      const N3 = require("n3");
+
+      const server = await startSparqlTestServer({});
+      try {
+        const siteInfo = siteInfoFromSitematrix(
+          JSON.parse(Fs.readFileSync(Path.join(wdFixtures, "sitematrix.json"), "utf8")));
+        const converter = wikibaseRdfConverter(N3.DataFactory, {siteInfo});
+        for (const id of ["Q42", "Q5"])
+          for (const quad of converter.entityToQuads(
+            JSON.parse(Fs.readFileSync(Path.join(wdFixtures, id + ".json"), "utf8"))))
+            server.store.addQuad(quad);
+        expectConformant(await validate([
+          "-x", "wikidata/human.shex", "-m", queryMap,
+          "--endpoint", server.url,
+        ]));
+      } finally {
+        await server.close();
+      }
+    });
+  });
 }
 

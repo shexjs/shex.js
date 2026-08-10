@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ctor = exports.description = exports.name = void 0;
+exports.dbParams = exports.ctor = exports.description = exports.name = void 0;
 exports.rdfjsDB = rdfjsDB;
+exports.fromParams = fromParams;
 const neighborhood_api_1 = require("@shexjs/neighborhood-api");
 function rdfjsDB(db, queryTracker) {
     function getNeighborhood(point, shapeLabel, _shape) {
@@ -41,4 +42,24 @@ function rdfjsDB(db, queryTracker) {
 exports.name = "neighborhood-rdfjs";
 exports.description = "Implementation of @shexjs/neighborhood-api which gets data from an @rdfjs/dataset";
 exports.ctor = rdfjsDB;
+/** What it takes to construct this DB, declared for hosts that offer several
+ * neighborhood implementations (STRAWMAN, see @shexjs/neighborhood-api).
+ * "A list of filenames paired with media types" is declared as one
+ * array-of-files parameter per media type -- contentMediaType is the
+ * pairing.  Fetching and parsing them is the host's business (it's async
+ * and needs parsers this module doesn't ship), so `fromParams` takes the
+ * store the host built rather than the file lists. */
+exports.dbParams = [
+    { name: "data", selector: true,
+        description: "Turtle data",
+        schema: { type: "array", items: { type: "string", format: "uri", contentMediaType: "text/turtle" } },
+        cli: { option: "dataURL", alias: "d", typeLabel: "file|URL" } },
+    { name: "jsonld",
+        description: "JSON-LD data",
+        schema: { type: "array", items: { type: "string", format: "uri", contentMediaType: "application/ld+json" } },
+        cli: { option: "jsonld", alias: "l", typeLabel: "file|URL" } },
+];
+function fromParams(params, queryTracker) {
+    return rdfjsDB(params.store, queryTracker);
+}
 //# sourceMappingURL=neighborhood-rdfjs.js.map

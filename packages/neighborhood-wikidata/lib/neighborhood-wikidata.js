@@ -33,14 +33,16 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ctor = exports.description = exports.name = exports.EntityResolutionError = void 0;
+exports.dbParams = exports.ctor = exports.description = exports.name = exports.EntityResolutionError = void 0;
 exports.bcp47 = bcp47;
 exports.siteInfoFromSitematrix = siteInfoFromSitematrix;
 exports.wikidataDB = wikidataDB;
+exports.fromParams = fromParams;
 const neighborhood_api_1 = require("@shexjs/neighborhood-api");
 const N3 = __importStar(require("n3"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
+const url_1 = require("url");
 const wikibase_rdf_1 = require("./wikibase-rdf");
 /** Thrown when a focus node can't be tied to an entity page. */
 class EntityResolutionError extends Error {
@@ -121,6 +123,10 @@ function wikidataDB(queryTracker, options = {}) {
     const siteMatrixUrl = options.siteMatrixUrl ||
         "https://www.wikidata.org/w/api.php?action=sitematrix&format=json&formatversion=2";
     const fetchDoc = options.fetchDoc || function (url) {
+        // a file: base makes a directory of captured pages a fully offline
+        // "API": <base><id>.json resolves to a file next to its siblings
+        if (url.startsWith("file://"))
+            return fs.readFileSync((0, url_1.fileURLToPath)(url), "utf8");
         const XHR = globalThis.XMLHttpRequest;
         if (!XHR)
             throw Error(`no fetchDoc option and no XMLHttpRequest to fetch ${url} with; ` +
@@ -246,4 +252,29 @@ function wikidataDB(queryTracker, options = {}) {
 exports.name = "neighborhood-wikidata";
 exports.description = "Implementation of @shexjs/neighborhood-api which synthesizes Wikidata's RDF from entity JSON pages";
 exports.ctor = wikidataDB;
+/** What it takes to construct this DB, declared for hosts that offer several
+ * neighborhood implementations (STRAWMAN, see @shexjs/neighborhood-api). */
+exports.dbParams = [
+    { name: "base", selector: true, required: true,
+        description: "where entity pages live: <base><id>.json names each page " +
+            "(e.g. https://www.wikidata.org/wiki/Special:EntityData/ or a file: directory of captured pages)",
+        schema: { type: "string", format: "uri" },
+        cli: { option: "wikidata", typeLabel: "IRI" } },
+    { name: "sitematrix",
+        description: "where the site matrix lives (site id -> URL/language/group, needed for sitelink RDF); " +
+            "defaults to the wikidata API",
+        schema: { type: "string", format: "uri" },
+        cli: { option: "wikidata-sitematrix", typeLabel: "IRI" } },
+    { name: "cacheDir",
+        description: "keep fetched entity pages on disk here",
+        schema: { type: "string", format: "file-path" },
+        cli: { option: "wikidata-cache", typeLabel: "dir" } },
+];
+function fromParams(params, queryTracker) {
+    return wikidataDB(queryTracker, {
+        entityDataUrl: params.base === undefined ? undefined : (id) => `${params.base}${id}.json`,
+        siteMatrixUrl: params.sitematrix,
+        cacheDir: params.cacheDir,
+    });
+}
 //# sourceMappingURL=neighborhood-wikidata.js.map

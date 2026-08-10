@@ -54,9 +54,12 @@ neighborhood.
   pick up an edit. Without it, caching is in-memory only (still one fetch
   per entity per DB).
 - `fetchDoc(url)`: synchronous transport returning the response body. The
-  default uses a synchronous `XMLHttpRequest`, which browsers provide; under
-  node pass this option or install a shim (e.g.
-  [neighborhood-sparql's test sync-fetch](../neighborhood-sparql/test/sync-fetch.js)).
+  default reads `file:` URLs from disk (a directory of captured pages is a
+  fully offline "API") and fetches the rest with a synchronous
+  `XMLHttpRequest`, which browsers provide; under node pass this option or
+  install a shim (e.g.
+  [neighborhood-sparql's sync-fetch](../neighborhood-sparql/sync-fetch.js):
+  `require("@shexjs/neighborhood-sparql/sync-fetch").installXhrShim()`).
   Wikimedia's servers 403 anonymous clients, so a node transport should send
   a real `User-Agent`.
 - `entityDataUrl(id)`, `siteMatrixUrl`, `conceptBase`, `dataBase`,
@@ -72,6 +75,23 @@ const {wikibaseRdfConverter} = require("@shexjs/neighborhood-wikidata/lib/wikiba
 const quads = wikibaseRdfConverter(N3.DataFactory, {siteInfo})
   .entityToQuads(JSON.parse(entityDataJson));
 ```
+
+## from the command line
+
+The module declares its construction parameters (see the STRAWMAN notes in
+[`@shexjs/neighborhood-api`](../neighborhood-api#readme)), which
+[`@shexjs/cli`](../shex-cli#readme)'s `validate` surfaces as options:
+
+``` shell
+validate -x human.shex -m '<http://www.wikidata.org/entity/Q42>@<#human>' \
+  --wikidata https://www.wikidata.org/wiki/Special:EntityData/ \
+  --wikidata-cache /tmp/wikidata-pages
+```
+
+`--wikidata` names the base that entity ids are appended to
+(`<base><id>.json`); a `file:` directory of captured pages works offline.
+`--wikidata-sitematrix` and `--wikidata-cache` cover the sitematrix source
+and the on-disk page cache.
 
 ## what the store can and cannot answer
 

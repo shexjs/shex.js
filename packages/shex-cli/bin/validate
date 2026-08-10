@@ -44,7 +44,16 @@ const ShExUtil = require("@shexjs/util");
 const {ShExIndexVisitor} = require("@shexjs/visitor");
 const {StoreDuplicates, yyllocToString, Merger: ShExMerger} = require("@shexjs/util/lib/Merger");
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
-const { ctor: SparqlDb } = require('@shexjs/neighborhood-sparql');
+const { paramsToCommandLineArgs } = require('@shexjs/neighborhood-api');
+/* Query-backed neighborhood modules this CLI can drive.  Each declares its
+ * construction parameters (dbParams) and a uniform constructor (fromParams);
+ * the declared parameters are appended to CommandLineOptions below, and the
+ * module whose selector parameter appears on the command line supplies the
+ * NeighborhoodDb (rdfjs over the loaded data files otherwise). */
+const QueryDbModules = [
+  require('@shexjs/neighborhood-sparql'),   // --endpoint
+  require('@shexjs/neighborhood-wikidata'), // --wikidata
+];
 const ShExTerm = require("@shexjs/term");
 const ShExParser = require("@shexjs/parser");
 const ShExWriter = require("@shexjs/writer"); // for verbose output
@@ -100,7 +109,7 @@ const CommandLineOptions = [
   { name: "json",      alias: "j", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExJ schema" },
   { name: "dataURL",   alias: "d", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle data", defaultOption: true },
   { name: "jsonld",    alias: "l", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD data" },
-  { name: "endpoint",              type: String, typeLabel: "IRI",       multiple: false, defaultValue: undefined, description: "data query endpoint" },
+  // --endpoint, --wikidata etc. are appended from QueryDbModules' dbParams below
   { name: "extension",             type: String, typeLabel: "file glob", multiple:  true, defaultValue:        [], description: "semantic action extension" },
   { name: "result",                type: String, typeLabel: "file|URL",  multiple: false, defaultValue: undefined, description: "expected JSON results" },
   { name: "serve",     alias: "S", type: String, typeLabel: "URL",       multiple: false, defaultValue: undefined, description: "server" },
@@ -119,6 +128,44 @@ const CommandLineOptions = [
   { name: "dry-run",   alias: "N", type: Boolean, desc: "prepare validation but don't execute" },
   { name: "regex-module",          type: String, typeLabel: "js module", multiple: false, defaultValue: undefined, description: "what regular expression module to use" },
 ];
+
+// Options declared by neighborhood modules (a spec whose cli.option is
+// already defined above, like sparql's allOutgoing riding --slurp-all,
+// shares the existing option).
+for (const mod of QueryDbModules)
+  for (const opt of paramsToCommandLineArgs(mod.dbParams || []))
+    if (!CommandLineOptions.some(already => already.name === opt.name))
+      CommandLineOptions.push(opt);
+
+/** The declared parameter values a command line supplies for one module,
+ * keyed the way its fromParams wants them; null unless the module's
+ * selector parameter is present. */
+function queryDbParams (mod, cmds) {
+  const specs = mod.dbParams || [];
+  const cliName = s => s.cli && s.cli.option || s.name;
+  const selector = specs.find(s => s.selector);
+  if (!selector || cmds[cliName(selector)] === undefined)
+    return null;
+  const params = {};
+  for (const s of specs)
+    if (cmds[cliName(s)] !== undefined)
+      params[s.name] = cmds[cliName(s)];
+  return params;
+}
+
+function selectedQueryDbModule (cmds) {
+  return QueryDbModules.find(mod => queryDbParams(mod, cmds) !== null) || null;
+}
+
+function makeQueryDb (cmds, queryTracker) {
+  const mod = selectedQueryDbModule(cmds);
+  if (!mod)
+    return null;
+  // the NeighborhoodDb API is synchronous, so give ShExUtil.executeQuery and
+  // friends a synchronous XMLHttpRequest to fetch with
+  require('@shexjs/neighborhood-sparql/sync-fetch').installXhrShim();
+  return mod.fromParams(queryDbParams(mod, cmds), queryTracker);
+}
 
 // Generate command line interface
 const Argv1 = Path.relative("", process.argv[1]);
@@ -409,7 +456,8 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions, cmd
   if (!valParms.serve && !valParms["dry-run"]) {
     if (valParms.schemaURL.length === 0 && valParms.json.length === 0) abort("No schemaURL specified", ExitCode.bad_argument);
     if (!valParms.diagnose) {
-      if (valParms.dataURL.length === 0 && valParms.jsonld.length === 0) abort("No dataURL specified", ExitCode.bad_argument);
+      if (valParms.dataURL.length === 0 && valParms.jsonld.length === 0 && !selectedQueryDbModule(valParms))
+        abort("No dataURL specified", ExitCode.bad_argument);
     }
   }
 
@@ -486,7 +534,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions, cmd
           : null;
     let provSources = null;
     if (valParms.provenance) {
-      if (valParms.endpoint || valParms.jsonld.length)
+      if (selectedQueryDbModule(valParms) || valParms.jsonld.length)
         abort("--provenance requires Turtle data files (-d)", ExitCode.bad_argument);
       // reparse the data with source tracking and validate over THOSE quads,
       // so results' blank node labels align with the provenance index
@@ -500,9 +548,10 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions, cmd
       }));
       schemaAndData.data = store;
     }
-    schemaAndData.data = valParms.endpoint
-      ? SparqlDb(valParms.endpoint, queryTracker, {allOutgoing: valParms["slurp-all"]})
-      : RdfJsDb(schemaAndData.data, queryTracker);
+    schemaAndData.data = makeQueryDb(valParms, queryTracker)
+      || RdfJsDb(schemaAndData.data, queryTracker);
+    if (typeof schemaAndData.data.setSchema === "function")
+      schemaAndData.data.setSchema(schemaAndData.schema); // e.g. sparql narrows queries by shape
 
     if (valParms.diagnose) {
       const redefined = Object.keys(storeDuplicatesInstance.duplicates);
