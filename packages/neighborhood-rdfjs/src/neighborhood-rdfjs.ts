@@ -2,7 +2,7 @@
  */
 import * as RdfJs from "@rdfjs/types";
 import {Shape} from "shexj";
-import {DbParamSpec, DbQueryTracker, Neighborhood, NeighborhoodDb, sparqlOrder, Start} from "@shexjs/neighborhood-api";
+import {DbParamSpec, DbQueryTracker, Neighborhood, NeighborhoodDb, ParamEditor, sparqlOrder, Start} from "@shexjs/neighborhood-api";
 
 /** The subset of an RDF/JS quad store needed by rdfjsDB, satisfied by e.g. an N3.Store.
  */
@@ -82,3 +82,13 @@ export const dbParams: DbParamSpec[] = [
 export function fromParams (params: { [name: string]: any }, queryTracker?: DbQueryTracker): NeighborhoodDb {
   return rdfjsDB(params.store, queryTracker);
 }
+
+/** The catch-all: any text a query module doesn't claim is data to parse.
+ * A host lists this module last. */
+export function claimPaneText (text: string): { [name: string]: any } {
+  return {text};
+}
+
+/** This module has a whole RDF document to edit, so it names the language
+ * the host already implements rather than describing one. */
+export const paneEditor: ParamEditor = {language: "turtle"};

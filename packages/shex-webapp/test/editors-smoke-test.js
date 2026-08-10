@@ -107,6 +107,37 @@ if (!TEST_browser) {
       expect($("#inputSchema .cm-content").text()).to.include("http://a.example/");
     });
 
+    /* The data pane's language belongs to whichever neighborhood module
+     * claims its text, not to this app: "# Endpoint:" makes it the SPARQL
+     * module's, "# Wikidata" the wikidata module's, anything else the rdfjs
+     * module's Turtle.  Each module describes its own header, and the host
+     * colors and diagnoses it from that description. */
+    it("should take the data pane's language from the module claiming its text", function () {
+      const textarea = $("#inputData textarea").first();
+      const before = textarea.val();
+      const marks = () => $("#inputData [class*='shexjs-tok-']").length;
+      try {
+        // Turtle: the rdfjs module names the host's language and describes
+        // nothing of its own, so nothing is module-colored
+        textarea.val("PREFIX : <http://a.example/>\n:x :p 1 .\n");
+        expect(marks(), "Turtle needs no module tokens").to.equal(0);
+
+        // typing a header hands the pane to another module, which colors it
+        textarea.val("# Endpoint: http://ex.example/sparql\n:x :p 1 .\n");
+        expect($("#inputData .shexjs-tok-keyword").length, "endpoint header").to.equal(1);
+        expect($("#inputData .shexjs-tok-link").length, "endpoint URL").to.equal(1);
+
+        // a URL that can't be queried is the module's own diagnosis
+        textarea.val("# Endpoint: localhost:8080\n");
+        expect($("#inputData .shexjs-tok-invalid").length, "unusable endpoint").to.equal(1);
+
+        textarea.val("# Wikidata\n");
+        expect($("#inputData .shexjs-tok-keyword").length, "wikidata header").to.equal(1);
+      } finally {
+        textarea.val(before);
+      }
+    });
+
     it("should anchor validation errors in both panes", async function () {
       const warns = [];
       const origWarn = dom.window.console.warn;

@@ -7,7 +7,7 @@ exports.wfUrlencode = wfUrlencode;
 exports.valueNodeHash = valueNodeHash;
 exports.cleanTimeValue = cleanTimeValue;
 exports.wikibaseRdfConverter = wikibaseRdfConverter;
-const crypto_1 = require("crypto");
+const md5_1 = require("./md5");
 exports.RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 exports.XSD = "http://www.w3.org/2001/XMLSchema#";
 exports.RDFS = "http://www.w3.org/2000/01/rdf-schema#";
@@ -23,7 +23,6 @@ const CALENDAR_JULIAN = "http://www.wikidata.org/entity/Q1985786";
 /** wikibase:quantityUnit for a unit of "1" (dimensionless). */
 const UNIT_ONE = "http://www.wikidata.org/entity/Q199";
 const EARTH = "http://www.wikidata.org/entity/Q2";
-const md5 = (s) => (0, crypto_1.createHash)("md5").update(s, "utf8").digest("hex");
 // ── PHP compatibility ───────────────────────────────────────────────────────
 // The derived names above hash PHP serializations, so the byte-for-byte
 // quirks of PHP's formatting are part of the data model.
@@ -78,17 +77,17 @@ function valueNodeHash(dv) {
     const v = dv.value;
     switch (dv.type) {
         case "time":
-            return md5(phpC("DataValues\\TimeValue", phpJson([v.time, v.timezone, v.before, v.after, v.precision, v.calendarmodel])));
+            return (0, md5_1.md5)(phpC("DataValues\\TimeValue", phpJson([v.time, v.timezone, v.before, v.after, v.precision, v.calendarmodel])));
         case "quantity": {
             const bounded = v.upperBound != null || v.lowerBound != null;
             const data = bounded
                 ? `a:4:{i:0;${phpDecimal(v.amount)}i:1;${phpStr(v.unit)}` +
                     `i:2;${phpDecimal(v.upperBound)}i:3;${phpDecimal(v.lowerBound)}}`
                 : `a:2:{i:0;${phpDecimal(v.amount)}i:1;${phpStr(v.unit)}}`;
-            return md5(phpC(bounded ? "DataValues\\QuantityValue" : "DataValues\\UnboundedQuantityValue", data));
+            return (0, md5_1.md5)(phpC(bounded ? "DataValues\\QuantityValue" : "DataValues\\UnboundedQuantityValue", data));
         }
         case "globecoordinate":
-            return md5(`${phpFloatStr(v.latitude)}|${phpFloatStr(v.longitude)}|` +
+            return (0, md5_1.md5)(`${phpFloatStr(v.latitude)}|${phpFloatStr(v.longitude)}|` +
                 `${v.precision == null ? "" : phpFloatStr(v.precision)}|${v.globe}`);
         default:
             throw Error(`no value node for datavalue type ${dv.type}`);
@@ -404,7 +403,7 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
                     add(iri(ns + id), "a", iri(exports.OWL + "ObjectProperty"));
                 add(iri(NS.wdtn + id), "a", iri(exports.OWL + normalizedKind));
             }
-            const restriction = DF.blankNode(md5(`owl:complementOf-${repositoryName}-${id}`));
+            const restriction = DF.blankNode((0, md5_1.md5)(`owl:complementOf-${repositoryName}-${id}`));
             add(iri(NS.wdno + id), "a", iri(exports.OWL + "Class"));
             add(iri(NS.wdno + id), exports.OWL + "complementOf", restriction);
             add(restriction, "a", iri(exports.OWL + "Restriction"));
@@ -460,7 +459,7 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
                 case "somevalue":
                     // an unknown value is a blank node; the label is stable across
                     // serializations (md5 of parent + namespaces + snak hash)
-                    add(subject, simple + pid, DF.blankNode(md5(`${parentLName}-${simple}-${NS.wdv}-${snak.hash}`)));
+                    add(subject, simple + pid, DF.blankNode((0, md5_1.md5)(`${parentLName}-${simple}-${NS.wdv}-${snak.hash}`)));
                     break;
                 case "novalue":
                     add(subject, "a", iri(NS.wdno + pid));

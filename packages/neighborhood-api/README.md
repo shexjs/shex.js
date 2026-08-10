@@ -49,16 +49,50 @@ a command line. `bin/validate` in [`@shexjs/cli`](../shex-cli#readme)
 appends the declared options of its registered modules (`--endpoint …`,
 `--wikidata …`) and constructs whichever module's selector appears.
 
+## a module's own language-sensitive editor (STRAWMAN)
+
+A host with editors shows the text that selects and configures a
+neighborhood. In the WebApp that text is the data pane, where
+`# Endpoint: <url>` has long meant "query this rather than parsing me".
+Which language that text is in is the module's business, not the host's — so
+a module may also export:
+
+- `claimPaneText(text)` — do I serve this pane, and with what parameters?
+  (returns a parameter bag, or `null` to pass). A host tries its modules in
+  order and lists its catch-all — rdfjs, which parses the text as data —
+  last. `claimPane(modules, text)` does the walk.
+- `paneEditor: ParamEditor` — how that text should be edited.
+
+**A `ParamEditor` describes a language; it does not implement one.** Whole
+document `tokens(text)`, `lint(text)`, `complete(text, pos, ctx)` — plain
+data over plain strings, no editor library, no DOM, nothing to import, and
+unit-testable without either. That is what keeps `getNeighborhood` the only
+obligation: a module never has to ship a javascript LSE.
+
+The members compose. A module whose pane is mostly an RDF document with a
+header line of its own says `language: "turtle"` for the body and describes
+just the header; the host overlays the module's tokens and diagnostics on
+the grammar it named. `complete` receives an `EditorContext` carrying the
+live db, which is how a completion no host could compute gets made — the
+wikidata module completes entity IRIs from the labels of the pages its db
+has actually loaded.
+
+**The fallback is the textarea.** A module that describes no language gets
+`makePaneIfDescribed` → `null`, and the textarea stays exactly as the app
+shows it with the editors switched off.
+
 ## loading a neighborhood module into the WebApp (STRAWMAN)
 
 The WebApp wants more from a db than `getNeighborhood`: focus-node
-typeahead, display labels, maybe a module-tuned editor. But a module that
-implements `getNeighborhood()` must not be obliged to ship a javascript
-language-sensitive editor, so `NeighborhoodWebAppDb` extends
-`NeighborhoodDb` with only *optional* affordances (`suggestFocusNodes`,
-`labelOf`, …) — the WebApp feature-tests and falls back to its generic UI,
-and a plain `NeighborhoodDb` loads fine. Construction is already covered by
-`dbParams`/`fromParams` above, rendered as a form instead of command line
+typeahead, display labels. `NeighborhoodWebAppDb` extends `NeighborhoodDb`
+with only *optional* affordances (`suggestFocusNodes`, `labelOf`) — the app
+feature-tests and falls back to its generic UI, and a plain
+`NeighborhoodDb` loads fine. The shape-map's focus-node menu asks
+`suggestFocusNodes` first, because a db knows what its nodes are where the
+app can only guess from whatever triples are loaded (over the wikidata
+neighborhood, guessing offers statement and value nodes alongside the
+entities anyone would actually validate). Construction is covered by
+`dbParams`/`fromParams` above, rendered as a form rather than command line
 options.
 
 All names and shapes here are negotiable; this is a strawman to refine.

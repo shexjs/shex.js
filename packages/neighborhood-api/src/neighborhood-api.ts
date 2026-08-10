@@ -81,9 +81,81 @@ export interface DbParamSpec {
   cli?: { option?: string; alias?: string; typeLabel?: string };
 }
 
+// ── a module's own language-sensitive editor ────────────────────────────────
+// STRAWMAN.  A host with editors (the WebApp) shows the text that selects
+// and configures a neighborhood -- today the data pane, where "# Endpoint:
+// <url>" means "query this instead of parsing me".  Which language that
+// text is in is the module's business, not the host's.
+//
+// But a module that implements getNeighborhood must not be obliged to ship
+// a javascript editor, so a ParamEditor *describes* a language rather than
+// implementing one: whole-document tokens, diagnostics, completions, all in
+// plain data over plain strings.  No editor library, no DOM, nothing to
+// import -- and unit-testable without either.  A module with a big document
+// to edit instead names a language the host already implements
+// (`language: "turtle"`).  A module that describes nothing at all gets the
+// plain textarea the WebApp shows with its editors turned off, which is
+// also what every module gets when the editors are off or absent.
+
+/** A run of text to color.  `style` is a highlight role -- the names
+ * CodeMirror's stream parsers use ("keyword", "comment", "string", "link",
+ * "number", "variableName", "invalid", ...) -- which the host maps to its
+ * own theme. */
+export interface EditorToken {
+  from: number;
+  to: number;
+  style: string;
+}
+
+export interface EditorDiagnostic {
+  from: number;
+  to: number;
+  severity: "error" | "warning" | "info";
+  message: string;
+}
+
+export interface EditorCompletion {
+  label: string;
+  detail?: string;
+  /** completion kind, e.g. "keyword", "namespace", "class", "property" */
+  type?: string;
+}
+
+export interface EditorCompletions {
+  /** where the text being completed starts */
+  from: number;
+  to?: number;
+  options: EditorCompletion[];
+}
+
+/** Context a host may hand the editor: the live db, when one is built, so
+ * completions can draw on what it knows (see NeighborhoodWebAppDb below). */
+export interface EditorContext {
+  db?: NeighborhoodDb;
+}
+
+/** How a module's own text should be edited.  Every member is optional: a
+ * module contributes as much language as it has and no more, and the
+ * members compose -- a module whose pane is mostly an RDF document with a
+ * header line of its own says `language: "turtle"` for the body and
+ * describes just the header in `tokens`/`lint`, which the host overlays on
+ * (rather than replaces) what the named language provides. */
+export interface ParamEditor {
+  /** a language the host already implements ("turtle", "shexc", "json"),
+   * for text a module does not want to describe itself */
+  language?: string;
+  /** syntax coloring, as a whole-document scan */
+  tokens? (text: string, ctx?: EditorContext): EditorToken[];
+  /** diagnostics over the whole text */
+  lint? (text: string, ctx?: EditorContext): EditorDiagnostic[];
+  /** completions at a cursor offset; null for "nothing to offer here" */
+  complete? (text: string, pos: number, ctx?: EditorContext): EditorCompletions | null;
+}
+
 /** What a neighborhood package's entry may export.  `name`, `description`
- * and `ctor` are the longstanding convention; `dbParams`/`fromParams` are
- * the optional declaration that lets a host construct the db generically. */
+ * and `ctor` are the longstanding convention; the rest are optional
+ * declarations that let a host construct the db, and edit the text
+ * configuring it, generically. */
 export interface NeighborhoodModule {
   name: string;
   description: string;
@@ -92,6 +164,29 @@ export interface NeighborhoodModule {
   /** uniform constructor over values keyed by DbParamSpec.name */
   fromParams?: (params: { [name: string]: any }, queryTracker?: DbQueryTracker) => NeighborhoodDb;
   dbParams?: DbParamSpec[];
+  /** Does this module serve the text in a host's data pane, and with what
+   * parameters?  Generalizes the WebApp's "# Endpoint: <url>" sniffing: the
+   * pattern a module answers to is the module's business.  Return null to
+   * pass.  A host tries its modules in order and falls back to the last
+   * (rdfjs, which parses the text as data). */
+  claimPaneText? (text: string): { [name: string]: any } | null;
+  /** how the text this module claims should be edited */
+  paneEditor?: ParamEditor;
+}
+
+/** The module whose claimPaneText answers to this text, and the parameters
+ * it read out of it.  The modules are tried in order, so a host lists its
+ * catch-all (rdfjs) last. */
+export function claimPane (modules: NeighborhoodModule[], text: string): {
+  module: NeighborhoodModule;
+  params: { [name: string]: any };
+} | null {
+  for (const module of modules) {
+    const params = module.claimPaneText ? module.claimPaneText(text) : null;
+    if (params !== null)
+      return {module, params};
+  }
+  return null;
 }
 
 /** What a command-line-args/command-line-usage option definition looks like;
@@ -150,10 +245,12 @@ export function paramsToCommandLineArgs (specs: DbParamSpec[]): CliOptionDefinit
 // options).
 
 export interface NeighborhoodWebAppDb extends NeighborhoodDb {
-  /** typeahead for the focus node input, e.g. wikidata's label search */
-  suggestFocusNodes?(prefix: string, limit: number): Promise<RdfJs.Term[]>;
+  /** typeahead for the focus node input, e.g. wikidata's label search.
+   * Also what a module's ParamEditor completions can draw on, through the
+   * EditorContext's `db`. */
+  suggestFocusNodes?(prefix: string, limit: number): EditorCompletion[];
   /** display label for a term, e.g. rdfs:label in the user's language */
-  labelOf?(term: RdfJsTerm, language: string): Promise<string | null>;
+  labelOf?(term: RdfJsTerm, language: string): string | null;
 }
 
 /* sparqlOrder - sort triples by subject following SPARQL partial ordering.

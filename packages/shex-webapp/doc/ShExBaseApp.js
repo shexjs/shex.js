@@ -189,6 +189,18 @@ class SchemaCache extends InterfaceCache {
   }
 }
 
+/** The language of the data pane, as described by whichever neighborhood
+ * module claims its text -- null when no module describes one, which is how
+ * a pane falls back to the plain textarea the app shows with its editors
+ * off.  Recomputed as the text changes, so typing "# Endpoint:" over a
+ * Turtle document swaps the SPARQL module's header language in under the
+ * Turtle body it names.
+ */
+function moduleEditorFor (text) {
+  const claim = ShExWebApp.NeighborhoodApi.claimPane(ShExWebApp.NeighborhoodModules, text);
+  return claim && claim.module.paneEditor || null;
+}
+
 class TurtleCache extends InterfaceCache {
   constructor (selection, onLoad, turtleParser, queryTrackerController) {
     super(selection, onLoad);
@@ -198,10 +210,35 @@ class TurtleCache extends InterfaceCache {
     this.meta.lexToTerm = (lex) => turtleParser.termToLd(lex, new IRIResolver(this.meta));
   }
 
+  /** Which neighborhood serves this pane is the modules' business, not this
+   * app's: each says whether it answers to the pane's text and with what
+   * parameters (claimPaneText), and the app builds whichever claims it
+   * (fromParams).  A module that declares a `data` parameter -- rdfjs --
+   * gets the parsed store, since the Turtle parser and this pane's
+   * prefixes and base live here.
+   */
   async parse (text, base) {
-    var m = text.match(/^\s*#?\s*Endpoint\s*:\s*(https?:\/\/.*?)(\s+|$)/si);
-    if (m) {
-      this.endpoint = m[1];
+    const claim = ShExWebApp.NeighborhoodApi.claimPane(ShExWebApp.NeighborhoodModules, text);
+    if (!claim)
+      throw Error("no neighborhood module will serve this data pane; " +
+                  "the last of ShExWebApp.NeighborhoodModules should claim whatever the others pass on");
+    const params = Object.assign({}, claim.params);
+    if ("endpoint" in params)
+      this.endpoint = params.endpoint;    // the SPARQL shape-map extension reads this
+    else
+      delete this.endpoint;
+    this.showSlurpControl(this.endpoint);
+    if ((claim.module.dbParams || []).some(p => p.name === "data"))
+      params.store = this.turtleParser.parseString(text, this.meta, base);
+    const res = claim.module.fromParams(params, this.queryTrackerController.queryTracker);
+    this.callOnLoad();
+    return res;
+  }
+
+  /** slurping fills the data pane from the queries a validation makes, so
+   * it's offered only when the pane names something to query */
+  showSlurpControl (endpoint) {
+    if (endpoint) {
       if ($("#slurp").length === 0) {
         // Add a #slurp checkbox
         $("#load-data-button").append(
@@ -221,28 +258,32 @@ class TurtleCache extends InterfaceCache {
         );
       }
     } else {
-      delete this.endpoint; // make sure it's not set
       $("#slurpSpan").remove();
     }
-    const res = this.endpoint
-      ? ShExWebApp.SparqlDb(this.endpoint, this.queryTrackerController.queryTracker)
-      : ShExWebApp.RdfJsDb(this.turtleParser.parseString(text, this.meta, base));
-    this.callOnLoad();
-    return res;
   }
 
+  /** candidate focus nodes for the shape-map menus.
+   *
+   * A db that offers its own typeahead (NeighborhoodWebAppDb's optional
+   * suggestFocusNodes) is asked first: it knows what its nodes are, where
+   * this app can only guess by looking at whatever triples are loaded --
+   * which for the wikidata neighborhood would offer statement and value
+   * nodes alongside the entities anyone would actually validate.
+   */
   async getItems () {
-    const m = this.get().match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
-    if (m) {
+    const data = await this.refresh();
+    if (typeof data.suggestFocusNodes === "function")
+      return data.suggestFocusNodes("", SPARQL_get_items_limit)
+        .map(suggestion => this.meta.termToLex(RdfJs.DataFactory.namedNode(suggestion.label)));
+    if (this.endpoint) {
       const q = "SELECT DISTINCT ?s { ?s ?p ?o } LIMIT " + SPARQL_get_items_limit;
+      // (this read ShEx.Util, which is not a thing in this file: the menu
+      // has been quietly falling back to "no choices found" over endpoints)
       return [MENU_ITEM_materialize]
-        .concat(ShEx.Util.executeQuery(q, m[1], RdfJs.DataFactory).map(this.lexifyFirstColumn));
-    } else {
-      const data = await this.refresh();
-      return data.getQuads().map(t => {
-        return this.meta.termToLex(t.subject); // !!check
-      });
+        .concat(ShExWebApp.Util.executeQuery(q, this.endpoint, RdfJs.DataFactory)
+                .map(row => this.lexifyFirstColumn(row)));
     }
+    return data.getQuads().map(t => this.meta.termToLex(t.subject));
   }
 
   lexifyFirstColumn (row) {
@@ -1697,14 +1738,24 @@ class EditorSupport {
     this.panes = {};
   }
 
-  addPane (name, cache, language) {
+  /** `language` names one of the host's own languages; pass `supplied` for
+   * a pane whose language comes from whichever neighborhood module claims
+   * its text (see moduleEditorFor).  Without either -- editors off, or a
+   * module that describes no language -- the textarea is what stays. */
+  addPane (name, cache, language, supplied) {
     const textarea = cache.selection[0];
     if (!textarea)
       return null;
-    return this.panes[name] = ShExWebApp.EditorPanes.makePane(textarea, {
+    // makePaneIfDescribed, not makePane: a module that describes no
+    // language leaves the textarea exactly as the editors-off app shows it
+    return this.panes[name] = ShExWebApp.EditorPanes.makePaneIfDescribed(textarea, {
       language,
       getBase: () => cache.meta && cache.meta.base,
-      completions: () => this.completionSets(language, cache),
+      completions: () => this.completionSets(language || "turtle", cache),
+      supplied,
+      // completions a module can only make from a live db: wikidata
+      // completing entity IRIs from the labels it has loaded
+      suppliedContext: () => ({db: cache.parsed}),
     });
   }
 
@@ -1996,10 +2047,21 @@ class ShExBaseApp {
     }
   }
 
-  /** which caches get panes; subclasses add theirs */
+  /** which caches get panes; subclasses add theirs.
+   *
+   * The schema pane is ShExC and always will be.  The data pane's language
+   * is not the app's to decide: its text says which neighborhood serves the
+   * data ("# Endpoint: <url>" queries SPARQL, "# Wikidata" synthesizes
+   * entity pages, anything else is Turtle to parse), and each of those
+   * modules describes its own text.  So the pane asks whichever module
+   * claims the text as it stands -- and gets a plain textarea, exactly as
+   * with the editors off, from a module that describes nothing.
+   */
   addEditorPanes () {
     this.editorSupport.addPane("inputSchema", this.Caches.inputSchema, "shexc");
-    this.editorSupport.addPane("inputData", this.Caches.inputData, "turtle");
+    // moduleEditorFor is asked about the text the pane is describing, not
+    // about the cache: mid-edit the cache still reports the old document
+    this.editorSupport.addPane("inputData", this.Caches.inputData, null, moduleEditorFor);
   }
 
   async start () {

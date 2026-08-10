@@ -1,9 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Start = void 0;
+exports.claimPane = claimPane;
 exports.paramsToCommandLineArgs = paramsToCommandLineArgs;
 exports.sparqlOrder = sparqlOrder;
 exports.Start = { term: "START" };
+/** The module whose claimPaneText answers to this text, and the parameters
+ * it read out of it.  The modules are tried in order, so a host lists its
+ * catch-all (rdfjs) last. */
+function claimPane(modules, text) {
+    for (const module of modules) {
+        const params = module.claimPaneText ? module.claimPaneText(text) : null;
+        if (params !== null)
+            return { module, params };
+    }
+    return null;
+}
 /** Translate DbParamSpecs into command-line-args option definitions.
  *
  * This function is also the measurement the two vocabularies were compared

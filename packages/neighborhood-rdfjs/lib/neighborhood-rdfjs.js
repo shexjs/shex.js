@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.dbParams = exports.ctor = exports.description = exports.name = void 0;
+exports.paneEditor = exports.dbParams = exports.ctor = exports.description = exports.name = void 0;
 exports.rdfjsDB = rdfjsDB;
 exports.fromParams = fromParams;
+exports.claimPaneText = claimPaneText;
 const neighborhood_api_1 = require("@shexjs/neighborhood-api");
 function rdfjsDB(db, queryTracker) {
     function getNeighborhood(point, shapeLabel, _shape) {
@@ -62,4 +63,12 @@ exports.dbParams = [
 function fromParams(params, queryTracker) {
     return rdfjsDB(params.store, queryTracker);
 }
+/** The catch-all: any text a query module doesn't claim is data to parse.
+ * A host lists this module last. */
+function claimPaneText(text) {
+    return { text };
+}
+/** This module has a whole RDF document to edit, so it names the language
+ * the host already implements rather than describing one. */
+exports.paneEditor = { language: "turtle" };
 //# sourceMappingURL=neighborhood-rdfjs.js.map

@@ -8,8 +8,10 @@ ShExWebApp = (function () {
     "@shexjs/term":                require('@shexjs/term'),
     "@shexjs/util":                require('@shexjs/util'),
     "@shexjs/visitor":             require('@shexjs/visitor'),
+    "@shexjs/neighborhood-api":    require('@shexjs/neighborhood-api'),
     "@shexjs/neighborhood-rdfjs":  require('@shexjs/neighborhood-rdfjs'),
     "@shexjs/neighborhood-sparql": require('@shexjs/neighborhood-sparql'),
+    "@shexjs/neighborhood-wikidata": require('@shexjs/neighborhood-wikidata'),
     "@shexjs/validator":           require('@shexjs/validator'),
     "@shexjs/writer":              require('@shexjs/writer'),
     "@shexjs/loader":              require("@shexjs/loader"),
@@ -29,6 +31,16 @@ ShExWebApp = (function () {
     Util:                 modules["@shexjs/util"],
     RdfJsDb:              modules["@shexjs/neighborhood-rdfjs"].ctor,
     SparqlDb:             modules["@shexjs/neighborhood-sparql"].ctor,
+    NeighborhoodApi:      modules["@shexjs/neighborhood-api"],
+    /* The neighborhoods this app can serve its data pane from, in the order
+     * they're offered the pane's text: each module says whether it answers
+     * to it (claimPaneText) and how that text should be edited
+     * (paneEditor).  rdfjs is last because it claims whatever is left. */
+    NeighborhoodModules: [
+      modules["@shexjs/neighborhood-sparql"],
+      modules["@shexjs/neighborhood-wikidata"],
+      modules["@shexjs/neighborhood-rdfjs"],
+    ],
     Validator:            modules["@shexjs/validator"].ShExValidator,
     Writer:               modules["@shexjs/writer"],
     Loader:               modules["@shexjs/loader"],

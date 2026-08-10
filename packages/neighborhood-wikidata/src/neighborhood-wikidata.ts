@@ -35,7 +35,8 @@
  */
 import * as RdfJs from "@rdfjs/types";
 import type {Shape} from "shexj";
-import {DbParamSpec, DbQueryTracker, Neighborhood, NeighborhoodDb, sparqlOrder, Start} from "@shexjs/neighborhood-api";
+import {DbParamSpec, DbQueryTracker, EditorCompletion, Neighborhood, NeighborhoodDb,
+        NeighborhoodWebAppDb, ParamEditor, sparqlOrder, Start} from "@shexjs/neighborhood-api";
 import * as N3 from "n3";
 import * as fs from "fs";
 import * as path from "path";
@@ -135,7 +136,7 @@ export function siteInfoFromSitematrix (doc: any): (siteId: string) => SiteInfo 
 
 // ── the DB ──────────────────────────────────────────────────────────────────
 
-export function wikidataDB (queryTracker?: DbQueryTracker, options: WikidataDbOptions = {}): NeighborhoodDb {
+export function wikidataDB (queryTracker?: DbQueryTracker, options: WikidataDbOptions = {}): NeighborhoodWebAppDb {
   const conceptBase = options.conceptBase || "http://www.wikidata.org/";
   const dataBase = options.dataBase || "https://www.wikidata.org/wiki/Special:EntityData/";
   const entityDataUrl = options.entityDataUrl || ((id: string) => `${dataBase}${id}.json`);
@@ -267,6 +268,39 @@ export function wikidataDB (queryTracker?: DbQueryTracker, options: WikidataDbOp
     return {outgoing, incoming};
   }
 
+  /** Entities this DB could offer a WebApp's focus-node input, matched by
+   * id or by label.  Only the pages already loaded: this is typeahead over
+   * what the session has seen, not a search of all of Wikidata (which would
+   * be the wbsearchentities API, and asynchronous). */
+  function suggestFocusNodes (prefix: string, limit: number): EditorCompletion[] {
+    const wanted = prefix.replace(/^(wd:|<?https?:\/\/\S*\/entity\/)/, "").toLowerCase();
+    const out: EditorCompletion[] = [];
+    for (const id of loaded) {
+      const label = labelOf(DataFactory.namedNode(NS.wd + id), "en");
+      if (id.toLowerCase().startsWith(wanted) ||
+          (label !== null && label.toLowerCase().startsWith(wanted))) {
+        out.push({label: NS.wd + id, detail: label || undefined, type: "class"});
+        if (out.length >= limit) break;
+      }
+    }
+    return out;
+  }
+
+  /** The label to show a reader of `language`.  Falling back through `mul`
+   * matters more on Wikidata than it looks: a name that reads the same in
+   * every language is now stored once as language-neutral `mul` rather than
+   * copied per language, so an entity can have 75 labels and no `en` one
+   * (Q42 is exactly this). */
+  function labelOf (term: RdfJs.Term, language: string): string | null {
+    const labels = store.getObjects(term as any, DataFactory.namedNode(RDFS_LABEL), null);
+    const inLanguage = (want: string) =>
+      labels.find(l => (l as RdfJs.Literal).language === want);
+    const found = inLanguage(language.toLowerCase())
+          || inLanguage(language.toLowerCase().split("-")[0])
+          || inLanguage("mul");
+    return found ? found.value : labels.length > 0 ? labels[0].value : null;
+  }
+
   return {
     getNeighborhood,
     getSubjects: () => store.getSubjects(null, null, null),
@@ -274,8 +308,12 @@ export function wikidataDB (queryTracker?: DbQueryTracker, options: WikidataDbOp
     getObjects: () => store.getObjects(null, null, null),
     getQuads: (...args: any[]) => (store.getQuads as any)(...args),
     get size (): number { return store.size; },
+    suggestFocusNodes,
+    labelOf,
   };
 }
+
+const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
 
 export const name = "neighborhood-wikidata";
 export const description = "Implementation of @shexjs/neighborhood-api which synthesizes Wikidata's RDF from entity JSON pages";
@@ -306,4 +344,87 @@ export function fromParams (params: { [name: string]: any }, queryTracker?: DbQu
     siteMatrixUrl: params.sitematrix,
     cacheDir: params.cacheDir,
   });
+}
+
+/** `# Wikidata` on the first line means "synthesize entity pages rather
+ * than parsing me"; a URL after it points at another Wikibase instance. */
+const WIKIDATA_HEADER = /^([ \t]*#?[ \t]*Wikidata[ \t]*:?[ \t]*)(\S*)(.*)$/im;
+
+const KNOWN_BASES = [
+  {label: "https://www.wikidata.org/wiki/Special:EntityData/", detail: "Wikidata"},
+  {label: "https://test.wikidata.org/wiki/Special:EntityData/", detail: "Wikidata test instance"},
+  {label: "https://commons.wikimedia.org/wiki/Special:EntityData/", detail: "Wikimedia Commons"},
+];
+
+export function claimPaneText (text: string): { [name: string]: any } | null {
+  const m = text.match(WIKIDATA_HEADER);
+  if (!m || m.index !== 0)
+    return null;
+  return m[2] === "" ? {} : {base: m[2]};   // bare header: the default base
+}
+
+/** The pane's body is whatever was slurped back, so the host's Turtle
+ * carries it; this module describes its own header, and -- the part no host
+ * could supply -- completes entity IRIs from the labels of the pages the DB
+ * has actually loaded. */
+export const paneEditor: ParamEditor = {
+  language: "turtle",
+
+  tokens (text: string) {
+    const m = text.match(WIKIDATA_HEADER);
+    if (!m || m.index !== 0) return [];
+    const base = m[2];
+    const tokens = [{from: 0, to: m[1].length, style: "keyword"}];
+    if (base !== "")
+      tokens.push({from: m[1].length, to: m[1].length + base.length,
+                   style: isEntityDataBase(base) ? "link" : "invalid"});
+    return tokens;
+  },
+
+  lint (text: string) {
+    const m = text.match(WIKIDATA_HEADER);
+    if (!m || m.index !== 0) return [];
+    const [from, to] = [m[1].length, m[1].length + m[2].length];
+    if (m[2] !== "" && !isEntityDataBase(m[2]))
+      return [{from, to, severity: "error" as const,
+               message: `"${m[2]}" is not an http(s) or file URL; entity pages are fetched from ` +
+               `<base><id>.json, so the base needs a trailing delimiter too`}];
+    return [];
+  },
+
+  complete (text: string, pos: number, ctx?: {db?: NeighborhoodDb}) {
+    const lineStart = text.lastIndexOf("\n", pos - 1) + 1;
+    const claimed = claimPaneText(text) !== null;
+
+    if (lineStart === 0 && !claimed)
+      return {from: 0, to: pos,
+              options: [{label: "# Wikidata: ", type: "keyword",
+                         detail: "synthesize entity pages instead of parsing this pane"}]};
+
+    if (lineStart === 0 && claimed) {
+      // completing the base on the header line
+      const m = text.match(WIKIDATA_HEADER)!;
+      if (pos >= m[1].length)
+        return {from: m[1].length, to: m[1].length + m[2].length,
+                options: KNOWN_BASES.map(b => ({...b, type: "namespace"}))};
+      return null;
+    }
+
+    // an entity IRI anywhere else: only this DB knows that Q42 is Douglas Adams
+    const db = ctx && ctx.db as NeighborhoodWebAppDb | undefined;
+    if (!db || typeof db.suggestFocusNodes !== "function")
+      return null;
+    const before = text.substring(lineStart, pos);
+    const word = before.match(/(?:<|wd:)?[A-Za-z]*\d*$/);
+    if (!word || word[0] === "")
+      return null;
+    const options = db.suggestFocusNodes(word[0].replace(/^</, ""), 20);
+    return options.length
+      ? {from: lineStart + word.index!, to: pos, options}
+      : null;
+  },
+};
+
+function isEntityDataBase (base: string): boolean {
+  return /^(https?|file):\/\/\S*[/=:]$/.test(base);
 }

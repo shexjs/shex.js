@@ -93,6 +93,27 @@ validate -x human.shex -m '<http://www.wikidata.org/entity/Q42>@<#human>' \
 `--wikidata-sitematrix` and `--wikidata-cache` cover the sitematrix source
 and the on-disk page cache.
 
+## from the WebApp
+
+A data pane whose first line is `# Wikidata` is served by this module
+(`# Wikidata: <base>` points at another Wikibase instance). The module also
+describes how that text should be edited — the header is colored and
+diagnosed here, not by the app, and the body stays Turtle. What no host
+could offer, this module does: completing entity IRIs from the labels of the
+pages the db has loaded, so typing `wd:Q4` offers
+`http://www.wikidata.org/entity/Q42` — *Douglas Adams*. The same knowledge
+backs the shape-map's focus-node menu through `suggestFocusNodes`.
+
+Label lookup falls through `mul`, Wikidata's language-neutral label: a name
+that reads the same everywhere is now stored once rather than copied per
+language, so an entity can carry 75 labels and no `en` one (Q42 is exactly
+this).
+
+This package computes md5 itself (`src/md5.ts`) rather than reaching for
+node's `crypto`: the digests are Wikibase's naming scheme — value nodes,
+somevalue blank nodes, novalue restrictions — and browsers have no
+synchronous md5 to offer a synchronous API.
+
 ## what the store can and cannot answer
 
 Every loaded page states *all* of its entity's outgoing arcs, so outgoing

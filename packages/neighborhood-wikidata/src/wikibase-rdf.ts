@@ -45,7 +45,7 @@
  * (`wikibase:directClaimNormalized` etc.) are static and are emitted.
  */
 import type * as RdfJs from "@rdfjs/types";
-import {createHash} from "crypto";
+import {md5} from "./md5";
 
 export const RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 export const XSD = "http://www.w3.org/2001/XMLSchema#";
@@ -102,8 +102,6 @@ export interface WikibaseRdfOptions {
 export interface EntityDoc {
   entities: { [id: string]: any };
 }
-
-const md5 = (s: string) => createHash("md5").update(s, "utf8").digest("hex");
 
 // ── PHP compatibility ───────────────────────────────────────────────────────
 // The derived names above hash PHP serializations, so the byte-for-byte

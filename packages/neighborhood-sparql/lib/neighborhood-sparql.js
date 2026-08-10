@@ -33,9 +33,10 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.dbParams = exports.ctor = exports.description = exports.name = exports.BNodeIdentityError = void 0;
+exports.paneEditor = exports.dbParams = exports.ctor = exports.description = exports.name = exports.BNodeIdentityError = void 0;
 exports.sparqlDB = sparqlDB;
 exports.fromParams = fromParams;
+exports.claimPaneText = claimPaneText;
 const neighborhood_api_1 = require("@shexjs/neighborhood-api");
 const ShExUtil = __importStar(require("@shexjs/util"));
 const visitor_1 = require("@shexjs/visitor");
@@ -686,5 +687,61 @@ function fromParams(params, queryTracker) {
         bnodeDepth: params.bnodeDepth,
         verifyBnodeDescriptions: params.verifyBnodeDescriptions,
     });
+}
+/** `# Endpoint: <url>` on the first line means "query this rather than
+ * parsing me".  The header has been the WebApp's way of pointing the data
+ * pane at an endpoint for years; what moves here is only who knows the
+ * pattern. */
+const ENDPOINT_HEADER = /^([ \t]*#?[ \t]*Endpoint[ \t]*:[ \t]*)(\S*)(.*)$/im;
+function claimPaneText(text) {
+    const m = text.match(ENDPOINT_HEADER);
+    return m && m.index === 0 ? { endpoint: m[2] } : null;
+}
+/** The body of the pane is whatever was slurped back from the endpoint, so
+ * the host's Turtle carries it; this module describes only its own header
+ * line, and the host overlays that. */
+exports.paneEditor = {
+    language: "turtle",
+    tokens(text) {
+        const m = text.match(ENDPOINT_HEADER);
+        if (!m || m.index !== 0)
+            return [];
+        const url = m[2];
+        return [
+            { from: 0, to: m[1].length, style: "keyword" },
+            { from: m[1].length, to: m[1].length + url.length,
+                style: isEndpointUrl(url) ? "link" : "invalid" },
+        ];
+    },
+    lint(text) {
+        const m = text.match(ENDPOINT_HEADER);
+        if (!m || m.index !== 0)
+            return [];
+        const [from, to] = [m[1].length, m[1].length + m[2].length];
+        if (m[2] === "")
+            return [{ from: 0, to: m[1].length, severity: "error",
+                    message: "no endpoint: this header wants the URL of a SPARQL query service" }];
+        if (!isEndpointUrl(m[2]))
+            return [{ from, to, severity: "error",
+                    message: `"${m[2]}" is not an http(s) URL, so nothing can be queried from it` }];
+        if (m[3].trim() !== "")
+            return [{ from: to, to: to + m[3].length, severity: "warning",
+                    message: "everything after the endpoint URL on this line is ignored" }];
+        return [];
+    },
+    complete(text, pos) {
+        // only at the top of the document, where the header would go
+        const lineStart = text.lastIndexOf("\n", pos - 1) + 1;
+        if (lineStart !== 0 || claimPaneText(text) !== null)
+            return null;
+        return {
+            from: 0, to: pos,
+            options: [{ label: "# Endpoint: ", type: "keyword",
+                    detail: "query a SPARQL endpoint instead of parsing this pane" }],
+        };
+    },
+};
+function isEndpointUrl(url) {
+    return /^https?:\/\/\S+$/.test(url);
 }
 //# sourceMappingURL=neighborhood-sparql.js.map

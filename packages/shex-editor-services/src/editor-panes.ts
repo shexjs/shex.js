@@ -17,13 +17,29 @@ import {EditorView, Decoration, DecorationSet, gutter, GutterMarker} from "@code
 import {StateField, StateEffect, Extension, RangeSet, EditorState, Annotation} from "@codemirror/state";
 import {StreamLanguage, StreamParser, LRLanguage} from "@codemirror/language";
 import {linter, setDiagnostics, lintGutter, LintSource} from "@codemirror/lint";
-import {CompletionContext, CompletionResult, Completion} from "@codemirror/autocomplete";
+import {autocompletion, CompletionContext, CompletionResult, Completion} from "@codemirror/autocomplete";
 import {json, jsonParseLinter} from "@codemirror/lang-json";
 import {parser as lezerTurtleParser} from "lezer-turtle";
 import * as EditorServices from "./editor-services";
 import {Diagnostic, Range} from "./editor-services";
 
 export type PaneLanguage = "shexc" | "turtle" | "json";
+
+/** A language described by something that isn't this package -- a
+ * neighborhood module saying how the text that configures it should be
+ * edited (see ParamEditor in @shexjs/neighborhood-api).  It arrives as
+ * plain functions over plain strings, because a module that implements
+ * getNeighborhood must not be obliged to depend on an editor library; the
+ * adapters below are what turn that description into an editor.  Repeated
+ * structurally rather than imported so this package keeps its one-way
+ * dependency on nothing. */
+export interface SuppliedEditor {
+  language?: string;
+  tokens? (text: string, ctx?: any): {from: number, to: number, style: string}[];
+  lint? (text: string, ctx?: any): Diagnostic[];
+  complete? (text: string, pos: number, ctx?: any):
+    {from: number, to?: number, options: {label: string, detail?: string, type?: string}[]} | null;
+}
 
 /** completion vocabulary, supplied live by the application */
 export interface CompletionSets {
@@ -40,6 +56,21 @@ export interface MakePaneOptions {
   lint?: boolean;
   /** enables autocomplete of prefixes, shape labels and predicates */
   completions?: () => CompletionSets;
+  /** a language described from outside this package (a neighborhood
+   * module's).  Its `language`, if it names one of ours, supplies the
+   * grammar; its tokens/lint/complete are overlaid on top, so a module
+   * whose pane is an RDF document with a header line of its own describes
+   * only the header.
+   *
+   * Called with the text to be described, never for the host to look the
+   * text up itself: which module claims a pane can change with every
+   * keystroke, and a host reading it back from the textarea would be
+   * answering about the document as it was before the edit -- the pane's
+   * proxy still reports the old text while the transaction that changes it
+   * is being applied. */
+  supplied?: (text: string) => SuppliedEditor | null;
+  /** context handed to the supplied editor's functions, e.g. {db} */
+  suppliedContext?: () => any;
 }
 
 /** lexicalize - shortest lexical form for an IRI under the given prefixes */
@@ -340,6 +371,104 @@ function lintSourceFor (language: PaneLanguage | undefined, opts: MakePaneOption
   }
 }
 
+// ---------------------------------------------------------------------------
+// module-supplied languages
+//
+// A neighborhood module describes its text as plain functions over plain
+// strings (tokens, lint, complete); these adapters are the only place that
+// description meets an editor library.
+
+/** Styles a supplied tokenizer can ask for.  The names are the ones
+ * CodeMirror's own stream parsers use, so a module that grows into a real
+ * StreamParser keeps its vocabulary. */
+const suppliedTokenTheme = EditorView.baseTheme({
+  ".shexjs-tok-keyword": {color: "#708"},
+  ".shexjs-tok-link": {color: "#219", textDecoration: "underline"},
+  ".shexjs-tok-string": {color: "#a11"},
+  ".shexjs-tok-comment": {color: "#940", fontStyle: "italic"},
+  ".shexjs-tok-number": {color: "#164"},
+  ".shexjs-tok-variableName": {color: "#00c"},
+  ".shexjs-tok-typeName": {color: "#085"},
+  ".shexjs-tok-invalid": {color: "#f00", textDecoration: "underline wavy #f00"},
+});
+
+/** Recompute a supplied tokenizer's decorations whenever the document
+ * changes.  Whole-document rather than incremental: what modules describe
+ * are header lines, and their real body language (`language: "turtle"`) is
+ * still parsed incrementally by the grammar underneath. */
+function suppliedTokensExtension (
+  getSupplied: (text: string) => SuppliedEditor | null,
+  getContext: () => any,
+): Extension {
+  const compute = (doc: string): DecorationSet => {
+    const supplied = getSupplied(doc);
+    if (!supplied || !supplied.tokens)
+      return Decoration.none;
+    let tokens;
+    try {
+      tokens = supplied.tokens(doc, getContext()) || [];
+    } catch (e) {
+      return Decoration.none;      // a module's bug must not break editing
+    }
+    const marks = tokens
+          .filter(t => t.from >= 0 && t.to > t.from && t.to <= doc.length)
+          .sort((l, r) => l.from - r.from)
+          .map(t => Decoration.mark({class: "shexjs-tok-" + t.style}).range(t.from, t.to));
+    return Decoration.set(marks, true);
+  };
+  const field = StateField.define<DecorationSet>({
+    create: state => compute(state.doc.toString()),
+    update: (deco, tr) => tr.docChanged ? compute(tr.state.doc.toString()) : deco,
+    provide: f => EditorView.decorations.from(f),
+  });
+  return [field, suppliedTokenTheme];
+}
+
+/** A CodeMirror completion source over a supplied editor's `complete`. */
+function suppliedCompletionSource (
+  getSupplied: (text: string) => SuppliedEditor | null,
+  getContext: () => any,
+) {
+  return (context: CompletionContext): CompletionResult | null => {
+    const text = context.state.doc.toString();
+    const supplied = getSupplied(text);
+    if (!supplied || !supplied.complete)
+      return null;
+    let result;
+    try {
+      result = supplied.complete(text, context.pos, getContext());
+    } catch (e) {
+      return null;
+    }
+    if (!result || result.options.length === 0)
+      return null;
+    return {from: result.from, to: result.to, options: result.options};
+  };
+}
+
+/** Is there a language here to build an editor from?  A module that
+ * describes none gets no pane -- see makePaneIfDescribed. */
+function describesALanguage (opts: MakePaneOptions, text: string): boolean {
+  if (opts.language)
+    return true;
+  const supplied = opts.supplied ? opts.supplied(text) : null;
+  return !!supplied &&
+    !!(supplied.language || supplied.tokens || supplied.lint || supplied.complete);
+}
+
+/** makePane, unless nothing describes the text's language -- then null, and
+ * the textarea is left exactly as it is.
+ *
+ * This is the fallback for a host whose panes take their language from
+ * whatever module claims their text: a module that describes no language
+ * costs the user nothing but the plain textarea they would have had with
+ * the editors switched off.  Implementing getNeighborhood stays the only
+ * obligation; an editor is a thing a module may offer, not owe.
+ */
+export function makePaneIfDescribed (textarea: HTMLTextAreaElement, opts: MakePaneOptions = {}): Pane | null {
+  return describesALanguage(opts, textarea.value) ? makePane(textarea, opts) : null;
+}
+
 /** makePane - replace `textarea` with a CodeMirror 6 editor. */
 export const CHANGE_DEBOUNCE_MS = 350;
 
@@ -389,16 +518,50 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
       }
     }),
   ];
-  if (opts.language === "shexc" || opts.language === "turtle") {
-    const lang = opts.language === "shexc" ? StreamLanguage.define(shexcStreamParser) : turtleLanguage;
+  // a module-supplied language names the grammar (when it's one of ours)
+  // and overlays its own tokens, diagnostics and completions on it
+  const getSupplied = opts.supplied || ((_text: string) => null);
+  const getSuppliedContext = opts.suppliedContext || (() => undefined);
+  const supplied = getSupplied(textarea.value);
+  const language = opts.language
+        || (supplied && languages[supplied.language as PaneLanguage] ? supplied.language as PaneLanguage : undefined);
+
+  if (language === "shexc" || language === "turtle") {
+    const lang = language === "shexc" ? StreamLanguage.define(shexcStreamParser) : turtleLanguage;
     extensions.push(lang);
+    const autocompletes = [];
     if (opts.completions) // basicSetup's autocompletion() reads languageData
-      extensions.push(lang.data.of({autocomplete: completionSource(opts.completions)}));
-  } else if (opts.language && languages[opts.language]) {
-    extensions.push(languages[opts.language]());
+      autocompletes.push(completionSource(opts.completions));
+    if (opts.supplied)
+      autocompletes.push(suppliedCompletionSource(getSupplied, getSuppliedContext));
+    for (const autocomplete of autocompletes)
+      extensions.push(lang.data.of({autocomplete}));
+  } else if (language && languages[language]) {
+    extensions.push(languages[language]());
   }
-  const lintSource = opts.lint === false ? null : lintSourceFor(opts.language, opts);
-  if (lintSource)
+  if (opts.supplied) {
+    extensions.push(suppliedTokensExtension(getSupplied, getSuppliedContext));
+    if (!language)
+      // no grammar to hang languageData on
+      extensions.push(autocompletion({override: [suppliedCompletionSource(getSupplied, getSuppliedContext)]}));
+  }
+
+  const langLintSource = opts.lint === false ? null : lintSourceFor(language, opts);
+  const lintSource: LintSource | null = opts.lint === false ? null : (view => {
+    const fromLanguage = langLintSource ? langLintSource(view) : [];
+    const text = view.state.doc.toString();
+    const current = getSupplied(text);
+    if (!current || !current.lint)
+      return fromLanguage;
+    let mine: Diagnostic[] = [];
+    try {
+      mine = current.lint(text, getSuppliedContext()) || [];
+    } catch (e) { /* a module's bug must not break editing */ }
+    return Promise.resolve(fromLanguage).then(
+      diagnostics => (diagnostics as Diagnostic[]).concat(
+        mine.filter(d => d.from >= 0 && d.to >= d.from && d.to <= view.state.doc.length)));
+  });
+  if (lintSource && (langLintSource || opts.supplied))
     extensions.push(linter(lintSource, {delay: 500}));
 
   const view = new EditorView({doc: textarea.value, extensions});

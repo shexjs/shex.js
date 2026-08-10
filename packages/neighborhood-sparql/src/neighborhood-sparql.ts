@@ -38,7 +38,7 @@
 import * as RdfJs from "@rdfjs/types";
 import {Shape, ShapeDecl, shapeExprOrRef, tripleExprOrRef} from "shexj";
 import {InternalSchema, SchemaIndex} from "@shexjs/term";
-import {DbParamSpec, DbQueryTracker, Neighborhood, NeighborhoodDb, sparqlOrder, Start} from "@shexjs/neighborhood-api";
+import {DbParamSpec, DbQueryTracker, Neighborhood, NeighborhoodDb, ParamEditor, sparqlOrder, Start} from "@shexjs/neighborhood-api";
 import * as ShExUtil from "@shexjs/util";
 import {ShExIndexVisitor} from "@shexjs/visitor";
 import * as N3 from "n3"; // TODO: set global externally
@@ -820,4 +820,65 @@ export function fromParams (params: { [name: string]: any }, queryTracker?: DbQu
     bnodeDepth: params.bnodeDepth,
     verifyBnodeDescriptions: params.verifyBnodeDescriptions,
   });
+}
+
+/** `# Endpoint: <url>` on the first line means "query this rather than
+ * parsing me".  The header has been the WebApp's way of pointing the data
+ * pane at an endpoint for years; what moves here is only who knows the
+ * pattern. */
+const ENDPOINT_HEADER = /^([ \t]*#?[ \t]*Endpoint[ \t]*:[ \t]*)(\S*)(.*)$/im;
+
+export function claimPaneText (text: string): { [name: string]: any } | null {
+  const m = text.match(ENDPOINT_HEADER);
+  return m && m.index === 0 ? {endpoint: m[2]} : null;
+}
+
+/** The body of the pane is whatever was slurped back from the endpoint, so
+ * the host's Turtle carries it; this module describes only its own header
+ * line, and the host overlays that. */
+export const paneEditor: ParamEditor = {
+  language: "turtle",
+
+  tokens (text: string) {
+    const m = text.match(ENDPOINT_HEADER);
+    if (!m || m.index !== 0) return [];
+    const url = m[2];
+    return [
+      {from: 0, to: m[1].length, style: "keyword"},
+      {from: m[1].length, to: m[1].length + url.length,
+       style: isEndpointUrl(url) ? "link" : "invalid"},
+    ];
+  },
+
+  lint (text: string) {
+    const m = text.match(ENDPOINT_HEADER);
+    if (!m || m.index !== 0) return [];
+    const [from, to] = [m[1].length, m[1].length + m[2].length];
+    if (m[2] === "")
+      return [{from: 0, to: m[1].length, severity: "error" as const,
+               message: "no endpoint: this header wants the URL of a SPARQL query service"}];
+    if (!isEndpointUrl(m[2]))
+      return [{from, to, severity: "error" as const,
+               message: `"${m[2]}" is not an http(s) URL, so nothing can be queried from it`}];
+    if (m[3].trim() !== "")
+      return [{from: to, to: to + m[3].length, severity: "warning" as const,
+               message: "everything after the endpoint URL on this line is ignored"}];
+    return [];
+  },
+
+  complete (text: string, pos: number) {
+    // only at the top of the document, where the header would go
+    const lineStart = text.lastIndexOf("\n", pos - 1) + 1;
+    if (lineStart !== 0 || claimPaneText(text) !== null)
+      return null;
+    return {
+      from: 0, to: pos,
+      options: [{label: "# Endpoint: ", type: "keyword",
+                 detail: "query a SPARQL endpoint instead of parsing this pane"}],
+    };
+  },
+};
+
+function isEndpointUrl (url: string): boolean {
+  return /^https?:\/\/\S+$/.test(url);
 }
