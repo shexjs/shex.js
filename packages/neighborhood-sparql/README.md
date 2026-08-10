@@ -75,13 +75,15 @@ SPARQL_ENDPOINT=http://localhost:7001 npm run test-sparql   # against a real sto
 [shexTest](https://github.com/shexSpec/shexTest) validation suite twice — once
 through `@shexjs/neighborhood-rdfjs` over an in-memory store, once through this
 module over a SPARQL endpoint — and requires the two to agree, modulo blank node
-labels. Two families of tests are out of scope and skipped: those naming a
-blank node as the focus (detected from the focus/map itself, since three of
-them are missing the manifest's `ToldBNode` trait), and those the manifest tags
-`LexicalBNode` whose data contains blank nodes — the tests that measure a blank
-node's *label* with `length` or `pattern`. Both ask SPARQL for something it
-does not have; every untagged facet-plus-bnode test demonstrably agrees across
-the two neighborhoods, so the tag is trusted as the exact boundary.
+labels. Two families of tests are out of scope, marked by the manifest traits
+`ToldBNode` (the focus is a blank node — unnameable over SPARQL) and
+`LexicalBNode` (the verdict measures a blank node's *label* with `length` or
+`pattern` — labels don't survive SPARQL). Each such entry becomes a declared
+pending test naming its reason, rather than being dropped from the queue, so
+the pending count is the suite's ledger of declined entries and a tagging
+change upstream shows as a count jump instead of tests silently vanishing.
+Every untagged facet-plus-bnode test demonstrably agrees across the two
+neighborhoods, so the tags are trusted as the exact boundary.
 
 The endpoint under test (`sparql-test-server.js`, comunica-backed) is as hostile
 as the spec allows: it draws every response's blank node labels from a small

@@ -66,8 +66,6 @@ const manifestFile = validationPath + "manifest.jsonld";
  * trusted as the exact boundary: a new label-sensitive test arriving untagged
  * will fail here loudly rather than be quietly over-skipped.  A meta-test
  * below keeps the ToldBNode/focus coupling honest. */
-const needsToldBnodes = test => (test.trait || []).includes("ToldBNode");
-const measuresBnodeLabels = test => (test.trait || []).includes("LexicalBNode");
 
 const ENABLED = "TEST_sparql" in process.env;
 
@@ -81,9 +79,6 @@ describe("A ShEx validator over SPARQL", function () {
   if (TESTS)
     tests = tests.filter(t => t["@id"].match(TESTS) || t["@id"].substr(1).match(TESTS) ||
                          t.action.schema.match(TESTS) || t.action.data.match(TESTS));
-
-  const skipped = tests.filter(needsToldBnodes);
-  tests = tests.filter(t => !needsToldBnodes(t));
 
   let endpoint = null;
   const schemaCache = new Map();
@@ -99,13 +94,20 @@ describe("A ShEx validator over SPARQL", function () {
 
   after(async () => { if (endpoint) await endpoint.close(); });
 
-  it(`should skip ${skipped.length} test(s) whose focus is a told blank node`, () => {
-    // ToldBNode is trusted for skipping; assert it still means what it says.
-    assert.isTrue(skipped.every(t => JSON.stringify(t.action).indexOf('"_:') !== -1),
-                  "a ToldBNode-tagged test doesn't actually mention a blank node");
+  it(`should mark all tests whose focus is a told blank node with the ToldBNode trait`, () => {
+    const marked = new Set(tests.filter(t => (t.trait || []).includes("ToldBNode")).map(t => t["@id"]));
+    const founds = new Set(tests.filter(t => typeof t.action.focus === "string" && t.action.focus.startsWith("_:")).map(t => t["@id"]));
+    const missedTraits = founds.difference(marked);
+    const extraTraits = marked.difference(founds);
+    assert.deepEqual([...missedTraits], [], `${missedTraits.size} test(s): [${[...missedTraits].join(', ')}] should have a "ToldBNode" trait`);
+    assert.deepEqual([...extraTraits], [], `${extraTraits.size} test(s): [${[...extraTraits].join(', ')}] should NOT have a "ToldBNode" trait`);
   });
 
-  tests.forEach(function (test) {
+  tests.filter(test =>
+    !(["ToldBNode", "LexicalBNode"])
+      .find(trait => (test.trait || []).find(tt => tt === trait))
+  ).forEach(function (test) {
+
     const schemaFile = path.resolve(schemasPath, test.action.schema);
     const schemaURL = "file://" + schemaFile;
     const dataFile = path.resolve(validationPath, test.action.data);
@@ -125,8 +127,6 @@ describe("A ShEx validator over SPARQL", function () {
       const quads = opaqueBnodes(new N3.Parser({
         baseIRI: dataURL, format: "text/turtle", factory: N3.DataFactory,
       }).parse(fs.readFileSync(dataFile, "utf8")));
-      if (measuresBnodeLabels(test))
-        return this.skip(); // the test is about the label, and SPARQL doesn't keep labels
       const store = new N3.Store();
       store.addQuads(quads);
 
