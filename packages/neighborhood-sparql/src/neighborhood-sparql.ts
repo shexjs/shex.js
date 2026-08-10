@@ -53,6 +53,11 @@ export interface SparqlDbOptions {
   /** ask the endpoint to confirm each description picks out the nodes it should
    * (default true).  Costs one query per neighborhood that contains blank nodes. */
   verifyBnodeDescriptions?: boolean;
+  /** remember each query's rows for this DB's lifetime (default true).  A
+   * validation asks for the same neighborhood many times over -- EXTENDS
+   * alone revisits nodes once per extended shape -- and the graph does not
+   * change under a validation, so identical queries need not be re-sent. */
+  cacheQueries?: boolean;
   /** override the SPARQL transport, e.g. to log queries or to run against a mock */
   executeQuery?: (query: string, endpoint: string, dataFactory: any) => any[][];
 }
@@ -126,7 +131,17 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
   const verify = options.verifyBnodeDescriptions !== false;
   const execute = options.executeQuery ||
         ((q: string, ep: string, df: any) => ShExUtil.executeQuery(q, ep, df));
-  const runQuery = (query: string) => execute(query, endpoint, DataFactory);
+  const queryCache: Map<string, any[][]> | null = options.cacheQueries === false ? null : new Map();
+  const runQuery = (query: string) => {
+    if (queryCache === null)
+      return execute(query, endpoint, DataFactory);
+    let rows = queryCache.get(query);
+    if (rows === undefined) {
+      rows = execute(query, endpoint, DataFactory);
+      queryCache.set(query, rows);
+    }
+    return rows;
+  };
 
   /** Every blank node this DB has handed out, by its internal label. */
   const described = new Map<string, BNodeDescription>();
@@ -570,9 +585,16 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
       instantiate(anchor.text, "a") + branches.join("\n  UNION\n") + "\n}";
   }
 
-  /** One component query, turned into quads plus handles for its blank nodes. */
+  /** One component query, turned into quads plus handles for its blank nodes.
+   *
+   * Starts with a depth-0 probe -- most neighborhoods contain no blank nodes,
+   * and a single-branch query is much cheaper to plan than the full UNION of
+   * chains -- and only walks the blank-node component when the probe shows
+   * blank nodes (the truncation retry below escalates the same way when a
+   * description bottoms out). */
   function fetch (point: RdfJs.Term, preds: string[] | null, inverse: boolean): RdfJs.Quad[] {
-    for (let depth = startDepth; ; depth = Math.min(depth * 2, maxDepth)) {
+    for (let depth = 0; ;
+         depth = depth === 0 ? (startDepth || 4) : Math.min(depth * 2, maxDepth)) {
       const anchor = descriptionOf(point);
       const query = componentQuery(anchor, preds, depth, inverse);
       const rows = runQuery(query);

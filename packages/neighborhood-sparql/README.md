@@ -27,6 +27,10 @@ is what keeps the queries narrow.
 - `maxBnodeDepth`: ceiling on that growth (default 64)
 - `verifyBnodeDescriptions`: ask the endpoint to confirm each blank node
   description picks out the node it should (default `true`)
+- `cacheQueries`: remember each query's rows for the DB's lifetime (default
+  `true`) — a validation asks for the same neighborhood many times over
+  (EXTENDS alone revisits nodes once per extended shape), and the graph does
+  not change under a validation
 - `executeQuery`: replace the SPARQL transport, e.g. to log queries
 
 

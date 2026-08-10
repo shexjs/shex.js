@@ -58,7 +58,17 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
     const verify = options.verifyBnodeDescriptions !== false;
     const execute = options.executeQuery ||
         ((q, ep, df) => ShExUtil.executeQuery(q, ep, df));
-    const runQuery = (query) => execute(query, endpoint, DataFactory);
+    const queryCache = options.cacheQueries === false ? null : new Map();
+    const runQuery = (query) => {
+        if (queryCache === null)
+            return execute(query, endpoint, DataFactory);
+        let rows = queryCache.get(query);
+        if (rows === undefined) {
+            rows = execute(query, endpoint, DataFactory);
+            queryCache.set(query, rows);
+        }
+        return rows;
+    };
     /** Every blank node this DB has handed out, by its internal label. */
     const described = new Map();
     let nextLabel = 0;
@@ -460,9 +470,15 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         return `SELECT ?lvl ?s ?p ?o ${anchorVars}WHERE {\n` +
             instantiate(anchor.text, "a") + branches.join("\n  UNION\n") + "\n}";
     }
-    /** One component query, turned into quads plus handles for its blank nodes. */
+    /** One component query, turned into quads plus handles for its blank nodes.
+     *
+     * Starts with a depth-0 probe -- most neighborhoods contain no blank nodes,
+     * and a single-branch query is much cheaper to plan than the full UNION of
+     * chains -- and only walks the blank-node component when the probe shows
+     * blank nodes (the truncation retry below escalates the same way when a
+     * description bottoms out). */
     function fetch(point, preds, inverse) {
-        for (let depth = startDepth;; depth = Math.min(depth * 2, maxDepth)) {
+        for (let depth = 0;; depth = depth === 0 ? (startDepth || 4) : Math.min(depth * 2, maxDepth)) {
             const anchor = descriptionOf(point);
             const query = componentQuery(anchor, preds, depth, inverse);
             const rows = runQuery(query);
