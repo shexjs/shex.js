@@ -15,7 +15,8 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-extension-map.js",
+  "main": "./lib/shex-extension-map.js",
+  "types": "./src/shex-extension-map.ts",
   "bin": {
     "shexmap-materialize": "bin/materialize",
     "shexmap-debug": "bin/shexmap-debug"

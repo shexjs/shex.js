@@ -81,7 +81,7 @@ const AllTests = {
     //   extension-test exports a plain object; fail(o) semAct forces a Failure adorned with semActResults
     { name: "extension-test-fail" , args: ["-x", "cli/1dotTestFail.shex", "-s", "<http://a.example/S1>", "-d", "cli/p1.ttl", "-n", "<x>", "--extension", "../../extension-test/lib/shex-extension-test.js"], resultMatch: "\"semActResults\"[\\s\\S]*http://shex.io/extensions/Test/", status: X.shape_test_fail },
     //   extension-map exports a factory function; map bindings appear in the passing result structure
-    { name: "extension-map" , args: ["-x", "../../extension-map/examples/BPfhir-schema.shex", "-d", "../../extension-map/examples/BPfhir-instance.ttl", "-n", "tag:BPfhir123", "--extension", "../../extension-map/shex-extension-map.js"], resultMatch: "http://shex.io/extensions/Map/#", status: X.shape_test_pass },
+    { name: "extension-map" , args: ["-x", "../../extension-map/examples/BPfhir-schema.shex", "-d", "../../extension-map/examples/BPfhir-instance.ttl", "-n", "tag:BPfhir123", "--extension", "../../extension-map/lib/shex-extension-map.js"], resultMatch: "http://shex.io/extensions/Map/#", status: X.shape_test_pass },
 
     // manifest
     { name: "simple-json" , args: ["--json-manifest", "cli/manifest-simple.json"], result: "cli/1dotOr2dot_pass_p1.val", status: X.val_match_pass },

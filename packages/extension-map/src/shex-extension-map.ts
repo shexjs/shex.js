@@ -7,16 +7,16 @@
 
 const {rdfJsTerm2Ld} = require("@shexjs/term");
 
-const ShExMapCjsModule = function (config) {
+const ShExMapCjsModule = function (config: any) {
 
 const ShExTerm = require("@shexjs/term");
-const extensions = require("./lib/extensions");
+const extensions = require("./extensions");
 const {ShExVisitor, ShExIndexVisitor} = require("@shexjs/visitor");
 const ShExUtil = require("@shexjs/util");
 const N3Util = require("n3/lib/N3Util");
 const N3DataFactory = require("n3/lib/N3DataFactory").default;
-const materializer = require("./lib/ShExMaterializer")(config);
-const StringToRdfJs = require("./lib/stringToRdfJs");
+const materializer = require("./ShExMaterializer")(config);
+const StringToRdfJs = require("./stringToRdfJs");
 
 const MapExt = "http://shex.io/extensions/Map/#";
 const pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
@@ -24,29 +24,33 @@ const pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
 const UNBOUNDED = -1;
 const MAX_MAX_CARD = 50; // @@ don't repeat forever during dev experiments.
 
-function register (validator, api) {
+function register (validator: any, api: any) {
   if (api === undefined || !('ShExTerm' in api))
     throw Error('SemAct extensions must be called with register(validator, {ShExTerm, ...)')
 
   class MaterializerVisitor extends ShExVisitor {
-    constructor (tc, index, curSubjectx) {
+    tc: any;
+    index: any;
+    curSubjectx: any;
+
+    constructor (tc: any, index: any, curSubjectx?: any) {
       super();
       this.tc = tc;
       this.index = index;
       this.curSubjectx = curSubjectx;
     }
 
-    visitShapeRef (shapeRef, ...args) {
+    visitShapeRef (shapeRef: any, ...args: any[]) {
       this.visitShapeDecl(this.index.shapeExprs[shapeRef], ...args);
       return super.visitShapeRef(shapeRef, ...args);
     };
 
-    visitValueRef (r, ...args) {
-      this.visitTripleExpr(schema.shapes[r], r, ...args);
+    visitValueRef (r: any, ...args: any[]) {
+      this.visitTripleExpr(validator.schema.shapes[r], r, ...args);
       return this._visitValue(r, ...args);
     };
 
-    visitTripleConstraint (expr, curSubjectx, nextBNode, target, materializer, schema, bindings) {
+    visitTripleConstraint (expr: any, curSubjectx?: any, nextBNode?: any, target?: any, materializer?: any, schema?: any, bindings?: any) {
       this.tc(expr, curSubjectx, nextBNode, target, materializer, schema, bindings);
     };
   }
@@ -67,9 +71,9 @@ function register (validator, api) {
        * @param {object} extensionStorage - place where the extension writes into the result structure.
        * @return {bool} false if the extension failed or did not accept the ctx object.
        */
-      dispatch: function (code, ctx, extensionStorage) {
-        function fail (msg) { const e = Error(msg); Error.captureStackTrace(e, fail); throw e; }
-        function getPrefixedName(bindingName) {
+      dispatch: function (code: any, ctx: any, extensionStorage: any) {
+        function fail (msg: any) { const e = Error(msg); Error.captureStackTrace(e, fail); throw e; }
+        function getPrefixedName(bindingName: any) {
            // already have the fully prefixed binding name ready to go
            if (typeof bindingName === "string") return bindingName;
 
@@ -80,7 +84,7 @@ function register (validator, api) {
             return prefixedName;
         }
 
-        const update = function(bindingName, value) {
+        const update = function(bindingName: any, value: any) {
 
             if (!bindingName) {
                throw Error("Invocation error: " + MapExt + " code \"" + code + "\" didn't match " + pattern);
@@ -97,7 +101,7 @@ function register (validator, api) {
         const funcArg = code.match(/^\s*[a-zA-Z0-9]+\((.*)\)\s*$/)
         if (funcArg) {
           const results = extensions.lift(code, ctx.triples[0].object.value, prefixes);
-          for (key in results)
+          for (const key in results)
             update(key, N3DataFactory.literal(results[key]));
         } else {
           const bindingName = code.match(pattern);
@@ -120,19 +124,19 @@ function register (validator, api) {
     visitTripleConstraint
   }
 
-function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
+function visitTripleConstraint (expr: any, curSubjectx: any, nextBNode: any, target: any, visitor: any, schema: any, bindings: any, recurse: any, direct: any, checkValueExpr: any) {
       // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
-      function P (pname) { return expandPrefixedName(pname, schema._prefixes); }
-      function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
+      function P (pname: any) { return expandPrefixedName(pname, schema._prefixes); }
+      function L (value: any, modifier: any) { return N3Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
-      function add (s, p, o) {
+      function add (s: any, p: any, o: any) {
         target.addQuad(StringToRdfJs.n3idQuad2RdfJs(s, p, o));
         return s;
       }
 
-        const mapExts = (expr.semActs || []).filter(function (ext) { return ext.name === MapExt; });
+        const mapExts = (expr.semActs || []).filter(function (ext: any) { return ext.name === MapExt; });
         if (mapExts.length) {
-          mapExts.forEach(function (ext) {
+          mapExts.forEach(function (ext: any) {
             const code = ext.code;
             const m = code.match(pattern);
 
@@ -153,7 +157,7 @@ function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, s
             }
 
             if (tripleObject === undefined)
-              ; // console.warn('Not in bindings: ',code);
+              { /* console.warn('Not in bindings: ',code); */ }
             else if (expr.inverse)
               add(tripleObject, expr.predicate, curSubjectx.cs);
             else
@@ -192,27 +196,27 @@ function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, s
         }
       }
 
-function trivialMaterializer (schema, nextBNode) {
+function trivialMaterializer (schema: any, nextBNode: any) {
   let blankNodeCount = 0;
   const index = schema._index || ShExIndexVisitor.index(schema);
   nextBNode = nextBNode || function () {
     return '_:b' + blankNodeCount++;
   };
   return {
-    materialize: function (bindings, createRoot, shape, target) {
+    materialize: function (bindings: any, createRoot: any, shape: any, target: any) {
       shape = !shape || shape === validator.Start
         ? schema.start
         : schema.shapes.indexOf(shape) !== -1
         ? shape
-        : this._lookupShape(shape);
+        : (this as any)._lookupShape(shape);
       target = target || new config.rdfjs.Store();
       // target.addPrefixes(schema.prefixes); // not used, but seems polite
 
       // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
-      function P (pname) { return expandPrefixedName(pname, schema.prefixes); }
-      function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
+      function P (pname: any) { return expandPrefixedName(pname, schema.prefixes); }
+      function L (value: any, modifier: any) { return N3Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
-      function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
+      function add (s: any, p: any, o: any) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
 
       const curSubject = createRoot || B();
       const curSubjectx = {cs: curSubject};
@@ -224,18 +228,18 @@ function trivialMaterializer (schema, nextBNode) {
   };
 }
 
-function binder (tree) {
-  let stack = []; // e.g. [2, 1] for v="http://shex.io/extensions/Map/#BPDAM-XXX"
-  const globals = {}; // !! delme
+function binder (tree: any) {
+  let stack: any = []; // e.g. [2, 1] for v="http://shex.io/extensions/Map/#BPDAM-XXX"
+  const globals: any = {}; // !! delme
   //
 
   /**
    * returns: { const->count }
    */
-  function _mults (obj) {
-    const rays = [];
-    const objs = [];
-    const counts = Object.keys(obj).reduce((r, k) => {
+  function _mults (obj: any): any {
+    const rays: any[] = [];
+    const objs: any[] = [];
+    const counts = Object.keys(obj).reduce((r: any, k: any) => {
       let toAdd = null;
       if (typeof obj[k] === "object" && !("value" in obj[k])) {
         toAdd = _mults(obj[k]);
@@ -250,46 +254,46 @@ function binder (tree) {
       return _add(r, toAdd);
     }, {});
     if (rays.length > 0) {
-      objs.forEach(i => {
-        const novel = Object.keys(obj[i]).filter(k => {
+      objs.forEach((i: any) => {
+        const novel = Object.keys(obj[i]).filter((k: any) => {
           return counts[k] === 1;
         });
         if (novel.length) {
-          const n2 = novel.reduce((r, k) => {
+          const n2 = novel.reduce((r: any, k: any) => {
             r[k] = obj[i][k];
             return r;
           }, {});
-          rays.forEach(l => {
+          rays.forEach((l: any) => {
             _cross(obj[l], n2);
           });
         }
       });
       objs.reverse();
-      objs.forEach(i => {
+      objs.forEach((i: any) => {
         obj.splice(i, 1); // remove object from tree
       });
     }
     return counts;
   }
-  function _add (l, r) {
+  function _add (l: any, r: any) {
     const ret = Object.assign({}, l);
-    return Object.keys(r).reduce((ret, k) => {
+    return Object.keys(r).reduce((ret: any, k: any) => {
       const add = k in r ? r[k] : 1;
       ret[k] = k in ret ? ret[k] + add : add;
       return ret;
     }, ret);
   }
-  function _make (k, v) {
-    const ret = {};
+  function _make (k: any, v: any) {
+    const ret: any = {};
     ret[k] = v;
     return ret;
   }
-  function _cross (list, map) {
+  function _cross (list: any, map: any) {
     for (let listIndex in list) {
       if (Array.isArray(list[listIndex])) {
         _cross(list[listIndex], map);
       } else {
-        Object.keys(map).forEach(mapKey => {
+        Object.keys(map).forEach((mapKey: any) => {
           if (mapKey in list[listIndex])
             throw Error("unexpected duplicate key: " + mapKey + " in " + JSON.stringify(list[listIndex]));
           list[listIndex][mapKey] = map[mapKey];
@@ -298,8 +302,8 @@ function binder (tree) {
     };
   }
   _mults(tree);
-  function _simplify (list) {
-    const ret = list.reduce((r, elt) => {
+  function _simplify (list: any) {
+    const ret = list.reduce((r: any, elt: any) => {
       return r.concat(
         Array.isArray(elt) ?
           _simplify(elt) :
@@ -310,9 +314,9 @@ function binder (tree) {
   }
   tree = Array.isArray(tree) ? _simplify(tree) : [tree]; // expects an array
 
-  // const globals = tree.reduce((r, e, idx) => {
+  // const globals = tree.reduce((r: any, e: any, idx: any) => {
   //   if (!Array.isArray(e)) {
-  //     Object.keys(e).forEach(k => {
+  //     Object.keys(e).forEach((k: any) => {
   //       r[k] = e[k];
   //     });
   //     removables.unshift(idx); // higher indexes at the left
@@ -320,7 +324,7 @@ function binder (tree) {
   //   return r;
   // }, {});
 
-  function getter (v) {
+  function getter (v: any) {
     // work with copy of stack while trying to grok this problem...
     if (stack === null)
       return undefined;
@@ -348,13 +352,13 @@ function binder (tree) {
     delete next[v];
     return ret;
 
-    function getObj (s) {
-      return s.reduce(function (res, elt) {
+    function getObj (s: any) {
+      return s.reduce(function (res: any, elt: any) {
         return res[elt];
       }, tree);
     }
 
-    function diveIntoObj (s) {
+    function diveIntoObj (s: any) {
       while (Array.isArray(getObj(s)))
         s.push(0);
       return getObj(s);
@@ -365,12 +369,12 @@ function binder (tree) {
 
 }
 
-function done (validator) {
+function done (validator: any) {
   if (Object.keys(validator.semActHandler.results[MapExt]).length === 0)
     delete validator.semActHandler.results[MapExt];
 }
 
-function n3ify (ldterm) {
+function n3ify (ldterm: any) {
   if (typeof ldterm !== "object")
     return ldterm;
   const ret = "\"" + ldterm.value + "\"";
@@ -382,9 +386,9 @@ function n3ify (ldterm) {
 }
 
   // Expands the prefixed name to a full IRI (also when it occurs as a literal's type)
-  function expandPrefixedName (prefixedName, prefixes) {
+  function expandPrefixedName (prefixedName: any, prefixes: any) {
     const match = /(?:^|"\^\^)([^:\/#"'\^_]*):[^\/]*$/.exec(prefixedName);
-    let prefix, base, index;
+    let prefix: any, base: any, index: any;
     if (match)
       prefix = match[1], base = prefixes[prefix], index = match.index;
     if (base === undefined)
@@ -396,7 +400,7 @@ function n3ify (ldterm) {
                          base + prefixedName.substr(index + prefix.length + 4);
   }
 
-function extractBindingsDelMe (soln, min, max, depth) {
+function extractBindingsDelMe (soln: any, min: any, max: any, depth: any) {
   if ("min" in soln && soln.min < min)
     min = soln.min
   const myMax = "max" in soln ?
@@ -407,13 +411,13 @@ function extractBindingsDelMe (soln, min, max, depth) {
   if (myMax > max)
     max = myMax
 
-  function walkExpressions (s) {
-    return s.expressions.reduce((inner, e) => {
+  function walkExpressions (s: any) {
+    return s.expressions.reduce((inner: any, e: any) => {
       return inner.concat(extractBindingsDelMe(e, min, max, depth+1));
     }, []);
   }
 
-  function walkTriple (s) {
+  function walkTriple (s: any) {
     const fromTriple = "extensions" in s && MapExt in s.extensions ?
         [{ depth: depth, min: min, max: max, obj: s.extensions[MapExt] }] :
         [];
@@ -422,7 +426,7 @@ function extractBindingsDelMe (soln, min, max, depth) {
       fromTriple;
   }
 
-  function structuralError (msg) { throw Error(msg); }
+  function structuralError (msg: any) { throw Error(msg); }
 
   const walk = // function to explore each solution
       soln.type === "someOfSolutions" ||
@@ -444,22 +448,21 @@ return {
   register: register,
   done: done,
   materializer: materializer,
-  ThreadedMaterializer: require("./lib/ThreadedMaterializer").ThreadedMaterializer,
-  MaterializerDebugger: require("./lib/ThreadedMaterializer").MaterializerDebugger,
-  MaterializationError: require("./lib/ThreadedMaterializer").MaterializationError,
-  tripleConstraints: require("./lib/ThreadedMaterializer").tripleConstraints,
+  ThreadedMaterializer: require("./ThreadedMaterializer").ThreadedMaterializer,
+  MaterializerDebugger: require("./ThreadedMaterializer").MaterializerDebugger,
+  MaterializationError: require("./ThreadedMaterializer").MaterializationError,
+  tripleConstraints: require("./ThreadedMaterializer").tripleConstraints,
   // binder: binder,
   url: MapExt,
   // visitTripleConstraint: myvisitTripleConstraint
   extension: {
-    hashmap: require("./lib/hashmap_extension"),
-    regex: require("./lib/regex_extension")
+    hashmap: require("./hashmap_extension"),
+    regex: require("./regex_extension")
   },
-  extensions: require("./lib/extensions"),
-  utils: require("./lib/extension-utils"),
+  extensions: require("./extensions"),
+  utils: require("./extension-utils"),
 };
 
 };
 
-if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = ShExMapCjsModule;
+export = ShExMapCjsModule;

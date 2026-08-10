@@ -1,12 +1,13 @@
-"use strict";
 /**
  * This file is the main entry point into calling an extension.
  * It determines which extension is requested, and then, assuming
  * the extension is valid, it forwards the request on
  */
+
 // Known extensions
-const hashmap_extension = require("./hashmap_extension");
-const regex_extension = require("./regex_extension");
+import hashmap_extension = require('./hashmap_extension');
+import regex_extension = require('./regex_extension');
+
 /**
  * Given a map directive that contains an extension of format
  *          extensionName(args)
@@ -16,46 +17,56 @@ const regex_extension = require("./regex_extension");
  *
  * @return an object with members:  extension name and the arguments.
  */
-function extensionDef(mapDirective) {
+function extensionDef(mapDirective: string | undefined): { name: string, args: string } {
     if (mapDirective === undefined)
         throw Error("Invalid extension function: " + mapDirective + "!");
+
     // Get the extension name and argument(s)
     mapDirective = mapDirective.trim(); // Strip any leading or trailing white space
     const startArgs = mapDirective.indexOf('(', 0);
     const endArgs = mapDirective.lastIndexOf(')');
-    if (startArgs < 2 || endArgs < 4 || endArgs <= startArgs + 1 || endArgs != mapDirective.length - 1)
+    if (startArgs < 2 || endArgs < 4 || endArgs <= startArgs+1 || endArgs != mapDirective.length-1)
         throw Error("Invalid extension function: " + mapDirective + "!");
-    return { name: mapDirective.substring(0, startArgs),
-        args: mapDirective.substring(startArgs + 1, endArgs) };
+
+    return { name:  mapDirective.substring(0, startArgs),
+             args:  mapDirective.substring(startArgs+1, endArgs) };
 }
-function lift(mapDirective, input, prefixes) {
+
+function lift(mapDirective: string, input: any, prefixes: { [prefix: string]: string }) {
     const extDef = extensionDef(mapDirective);
     switch (extDef.name) {
         case 'hashmap':
-            return hashmap_extension.lift(mapDirective, input, prefixes, extDef.args);
+          return hashmap_extension.lift(mapDirective, input, prefixes, extDef.args);
+
         case 'regex':
-            return regex_extension.lift(mapDirective, input, prefixes, extDef.args);
+          return regex_extension.lift(mapDirective, input, prefixes, extDef.args);
+
         case 'test':
-            return mapDirective;
+          return mapDirective;
+
         default:
-            throw Error('Unknown extension: ' + mapDirective + '!');
+          throw Error('Unknown extension: '+ mapDirective+'!');
     }
 }
-function lower(mapDirective, bindings, prefixes) {
+
+function lower(mapDirective: string, bindings: any, prefixes: { [prefix: string]: string }) {
     const extDef = extensionDef(mapDirective);
     switch (extDef.name) {
         case 'hashmap':
-            return hashmap_extension.lower(mapDirective, bindings, prefixes, extDef.args);
+          return hashmap_extension.lower(mapDirective, bindings, prefixes, extDef.args);
+
         case 'regex':
-            return regex_extension.lower(mapDirective, bindings, prefixes, extDef.args);
+          return regex_extension.lower(mapDirective, bindings, prefixes, extDef.args);
+
         case 'test':
-            return mapDirective;
+          return mapDirective;
+
         default:
-            throw Error('Unknown extension: ' + mapDirective + '!');
+          throw Error('Unknown extension: ' + mapDirective+'!');
     }
 }
-module.exports = {
+
+export = {
     lift: lift,
     lower: lower,
 };
-//# sourceMappingURL=extensions.js.map

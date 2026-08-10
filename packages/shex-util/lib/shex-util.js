@@ -1745,24 +1745,44 @@ const ShExUtil = {
         }
         return reportUnknown ? reportUnknown(t) : this.UnknownIRI;
     },
+    /** Above this the query goes in a POST body instead of the URL. Servers and
+     * proxies cap request lines well below what a generated query can reach --
+     * QLever drops the connection past about 8k -- and the SPARQL protocol has
+     * the POST form for exactly this. */
+    sparqlGetLimit: 2000,
     executeQueryPromise: function (query, endpoint, dataFactory) {
         if (!endpoint)
             throw Error(`Can't execute a SPARQL query with no endpoint`);
         const queryURL = endpoint + "?query=" + encodeURIComponent(query);
-        return fetch(queryURL, {
-            headers: {
-                'Accept': 'application/sparql-results+json'
-            }
-        }).then(resp => resp.json()).then(jsonObject => {
+        const request = queryURL.length <= this.sparqlGetLimit
+            ? fetch(queryURL, { headers: { 'Accept': 'application/sparql-results+json' } })
+            : fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/sparql-results+json',
+                    'Content-Type': 'application/sparql-query',
+                },
+                body: query,
+            });
+        return request.then(resp => resp.json()).then(jsonObject => {
             return this.parseSparqlJsonResults(jsonObject, dataFactory);
         }); // .then(x => new Promise(resolve => setTimeout(() => resolve(x), 1000)));
     },
     executeQuery: function (query, endpoint, dataFactory) {
+        if (!endpoint)
+            throw Error(`Can't execute a SPARQL query with no endpoint`);
         const queryURL = endpoint + "?query=" + encodeURIComponent(query);
+        const byUrl = queryURL.length <= this.sparqlGetLimit;
         const xhr = new XMLHttpRequest();
-        xhr.open("GET", queryURL, false);
+        xhr.open(byUrl ? "GET" : "POST", byUrl ? queryURL : endpoint, false);
         xhr.setRequestHeader('Accept', 'application/sparql-results+json');
-        xhr.send();
+        if (byUrl) {
+            xhr.send();
+        }
+        else {
+            xhr.setRequestHeader('Content-Type', 'application/sparql-query');
+            xhr.send(query);
+        }
         // const selectsBlock = query.match(/SELECT\s*(.*?)\s*{/)[1];
         // const selects = selectsBlock.match(/\?[^\s?]+/g);
         const jsonObject = JSON.parse(xhr.responseText);
