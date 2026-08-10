@@ -78,11 +78,10 @@ module over a SPARQL endpoint — and requires the two to agree, modulo blank no
 labels. Two families of tests are out of scope, marked by the manifest traits
 `ToldBNode` (the focus is a blank node — unnameable over SPARQL) and
 `LexicalBNode` (the verdict measures a blank node's *label* with `length` or
-`pattern` — labels don't survive SPARQL). Each such entry becomes a declared
-pending test naming its reason, rather than being dropped from the queue, so
-the pending count is the suite's ledger of declined entries and a tagging
-change upstream shows as a count jump instead of tests silently vanishing.
-Every untagged facet-plus-bnode test demonstrably agrees across the two
+`pattern` — labels don't survive SPARQL). They are filtered out rather than
+marked pending: a pending test reads as work to return to, and these can never
+run. A meta-test audits the `ToldBNode` tagging in both directions. Every
+untagged facet-plus-bnode test demonstrably agrees across the two
 neighborhoods, so the tags are trusted as the exact boundary.
 
 The endpoint under test (`sparql-test-server.js`, comunica-backed) is as hostile
