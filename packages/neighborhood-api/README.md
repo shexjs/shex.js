@@ -136,14 +136,25 @@ entities anyone would actually validate). Construction is covered by
 options.
 
 The WebApp puts these together: a **data source** picklist in the title bar
-lists the modules it loaded, and `#inputData` shows that source's fields and
-its documents' tabs. Where the data comes from is a choice, not a guess
-read out of the pane's text.
+lists the modules it loaded, and `#inputData` shows a tab set — the source's
+settings in the leftmost pane, one tab per document it takes to their right,
+the same shape the shape map's tabs have. Where the data comes from is a
+choice, not a guess read out of the pane's text.
+
+A host may add settings of its own to that pane for things the module
+declares no parameter for because the *host* carries them out. The WebApp
+adds one: `slurp`, which records the triples a validation fetched into the
+local store's Turtle document, so switching the picklist to Turtle
+afterwards validates the same data without the service. It is offered only
+for a source that fetches.
 
 All names and shapes here are negotiable; this is a strawman to refine.
 Known limits of this round: one data source at a time, and a permalink
 carries only the document showing (`data=`) — a second `data` document
-survives a manifest entry but not a permalink.
+survives a manifest entry but not a permalink. A parameter's *name* is
+shared by convention (`data`, `endpoint`), but its *value* belongs to the
+source that asked for it: `data` is a graph to one source and an entity page
+to another, and neither wants the other's document.
 
 
 # Lerna Monorepo

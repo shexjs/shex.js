@@ -114,6 +114,11 @@ if (!TEST_browser) {
      * sources in general and about none of them in particular. */
     describe("the data source picklist", function () {
       const source = () => shared.neighborhoods;
+      /** the tab set's labels, settings pane first */
+      const tabs = () => $("#dataPaneTabs > li > a").map((i, a) => $(a).text()).get();
+      /** shown or hidden, read off the inline style jQuery's toggle writes
+       * (jsdom lays nothing out, so :visible and computed display can't say) */
+      const shown = selector => $(selector).prop("style").display !== "none";
       afterEach(function () {
         source().select("rdfjs");   // leave the app as the other tests expect
       });
@@ -123,12 +128,14 @@ if (!TEST_browser) {
           .to.deep.equal(["rdfjs", "sparql", "wikidata"]);
         expect($("#neighborhood").val()).to.equal("rdfjs");
         expect($("#neighborhood option:selected").text()).to.equal("Turtle");
-        // one mandatory document, nothing to configure, no tabs to bother
-        // with (jsdom lays nothing out, so "showing" is the display style)
-        expect($("#neighborhoodFields").children().length).to.equal(0);
-        expect($("#dataPaneTabs").css("display")).to.equal("none");
+        // settings on the left, one document tab beside it, and that
+        // document is what shows (jsdom lays nothing out, so "showing" is
+        // the display style)
+        expect(tabs()).to.deep.equal(["settings", "Turtle 1"]);
+        expect($("#neighborhoodFields .noSettings").length, "nothing to configure").to.equal(1);
         expect(source().paneParam.pane.label).to.equal("Turtle");
-        expect($("#inputData .shexjs-editor-pane").css("display")).to.not.equal("none");
+        expect(shown("#dataDocument")).to.equal(true);
+        expect(shown("#addDataPane"), "one graph is one document").to.equal(false);
       });
 
       it("should draw a query service as fields, with no document at all", function () {
@@ -136,34 +143,39 @@ if (!TEST_browser) {
         const fields = $("#neighborhoodFields label").map((i, l) => $(l).text().trim()).get();
         expect(fields).to.include("endpoint");
         expect(fields).to.include("expectBnodes");
+        // and the setting this app carries out itself, moved here from the
+        // "load data" menu item it used to hide inside
+        expect(fields).to.include("slurp");
         expect($("#nbhd-expectBnodes").attr("type"), "a boolean is a checkbox").to.equal("checkbox");
         expect($("#nbhd-bnodeDepth").attr("type"), "an integer is a number").to.equal("number");
-        // nothing to edit, so nothing to edit it in
+        // nothing to edit, so no document tab and nothing to edit it in
         expect(source().paneParam).to.equal(null);
+        expect(tabs()).to.deep.equal(["settings"]);
+        expect(shown("#dataDocument"), "nothing to edit").to.equal(false);
+        expect(source().onSettings, "so the settings pane is what shows").to.equal(true);
         // no document, so not even an editor: the fallback all the way down
         expect($("#inputData .shexjs-editor-pane").length).to.equal(0);
-        expect($("#inputData textarea").first().css("display")).to.equal("none");
-        expect($("#dataPaneTabs").css("display")).to.equal("none");
+        expect(shown("#dataPaneControls"), "and nothing to add one with").to.equal(false);
       });
 
       it("should let a wikibase grow a pane per entity page", function () {
         source().select("wikidata");
-        expect($("#dataPaneTabs .dataPaneTab").length, "one to start").to.equal(1);
-        expect($("#addDataPane").length, "and a way to open another").to.equal(1);
+        expect(tabs(), "one to start").to.deep.equal(["settings", "entity JSON 1"]);
+        expect(shown("#addDataPane"), "and a way to open another").to.equal(true);
 
         $("#addDataPane").trigger("click");
-        expect($("#dataPaneTabs .dataPaneTab").length).to.equal(2);
+        expect(tabs().length).to.equal(3);
         // a fresh page starts from the module's template, and its tab is
         // named by the module reading the page's id back out of it
         expect($("#inputData textarea").first().val()).to.include('"entities"');
-        expect($("#dataPaneTabs .dataPaneTab").last().text()).to.equal("Q0");
+        expect(tabs()[2]).to.equal("Q0");
 
         // the panes not showing are still there to be validated with
         $("#inputData textarea").first().val('{"entities": {"Q42": {"id": "Q42"}}}');
-        $("#dataPaneTabs .dataPaneTab").first().trigger("click");
+        source().show(0);
         expect(source().texts().length).to.equal(2);
         expect(source().params().data[1]).to.include("Q42");
-        expect($("#dataPaneTabs .dataPaneTab").last().text()).to.equal("Q42");
+        expect(tabs()[2], "a tab is named by the page in it").to.equal("Q42");
       });
 
       it("should give each pane the language its source says it is in", function () {
@@ -195,8 +207,29 @@ if (!TEST_browser) {
 
         expect($("#neighborhood").val(), "the entry named its source").to.equal("wikidata");
         expect(source().texts()).to.deep.equal(pages);
-        expect($("#dataPaneTabs .dataPaneTab").map((i, b) => $(b).text()).get())
-          .to.deep.equal(["Q1", "Q2"]);
+        expect(tabs()).to.deep.equal(["settings", "Q1", "Q2"]);
+      });
+
+      /* `slurp` used to hide inside the "load data" menu item, appearing
+       * only once the pane's text named an endpoint.  It is a setting of the
+       * data source -- one this app carries out rather than the module -- so
+       * it is drawn with the source's own settings, and what it records goes
+       * to the local store's document: switch the picklist to Turtle
+       * afterwards and the same data validates without the service. */
+      it("should record what a query service was asked into the Turtle document", function () {
+        source().select("sparql");
+        expect($("#nbhd-slurp").length, "offered for a source that fetches").to.equal(1);
+        expect(source().slurping()).to.equal(false);
+        $("#nbhd-slurp").prop("checked", true).trigger("change");
+        expect(source().slurping()).to.equal(true);
+
+        source().appendToLocalTurtle("# <x>@<S> 1 triples\n");
+        source().select("rdfjs");
+        expect($("#inputData textarea").first().val()).to.include("# <x>@<S> 1 triples");
+
+        // ...and it isn't offered where there is nothing to record
+        source().select("wikidata");
+        expect($("#nbhd-slurp").length).to.equal(0);
       });
 
       it("should carry the source and its settings in the permalink", async function () {

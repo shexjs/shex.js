@@ -60,11 +60,14 @@
         color: #777;
       }
       body { border-width: .25em; border-style: solid; border-color: white; }
-      #neighborhoodConfig { margin-bottom: .2em; }
-      #neighborhoodFields label.neighborhoodField { font-size: .8em; margin-right: .6em; white-space: nowrap; }
+      #dataSource-tabs { margin-bottom: .2em; padding: .2em; }
+      #dataSource-tabs .ui-tabs-nav { padding-left: .2em; }
+      #dataSource-tabs .ui-tabs-panel { padding: .3em .2em; }
+      #neighborhoodFields label.neighborhoodField { font-size: .85em; margin-right: .8em; white-space: nowrap; display: inline-block; }
       #neighborhoodFields input[type=text], #neighborhoodFields input[type=number] { width: 14em; }
-      #dataPaneTabs button { font-size: .8em; margin-right: .2em; }
-      #dataPaneTabs button.selected { font-weight: bold; }
+      #neighborhoodFields .noSettings { font-size: .85em; font-style: italic; color: #666; }
+      #dataPaneControls { float: right; }
+      #dataPaneControls button { font-size: .8em; }
       #dataSource { font-size: .8em; }
       .droparea { border-width: .25em; border-style: dashed; }
       .droparea.hover, body.hover { border: .25em dashed #0c0; }
@@ -249,7 +252,7 @@ ul {
               <li class="        "><hr/></li>
               <li class="        "><h3>HTTP</h3></li>
               <li class="menuitem" id="load-schema-button">load <span class="schema">schema</span></li>
-              <li class="menuitem" id="load-data-button">load <span class="data">data</span><span id="slurpSpan" style="float:right" title="fill data pane with data queried from &lt;https://query.wikidata.org/sparql&gt;"><input id="slurp" type="checkbox"><label for="slurp">slurp</label></span></li>
+              <li class="menuitem" id="load-data-button">load <span class="data">data</span></li>
               <li class="menuitem" id="load-manifest-button">load <span class="manifest">manifest</span></li>
               <li id="extensionDrop" class="droparea"><h3>Extensions</h3></li>
               <li class="menuitem" id="load-extension-button">load <span class="extension">extension</span></li>
@@ -381,8 +384,12 @@ ul {
       </div>
       <div id="inputData" class="panel">
         <h2 class="status"> </h2>
-        <div id="neighborhoodConfig"><div id="neighborhoodFields"></div><div id="dataPaneTabs"></div></div>
-        <textarea rows="25" class="data droparea" style="width: 100%" spellcheck="false"></textarea>
+        <div id="dataSource-tabs" style="width: 100%">
+          <span id="dataPaneControls"><button type="button" id="addDataPane" title="another document">+</button><button type="button" id="removeDataPane" title="close this document">&#8722;</button></span>
+          <ul id="dataPaneTabs"><li><a href="#neighborhoodFields">settings</a></li></ul>
+          <div id="neighborhoodFields"></div>
+        </div>
+        <div id="dataDocument"><textarea rows="25" class="data droparea" style="width: 100%" spellcheck="false"></textarea></div>
         <div style="margin-left: .1em;">
           <div class="passes" style="float:left; display:none;">
             <p></p>

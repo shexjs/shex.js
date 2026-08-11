@@ -215,14 +215,29 @@ class NeighborhoodConfig {
     this.textarea = textarea;
     this.onChange = onChange;
     this.moduleId = ShExWebApp.NeighborhoodApi.moduleId(modules[0]);
-    /** parameter name -> value, shared across modules: a name like
-     * "endpoint" means the same thing wherever it is declared, which is
-     * what lets a manifest entry or a permalink say `endpoint=` without
-     * naming a module twice */
-    this.fields = {};
-    /** parameter name -> [text, ...], likewise */
-    this.panes = {};
+    /** A parameter's name means the same thing wherever it is declared --
+     * that is what lets a manifest entry or a permalink say `endpoint=`
+     * without naming a module twice -- but its *value* belongs to the
+     * source that asked for it: `data` is a graph to one source and an
+     * entity page to another, and neither wants the other's document. */
+    this.fieldsByModule = {};
+    this.panesByModule = {};
     this.showing = 0;
+    this.onSettings = false;
+  }
+
+  /** the selected source's fields: parameter name -> value */
+  get fields () {
+    return this.fieldsByModule[this.moduleId] || (this.fieldsByModule[this.moduleId] = {});
+  }
+
+  /** the selected source's documents: parameter name -> [text, ...] */
+  get panes () {
+    return this.panesFor(this.moduleId);
+  }
+
+  panesFor (moduleId) {
+    return this.panesByModule[moduleId] || (this.panesByModule[moduleId] = {});
   }
 
   get module () {
@@ -293,6 +308,7 @@ class NeighborhoodConfig {
     this.stash();
     this.moduleId = moduleId;
     this.showing = 0;
+    this.onSettings = false;   // show the document; settings are a tab away
     $("#neighborhood").val(moduleId);
     this.render();
     this.textarea.val((this.panes[(this.paneParam || {}).name] || [""])[0] || "");
@@ -307,10 +323,17 @@ class NeighborhoodConfig {
   }
 
   show (n) {
-    this.stash();
-    this.showing = n;
-    this.textarea.val((this.panes[this.paneParam.name] || [])[n] || "");
-    this.render();
+    if (this.showingPane)
+      return;                 // render() moved the tab set; not a new choice
+    this.showingPane = true;
+    try {
+      this.stash();
+      this.showing = n;
+      this.textarea.val((this.panes[this.paneParam.name] || [])[n] || "");
+      this.render();
+    } finally {
+      this.showingPane = false;
+    }
     this.onChange();
   }
 
@@ -336,72 +359,174 @@ class NeighborhoodConfig {
     this.show(Math.min(this.showing, texts.length - 1));
   }
 
-  /** draw the fields and tabs the selected module calls for */
+  /** Draw what the selected source asks for: its settings in the leftmost
+   * pane, and one pane per document it takes to the right of them -- the
+   * same tab set the shape map uses, so the data pane reads the way the
+   * rest of the app does.
+   *
+   * The documents' panes are placeholders: one editing area is moved into
+   * whichever is showing, so everything that has ever talked to "the data
+   * textarea" -- drag and drop, dirty tracking, permalinks, the editors --
+   * goes on talking to one element.
+   */
   render () {
     const {moduleId} = ShExWebApp.NeighborhoodApi;
     const spec = this.paneParam;
-    const fields = $("#neighborhoodFields").empty();
-    for (const param of this.fieldParams.filter(p => !(p.ui && p.ui.hidden))) {
-      const id = "nbhd-" + param.name;
-      const value = this.fields[param.name];
-      const input = param.schema.type === "boolean"
-            ? $("<input/>", {type: "checkbox", id})
-              .prop("checked", value === undefined ? !!param.schema.default : !!value)
-            : $("<input/>", {type: param.schema.type === "integer" || param.schema.type === "number"
-                             ? "number" : "text", id,
-                             placeholder: param.schema.default === undefined ? "" : String(param.schema.default),
-                             value: value === undefined ? "" : value});
-      input.attr("title", param.description || "");
-      input.on("change keyup", () => {
-        this.fields[param.name] = param.schema.type === "boolean"
-          ? input.prop("checked")
-          : input.val();
-        this.onChange();
-      });
-      fields.append($("<label/>", {for: id, class: "neighborhoodField"})
-                    .text(param.name + " ").append(input));
-    }
+    const container = $("#dataSource-tabs");
+    const initialized = container.hasClass("ui-tabs");
 
-    const tabs = $("#dataPaneTabs").empty();
-    if (spec) {
-      const texts = this.panes[spec.name] || [""];
-      texts.forEach((text, i) => {
-        const title = (spec.pane.titleOf && spec.pane.titleOf(text)) || (spec.pane.label + " " + (i + 1));
-        const tab = $("<button/>", {type: "button", class: "dataPaneTab", title: spec.pane.label})
-              .text(title).on("click", () => this.show(i));
-        if (i === this.showing)
-          tab.addClass("selected");
-        tabs.append(tab);
-      });
-      if (spec.pane.creatable)
-        tabs.append($("<button/>", {type: "button", id: "addDataPane",
-                                    title: "another " + spec.pane.label})
-                    .text("+").on("click", () => this.addPane()));
-      if (texts.length > (spec.pane.min || 0))
-        tabs.append($("<button/>", {type: "button", id: "removeDataPane",
-                                    title: "close this " + spec.pane.label})
-                    .text("−").on("click", () => this.removePane(this.showing)));
-      tabs.toggle(texts.length > 1 || !!spec.pane.creatable);
-    } else {
-      tabs.hide();
+    const fields = $("#neighborhoodFields").empty();
+    const shown = this.fieldParams.filter(p => !(p.ui && p.ui.hidden));
+    for (const param of shown.concat(this.hostParams()))
+      fields.append(this.fieldFor(param));
+    if (fields.children().length === 0)
+      fields.append($("<span/>", {class: "noSettings"})
+                    .text("nothing to configure: " + (this.module.description || this.module.name)));
+
+    // one tab and one (empty) panel per document
+    const tabs = $("#dataPaneTabs");
+    tabs.children().not(":first").remove();
+    container.children("div.dataPanePanel").remove();
+    const texts = spec ? (this.panes[spec.name] || [""]) : [];
+    texts.forEach((text, i) => {
+      const id = "dataPanePanel-" + i;
+      const title = (spec.pane.titleOf && spec.pane.titleOf(text)) || (spec.pane.label + " " + (i + 1));
+      tabs.append($("<li/>").append($("<a/>", {href: "#" + id, title: spec.pane.label}).text(title)));
+      container.append($("<div/>", {id, class: "dataPanePanel"}));
+    });
+
+    $("#dataPaneControls").toggle(!!spec);
+    $("#addDataPane").toggle(!!spec && !!spec.pane.creatable);
+    $("#removeDataPane").toggle(!!spec && texts.length > (spec.pane.min || 0));
+
+    // a source with no document has only its settings to show
+    if (!spec)
+      this.onSettings = true;
+    if (initialized) {
+      // refreshing re-activates a tab, which would answer the question this
+      // is about to ask; say what should be active and ignore the widget's
+      // own opinion while it settles
+      const active = this.onSettings ? 0 : this.showing + 1;   // +1: settings is leftmost
+      this.rendering = true;
+      try {
+        container.tabs("refresh");
+        container.tabs("option", "active", active);
+      } finally {
+        this.rendering = false;
+      }
     }
     this.showDocumentArea();
     $("#neighborhood").val(moduleId(this.module));
   }
 
-  /** Show or hide whatever is standing in for the document -- the textarea,
-   * or the editor that has taken its place -- since a source with nothing to
-   * edit should show nothing.  Kept apart from render() because rebuilding
-   * the editor restores the textarea it hid, so this has to run after. */
-  showDocumentArea () {
-    const editorPane = this.textarea.parent().find(".shexjs-editor-pane");
-    const showing = !!this.paneParam;
-    if (editorPane.length) {
-      editorPane.toggle(showing);
-      this.textarea.hide();      // the editor speaks for it either way
-    } else {
-      this.textarea.toggle(showing);
+  /** one labelled input for a parameter, remembering what's typed into it */
+  fieldFor (param) {
+    const id = "nbhd-" + param.name;
+    const value = this.fields[param.name];
+    const input = param.schema.type === "boolean"
+          ? $("<input/>", {type: "checkbox", id})
+            .prop("checked", value === undefined ? !!param.schema.default : !!value)
+          : $("<input/>", {type: param.schema.type === "integer" || param.schema.type === "number"
+                           ? "number" : "text", id,
+                           placeholder: param.schema.default === undefined ? "" : String(param.schema.default),
+                           value: value === undefined ? "" : value});
+    input.attr("title", param.description || "");
+    input.on("change keyup", () => {
+      this.fields[param.name] = param.schema.type === "boolean" ? input.prop("checked") : input.val();
+      this.onChange();
+    });
+    return $("<label/>", {for: id, class: "neighborhoodField"}).text(param.name + " ").append(input);
+  }
+
+  /** Settings that belong to the data source but that this app, not the
+   * module, carries out.  `slurp` is the one: recording the triples a
+   * validation fetched is the host's doing, and it only means anything for
+   * a source that fetches -- which is why it used to hide inside the "load
+   * data" menu item and appear only once an endpoint was named. */
+  hostParams () {
+    return this.module.dbParams && this.module.dbParams.some(p => p.name === "endpoint")
+      ? [{name: "slurp", schema: {type: "boolean"},
+          description: "record the triples this validation fetches, as Turtle, " +
+          "so the same data can be validated without the service"}]
+      : [];
+  }
+
+  /** Is this app recording what a validation fetches? */
+  slurping () {
+    return this.fields.slurp === true || this.fields.slurp === "true";
+  }
+
+  /** Where slurped triples go: the local store's Turtle document, so that
+   * switching the picklist to Turtle afterwards validates the same data
+   * without the service.  (They used to go into the pane that held the
+   * `# Endpoint:` header, which came to the same thing once you deleted
+   * the header.) */
+  localTurtle () {
+    const {paneParams, moduleId} = ShExWebApp.NeighborhoodApi;
+    for (const module of this.modules) {
+      const spec = paneParams(module.dbParams || []).find(
+        p => ((p.schema.items || {}).contentMediaType || "") === "text/turtle");
+      if (spec)
+        return {id: moduleId(module), name: spec.name};
     }
+    return null;
+  }
+
+  /** Append to that document, and to the textarea too when it is the one
+   * showing (so a slurp scrolls by as it happens, as it always has). */
+  appendToLocalTurtle (text) {
+    const target = this.localTurtle();
+    if (!target)
+      return;
+    const showingIt = this.moduleId === target.id && !this.onSettings &&
+          this.paneParam && this.paneParam.name === target.name && this.showing === 0;
+    if (showingIt) {
+      noScrollAppend(this.textarea, text);
+      return;
+    }
+    const panes = this.panesFor(target.id);
+    const texts = panes[target.name] || [""];
+    texts[0] = (texts[0] || "") + text;
+    panes[target.name] = texts;
+  }
+
+  setLocalTurtle (text) {
+    const target = this.localTurtle();
+    if (!target)
+      return;
+    const panes = this.panesFor(target.id);
+    panes[target.name] = [text];
+    if (this.moduleId === target.id && this.showing === 0)
+      this.textarea.val(text);
+  }
+
+  /** Wire the tab set up once the DOM is in place. */
+  initTabs () {
+    $("#dataSource-tabs").tabs({
+      activate: (event, ui) => {
+        if (this.rendering)
+          return;                        // render() moving the tabs, not the user
+        const panel = ui.newPanel.attr("id") || "";
+        const m = panel.match(/^dataPanePanel-(\d+)$/);
+        this.onSettings = !m;
+        if (m)
+          this.show(parseInt(m[1], 10));
+        else
+          this.showDocumentArea();       // the settings pane: no document
+      },
+    });
+    $("#addDataPane").on("click", () => this.addPane());
+    $("#removeDataPane").on("click", () => this.removePane(this.showing));
+  }
+
+  /** The editing area belongs to the document tabs, so it shows when one of
+   * them is active and not when the settings pane is -- and not at all for
+   * a source with no document to edit.  It sits below the tab set rather
+   * than inside a panel: the panels are empty placeholders, which keeps the
+   * one textarea (and whatever editor has taken it over) in one place.
+   */
+  showDocumentArea () {
+    $("#dataDocument").toggle(!!this.paneParam && !this.onSettings);
   }
 
   /** the language of the pane now showing, for the editors */
@@ -425,6 +550,7 @@ class NeighborhoodConfig {
                     .text(module.label || module.name)
                     .attr("title", module.description || ""));
     select.on("change", () => this.select(select.val()));
+    this.initTabs();
     this.render();
   }
 
@@ -511,7 +637,6 @@ class TurtleCache extends InterfaceCache {
       this.endpoint = params.endpoint;    // the SPARQL shape-map extension reads this
     else
       delete this.endpoint;
-    this.showSlurpControl(this.endpoint);
 
     // A pane of Turtle is this app's to parse: it owns the parser, and the
     // prefixes and base it finds are what the rest of the app lexifies
@@ -525,33 +650,6 @@ class TurtleCache extends InterfaceCache {
     const res = module.fromParams(params, this.queryTrackerController.queryTracker);
     this.callOnLoad();
     return res;
-  }
-
-  /** slurping fills the data pane from the queries a validation makes, so
-   * it's offered only when the pane names something to query */
-  showSlurpControl (endpoint) {
-    if (endpoint) {
-      if ($("#slurp").length === 0) {
-        // Add a #slurp checkbox
-        $("#load-data-button").append(
-          $("<span/>", {id: "slurpSpan",
-                        style: "float:right",
-                        title: "fill data pane with data queried from <" + this.endpoint + ">"})
-            .append(
-              $("<input/>", {id: "slurp", type: "checkbox"}),
-              $("<label/>", {for: "slurp"}).text("slurp")
-            ).on("click", () => {
-              // HACK: disable propagation and toggle after handler is done.
-              setTimeout(() => {
-                $("#slurp").prop("checked", !$("#slurp").prop("checked"));
-              }, 0);
-              return false; // don't pass to load data button
-            })
-        );
-      }
-    } else {
-      $("#slurpSpan").remove();
-    }
   }
 
   /** candidate focus nodes for the shape-map menus.
@@ -2012,10 +2110,7 @@ class ShExResultsRenderer {
   finish (done) {
     if ("slurpWriter" in this.caches.inputData) {
       this.caches.inputData.slurpWriter.end((err, chunk) => {
-        $("#inputData textarea").val((i, text) => {
-          return text + "\n\n# Visited data:\n" + chunk; // cheaper than set() but a pain to maintain...
-        });
-        $("#slurpSpan").remove();
+        this.caches.inputData.neighborhoods.appendToLocalTurtle("\n\n# Visited data:\n" + chunk);
         // delete this.caches.intputData.endpoint;
         this.caches.inputData.refresh();
         delete this.caches.inputData.slurpWriter;
@@ -2973,11 +3068,14 @@ class ShExBaseApp {
         const fixedMap = $("#fixedMap tr").map((idx, tr) =>
           this.fixValidationShapeMapEntry($(tr).find("input.focus").val(), $(tr).find("input.inputShape").val())
         ).get();
-        if ($("#slurp").is(":checked")) {
-          // .set() sets inputData's dirty bit.
-          this.Caches.inputData.set("# Endpoint: " + this.Caches.inputData.endpoint + "\n\n\n", this.Caches.inputData.endpoint);
+        if (this.neighborhoods.slurping()) {
+          // start the Turtle document over: what this validation fetches is
+          // what it should end up holding
+          this.neighborhoods.setLocalTurtle("");
           this.Caches.inputData.slurpWriter = new RdfJs.Writer({ prefixes: this.Caches.inputSchema.meta.prefixes });
-          inputData = ShExWebApp.SparqlDb(this.Caches.inputData.endpoint, this.makeQueryTracker());
+          this.queryTrackerController.queryTracker = this.makeQueryTracker();
+          this.Caches.inputData.dirty(true);
+          inputData = await this.Caches.inputData.refresh();
         }
 
         currentAction = "creating validator";
@@ -3068,16 +3166,16 @@ class ShExBaseApp {
   }
 
   makeQueryTracker () {
-    this.queryTrackerController.queryTracker = $("#slurp").is(":checked")
+    this.queryTrackerController.queryTracker = this.neighborhoods.slurping()
     ? {
       start: (isOut, term, shapeLabel) => {
         const node = this.Caches.inputData.meta.termToLex(WorkerMarshalling.jsonTermToRdfjsTerm(term, RdfJs.DataFactory));
         const shape = this.Caches.inputSchema.meta.termToLex(shapeLabel);
         const slurpStatus = (isOut ? "←" : "→") + " " + node + "@" + shape;
-        noScrollAppend($("#inputData textarea"), "# " + slurpStatus);
+        this.neighborhoods.appendToLocalTurtle("# " + slurpStatus);
       },
       end: (triples, time) => {
-        noScrollAppend($("#inputData textarea"), " " + triples.length + " triples (" + time + " μs)\n");
+        this.neighborhoods.appendToLocalTurtle(" " + triples.length + " triples (" + time + " μs)\n");
         this.Caches.inputData.slurpWriter.addQuads(triples.map(
           t => WorkerMarshalling.jsonTripleToRdfjsTriple(t, RdfJs.DataFactory)
           // t => ShExWebApp.ShExTerm.externalTriple(t, RdfJs.DataFactory)
