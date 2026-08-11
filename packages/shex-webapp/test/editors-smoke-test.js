@@ -131,9 +131,9 @@ if (!TEST_browser) {
         // settings on the left, one document tab beside it, and that
         // document is what shows (jsdom lays nothing out, so "showing" is
         // the display style)
-        expect(tabs()).to.deep.equal(["settings", "Turtle 1"]);
+        expect(tabs()).to.deep.equal(["settings", "Turtle data"]);
         expect($("#neighborhoodFields .noSettings").length, "nothing to configure").to.equal(1);
-        expect(source().paneParam.pane.label).to.equal("Turtle");
+        expect(source().paneParam.pane.label).to.equal("Turtle data");
         expect(shown("#dataDocument")).to.equal(true);
         expect(shown("#addDataPane"), "one graph is one document").to.equal(false);
       });
@@ -160,7 +160,9 @@ if (!TEST_browser) {
 
       it("should let a wikibase grow a pane per entity page", function () {
         source().select("wikidata");
-        expect(tabs(), "one to start").to.deep.equal(["settings", "entity JSON 1"]);
+        // which entities are in play is one list; their pages are documents
+        // of their own, and there are none until you open one
+        expect(tabs(), "one to start").to.deep.equal(["settings", "entity ids"]);
         expect(shown("#addDataPane"), "and a way to open another").to.equal(true);
 
         $("#addDataPane").trigger("click");
@@ -172,9 +174,11 @@ if (!TEST_browser) {
 
         // the panes not showing are still there to be validated with
         $("#inputData textarea").first().val('{"entities": {"Q42": {"id": "Q42"}}}');
-        source().show(0);
-        expect(source().texts().length).to.equal(2);
-        expect(source().params().data[1]).to.include("Q42");
+        source().show(1);                     // back to the id list
+        expect(tabs()[2], "a tab is named by the page in it").to.equal("Q42");
+        expect(source().params().pages).to.deep.equal(['{"entities": {"Q42": {"id": "Q42"}}}']);
+        // ...and a pane nobody has written in isn't a document
+        expect(source().params().data).to.deep.equal([]);
         expect(tabs()[2], "a tab is named by the page in it").to.equal("Q42");
       });
 
@@ -182,6 +186,8 @@ if (!TEST_browser) {
         source().select("rdfjs");
         expect(source().paneEditor().language).to.equal("turtle");
         source().select("wikidata");
+        expect(source().paneEditor(), "a list of ids is not a language").to.equal(null);
+        source().addPane();               // an entity page, which is JSON
         expect(source().paneEditor().language).to.equal("json");
         source().select("sparql");
         expect(source().paneEditor(), "nothing to edit").to.equal(null);
@@ -206,8 +212,10 @@ if (!TEST_browser) {
         await shared.promise;
 
         expect($("#neighborhood").val(), "the entry named its source").to.equal("wikidata");
-        expect(source().texts()).to.deep.equal(pages);
-        expect(tabs()).to.deep.equal(["settings", "Q1", "Q2"]);
+        // the source sorted them out: two pages, and the ids they are about
+        expect(tabs()).to.deep.equal(["settings", "entity ids", "Q1", "Q2"]);
+        expect(source().texts("data")).to.deep.equal(["Q1 Q2"]);
+        expect(source().params().pages.length).to.equal(2);
       });
 
       /* `slurp` used to hide inside the "load data" menu item, appearing
@@ -216,6 +224,25 @@ if (!TEST_browser) {
        * it is drawn with the source's own settings, and what it records goes
        * to the local store's document: switch the picklist to Turtle
        * afterwards and the same data validates without the service. */
+      /* Switching to a source with nothing to edit leaves no editor pane --
+       * that is the textarea fallback doing its job -- and switching back
+       * has to bring one; "is there a pane to rebuild" was the wrong
+       * question to gate that on. */
+      it("should get its editor back after a source that had none", function () {
+        const editorPanes = () => $("#inputData .shexjs-editor-pane").length;
+        source().select("rdfjs");
+        $("#inputData textarea").first().val("PREFIX : <http://a.example/>\n:x :p 1 .\n");
+        expect(editorPanes(), "Turtle is edited").to.equal(1);
+
+        source().select("sparql");
+        expect(editorPanes(), "a query service has no document").to.equal(0);
+
+        source().select("rdfjs");
+        expect(editorPanes(), "and Turtle is edited again").to.equal(1);
+        expect($("#inputData textarea").first().val(), "with the document it had")
+          .to.include(":x :p 1 .");
+      });
+
       it("should record what a query service was asked into the Turtle document", function () {
         source().select("sparql");
         expect($("#nbhd-slurp").length, "offered for a source that fetches").to.equal(1);
@@ -227,9 +254,55 @@ if (!TEST_browser) {
         source().select("rdfjs");
         expect($("#inputData textarea").first().val()).to.include("# <x>@<S> 1 triples");
 
-        // ...and it isn't offered where there is nothing to record
+        // every source that fetches has something to record -- a Wikibase
+        // translates pages into RDF, so it does too -- and one that is
+        // handed its data has nothing
         source().select("wikidata");
-        expect($("#nbhd-slurp").length).to.equal(0);
+        expect($("#nbhd-slurp").length, "a translating source").to.equal(1);
+        source().select("rdfjs");
+        expect($("#nbhd-slurp").length, "but not a document you typed").to.equal(0);
+      });
+
+      /* The three "Wikidata person" entries in the examples manifest are the
+       * same schema and the same focus node over three data sources.  Only
+       * the third names a document; the first two *are* their source, which
+       * a manifest says by naming the source and the settings it wants.
+       * (Picking an entry configures; validating would go to the network,
+       * which is what the CLI tests do.) */
+      it("should configure each of the manifest's Wikidata entries", async function () {
+        this.timeout(30000);
+        // an earlier test replaced the manifest with one of its own
+        await shared.Caches.manifest.asyncGet(
+          new dom.window.URL("../examples/manifest.json", dom.window.location.href).href);
+        const dataItems = () => $("#inputData .passes li");
+        $("#inputSchema .manifest li").filter((i, li) => $(li).text() === "Wikidata person")
+          .first().trigger("click");
+        await shared.promise;
+        expect(dataItems().map((i, li) => $(li).text()).get()).to.deep.equal(
+          ["Q42 from the query service", "Q42 from the JSON API", "Q42 from a downloaded page"]);
+
+        const pick = async n => {
+          dataItems().eq(n).trigger("click");
+          await shared.promise;
+        };
+
+        await pick(0);
+        expect($("#neighborhood").val()).to.equal("sparql");
+        expect($("#nbhd-endpoint").val()).to.equal("https://query.wikidata.org/sparql");
+        expect(tabs(), "a query service has no document").to.deep.equal(["settings"]);
+
+        await pick(1);
+        expect($("#neighborhood").val()).to.equal("wikidata");
+        expect($("#nbhd-base").val()).to.equal("https://www.wikidata.org/wiki/Special:EntityData/");
+        expect(source().texts("data"), "the entry said which entity").to.deep.equal(["Q42"]);
+        // ...and the endpoint didn't follow it here
+        expect($("#nbhd-endpoint").length).to.equal(0);
+
+        await pick(2);
+        expect($("#neighborhood").val()).to.equal("wikidata");
+        expect(tabs()[2], "the downloaded page, named by the id in it").to.equal("Q42");
+        expect(source().texts("data"), "and the id it is about").to.deep.equal(["Q42"]);
+        expect(source().texts("pages")[0]).to.include('"lastrevid"');
       });
 
       it("should carry the source and its settings in the permalink", async function () {

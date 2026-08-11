@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.paneEditor = exports.dbParams = exports.ctor = exports.description = exports.label = exports.name = exports.BNodeIdentityError = void 0;
+exports.paneEditor = exports.dbParams = exports.ctor = exports.capabilities = exports.description = exports.label = exports.name = exports.BNodeIdentityError = void 0;
 exports.sparqlDB = sparqlDB;
 exports.fromParams = fromParams;
 exports.claimPaneText = claimPaneText;
@@ -660,6 +660,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
 exports.name = "neighborhood-sparql";
 exports.label = "SPARQL endpoint";
 exports.description = "Implementation of @shexjs/neighborhood-api which gets data from a SPARQL endpoint";
+exports.capabilities = ["query"];
 exports.ctor = sparqlDB;
 /** What it takes to construct this DB, declared for hosts (the CLI, the
  * WebApp) that offer several neighborhood implementations.  See the STRAWMAN

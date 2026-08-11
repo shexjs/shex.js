@@ -56,7 +56,7 @@ exports.dbParams = [
         schema: { type: "array", items: { type: "string", format: "uri", contentMediaType: "text/turtle" } },
         // one graph, so one pane, and the user can't open another: a second
         // document would just be more of the same graph
-        pane: { label: "Turtle", editor: { language: "turtle" }, min: 1, max: 1 },
+        pane: { label: "Turtle data", editor: { language: "turtle" }, min: 1, max: 1 },
         cli: { option: "dataURL", alias: "d", typeLabel: "file|URL" } },
     { name: "jsonld",
         description: "JSON-LD data",

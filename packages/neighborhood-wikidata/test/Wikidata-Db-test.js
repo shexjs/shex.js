@@ -176,6 +176,33 @@ describe("neighborhood-wikidata", () => {
     });
   });
 
+  describe("the pages it read", () => {
+    it("should hand back what it fetched, readably, for a host to keep", () => {
+      const db = wikidataDB(null, fixtureTransport());
+      db.getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
+      const pages = db.loadedPages();
+      assert.deepEqual(pages.map(p => p.id), ["Q42"]);
+      // as downloaded it is one enormous line; as handed back it is legible
+      assert.isTrue(pages[0].text.startsWith("{\n  \"entities\""));
+      assert.equal(JSON.parse(pages[0].text).entities.Q42.id, "Q42");
+    });
+
+    it("should not hand back a page it was given", () => {
+      // it is already a document the caller has; only what was fetched is news
+      const doc = fs.readFileSync(path.join(fixtures, "Q42.json"), "utf8");
+      const db = wikidataDB(null, Object.assign(fixtureTransport(), {pages: [doc]}));
+      db.getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
+      assert.deepEqual(db.loadedPages(), []);
+    });
+
+    it("should offer the entities it was told about, before reaching them", () => {
+      const db = wikidataDB(null, Object.assign(fixtureTransport(), {entities: ["Q42", "Q5"]}));
+      assert.deepEqual(db.suggestFocusNodes("Q", 10).map(s => s.label),
+                       [WD + "Q42", WD + "Q5"]);
+      assert.deepEqual(db.loadedPages(), [], "naming an entity is not asking for it");
+    });
+  });
+
   describe("validation", () => {
     // entity -> statement -> value node, plus a hop to a second entity's
     // page (Q5), all synthesized from JSON

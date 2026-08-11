@@ -800,6 +800,7 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
 export const name = "neighborhood-sparql";
 export const label = "SPARQL endpoint";
 export const description = "Implementation of @shexjs/neighborhood-api which gets data from a SPARQL endpoint";
+export const capabilities = ["query"];
 export const ctor = sparqlDB;
 
 /** What it takes to construct this DB, declared for hosts (the CLI, the

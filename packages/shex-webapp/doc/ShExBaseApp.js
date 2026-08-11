@@ -248,57 +248,80 @@ class NeighborhoodConfig {
   get paneParams () { return ShExWebApp.NeighborhoodApi.paneParams(this.module.dbParams || []); }
   get fieldParams () { return ShExWebApp.NeighborhoodApi.fieldParams(this.module.dbParams || []); }
 
-  /** the parameter whose documents this app's data pane shows; the first
-   * declared, there being no app in which two make sense at once */
-  get paneParam () { return this.paneParams[0] || null; }
+  /** Every document the selected source takes, in declaration order: a
+   * flat list, because that is what the tabs are.  A parameter that must
+   * have a document always shows one, even before anything is in it. */
+  documents () {
+    const out = [];
+    for (const param of this.paneParams) {
+      const texts = this.panes[param.name] || (param.pane.min ? [""] : []);
+      texts.forEach((text, index) => out.push({param, index, text}));
+    }
+    return out;
+  }
 
-  /** texts of the showing parameter's panes, the visible one included */
-  texts () {
-    const spec = this.paneParam;
-    if (!spec)
+  /** the document a tab is showing, with the textarea's text in it */
+  docAt (n) {
+    const docs = this.documents();
+    if (n < 0 || n >= docs.length)
+      return null;
+    const doc = docs[n];
+    return Object.assign({}, doc, n === this.showing ? {text: this.textarea.val()} : {});
+  }
+
+  /** the parameter whose document is showing (for its language) */
+  get paneParam () {
+    const doc = this.docAt(this.showing);
+    return doc ? doc.param : (this.paneParams[0] || null);
+  }
+
+  /** texts of one parameter's documents, the showing one included */
+  texts (paramName) {
+    const name = paramName || (this.paneParam || {}).name;
+    if (!name)
       return [];
-    const texts = (this.panes[spec.name] || []).slice();
-    while (texts.length <= this.showing)
-      texts.push("");
-    texts[this.showing] = this.textarea.val();
+    const texts = (this.panes[name] || []).slice();
+    const doc = this.docAt(this.showing);
+    if (doc && doc.param.name === name) {
+      while (texts.length <= doc.index)
+        texts.push("");
+      texts[doc.index] = this.textarea.val();
+    }
     return texts;
   }
 
-  /** what to hand the module's fromParams */
+  /** what to hand the module's fromParams: a pane nobody has written in is
+   * not a document, however much room it is taking up */
   params () {
     const params = Object.assign({}, this.fields);
-    const spec = this.paneParam;
-    if (spec)
-      params[spec.name] = this.texts();
+    for (const param of this.paneParams)
+      params[param.name] = this.texts(param.name).filter(text => text.trim() !== "");
     return params;
   }
 
-  /** the text a permalink or manifest means by "data": the first document,
-   * whichever pane happens to be showing */
+  /** the text a permalink or manifest means by "data": the first document
+   * of the first parameter, whichever pane happens to be showing */
   primaryText () {
-    const texts = this.texts();
+    const texts = this.texts((this.paneParams[0] || {}).name);
     return texts.length > 0 ? texts[0] : "";
   }
 
-  async setPrimaryText (text) {
-    const spec = this.paneParam;
-    if (!spec)
+  /** Put documents where the source says they go.  A source that can sort
+   * its own documents out (a Wikibase, told an entity page, knows it is a
+   * page and which ids it is about) does; otherwise they are documents of
+   * the first parameter, which is what a data pane has always meant. */
+  setDocuments (texts) {
+    const first = this.paneParams[0];
+    if (!first)
       return;
-    const texts = this.texts();
-    texts[0] = text;
-    this.panes[spec.name] = texts;
-    if (this.showing !== 0)
-      this.showing = 0;
-    this.textarea.val(text);
-  }
-
-  /** replace the documents beyond the first (a manifest entry that named
-   * several, e.g. the entity pages of a constellation) */
-  setExtraTexts (texts) {
-    const spec = this.paneParam;
-    if (!spec)
-      return;
-    this.panes[spec.name] = [this.primaryText()].concat(texts);
+    const distribute = this.module.distributeDocuments;
+    const bySpec = distribute
+          ? distribute(texts.filter(text => text.trim() !== ""))
+          : {[first.name]: texts};
+    for (const param of this.paneParams)
+      this.panes[param.name] = (bySpec[param.name] || []).slice();
+    this.showing = 0;
+    this.textarea.val((this.documents()[0] || {}).text || "");
     this.render();
   }
 
@@ -312,14 +335,14 @@ class NeighborhoodConfig {
     $("#neighborhood").val(moduleId);
     this.render();
     this.textarea.val((this.panes[(this.paneParam || {}).name] || [""])[0] || "");
-    this.onChange();
+    this.onChange({language: true});   // a different source, a different language
   }
 
-  /** keep the showing pane's text before something replaces it */
+  /** keep the showing document's text before something replaces it */
   stash () {
-    const spec = this.paneParam;
-    if (spec)
-      this.panes[spec.name] = this.texts();
+    const doc = this.docAt(this.showing);
+    if (doc)
+      this.panes[doc.param.name] = this.texts(doc.param.name);
   }
 
   show (n) {
@@ -328,8 +351,11 @@ class NeighborhoodConfig {
     this.showingPane = true;
     try {
       this.stash();
+      // read the document before moving to it: docAt reports the showing
+      // one through the textarea, which is about to be overwritten
+      const text = (this.documents()[n] || {}).text || "";
       this.showing = n;
-      this.textarea.val((this.panes[this.paneParam.name] || [])[n] || "");
+      this.textarea.val(text);
       this.render();
     } finally {
       this.showingPane = false;
@@ -337,26 +363,34 @@ class NeighborhoodConfig {
     this.onChange();
   }
 
+  /** the parameter a new document would be added to */
+  get creatableParam () {
+    return this.paneParams.find(p => p.pane.creatable) || null;
+  }
+
   addPane (text) {
-    const spec = this.paneParam;
+    const spec = this.creatableParam;
     if (!spec)
       return;
     this.stash();
     const texts = this.panes[spec.name] || [];
     texts.push(text === undefined ? (spec.pane.template || "") : text);
     this.panes[spec.name] = texts;
-    this.show(texts.length - 1);
+    this.show(this.documents().findIndex(
+      d => d.param.name === spec.name && d.index === texts.length - 1));
   }
 
   removePane (n) {
-    const spec = this.paneParam;
-    this.stash();
-    const texts = this.panes[spec.name] || [];
-    if (texts.length <= (spec.pane.min || 0))
+    const doc = this.docAt(n);
+    if (!doc)
       return;
-    texts.splice(n, 1);
-    this.panes[spec.name] = texts;
-    this.show(Math.min(this.showing, texts.length - 1));
+    this.stash();
+    const texts = this.panes[doc.param.name] || [];
+    if (texts.length <= (doc.param.pane.min || 0))
+      return;
+    texts.splice(doc.index, 1);
+    this.panes[doc.param.name] = texts;
+    this.show(Math.min(this.showing, Math.max(0, this.documents().length - 1)));
   }
 
   /** Draw what the selected source asks for: its settings in the leftmost
@@ -383,24 +417,32 @@ class NeighborhoodConfig {
       fields.append($("<span/>", {class: "noSettings"})
                     .text("nothing to configure: " + (this.module.description || this.module.name)));
 
-    // one tab and one (empty) panel per document
+    // one tab and one (empty) panel per document, in the order the source
+    // declared its parameters
     const tabs = $("#dataPaneTabs");
     tabs.children().not(":first").remove();
     container.children("div.dataPanePanel").remove();
-    const texts = spec ? (this.panes[spec.name] || [""]) : [];
-    texts.forEach((text, i) => {
-      const id = "dataPanePanel-" + i;
-      const title = (spec.pane.titleOf && spec.pane.titleOf(text)) || (spec.pane.label + " " + (i + 1));
-      tabs.append($("<li/>").append($("<a/>", {href: "#" + id, title: spec.pane.label}).text(title)));
+    const docs = this.documents();
+    docs.forEach(({param, index, text}, n) => {
+      const id = "dataPanePanel-" + n;
+      const showingText = n === this.showing ? this.textarea.val() : text;
+      const title = (param.pane.titleOf && param.pane.titleOf(showingText))
+            || (param.pane.max === 1 ? param.pane.label : param.pane.label + " " + (index + 1));
+      tabs.append($("<li/>").append($("<a/>", {href: "#" + id, title: param.pane.label}).text(title)));
       container.append($("<div/>", {id, class: "dataPanePanel"}));
     });
+    if (this.showing >= docs.length)
+      this.showing = Math.max(0, docs.length - 1);
 
-    $("#dataPaneControls").toggle(!!spec);
-    $("#addDataPane").toggle(!!spec && !!spec.pane.creatable);
-    $("#removeDataPane").toggle(!!spec && texts.length > (spec.pane.min || 0));
+    const removable = this.docAt(this.showing);
+    $("#dataPaneControls").toggle(docs.length > 0 || !!this.creatableParam);
+    $("#addDataPane").toggle(!!this.creatableParam);
+    $("#removeDataPane").toggle(!!removable &&
+                                (this.panes[removable.param.name] || []).length >
+                                (removable.param.pane.min || 0));
 
     // a source with no document has only its settings to show
-    if (!spec)
+    if (docs.length === 0)
       this.onSettings = true;
     if (initialized) {
       // refreshing re-activates a tab, which would answer the question this
@@ -444,10 +486,12 @@ class NeighborhoodConfig {
    * a source that fetches -- which is why it used to hide inside the "load
    * data" menu item and appear only once an endpoint was named. */
   hostParams () {
-    return this.module.dbParams && this.module.dbParams.some(p => p.name === "endpoint")
+    // any source that fetches its answers -- by querying a service or by
+    // translating some other representation -- has something to record
+    return (this.module.capabilities || []).length > 0
       ? [{name: "slurp", schema: {type: "boolean"},
-          description: "record the triples this validation fetches, as Turtle, " +
-          "so the same data can be validated without the service"}]
+          description: "record what this validation fetches: the triples as Turtle, " +
+          "so the same data can be validated without the source"}]
       : [];
   }
 
@@ -464,12 +508,32 @@ class NeighborhoodConfig {
   localTurtle () {
     const {paneParams, moduleId} = ShExWebApp.NeighborhoodApi;
     for (const module of this.modules) {
+      // the registered source that holds an RDF document -- the "Turtle
+      // data" pane -- found by what it takes rather than by its name
       const spec = paneParams(module.dbParams || []).find(
         p => ((p.schema.items || {}).contentMediaType || "") === "text/turtle");
       if (spec)
         return {id: moduleId(module), name: spec.name};
     }
     return null;
+  }
+
+  /** Record a page a translating source read, as one of its own documents:
+   * a tab per entity, named by the id in it.  Slurping a Wikibase leaves
+   * you the pages it visited, to edit and validate again. */
+  addPageDocument (id, text) {
+    const spec = this.paneParams.find(p => p.pane.creatable);
+    if (!spec)
+      return;
+    this.stash();
+    const texts = this.panes[spec.name] || [];
+    const titleOf = spec.pane.titleOf || (() => null);
+    const at = texts.findIndex(had => titleOf(had) === id);
+    if (at === -1)
+      texts.push(text);
+    else
+      texts[at] = text;
+    this.panes[spec.name] = texts;
   }
 
   /** Append to that document, and to the textarea too when it is the one
@@ -526,7 +590,7 @@ class NeighborhoodConfig {
    * one textarea (and whatever editor has taken it over) in one place.
    */
   showDocumentArea () {
-    $("#dataDocument").toggle(!!this.paneParam && !this.onSettings);
+    $("#dataDocument").toggle(this.documents().length > 0 && !this.onSettings);
   }
 
   /** the language of the pane now showing, for the editors */
@@ -594,6 +658,7 @@ class NeighborhoodConfig {
               else
                 this.fields[param.name] = param.schema.type === "boolean" ? v !== "false" : v;
               this.render();
+              this.onChange();     // the db was built from the old value
             }),
         });
       }
@@ -961,7 +1026,10 @@ class ManifestCache extends InterfaceCache {
     const urls = elt.dataURL === undefined ? [] : [].concat(elt.dataURL);
     return {
       label: dataLabel || idx.toString(),
-      text: texts.length > 0 ? texts[0] : undefined,
+      // no document named at all means the source is the data (a query
+      // service); "" rather than undefined, which would send paintManifest
+      // fetching a URL that isn't there
+      text: texts.length > 0 ? texts[0] : (urls.length > 0 ? undefined : ""),
       url: urls.length > 0 ? urls[0] : (elt.data ? base : undefined),
       moreTexts: texts.slice(1),
       moreUrls: urls.slice(1),
@@ -1015,10 +1083,14 @@ class ManifestCache extends InterfaceCache {
       if (neighborhoods)
         neighborhoods.select(dataTest.entry.neighborhood ||
                              ShExWebApp.NeighborhoodApi.moduleId(neighborhoods.modules[0]));
-      // Update data pane.
+      // Update data pane.  An entry may name several documents, and where
+      // they go is the source's business: a Wikibase told an entity page
+      // knows it is a page, and which ids it is about.
+      const documents = [dataTest.text === undefined ? "" : dataTest.text]
+            .concat(await this.extraDataDocuments(dataTest));
       await this.caches.inputData.set(dataTest.text, new URL((dataTest.url || ""), DefaultBase).href);
       if (neighborhoods)
-        neighborhoods.setExtraTexts(await this.extraDataDocuments(dataTest));
+        neighborhoods.setDocuments(documents);
       this.caches.inputData.url = undefined; // @@ crappyHack1
       $("#inputData .status").text(name);
       $("#inputData li.selected").removeClass("selected");
@@ -2108,6 +2180,15 @@ class ShExResultsRenderer {
   }
 
   finish (done) {
+    // a source that read documents to answer with hands them back, so a
+    // slurp leaves the entity pages it visited as panes to edit
+    const neighborhoods = this.caches.inputData.neighborhoods;
+    const db = this.caches.inputData.parsed;
+    if (neighborhoods && neighborhoods.slurping() && db && typeof db.loadedPages === "function") {
+      for (const {id, text} of db.loadedPages())
+        neighborhoods.addPageDocument(id, text);
+      neighborhoods.render();
+    }
     if ("slurpWriter" in this.caches.inputData) {
       this.caches.inputData.slurpWriter.end((err, chunk) => {
         this.caches.inputData.neighborhoods.appendToLocalTurtle("\n\n# Visited data:\n" + chunk);
@@ -2417,7 +2498,11 @@ class ShExBaseApp {
     // where the data comes from, and the configuration that source asks for
     this.neighborhoods = new NeighborhoodConfig(
       ShExWebApp.NeighborhoodModules, inputData.selection,
-      () => { inputData.dirty(true); this.refreshDataPaneEditor(); });
+      changed => {
+        inputData.dirty(true);
+        if (changed && changed.language)
+          this.refreshDataPaneEditor();
+      });
     inputData.neighborhoods = this.neighborhoods;
     // manifest: how this input corresponds to a manifest entry: key (the
     // entry key; long text may spill to a gist file named spillName,
@@ -2498,12 +2583,16 @@ class ShExBaseApp {
    * a different pane of it), and a pane's grammar is fixed when it is
    * built, so rebuild it. */
   refreshDataPaneEditor () {
-    if (!this.editorSupport || !this.editorSupport.panes.inputData)
+    // Whether there is a pane to rebuild is not the question -- a source
+    // with no document to edit leaves none, and the next source may want
+    // one back.  The question is whether the editors are on at all.
+    if (!this.editorSupport)
       return;
-    const text = this.Caches.inputData.selection.val();
-    this.editorSupport.panes.inputData.destroy();
-    delete this.editorSupport.panes.inputData;
-    this.Caches.inputData.selection.val(text);
+    const pane = this.editorSupport.panes.inputData;
+    if (pane) {
+      pane.destroy();          // hands its text back to the textarea
+      delete this.editorSupport.panes.inputData;
+    }
     this.editorSupport.addPane("inputData", this.Caches.inputData, null,
                                () => this.neighborhoods.paneEditor());
     // destroying a pane restores the textarea it hid, so say again what

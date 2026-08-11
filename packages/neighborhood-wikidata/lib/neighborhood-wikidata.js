@@ -33,12 +33,13 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.paneEditor = exports.dbParams = exports.ctor = exports.description = exports.label = exports.name = exports.EntityResolutionError = void 0;
+exports.paneEditor = exports.dbParams = exports.ctor = exports.capabilities = exports.description = exports.label = exports.name = exports.EntityResolutionError = void 0;
 exports.bcp47 = bcp47;
 exports.siteInfoFromSitematrix = siteInfoFromSitematrix;
 exports.wikidataDB = wikidataDB;
 exports.asEntityDoc = asEntityDoc;
 exports.fromParams = fromParams;
+exports.distributeDocuments = distributeDocuments;
 exports.claimPaneText = claimPaneText;
 const neighborhood_api_1 = require("@shexjs/neighborhood-api");
 const N3 = __importStar(require("n3"));
@@ -55,6 +56,9 @@ class EntityResolutionError extends Error {
 }
 exports.EntityResolutionError = EntityResolutionError;
 const DataFactory = N3.DataFactory;
+/** Who this is, for hosts that ask (see fetchDoc): a tool and where to
+ * read about it, which is what Wikimedia's robot policy wants. */
+const USER_AGENT = "@shexjs/neighborhood-wikidata (https://github.com/shexjs/shex.js)";
 // ── site languages ──────────────────────────────────────────────────────────
 // The sitematrix names each wiki's language by its subdomain-ish code;
 // Wikibase's RDF names it by the BCP 47 form of the sites-table entry.
@@ -123,7 +127,9 @@ function wikidataDB(queryTracker, options = {}) {
     const dataBase = options.dataBase || "https://www.wikidata.org/wiki/Special:EntityData/";
     const entityDataUrl = options.entityDataUrl || ((id) => `${dataBase}${id}.json`);
     const siteMatrixUrl = options.siteMatrixUrl ||
-        "https://www.wikidata.org/w/api.php?action=sitematrix&format=json&formatversion=2";
+        // origin=* is what makes the Action API answer a cross-origin
+        // request; without it a browser has no permission to read this
+        "https://www.wikidata.org/w/api.php?action=sitematrix&format=json&formatversion=2&origin=*";
     const fetchDoc = options.fetchDoc || function (url) {
         // a file: base makes a directory of captured pages a fully offline
         // "API": <base><id>.json resolves to a file next to its siblings
@@ -136,9 +142,15 @@ function wikidataDB(queryTracker, options = {}) {
         const xhr = new XHR();
         xhr.open("GET", url, false);
         xhr.setRequestHeader("Accept", "application/json");
-        // Wikimedia's User-Agent policy 403s anonymous clients; browsers can't
-        // set User-Agent, so identify via the Api-User-Agent they accept instead
-        xhr.setRequestHeader("Api-User-Agent", "@shexjs/neighborhood-wikidata");
+        // Wikimedia's robot policy 403s clients that don't identify themselves
+        // (T400119).  User-Agent is a forbidden header name, so a browser
+        // ignores this and sends its own, while a node shim -- which has none --
+        // honors it.  Api-User-Agent, which MediaWiki also reads, is *not*
+        // forbidden, and asking for a custom header turns a cross-origin
+        // request into a preflighted one, which a synchronous XHR cannot do:
+        // it is the difference between this working in a browser and failing
+        // with "Failed to execute 'send' on 'XMLHttpRequest'".
+        xhr.setRequestHeader("User-Agent", USER_AGENT);
         xhr.send();
         if (xhr.status >= 400)
             throw Error(`GET <${url}> returned ${xhr.status}:\n${xhr.responseText}`);
@@ -190,12 +202,19 @@ function wikidataDB(queryTracker, options = {}) {
         for (const id of Object.keys(doc.entities))
             supplied.set(id, doc);
     });
+    /** the pages this DB has read, by the id each is the page of */
+    const pageTexts = new Map();
     function ensureLoaded(id) {
         if (loaded.has(id))
             return;
         // a page the caller supplied is the page: it says what the entity would
         // be if their edit were made, which is the thing being validated
-        const doc = supplied.get(id) || JSON.parse(getDoc(id, entityDataUrl(id)));
+        let doc = supplied.get(id);
+        if (doc === undefined) {
+            const text = getDoc(id, entityDataUrl(id));
+            pageTexts.set(id, text);
+            doc = JSON.parse(text);
+        }
         store.addQuads(converter.entityToQuads(doc, id));
         loaded.add(id);
         const returned = Object.keys(doc.entities)[0];
@@ -268,10 +287,10 @@ function wikidataDB(queryTracker, options = {}) {
         const out = [];
         // pages the caller supplied are what they came to validate, so offer
         // them whether or not the walk has reached them yet
-        for (const id of new Set([...supplied.keys(), ...loaded])) {
+        for (const id of new Set([...(options.entities || []), ...supplied.keys(), ...loaded])) {
             const label = loaded.has(id)
                 ? labelOf(DataFactory.namedNode(NS.wd + id), "en")
-                : labelIn(supplied.get(id), id, "en");
+                : supplied.has(id) ? labelIn(supplied.get(id), id, "en") : null;
             if (id.toLowerCase().startsWith(wanted) ||
                 (label !== null && label.toLowerCase().startsWith(wanted))) {
                 out.push({ label: NS.wd + id, detail: label || undefined, type: "class" });
@@ -303,7 +322,24 @@ function wikidataDB(queryTracker, options = {}) {
         get size() { return store.size; },
         suggestFocusNodes,
         labelOf,
+        loadedPages,
     };
+    /** The pages this DB fetched, ready to be looked at: readably indented,
+     * one per entity a walk reached.  A host that offers to record what a
+     * validation fetched (the WebApp's slurp) hands each of these back as a
+     * document, so what was read can be edited and validated again. */
+    function loadedPages() {
+        const out = [];
+        for (const [id, text] of pageTexts) {
+            try {
+                out.push({ id, text: JSON.stringify(JSON.parse(text), null, 2) + "\n" });
+            }
+            catch (e) {
+                out.push({ id, text }); // unparseable: hand back what arrived
+            }
+        }
+        return out;
+    }
 }
 const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
 /** An entity page either as `Special:EntityData` serves it or as the entity
@@ -328,6 +364,7 @@ function labelIn(doc, id, language) {
 exports.name = "neighborhood-wikidata";
 exports.label = "Wikidata";
 exports.description = "Implementation of @shexjs/neighborhood-api which synthesizes Wikidata's RDF from entity JSON pages";
+exports.capabilities = ["query", "translate"];
 exports.ctor = wikidataDB;
 /** What it takes to construct this DB, declared for hosts that offer several
  * neighborhood implementations (STRAWMAN, see @shexjs/neighborhood-api). */
@@ -359,7 +396,13 @@ exports.dbParams = [
         schema: { type: "string", format: "file-path" },
         ui: { hidden: true }, // a browser has no disk to cache on
         cli: { option: "wikidata-cache", typeLabel: "dir" } },
-    { name: "data",
+    { name: "data", selector: true,
+        description: "the entities to look at, by id, separated by whitespace",
+        schema: { type: "array", items: { type: "string", contentMediaType: "text/plain" } },
+        // one list, so one pane: which entities are in play is a single thought
+        pane: { label: "entity ids", min: 1, max: 1 },
+        cli: { option: "wikidata-entities", typeLabel: "Q42 Q5 ..." } },
+    { name: "pages", selector: true,
         description: "entity pages to believe instead of what the site serves, " +
             "so an edit can be validated before it is made",
         schema: { type: "array", items: { type: "string", format: "uri", contentMediaType: "application/json" } },
@@ -386,8 +429,36 @@ function fromParams(params, queryTracker) {
         entityDataUrl: params.base === undefined ? undefined : (id) => `${params.base}${id}.json`,
         siteMatrixUrl: params.sitematrix,
         cacheDir: params.cacheDir,
-        pages: params.data,
+        pages: params.pages,
+        entities: (params.data || []).join(" ").split(/\s+/).filter((id) => id !== ""),
     });
+}
+/** Sort documents a host was handed into the panes they belong in: an
+ * entity page is a page, anything else is a list of ids -- and a page also
+ * says which entities it is about, so dropping one in fills the id list
+ * too.  A host with documents and no idea which parameter they are for
+ * (a manifest entry's `data`, a dropped file) asks this. */
+function distributeDocuments(texts) {
+    const ids = [];
+    const pages = [];
+    for (const text of texts) {
+        let doc = null;
+        try {
+            doc = asEntityDoc(JSON.parse(text));
+        }
+        catch (e) {
+            doc = null; // not a page: a list of ids, then
+        }
+        if (doc === null)
+            ids.push(...text.split(/\s+/).filter(id => id !== ""));
+        else {
+            // re-serialized so a downloaded page arrives readable rather than as
+            // one enormous line
+            pages.push(JSON.stringify(doc, null, 2) + "\n");
+            ids.push(...Object.keys(doc.entities));
+        }
+    }
+    return { data: [ids.join(" ")], pages };
 }
 /** `# Wikidata` on the first line means "synthesize entity pages rather
  * than parsing me"; a URL after it points at another Wikibase instance. */

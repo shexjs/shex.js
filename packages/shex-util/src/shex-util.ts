@@ -1759,18 +1759,30 @@ const ShExUtil = {
    * the POST form for exactly this. */
   sparqlGetLimit: 2000,
 
+  /** Who we are, for services that insist on being told: Wikimedia's robot
+   * policy 403s a request with no User-Agent (T400119).  A browser refuses
+   * to set that header -- it is a forbidden header name, so the call is
+   * quietly ignored -- and sends one of its own; a synchronous-XHR shim
+   * under node has none to send, so it is set here for the shim's benefit.
+   * Assign to it to identify your own tool instead. */
+  sparqlUserAgent: "shex.js (https://github.com/shexjs/shex.js)",
+
   executeQueryPromise: function (query: string, endpoint: string, dataFactory: any): Promise<any[][]> {
     if (!endpoint)
       throw Error(`Can't execute a SPARQL query with no endpoint`);
 
     const queryURL = endpoint + "?query=" + encodeURIComponent(query);
     const request = queryURL.length <= this.sparqlGetLimit
-          ? fetch(queryURL, {headers: {'Accept': 'application/sparql-results+json'}})
+          ? fetch(queryURL, {headers: {
+            'Accept': 'application/sparql-results+json',
+            'User-Agent': this.sparqlUserAgent,
+          }})
           : fetch(endpoint, {
             method: 'POST',
             headers: {
               'Accept': 'application/sparql-results+json',
               'Content-Type': 'application/sparql-query',
+              'User-Agent': this.sparqlUserAgent,
             },
             body: query,
           });
@@ -1788,6 +1800,7 @@ const ShExUtil = {
     const xhr = new XMLHttpRequest();
     xhr.open(byUrl ? "GET" : "POST", byUrl ? queryURL : endpoint, false);
     xhr.setRequestHeader('Accept', 'application/sparql-results+json');
+    xhr.setRequestHeader('User-Agent', this.sparqlUserAgent);
     if (byUrl) {
       xhr.send();
     } else {

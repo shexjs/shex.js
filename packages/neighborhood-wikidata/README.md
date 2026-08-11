@@ -112,9 +112,20 @@ the bare entity, which is what hand-editing tends to leave you with.
 ## from the WebApp
 
 Pick **Wikidata** from the data-source list. The module declares what it
-needs, so the app draws it: a field for the entity-page base, and a pane per
-entity page with a `+` to open another — each tab named by reading the id
-back out of the page. Those pages are the `pages` above.
+needs, so the app draws it: a field for the entity-page base, a first pane
+holding the entities in play as a whitespace-separated list of ids, and a
+pane per entity page with a `+` to open another — each tab named by reading
+the id back out of the page. Those pages are the `pages` above.
+
+Turning on **slurp** records what a validation fetched: the triples go to
+the local store's Turtle document, and every entity page the walk read comes
+back as a pane of its own, readably indented, to edit and validate again.
+
+Requests identify themselves with a `User-Agent` (Wikimedia's robot policy
+403s clients that don't), and the site table is fetched with `origin=*` so a
+browser is allowed to read it. Nothing sets a *custom* request header:
+asking for one turns a cross-origin request into a preflighted one, which a
+synchronous XHR cannot do — and this API is synchronous.
 
 What no host could offer, this module does: completing entity IRIs from the
 labels of the pages the db has loaded, so typing `wd:Q4` offers

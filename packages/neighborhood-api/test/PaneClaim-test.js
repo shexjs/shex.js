@@ -151,9 +151,27 @@ describe("neighborhood pane claims", () => {
     it("should give a local store exactly one document, which the user can't multiply", () => {
       const [pane] = paneParams(RdfJs.dbParams);
       expect(pane.name).to.equal("data");
-      expect(pane.pane).to.deep.include({label: "Turtle", min: 1, max: 1});
+      expect(pane.pane).to.deep.include({label: "Turtle data", min: 1, max: 1});
       expect(pane.pane.creatable).to.not.equal(true);
       expect(pane.pane.editor.language).to.equal("turtle");
+    });
+
+    it("should sort documents into the panes they belong in", () => {
+      // an entity page is a page, and it also says which entity it is about;
+      // anything else is a list of ids
+      const page = '{"entities": {"Q42": {"id": "Q42"}}}';
+      expect(Wikidata.distributeDocuments([page, "Q5 Q7"])).to.deep.equal({
+        data: ["Q42 Q5 Q7"],
+        pages: [JSON.stringify(JSON.parse(page), null, 2) + "\n"],
+      });
+      expect(RdfJs.distributeDocuments, "a graph is a graph").to.equal(undefined);
+    });
+
+    it("should say which sources fetch their answers", () => {
+      // what a host needs to know to offer to record what was fetched
+      expect(Sparql.capabilities).to.deep.equal(["query"]);
+      expect(Wikidata.capabilities).to.deep.equal(["query", "translate"]);
+      expect(RdfJs.capabilities, "handed its data").to.equal(undefined);
     });
 
     it("should give a query service no documents at all, only fields", () => {
@@ -163,18 +181,22 @@ describe("neighborhood pane claims", () => {
     });
 
     it("should let a wikibase have as many entity pages as the user opens", () => {
-      const [pane] = paneParams(Wikidata.dbParams);
-      expect(pane.name).to.equal("data");
-      expect(pane.pane).to.deep.include({label: "entity JSON", min: 0, creatable: true});
-      expect(pane.pane.max).to.equal(undefined);
-      expect(pane.pane.editor.language).to.equal("json");
+      // which entities are in play is one list; their pages are documents
+      const [ids, pages] = paneParams(Wikidata.dbParams);
+      expect(ids.name).to.equal("data");
+      expect(ids.pane).to.deep.include({label: "entity ids", min: 1, max: 1});
+      expect(ids.pane.editor, "a list of ids is not a language").to.equal(undefined);
+      expect(pages.name).to.equal("pages");
+      expect(pages.pane).to.deep.include({label: "entity JSON", min: 0, creatable: true});
+      expect(pages.pane.max).to.equal(undefined);
+      expect(pages.pane.editor.language).to.equal("json");
       // fields go on being fields
       expect(fieldParams(Wikidata.dbParams).map(p => p.name)).to.deep.equal(
         ["base", "sitematrix", "cacheDir"]);
     });
 
     it("should title an entity pane from the page in it", () => {
-      const {titleOf, template} = paneParams(Wikidata.dbParams)[0].pane;
+      const {titleOf, template} = paneParams(Wikidata.dbParams)[1].pane;
       expect(titleOf('{"entities": {"Q42": {"id": "Q42"}}}')).to.equal("Q42");
       expect(titleOf('{"id": "Q42", "type": "item"}')).to.equal("Q42"); // a bare entity
       expect(titleOf('{"entities": {"Q4'), "half-typed").to.equal(null);

@@ -143,8 +143,10 @@ for (const mod of QueryDbModules)
 function queryDbParams (mod, cmds) {
   const specs = mod.dbParams || [];
   const cliName = s => s.cli && s.cli.option || s.name;
-  const selector = specs.find(s => s.selector);
-  if (!selector || cmds[cliName(selector)] === undefined)
+  // any of a module's selectors names it: --wikidata says which Wikibase,
+  // --wikidata-page says which pages, and either one is a choice of source
+  const selectors = specs.filter(s => s.selector);
+  if (!selectors.some(s => cmds[cliName(s)] !== undefined))
     return null;
   const params = {};
   for (const s of specs)
@@ -162,9 +164,12 @@ async function makeQueryDb (cmds, queryTracker) {
   if (!mod)
     return null;
   const params = queryDbParams(mod, cmds);
-  // A pane parameter's value is a *document*, which a command line can only
-  // name; the host resolves each name to its content (see PaneSpec).
-  for (const spec of (mod.dbParams || []).filter(s => s.pane && params[s.name] !== undefined))
+  // A pane parameter whose documents are named by URI is *referred to* on a
+  // command line -- a filename -- so the host resolves each name to its
+  // content; one whose documents are plain text (a list of entity ids) is
+  // typed out in full and is already what it says (see PaneSpec).
+  for (const spec of (mod.dbParams || []).filter(
+    s => s.pane && params[s.name] !== undefined && (s.schema.items || {}).format === "uri"))
     params[spec.name] = await Promise.all(
       [].concat(params[spec.name]).map(ref => ShExNode.GET(ref).then(body => body.text)));
   // the NeighborhoodDb API is synchronous, so give ShExUtil.executeQuery and

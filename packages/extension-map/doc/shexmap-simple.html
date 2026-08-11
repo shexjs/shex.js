@@ -62,6 +62,9 @@
       body { border-width: .25em; border-style: solid; border-color: white; }
       #bindings1 textarea, .meta { background-color: #fffff4; color: #000000; border-color: #56fc1c}
       #bindings1 li.selected { background-color: #ffffe8; }
+      /* the tab set and the document share one box, so the buttons below
+         don't move when the settings tab (which is short) is showing */
+      #dataArea { min-height: 33em; }
       #dataSource-tabs { margin-bottom: .2em; padding: .2em; }
       #dataSource-tabs .ui-tabs-nav { padding-left: .2em; }
       #dataSource-tabs .ui-tabs-panel { padding: .3em .2em; }
@@ -382,12 +385,14 @@ ul {
       </div>
       <div id="inputData" class="panel">
         <h2 class="status"> </h2>
-        <div id="dataSource-tabs" style="width: 100%">
-          <span id="dataPaneControls"><button type="button" id="addDataPane" title="another document">+</button><button type="button" id="removeDataPane" title="close this document">&#8722;</button></span>
-          <ul id="dataPaneTabs"><li><a href="#neighborhoodFields">settings</a></li></ul>
-          <div id="neighborhoodFields"></div>
+        <div id="dataArea">
+          <div id="dataSource-tabs" style="width: 100%">
+            <span id="dataPaneControls"><button type="button" id="addDataPane" title="another document">+</button><button type="button" id="removeDataPane" title="close this document">&#8722;</button></span>
+            <ul id="dataPaneTabs"><li><a href="#neighborhoodFields">settings</a></li></ul>
+            <div id="neighborhoodFields"></div>
+          </div>
+          <div id="dataDocument"><textarea rows="25" class="data droparea" style="width: 100%" spellcheck="false"></textarea></div>
         </div>
-        <div id="dataDocument"><textarea rows="25" class="data droparea" style="width: 100%" spellcheck="false"></textarea></div>
         <div style="margin-left: .1em;">
           <div class="passes" style="float:left; display:none;">
             <p></p>

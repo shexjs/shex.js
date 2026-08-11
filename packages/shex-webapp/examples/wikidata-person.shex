@@ -1,0 +1,64 @@
+# A person in Wikidata, small enough to see all of at once.
+#
+# Wikidata's own human schema is EntitySchema E10
+# <https://www.wikidata.org/wiki/EntitySchema:E10>; this is the same idea
+# pared down in two ways.  E10 sends `wdt:P22 @<human>` and friends into the
+# family graph, which fetches an entity per relative and, sooner or later,
+# reaches an ancestor recorded as "unknown value" -- a blank node, which no
+# `@<human>` can match.  And it looks only at the truthy `wdt:` arcs, where
+# half of what makes Wikidata's RDF interesting is the statement behind each
+# one: its rank, its qualifiers, and the value node that says how precise a
+# date is.  So this shape stays inside one entity and follows one property
+# down to its value node.
+#
+# The same schema validates the same entity whichever way the data arrives:
+# from the query service, from the JSON API an entity page is edited
+# through, or from a page you downloaded and edited yourself.
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX p: <http://www.wikidata.org/prop/>
+PREFIX ps: <http://www.wikidata.org/prop/statement/>
+PREFIX psv: <http://www.wikidata.org/prop/statement/value/>
+PREFIX wikibase: <http://wikiba.se/ontology#>
+
+start = @<person>
+
+<person> EXTRA wdt:P31 {
+  wdt:P31 [wd:Q5] ;                 # instance of: human
+  rdfs:label rdf:langString + ;     # named in at least one language
+  wdt:P21 IRI ? ;                   # sex or gender
+  wdt:P569 xsd:dateTime ? ;         # date of birth, as the truthy arc says it
+  wdt:P570 xsd:dateTime ? ;         # date of death
+  wdt:P106 IRI * ;                  # occupation
+  wdt:P27 IRI * ;                   # country of citizenship
+  wdt:P735 IRI * ;                  # given name
+  p:P569 @<birthStatement> * ;      # ...and the statement that date came from
+}
+
+# Every truthy arc is the shorthand for a statement, which is where a claim's
+# rank and provenance live.
+<birthStatement> {
+  # `a wikibase:Statement` is in the dump and in the JSON API's RDF, but the
+  # query service loads a munged dump that drops it as redundant, keeping
+  # only wikibase:BestRank on the statements wdt: reflects.  So this can say
+  # which types are allowed but not that any is required -- a difference
+  # between the two data sources, in the data rather than in this validator.
+  a [wikibase:Statement wikibase:BestRank] * ;
+  wikibase:rank [wikibase:PreferredRank wikibase:NormalRank wikibase:DeprecatedRank] ;
+  ps:P569 xsd:dateTime ;            # the same date, said in the statement
+  psv:P569 @<timeValue> ? ;         # and again, with its precision
+}
+
+# A date in Wikidata is a value with a precision and a calendar, not just a
+# lexical form: "1952-03-11" to the day, in the proleptic Gregorian calendar.
+<timeValue> {
+  a [wikibase:TimeValue] ;
+  wikibase:timeValue xsd:dateTime ;
+  wikibase:timePrecision xsd:integer ;
+  wikibase:timeTimezone xsd:integer ;
+  wikibase:timeCalendarModel IRI ;
+}

@@ -99,8 +99,9 @@ export interface DbParamSpec {
   /** key of this parameter in the bag handed to `fromParams` */
   name: string;
   description?: string;
-  /** the parameter whose presence picks this module: a host offering several
-   * neighborhood modules selects the one whose selector the user supplied */
+  /** this parameter's presence picks this module: a host offering several
+   * neighborhood modules selects the one whose selector the user supplied.
+   * More than one may be marked -- any of them names the source. */
   selector?: boolean;
   required?: boolean;
   schema: DbParamSchema;
@@ -212,6 +213,13 @@ export interface ParamEditor {
 export interface NeighborhoodModule {
   name: string;
   description: string;
+  /** What this source does to get its answers, which a host may need to
+   * know without knowing the source: "query" goes to a service, "translate"
+   * turns some other representation into RDF.  Either means the data is
+   * fetched rather than typed, so a host can offer to record what a
+   * validation fetched (the WebApp's slurp).  A source that is handed its
+   * data declares neither. */
+  capabilities?: ("query" | "translate")[];
   /** what to call this data source where a user picks one, e.g. "Wikidata".
    * A neighborhood is an implementation detail from inside; from outside it
    * is where the data comes from. */
@@ -312,6 +320,11 @@ export interface NeighborhoodWebAppDb extends NeighborhoodDb {
   suggestFocusNodes?(prefix: string, limit: number): EditorCompletion[];
   /** display label for a term, e.g. rdfs:label in the user's language */
   labelOf?(term: RdfJsTerm, language: string): string | null;
+  /** The documents this db read to answer what it was asked -- a
+   * translating source's source material, one per thing it fetched.  A
+   * host that offers to record what a validation fetched hands these back
+   * as documents, so what was read can be edited and validated again. */
+  loadedPages?(): { id: string, text: string }[];
 }
 
 /* sparqlOrder - sort triples by subject following SPARQL partial ordering.

@@ -1,16 +1,15 @@
----
 - schemaLabel: repeated properties
   schema: |
     PREFIX : <http://hl7.org/fhir/>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-    
+
     <#S1> {
       :p xsd:integer ;
       :p IRI ;
       :p xsd:decimal ;
       :p @<#S2>
     }
-    
+
     <#S2> {
       :q [5]
     }
@@ -18,14 +17,14 @@
   data: |
     PREFIX : <http://hl7.org/fhir/>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-    
+
     <#n1>
       :p 1.1 ;
       :p <#n3> ;
       :p <#n2> ;
       :p 4 ;
     .
-    
+
     <#n3> :q 5 .
   queryMap: |
     <#n1>@<#S1>
@@ -89,7 +88,8 @@
 
     <Patient2>
       :name "Bob" .
-  queryMap: "<Obs1>@START\n"
+  queryMap: |
+    <Obs1>@START
   status: conformant
 - schemaLabel: clinical observation
   schema: |
@@ -118,7 +118,8 @@
 
     <Patient2>
       :birthdate "1999-12-31"^^xsd:date .
-  queryMap: "<Obs1>@START\n"
+  queryMap: |
+    <Obs1>@START
   status: conformant
 - schemaLabel: clinical observation
   schema: |
@@ -148,7 +149,8 @@
     <Patient2>
       :name "Bob" ;
       :birthdate "1999-12-31"^^xsd:date .
-  queryMap: "<Obs1>@START\n"
+  queryMap: |
+    <Obs1>@START
   status: nonconformant
 - schemaLabel: clinical observation
   schema: |
@@ -177,7 +179,8 @@
     <Patient2>
       :name "Bob" ;
       :birthdate "1999-12-31"^^xsd:date .
-  queryMap: "<Obs1>@START\n"
+  queryMap: |
+    <Obs1>@START
   status: nonconformant
 - schemaLabel: clinical observation
   schema: |
@@ -207,7 +210,7 @@
     <Patient2>
       :name "Bob" ;
       :birthdate "1999-12-31T01:23:45"^^xsd:dateTime .
-  queryMap: "<Obs1>@START"
+  queryMap: <Obs1>@START
   status: nonconformant
 - schemaLabel: GO-CAM example
   schemaURL: GO-CAM-schema.shex
@@ -216,3 +219,65 @@
   queryMap: |
     <http://model.geneontology.org/5b528b1100001416/5b528b1100001522>@<#S1>
   status: conformant
+- schemaLabel: wikidata query
+  schema: |
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+    PREFIX p: <http://www.wikidata.org/prop/>
+    PREFIX pr: <http://www.wikidata.org/prop/reference/>
+    PREFIX ps: <http://www.wikidata.org/prop/statement/>
+
+    start = @<wikidata_item>
+
+    <wikidata_item> {
+      p:P1748 {
+        ps:P1748 LITERAL ;
+        prov:wasDerivedFrom @<reference>+
+      }+
+    }
+
+    <reference> {
+      pr:P248  IRI ;
+      pr:P813  xsd:dateTime ;
+      # pr:P699  LITERAL
+    }
+  dataLabel: '12078'
+  queryMap: |-
+    SPARQL '''SELECT ?item ?itemLabel WHERE {
+      ?item wdt:P279* wd:Q12078 .
+      SERVICE wikibase:label {
+        bd:serviceParam wikibase:language "en"
+      }
+    } LIMIT 10'''@START
+  status: conformant
+  neighborhood: sparql
+  endpoint: https://query.wikidata.org/sparql
+- schemaLabel: Wikidata person
+  schemaURL: wikidata-person.shex
+  dataLabel: Q42 from the query service
+  neighborhood: sparql
+  endpoint: https://query.wikidata.org/sparql
+  queryMap: |
+    <http://www.wikidata.org/entity/Q42>@START
+  status: conformant
+  comment: Douglas Adams, validated by asking query.wikidata.org for each neighborhood as the walk needs it.
+- schemaLabel: Wikidata person
+  schemaURL: wikidata-person.shex
+  dataLabel: Q42 from the JSON API
+  neighborhood: wikidata
+  base: https://www.wikidata.org/wiki/Special:EntityData/
+  queryMap: |
+    <http://www.wikidata.org/entity/Q42>@START
+  status: conformant
+  comment: The same entity from the JSON pages Wikidata is edited through, turned back into the RDF the query service would serve.
+  data: |
+    Q42
+- schemaLabel: Wikidata person
+  schemaURL: wikidata-person.shex
+  dataLabel: Q42 from a downloaded page
+  neighborhood: wikidata
+  dataURL: wikidata-Q42.json
+  queryMap: |
+    <http://www.wikidata.org/entity/Q42>@START
+  status: conformant
+  comment: 'The same entity from a page downloaded earlier: edit it in the pane to see what an edit would validate as before making it.'
