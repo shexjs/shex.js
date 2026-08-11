@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.paneEditor = exports.dbParams = exports.ctor = exports.description = exports.name = exports.BNodeIdentityError = void 0;
+exports.paneEditor = exports.dbParams = exports.ctor = exports.description = exports.label = exports.name = exports.BNodeIdentityError = void 0;
 exports.sparqlDB = sparqlDB;
 exports.fromParams = fromParams;
 exports.claimPaneText = claimPaneText;
@@ -480,7 +480,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
      * blank nodes (the truncation retry below escalates the same way when a
      * description bottoms out). */
     function fetch(point, preds, inverse) {
-        for (let depth = 0;; depth = depth === 0 ? (startDepth || 4) : Math.min(depth * 2, maxDepth)) {
+        for (let depth = options.expectBnodes ? (startDepth || 4) : 0;; depth = depth === 0 ? (startDepth || 4) : Math.min(depth * 2, maxDepth)) {
             const anchor = descriptionOf(point);
             const query = componentQuery(anchor, preds, depth, inverse);
             const rows = runQuery(query);
@@ -658,33 +658,46 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
     };
 }
 exports.name = "neighborhood-sparql";
+exports.label = "SPARQL endpoint";
 exports.description = "Implementation of @shexjs/neighborhood-api which gets data from a SPARQL endpoint";
 exports.ctor = sparqlDB;
 /** What it takes to construct this DB, declared for hosts (the CLI, the
  * WebApp) that offer several neighborhood implementations.  See the STRAWMAN
  * notes in @shexjs/neighborhood-api. */
+/** Everything this data source needs is a value to type: there is no
+ * document to edit, so a host renders it as fields and no panes. */
 exports.dbParams = [
     { name: "endpoint", selector: true, required: true,
-        description: "data query endpoint",
+        description: "SPARQL query service to ask",
         schema: { type: "string", format: "uri" },
         cli: { option: "endpoint", typeLabel: "IRI" } }, // the CLI's historical flag
     { name: "allOutgoing",
         description: "fetch every outgoing arc rather than only those the shape needs",
         schema: { type: "boolean" },
         cli: { option: "slurp-all" } }, // rides the CLI's existing flag
+    { name: "expectBnodes",
+        description: "expect blank nodes in every neighborhood, rather than probing for them first",
+        schema: { type: "boolean", default: false },
+        cli: { option: "sparql-expect-bnodes" } },
     { name: "bnodeDepth",
-        description: "how optimistically to chase blank nodes when describing them (grown on demand)",
+        description: "how far to follow blank nodes when describing them (grown on demand)",
         schema: { type: "integer", default: 4 },
         cli: { option: "sparql-bnode-depth", typeLabel: "integer" } },
+    { name: "maxBnodeDepth",
+        description: "never describe blank nodes more deeply than this",
+        schema: { type: "integer", default: 64 },
+        cli: { option: "sparql-max-bnode-depth", typeLabel: "integer" } },
     { name: "verifyBnodeDescriptions",
-        description: "pessimistically ask the endpoint to confirm each blank node description",
+        description: "have the endpoint confirm each blank node description picks out the node it should",
         schema: { type: "boolean", default: true },
         cli: { option: "sparql-verify-bnodes" } },
 ];
 function fromParams(params, queryTracker) {
     return sparqlDB(params.endpoint, queryTracker, {
         allOutgoing: params.allOutgoing,
+        expectBnodes: params.expectBnodes,
         bnodeDepth: params.bnodeDepth,
+        maxBnodeDepth: params.maxBnodeDepth,
         verifyBnodeDescriptions: params.verifyBnodeDescriptions,
     });
 }

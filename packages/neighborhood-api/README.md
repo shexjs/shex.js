@@ -49,19 +49,53 @@ a command line. `bin/validate` in [`@shexjs/cli`](../shex-cli#readme)
 appends the declared options of its registered modules (`--endpoint …`,
 `--wikidata …`) and constructs whichever module's selector appears.
 
+## fields and panes (STRAWMAN)
+
+A user picks a **data source** — which is what a neighborhood is from
+outside — and the host draws whatever that source needs from its own
+declarations. A parameter is either
+
+- a value to type, rendered as a **field**, or
+- one or more documents to edit, rendered as **panes** shown one at a time,
+  declared by adding a `pane: PaneSpec` to the parameter.
+
+`PaneSpec` says what to call a document (`label`), what language it is in
+(`editor`), how many there may be (`min`/`max`/`creatable`), what a new one
+starts as (`template`), and how to name its tab from its content
+(`titleOf`). `paneParams(specs)` and `fieldParams(specs)` split them; `ui:
+{hidden: true}` keeps a parameter out of a form where it can't mean anything
+(a cache directory, in a browser).
+
+So a SPARQL endpoint is all fields and no documents; a local store is one
+mandatory Turtle document; a Wikibase is a growable set of entity pages —
+each one an edit to try before making it, since a page supplied here is
+believed in place of what the site serves.
+
+A pane parameter's value is *document content*. A host that is given
+references instead — a command line's filenames, a manifest's `dataURL` —
+resolves them first (see `bin/validate`'s `makeQueryDb`).
+
+`moduleId(module)` is how a module is named where a name must be short and
+stable: a manifest entry's `neighborhood`, a permalink parameter, a
+picklist's option value. Parameters are keyed by *meaning* rather than by
+module, so `neighborhood=sparql&endpoint=…` reads the same in a permalink
+and in a manifest entry, and two sources that both take an `endpoint` agree
+about the word.
+
 ## a module's own language-sensitive editor (STRAWMAN)
 
-A host with editors shows the text that selects and configures a
-neighborhood. In the WebApp that text is the data pane, where
-`# Endpoint: <url>` has long meant "query this rather than parsing me".
-Which language that text is in is the module's business, not the host's — so
-a module may also export:
+Which language a document is in is the module's business, not the host's.
+Besides a pane's `editor`, a module may export:
 
-- `claimPaneText(text)` — do I serve this pane, and with what parameters?
-  (returns a parameter bag, or `null` to pass). A host tries its modules in
-  order and lists its catch-all — rdfjs, which parses the text as data —
-  last. `claimPane(modules, text)` does the walk.
-- `paneEditor: ParamEditor` — how that text should be edited.
+- `claimPaneText(text)` — does this text *name* me, and with what
+  parameters? Not how a host picks a source — the user does that — but how
+  text arriving from elsewhere says which one it wants: a permalink, a
+  dropped file, or a pane saved back when `# Endpoint: <url>` at the top of
+  the data was how you reached a query service. `claimPane(modules, text)`
+  walks the list and returns null when nothing claims it, leaving the host
+  with whatever source it was going to use.
+- `paneEditor: ParamEditor` — for a host with a single pane and no notion of
+  which parameter it holds.
 
 **A `ParamEditor` describes a language; it does not implement one.** Whole
 document `tokens(text)`, `lint(text)`, `complete(text, pos, ctx)` — plain
@@ -81,6 +115,12 @@ has actually loaded.
 `makePaneIfDescribed` → `null`, and the textarea stays exactly as the app
 shows it with the editors switched off.
 
+`supplied` is called *with* the text to describe, never left to read it
+back: which language a pane is in can change with a keystroke, and a host
+reading the text from its own cache would be describing the document as it
+was before the edit — the pane's textarea proxy still reports the old text
+while the transaction that changes it is being applied.
+
 ## loading a neighborhood module into the WebApp (STRAWMAN)
 
 The WebApp wants more from a db than `getNeighborhood`: focus-node
@@ -95,7 +135,15 @@ entities anyone would actually validate). Construction is covered by
 `dbParams`/`fromParams` above, rendered as a form rather than command line
 options.
 
+The WebApp puts these together: a **data source** picklist in the title bar
+lists the modules it loaded, and `#inputData` shows that source's fields and
+its documents' tabs. Where the data comes from is a choice, not a guess
+read out of the pane's text.
+
 All names and shapes here are negotiable; this is a strawman to refine.
+Known limits of this round: one data source at a time, and a permalink
+carries only the document showing (`data=`) — a second `data` document
+survives a manifest entry but not a permalink.
 
 
 # Lerna Monorepo

@@ -33,10 +33,11 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.paneEditor = exports.dbParams = exports.ctor = exports.description = exports.name = exports.EntityResolutionError = void 0;
+exports.paneEditor = exports.dbParams = exports.ctor = exports.description = exports.label = exports.name = exports.EntityResolutionError = void 0;
 exports.bcp47 = bcp47;
 exports.siteInfoFromSitematrix = siteInfoFromSitematrix;
 exports.wikidataDB = wikidataDB;
+exports.asEntityDoc = asEntityDoc;
 exports.fromParams = fromParams;
 exports.claimPaneText = claimPaneText;
 const neighborhood_api_1 = require("@shexjs/neighborhood-api");
@@ -145,7 +146,9 @@ function wikidataDB(queryTracker, options = {}) {
     };
     /** memory over disk over network */
     function getDoc(cacheKey, url) {
-        if (options.cacheDir) {
+        // fs is absent where there is no filesystem (a browser bundle stubs it
+        // out), so an on-disk cache is only offered where one can exist
+        if (options.cacheDir && fs && typeof fs.existsSync === "function") {
             const file = path.join(options.cacheDir, cacheKey + ".json");
             if (fs.existsSync(file))
                 return fs.readFileSync(file, "utf8");
@@ -174,10 +177,25 @@ function wikidataDB(queryTracker, options = {}) {
     const store = new N3.Store();
     /** entity ids whose pages are in the store */
     const loaded = new Set();
+    /** the caller's own pages, by the id each one is the page of */
+    const supplied = new Map();
+    (options.pages || []).forEach((text, i) => {
+        let doc;
+        try {
+            doc = asEntityDoc(JSON.parse(text));
+        }
+        catch (e) {
+            throw Error(`supplied entity page ${i} is not an entity: ${e.message}`);
+        }
+        for (const id of Object.keys(doc.entities))
+            supplied.set(id, doc);
+    });
     function ensureLoaded(id) {
         if (loaded.has(id))
             return;
-        const doc = JSON.parse(getDoc(id, entityDataUrl(id)));
+        // a page the caller supplied is the page: it says what the entity would
+        // be if their edit were made, which is the thing being validated
+        const doc = supplied.get(id) || JSON.parse(getDoc(id, entityDataUrl(id)));
         store.addQuads(converter.entityToQuads(doc, id));
         loaded.add(id);
         const returned = Object.keys(doc.entities)[0];
@@ -248,8 +266,12 @@ function wikidataDB(queryTracker, options = {}) {
     function suggestFocusNodes(prefix, limit) {
         const wanted = prefix.replace(/^(wd:|<?https?:\/\/\S*\/entity\/)/, "").toLowerCase();
         const out = [];
-        for (const id of loaded) {
-            const label = labelOf(DataFactory.namedNode(NS.wd + id), "en");
+        // pages the caller supplied are what they came to validate, so offer
+        // them whether or not the walk has reached them yet
+        for (const id of new Set([...supplied.keys(), ...loaded])) {
+            const label = loaded.has(id)
+                ? labelOf(DataFactory.namedNode(NS.wd + id), "en")
+                : labelIn(supplied.get(id), id, "en");
             if (id.toLowerCase().startsWith(wanted) ||
                 (label !== null && label.toLowerCase().startsWith(wanted))) {
                 out.push({ label: NS.wd + id, detail: label || undefined, type: "class" });
@@ -284,11 +306,43 @@ function wikidataDB(queryTracker, options = {}) {
     };
 }
 const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
+/** An entity page either as `Special:EntityData` serves it or as the entity
+ * alone, which is what someone hand-editing one tends to have. */
+function asEntityDoc(parsed) {
+    if (parsed && typeof parsed === "object" && parsed.entities)
+        return parsed;
+    if (parsed && typeof parsed === "object" && typeof parsed.id === "string")
+        return { entities: { [parsed.id]: parsed } };
+    throw Error(`expected {"entities": {...}} or an entity with an "id"`);
+}
+/** The label a JSON entity gives itself, through Wikidata's language-neutral
+ * "mul" -- see labelOf, which does the same over converted RDF. */
+function labelIn(doc, id, language) {
+    const labels = (doc.entities[id] || {}).labels || {};
+    const found = labels[language.toLowerCase()]
+        || labels[language.toLowerCase().split("-")[0]]
+        || labels.mul
+        || Object.values(labels)[0];
+    return found ? found.value : null;
+}
 exports.name = "neighborhood-wikidata";
+exports.label = "Wikidata";
 exports.description = "Implementation of @shexjs/neighborhood-api which synthesizes Wikidata's RDF from entity JSON pages";
 exports.ctor = wikidataDB;
 /** What it takes to construct this DB, declared for hosts that offer several
  * neighborhood implementations (STRAWMAN, see @shexjs/neighborhood-api). */
+/** What an entity page opened from scratch starts as: the shape of the
+ * thing, with the id to fill in and one empty statement group. */
+const ENTITY_TEMPLATE = JSON.stringify({
+    entities: {
+        Q0: {
+            type: "item",
+            id: "Q0",
+            labels: { en: { language: "en", value: "" } },
+            claims: {},
+        },
+    },
+}, null, 2) + "\n";
 exports.dbParams = [
     { name: "base", selector: true, required: true,
         description: "where entity pages live: <base><id>.json names each page " +
@@ -303,13 +357,36 @@ exports.dbParams = [
     { name: "cacheDir",
         description: "keep fetched entity pages on disk here",
         schema: { type: "string", format: "file-path" },
+        ui: { hidden: true }, // a browser has no disk to cache on
         cli: { option: "wikidata-cache", typeLabel: "dir" } },
+    { name: "data",
+        description: "entity pages to believe instead of what the site serves, " +
+            "so an edit can be validated before it is made",
+        schema: { type: "array", items: { type: "string", format: "uri", contentMediaType: "application/json" } },
+        // as many as the user opens: what is being checked is a constellation
+        // of entities, and how many of them there are is theirs to say
+        pane: {
+            label: "entity JSON",
+            editor: { language: "json" },
+            min: 0, creatable: true,
+            template: ENTITY_TEMPLATE,
+            titleOf: (text) => {
+                try {
+                    return Object.keys(asEntityDoc(JSON.parse(text)).entities)[0] || null;
+                }
+                catch (e) {
+                    return null; // half-typed, or not an entity page
+                }
+            },
+        },
+        cli: { option: "wikidata-page", typeLabel: "file|URL" } },
 ];
 function fromParams(params, queryTracker) {
     return wikidataDB(queryTracker, {
         entityDataUrl: params.base === undefined ? undefined : (id) => `${params.base}${id}.json`,
         siteMatrixUrl: params.sitematrix,
         cacheDir: params.cacheDir,
+        pages: params.data,
     });
 }
 /** `# Wikidata` on the first line means "synthesize entity pages rather

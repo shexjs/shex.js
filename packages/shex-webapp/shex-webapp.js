@@ -32,14 +32,14 @@ ShExWebApp = (function () {
     RdfJsDb:              modules["@shexjs/neighborhood-rdfjs"].ctor,
     SparqlDb:             modules["@shexjs/neighborhood-sparql"].ctor,
     NeighborhoodApi:      modules["@shexjs/neighborhood-api"],
-    /* The neighborhoods this app can serve its data pane from, in the order
-     * they're offered the pane's text: each module says whether it answers
-     * to it (claimPaneText) and how that text should be edited
-     * (paneEditor).  rdfjs is last because it claims whatever is left. */
+    /* The data sources this app offers, in picklist order.  The first is
+     * the default -- an RDF document, which is what a data pane has always
+     * held.  What each one needs configured, and how its documents are
+     * edited, comes from the module (dbParams, PaneSpec). */
     NeighborhoodModules: [
+      modules["@shexjs/neighborhood-rdfjs"],
       modules["@shexjs/neighborhood-sparql"],
       modules["@shexjs/neighborhood-wikidata"],
-      modules["@shexjs/neighborhood-rdfjs"],
     ],
     Validator:            modules["@shexjs/validator"].ShExValidator,
     Writer:               modules["@shexjs/writer"],

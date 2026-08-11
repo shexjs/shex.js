@@ -1,9 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.paneEditor = exports.dbParams = exports.ctor = exports.description = exports.name = void 0;
+exports.paneEditor = exports.dbParams = exports.ctor = exports.description = exports.label = exports.name = void 0;
 exports.rdfjsDB = rdfjsDB;
 exports.fromParams = fromParams;
-exports.claimPaneText = claimPaneText;
 const neighborhood_api_1 = require("@shexjs/neighborhood-api");
 function rdfjsDB(db, queryTracker) {
     function getNeighborhood(point, shapeLabel, _shape) {
@@ -41,6 +40,7 @@ function rdfjsDB(db, queryTracker) {
     };
 }
 exports.name = "neighborhood-rdfjs";
+exports.label = "Turtle";
 exports.description = "Implementation of @shexjs/neighborhood-api which gets data from an @rdfjs/dataset";
 exports.ctor = rdfjsDB;
 /** What it takes to construct this DB, declared for hosts that offer several
@@ -51,23 +51,29 @@ exports.ctor = rdfjsDB;
  * and needs parsers this module doesn't ship), so `fromParams` takes the
  * store the host built rather than the file lists. */
 exports.dbParams = [
-    { name: "data", selector: true,
+    { name: "data", selector: true, required: true,
         description: "Turtle data",
         schema: { type: "array", items: { type: "string", format: "uri", contentMediaType: "text/turtle" } },
+        // one graph, so one pane, and the user can't open another: a second
+        // document would just be more of the same graph
+        pane: { label: "Turtle", editor: { language: "turtle" }, min: 1, max: 1 },
         cli: { option: "dataURL", alias: "d", typeLabel: "file|URL" } },
     { name: "jsonld",
         description: "JSON-LD data",
         schema: { type: "array", items: { type: "string", format: "uri", contentMediaType: "application/ld+json" } },
+        // named files for a host that can fetch and expand them, which so far
+        // means the command line: nothing to type into a form, and no pane
+        // (this data ends up in the same store the Turtle pane feeds)
+        ui: { hidden: true },
         cli: { option: "jsonld", alias: "l", typeLabel: "file|URL" } },
 ];
 function fromParams(params, queryTracker) {
     return rdfjsDB(params.store, queryTracker);
 }
-/** The catch-all: any text a query module doesn't claim is data to parse.
- * A host lists this module last. */
-function claimPaneText(text) {
-    return { text };
-}
+/* No claimPaneText: nothing about a document says it wants to be parsed
+ * rather than queried, and a host that used to guess from the text now
+ * asks (or defaults to this module, an RDF document being what a data pane
+ * has always held). */
 /** This module has a whole RDF document to edit, so it names the language
  * the host already implements rather than describing one. */
 exports.paneEditor = { language: "turtle" };

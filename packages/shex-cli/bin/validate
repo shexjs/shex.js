@@ -157,14 +157,20 @@ function selectedQueryDbModule (cmds) {
   return QueryDbModules.find(mod => queryDbParams(mod, cmds) !== null) || null;
 }
 
-function makeQueryDb (cmds, queryTracker) {
+async function makeQueryDb (cmds, queryTracker) {
   const mod = selectedQueryDbModule(cmds);
   if (!mod)
     return null;
+  const params = queryDbParams(mod, cmds);
+  // A pane parameter's value is a *document*, which a command line can only
+  // name; the host resolves each name to its content (see PaneSpec).
+  for (const spec of (mod.dbParams || []).filter(s => s.pane && params[s.name] !== undefined))
+    params[spec.name] = await Promise.all(
+      [].concat(params[spec.name]).map(ref => ShExNode.GET(ref).then(body => body.text)));
   // the NeighborhoodDb API is synchronous, so give ShExUtil.executeQuery and
   // friends a synchronous XMLHttpRequest to fetch with
   require('@shexjs/neighborhood-sparql/sync-fetch').installXhrShim();
-  return mod.fromParams(queryDbParams(mod, cmds), queryTracker);
+  return mod.fromParams(params, queryTracker);
 }
 
 // Generate command line interface
@@ -548,7 +554,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions, cmd
       }));
       schemaAndData.data = store;
     }
-    schemaAndData.data = makeQueryDb(valParms, queryTracker)
+    schemaAndData.data = (await makeQueryDb(valParms, queryTracker))
       || RdfJsDb(schemaAndData.data, queryTracker);
     if (typeof schemaAndData.data.setSchema === "function")
       schemaAndData.data.setSchema(schemaAndData.schema); // e.g. sparql narrows queries by shape

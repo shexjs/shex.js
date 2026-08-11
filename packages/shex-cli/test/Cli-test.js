@@ -190,6 +190,31 @@ if (!TEST_cli) {
       ]));
     });
 
+    /* A pane parameter's value is a document; on a command line it can only
+     * be named, so the CLI resolves each name to its content.  Here that
+     * document is an entity page nobody has saved: the validation reads it
+     * where it would have fetched Q42, and fetches Q5 around it as usual. */
+    it("by neighborhood-wikidata over an entity page that only exists locally", async function () {
+      this.timeout(20000);
+      const edited = Path.join(Fs.mkdtempSync(Path.join(require("os").tmpdir(), "wd-")), "Q42.json");
+      const doc = JSON.parse(Fs.readFileSync(Path.join(wdFixtures, "Q42.json"), "utf8"));
+      doc.entities.Q42.claims.P569[0].mainsnak.datavalue.value.time = "+1952-03-12T00:00:00Z";
+      Fs.writeFileSync(edited, JSON.stringify(doc));
+      try {
+        const run = await validate([
+          "-x", "wikidata/human.shex", "-m", queryMap,
+          "--wikidata", fixturesUrl,
+          "--wikidata-sitematrix", fixturesUrl + "sitematrix.json",
+          "--wikidata-page", edited,
+        ]);
+        expectConformant(run);
+        expect(run.stdout).to.include("1952-03-12T00:00:00Z");  // the unsaved edit
+        expect(run.stdout).not.to.include("1952-03-11T00:00:00Z");
+      } finally {
+        Fs.rmSync(Path.dirname(edited), {recursive: true, force: true});
+      }
+    });
+
     it("by neighborhood-sparql over an endpoint holding the same synthesized graph", async function () {
       this.timeout(60000);
       const {startSparqlTestServer} = require("../../neighborhood-sparql/test/sparql-test-server");

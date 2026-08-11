@@ -22,17 +22,21 @@ const Sparql = require("@shexjs/neighborhood-sparql");
 const Wikidata = require("@shexjs/neighborhood-wikidata");
 const RdfJs = require("@shexjs/neighborhood-rdfjs");
 
-// the order a host offers its modules: the catch-all goes last
-const MODULES = [Sparql, Wikidata, RdfJs];
+// the order a host offers them: the default (a local store) first, since
+// nothing about a document says whether to parse it or to query something
+// instead -- that is the user's choice, not a claim
+const MODULES = [RdfJs, Sparql, Wikidata];
 
 const TURTLE = `PREFIX : <http://a.example/>\n:x :p 1 .\n`;
 
 describe("neighborhood pane claims", () => {
 
-  it("should give Turtle to the module that parses it", () => {
-    const claim = claimPane(MODULES, TURTLE);
-    expect(claim.module.name).to.equal("neighborhood-rdfjs");
-    expect(claim.module.paneEditor.language).to.equal("turtle");
+  it("should leave ordinary data to whatever source the host had chosen", () => {
+    // no module claims a plain document: a host asks the user which source
+    // to use and only consults claimPaneText for text that names one
+    expect(claimPane(MODULES, TURTLE)).to.equal(null);
+    expect(RdfJs.claimPaneText, "no catch-all any more").to.equal(undefined);
+    expect(RdfJs.paneEditor.language).to.equal("turtle");
   });
 
   it("should give an Endpoint header to the SPARQL module", () => {
@@ -50,12 +54,13 @@ describe("neighborhood pane claims", () => {
 
   it("should only read a header on the first line", () => {
     // a header further down is a comment in somebody's data, not a claim
-    const claim = claimPane(MODULES, TURTLE + "# Endpoint: http://ex.example/sparql\n");
-    expect(claim.module.name).to.equal("neighborhood-rdfjs");
+    expect(claimPane(MODULES, TURTLE + "# Endpoint: http://ex.example/sparql\n"))
+      .to.equal(null);
   });
 
-  it("should let a host know when nothing claims the text", () => {
-    expect(claimPane([Sparql, Wikidata], TURTLE)).to.equal(null);
+  it("should name each module the way a manifest or permalink does", () => {
+    const {moduleId} = require("..");
+    expect(MODULES.map(moduleId)).to.deep.equal(["rdfjs", "sparql", "wikidata"]);
   });
 
   describe("module-described languages", () => {
@@ -134,6 +139,46 @@ describe("neighborhood pane claims", () => {
 
       // ...and nothing without a db: the host has no way to know this
       expect(Wikidata.paneEditor.complete(text, text.length)).to.equal(null);
+    });
+  });
+
+  /* What a host needs to build a data-source configuration UI: which
+   * parameters are documents to edit (panes, shown one at a time) and which
+   * are values to type (fields). */
+  describe("panes and fields", () => {
+    const {paneParams, fieldParams, moduleId} = require("..");
+
+    it("should give a local store exactly one document, which the user can't multiply", () => {
+      const [pane] = paneParams(RdfJs.dbParams);
+      expect(pane.name).to.equal("data");
+      expect(pane.pane).to.deep.include({label: "Turtle", min: 1, max: 1});
+      expect(pane.pane.creatable).to.not.equal(true);
+      expect(pane.pane.editor.language).to.equal("turtle");
+    });
+
+    it("should give a query service no documents at all, only fields", () => {
+      expect(paneParams(Sparql.dbParams)).to.deep.equal([]);
+      expect(fieldParams(Sparql.dbParams).map(p => p.name)).to.include.members(
+        ["endpoint", "expectBnodes", "bnodeDepth", "verifyBnodeDescriptions"]);
+    });
+
+    it("should let a wikibase have as many entity pages as the user opens", () => {
+      const [pane] = paneParams(Wikidata.dbParams);
+      expect(pane.name).to.equal("data");
+      expect(pane.pane).to.deep.include({label: "entity JSON", min: 0, creatable: true});
+      expect(pane.pane.max).to.equal(undefined);
+      expect(pane.pane.editor.language).to.equal("json");
+      // fields go on being fields
+      expect(fieldParams(Wikidata.dbParams).map(p => p.name)).to.deep.equal(
+        ["base", "sitematrix", "cacheDir"]);
+    });
+
+    it("should title an entity pane from the page in it", () => {
+      const {titleOf, template} = paneParams(Wikidata.dbParams)[0].pane;
+      expect(titleOf('{"entities": {"Q42": {"id": "Q42"}}}')).to.equal("Q42");
+      expect(titleOf('{"id": "Q42", "type": "item"}')).to.equal("Q42"); // a bare entity
+      expect(titleOf('{"entities": {"Q4'), "half-typed").to.equal(null);
+      expect(titleOf(template), "a fresh page names the id to fill in").to.equal("Q0");
     });
   });
 

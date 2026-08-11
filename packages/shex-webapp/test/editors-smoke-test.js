@@ -107,35 +107,109 @@ if (!TEST_browser) {
       expect($("#inputSchema .cm-content").text()).to.include("http://a.example/");
     });
 
-    /* The data pane's language belongs to whichever neighborhood module
-     * claims its text, not to this app: "# Endpoint:" makes it the SPARQL
-     * module's, "# Wikidata" the wikidata module's, anything else the rdfjs
-     * module's Turtle.  Each module describes its own header, and the host
-     * colors and diagnoses it from that description. */
-    it("should take the data pane's language from the module claiming its text", function () {
-      const textarea = $("#inputData textarea").first();
-      const before = textarea.val();
-      const marks = () => $("#inputData [class*='shexjs-tok-']").length;
-      try {
-        // Turtle: the rdfjs module names the host's language and describes
-        // nothing of its own, so nothing is module-colored
-        textarea.val("PREFIX : <http://a.example/>\n:x :p 1 .\n");
-        expect(marks(), "Turtle needs no module tokens").to.equal(0);
+    /* Where the data comes from is picked from a list of the neighborhood
+     * modules this app loaded, and what each one needs is drawn from that
+     * module's own declarations: values to type become fields, documents to
+     * edit become panes shown one at a time.  The app knows about data
+     * sources in general and about none of them in particular. */
+    describe("the data source picklist", function () {
+      const source = () => shared.neighborhoods;
+      afterEach(function () {
+        source().select("rdfjs");   // leave the app as the other tests expect
+      });
 
-        // typing a header hands the pane to another module, which colors it
-        textarea.val("# Endpoint: http://ex.example/sparql\n:x :p 1 .\n");
-        expect($("#inputData .shexjs-tok-keyword").length, "endpoint header").to.equal(1);
-        expect($("#inputData .shexjs-tok-link").length, "endpoint URL").to.equal(1);
+      it("should offer every loaded source, defaulting to an RDF document", function () {
+        expect($("#neighborhood option").map((i, o) => $(o).val()).get())
+          .to.deep.equal(["rdfjs", "sparql", "wikidata"]);
+        expect($("#neighborhood").val()).to.equal("rdfjs");
+        expect($("#neighborhood option:selected").text()).to.equal("Turtle");
+        // one mandatory document, nothing to configure, no tabs to bother
+        // with (jsdom lays nothing out, so "showing" is the display style)
+        expect($("#neighborhoodFields").children().length).to.equal(0);
+        expect($("#dataPaneTabs").css("display")).to.equal("none");
+        expect(source().paneParam.pane.label).to.equal("Turtle");
+        expect($("#inputData .shexjs-editor-pane").css("display")).to.not.equal("none");
+      });
 
-        // a URL that can't be queried is the module's own diagnosis
-        textarea.val("# Endpoint: localhost:8080\n");
-        expect($("#inputData .shexjs-tok-invalid").length, "unusable endpoint").to.equal(1);
+      it("should draw a query service as fields, with no document at all", function () {
+        source().select("sparql");
+        const fields = $("#neighborhoodFields label").map((i, l) => $(l).text().trim()).get();
+        expect(fields).to.include("endpoint");
+        expect(fields).to.include("expectBnodes");
+        expect($("#nbhd-expectBnodes").attr("type"), "a boolean is a checkbox").to.equal("checkbox");
+        expect($("#nbhd-bnodeDepth").attr("type"), "an integer is a number").to.equal("number");
+        // nothing to edit, so nothing to edit it in
+        expect(source().paneParam).to.equal(null);
+        // no document, so not even an editor: the fallback all the way down
+        expect($("#inputData .shexjs-editor-pane").length).to.equal(0);
+        expect($("#inputData textarea").first().css("display")).to.equal("none");
+        expect($("#dataPaneTabs").css("display")).to.equal("none");
+      });
 
-        textarea.val("# Wikidata\n");
-        expect($("#inputData .shexjs-tok-keyword").length, "wikidata header").to.equal(1);
-      } finally {
-        textarea.val(before);
-      }
+      it("should let a wikibase grow a pane per entity page", function () {
+        source().select("wikidata");
+        expect($("#dataPaneTabs .dataPaneTab").length, "one to start").to.equal(1);
+        expect($("#addDataPane").length, "and a way to open another").to.equal(1);
+
+        $("#addDataPane").trigger("click");
+        expect($("#dataPaneTabs .dataPaneTab").length).to.equal(2);
+        // a fresh page starts from the module's template, and its tab is
+        // named by the module reading the page's id back out of it
+        expect($("#inputData textarea").first().val()).to.include('"entities"');
+        expect($("#dataPaneTabs .dataPaneTab").last().text()).to.equal("Q0");
+
+        // the panes not showing are still there to be validated with
+        $("#inputData textarea").first().val('{"entities": {"Q42": {"id": "Q42"}}}');
+        $("#dataPaneTabs .dataPaneTab").first().trigger("click");
+        expect(source().texts().length).to.equal(2);
+        expect(source().params().data[1]).to.include("Q42");
+        expect($("#dataPaneTabs .dataPaneTab").last().text()).to.equal("Q42");
+      });
+
+      it("should give each pane the language its source says it is in", function () {
+        source().select("rdfjs");
+        expect(source().paneEditor().language).to.equal("turtle");
+        source().select("wikidata");
+        expect(source().paneEditor().language).to.equal("json");
+        source().select("sparql");
+        expect(source().paneEditor(), "nothing to edit").to.equal(null);
+      });
+
+      /* A manifest entry says which source it is for with the same
+       * `neighborhood` key a permalink uses, and hands that source its
+       * documents under the `data` key one document has always used --
+       * so a source that takes several gets an array. */
+      it("should take a manifest entry's source and all of its documents", async function () {
+        const pages = ['{"entities": {"Q1": {"id": "Q1"}}}',
+                       '{"entities": {"Q2": {"id": "Q2"}}}'];
+        await shared.Caches.manifest.set([{
+          schemaLabel: "constellation", schema: "PREFIX : <http://a.example/>\n<#S> {}",
+          dataLabel: "two entities", neighborhood: "wikidata", data: pages,
+          queryMap: '<http://www.wikidata.org/entity/Q1>@<#S>',
+        }], "http://localhost/manifest.json");
+
+        $("#inputSchema .manifest li").last().trigger("click");
+        await shared.promise;
+        $("#inputData .indeterminant li").last().trigger("click");
+        await shared.promise;
+
+        expect($("#neighborhood").val(), "the entry named its source").to.equal("wikidata");
+        expect(source().texts()).to.deep.equal(pages);
+        expect($("#dataPaneTabs .dataPaneTab").map((i, b) => $(b).text()).get())
+          .to.deep.equal(["Q1", "Q2"]);
+      });
+
+      it("should carry the source and its settings in the permalink", async function () {
+        source().select("sparql");
+        $("#nbhd-endpoint").val("http://ex.example/sparql").trigger("change");
+        const permalink = await shared.app.getPermalink();
+        expect(permalink).to.include("neighborhood=sparql");
+        expect(permalink).to.include("endpoint=" + encodeURIComponent("http://ex.example/sparql"));
+
+        // ...and a setting belongs to the source that asked for it
+        source().select("rdfjs");
+        expect(await shared.app.getPermalink()).not.to.include("endpoint=");
+      });
     });
 
     it("should anchor validation errors in both panes", async function () {

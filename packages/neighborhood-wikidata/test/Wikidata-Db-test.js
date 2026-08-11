@@ -120,6 +120,62 @@ describe("neighborhood-wikidata", () => {
     }
   });
 
+  describe("pages the caller supplies", () => {
+    /** Q42 with its date of birth moved a day later and its P31 dropped:
+     * an edit nobody has made, which is the point of supplying pages. */
+    function editedQ42 () {
+      const doc = JSON.parse(fs.readFileSync(path.join(fixtures, "Q42.json"), "utf8"));
+      const entity = doc.entities.Q42;
+      entity.claims.P569[0].mainsnak.datavalue.value.time = "+1952-03-12T00:00:00Z";
+      delete entity.claims.P31;
+      return JSON.stringify(doc);
+    }
+
+    it("should read a supplied page where it would have fetched one", () => {
+      const {log, fetchDoc} = fixtureTransport();
+      const db = wikidataDB(null, {fetchDoc, pages: [editedQ42()]});
+      const {outgoing} = db.getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
+      assert.deepEqual(log.filter(u => u.indexOf("Q42.json") !== -1), [],
+                       "Q42's page came from the caller, so it shouldn't have been fetched");
+      const born = outgoing.filter(q => q.predicate.value === WDT + "P569");
+      assert.deepEqual(born.map(q => q.object.value), ["1952-03-12T00:00:00Z"]);
+      assert.deepEqual(outgoing.filter(q => q.predicate.value === WDT + "P31"), [],
+                       "the edit removed P31");
+    });
+
+    it("should still fetch the entities around it", () => {
+      // the point of validating a speculative edit is its real surroundings
+      const {log, fetchDoc} = fixtureTransport();
+      const db = wikidataDB(null, {fetchDoc, pages: [editedQ42()]});
+      db.getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
+      db.getNeighborhood(nn(WD + "Q5"), "-start-", anyShape);
+      assert.isTrue(log.some(u => u.indexOf("Q5.json") !== -1));
+    });
+
+    it("should accept a bare entity, which is what hand-editing leaves you with", () => {
+      const {fetchDoc} = fixtureTransport();
+      const db = wikidataDB(null, {fetchDoc, pages: [JSON.stringify({
+        type: "item", id: "Q1000000",
+        labels: {en: {language: "en", value: "Fictitious"}},
+        claims: {},
+      })]});
+      const {outgoing} = db.getNeighborhood(nn(WD + "Q1000000"), "-start-", anyShape);
+      assert.isTrue(outgoing.some(q => q.object.value === "Fictitious"));
+    });
+
+    it("should offer supplied entities to a focus-node menu before they're walked", () => {
+      const db = wikidataDB(null, Object.assign(fixtureTransport(), {pages: [editedQ42()]}));
+      const suggestions = db.suggestFocusNodes("Q42", 10);
+      assert.deepEqual(suggestions.map(s => s.label), [WD + "Q42"]);
+      assert.equal(suggestions[0].detail, "Douglas Adams");
+    });
+
+    it("should say which supplied page it couldn't read", () => {
+      expect(() => wikidataDB(null, {pages: ["{\"nope\": true}"]}))
+        .to.throw(/supplied entity page 0/);
+    });
+  });
+
   describe("validation", () => {
     // entity -> statement -> value node, plus a hop to a second entity's
     // page (Q5), all synthesized from JSON

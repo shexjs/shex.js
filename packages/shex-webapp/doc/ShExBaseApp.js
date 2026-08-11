@@ -189,16 +189,290 @@ class SchemaCache extends InterfaceCache {
   }
 }
 
-/** The language of the data pane, as described by whichever neighborhood
- * module claims its text -- null when no module describes one, which is how
- * a pane falls back to the plain textarea the app shows with its editors
- * off.  Recomputed as the text changes, so typing "# Endpoint:" over a
- * Turtle document swaps the SPARQL module's header language in under the
- * Turtle body it names.
+/** The data source picker and the configuration it draws.
+ *
+ * Where the data comes from is the user's choice, made from a list of the
+ * neighborhood modules loaded into this app -- so this class knows about
+ * data sources in general and about none of them in particular.  What each
+ * one needs it reads from that module's declarations (dbParams): values to
+ * type become fields, documents to edit become panes shown one at a time.
+ * A query service is then all fields and no panes; a local store is one
+ * mandatory Turtle document; a Wikibase is a growable set of entity pages,
+ * each one an edit to try before making it.
+ *
+ * One textarea holds whichever pane is showing -- the same textarea the app
+ * has always had, so drag-and-drop, dirty tracking, permalinks and the
+ * editors keep working -- and the panes not showing live here as text.
  */
-function moduleEditorFor (text) {
-  const claim = ShExWebApp.NeighborhoodApi.claimPane(ShExWebApp.NeighborhoodModules, text);
-  return claim && claim.module.paneEditor || null;
+class NeighborhoodConfig {
+  /**
+   * @param modules  the loaded neighborhood modules, in picklist order
+   * @param textarea the data pane's textarea (jQuery selection)
+   * @param onChange called when the user changes anything the db is built from
+   */
+  constructor (modules, textarea, onChange) {
+    this.modules = modules;
+    this.textarea = textarea;
+    this.onChange = onChange;
+    this.moduleId = ShExWebApp.NeighborhoodApi.moduleId(modules[0]);
+    /** parameter name -> value, shared across modules: a name like
+     * "endpoint" means the same thing wherever it is declared, which is
+     * what lets a manifest entry or a permalink say `endpoint=` without
+     * naming a module twice */
+    this.fields = {};
+    /** parameter name -> [text, ...], likewise */
+    this.panes = {};
+    this.showing = 0;
+  }
+
+  get module () {
+    const {moduleId} = ShExWebApp.NeighborhoodApi;
+    return this.modules.find(m => moduleId(m) === this.moduleId) || this.modules[0];
+  }
+
+  get paneParams () { return ShExWebApp.NeighborhoodApi.paneParams(this.module.dbParams || []); }
+  get fieldParams () { return ShExWebApp.NeighborhoodApi.fieldParams(this.module.dbParams || []); }
+
+  /** the parameter whose documents this app's data pane shows; the first
+   * declared, there being no app in which two make sense at once */
+  get paneParam () { return this.paneParams[0] || null; }
+
+  /** texts of the showing parameter's panes, the visible one included */
+  texts () {
+    const spec = this.paneParam;
+    if (!spec)
+      return [];
+    const texts = (this.panes[spec.name] || []).slice();
+    while (texts.length <= this.showing)
+      texts.push("");
+    texts[this.showing] = this.textarea.val();
+    return texts;
+  }
+
+  /** what to hand the module's fromParams */
+  params () {
+    const params = Object.assign({}, this.fields);
+    const spec = this.paneParam;
+    if (spec)
+      params[spec.name] = this.texts();
+    return params;
+  }
+
+  /** the text a permalink or manifest means by "data": the first document,
+   * whichever pane happens to be showing */
+  primaryText () {
+    const texts = this.texts();
+    return texts.length > 0 ? texts[0] : "";
+  }
+
+  async setPrimaryText (text) {
+    const spec = this.paneParam;
+    if (!spec)
+      return;
+    const texts = this.texts();
+    texts[0] = text;
+    this.panes[spec.name] = texts;
+    if (this.showing !== 0)
+      this.showing = 0;
+    this.textarea.val(text);
+  }
+
+  /** replace the documents beyond the first (a manifest entry that named
+   * several, e.g. the entity pages of a constellation) */
+  setExtraTexts (texts) {
+    const spec = this.paneParam;
+    if (!spec)
+      return;
+    this.panes[spec.name] = [this.primaryText()].concat(texts);
+    this.render();
+  }
+
+  select (moduleId) {
+    if (this.moduleId === moduleId)
+      return;
+    this.stash();
+    this.moduleId = moduleId;
+    this.showing = 0;
+    $("#neighborhood").val(moduleId);
+    this.render();
+    this.textarea.val((this.panes[(this.paneParam || {}).name] || [""])[0] || "");
+    this.onChange();
+  }
+
+  /** keep the showing pane's text before something replaces it */
+  stash () {
+    const spec = this.paneParam;
+    if (spec)
+      this.panes[spec.name] = this.texts();
+  }
+
+  show (n) {
+    this.stash();
+    this.showing = n;
+    this.textarea.val((this.panes[this.paneParam.name] || [])[n] || "");
+    this.render();
+    this.onChange();
+  }
+
+  addPane (text) {
+    const spec = this.paneParam;
+    if (!spec)
+      return;
+    this.stash();
+    const texts = this.panes[spec.name] || [];
+    texts.push(text === undefined ? (spec.pane.template || "") : text);
+    this.panes[spec.name] = texts;
+    this.show(texts.length - 1);
+  }
+
+  removePane (n) {
+    const spec = this.paneParam;
+    this.stash();
+    const texts = this.panes[spec.name] || [];
+    if (texts.length <= (spec.pane.min || 0))
+      return;
+    texts.splice(n, 1);
+    this.panes[spec.name] = texts;
+    this.show(Math.min(this.showing, texts.length - 1));
+  }
+
+  /** draw the fields and tabs the selected module calls for */
+  render () {
+    const {moduleId} = ShExWebApp.NeighborhoodApi;
+    const spec = this.paneParam;
+    const fields = $("#neighborhoodFields").empty();
+    for (const param of this.fieldParams.filter(p => !(p.ui && p.ui.hidden))) {
+      const id = "nbhd-" + param.name;
+      const value = this.fields[param.name];
+      const input = param.schema.type === "boolean"
+            ? $("<input/>", {type: "checkbox", id})
+              .prop("checked", value === undefined ? !!param.schema.default : !!value)
+            : $("<input/>", {type: param.schema.type === "integer" || param.schema.type === "number"
+                             ? "number" : "text", id,
+                             placeholder: param.schema.default === undefined ? "" : String(param.schema.default),
+                             value: value === undefined ? "" : value});
+      input.attr("title", param.description || "");
+      input.on("change keyup", () => {
+        this.fields[param.name] = param.schema.type === "boolean"
+          ? input.prop("checked")
+          : input.val();
+        this.onChange();
+      });
+      fields.append($("<label/>", {for: id, class: "neighborhoodField"})
+                    .text(param.name + " ").append(input));
+    }
+
+    const tabs = $("#dataPaneTabs").empty();
+    if (spec) {
+      const texts = this.panes[spec.name] || [""];
+      texts.forEach((text, i) => {
+        const title = (spec.pane.titleOf && spec.pane.titleOf(text)) || (spec.pane.label + " " + (i + 1));
+        const tab = $("<button/>", {type: "button", class: "dataPaneTab", title: spec.pane.label})
+              .text(title).on("click", () => this.show(i));
+        if (i === this.showing)
+          tab.addClass("selected");
+        tabs.append(tab);
+      });
+      if (spec.pane.creatable)
+        tabs.append($("<button/>", {type: "button", id: "addDataPane",
+                                    title: "another " + spec.pane.label})
+                    .text("+").on("click", () => this.addPane()));
+      if (texts.length > (spec.pane.min || 0))
+        tabs.append($("<button/>", {type: "button", id: "removeDataPane",
+                                    title: "close this " + spec.pane.label})
+                    .text("−").on("click", () => this.removePane(this.showing)));
+      tabs.toggle(texts.length > 1 || !!spec.pane.creatable);
+    } else {
+      tabs.hide();
+    }
+    this.showDocumentArea();
+    $("#neighborhood").val(moduleId(this.module));
+  }
+
+  /** Show or hide whatever is standing in for the document -- the textarea,
+   * or the editor that has taken its place -- since a source with nothing to
+   * edit should show nothing.  Kept apart from render() because rebuilding
+   * the editor restores the textarea it hid, so this has to run after. */
+  showDocumentArea () {
+    const editorPane = this.textarea.parent().find(".shexjs-editor-pane");
+    const showing = !!this.paneParam;
+    if (editorPane.length) {
+      editorPane.toggle(showing);
+      this.textarea.hide();      // the editor speaks for it either way
+    } else {
+      this.textarea.toggle(showing);
+    }
+  }
+
+  /** the language of the pane now showing, for the editors */
+  paneEditor () {
+    const spec = this.paneParam;
+    return spec ? (spec.pane.editor || null) : null;
+  }
+
+  /** what the data pane is showing, for its heading */
+  dialect () {
+    const spec = this.paneParam;
+    return spec ? spec.pane.label : (this.module.label || this.module.name);
+  }
+
+  /** Fill the picklist and draw the starting source's configuration. */
+  init () {
+    const {moduleId} = ShExWebApp.NeighborhoodApi;
+    const select = $("#neighborhood").empty();
+    for (const module of this.modules)
+      select.append($("<option/>", {value: moduleId(module)})
+                    .text(module.label || module.name)
+                    .attr("title", module.description || ""));
+    select.on("change", () => this.select(select.val()));
+    this.render();
+  }
+
+  /** QueryParams descriptors: the data source itself, and every value any
+   * loaded source asks to be told.  Parameters are keyed by meaning rather
+   * than by module, so `endpoint=` in a permalink or a manifest entry
+   * belongs to whichever source is selected and asks for one.
+   *
+   * The locations are stand-ins rather than DOM elements: the field for a
+   * parameter exists only while the source that declares it is selected,
+   * but its value has to survive the picklist either way. */
+  queryParams () {
+    const {moduleId, fieldParams} = ShExWebApp.NeighborhoodApi;
+    const stub = (get, set) => ({
+      val: function (v) { return v === undefined ? get() : set(v); },
+      prop: () => undefined,
+    });
+    const params = [
+      {queryStringParm: "neighborhood", deflt: moduleId(this.modules[0]),
+       manifest: {key: "neighborhood"},
+       location: stub(() => this.moduleId, v => this.select(v || moduleId(this.modules[0])))},
+    ];
+    const seen = new Set();
+    for (const module of this.modules)
+      for (const param of fieldParams(module.dbParams || [])) {
+        if (seen.has(param.name) || (param.ui && param.ui.hidden))
+          continue;
+        seen.add(param.name);
+        params.push({
+          queryStringParm: param.name, deflt: "", manifest: {key: param.name},
+          location: stub(
+            () => {
+              // only the selected source's parameters describe this state
+              const mine = fieldParams(this.module.dbParams || []).some(p => p.name === param.name);
+              const value = mine ? this.fields[param.name] : undefined;
+              return value === undefined || value === false ? "" : String(value);
+            },
+            v => {
+              if (v === "" || v === undefined)
+                delete this.fields[param.name];
+              else
+                this.fields[param.name] = param.schema.type === "boolean" ? v !== "false" : v;
+              this.render();
+            }),
+        });
+      }
+    return params;
+  }
 }
 
 class TurtleCache extends InterfaceCache {
@@ -218,19 +492,37 @@ class TurtleCache extends InterfaceCache {
    * prefixes and base live here.
    */
   async parse (text, base) {
-    const claim = ShExWebApp.NeighborhoodApi.claimPane(ShExWebApp.NeighborhoodModules, text);
-    if (!claim)
-      throw Error("no neighborhood module will serve this data pane; " +
-                  "the last of ShExWebApp.NeighborhoodModules should claim whatever the others pass on");
-    const params = Object.assign({}, claim.params);
+    const module = this.neighborhoods.module;
+    const params = this.neighborhoods.params();
+    // text arriving from somewhere the user didn't type -- a manifest, a
+    // permalink, a dropped file, or a pane saved back when "# Endpoint:"
+    // at the top of the data was how you reached a query service -- may
+    // name a source of its own
+    const claim = ShExWebApp.NeighborhoodApi.claimPane(
+      ShExWebApp.NeighborhoodModules.filter(m => m !== module), text);
+    if (claim && claim.module.claimPaneText) {
+      this.neighborhoods.select(ShExWebApp.NeighborhoodApi.moduleId(claim.module));
+      Object.assign(this.neighborhoods.fields, claim.params);
+      this.neighborhoods.render();
+      return this.parse(this.get(), base);
+    }
+
     if ("endpoint" in params)
       this.endpoint = params.endpoint;    // the SPARQL shape-map extension reads this
     else
       delete this.endpoint;
     this.showSlurpControl(this.endpoint);
-    if ((claim.module.dbParams || []).some(p => p.name === "data"))
-      params.store = this.turtleParser.parseString(text, this.meta, base);
-    const res = claim.module.fromParams(params, this.queryTrackerController.queryTracker);
+
+    // A pane of Turtle is this app's to parse: it owns the parser, and the
+    // prefixes and base it finds are what the rest of the app lexifies
+    // nodes with.  Panes of anything else go to the module as text.
+    const turtlePane = ShExWebApp.NeighborhoodApi.paneParams(module.dbParams || [])
+          .find(p => ((p.schema.items || {}).contentMediaType || "") === "text/turtle");
+    if (turtlePane)
+      params.store = this.turtleParser.parseString(
+        (params[turtlePane.name] || []).join("\n"), this.meta, base);
+
+    const res = module.fromParams(params, this.queryTrackerController.queryTracker);
     this.callOnLoad();
     return res;
   }
@@ -561,11 +853,20 @@ class ManifestCache extends InterfaceCache {
     }
   }
 
+  /** A data source that takes several documents -- a Wikibase's entity
+   * pages, say -- is given them as an array under the same `data`/`dataURL`
+   * keys one document uses.  The first is the entry's document as far as
+   * every existing path is concerned (the pick machinery, `.selected`
+   * matching, the load dialog); the rest are fetched at pick time. */
   makeDataEntry (dataLabel, idx, elt, base) {
+    const texts = elt.data === undefined ? [] : [].concat(elt.data);
+    const urls = elt.dataURL === undefined ? [] : [].concat(elt.dataURL);
     return {
       label: dataLabel || idx.toString(),
-      text: elt.data,
-      url: elt.dataURL || (elt.data ? base : undefined),
+      text: texts.length > 0 ? texts[0] : undefined,
+      url: urls.length > 0 ? urls[0] : (elt.data ? base : undefined),
+      moreTexts: texts.slice(1),
+      moreUrls: urls.slice(1),
       entry: elt
     };
   }
@@ -609,8 +910,17 @@ class ManifestCache extends InterfaceCache {
     if ($(elt).hasClass("selected")) {
       $(elt).removeClass("selected");
     } else {
+      // Which data source this entry is for, before its documents land in
+      // the panes: the same `neighborhood` key a permalink uses, defaulting
+      // to the first source (a local store) as manifests always meant.
+      const neighborhoods = this.caches.inputData.neighborhoods;
+      if (neighborhoods)
+        neighborhoods.select(dataTest.entry.neighborhood ||
+                             ShExWebApp.NeighborhoodApi.moduleId(neighborhoods.modules[0]));
       // Update data pane.
       await this.caches.inputData.set(dataTest.text, new URL((dataTest.url || ""), DefaultBase).href);
+      if (neighborhoods)
+        neighborhoods.setExtraTexts(await this.extraDataDocuments(dataTest));
       this.caches.inputData.url = undefined; // @@ crappyHack1
       $("#inputData .status").text(name);
       $("#inputData li.selected").removeClass("selected");
@@ -670,6 +980,20 @@ class ManifestCache extends InterfaceCache {
       else
         q.location.val(value);
     }
+  }
+
+  /** the entry's documents after the first, fetched if it named them by URL */
+  async extraDataDocuments (dataTest) {
+    const texts = (dataTest.moreTexts || []).slice();
+    for (const url of dataTest.moreUrls || []) {
+      const absolute = new URL(url, dataTest.url || DefaultBase).href;
+      try {
+        texts.push(await this.fetchOK(absolute));
+      } catch (e) {
+        this.renderErrorMessage(e, "data");
+      }
+    }
+    return texts;
   }
 
   async queryMapLoaded (dataTest, text) {
@@ -1994,6 +2318,12 @@ class ShExBaseApp {
     const shapeMap = new ShapeMapCache($("#textMap"), {inputSchema, inputData}, this.turtleParser, this.resultsWidget); // @@ rename to #shapeMap
 
     this.Caches = { inputSchema, inputData, extension, shapeMap };
+
+    // where the data comes from, and the configuration that source asks for
+    this.neighborhoods = new NeighborhoodConfig(
+      ShExWebApp.NeighborhoodModules, inputData.selection,
+      () => { inputData.dirty(true); this.refreshDataPaneEditor(); });
+    inputData.neighborhoods = this.neighborhoods;
     // manifest: how this input corresponds to a manifest entry: key (the
     // entry key; long text may spill to a gist file named spillName,
     // referenced as <key>URL), labelKey/label (an accompanying label line),
@@ -2013,7 +2343,11 @@ class ShExBaseApp {
       {queryStringParm: "success",      location: $("#success"),         deflt: "proof"     },
       {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr" },
       {queryStringParm: "editors",      location: $("#editors"),         deflt: ""          },
-    ]);
+      // The data source and whatever it wants configured.  A parameter is
+      // named for what it means, not for the module that declares it, so a
+      // manifest entry or a permalink says `neighborhood=sparql&endpoint=…`
+      // and two sources that both take an `endpoint` agree about the word.
+    ]).concat(this.neighborhoods.queryParams());
     this.keyDownHandlers = [
       this.validateKeyDown.bind(this),
       this.navigateManifestKeyDown.bind(this),
@@ -2059,13 +2393,32 @@ class ShExBaseApp {
    */
   addEditorPanes () {
     this.editorSupport.addPane("inputSchema", this.Caches.inputSchema, "shexc");
-    // moduleEditorFor is asked about the text the pane is describing, not
-    // about the cache: mid-edit the cache still reports the old document
-    this.editorSupport.addPane("inputData", this.Caches.inputData, null, moduleEditorFor);
+    // the data pane's language is whatever the showing document is in, and
+    // that is the selected source's to say
+    this.editorSupport.addPane("inputData", this.Caches.inputData, null,
+                               () => this.neighborhoods.paneEditor());
+  }
+
+  /** The showing document may have changed language (a different source, or
+   * a different pane of it), and a pane's grammar is fixed when it is
+   * built, so rebuild it. */
+  refreshDataPaneEditor () {
+    if (!this.editorSupport || !this.editorSupport.panes.inputData)
+      return;
+    const text = this.Caches.inputData.selection.val();
+    this.editorSupport.panes.inputData.destroy();
+    delete this.editorSupport.panes.inputData;
+    this.Caches.inputData.selection.val(text);
+    this.editorSupport.addPane("inputData", this.Caches.inputData, null,
+                               () => this.neighborhoods.paneEditor());
+    // destroying a pane restores the textarea it hid, so say again what
+    // should be showing
+    this.neighborhoods.showDocumentArea();
   }
 
   async start () {
-    SharedForTests = {Caches: this.Caches, /*DefaultBase*/} // an object to share state with a test harness
+    SharedForTests = {Caches: this.Caches, neighborhoods: this.neighborhoods, app: this}
+    this.neighborhoods.init(); // before ?neighborhood=… reaches the picklist
     this.prepareControls();
     const dndPromise = this.prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
     const loads = this.loadSearchParameters();
@@ -3142,7 +3495,7 @@ class ShExBaseApp {
   customizeInterface () {
   if ($("#interface").val() === "minimal") {
     $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").show();
-    $("#inputData .status").html("data (<span id=\"dataDialect\">Turtle</span>)").show();
+    $("#inputData .status").html("data (<span id=\"dataDialect\">" + this.neighborhoods.dialect() + "</span>)").show();
     $("#actions").parent().children().not("#actions").hide();
     $("#title img, #title h1").hide();
     $("#menuForm").css("position", "absolute").css(
@@ -3153,7 +3506,7 @@ class ShExBaseApp {
     $("#controls").css("position", "relative");
   } else {
     $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").hide();
-    $("#inputData .status").html("data (<span id=\"dataDialect\">Turtle</span>)").hide();
+    $("#inputData .status").html("data (<span id=\"dataDialect\">" + this.neighborhoods.dialect() + "</span>)").hide();
     $("#actions").parent().children().not("#actions").show();
     $("#title img, #title h1").show();
     $("#menuForm").removeAttr("style");

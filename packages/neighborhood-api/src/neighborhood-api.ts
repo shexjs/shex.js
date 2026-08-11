@@ -63,6 +63,36 @@ export interface DbParamSchema {
   items?: { type: string; format?: string; contentMediaType?: string };
 }
 
+/** A parameter whose value is one or more *documents the user edits*, not a
+ * scalar they type into a field: the RDF a local store validates, the
+ * entity pages a Wikibase neighborhood should believe instead of what the
+ * site currently says.
+ *
+ * A host shows a pane per document -- one at a time, the way any editor
+ * shows tabs -- and asks the module what language they are in and whether
+ * the user may add more.  A neighborhood whose data is one graph declares
+ * exactly one; a neighborhood whose data is a set of entities declares as
+ * many as the user cares to open; a neighborhood that only queries a
+ * server declares none, and its whole configuration is fields.
+ */
+export interface PaneSpec {
+  /** what to call one of these documents: "Turtle", "entity JSON" */
+  label: string;
+  /** how the document is edited; absent means a plain textarea */
+  editor?: ParamEditor;
+  /** fewest and most a host should offer (max undefined: no limit) */
+  min?: number;
+  max?: number;
+  /** may the user open more of them? */
+  creatable?: boolean;
+  /** what a newly opened document starts as */
+  template?: string;
+  /** a name for one document, read out of it -- a Wikibase entity page's
+   * id, say -- for its tab.  Null when the document doesn't say (it is
+   * half-typed, or not of this kind), leaving the host its own numbering. */
+  titleOf? (text: string): string | null;
+}
+
 /** One construction parameter of a NeighborhoodDb implementation, in the
  * style of an OpenAPI Parameter Object. */
 export interface DbParamSpec {
@@ -79,6 +109,29 @@ export interface DbParamSpec {
    * `alias` is a single-char short flag.  A host is free to prefix option
    * names to avoid collisions between modules. */
   cli?: { option?: string; alias?: string; typeLabel?: string };
+  /** present when this parameter's value is documents to edit rather than
+   * a value to type; see PaneSpec */
+  pane?: PaneSpec;
+  /** `hidden` keeps a parameter out of a rendered form -- for one that only
+   * means something where the host isn't, like a directory to cache in when
+   * the host is a browser */
+  ui?: { hidden?: boolean };
+}
+
+/** the parameters a host renders as document panes, and as form fields */
+export function paneParams (specs: DbParamSpec[]): DbParamSpec[] {
+  return specs.filter(spec => !!spec.pane);
+}
+
+export function fieldParams (specs: DbParamSpec[]): DbParamSpec[] {
+  return specs.filter(spec => !spec.pane);
+}
+
+/** How a module is named where a name has to be short and stable: a
+ * manifest entry's `neighborhood`, a permalink parameter, a picklist's
+ * option value. */
+export function moduleId (module: NeighborhoodModule): string {
+  return module.name.replace(/^neighborhood-/, "");
 }
 
 // ── a module's own language-sensitive editor ────────────────────────────────
@@ -159,24 +212,32 @@ export interface ParamEditor {
 export interface NeighborhoodModule {
   name: string;
   description: string;
+  /** what to call this data source where a user picks one, e.g. "Wikidata".
+   * A neighborhood is an implementation detail from inside; from outside it
+   * is where the data comes from. */
+  label?: string;
   /** the implementation-specific constructor (each module's own signature) */
   ctor: (...args: any[]) => NeighborhoodDb;
   /** uniform constructor over values keyed by DbParamSpec.name */
   fromParams?: (params: { [name: string]: any }, queryTracker?: DbQueryTracker) => NeighborhoodDb;
   dbParams?: DbParamSpec[];
-  /** Does this module serve the text in a host's data pane, and with what
-   * parameters?  Generalizes the WebApp's "# Endpoint: <url>" sniffing: the
-   * pattern a module answers to is the module's business.  Return null to
-   * pass.  A host tries its modules in order and falls back to the last
-   * (rdfjs, which parses the text as data). */
+  /** Does this text ask for this module, and with what parameters?
+   *
+   * Not how a host picks a data source -- the user does that -- but how
+   * text that arrives from somewhere else says which one it wants: a
+   * manifest entry, a permalink, a dropped file, or a pane saved back when
+   * "# Endpoint: <url>" at the top of the data was how you reached a query
+   * service.  Return null to pass. */
   claimPaneText? (text: string): { [name: string]: any } | null;
-  /** how the text this module claims should be edited */
+  /** how the text this module claims should be edited, for a host with one
+   * pane and no notion of which parameter it holds.  A host that renders
+   * dbParams gets each pane's language from its PaneSpec instead. */
   paneEditor?: ParamEditor;
 }
 
 /** The module whose claimPaneText answers to this text, and the parameters
- * it read out of it.  The modules are tried in order, so a host lists its
- * catch-all (rdfjs) last. */
+ * it read out of it; null when none does, leaving the host with whatever
+ * data source it was going to use anyway. */
 export function claimPane (modules: NeighborhoodModule[], text: string): {
   module: NeighborhoodModule;
   params: { [name: string]: any };

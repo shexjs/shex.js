@@ -1,13 +1,29 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Start = void 0;
+exports.paneParams = paneParams;
+exports.fieldParams = fieldParams;
+exports.moduleId = moduleId;
 exports.claimPane = claimPane;
 exports.paramsToCommandLineArgs = paramsToCommandLineArgs;
 exports.sparqlOrder = sparqlOrder;
 exports.Start = { term: "START" };
+/** the parameters a host renders as document panes, and as form fields */
+function paneParams(specs) {
+    return specs.filter(spec => !!spec.pane);
+}
+function fieldParams(specs) {
+    return specs.filter(spec => !spec.pane);
+}
+/** How a module is named where a name has to be short and stable: a
+ * manifest entry's `neighborhood`, a permalink parameter, a picklist's
+ * option value. */
+function moduleId(module) {
+    return module.name.replace(/^neighborhood-/, "");
+}
 /** The module whose claimPaneText answers to this text, and the parameters
- * it read out of it.  The modules are tried in order, so a host lists its
- * catch-all (rdfjs) last. */
+ * it read out of it; null when none does, leaving the host with whatever
+ * data source it was going to use anyway. */
 function claimPane(modules, text) {
     for (const module of modules) {
         const params = module.claimPaneText ? module.claimPaneText(text) : null;

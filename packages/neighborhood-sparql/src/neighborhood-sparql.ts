@@ -46,6 +46,15 @@ import * as N3 from "n3"; // TODO: set global externally
 export interface SparqlDbOptions {
   /** slurp all outgoing arcs rather than only those needed by the shape under test */
   allOutgoing?: boolean;
+  /** Expect blank nodes in every neighborhood, rather than finding out.
+   *
+   * Optimism is the default and is usually right: most neighborhoods have
+   * no blank nodes at all, and a depth-0 probe -- one triple pattern -- is
+   * far cheaper for an engine to plan than the UNION of chains that walks a
+   * blank node component, which is only needed once a probe turns one up.
+   * Where the data is known to be full of blank nodes that costs an extra
+   * round trip per neighborhood, and this skips it. */
+  expectBnodes?: boolean;
   /** how far to follow blank nodes when describing them (default 4, grown on demand) */
   bnodeDepth?: number;
   /** never describe blank nodes more deeply than this (default 64) */
@@ -593,7 +602,7 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
    * blank nodes (the truncation retry below escalates the same way when a
    * description bottoms out). */
   function fetch (point: RdfJs.Term, preds: string[] | null, inverse: boolean): RdfJs.Quad[] {
-    for (let depth = 0; ;
+    for (let depth = options.expectBnodes ? (startDepth || 4) : 0; ;
          depth = depth === 0 ? (startDepth || 4) : Math.min(depth * 2, maxDepth)) {
       const anchor = descriptionOf(point);
       const query = componentQuery(anchor, preds, depth, inverse);
@@ -789,27 +798,38 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
 }
 
 export const name = "neighborhood-sparql";
+export const label = "SPARQL endpoint";
 export const description = "Implementation of @shexjs/neighborhood-api which gets data from a SPARQL endpoint";
 export const ctor = sparqlDB;
 
 /** What it takes to construct this DB, declared for hosts (the CLI, the
  * WebApp) that offer several neighborhood implementations.  See the STRAWMAN
  * notes in @shexjs/neighborhood-api. */
+/** Everything this data source needs is a value to type: there is no
+ * document to edit, so a host renders it as fields and no panes. */
 export const dbParams: DbParamSpec[] = [
   { name: "endpoint", selector: true, required: true,
-    description: "data query endpoint",
+    description: "SPARQL query service to ask",
     schema: {type: "string", format: "uri"},
     cli: {option: "endpoint", typeLabel: "IRI"} },      // the CLI's historical flag
   { name: "allOutgoing",
     description: "fetch every outgoing arc rather than only those the shape needs",
     schema: {type: "boolean"},
     cli: {option: "slurp-all"} },                       // rides the CLI's existing flag
+  { name: "expectBnodes",
+    description: "expect blank nodes in every neighborhood, rather than probing for them first",
+    schema: {type: "boolean", default: false},
+    cli: {option: "sparql-expect-bnodes"} },
   { name: "bnodeDepth",
-    description: "how optimistically to chase blank nodes when describing them (grown on demand)",
+    description: "how far to follow blank nodes when describing them (grown on demand)",
     schema: {type: "integer", default: 4},
     cli: {option: "sparql-bnode-depth", typeLabel: "integer"} },
+  { name: "maxBnodeDepth",
+    description: "never describe blank nodes more deeply than this",
+    schema: {type: "integer", default: 64},
+    cli: {option: "sparql-max-bnode-depth", typeLabel: "integer"} },
   { name: "verifyBnodeDescriptions",
-    description: "pessimistically ask the endpoint to confirm each blank node description",
+    description: "have the endpoint confirm each blank node description picks out the node it should",
     schema: {type: "boolean", default: true},
     cli: {option: "sparql-verify-bnodes"} },
 ];
@@ -817,7 +837,9 @@ export const dbParams: DbParamSpec[] = [
 export function fromParams (params: { [name: string]: any }, queryTracker?: DbQueryTracker): SparqlNeighborhoodDb {
   return sparqlDB(params.endpoint, queryTracker, {
     allOutgoing: params.allOutgoing,
+    expectBnodes: params.expectBnodes,
     bnodeDepth: params.bnodeDepth,
+    maxBnodeDepth: params.maxBnodeDepth,
     verifyBnodeDescriptions: params.verifyBnodeDescriptions,
   });
 }

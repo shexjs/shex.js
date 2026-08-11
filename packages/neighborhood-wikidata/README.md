@@ -93,16 +93,35 @@ validate -x human.shex -m '<http://www.wikidata.org/entity/Q42>@<#human>' \
 `--wikidata-sitematrix` and `--wikidata-cache` cover the sitematrix source
 and the on-disk page cache.
 
+## validating an edit before making it
+
+`pages` (the CLI's `--wikidata-page`, the WebApp's entity-JSON panes) are
+entity pages to believe **instead of** what the site currently serves:
+
+``` shell
+validate -x human.shex -m '<http://www.wikidata.org/entity/Q42>@<#human>' \
+  --wikidata https://www.wikidata.org/wiki/Special:EntityData/ \
+  --wikidata-page ./Q42-with-my-edit.json
+```
+
+The walk reads that page where it would have fetched Q42 and fetches
+everything else as usual, so a speculative constellation is checked in its
+real surroundings. A page may be the full `{"entities": {…}}` document or
+the bare entity, which is what hand-editing tends to leave you with.
+
 ## from the WebApp
 
-A data pane whose first line is `# Wikidata` is served by this module
-(`# Wikidata: <base>` points at another Wikibase instance). The module also
-describes how that text should be edited — the header is colored and
-diagnosed here, not by the app, and the body stays Turtle. What no host
-could offer, this module does: completing entity IRIs from the labels of the
-pages the db has loaded, so typing `wd:Q4` offers
+Pick **Wikidata** from the data-source list. The module declares what it
+needs, so the app draws it: a field for the entity-page base, and a pane per
+entity page with a `+` to open another — each tab named by reading the id
+back out of the page. Those pages are the `pages` above.
+
+What no host could offer, this module does: completing entity IRIs from the
+labels of the pages the db has loaded, so typing `wd:Q4` offers
 `http://www.wikidata.org/entity/Q42` — *Douglas Adams*. The same knowledge
-backs the shape-map's focus-node menu through `suggestFocusNodes`.
+backs the shape-map's focus-node menu through `suggestFocusNodes`. A pane's
+first line may still say `# Wikidata: <base>`, which is how a permalink or a
+dropped file names this source.
 
 Label lookup falls through `mul`, Wikidata's language-neutral label: a name
 that reads the same everywhere is now stored once rather than copied per
