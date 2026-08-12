@@ -183,6 +183,7 @@ function makeResultPane(text, language = "json") {
     const clampRange = (r) => !!r && r.from >= 0 && r.to <= view.state.doc.length && r.to > r.from;
     return {
         dom: view.dom,
+        requestMeasure() { view.requestMeasure(); },
         highlight(ranges, cls = "shexjs-highlight", opts = {}) {
             const inRange = (ranges || []).filter(clampRange).sort((a, b) => a.from - b.from);
             const decos = inRange.map(r => view_1.Decoration.mark({ class: cls }).range(r.from, r.to));
@@ -534,6 +535,7 @@ function makePane(textarea, opts = {}) {
             view.dispatch({ effects: setHighlightsEffect.of(view_1.Decoration.none) });
         },
         setHoverRegions,
+        requestMeasure() { view.requestMeasure(); },
         listBreakpoints() {
             const positions = [];
             view.state.field(breakpointField).between(0, view.state.doc.length, from => { positions.push(from); });

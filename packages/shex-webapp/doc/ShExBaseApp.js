@@ -209,11 +209,14 @@ class NeighborhoodConfig {
    * @param modules  the loaded neighborhood modules, in picklist order
    * @param textarea the data pane's textarea (jQuery selection)
    * @param onChange called when the user changes anything the db is built from
+   * @param onShown  called when the document area becomes visible again
    */
-  constructor (modules, textarea, onChange) {
+  constructor (modules, textarea, onChange, onShown) {
     this.modules = modules;
     this.textarea = textarea;
     this.onChange = onChange;
+    /** called when the document area becomes visible again */
+    this.onShown = onShown;
     this.moduleId = ShExWebApp.NeighborhoodApi.moduleId(modules[0]);
     /** A parameter's name means the same thing wherever it is declared --
      * that is what lets a manifest entry or a permalink say `endpoint=`
@@ -590,7 +593,12 @@ class NeighborhoodConfig {
    * one textarea (and whatever editor has taken it over) in one place.
    */
   showDocumentArea () {
-    $("#dataDocument").toggle(this.documents().length > 0 && !this.onSettings);
+    const showing = this.documents().length > 0 && !this.onSettings;
+    $("#dataDocument").toggle(showing);
+    // an editor measures nothing while it is hidden, so what it drew before
+    // is what it keeps until it is told to look again
+    if (showing && this.onShown)
+      this.onShown();
   }
 
   /** the language of the pane now showing, for the editors */
@@ -2056,6 +2064,13 @@ class ResultsWidget {
     const top = paneDom.getBoundingClientRect().top;
     paneDom.style.height = Math.max(200, window.innerHeight - top - 12) + "px";
   }
+
+  /** Every result pane was built before it was in the document and has just
+   * been given a height, so none of them has measured anything real yet.
+   * Left alone they draw a gutter for a viewport that never existed. */
+  remeasurePanes () {
+    this.resultPanes.forEach(({pane}) => pane.requestMeasure && pane.requestMeasure());
+  }
   replace (text) {
     return this.resultsSel.text(text);
   }
@@ -2192,8 +2207,10 @@ class ShExResultsRenderer {
       }
     }
     this.resultsWidget.append(elt);
-    if (appinfoPane)
+    if (appinfoPane) {
       this.resultsWidget.fitPaneToWindow(appinfoPane.dom);
+      appinfoPane.requestMeasure();   // now that it is attached and sized
+    }
 
     // update the FixedMap
     fixedMapEntry.addClass(klass).find("a").text(resultStr);
@@ -2528,6 +2545,11 @@ class ShExBaseApp {
         inputData.dirty(true);
         if (changed && changed.language)
           this.refreshDataPaneEditor();
+      },
+      () => {
+        const pane = this.editorSupport && this.editorSupport.panes.inputData;
+        if (pane)
+          pane.requestMeasure();
       });
     inputData.neighborhoods = this.neighborhoods;
     // manifest: how this input corresponds to a manifest entry: key (the

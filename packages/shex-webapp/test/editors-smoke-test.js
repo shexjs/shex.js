@@ -484,6 +484,26 @@ if (!TEST_browser) {
         expect(elapsed, "and not in twenty seconds: " + elapsed + "ms").to.be.below(15000);
       });
 
+      /* CodeMirror measures when it is built and when its own observers
+       * fire; a pane built detached, or sitting behind another tab, has
+       * measured nothing -- and draws a gutter for a viewport that never
+       * existed until it is told to look again.  jsdom lays nothing out, so
+       * what can be checked here is that it is told. */
+      it("should re-measure a pane when it is shown again", function () {
+        source().select("rdfjs");
+        const pane = shared.Caches.editorSupport.panes.inputData;
+        let measured = 0;
+        const wasRequestMeasure = pane.requestMeasure;
+        pane.requestMeasure = function () { ++measured; return wasRequestMeasure.apply(this, arguments); };
+        try {
+          source().select("wikidata");
+          source().show(0);            // a document tab, after the settings pane
+          expect(measured, "hidden and shown again").to.be.above(0);
+        } finally {
+          pane.requestMeasure = wasRequestMeasure;
+        }
+      });
+
       it("should carry the source and its settings in the permalink", async function () {
         source().select("sparql");
         $("#nbhd-endpoint").val("http://ex.example/sparql").trigger("change");

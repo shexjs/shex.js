@@ -136,6 +136,15 @@ export interface Pane {
   listBreakpoints (): number[];
   /** toggle a gutter breakpoint at a character offset's line */
   toggleBreakpoint (pos: number): void;
+  /** Re-measure the editor.
+   *
+   * CodeMirror measures when it is created and when its own observers fire.
+   * A view built while it is not in the document, or inside something
+   * hidden -- a pane behind another tab, a result pane assembled before it
+   * is appended -- has nothing to measure, and what it drew from that
+   * survives: most visibly a gutter with more line numbers than there are
+   * lines.  A host that attaches, shows or resizes a pane says so here. */
+  requestMeasure (): void;
   /** remove the editor and restore the textarea (with the current text) */
   destroy (): void;
 }
@@ -197,6 +206,9 @@ export const languages: {[lang in PaneLanguage]: () => Extension} = {
 
 export interface ResultPane {
   dom: HTMLElement;
+  /** re-measure after the pane has been attached, shown or resized; see
+   * Pane.requestMeasure */
+  requestMeasure (): void;
   highlight (ranges: Range[], cls?: string, opts?: {scroll?: boolean}): void;
   clearHighlights (): void;
   setHoverRegions (regions: HoverRegion[], leave?: () => void): void;
@@ -222,6 +234,7 @@ export function makeResultPane (text: string, language: PaneLanguage = "json"): 
     !!r && r.from >= 0 && r.to <= view.state.doc.length && r.to > r.from;
   return {
     dom: view.dom,
+    requestMeasure (): void { view.requestMeasure(); },
     highlight (ranges: Range[], cls = "shexjs-highlight", opts: {scroll?: boolean} = {}): void {
       const inRange = (ranges || []).filter(clampRange).sort((a, b) => a.from - b.from);
       const decos = inRange.map(r => Decoration.mark({class: cls}).range(r.from, r.to));
@@ -612,6 +625,7 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
       view.dispatch({effects: setHighlightsEffect.of(Decoration.none)});
     },
     setHoverRegions,
+    requestMeasure (): void { view.requestMeasure(); },
     listBreakpoints (): number[] {
       const positions: number[] = [];
       view.state.field(breakpointField).between(0, view.state.doc.length,
