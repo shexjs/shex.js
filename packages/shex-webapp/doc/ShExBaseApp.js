@@ -2242,13 +2242,13 @@ class ShExResultsRenderer {
     }
 
     $("#results .status").text("rendering results...").show();
-    // Add commas to JSON results.
-    if ($("#interface").val() !== "human")
-      $("#results div *").each((idx, elt) => {
-        if (idx === 0)
-          $(elt).prepend("[");
-        $(elt).append(idx === $("#results div *").length - 1 ? "]" : ",");
-      });
+    // Results used to be punctuated into a JSON array -- "[" before the
+    // first, "," between -- which `$("#results div *")` did by appending to
+    // every *descendant* of the results.  Once a result is an editor rather
+    // than a <pre> that is every line and every gutter element of it, which
+    // is where the commas in the gutter came from.  One result per block,
+    // separated by a rule, says the same thing without writing into
+    // somebody else's DOM.
     $("#results .status").hide();
     // for debugging values and schema formats:
     // try {

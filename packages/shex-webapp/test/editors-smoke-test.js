@@ -147,6 +147,54 @@ if (!TEST_browser) {
       expect(button.attr("title"), "with how long it took").to.match(/last validation: \d+ ms/);
     });
 
+    /* Results were punctuated into a JSON array by appending to every
+     * *descendant* of #results.  Once a result is an editor rather than a
+     * <pre>, its descendants are every line and every gutter element, so a
+     * comma landed in each of them -- the extra lines in the gutter. */
+    it("should not write into the results editors' own DOM", async function () {
+      const wasInterface = $("#interface").val();
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      try {
+        $("#interface").val("appinfo").trigger("change");
+        set("#inputSchema textarea", "PREFIX : <http://a.example/>\n:S { :p . }");
+        set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .\n:y :p 2 .");
+        // more than one entry, which is when the separators between results
+        // matter
+        set("#textMap", "<http://a.example/x>@<http://a.example/S>,\n" +
+            "<http://a.example/y>@<http://a.example/S>");
+        await shared.promise;
+        $("#validate").trigger("click");
+        await shared.promise;
+
+        const panes = $("#results .cm-editor");
+        // (the shape map keeps entries from earlier tests, so this says
+        // "a pane each" rather than a count)
+        expect(panes.length, "a pane per result").to.be.at.least(2);
+        const gutters = $("#results .cm-gutterElement");
+        expect(gutters.length, "with gutters").to.be.above(0);
+        const punctuated = gutters.filter((i, e) => /[\[\],]/.test($(e).text()));
+        expect(punctuated.length,
+               "gutter elements holding punctuation: " +
+               punctuated.map((i, e) => JSON.stringify($(e).text())).get().slice(0, 5).join(" "))
+          .to.equal(0);
+        // nor anywhere else inside an editor
+        expect($("#results .cm-editor").text()).to.not.match(/^\s*\[/);
+      } finally {
+        $("#interface").val(wasInterface).trigger("change");
+        // the shape map outlives a test, so put back the one entry the
+        // others were left expecting
+        shared.Caches.shapeMap.removeEditMapPair(null);
+        const map = $("#textMap");
+        map.val("<http://a.example/x>@<http://a.example/S>");
+        map.trigger("change");
+        await shared.promise;
+      }
+    });
+
     /* Where the data comes from is picked from a list of the neighborhood
      * modules this app loaded, and what each one needs is drawn from that
      * module's own declarations: values to type become fields, documents to

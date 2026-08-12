@@ -29,6 +29,9 @@
       .pair.fails { border-left: none; padding-left: none; }
       .pair.fails { background-color: #fbb; }
       .error , #results div .error  { padding-left: .1em; border-left: thick solid #b00; }
+      /* one validation result per block, told apart by a rule rather than
+         by the punctuation of a JSON array */
+      #results > div > * + * { border-top: 1px solid #ccc; margin-top: .5em; padding-top: .5em; }
       .running { background-color: #ddf; }
       /* a validation over a synchronous data source holds the main thread,
          so the button says so before it starts and nothing else can */
