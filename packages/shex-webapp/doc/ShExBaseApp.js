@@ -418,7 +418,8 @@ class NeighborhoodConfig {
       fields.append(this.fieldFor(param));
     if (fields.children().length === 0)
       fields.append($("<span/>", {class: "noSettings"})
-                    .text("nothing to configure: " + (this.module.description || this.module.name)));
+                    .text("nothing to configure for " + (this.module.label || this.module.name))
+                    .attr("title", this.module.description || ""));
 
     // one tab and one (empty) panel per document, in the order the source
     // declared its parameters
@@ -480,7 +481,8 @@ class NeighborhoodConfig {
       this.fields[param.name] = param.schema.type === "boolean" ? input.prop("checked") : input.val();
       this.onChange();
     });
-    return $("<label/>", {for: id, class: "neighborhoodField"}).text(param.name + " ").append(input);
+    return $("<label/>", {for: id, class: "neighborhoodField"})
+      .append($("<span/>").text(param.name), input);
   }
 
   /** Settings that belong to the data source but that this app, not the
@@ -1821,7 +1823,19 @@ class ShapeMapCache extends InterfaceCache {
    * use {this.caches.inputData,this.caches.inputSchema}.meta.{prefix,base} to complete IRIs
    * @return array of encountered errors
    */
+  /** Rebuild the Fixed Map from the Edit Map.
+   *
+   * Resolving a pair is asynchronous -- a triple pattern or a query map
+   * extension asks the data source what it selects -- so two of these can
+   * be in flight at once, which happens whenever anything changes twice in
+   * quick succession (setting the data and then the query map, say).  Each
+   * used to empty the table on the way in and append on the way out, so
+   * both lots of rows survived: the map grew a stale copy of every pair it
+   * had before.  Now the table is emptied by whichever run is still the
+   * current one, at the point it has something to put there.
+   */
   async copyEditMapToFixedMap () {
+    const generation = this.fixedMapGeneration = (this.fixedMapGeneration || 0) + 1;
     const getQuads = async (s, p, o) => {
       const get = s === ShExWebApp.ShapeMap.Focus ? "subject" : "object";
       return (await this.caches.inputData.refresh()).getQuads(mine(s), mine(p), mine(o)).map(t => {
@@ -1834,8 +1848,6 @@ class ShapeMapCache extends InterfaceCache {
       }
     }
 
-    this.fixedMap.find("tbody").empty(); // empty out the fixed map (make optional?).
-    // or could leave the tbody: this.fixedMap.find(".pair").remove();
     const restoreText = this.fixedMapTab.text();
     this.fixedMapTab.text("resolving Fixed Map").addClass("running");
     const nodeShapePromises = this.editMap.find(".pair").get().reduce((acc, queryPair) => {
@@ -1915,6 +1927,9 @@ class ShapeMapCache extends InterfaceCache {
     }
 
     const pairs = await Promise.all(nodeShapePromises)
+    if (generation !== this.fixedMapGeneration)
+      return []; // a later edit is already resolving; its rows are the ones to show
+    this.fixedMap.find("tbody").empty();
     pairs.reduce((acc, pair) => {
       pair.nodes.forEach(node => {
         const nodeTerm = this.caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
@@ -2082,12 +2097,18 @@ class ResultsWidget {
    * browser to scroll to an element with that id -- which is how results
    * that are each their own element have always worked. */
   scrollToResult (anchor) {
-    for (const {pane, offsets} of this.resultPanes) {
-      if (offsets && anchor in offsets) {
-        pane.scrollTo(offsets[anchor]);
-        return true;
-      }
-    }
+    // a browser may hand back the fragment as it was written or percent-
+    // decoded, and these anchors are node@shape with both encoded
+    const spellings = [anchor];
+    try {
+      spellings.push(decodeURIComponent(anchor));
+    } catch (e) { /* not valid percent-encoding: the one spelling, then */ }
+    for (const {pane, offsets} of this.resultPanes)
+      for (const spelling of spellings)
+        if (offsets && spelling in offsets) {
+          pane.scrollTo(offsets[spelling]);
+          return true;
+        }
     return false;
   }
 
@@ -2788,14 +2809,22 @@ class ShExBaseApp {
     $("#success").on("change", this.setInterface.bind(this));
     $("#regexpEngine").on("change", this.toggleControls.bind(this));
     $("#editors").on("change", () => this.setEditors());
-    // A Fixed Map check mark links to its result.  Where the results share
-    // one editor there is no element to jump to, so the link is followed
-    // here instead, to that result's offset in the editor's document.
-    $("#fixedMap").on("click", "a[href^='#']", evt => {
-      const anchor = $(evt.currentTarget).attr("href").substring(1);
-      if (this.resultsWidget.scrollToResult(anchor))
-        evt.preventDefault();
-    });
+    /* A Fixed Map check mark links to its result, and a link to a fragment
+     * is the browser's business: it sets the location and scrolls to the
+     * element with that id.  Where every result is an element that is the
+     * whole story.  Where they share one editor there is no element to
+     * scroll to -- the result is a stretch of that editor's document -- so
+     * the app does the scrolling, and only that: the click is not
+     * cancelled, so the location still updates and Back still works.
+     *
+     * Both the click and the location are listened to.  The click is what
+     * makes clicking the same check mark twice work (the location doesn't
+     * change, so no hashchange follows); the location is what makes Back,
+     * Forward, and a pasted link work. */
+    $("#fixedMap").on("click", "a[href^='#']", evt =>
+      this.resultsWidget.scrollToResult($(evt.currentTarget).attr("href").substring(1)));
+    $(window).on("hashchange", () =>
+      this.resultsWidget.scrollToResult(window.location.hash.substring(1)));
     $("#validate").on("click", this.disableResultsAndValidate.bind(this));
     $("#debugValidate").on("click", () => { SharedForTests.promise = this.startValidationDebugSession(); });
     $("#valDbgInto").on("click", () => this.valDebugStep("stepInto"));

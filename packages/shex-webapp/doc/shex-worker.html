@@ -73,8 +73,11 @@
       #dataSource-tabs { margin-bottom: .2em; padding: .2em; }
       #dataSource-tabs .ui-tabs-nav { padding-left: .2em; }
       #dataSource-tabs .ui-tabs-panel { padding: .3em .2em; }
-      #neighborhoodFields label.neighborhoodField { font-size: .85em; margin-right: .8em; white-space: nowrap; display: inline-block; }
-      #neighborhoodFields input[type=text], #neighborhoodFields input[type=number] { width: 14em; }
+      /* one setting per line: they are a form, not a sentence, and a row of
+         them runs off the side of a panel that is half the window wide */
+      #neighborhoodFields label.neighborhoodField { font-size: .85em; display: block; margin: .15em 0; }
+      #neighborhoodFields label.neighborhoodField > span { display: inline-block; min-width: 11em; }
+      #neighborhoodFields input[type=text], #neighborhoodFields input[type=number] { width: 22em; max-width: 60%; }
       #neighborhoodFields .noSettings { font-size: .85em; font-style: italic; color: #666; }
       #dataPaneControls { float: right; }
       #dataPaneControls button { font-size: .8em; }

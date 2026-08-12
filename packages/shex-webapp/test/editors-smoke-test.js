@@ -147,6 +147,47 @@ if (!TEST_browser) {
       expect(button.attr("title"), "with how long it took").to.match(/last validation: \d+ ms/);
     });
 
+    /* Resolving a Fixed Map pair is asynchronous -- a triple pattern or a
+     * query map extension asks the data source what it selects -- so two
+     * rebuilds can be in flight at once, which is what happens when
+     * anything changes twice in quick succession.  Both used to empty the
+     * table on the way in and append on the way out, leaving the map a
+     * stale copy of every pair it had before. */
+    it("should replace the Fixed Map rather than accumulate them", async function () {
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      const rows = () => $("#fixedMap tr.pair").map(
+        (i, tr) => $(tr).attr("data-node") + "@" + $(tr).attr("data-shape")).get();
+      try {
+        set("#inputSchema textarea", "PREFIX : <http://a.example/>\n:S { :p . }");
+        // changing the data starts a rebuild; changing the map starts another
+        // before the first has resolved
+        set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .\n:y :p 2 .");
+        set("#textMap", "<http://a.example/x>@<http://a.example/S>,\n" +
+            "<http://a.example/y>@<http://a.example/S>");
+        await shared.promise;
+
+        expect(rows(), "one row per pair, and only the current pairs").to.deep.equal([
+          "http://a.example/x@http://a.example/S",
+          "http://a.example/y@http://a.example/S",
+        ]);
+
+        // and again, to a map with fewer pairs than the one before
+        set("#textMap", "<http://a.example/y>@<http://a.example/S>");
+        await shared.promise;
+        expect(rows(), "the pair that went away is gone").to.deep.equal([
+          "http://a.example/y@http://a.example/S",
+        ]);
+      } finally {
+        shared.Caches.shapeMap.removeEditMapPair(null);
+        set("#textMap", "<http://a.example/x>@<http://a.example/S>");
+        await shared.promise;
+      }
+    });
+
     /* Results read as one array, because that is what they are.  They used
      * to be an editor each with the punctuation of an array written between
      * them -- by appending to every *descendant* of #results, which once a
@@ -232,6 +273,17 @@ if (!TEST_browser) {
           pane.scrollTo = wasScrollTo;
         }
         expect(scrolled, "the click scrolled to the second result").to.equal(places[1]);
+
+        // ...and so does arriving at that location by any other route
+        scrolled = null;
+        pane.scrollTo = pos => { scrolled = pos; };
+        try {
+          dom.window.location.hash = "#" + anchors[0];
+          $(dom.window).trigger("hashchange");
+        } finally {
+          pane.scrollTo = wasScrollTo;
+        }
+        expect(scrolled, "a location change scrolled to the first").to.equal(places[0]);
       });
 
       it("should render results as <pre> when the editors are off", async function () {
@@ -277,7 +329,10 @@ if (!TEST_browser) {
         // document is what shows (jsdom lays nothing out, so "showing" is
         // the display style)
         expect(tabs()).to.deep.equal(["settings", "Turtle data"]);
-        expect($("#neighborhoodFields .noSettings").length, "nothing to configure").to.equal(1);
+        expect($("#neighborhoodFields .noSettings").text(), "nothing to configure")
+          .to.equal("nothing to configure for Turtle");
+        // one setting per line, so a source with several doesn't run off the side
+        expect($("#neighborhoodFields label").css("display")).to.not.equal("inline-block");
         expect(source().paneParam.pane.label).to.equal("Turtle data");
         expect(shown("#dataDocument")).to.equal(true);
         expect(shown("#addDataPane"), "one graph is one document").to.equal(false);
@@ -285,7 +340,7 @@ if (!TEST_browser) {
 
       it("should draw a query service as fields, with no document at all", function () {
         source().select("sparql");
-        const fields = $("#neighborhoodFields label").map((i, l) => $(l).text().trim()).get();
+        const fields = $("#neighborhoodFields label > span").map((i, s) => $(s).text().trim()).get();
         expect(fields).to.include("endpoint");
         expect(fields).to.include("expectBnodes");
         // and the setting this app carries out itself, moved here from the
