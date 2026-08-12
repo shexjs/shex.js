@@ -209,6 +209,9 @@ export interface ResultPane {
   /** re-measure after the pane has been attached, shown or resized; see
    * Pane.requestMeasure */
   requestMeasure (): void;
+  /** bring a character offset to the top of the pane -- what a fragment
+   * link does for a document, for a document that is inside an editor */
+  scrollTo (pos: number): void;
   highlight (ranges: Range[], cls?: string, opts?: {scroll?: boolean}): void;
   clearHighlights (): void;
   setHoverRegions (regions: HoverRegion[], leave?: () => void): void;
@@ -235,6 +238,10 @@ export function makeResultPane (text: string, language: PaneLanguage = "json"): 
   return {
     dom: view.dom,
     requestMeasure (): void { view.requestMeasure(); },
+    scrollTo (pos: number): void {
+      const at = Math.max(0, Math.min(pos, view.state.doc.length));
+      view.dispatch({effects: EditorView.scrollIntoView(at, {y: "start"})});
+    },
     highlight (ranges: Range[], cls = "shexjs-highlight", opts: {scroll?: boolean} = {}): void {
       const inRange = (ranges || []).filter(clampRange).sort((a, b) => a.from - b.from);
       const decos = inRange.map(r => Decoration.mark({class: cls}).range(r.from, r.to));

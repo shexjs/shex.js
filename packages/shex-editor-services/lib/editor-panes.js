@@ -184,6 +184,10 @@ function makeResultPane(text, language = "json") {
     return {
         dom: view.dom,
         requestMeasure() { view.requestMeasure(); },
+        scrollTo(pos) {
+            const at = Math.max(0, Math.min(pos, view.state.doc.length));
+            view.dispatch({ effects: view_1.EditorView.scrollIntoView(at, { y: "start" }) });
+        },
         highlight(ranges, cls = "shexjs-highlight", opts = {}) {
             const inRange = (ranges || []).filter(clampRange).sort((a, b) => a.from - b.from);
             const decos = inRange.map(r => view_1.Decoration.mark({ class: cls }).range(r.from, r.to));

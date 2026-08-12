@@ -147,52 +147,109 @@ if (!TEST_browser) {
       expect(button.attr("title"), "with how long it took").to.match(/last validation: \d+ ms/);
     });
 
-    /* Results were punctuated into a JSON array by appending to every
-     * *descendant* of #results.  Once a result is an editor rather than a
-     * <pre>, its descendants are every line and every gutter element, so a
-     * comma landed in each of them -- the extra lines in the gutter. */
-    it("should not write into the results editors' own DOM", async function () {
-      const wasInterface = $("#interface").val();
+    /* Results read as one array, because that is what they are.  They used
+     * to be an editor each with the punctuation of an array written between
+     * them -- by appending to every *descendant* of #results, which once a
+     * result is an editor is every line and every gutter element of it, and
+     * is where the commas in the gutter came from.  Now the array is the
+     * document, and a Fixed Map check mark scrolls to its result inside it. */
+    describe("the results", function () {
       const set = (selector, value) => {
         const elt = $(selector).first();
         elt.val(value);
         elt.trigger("change");
       };
-      try {
+      let wasInterface;
+
+      beforeEach(async function () {
+        wasInterface = $("#interface").val();
         $("#interface").val("appinfo").trigger("change");
         set("#inputSchema textarea", "PREFIX : <http://a.example/>\n:S { :p . }");
         set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .\n:y :p 2 .");
-        // more than one entry, which is when the separators between results
-        // matter
+        shared.Caches.shapeMap.removeEditMapPair(null);
         set("#textMap", "<http://a.example/x>@<http://a.example/S>,\n" +
             "<http://a.example/y>@<http://a.example/S>");
         await shared.promise;
+      });
+
+      afterEach(async function () {
+        $("#interface").val(wasInterface).trigger("change");
+        $("#editors").val("1").trigger("change");
+        // put back the one entry the other tests were left expecting
+        shared.Caches.shapeMap.removeEditMapPair(null);
+        set("#textMap", "<http://a.example/x>@<http://a.example/S>");
+        await shared.promise;
+      });
+
+      it("should put every result in one editor, as the array they are", async function () {
         $("#validate").trigger("click");
         await shared.promise;
 
         const panes = $("#results .cm-editor");
-        // (the shape map keeps entries from earlier tests, so this says
-        // "a pane each" rather than a count)
-        expect(panes.length, "a pane per result").to.be.at.least(2);
+        expect(panes.length, "one editor for all of them").to.equal(1);
+        // the editor renders only what is in view, so the document itself is
+        // what the app kept beside it
+        const text = panes.first().parent().data("rawText");
+        expect(text.trimStart()[0], "one JSON array").to.equal("[");
+        expect(text, "holding every result").to.include("http://a.example/x");
+        expect(text).to.include("http://a.example/y");
+
+        // nothing of ours written into the editor's own DOM
         const gutters = $("#results .cm-gutterElement");
-        expect(gutters.length, "with gutters").to.be.above(0);
+        expect(gutters.length, "with a gutter").to.be.above(0);
         const punctuated = gutters.filter((i, e) => /[\[\],]/.test($(e).text()));
         expect(punctuated.length,
                "gutter elements holding punctuation: " +
                punctuated.map((i, e) => JSON.stringify($(e).text())).get().slice(0, 5).join(" "))
           .to.equal(0);
-        // nor anywhere else inside an editor
-        expect($("#results .cm-editor").text()).to.not.match(/^\s*\[/);
-      } finally {
-        $("#interface").val(wasInterface).trigger("change");
-        // the shape map outlives a test, so put back the one entry the
-        // others were left expecting
-        shared.Caches.shapeMap.removeEditMapPair(null);
-        const map = $("#textMap");
-        map.val("<http://a.example/x>@<http://a.example/S>");
-        map.trigger("change");
+      });
+
+      it("should scroll to the result a Fixed Map check mark names", async function () {
+        $("#validate").trigger("click");
         await shared.promise;
-      }
+
+        const links = $("#fixedMap a[href^='#']");
+        expect(links.length, "a check mark per entry").to.be.at.least(2);
+        // (a map may hold the same pair twice -- see the accumulation bug --
+        // so this is about the distinct ones)
+        const anchors = [...new Set(links.map((i, a) => $(a).attr("href").substring(1)).get())];
+        expect(anchors.length, "two different results").to.be.at.least(2);
+        const [{pane, offsets}] = shared.Caches.editorSupport
+              ? shared.app.resultsWidget.resultPanes
+              : [{}];
+        // every check mark names a place in the shared document, and they
+        // are different places, in the order the results were rendered
+        const places = anchors.map(a => offsets[a]);
+        expect(places.filter(p => p === undefined), anchors.join(" ")).to.deep.equal([]);
+        expect(places[1], "the second result starts after the first").to.be.above(places[0]);
+
+        let scrolled = null;
+        const wasScrollTo = pane.scrollTo;
+        pane.scrollTo = pos => { scrolled = pos; };
+        try {
+          links.filter((i, a) => $(a).attr("href") === "#" + anchors[1]).first().trigger("click");
+        } finally {
+          pane.scrollTo = wasScrollTo;
+        }
+        expect(scrolled, "the click scrolled to the second result").to.equal(places[1]);
+      });
+
+      it("should render results as <pre> when the editors are off", async function () {
+        $("#editors").val("").trigger("change");
+        $("#validate").trigger("click");
+        await shared.promise;
+
+        expect($("#results .cm-editor").length, "no editor anywhere").to.equal(0);
+        const pres = $("#results pre");
+        expect(pres.length, "a <pre> per result").to.be.at.least(2);
+        // each is the element its check mark links to, so the browser can
+        // scroll to it the way it always has
+        const anchors = [...new Set($("#fixedMap a[href^='#']").map(
+          (i, a) => $(a).attr("href").substring(1)).get())];
+        for (const anchor of anchors)
+          expect($("#results").find("[id='" + anchor.replace(/'/g, "") + "']").length,
+                 "an element for " + anchor).to.be.at.least(1);
+      });
     });
 
     /* Where the data comes from is picked from a list of the neighborhood

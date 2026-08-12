@@ -66,9 +66,10 @@
         color: #777;
       }
       body { border-width: .25em; border-style: solid; border-color: white; }
-      /* the tab set and the document share one box, so the buttons below
-         don't move when the settings tab (which is short) is showing */
-      #dataArea { min-height: 33em; }
+      /* the tab set and the document share one box, whose height the app
+         fixes to what a document needs once it has measured one (see
+         showDocumentArea) so the buttons below don't move when the settings
+         tab, which is short, is showing */
       #dataSource-tabs { margin-bottom: .2em; padding: .2em; }
       #dataSource-tabs .ui-tabs-nav { padding-left: .2em; }
       #dataSource-tabs .ui-tabs-panel { padding: .3em .2em; }

@@ -594,11 +594,23 @@ class NeighborhoodConfig {
    */
   showDocumentArea () {
     const showing = this.documents().length > 0 && !this.onSettings;
+    const area = $("#dataArea");
     $("#dataDocument").toggle(showing);
-    // an editor measures nothing while it is hidden, so what it drew before
-    // is what it keeps until it is told to look again
-    if (showing && this.onShown)
-      this.onShown();
+    if (showing) {
+      // an editor measures nothing while it is hidden, so what it drew
+      // before is what it keeps until it is told to look again
+      if (this.onShown)
+        this.onShown();
+      // and remember how tall this block is with a document in it, so that
+      // showing the settings pane -- which is a line or two -- doesn't let
+      // everything below jump up.  Measured rather than declared: the
+      // document is a textarea, or an editor, or an editor the reader has
+      // resized.
+      area.css("min-height", "");
+      const height = area.outerHeight();
+      if (height)
+        area.css("min-height", height + "px");
+    }
   }
 
   /** the language of the pane now showing, for the editors */
@@ -2065,6 +2077,20 @@ class ResultsWidget {
     paneDom.style.height = Math.max(200, window.innerHeight - top - 12) + "px";
   }
 
+  /** Bring the result an anchor names into view, when the results share an
+   * editor.  Returns false if nothing here knows that anchor, leaving the
+   * browser to scroll to an element with that id -- which is how results
+   * that are each their own element have always worked. */
+  scrollToResult (anchor) {
+    for (const {pane, offsets} of this.resultPanes) {
+      if (offsets && anchor in offsets) {
+        pane.scrollTo(offsets[anchor]);
+        return true;
+      }
+    }
+    return false;
+  }
+
   /** Every result pane was built before it was in the document and has just
    * been given a height, so none of them has measured anything real yet.
    * Left alone they draw a gutter for a viewport that never existed. */
@@ -2124,6 +2150,7 @@ class ShExResultsRenderer {
     this.resultsWidget = resultsWidget;
     this.caches = caches;
     this.entries = []; // collected for editor diagnostics (EditorSupport)
+    this.appinfo = []; // results held back to share one editor
   }
 
   async entry (entry) {
@@ -2139,7 +2166,6 @@ class ShExResultsRenderer {
     const klass = (fails ^ fixedMapEntry.find(".shapeMap-joiner").hasClass("nonconformant")) ? "fails" : "passes";
     const resultStr = fails ? "✗" : "✓";
     let elt = null;
-    let appinfoPane = null;
 
     if (!fails) {
       if ($("#success").val() === "query" || $("#success").val() === "remainder") {
@@ -2192,34 +2218,80 @@ class ShExResultsRenderer {
         elt = $("<pre/>").text(JSON.stringify(renderMe, null, "  ")).addClass(klass);
         break;
 
-      default: // appinfo: syntax-highlighted JSON with TestedTriples mapped
-        try {
-          const {text, ranges} = ShExWebApp.EditorServices.stringifyWithOffsets(
-            renderMe, o => o && o.type === "TestedTriple");
-          const pane = ShExWebApp.EditorPanes.makeJsonPane(text);
-          elt = $("<div/>").addClass(klass).append(pane.dom).data("rawText", text);
-          this.resultsWidget.resultPanes.push({pane, ranges});
-          appinfoPane = pane;
-        } catch (e) {
-          console.warn("falling back to plain results JSON:", e);
+      default: // appinfo: the whole JSON, in an editor if there is one
+        if (this.editorsOn()) {
+          // held back: all the results go into one editor at finish(), the
+          // way they read as one array
+          this.appinfo.push({renderMe, klass, entry});
+          elt = null;
+        } else {
           elt = $("<pre/>").text(JSON.stringify(renderMe, null, "  ")).addClass(klass);
         }
       }
     }
-    this.resultsWidget.append(elt);
-    if (appinfoPane) {
-      this.resultsWidget.fitPaneToWindow(appinfoPane.dom);
-      appinfoPane.requestMeasure();   // now that it is attached and sized
-    }
+    if (elt)
+      this.resultsWidget.append(elt);
 
-    // update the FixedMap
+    // update the FixedMap.  Its check mark links to this result: an element
+    // id where each result is an element, an offset into the editor where
+    // they share one (see renderAppinfo).
     fixedMapEntry.addClass(klass).find("a").text(resultStr);
     const nodeLex = fixedMapEntry.find("input.focus").val();
     const shapeLex = fixedMapEntry.find("input.inputShape").val();
     const anchor = encodeURIComponent(nodeLex) + "@" + encodeURIComponent(shapeLex);
-    elt.attr("id", anchor);
+    if (elt)
+      elt.attr("id", anchor);
+    else
+      this.appinfo[this.appinfo.length - 1].anchor = anchor;
     fixedMapEntry.find("a").attr("href", "#" + anchor);
     fixedMapEntry.attr("title", entry.elapsed + " ms")
+  }
+
+  /** are the language-aware editors on?  The results follow the rest of the
+   * interface: editors everywhere, or textareas and <pre>s everywhere. */
+  editorsOn () {
+    return "EditorPanes" in ShExWebApp && $("#editors").val() === "1";
+  }
+
+  /** One editor holding every result, as the array they are.
+   *
+   * They used to be one editor each with the punctuation of an array
+   * written between them, which is what the Fixed Map's check marks
+   * scrolled to.  Now the array is the editor's document, and a check mark
+   * scrolls to its result's offset within it.
+   */
+  renderAppinfo () {
+    if (this.appinfo.length === 0)
+      return;
+    const results = this.appinfo.map(({renderMe}) => renderMe);
+    try {
+      const {text, ranges} = ShExWebApp.EditorServices.stringifyWithOffsets(
+        results, o => o && (o.type === "TestedTriple" || results.indexOf(o) !== -1));
+      const pane = ShExWebApp.EditorPanes.makeJsonPane(text);
+      const klass = this.appinfo.every(({klass}) => klass === "passes") ? "passes" : "fails";
+      const elt = $("<div/>").addClass(klass).append(pane.dom).data("rawText", text);
+      this.resultsWidget.append(elt);
+      this.resultsWidget.fitPaneToWindow(pane.dom);
+      pane.requestMeasure();   // now that it is attached and sized
+
+      // where each result starts, by the anchor its check mark links to
+      const offsets = {};
+      this.appinfo.forEach(({renderMe, anchor}) => {
+        const range = ranges.find(r => r.target === renderMe);
+        if (range && anchor !== undefined)
+          offsets[anchor] = range.from;
+      });
+      this.resultsWidget.resultPanes.push({
+        pane,
+        ranges: ranges.filter(r => r.target && r.target.type === "TestedTriple"),
+        offsets,
+      });
+    } catch (e) {
+      console.warn("falling back to plain results JSON:", e);
+      this.appinfo.forEach(({renderMe, klass, anchor}) =>
+        this.resultsWidget.append(
+          $("<pre/>").text(JSON.stringify(renderMe, null, "  ")).addClass(klass).attr("id", anchor)));
+    }
   }
 
   finish (done) {
@@ -2241,6 +2313,7 @@ class ShExResultsRenderer {
       });
     }
 
+    this.renderAppinfo();
     $("#results .status").text("rendering results...").show();
     // Results used to be punctuated into a JSON array -- "[" before the
     // first, "," between -- which `$("#results div *")` did by appending to
@@ -2552,6 +2625,8 @@ class ShExBaseApp {
           pane.requestMeasure();
       });
     inputData.neighborhoods = this.neighborhoods;
+    // normalize: bring a query parameter's value into the range its control
+    // accepts, so a permalink can say what a reader would write.
     // manifest: how this input corresponds to a manifest entry: key (the
     // entry key; long text may spill to a gist file named spillName,
     // referenced as <key>URL), labelKey/label (an accompanying label line),
@@ -2573,7 +2648,10 @@ class ShExBaseApp {
       // way a shape could match, which some real data makes impractical
       {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr",
        manifest: {key: "regexpEngine"} },
-      {queryStringParm: "editors",      location: $("#editors"),         deflt: ""          },
+      // the select's "off" is the empty string, which is not what anyone
+      // types: ?editors=0 and ?editors=false mean the same thing
+      {queryStringParm: "editors",      location: $("#editors"),         deflt: "",
+       normalize: v => /^(1|true|yes|on)$/i.test(v) ? "1" : ""},
       // The data source and whatever it wants configured.  A parameter is
       // named for what it means, not for the module that declares it, so a
       // manifest entry or a permalink says `neighborhood=sparql&endpoint=…`
@@ -2710,6 +2788,14 @@ class ShExBaseApp {
     $("#success").on("change", this.setInterface.bind(this));
     $("#regexpEngine").on("change", this.toggleControls.bind(this));
     $("#editors").on("change", () => this.setEditors());
+    // A Fixed Map check mark links to its result.  Where the results share
+    // one editor there is no element to jump to, so the link is followed
+    // here instead, to that result's offset in the editor's document.
+    $("#fixedMap").on("click", "a[href^='#']", evt => {
+      const anchor = $(evt.currentTarget).attr("href").substring(1);
+      if (this.resultsWidget.scrollToResult(anchor))
+        evt.preventDefault();
+    });
     $("#validate").on("click", this.disableResultsAndValidate.bind(this));
     $("#debugValidate").on("click", () => { SharedForTests.promise = this.startValidationDebugSession(); });
     $("#valDbgInto").on("click", () => this.valDebugStep("stepInto"));
@@ -2902,7 +2988,9 @@ class ShExBaseApp {
         const prepend = input.location.prop("tagName") === "TEXTAREA" ?
               input.location.val() :
               "";
-        const value = prepend + iface[parm].join("");
+        const value = prepend + (input.normalize
+                                 ? input.normalize(iface[parm].join(""))
+                                 : iface[parm].join(""));
         const origValue = input.location.val();
 
         try {
