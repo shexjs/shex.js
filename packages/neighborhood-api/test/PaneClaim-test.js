@@ -204,6 +204,50 @@ describe("neighborhood pane claims", () => {
     });
   });
 
+  /* A shape map may pick its focus nodes by asking rather than naming them.
+   * Which questions can be asked depends on where the data comes from, so
+   * each source says what it can resolve and a host asks the selected one. */
+  describe("query map extensions", () => {
+    const {queryMapResolverFor, extensionIri, extensionName} = require("..");
+
+    it("should name extensions the way the shape map grammar does", () => {
+      expect(extensionIri("QENTITIES")).to.equal("http://www.w3.org/ns/shex#Extensions-qentities");
+      expect(extensionName(extensionIri("QENTITIES"))).to.equal("QENTITIES");
+      // SPARQL's long-standing IRI is an instance of the same convention
+      expect(extensionIri("SPARQL")).to.equal("http://www.w3.org/ns/shex#Extensions-sparql");
+    });
+
+    it("should let a query service answer SPARQL and nothing else", () => {
+      expect(queryMapResolverFor(Sparql, extensionIri("SPARQL")).name).to.equal("SPARQL");
+      expect(queryMapResolverFor(Sparql, extensionIri("QENTITIES"))).to.equal(null);
+    });
+
+    it("should let a wikibase answer QENTITIES, by id or by bare number", () => {
+      const resolver = queryMapResolverFor(Wikidata, extensionIri("QENTITIES"));
+      expect(resolver.name).to.equal("QENTITIES");
+      const db = Wikidata.ctor(null, {fetchDoc: () => { throw Error("no fetching to resolve ids"); }});
+      expect(resolver.resolve("42 Q76 P31", db).map(t => t.value)).to.deep.equal([
+        "http://www.wikidata.org/entity/Q42",
+        "http://www.wikidata.org/entity/Q76",
+        "http://www.wikidata.org/entity/P31",
+      ]);
+      // the entities themselves, not the pages they came from: a schema
+      // about people is about wd:Q42, where data:Q42 is a dataset with a
+      // revision and a modification date
+      expect(resolver.resolve("42", db)[0].value).to.not.match(/EntityData/);
+    });
+
+    it("should say what isn't an id rather than inventing one", () => {
+      const resolver = queryMapResolverFor(Wikidata, extensionIri("QENTITIES"));
+      expect(() => resolver.resolve("42 rubbish", {})).to.throw(/"rubbish" is not an entity id/);
+    });
+
+    it("should leave a local store with no questions to answer", () => {
+      expect(RdfJs.queryMapResolvers, "nothing to ask a document you typed").to.equal(undefined);
+      expect(queryMapResolverFor(RdfJs, extensionIri("SPARQL"))).to.equal(null);
+    });
+  });
+
   describe("command line translation", () => {
     it("should keep a module's historical option name", () => {
       const [endpoint] = paramsToCommandLineArgs(Sparql.dbParams);

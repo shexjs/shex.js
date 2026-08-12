@@ -43,8 +43,10 @@ const JsYaml = require('js-yaml');
 const ShExUtil = require("@shexjs/util");
 const {ShExIndexVisitor} = require("@shexjs/visitor");
 const {StoreDuplicates, yyllocToString, Merger: ShExMerger} = require("@shexjs/util/lib/Merger");
-const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
-const { paramsToCommandLineArgs } = require('@shexjs/neighborhood-api');
+const RdfJsModule = require('@shexjs/neighborhood-rdfjs');
+const { ctor: RdfJsDb } = RdfJsModule;
+const { paramsToCommandLineArgs, queryMapResolverFor, extensionName, moduleId } =
+      require('@shexjs/neighborhood-api');
 /* Query-backed neighborhood modules this CLI can drive.  Each declares its
  * construction parameters (dbParams) and a uniform constructor (fromParams);
  * the declared parameters are appended to CommandLineOptions below, and the
@@ -320,15 +322,16 @@ async function findNodesAndValidate (loaded, parms, options, schemaStart, cmds) 
         : term;
     }
   }
-  const shapeMapExtensions = {
-    "http://www.w3.org/ns/shex#Extensions-sparql": function (query) {
-      const prefixesStr = loaded.dataMeta.length > 0
-            ? Object.keys(loaded.dataMeta[0].prefixes).map(
-              k => `PREFIX ${k}: <${loaded.dataMeta[0].prefixes[k]}>\n`
-            ).join("")
-            : "";
-      return ShExUtil.executeQuery(prefixesStr + query, parms.endpoint, N3.DataFactory).map(row => row[0]);
-    }
+  /** Resolve a query map extension by asking the data source: which
+   * questions can be asked depends on where the data comes from, and only
+   * the source knows what it means (see QueryMapResolver). */
+  function resolveShapeMapExtension (language, lexical) {
+    const mod = selectedQueryDbModule(parms) || RdfJsModule;
+    const resolver = queryMapResolverFor(mod, language);
+    if (!resolver)
+      throw new TermError(`the QueryMap extension ${extensionName(language)} is not supported ` +
+                          `by the neighborhood ${moduleId(mod)}`);
+    return resolver.resolve(lexical, loaded.data).map(ShExTerm.rdfJsTerm2Ld);
   }
 
   function _makeShapeMap (nodeP, shapeP, nodeTypeP, schemaStart) {
@@ -339,7 +342,7 @@ async function findNodesAndValidate (loaded, parms, options, schemaStart, cmds) 
         : typeof nodeP === "object" && nodeP.type === "TriplePattern"
         ? getQuads(nodeP.subject, nodeP.predicate, nodeP.object).map(ShExTerm.rdfJsTerm2Ld)
         : typeof nodeP === "object" && nodeP.type === "Extension"
-          ? shapeMapExtensions[nodeP.language](nodeP.lexical)
+          ? resolveShapeMapExtension(nodeP.language, nodeP.lexical)
         : [ShExUtil.parsePassedNode(nodeP, loaded.dataMeta[0], someIRInode,
                                  MISC_NODES ? () => true : knownNode, x => x)]; // accept unknown nodes
     let shape, shapeLabel;
@@ -651,7 +654,9 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions, cmd
           console.log(
             cmds["human"]
               ? passed
-              ? `${res.node}@${res.shape}`
+              // a query map extension, or a triple pattern, yields a node
+              // per match rather than the one node -n names
+              ? (res.solutions || [res]).map(s => `${s.node}@${s.shape}`).join("\n")
               : ShExUtil.errsToSimple(res)
               : JSON.stringify(res, null, "  ")
           );

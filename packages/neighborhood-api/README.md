@@ -121,6 +121,35 @@ reading the text from its own cache would be describing the document as it
 was before the edit — the pane's textarea proxy still reports the old text
 while the transaction that changes it is being applied.
 
+## query map extensions (STRAWMAN)
+
+A shape map may pick its focus nodes by asking rather than by naming them:
+
+```
+SPARQL "SELECT ?item WHERE { ?item wdt:P31 wd:Q5 } LIMIT 10"@START
+QENTITIES "42 76"@START
+```
+
+Which questions can be asked is not a property of the shape map language but
+of **where the data comes from** — only a query service can run a SPARQL
+query, only a Wikibase knows what an entity id means. So a module declares
+`queryMapResolvers: QueryMapResolver[]`, each with the extension's `language`
+IRI, the `name` a shape map writes, and `resolve(lexical, db)` returning the
+focus nodes. `queryMapResolverFor(module, language)` finds one;
+`extensionIri(name)`/`extensionName(iri)` convert between the two spellings
+(the shape-map grammar reads any bare `NAME "…"` as
+`http://www.w3.org/ns/shex#Extensions-<name lowercased>`, of which SPARQL's
+long-standing IRI is an instance).
+
+A host that finds no resolver can then say *which* source doesn't understand
+the extension — "the QueryMap extension QENTITIES is not supported by the
+neighborhood sparql" — rather than reporting a syntax error, or running the
+question against something that was never configured. That last one was a
+real bug: `SPARQL "…"` used to be resolved against an endpoint the app kept
+beside the data pane, which by then might be nobody's endpoint at all.
+
+Resolvers are synchronous, like the db they are handed.
+
 ## loading a neighborhood module into the WebApp (STRAWMAN)
 
 The WebApp wants more from a db than `getNeighborhood`: focus-node

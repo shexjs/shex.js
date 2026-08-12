@@ -4,6 +4,9 @@ exports.Start = void 0;
 exports.paneParams = paneParams;
 exports.fieldParams = fieldParams;
 exports.moduleId = moduleId;
+exports.extensionIri = extensionIri;
+exports.extensionName = extensionName;
+exports.queryMapResolverFor = queryMapResolverFor;
 exports.claimPane = claimPane;
 exports.paramsToCommandLineArgs = paramsToCommandLineArgs;
 exports.sparqlOrder = sparqlOrder;
@@ -20,6 +23,31 @@ function fieldParams(specs) {
  * option value. */
 function moduleId(module) {
     return module.name.replace(/^neighborhood-/, "");
+}
+// ── query map extensions ───────────────────────────────────────────────────
+// A shape map may pick its focus nodes by asking rather than by naming
+// them: `SPARQL "SELECT ..."@START` means "whatever that query selects".
+// Which questions can be asked is not a property of the shape map language
+// but of where the data comes from -- only a query service can run a SPARQL
+// query, only a Wikibase knows what an entity id means -- so each module
+// says what it can resolve and a host asks the selected source.  A host
+// that finds no resolver can then say *which* source doesn't understand
+// the extension, rather than reporting it as a syntax error or, worse,
+// running it against something that was never configured.
+/** How a bare extension name in a shape map becomes an IRI: the convention
+ * the shape-map grammar follows, and SPARQL's own name obeys. */
+function extensionIri(name) {
+    return "http://www.w3.org/ns/shex#Extensions-" + name.toLowerCase();
+}
+/** The name a shape map would write for an extension IRI, for error
+ * messages and for writing a shape map back out. */
+function extensionName(language) {
+    const m = language.match(/#Extensions-(.*)$/);
+    return m ? m[1].toUpperCase() : language;
+}
+/** the selected source's resolver for an extension, or null if it has none */
+function queryMapResolverFor(module, language) {
+    return (module.queryMapResolvers || []).find(r => r.language === language) || null;
 }
 /** The module whose claimPaneText answers to this text, and the parameters
  * it read out of it; null when none does, leaving the host with whatever

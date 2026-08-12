@@ -206,6 +206,46 @@ export interface ParamEditor {
   complete? (text: string, pos: number, ctx?: EditorContext): EditorCompletions | null;
 }
 
+// ── query map extensions ───────────────────────────────────────────────────
+// A shape map may pick its focus nodes by asking rather than by naming
+// them: `SPARQL "SELECT ..."@START` means "whatever that query selects".
+// Which questions can be asked is not a property of the shape map language
+// but of where the data comes from -- only a query service can run a SPARQL
+// query, only a Wikibase knows what an entity id means -- so each module
+// says what it can resolve and a host asks the selected source.  A host
+// that finds no resolver can then say *which* source doesn't understand
+// the extension, rather than reporting it as a syntax error or, worse,
+// running it against something that was never configured.
+
+/** How a bare extension name in a shape map becomes an IRI: the convention
+ * the shape-map grammar follows, and SPARQL's own name obeys. */
+export function extensionIri (name: string): string {
+  return "http://www.w3.org/ns/shex#Extensions-" + name.toLowerCase();
+}
+
+/** The name a shape map would write for an extension IRI, for error
+ * messages and for writing a shape map back out. */
+export function extensionName (language: string): string {
+  const m = language.match(/#Extensions-(.*)$/);
+  return m ? m[1].toUpperCase() : language;
+}
+
+export interface QueryMapResolver {
+  /** the extension IRI the shape-map parser reports; see extensionIri */
+  language: string;
+  /** how it is written in a shape map, the bare word before the string */
+  name: string;
+  description?: string;
+  /** the focus nodes this extension's text picks out.  Synchronous, like
+   * the rest of this API: the db it is handed answers synchronously too. */
+  resolve (lexical: string, db: NeighborhoodDb): RdfJsTerm[];
+}
+
+/** the selected source's resolver for an extension, or null if it has none */
+export function queryMapResolverFor (module: NeighborhoodModule, language: string): QueryMapResolver | null {
+  return (module.queryMapResolvers || []).find(r => r.language === language) || null;
+}
+
 /** What a neighborhood package's entry may export.  `name`, `description`
  * and `ctor` are the longstanding convention; the rest are optional
  * declarations that let a host construct the db, and edit the text
@@ -237,6 +277,8 @@ export interface NeighborhoodModule {
    * "# Endpoint: <url>" at the top of the data was how you reached a query
    * service.  Return null to pass. */
   claimPaneText? (text: string): { [name: string]: any } | null;
+  /** the query map extensions this source can resolve; see QueryMapResolver */
+  queryMapResolvers?: QueryMapResolver[];
   /** how the text this module claims should be edited, for a host with one
    * pane and no notion of which parameter it holds.  A host that renders
    * dbParams gets each pane's language from its PaneSpec instead. */

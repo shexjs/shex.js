@@ -305,6 +305,39 @@ if (!TEST_browser) {
         expect(source().texts("pages")[0]).to.include('"lastrevid"');
       });
 
+      /* A QueryMap may ask the source which nodes to validate.  Which
+       * questions can be asked is the source's business: only a query
+       * service can run SPARQL, only a Wikibase knows what Q42 means, and a
+       * source that does not understand an extension says which one it is
+       * and which source refused it. */
+      it("should resolve a QueryMap extension through the selected source", async function () {
+        source().select("wikidata");
+        const data = shared.Caches.inputData;
+        const qentities = "http://www.w3.org/ns/shex#Extensions-qentities";
+        const nodes = await data.resolveQueryMapExtension(qentities, "42 76");
+        expect(nodes.map(n => n.value)).to.deep.equal([
+          "http://www.wikidata.org/entity/Q42",
+          "http://www.wikidata.org/entity/Q76",
+        ]);
+        // and it is written back out by the name the source knows it as
+        expect(data.writeQueryMapExtension(qentities, "42 76"))
+          .to.equal("QENTITIES " + "'''" + "42 76" + "'''");
+
+        for (const [id, extension] of [["sparql", "QENTITIES"], ["rdfjs", "SPARQL"]]) {
+          source().select(id);
+          let message = null;
+          try {
+            await data.resolveQueryMapExtension(
+              "http://www.w3.org/ns/shex#Extensions-" + extension.toLowerCase(), "whatever");
+          } catch (e) {
+            message = e.message;
+          }
+          expect(message, id).to.equal(
+            "the QueryMap extension " + extension +
+            " is not supported by the neighborhood " + id);
+        }
+      });
+
       it("should carry the source and its settings in the permalink", async function () {
         source().select("sparql");
         $("#nbhd-endpoint").val("http://ex.example/sparql").trigger("change");

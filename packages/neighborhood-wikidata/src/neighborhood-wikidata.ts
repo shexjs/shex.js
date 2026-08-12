@@ -153,7 +153,15 @@ export function siteInfoFromSitematrix (doc: any): (siteId: string) => SiteInfo 
 
 // ── the DB ──────────────────────────────────────────────────────────────────
 
-export function wikidataDB (queryTracker?: DbQueryTracker, options: WikidataDbOptions = {}): NeighborhoodWebAppDb {
+/** What this module's DB offers over the plain API: its own entity naming,
+ * which its query map resolver needs, and the pages it read. */
+export interface WikidataNeighborhoodDb extends NeighborhoodWebAppDb {
+  /** the IRI of an entity, by id, in whichever Wikibase this DB is pointed at */
+  entityIri (id: string): string;
+  loadedPages (): { id: string, text: string }[];
+}
+
+export function wikidataDB (queryTracker?: DbQueryTracker, options: WikidataDbOptions = {}): WikidataNeighborhoodDb {
   const conceptBase = options.conceptBase || "http://www.wikidata.org/";
   const dataBase = options.dataBase || "https://www.wikidata.org/wiki/Special:EntityData/";
   const entityDataUrl = options.entityDataUrl || ((id: string) => `${dataBase}${id}.json`);
@@ -365,6 +373,7 @@ export function wikidataDB (queryTracker?: DbQueryTracker, options: WikidataDbOp
     suggestFocusNodes,
     labelOf,
     loadedPages,
+    entityIri: (id: string) => NS.wd + id,
   };
 
   /** The pages this DB fetched, ready to be looked at: readably indented,
@@ -411,6 +420,32 @@ export const name = "neighborhood-wikidata";
 export const label = "Wikidata";
 export const description = "Implementation of @shexjs/neighborhood-api which synthesizes Wikidata's RDF from entity JSON pages";
 export const capabilities = ["query", "translate"];
+
+/** A shape map may name the entities to validate rather than their IRIs:
+ *
+ *     QENTITIES "42 76"@START
+ *
+ * which this source reads as wd:Q42 and wd:Q76 -- the entities themselves,
+ * the things a schema about people or places is about.  (The pages they come
+ * from are `data:Q42`, which answer a different schema: a dataset with a
+ * revision and a modification date.)  Ids may be written with or without
+ * their leading letter, the pane they are typed into being a list of
+ * entities and nothing else. */
+export const queryMapResolvers = [{
+  language: "http://www.w3.org/ns/shex#Extensions-qentities",
+  name: "QENTITIES",
+  description: "the focus nodes are the entities with these ids",
+  resolve: (lexical: string, db: NeighborhoodDb) => {
+    const iri = (db as WikidataNeighborhoodDb).entityIri ||
+          ((id: string) => "http://www.wikidata.org/entity/" + id);
+    return lexical.trim().split(/\s+/).filter(word => word !== "").map(word => {
+      const id = /^[QPLM]/i.test(word) ? word[0].toUpperCase() + word.substring(1) : "Q" + word;
+      if (!/^[QPLM]\d+$/.test(id))
+        throw Error(`"${word}" is not an entity id: QENTITIES takes ids like Q42, or bare numbers`);
+      return DataFactory.namedNode(iri(id));
+    });
+  },
+}];
 export const ctor = wikidataDB;
 
 /** What it takes to construct this DB, declared for hosts that offer several

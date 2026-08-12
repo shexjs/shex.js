@@ -76,6 +76,9 @@ export interface SparqlDbOptions {
  */
 export interface SparqlNeighborhoodDb extends NeighborhoodDb {
   setSchema (schema: InternalSchema): void;
+  /** rows of a SELECT against this DB's endpoint -- what a shape map's
+   * SPARQL extension is asking for, run where this DB is pointed */
+  executeSelect (query: string): RdfJs.Term[][];
 }
 
 /** Thrown when a blank node can't be pinned down by an anchored description. */
@@ -794,6 +797,7 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
     getObjects: function () { return ["!Query DB can't index objects"] as unknown as RdfJs.Term[] },
     get size(): number { return undefined as unknown as number; },
     setSchema: function (schema: InternalSchema) { schemaIndex = schema._index || ShExIndexVisitor.index(schema) },
+    executeSelect: (query: string) => runQuery(query),
   };
 }
 
@@ -801,6 +805,15 @@ export const name = "neighborhood-sparql";
 export const label = "SPARQL endpoint";
 export const description = "Implementation of @shexjs/neighborhood-api which gets data from a SPARQL endpoint";
 export const capabilities = ["query"];
+
+/** A shape map may ask this source which nodes to validate. */
+export const queryMapResolvers = [{
+  language: "http://www.w3.org/ns/shex#Extensions-sparql",
+  name: "SPARQL",
+  description: "the focus nodes are the first column of this SELECT, run on this endpoint",
+  resolve: (lexical: string, db: NeighborhoodDb) =>
+    (db as SparqlNeighborhoodDb).executeSelect(lexical).map(row => row[0]),
+}];
 export const ctor = sparqlDB;
 
 /** What it takes to construct this DB, declared for hosts (the CLI, the

@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.paneEditor = exports.dbParams = exports.ctor = exports.capabilities = exports.description = exports.label = exports.name = exports.BNodeIdentityError = void 0;
+exports.paneEditor = exports.dbParams = exports.ctor = exports.queryMapResolvers = exports.capabilities = exports.description = exports.label = exports.name = exports.BNodeIdentityError = void 0;
 exports.sparqlDB = sparqlDB;
 exports.fromParams = fromParams;
 exports.claimPaneText = claimPaneText;
@@ -655,12 +655,20 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         getObjects: function () { return ["!Query DB can't index objects"]; },
         get size() { return undefined; },
         setSchema: function (schema) { schemaIndex = schema._index || visitor_1.ShExIndexVisitor.index(schema); },
+        executeSelect: (query) => runQuery(query),
     };
 }
 exports.name = "neighborhood-sparql";
 exports.label = "SPARQL endpoint";
 exports.description = "Implementation of @shexjs/neighborhood-api which gets data from a SPARQL endpoint";
 exports.capabilities = ["query"];
+/** A shape map may ask this source which nodes to validate. */
+exports.queryMapResolvers = [{
+        language: "http://www.w3.org/ns/shex#Extensions-sparql",
+        name: "SPARQL",
+        description: "the focus nodes are the first column of this SELECT, run on this endpoint",
+        resolve: (lexical, db) => db.executeSelect(lexical).map(row => row[0]),
+    }];
 exports.ctor = sparqlDB;
 /** What it takes to construct this DB, declared for hosts (the CLI, the
  * WebApp) that offer several neighborhood implementations.  See the STRAWMAN

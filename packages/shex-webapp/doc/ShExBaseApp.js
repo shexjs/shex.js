@@ -7,7 +7,6 @@ const NO_MANIFEST_LOADED = "no manifest loaded";
 
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 const LOG_PROGRESS = false;
-const EXTENSION_sparql = "http://www.w3.org/ns/shex#Extensions-sparql";
 const SPARQL_get_items_limit = 50;
 const MENU_ITEM_materialize = "- materialize -"
 const GIST_TOKEN_KEY = "githubGistToken"; // localStorage key for Menu → Create Gist
@@ -715,6 +714,31 @@ class TurtleCache extends InterfaceCache {
     const res = module.fromParams(params, this.queryTrackerController.queryTracker);
     this.callOnLoad();
     return res;
+  }
+
+  /** Resolve a query map extension -- SPARQL "SELECT ...", QENTITIES "42"
+   * -- by asking the selected data source, which is the only thing that can
+   * know what the question means.  A source that does not offer the
+   * extension says so by name, rather than failing obscurely or running the
+   * question against something that was never configured.
+   */
+  async resolveQueryMapExtension (language, lexical) {
+    const {queryMapResolverFor, extensionName, moduleId} = ShExWebApp.NeighborhoodApi;
+    const module = this.neighborhoods.module;
+    const resolver = queryMapResolverFor(module, language);
+    if (!resolver)
+      throw Error("the QueryMap extension " + extensionName(language) +
+                  " is not supported by the neighborhood " + moduleId(module));
+    return resolver.resolve(lexical, await this.refresh());
+  }
+
+  /** how a query map extension is written back out: by the name the source
+   * knows it as */
+  writeQueryMapExtension (language, lexical) {
+    const {queryMapResolverFor, extensionName} = ShExWebApp.NeighborhoodApi;
+    const resolver = queryMapResolverFor(this.neighborhoods.module, language);
+    return (resolver ? resolver.name : extensionName(language)) +
+      " '''" + lexical.replace(/'''/g, "''\\'") + "'''";
   }
 
   /** candidate focus nodes for the shape-map menus.
@@ -1466,14 +1490,10 @@ class ShapeMapCache extends InterfaceCache {
       case "node": node = ldToTurtle(pair.node, this.caches.inputData.meta.termToLex); shape = startOrLdToTurtle(pair.shape); break;
       case "TriplePattern": node = renderTP(pair.node); shape = startOrLdToTurtle(pair.shape); break;
       case "Extension":
-        if (pair.node.language === EXTENSION_sparql) {
-          node = "SPARQL '''" + (pair.node.lexical.replace(/'''/g, "''\\'")) + "'''";
-          shape = startOrLdToTurtle(pair.shape);
-        } else {
-          this.resultsWidget.failMessage(Error("unsupported extension: <" + pair.node.language + ">"),
-                                         "parsing Query Map", pair.node.lexical);
-          skip = true; // skip this entry.
-        }
+        // whether this source can resolve it is settled when the map is
+        // used; writing it back out only needs its name
+        node = this.caches.inputData.writeQueryMapExtension(pair.node.language, pair.node.lexical);
+        shape = startOrLdToTurtle(pair.shape);
         break;
       default:
         this.resultsWidget.append($("<div/>").append(
@@ -1638,18 +1658,17 @@ class ShapeMapCache extends InterfaceCache {
             var smparser = ShExWebApp.ShapeMapParser.construct(
               _ShapeMapCache.meta.base, _ShapeMapCache.caches.inputSchema.meta, _ShapeMapCache.caches.inputData.meta);
             var sm = smparser.parse(nodeLex + '@' + shapeLex)[0];
-            if (sm.node.language === EXTENSION_sparql) {
-              let q = sm.node.lexical;
-              let obj = {}
+            if (sm.node.type === "Extension") {
+              const obj = {}
               obj[MENU_ITEM_materialize] = { name: MENU_ITEM_materialize };
+              const nodes = await _ShapeMapCache.caches.inputData.resolveQueryMapExtension(
+                sm.node.language, sm.node.lexical);
               return {
-                items: ShExWebApp.Util.executeQuery(q, _ShapeMapCache.caches.inputData.endpoint, RdfJs.DataFactory).reduce(
-                  (ret, row) => {
-                    let name = _ShapeMapCache.caches.inputData.lexifyFirstColumn(row);
-                    ret[name] = { name: name };
-                    return ret;
-                  }, obj
-                )
+                items: nodes.reduce((ret, term) => {
+                  const name = _ShapeMapCache.caches.inputData.meta.termToLex(term);
+                  ret[name] = { name: name };
+                  return ret;
+                }, obj)
               }
             }
           } catch (e) {
@@ -1805,9 +1824,9 @@ class ShapeMapCache extends InterfaceCache {
         const sm = smparser.parse(node + '@' + shape)[0];
         const added = typeof sm.node === "string" || "@value" in sm.node
               ? Promise.resolve({nodes: [node], shape: shape, status: status})
-              : sm.node.language === EXTENSION_sparql
-              ? ShExWebApp.Util.executeQueryPromise(sm.node.lexical, this.caches.inputData.endpoint, RdfJs.DataFactory)
-                .then(rows => Promise.resolve({nodes: rows.map(row => this.caches.inputData.lexifyFirstColumn(row)), shape: shape}))
+              : sm.node.type === "Extension"
+              ? this.caches.inputData.resolveQueryMapExtension(sm.node.language, sm.node.lexical)
+                .then(terms => ({nodes: terms.map(term => this.caches.inputData.meta.termToLex(term)), shape: shape}))
               : getQuads(sm.node.subject, sm.node.predicate, sm.node.object)
               .then(nodes => Promise.resolve({nodes: nodes, shape: shape, status: status}));
         return acc.concat(added);
