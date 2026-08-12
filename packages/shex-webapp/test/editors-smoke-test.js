@@ -338,6 +338,30 @@ if (!TEST_browser) {
         }
       });
 
+      /* A manifest entry's source settings arrive after its documents do --
+       * the pick machinery sets the data, then loadExtraInputs delivers the
+       * rest -- so the db built on the way through knows nothing of the
+       * endpoint yet.  Whatever asks the source next has to see the
+       * configured db, not that one: "Can't execute a SPARQL query with no
+       * endpoint" was this, and it is why setting a source parameter
+       * invalidates the db built from the old value. */
+      it("should rebuild the source when a setting arrives after its data", async function () {
+        const data = shared.Caches.inputData;
+        const endpoint = shared.app.QueryParams.find(q => q.queryStringParm === "endpoint");
+        // the order pickData uses: name the source, then deliver its settings
+        source().select("sparql");
+        endpoint.location.val("");    // as an entry that names none delivers it
+        await data.refresh();
+        expect(data.endpoint, "nothing configured yet").to.equal(undefined);
+
+        // the way a manifest entry (or a permalink) delivers `endpoint=`
+        endpoint.location.val("https://query.wikidata.org/sparql");
+        const db = await data.refresh();
+        expect(data.endpoint).to.equal("https://query.wikidata.org/sparql");
+        expect(typeof db.executeSelect, "and it is a db a resolver can ask").to.equal("function");
+        endpoint.location.val("");
+      });
+
       it("should carry the source and its settings in the permalink", async function () {
         source().select("sparql");
         $("#nbhd-endpoint").val("http://ex.example/sparql").trigger("change");

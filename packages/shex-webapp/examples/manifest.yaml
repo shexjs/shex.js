@@ -280,4 +280,5 @@
   queryMap: |
     <http://www.wikidata.org/entity/Q42>@START
   status: conformant
-  comment: 'The same entity from a page downloaded earlier: edit it in the pane to see what an edit would validate as before making it.'
+  comment: 'The same entity from a page downloaded earlier: edit it in the pane to see what an edit would validate as before making it.  With a downloaded site table too (the sitelinks in a page name wikis like "enwiki", and only that table says which URL and language that is), this entry needs no network at all.'
+  sitematrix: ../examples/wikidata-sitematrix.json

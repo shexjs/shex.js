@@ -28,6 +28,17 @@ describe("the examples manifest", () => {
       expect(Fs.existsSync(Path.join(examples, file)), file).to.equal(true);
   });
 
+  it("should ship the site table its offline example names", () => {
+    // a Wikibase page's sitelinks name wikis like "enwiki", and only the
+    // site table says which URL and language that is; this entry names a
+    // downloaded copy so it needs no network at all.  The value is resolved
+    // by the browser against the page that loads it, i.e. doc/.
+    const entry = json.find(e => e.dataLabel === "Q42 from a downloaded page");
+    expect(entry.sitematrix, "the example that shows what sitematrix is for").to.be.a("string");
+    expect(Fs.existsSync(Path.join(__dirname, "../doc", entry.sitematrix)),
+           entry.sitematrix).to.equal(true);
+  });
+
   it("should name only data sources this app loads", () => {
     const {moduleId} = require("@shexjs/neighborhood-api");
     const known = [
