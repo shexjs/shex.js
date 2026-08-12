@@ -121,11 +121,19 @@ Turning on **slurp** records what a validation fetched: the triples go to
 the local store's Turtle document, and every entity page the walk read comes
 back as a pane of its own, readably indented, to edit and validate again.
 
-Requests identify themselves with a `User-Agent` (Wikimedia's robot policy
-403s clients that don't), and the site table is fetched with `origin=*` so a
-browser is allowed to read it. Nothing sets a *custom* request header:
+Requests identify themselves with a `User-Agent` where that can be said —
+Wikimedia's robot policy 403s clients that don't — which means under node,
+whose synchronous-XHR shim has none of its own. A browser has one already
+and refuses to let anyone set that header, so it isn't asked. Nor is any
+*custom* header set (`Api-User-Agent`, which MediaWiki would also read):
 asking for one turns a cross-origin request into a preflighted one, which a
-synchronous XHR cannot do — and this API is synchronous.
+synchronous XHR cannot do. The site table is fetched with `origin=*`, or a
+browser has no permission to read the response.
+
+Nothing here uses a node-only global — no `Buffer`, no `crypto` — because
+all of it runs in a browser too. PHP's serialization counts *bytes*, so
+`utf8Length` does that arithmetic itself; a test converts a fixture with
+`Buffer` taken away to keep it that way.
 
 What no host could offer, this module does: completing entity IRIs from the
 labels of the pages the db has loaded, so typing `wd:Q4` offers

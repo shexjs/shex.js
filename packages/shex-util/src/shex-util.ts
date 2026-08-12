@@ -1760,12 +1760,24 @@ const ShExUtil = {
   sparqlGetLimit: 2000,
 
   /** Who we are, for services that insist on being told: Wikimedia's robot
-   * policy 403s a request with no User-Agent (T400119).  A browser refuses
-   * to set that header -- it is a forbidden header name, so the call is
-   * quietly ignored -- and sends one of its own; a synchronous-XHR shim
-   * under node has none to send, so it is set here for the shim's benefit.
-   * Assign to it to identify your own tool instead. */
+   * policy 403s a request with no User-Agent (T400119).  A browser has one
+   * of its own and refuses to let anyone set that header -- it warns rather
+   * than obeying -- so only a shim that has none is told.  Assign to it to
+   * identify your own tool instead. */
   sparqlUserAgent: "shex.js (https://github.com/shexjs/shex.js)",
+
+  /** is there a browser here, with a User-Agent of its own? */
+  inBrowser: function (): boolean {
+    const global = globalThis as any;
+    return typeof global.window !== "undefined" && typeof global.window.document !== "undefined";
+  },
+
+  /** the given headers, plus who we are where that can be said */
+  requestHeaders: function (headers: {[name: string]: string}): {[name: string]: string} {
+    return this.inBrowser()
+      ? headers
+      : Object.assign({"User-Agent": this.sparqlUserAgent}, headers);
+  },
 
   executeQueryPromise: function (query: string, endpoint: string, dataFactory: any): Promise<any[][]> {
     if (!endpoint)
@@ -1773,17 +1785,15 @@ const ShExUtil = {
 
     const queryURL = endpoint + "?query=" + encodeURIComponent(query);
     const request = queryURL.length <= this.sparqlGetLimit
-          ? fetch(queryURL, {headers: {
+          ? fetch(queryURL, {headers: this.requestHeaders({
             'Accept': 'application/sparql-results+json',
-            'User-Agent': this.sparqlUserAgent,
-          }})
+          })})
           : fetch(endpoint, {
             method: 'POST',
-            headers: {
+            headers: this.requestHeaders({
               'Accept': 'application/sparql-results+json',
               'Content-Type': 'application/sparql-query',
-              'User-Agent': this.sparqlUserAgent,
-            },
+            }),
             body: query,
           });
     return request.then(resp => resp.json()).then(jsonObject => {
@@ -1800,7 +1810,8 @@ const ShExUtil = {
     const xhr = new XMLHttpRequest();
     xhr.open(byUrl ? "GET" : "POST", byUrl ? queryURL : endpoint, false);
     xhr.setRequestHeader('Accept', 'application/sparql-results+json');
-    xhr.setRequestHeader('User-Agent', this.sparqlUserAgent);
+    if (!this.inBrowser())
+      xhr.setRequestHeader('User-Agent', this.sparqlUserAgent);
     if (byUrl) {
       xhr.send();
     } else {

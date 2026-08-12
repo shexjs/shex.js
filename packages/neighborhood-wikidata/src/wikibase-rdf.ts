@@ -143,7 +143,31 @@ export function wfUrlencode (s: string): string {
     m => decodeURIComponent(m));
 }
 
-const utf8Len = (s: string) => Buffer.byteLength(s, "utf8");
+/** How many bytes a string is in UTF-8, which is what PHP's serialization
+ * counts.  Not `Buffer.byteLength`: this runs in a browser too, where there
+ * is no Buffer -- and a length that is quietly wrong would move every hash
+ * that depends on it. */
+export function utf8Length (text: string): number {
+  let bytes = 0;
+  for (let i = 0; i < text.length; ++i) {
+    const code = text.charCodeAt(i);
+    if (code < 0x80)
+      bytes += 1;
+    else if (code < 0x800)
+      bytes += 2;
+    else if (code >= 0xd800 && code <= 0xdbff && i + 1 < text.length &&
+             (text.charCodeAt(i + 1) & 0xfc00) === 0xdc00) {
+      bytes += 4;              // a surrogate pair is one 4-byte character
+      ++i;
+    } else {
+      // a lone surrogate encodes as U+FFFD, which is 3 bytes either way
+      bytes += 3;
+    }
+  }
+  return bytes;
+}
+
+const utf8Len = utf8Length;
 /** PHP json_encode: like JSON.stringify but "/" is escaped. */
 const phpJson = (v: unknown) => JSON.stringify(v).replace(/\//g, "\\/");
 /** PHP serialize() of a string. */

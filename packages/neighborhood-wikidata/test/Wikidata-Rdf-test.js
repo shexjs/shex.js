@@ -87,6 +87,34 @@ describe("wikibase-rdf", () => {
     });
   });
 
+  /* This package runs in a browser as well as in node, and a browser has
+   * no Buffer.  PHP's serialization counts *bytes*, so reaching for
+   * Buffer.byteLength was both a crash there and a hash waiting to go
+   * wrong; converting with Buffer taken away is the guard. */
+  it("should synthesize with none of node's globals, as a browser must", () => {
+    const hadBuffer = global.Buffer;
+    for (const id of Object.keys(require.cache))
+      if (/neighborhood-wikidata[\\/]lib[\\/]/.test(id))
+        delete require.cache[id];
+    delete global.Buffer;
+    try {
+      const {wikibaseRdfConverter: fresh} = require("../lib/wikibase-rdf");
+      const quads = fresh(N3.DataFactory, {siteInfo}).entityToQuads(JSON.parse(read("Q42.json")));
+      // the value node names are what byte lengths decide
+      assert.isTrue(quads.some(q => q.object.value ===
+                                "http://www.wikidata.org/value/426df9023763f08b066f4478480f44cd"),
+                    "Q42's birth date value node, named by a PHP serialization's length");
+    } finally {
+      global.Buffer = hadBuffer;
+    }
+  });
+
+  it("should count UTF-8 bytes the way PHP does", () => {
+    const {utf8Length} = require("../lib/wikibase-rdf");
+    for (const text of ["", "abc", "é", "日本語", "😀", "a😀b", "\ud800", "\ud800x", "دوغلاس آدمز"])
+      assert.equal(utf8Length(text), Buffer.byteLength(text, "utf8"), JSON.stringify(text));
+  });
+
   it("should reject entity types it would misrepresent", () => {
     expect(() => converter.entityToQuads({entities: {L42: {id: "L42", type: "lexeme"}}}))
       .to.throw(/lexeme/);

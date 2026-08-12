@@ -59,6 +59,12 @@ const DataFactory = N3.DataFactory;
 /** Who this is, for hosts that ask (see fetchDoc): a tool and where to
  * read about it, which is what Wikimedia's robot policy wants. */
 const USER_AGENT = "@shexjs/neighborhood-wikidata (https://github.com/shexjs/shex.js)";
+/** Is there a browser here, with a User-Agent of its own and opinions about
+ * who may set it? */
+function inBrowser() {
+    const global = globalThis;
+    return typeof global.window !== "undefined" && typeof global.window.document !== "undefined";
+}
 // ── site languages ──────────────────────────────────────────────────────────
 // The sitematrix names each wiki's language by its subdomain-ish code;
 // Wikibase's RDF names it by the BCP 47 form of the sites-table entry.
@@ -142,14 +148,14 @@ function wikidataDB(queryTracker, options = {}) {
         xhr.open("GET", url, false);
         xhr.setRequestHeader("Accept", "application/json");
         // Wikimedia's robot policy 403s clients that don't identify themselves
-        // (T400119).  User-Agent is a forbidden header name, so a browser
-        // ignores this and sends its own, while a node shim -- which has none --
-        // honors it.  Api-User-Agent, which MediaWiki also reads, is *not*
-        // forbidden, and asking for a custom header turns a cross-origin
-        // request into a preflighted one, which a synchronous XHR cannot do:
-        // it is the difference between this working in a browser and failing
-        // with "Failed to execute 'send' on 'XMLHttpRequest'".
-        xhr.setRequestHeader("User-Agent", USER_AGENT);
+        // (T400119).  A browser has a User-Agent of its own and refuses to let
+        // anyone set that header -- it warns rather than obeying -- so only a
+        // shim that has none is told.  And nothing sets a *custom* header
+        // (Api-User-Agent, which MediaWiki would also read): asking for one
+        // turns a cross-origin request into a preflighted one, which a
+        // synchronous XHR cannot do.
+        if (!inBrowser())
+            xhr.setRequestHeader("User-Agent", USER_AGENT);
         xhr.send();
         if (xhr.status >= 400)
             throw Error(`GET <${url}> returned ${xhr.status}:\n${xhr.responseText}`);
