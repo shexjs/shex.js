@@ -440,6 +440,50 @@ if (!TEST_browser) {
         expect(asked[0].canQuery, "and a db that can run it").to.equal(true);
       });
 
+      /* What made these entries slow was a source rebuilt -- and
+       * re-fetched, and re-translated -- for every dirty bit, and an engine
+       * that took twenty seconds over one entity's worth of labels.  This
+       * validates a real entity page end to end and says how long that took.
+       *
+       * The page is handed over inline, with its sitelinks removed so that
+       * nothing has to be fetched: jsdom serves this suite's HTTP from the
+       * same event loop the app runs on, and a *synchronous* XHR into it
+       * deadlocks (which is the whole reason neighborhood-sparql ships
+       * sync-fetch).  In a browser the server is another process and the
+       * shipped entry fetches its page and site table quite happily. */
+      it("should validate a real entity page end to end, quickly", async function () {
+        this.timeout(60000);
+        const examples = Path.join(__dirname, "../examples");
+        const page = JSON.parse(Fs.readFileSync(Path.join(examples, "wikidata-Q42.json"), "utf8"));
+        delete page.entities.Q42.sitelinks;   // ...so no site table is wanted
+
+        await shared.Caches.manifest.set([{
+          schemaLabel: "person", schema: Fs.readFileSync(
+            Path.join(examples, "wikidata-person.shex"), "utf8"),
+          dataLabel: "Q42, handed over whole", neighborhood: "wikidata",
+          data: JSON.stringify(page),
+          regexpEngine: "eval-simple-1err",
+          queryMap: 'QENTITIES "42"@START',
+        }], "http://localhost/manifest.json");
+        $("#inputSchema .manifest li").last().trigger("click");
+        await shared.promise;
+        $("#inputData .indeterminant li").last().trigger("click");
+        await shared.promise;
+
+        expect($("#neighborhood").val()).to.equal("wikidata");
+        expect($("#regexpEngine").val(), "the entry asked for an engine").to.equal("eval-simple-1err");
+
+        const began = Date.now();
+        $("#validate").trigger("click");
+        await shared.promise;
+        const elapsed = Date.now() - began;
+
+        expect($("#results .error").length, $("#results").text().substring(0, 300)).to.equal(0);
+        // the human interface renders a pass as a check beside the pair
+        expect($("#results").text(), "Q42 is a person").to.match(/\u2713|ShapeTest|conformant/);
+        expect(elapsed, "and not in twenty seconds: " + elapsed + "ms").to.be.below(15000);
+      });
+
       it("should carry the source and its settings in the permalink", async function () {
         source().select("sparql");
         $("#nbhd-endpoint").val("http://ex.example/sparql").trigger("change");

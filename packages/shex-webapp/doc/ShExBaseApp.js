@@ -2547,7 +2547,10 @@ class ShExBaseApp {
     this.QueryParams = this.Getables.concat([
       {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
       {queryStringParm: "success",      location: $("#success"),         deflt: "proof"     },
-      {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr" },
+      // an entry may ask for an engine: the thorough one enumerates every
+      // way a shape could match, which some real data makes impractical
+      {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr",
+       manifest: {key: "regexpEngine"} },
       {queryStringParm: "editors",      location: $("#editors"),         deflt: ""          },
       // The data source and whatever it wants configured.  A parameter is
       // named for what it means, not for the module that declares it, so a

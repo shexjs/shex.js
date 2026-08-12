@@ -60,7 +60,7 @@ describe("the examples manifest", () => {
     // keys every entry may carry, whichever source it names
     const generic = new Set(["schemaLabel", "schema", "schemaURL", "dataLabel", "data",
                              "dataURL", "queryMap", "queryMapURL", "status", "comment",
-                             "neighborhood", "name"]);
+                             "neighborhood", "name", "regexpEngine"]);
     for (const entry of json) {
       const module = modules[entry.neighborhood || "rdfjs"];
       const declared = new Set((module.dbParams || []).map(p => p.name));

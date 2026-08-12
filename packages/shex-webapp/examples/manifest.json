@@ -70,7 +70,8 @@
     "queryMap": "SPARQL '''SELECT ?item ?itemLabel WHERE {\n  ?item wdt:P279* wd:Q12078 .\n  SERVICE wikibase:label {\n    bd:serviceParam wikibase:language \"en\"\n  }\n} LIMIT 10'''@START",
     "status": "conformant",
     "neighborhood": "sparql",
-    "endpoint": "https://query.wikidata.org/sparql"
+    "endpoint": "https://query.wikidata.org/sparql",
+    "regexpEngine": "eval-simple-1err"
   },
   {
     "schemaLabel": "Wikidata person",
@@ -80,7 +81,8 @@
     "endpoint": "https://query.wikidata.org/sparql",
     "queryMap": "<http://www.wikidata.org/entity/Q42>@START\n",
     "status": "conformant",
-    "comment": "Douglas Adams, validated by asking query.wikidata.org for each neighborhood as the walk needs it."
+    "comment": "Douglas Adams, validated by asking query.wikidata.org for each neighborhood as the walk needs it.",
+    "regexpEngine": "eval-simple-1err"
   },
   {
     "schemaLabel": "Wikidata person",
@@ -91,7 +93,8 @@
     "queryMap": "QENTITIES \"42 76\"@START\n",
     "status": "conformant",
     "comment": "The same entity from the JSON pages Wikidata is edited through, turned back into the RDF the query service would serve.  The QueryMap names entities by id and lets this source work out what they are called.",
-    "data": "Q42\n"
+    "data": "Q42\n",
+    "regexpEngine": "eval-simple-1err"
   },
   {
     "schemaLabel": "Wikidata person",
@@ -102,6 +105,7 @@
     "queryMap": "<http://www.wikidata.org/entity/Q42>@START\n",
     "status": "conformant",
     "comment": "The same entity from a page downloaded earlier: edit it in the pane to see what an edit would validate as before making it.  With a downloaded site table too (the sitelinks in a page name wikis like \"enwiki\", and only that table says which URL and language that is), this entry needs no network at all.",
-    "sitematrix": "../examples/wikidata-sitematrix.json"
+    "sitematrix": "../examples/wikidata-sitematrix.json",
+    "regexpEngine": "eval-simple-1err"
   }
 ]
