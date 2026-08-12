@@ -308,6 +308,18 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
     const langLit = (v, lang) => DF.literal(v, lang.toLowerCase());
     const typed = (v, dt) => DF.literal(v, iri(dt));
     const integer = (v) => typed(String(v), exports.XSD + "integer");
+    /** quad -> utterances, keyed canonically so that two equal quads (an RDF
+     * set has one, a document may say it twice) share an entry */
+    const provenance = new Map();
+    const quadKey = (q) => [q.subject, q.predicate, q.object].map(term => term.termType === "BlankNode" ? "_:" + term.value
+        : term.termType === "Literal"
+            ? JSON.stringify([term.value, term.language,
+                term.datatype && term.datatype.value])
+            : "<" + term.value + ">").join(" ");
+    const provenanceIndex = {
+        get: (quad) => provenance.get(quadKey(quad)) || [],
+        get size() { return provenance.size; },
+    };
     function entityToQuads(doc, requestedId) {
         const ids = Object.keys(doc.entities);
         if (ids.length !== 1)
@@ -315,10 +327,46 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
         const entity = doc.entities[ids[0]];
         const id = entity.id || ids[0];
         const quads = [];
+        const located = options.locations;
+        /** where the quads being emitted right now were written: set by each
+         * emitter as it descends, so `add` doesn't have to be told every time */
+        let where = {};
+        const at = (path) => path && located ? located.at(path) : null;
+        const nameAt = (path) => path && located ? located.nameAt(path) : null;
         const add = (s, p, o) => {
-            quads.push(DF.quad(s, p === "a" ? a : iri(p), o));
+            const quad = DF.quad(s, p === "a" ? a : iri(p), o);
+            quads.push(quad);
+            if (!located)
+                return;
+            // a member's *name* is the nearest thing JSON has to a predicate; a
+            // value that is an object is its whole {...}
+            const utterance = {
+                subject: at(where.s),
+                predicate: nameAt(where.p) || at(where.p),
+                object: at(where.o),
+            };
+            const key = quadKey(quad);
+            const had = provenance.get(key);
+            if (had)
+                had.push(utterance);
+            else
+                provenance.set(key, [utterance]);
+        };
+        /** run `emit` with these paths as the source of what it emits */
+        const from = (paths, emit) => {
+            const outer = where;
+            where = paths;
+            try {
+                emit();
+            }
+            finally {
+                where = outer;
+            }
         };
         const wd = iri(NS.wd + id);
+        /** where this entity is in the page: everything below is relative */
+        const ENTITY = ["entities", id];
+        where = { s: ENTITY, o: ENTITY };
         const COMPLEX_VALUES = {
             time: emitTimeValueNode,
             quantity: emitQuantityValueNode,
@@ -365,16 +413,18 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
                 emitStatementGroup(pid, statements);
         }
         function emitTerms() {
-            for (const { language, value } of Object.values(entity.labels || {})) {
-                add(wd, exports.RDFS + "label", langLit(value, language));
-                add(wd, exports.SKOS + "prefLabel", langLit(value, language));
-                add(wd, exports.SCHEMA + "name", langLit(value, language));
-            }
-            for (const { language, value } of Object.values(entity.descriptions || {}))
-                add(wd, exports.SCHEMA + "description", langLit(value, language));
-            for (const aliases of Object.values(entity.aliases || {}))
-                for (const { language, value } of aliases)
-                    add(wd, exports.SKOS + "altLabel", langLit(value, language));
+            for (const [key, term] of Object.entries(entity.labels || {}))
+                from({ s: ENTITY, p: ENTITY.concat("labels", key), o: ENTITY.concat("labels", key, "value") }, () => {
+                    add(wd, exports.RDFS + "label", langLit(term.value, term.language));
+                    add(wd, exports.SKOS + "prefLabel", langLit(term.value, term.language));
+                    add(wd, exports.SCHEMA + "name", langLit(term.value, term.language));
+                });
+            for (const [key, term] of Object.entries(entity.descriptions || {}))
+                from({ s: ENTITY, p: ENTITY.concat("descriptions", key),
+                    o: ENTITY.concat("descriptions", key, "value") }, () => add(wd, exports.SCHEMA + "description", langLit(term.value, term.language)));
+            for (const [key, aliases] of Object.entries(entity.aliases || {}))
+                aliases.forEach((term, i) => from({ s: ENTITY, p: ENTITY.concat("aliases", key),
+                    o: ENTITY.concat("aliases", key, i, "value") }, () => add(wd, exports.SKOS + "altLabel", langLit(term.value, term.language))));
         }
         function emitSitelinks() {
             const sitelinks = Object.values(entity.sitelinks || {});
@@ -384,6 +434,9 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
                 throw Error(`can't convert ${id}'s sitelinks without a siteInfo option ` +
                     `(the page names sites like "${sitelinks[0].site}" but the RDF needs their URLs)`);
             for (const { site, title, badges } of sitelinks) {
+                where = { s: ENTITY.concat("sitelinks", site),
+                    p: ENTITY.concat("sitelinks", site),
+                    o: ENTITY.concat("sitelinks", site) };
                 const info = options.siteInfo(site);
                 if (!info)
                     throw Error(`unknown site "${site}" in ${id}'s sitelinks`);
@@ -398,6 +451,7 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
                     add(article, exports.WIKIBASE + "badge", iri(NS.wd + badge));
                 add(iri(home), exports.WIKIBASE + "wikiGroup", string(info.group));
             }
+            where = { s: ENTITY, o: ENTITY };
         }
         function emitPropertyOntology() {
             const dt = entity.datatype;
@@ -439,36 +493,46 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
             // "truthy" wdt: arcs reflect only the best statements of a property:
             // the preferred ones, or all the normal ones when nothing is preferred
             const bestRank = statements.some(st => st.rank === "preferred") ? "preferred" : "normal";
-            for (const st of statements) {
+            statements.forEach((st, index) => {
+                const CLAIM = ENTITY.concat("claims", pid, index);
                 const stLName = st.id.replace("$", "-");
                 const wds = iri(NS.wds + stLName);
-                add(wd, NS.p + pid, wds);
-                add(wds, "a", iri(exports.WIKIBASE + "Statement"));
-                const best = st.rank === bestRank;
-                if (best)
-                    add(wds, "a", iri(exports.WIKIBASE + "BestRank"));
-                add(wds, exports.WIKIBASE + "rank", iri(exports.WIKIBASE + st.rank.charAt(0).toUpperCase() + st.rank.substring(1) + "Rank"));
-                emitSnak(wds, stLName, st.mainsnak, "statement");
-                if (best)
-                    emitSnak(wd, stLName, st.mainsnak, "direct");
-                for (const snaks of Object.values(st.qualifiers || {}))
-                    for (const snak of snaks)
-                        emitSnak(wds, stLName, snak, "qualifier");
-                for (const ref of st.references || []) {
+                // the statement node is that claim's whole object, the way a blank
+                // node is its whole [ ... ]
+                from({ s: ENTITY, p: ENTITY.concat("claims", pid), o: CLAIM }, () => add(wd, NS.p + pid, wds));
+                from({ s: CLAIM, p: CLAIM, o: CLAIM }, () => {
+                    add(wds, "a", iri(exports.WIKIBASE + "Statement"));
+                    if (st.rank === bestRank)
+                        add(wds, "a", iri(exports.WIKIBASE + "BestRank"));
+                });
+                from({ s: CLAIM, p: CLAIM.concat("rank"), o: CLAIM.concat("rank") }, () => add(wds, exports.WIKIBASE + "rank", iri(exports.WIKIBASE + st.rank.charAt(0).toUpperCase() + st.rank.substring(1) + "Rank")));
+                const PROPERTY = ENTITY.concat("claims", pid);
+                emitSnak(wds, stLName, st.mainsnak, "statement", CLAIM.concat("mainsnak"), CLAIM, PROPERTY);
+                if (st.rank === bestRank)
+                    emitSnak(wd, stLName, st.mainsnak, "direct", CLAIM.concat("mainsnak"), ENTITY, PROPERTY);
+                for (const [qid, snaks] of Object.entries(st.qualifiers || {}))
+                    snaks.forEach((snak, qi) => emitSnak(wds, stLName, snak, "qualifier", CLAIM.concat("qualifiers", qid, qi), CLAIM, CLAIM.concat("qualifiers", qid)));
+                (st.references || []).forEach((ref, ri) => {
+                    const REF = CLAIM.concat("references", ri);
                     const wdref = iri(NS.wdref + ref.hash);
-                    add(wds, exports.PROV + "wasDerivedFrom", wdref);
-                    add(wdref, "a", iri(exports.WIKIBASE + "Reference"));
-                    for (const snaks of Object.values(ref.snaks || {}))
-                        for (const snak of snaks)
-                            emitSnak(wdref, ref.hash, snak, "reference");
-                }
-            }
+                    from({ s: CLAIM, p: REF, o: REF }, () => {
+                        add(wds, exports.PROV + "wasDerivedFrom", wdref);
+                        add(wdref, "a", iri(exports.WIKIBASE + "Reference"));
+                    });
+                    for (const [rid, snaks] of Object.entries(ref.snaks || {}))
+                        snaks.forEach((snak, si) => emitSnak(wdref, ref.hash, snak, "reference", REF.concat("snaks", rid, si), REF, REF.concat("snaks", rid)));
+                });
+            });
         }
         /** One snak onto `subject`: the simple value in the family's namespace,
          * plus (except for truthy wdt:) the wdv: node for structured values. */
-        function emitSnak(subject, parentLName, snak, family) {
+        function emitSnak(subject, parentLName, snak, family, SNAK, SUBJECT, PROPERTY) {
             const { simple, value } = FAMILIES[family];
             const pid = snak.property;
+            const VALUE = SNAK && SNAK.concat("datavalue", "value");
+            // the property is named by the member that groups these snaks -- the
+            // "P569" of claims, of qualifiers, of a reference's snaks
+            where = { s: SUBJECT, p: PROPERTY, o: VALUE };
             switch (snak.snaktype) {
                 case "value": {
                     const term = simpleValueTerm(snak.datavalue, snak.datatype);
@@ -477,7 +541,8 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
                     if (value !== null && snak.datavalue.type in COMPLEX_VALUES) {
                         const node = iri(NS.wdv + valueNodeHash(snak.datavalue));
                         add(subject, value + pid, node);
-                        COMPLEX_VALUES[snak.datavalue.type](node, snak.datavalue.value);
+                        // the value node's own arcs come from inside that value object
+                        from({ s: VALUE, p: VALUE, o: VALUE }, () => COMPLEX_VALUES[snak.datavalue.type](node, snak.datavalue.value));
                     }
                     break;
                 }
@@ -550,7 +615,7 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
             add(node, exports.WIKIBASE + "geoGlobe", iri(v.globe));
         }
     }
-    return { entityToQuads, namespaces: NS };
+    return { entityToQuads, namespaces: NS, provenance: provenanceIndex };
 }
 exports.name = "wikibase-rdf";
 exports.description = "Wikibase entity JSON pages to WDQS-flavor RDF";

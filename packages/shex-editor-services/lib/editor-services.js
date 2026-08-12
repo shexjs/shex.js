@@ -423,10 +423,13 @@ function quadAnchors(parsed, quad, text) {
     const [utt] = parsed.provenance.get(quad);
     if (!utt)
         return null;
-    // a blank node's source form is its whole [ property list ]; highlight
-    // just the delimiters so the contents read as their own triples
-    const delims = (range, term) => range && term.termType === "BlankNode" && range.to - range.from >= 2 &&
-        text[range.from] === "[" && text[range.to - 1] === "]"
+    // A term whose source form is a nested structure -- a blank node's whole
+    // [ property list ] in Turtle, an entity page's { ... } in JSON -- marks
+    // just its delimiters, so the contents read as their own triples.
+    const nested = (range) => !!range && range.to - range.from >= 2 &&
+        ((text[range.from] === "[" && text[range.to - 1] === "]") ||
+            (text[range.from] === "{" && text[range.to - 1] === "}"));
+    const delims = (range, _term) => nested(range)
         ? [{ from: range.from, to: range.from + 1 }, { from: range.to - 1, to: range.to }]
         : undefined;
     const subject = trimRange(uttRange(utt.subject), text);

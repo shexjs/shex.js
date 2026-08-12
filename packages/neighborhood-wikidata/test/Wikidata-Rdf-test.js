@@ -222,3 +222,63 @@ describe("wikibase-rdf", () => {
     });
   });
 });
+
+/* A Turtle parser hands back a side table saying where each triple was
+ * uttered, which is what post-validation highlighting anchors to.  An
+ * entity page is JSON, and the RDF it becomes has the same need, so the
+ * converter reports the same thing about the same quads. */
+describe("where a quad was uttered", () => {
+  const {locateJson} = require("../lib/json-locations");
+  const text = read("Q42.json");
+  const locations = locateJson(text);
+  const siteInfo = siteInfoFromSitematrix(JSON.parse(read("sitematrix.json")));
+  const converter = wikibaseRdfConverter(N3.DataFactory, {siteInfo, locations});
+  const quads = converter.entityToQuads(locations.value);
+  const said = (from, to) => text.substring(from, to);
+  const utterance = predicate => {
+    const quad = quads.find(q => q.predicate.value === predicate);
+    assert.isDefined(quad, predicate);
+    const [utt] = converter.provenance.get(quad);
+    assert.isDefined(utt, "an utterance for " + predicate);
+    return utt;
+  };
+
+  it("should locate the same value JSON.parse would have read", () => {
+    assert.deepEqual(locations.value, JSON.parse(text));
+  });
+
+  it("should point a truthy arc at the claim it abbreviates", () => {
+    const utt = utterance("http://www.wikidata.org/prop/direct/P569");
+    // the property is named by the member that groups the claims
+    assert.equal(said(utt.predicate.start, utt.predicate.end), '"P569"');
+    // and the object is the value, whole
+    assert.equal(JSON.parse(said(utt.object.start, utt.object.end)).time,
+                 "+1952-03-11T00:00:00Z");
+  });
+
+  it("should give a statement the range of its whole object, as Turtle gives a bnode its []", () => {
+    const utt = utterance("http://www.wikidata.org/prop/P569");
+    const claim = said(utt.object.start, utt.object.end);
+    assert.equal(claim[0], "{", "starts at the brace");
+    assert.equal(claim[claim.length - 1], "}", "and ends at its match");
+    assert.equal(JSON.parse(claim).mainsnak.property, "P569");
+  });
+
+  it("should point a label at its language and its text", () => {
+    const utt = utterance("http://www.w3.org/2000/01/rdf-schema#label");
+    assert.match(said(utt.predicate.start, utt.predicate.end), /^"[a-z-]+"$/);
+    assert.equal(said(utt.object.start, utt.object.end)[0], '"');
+  });
+
+  it("should say where every quad it made came from", () => {
+    const unlocated = quads.filter(q => converter.provenance.get(q).length === 0);
+    assert.deepEqual(unlocated.slice(0, 3).map(q => q.predicate.value), []);
+  });
+
+  it("should report nothing when it was not given the page's text", () => {
+    const plain = wikibaseRdfConverter(N3.DataFactory, {siteInfo});
+    const quad = plain.entityToQuads(JSON.parse(text))[0];
+    assert.deepEqual(plain.provenance.get(quad), []);
+    assert.equal(plain.provenance.size, 0);
+  });
+});
