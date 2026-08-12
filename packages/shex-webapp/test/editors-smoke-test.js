@@ -107,6 +107,46 @@ if (!TEST_browser) {
       expect($("#inputSchema .cm-content").text()).to.include("http://a.example/");
     });
 
+    /* A validation over a synchronous data source holds the main thread
+     * from the moment it starts, so the button has to say what is happening
+     * *before* it does -- and the elapsed time can only be reported after,
+     * there being no repaint in between to count up in. */
+    it("should say on the button that it is validating, and for how long it did", async function () {
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      set("#inputSchema textarea", "PREFIX : <http://a.example/>\n:S { :p . }");
+      set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .");
+      set("#textMap", "<http://a.example/x>@<http://a.example/S>");
+      await shared.promise;
+
+      const button = $("#validate");
+      const said = [];
+      // the click hands the browser a turn to paint before it blocks, and
+      // what it would paint is what the button says at that moment
+      const wasTimeout = dom.window.setTimeout;
+      dom.window.setTimeout = (fn, ms) => {
+        said.push({text: button.text(), running: button.hasClass("running"),
+                   disabled: !!button.prop("disabled")});
+        return wasTimeout(fn, ms);
+      };
+      try {
+        button.trigger("click");
+        await shared.promise;
+      } finally {
+        dom.window.setTimeout = wasTimeout;
+      }
+
+      expect(said[0], "what the button says while it runs").to.deep.equal(
+        {text: "validating\u2026", running: true, disabled: true});
+      expect(button.text(), "and afterwards").to.equal("validate (ctl-enter)");
+      expect(button.hasClass("running")).to.equal(false);
+      expect(button.prop("disabled")).to.equal(false);
+      expect(button.attr("title"), "with how long it took").to.match(/last validation: \d+ ms/);
+    });
+
     /* Where the data comes from is picked from a list of the neighborhood
      * modules this app loaded, and what each one needs is drawn from that
      * module's own declarations: values to type become fields, documents to

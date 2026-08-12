@@ -30,6 +30,9 @@
       .pair.fails { background-color: #fbb; }
       .error , #results div .error  { padding-left: .1em; border-left: thick solid #b00; }
       .running { background-color: #ddf; }
+      /* a validation over a synchronous data source holds the main thread,
+         so the button says so before it starts and nothing else can */
+      #validate.running { background-color: #ffe9a8; border-color: #d0a400; font-style: italic; }
       #inputarea { overflow-x: none; white-space:nowrap; }
       #inputarea textarea { overflow-x: auto }
       #inputarea textarea.data.focus {

@@ -51,8 +51,13 @@ neighborhood.
 
 - `cacheDir`: keep each fetched JSON page on disk, so re-validating costs no
   requests. Pages are cached forever — delete a file (or the directory) to
-  pick up an edit. Without it, caching is in-memory only (still one fetch
-  per entity per DB).
+  pick up an edit.
+
+Pages are also remembered **per process**, not per DB: a host that offers a
+configuration form rebuilds its db whenever a setting changes, and a
+synchronous fetch is the most expensive thing here, so what was fetched
+outlives the db that fetched it. `forgetPages()` empties that, for a host
+that wants the site's current answer again.
 - `fetchDoc(url)`: synchronous transport returning the response body. The
   default reads `file:` URLs from disk (a directory of captured pages is a
   fully offline "API") and fetches the rest with a synchronous

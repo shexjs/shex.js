@@ -17,7 +17,7 @@ const assert = chai.assert;
 const expect = chai.expect;
 const N3 = require("n3");
 
-const {wikidataDB, EntityResolutionError} = require("../lib/neighborhood-wikidata");
+const {wikidataDB, EntityResolutionError, forgetPages} = require("../lib/neighborhood-wikidata");
 const ShExParser = require("@shexjs/parser");
 const {ShExValidator} = require("@shexjs/validator");
 
@@ -49,6 +49,9 @@ function fixtureTransport () {
 const anyShape = {type: "Shape"};
 
 describe("neighborhood-wikidata", () => {
+  // pages outlive the DB that read them (see forgetPages), so a test that
+  // counts fetches has to start from nothing fetched
+  beforeEach(() => forgetPages());
 
   it("should serve an entity's neighborhood from its JSON page", () => {
     const {log, fetchDoc} = fixtureTransport();
@@ -118,6 +121,30 @@ describe("neighborhood-wikidata", () => {
     } finally {
       fs.rmSync(cacheDir, {recursive: true, force: true});
     }
+  });
+
+  /* A host rebuilds a DB whenever its configuration changes -- a form
+   * rebuilds on every keystroke -- and a synchronous fetch is the most
+   * expensive thing here.  What was fetched outlives the DB that fetched
+   * it, so the second DB starts where the first left off. */
+  it("should not fetch again what this process has already fetched", () => {
+    const first = fixtureTransport();
+    wikidataDB(null, {fetchDoc: first.fetchDoc})
+      .getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
+    assert.equal(first.log.length, 2, "a page and a site table");
+
+    const second = fixtureTransport();
+    const db = wikidataDB(null, {fetchDoc: second.fetchDoc});
+    db.getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
+    assert.deepEqual(second.log, [], "a rebuilt DB re-fetches nothing");
+    // and it is the same data, not an empty store
+    assert.isTrue(db.getQuads(nn(WD + "Q42"), nn(WDT + "P31"), null, null).length > 0);
+
+    forgetPages();
+    const third = fixtureTransport();
+    wikidataDB(null, {fetchDoc: third.fetchDoc})
+      .getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
+    assert.equal(third.log.length, 2, "until a host asks for the site's current answer");
   });
 
   describe("pages the caller supplies", () => {

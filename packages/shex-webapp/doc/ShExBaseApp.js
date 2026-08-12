@@ -3,6 +3,7 @@
  */
 const START_SHAPE_LABEL = "START";
 const INPUTAREA_TIMEOUT = 250;
+const VALIDATE_LABEL = "validate (ctl-enter)";
 const NO_MANIFEST_LOADED = "no manifest loaded";
 
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
@@ -684,18 +685,22 @@ class TurtleCache extends InterfaceCache {
   async parse (text, base) {
     const module = this.neighborhoods.module;
     const params = this.neighborhoods.params();
-    // text arriving from somewhere the user didn't type -- a manifest, a
-    // permalink, a dropped file, or a pane saved back when "# Endpoint:"
-    // at the top of the data was how you reached a query service -- may
-    // name a source of its own
-    const claim = ShExWebApp.NeighborhoodApi.claimPane(
-      ShExWebApp.NeighborhoodModules.filter(m => m !== module), text);
-    if (claim && claim.module.claimPaneText) {
-      this.neighborhoods.select(ShExWebApp.NeighborhoodApi.moduleId(claim.module));
-      Object.assign(this.neighborhoods.fields, claim.params);
-      this.neighborhoods.render();
-      return this.parse(this.get(), base);
-    }
+
+    // The dirty bit says "something the user touched changed", which is
+    // true of every keystroke in a settings field; whether *this source's*
+    // inputs changed is a different question, and for a source that fetches
+    // its answers rebuilding when they haven't costs a round trip and a
+    // translation for nothing.  A local store is rebuilt regardless: it is
+    // cheap, and parsing the document is also how this pane learns its
+    // prefixes and base.
+    const fetches = (module.capabilities || []).length > 0;
+    const signature = JSON.stringify([ShExWebApp.NeighborhoodApi.moduleId(module), params, base,
+                                      // the tracker is an input too: turning slurp on has to
+                                      // build a db that reports what it fetches
+                                      !!this.queryTrackerController.queryTracker]);
+    if (fetches && this.parsed && signature === this.dbSignature)
+      return this.parsed;
+    this.dbSignature = signature;
 
     if ("endpoint" in params)
       this.endpoint = params.endpoint;    // the SPARQL shape-map extension reads this
@@ -2959,13 +2964,38 @@ class ShExBaseApp {
     }
     this.resultsWidget.clear();
     this.resultsWidget.start();
+    // Say what is happening before it starts, and let the browser paint it:
+    // a validation over a synchronous neighborhood holds the main thread
+    // from here until it is done, so this is the last chance to draw
+    // anything.  (Which is also why the elapsed time is reported after
+    // rather than counted up during -- see doc/ShExBaseApp.js's
+    // startValidation.)
+    this.startValidation();
     SharedForTests.promise = new Promise((resolve, reject) => {
       setTimeout(async () => {
-        const errors = await this.Caches.shapeMap.copyEditMapToTextMap(); // will update if #editMap is dirty
-        if (errors.length === 0)
-          resolve(await this.callValidator());
+        const began = new Date().getTime();
+        try {
+          const errors = await this.Caches.shapeMap.copyEditMapToTextMap(); // will update if #editMap is dirty
+          if (errors.length === 0)
+            resolve(await this.callValidator());
+        } finally {
+          this.endValidation(new Date().getTime() - began);
+        }
       }, 0);
     })
+  }
+
+  /** the validate button while a validation is running: it is the only
+   * thing that can be said, since nothing will repaint until it finishes */
+  startValidation () {
+    $("#validate").addClass("running").prop("disabled", true)
+      .text("validating\u2026").attr("title", "");
+  }
+
+  endValidation (elapsed) {
+    $("#validate").removeClass("running").prop("disabled", false)
+      .text(VALIDATE_LABEL)
+      .attr("title", "last validation: " + elapsed + " ms");
   }
 
   /** startValidationDebugSession - step-through debugging of the

@@ -90,6 +90,24 @@ const DataFactory = N3.DataFactory;
  * read about it, which is what Wikimedia's robot policy wants. */
 const USER_AGENT = "@shexjs/neighborhood-wikidata (https://github.com/shexjs/shex.js)";
 
+/** Pages fetched by this process, by URL.
+ *
+ * A DB is rebuilt whenever its configuration changes -- a host that offers
+ * a form rebuilds on every keystroke in it -- and a page fetched
+ * synchronously is the most expensive thing here by an order of magnitude.
+ * The pages themselves don't change under an edit to a field, so they
+ * outlive the DB that read them.  `forgetPages()` empties this for a host
+ * that wants to see the site's current answer again. */
+const fetchedPages = new Map<string, string>();
+
+/** likewise the site table, which is parsed into a lookup once per URL */
+const siteInfoByUrl = new Map<string, (siteId: string) => SiteInfo | undefined>();
+
+export function forgetPages (): void {
+  fetchedPages.clear();
+  siteInfoByUrl.clear();
+}
+
 /** Is there a browser here, with a User-Agent of its own and opinions about
  * who may set it? */
 function inBrowser (): boolean {
@@ -204,8 +222,17 @@ export function wikidataDB (queryTracker?: DbQueryTracker, options: WikidataDbOp
     return xhr.responseText;
   };
 
-  /** memory over disk over network */
+  /** this process over disk over network */
   function getDoc (cacheKey: string, url: string): string {
+    const remembered = fetchedPages.get(url);
+    if (remembered !== undefined)
+      return remembered;
+    const body = readDoc(cacheKey, url);
+    fetchedPages.set(url, body);
+    return body;
+  }
+
+  function readDoc (cacheKey: string, url: string): string {
     // fs is absent where there is no filesystem (a browser bundle stubs it
     // out), so an on-disk cache is only offered where one can exist
     if (options.cacheDir && fs && typeof fs.existsSync === "function") {
@@ -229,8 +256,13 @@ export function wikidataDB (queryTracker?: DbQueryTracker, options: WikidataDbOp
     license: options.license,
     // lazy: entities without sitelinks never need the sitematrix
     siteInfo: siteId => {
-      if (siteInfo === null)
-        siteInfo = siteInfoFromSitematrix(JSON.parse(getDoc("sitematrix", siteMatrixUrl)));
+      if (siteInfo === null) {
+        siteInfo = siteInfoByUrl.get(siteMatrixUrl) || null;
+        if (siteInfo === null) {
+          siteInfo = siteInfoFromSitematrix(JSON.parse(getDoc("sitematrix", siteMatrixUrl)));
+          siteInfoByUrl.set(siteMatrixUrl, siteInfo);
+        }
+      }
       return siteInfo(siteId);
     },
   });
