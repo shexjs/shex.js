@@ -1107,6 +1107,10 @@ class ManifestCache extends InterfaceCache {
       if (neighborhoods)
         neighborhoods.select(dataTest.entry.neighborhood ||
                              ShExWebApp.NeighborhoodApi.moduleId(neighborhoods.modules[0]));
+      // ...and everything else the entry configures it with, before the
+      // query map below asks it anything: a source with its endpoint still
+      // to come is a source that can't answer.
+      await this.loadExtraInputs(dataTest);
       // Update data pane.  An entry may name several documents, and where
       // they go is the source's business: a Wikibase told an entity page
       // knows it is a page, and which ids it is about.
@@ -1139,8 +1143,6 @@ class ManifestCache extends InterfaceCache {
       } else {
         this.resultsWidget.append($("<div/>").text("No queryMap or queryMapURL supplied in manifest").addClass("warning"));
       }
-
-      await this.loadExtraInputs(dataTest);
     }
   }
 

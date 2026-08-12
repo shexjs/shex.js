@@ -362,6 +362,44 @@ if (!TEST_browser) {
         endpoint.location.val("");
       });
 
+      /* Picking an entry builds its fixed map on the spot, and a query map
+       * extension is resolved by asking the source -- so the source has to
+       * be configured by then.  Its settings used to arrive afterwards,
+       * which is what "Can't execute a SPARQL query with no endpoint"
+       * was: an endpoint delivered one step too late. */
+      it("should configure the source before the entry's query map asks it anything", async function () {
+        this.timeout(30000);
+        await shared.Caches.manifest.asyncGet(
+          new dom.window.URL("../examples/manifest.json", dom.window.location.href).href);
+
+        // stand in for the resolver, so this stays a test and not a query
+        const sparql = dom.window.ShExWebApp.NeighborhoodModules
+              .find(m => m.name === "neighborhood-sparql");
+        const resolver = sparql.queryMapResolvers[0];
+        const asked = [];
+        const wasResolve = resolver.resolve;
+        resolver.resolve = (lexical, db) => {
+          asked.push({lexical, endpoint: shared.Caches.inputData.endpoint,
+                      canQuery: typeof db.executeSelect === "function"});
+          return [];
+        };
+        try {
+          $("#inputSchema .manifest li").filter((i, li) => $(li).text() === "wikidata query")
+            .first().trigger("click");
+          await shared.promise;
+          $("#inputData .passes li").first().trigger("click");
+          await shared.promise;
+        } finally {
+          resolver.resolve = wasResolve;
+        }
+
+        expect(asked.length, "the entry's query map was resolved").to.be.above(0);
+        expect(asked[0].lexical).to.match(/SELECT/);
+        expect(asked[0].endpoint, "with the endpoint the entry named")
+          .to.equal("https://query.wikidata.org/sparql");
+        expect(asked[0].canQuery, "and a db that can run it").to.equal(true);
+      });
+
       it("should carry the source and its settings in the permalink", async function () {
         source().select("sparql");
         $("#nbhd-endpoint").val("http://ex.example/sparql").trigger("change");
