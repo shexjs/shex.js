@@ -666,10 +666,11 @@ if (!TEST_browser) {
 
       /* Post-validation highlighting anchors to where the data was written,
        * which the data source says: over an entity page that means ranges in
-       * the JSON.  The source's half is done -- it locates its own document
-       * and reports a quad-to-range table of the shape a Turtle parse has --
-       * and the app asks it instead of assuming Turtle. */
-      it("should get a located parse of an entity page from the source", async function () {
+       * the JSON.  The source locates its own document and reports a
+       * quad-to-range table of the shape a Turtle parse has, the app asks it
+       * instead of assuming Turtle, and the highlighting that follows can't
+       * tell the two syntaxes apart. */
+      it("should anchor validation results in an entity page, not just in Turtle", async function () {
         this.timeout(60000);
         const examples = Path.join(__dirname, "../examples");
         const page = JSON.parse(Fs.readFileSync(Path.join(examples, "wikidata-Q42.json"), "utf8"));
@@ -696,6 +697,9 @@ if (!TEST_browser) {
         const shown = $("#inputData textarea").first().val();
         expect(shown.trimStart()[0], "the pane holds the entity page").to.equal("{");
 
+        $("#validate").trigger("click");
+        await shared.promise;
+
         const db = shared.Caches.inputData.parsed;
         const located = db.locateDocument(shown);
         expect(located, "the source locates its own document").to.exist;
@@ -707,7 +711,7 @@ if (!TEST_browser) {
           located.quads.find(q => q.predicate.value.endsWith("/P569")));
         expect(utterance, "an utterance for the date of birth").to.exist;
         for (const position of ["subject", "predicate", "object"]) {
-          const range = utterance[position];
+          const [range] = utterance[position];
           expect(range, position).to.exist;
           expect(range.end).to.be.at.most(shown.length);
           expect(range.end).to.be.above(range.start);
@@ -716,11 +720,25 @@ if (!TEST_browser) {
         // brackets -- what editor-services reads to highlight delimiters only
         const statement = located.provenance.get(
           located.quads.find(q => q.predicate.value === "http://www.wikidata.org/prop/P569"))[0];
-        expect(shown[statement.object.start]).to.equal("{");
-        expect(shown[statement.object.end - 1]).to.equal("}");
+        expect(shown[statement.object[0].start]).to.equal("{");
+        expect(shown[statement.object[0].end - 1]).to.equal("}");
 
-        // the app asks the source rather than parsing the pane as Turtle
-        expect(shared.Caches.editorSupport.lastMapped, "a validation was mapped").to.exist;
+        // ...so the results the app mapped point into the page
+        const mapped = shared.Caches.editorSupport.lastMapped;
+        expect(mapped, "a validation was mapped").to.exist;
+        const anchored = mapped.pairs.filter(pair => pair.anchors && pair.anchors.object);
+        expect(anchored.length, "results anchored in the page").to.be.above(0);
+        for (const {anchors} of anchored) {
+          expect(anchors.object.to, "a range within the document").to.be.at.most(shown.length);
+          expect(anchors.object.to).to.be.above(anchors.object.from);
+        }
+        // a claim highlights its braces and leaves the contents to the
+        // triples inside it, the way a Turtle bnode highlights its brackets
+        const nested = anchored.filter(pair => pair.anchors.objectParts);
+        expect(nested.length, "a claim marked at its delimiters").to.be.above(0);
+        const [open, close] = nested[0].anchors.objectParts;
+        expect(shown.substring(open.from, open.to)).to.equal("{");
+        expect(shown.substring(close.from, close.to)).to.equal("}");
       });
 
       it("should carry the source and its settings in the permalink", async function () {

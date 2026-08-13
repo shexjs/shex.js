@@ -340,10 +340,13 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
                 return;
             // a member's *name* is the nearest thing JSON has to a predicate; a
             // value that is an object is its whole {...}
+            const spans = (range) => range ? [range] : [];
             const utterance = {
-                subject: at(where.s),
-                predicate: nameAt(where.p) || at(where.p),
-                object: at(where.o),
+                quad,
+                subject: spans(at(where.s)),
+                predicate: spans(nameAt(where.p) || at(where.p)),
+                object: spans(at(where.o)),
+                graph: [],
             };
             const key = quadKey(quad);
             const had = provenance.get(key);

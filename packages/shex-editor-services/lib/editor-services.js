@@ -594,7 +594,8 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed) {
             subject: null, predicate: null, object: null,
         };
         let dataRange = null;
-        if (turtleParsed && turtleParsed.dataset) {
+        // anchoring needs the quads and where they were written, not a store
+        if (turtleParsed && turtleParsed.quads) {
             const triple = leaf.triple || (leaf.triples && leaf.triples[0]) || null;
             if (triple) {
                 const termRanges = tripleAnchors(turtleParsed, triple, turtleParsed.text, bnodes);

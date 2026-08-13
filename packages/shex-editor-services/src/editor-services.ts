@@ -100,10 +100,15 @@ export interface ParsedShExC extends LocatedSchema {
   diagnostics: Diagnostic[];
 }
 
+/** A document, its quads, and where each was written.  Parsing Turtle
+ * produces one, and so does any data source that offers to locate its own
+ * document (see neighborhood-api's `locateDocument`) -- error mapping reads
+ * it without knowing which syntax it came from. */
 export interface ParsedTurtle {
   text: string;
-  /** an N3.Store of the parsed quads */
-  dataset: InstanceType<typeof RdfJs.Store>;
+  /** an N3.Store of the parsed quads; a source that hands back a located
+   * document it already has quads for needn't build one */
+  dataset?: InstanceType<typeof RdfJs.Store>;
   quads: any[];
   /** lezer-turtle ProvenanceIndex: get(quad) -> utterances with
    * {start, end} source ranges per position (a multiset: a quad uttered
@@ -787,7 +792,8 @@ export function mapValidationErrors (valResult: unknown,
       subject: null, predicate: null, object: null,
     };
     let dataRange: Range | null = null;
-    if (turtleParsed && turtleParsed.dataset) {
+    // anchoring needs the quads and where they were written, not a store
+    if (turtleParsed && turtleParsed.quads) {
       const triple = leaf.triple || (leaf.triples && leaf.triples[0]) || null;
       if (triple) {
         const termRanges = tripleAnchors(turtleParsed, triple, turtleParsed.text, bnodes);

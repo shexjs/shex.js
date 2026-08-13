@@ -107,15 +107,22 @@ export interface EntityDoc {
   entities: { [id: string]: any };
 }
 
-/** Where a quad was uttered: a range per position, the way a Turtle
- * parser reports one.  A term written as a nested object gets the range of
- * that object, braces and all -- as Turtle gives a blank node the range of
- * its whole `[ ... ]`, so that a highlighter can mark the delimiters and
- * leave the contents to their own triples. */
+/** Where a quad was uttered: the spans of each position, exactly as a
+ * Turtle parse reports them -- a list per position (a term can be written
+ * in more than one piece, and a position not written at all is empty), and
+ * the quad itself alongside.  Consumers read these without caring which
+ * syntax produced them, so the shape is not ours to vary.
+ *
+ * A term written as a nested object gets the range of that object, braces
+ * and all -- as Turtle gives a blank node the range of its whole
+ * `[ ... ]`, so that a highlighter can mark the delimiters and leave the
+ * contents to their own triples. */
 export interface QuadUtterance {
-  subject: SourceRange | null;
-  predicate: SourceRange | null;
-  object: SourceRange | null;
+  quad: RdfJs.Quad;
+  subject: SourceRange[];
+  predicate: SourceRange[];
+  object: SourceRange[];
+  graph: SourceRange[];
 }
 
 /** The side table a located conversion produces: quad -> utterances, with
@@ -453,10 +460,13 @@ export function wikibaseRdfConverter (dataFactory: RdfJs.DataFactory, options: W
         return;
       // a member's *name* is the nearest thing JSON has to a predicate; a
       // value that is an object is its whole {...}
+      const spans = (range: SourceRange | null) => range ? [range] : [];
       const utterance: QuadUtterance = {
-        subject: at(where.s),
-        predicate: nameAt(where.p) || at(where.p),
-        object: at(where.o),
+        quad,
+        subject: spans(at(where.s)),
+        predicate: spans(nameAt(where.p) || at(where.p)),
+        object: spans(at(where.o)),
+        graph: [],
       };
       const key = quadKey(quad);
       const had = provenance.get(key);

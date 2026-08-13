@@ -234,7 +234,9 @@ describe("where a quad was uttered", () => {
   const siteInfo = siteInfoFromSitematrix(JSON.parse(read("sitematrix.json")));
   const converter = wikibaseRdfConverter(N3.DataFactory, {siteInfo, locations});
   const quads = converter.entityToQuads(locations.value);
-  const said = (from, to) => text.substring(from, to);
+  // a position is a list of spans (a Turtle utterance's shape), and these
+  // are all written in one piece
+  const said = spans => text.substring(spans[0].start, spans[0].end);
   const utterance = predicate => {
     const quad = quads.find(q => q.predicate.value === predicate);
     assert.isDefined(quad, predicate);
@@ -250,15 +252,15 @@ describe("where a quad was uttered", () => {
   it("should point a truthy arc at the claim it abbreviates", () => {
     const utt = utterance("http://www.wikidata.org/prop/direct/P569");
     // the property is named by the member that groups the claims
-    assert.equal(said(utt.predicate.start, utt.predicate.end), '"P569"');
+    assert.equal(said(utt.predicate), '"P569"');
     // and the object is the value, whole
-    assert.equal(JSON.parse(said(utt.object.start, utt.object.end)).time,
+    assert.equal(JSON.parse(said(utt.object)).time,
                  "+1952-03-11T00:00:00Z");
   });
 
   it("should give a statement the range of its whole object, as Turtle gives a bnode its []", () => {
     const utt = utterance("http://www.wikidata.org/prop/P569");
-    const claim = said(utt.object.start, utt.object.end);
+    const claim = said(utt.object);
     assert.equal(claim[0], "{", "starts at the brace");
     assert.equal(claim[claim.length - 1], "}", "and ends at its match");
     assert.equal(JSON.parse(claim).mainsnak.property, "P569");
@@ -266,8 +268,8 @@ describe("where a quad was uttered", () => {
 
   it("should point a label at its language and its text", () => {
     const utt = utterance("http://www.w3.org/2000/01/rdf-schema#label");
-    assert.match(said(utt.predicate.start, utt.predicate.end), /^"[a-z-]+"$/);
-    assert.equal(said(utt.object.start, utt.object.end)[0], '"');
+    assert.match(said(utt.predicate), /^"[a-z-]+"$/);
+    assert.equal(said(utt.object)[0], '"');
   });
 
   it("should say where every quad it made came from", () => {
