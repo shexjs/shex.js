@@ -362,6 +362,18 @@ export interface NeighborhoodWebAppDb extends NeighborhoodDb {
   suggestFocusNodes?(prefix: string, limit: number): EditorCompletion[];
   /** display label for a term, e.g. rdfs:label in the user's language */
   labelOf?(term: RdfJsTerm, language: string): string | null;
+  /** This source's own document, parsed, with a side table saying where
+   * each quad was written -- the same shape a Turtle parser reports
+   * ({start, end} per position, a multiset).  A host anchors validation
+   * results to the data with this, and only the source can supply it: a
+   * document is Turtle, or an entity page, or whatever the source reads.
+   * Absent means "assume the host's own format". */
+  locateDocument?(text: string): {
+    text: string;
+    quads: RdfJs.Quad[];
+    provenance: {get (quad: RdfJs.Quad): any[], readonly size: number};
+    diagnostics: {from: number, to: number, severity: string, message: string}[];
+  } | null;
   /** The documents this db read to answer what it was asked -- a
    * translating source's source material, one per thing it fetched.  A
    * host that offers to record what a validation fetched hands these back

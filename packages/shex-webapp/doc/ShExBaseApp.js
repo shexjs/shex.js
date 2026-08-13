@@ -2439,10 +2439,17 @@ class EditorSupport {
     try {
       const located = ShExWebApp.EditorServices.locateInParsed(
         inputSchema.selection.val(), inputSchema.parsed);
-      const dataParsed = this.panes.inputData
-            ? ShExWebApp.EditorServices.parseTurtle(
-                inputData.selection.val(), {baseIRI: inputData.meta && inputData.meta.base})
-            : null;
+      // Where the data was written is the data source's to say: its
+      // document is Turtle, or an entity page, or whatever it reads.  A
+      // source that doesn't offer to locate its own leaves the Turtle
+      // parser, which is what a data pane has always held.
+      const db = inputData.parsed;
+      const dataParsed = !this.panes.inputData
+            ? null
+            : (db && typeof db.locateDocument === "function"
+               && db.locateDocument(inputData.selection.val()))
+            || ShExWebApp.EditorServices.parseTurtle(
+              inputData.selection.val(), {baseIRI: inputData.meta && inputData.meta.base});
       const merged = {schema: [], data: [], pairs: []};
       entries.forEach(entry => {
         const mapped = ShExWebApp.EditorServices.mapValidationErrors(

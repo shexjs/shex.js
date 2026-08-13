@@ -48,6 +48,7 @@ const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const url_1 = require("url");
 const wikibase_rdf_1 = require("./wikibase-rdf");
+const json_locations_1 = require("./json-locations");
 /** Thrown when a focus node can't be tied to an entity page. */
 class EntityResolutionError extends Error {
     constructor(message) {
@@ -358,7 +359,47 @@ function wikidataDB(queryTracker, options = {}) {
         labelOf,
         loadedPages,
         entityIri: (id) => NS.wd + id,
+        locateDocument,
     };
+    /** This source's document is an entity page, so a host asking where the
+     * data was written gets the page located and converted -- the same
+     * side table a Turtle parser would hand back, over the same quads. */
+    function locateDocument(text) {
+        if (text.trim() === "")
+            return null;
+        let locations;
+        try {
+            locations = (0, json_locations_1.locateJson)(text);
+        }
+        catch (e) {
+            return null; // not JSON: some other pane of this source's, or nothing yet
+        }
+        // a converter of its own: this one records where everything came from
+        const locating = (0, wikibase_rdf_1.wikibaseRdfConverter)(DataFactory, {
+            conceptBase, dataBase,
+            repositoryName: options.repositoryName,
+            commonsMediaBase: options.commonsMediaBase,
+            commonsDataBase: options.commonsDataBase,
+            license: options.license,
+            locations,
+            siteInfo: siteId => {
+                if (siteInfo === null)
+                    siteInfo = siteInfoFromSitematrix(JSON.parse(getDoc("sitematrix", siteMatrixUrl)));
+                return siteInfo(siteId);
+            },
+        });
+        try {
+            return { text, quads: locating.entityToQuads(asEntityDoc(locations.value)),
+                provenance: locating.provenance, diagnostics: [] };
+        }
+        catch (e) {
+            return {
+                text, quads: [], provenance: { get: () => [], size: 0 },
+                diagnostics: [{ from: 0, to: Math.min(text.length, 1), severity: "error",
+                        message: "not an entity page: " + e.message }],
+            };
+        }
+    }
     /** The pages this DB fetched, ready to be looked at: readably indented,
      * one per entity a walk reached.  A host that offers to record what a
      * validation fetched (the WebApp's slurp) hands each of these back as a

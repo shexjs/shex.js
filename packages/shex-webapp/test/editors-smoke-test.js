@@ -664,6 +664,65 @@ if (!TEST_browser) {
         }
       });
 
+      /* Post-validation highlighting anchors to where the data was written,
+       * which the data source says: over an entity page that means ranges in
+       * the JSON.  The source's half is done -- it locates its own document
+       * and reports a quad-to-range table of the shape a Turtle parse has --
+       * and the app asks it instead of assuming Turtle. */
+      it("should get a located parse of an entity page from the source", async function () {
+        this.timeout(60000);
+        const examples = Path.join(__dirname, "../examples");
+        const page = JSON.parse(Fs.readFileSync(Path.join(examples, "wikidata-Q42.json"), "utf8"));
+        delete page.entities.Q42.sitelinks;    // so nothing has to be fetched
+        const text = JSON.stringify(page, null, 2);
+
+        await shared.Caches.manifest.set([{
+          schemaLabel: "person", schema: Fs.readFileSync(
+            Path.join(examples, "wikidata-person.shex"), "utf8"),
+          dataLabel: "Q42 as JSON", neighborhood: "wikidata", data: text,
+          regexpEngine: "eval-simple-1err",
+          queryMap: 'QENTITIES "42"@START',
+        }], "http://localhost/manifest.json");
+        $("#inputSchema .manifest li").last().trigger("click");
+        await shared.promise;
+        $("#inputData .indeterminant li").last().trigger("click");
+        await shared.promise;
+
+        // highlighting marks the document on screen, so look at the page
+        // rather than at the list of ids the source shows first
+        const pageTab = $("#dataPaneTabs > li > a").filter((i, a) => $(a).text() === "Q42");
+        expect(pageTab.length, "a tab for the page").to.equal(1);
+        pageTab.trigger("click");
+        const shown = $("#inputData textarea").first().val();
+        expect(shown.trimStart()[0], "the pane holds the entity page").to.equal("{");
+
+        const db = shared.Caches.inputData.parsed;
+        const located = db.locateDocument(shown);
+        expect(located, "the source locates its own document").to.exist;
+        expect(located.quads.length, "quads from the page").to.be.above(0);
+        expect(located.provenance.size, "and where each was written").to.be.above(0);
+
+        // every position is a range within the document on screen
+        const [utterance] = located.provenance.get(
+          located.quads.find(q => q.predicate.value.endsWith("/P569")));
+        expect(utterance, "an utterance for the date of birth").to.exist;
+        for (const position of ["subject", "predicate", "object"]) {
+          const range = utterance[position];
+          expect(range, position).to.exist;
+          expect(range.end).to.be.at.most(shown.length);
+          expect(range.end).to.be.above(range.start);
+        }
+        // and a claim is marked at its braces, as a Turtle bnode is at its
+        // brackets -- what editor-services reads to highlight delimiters only
+        const statement = located.provenance.get(
+          located.quads.find(q => q.predicate.value === "http://www.wikidata.org/prop/P569"))[0];
+        expect(shown[statement.object.start]).to.equal("{");
+        expect(shown[statement.object.end - 1]).to.equal("}");
+
+        // the app asks the source rather than parsing the pane as Turtle
+        expect(shared.Caches.editorSupport.lastMapped, "a validation was mapped").to.exist;
+      });
+
       it("should carry the source and its settings in the permalink", async function () {
         source().select("sparql");
         $("#nbhd-endpoint").val("http://ex.example/sparql").trigger("change");

@@ -42,6 +42,7 @@ import * as fs from "fs";
 import * as path from "path";
 import {fileURLToPath} from "url";
 import {EntityDoc, SiteInfo, WikibaseRdfOptions, wikibaseRdfConverter} from "./wikibase-rdf";
+import {locateJson} from "./json-locations";
 
 export {SiteInfo};
 
@@ -183,6 +184,12 @@ export function siteInfoFromSitematrix (doc: any): (siteId: string) => SiteInfo 
 export interface WikidataNeighborhoodDb extends NeighborhoodWebAppDb {
   /** the IRI of an entity, by id, in whichever Wikibase this DB is pointed at */
   entityIri (id: string): string;
+  locateDocument (text: string): {
+    text: string;
+    quads: RdfJs.Quad[];
+    provenance: {get (quad: RdfJs.Quad): any[], readonly size: number};
+    diagnostics: {from: number, to: number, severity: string, message: string}[];
+  } | null;
   loadedPages (): { id: string, text: string }[];
 }
 
@@ -413,7 +420,46 @@ export function wikidataDB (queryTracker?: DbQueryTracker, options: WikidataDbOp
     labelOf,
     loadedPages,
     entityIri: (id: string) => NS.wd + id,
+    locateDocument,
   };
+
+  /** This source's document is an entity page, so a host asking where the
+   * data was written gets the page located and converted -- the same
+   * side table a Turtle parser would hand back, over the same quads. */
+  function locateDocument (text: string) {
+    if (text.trim() === "")
+      return null;
+    let locations;
+    try {
+      locations = locateJson(text);
+    } catch (e) {
+      return null;    // not JSON: some other pane of this source's, or nothing yet
+    }
+    // a converter of its own: this one records where everything came from
+    const locating = wikibaseRdfConverter(DataFactory, {
+      conceptBase, dataBase,
+      repositoryName: options.repositoryName,
+      commonsMediaBase: options.commonsMediaBase,
+      commonsDataBase: options.commonsDataBase,
+      license: options.license,
+      locations,
+      siteInfo: siteId => {
+        if (siteInfo === null)
+          siteInfo = siteInfoFromSitematrix(JSON.parse(getDoc("sitematrix", siteMatrixUrl)));
+        return siteInfo(siteId);
+      },
+    });
+    try {
+      return {text, quads: locating.entityToQuads(asEntityDoc(locations.value)),
+              provenance: locating.provenance, diagnostics: []};
+    } catch (e) {
+      return {
+        text, quads: [], provenance: {get: () => [], size: 0},
+        diagnostics: [{from: 0, to: Math.min(text.length, 1), severity: "error" as const,
+                       message: "not an entity page: " + (e as Error).message}],
+      };
+    }
+  }
 
   /** The pages this DB fetched, ready to be looked at: readably indented,
    * one per entity a walk reached.  A host that offers to record what a
