@@ -8,8 +8,10 @@ ShExWebApp = (function () {
     "@shexjs/term":                require('@shexjs/term'),
     "@shexjs/util":                require('@shexjs/util'),
     "@shexjs/visitor":             require('@shexjs/visitor'),
+    "@shexjs/neighborhood-api":    require('@shexjs/neighborhood-api'),
     "@shexjs/neighborhood-rdfjs":  require('@shexjs/neighborhood-rdfjs'),
     "@shexjs/neighborhood-sparql": require('@shexjs/neighborhood-sparql'),
+    "@shexjs/neighborhood-wikidata": require('@shexjs/neighborhood-wikidata'),
     "@shexjs/validator":           require('@shexjs/validator'),
     "@shexjs/writer":              require('@shexjs/writer'),
     "@shexjs/loader":              require("@shexjs/loader"),
@@ -29,6 +31,16 @@ ShExWebApp = (function () {
     Util:                 modules["@shexjs/util"],
     RdfJsDb:              modules["@shexjs/neighborhood-rdfjs"].ctor,
     SparqlDb:             modules["@shexjs/neighborhood-sparql"].ctor,
+    NeighborhoodApi:      modules["@shexjs/neighborhood-api"],
+    /* The data sources this app offers, in picklist order.  The first is
+     * the default -- an RDF document, which is what a data pane has always
+     * held.  What each one needs configured, and how its documents are
+     * edited, comes from the module (dbParams, PaneSpec). */
+    NeighborhoodModules: [
+      modules["@shexjs/neighborhood-rdfjs"],
+      modules["@shexjs/neighborhood-sparql"],
+      modules["@shexjs/neighborhood-wikidata"],
+    ],
     Validator:            modules["@shexjs/validator"].ShExValidator,
     Writer:               modules["@shexjs/writer"],
     Loader:               modules["@shexjs/loader"],

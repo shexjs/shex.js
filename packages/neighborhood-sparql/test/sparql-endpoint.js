@@ -12,7 +12,7 @@
 
 const path = require("path");
 const {Worker} = require("worker_threads");
-const {syncRequest, closeSyncFetch, installXhrShim} = require("./sync-fetch");
+const {syncRequest, closeSyncFetch, installXhrShim} = require("../sync-fetch");
 
 const SERVER = path.join(__dirname, "sparql-test-server.js");
 

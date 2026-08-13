@@ -38,7 +38,7 @@
 import * as RdfJs from "@rdfjs/types";
 import {Shape, ShapeDecl, shapeExprOrRef, tripleExprOrRef} from "shexj";
 import {InternalSchema, SchemaIndex} from "@shexjs/term";
-import {DbQueryTracker, Neighborhood, NeighborhoodDb, sparqlOrder, Start} from "@shexjs/neighborhood-api";
+import {DbParamSpec, DbQueryTracker, Neighborhood, NeighborhoodDb, ParamEditor, sparqlOrder, Start} from "@shexjs/neighborhood-api";
 import * as ShExUtil from "@shexjs/util";
 import {ShExIndexVisitor} from "@shexjs/visitor";
 import * as N3 from "n3"; // TODO: set global externally
@@ -46,6 +46,15 @@ import * as N3 from "n3"; // TODO: set global externally
 export interface SparqlDbOptions {
   /** slurp all outgoing arcs rather than only those needed by the shape under test */
   allOutgoing?: boolean;
+  /** Expect blank nodes in every neighborhood, rather than finding out.
+   *
+   * Optimism is the default and is usually right: most neighborhoods have
+   * no blank nodes at all, and a depth-0 probe -- one triple pattern -- is
+   * far cheaper for an engine to plan than the UNION of chains that walks a
+   * blank node component, which is only needed once a probe turns one up.
+   * Where the data is known to be full of blank nodes that costs an extra
+   * round trip per neighborhood, and this skips it. */
+  expectBnodes?: boolean;
   /** how far to follow blank nodes when describing them (default 4, grown on demand) */
   bnodeDepth?: number;
   /** never describe blank nodes more deeply than this (default 64) */
@@ -53,6 +62,11 @@ export interface SparqlDbOptions {
   /** ask the endpoint to confirm each description picks out the nodes it should
    * (default true).  Costs one query per neighborhood that contains blank nodes. */
   verifyBnodeDescriptions?: boolean;
+  /** remember each query's rows for this DB's lifetime (default true).  A
+   * validation asks for the same neighborhood many times over -- EXTENDS
+   * alone revisits nodes once per extended shape -- and the graph does not
+   * change under a validation, so identical queries need not be re-sent. */
+  cacheQueries?: boolean;
   /** override the SPARQL transport, e.g. to log queries or to run against a mock */
   executeQuery?: (query: string, endpoint: string, dataFactory: any) => any[][];
 }
@@ -62,6 +76,9 @@ export interface SparqlDbOptions {
  */
 export interface SparqlNeighborhoodDb extends NeighborhoodDb {
   setSchema (schema: InternalSchema): void;
+  /** rows of a SELECT against this DB's endpoint -- what a shape map's
+   * SPARQL extension is asking for, run where this DB is pointed */
+  executeSelect (query: string): RdfJs.Term[][];
 }
 
 /** Thrown when a blank node can't be pinned down by an anchored description. */
@@ -126,7 +143,17 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
   const verify = options.verifyBnodeDescriptions !== false;
   const execute = options.executeQuery ||
         ((q: string, ep: string, df: any) => ShExUtil.executeQuery(q, ep, df));
-  const runQuery = (query: string) => execute(query, endpoint, DataFactory);
+  const queryCache: Map<string, any[][]> | null = options.cacheQueries === false ? null : new Map();
+  const runQuery = (query: string) => {
+    if (queryCache === null)
+      return execute(query, endpoint, DataFactory);
+    let rows = queryCache.get(query);
+    if (rows === undefined) {
+      rows = execute(query, endpoint, DataFactory);
+      queryCache.set(query, rows);
+    }
+    return rows;
+  };
 
   /** Every blank node this DB has handed out, by its internal label. */
   const described = new Map<string, BNodeDescription>();
@@ -570,9 +597,16 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
       instantiate(anchor.text, "a") + branches.join("\n  UNION\n") + "\n}";
   }
 
-  /** One component query, turned into quads plus handles for its blank nodes. */
+  /** One component query, turned into quads plus handles for its blank nodes.
+   *
+   * Starts with a depth-0 probe -- most neighborhoods contain no blank nodes,
+   * and a single-branch query is much cheaper to plan than the full UNION of
+   * chains -- and only walks the blank-node component when the probe shows
+   * blank nodes (the truncation retry below escalates the same way when a
+   * description bottoms out). */
   function fetch (point: RdfJs.Term, preds: string[] | null, inverse: boolean): RdfJs.Quad[] {
-    for (let depth = startDepth; ; depth = Math.min(depth * 2, maxDepth)) {
+    for (let depth = options.expectBnodes ? (startDepth || 4) : 0; ;
+         depth = depth === 0 ? (startDepth || 4) : Math.min(depth * 2, maxDepth)) {
       const anchor = descriptionOf(point);
       const query = componentQuery(anchor, preds, depth, inverse);
       const rows = runQuery(query);
@@ -763,9 +797,124 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
     getObjects: function () { return ["!Query DB can't index objects"] as unknown as RdfJs.Term[] },
     get size(): number { return undefined as unknown as number; },
     setSchema: function (schema: InternalSchema) { schemaIndex = schema._index || ShExIndexVisitor.index(schema) },
+    executeSelect: (query: string) => runQuery(query),
   };
 }
 
 export const name = "neighborhood-sparql";
+export const label = "SPARQL endpoint";
 export const description = "Implementation of @shexjs/neighborhood-api which gets data from a SPARQL endpoint";
+export const capabilities = ["query"];
+
+/** A shape map may ask this source which nodes to validate. */
+export const queryMapResolvers = [{
+  language: "http://www.w3.org/ns/shex#Extensions-sparql",
+  name: "SPARQL",
+  description: "the focus nodes are the first column of this SELECT, run on this endpoint",
+  resolve: (lexical: string, db: NeighborhoodDb) =>
+    (db as SparqlNeighborhoodDb).executeSelect(lexical).map(row => row[0]),
+}];
 export const ctor = sparqlDB;
+
+/** What it takes to construct this DB, declared for hosts (the CLI, the
+ * WebApp) that offer several neighborhood implementations.  See the STRAWMAN
+ * notes in @shexjs/neighborhood-api. */
+/** Everything this data source needs is a value to type: there is no
+ * document to edit, so a host renders it as fields and no panes. */
+export const dbParams: DbParamSpec[] = [
+  { name: "endpoint", selector: true, required: true,
+    description: "SPARQL query service to ask",
+    schema: {type: "string", format: "uri"},
+    cli: {option: "endpoint", typeLabel: "IRI"} },      // the CLI's historical flag
+  { name: "allOutgoing",
+    description: "fetch every outgoing arc rather than only those the shape needs",
+    schema: {type: "boolean"},
+    cli: {option: "slurp-all"} },                       // rides the CLI's existing flag
+  { name: "expectBnodes",
+    description: "expect blank nodes in every neighborhood, rather than probing for them first",
+    schema: {type: "boolean", default: false},
+    cli: {option: "sparql-expect-bnodes"} },
+  { name: "bnodeDepth",
+    description: "how far to follow blank nodes when describing them (grown on demand)",
+    schema: {type: "integer", default: 4},
+    cli: {option: "sparql-bnode-depth", typeLabel: "integer"} },
+  { name: "maxBnodeDepth",
+    description: "never describe blank nodes more deeply than this",
+    schema: {type: "integer", default: 64},
+    cli: {option: "sparql-max-bnode-depth", typeLabel: "integer"} },
+  { name: "verifyBnodeDescriptions",
+    description: "have the endpoint confirm each blank node description picks out the node it should",
+    schema: {type: "boolean", default: true},
+    cli: {option: "sparql-verify-bnodes"} },
+];
+
+export function fromParams (params: { [name: string]: any }, queryTracker?: DbQueryTracker): SparqlNeighborhoodDb {
+  return sparqlDB(params.endpoint, queryTracker, {
+    allOutgoing: params.allOutgoing,
+    expectBnodes: params.expectBnodes,
+    bnodeDepth: params.bnodeDepth,
+    maxBnodeDepth: params.maxBnodeDepth,
+    verifyBnodeDescriptions: params.verifyBnodeDescriptions,
+  });
+}
+
+/** `# Endpoint: <url>` on the first line means "query this rather than
+ * parsing me".  The header has been the WebApp's way of pointing the data
+ * pane at an endpoint for years; what moves here is only who knows the
+ * pattern. */
+const ENDPOINT_HEADER = /^([ \t]*#?[ \t]*Endpoint[ \t]*:[ \t]*)(\S*)(.*)$/im;
+
+export function claimPaneText (text: string): { [name: string]: any } | null {
+  const m = text.match(ENDPOINT_HEADER);
+  return m && m.index === 0 ? {endpoint: m[2]} : null;
+}
+
+/** The body of the pane is whatever was slurped back from the endpoint, so
+ * the host's Turtle carries it; this module describes only its own header
+ * line, and the host overlays that. */
+export const paneEditor: ParamEditor = {
+  language: "turtle",
+
+  tokens (text: string) {
+    const m = text.match(ENDPOINT_HEADER);
+    if (!m || m.index !== 0) return [];
+    const url = m[2];
+    return [
+      {from: 0, to: m[1].length, style: "keyword"},
+      {from: m[1].length, to: m[1].length + url.length,
+       style: isEndpointUrl(url) ? "link" : "invalid"},
+    ];
+  },
+
+  lint (text: string) {
+    const m = text.match(ENDPOINT_HEADER);
+    if (!m || m.index !== 0) return [];
+    const [from, to] = [m[1].length, m[1].length + m[2].length];
+    if (m[2] === "")
+      return [{from: 0, to: m[1].length, severity: "error" as const,
+               message: "no endpoint: this header wants the URL of a SPARQL query service"}];
+    if (!isEndpointUrl(m[2]))
+      return [{from, to, severity: "error" as const,
+               message: `"${m[2]}" is not an http(s) URL, so nothing can be queried from it`}];
+    if (m[3].trim() !== "")
+      return [{from: to, to: to + m[3].length, severity: "warning" as const,
+               message: "everything after the endpoint URL on this line is ignored"}];
+    return [];
+  },
+
+  complete (text: string, pos: number) {
+    // only at the top of the document, where the header would go
+    const lineStart = text.lastIndexOf("\n", pos - 1) + 1;
+    if (lineStart !== 0 || claimPaneText(text) !== null)
+      return null;
+    return {
+      from: 0, to: pos,
+      options: [{label: "# Endpoint: ", type: "keyword",
+                 detail: "query a SPARQL endpoint instead of parsing this pane"}],
+    };
+  },
+};
+
+function isEndpointUrl (url: string): boolean {
+  return /^https?:\/\/\S+$/.test(url);
+}

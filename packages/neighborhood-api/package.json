@@ -24,7 +24,7 @@
     "@shexjs/term": "^1.0.0-alpha.27"
   },
   "scripts": {
-    "test": "echo 'no tests for neighborhood-api'"
+    "test": "cd ../.. && mocha packages/neighborhood-api/test/*test.js -R dot"
   },
   "publishConfig": {
     "access": "public"

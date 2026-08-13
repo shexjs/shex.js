@@ -29,7 +29,13 @@
       .pair.fails { border-left: none; padding-left: none; }
       .pair.fails { background-color: #fbb; }
       .error , #results div .error  { padding-left: .1em; border-left: thick solid #b00; }
+      /* one validation result per block, told apart by a rule rather than
+         by the punctuation of a JSON array */
+      #results > div > * + * { border-top: 1px solid #ccc; margin-top: .5em; padding-top: .5em; }
       .running { background-color: #ddf; }
+      /* a validation over a synchronous data source holds the main thread,
+         so the button says so before it starts and nothing else can */
+      #validate.running { background-color: #ffe9a8; border-color: #d0a400; font-style: italic; }
       #inputarea { overflow-x: auto; white-space:nowrap; }
       #inputarea textarea { overflow-x: auto }
       #inputarea textarea.data.focus {
@@ -62,6 +68,22 @@
       body { border-width: .25em; border-style: solid; border-color: white; }
       #bindings1 textarea, .meta { background-color: #fffff4; color: #000000; border-color: #56fc1c}
       #bindings1 li.selected { background-color: #ffffe8; }
+      /* the tab set and the document share one box, whose height the app
+         fixes to what a document needs once it has measured one (see
+         showDocumentArea) so the buttons below don't move when the settings
+         tab, which is short, is showing */
+      #dataSource-tabs { margin-bottom: .2em; padding: .2em; }
+      #dataSource-tabs .ui-tabs-nav { padding-left: .2em; }
+      #dataSource-tabs .ui-tabs-panel { padding: .3em .2em; }
+      /* one setting per line: they are a form, not a sentence, and a row of
+         them runs off the side of a panel that is half the window wide */
+      #neighborhoodFields label.neighborhoodField { font-size: .85em; display: block; margin: .15em 0; }
+      #neighborhoodFields label.neighborhoodField > span { display: inline-block; min-width: 11em; }
+      #neighborhoodFields input[type=text], #neighborhoodFields input[type=number] { width: 22em; max-width: 60%; }
+      #neighborhoodFields .noSettings { font-size: .85em; font-style: italic; color: #666; }
+      #dataPaneControls { float: right; }
+      #dataPaneControls button { font-size: .8em; }
+      #dataSource { font-size: .8em; }
       .droparea { border-width: .25em; border-style: dashed; }
       .droparea.hover, body.hover { border: .25em dashed #0c0; }
       .stoppable { background-color: red; }
@@ -222,6 +244,7 @@ ul {
 
     <div id="title">
       <img src="../../shex-webapp/doc/ShEx-bones-min.svg" class="ShExLogo" alt="ShEx Icon"/><h1 style="float:left;">ShExMap — Simple Online Translator</h1>
+      <span id="dataSource" style="float:right; padding-right:1em;"><label for="neighborhood">data source: </label><select id="neighborhood" title="where the data to validate comes from"></select></span>
       <!-- <ul id="navlist" style="float:left; padding-left: 1em;"> -->
       <!--   <li>‣ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
       <!-- </ul> -->
@@ -372,7 +395,14 @@ ul {
       </div>
       <div id="inputData" class="panel">
         <h2 class="status"> </h2>
-        <textarea rows="25" class="data droparea" style="width: 100%" spellcheck="false"></textarea>
+        <div id="dataArea">
+          <div id="dataSource-tabs" style="width: 100%">
+            <span id="dataPaneControls"><button type="button" id="addDataPane" title="another document">+</button><button type="button" id="removeDataPane" title="close this document">&#8722;</button></span>
+            <ul id="dataPaneTabs"><li><a href="#neighborhoodFields">settings</a></li></ul>
+            <div id="neighborhoodFields"></div>
+          </div>
+          <div id="dataDocument"><textarea rows="25" class="data droparea" style="width: 100%" spellcheck="false"></textarea></div>
+        </div>
         <div style="margin-left: .1em;">
           <div class="passes" style="float:left; display:none;">
             <p></p>

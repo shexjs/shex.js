@@ -97,10 +97,11 @@ describe("A ShEx validator over SPARQL", function () {
   it(`should mark all tests whose focus is a told blank node with the ToldBNode trait`, () => {
     const marked = new Set(tests.filter(t => (t.trait || []).includes("ToldBNode")).map(t => t["@id"]));
     const founds = new Set(tests.filter(t => typeof t.action.focus === "string" && t.action.focus.startsWith("_:")).map(t => t["@id"]));
-    const missedTraits = founds.difference(marked);
-    const extraTraits = marked.difference(founds);
-    assert.deepEqual([...missedTraits], [], `${missedTraits.size} test(s): [${[...missedTraits].join(', ')}] should have a "ToldBNode" trait`);
-    assert.deepEqual([...extraTraits], [], `${extraTraits.size} test(s): [${[...extraTraits].join(', ')}] should NOT have a "ToldBNode" trait`);
+    // (Set.prototype.difference needs Node >= 22; CI's oldest lane runs 20)
+    const missedTraits = [...founds].filter(id => !marked.has(id));
+    const extraTraits = [...marked].filter(id => !founds.has(id));
+    assert.deepEqual(missedTraits, [], `${missedTraits.length} test(s): [${missedTraits.join(', ')}] should have a "ToldBNode" trait`);
+    assert.deepEqual(extraTraits, [], `${extraTraits.length} test(s): [${extraTraits.join(', ')}] should NOT have a "ToldBNode" trait`);
   });
 
   tests.filter(test =>

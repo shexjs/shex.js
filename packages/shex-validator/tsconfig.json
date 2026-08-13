@@ -14,8 +14,8 @@
         "strict": true,
         "noUnusedParameters": true,
         "lib": [
-            "ES6",
-            "ES2021.String"
+            "ES2021",
+            "DOM"
         ]
     },
     "exclude": [

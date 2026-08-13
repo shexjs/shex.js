@@ -53,7 +53,7 @@ class RemoteShExValidator {
           request: "create",
           schema: loaded.schema,
           schemaURL: schemaURL,
-          slurp: $("#slurp").is(":checked"),
+          slurp: this.renderer.caches.inputData.neighborhoods.slurping(),
           options: {regexModule: $("#regexpEngine").val()},
         },
         endpoint

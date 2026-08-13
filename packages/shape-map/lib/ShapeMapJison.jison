@@ -116,6 +116,7 @@ FOCUS                   [Ff][Oo][Cc][Uu][Ss]
 START                   [Ss][Tt][Aa][Rr][Tt]
 ATSTART                 "@"[Ss][Tt][Aa][Rr][Tt]
 IT_SPARQL               [Ss][Pp][Aa][Rr][Qq][Ll]
+EXTENSION_NAME          [A-Z][A-Z0-9_]+
 LANGTAG                 "@"([A-Za-z])+(("-"([0-9A-Za-z])+))*
 INTEGER                 ([+-])?([0-9])+
 DECIMAL                 ([+-])?([0-9])*"."([0-9])+
@@ -158,6 +159,7 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 {START}                 return 'START';
 {ATSTART}               return 'ATSTART';
 {IT_SPARQL}             return 'IT_SPARQL';
+{EXTENSION_NAME}        return 'EXTENSION_NAME';
 
 {ATPNAME_LN}            return 'ATPNAME_LN';
 {ATPNAME_NS}            return 'ATPNAME_NS';
@@ -265,6 +267,10 @@ nodeSelector:
     | triplePattern	
 //     | _O_QIT_SPARQL_E_Or_QnodeIri_E_C string	-> { type: "Extension", language: $1, lexical: $2["@value"] }
     | IT_SPARQL string	-> { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-sparql", lexical: $2["@value"] }
+    /* Any bare NAME before a string is an extension, named the way SPARQL is:
+       the resolver that knows what to do with it belongs to the data source,
+       not to this grammar. */
+    | EXTENSION_NAME string	-> { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-" + $1.toLowerCase(), lexical: $2["@value"] }
     | nodeIri string	-> { type: "Extension", language: $1, lexical: $2["@value"] }
     ;
 

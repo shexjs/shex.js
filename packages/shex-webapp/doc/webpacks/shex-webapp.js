@@ -21206,12 +21206,105 @@ function capturingRegexModule(inner) {
 (__unused_webpack_module, exports) {
 
 "use strict";
-var __webpack_unused_export__;
 
-__webpack_unused_export__ = ({ value: true });
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Start = void 0;
+exports.paneParams = paneParams;
+exports.fieldParams = fieldParams;
+exports.moduleId = moduleId;
+exports.extensionIri = extensionIri;
+exports.extensionName = extensionName;
+exports.queryMapResolverFor = queryMapResolverFor;
+exports.claimPane = claimPane;
+exports.paramsToCommandLineArgs = paramsToCommandLineArgs;
 exports.sparqlOrder = sparqlOrder;
 exports.Start = { term: "START" };
+/** the parameters a host renders as document panes, and as form fields */
+function paneParams(specs) {
+    return specs.filter(spec => !!spec.pane);
+}
+function fieldParams(specs) {
+    return specs.filter(spec => !spec.pane);
+}
+/** How a module is named where a name has to be short and stable: a
+ * manifest entry's `neighborhood`, a permalink parameter, a picklist's
+ * option value. */
+function moduleId(module) {
+    return module.name.replace(/^neighborhood-/, "");
+}
+// ── query map extensions ───────────────────────────────────────────────────
+// A shape map may pick its focus nodes by asking rather than by naming
+// them: `SPARQL "SELECT ..."@START` means "whatever that query selects".
+// Which questions can be asked is not a property of the shape map language
+// but of where the data comes from -- only a query service can run a SPARQL
+// query, only a Wikibase knows what an entity id means -- so each module
+// says what it can resolve and a host asks the selected source.  A host
+// that finds no resolver can then say *which* source doesn't understand
+// the extension, rather than reporting it as a syntax error or, worse,
+// running it against something that was never configured.
+/** How a bare extension name in a shape map becomes an IRI: the convention
+ * the shape-map grammar follows, and SPARQL's own name obeys. */
+function extensionIri(name) {
+    return "http://www.w3.org/ns/shex#Extensions-" + name.toLowerCase();
+}
+/** The name a shape map would write for an extension IRI, for error
+ * messages and for writing a shape map back out. */
+function extensionName(language) {
+    const m = language.match(/#Extensions-(.*)$/);
+    return m ? m[1].toUpperCase() : language;
+}
+/** the selected source's resolver for an extension, or null if it has none */
+function queryMapResolverFor(module, language) {
+    return (module.queryMapResolvers || []).find(r => r.language === language) || null;
+}
+/** The module whose claimPaneText answers to this text, and the parameters
+ * it read out of it; null when none does, leaving the host with whatever
+ * data source it was going to use anyway. */
+function claimPane(modules, text) {
+    for (const module of modules) {
+        const params = module.claimPaneText ? module.claimPaneText(text) : null;
+        if (params !== null)
+            return { module, params };
+    }
+    return null;
+}
+/** Translate DbParamSpecs into command-line-args option definitions.
+ *
+ * This function is also the measurement the two vocabularies were compared
+ * by.  What survives the round trip: names, descriptions, the four scalar
+ * types, arrays (`multiple`), defaults, enums (demoted to a typeLabel).
+ * What OpenAPI can say that command-line-args cannot: `format`,
+ * `items.contentMediaType` (both demoted to help text), `required` (CLA has
+ * no mandatory options -- the host must enforce it), and nested objects
+ * (not offered in DbParamSchema for exactly that reason).  What
+ * command-line-args can say that OpenAPI cannot: `alias`, `defaultOption`,
+ * `lazyMultiple`, `group` -- which is why DbParamSpec carries a `cli` hint
+ * rather than pretending OpenAPI covers a command line.
+ */
+function paramsToCommandLineArgs(specs) {
+    return specs.map(spec => {
+        var _a, _b, _c, _d, _e;
+        const scalar = spec.schema.type === "array" ? (((_a = spec.schema.items) === null || _a === void 0 ? void 0 : _a.type) || "string") : spec.schema.type;
+        const def = {
+            name: ((_b = spec.cli) === null || _b === void 0 ? void 0 : _b.option) || spec.name,
+            type: scalar === "boolean" ? Boolean : scalar === "number" || scalar === "integer" ? Number : String,
+        };
+        if ((_c = spec.cli) === null || _c === void 0 ? void 0 : _c.alias)
+            def.alias = spec.cli.alias;
+        if (spec.schema.type === "array")
+            def.multiple = true;
+        if (spec.schema.default !== undefined)
+            def.defaultValue = spec.schema.default;
+        if (spec.description)
+            def.description = spec.description;
+        def.typeLabel = ((_d = spec.cli) === null || _d === void 0 ? void 0 : _d.typeLabel)
+            || (spec.schema.enum ? spec.schema.enum.join("|") : undefined)
+            || (spec.schema.type === "array" ? (_e = spec.schema.items) === null || _e === void 0 ? void 0 : _e.format : spec.schema.format);
+        if (def.typeLabel === undefined)
+            delete def.typeLabel;
+        return def;
+    });
+}
 /* sparqlOrder - sort triples by subject following SPARQL partial ordering.
  */
 function sparqlOrder(l, r) {
@@ -21239,8 +21332,10 @@ function prec(t) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ctor = exports.description = exports.name = void 0;
+exports.paneEditor = exports.dbParams = exports.ctor = exports.description = exports.label = exports.name = void 0;
 exports.rdfjsDB = rdfjsDB;
+exports.documentTitle = documentTitle;
+exports.fromParams = fromParams;
 const neighborhood_api_1 = __webpack_require__(7682);
 function rdfjsDB(db, queryTracker) {
     function getNeighborhood(point, shapeLabel, _shape) {
@@ -21278,8 +21373,73 @@ function rdfjsDB(db, queryTracker) {
     };
 }
 exports.name = "neighborhood-rdfjs";
+exports.label = "Turtle";
 exports.description = "Implementation of @shexjs/neighborhood-api which gets data from an @rdfjs/dataset";
 exports.ctor = rdfjsDB;
+/** What it takes to construct this DB, declared for hosts that offer several
+ * neighborhood implementations (STRAWMAN, see @shexjs/neighborhood-api).
+ * "A list of filenames paired with media types" is declared as one
+ * array-of-files parameter per media type -- contentMediaType is the
+ * pairing.  Fetching and parsing them is the host's business (it's async
+ * and needs parsers this module doesn't ship), so `fromParams` takes the
+ * store the host built rather than the file lists. */
+/** What to call a document in a tab.  A leading comment is the writer
+ * saying what this file is, which beats anything a parser could work out;
+ * failing that, the first subject names it, since a document usually is
+ * about the thing it starts by describing.  Neither is a parse: a tab has
+ * to have a name while the document is still half-typed. */
+function documentTitle(text) {
+    const lines = text.split("\n");
+    for (const line of lines) {
+        const bare = line.trim();
+        if (bare === "")
+            continue;
+        if (bare.startsWith("#")) // the writer's own name for it
+            return bare.replace(/^#+\s*/, "").substring(0, 24) || null;
+        if (/^(@?(prefix|base)\b|PREFIX\b|BASE\b)/i.test(bare))
+            continue; // directives name the document's words, not it
+        const subject = bare.match(/^(?:<([^>]*)>|((?:[A-Za-z][\w.-]*)?:[^\s;,.]*))/);
+        if (subject) {
+            const iri = subject[1] || subject[2];
+            const local = iri.split(/[#/]/).pop() || iri;
+            return (local.startsWith(":") ? local.substring(1) : local).substring(0, 24) || null;
+        }
+        return null;
+    }
+    return null;
+}
+exports.dbParams = [
+    { name: "data", selector: true, required: true,
+        description: "Turtle data",
+        schema: { type: "array", items: { type: "string", format: "uri", contentMediaType: "text/turtle" } },
+        // One graph, but not necessarily one document: a patient in one file
+        // and an observation about them in another are still one graph, and
+        // keeping them apart is how they were written and how they are edited.
+        // So a document can be opened, and each is named by the first thing it
+        // says about itself.
+        pane: { label: "Turtle", editor: { language: "turtle" }, min: 1, creatable: true,
+            template: "# a document\nPREFIX : <http://a.example/>\n\n",
+            titleOf: (text) => documentTitle(text) },
+        cli: { option: "dataURL", alias: "d", typeLabel: "file|URL" } },
+    { name: "jsonld",
+        description: "JSON-LD data",
+        schema: { type: "array", items: { type: "string", format: "uri", contentMediaType: "application/ld+json" } },
+        // named files for a host that can fetch and expand them, which so far
+        // means the command line: nothing to type into a form, and no pane
+        // (this data ends up in the same store the Turtle pane feeds)
+        ui: { hidden: true },
+        cli: { option: "jsonld", alias: "l", typeLabel: "file|URL" } },
+];
+function fromParams(params, queryTracker) {
+    return rdfjsDB(params.store, queryTracker);
+}
+/* No claimPaneText: nothing about a document says it wants to be parsed
+ * rather than queried, and a host that used to guess from the text now
+ * asks (or defaults to this module, an RDF document being what a data pane
+ * has always held). */
+/** This module has a whole RDF document to edit, so it names the language
+ * the host already implements rather than describing one. */
+exports.paneEditor = { language: "turtle" };
 //# sourceMappingURL=neighborhood-rdfjs.js.map
 
 /***/ },
@@ -21323,8 +21483,10 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ctor = exports.description = exports.name = exports.BNodeIdentityError = void 0;
+exports.paneEditor = exports.dbParams = exports.ctor = exports.queryMapResolvers = exports.capabilities = exports.description = exports.label = exports.name = exports.BNodeIdentityError = void 0;
 exports.sparqlDB = sparqlDB;
+exports.fromParams = fromParams;
+exports.claimPaneText = claimPaneText;
 const neighborhood_api_1 = __webpack_require__(7682);
 const ShExUtil = __importStar(__webpack_require__(5590));
 const visitor_1 = __webpack_require__(2818);
@@ -21348,7 +21510,17 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
     const verify = options.verifyBnodeDescriptions !== false;
     const execute = options.executeQuery ||
         ((q, ep, df) => ShExUtil.executeQuery(q, ep, df));
-    const runQuery = (query) => execute(query, endpoint, DataFactory);
+    const queryCache = options.cacheQueries === false ? null : new Map();
+    const runQuery = (query) => {
+        if (queryCache === null)
+            return execute(query, endpoint, DataFactory);
+        let rows = queryCache.get(query);
+        if (rows === undefined) {
+            rows = execute(query, endpoint, DataFactory);
+            queryCache.set(query, rows);
+        }
+        return rows;
+    };
     /** Every blank node this DB has handed out, by its internal label. */
     const described = new Map();
     let nextLabel = 0;
@@ -21750,9 +21922,15 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         return `SELECT ?lvl ?s ?p ?o ${anchorVars}WHERE {\n` +
             instantiate(anchor.text, "a") + branches.join("\n  UNION\n") + "\n}";
     }
-    /** One component query, turned into quads plus handles for its blank nodes. */
+    /** One component query, turned into quads plus handles for its blank nodes.
+     *
+     * Starts with a depth-0 probe -- most neighborhoods contain no blank nodes,
+     * and a single-branch query is much cheaper to plan than the full UNION of
+     * chains -- and only walks the blank-node component when the probe shows
+     * blank nodes (the truncation retry below escalates the same way when a
+     * description bottoms out). */
     function fetch(point, preds, inverse) {
-        for (let depth = startDepth;; depth = Math.min(depth * 2, maxDepth)) {
+        for (let depth = options.expectBnodes ? (startDepth || 4) : 0;; depth = depth === 0 ? (startDepth || 4) : Math.min(depth * 2, maxDepth)) {
             const anchor = descriptionOf(point);
             const query = componentQuery(anchor, preds, depth, inverse);
             const rows = runQuery(query);
@@ -21927,12 +22105,1665 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         getObjects: function () { return ["!Query DB can't index objects"]; },
         get size() { return undefined; },
         setSchema: function (schema) { schemaIndex = schema._index || visitor_1.ShExIndexVisitor.index(schema); },
+        executeSelect: (query) => runQuery(query),
     };
 }
 exports.name = "neighborhood-sparql";
+exports.label = "SPARQL endpoint";
 exports.description = "Implementation of @shexjs/neighborhood-api which gets data from a SPARQL endpoint";
+exports.capabilities = ["query"];
+/** A shape map may ask this source which nodes to validate. */
+exports.queryMapResolvers = [{
+        language: "http://www.w3.org/ns/shex#Extensions-sparql",
+        name: "SPARQL",
+        description: "the focus nodes are the first column of this SELECT, run on this endpoint",
+        resolve: (lexical, db) => db.executeSelect(lexical).map(row => row[0]),
+    }];
 exports.ctor = sparqlDB;
+/** What it takes to construct this DB, declared for hosts (the CLI, the
+ * WebApp) that offer several neighborhood implementations.  See the STRAWMAN
+ * notes in @shexjs/neighborhood-api. */
+/** Everything this data source needs is a value to type: there is no
+ * document to edit, so a host renders it as fields and no panes. */
+exports.dbParams = [
+    { name: "endpoint", selector: true, required: true,
+        description: "SPARQL query service to ask",
+        schema: { type: "string", format: "uri" },
+        cli: { option: "endpoint", typeLabel: "IRI" } }, // the CLI's historical flag
+    { name: "allOutgoing",
+        description: "fetch every outgoing arc rather than only those the shape needs",
+        schema: { type: "boolean" },
+        cli: { option: "slurp-all" } }, // rides the CLI's existing flag
+    { name: "expectBnodes",
+        description: "expect blank nodes in every neighborhood, rather than probing for them first",
+        schema: { type: "boolean", default: false },
+        cli: { option: "sparql-expect-bnodes" } },
+    { name: "bnodeDepth",
+        description: "how far to follow blank nodes when describing them (grown on demand)",
+        schema: { type: "integer", default: 4 },
+        cli: { option: "sparql-bnode-depth", typeLabel: "integer" } },
+    { name: "maxBnodeDepth",
+        description: "never describe blank nodes more deeply than this",
+        schema: { type: "integer", default: 64 },
+        cli: { option: "sparql-max-bnode-depth", typeLabel: "integer" } },
+    { name: "verifyBnodeDescriptions",
+        description: "have the endpoint confirm each blank node description picks out the node it should",
+        schema: { type: "boolean", default: true },
+        cli: { option: "sparql-verify-bnodes" } },
+];
+function fromParams(params, queryTracker) {
+    return sparqlDB(params.endpoint, queryTracker, {
+        allOutgoing: params.allOutgoing,
+        expectBnodes: params.expectBnodes,
+        bnodeDepth: params.bnodeDepth,
+        maxBnodeDepth: params.maxBnodeDepth,
+        verifyBnodeDescriptions: params.verifyBnodeDescriptions,
+    });
+}
+/** `# Endpoint: <url>` on the first line means "query this rather than
+ * parsing me".  The header has been the WebApp's way of pointing the data
+ * pane at an endpoint for years; what moves here is only who knows the
+ * pattern. */
+const ENDPOINT_HEADER = /^([ \t]*#?[ \t]*Endpoint[ \t]*:[ \t]*)(\S*)(.*)$/im;
+function claimPaneText(text) {
+    const m = text.match(ENDPOINT_HEADER);
+    return m && m.index === 0 ? { endpoint: m[2] } : null;
+}
+/** The body of the pane is whatever was slurped back from the endpoint, so
+ * the host's Turtle carries it; this module describes only its own header
+ * line, and the host overlays that. */
+exports.paneEditor = {
+    language: "turtle",
+    tokens(text) {
+        const m = text.match(ENDPOINT_HEADER);
+        if (!m || m.index !== 0)
+            return [];
+        const url = m[2];
+        return [
+            { from: 0, to: m[1].length, style: "keyword" },
+            { from: m[1].length, to: m[1].length + url.length,
+                style: isEndpointUrl(url) ? "link" : "invalid" },
+        ];
+    },
+    lint(text) {
+        const m = text.match(ENDPOINT_HEADER);
+        if (!m || m.index !== 0)
+            return [];
+        const [from, to] = [m[1].length, m[1].length + m[2].length];
+        if (m[2] === "")
+            return [{ from: 0, to: m[1].length, severity: "error",
+                    message: "no endpoint: this header wants the URL of a SPARQL query service" }];
+        if (!isEndpointUrl(m[2]))
+            return [{ from, to, severity: "error",
+                    message: `"${m[2]}" is not an http(s) URL, so nothing can be queried from it` }];
+        if (m[3].trim() !== "")
+            return [{ from: to, to: to + m[3].length, severity: "warning",
+                    message: "everything after the endpoint URL on this line is ignored" }];
+        return [];
+    },
+    complete(text, pos) {
+        // only at the top of the document, where the header would go
+        const lineStart = text.lastIndexOf("\n", pos - 1) + 1;
+        if (lineStart !== 0 || claimPaneText(text) !== null)
+            return null;
+        return {
+            from: 0, to: pos,
+            options: [{ label: "# Endpoint: ", type: "keyword",
+                    detail: "query a SPARQL endpoint instead of parsing this pane" }],
+        };
+    },
+};
+function isEndpointUrl(url) {
+    return /^https?:\/\/\S+$/.test(url);
+}
 //# sourceMappingURL=neighborhood-sparql.js.map
+
+/***/ },
+
+/***/ 1434
+(__unused_webpack_module, exports) {
+
+"use strict";
+var __webpack_unused_export__;
+
+/** Parse JSON, keeping every value's place in the text.
+ *
+ * A Turtle parser hands back a side table saying where each triple was
+ * uttered, which is what lets a validation result highlight the data it
+ * was about.  An entity page is JSON rather than Turtle, but the RDF it
+ * becomes has the same need, so this parses the page the same way: the
+ * value, plus the range of every value and of every member name, by path.
+ *
+ * `JSON.parse` with a reviver can't do this -- a reviver sees values, not
+ * offsets -- so this is a plain recursive-descent parser.  It accepts what
+ * JSON accepts and nothing more; the caller has already had `JSON.parse`
+ * accept the same text, so anything rejected here is a bug rather than
+ * user input.
+ */
+__webpack_unused_export__ = ({ value: true });
+exports.locateJson = locateJson;
+const key = (path) => path.join(" ");
+function locateJson(text) {
+    const values = new Map();
+    const names = new Map();
+    let at = 0;
+    function ws() {
+        while (at < text.length && (text.charCodeAt(at) === 0x20 || text.charCodeAt(at) === 0x09 ||
+            text.charCodeAt(at) === 0x0a || text.charCodeAt(at) === 0x0d))
+            ++at;
+    }
+    function expect(ch) {
+        if (text[at] !== ch)
+            throw Error(`expected ${ch} at ${at}, found ${JSON.stringify(text.substr(at, 12))}`);
+        ++at;
+    }
+    /** a JSON string, starting at a quote; returns its range and its value */
+    function str() {
+        const start = at;
+        expect('"');
+        while (at < text.length && text[at] !== '"') {
+            if (text[at] === "\\")
+                ++at;
+            ++at;
+        }
+        expect('"');
+        const range = { start, end: at };
+        return { range, value: JSON.parse(text.substring(start, at)) };
+    }
+    function value(path) {
+        ws();
+        const start = at;
+        let parsed;
+        switch (text[at]) {
+            case "{": {
+                ++at;
+                parsed = {};
+                ws();
+                if (text[at] === "}") {
+                    ++at;
+                }
+                else {
+                    for (;;) {
+                        ws();
+                        const name = str();
+                        ws();
+                        expect(":");
+                        const member = path.concat(name.value);
+                        names.set(key(member), name.range);
+                        parsed[name.value] = value(member);
+                        ws();
+                        if (text[at] === ",") {
+                            ++at;
+                            continue;
+                        }
+                        expect("}");
+                        break;
+                    }
+                }
+                break;
+            }
+            case "[": {
+                ++at;
+                parsed = [];
+                ws();
+                if (text[at] === "]") {
+                    ++at;
+                }
+                else {
+                    for (;;) {
+                        parsed.push(value(path.concat(parsed.length)));
+                        ws();
+                        if (text[at] === ",") {
+                            ++at;
+                            continue;
+                        }
+                        expect("]");
+                        break;
+                    }
+                }
+                break;
+            }
+            case '"':
+                parsed = str().value;
+                break;
+            default: {
+                // a number, true, false or null: everything up to what can follow one
+                const from = at;
+                while (at < text.length && ",]} \t\n\r".indexOf(text[at]) === -1)
+                    ++at;
+                parsed = JSON.parse(text.substring(from, at));
+            }
+        }
+        values.set(key(path), { start, end: at });
+        return parsed;
+    }
+    const parsed = value([]);
+    ws();
+    return {
+        value: parsed,
+        at: (path) => values.get(key(path)) || null,
+        nameAt: (path) => names.get(key(path)) || null,
+    };
+}
+//# sourceMappingURL=json-locations.js.map
+
+/***/ },
+
+/***/ 17
+(__unused_webpack_module, exports) {
+
+"use strict";
+var __webpack_unused_export__;
+
+/** md5, because Wikibase names things with it.
+ *
+ * Value nodes (`wdv:<32 hex>`), somevalue blank nodes and novalue class
+ * restrictions are all md5 digests of a serialization -- see wikibase-rdf --
+ * so a package that synthesizes Wikidata's RDF cannot avoid computing them.
+ * Node has `crypto.createHash`, but browsers do not: WebCrypto offers no md5
+ * (rightly -- it is broken for every security purpose) and is asynchronous
+ * besides, while the NeighborhoodDb API is synchronous.  Rather than make
+ * the package node-only or drag in a dependency, here is RFC 1321 in about
+ * fifty lines.
+ *
+ * NOT FOR SECURITY.  This is a naming scheme's arithmetic: the digests it
+ * computes are Wikibase's identifiers, and nothing here authenticates
+ * anything.
+ */
+__webpack_unused_export__ = ({ value: true });
+exports.md5 = md5;
+const S = [
+    7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
+    5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20,
+    4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
+    6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21,
+];
+/** K[i] = floor(2^32 * abs(sin(i + 1))) */
+const K = Array.from({ length: 64 }, (_, i) => Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296));
+const rotl = (x, c) => (x << c) | (x >>> (32 - c));
+/** UTF-8 bytes of a string, without TextEncoder (which older embedders and
+ * some bundler targets lack). */
+function utf8Bytes(text) {
+    const bytes = [];
+    for (let i = 0; i < text.length; ++i) {
+        let code = text.charCodeAt(i);
+        if (code >= 0xd800 && code <= 0xdbff && i + 1 < text.length) {
+            const low = text.charCodeAt(i + 1);
+            if (low >= 0xdc00 && low <= 0xdfff) {
+                code = 0x10000 + ((code - 0xd800) << 10) + (low - 0xdc00);
+                ++i;
+            }
+        }
+        if (code < 0x80) {
+            bytes.push(code);
+        }
+        else if (code < 0x800) {
+            bytes.push(0xc0 | (code >> 6), 0x80 | (code & 0x3f));
+        }
+        else if (code < 0x10000) {
+            bytes.push(0xe0 | (code >> 12), 0x80 | ((code >> 6) & 0x3f), 0x80 | (code & 0x3f));
+        }
+        else {
+            bytes.push(0xf0 | (code >> 18), 0x80 | ((code >> 12) & 0x3f), 0x80 | ((code >> 6) & 0x3f), 0x80 | (code & 0x3f));
+        }
+    }
+    return bytes;
+}
+/** Lowercase hex md5 of a string's UTF-8 encoding. */
+function md5(text) {
+    const bytes = utf8Bytes(text);
+    const bitLength = bytes.length * 8;
+    bytes.push(0x80);
+    while (bytes.length % 64 !== 56)
+        bytes.push(0);
+    // length as a little-endian 64-bit count of bits; a string long enough to
+    // overflow 53 bits of float can't be held in memory anyway
+    for (let i = 0; i < 8; ++i)
+        bytes.push(Math.floor(bitLength / Math.pow(2, 8 * i)) & 0xff);
+    let [a0, b0, c0, d0] = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476];
+    for (let chunk = 0; chunk < bytes.length; chunk += 64) {
+        const M = new Array(16);
+        for (let j = 0; j < 16; ++j) {
+            const o = chunk + j * 4;
+            M[j] = bytes[o] | (bytes[o + 1] << 8) | (bytes[o + 2] << 16) | (bytes[o + 3] << 24);
+        }
+        let [A, B, C, D] = [a0, b0, c0, d0];
+        for (let i = 0; i < 64; ++i) {
+            let F, g;
+            if (i < 16) {
+                F = (B & C) | (~B & D);
+                g = i;
+            }
+            else if (i < 32) {
+                F = (D & B) | (~D & C);
+                g = (5 * i + 1) % 16;
+            }
+            else if (i < 48) {
+                F = B ^ C ^ D;
+                g = (3 * i + 5) % 16;
+            }
+            else {
+                F = C ^ (B | ~D);
+                g = (7 * i) % 16;
+            }
+            F = (F + A + K[i] + M[g]) | 0;
+            A = D;
+            D = C;
+            C = B;
+            B = (B + rotl(F, S[i])) | 0;
+        }
+        a0 = (a0 + A) | 0;
+        b0 = (b0 + B) | 0;
+        c0 = (c0 + C) | 0;
+        d0 = (d0 + D) | 0;
+    }
+    return [a0, b0, c0, d0].map(word => Array.from({ length: 4 }, (_, i) => ((word >>> (8 * i)) & 0xff).toString(16).padStart(2, "0"))
+        .join("")).join("");
+}
+//# sourceMappingURL=md5.js.map
+
+/***/ },
+
+/***/ 2906
+(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.paneEditor = exports.dbParams = exports.ctor = exports.queryMapResolvers = exports.capabilities = exports.description = exports.label = exports.name = exports.EntityResolutionError = void 0;
+exports.forgetPages = forgetPages;
+exports.bcp47 = bcp47;
+exports.siteInfoFromSitematrix = siteInfoFromSitematrix;
+exports.wikidataDB = wikidataDB;
+exports.asEntityDoc = asEntityDoc;
+exports.fromParams = fromParams;
+exports.distributeDocuments = distributeDocuments;
+exports.claimPaneText = claimPaneText;
+const neighborhood_api_1 = __webpack_require__(7682);
+const N3 = __importStar(__webpack_require__(4957));
+const fs = __importStar(__webpack_require__(6478));
+const path = __importStar(__webpack_require__(8726));
+const url_1 = __webpack_require__(2286);
+const wikibase_rdf_1 = __webpack_require__(4157);
+const json_locations_1 = __webpack_require__(1434);
+/** Thrown when a focus node can't be tied to an entity page. */
+class EntityResolutionError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "EntityResolutionError";
+    }
+}
+exports.EntityResolutionError = EntityResolutionError;
+const DataFactory = N3.DataFactory;
+/** Who this is, for hosts that ask (see fetchDoc): a tool and where to
+ * read about it, which is what Wikimedia's robot policy wants. */
+const USER_AGENT = "@shexjs/neighborhood-wikidata (https://github.com/shexjs/shex.js)";
+/** Pages fetched by this process, by URL.
+ *
+ * A DB is rebuilt whenever its configuration changes -- a host that offers
+ * a form rebuilds on every keystroke in it -- and a page fetched
+ * synchronously is the most expensive thing here by an order of magnitude.
+ * The pages themselves don't change under an edit to a field, so they
+ * outlive the DB that read them.  `forgetPages()` empties this for a host
+ * that wants to see the site's current answer again. */
+const fetchedPages = new Map();
+/** likewise the site table, which is parsed into a lookup once per URL */
+const siteInfoByUrl = new Map();
+function forgetPages() {
+    fetchedPages.clear();
+    siteInfoByUrl.clear();
+}
+/** Is there a browser here, with a User-Agent of its own and opinions about
+ * who may set it? */
+function inBrowser() {
+    const global = globalThis;
+    return typeof global.window !== "undefined" && typeof global.window.document !== "undefined";
+}
+// ── site languages ──────────────────────────────────────────────────────────
+// The sitematrix names each wiki's language by its subdomain-ish code;
+// Wikibase's RDF names it by the BCP 47 form of the sites-table entry.
+// Bridging the two takes MediaWiki's nonstandard-code mapping
+// (LanguageCode::NON_STANDARD_LANGUAGE_CODE_MAPPING), a few sites-table
+// values that predate today's config, and BCP 47 case normalization --
+// each verified against dump output for entities with the affected links.
+const NONSTANDARD_LANGUAGE_CODES = {
+    "als": "gsw", "bat-smg": "sgs", "be-x-old": "be-tarask", "cbk-zam": "cbk-x-zam",
+    "eml": "egl", "fiu-vro": "vro", "map-bms": "jv-x-bms", "mo": "ro-Cyrl-x-mo",
+    "nrm": "fr-x-nrm", "roa-rup": "rup", "roa-tara": "nap-x-tara", "simple": "en-simple",
+    "zh-classical": "lzh", "zh-min-nan": "nan", "zh-yue": "yue",
+};
+/** sites-table languages that differ from the sitematrix code */
+const SITE_LANGUAGE_OVERRIDES = {
+    nowiki: "nb", nowiktionary: "nb", nowikibooks: "nb", nowikinews: "nb",
+    nowikiquote: "nb", nowikisource: "nb",
+    bhwiki: "bho", bhwiktionary: "bho",
+    crhwiki: "crh-latn",
+};
+/** BCP 47 case normalization: "nds-nl" -> "nds-NL", "crh-latn" -> "crh-Latn" */
+function bcp47(code) {
+    const mapped = NONSTANDARD_LANGUAGE_CODES[code.toLowerCase()] || code;
+    let priv = false;
+    return mapped.split("-").map((part, i) => {
+        if (i === 0 || priv)
+            return part.toLowerCase();
+        if (part.toLowerCase() === "x") {
+            priv = true;
+            return "x";
+        }
+        if (part.length === 2)
+            return part.toUpperCase();
+        if (part.length === 4)
+            return part.charAt(0).toUpperCase() + part.substring(1).toLowerCase();
+        return part.toLowerCase();
+    }).join("-");
+}
+/** Site id -> SiteInfo from an `action=sitematrix&formatversion=2` response.
+ * Exported so a cached copy can be turned into a `siteInfo` option. */
+function siteInfoFromSitematrix(doc) {
+    const sm = doc.sitematrix || {};
+    const map = new Map();
+    const entry = (dbname, url, langCode, group) => map.set(dbname, {
+        url,
+        language: bcp47(SITE_LANGUAGE_OVERRIDES[dbname] || langCode),
+        group: group === "wiki" ? "wikipedia" : group,
+    });
+    for (const [key, val] of Object.entries(sm)) {
+        if (key === "count")
+            continue;
+        if (key === "specials")
+            for (const s of val)
+                // specials' "lang" is a placeholder matching their code; their
+                // content language is English
+                entry(s.dbname, s.url, s.lang === s.code ? "en" : s.lang || "en", s.code);
+        else
+            for (const s of val.site || [])
+                entry(s.dbname, s.url, val.code, s.code);
+    }
+    return siteId => map.get(siteId);
+}
+function wikidataDB(queryTracker, options = {}) {
+    const conceptBase = options.conceptBase || "http://www.wikidata.org/";
+    const dataBase = options.dataBase || "https://www.wikidata.org/wiki/Special:EntityData/";
+    const entityDataUrl = options.entityDataUrl || ((id) => `${dataBase}${id}.json`);
+    const siteMatrixUrl = options.siteMatrixUrl ||
+        // origin=* is what makes the Action API answer a cross-origin
+        // request; without it a browser has no permission to read this
+        "https://www.wikidata.org/w/api.php?action=sitematrix&format=json&formatversion=2&origin=*";
+    const fetchDoc = options.fetchDoc || function (url) {
+        // a file: base makes a directory of captured pages a fully offline
+        // "API": <base><id>.json resolves to a file next to its siblings
+        if (url.startsWith("file://"))
+            return fs.readFileSync((0, url_1.fileURLToPath)(url), "utf8");
+        const XHR = globalThis.XMLHttpRequest;
+        if (!XHR)
+            throw Error(`no fetchDoc option and no XMLHttpRequest to fetch ${url} with; ` +
+                `pass fetchDoc or install a synchronous XMLHttpRequest shim`);
+        const xhr = new XHR();
+        xhr.open("GET", url, false);
+        xhr.setRequestHeader("Accept", "application/json");
+        // Wikimedia's robot policy 403s clients that don't identify themselves
+        // (T400119).  A browser has a User-Agent of its own and refuses to let
+        // anyone set that header -- it warns rather than obeying -- so only a
+        // shim that has none is told.  And nothing sets a *custom* header
+        // (Api-User-Agent, which MediaWiki would also read): asking for one
+        // turns a cross-origin request into a preflighted one, which a
+        // synchronous XHR cannot do.
+        if (!inBrowser())
+            xhr.setRequestHeader("User-Agent", USER_AGENT);
+        xhr.send();
+        if (xhr.status >= 400)
+            throw Error(`GET <${url}> returned ${xhr.status}:\n${xhr.responseText}`);
+        return xhr.responseText;
+    };
+    /** this process over disk over network */
+    function getDoc(cacheKey, url) {
+        const remembered = fetchedPages.get(url);
+        if (remembered !== undefined)
+            return remembered;
+        const body = readDoc(cacheKey, url);
+        fetchedPages.set(url, body);
+        return body;
+    }
+    function readDoc(cacheKey, url) {
+        // fs is absent where there is no filesystem (a browser bundle stubs it
+        // out), so an on-disk cache is only offered where one can exist
+        if (options.cacheDir && fs && typeof fs.existsSync === "function") {
+            const file = path.join(options.cacheDir, cacheKey + ".json");
+            if (fs.existsSync(file))
+                return fs.readFileSync(file, "utf8");
+            const body = fetchDoc(url);
+            fs.mkdirSync(options.cacheDir, { recursive: true });
+            fs.writeFileSync(file, body);
+            return body;
+        }
+        return fetchDoc(url);
+    }
+    let siteInfo = options.siteInfo || null;
+    const converter = (0, wikibase_rdf_1.wikibaseRdfConverter)(DataFactory, {
+        conceptBase, dataBase,
+        repositoryName: options.repositoryName,
+        commonsMediaBase: options.commonsMediaBase,
+        commonsDataBase: options.commonsDataBase,
+        license: options.license,
+        // lazy: entities without sitelinks never need the sitematrix
+        siteInfo: siteId => {
+            if (siteInfo === null) {
+                siteInfo = siteInfoByUrl.get(siteMatrixUrl) || null;
+                if (siteInfo === null) {
+                    siteInfo = siteInfoFromSitematrix(JSON.parse(getDoc("sitematrix", siteMatrixUrl)));
+                    siteInfoByUrl.set(siteMatrixUrl, siteInfo);
+                }
+            }
+            return siteInfo(siteId);
+        },
+    });
+    const NS = converter.namespaces;
+    const store = new N3.Store();
+    /** entity ids whose pages are in the store */
+    const loaded = new Set();
+    /** the caller's own pages, by the id each one is the page of */
+    const supplied = new Map();
+    (options.pages || []).forEach((text, i) => {
+        let doc;
+        try {
+            doc = asEntityDoc(JSON.parse(text));
+        }
+        catch (e) {
+            throw Error(`supplied entity page ${i} is not an entity: ${e.message}`);
+        }
+        for (const id of Object.keys(doc.entities))
+            supplied.set(id, doc);
+    });
+    /** the pages this DB has read, by the id each is the page of */
+    const pageTexts = new Map();
+    function ensureLoaded(id) {
+        if (loaded.has(id))
+            return;
+        // a page the caller supplied is the page: it says what the entity would
+        // be if their edit were made, which is the thing being validated
+        let doc = supplied.get(id);
+        if (doc === undefined) {
+            const text = getDoc(id, entityDataUrl(id));
+            pageTexts.set(id, text);
+            doc = JSON.parse(text);
+        }
+        store.addQuads(converter.entityToQuads(doc, id));
+        loaded.add(id);
+        const returned = Object.keys(doc.entities)[0];
+        if (returned !== id)
+            loaded.add(returned); // a redirect loads its target
+    }
+    /** The entity page a term implies, or null for terms that carry no entity
+     * name (and so must already be in the store, or aren't ours at all). */
+    function entityOf(point) {
+        if (point.termType !== "NamedNode")
+            return null;
+        const v = point.value;
+        if (v.startsWith(NS.wds)) {
+            // wds:Q42-<guid>, wds:q42-<guid> (old statements), wds:L123-F4-<guid>
+            const m = v.substring(NS.wds.length).match(/^([QPL]\d+)/i);
+            return m ? m[1].toUpperCase() : null;
+        }
+        if (v.startsWith(NS.wd)) {
+            const m = v.substring(NS.wd.length).match(/^([QPL]\d+)(-|$)/i);
+            return m ? m[1].toUpperCase() : null;
+        }
+        if (v.startsWith(dataBase)) {
+            const m = v.substring(dataBase.length).match(/^([QPL]\d+)/i);
+            return m ? m[1].toUpperCase() : null;
+        }
+        return null;
+    }
+    /** True for terms that only an entity page this DB has loaded could have
+     * minted -- so absence from the store is a mistake worth an error. */
+    function mintedHere(point) {
+        return point.termType === "BlankNode" ||
+            (point.termType === "NamedNode" &&
+                (point.value.startsWith(NS.wdv) || point.value.startsWith(NS.wdref)));
+    }
+    function getNeighborhood(point, shapeLabel, _shape) {
+        const id = entityOf(point);
+        if (id !== null)
+            ensureLoaded(id);
+        else if (mintedHere(point) &&
+            store.countQuads(point, null, null, null) === 0 &&
+            store.countQuads(null, null, point, null) === 0)
+            throw new EntityResolutionError(`${point.termType === "BlankNode" ? "_:" + point.value : "<" + point.value + ">"} ` +
+                `is not in any entity page this DB has loaded, and its name doesn't say ` +
+                `which page to fetch; walk in through the entity's statements instead`);
+        let startTime = null;
+        if (queryTracker) {
+            startTime = Date.now();
+            queryTracker.start(false, point, shapeLabel);
+        }
+        const outgoing = store.getQuads(point, null, null, null)
+            .sort((l, r) => (0, neighborhood_api_1.sparqlOrder)(l.object, r.object));
+        if (queryTracker) {
+            const now = Date.now();
+            queryTracker.end(outgoing, now - startTime);
+            startTime = now;
+            queryTracker.start(true, point, shapeLabel);
+        }
+        const incoming = store.getQuads(null, null, point, null)
+            .sort((l, r) => (0, neighborhood_api_1.sparqlOrder)(l.object, r.object));
+        if (queryTracker)
+            queryTracker.end(incoming, Date.now() - startTime);
+        return { outgoing, incoming };
+    }
+    /** Entities this DB could offer a WebApp's focus-node input, matched by
+     * id or by label.  Only the pages already loaded: this is typeahead over
+     * what the session has seen, not a search of all of Wikidata (which would
+     * be the wbsearchentities API, and asynchronous). */
+    function suggestFocusNodes(prefix, limit) {
+        const wanted = prefix.replace(/^(wd:|<?https?:\/\/\S*\/entity\/)/, "").toLowerCase();
+        const out = [];
+        // pages the caller supplied are what they came to validate, so offer
+        // them whether or not the walk has reached them yet
+        for (const id of new Set([...(options.entities || []), ...supplied.keys(), ...loaded])) {
+            const label = loaded.has(id)
+                ? labelOf(DataFactory.namedNode(NS.wd + id), "en")
+                : supplied.has(id) ? labelIn(supplied.get(id), id, "en") : null;
+            if (id.toLowerCase().startsWith(wanted) ||
+                (label !== null && label.toLowerCase().startsWith(wanted))) {
+                out.push({ label: NS.wd + id, detail: label || undefined, type: "class" });
+                if (out.length >= limit)
+                    break;
+            }
+        }
+        return out;
+    }
+    /** The label to show a reader of `language`.  Falling back through `mul`
+     * matters more on Wikidata than it looks: a name that reads the same in
+     * every language is now stored once as language-neutral `mul` rather than
+     * copied per language, so an entity can have 75 labels and no `en` one
+     * (Q42 is exactly this). */
+    function labelOf(term, language) {
+        const labels = store.getObjects(term, DataFactory.namedNode(RDFS_LABEL), null);
+        const inLanguage = (want) => labels.find(l => l.language === want);
+        const found = inLanguage(language.toLowerCase())
+            || inLanguage(language.toLowerCase().split("-")[0])
+            || inLanguage("mul");
+        return found ? found.value : labels.length > 0 ? labels[0].value : null;
+    }
+    return {
+        getNeighborhood,
+        getSubjects: () => store.getSubjects(null, null, null),
+        getPredicates: () => store.getPredicates(null, null, null),
+        getObjects: () => store.getObjects(null, null, null),
+        getQuads: (...args) => store.getQuads(...args),
+        get size() { return store.size; },
+        suggestFocusNodes,
+        labelOf,
+        loadedPages,
+        entityIri: (id) => NS.wd + id,
+        locateDocument,
+    };
+    /** This source's document is an entity page, so a host asking where the
+     * data was written gets the page located and converted -- the same
+     * side table a Turtle parser would hand back, over the same quads. */
+    function locateDocument(text) {
+        if (text.trim() === "")
+            return null;
+        let locations;
+        try {
+            locations = (0, json_locations_1.locateJson)(text);
+        }
+        catch (e) {
+            return null; // not JSON: some other pane of this source's, or nothing yet
+        }
+        // a converter of its own: this one records where everything came from
+        const locating = (0, wikibase_rdf_1.wikibaseRdfConverter)(DataFactory, {
+            conceptBase, dataBase,
+            repositoryName: options.repositoryName,
+            commonsMediaBase: options.commonsMediaBase,
+            commonsDataBase: options.commonsDataBase,
+            license: options.license,
+            locations,
+            siteInfo: siteId => {
+                if (siteInfo === null)
+                    siteInfo = siteInfoFromSitematrix(JSON.parse(getDoc("sitematrix", siteMatrixUrl)));
+                return siteInfo(siteId);
+            },
+        });
+        try {
+            return { text, quads: locating.entityToQuads(asEntityDoc(locations.value)),
+                provenance: locating.provenance, diagnostics: [] };
+        }
+        catch (e) {
+            return {
+                text, quads: [], provenance: { get: () => [], size: 0 },
+                diagnostics: [{ from: 0, to: Math.min(text.length, 1), severity: "error",
+                        message: "not an entity page: " + e.message }],
+            };
+        }
+    }
+    /** The pages this DB fetched, ready to be looked at: readably indented,
+     * one per entity a walk reached.  A host that offers to record what a
+     * validation fetched (the WebApp's slurp) hands each of these back as a
+     * document, so what was read can be edited and validated again. */
+    function loadedPages() {
+        const out = [];
+        for (const [id, text] of pageTexts) {
+            try {
+                out.push({ id, text: JSON.stringify(JSON.parse(text), null, 2) + "\n" });
+            }
+            catch (e) {
+                out.push({ id, text }); // unparseable: hand back what arrived
+            }
+        }
+        return out;
+    }
+}
+const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
+/** An entity page either as `Special:EntityData` serves it or as the entity
+ * alone, which is what someone hand-editing one tends to have. */
+function asEntityDoc(parsed) {
+    if (parsed && typeof parsed === "object" && parsed.entities)
+        return parsed;
+    if (parsed && typeof parsed === "object" && typeof parsed.id === "string")
+        return { entities: { [parsed.id]: parsed } };
+    throw Error(`expected {"entities": {...}} or an entity with an "id"`);
+}
+/** The label a JSON entity gives itself, through Wikidata's language-neutral
+ * "mul" -- see labelOf, which does the same over converted RDF. */
+function labelIn(doc, id, language) {
+    const labels = (doc.entities[id] || {}).labels || {};
+    const found = labels[language.toLowerCase()]
+        || labels[language.toLowerCase().split("-")[0]]
+        || labels.mul
+        || Object.values(labels)[0];
+    return found ? found.value : null;
+}
+exports.name = "neighborhood-wikidata";
+exports.label = "Wikidata";
+exports.description = "Implementation of @shexjs/neighborhood-api which synthesizes Wikidata's RDF from entity JSON pages";
+exports.capabilities = ["query", "translate"];
+/** A shape map may name the entities to validate rather than their IRIs:
+ *
+ *     QENTITIES "42 76"@START
+ *
+ * which this source reads as wd:Q42 and wd:Q76 -- the entities themselves,
+ * the things a schema about people or places is about.  (The pages they come
+ * from are `data:Q42`, which answer a different schema: a dataset with a
+ * revision and a modification date.)  Ids may be written with or without
+ * their leading letter, the pane they are typed into being a list of
+ * entities and nothing else. */
+exports.queryMapResolvers = [{
+        language: "http://www.w3.org/ns/shex#Extensions-qentities",
+        name: "QENTITIES",
+        description: "the focus nodes are the entities with these ids",
+        resolve: (lexical, db) => {
+            const iri = db.entityIri ||
+                ((id) => "http://www.wikidata.org/entity/" + id);
+            return lexical.trim().split(/\s+/).filter(word => word !== "").map(word => {
+                const id = /^[QPLM]/i.test(word) ? word[0].toUpperCase() + word.substring(1) : "Q" + word;
+                if (!/^[QPLM]\d+$/.test(id))
+                    throw Error(`"${word}" is not an entity id: QENTITIES takes ids like Q42, or bare numbers`);
+                return DataFactory.namedNode(iri(id));
+            });
+        },
+    }];
+exports.ctor = wikidataDB;
+/** What it takes to construct this DB, declared for hosts that offer several
+ * neighborhood implementations (STRAWMAN, see @shexjs/neighborhood-api). */
+/** What an entity page opened from scratch starts as: the shape of the
+ * thing, with the id to fill in and one empty statement group. */
+const ENTITY_TEMPLATE = JSON.stringify({
+    entities: {
+        Q0: {
+            type: "item",
+            id: "Q0",
+            labels: { en: { language: "en", value: "" } },
+            claims: {},
+        },
+    },
+}, null, 2) + "\n";
+exports.dbParams = [
+    { name: "base", selector: true, required: true,
+        description: "where entity pages live: <base><id>.json names each page " +
+            "(e.g. https://www.wikidata.org/wiki/Special:EntityData/ or a file: directory of captured pages)",
+        schema: { type: "string", format: "uri" },
+        cli: { option: "wikidata", typeLabel: "IRI" } },
+    { name: "sitematrix",
+        description: "where the site matrix lives (site id -> URL/language/group, needed for sitelink RDF); " +
+            "defaults to the wikidata API",
+        schema: { type: "string", format: "uri" },
+        cli: { option: "wikidata-sitematrix", typeLabel: "IRI" } },
+    { name: "cacheDir",
+        description: "keep fetched entity pages on disk here",
+        schema: { type: "string", format: "file-path" },
+        ui: { hidden: true }, // a browser has no disk to cache on
+        cli: { option: "wikidata-cache", typeLabel: "dir" } },
+    { name: "data", selector: true,
+        description: "the entities to look at, by id, separated by whitespace",
+        schema: { type: "array", items: { type: "string", contentMediaType: "text/plain" } },
+        // one list, so one pane: which entities are in play is a single thought
+        pane: { label: "entity ids", min: 1, max: 1 },
+        cli: { option: "wikidata-entities", typeLabel: "Q42 Q5 ..." } },
+    { name: "pages", selector: true,
+        description: "entity pages to believe instead of what the site serves, " +
+            "so an edit can be validated before it is made",
+        schema: { type: "array", items: { type: "string", format: "uri", contentMediaType: "application/json" } },
+        // as many as the user opens: what is being checked is a constellation
+        // of entities, and how many of them there are is theirs to say
+        pane: {
+            label: "entity JSON",
+            editor: { language: "json" },
+            min: 0, creatable: true,
+            template: ENTITY_TEMPLATE,
+            titleOf: (text) => {
+                try {
+                    return Object.keys(asEntityDoc(JSON.parse(text)).entities)[0] || null;
+                }
+                catch (e) {
+                    return null; // half-typed, or not an entity page
+                }
+            },
+        },
+        cli: { option: "wikidata-page", typeLabel: "file|URL" } },
+];
+function fromParams(params, queryTracker) {
+    return wikidataDB(queryTracker, {
+        entityDataUrl: params.base === undefined ? undefined : (id) => `${params.base}${id}.json`,
+        siteMatrixUrl: params.sitematrix,
+        cacheDir: params.cacheDir,
+        pages: params.pages,
+        entities: (params.data || []).join(" ").split(/\s+/).filter((id) => id !== ""),
+    });
+}
+/** Sort documents a host was handed into the panes they belong in: an
+ * entity page is a page, anything else is a list of ids -- and a page also
+ * says which entities it is about, so dropping one in fills the id list
+ * too.  A host with documents and no idea which parameter they are for
+ * (a manifest entry's `data`, a dropped file) asks this. */
+function distributeDocuments(texts) {
+    const ids = [];
+    const pages = [];
+    for (const text of texts) {
+        let doc = null;
+        try {
+            doc = asEntityDoc(JSON.parse(text));
+        }
+        catch (e) {
+            doc = null; // not a page: a list of ids, then
+        }
+        if (doc === null)
+            ids.push(...text.split(/\s+/).filter(id => id !== ""));
+        else {
+            // re-serialized so a downloaded page arrives readable rather than as
+            // one enormous line
+            pages.push(JSON.stringify(doc, null, 2) + "\n");
+            ids.push(...Object.keys(doc.entities));
+        }
+    }
+    return { data: [ids.join(" ")], pages };
+}
+/** `# Wikidata` on the first line means "synthesize entity pages rather
+ * than parsing me"; a URL after it points at another Wikibase instance. */
+const WIKIDATA_HEADER = /^([ \t]*#?[ \t]*Wikidata[ \t]*:?[ \t]*)(\S*)(.*)$/im;
+const KNOWN_BASES = [
+    { label: "https://www.wikidata.org/wiki/Special:EntityData/", detail: "Wikidata" },
+    { label: "https://test.wikidata.org/wiki/Special:EntityData/", detail: "Wikidata test instance" },
+    { label: "https://commons.wikimedia.org/wiki/Special:EntityData/", detail: "Wikimedia Commons" },
+];
+function claimPaneText(text) {
+    const m = text.match(WIKIDATA_HEADER);
+    if (!m || m.index !== 0)
+        return null;
+    return m[2] === "" ? {} : { base: m[2] }; // bare header: the default base
+}
+/** The pane's body is whatever was slurped back, so the host's Turtle
+ * carries it; this module describes its own header, and -- the part no host
+ * could supply -- completes entity IRIs from the labels of the pages the DB
+ * has actually loaded. */
+exports.paneEditor = {
+    language: "turtle",
+    tokens(text) {
+        const m = text.match(WIKIDATA_HEADER);
+        if (!m || m.index !== 0)
+            return [];
+        const base = m[2];
+        const tokens = [{ from: 0, to: m[1].length, style: "keyword" }];
+        if (base !== "")
+            tokens.push({ from: m[1].length, to: m[1].length + base.length,
+                style: isEntityDataBase(base) ? "link" : "invalid" });
+        return tokens;
+    },
+    lint(text) {
+        const m = text.match(WIKIDATA_HEADER);
+        if (!m || m.index !== 0)
+            return [];
+        const [from, to] = [m[1].length, m[1].length + m[2].length];
+        if (m[2] !== "" && !isEntityDataBase(m[2]))
+            return [{ from, to, severity: "error",
+                    message: `"${m[2]}" is not an http(s) or file URL; entity pages are fetched from ` +
+                        `<base><id>.json, so the base needs a trailing delimiter too` }];
+        return [];
+    },
+    complete(text, pos, ctx) {
+        const lineStart = text.lastIndexOf("\n", pos - 1) + 1;
+        const claimed = claimPaneText(text) !== null;
+        if (lineStart === 0 && !claimed)
+            return { from: 0, to: pos,
+                options: [{ label: "# Wikidata: ", type: "keyword",
+                        detail: "synthesize entity pages instead of parsing this pane" }] };
+        if (lineStart === 0 && claimed) {
+            // completing the base on the header line
+            const m = text.match(WIKIDATA_HEADER);
+            if (pos >= m[1].length)
+                return { from: m[1].length, to: m[1].length + m[2].length,
+                    options: KNOWN_BASES.map(b => (Object.assign(Object.assign({}, b), { type: "namespace" }))) };
+            return null;
+        }
+        // an entity IRI anywhere else: only this DB knows that Q42 is Douglas Adams
+        const db = ctx && ctx.db;
+        if (!db || typeof db.suggestFocusNodes !== "function")
+            return null;
+        const before = text.substring(lineStart, pos);
+        const word = before.match(/(?:<|wd:)?[A-Za-z]*\d*$/);
+        if (!word || word[0] === "")
+            return null;
+        const options = db.suggestFocusNodes(word[0].replace(/^</, ""), 20);
+        return options.length
+            ? { from: lineStart + word.index, to: pos, options }
+            : null;
+    },
+};
+function isEntityDataBase(base) {
+    return /^(https?|file):\/\/\S*[/=:]$/.test(base);
+}
+//# sourceMappingURL=neighborhood-wikidata.js.map
+
+/***/ },
+
+/***/ 4157
+(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+var __webpack_unused_export__;
+
+__webpack_unused_export__ = ({ value: true });
+__webpack_unused_export__ = __webpack_unused_export__ = exports.ei = exports.m$ = exports.CC = exports.u3 = exports.yx = exports.z1 = exports.Xn = exports.kl = exports.YH = exports.Xc = void 0;
+__webpack_unused_export__ = phpFloatStr;
+__webpack_unused_export__ = phpUrlencode;
+__webpack_unused_export__ = wfUrlencode;
+__webpack_unused_export__ = utf8Length;
+__webpack_unused_export__ = valueNodeHash;
+__webpack_unused_export__ = cleanTimeValue;
+exports.wikibaseRdfConverter = wikibaseRdfConverter;
+const md5_1 = __webpack_require__(17);
+exports.Xc = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+exports.YH = "http://www.w3.org/2001/XMLSchema#";
+exports.kl = "http://www.w3.org/2000/01/rdf-schema#";
+exports.Xn = "http://www.w3.org/2002/07/owl#";
+exports.z1 = "http://www.w3.org/2004/02/skos/core#";
+exports.yx = "http://schema.org/";
+exports.u3 = "http://www.w3.org/ns/prov#";
+exports.CC = "http://creativecommons.org/ns#";
+exports.m$ = "http://www.opengis.net/ont/geosparql#";
+exports.ei = "http://wikiba.se/ontology#";
+const CALENDAR_GREGORIAN = "http://www.wikidata.org/entity/Q1985727";
+const CALENDAR_JULIAN = "http://www.wikidata.org/entity/Q1985786";
+/** wikibase:quantityUnit for a unit of "1" (dimensionless). */
+const UNIT_ONE = "http://www.wikidata.org/entity/Q199";
+const EARTH = "http://www.wikidata.org/entity/Q2";
+/** Which member of a datavalue's `value` object a simple (truthy, `ps:`,
+ * `pq:`, `pr:`) arc's object is written as.  A value that is a plain string
+ * is its own member, and a globe coordinate is composed of several, so
+ * neither appears here. */
+const SIMPLE_FROM = {
+    time: "time",
+    quantity: "amount",
+    monolingualtext: "text",
+    "wikibase-entityid": "id",
+};
+// ── PHP compatibility ───────────────────────────────────────────────────────
+// The derived names above hash PHP serializations, so the byte-for-byte
+// quirks of PHP's formatting are part of the data model.
+/** PHP's default float rendering: up to 14 significant digits, trailing
+ * zeros dropped, exponent notation ("1.0E-5", capital E, always a signed
+ * exponent, mantissa always with a decimal point) outside [1e-4, 1e14). */
+function phpFloatStr(x) {
+    if (Number.isNaN(x))
+        return "NAN";
+    if (x === Infinity)
+        return "INF";
+    if (x === -Infinity)
+        return "-INF";
+    if (x === 0)
+        return Object.is(x, -0) ? "-0" : "0";
+    const neg = x < 0 ? "-" : "";
+    const a = Math.abs(x);
+    let [mant, expStr] = a.toExponential(13).split("e");
+    const exp = parseInt(expStr, 10);
+    if (mant.indexOf(".") !== -1)
+        mant = mant.replace(/0+$/, "").replace(/\.$/, "");
+    if (exp >= 14 || exp < -4) {
+        if (mant.indexOf(".") === -1)
+            mant += ".0";
+        return neg + mant + "E" + (exp < 0 ? "-" : "+") + Math.abs(exp);
+    }
+    let s = a.toPrecision(14);
+    if (s.indexOf(".") !== -1)
+        s = s.replace(/0+$/, "").replace(/\.$/, "");
+    return neg + s;
+}
+/** PHP rawurlencode: %XX for everything but A-Za-z0-9-_.~ */
+function phpUrlencode(s) {
+    return encodeURIComponent(s).replace(/[!'()*]/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase());
+}
+/** MediaWiki's wfUrlencode, used in page URLs: rawurlencode with the
+ * characters MediaWiki considers safe in titles put back. */
+function wfUrlencode(s) {
+    return phpUrlencode(s).replace(/%3B|%40|%24|%21|%2A|%28|%29|%2C|%2F|%7E|%3A/gi, m => decodeURIComponent(m));
+}
+/** How many bytes a string is in UTF-8, which is what PHP's serialization
+ * counts.  Not `Buffer.byteLength`: this runs in a browser too, where there
+ * is no Buffer -- and a length that is quietly wrong would move every hash
+ * that depends on it. */
+function utf8Length(text) {
+    let bytes = 0;
+    for (let i = 0; i < text.length; ++i) {
+        const code = text.charCodeAt(i);
+        if (code < 0x80)
+            bytes += 1;
+        else if (code < 0x800)
+            bytes += 2;
+        else if (code >= 0xd800 && code <= 0xdbff && i + 1 < text.length &&
+            (text.charCodeAt(i + 1) & 0xfc00) === 0xdc00) {
+            bytes += 4; // a surrogate pair is one 4-byte character
+            ++i;
+        }
+        else {
+            // a lone surrogate encodes as U+FFFD, which is 3 bytes either way
+            bytes += 3;
+        }
+    }
+    return bytes;
+}
+const utf8Len = utf8Length;
+/** PHP json_encode: like JSON.stringify but "/" is escaped. */
+const phpJson = (v) => JSON.stringify(v).replace(/\//g, "\\/");
+/** PHP serialize() of a string. */
+const phpStr = (s) => `s:${utf8Len(s)}:"${s}";`;
+/** PHP serialize() of a pre-7.4 Serializable object: the class wraps
+ * whatever its serialize() method returned. */
+const phpC = (cls, data) => `C:${cls.length}:"${cls}":${utf8Len(data)}:{${data}}`;
+const phpDecimal = (s) => phpC("DataValues\\DecimalValue", phpStr(s));
+/** The 32-hex name of the `wdv:` node for a complex datavalue. */
+function valueNodeHash(dv) {
+    const v = dv.value;
+    switch (dv.type) {
+        case "time":
+            return (0, md5_1.md5)(phpC("DataValues\\TimeValue", phpJson([v.time, v.timezone, v.before, v.after, v.precision, v.calendarmodel])));
+        case "quantity": {
+            const bounded = v.upperBound != null || v.lowerBound != null;
+            const data = bounded
+                ? `a:4:{i:0;${phpDecimal(v.amount)}i:1;${phpStr(v.unit)}` +
+                    `i:2;${phpDecimal(v.upperBound)}i:3;${phpDecimal(v.lowerBound)}}`
+                : `a:2:{i:0;${phpDecimal(v.amount)}i:1;${phpStr(v.unit)}}`;
+            return (0, md5_1.md5)(phpC(bounded ? "DataValues\\QuantityValue" : "DataValues\\UnboundedQuantityValue", data));
+        }
+        case "globecoordinate":
+            return (0, md5_1.md5)(`${phpFloatStr(v.latitude)}|${phpFloatStr(v.longitude)}|` +
+                `${v.precision == null ? "" : phpFloatStr(v.precision)}|${v.globe}`);
+        default:
+            throw Error(`no value node for datavalue type ${dv.type}`);
+    }
+}
+// ── time cleaning ───────────────────────────────────────────────────────────
+// Port of Wikibase's DateTimeValueCleaner and JulianDateTimeValueCleaner
+// (including PHP ext/calendar's Julian/Gregorian SDN conversions), xsd11 mode.
+const PRECISION_YEAR = 9, PRECISION_MONTH = 10, PRECISION_DAY = 11;
+function parseDateValue(dateValue) {
+    const t = dateValue.indexOf("T");
+    if (t === -1)
+        return null;
+    const date = dateValue.substring(0, t), time = dateValue.substring(t + 1);
+    const minus = date[0] === "-" ? "-" : "";
+    const parts = date.substring(1).split("-");
+    if (parts.length < 3)
+        return null;
+    const y = parts[0].replace(/^0+/, "");
+    let m = parseInt(parts[1], 10) || 0;
+    let d = parseInt(parts[2], 10) || 0;
+    if (m <= 0)
+        m = 1;
+    if (m >= 12)
+        m = 12;
+    if (d <= 0)
+        d = 1;
+    if (y === "")
+        return null; // year 0 is invalid (T94064)
+    return { minus, y, m, d, time };
+}
+const GREGORIAN_MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+function gregorianDaysInMonth(m, y) {
+    if (m !== 2)
+        return GREGORIAN_MONTH_DAYS[m - 1];
+    return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0 ? 29 : 28;
+}
+function cleanupGregorianValue(dateValue, precision) {
+    const parsed = parseDateValue(dateValue);
+    if (parsed === null)
+        return null;
+    let { minus, y, m, d } = parsed;
+    if (precision <= PRECISION_YEAR) {
+        d = 1;
+        m = 1;
+    }
+    else if (precision === PRECISION_MONTH) {
+        d = 1;
+    }
+    if (!(d <= 28 || (m !== 2 && d <= 30))) {
+        // clamp the day to the last day in the month, over a year value squeezed
+        // into the range PHP's calendar functions accept
+        let safeYear;
+        if (minus && parseFloat(y) >= 4714)
+            safeYear = -4713;
+        else
+            safeYear = (y.length >= 10 ? parseInt("1" + y.substring(y.length - 5), 10) : parseInt(y, 10))
+                * (minus ? -1 : 1);
+        const max = gregorianDaysInMonth(m, safeYear);
+        if (d > max)
+            d = max;
+    }
+    if (precision >= PRECISION_YEAR && minus) {
+        // XSD 1.1 has a year 0 (1 BCE), so BCE years shift up by one
+        y = String(Number(y) - 1);
+        if (y === "0")
+            minus = "";
+    }
+    return `${minus}${y.padStart(4, "0")}-${String(m).padStart(2, "0")}-` +
+        `${String(d).padStart(2, "0")}T${parsed.time}`;
+}
+/** PHP ext/calendar JulianToSdn. */
+function julianToSdn(month, day, year) {
+    if (year === 0 || month < 1 || month > 12 || day < 1 || day > 31)
+        return 0;
+    let y = year < 0 ? year + 4801 : year + 4800;
+    let m;
+    if (month > 2) {
+        m = month - 3;
+    }
+    else {
+        m = month + 9;
+        y--;
+    }
+    return Math.trunc(y * 1461 / 4) + Math.trunc((m * 153 + 2) / 5) + day - 32083;
+}
+/** PHP ext/calendar SdnToGregorian. */
+function sdnToGregorian(sdn) {
+    if (sdn <= 0)
+        return null;
+    let temp = (sdn + 32045) * 4 - 1;
+    const century = Math.trunc(temp / 146097);
+    temp = Math.trunc(temp % 146097 / 4) * 4 + 3;
+    let y = century * 100 + Math.trunc(temp / 1461);
+    const dayOfYear = Math.trunc(temp % 1461 / 4) + 1;
+    temp = dayOfYear * 5 - 3;
+    let m = Math.trunc(temp / 153);
+    const d = Math.trunc(temp % 153 / 5) + 1;
+    if (m < 10) {
+        m += 3;
+    }
+    else {
+        y++;
+        m -= 9;
+    }
+    y -= 4800;
+    if (y <= 0)
+        y--;
+    return { y, m, d };
+}
+function julianDateValue(dateValue) {
+    const parsed = parseDateValue(dateValue);
+    if (parsed === null)
+        return null;
+    const y = parsed.minus ? -Number(parsed.y) : Number(parsed.y);
+    if (!Number.isSafeInteger(y) || y < -4713 || y > 1465072)
+        return null;
+    const sdn = julianToSdn(parsed.m, parsed.d, y);
+    if (sdn === 0)
+        return null;
+    const g = sdnToGregorian(sdn);
+    if (g === null)
+        return null;
+    let gy = g.y;
+    if (gy < 0)
+        gy++; // XSD 1.1 year numbering again
+    return `${gy < 0 ? "-" : ""}${String(Math.abs(gy)).padStart(4, "0")}-` +
+        `${String(g.m).padStart(2, "0")}-${String(g.d).padStart(2, "0")}T${parsed.time}`;
+}
+/** xsd:dateTime lexical form of a Wikibase time value, or null when there
+ * isn't one (an unrecognized calendar at day precision). */
+function cleanTimeValue(v) {
+    if (v.calendarmodel === CALENDAR_JULIAN && v.precision >= PRECISION_DAY)
+        // A Julian date PHP can't convert is assumed to have been meant Gregorian.
+        return julianDateValue(v.time) || cleanupGregorianValue(v.time, v.precision);
+    if (v.calendarmodel === CALENDAR_GREGORIAN || v.precision < PRECISION_DAY)
+        return cleanupGregorianValue(v.time, v.precision);
+    return null;
+}
+// ── the converter ───────────────────────────────────────────────────────────
+/** Wikibase datatype -> wikibase:propertyType local name:
+ * "wikibase-item" -> "WikibaseItem". */
+function ontologyType(datatype) {
+    return datatype.split("-").map(p => p.charAt(0).toUpperCase() + p.substring(1)).join("");
+}
+/** Datatypes whose simple values are IRIs; the rest are literals.  Decides
+ * owl:ObjectProperty vs owl:DatatypeProperty on property pages. */
+const OBJECT_DATATYPES = new Set([
+    "wikibase-item", "wikibase-property", "wikibase-lexeme", "wikibase-form",
+    "wikibase-sense", "url", "commonsMedia", "geo-shape", "tabular-data",
+    "entity-schema",
+]);
+function wikibaseRdfConverter(dataFactory, options = {}) {
+    const cb = options.conceptBase || "http://www.wikidata.org/";
+    const dataBase = options.dataBase || "https://www.wikidata.org/wiki/Special:EntityData/";
+    const repositoryName = options.repositoryName === undefined ? "wikidata" : options.repositoryName;
+    const commonsMediaBase = options.commonsMediaBase || "http://commons.wikimedia.org/wiki/Special:FilePath/";
+    const commonsDataBase = options.commonsDataBase || "http://commons.wikimedia.org/data/main/";
+    const license = options.license || "http://creativecommons.org/publicdomain/zero/1.0/";
+    const DF = dataFactory;
+    const NS = {
+        wd: cb + "entity/",
+        wds: cb + "entity/statement/",
+        wdv: cb + "value/",
+        wdref: cb + "reference/",
+        wdt: cb + "prop/direct/",
+        wdtn: cb + "prop/direct-normalized/",
+        p: cb + "prop/",
+        ps: cb + "prop/statement/",
+        psv: cb + "prop/statement/value/",
+        psn: cb + "prop/statement/value-normalized/",
+        pq: cb + "prop/qualifier/",
+        pqv: cb + "prop/qualifier/value/",
+        pqn: cb + "prop/qualifier/value-normalized/",
+        pr: cb + "prop/reference/",
+        prv: cb + "prop/reference/value/",
+        prn: cb + "prop/reference/value-normalized/",
+        wdno: cb + "prop/novalue/",
+    };
+    /** simple-value and value-node namespaces for each place a snak can sit */
+    const FAMILIES = {
+        direct: { simple: NS.wdt, value: null },
+        statement: { simple: NS.ps, value: NS.psv },
+        qualifier: { simple: NS.pq, value: NS.pqv },
+        reference: { simple: NS.pr, value: NS.prv },
+    };
+    const iri = (v) => DF.namedNode(v);
+    const a = iri(exports.Xc + "type");
+    const string = (v) => DF.literal(v);
+    // language tags are case-insensitive; lowercase is what an N3-parsed graph
+    // carries, so emit that (schema:inLanguage keeps the canonical case, being
+    // an ordinary string)
+    const langLit = (v, lang) => DF.literal(v, lang.toLowerCase());
+    const typed = (v, dt) => DF.literal(v, iri(dt));
+    const integer = (v) => typed(String(v), exports.YH + "integer");
+    /** quad -> utterances, keyed canonically so that two equal quads (an RDF
+     * set has one, a document may say it twice) share an entry */
+    const provenance = new Map();
+    const quadKey = (q) => [q.subject, q.predicate, q.object].map(term => term.termType === "BlankNode" ? "_:" + term.value
+        : term.termType === "Literal"
+            ? JSON.stringify([term.value, term.language,
+                term.datatype && term.datatype.value])
+            : "<" + term.value + ">").join(" ");
+    const provenanceIndex = {
+        get: (quad) => provenance.get(quadKey(quad)) || [],
+        get size() { return provenance.size; },
+    };
+    function entityToQuads(doc, requestedId) {
+        const ids = Object.keys(doc.entities);
+        if (ids.length !== 1)
+            throw Error(`expected one entity in the page, got [${ids.join(", ")}]`);
+        const entity = doc.entities[ids[0]];
+        const id = entity.id || ids[0];
+        const quads = [];
+        const located = options.locations;
+        /** where the quads being emitted right now were written: set by each
+         * emitter as it descends, so `add` doesn't have to be told every time */
+        let where = {};
+        const at = (path) => path && located ? located.at(path) : null;
+        const nameAt = (path) => path && located ? located.nameAt(path) : null;
+        const add = (s, p, o) => {
+            const quad = DF.quad(s, p === "a" ? a : iri(p), o);
+            quads.push(quad);
+            if (!located)
+                return;
+            // a member's *name* is the nearest thing JSON has to a predicate; a
+            // value that is an object is its whole {...}
+            const spans = (range) => range ? [range] : [];
+            const utterance = {
+                quad,
+                subject: spans(at(where.s)),
+                predicate: spans(nameAt(where.p) || at(where.p)),
+                object: spans(at(where.o)),
+                graph: [],
+            };
+            const key = quadKey(quad);
+            const had = provenance.get(key);
+            if (had)
+                had.push(utterance);
+            else
+                provenance.set(key, [utterance]);
+        };
+        /** run `emit` with these paths as the source of what it emits */
+        const from = (paths, emit) => {
+            const outer = where;
+            where = paths;
+            try {
+                emit();
+            }
+            finally {
+                where = outer;
+            }
+        };
+        /** an arc a member of the value object states: that member names it and
+         * holds its object, so `wikibase:timePrecision 11` marks "precision": 11
+         * rather than the whole value again */
+        const said = (name, emit) => {
+            const V = where.o;
+            from({ s: where.s, p: V && V.concat(name), o: V && V.concat(name) }, emit);
+        };
+        const wd = iri(NS.wd + id);
+        /** where this entity is in the page: everything below is relative */
+        const ENTITY = ["entities", id];
+        // an entity said as a subject is its "id", the way a Turtle subject is
+        // the term that names it -- not the whole {...}, which is the document
+        const ID = ENTITY.concat("id");
+        where = { s: ID, o: ENTITY };
+        const COMPLEX_VALUES = {
+            time: emitTimeValueNode,
+            quantity: emitQuantityValueNode,
+            globecoordinate: emitGlobeValueNode,
+        };
+        if (requestedId !== undefined && requestedId !== id)
+            // the page redirected; WDQS models redirects the same way
+            add(iri(NS.wd + requestedId), exports.Xn + "sameAs", wd);
+        emitDataHeader();
+        emitEntity();
+        return quads;
+        function emitDataHeader() {
+            const data = iri(dataBase + id);
+            add(data, "a", iri(exports.yx + "Dataset"));
+            add(data, exports.yx + "about", wd);
+            add(data, exports.CC + "license", iri(license));
+            add(data, exports.yx + "softwareVersion", string("1.0.0"));
+            if (entity.lastrevid !== undefined)
+                add(data, exports.yx + "version", integer(entity.lastrevid));
+            if (entity.modified !== undefined)
+                add(data, exports.yx + "dateModified", typed(entity.modified, exports.YH + "dateTime"));
+            const statements = Object.values(entity.claims || {});
+            add(data, exports.ei + "statements", integer(statements.reduce((n, sts) => n + sts.length, 0)));
+            if (entity.type === "item") {
+                add(data, exports.ei + "sitelinks", integer(Object.keys(entity.sitelinks || {}).length));
+                add(data, exports.ei + "identifiers", integer(statements.reduce((n, sts) => n + sts.filter(st => st.mainsnak.datatype === "external-id").length, 0)));
+            }
+        }
+        function emitEntity() {
+            switch (entity.type) {
+                case "item":
+                    add(wd, "a", iri(exports.ei + "Item"));
+                    break;
+                case "property":
+                    add(wd, "a", iri(exports.ei + "Property"));
+                    emitPropertyOntology();
+                    break;
+                default:
+                    throw Error(`entity type "${entity.type}" (${id}) is not supported yet`);
+            }
+            emitTerms();
+            emitSitelinks();
+            for (const [pid, statements] of Object.entries(entity.claims || {}))
+                emitStatementGroup(pid, statements);
+        }
+        function emitTerms() {
+            for (const [key, term] of Object.entries(entity.labels || {}))
+                from({ s: ID, p: ENTITY.concat("labels", key), o: ENTITY.concat("labels", key, "value") }, () => {
+                    add(wd, exports.kl + "label", langLit(term.value, term.language));
+                    add(wd, exports.z1 + "prefLabel", langLit(term.value, term.language));
+                    add(wd, exports.yx + "name", langLit(term.value, term.language));
+                });
+            for (const [key, term] of Object.entries(entity.descriptions || {}))
+                from({ s: ID, p: ENTITY.concat("descriptions", key),
+                    o: ENTITY.concat("descriptions", key, "value") }, () => add(wd, exports.yx + "description", langLit(term.value, term.language)));
+            for (const [key, aliases] of Object.entries(entity.aliases || {}))
+                aliases.forEach((term, i) => from({ s: ID, p: ENTITY.concat("aliases", key),
+                    o: ENTITY.concat("aliases", key, i, "value") }, () => add(wd, exports.z1 + "altLabel", langLit(term.value, term.language))));
+        }
+        function emitSitelinks() {
+            const sitelinks = Object.values(entity.sitelinks || {});
+            if (sitelinks.length === 0)
+                return;
+            if (!options.siteInfo)
+                throw Error(`can't convert ${id}'s sitelinks without a siteInfo option ` +
+                    `(the page names sites like "${sitelinks[0].site}" but the RDF needs their URLs)`);
+            for (const { site, title, badges } of sitelinks) {
+                where = { s: ENTITY.concat("sitelinks", site),
+                    p: ENTITY.concat("sitelinks", site),
+                    o: ENTITY.concat("sitelinks", site) };
+                const info = options.siteInfo(site);
+                if (!info)
+                    throw Error(`unknown site "${site}" in ${id}'s sitelinks`);
+                const article = iri(info.url + "/wiki/" + wfUrlencode(title.replace(/ /g, "_")));
+                const home = info.url + "/";
+                add(article, "a", iri(exports.yx + "Article"));
+                add(article, exports.yx + "about", wd);
+                add(article, exports.yx + "inLanguage", string(info.language));
+                add(article, exports.yx + "isPartOf", iri(home));
+                add(article, exports.yx + "name", langLit(title, info.language));
+                for (const badge of badges || [])
+                    add(article, exports.ei + "badge", iri(NS.wd + badge));
+                add(iri(home), exports.ei + "wikiGroup", string(info.group));
+            }
+            where = { s: ID, o: ENTITY };
+        }
+        function emitPropertyOntology() {
+            const dt = entity.datatype;
+            const propertyKind = OBJECT_DATATYPES.has(dt) ? "ObjectProperty" : "DatatypeProperty";
+            add(wd, exports.ei + "propertyType", iri(exports.ei + ontologyType(dt)));
+            const roles = [
+                ["directClaim", NS.wdt], ["claim", NS.p],
+                ["statementProperty", NS.ps], ["statementValue", NS.psv],
+                ["qualifier", NS.pq], ["qualifierValue", NS.pqv],
+                ["reference", NS.pr], ["referenceValue", NS.prv],
+                ["novalue", NS.wdno],
+            ];
+            // normalization applies to external identifiers (formatter IRIs) and
+            // quantities (unit conversion); wdtn: holds IRIs for the former,
+            // converted amounts for the latter
+            const normalizedKind = dt === "external-id" ? "ObjectProperty"
+                : dt === "quantity" ? "DatatypeProperty" : null;
+            if (normalizedKind !== null)
+                roles.push(["directClaimNormalized", NS.wdtn], ["statementValueNormalized", NS.psn], ["qualifierValueNormalized", NS.pqn], ["referenceValueNormalized", NS.prn]);
+            for (const [role, ns] of roles)
+                add(wd, exports.ei + role, iri(ns + id));
+            for (const ns of [NS.p, NS.psv, NS.pqv, NS.prv])
+                add(iri(ns + id), "a", iri(exports.Xn + "ObjectProperty"));
+            for (const ns of [NS.wdt, NS.ps, NS.pq, NS.pr])
+                add(iri(ns + id), "a", iri(exports.Xn + propertyKind));
+            if (normalizedKind !== null) {
+                for (const ns of [NS.psn, NS.pqn, NS.prn])
+                    add(iri(ns + id), "a", iri(exports.Xn + "ObjectProperty"));
+                add(iri(NS.wdtn + id), "a", iri(exports.Xn + normalizedKind));
+            }
+            const restriction = DF.blankNode((0, md5_1.md5)(`owl:complementOf-${repositoryName}-${id}`));
+            add(iri(NS.wdno + id), "a", iri(exports.Xn + "Class"));
+            add(iri(NS.wdno + id), exports.Xn + "complementOf", restriction);
+            add(restriction, "a", iri(exports.Xn + "Restriction"));
+            add(restriction, exports.Xn + "onProperty", iri(NS.wdt + id));
+            add(restriction, exports.Xn + "someValuesFrom", iri(exports.Xn + "Thing"));
+        }
+        function emitStatementGroup(pid, statements) {
+            // "truthy" wdt: arcs reflect only the best statements of a property:
+            // the preferred ones, or all the normal ones when nothing is preferred
+            const bestRank = statements.some(st => st.rank === "preferred") ? "preferred" : "normal";
+            statements.forEach((st, index) => {
+                const CLAIM = ENTITY.concat("claims", pid, index);
+                const stLName = st.id.replace("$", "-");
+                const wds = iri(NS.wds + stLName);
+                // the statement node is that claim's whole object, the way a blank
+                // node is its whole [ ... ]
+                from({ s: ID, p: ENTITY.concat("claims", pid), o: CLAIM }, () => add(wd, NS.p + pid, wds));
+                from({ s: CLAIM, p: CLAIM, o: CLAIM }, () => {
+                    add(wds, "a", iri(exports.ei + "Statement"));
+                    if (st.rank === bestRank)
+                        add(wds, "a", iri(exports.ei + "BestRank"));
+                });
+                from({ s: CLAIM, p: CLAIM.concat("rank"), o: CLAIM.concat("rank") }, () => add(wds, exports.ei + "rank", iri(exports.ei + st.rank.charAt(0).toUpperCase() + st.rank.substring(1) + "Rank")));
+                const PROPERTY = ENTITY.concat("claims", pid);
+                emitSnak(wds, stLName, st.mainsnak, "statement", CLAIM.concat("mainsnak"), CLAIM, PROPERTY);
+                if (st.rank === bestRank)
+                    emitSnak(wd, stLName, st.mainsnak, "direct", CLAIM.concat("mainsnak"), ID, PROPERTY);
+                for (const [qid, snaks] of Object.entries(st.qualifiers || {}))
+                    snaks.forEach((snak, qi) => emitSnak(wds, stLName, snak, "qualifier", CLAIM.concat("qualifiers", qid, qi), CLAIM, CLAIM.concat("qualifiers", qid)));
+                (st.references || []).forEach((ref, ri) => {
+                    const REF = CLAIM.concat("references", ri);
+                    const wdref = iri(NS.wdref + ref.hash);
+                    from({ s: CLAIM, p: REF, o: REF }, () => {
+                        add(wds, exports.u3 + "wasDerivedFrom", wdref);
+                        add(wdref, "a", iri(exports.ei + "Reference"));
+                    });
+                    for (const [rid, snaks] of Object.entries(ref.snaks || {}))
+                        snaks.forEach((snak, si) => emitSnak(wdref, ref.hash, snak, "reference", REF.concat("snaks", rid, si), REF, REF.concat("snaks", rid)));
+                });
+            });
+        }
+        /** One snak onto `subject`: the simple value in the family's namespace,
+         * plus (except for truthy wdt:) the wdv: node for structured values. */
+        function emitSnak(subject, parentLName, snak, family, SNAK, SUBJECT, PROPERTY) {
+            const { simple, value } = FAMILIES[family];
+            const pid = snak.property;
+            const VALUE = SNAK && SNAK.concat("datavalue", "value");
+            // the property is named by the member that groups these snaks -- the
+            // "P569" of claims, of qualifiers, of a reference's snaks
+            where = { s: SUBJECT, p: PROPERTY, o: VALUE };
+            switch (snak.snaktype) {
+                case "value": {
+                    const term = simpleValueTerm(snak.datavalue, snak.datatype);
+                    if (term !== null)
+                        // a simple arc's object is one member of the value: the date in a
+                        // time, the number in a quantity.  Only a value with no one member
+                        // behind it -- a coordinate, made of two -- is the whole object.
+                        from(Object.assign(Object.assign({}, where), { o: SIMPLE_FROM[snak.datavalue.type]
+                                ? VALUE && VALUE.concat(SIMPLE_FROM[snak.datavalue.type])
+                                : VALUE }), () => add(subject, simple + pid, term));
+                    if (value !== null && snak.datavalue.type in COMPLEX_VALUES) {
+                        const node = iri(NS.wdv + valueNodeHash(snak.datavalue));
+                        add(subject, value + pid, node);
+                        // the value node's own arcs come from inside that value object
+                        from({ s: VALUE, p: VALUE, o: VALUE }, () => COMPLEX_VALUES[snak.datavalue.type](node, snak.datavalue.value));
+                    }
+                    break;
+                }
+                case "somevalue":
+                    // an unknown value is a blank node; the label is stable across
+                    // serializations (md5 of parent + namespaces + snak hash)
+                    add(subject, simple + pid, DF.blankNode((0, md5_1.md5)(`${parentLName}-${simple}-${NS.wdv}-${snak.hash}`)));
+                    break;
+                case "novalue":
+                    add(subject, "a", iri(NS.wdno + pid));
+                    break;
+                default:
+                    throw Error(`unknown snak type "${snak.snaktype}" on ${id} ${pid}`);
+            }
+        }
+        function simpleValueTerm(dv, datatype) {
+            const v = dv.value;
+            switch (dv.type) {
+                case "wikibase-entityid":
+                    return iri(NS.wd + v.id);
+                case "string":
+                    switch (datatype) {
+                        case "url": return iri(v);
+                        case "commonsMedia": return iri(commonsMediaBase + phpUrlencode(v));
+                        case "geo-shape":
+                        case "tabular-data": return iri(commonsDataBase + wfUrlencode(v.replace(/ /g, "_")));
+                        default: return string(v); // string, external-id, math, musical-notation ...
+                    }
+                case "monolingualtext":
+                    return langLit(v.text, v.language);
+                case "time": {
+                    const cleaned = cleanTimeValue(v);
+                    return cleaned === null ? null : typed(cleaned, exports.YH + "dateTime");
+                }
+                case "quantity":
+                    return typed(v.amount, exports.YH + "decimal");
+                case "globecoordinate":
+                    return typed((v.globe === EARTH ? "" : `<${v.globe}> `) +
+                        `Point(${phpFloatStr(v.longitude)} ${phpFloatStr(v.latitude)})`, exports.m$ + "wktLiteral");
+                default:
+                    throw Error(`unknown datavalue type "${dv.type}" (datatype ${datatype}) on ${id}`);
+            }
+        }
+        function emitTimeValueNode(node, v) {
+            add(node, "a", iri(exports.ei + "TimeValue"));
+            const cleaned = cleanTimeValue(v);
+            if (cleaned !== null)
+                said("time", () => add(node, exports.ei + "timeValue", typed(cleaned, exports.YH + "dateTime")));
+            said("precision", () => add(node, exports.ei + "timePrecision", integer(v.precision)));
+            said("timezone", () => add(node, exports.ei + "timeTimezone", integer(v.timezone)));
+            said("calendarmodel", () => add(node, exports.ei + "timeCalendarModel", iri(v.calendarmodel)));
+        }
+        function emitQuantityValueNode(node, v) {
+            add(node, "a", iri(exports.ei + "QuantityValue"));
+            said("amount", () => add(node, exports.ei + "quantityAmount", typed(v.amount, exports.YH + "decimal")));
+            if (v.upperBound != null)
+                said("upperBound", () => add(node, exports.ei + "quantityUpperBound", typed(v.upperBound, exports.YH + "decimal")));
+            if (v.lowerBound != null)
+                said("lowerBound", () => add(node, exports.ei + "quantityLowerBound", typed(v.lowerBound, exports.YH + "decimal")));
+            said("unit", () => add(node, exports.ei + "quantityUnit", iri(v.unit === "1" ? UNIT_ONE : v.unit)));
+            // wikibase:quantityNormalized needs unit conversion tables; see the
+            // module comment
+        }
+        function emitGlobeValueNode(node, v) {
+            add(node, "a", iri(exports.ei + "GlobecoordinateValue"));
+            said("latitude", () => add(node, exports.ei + "geoLatitude", typed(phpFloatStr(v.latitude), exports.YH + "double")));
+            said("longitude", () => add(node, exports.ei + "geoLongitude", typed(phpFloatStr(v.longitude), exports.YH + "double")));
+            if (v.precision != null)
+                said("precision", () => add(node, exports.ei + "geoPrecision", typed(phpFloatStr(v.precision), exports.YH + "double")));
+            said("globe", () => add(node, exports.ei + "geoGlobe", iri(v.globe)));
+        }
+    }
+    return { entityToQuads, namespaces: NS, provenance: provenanceIndex };
+}
+__webpack_unused_export__ = "wikibase-rdf";
+__webpack_unused_export__ = "Wikibase entity JSON pages to WDQS-flavor RDF";
+//# sourceMappingURL=wikibase-rdf.js.map
 
 /***/ },
 
@@ -22049,15 +23880,15 @@ const { JisonParser, o } = __webpack_require__(5546);
 class ShapeMapJisonParser extends JisonParser {
     constructor(yy = {}, lexer = new ShapeMapJisonLexer(yy)) {
         super(yy, lexer);
-        this.symbols_ = {"error":2,"shapeMap":3,"EOF":4,"pair":5,"Q_O_QGT_COMMA_E_S_Qpair_E_C_E_Star":6,"QGT_COMMA_E_Opt":7,"O_QGT_COMMA_E_S_Qpair_E_C":8,"GT_COMMA":9,"nodeSelector":10,"statusAndShape":11,"Qreason_E_Opt":12,"QjsonAttributes_E_Opt":13,"reason":14,"jsonAttributes":15,"GT_AT":16,"Qstatus_E_Opt":17,"shapeSelector":18,"ATSTART":19,"ATPNAME_NS":20,"ATPNAME_LN":21,"status":22,"objectTerm":23,"triplePattern":24,"IT_SPARQL":25,"string":26,"nodeIri":27,"shapeIri":28,"START":29,"subjectTerm":30,"BLANK_NODE_LABEL":31,"literal":32,"GT_LCURLEY":33,"IT_FOCUS":34,"nodePredicate":35,"O_QobjectTerm_E_Or_QIT___E_C":36,"GT_RCURLEY":37,"O_QsubjectTerm_E_Or_QIT___E_C":38,"IT__":39,"GT_NOT":40,"GT_OPT":41,"GT_DIVIDE":42,"GT_DOLLAR":43,"O_QAPPINFO_COLON_E_Or_QAPPINFO_SPACE_COLON_E_C":44,"jsonValue":45,"APPINFO_COLON":46,"APPINFO_SPACE_COLON":47,"IT_false":48,"IT_null":49,"IT_true":50,"jsonObject":51,"jsonArray":52,"INTEGER":53,"DECIMAL":54,"DOUBLE":55,"STRING_LITERAL2":56,"Q_O_QjsonMember_E_S_QGT_COMMA_E_S_QjsonMember_E_Star_C_E_Opt":57,"O_QGT_COMMA_E_S_QjsonMember_E_C":58,"jsonMember":59,"Q_O_QGT_COMMA_E_S_QjsonMember_E_C_E_Star":60,"O_QjsonMember_E_S_QGT_COMMA_E_S_QjsonMember_E_Star_C":61,"STRING_LITERAL2_COLON":62,"GT_LBRACKET":63,"Q_O_QjsonValue_E_S_QGT_COMMA_E_S_QjsonValue_E_Star_C_E_Opt":64,"GT_RBRACKET":65,"O_QGT_COMMA_E_S_QjsonValue_E_C":66,"Q_O_QGT_COMMA_E_S_QjsonValue_E_C_E_Star":67,"O_QjsonValue_E_S_QGT_COMMA_E_S_QjsonValue_E_Star_C":68,"rdfLiteral":69,"numericLiteral":70,"booleanLiteral":71,"Q_O_QLANGTAG_E_Or_QGT_DTYPE_E_S_QnodeIri_E_C_E_Opt":72,"O_QLANGTAG_E_Or_QGT_DTYPE_E_S_QnodeIri_E_C":73,"LANGTAG":74,"GT_DTYPE":75,"STRING_LITERAL1":76,"STRING_LITERAL_LONG1":77,"STRING_LITERAL_LONG2":78,"IT_a":79,"IRIREF":80,"PNAME_LN":81,"PNAME_NS":82,"$accept":0,"$end":1};
-        this.terminals_ = {2:"error",4:"EOF",9:"GT_COMMA",16:"GT_AT",19:"ATSTART",20:"ATPNAME_NS",21:"ATPNAME_LN",25:"IT_SPARQL",29:"START",31:"BLANK_NODE_LABEL",33:"GT_LCURLEY",34:"IT_FOCUS",37:"GT_RCURLEY",39:"IT__",40:"GT_NOT",41:"GT_OPT",42:"GT_DIVIDE",43:"GT_DOLLAR",46:"APPINFO_COLON",47:"APPINFO_SPACE_COLON",48:"IT_false",49:"IT_null",50:"IT_true",53:"INTEGER",54:"DECIMAL",55:"DOUBLE",56:"STRING_LITERAL2",62:"STRING_LITERAL2_COLON",63:"GT_LBRACKET",65:"GT_RBRACKET",74:"LANGTAG",75:"GT_DTYPE",76:"STRING_LITERAL1",77:"STRING_LITERAL_LONG1",78:"STRING_LITERAL_LONG2",79:"IT_a",80:"IRIREF",81:"PNAME_LN",82:"PNAME_NS"};
-        this.productions_ = [0,[3,1],[3,4],[8,2],[6,0],[6,2],[7,0],[7,1],[5,4],[12,0],[12,1],[13,0],[13,1],[11,3],[11,1],[11,1],[11,1],[17,0],[17,1],[10,1],[10,1],[10,2],[10,2],[18,1],[18,1],[30,1],[30,1],[23,1],[23,1],[24,5],[24,5],[36,1],[36,1],[38,1],[38,1],[22,1],[22,1],[14,2],[15,3],[44,1],[44,1],[45,1],[45,1],[45,1],[45,1],[45,1],[45,1],[45,1],[45,1],[45,1],[51,3],[58,2],[60,0],[60,2],[61,2],[57,0],[57,1],[59,2],[52,3],[66,2],[67,0],[67,2],[68,2],[64,0],[64,1],[32,1],[32,1],[32,1],[70,1],[70,1],[70,1],[69,2],[73,1],[73,2],[72,0],[72,1],[71,1],[71,1],[26,1],[26,1],[26,1],[26,1],[35,1],[35,1],[27,1],[27,1],[27,1],[27,1],[28,1],[28,1],[28,1],[28,1]];
+        this.symbols_ = {"error":2,"shapeMap":3,"EOF":4,"pair":5,"Q_O_QGT_COMMA_E_S_Qpair_E_C_E_Star":6,"QGT_COMMA_E_Opt":7,"O_QGT_COMMA_E_S_Qpair_E_C":8,"GT_COMMA":9,"nodeSelector":10,"statusAndShape":11,"Qreason_E_Opt":12,"QjsonAttributes_E_Opt":13,"reason":14,"jsonAttributes":15,"GT_AT":16,"Qstatus_E_Opt":17,"shapeSelector":18,"ATSTART":19,"ATPNAME_NS":20,"ATPNAME_LN":21,"status":22,"objectTerm":23,"triplePattern":24,"IT_SPARQL":25,"string":26,"EXTENSION_NAME":27,"nodeIri":28,"shapeIri":29,"START":30,"subjectTerm":31,"BLANK_NODE_LABEL":32,"literal":33,"GT_LCURLEY":34,"IT_FOCUS":35,"nodePredicate":36,"O_QobjectTerm_E_Or_QIT___E_C":37,"GT_RCURLEY":38,"O_QsubjectTerm_E_Or_QIT___E_C":39,"IT__":40,"GT_NOT":41,"GT_OPT":42,"GT_DIVIDE":43,"GT_DOLLAR":44,"O_QAPPINFO_COLON_E_Or_QAPPINFO_SPACE_COLON_E_C":45,"jsonValue":46,"APPINFO_COLON":47,"APPINFO_SPACE_COLON":48,"IT_false":49,"IT_null":50,"IT_true":51,"jsonObject":52,"jsonArray":53,"INTEGER":54,"DECIMAL":55,"DOUBLE":56,"STRING_LITERAL2":57,"Q_O_QjsonMember_E_S_QGT_COMMA_E_S_QjsonMember_E_Star_C_E_Opt":58,"O_QGT_COMMA_E_S_QjsonMember_E_C":59,"jsonMember":60,"Q_O_QGT_COMMA_E_S_QjsonMember_E_C_E_Star":61,"O_QjsonMember_E_S_QGT_COMMA_E_S_QjsonMember_E_Star_C":62,"STRING_LITERAL2_COLON":63,"GT_LBRACKET":64,"Q_O_QjsonValue_E_S_QGT_COMMA_E_S_QjsonValue_E_Star_C_E_Opt":65,"GT_RBRACKET":66,"O_QGT_COMMA_E_S_QjsonValue_E_C":67,"Q_O_QGT_COMMA_E_S_QjsonValue_E_C_E_Star":68,"O_QjsonValue_E_S_QGT_COMMA_E_S_QjsonValue_E_Star_C":69,"rdfLiteral":70,"numericLiteral":71,"booleanLiteral":72,"Q_O_QLANGTAG_E_Or_QGT_DTYPE_E_S_QnodeIri_E_C_E_Opt":73,"O_QLANGTAG_E_Or_QGT_DTYPE_E_S_QnodeIri_E_C":74,"LANGTAG":75,"GT_DTYPE":76,"STRING_LITERAL1":77,"STRING_LITERAL_LONG1":78,"STRING_LITERAL_LONG2":79,"IT_a":80,"IRIREF":81,"PNAME_LN":82,"PNAME_NS":83,"$accept":0,"$end":1};
+        this.terminals_ = {2:"error",4:"EOF",9:"GT_COMMA",16:"GT_AT",19:"ATSTART",20:"ATPNAME_NS",21:"ATPNAME_LN",25:"IT_SPARQL",27:"EXTENSION_NAME",30:"START",32:"BLANK_NODE_LABEL",34:"GT_LCURLEY",35:"IT_FOCUS",38:"GT_RCURLEY",40:"IT__",41:"GT_NOT",42:"GT_OPT",43:"GT_DIVIDE",44:"GT_DOLLAR",47:"APPINFO_COLON",48:"APPINFO_SPACE_COLON",49:"IT_false",50:"IT_null",51:"IT_true",54:"INTEGER",55:"DECIMAL",56:"DOUBLE",57:"STRING_LITERAL2",63:"STRING_LITERAL2_COLON",64:"GT_LBRACKET",66:"GT_RBRACKET",75:"LANGTAG",76:"GT_DTYPE",77:"STRING_LITERAL1",78:"STRING_LITERAL_LONG1",79:"STRING_LITERAL_LONG2",80:"IT_a",81:"IRIREF",82:"PNAME_LN",83:"PNAME_NS"};
+        this.productions_ = [0,[3,1],[3,4],[8,2],[6,0],[6,2],[7,0],[7,1],[5,4],[12,0],[12,1],[13,0],[13,1],[11,3],[11,1],[11,1],[11,1],[17,0],[17,1],[10,1],[10,1],[10,2],[10,2],[10,2],[18,1],[18,1],[31,1],[31,1],[23,1],[23,1],[24,5],[24,5],[37,1],[37,1],[39,1],[39,1],[22,1],[22,1],[14,2],[15,3],[45,1],[45,1],[46,1],[46,1],[46,1],[46,1],[46,1],[46,1],[46,1],[46,1],[46,1],[52,3],[59,2],[61,0],[61,2],[62,2],[58,0],[58,1],[60,2],[53,3],[67,2],[68,0],[68,2],[69,2],[65,0],[65,1],[33,1],[33,1],[33,1],[71,1],[71,1],[71,1],[70,2],[74,1],[74,2],[73,0],[73,1],[72,1],[72,1],[26,1],[26,1],[26,1],[26,1],[36,1],[36,1],[28,1],[28,1],[28,1],[28,1],[29,1],[29,1],[29,1],[29,1]];
 
         // shorten static method to just `o` for terse STATE_TABLE
-        const $V0=[1,7],$V1=[1,16],$V2=[1,11],$V3=[1,14],$V4=[1,25],$V5=[1,24],$V6=[1,21],$V7=[1,22],$V8=[1,23],$V9=[1,28],$Va=[1,26],$Vb=[1,27],$Vc=[1,29],$Vd=[1,12],$Ve=[1,13],$Vf=[1,15],$Vg=[4,9],$Vh=[16,19,20,21],$Vi=[2,25],$Vj=[16,19,20,21,37],$Vk=[16,19,20,21,31,34,37,39,46,48,50,53,54,55,56,76,77,78,79,80,81,82],$Vl=[4,9,16,19,20,21,37,43,74,75],$Vm=[4,9,43],$Vn=[29,46,80,81,82],$Vo=[4,9,42,43],$Vp=[1,59],$Vq=[46,79,80,81,82],$Vr=[31,34,39,46,48,50,53,54,55,56,76,77,78,80,81,82],$Vs=[1,94],$Vt=[1,85],$Vu=[1,86],$Vv=[1,87],$Vw=[1,90],$Vx=[1,91],$Vy=[1,92],$Vz=[1,93],$VA=[1,95],$VB=[33,48,49,50,53,54,55,56,63],$VC=[4,9,37,65],$VD=[1,99],$VE=[9,37],$VF=[9,65];
+        const $V0=[1,7],$V1=[1,8],$V2=[1,17],$V3=[1,12],$V4=[1,15],$V5=[1,26],$V6=[1,25],$V7=[1,22],$V8=[1,23],$V9=[1,24],$Va=[1,29],$Vb=[1,27],$Vc=[1,28],$Vd=[1,30],$Ve=[1,13],$Vf=[1,14],$Vg=[1,16],$Vh=[4,9],$Vi=[16,19,20,21],$Vj=[2,26],$Vk=[16,19,20,21,38],$Vl=[16,19,20,21,32,35,38,40,47,49,51,54,55,56,57,77,78,79,80,81,82,83],$Vm=[4,9,16,19,20,21,38,44,75,76],$Vn=[4,9,44],$Vo=[30,47,81,82,83],$Vp=[4,9,43,44],$Vq=[1,61],$Vr=[47,80,81,82,83],$Vs=[32,35,40,47,49,51,54,55,56,57,77,78,79,81,82,83],$Vt=[1,96],$Vu=[1,87],$Vv=[1,88],$Vw=[1,89],$Vx=[1,92],$Vy=[1,93],$Vz=[1,94],$VA=[1,95],$VB=[1,97],$VC=[34,49,50,51,54,55,56,57,64],$VD=[4,9,38,66],$VE=[1,101],$VF=[9,38],$VG=[9,66];
         const o = JisonParser.expandParseTable;
-        this.table = [{3:1,4:[1,2],5:3,10:4,23:5,24:6,25:$V0,26:20,27:8,30:9,31:$V1,32:10,33:$V2,46:$V3,48:$V4,50:$V5,53:$V6,54:$V7,55:$V8,56:$V9,69:17,70:18,71:19,76:$Va,77:$Vb,78:$Vc,80:$Vd,81:$Ve,82:$Vf},{1:[3]},{1:[2,1]},o($Vg,[2,4],{6:30}),{11:31,16:[1,32],19:[1,33],20:[1,34],21:[1,35]},o($Vh,[2,19]),o($Vh,[2,20]),{26:36,56:$V9,76:$Va,77:$Vb,78:$Vc},o($Vh,$Vi,{26:37,56:$V9,76:$Va,77:$Vb,78:$Vc}),o($Vj,[2,27]),o($Vj,[2,28]),{27:42,30:40,31:$V1,34:[1,38],38:39,39:[1,41],46:$V3,80:$Vd,81:$Ve,82:$Vf},o($Vk,[2,84]),o($Vk,[2,85]),o($Vk,[2,86]),o($Vk,[2,87]),o([16,19,20,21,37,46,79,80,81,82],[2,26]),o($Vj,[2,65]),o($Vj,[2,66]),o($Vj,[2,67]),o($Vj,[2,74],{72:43,73:44,74:[1,45],75:[1,46]}),o($Vj,[2,68]),o($Vj,[2,69]),o($Vj,[2,70]),o($Vj,[2,76]),o($Vj,[2,77]),o($Vl,[2,78]),o($Vl,[2,79]),o($Vl,[2,80]),o($Vl,[2,81]),{4:[2,6],7:47,8:48,9:[1,49]},o($Vm,[2,9],{12:50,14:51,42:[1,52]}),o($Vn,[2,17],{17:53,22:54,40:[1,55],41:[1,56]}),o($Vo,[2,14]),o($Vo,[2,15]),o($Vo,[2,16]),o($Vh,[2,21]),o($Vh,[2,22]),{27:58,35:57,46:$V3,79:$Vp,80:$Vd,81:$Ve,82:$Vf},{27:58,35:60,46:$V3,79:$Vp,80:$Vd,81:$Ve,82:$Vf},o($Vq,[2,33]),o($Vq,[2,34]),o([37,46,79,80,81,82],$Vi),o($Vj,[2,71]),o($Vj,[2,75]),o($Vj,[2,72]),{27:61,46:$V3,80:$Vd,81:$Ve,82:$Vf},{4:[1,62]},o($Vg,[2,5]),{4:[2,7],5:63,10:4,23:5,24:6,25:$V0,26:20,27:8,30:9,31:$V1,32:10,33:$V2,46:$V3,48:$V4,50:$V5,53:$V6,54:$V7,55:$V8,56:$V9,69:17,70:18,71:19,76:$Va,77:$Vb,78:$Vc,80:$Vd,81:$Ve,82:$Vf},o($Vg,[2,11],{13:64,15:65,43:[1,66]}),o($Vm,[2,10]),{26:67,56:$V9,76:$Va,77:$Vb,78:$Vc},{18:68,28:69,29:[1,70],46:[1,73],80:[1,71],81:[1,72],82:[1,74]},o($Vn,[2,18]),o($Vn,[2,35]),o($Vn,[2,36]),{23:76,26:20,27:42,30:9,31:$V1,32:10,36:75,39:[1,77],46:$V3,48:$V4,50:$V5,53:$V6,54:$V7,55:$V8,56:$V9,69:17,70:18,71:19,76:$Va,77:$Vb,78:$Vc,80:$Vd,81:$Ve,82:$Vf},o($Vr,[2,82]),o($Vr,[2,83]),{34:[1,78]},o($Vj,[2,73]),{1:[2,2]},o($Vg,[2,3]),o($Vg,[2,8]),o($Vg,[2,12]),{44:79,46:[1,80],47:[1,81]},o($Vm,[2,37]),o($Vo,[2,13]),o($Vo,[2,23]),o($Vo,[2,24]),o($Vo,[2,88]),o($Vo,[2,89]),o($Vo,[2,90]),o($Vo,[2,91]),{37:[1,82]},{37:[2,31]},{37:[2,32]},{37:[1,83]},{33:$Vs,45:84,48:$Vt,49:$Vu,50:$Vv,51:88,52:89,53:$Vw,54:$Vx,55:$Vy,56:$Vz,63:$VA},o($VB,[2,39]),o($VB,[2,40]),o($Vh,[2,29]),o($Vh,[2,30]),o($Vg,[2,38]),o($VC,[2,41]),o($VC,[2,42]),o($VC,[2,43]),o($VC,[2,44]),o($VC,[2,45]),o($VC,[2,46]),o($VC,[2,47]),o($VC,[2,48]),o($VC,[2,49]),{37:[2,55],57:96,59:98,61:97,62:$VD},{33:$Vs,45:102,48:$Vt,49:$Vu,50:$Vv,51:88,52:89,53:$Vw,54:$Vx,55:$Vy,56:$Vz,63:$VA,64:100,65:[2,63],68:101},{37:[1,103]},{37:[2,56]},o($VE,[2,52],{60:104}),{33:$Vs,45:105,48:$Vt,49:$Vu,50:$Vv,51:88,52:89,53:$Vw,54:$Vx,55:$Vy,56:$Vz,63:$VA},{65:[1,106]},{65:[2,64]},o($VF,[2,60],{67:107}),o($VC,[2,50]),{9:[1,109],37:[2,54],58:108},o($VE,[2,57]),o($VC,[2,58]),{9:[1,111],65:[2,62],66:110},o($VE,[2,53]),{59:112,62:$VD},o($VF,[2,61]),{33:$Vs,45:113,48:$Vt,49:$Vu,50:$Vv,51:88,52:89,53:$Vw,54:$Vx,55:$Vy,56:$Vz,63:$VA},o($VE,[2,51]),o($VF,[2,59])];
-        this.defaultActions = {2:[2,1],62:[2,2],76:[2,31],77:[2,32],97:[2,56],101:[2,64]};
+        this.table = [{3:1,4:[1,2],5:3,10:4,23:5,24:6,25:$V0,26:21,27:$V1,28:9,31:10,32:$V2,33:11,34:$V3,47:$V4,49:$V5,51:$V6,54:$V7,55:$V8,56:$V9,57:$Va,70:18,71:19,72:20,77:$Vb,78:$Vc,79:$Vd,81:$Ve,82:$Vf,83:$Vg},{1:[3]},{1:[2,1]},o($Vh,[2,4],{6:31}),{11:32,16:[1,33],19:[1,34],20:[1,35],21:[1,36]},o($Vi,[2,19]),o($Vi,[2,20]),{26:37,57:$Va,77:$Vb,78:$Vc,79:$Vd},{26:38,57:$Va,77:$Vb,78:$Vc,79:$Vd},o($Vi,$Vj,{26:39,57:$Va,77:$Vb,78:$Vc,79:$Vd}),o($Vk,[2,28]),o($Vk,[2,29]),{28:44,31:42,32:$V2,35:[1,40],39:41,40:[1,43],47:$V4,81:$Ve,82:$Vf,83:$Vg},o($Vl,[2,85]),o($Vl,[2,86]),o($Vl,[2,87]),o($Vl,[2,88]),o([16,19,20,21,38,47,80,81,82,83],[2,27]),o($Vk,[2,66]),o($Vk,[2,67]),o($Vk,[2,68]),o($Vk,[2,75],{73:45,74:46,75:[1,47],76:[1,48]}),o($Vk,[2,69]),o($Vk,[2,70]),o($Vk,[2,71]),o($Vk,[2,77]),o($Vk,[2,78]),o($Vm,[2,79]),o($Vm,[2,80]),o($Vm,[2,81]),o($Vm,[2,82]),{4:[2,6],7:49,8:50,9:[1,51]},o($Vn,[2,9],{12:52,14:53,43:[1,54]}),o($Vo,[2,17],{17:55,22:56,41:[1,57],42:[1,58]}),o($Vp,[2,14]),o($Vp,[2,15]),o($Vp,[2,16]),o($Vi,[2,21]),o($Vi,[2,22]),o($Vi,[2,23]),{28:60,36:59,47:$V4,80:$Vq,81:$Ve,82:$Vf,83:$Vg},{28:60,36:62,47:$V4,80:$Vq,81:$Ve,82:$Vf,83:$Vg},o($Vr,[2,34]),o($Vr,[2,35]),o([38,47,80,81,82,83],$Vj),o($Vk,[2,72]),o($Vk,[2,76]),o($Vk,[2,73]),{28:63,47:$V4,81:$Ve,82:$Vf,83:$Vg},{4:[1,64]},o($Vh,[2,5]),{4:[2,7],5:65,10:4,23:5,24:6,25:$V0,26:21,27:$V1,28:9,31:10,32:$V2,33:11,34:$V3,47:$V4,49:$V5,51:$V6,54:$V7,55:$V8,56:$V9,57:$Va,70:18,71:19,72:20,77:$Vb,78:$Vc,79:$Vd,81:$Ve,82:$Vf,83:$Vg},o($Vh,[2,11],{13:66,15:67,44:[1,68]}),o($Vn,[2,10]),{26:69,57:$Va,77:$Vb,78:$Vc,79:$Vd},{18:70,29:71,30:[1,72],47:[1,75],81:[1,73],82:[1,74],83:[1,76]},o($Vo,[2,18]),o($Vo,[2,36]),o($Vo,[2,37]),{23:78,26:21,28:44,31:10,32:$V2,33:11,37:77,40:[1,79],47:$V4,49:$V5,51:$V6,54:$V7,55:$V8,56:$V9,57:$Va,70:18,71:19,72:20,77:$Vb,78:$Vc,79:$Vd,81:$Ve,82:$Vf,83:$Vg},o($Vs,[2,83]),o($Vs,[2,84]),{35:[1,80]},o($Vk,[2,74]),{1:[2,2]},o($Vh,[2,3]),o($Vh,[2,8]),o($Vh,[2,12]),{45:81,47:[1,82],48:[1,83]},o($Vn,[2,38]),o($Vp,[2,13]),o($Vp,[2,24]),o($Vp,[2,25]),o($Vp,[2,89]),o($Vp,[2,90]),o($Vp,[2,91]),o($Vp,[2,92]),{38:[1,84]},{38:[2,32]},{38:[2,33]},{38:[1,85]},{34:$Vt,46:86,49:$Vu,50:$Vv,51:$Vw,52:90,53:91,54:$Vx,55:$Vy,56:$Vz,57:$VA,64:$VB},o($VC,[2,40]),o($VC,[2,41]),o($Vi,[2,30]),o($Vi,[2,31]),o($Vh,[2,39]),o($VD,[2,42]),o($VD,[2,43]),o($VD,[2,44]),o($VD,[2,45]),o($VD,[2,46]),o($VD,[2,47]),o($VD,[2,48]),o($VD,[2,49]),o($VD,[2,50]),{38:[2,56],58:98,60:100,62:99,63:$VE},{34:$Vt,46:104,49:$Vu,50:$Vv,51:$Vw,52:90,53:91,54:$Vx,55:$Vy,56:$Vz,57:$VA,64:$VB,65:102,66:[2,64],69:103},{38:[1,105]},{38:[2,57]},o($VF,[2,53],{61:106}),{34:$Vt,46:107,49:$Vu,50:$Vv,51:$Vw,52:90,53:91,54:$Vx,55:$Vy,56:$Vz,57:$VA,64:$VB},{66:[1,108]},{66:[2,65]},o($VG,[2,61],{68:109}),o($VD,[2,51]),{9:[1,111],38:[2,55],59:110},o($VF,[2,58]),o($VD,[2,59]),{9:[1,113],66:[2,63],67:112},o($VF,[2,54]),{60:114,63:$VE},o($VG,[2,62]),{34:$Vt,46:115,49:$Vu,50:$Vv,51:$Vw,52:90,53:91,54:$Vx,55:$Vy,56:$Vz,57:$VA,64:$VB},o($VF,[2,52]),o($VG,[2,60])];
+        this.defaultActions = {2:[2,1],64:[2,2],78:[2,32],79:[2,33],99:[2,57],103:[2,65]};
     }
     performAction (yytext, yyleng, yylineno, yy, yystate /* action[1] */, $$ /* vstack */, _$ /* lstack */) {
 /* this == yyval */
@@ -22075,19 +23906,19 @@ case 2:
         
 // removed by dead control flow
 
-case 3: case 51: case 59:
+case 3: case 52: case 60:
 this.$ = $$[$0];
 break;
-case 4: case 60: case 63:
+case 4: case 61: case 64:
 this.$ = [  ];
 break;
-case 5: case 61:
+case 5: case 62:
 this.$ = $$[$0-1].concat($$[$0]);
 break;
 case 8:
 this.$ = extend({ node: $$[$0-3] }, $$[$0-2], $$[$0-1], $$[$0]);
 break;
-case 9: case 11: case 52: case 55: case 74:
+case 9: case 11: case 53: case 56: case 75:
 this.$ = {  };
 break;
 case 13:
@@ -22119,112 +23950,115 @@ case 21:
 this.$ = { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-sparql", lexical: $$[$0]["@value"] };
 break;
 case 22:
+this.$ = { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-" + $$[$0-1].toLowerCase(), lexical: $$[$0]["@value"] };
+break;
+case 23:
 this.$ = { type: "Extension", language: $$[$0-1], lexical: $$[$0]["@value"] };
 break;
-case 24:
+case 25:
 this.$ = ShapeMap.Start;
 break;
-case 29:
+case 30:
 this.$ = { type: "TriplePattern", subject: ShapeMap.Focus, predicate: $$[$0-2], object: $$[$0-1] };
 break;
-case 30:
+case 31:
 this.$ = { type: "TriplePattern", subject: $$[$0-3], predicate: $$[$0-2], object: ShapeMap.Focus };
 break;
-case 32: case 34: case 42:
+case 33: case 35: case 43:
 this.$ = null;
 break;
-case 35:
+case 36:
 this.$ = 'nonconformant';
 break;
-case 36:
+case 37:
 this.$ = 'unknown';
 break;
-case 37:
+case 38:
 this.$ = { reason: $$[$0] };
 break;
-case 38:
+case 39:
 this.$ = { appinfo: $$[$0] };
 break;
-case 41:
+case 42:
 this.$ = false;
 break;
-case 43:
+case 44:
 this.$ = true;
 break;
-case 46: case 47: case 48:
+case 47: case 48: case 49:
 this.$ = parseFloat($$[$0]);
 break;
-case 49:
+case 50:
 this.$ = unescapeString($$[$0], 1)["@value"];
 break;
-case 50: case 58:
+case 51: case 59:
 this.$ = $$[$0-1];
 break;
-case 53: case 54: case 71:
+case 54: case 55: case 72:
 this.$ = extend($$[$0-1], $$[$0]);
 break;
-case 57:
+case 58:
 
         this.$ = {  };
         const t = $$[$0-1].substr(0, $$[$0-1].length - 1).trim(); // remove trailing ':' and spaces
         this.$[unescapeString(t, 1)["@value"]] = $$[$0];
       
 break;
-case 62:
+case 63:
 this.$ = [$$[$0-1]].concat($$[$0]);
 break;
-case 68:
+case 69:
 this.$ = createLiteral($$[$0], XSD_INTEGER);
 break;
-case 69:
+case 70:
 this.$ = createLiteral($$[$0], XSD_DECIMAL);
 break;
-case 70:
+case 71:
 this.$ = createLiteral($$[$0], XSD_DOUBLE);
 break;
-case 72:
+case 73:
 this.$ = obj("@language", $$[$0].substr(1).toLowerCase());
 break;
-case 73:
+case 74:
 this.$ = obj("@type", $$[$0]);
 break;
-case 76:
+case 77:
 this.$ = createLiteral("true", XSD_BOOLEAN);
 break;
-case 77:
+case 78:
 this.$ = createLiteral("false", XSD_BOOLEAN);
 break;
-case 78: case 80:
+case 79: case 81:
 this.$ = unescapeString($$[$0], 1);
 break;
-case 79: case 81:
+case 80: case 82:
 this.$ = unescapeString($$[$0], 3);
 break;
-case 83:
+case 84:
 this.$ = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 break;
-case 84:
+case 85:
 
         const node = ShExUtil.unescapeText($$[$0].slice(1,-1), {});
         this.$ = yy.dataMeta.base === null || absoluteIRI.test(node) ? node : yy.dataMeta._resolveIRI(node)
       
 break;
-case 85: case 86:
+case 86: case 87:
 this.$ = parsePName($$[$0], yy.dataMeta, yy);
 break;
-case 87:
+case 88:
 this.$ = yy.dataMeta.expandPrefix($$[$0].substr(0, $$[$0].length - 1), yy);;
 break;
-case 88:
+case 89:
 
         const shape = ShExUtil.unescapeText($$[$0].slice(1,-1), {});
         this.$ = yy.schemaMeta.base === null || absoluteIRI.test(shape) ? shape : yy.schemaMeta._resolveIRI(shape)
       
 break;
-case 89: case 90:
+case 90: case 91:
 this.$ = parsePName($$[$0], yy.schemaMeta, yy);
 break;
-case 91:
+case 92:
 this.$ = yy.schemaMeta.expandPrefix($$[$0].substr(0, $$[$0].length - 1), yy);;
 break;
         }
@@ -22251,6 +24085,7 @@ class ShapeMapJisonLexer extends JisonLexer {
         /^(?:[Ss][Tt][Aa][Rr][Tt])/,
         /^(?:@[Ss][Tt][Aa][Rr][Tt])/,
         /^(?:[Ss][Pp][Aa][Rr][Qq][Ll])/,
+        /^(?:[A-Z][A-Z0-9_]+)/,
         /^(?:@(?:(?:[A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])(?:(?:[A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF]|_|_|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]|\.)*(?:[A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF]|_|_|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?)?:(?:[A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF]|_|_|:|[0-9]|%(?:[0-9]|[A-F]|[a-f])(?:[0-9]|[A-F]|[a-f])|\\(?:_|~|\.|-|!|\$|&|'|\(|\)|\*|\+|,|;|=|\/|\?|#|@|%))(?:[A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF]|_|_|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]|\.|:|%(?:[0-9]|[A-F]|[a-f])(?:[0-9]|[A-F]|[a-f])|\\(?:_|~|\.|-|!|\$|&|'|\(|\)|\*|\+|,|;|=|\/|\?|#|@|%))*)/,
         /^(?:@(?:(?:[A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])(?:(?:[A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF]|_|_|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]|\.)*(?:[A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF]|_|_|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?)?:)/,
         /^(?:@[A-Za-z]+(?:-[0-9A-Za-z]+)*)/,
@@ -22286,23 +24121,23 @@ class ShapeMapJisonLexer extends JisonLexer {
         /^(?:[a-zA-Z0-9_-]+)/,
         /^(?:.)/
     ];
-        this.conditions = {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40],"inclusive":true}};
+        this.conditions = {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41],"inclusive":true}};
     }
     performAction (yy, yy_, $avoiding_name_collisions, YY_START) {
               let YYSTATE = YY_START;
             switch ($avoiding_name_collisions) {
     case 0:/**/
       break;
-    case 1:return 47;
+    case 1:return 48;
       // removed by dead control flow
 
-    case 2:return 62;
+    case 2:return 63;
       // removed by dead control flow
 
-    case 3:return 34;
+    case 3:return 35;
       // removed by dead control flow
 
-    case 4:return 29;
+    case 4:return 30;
       // removed by dead control flow
 
     case 5:return 19;
@@ -22311,67 +24146,67 @@ class ShapeMapJisonLexer extends JisonLexer {
     case 6:return 25;
       // removed by dead control flow
 
-    case 7:return 21;
+    case 7:return 27;
       // removed by dead control flow
 
-    case 8:return 20;
+    case 8:return 21;
       // removed by dead control flow
 
-    case 9:return 74;
+    case 9:return 20;
       // removed by dead control flow
 
-    case 10:return 81;
+    case 10:return 75;
       // removed by dead control flow
 
-    case 11:return 46;
+    case 11:return 82;
       // removed by dead control flow
 
-    case 12:return 82;
+    case 12:return 47;
       // removed by dead control flow
 
-    case 13:return 55;
+    case 13:return 83;
       // removed by dead control flow
 
-    case 14:return 54;
+    case 14:return 56;
       // removed by dead control flow
 
-    case 15:return 53;
+    case 15:return 55;
       // removed by dead control flow
 
-    case 16:return 80;
+    case 16:return 54;
       // removed by dead control flow
 
-    case 17:return 31;
+    case 17:return 81;
       // removed by dead control flow
 
-    case 18:return 77;
+    case 18:return 32;
       // removed by dead control flow
 
     case 19:return 78;
       // removed by dead control flow
 
-    case 20:return 76;
+    case 20:return 79;
       // removed by dead control flow
 
-    case 21:return 56;
+    case 21:return 77;
       // removed by dead control flow
 
-    case 22:return 79;
+    case 22:return 57;
       // removed by dead control flow
 
-    case 23:return 9;
+    case 23:return 80;
       // removed by dead control flow
 
-    case 24:return 33;
+    case 24:return 9;
       // removed by dead control flow
 
-    case 25:return 37;
+    case 25:return 34;
       // removed by dead control flow
 
-    case 26:return 16;
+    case 26:return 38;
       // removed by dead control flow
 
-    case 27:return 40;
+    case 27:return 16;
       // removed by dead control flow
 
     case 28:return 41;
@@ -22383,34 +24218,37 @@ class ShapeMapJisonLexer extends JisonLexer {
     case 30:return 43;
       // removed by dead control flow
 
-    case 31:return 63;
+    case 31:return 44;
       // removed by dead control flow
 
-    case 32:return 65;
+    case 32:return 64;
       // removed by dead control flow
 
-    case 33:return 75;
+    case 33:return 66;
       // removed by dead control flow
 
-    case 34:return 39;
+    case 34:return 76;
       // removed by dead control flow
 
-    case 35:return 50;
+    case 35:return 40;
       // removed by dead control flow
 
-    case 36:return 48;
+    case 36:return 51;
       // removed by dead control flow
 
     case 37:return 49;
       // removed by dead control flow
 
-    case 38:return 4;
+    case 38:return 50;
       // removed by dead control flow
 
-    case 39:return 'unexpected word "'+yy_.yytext+'"';
+    case 39:return 4;
       // removed by dead control flow
 
-    case 40:return 'invalid character '+yy_.yytext;
+    case 40:return 'unexpected word "'+yy_.yytext+'"';
+      // removed by dead control flow
+
+    case 41:return 'invalid character '+yy_.yytext;
       // removed by dead control flow
 
         }
@@ -22773,12 +24611,14 @@ exports.lexicalize = lexicalize;
 exports.completionSource = completionSource;
 exports.makeResultPane = makeResultPane;
 exports.makeJsonPane = makeJsonPane;
+exports.makePaneIfDescribed = makePaneIfDescribed;
 exports.makePane = makePane;
 const codemirror_1 = __webpack_require__(1301);
 const view_1 = __webpack_require__(9905);
 const state_1 = __webpack_require__(3109);
 const language_1 = __webpack_require__(734);
 const lint_1 = __webpack_require__(6793);
+const autocomplete_1 = __webpack_require__(9912);
 const lang_json_1 = __webpack_require__(5533);
 const lezer_turtle_1 = __webpack_require__(1799);
 const EditorServices = __importStar(__webpack_require__(9017));
@@ -22903,6 +24743,11 @@ function makeResultPane(text, language = "json") {
     const clampRange = (r) => !!r && r.from >= 0 && r.to <= view.state.doc.length && r.to > r.from;
     return {
         dom: view.dom,
+        requestMeasure() { view.requestMeasure(); },
+        scrollTo(pos) {
+            const at = Math.max(0, Math.min(pos, view.state.doc.length));
+            view.dispatch({ effects: view_1.EditorView.scrollIntoView(at, { y: "start" }) });
+        },
         highlight(ranges, cls = "shexjs-highlight", opts = {}) {
             const inRange = (ranges || []).filter(clampRange).sort((a, b) => a.from - b.from);
             const decos = inRange.map(r => view_1.Decoration.mark({ class: cls }).range(r.from, r.to));
@@ -23035,6 +24880,94 @@ function lintSourceFor(language, opts) {
             return null;
     }
 }
+// ---------------------------------------------------------------------------
+// module-supplied languages
+//
+// A neighborhood module describes its text as plain functions over plain
+// strings (tokens, lint, complete); these adapters are the only place that
+// description meets an editor library.
+/** Styles a supplied tokenizer can ask for.  The names are the ones
+ * CodeMirror's own stream parsers use, so a module that grows into a real
+ * StreamParser keeps its vocabulary. */
+const suppliedTokenTheme = view_1.EditorView.baseTheme({
+    ".shexjs-tok-keyword": { color: "#708" },
+    ".shexjs-tok-link": { color: "#219", textDecoration: "underline" },
+    ".shexjs-tok-string": { color: "#a11" },
+    ".shexjs-tok-comment": { color: "#940", fontStyle: "italic" },
+    ".shexjs-tok-number": { color: "#164" },
+    ".shexjs-tok-variableName": { color: "#00c" },
+    ".shexjs-tok-typeName": { color: "#085" },
+    ".shexjs-tok-invalid": { color: "#f00", textDecoration: "underline wavy #f00" },
+});
+/** Recompute a supplied tokenizer's decorations whenever the document
+ * changes.  Whole-document rather than incremental: what modules describe
+ * are header lines, and their real body language (`language: "turtle"`) is
+ * still parsed incrementally by the grammar underneath. */
+function suppliedTokensExtension(getSupplied, getContext) {
+    const compute = (doc) => {
+        const supplied = getSupplied(doc);
+        if (!supplied || !supplied.tokens)
+            return view_1.Decoration.none;
+        let tokens;
+        try {
+            tokens = supplied.tokens(doc, getContext()) || [];
+        }
+        catch (e) {
+            return view_1.Decoration.none; // a module's bug must not break editing
+        }
+        const marks = tokens
+            .filter(t => t.from >= 0 && t.to > t.from && t.to <= doc.length)
+            .sort((l, r) => l.from - r.from)
+            .map(t => view_1.Decoration.mark({ class: "shexjs-tok-" + t.style }).range(t.from, t.to));
+        return view_1.Decoration.set(marks, true);
+    };
+    const field = state_1.StateField.define({
+        create: state => compute(state.doc.toString()),
+        update: (deco, tr) => tr.docChanged ? compute(tr.state.doc.toString()) : deco,
+        provide: f => view_1.EditorView.decorations.from(f),
+    });
+    return [field, suppliedTokenTheme];
+}
+/** A CodeMirror completion source over a supplied editor's `complete`. */
+function suppliedCompletionSource(getSupplied, getContext) {
+    return (context) => {
+        const text = context.state.doc.toString();
+        const supplied = getSupplied(text);
+        if (!supplied || !supplied.complete)
+            return null;
+        let result;
+        try {
+            result = supplied.complete(text, context.pos, getContext());
+        }
+        catch (e) {
+            return null;
+        }
+        if (!result || result.options.length === 0)
+            return null;
+        return { from: result.from, to: result.to, options: result.options };
+    };
+}
+/** Is there a language here to build an editor from?  A module that
+ * describes none gets no pane -- see makePaneIfDescribed. */
+function describesALanguage(opts, text) {
+    if (opts.language)
+        return true;
+    const supplied = opts.supplied ? opts.supplied(text) : null;
+    return !!supplied &&
+        !!(supplied.language || supplied.tokens || supplied.lint || supplied.complete);
+}
+/** makePane, unless nothing describes the text's language -- then null, and
+ * the textarea is left exactly as it is.
+ *
+ * This is the fallback for a host whose panes take their language from
+ * whatever module claims their text: a module that describes no language
+ * costs the user nothing but the plain textarea they would have had with
+ * the editors switched off.  Implementing getNeighborhood stays the only
+ * obligation; an editor is a thing a module may offer, not owe.
+ */
+function makePaneIfDescribed(textarea, opts = {}) {
+    return describesALanguage(opts, textarea.value) ? makePane(textarea, opts) : null;
+}
 /** makePane - replace `textarea` with a CodeMirror 6 editor. */
 exports.CHANGE_DEBOUNCE_MS = 350;
 /** marks a document change made by the application (a write through the
@@ -23080,17 +25013,48 @@ function makePane(textarea, opts = {}) {
             }
         }),
     ];
-    if (opts.language === "shexc" || opts.language === "turtle") {
-        const lang = opts.language === "shexc" ? language_1.StreamLanguage.define(exports.shexcStreamParser) : turtleLanguage;
+    // a module-supplied language names the grammar (when it's one of ours)
+    // and overlays its own tokens, diagnostics and completions on it
+    const getSupplied = opts.supplied || ((_text) => null);
+    const getSuppliedContext = opts.suppliedContext || (() => undefined);
+    const supplied = getSupplied(textarea.value);
+    const language = opts.language
+        || (supplied && exports.languages[supplied.language] ? supplied.language : undefined);
+    if (language === "shexc" || language === "turtle") {
+        const lang = language === "shexc" ? language_1.StreamLanguage.define(exports.shexcStreamParser) : turtleLanguage;
         extensions.push(lang);
+        const autocompletes = [];
         if (opts.completions) // basicSetup's autocompletion() reads languageData
-            extensions.push(lang.data.of({ autocomplete: completionSource(opts.completions) }));
+            autocompletes.push(completionSource(opts.completions));
+        if (opts.supplied)
+            autocompletes.push(suppliedCompletionSource(getSupplied, getSuppliedContext));
+        for (const autocomplete of autocompletes)
+            extensions.push(lang.data.of({ autocomplete }));
     }
-    else if (opts.language && exports.languages[opts.language]) {
-        extensions.push(exports.languages[opts.language]());
+    else if (language && exports.languages[language]) {
+        extensions.push(exports.languages[language]());
     }
-    const lintSource = opts.lint === false ? null : lintSourceFor(opts.language, opts);
-    if (lintSource)
+    if (opts.supplied) {
+        extensions.push(suppliedTokensExtension(getSupplied, getSuppliedContext));
+        if (!language)
+            // no grammar to hang languageData on
+            extensions.push((0, autocomplete_1.autocompletion)({ override: [suppliedCompletionSource(getSupplied, getSuppliedContext)] }));
+    }
+    const langLintSource = opts.lint === false ? null : lintSourceFor(language, opts);
+    const lintSource = opts.lint === false ? null : (view => {
+        const fromLanguage = langLintSource ? langLintSource(view) : [];
+        const text = view.state.doc.toString();
+        const current = getSupplied(text);
+        if (!current || !current.lint)
+            return fromLanguage;
+        let mine = [];
+        try {
+            mine = current.lint(text, getSuppliedContext()) || [];
+        }
+        catch (e) { /* a module's bug must not break editing */ }
+        return Promise.resolve(fromLanguage).then(diagnostics => diagnostics.concat(mine.filter(d => d.from >= 0 && d.to >= d.from && d.to <= view.state.doc.length)));
+    });
+    if (lintSource && (langLintSource || opts.supplied))
         extensions.push((0, lint_1.linter)(lintSource, { delay: 500 }));
     const view = new view_1.EditorView({ doc: textarea.value, extensions });
     view.dom.classList.add("shexjs-editor-pane");
@@ -23135,6 +25099,7 @@ function makePane(textarea, opts = {}) {
             view.dispatch({ effects: setHighlightsEffect.of(view_1.Decoration.none) });
         },
         setHoverRegions,
+        requestMeasure() { view.requestMeasure(); },
         listBreakpoints() {
             const positions = [];
             view.state.field(breakpointField).between(0, view.state.doc.length, from => { positions.push(from); });
@@ -23590,10 +25555,13 @@ function quadAnchors(parsed, quad, text) {
     const [utt] = parsed.provenance.get(quad);
     if (!utt)
         return null;
-    // a blank node's source form is its whole [ property list ]; highlight
-    // just the delimiters so the contents read as their own triples
-    const delims = (range, term) => range && term.termType === "BlankNode" && range.to - range.from >= 2 &&
-        text[range.from] === "[" && text[range.to - 1] === "]"
+    // A term whose source form is a nested structure -- a blank node's whole
+    // [ property list ] in Turtle, an entity page's { ... } in JSON -- marks
+    // just its delimiters, so the contents read as their own triples.
+    const nested = (range) => !!range && range.to - range.from >= 2 &&
+        ((text[range.from] === "[" && text[range.to - 1] === "]") ||
+            (text[range.from] === "{" && text[range.to - 1] === "}"));
+    const delims = (range, _term) => nested(range)
         ? [{ from: range.from, to: range.from + 1 }, { from: range.to - 1, to: range.to }]
         : undefined;
     const subject = trimRange(uttRange(utt.subject), text);
@@ -23758,7 +25726,8 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed) {
             subject: null, predicate: null, object: null,
         };
         let dataRange = null;
-        if (turtleParsed && turtleParsed.dataset) {
+        // anchoring needs the quads and where they were written, not a store
+        if (turtleParsed && turtleParsed.quads) {
             const triple = leaf.triple || (leaf.triples && leaf.triples[0]) || null;
             if (triple) {
                 const termRanges = tripleAnchors(turtleParsed, triple, turtleParsed.text, bnodes);
@@ -28381,18 +30350,37 @@ const ShExUtil = {
      * QLever drops the connection past about 8k -- and the SPARQL protocol has
      * the POST form for exactly this. */
     sparqlGetLimit: 2000,
+    /** Who we are, for services that insist on being told: Wikimedia's robot
+     * policy 403s a request with no User-Agent (T400119).  A browser has one
+     * of its own and refuses to let anyone set that header -- it warns rather
+     * than obeying -- so only a shim that has none is told.  Assign to it to
+     * identify your own tool instead. */
+    sparqlUserAgent: "shex.js (https://github.com/shexjs/shex.js)",
+    /** is there a browser here, with a User-Agent of its own? */
+    inBrowser: function () {
+        const global = globalThis;
+        return typeof global.window !== "undefined" && typeof global.window.document !== "undefined";
+    },
+    /** the given headers, plus who we are where that can be said */
+    requestHeaders: function (headers) {
+        return this.inBrowser()
+            ? headers
+            : Object.assign({ "User-Agent": this.sparqlUserAgent }, headers);
+    },
     executeQueryPromise: function (query, endpoint, dataFactory) {
         if (!endpoint)
             throw Error(`Can't execute a SPARQL query with no endpoint`);
         const queryURL = endpoint + "?query=" + encodeURIComponent(query);
         const request = queryURL.length <= this.sparqlGetLimit
-            ? fetch(queryURL, { headers: { 'Accept': 'application/sparql-results+json' } })
+            ? fetch(queryURL, { headers: this.requestHeaders({
+                    'Accept': 'application/sparql-results+json',
+                }) })
             : fetch(endpoint, {
                 method: 'POST',
-                headers: {
+                headers: this.requestHeaders({
                     'Accept': 'application/sparql-results+json',
                     'Content-Type': 'application/sparql-query',
-                },
+                }),
                 body: query,
             });
         return request.then(resp => resp.json()).then(jsonObject => {
@@ -28407,6 +30395,8 @@ const ShExUtil = {
         const xhr = new XMLHttpRequest();
         xhr.open(byUrl ? "GET" : "POST", byUrl ? queryURL : endpoint, false);
         xhr.setRequestHeader('Accept', 'application/sparql-results+json');
+        if (!this.inBrowser())
+            xhr.setRequestHeader('User-Agent', this.sparqlUserAgent);
         if (byUrl) {
             xhr.send();
         }
@@ -28840,7 +30830,7 @@ class EmptyTracker {
 }
 class ShapeExprValidationContext {
     constructor(parent, label, // Can only be Start if it's the root of a context list.
-    depth = 0, tracker = new EmptyTracker(), seen = {}, matchTarget = null, subGraph = null,
+    depth = 0, tracker = new EmptyTracker(), seen = {}, matchTarget = null, subGraph = null, 
     // The subGraph is the partition an extending CLOSED shape allocated to this
     // extension: every triple in it must be consumed, as any left over would be
     // unmatched in the extending shape's closed neighborhood.
@@ -30108,7 +32098,6 @@ function runtimeError(...args) {
 }
 //# sourceMappingURL=shex-validator.js.map
 
-
 /***/ },
 
 /***/ 5683
@@ -31304,8 +33293,10 @@ ShExWebApp = (function () {
     "@shexjs/term":                __webpack_require__(2130),
     "@shexjs/util":                __webpack_require__(5590),
     "@shexjs/visitor":             __webpack_require__(2818),
+    "@shexjs/neighborhood-api":    __webpack_require__(7682),
     "@shexjs/neighborhood-rdfjs":  __webpack_require__(2932),
     "@shexjs/neighborhood-sparql": __webpack_require__(1238),
+    "@shexjs/neighborhood-wikidata": __webpack_require__(2906),
     "@shexjs/validator":           __webpack_require__(8006),
     "@shexjs/writer":              __webpack_require__(6526),
     "@shexjs/loader":              __webpack_require__(2482),
@@ -31325,6 +33316,16 @@ ShExWebApp = (function () {
     Util:                 modules["@shexjs/util"],
     RdfJsDb:              modules["@shexjs/neighborhood-rdfjs"].ctor,
     SparqlDb:             modules["@shexjs/neighborhood-sparql"].ctor,
+    NeighborhoodApi:      modules["@shexjs/neighborhood-api"],
+    /* The data sources this app offers, in picklist order.  The first is
+     * the default -- an RDF document, which is what a data pane has always
+     * held.  What each one needs configured, and how its documents are
+     * edited, comes from the module (dbParams, PaneSpec). */
+    NeighborhoodModules: [
+      modules["@shexjs/neighborhood-rdfjs"],
+      modules["@shexjs/neighborhood-sparql"],
+      modules["@shexjs/neighborhood-wikidata"],
+    ],
     Validator:            modules["@shexjs/validator"].ShExValidator,
     Writer:               modules["@shexjs/writer"],
     Loader:               modules["@shexjs/loader"],
@@ -31345,6 +33346,27 @@ ShExWebApp = (function () {
 if (true)
   module.exports = ShExWebApp;
 
+
+/***/ },
+
+/***/ 6478
+() {
+
+/* (ignored) */
+
+/***/ },
+
+/***/ 8726
+() {
+
+/* (ignored) */
+
+/***/ },
+
+/***/ 2286
+() {
+
+/* (ignored) */
 
 /***/ },
 

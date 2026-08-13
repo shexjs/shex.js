@@ -100,10 +100,15 @@ export interface ParsedShExC extends LocatedSchema {
   diagnostics: Diagnostic[];
 }
 
+/** A document, its quads, and where each was written.  Parsing Turtle
+ * produces one, and so does any data source that offers to locate its own
+ * document (see neighborhood-api's `locateDocument`) -- error mapping reads
+ * it without knowing which syntax it came from. */
 export interface ParsedTurtle {
   text: string;
-  /** an N3.Store of the parsed quads */
-  dataset: InstanceType<typeof RdfJs.Store>;
+  /** an N3.Store of the parsed quads; a source that hands back a located
+   * document it already has quads for needn't build one */
+  dataset?: InstanceType<typeof RdfJs.Store>;
   quads: any[];
   /** lezer-turtle ProvenanceIndex: get(quad) -> utterances with
    * {start, end} source ranges per position (a multiset: a quad uttered
@@ -571,12 +576,16 @@ function quadAnchors (parsed: ParsedTurtle, quad: any, text: string):
   const [utt] = parsed.provenance.get(quad);
   if (!utt)
     return null;
-  // a blank node's source form is its whole [ property list ]; highlight
-  // just the delimiters so the contents read as their own triples
-  const delims = (range: Range | null, term: any): Range[] | undefined =>
-    range && term.termType === "BlankNode" && range.to - range.from >= 2 &&
-    text[range.from] === "[" && text[range.to - 1] === "]"
-      ? [{from: range.from, to: range.from + 1}, {from: range.to - 1, to: range.to}]
+  // A term whose source form is a nested structure -- a blank node's whole
+  // [ property list ] in Turtle, an entity page's { ... } in JSON -- marks
+  // just its delimiters, so the contents read as their own triples.
+  const nested = (range: Range | null): boolean =>
+    !!range && range.to - range.from >= 2 &&
+    ((text[range.from] === "[" && text[range.to - 1] === "]") ||
+     (text[range.from] === "{" && text[range.to - 1] === "}"));
+  const delims = (range: Range | null, _term: any): Range[] | undefined =>
+    nested(range)
+      ? [{from: range!.from, to: range!.from + 1}, {from: range!.to - 1, to: range!.to}]
       : undefined;
   const subject = trimRange(uttRange(utt.subject), text);
   const object = trimRange(uttRange(utt.object), text);
@@ -783,7 +792,8 @@ export function mapValidationErrors (valResult: unknown,
       subject: null, predicate: null, object: null,
     };
     let dataRange: Range | null = null;
-    if (turtleParsed && turtleParsed.dataset) {
+    // anchoring needs the quads and where they were written, not a store
+    if (turtleParsed && turtleParsed.quads) {
       const triple = leaf.triple || (leaf.triples && leaf.triples[0]) || null;
       if (triple) {
         const termRanges = tripleAnchors(turtleParsed, triple, turtleParsed.text, bnodes);

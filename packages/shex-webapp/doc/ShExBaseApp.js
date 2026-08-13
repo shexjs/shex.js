@@ -3,11 +3,11 @@
  */
 const START_SHAPE_LABEL = "START";
 const INPUTAREA_TIMEOUT = 250;
+const VALIDATE_LABEL = "validate (ctl-enter)";
 const NO_MANIFEST_LOADED = "no manifest loaded";
 
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 const LOG_PROGRESS = false;
-const EXTENSION_sparql = "http://www.w3.org/ns/shex#Extensions-sparql";
 const SPARQL_get_items_limit = 50;
 const MENU_ITEM_materialize = "- materialize -"
 const GIST_TOKEN_KEY = "githubGistToken"; // localStorage key for Menu → Create Gist
@@ -189,6 +189,509 @@ class SchemaCache extends InterfaceCache {
   }
 }
 
+/** The data source picker and the configuration it draws.
+ *
+ * Where the data comes from is the user's choice, made from a list of the
+ * neighborhood modules loaded into this app -- so this class knows about
+ * data sources in general and about none of them in particular.  What each
+ * one needs it reads from that module's declarations (dbParams): values to
+ * type become fields, documents to edit become panes shown one at a time.
+ * A query service is then all fields and no panes; a local store is one
+ * mandatory Turtle document; a Wikibase is a growable set of entity pages,
+ * each one an edit to try before making it.
+ *
+ * One textarea holds whichever pane is showing -- the same textarea the app
+ * has always had, so drag-and-drop, dirty tracking, permalinks and the
+ * editors keep working -- and the panes not showing live here as text.
+ */
+class NeighborhoodConfig {
+  /**
+   * @param modules  the loaded neighborhood modules, in picklist order
+   * @param textarea the data pane's textarea (jQuery selection)
+   * @param onChange called when the user changes anything the db is built from
+   * @param onShown  called when the document area becomes visible again
+   */
+  constructor (modules, textarea, onChange, onShown) {
+    this.modules = modules;
+    this.textarea = textarea;
+    this.onChange = onChange;
+    /** called when the document area becomes visible again */
+    this.onShown = onShown;
+    this.moduleId = ShExWebApp.NeighborhoodApi.moduleId(modules[0]);
+    /** A parameter's name means the same thing wherever it is declared --
+     * that is what lets a manifest entry or a permalink say `endpoint=`
+     * without naming a module twice -- but its *value* belongs to the
+     * source that asked for it: `data` is a graph to one source and an
+     * entity page to another, and neither wants the other's document. */
+    this.fieldsByModule = {};
+    this.panesByModule = {};
+    this.showing = 0;
+    this.onSettings = false;
+  }
+
+  /** the selected source's fields: parameter name -> value */
+  get fields () {
+    return this.fieldsByModule[this.moduleId] || (this.fieldsByModule[this.moduleId] = {});
+  }
+
+  /** the selected source's documents: parameter name -> [text, ...] */
+  get panes () {
+    return this.panesFor(this.moduleId);
+  }
+
+  panesFor (moduleId) {
+    return this.panesByModule[moduleId] || (this.panesByModule[moduleId] = {});
+  }
+
+  get module () {
+    const {moduleId} = ShExWebApp.NeighborhoodApi;
+    return this.modules.find(m => moduleId(m) === this.moduleId) || this.modules[0];
+  }
+
+  get paneParams () { return ShExWebApp.NeighborhoodApi.paneParams(this.module.dbParams || []); }
+  get fieldParams () { return ShExWebApp.NeighborhoodApi.fieldParams(this.module.dbParams || []); }
+
+  /** Every document the selected source takes, in declaration order: a
+   * flat list, because that is what the tabs are.  A parameter that must
+   * have a document always shows one, even before anything is in it. */
+  documents () {
+    const out = [];
+    for (const param of this.paneParams) {
+      const texts = this.panes[param.name] || (param.pane.min ? [""] : []);
+      texts.forEach((text, index) => out.push({param, index, text}));
+    }
+    return out;
+  }
+
+  /** the document a tab is showing, with the textarea's text in it */
+  docAt (n) {
+    const docs = this.documents();
+    if (n < 0 || n >= docs.length)
+      return null;
+    const doc = docs[n];
+    return Object.assign({}, doc, n === this.showing ? {text: this.textarea.val()} : {});
+  }
+
+  /** the parameter whose document is showing (for its language) */
+  get paneParam () {
+    const doc = this.docAt(this.showing);
+    return doc ? doc.param : (this.paneParams[0] || null);
+  }
+
+  /** texts of one parameter's documents, the showing one included */
+  texts (paramName) {
+    const name = paramName || (this.paneParam || {}).name;
+    if (!name)
+      return [];
+    const texts = (this.panes[name] || []).slice();
+    const doc = this.docAt(this.showing);
+    if (doc && doc.param.name === name) {
+      while (texts.length <= doc.index)
+        texts.push("");
+      texts[doc.index] = this.textarea.val();
+    }
+    return texts;
+  }
+
+  /** what to hand the module's fromParams: a pane nobody has written in is
+   * not a document, however much room it is taking up */
+  params () {
+    const params = Object.assign({}, this.fields);
+    for (const param of this.paneParams)
+      params[param.name] = this.texts(param.name).filter(text => text.trim() !== "");
+    return params;
+  }
+
+  /** the text a permalink or manifest means by "data": the first document
+   * of the first parameter, whichever pane happens to be showing */
+  primaryText () {
+    const texts = this.texts((this.paneParams[0] || {}).name);
+    return texts.length > 0 ? texts[0] : "";
+  }
+
+  /** Put documents where the source says they go.  A source that can sort
+   * its own documents out (a Wikibase, told an entity page, knows it is a
+   * page and which ids it is about) does; otherwise they are documents of
+   * the first parameter, which is what a data pane has always meant. */
+  setDocuments (texts) {
+    const first = this.paneParams[0];
+    if (!first)
+      return;
+    const distribute = this.module.distributeDocuments;
+    const bySpec = distribute
+          ? distribute(texts.filter(text => text.trim() !== ""))
+          : {[first.name]: texts};
+    for (const param of this.paneParams)
+      this.panes[param.name] = (bySpec[param.name] || []).slice();
+    this.showing = 0;
+    this.textarea.val((this.documents()[0] || {}).text || "");
+    this.render();
+  }
+
+  select (moduleId) {
+    if (this.moduleId === moduleId)
+      return;
+    this.stash();
+    this.moduleId = moduleId;
+    this.showing = 0;
+    this.onSettings = false;   // show the document; settings are a tab away
+    $("#neighborhood").val(moduleId);
+    this.render();
+    this.textarea.val((this.panes[(this.paneParam || {}).name] || [""])[0] || "");
+    this.onChange({language: true});   // a different source, a different language
+  }
+
+  /** keep the showing document's text before something replaces it */
+  stash () {
+    const doc = this.docAt(this.showing);
+    if (doc)
+      this.panes[doc.param.name] = this.texts(doc.param.name);
+  }
+
+  show (n) {
+    if (this.showingPane)
+      return;                 // render() moved the tab set; not a new choice
+    // one source's panes need not share a language -- wikidata's list of
+    // entity ids and the entity pages themselves don't -- so moving between
+    // them is a language change as much as changing source is
+    const was = this.paneParam;
+    this.showingPane = true;
+    try {
+      this.stash();
+      // read the document before moving to it: docAt reports the showing
+      // one through the textarea, which is about to be overwritten
+      const text = (this.documents()[n] || {}).text || "";
+      this.showing = n;
+      this.textarea.val(text);
+      this.render();
+    } finally {
+      this.showingPane = false;
+    }
+    this.onChange(was === this.paneParam ? undefined : {language: true});
+  }
+
+  /** the parameter a new document would be added to */
+  get creatableParam () {
+    return this.paneParams.find(p => p.pane.creatable) || null;
+  }
+
+  addPane (text) {
+    const spec = this.creatableParam;
+    if (!spec)
+      return;
+    this.stash();
+    const texts = this.panes[spec.name] || [];
+    texts.push(text === undefined ? (spec.pane.template || "") : text);
+    this.panes[spec.name] = texts;
+    this.show(this.documents().findIndex(
+      d => d.param.name === spec.name && d.index === texts.length - 1));
+  }
+
+  removePane (n) {
+    const doc = this.docAt(n);
+    if (!doc)
+      return;
+    this.stash();
+    const texts = this.panes[doc.param.name] || [];
+    if (texts.length <= (doc.param.pane.min || 0))
+      return;
+    texts.splice(doc.index, 1);
+    this.panes[doc.param.name] = texts;
+    this.show(Math.min(this.showing, Math.max(0, this.documents().length - 1)));
+  }
+
+  /** Draw what the selected source asks for: its settings in the leftmost
+   * pane, and one pane per document it takes to the right of them -- the
+   * same tab set the shape map uses, so the data pane reads the way the
+   * rest of the app does.
+   *
+   * The documents' panes are placeholders: one editing area is moved into
+   * whichever is showing, so everything that has ever talked to "the data
+   * textarea" -- drag and drop, dirty tracking, permalinks, the editors --
+   * goes on talking to one element.
+   */
+  render () {
+    const {moduleId} = ShExWebApp.NeighborhoodApi;
+    const spec = this.paneParam;
+    const container = $("#dataSource-tabs");
+    const initialized = container.hasClass("ui-tabs");
+
+    const fields = $("#neighborhoodFields").empty();
+    const shown = this.fieldParams.filter(p => !(p.ui && p.ui.hidden));
+    for (const param of shown.concat(this.hostParams()))
+      fields.append(this.fieldFor(param));
+    if (fields.children().length === 0)
+      fields.append($("<span/>", {class: "noSettings"})
+                    .text("nothing to configure for " + (this.module.label || this.module.name))
+                    .attr("title", this.module.description || ""));
+
+    // one tab and one (empty) panel per document, in the order the source
+    // declared its parameters
+    const tabs = $("#dataPaneTabs");
+    tabs.children().not(":first").remove();
+    container.children("div.dataPanePanel").remove();
+    const docs = this.documents();
+    docs.forEach(({param, index, text}, n) => {
+      const id = "dataPanePanel-" + n;
+      const showingText = n === this.showing ? this.textarea.val() : text;
+      const title = (param.pane.titleOf && param.pane.titleOf(showingText))
+            || (param.pane.max === 1 ? param.pane.label : param.pane.label + " " + (index + 1));
+      tabs.append($("<li/>").append($("<a/>", {href: "#" + id, title: param.pane.label}).text(title)));
+      container.append($("<div/>", {id, class: "dataPanePanel"}));
+    });
+    if (this.showing >= docs.length)
+      this.showing = Math.max(0, docs.length - 1);
+
+    const removable = this.docAt(this.showing);
+    $("#dataPaneControls").toggle(docs.length > 0 || !!this.creatableParam);
+    $("#addDataPane").toggle(!!this.creatableParam);
+    $("#removeDataPane").toggle(!!removable &&
+                                (this.panes[removable.param.name] || []).length >
+                                (removable.param.pane.min || 0));
+
+    // a source with no document has only its settings to show
+    if (docs.length === 0)
+      this.onSettings = true;
+    if (initialized) {
+      // refreshing re-activates a tab, which would answer the question this
+      // is about to ask; say what should be active and ignore the widget's
+      // own opinion while it settles
+      const active = this.onSettings ? 0 : this.showing + 1;   // +1: settings is leftmost
+      this.rendering = true;
+      try {
+        container.tabs("refresh");
+        container.tabs("option", "active", active);
+      } finally {
+        this.rendering = false;
+      }
+    }
+    this.showDocumentArea();
+    $("#neighborhood").val(moduleId(this.module));
+  }
+
+  /** one labelled input for a parameter, remembering what's typed into it */
+  fieldFor (param) {
+    const id = "nbhd-" + param.name;
+    const value = this.fields[param.name];
+    const input = param.schema.type === "boolean"
+          ? $("<input/>", {type: "checkbox", id})
+            .prop("checked", value === undefined ? !!param.schema.default : !!value)
+          : $("<input/>", {type: param.schema.type === "integer" || param.schema.type === "number"
+                           ? "number" : "text", id,
+                           placeholder: param.schema.default === undefined ? "" : String(param.schema.default),
+                           value: value === undefined ? "" : value});
+    input.attr("title", param.description || "");
+    input.on("change keyup", () => {
+      this.fields[param.name] = param.schema.type === "boolean" ? input.prop("checked") : input.val();
+      this.onChange();
+    });
+    return $("<label/>", {for: id, class: "neighborhoodField"})
+      .append($("<span/>").text(param.name), input);
+  }
+
+  /** Settings that belong to the data source but that this app, not the
+   * module, carries out.  `slurp` is the one: recording the triples a
+   * validation fetched is the host's doing, and it only means anything for
+   * a source that fetches -- which is why it used to hide inside the "load
+   * data" menu item and appear only once an endpoint was named. */
+  hostParams () {
+    // any source that fetches its answers -- by querying a service or by
+    // translating some other representation -- has something to record
+    return (this.module.capabilities || []).length > 0
+      ? [{name: "slurp", schema: {type: "boolean"},
+          description: "record what this validation fetches: the triples as Turtle, " +
+          "so the same data can be validated without the source"}]
+      : [];
+  }
+
+  /** Is this app recording what a validation fetches? */
+  slurping () {
+    return this.fields.slurp === true || this.fields.slurp === "true";
+  }
+
+  /** Where slurped triples go: the local store's Turtle document, so that
+   * switching the picklist to Turtle afterwards validates the same data
+   * without the service.  (They used to go into the pane that held the
+   * `# Endpoint:` header, which came to the same thing once you deleted
+   * the header.) */
+  localTurtle () {
+    const {paneParams, moduleId} = ShExWebApp.NeighborhoodApi;
+    for (const module of this.modules) {
+      // the registered source that holds an RDF document -- the "Turtle
+      // data" pane -- found by what it takes rather than by its name
+      const spec = paneParams(module.dbParams || []).find(
+        p => ((p.schema.items || {}).contentMediaType || "") === "text/turtle");
+      if (spec)
+        return {id: moduleId(module), name: spec.name};
+    }
+    return null;
+  }
+
+  /** Record a page a translating source read, as one of its own documents:
+   * a tab per entity, named by the id in it.  Slurping a Wikibase leaves
+   * you the pages it visited, to edit and validate again. */
+  addPageDocument (id, text) {
+    const spec = this.paneParams.find(p => p.pane.creatable);
+    if (!spec)
+      return;
+    this.stash();
+    const texts = this.panes[spec.name] || [];
+    const titleOf = spec.pane.titleOf || (() => null);
+    const at = texts.findIndex(had => titleOf(had) === id);
+    if (at === -1)
+      texts.push(text);
+    else
+      texts[at] = text;
+    this.panes[spec.name] = texts;
+  }
+
+  /** Append to that document, and to the textarea too when it is the one
+   * showing (so a slurp scrolls by as it happens, as it always has). */
+  appendToLocalTurtle (text) {
+    const target = this.localTurtle();
+    if (!target)
+      return;
+    const showingIt = this.moduleId === target.id && !this.onSettings &&
+          this.paneParam && this.paneParam.name === target.name && this.showing === 0;
+    if (showingIt) {
+      noScrollAppend(this.textarea, text);
+      return;
+    }
+    const panes = this.panesFor(target.id);
+    const texts = panes[target.name] || [""];
+    texts[0] = (texts[0] || "") + text;
+    panes[target.name] = texts;
+  }
+
+  setLocalTurtle (text) {
+    const target = this.localTurtle();
+    if (!target)
+      return;
+    const panes = this.panesFor(target.id);
+    panes[target.name] = [text];
+    if (this.moduleId === target.id && this.showing === 0)
+      this.textarea.val(text);
+  }
+
+  /** Wire the tab set up once the DOM is in place. */
+  initTabs () {
+    $("#dataSource-tabs").tabs({
+      activate: (event, ui) => {
+        if (this.rendering)
+          return;                        // render() moving the tabs, not the user
+        const panel = ui.newPanel.attr("id") || "";
+        const m = panel.match(/^dataPanePanel-(\d+)$/);
+        this.onSettings = !m;
+        if (m)
+          this.show(parseInt(m[1], 10));
+        else
+          this.showDocumentArea();       // the settings pane: no document
+      },
+    });
+    $("#addDataPane").on("click", () => this.addPane());
+    $("#removeDataPane").on("click", () => this.removePane(this.showing));
+  }
+
+  /** The editing area belongs to the document tabs, so it shows when one of
+   * them is active and not when the settings pane is -- and not at all for
+   * a source with no document to edit.  It sits below the tab set rather
+   * than inside a panel: the panels are empty placeholders, which keeps the
+   * one textarea (and whatever editor has taken it over) in one place.
+   */
+  showDocumentArea () {
+    const showing = this.documents().length > 0 && !this.onSettings;
+    const area = $("#dataArea");
+    $("#dataDocument").toggle(showing);
+    if (showing) {
+      // an editor measures nothing while it is hidden, so what it drew
+      // before is what it keeps until it is told to look again
+      if (this.onShown)
+        this.onShown();
+      // and remember how tall this block is with a document in it, so that
+      // showing the settings pane -- which is a line or two -- doesn't let
+      // everything below jump up.  Measured rather than declared: the
+      // document is a textarea, or an editor, or an editor the reader has
+      // resized.
+      area.css("min-height", "");
+      const height = area.outerHeight();
+      if (height)
+        area.css("min-height", height + "px");
+    }
+  }
+
+  /** the language of the pane now showing, for the editors */
+  paneEditor () {
+    const spec = this.paneParam;
+    return spec ? (spec.pane.editor || null) : null;
+  }
+
+  /** what the data pane is showing, for its heading */
+  dialect () {
+    const spec = this.paneParam;
+    return spec ? spec.pane.label : (this.module.label || this.module.name);
+  }
+
+  /** Fill the picklist and draw the starting source's configuration. */
+  init () {
+    const {moduleId} = ShExWebApp.NeighborhoodApi;
+    const select = $("#neighborhood").empty();
+    for (const module of this.modules)
+      select.append($("<option/>", {value: moduleId(module)})
+                    .text(module.label || module.name)
+                    .attr("title", module.description || ""));
+    select.on("change", () => this.select(select.val()));
+    this.initTabs();
+    this.render();
+  }
+
+  /** QueryParams descriptors: the data source itself, and every value any
+   * loaded source asks to be told.  Parameters are keyed by meaning rather
+   * than by module, so `endpoint=` in a permalink or a manifest entry
+   * belongs to whichever source is selected and asks for one.
+   *
+   * The locations are stand-ins rather than DOM elements: the field for a
+   * parameter exists only while the source that declares it is selected,
+   * but its value has to survive the picklist either way. */
+  queryParams () {
+    const {moduleId, fieldParams} = ShExWebApp.NeighborhoodApi;
+    const stub = (get, set) => ({
+      val: function (v) { return v === undefined ? get() : set(v); },
+      prop: () => undefined,
+    });
+    const params = [
+      {queryStringParm: "neighborhood", deflt: moduleId(this.modules[0]),
+       manifest: {key: "neighborhood"},
+       location: stub(() => this.moduleId, v => this.select(v || moduleId(this.modules[0])))},
+    ];
+    const seen = new Set();
+    for (const module of this.modules)
+      for (const param of fieldParams(module.dbParams || [])) {
+        if (seen.has(param.name) || (param.ui && param.ui.hidden))
+          continue;
+        seen.add(param.name);
+        params.push({
+          queryStringParm: param.name, deflt: "", manifest: {key: param.name},
+          location: stub(
+            () => {
+              // only the selected source's parameters describe this state
+              const mine = fieldParams(this.module.dbParams || []).some(p => p.name === param.name);
+              const value = mine ? this.fields[param.name] : undefined;
+              return value === undefined || value === false ? "" : String(value);
+            },
+            v => {
+              if (v === "" || v === undefined)
+                delete this.fields[param.name];
+              else
+                this.fields[param.name] = param.schema.type === "boolean" ? v !== "false" : v;
+              this.render();
+              this.onChange();     // the db was built from the old value
+            }),
+        });
+      }
+    return params;
+  }
+}
+
 class TurtleCache extends InterfaceCache {
   constructor (selection, onLoad, turtleParser, queryTrackerController) {
     super(selection, onLoad);
@@ -198,51 +701,99 @@ class TurtleCache extends InterfaceCache {
     this.meta.lexToTerm = (lex) => turtleParser.termToLd(lex, new IRIResolver(this.meta));
   }
 
+  /** Which neighborhood serves this pane is the modules' business, not this
+   * app's: each says whether it answers to the pane's text and with what
+   * parameters (claimPaneText), and the app builds whichever claims it
+   * (fromParams).  A module that declares a `data` parameter -- rdfjs --
+   * gets the parsed store, since the Turtle parser and this pane's
+   * prefixes and base live here.
+   */
   async parse (text, base) {
-    var m = text.match(/^\s*#?\s*Endpoint\s*:\s*(https?:\/\/.*?)(\s+|$)/si);
-    if (m) {
-      this.endpoint = m[1];
-      if ($("#slurp").length === 0) {
-        // Add a #slurp checkbox
-        $("#load-data-button").append(
-          $("<span/>", {id: "slurpSpan",
-                        style: "float:right",
-                        title: "fill data pane with data queried from <" + this.endpoint + ">"})
-            .append(
-              $("<input/>", {id: "slurp", type: "checkbox"}),
-              $("<label/>", {for: "slurp"}).text("slurp")
-            ).on("click", () => {
-              // HACK: disable propagation and toggle after handler is done.
-              setTimeout(() => {
-                $("#slurp").prop("checked", !$("#slurp").prop("checked"));
-              }, 0);
-              return false; // don't pass to load data button
-            })
-        );
-      }
-    } else {
-      delete this.endpoint; // make sure it's not set
-      $("#slurpSpan").remove();
-    }
-    const res = this.endpoint
-      ? ShExWebApp.SparqlDb(this.endpoint, this.queryTrackerController.queryTracker)
-      : ShExWebApp.RdfJsDb(this.turtleParser.parseString(text, this.meta, base));
+    const module = this.neighborhoods.module;
+    const params = this.neighborhoods.params();
+
+    // The dirty bit says "something the user touched changed", which is
+    // true of every keystroke in a settings field; whether *this source's*
+    // inputs changed is a different question, and for a source that fetches
+    // its answers rebuilding when they haven't costs a round trip and a
+    // translation for nothing.  A local store is rebuilt regardless: it is
+    // cheap, and parsing the document is also how this pane learns its
+    // prefixes and base.
+    const fetches = (module.capabilities || []).length > 0;
+    const signature = JSON.stringify([ShExWebApp.NeighborhoodApi.moduleId(module), params, base,
+                                      // the tracker is an input too: turning slurp on has to
+                                      // build a db that reports what it fetches
+                                      !!this.queryTrackerController.queryTracker]);
+    if (fetches && this.parsed && signature === this.dbSignature)
+      return this.parsed;
+    this.dbSignature = signature;
+
+    if ("endpoint" in params)
+      this.endpoint = params.endpoint;    // the SPARQL shape-map extension reads this
+    else
+      delete this.endpoint;
+
+    // A pane of Turtle is this app's to parse: it owns the parser, and the
+    // prefixes and base it finds are what the rest of the app lexifies
+    // nodes with.  Panes of anything else go to the module as text.
+    const turtlePane = ShExWebApp.NeighborhoodApi.paneParams(module.dbParams || [])
+          .find(p => ((p.schema.items || {}).contentMediaType || "") === "text/turtle");
+    if (turtlePane)
+      params.store = this.turtleParser.parseDocuments(
+        params[turtlePane.name] || [], this.meta, base);
+
+    const res = module.fromParams(params, this.queryTrackerController.queryTracker);
     this.callOnLoad();
     return res;
   }
 
+  /** Resolve a query map extension -- SPARQL "SELECT ...", QENTITIES "42"
+   * -- by asking the selected data source, which is the only thing that can
+   * know what the question means.  A source that does not offer the
+   * extension says so by name, rather than failing obscurely or running the
+   * question against something that was never configured.
+   */
+  async resolveQueryMapExtension (language, lexical) {
+    const {queryMapResolverFor, extensionName, moduleId} = ShExWebApp.NeighborhoodApi;
+    const module = this.neighborhoods.module;
+    const resolver = queryMapResolverFor(module, language);
+    if (!resolver)
+      throw Error("the QueryMap extension " + extensionName(language) +
+                  " is not supported by the neighborhood " + moduleId(module));
+    return resolver.resolve(lexical, await this.refresh());
+  }
+
+  /** how a query map extension is written back out: by the name the source
+   * knows it as */
+  writeQueryMapExtension (language, lexical) {
+    const {queryMapResolverFor, extensionName} = ShExWebApp.NeighborhoodApi;
+    const resolver = queryMapResolverFor(this.neighborhoods.module, language);
+    return (resolver ? resolver.name : extensionName(language)) +
+      " '''" + lexical.replace(/'''/g, "''\\'") + "'''";
+  }
+
+  /** candidate focus nodes for the shape-map menus.
+   *
+   * A db that offers its own typeahead (NeighborhoodWebAppDb's optional
+   * suggestFocusNodes) is asked first: it knows what its nodes are, where
+   * this app can only guess by looking at whatever triples are loaded --
+   * which for the wikidata neighborhood would offer statement and value
+   * nodes alongside the entities anyone would actually validate.
+   */
   async getItems () {
-    const m = this.get().match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
-    if (m) {
+    const data = await this.refresh();
+    if (typeof data.suggestFocusNodes === "function")
+      return data.suggestFocusNodes("", SPARQL_get_items_limit)
+        .map(suggestion => this.meta.termToLex(RdfJs.DataFactory.namedNode(suggestion.label)));
+    if (this.endpoint) {
       const q = "SELECT DISTINCT ?s { ?s ?p ?o } LIMIT " + SPARQL_get_items_limit;
+      // (this read ShEx.Util, which is not a thing in this file: the menu
+      // has been quietly falling back to "no choices found" over endpoints)
       return [MENU_ITEM_materialize]
-        .concat(ShEx.Util.executeQuery(q, m[1], RdfJs.DataFactory).map(this.lexifyFirstColumn));
-    } else {
-      const data = await this.refresh();
-      return data.getQuads().map(t => {
-        return this.meta.termToLex(t.subject); // !!check
-      });
+        .concat(ShExWebApp.Util.executeQuery(q, this.endpoint, RdfJs.DataFactory)
+                .map(row => this.lexifyFirstColumn(row)));
     }
+    return data.getQuads().map(t => this.meta.termToLex(t.subject));
   }
 
   lexifyFirstColumn (row) {
@@ -354,7 +905,11 @@ class ManifestCache extends InterfaceCache {
       }
       ["schemaURL", "dataURL", "queryMapURL"].forEach(parm => {
         if (parm in elt) {
-          elt[parm] = new URL(elt[parm], url).href;
+          // an entry may name several documents under one key; each is a
+          // reference of its own, not one comma-joined reference
+          elt[parm] = Array.isArray(elt[parm])
+            ? elt[parm].map(each => new URL(each, url).href)
+            : new URL(elt[parm], url).href;
         } else {
           delete elt[parm];
         }
@@ -520,11 +1075,23 @@ class ManifestCache extends InterfaceCache {
     }
   }
 
+  /** A data source that takes several documents -- a Wikibase's entity
+   * pages, say -- is given them as an array under the same `data`/`dataURL`
+   * keys one document uses.  The first is the entry's document as far as
+   * every existing path is concerned (the pick machinery, `.selected`
+   * matching, the load dialog); the rest are fetched at pick time. */
   makeDataEntry (dataLabel, idx, elt, base) {
+    const texts = elt.data === undefined ? [] : [].concat(elt.data);
+    const urls = elt.dataURL === undefined ? [] : [].concat(elt.dataURL);
     return {
       label: dataLabel || idx.toString(),
-      text: elt.data,
-      url: elt.dataURL || (elt.data ? base : undefined),
+      // no document named at all means the source is the data (a query
+      // service); "" rather than undefined, which would send paintManifest
+      // fetching a URL that isn't there
+      text: texts.length > 0 ? texts[0] : (urls.length > 0 ? undefined : ""),
+      url: urls.length > 0 ? urls[0] : (elt.data ? base : undefined),
+      moreTexts: texts.slice(1),
+      moreUrls: urls.slice(1),
       entry: elt
     };
   }
@@ -568,8 +1135,25 @@ class ManifestCache extends InterfaceCache {
     if ($(elt).hasClass("selected")) {
       $(elt).removeClass("selected");
     } else {
-      // Update data pane.
+      // Which data source this entry is for, before its documents land in
+      // the panes: the same `neighborhood` key a permalink uses, defaulting
+      // to the first source (a local store) as manifests always meant.
+      const neighborhoods = this.caches.inputData.neighborhoods;
+      if (neighborhoods)
+        neighborhoods.select(dataTest.entry.neighborhood ||
+                             ShExWebApp.NeighborhoodApi.moduleId(neighborhoods.modules[0]));
+      // ...and everything else the entry configures it with, before the
+      // query map below asks it anything: a source with its endpoint still
+      // to come is a source that can't answer.
+      await this.loadExtraInputs(dataTest);
+      // Update data pane.  An entry may name several documents, and where
+      // they go is the source's business: a Wikibase told an entity page
+      // knows it is a page, and which ids it is about.
+      const documents = [dataTest.text === undefined ? "" : dataTest.text]
+            .concat(await this.extraDataDocuments(dataTest));
       await this.caches.inputData.set(dataTest.text, new URL((dataTest.url || ""), DefaultBase).href);
+      if (neighborhoods)
+        neighborhoods.setDocuments(documents);
       this.caches.inputData.url = undefined; // @@ crappyHack1
       $("#inputData .status").text(name);
       $("#inputData li.selected").removeClass("selected");
@@ -594,8 +1178,6 @@ class ManifestCache extends InterfaceCache {
       } else {
         this.resultsWidget.append($("<div/>").text("No queryMap or queryMapURL supplied in manifest").addClass("warning"));
       }
-
-      await this.loadExtraInputs(dataTest);
     }
   }
 
@@ -629,6 +1211,20 @@ class ManifestCache extends InterfaceCache {
       else
         q.location.val(value);
     }
+  }
+
+  /** the entry's documents after the first, fetched if it named them by URL */
+  async extraDataDocuments (dataTest) {
+    const texts = (dataTest.moreTexts || []).slice();
+    for (const url of dataTest.moreUrls || []) {
+      const absolute = new URL(url, dataTest.url || DefaultBase).href;
+      try {
+        texts.push(await this.fetchOK(absolute));
+      } catch (e) {
+        this.renderErrorMessage(e, "data");
+      }
+    }
+    return texts;
   }
 
   async queryMapLoaded (dataTest, text) {
@@ -931,14 +1527,10 @@ class ShapeMapCache extends InterfaceCache {
       case "node": node = ldToTurtle(pair.node, this.caches.inputData.meta.termToLex); shape = startOrLdToTurtle(pair.shape); break;
       case "TriplePattern": node = renderTP(pair.node); shape = startOrLdToTurtle(pair.shape); break;
       case "Extension":
-        if (pair.node.language === EXTENSION_sparql) {
-          node = "SPARQL '''" + (pair.node.lexical.replace(/'''/g, "''\\'")) + "'''";
-          shape = startOrLdToTurtle(pair.shape);
-        } else {
-          this.resultsWidget.failMessage(Error("unsupported extension: <" + pair.node.language + ">"),
-                                         "parsing Query Map", pair.node.lexical);
-          skip = true; // skip this entry.
-        }
+        // whether this source can resolve it is settled when the map is
+        // used; writing it back out only needs its name
+        node = this.caches.inputData.writeQueryMapExtension(pair.node.language, pair.node.lexical);
+        shape = startOrLdToTurtle(pair.shape);
         break;
       default:
         this.resultsWidget.append($("<div/>").append(
@@ -1103,18 +1695,17 @@ class ShapeMapCache extends InterfaceCache {
             var smparser = ShExWebApp.ShapeMapParser.construct(
               _ShapeMapCache.meta.base, _ShapeMapCache.caches.inputSchema.meta, _ShapeMapCache.caches.inputData.meta);
             var sm = smparser.parse(nodeLex + '@' + shapeLex)[0];
-            if (sm.node.language === EXTENSION_sparql) {
-              let q = sm.node.lexical;
-              let obj = {}
+            if (sm.node.type === "Extension") {
+              const obj = {}
               obj[MENU_ITEM_materialize] = { name: MENU_ITEM_materialize };
+              const nodes = await _ShapeMapCache.caches.inputData.resolveQueryMapExtension(
+                sm.node.language, sm.node.lexical);
               return {
-                items: ShExWebApp.Util.executeQuery(q, _ShapeMapCache.caches.inputData.endpoint, RdfJs.DataFactory).reduce(
-                  (ret, row) => {
-                    let name = _ShapeMapCache.caches.inputData.lexifyFirstColumn(row);
-                    ret[name] = { name: name };
-                    return ret;
-                  }, obj
-                )
+                items: nodes.reduce((ret, term) => {
+                  const name = _ShapeMapCache.caches.inputData.meta.termToLex(term);
+                  ret[name] = { name: name };
+                  return ret;
+                }, obj)
               }
             }
           } catch (e) {
@@ -1240,7 +1831,19 @@ class ShapeMapCache extends InterfaceCache {
    * use {this.caches.inputData,this.caches.inputSchema}.meta.{prefix,base} to complete IRIs
    * @return array of encountered errors
    */
+  /** Rebuild the Fixed Map from the Edit Map.
+   *
+   * Resolving a pair is asynchronous -- a triple pattern or a query map
+   * extension asks the data source what it selects -- so two of these can
+   * be in flight at once, which happens whenever anything changes twice in
+   * quick succession (setting the data and then the query map, say).  Each
+   * used to empty the table on the way in and append on the way out, so
+   * both lots of rows survived: the map grew a stale copy of every pair it
+   * had before.  Now the table is emptied by whichever run is still the
+   * current one, at the point it has something to put there.
+   */
   async copyEditMapToFixedMap () {
+    const generation = this.fixedMapGeneration = (this.fixedMapGeneration || 0) + 1;
     const getQuads = async (s, p, o) => {
       const get = s === ShExWebApp.ShapeMap.Focus ? "subject" : "object";
       return (await this.caches.inputData.refresh()).getQuads(mine(s), mine(p), mine(o)).map(t => {
@@ -1253,8 +1856,6 @@ class ShapeMapCache extends InterfaceCache {
       }
     }
 
-    this.fixedMap.find("tbody").empty(); // empty out the fixed map (make optional?).
-    // or could leave the tbody: this.fixedMap.find(".pair").remove();
     const restoreText = this.fixedMapTab.text();
     this.fixedMapTab.text("resolving Fixed Map").addClass("running");
     const nodeShapePromises = this.editMap.find(".pair").get().reduce((acc, queryPair) => {
@@ -1270,9 +1871,9 @@ class ShapeMapCache extends InterfaceCache {
         const sm = smparser.parse(node + '@' + shape)[0];
         const added = typeof sm.node === "string" || "@value" in sm.node
               ? Promise.resolve({nodes: [node], shape: shape, status: status})
-              : sm.node.language === EXTENSION_sparql
-              ? ShExWebApp.Util.executeQueryPromise(sm.node.lexical, this.caches.inputData.endpoint, RdfJs.DataFactory)
-                .then(rows => Promise.resolve({nodes: rows.map(row => this.caches.inputData.lexifyFirstColumn(row)), shape: shape}))
+              : sm.node.type === "Extension"
+              ? this.caches.inputData.resolveQueryMapExtension(sm.node.language, sm.node.lexical)
+                .then(terms => ({nodes: terms.map(term => this.caches.inputData.meta.termToLex(term)), shape: shape}))
               : getQuads(sm.node.subject, sm.node.predicate, sm.node.object)
               .then(nodes => Promise.resolve({nodes: nodes, shape: shape, status: status}));
         return acc.concat(added);
@@ -1334,6 +1935,9 @@ class ShapeMapCache extends InterfaceCache {
     }
 
     const pairs = await Promise.all(nodeShapePromises)
+    if (generation !== this.fixedMapGeneration)
+      return []; // a later edit is already resolving; its rows are the ones to show
+    this.fixedMap.find("tbody").empty();
     pairs.reduce((acc, pair) => {
       pair.nodes.forEach(node => {
         const nodeTerm = this.caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
@@ -1416,6 +2020,36 @@ class TurtleParser {
     meta.prefixes = parser._prefixes;
     return ret;
   }
+  /** Several documents, one graph.  A source may hold more than one -- a
+   * patient here, an observation about them there -- and they still make a
+   * single store to validate against.  Each parses on its own, though:
+   * prefixes belong to the document that declares them, and so do blank
+   * nodes, which two documents may both call _:x without meaning the same
+   * node.  So later documents' blank nodes are renamed apart.
+   */
+  parseDocuments (texts, meta, base) {
+    if (texts.length <= 1)
+      return this.parseString(texts[0] || "", meta, base);
+    const ret = new RdfJs.Store();
+    const prefixes = {};
+    texts.forEach((text, index) => {
+      const one = {};
+      const store = this.parseString(text, one, base);
+      const scope = (term) => term.termType !== "BlankNode" ? term
+            : RdfJs.DataFactory.blankNode("d" + index + "_" + term.value);
+      ret.addQuads(store.getQuads().map(q => index === 0 ? q : RdfJs.DataFactory.quad(
+        scope(q.subject), q.predicate, scope(q.object), q.graph)));
+      // the first declaration of a prefix wins, as it would in one document
+      for (const [prefix, iri] of Object.entries(one.prefixes || {}))
+        if (!(prefix in prefixes))
+          prefixes[prefix] = iri;
+      if (index === 0)
+        meta.base = one.base;
+    });
+    meta.prefixes = prefixes;
+    return ret;
+  }
+
   termToLd (lex, resolver) { // returns ShExJ objectValue
     let nz;
     try {
@@ -1495,6 +2129,33 @@ class ResultsWidget {
     const top = paneDom.getBoundingClientRect().top;
     paneDom.style.height = Math.max(200, window.innerHeight - top - 12) + "px";
   }
+
+  /** Bring the result an anchor names into view, when the results share an
+   * editor.  Returns false if nothing here knows that anchor, leaving the
+   * browser to scroll to an element with that id -- which is how results
+   * that are each their own element have always worked. */
+  scrollToResult (anchor) {
+    // a browser may hand back the fragment as it was written or percent-
+    // decoded, and these anchors are node@shape with both encoded
+    const spellings = [anchor];
+    try {
+      spellings.push(decodeURIComponent(anchor));
+    } catch (e) { /* not valid percent-encoding: the one spelling, then */ }
+    for (const {pane, offsets} of this.resultPanes)
+      for (const spelling of spellings)
+        if (offsets && spelling in offsets) {
+          pane.scrollTo(offsets[spelling]);
+          return true;
+        }
+    return false;
+  }
+
+  /** Every result pane was built before it was in the document and has just
+   * been given a height, so none of them has measured anything real yet.
+   * Left alone they draw a gutter for a viewport that never existed. */
+  remeasurePanes () {
+    this.resultPanes.forEach(({pane}) => pane.requestMeasure && pane.requestMeasure());
+  }
   replace (text) {
     return this.resultsSel.text(text);
   }
@@ -1548,6 +2209,7 @@ class ShExResultsRenderer {
     this.resultsWidget = resultsWidget;
     this.caches = caches;
     this.entries = []; // collected for editor diagnostics (EditorSupport)
+    this.appinfo = []; // results held back to share one editor
   }
 
   async entry (entry) {
@@ -1563,7 +2225,6 @@ class ShExResultsRenderer {
     const klass = (fails ^ fixedMapEntry.find(".shapeMap-joiner").hasClass("nonconformant")) ? "fails" : "passes";
     const resultStr = fails ? "✗" : "✓";
     let elt = null;
-    let appinfoPane = null;
 
     if (!fails) {
       if ($("#success").val() === "query" || $("#success").val() === "remainder") {
@@ -1616,55 +2277,110 @@ class ShExResultsRenderer {
         elt = $("<pre/>").text(JSON.stringify(renderMe, null, "  ")).addClass(klass);
         break;
 
-      default: // appinfo: syntax-highlighted JSON with TestedTriples mapped
-        try {
-          const {text, ranges} = ShExWebApp.EditorServices.stringifyWithOffsets(
-            renderMe, o => o && o.type === "TestedTriple");
-          const pane = ShExWebApp.EditorPanes.makeJsonPane(text);
-          elt = $("<div/>").addClass(klass).append(pane.dom).data("rawText", text);
-          this.resultsWidget.resultPanes.push({pane, ranges});
-          appinfoPane = pane;
-        } catch (e) {
-          console.warn("falling back to plain results JSON:", e);
+      default: // appinfo: the whole JSON, in an editor if there is one
+        if (this.editorsOn()) {
+          // held back: all the results go into one editor at finish(), the
+          // way they read as one array
+          this.appinfo.push({renderMe, klass, entry});
+          elt = null;
+        } else {
           elt = $("<pre/>").text(JSON.stringify(renderMe, null, "  ")).addClass(klass);
         }
       }
     }
-    this.resultsWidget.append(elt);
-    if (appinfoPane)
-      this.resultsWidget.fitPaneToWindow(appinfoPane.dom);
+    if (elt)
+      this.resultsWidget.append(elt);
 
-    // update the FixedMap
+    // update the FixedMap.  Its check mark links to this result: an element
+    // id where each result is an element, an offset into the editor where
+    // they share one (see renderAppinfo).
     fixedMapEntry.addClass(klass).find("a").text(resultStr);
     const nodeLex = fixedMapEntry.find("input.focus").val();
     const shapeLex = fixedMapEntry.find("input.inputShape").val();
     const anchor = encodeURIComponent(nodeLex) + "@" + encodeURIComponent(shapeLex);
-    elt.attr("id", anchor);
+    if (elt)
+      elt.attr("id", anchor);
+    else
+      this.appinfo[this.appinfo.length - 1].anchor = anchor;
     fixedMapEntry.find("a").attr("href", "#" + anchor);
     fixedMapEntry.attr("title", entry.elapsed + " ms")
   }
 
+  /** are the language-aware editors on?  The results follow the rest of the
+   * interface: editors everywhere, or textareas and <pre>s everywhere. */
+  editorsOn () {
+    return "EditorPanes" in ShExWebApp && $("#editors").val() === "1";
+  }
+
+  /** One editor holding every result, as the array they are.
+   *
+   * They used to be one editor each with the punctuation of an array
+   * written between them, which is what the Fixed Map's check marks
+   * scrolled to.  Now the array is the editor's document, and a check mark
+   * scrolls to its result's offset within it.
+   */
+  renderAppinfo () {
+    if (this.appinfo.length === 0)
+      return;
+    const results = this.appinfo.map(({renderMe}) => renderMe);
+    try {
+      const {text, ranges} = ShExWebApp.EditorServices.stringifyWithOffsets(
+        results, o => o && (o.type === "TestedTriple" || results.indexOf(o) !== -1));
+      const pane = ShExWebApp.EditorPanes.makeJsonPane(text);
+      const klass = this.appinfo.every(({klass}) => klass === "passes") ? "passes" : "fails";
+      const elt = $("<div/>").addClass(klass).append(pane.dom).data("rawText", text);
+      this.resultsWidget.append(elt);
+      this.resultsWidget.fitPaneToWindow(pane.dom);
+      pane.requestMeasure();   // now that it is attached and sized
+
+      // where each result starts, by the anchor its check mark links to
+      const offsets = {};
+      this.appinfo.forEach(({renderMe, anchor}) => {
+        const range = ranges.find(r => r.target === renderMe);
+        if (range && anchor !== undefined)
+          offsets[anchor] = range.from;
+      });
+      this.resultsWidget.resultPanes.push({
+        pane,
+        ranges: ranges.filter(r => r.target && r.target.type === "TestedTriple"),
+        offsets,
+      });
+    } catch (e) {
+      console.warn("falling back to plain results JSON:", e);
+      this.appinfo.forEach(({renderMe, klass, anchor}) =>
+        this.resultsWidget.append(
+          $("<pre/>").text(JSON.stringify(renderMe, null, "  ")).addClass(klass).attr("id", anchor)));
+    }
+  }
+
   finish (done) {
+    // a source that read documents to answer with hands them back, so a
+    // slurp leaves the entity pages it visited as panes to edit
+    const neighborhoods = this.caches.inputData.neighborhoods;
+    const db = this.caches.inputData.parsed;
+    if (neighborhoods && neighborhoods.slurping() && db && typeof db.loadedPages === "function") {
+      for (const {id, text} of db.loadedPages())
+        neighborhoods.addPageDocument(id, text);
+      neighborhoods.render();
+    }
     if ("slurpWriter" in this.caches.inputData) {
       this.caches.inputData.slurpWriter.end((err, chunk) => {
-        $("#inputData textarea").val((i, text) => {
-          return text + "\n\n# Visited data:\n" + chunk; // cheaper than set() but a pain to maintain...
-        });
-        $("#slurpSpan").remove();
+        this.caches.inputData.neighborhoods.appendToLocalTurtle("\n\n# Visited data:\n" + chunk);
         // delete this.caches.intputData.endpoint;
         this.caches.inputData.refresh();
         delete this.caches.inputData.slurpWriter;
       });
     }
 
+    this.renderAppinfo();
     $("#results .status").text("rendering results...").show();
-    // Add commas to JSON results.
-    if ($("#interface").val() !== "human")
-      $("#results div *").each((idx, elt) => {
-        if (idx === 0)
-          $(elt).prepend("[");
-        $(elt).append(idx === $("#results div *").length - 1 ? "]" : ",");
-      });
+    // Results used to be punctuated into a JSON array -- "[" before the
+    // first, "," between -- which `$("#results div *")` did by appending to
+    // every *descendant* of the results.  Once a result is an editor rather
+    // than a <pre> that is every line and every gutter element of it, which
+    // is where the commas in the gutter came from.  One result per block,
+    // separated by a rule, says the same thing without writing into
+    // somebody else's DOM.
     $("#results .status").hide();
     // for debugging values and schema formats:
     // try {
@@ -1697,14 +2413,24 @@ class EditorSupport {
     this.panes = {};
   }
 
-  addPane (name, cache, language) {
+  /** `language` names one of the host's own languages; pass `supplied` for
+   * a pane whose language comes from whichever neighborhood module claims
+   * its text (see moduleEditorFor).  Without either -- editors off, or a
+   * module that describes no language -- the textarea is what stays. */
+  addPane (name, cache, language, supplied) {
     const textarea = cache.selection[0];
     if (!textarea)
       return null;
-    return this.panes[name] = ShExWebApp.EditorPanes.makePane(textarea, {
+    // makePaneIfDescribed, not makePane: a module that describes no
+    // language leaves the textarea exactly as the editors-off app shows it
+    return this.panes[name] = ShExWebApp.EditorPanes.makePaneIfDescribed(textarea, {
       language,
       getBase: () => cache.meta && cache.meta.base,
-      completions: () => this.completionSets(language, cache),
+      completions: () => this.completionSets(language || "turtle", cache),
+      supplied,
+      // completions a module can only make from a live db: wikidata
+      // completing entity IRIs from the labels it has loaded
+      suppliedContext: () => ({db: cache.parsed}),
     });
   }
 
@@ -1751,14 +2477,50 @@ class EditorSupport {
     try {
       const located = ShExWebApp.EditorServices.locateInParsed(
         inputSchema.selection.val(), inputSchema.parsed);
-      const dataParsed = this.panes.inputData
-            ? ShExWebApp.EditorServices.parseTurtle(
-                inputData.selection.val(), {baseIRI: inputData.meta && inputData.meta.base})
-            : null;
+      // Where the data was written is the data source's to say: its
+      // document is Turtle, or an entity page, or whatever it reads.  A
+      // source that doesn't offer to locate its own leaves the Turtle
+      // parser, which is what a data pane has always held.
+      // Locating the data is worth doing whether or not it is showing in an
+      // editor: the results widget anchors to these ranges too.
+      const db = inputData.parsed;
+      const locate = text => !text ? null
+            : (db && typeof db.locateDocument === "function" && db.locateDocument(text))
+            || ShExWebApp.EditorServices.parseTurtle(
+              text, {baseIRI: inputData.meta && inputData.meta.base});
+      // A source can hold several documents -- an entity page each, and
+      // later a named graph each -- and a validation reaches all of them,
+      // so locate them all.  The showing one comes first: its diagnostics
+      // are the ones the pane on screen can carry.
+      const showing = this.app.neighborhoods ? this.app.neighborhoods.showing : -1;
+      const documents = this.app.neighborhoods ? this.app.neighborhoods.documents() : [];
+      // the showing document is read from the pane, which holds edits the
+      // stashed copy hasn't seen yet
+      const dataDocuments = [{at: documents.length ? showing : -1,
+                              parsed: locate(inputData.selection.val())}].concat(
+        documents.map((d, at) => ({at, parsed: at === showing ? null : locate(d.text)})))
+            .filter(d => d.parsed);
       const merged = {schema: [], data: [], pairs: []};
       entries.forEach(entry => {
-        const mapped = ShExWebApp.EditorServices.mapValidationErrors(
-          entry.appinfo, located, dataParsed);
+        // one mapping per document; a pair takes the anchors of whichever
+        // document turns out to have said its triple
+        const perDocument = dataDocuments.map(d => ({
+          at: d.at,
+          mapped: ShExWebApp.EditorServices.mapValidationErrors(entry.appinfo, located, d.parsed),
+        }));
+        const mapped = perDocument[0].mapped;
+        mapped.pairs.forEach((pair, i) => {
+          pair.doc = perDocument[0].at;
+          if (pair.anchors && pair.anchors.object)
+            return;
+          const elsewhere = perDocument.slice(1).find(
+            d => (d.mapped.pairs[i] || {}).anchors && d.mapped.pairs[i].anchors.object);
+          if (elsewhere) {
+            pair.anchors = elsewhere.mapped.pairs[i].anchors;
+            pair.data = elsewhere.mapped.pairs[i].data;
+            pair.doc = elsewhere.at;
+          }
+        });
         mapped.pairs.forEach(p => { p.id += merged.pairs.length; });
         merged.pairs.push.apply(merged.pairs, mapped.pairs);
         const actualFail = entry.status === "nonconformant";
@@ -1848,6 +2610,19 @@ class EditorSupport {
         anchorRanges(p, "object"), anchorRanges(p, "subject"), anchorRanges(p, "predicate")));
       // don't auto-scroll the pane the mouse is in
       schemaPane.highlight(schemaRanges, cls, {scroll: hoveredSide !== "schema"});
+      // the data may be in a document that isn't showing -- another entity
+      // page, later another named graph -- so bring it forward.  Showing a
+      // document can rebuild the pane (a new language), so ask for the pane
+      // again rather than highlighting the one that was just destroyed.
+      const neighborhoods = this.app.neighborhoods;
+      if (neighborhoods && lead.doc >= 0 && lead.doc !== neighborhoods.showing
+          && dataRanges.length) {
+        neighborhoods.show(lead.doc);
+        const showingPane = this.panes.inputData;
+        if (showingPane)
+          showingPane.highlight(dataRanges, cls, {scroll: true});
+        return showInResults(group, cls, hoveredSide !== "results");
+      }
       dataPane.highlight(dataRanges, cls, {scroll: hoveredSide !== "data"});
       showInResults(group, cls, hoveredSide !== "results");
     };
@@ -1943,6 +2718,23 @@ class ShExBaseApp {
     const shapeMap = new ShapeMapCache($("#textMap"), {inputSchema, inputData}, this.turtleParser, this.resultsWidget); // @@ rename to #shapeMap
 
     this.Caches = { inputSchema, inputData, extension, shapeMap };
+
+    // where the data comes from, and the configuration that source asks for
+    this.neighborhoods = new NeighborhoodConfig(
+      ShExWebApp.NeighborhoodModules, inputData.selection,
+      changed => {
+        inputData.dirty(true);
+        if (changed && changed.language)
+          this.refreshDataPaneEditor();
+      },
+      () => {
+        const pane = this.editorSupport && this.editorSupport.panes.inputData;
+        if (pane)
+          pane.requestMeasure();
+      });
+    inputData.neighborhoods = this.neighborhoods;
+    // normalize: bring a query parameter's value into the range its control
+    // accepts, so a permalink can say what a reader would write.
     // manifest: how this input corresponds to a manifest entry: key (the
     // entry key; long text may spill to a gist file named spillName,
     // referenced as <key>URL), labelKey/label (an accompanying label line),
@@ -1960,9 +2752,19 @@ class ShExBaseApp {
     this.QueryParams = this.Getables.concat([
       {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
       {queryStringParm: "success",      location: $("#success"),         deflt: "proof"     },
-      {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr" },
-      {queryStringParm: "editors",      location: $("#editors"),         deflt: ""          },
-    ]);
+      // an entry may ask for an engine: the thorough one enumerates every
+      // way a shape could match, which some real data makes impractical
+      {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr",
+       manifest: {key: "regexpEngine"} },
+      // the select's "off" is the empty string, which is not what anyone
+      // types: ?editors=0 and ?editors=false mean the same thing
+      {queryStringParm: "editors",      location: $("#editors"),         deflt: "",
+       normalize: v => /^(1|true|yes|on)$/i.test(v) ? "1" : ""},
+      // The data source and whatever it wants configured.  A parameter is
+      // named for what it means, not for the module that declares it, so a
+      // manifest entry or a permalink says `neighborhood=sparql&endpoint=…`
+      // and two sources that both take an `endpoint` agree about the word.
+    ]).concat(this.neighborhoods.queryParams());
     this.keyDownHandlers = [
       this.validateKeyDown.bind(this),
       this.navigateManifestKeyDown.bind(this),
@@ -1996,14 +2798,48 @@ class ShExBaseApp {
     }
   }
 
-  /** which caches get panes; subclasses add theirs */
+  /** which caches get panes; subclasses add theirs.
+   *
+   * The schema pane is ShExC and always will be.  The data pane's language
+   * is not the app's to decide: its text says which neighborhood serves the
+   * data ("# Endpoint: <url>" queries SPARQL, "# Wikidata" synthesizes
+   * entity pages, anything else is Turtle to parse), and each of those
+   * modules describes its own text.  So the pane asks whichever module
+   * claims the text as it stands -- and gets a plain textarea, exactly as
+   * with the editors off, from a module that describes nothing.
+   */
   addEditorPanes () {
     this.editorSupport.addPane("inputSchema", this.Caches.inputSchema, "shexc");
-    this.editorSupport.addPane("inputData", this.Caches.inputData, "turtle");
+    // the data pane's language is whatever the showing document is in, and
+    // that is the selected source's to say
+    this.editorSupport.addPane("inputData", this.Caches.inputData, null,
+                               () => this.neighborhoods.paneEditor());
+  }
+
+  /** The showing document may have changed language (a different source, or
+   * a different pane of it), and a pane's grammar is fixed when it is
+   * built, so rebuild it. */
+  refreshDataPaneEditor () {
+    // Whether there is a pane to rebuild is not the question -- a source
+    // with no document to edit leaves none, and the next source may want
+    // one back.  The question is whether the editors are on at all.
+    if (!this.editorSupport)
+      return;
+    const pane = this.editorSupport.panes.inputData;
+    if (pane) {
+      pane.destroy();          // hands its text back to the textarea
+      delete this.editorSupport.panes.inputData;
+    }
+    this.editorSupport.addPane("inputData", this.Caches.inputData, null,
+                               () => this.neighborhoods.paneEditor());
+    // destroying a pane restores the textarea it hid, so say again what
+    // should be showing
+    this.neighborhoods.showDocumentArea();
   }
 
   async start () {
-    SharedForTests = {Caches: this.Caches, /*DefaultBase*/} // an object to share state with a test harness
+    SharedForTests = {Caches: this.Caches, neighborhoods: this.neighborhoods, app: this}
+    this.neighborhoods.init(); // before ?neighborhood=… reaches the picklist
     this.prepareControls();
     const dndPromise = this.prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
     const loads = this.loadSearchParameters();
@@ -2060,6 +2896,22 @@ class ShExBaseApp {
     $("#success").on("change", this.setInterface.bind(this));
     $("#regexpEngine").on("change", this.toggleControls.bind(this));
     $("#editors").on("change", () => this.setEditors());
+    /* A Fixed Map check mark links to its result, and a link to a fragment
+     * is the browser's business: it sets the location and scrolls to the
+     * element with that id.  Where every result is an element that is the
+     * whole story.  Where they share one editor there is no element to
+     * scroll to -- the result is a stretch of that editor's document -- so
+     * the app does the scrolling, and only that: the click is not
+     * cancelled, so the location still updates and Back still works.
+     *
+     * Both the click and the location are listened to.  The click is what
+     * makes clicking the same check mark twice work (the location doesn't
+     * change, so no hashchange follows); the location is what makes Back,
+     * Forward, and a pasted link work. */
+    $("#fixedMap").on("click", "a[href^='#']", evt =>
+      this.resultsWidget.scrollToResult($(evt.currentTarget).attr("href").substring(1)));
+    $(window).on("hashchange", () =>
+      this.resultsWidget.scrollToResult(window.location.hash.substring(1)));
     $("#validate").on("click", this.disableResultsAndValidate.bind(this));
     $("#debugValidate").on("click", () => { SharedForTests.promise = this.startValidationDebugSession(); });
     $("#valDbgInto").on("click", () => this.valDebugStep("stepInto"));
@@ -2252,7 +3104,9 @@ class ShExBaseApp {
         const prepend = input.location.prop("tagName") === "TEXTAREA" ?
               input.location.val() :
               "";
-        const value = prepend + iface[parm].join("");
+        const value = prepend + (input.normalize
+                                 ? input.normalize(iface[parm].join(""))
+                                 : iface[parm].join(""));
         const origValue = input.location.val();
 
         try {
@@ -2339,13 +3193,38 @@ class ShExBaseApp {
     }
     this.resultsWidget.clear();
     this.resultsWidget.start();
+    // Say what is happening before it starts, and let the browser paint it:
+    // a validation over a synchronous neighborhood holds the main thread
+    // from here until it is done, so this is the last chance to draw
+    // anything.  (Which is also why the elapsed time is reported after
+    // rather than counted up during -- see doc/ShExBaseApp.js's
+    // startValidation.)
+    this.startValidation();
     SharedForTests.promise = new Promise((resolve, reject) => {
       setTimeout(async () => {
-        const errors = await this.Caches.shapeMap.copyEditMapToTextMap(); // will update if #editMap is dirty
-        if (errors.length === 0)
-          resolve(await this.callValidator());
+        const began = new Date().getTime();
+        try {
+          const errors = await this.Caches.shapeMap.copyEditMapToTextMap(); // will update if #editMap is dirty
+          if (errors.length === 0)
+            resolve(await this.callValidator());
+        } finally {
+          this.endValidation(new Date().getTime() - began);
+        }
       }, 0);
     })
+  }
+
+  /** the validate button while a validation is running: it is the only
+   * thing that can be said, since nothing will repaint until it finishes */
+  startValidation () {
+    $("#validate").addClass("running").prop("disabled", true)
+      .text("validating\u2026").attr("title", "");
+  }
+
+  endValidation (elapsed) {
+    $("#validate").removeClass("running").prop("disabled", false)
+      .text(VALIDATE_LABEL)
+      .attr("title", "last validation: " + elapsed + " ms");
   }
 
   /** startValidationDebugSession - step-through debugging of the
@@ -2558,11 +3437,14 @@ class ShExBaseApp {
         const fixedMap = $("#fixedMap tr").map((idx, tr) =>
           this.fixValidationShapeMapEntry($(tr).find("input.focus").val(), $(tr).find("input.inputShape").val())
         ).get();
-        if ($("#slurp").is(":checked")) {
-          // .set() sets inputData's dirty bit.
-          this.Caches.inputData.set("# Endpoint: " + this.Caches.inputData.endpoint + "\n\n\n", this.Caches.inputData.endpoint);
+        if (this.neighborhoods.slurping()) {
+          // start the Turtle document over: what this validation fetches is
+          // what it should end up holding
+          this.neighborhoods.setLocalTurtle("");
           this.Caches.inputData.slurpWriter = new RdfJs.Writer({ prefixes: this.Caches.inputSchema.meta.prefixes });
-          inputData = ShExWebApp.SparqlDb(this.Caches.inputData.endpoint, this.makeQueryTracker());
+          this.queryTrackerController.queryTracker = this.makeQueryTracker();
+          this.Caches.inputData.dirty(true);
+          inputData = await this.Caches.inputData.refresh();
         }
 
         currentAction = "creating validator";
@@ -2653,16 +3535,16 @@ class ShExBaseApp {
   }
 
   makeQueryTracker () {
-    this.queryTrackerController.queryTracker = $("#slurp").is(":checked")
+    this.queryTrackerController.queryTracker = this.neighborhoods.slurping()
     ? {
       start: (isOut, term, shapeLabel) => {
         const node = this.Caches.inputData.meta.termToLex(WorkerMarshalling.jsonTermToRdfjsTerm(term, RdfJs.DataFactory));
         const shape = this.Caches.inputSchema.meta.termToLex(shapeLabel);
         const slurpStatus = (isOut ? "←" : "→") + " " + node + "@" + shape;
-        noScrollAppend($("#inputData textarea"), "# " + slurpStatus);
+        this.neighborhoods.appendToLocalTurtle("# " + slurpStatus);
       },
       end: (triples, time) => {
-        noScrollAppend($("#inputData textarea"), " " + triples.length + " triples (" + time + " μs)\n");
+        this.neighborhoods.appendToLocalTurtle(" " + triples.length + " triples (" + time + " μs)\n");
         this.Caches.inputData.slurpWriter.addQuads(triples.map(
           t => WorkerMarshalling.jsonTripleToRdfjsTriple(t, RdfJs.DataFactory)
           // t => ShExWebApp.ShExTerm.externalTriple(t, RdfJs.DataFactory)
@@ -3080,7 +3962,7 @@ class ShExBaseApp {
   customizeInterface () {
   if ($("#interface").val() === "minimal") {
     $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").show();
-    $("#inputData .status").html("data (<span id=\"dataDialect\">Turtle</span>)").show();
+    $("#inputData .status").html("data (<span id=\"dataDialect\">" + this.neighborhoods.dialect() + "</span>)").show();
     $("#actions").parent().children().not("#actions").hide();
     $("#title img, #title h1").hide();
     $("#menuForm").css("position", "absolute").css(
@@ -3091,7 +3973,7 @@ class ShExBaseApp {
     $("#controls").css("position", "relative");
   } else {
     $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").hide();
-    $("#inputData .status").html("data (<span id=\"dataDialect\">Turtle</span>)").hide();
+    $("#inputData .status").html("data (<span id=\"dataDialect\">" + this.neighborhoods.dialect() + "</span>)").hide();
     $("#actions").parent().children().not("#actions").show();
     $("#title img, #title h1").show();
     $("#menuForm").removeAttr("style");

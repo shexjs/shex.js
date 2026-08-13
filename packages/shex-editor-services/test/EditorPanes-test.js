@@ -119,6 +119,151 @@ describe("EditorPanes", function () {
     expect(labels).to.include(":p");     // predicate
   });
 
+  /* A neighborhood module describes its language as plain functions over
+   * strings (see @shexjs/neighborhood-api's ParamEditor and its
+   * PaneClaim-test); these are the adapters that make an editor of that
+   * description, and the fallback when there is no description to adapt. */
+  describe("a module-supplied language", function () {
+    const ENDPOINT = "# Endpoint: http://ex.example/sparql\n";
+
+    /** stands in for a neighborhood module's paneEditor */
+    const supplied = {
+      language: "turtle",
+      tokens: text => text.startsWith("# Endpoint:")
+        ? [{from: 0, to: 11, style: "keyword"}, {from: 12, to: text.indexOf("\n"), style: "link"}]
+        : [],
+      lint: text => text.startsWith("# Endpoint: http")
+        ? []
+        : [{from: 0, to: 11, severity: "error", message: "no endpoint"}],
+      complete: (text, pos, ctx) => ctx && ctx.db
+        ? {from: pos, to: pos, options: [{label: ctx.db.only, detail: "from the live db"}]}
+        : null,
+    };
+
+    it("should color what the module describes, over the language it names", function () {
+      const textarea = dom.window.document.createElement("textarea");
+      textarea.value = ENDPOINT + "<x> <p> 1 .\n";
+      dom.window.document.body.appendChild(textarea);
+      const pane = makePane(textarea, {supplied: () => supplied, lint: false});
+      try {
+        // the module's own tokens...
+        const classes = [];
+        pane.view.dom.querySelectorAll("[class*='shexjs-tok-']").forEach(
+          e => classes.push(e.className));
+        expect(classes.join(" ")).to.match(/shexjs-tok-keyword/);
+        expect(classes.join(" ")).to.match(/shexjs-tok-link/);
+        // ...over the grammar it named for the body it didn't describe
+        expect(pane.view.state.facet(require("@codemirror/language").language)).to.exist;
+      } finally {
+        pane.destroy();
+        textarea.remove();
+      }
+    });
+
+    it("should recolor when an edit changes which module would claim the text", function () {
+      const textarea = dom.window.document.createElement("textarea");
+      textarea.value = "<x> <p> 1 .\n";
+      dom.window.document.body.appendChild(textarea);
+      // a host picking the module the way the WebApp does: by the text.  It
+      // is handed the text rather than reading it back, because mid-edit
+      // the textarea proxy still reports the document as it was before.
+      const claimed = [];
+      const pane = makePane(textarea, {
+        lint: false,
+        supplied: text => {
+          claimed.push(text);
+          return text.startsWith("# Endpoint:") ? supplied : {language: "turtle"};
+        },
+      });
+      try {
+        const marked = () => pane.view.dom.querySelectorAll("[class*='shexjs-tok-']").length;
+        expect(marked(), "Turtle: the claiming module describes nothing of its own").to.equal(0);
+
+        textarea.value = ENDPOINT + "<x> <p> 1 .\n";  // now an endpoint pane
+        expect(marked(), "the module that claims it colors its header").to.be.greaterThan(0);
+        expect(claimed[claimed.length - 1], "asked about the text as edited")
+          .to.equal(ENDPOINT + "<x> <p> 1 .\n");
+
+        textarea.value = "<x> <p> 1 .\n";             // and back
+        expect(marked()).to.equal(0);
+      } finally {
+        pane.destroy();
+        textarea.remove();
+      }
+    });
+
+    it("should ask the module for diagnostics and completions, with the host's context", async function () {
+      const {EditorState} = require("@codemirror/state");
+      const {CompletionContext} = require("@codemirror/autocomplete");
+      const {forEachDiagnostic, forceLinting} = require("@codemirror/lint");
+
+      const textarea = dom.window.document.createElement("textarea");
+      textarea.value = "# Endpoint: \n";
+      dom.window.document.body.appendChild(textarea);
+      const pane = makePane(textarea, {
+        supplied: () => supplied,
+        suppliedContext: () => ({db: {only: "http://ex.example/Q42"}}),
+      });
+      try {
+        forceLinting(pane.view);
+        await new Promise(res => setTimeout(res, 700)); // linter delay
+        const messages = [];
+        forEachDiagnostic(pane.view.state, d => messages.push(d.message));
+        expect(messages).to.include("no endpoint");
+
+        // completions reach the module with whatever context the host gives
+        const state = EditorState.create({doc: "wd:Q"});
+        const source = pane.view.state.languageDataAt("autocomplete", 0).pop();
+        const result = source(new CompletionContext(state, 4, true));
+        expect(result.options.map(o => o.label)).to.deep.equal(["http://ex.example/Q42"]);
+      } finally {
+        pane.destroy();
+        textarea.remove();
+      }
+    });
+
+    it("should leave the textarea alone when a module describes no language", function () {
+      // the fallback: the same plain textarea the apps show with editors off
+      const {makePaneIfDescribed} = require("../lib/editor-panes");
+      const textarea = dom.window.document.createElement("textarea");
+      textarea.value = "<x> <p> 1 .\n";
+      dom.window.document.body.appendChild(textarea);
+      try {
+        // a module that claims the text but describes nothing about it
+        expect(makePaneIfDescribed(textarea, {supplied: () => ({})})).to.equal(null);
+        // ...and no module at all
+        expect(makePaneIfDescribed(textarea, {supplied: () => null})).to.equal(null);
+        expect(textarea.style.display).to.equal("");   // never hidden
+        expect(textarea.value).to.equal("<x> <p> 1 .\n");
+        expect(textarea.parentNode.querySelector(".shexjs-editor-pane")).to.equal(null);
+
+        // and one that does describe something gets its pane
+        const pane = makePaneIfDescribed(textarea, {supplied: () => supplied, lint: false});
+        expect(pane).to.not.equal(null);
+        expect(textarea.style.display).to.equal("none");
+        pane.destroy();
+      } finally {
+        textarea.remove();
+      }
+    });
+
+    it("should survive a module whose language functions throw", function () {
+      const textarea = dom.window.document.createElement("textarea");
+      textarea.value = ENDPOINT;
+      dom.window.document.body.appendChild(textarea);
+      const broken = {tokens: () => { throw Error("module bug"); },
+                      complete: () => { throw Error("module bug"); }};
+      const pane = makePane(textarea, {supplied: () => broken, lint: false});
+      try {
+        expect(pane.view.state.doc.toString()).to.equal(ENDPOINT); // still editable
+        expect(textarea.value).to.equal(ENDPOINT);
+      } finally {
+        pane.destroy();
+        textarea.remove();
+      }
+    });
+  });
+
   it("should tokenize ShExC approximately", function () {
     const {StringStream} = require("@codemirror/language");
     const kinds = [];

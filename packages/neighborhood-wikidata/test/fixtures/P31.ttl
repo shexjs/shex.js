@@ -1,0 +1,4800 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ontolex: <http://www.w3.org/ns/lemon/ontolex#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix wikibase: <http://wikiba.se/ontology#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix schema: <http://schema.org/> .
+@prefix cc: <http://creativecommons.org/ns#> .
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix wd: <http://www.wikidata.org/entity/> .
+@prefix data: <https://www.wikidata.org/wiki/Special:EntityData/> .
+@prefix wds: <http://www.wikidata.org/entity/statement/> .
+@prefix wdref: <http://www.wikidata.org/reference/> .
+@prefix wdv: <http://www.wikidata.org/value/> .
+@prefix wdt: <http://www.wikidata.org/prop/direct/> .
+@prefix wdtn: <http://www.wikidata.org/prop/direct-normalized/> .
+@prefix p: <http://www.wikidata.org/prop/> .
+@prefix ps: <http://www.wikidata.org/prop/statement/> .
+@prefix psv: <http://www.wikidata.org/prop/statement/value/> .
+@prefix psn: <http://www.wikidata.org/prop/statement/value-normalized/> .
+@prefix pq: <http://www.wikidata.org/prop/qualifier/> .
+@prefix pqv: <http://www.wikidata.org/prop/qualifier/value/> .
+@prefix pqn: <http://www.wikidata.org/prop/qualifier/value-normalized/> .
+@prefix pr: <http://www.wikidata.org/prop/reference/> .
+@prefix prv: <http://www.wikidata.org/prop/reference/value/> .
+@prefix prn: <http://www.wikidata.org/prop/reference/value-normalized/> .
+@prefix wdno: <http://www.wikidata.org/prop/novalue/> .
+
+data:P31 a schema:Dataset ;
+	schema:about wd:P31 ;
+	cc:license <http://creativecommons.org/publicdomain/zero/1.0/> ;
+	schema:softwareVersion "1.0.0" ;
+	schema:version "2525686014"^^xsd:integer ;
+	schema:dateModified "2026-08-01T13:44:39Z"^^xsd:dateTime ;
+	wikibase:statements "240"^^xsd:integer .
+
+wd:P31 a wikibase:Property ;
+	wdt:P1628 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>,
+		<http://d-nb.info/standards/elementset/gnd#broaderTermInstantial> ;
+	wdt:P1855 wd:Q772466,
+		wd:Q177866,
+		wd:Q2225,
+		wd:Q8023 ;
+	wdt:P1896 <http://www.w3.org/TR/rdf-schema/#ch_type> ;
+	wdt:P1659 wd:P279,
+		wd:P361 ;
+	wdt:P2559 "subject typically an individual member with a proper name label; different from P279; using this property as a qualifier is deprecated—use P2868 or P3831 instead"@en,
+		"以下のヘルプを参照してください"@ja,
+		"繁體中文用法說明"@zh-hant,
+		"Инструкции по использованию на русском языке"@ru,
+		"简体中文用法说明"@zh-hans,
+		"Eigenschaften die Mitgliedschaft oder Teilhabe ausdrücken"@de,
+		"Hướng dẫn sử dụng"@vi,
+		"tipo al que corresponde o pertenece este sujeto. Es diferente de «subclase de» (P279); por ejemplo: K2 es una instancia de montaña; volcán es una subclase de montaña;  no usar nunca como cualificador en su lugar úsese  P2868 o P3831"@es ;
+	wdt:P2875 wd:Q20117426 ;
+	wdt:P1629 wd:Q21503252 ;
+	a wdno:P3254 ;
+	wdt:P3734 wd:Q42533274 ;
+	wdt:P3713 wd:Q32764726 ;
+	wdt:P6609 wd:P279 ;
+	wdt:P7087 wd:Q65933034 ;
+	wdt:P8979 "P14" ;
+	wdtn:P8979 <https://data.wikitrek.org/entity/P14> ;
+	wdt:P10787 "P2" ;
+	wdt:P2668 wd:Q24025284 ;
+	wdt:P11914 "P3" ;
+	wdt:P6104 wd:Q60005226 ;
+	wdt:P2302 wd:Q21510851,
+		wd:Q52558054,
+		wd:Q53869507,
+		wd:Q25796498,
+		wd:Q52004125,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q21510864,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054,
+		wd:Q52558054 ;
+	wdt:P31 wd:Q18616576,
+		wd:Q115490628,
+		wd:Q28326730 ;
+	p:P1628 wds:P31-696d3f45-4cba-b3db-1648-0da6c3b29380 .
+
+wds:P31-696d3f45-4cba-b3db-1648-0da6c3b29380 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P1628 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> .
+
+wd:P31 p:P1628 wds:P31-6025e876-426e-8a2a-bede-05a2a89d317d .
+
+wds:P31-6025e876-426e-8a2a-bede-05a2a89d317d a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P1628 <http://d-nb.info/standards/elementset/gnd#broaderTermInstantial> .
+
+wd:P31 p:P1855 wds:P31-4d06056b-4142-5b71-8af0-ec2c8e215cba .
+
+wds:P31-4d06056b-4142-5b71-8af0-ec2c8e215cba a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P1855 wd:Q772466 ;
+	pq:P31 wd:Q43513 .
+
+wd:P31 p:P1855 wds:P31-75115ba2-485e-4014-3252-7f8adc0a861a .
+
+wds:P31-75115ba2-485e-4014-3252-7f8adc0a861a a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P1855 wd:Q177866 ;
+	pq:P31 wd:Q13406463 .
+
+wd:P31 p:P1855 wds:P31-cb321691-4088-825b-853f-c3977cce34ef .
+
+wds:P31-cb321691-4088-825b-853f-c3977cce34ef a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P1855 wd:Q2225 ;
+	pq:P31 wd:Q22675015 .
+
+wd:P31 p:P1855 wds:P31-978be9f2-42bd-5a53-31a6-4776e1623194 .
+
+wds:P31-978be9f2-42bd-5a53-31a6-4776e1623194 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P1855 wd:Q8023 ;
+	pq:P31 wd:Q5 .
+
+wd:P31 p:P1896 wds:P31-AAC38658-4318-4262-8CA9-9C7E17DC899C .
+
+wds:P31-AAC38658-4318-4262-8CA9-9C7E17DC899C a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P1896 <http://www.w3.org/TR/rdf-schema/#ch_type> ;
+	pq:P407 wd:Q1860 .
+
+wd:P31 p:P1659 wds:P31-13ad0b4a-4444-3f67-78f4-be9f4b224c7f .
+
+wds:P31-13ad0b4a-4444-3f67-78f4-be9f4b224c7f a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P1659 wd:P279 .
+
+wd:P31 p:P1659 wds:P31-57d58932-4d4e-b6a9-d9fb-aea718f0db89 .
+
+wds:P31-57d58932-4d4e-b6a9-d9fb-aea718f0db89 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P1659 wd:P361 .
+
+wd:P31 p:P2559 wds:P31-8ed11daf-478d-fd34-f578-37c68ae28174 .
+
+wds:P31-8ed11daf-478d-fd34-f578-37c68ae28174 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2559 "subject typically an individual member with a proper name label; different from P279; using this property as a qualifier is deprecated—use P2868 or P3831 instead"@en ;
+	pq:P973 <https://www.wikidata.org/wiki/Help:Basic_membership_properties> .
+
+wd:P31 p:P2559 wds:P31-dcb6d208-426e-72be-4606-be9c75461c47 .
+
+wds:P31-dcb6d208-426e-72be-4606-be9c75461c47 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2559 "以下のヘルプを参照してください"@ja ;
+	pq:P973 <https://www.wikidata.org/wiki/Help:Basic_membership_properties/ja> .
+
+wd:P31 p:P2559 wds:P31-5621b0a2-4735-7ace-d717-bd4fe53e60f3 .
+
+wds:P31-5621b0a2-4735-7ace-d717-bd4fe53e60f3 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2559 "繁體中文用法說明"@zh-hant ;
+	pq:P973 <https://www.wikidata.org/wiki/Help:Basic_membership_properties/zh?uselang=zh-hant> .
+
+wd:P31 p:P2559 wds:P31-b12d5345-465f-5eff-2639-a6a78d2a589b .
+
+wds:P31-b12d5345-465f-5eff-2639-a6a78d2a589b a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2559 "Инструкции по использованию на русском языке"@ru ;
+	pq:P973 <https://www.wikidata.org/wiki/Help:Basic_membership_properties/ru> .
+
+wd:P31 p:P2559 wds:P31-ee1d27c8-417a-43d7-dc1e-92a190f7244a .
+
+wds:P31-ee1d27c8-417a-43d7-dc1e-92a190f7244a a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2559 "简体中文用法说明"@zh-hans ;
+	pq:P973 <https://www.wikidata.org/wiki/Help:Basic_membership_properties/zh?uselang=zh-hans> .
+
+wd:P31 p:P2559 wds:P31-582b16d4-4214-e608-84c4-1ff1ed9af48f .
+
+wds:P31-582b16d4-4214-e608-84c4-1ff1ed9af48f a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2559 "Eigenschaften die Mitgliedschaft oder Teilhabe ausdrücken"@de ;
+	pq:P973 <https://www.wikidata.org/wiki/Help:Basic_membership_properties/de> .
+
+wd:P31 p:P2559 wds:P31-4e8cfcd1-464f-e3a0-9f46-cba66ed5ea55 .
+
+wds:P31-4e8cfcd1-464f-e3a0-9f46-cba66ed5ea55 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2559 "Hướng dẫn sử dụng"@vi ;
+	pq:P1683 "(đối tượng thường là một thành viên có nhãn tên thích hợp); khác với P279; nhãn này không còn được dùng làm từ khu biệt nữa—hãy dùng P2868 hoặc P3831"@vi .
+
+wd:P31 p:P2559 wds:P31-f7301606-4fe1-f97e-4841-5b9008f22dd1 .
+
+wds:P31-f7301606-4fe1-f97e-4841-5b9008f22dd1 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2559 "tipo al que corresponde o pertenece este sujeto. Es diferente de «subclase de» (P279); por ejemplo: K2 es una instancia de montaña; volcán es una subclase de montaña;  no usar nunca como cualificador en su lugar úsese  P2868 o P3831"@es .
+
+wd:P31 p:P2875 wds:P31-a0533236-4f18-546c-07bd-40e236933a9a .
+
+wds:P31-a0533236-4f18-546c-07bd-40e236933a9a a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2875 wd:Q20117426 .
+
+wd:P31 p:P1629 wds:P31-4a077d4e-428a-c946-574a-71f4ca12797f .
+
+wds:P31-4a077d4e-428a-c946-574a-71f4ca12797f a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:PreferredRank ;
+	ps:P1629 wd:Q21503252 ;
+	pq:P7452 wd:Q71538638 .
+
+wd:P31 p:P1629 wds:P31-e74d350e-4730-9338-0ff1-e378800d5ce4 .
+
+wds:P31-e74d350e-4730-9338-0ff1-e378800d5ce4 a wikibase:Statement ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P1629 wd:Q30208840 ;
+	pq:P3831 wd:Q54718960 .
+
+wd:P31 p:P3254 wds:P31-8adb42d4-4a4c-d653-7a2e-d6f45d1c0395 .
+
+wds:P31-8adb42d4-4a4c-d653-7a2e-d6f45d1c0395 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	a wdno:P3254 .
+
+wd:P31 p:P3734 wds:P31-42654C7D-2FAF-4F6B-92A8-76B2C3D1825E .
+
+wds:P31-42654C7D-2FAF-4F6B-92A8-76B2C3D1825E a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P3734 wd:Q42533274 .
+
+wd:P31 p:P3713 wds:P31-45f3fe6b-4f0f-d7d8-873f-2de071ab0cc1 .
+
+wds:P31-45f3fe6b-4f0f-d7d8-873f-2de071ab0cc1 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P3713 wd:Q32764726 .
+
+wd:P31 p:P6609 wds:P31-91fe265c-441e-8128-adad-969e29fa964d .
+
+wds:P31-91fe265c-441e-8128-adad-969e29fa964d a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P6609 wd:P279 .
+
+wd:P31 p:P7087 wds:P31-84bff4cc-482e-2b11-4226-0241ed8949b7 .
+
+wds:P31-84bff4cc-482e-2b11-4226-0241ed8949b7 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P7087 wd:Q65933034 .
+
+wd:P31 p:P8979 wds:P31-86718373-48ff-7a7c-0f05-401ec87ffb66 .
+
+wds:P31-86718373-48ff-7a7c-0f05-401ec87ffb66 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P8979 "P14" ;
+	psn:P8979 <https://data.wikitrek.org/entity/P14> .
+
+wd:P31 p:P10787 wds:P31-4ed09fa7-4c54-885c-b5fd-44f95edf4000 .
+
+wds:P31-4ed09fa7-4c54-885c-b5fd-44f95edf4000 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P10787 "P2" .
+
+wd:P31 p:P2668 wds:P31-85653c5f-43b7-6c86-cc00-02dbedcd8095 .
+
+wds:P31-85653c5f-43b7-6c86-cc00-02dbedcd8095 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2668 wd:Q24025284 .
+
+wd:P31 p:P11914 wds:P31-5fb6de30-4612-95bb-6b3c-0984172b6a94 .
+
+wds:P31-5fb6de30-4612-95bb-6b3c-0984172b6a94 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P11914 "P3" .
+
+wd:P31 p:P6104 wds:P31-49771A1F-CF2C-4575-B2A3-1B673999B4D4 .
+
+wds:P31-49771A1F-CF2C-4575-B2A3-1B673999B4D4 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P6104 wd:Q60005226 .
+
+wd:P31 p:P2302 wds:P31-A89E967D-82B7-4081-BAE3-BADF28B4E7E3 .
+
+wds:P31-A89E967D-82B7-4081-BAE3-BADF28B4E7E3 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q21510851 ;
+	pq:P2306 wd:P1264,
+		wd:P2241,
+		wd:P1013,
+		wd:P1534,
+		wd:P3005,
+		wd:P5102,
+		wd:P1114,
+		wd:P1480,
+		wd:P805,
+		wd:P1012,
+		wd:P1310,
+		wd:P3680,
+		wd:P459,
+		wd:P1932,
+		wd:P4649,
+		wd:P2210,
+		wd:P7452,
+		wd:P1001,
+		wd:P5168,
+		wd:P1011,
+		wd:P585,
+		wd:P1810,
+		wd:P1706,
+		wd:P5830,
+		wd:P6072,
+		wd:P1532,
+		wd:P580,
+		wd:P582,
+		wd:P3415,
+		wd:P3416,
+		wd:P1326,
+		wd:P1319,
+		wd:P8554,
+		wd:P1568,
+		wd:P1571,
+		wd:P5817,
+		wd:P1545,
+		wd:P155,
+		wd:P156,
+		wd:P1365,
+		wd:P1366,
+		wd:P5816,
+		wd:P8032,
+		wd:P10241,
+		wd:P1552,
+		wd:P12506,
+		wd:P1056,
+		wd:P376,
+		wd:P407,
+		wd:P1107,
+		wd:P12912,
+		wd:P12913,
+		wd:P10663,
+		wd:P1591,
+		wd:P1027,
+		wd:P12992,
+		wd:P12995,
+		wd:P12994,
+		wd:P12993,
+		wd:P4330,
+		wd:P921,
+		wd:P361,
+		wd:P527,
+		wd:P2670,
+		wd:P13044,
+		wd:P8555,
+		wd:P887,
+		wd:P144,
+		wd:P16,
+		wd:P749,
+		wd:P186,
+		wd:P460,
+		wd:P138,
+		wd:P131,
+		wd:P1268,
+		wd:P1531,
+		wd:P6001,
+		wd:P13188,
+		wd:P828,
+		wd:P1269,
+		wd:P1542,
+		wd:P118,
+		wd:P1354,
+		wd:P2389,
+		wd:P708,
+		wd:P1535,
+		wd:P13308,
+		wd:P81,
+		wd:P170,
+		wd:P12328,
+		wd:P518,
+		wd:P1547,
+		wd:P2559,
+		wd:P945,
+		wd:P2868,
+		wd:P3831,
+		wd:P611,
+		wd:P1376,
+		wd:P8115,
+		wd:P1336,
+		wd:P13359,
+		wd:P101,
+		wd:P571,
+		wd:P1192,
+		wd:P13718,
+		wd:P2283,
+		wd:P13883,
+		wd:P13884,
+		wd:P1416,
+		wd:P547,
+		wd:P1683,
+		wd:P366,
+		wd:P7528,
+		wd:P1793,
+		wd:P1478,
+		wd:P279,
+		wd:P1050,
+		wd:P437,
+		wd:P5607,
+		wd:P195,
+		wd:P3113,
+		wd:P6477,
+		wd:P4241,
+		wd:P495,
+		wd:P7888 ;
+	prov:wasDerivedFrom wdref:9d0a4d1a20a3d5a22c6907c1cad3e5048a882957,
+		wdref:17f0c8c0d0f168450af1bedda469340ac5cb0ade,
+		wdref:d9ffd0481fb36e62b21de4d35b954564f8d84329,
+		wdref:666ab5628c1f347ca4f97531b5df394d22f84194,
+		wdref:d05b78c48bc2dcc3387b9800cd06959319dfcafe,
+		wdref:6ab0189c77d2952f2ff755b61602db75ce4d1fdf .
+
+wd:P31 p:P2302 wds:P31-43E28495-355E-451E-A881-2EE14DFBE99D .
+
+wds:P31-43E28495-355E-451E-A881-2EE14DFBE99D a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q735 ;
+	pq:P9729 wd:Q838948 ;
+	pq:P6607 "Art (Q735) is for the concept of art. To show that something is a work of art, use this property with work of art (Q838948) instead."@en .
+
+wd:P31 p:P2302 wds:P31-5b646f90-44ae-fe14-c700-8b6d6615bbc9 .
+
+wds:P31-5b646f90-44ae-fe14-c700-8b6d6615bbc9 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q53869507 ;
+	pq:P5314 wd:Q54828448,
+		wd:Q54828449 .
+
+wd:P31 p:P2302 wds:P31-21416943-475c-b31b-2e99-2f512fe4be28 .
+
+wds:P31-21416943-475c-b31b-2e99-2f512fe4be28 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q25796498 .
+
+wd:P31 p:P2302 wds:P31-8e39a840-494e-65a0-9b07-ee9818ecde74 .
+
+wds:P31-8e39a840-494e-65a0-9b07-ee9818ecde74 a wikibase:Statement ;
+	wikibase:rank wikibase:DeprecatedRank ;
+	ps:P2302 wd:Q21510859 ;
+	pq:P2305 wd:Q5,
+		wd:Q486972,
+		wd:Q3305213,
+		wd:Q532,
+		wd:Q101352,
+		wd:Q11424,
+		wd:Q2031291,
+		wd:Q41176,
+		wd:Q3947,
+		wd:Q16521,
+		wd:Q4830453,
+		wd:Q13442814,
+		wd:Q3331189,
+		wd:Q4167836,
+		wd:Q26401003,
+		wd:Q196600,
+		wd:Q105543609,
+		wd:Q7725634,
+		wd:Q860861,
+		wd:Q4164871,
+		wd:Q23622 .
+
+wd:P31 p:P2302 wds:P31-33e19940-4507-f514-e324-c9d93017083d .
+
+wds:P31-33e19940-4507-f514-e324-c9d93017083d a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52004125 ;
+	pq:P2305 wd:Q29934200,
+		wd:Q29934218,
+		wd:Q51885771,
+		wd:Q59712033,
+		wd:Q54285143,
+		wd:Q54285715 ;
+	pq:P2316 wd:Q21502408 .
+
+wd:P31 p:P2302 wds:P31-e5555f68-4e75-54c8-2260-79679793407d .
+
+wds:P31-e5555f68-4e75-54c8-2260-79679793407d a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q44597997,
+		wd:Q44601380 ;
+	pq:P2316 wd:Q21502408 ;
+	pq:P6824 wd:P8274 ;
+	pq:P6607 "Verwenden Sie P8274 anstelle von P31, um die Schutzklassen für lebende Personen für eine Eigenschaft festzulegen."@de,
+		"Use P8274 instead of P31 for specifying living people protection classes for a property."@en,
+		"在指定属性的“生者保护类别”时，请使用 {{P|P8274}}以取代 {{P|P31}}"@zh .
+
+wd:P31 p:P2302 wds:P31-ffee66f1-4dd7-78e2-5a0e-8b26e5d70bb7 .
+
+wds:P31-ffee66f1-4dd7-78e2-5a0e-8b26e5d70bb7 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q15138389,
+		wd:Q29934200,
+		wd:Q51885771 .
+
+wd:P31 p:P2302 wds:P31-9329c5e1-4ed6-58f2-b95b-3d1d87ad4fb8 .
+
+wds:P31-9329c5e1-4ed6-58f2-b95b-3d1d87ad4fb8 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q171283 ;
+	pq:P2316 wd:Q21502408 ;
+	pq:P9729 wd:Q5 ;
+	pq:P6607 "Nutze als Ersatz des Datenobjekts Q5 (Mensch)."@de,
+		"Use Q5 (human) instead."@en,
+		"代わりに「ヒト (Q5)」を使用してください。"@ja,
+		"utiliser Q5 à la place"@fr,
+		"请改用 Q5（人类）代替。"@zh .
+
+wd:P31 p:P2302 wds:P31-b89ec1ab-413f-4bfc-377f-230f4cf08a38 .
+
+wds:P31-b89ec1ab-413f-4bfc-377f-230f4cf08a38 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q467,
+		wd:Q6581072,
+		wd:Q24630543,
+		wd:Q84048852 ;
+	pq:P2316 wd:Q21502408 ;
+	pq:P6824 wd:P21 ;
+	pq:P9729 wd:Q6581072 ;
+	pq:P6607 "Das Geschlecht wird über die Eigenschaft P21 spezifiziert."@de,
+		"Specify gender using P21 (sex or gender)"@en,
+		"Utiliser P21 pour le genre ou le sexe"@fr,
+		"使用 P21（性别）指定性别"@zh .
+
+wd:P31 p:P2302 wds:P31-BA530409-86FB-4C7F-99A8-432EBF758CE4 .
+
+wds:P31-BA530409-86FB-4C7F-99A8-432EBF758CE4 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q8441,
+		wd:Q6581097,
+		wd:Q100911674,
+		wd:Q84048850 ;
+	pq:P2316 wd:Q21502408 ;
+	pq:P6824 wd:P21 ;
+	pq:P9729 wd:Q6581097 ;
+	pq:P6607 "Das Geschlecht wird über die Eigenschaft P21 spezifiziert."@de,
+		"Specify gender using P21 (sex or gender)"@en,
+		"Utiliser P21 pour le genre ou le sexe"@fr,
+		"使用 P21（性别）指定性别。"@zh .
+
+wd:P31 p:P2302 wds:P31-c7568a55-4702-3a99-9bcb-0bf7d4cef1ba .
+
+wds:P31-c7568a55-4702-3a99-9bcb-0bf7d4cef1ba a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q24574745 ;
+	pq:P9729 wd:Q4167836 ;
+	pq:P6607 "Nutze stattdessen das Datenobjekt Q4167836 (Wikimedia-Kategorie)."@de,
+		"Use Q4167836 (Wikimedia category) instead."@en,
+		"Utiliser Q4167836 (page de catégorie d'un projet Wikimedia) à la place"@fr,
+		"请使用 Q4167836（维基媒体分类）代替。"@zh .
+
+wd:P31 p:P2302 wds:P31-57ff2bd7-4fa8-2b08-f11b-3ac9db5c7f64 .
+
+wds:P31-57ff2bd7-4fa8-2b08-f11b-3ac9db5c7f64 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q18593264 ;
+	pq:P6607 "Weitere Informationen zu dieser Entscheidung sind auf der Diskussionsseite des Datenobjekt Q18593264 (Sammel- oder Ausstellungsstück) zu finden."@de,
+		"More information on this decision can be found on the talk page of the data object Q18593264 (item of collection or exhibition)."@en,
+		"有关此决定的更多信息，请参见数据对象 Q18593264（收藏品或展品）的讨论页。"@zh ;
+	a wdno:P9729 ;
+	prov:wasDerivedFrom wdref:42faf462842e35e7be6c4090481408e60eda90c3 .
+
+wd:P31 p:P2302 wds:P31-8d1047d2-4b74-56c5-494b-2a42e5cf4e78 .
+
+wds:P31-8d1047d2-4b74-56c5-494b-2a42e5cf4e78 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q916475,
+		wd:Q10387684,
+		wd:Q10387575,
+		wd:Q916333,
+		wd:Q13423591 ;
+	pq:P6607 "Use heritage designation (P1435) instead"@en,
+		"请使用遗产地名称（P1435）代替。"@zh ;
+	pq:P6824 wd:P1435 .
+
+wd:P31 p:P2302 wds:P31-5d2ea2fc-44d5-e494-929f-11e2b3b1810b .
+
+wds:P31-5d2ea2fc-44d5-e494-929f-11e2b3b1810b a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q17125263,
+		wd:Q4110598,
+		wd:Q15077007,
+		wd:Q226008,
+		wd:Q58287519 ;
+	pq:P6824 wd:P106 .
+
+wd:P31 p:P2302 wds:P31-7f3ec2cd-4c8d-e95a-32ba-f8a8680e949c .
+
+wds:P31-7f3ec2cd-4c8d-e95a-32ba-f8a8680e949c a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q6561427,
+		wd:Q4485157,
+		wd:Q1121542,
+		wd:Q5647425,
+		wd:Q132178594 ;
+	pq:P9729 wd:Q7889 .
+
+wd:P31 p:P2302 wds:P31-5fa30244-4c99-75b5-8069-d50ffc43d33a .
+
+wds:P31-5fa30244-4c99-75b5-8069-d50ffc43d33a a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q24633474,
+		wd:Q3276244,
+		wd:Q20899 ;
+	pq:P9729 wd:Q24634210 ;
+	pq:P6607 "Use podcast show (Q24634210) instead."@en,
+		"请使用播客（Q24634210）代替。"@zh .
+
+wd:P31 p:P2302 wds:P31-12448DAA-D6DA-4737-8A41-51295F91B8A3 .
+
+wds:P31-12448DAA-D6DA-4737-8A41-51295F91B8A3 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q162244,
+		wd:Q290691,
+		wd:Q6498903,
+		wd:Q110910,
+		wd:Q188784,
+		wd:Q12218723 ;
+	pq:P6824 wd:P9071 ;
+	pq:P6607 "use character type (P9071) instead"@en-us,
+		"请使用角色类型（P9071）代替。"@zh .
+
+wd:P31 p:P2302 wds:P31-42a2e9f4-414f-22fd-d827-a1b8b0c6b461 .
+
+wds:P31-42a2e9f4-414f-22fd-d827-a1b8b0c6b461 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q526231,
+		wd:Q245204,
+		wd:Q55712911,
+		wd:Q215972,
+		wd:Q2595584,
+		wd:Q12317360,
+		wd:Q27623618,
+		wd:Q3775957 ;
+	pq:P6824 wd:P5800 .
+
+wd:P31 p:P2302 wds:P31-f8eddb8a-4b09-6261-cf43-50add785c78f .
+
+wds:P31-f8eddb8a-4b09-6261-cf43-50add785c78f a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q468388,
+		wd:Q1062345,
+		wd:Q466466 ;
+	pq:P6824 wd:P2868 .
+
+wd:P31 p:P2302 wds:P31-4b504a11-4393-acf6-ba37-36bf0ce61580 .
+
+wds:P31-4b504a11-4393-acf6-ba37-36bf0ce61580 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q185529,
+		wd:Q291,
+		wd:Q93204,
+		wd:Q25110269,
+		wd:Q430525,
+		wd:Q157443,
+		wd:Q459290,
+		wd:Q790192,
+		wd:Q275934,
+		wd:Q842256,
+		wd:Q1135802,
+		wd:Q17175676,
+		wd:Q12912091 ;
+	pq:P6824 wd:P136 .
+
+wd:P31 p:P2302 wds:P31-b3cbd21c-445e-09b4-a935-5eef62107b79 .
+
+wds:P31-b3cbd21c-445e-09b4-a935-5eef62107b79 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q172067,
+		wd:Q689445,
+		wd:Q1046788,
+		wd:Q219559 ;
+	pq:P6824 wd:P136 .
+
+wd:P31 p:P2302 wds:P31-8130E8BC-B36A-483B-91AD-68A764985130 .
+
+wds:P31-8130E8BC-B36A-483B-91AD-68A764985130 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q503106,
+		wd:Q242492,
+		wd:Q478804,
+		wd:Q231302,
+		wd:Q237338 ;
+	pq:P6824 wd:P136 .
+
+wd:P31 p:P2302 wds:P31-756af76e-423f-0b49-d47c-251cd7f67eda .
+
+wds:P31-756af76e-423f-0b49-d47c-251cd7f67eda a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q3908516,
+		wd:Q1323528,
+		wd:Q91038239,
+		wd:Q56279965 ;
+	pq:P6824 wd:P101 .
+
+wd:P31 p:P2302 wds:P31-2c57e16b-4491-7c12-e473-250a0c4d1007 .
+
+wds:P31-2c57e16b-4491-7c12-e473-250a0c4d1007 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q638,
+		wd:Q170412,
+		wd:Q207628,
+		wd:Q2188189,
+		wd:Q15835903 ;
+	pq:P9729 wd:Q105543609 ;
+	pq:P6607 "Use Q105543609 \"musical work/composition\" as P31 \"Instance of\""@en,
+		"使用 Q105543609“音乐作品/乐曲”作为 P31“隶属于”的属性值。"@zh .
+
+wd:P31 p:P2302 wds:P31-7dcf6638-49f0-eafd-3692-08a9a8ce9b69 .
+
+wds:P31-7dcf6638-49f0-eafd-3692-08a9a8ce9b69 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q208569,
+		wd:Q222910,
+		wd:Q4176708,
+		wd:Q209939,
+		wd:Q60030240,
+		wd:Q4712779,
+		wd:Q108064011,
+		wd:Q68902449 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q482994 ;
+	pq:P6607 "Use \"album\" (Q482994) with \"instance of\" (P31); use the specific form of album with \"form of creative work\" (P7937)."@en,
+		"使用“专辑”（Q482994）搭配“隶属于”（P31），并使用“创意作品形式”（P7937）指定具体形式。"@zh .
+
+wd:P31 p:P2302 wds:P31-55ccbd51-4e1c-5e6f-aa24-c550dd3002d9 .
+
+wds:P31-55ccbd51-4e1c-5e6f-aa24-c550dd3002d9 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1892995,
+		wd:Q3975953,
+		wd:Q963099 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q482994 ;
+	pq:P6607 "Use Q482994 with P31, use the specific form with P7937"@en,
+		"使用 Q482994 作为 P31 的值，并使用 P7937 指定的具体形式。"@zh .
+
+wd:P31 p:P2302 wds:P31-1174ed4b-45c2-f181-63cf-7555d2f57595 .
+
+wds:P31-1174ed4b-45c2-f181-63cf-7555d2f57595 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q3303814,
+		wd:Q723849,
+		wd:Q20737336,
+		wd:Q61570090,
+		wd:Q1242743,
+		wd:Q734454,
+		wd:Q82384463,
+		wd:Q64547452,
+		wd:Q207393,
+		wd:Q1138081,
+		wd:Q31281198,
+		wd:Q3622455,
+		wd:Q368281 ;
+	pq:P6824 wd:P1552 ;
+	pq:P9729 wd:Q482994 ;
+	pq:P6607 "Use Q482994 with P31, use the specific form with P1552"@en,
+		"将 Q482994作为 {{P|P31}}的值使用；而对于 {{P|P1552}}，则请使用更具体的表现形式"@zh .
+
+wd:P31 p:P2302 wds:P31-b1d25ef3-4b8e-c98d-4719-b44f521e7ad8 .
+
+wds:P31-b1d25ef3-4b8e-c98d-4719-b44f521e7ad8 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q20089094,
+		wd:Q20135338,
+		wd:Q97556069,
+		wd:Q14875859 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q10590726 ;
+	pq:P6607 "Use Q10590726 with P31, use the specific form with P7937"@en,
+		"使用 Q10590726 作为 P31 的值，并使用 P7937 的特定形式。"@zh .
+
+wd:P31 p:P2302 wds:P31-818f408e-405f-f81f-2fbd-ab4f6eeae513 .
+
+wds:P31-818f408e-405f-f81f-2fbd-ab4f6eeae513 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q217199,
+		wd:Q29652773,
+		wd:Q107022156,
+		wd:Q492264,
+		wd:Q5049564,
+		wd:Q1193470,
+		wd:Q93540236 ;
+	pq:P9729 wd:Q105543609 ;
+	pq:P6824 wd:P366 .
+
+wd:P31 p:P2302 wds:P31-29a26ce2-4a2b-f0c8-6336-0c3ef945645a .
+
+wds:P31-29a26ce2-4a2b-f0c8-6336-0c3ef945645a a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q212148,
+		wd:Q647653,
+		wd:Q215911,
+		wd:Q464769,
+		wd:Q658334,
+		wd:Q85477,
+		wd:Q189201,
+		wd:Q271802,
+		wd:Q181014,
+		wd:Q140544,
+		wd:Q599510,
+		wd:Q6941842,
+		wd:Q53831,
+		wd:Q23817390,
+		wd:Q638569,
+		wd:Q11821942,
+		wd:Q836571,
+		wd:Q3408995 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q105543609 ;
+	pq:P6607 "Use musical work/composition (Q105543609) for P31, and use the value with P7937 (form of creative work)"@en,
+		"对于属性 P31，请使用音乐作品/乐曲 (Q105543609)，并使用属性 P7937（创作作品形式）的值。"@zh .
+
+wd:P31 p:P2302 wds:P31-9f92c8eb-48a7-9bb6-2111-1dea2c82008d .
+
+wds:P31-9f92c8eb-48a7-9bb6-2111-1dea2c82008d a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q639197,
+		wd:Q21998559 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q105543609 .
+
+wd:P31 p:P2302 wds:P31-e4ae9d39-4a33-21ff-93b6-7a2d2945620d .
+
+wds:P31-e4ae9d39-4a33-21ff-93b6-7a2d2945620d a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q193217,
+		wd:Q202534,
+		wd:Q178122,
+		wd:Q1033831 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q105543609 .
+
+wd:P31 p:P2302 wds:P31-0b658cdd-4ac6-8feb-dd8e-e9d396337b23 .
+
+wds:P31-0b658cdd-4ac6-8feb-dd8e-e9d396337b23 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q109940,
+		wd:Q29596700,
+		wd:Q12374879,
+		wd:Q1928277,
+		wd:Q29598000,
+		wd:Q12367929,
+		wd:Q25521422,
+		wd:Q12374821,
+		wd:Q12371368 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q105543609 .
+
+wd:P31 p:P2302 wds:P31-6fd37643-4c33-0e1b-af4b-d722d37bbead .
+
+wds:P31-6fd37643-4c33-0e1b-af4b-d722d37bbead a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q174873,
+		wd:Q11499279,
+		wd:Q2631975 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q105543609 .
+
+wd:P31 p:P2302 wds:P31-bcad9494-4612-8634-7e3c-9948737bb15f .
+
+wds:P31-bcad9494-4612-8634-7e3c-9948737bb15f a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q9748,
+		wd:Q4025234,
+		wd:Q2991770,
+		wd:Q871420,
+		wd:Q633441,
+		wd:Q1746028,
+		wd:Q715123,
+		wd:Q3406328,
+		wd:Q11338076,
+		wd:Q42889208,
+		wd:Q951526,
+		wd:Q779024,
+		wd:Q24896839,
+		wd:Q2991803,
+		wd:Q210216,
+		wd:Q2802627,
+		wd:Q2699309,
+		wd:Q1954097,
+		wd:Q1783700,
+		wd:Q1852234,
+		wd:Q8349093 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q105543609 ;
+	pq:P6607 "Use musical work/composition (Q105543609) for P31, and use the specific concerto with P7937 (form of creative work)"@en,
+		"对于P31属性，请使用音乐作品/乐曲（Q105543609），并使用P7937（创作作品形式）指定具体的协奏曲。"@zh .
+
+wd:P31 p:P2302 wds:P31-d9663693-4a0e-a26d-0996-e1195f39f622 .
+
+wds:P31-d9663693-4a0e-a26d-0996-e1195f39f622 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q216860,
+		wd:Q4797274,
+		wd:Q2737175 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q105543609 .
+
+wd:P31 p:P2302 wds:P31-46a89605-415f-cda9-75ef-610aa15723ce .
+
+wds:P31-46a89605-415f-cda9-75ef-610aa15723ce a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q3482281 ;
+	pq:P6824 wd:P136 ;
+	pq:P9729 wd:Q105543609 .
+
+wd:P31 p:P2302 wds:P31-e610e0d8-488d-3a74-4b45-db742d73362d .
+
+wds:P31-e610e0d8-488d-3a74-4b45-db742d73362d a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1746015,
+		wd:Q17126392,
+		wd:Q1414262,
+		wd:Q1746025,
+		wd:Q10349334,
+		wd:Q1746023,
+		wd:Q7190206 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q105543609 .
+
+wd:P31 p:P2302 wds:P31-acd99445-43ba-b055-0680-2f085be84411 .
+
+wds:P31-acd99445-43ba-b055-0680-2f085be84411 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q131269,
+		wd:Q7933385,
+		wd:Q1546995,
+		wd:Q543020,
+		wd:Q857538,
+		wd:Q1999051,
+		wd:Q2308166,
+		wd:Q903425,
+		wd:Q3070575,
+		wd:Q1045984 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q105543609 .
+
+wd:P31 p:P2302 wds:P31-86b63daa-4d29-1c62-362b-1a4de9c2a890 .
+
+wds:P31-86b63daa-4d29-1c62-362b-1a4de9c2a890 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q202287,
+		wd:Q11565443 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q105543609 .
+
+wd:P31 p:P2302 wds:P31-e65bcffd-4f03-f315-a835-195876cd8b13 .
+
+wds:P31-e65bcffd-4f03-f315-a835-195876cd8b13 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q11371841,
+		wd:Q923298,
+		wd:Q11487510,
+		wd:Q937364,
+		wd:Q368926,
+		wd:Q29598462 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q105543609 .
+
+wd:P31 p:P2302 wds:P31-be047370-45ba-4973-8848-8f38f5381ec5 .
+
+wds:P31-be047370-45ba-4973-8848-8f38f5381ec5 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q9734,
+		wd:Q2142754,
+		wd:Q1889001,
+		wd:Q15077165 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q105543609 .
+
+wd:P31 p:P2302 wds:P31-538de857-4d94-bad3-da1f-696f01476d01 .
+
+wds:P31-538de857-4d94-bad3-da1f-696f01476d01 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q203005,
+		wd:Q11374147,
+		wd:Q388383 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q105543609 .
+
+wd:P31 p:P2302 wds:P31-737c18a2-4747-a4c1-1bfa-06e216cb6062 .
+
+wds:P31-737c18a2-4747-a4c1-1bfa-06e216cb6062 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q8701407,
+		wd:Q1464124 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q105543609 .
+
+wd:P31 p:P2302 wds:P31-cbbd5bcf-4fe1-fc23-36c7-59ce4b31a443 .
+
+wds:P31-cbbd5bcf-4fe1-fc23-36c7-59ce4b31a443 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q211025,
+		wd:Q1677377 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q105543609 .
+
+wd:P31 p:P2302 wds:P31-48645540-48cc-4fa2-7a5b-45b7558d3486 .
+
+wds:P31-48645540-48cc-4fa2-7a5b-45b7558d3486 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q65598315,
+		wd:Q56599584 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q105543609 .
+
+wd:P31 p:P2302 wds:P31-5678ce25-431b-4939-b686-696ad8d47bcc .
+
+wds:P31-5678ce25-431b-4939-b686-696ad8d47bcc a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1344,
+		wd:Q2743,
+		wd:Q918727,
+		wd:Q643684,
+		wd:Q27976507,
+		wd:Q148163,
+		wd:Q16154635,
+		wd:Q41425 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q58483083 ;
+	pq:P6607 "Use dramatico-musical work (Q58483083) for P31, and use the specific type with P7937 (form of creative work)"@en,
+		"对于P31属性，请使用戏剧音乐作品（Q58483083），并使用P7937（创作作品形式）指定具体类型。"@zh .
+
+wd:P31 p:P2302 wds:P31-97839fad-4773-d52d-3b32-197a69161558 .
+
+wds:P31-97839fad-4773-d52d-3b32-197a69161558 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q7354827,
+		wd:Q785479,
+		wd:Q3084465,
+		wd:Q208080,
+		wd:Q13220650,
+		wd:Q7099147,
+		wd:Q105906205,
+		wd:Q377258,
+		wd:Q1457481,
+		wd:Q908705,
+		wd:Q210675,
+		wd:Q24678689,
+		wd:Q17084138 ;
+	pq:P6824 wd:P136 ;
+	pq:P9729 wd:Q58483083 ;
+	pq:P6607 "Use dramatico-musical work (Q58483083) for P31, and use the specific type with P136 (genre)"@en,
+		"对于 P31 属性，请使用戏剧音乐作品 (Q58483083)，并使用 P136（体裁）属性指定具体类型。"@zh .
+
+wd:P31 p:P2302 wds:P31-162cb6ab-47b7-a841-59fb-deb5ccc20e28 .
+
+wds:P31-162cb6ab-47b7-a841-59fb-deb5ccc20e28 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q56572789,
+		wd:Q591990,
+		wd:Q502658,
+		wd:Q23817363,
+		wd:Q829147,
+		wd:Q265147,
+		wd:Q261434,
+		wd:Q102189017,
+		wd:Q25452063,
+		wd:Q943929,
+		wd:Q105575966 ;
+	pq:P6824 wd:P1552 ;
+	pq:P9729 wd:Q105543609 .
+
+wd:P31 p:P2302 wds:P31-21210492-4fb5-9ae8-ed88-e591b9c3e7f4 .
+
+wds:P31-21210492-4fb5-9ae8-ed88-e591b9c3e7f4 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q214272 ;
+	pq:P6824 wd:P1552 ;
+	pq:P6104 wd:Q5830855 ;
+	pq:P9729 wd:Q55850593,
+		wd:Q55850643 .
+
+wd:P31 p:P2302 wds:P31-29919d8a-4e3a-7853-dedc-569ae9239c92 .
+
+wds:P31-29919d8a-4e3a-7853-dedc-569ae9239c92 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q155171 ;
+	pq:P9729 wd:Q7302866 ;
+	pq:P6824 wd:P1552 ;
+	pq:P6607 "describe the track as its general type, e.g. vocal track (Q55850593) or  instrumental track (Q55850643), and add cover version as a characteristic (P1552)"@en,
+		"描述该音轨的总体类型，例如人声音轨 (Q55850593) 或器乐音轨 (Q55850643)，并将翻唱版本添加为一项特征 (P1552)。"@zh ;
+	pq:P6104 wd:Q5830855 .
+
+wd:P31 p:P2302 wds:P31-7760137c-48b6-4957-bb4e-d48f27e377ad .
+
+wds:P31-7760137c-48b6-4957-bb4e-d48f27e377ad a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q63068880 ;
+	pq:P6824 wd:P1552 .
+
+wd:P31 p:P2302 wds:P31-dbcbb6e8-4546-ef4d-3510-5660dcbb6fa2 .
+
+wds:P31-dbcbb6e8-4546-ef4d-3510-5660dcbb6fa2 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q2188189,
+		wd:Q207628 ;
+	pq:P6104 wd:Q5830855 ;
+	pq:P9729 wd:Q105543609 ;
+	pq:P6607 "\"musical work\" and \"musical composition\" mean the same thing so we just use \"musical work/composition\". The reason they are still separate items is because we can't merge them due to some Wikipedias still having articles for each."@en,
+		"\"יצירה מוזיקלית\" ו\"חיבור מוזיקלי\" אומרות אותו דבר אז אנחנו פשוט משתמשים ב\"יצירה/לחן מוזיקלי\". הסיבה שהם עדיין פריטים נפרדים היא בגלל שאנחנו לא יכולים למזג אותם בגלל שחלק מהוויקיפדים עדיין מכילים מאמרים לכל אחד מהם"@he,
+		"“音乐作品”和“乐曲”的意思相同，所以我们统一使用“音乐作品/乐曲”。之所以它们仍然是两个独立的项，是因为一些维基百科版本仍然为这两个术语分别创建了条目，我们无法将它们合并。"@zh .
+
+wd:P31 p:P2302 wds:P31-a5ae3354-49b7-d6d6-75fc-56ad74aa75e4 .
+
+wds:P31-a5ae3354-49b7-d6d6-75fc-56ad74aa75e4 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1065742,
+		wd:Q1076513,
+		wd:Q685884,
+		wd:Q235858 ;
+	pq:P6824 wd:P136 ;
+	pq:P9729 wd:Q105543609 .
+
+wd:P31 p:P2302 wds:P31-0275db46-486c-4c15-419e-f8595de3e5b3 .
+
+wds:P31-0275db46-486c-4c15-419e-f8595de3e5b3 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q19829125 ;
+	pq:P6824 wd:P279 ;
+	pq:P6607 "Use  P279 (subclass of) with qualifier P642 (\"of\"), or use P461 (opposite of)"@en,
+		"使用属性P279并添加限定符P642（“属于”），或者使用属性P461（相反）。"@zh .
+
+wd:P31 p:P2302 wds:P31-5fdf09ec-4157-b468-8d4f-b68182fd072f .
+
+wds:P31-5fdf09ec-4157-b468-8d4f-b68182fd072f a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q6581097,
+		wd:Q6581072,
+		wd:Q3031,
+		wd:Q3010 ;
+	pq:P6824 wd:P21 .
+
+wd:P31 p:P2302 wds:P31-f70aaec3-4aed-544a-6639-f0a5dbc526a0 .
+
+wds:P31-f70aaec3-4aed-544a-6639-f0a5dbc526a0 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q5883980 ;
+	pq:P6824 wd:P793 ;
+	pq:P9729 wd:Q2763 ;
+	pq:P6607 "replacement property and value apply to the same replacement statement"@en,
+		"替换属性和值适用于同一替换陈述。"@zh .
+
+wd:P31 p:P2302 wds:P31-4cf38c46-4fed-c540-1ed4-218f1ae34fd1 .
+
+wds:P31-4cf38c46-4fed-c540-1ed4-218f1ae34fd1 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q624669 ;
+	pq:P6824 wd:P1552 ;
+	pq:P6104 wd:Q5830855 .
+
+wd:P31 p:P2302 wds:P31-3b01ff89-4e62-c32f-0732-2cf80f9ae496 .
+
+wds:P31-3b01ff89-4e62-c32f-0732-2cf80f9ae496 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q242488,
+		wd:Q320568 ;
+	pq:P6824 wd:P136 .
+
+wd:P31 p:P2302 wds:P31-f44a25f8-467a-9f3a-9435-be3e104b9b27 .
+
+wds:P31-f44a25f8-467a-9f3a-9435-be3e104b9b27 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q89061424,
+		wd:Q98966385,
+		wd:Q73169841,
+		wd:Q46076028,
+		wd:Q73164596,
+		wd:Q98966375,
+		wd:Q98966378,
+		wd:Q73155718,
+		wd:Q67630359,
+		wd:Q73168492,
+		wd:Q98966337,
+		wd:Q108295395,
+		wd:Q73153647,
+		wd:Q107973786,
+		wd:Q107737414,
+		wd:Q192620,
+		wd:Q98966335,
+		wd:Q388505,
+		wd:Q10436169 ;
+	pq:P6824 wd:P793 .
+
+wd:P31 p:P2302 wds:P31-94231887-35C3-4F88-8504-76A4C3BC6D6C .
+
+wds:P31-94231887-35C3-4F88-8504-76A4C3BC6D6C a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q106039,
+		wd:Q17549077,
+		wd:Q47740,
+		wd:Q7325,
+		wd:Q6926246,
+		wd:Q10090 ;
+	pq:P6824 wd:P140 .
+
+wd:P31 p:P2302 wds:P31-c0924aba-4299-86b4-3447-0887e4282d97 .
+
+wds:P31-c0924aba-4299-86b4-3447-0887e4282d97 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q5292 ;
+	pq:P6824 wd:P136 .
+
+wd:P31 p:P2302 wds:P31-c9190846-4665-9f3f-3a51-7a1582cbdeb2 .
+
+wds:P31-c9190846-4665-9f3f-3a51-7a1582cbdeb2 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P6607 "for musicians, use P31=Q5 and P106=musician; for groups and bands, use applicable P31"@en,
+		"对于音乐家，请使用 P31=Q5 和 P106=musician；对于团体和乐队，请使用适用的 P31。"@zh ;
+	pq:P2305 wd:Q639669 ;
+	pq:P6824 wd:P106 .
+
+wd:P31 p:P2302 wds:P31-40881376-44be-c9dd-0d87-f0ba784ff56c .
+
+wds:P31-40881376-44be-c9dd-0d87-f0ba784ff56c a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q21561303 ;
+	pq:P6824 wd:P5800 .
+
+wd:P31 p:P2302 wds:P31-5e4509e1-45a7-e368-7661-b99ac930e2ee .
+
+wds:P31-5e4509e1-45a7-e368-7661-b99ac930e2ee a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q35120 ;
+	pq:P6607 "Bitte verwenden Sie eine spezifischere Klasse."@de,
+		"Please use a more-specific class"@en,
+		"请使用更具体的类名"@zh ;
+	pq:P6104 wd:Q60005226 .
+
+wd:P31 p:P2302 wds:P31-ec98629a-4d73-d543-aa25-20a5f6e032fa .
+
+wds:P31-ec98629a-4d73-d543-aa25-20a5f6e032fa a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q95074,
+		wd:Q14897293,
+		wd:Q15796005,
+		wd:Q3895768,
+		wd:Q116780221 ;
+	pq:P2316 wd:Q62026391 ;
+	pq:P6607 "Dieses Datenobjekte sind zu weit gefasst, versuchen Sie daher, eine spezifischere Unterklasse zu finden."@de,
+		"Too broad, use a more specific subclass, such as fictional human (Q15632617)"@en,
+		"Valores demasiado amplios. Trate de encontrar una subclase más específica."@es,
+		"Túl tág fogalom, próbálj meg konkrétabb alosztályt keresni"@hu,
+		"范围太广，请使用更具体的子类别，例如虚构人物 (Q15632617)。"@zh-hans,
+		"範囲が広すぎるため、架空の人（Q15632617）などのより具体的なサブクラスを使用してください。"@ja,
+		"範圍太廣，請使用更具體的子類別，例如虛構人物 (Q15632617)。"@zh-hant .
+
+wd:P31 p:P2302 wds:P31-363d9049-4568-93e0-29e6-992d332ec031 .
+
+wds:P31-363d9049-4568-93e0-29e6-992d332ec031 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q11639,
+		wd:Q201022 ;
+	pq:P9729 wd:Q107357104 .
+
+wd:P31 p:P2302 wds:P31-02b84af6-4850-050b-2631-3ac7ea48ca02 .
+
+wds:P31-02b84af6-4850-050b-2631-3ac7ea48ca02 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q21518270,
+		wd:Q14784328,
+		wd:Q21507383 ;
+	pq:P6104 wd:Q5497514 ;
+	pq:P6824 wd:P1376 .
+
+wd:P31 p:P2302 wds:P31-2ab2ec35-40f8-bbec-3b9b-0066ab424d1d .
+
+wds:P31-2ab2ec35-40f8-bbec-3b9b-0066ab424d1d a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q42915628 ;
+	pq:P9729 wd:Q21480300 .
+
+wd:P31 p:P2302 wds:P31-9e3f4220-4bf2-1ca1-607f-152aae939061 .
+
+wds:P31-9e3f4220-4bf2-1ca1-607f-152aae939061 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q7283 ;
+	pq:P9729 wd:Q2223653 .
+
+wd:P31 p:P2302 wds:P31-92d37747-40a8-c28e-774d-068eab054f50 .
+
+wds:P31-92d37747-40a8-c28e-774d-068eab054f50 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q5889469 ;
+	pq:P9729 wd:Q112044283 .
+
+wd:P31 p:P2302 wds:P31-02cee797-4578-08c3-eb3e-f7015b648f11 .
+
+wds:P31-02cee797-4578-08c3-eb3e-f7015b648f11 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q112042224 ;
+	pq:P9729 wd:Q210167,
+		wd:Q1137109,
+		wd:Q100588475 ;
+	pq:P2303 wd:Q107327507 .
+
+wd:P31 p:P2302 wds:P31-7ab9e498-417e-b092-86e6-e5ed907a357d .
+
+wds:P31-7ab9e498-417e-b092-86e6-e5ed907a357d a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q21510864 ;
+	pq:P2306 wd:P279 ;
+	pq:P2303 wd:Q35120 .
+
+wd:P31 p:P2302 wds:P31-50a814b8-4c22-7db3-44d5-3b4eea52afc6 .
+
+wds:P31-50a814b8-4c22-7db3-44d5-3b4eea52afc6 a wikibase:Statement ;
+	wikibase:rank wikibase:DeprecatedRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q3542731,
+		wd:Q2369882,
+		wd:Q27921916 ;
+	pq:P6607 "Too broad, use a more specific subclass instead"@en,
+		"范围太广，请尝试寻找更具体的子类别"@zh ;
+	pq:P2241 wd:Q1121749 .
+
+wd:P31 p:P2302 wds:P31-21c35380-43b1-26d2-e5d4-72ceaec06673 .
+
+wds:P31-21c35380-43b1-26d2-e5d4-72ceaec06673 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q2650048,
+		wd:Q916333,
+		wd:Q2035304 ;
+	pq:P6824 wd:P1435 .
+
+wd:P31 p:P2302 wds:P31-ab8c63ff-4ec8-204b-851f-b1622c6baeb4 .
+
+wds:P31-ab8c63ff-4ec8-204b-851f-b1622c6baeb4 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q115095765 ;
+	pq:P9729 wd:Q17334923,
+		wd:Q107307154,
+		wd:Q15796005 .
+
+wd:P31 p:P2302 wds:P31-f8bb43a8-4c78-2758-8432-a03de4dae06c .
+
+wds:P31-f8bb43a8-4c78-2758-8432-a03de4dae06c a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q78817465,
+		wd:Q20085850,
+		wd:Q3656924,
+		wd:Q130354436 ;
+	pq:P6824 wd:P106 ;
+	pq:P6607 "Specify occupation using P106 (occupation) and use the item for the real occupation"@en,
+		"使用 P106（职业）属性指定职业，并使用该属性来描述实际职业。"@zh .
+
+wd:P31 p:P2302 wds:P31-9492032e-460c-467b-4efa-69bdcf89f989 .
+
+wds:P31-9492032e-460c-467b-4efa-69bdcf89f989 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q557141,
+		wd:Q1792321,
+		wd:Q17514,
+		wd:Q17516 ;
+	pq:P6824 wd:P136 ;
+	pq:P6607 "\"public art\" is used with P136 (genre). Use artwork classes, e.g. sculpture, statue, painting, installation for P31."@en,
+		"“公共艺术”与属性 P136（类型）一起使用。请使用艺术品类别，例如雕塑、雕像、绘画、装置艺术等，用于属性 P31。"@zh .
+
+wd:P31 p:P2302 wds:P31-fd912bdd-477c-82e8-4b96-d4a4a15f90b4 .
+
+wds:P31-fd912bdd-477c-82e8-4b96-d4a4a15f90b4 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q18821702 ;
+	pq:P2316 wd:Q21502408 ;
+	pq:P6607 "use qualifer \"end time\" (P582) on P31 value \"commune of France\""@en,
+		"对属性P31的值“法国市镇”使用限定符“结束时间”（P582）。"@zh .
+
+wd:P31 p:P2302 wds:P31-0a2dabf7-4b97-8146-f70c-04977f097aad .
+
+wds:P31-0a2dabf7-4b97-8146-f70c-04977f097aad a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q3966183 ;
+	pq:P6607 "Pokémon should not be made direct instances of Q3966183 but should instead be instances of elemental type Pokémon (example: Q25930495)"@en,
+		"宝可梦不应该直接作为 Q3966183 的实例，而应该作为具有特定属性类型的宝可梦的实例（例如：Q25930495）。"@zh .
+
+wd:P31 p:P2302 wds:P31-fc2ba773-4367-fa4f-b2dc-d7264b390c27 .
+
+wds:P31-fc2ba773-4367-fa4f-b2dc-d7264b390c27 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q571 ;
+	pq:P6607 "use \"literary work\" (Q7725634), \"written work\" (Q47461344) or \"version, edition or translation\" (Q3331189) instead"@en,
+		"استخدم \"عمل أدبي\" أو \"نسخة أو طبعة أو ترجمة\" أو \"عمل مكتوب\" بدلاً منه"@ar,
+		"utiliser œuvre littéraire (Q7725634), œuvre écrite (Q47461344) ou version, édition ou traduction (Q3331189) à la place"@fr,
+		"请改用“文学作品”（Q7725634）、“书面作品”（Q47461344）或“版本、版次或译本”（Q3331189）。"@zh ;
+	pq:P9729 wd:Q7725634,
+		wd:Q3331189,
+		wd:Q47461344 .
+
+wd:P31 p:P2302 wds:P31-25F75D94-316B-46E1-AECF-F4A5F1A5AEEA .
+
+wds:P31-25F75D94-316B-46E1-AECF-F4A5F1A5AEEA a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1774805,
+		wd:Q1166153,
+		wd:Q105933250,
+		wd:Q623554,
+		wd:Q4115075 ;
+	pq:P6824 wd:P9295 .
+
+wd:P31 p:P2302 wds:P31-44ca7cba-408b-3872-aac7-f50d34bb4982 .
+
+wds:P31-44ca7cba-408b-3872-aac7-f50d34bb4982 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q2762504,
+		wd:Q828322,
+		wd:Q185029,
+		wd:Q380266,
+		wd:Q116790414,
+		wd:Q116790461,
+		wd:Q54767,
+		wd:Q175173,
+		wd:Q11064557 ;
+	pq:P6824 wd:P136 .
+
+wd:P31 p:P2302 wds:P31-323f166c-4b6b-380a-01bf-c7d072e61734 .
+
+wds:P31-323f166c-4b6b-380a-01bf-c7d072e61734 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q159979,
+		wd:Q31184,
+		wd:Q7560,
+		wd:Q7565,
+		wd:Q7569 ;
+	pq:P6607 "Please mark the relationship this person has with their twin using P3373 with qualifier P1039."@en,
+		"P3373 と修飾子 P1039 を使用して、この人と双子の関係をマークしてください。"@ja,
+		"请使用属性 P3373 并添加限定符 P1039 来标明此人与其双胞胎兄弟/姐妹的关系。"@zh .
+
+wd:P31 p:P2302 wds:P31-86aa14f3-40bd-f3f1-9b54-74e4fec3bbe8 .
+
+wds:P31-86aa14f3-40bd-f3f1-9b54-74e4fec3bbe8 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q36649,
+		wd:Q488383,
+		wd:Q223557 ;
+	pq:P6607 "use a more specific class"@en,
+		"より具体的なクラスを使用する"@ja,
+		"使用更具体的类"@zh ;
+	pq:P2316 wd:Q62026391 .
+
+wd:P31 p:P2302 wds:P31-31a3b19d-433b-c9a5-64ef-339728a07e66 .
+
+wds:P31-31a3b19d-433b-c9a5-64ef-339728a07e66 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q735,
+		wd:Q55336315,
+		wd:Q2018526 ;
+	pq:P9729 wd:Q1792379,
+		wd:Q968159,
+		wd:Q1792644,
+		wd:Q11177771,
+		wd:Q1406161,
+		wd:Q56055944,
+		wd:Q74817647,
+		wd:Q111676757,
+		wd:Q106727146,
+		wd:Q838948 .
+
+wd:P31 p:P2302 wds:P31-f00c2f90-4be7-3ea1-ca67-01274795cfe0 .
+
+wds:P31-f00c2f90-4be7-3ea1-ca67-01274795cfe0 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q36649,
+		wd:Q207241 ;
+	pq:P9729 wd:Q4502142 ;
+	pq:P6824 wd:P279 .
+
+wd:P31 p:P2302 wds:P31-717497af-4826-dfd9-331f-4e947baf551b .
+
+wds:P31-717497af-4826-dfd9-331f-4e947baf551b a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q184485 ;
+	pq:P9729 wd:Q17538722 ;
+	pq:P6824 wd:P279 .
+
+wd:P31 p:P2302 wds:P31-b36d67c4-43ec-a047-2fee-1a6032c14f99 .
+
+wds:P31-b36d67c4-43ec-a047-2fee-1a6032c14f99 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q8242 ;
+	pq:P9729 wd:Q7725634 ;
+	pq:P6824 wd:P279 .
+
+wd:P31 p:P2302 wds:P31-82cb9426-4b61-66b0-8b6b-5aa689e44ba1 .
+
+wds:P31-82cb9426-4b61-66b0-8b6b-5aa689e44ba1 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q2864737 ;
+	pq:P9729 wd:Q117023378 ;
+	pq:P6824 wd:P279,
+		wd:P136 .
+
+wd:P31 p:P2302 wds:P31-91a1a06b-4ec2-2f81-bd71-39eb0c95f867 .
+
+wds:P31-91a1a06b-4ec2-2f81-bd71-39eb0c95f867 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q16675884 ;
+	pq:P9729 wd:Q116445901 ;
+	pq:P6824 wd:P279,
+		wd:P136 .
+
+wd:P31 p:P2302 wds:P31-1e16f6b9-48cb-70d5-27e9-fa871179a4de .
+
+wds:P31-1e16f6b9-48cb-70d5-27e9-fa871179a4de a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q10988986,
+		wd:Q763631 ;
+	pq:P9729 wd:Q22075301,
+		wd:Q64092658 ;
+	pq:P6824 wd:P279 .
+
+wd:P31 p:P2302 wds:P31-37fb439f-47a5-fc07-f37f-8e1ee572632c .
+
+wds:P31-37fb439f-47a5-fc07-f37f-8e1ee572632c a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q213156 ;
+	pq:P9729 wd:Q22672348 ;
+	pq:P6824 wd:P279 .
+
+wd:P31 p:P2302 wds:P31-222cf285-43d9-1df1-60de-089f96763cd4 .
+
+wds:P31-222cf285-43d9-1df1-60de-089f96763cd4 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q682010 ;
+	pq:P9729 wd:Q20742776 ;
+	pq:P6824 wd:P279 .
+
+wd:P31 p:P2302 wds:P31-e504f3ec-4f4f-7661-ca85-c0a125d102fd .
+
+wds:P31-e504f3ec-4f4f-7661-ca85-c0a125d102fd a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q473743 ;
+	pq:P9729 wd:Q21042249 ;
+	pq:P6824 wd:P279,
+		wd:P136 .
+
+wd:P31 p:P2302 wds:P31-9eae29a8-4130-4304-2b7e-bae6d75b554b .
+
+wds:P31-9eae29a8-4130-4304-2b7e-bae6d75b554b a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q11633,
+		wd:Q166509,
+		wd:Q3879271 ;
+	pq:P9729 wd:Q125191,
+		wd:Q11900210 ;
+	pq:P6824 wd:P279 .
+
+wd:P31 p:P2302 wds:P31-f67367f4-4d64-5c0e-aedd-407fe232be1c .
+
+wds:P31-f67367f4-4d64-5c0e-aedd-407fe232be1c a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q2394336 ;
+	pq:P9729 wd:Q115452528 ;
+	pq:P6824 wd:P279 .
+
+wd:P31 p:P2302 wds:P31-64c7f94f-47b2-0d25-62c6-f6dadc01c682 .
+
+wds:P31-64c7f94f-47b2-0d25-62c6-f6dadc01c682 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q11629,
+		wd:Q174705,
+		wd:Q50030,
+		wd:Q1400853 ;
+	pq:P9729 wd:Q3305213,
+		wd:Q56676227,
+		wd:Q18761202,
+		wd:Q134307 ;
+	pq:P6607 "Paintings are a product, not an activity."@en,
+		"绘画是一种成品，而不是一种创作活动"@zh ;
+	pq:P6824 wd:P279,
+		wd:P136 .
+
+wd:P31 p:P2302 wds:P31-e62deacd-4481-ff90-b25d-844ec7666263 .
+
+wds:P31-e62deacd-4481-ff90-b25d-844ec7666263 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q11634,
+		wd:Q17310537,
+		wd:Q3476508 ;
+	pq:P9729 wd:Q860861 ;
+	pq:P6824 wd:P279,
+		wd:P136 .
+
+wd:P31 p:P2302 wds:P31-0767dead-4bb4-d0fb-34a9-b9aeca74ee4d .
+
+wds:P31-0767dead-4bb4-d0fb-34a9-b9aeca74ee4d a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q2921001 ;
+	pq:P9729 wd:Q93184 ;
+	pq:P6824 wd:P279 .
+
+wd:P31 p:P2302 wds:P31-ba345a09-4f81-0b4b-0b62-5b0df40bf15c .
+
+wds:P31-ba345a09-4f81-0b4b-0b62-5b0df40bf15c a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q337907 ;
+	pq:P9729 wd:Q60734095 ;
+	pq:P6824 wd:P279,
+		wd:P136 .
+
+wd:P31 p:P2302 wds:P31-3183258b-4c93-8bef-59af-4a3053190dd0 .
+
+wds:P31-3183258b-4c93-8bef-59af-4a3053190dd0 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1355413 ;
+	pq:P9729 wd:Q17538722 ;
+	pq:P6824 wd:P136 .
+
+wd:P31 p:P2302 wds:P31-4b9f584a-4ea5-5326-c895-aaffdcc501e8 .
+
+wds:P31-4b9f584a-4ea5-5326-c895-aaffdcc501e8 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1412362 ;
+	pq:P9729 wd:Q1255828 .
+
+wd:P31 p:P2302 wds:P31-7624c6fe-4238-5274-d9ff-e37ff3011659 .
+
+wds:P31-7624c6fe-4238-5274-d9ff-e37ff3011659 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q33095807 ;
+	pq:P9729 wd:Q245204 ;
+	pq:P6824 wd:P5800 .
+
+wd:P31 p:P2302 wds:P31-f08cc297-49d4-d3bb-9c68-f67ddca5fbc0 .
+
+wds:P31-f08cc297-49d4-d3bb-9c68-f67ddca5fbc0 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q3577509 ;
+	pq:P9729 wd:Q503958 .
+
+wd:P31 p:P2302 wds:P31-d51a54ad-4378-b202-2b4e-266799a6093a .
+
+wds:P31-d51a54ad-4378-b202-2b4e-266799a6093a a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q2684591 ;
+	pq:P9729 wd:Q474328,
+		wd:Q108163,
+		wd:Q628523,
+		wd:Q2620826,
+		wd:Q62662439,
+		wd:Q814441,
+		wd:Q3026787 ;
+	pq:P6607 "Q2684591 (statement) is ambiguous."@en,
+		"Q2684591（陈述）含义模糊。"@zh ;
+	pq:P2316 wd:Q62026391 .
+
+wd:P31 p:P2302 wds:P31-ac3bfdf9-4f58-4f8a-931c-2f96af23909d .
+
+wds:P31-ac3bfdf9-4f58-4f8a-931c-2f96af23909d a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q58778 ;
+	pq:P9729 wd:Q106865236,
+		wd:Q994895,
+		wd:Q1454986,
+		wd:Q3622126,
+		wd:Q3509189,
+		wd:Q3509386,
+		wd:Q1639378,
+		wd:Q120926552 ;
+	pq:P2316 wd:Q62026391 ;
+	pq:P6607 "Use a more specific class or classes if possible."@en,
+		"如果可能，请使用更具体的一个或多个类。"@zh .
+
+wd:P31 p:P2302 wds:P31-fcad4628-41b2-ed41-2e4f-006a6897eb5a .
+
+wds:P31-fcad4628-41b2-ed41-2e4f-006a6897eb5a a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q10884 ;
+	pq:P9729 wd:Q811534 ;
+	pq:P6607 "Use Q811534 for individual trees instead."@en,
+		"对于单棵树木，请使用 Q811534。"@zh .
+
+wd:P31 p:P2302 wds:P31-e88bd61b-4f89-8418-7361-c06669b23ce0 .
+
+wds:P31-e88bd61b-4f89-8418-7361-c06669b23ce0 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q19595246,
+		wd:Q96196475,
+		wd:Q106485190,
+		wd:Q120200559 ;
+	pq:P9729 wd:Q1145276 ;
+	pq:P2316 wd:Q62026391 ;
+	pq:P6607 "Use P122 for the form of government: monarchy, republic..."@en,
+		"使用 P122 来描述政府形式：君主制、共和制……"@zh .
+
+wd:P31 p:P2302 wds:P31-0236c42c-414f-cc21-f917-2004f18c36b5 .
+
+wds:P31-0236c42c-414f-cc21-f917-2004f18c36b5 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q5138347 ;
+	pq:P9729 wd:Q1785071,
+		wd:Q57821 ;
+	pq:P6607 "replaced item refers to operations and doctrine, not physical forts"@en,
+		"此处提及的“被替换的项目”指的是作战行动和作战理论，而不是实际的堡垒。"@zh .
+
+wd:P31 p:P2302 wds:P31-dfe5a10a-4464-b5da-6342-81377769e024 .
+
+wds:P31-dfe5a10a-4464-b5da-6342-81377769e024 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q18631232,
+		wd:Q19605764,
+		wd:Q510785 ;
+	pq:P9729 wd:Q15911314 ;
+	pq:P6607 "Use Q43229 instead, and use foundation, etc. with P1454 (legal form)"@en,
+		"请改用 Q43229，并使用 P1454（法律形式）等属性。"@zh .
+
+wd:P31 p:P2302 wds:P31-0d74a61c-42f6-2b1a-86dd-aea57a896b76 .
+
+wds:P31-0d74a61c-42f6-2b1a-86dd-aea57a896b76 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q16502 ;
+	pq:P9729 wd:Q3238337,
+		wd:Q3895768,
+		wd:Q634 ;
+	pq:P6607 "Q16502 should not have instances."@en,
+		"Q16502不应该存在任何实例"@zh .
+
+wd:P31 p:P2302 wds:P31-a51fcd99-44f6-5679-30de-31cfd98b6f78 .
+
+wds:P31-a51fcd99-44f6-5679-30de-31cfd98b6f78 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q4406616 ;
+	pq:P6607 "Use a more specific parent class."@en,
+		"使用更具体的父类"@zh ;
+	pq:P9729 wd:Q223557,
+		wd:Q28732711,
+		wd:Q17334923,
+		wd:Q618123,
+		wd:Q25404640 .
+
+wd:P31 p:P2302 wds:P31-c4beb0fb-4ba3-7cd2-d8ec-a2e7c0b753a9 .
+
+wds:P31-c4beb0fb-4ba3-7cd2-d8ec-a2e7c0b753a9 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1355413 ;
+	pq:P9729 wd:Q24354 .
+
+wd:P31 p:P2302 wds:P31-6079e08c-4c01-23b1-0a97-ca31f0624134 .
+
+wds:P31-6079e08c-4c01-23b1-0a97-ca31f0624134 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q8148 ;
+	pq:P9729 wd:Q268592,
+		wd:Q3958441 ;
+	pq:P6607 "Q8148 is a specific economic sector. It has parts, not instances"@en,
+		"Q8148 是一个特定的经济部门。它包含组成部分，而不是具体的实例。"@zh .
+
+wd:P31 p:P2302 wds:P31-1125aff5-4e21-8b1d-c4f1-cab29bf97fa4 .
+
+wds:P31-1125aff5-4e21-8b1d-c4f1-cab29bf97fa4 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q8148 ;
+	pq:P6824 wd:P361 ;
+	pq:P6607 "Q8148 is a specific economic sector. It has parts, not instances"@en,
+		"Q8148 是一个特定的经济部门。它包含组成部分，而不是具体的实例。"@zh .
+
+wd:P31 p:P2302 wds:P31-3715cf61-4799-8a4e-932c-eaf0eebd6d43 .
+
+wds:P31-3715cf61-4799-8a4e-932c-eaf0eebd6d43 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q261636 .
+
+wd:P31 p:P2302 wds:P31-4829dd39-42bc-2fd2-5891-f4e90009c095 .
+
+wds:P31-4829dd39-42bc-2fd2-5891-f4e90009c095 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q269415 .
+
+wd:P31 p:P2302 wds:P31-26fab30e-4f8d-a4f6-1014-805d878cd497 .
+
+wds:P31-26fab30e-4f8d-a4f6-1014-805d878cd497 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q7927917 .
+
+wd:P31 p:P2302 wds:P31-92aaf67b-481b-cd51-f2a1-d36035a6126d .
+
+wds:P31-92aaf67b-481b-cd51-f2a1-d36035a6126d a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q63412991,
+		wd:Q110875181 ;
+	pq:P9729 wd:Q1030329,
+		wd:Q1464125,
+		wd:Q193977,
+		wd:Q24862,
+		wd:Q110879246,
+		wd:Q2553613 ;
+	pq:P6824 wd:P437 ;
+	pq:P6607 "Being hosted on YouTube is not an essential quality of a video. If the item is hosted on YouTube, use distribution format (P437) = Q63412991, and/or specify a YouTube video ID (P1651)."@en,
+		"视频是否托管在 YouTube 上并非其必要属性。如果视频托管在 YouTube 上，请使用分发格式 (P437) = Q63412991，和/或指定 YouTube 视频 ID (P1651)。"@zh .
+
+wd:P31 p:P2302 wds:P31-5cb10fa9-44c1-d437-5f9c-558899e39700 .
+
+wds:P31-5cb10fa9-44c1-d437-5f9c-558899e39700 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q315 ;
+	pq:P9729 wd:Q34770 ;
+	pq:P6607 "Use Q34770 to indicate a language."@en,
+		"言語を指定するには「言語 (Q34770)」を使用します。"@ja,
+		"使用 Q34770 来表示一种语言"@zh ;
+	pq:P2316 wd:Q21502408 .
+
+wd:P31 p:P2302 wds:P31-3957d8ea-4515-cdc2-26ac-cb052f73347f .
+
+wds:P31-3957d8ea-4515-cdc2-26ac-cb052f73347f a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1078913 ;
+	pq:P9729 wd:Q350268 ;
+	pq:P6824 wd:P279,
+		wd:P136 ;
+	pq:P6607 "Q1078913 is the process, Q350268 is the product"@en,
+		"Q1078913 是过程，Q350268 是产品。"@zh .
+
+wd:P31 p:P2302 wds:P31-f6cffa4e-4006-413f-7864-82550b79b1c7 .
+
+wds:P31-f6cffa4e-4006-413f-7864-82550b79b1c7 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q8434 ;
+	pq:P6824 wd:P279 ;
+	pq:P9729 wd:Q2385804 .
+
+wd:P31 p:P2302 wds:P31-7b0cd18e-4135-9be4-e943-4a1079f25cfa .
+
+wds:P31-7b0cd18e-4135-9be4-e943-4a1079f25cfa a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q106974938,
+		wd:Q106974939 .
+
+wd:P31 p:P2302 wds:P31-10a1ebfe-4cf1-aaf4-f51d-088e0c1b23e0 .
+
+wds:P31-10a1ebfe-4cf1-aaf4-f51d-088e0c1b23e0 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1145397 ;
+	pq:P9729 wd:Q124473037 ;
+	pq:P6607 "such items generally describe grave sites, rather than the act of burial"@en,
+		"此类项目通常描述的是墓葬遗址，而非埋葬行为"@zh .
+
+wd:P31 p:P2302 wds:P31-c4f7bbec-430c-32a2-9331-ef90c85ebc5b .
+
+wds:P31-c4f7bbec-430c-32a2-9331-ef90c85ebc5b a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q15780329,
+		wd:Q117816838,
+		wd:Q117806335,
+		wd:Q117289741,
+		wd:Q116984826,
+		wd:Q116984653,
+		wd:Q116984649,
+		wd:Q116984641,
+		wd:Q66808903,
+		wd:Q63998451 ;
+	pq:P9729 wd:Q15773347 .
+
+wd:P31 p:P2302 wds:P31-561b5238-40af-8a0f-9fc3-9e4d3e0f6dc4 .
+
+wds:P31-561b5238-40af-8a0f-9fc3-9e4d3e0f6dc4 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q11635 ;
+	pq:P6607 "Use Q24354 for a theatre building, Q742421 for an informal theatrical troupe, Q2416217 for a professional theatre troupe, Q11812394 for a theatre company, Q7777570 for a theatrical production, for a play use Q7725634 (literary work)."@en,
+		"对于剧院建筑，请使用 Q24354；对于非正式剧团，请使用 Q742421；对于专业剧团，请使用 Q2416217；对于戏剧公司，请使用 Q11812394；对于戏剧作品，请使用 Q7777570；对于戏剧剧本，请使用 Q7725634（文学作品）。"@zh .
+
+wd:P31 p:P2302 wds:P31-2de7b8a5-4e18-f0fb-0987-39b426328cc6 .
+
+wds:P31-2de7b8a5-4e18-f0fb-0987-39b426328cc6 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q5891 ;
+	pq:P6824 wd:P279 ;
+	pq:P9729 wd:Q12558574,
+		wd:Q49447,
+		wd:Q7257,
+		wd:Q5390013 ;
+	pq:P6607 "Q5891 is a field of study. Branches of it should use P279. Specific views or beliefs should use Q12558574 or the like."@en,
+		"Q5891 是一个研究领域。其分支应使用 P279。具体的观点或信仰应使用 Q12558574 或类似项。"@zh .
+
+wd:P31 p:P2302 wds:P31-a671c163-4754-ba34-67cd-8883388ac090 .
+
+wds:P31-a671c163-4754-ba34-67cd-8883388ac090 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q374116,
+		wd:Q2254524,
+		wd:Q18640194,
+		wd:Q3257863,
+		wd:Q1987723,
+		wd:Q2238889,
+		wd:Q623605,
+		wd:Q836867,
+		wd:Q2084126,
+		wd:Q1976835,
+		wd:Q684883,
+		wd:Q297163,
+		wd:Q2598061,
+		wd:Q474686,
+		wd:Q2695327,
+		wd:Q385422,
+		wd:Q2768798,
+		wd:Q2351283,
+		wd:Q356838,
+		wd:Q2868354,
+		wd:Q2456069,
+		wd:Q12013554,
+		wd:Q1877290,
+		wd:Q61978174,
+		wd:Q1018126,
+		wd:Q56316683,
+		wd:Q135509402 ;
+	pq:P9729 wd:Q44494 ;
+	pq:P6607 "Use P366 instead for the function(s) the mill had, and use for P31 'mill', 'watermill', 'windmill', etc."@en,
+		"对于磨坊原有的功能，请使用 P366；对于 P31，请使用“磨坊”、“水磨”、“风车”等词语。"@zh .
+
+wd:P31 p:P2302 wds:P31-edd5dc3f-4763-ff7b-027f-624a4ac7c5d5 .
+
+wds:P31-edd5dc3f-4763-ff7b-027f-624a4ac7c5d5 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q3565868 ;
+	pq:P9729 wd:Q15141321,
+		wd:Q22667,
+		wd:Q728937 ;
+	pq:P6607 "Use one of the replacement values or one of their subclasses"@en,
+		"使用其中一个替换值或其子类之一"@zh .
+
+wd:P31 p:P2302 wds:P31-f17112ea-407e-9010-07a6-a74844803db3 .
+
+wds:P31-f17112ea-407e-9010-07a6-a74844803db3 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q590490 ;
+	pq:P6607 "Items typically do not represent names for a particular entity, but represent the named entity itself, such as a person or place. Names may be represented with lexemes. If a Q-item really represents a name of one of these types, it can be added as an exception to this constraint."@en,
+		"项目通常不代表特定实体的名称，而是代表实体本身，例如人或地点。名称可以用词素表示。如果某个Q项确实代表这些类型之一的名称，则可以将其作为例外添加到此约束条件中。"@zh .
+
+wd:P31 p:P2302 wds:P31-5e6d3e65-4dd7-7518-115f-bc93424fecda .
+
+wds:P31-5e6d3e65-4dd7-7518-115f-bc93424fecda a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q4393107,
+		wd:Q65963104,
+		wd:Q111223304,
+		wd:Q111241092,
+		wd:Q111241100,
+		wd:Q111241357 ;
+	pq:P6824 wd:P1552 .
+
+wd:P31 p:P2302 wds:P31-ddf8e545-4540-2771-0ae5-62036d7d5f2b .
+
+wds:P31-ddf8e545-4540-2771-0ae5-62036d7d5f2b a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q101552184,
+		wd:Q58806721,
+		wd:Q108028709,
+		wd:Q108028700,
+		wd:Q107458055,
+		wd:Q96604496,
+		wd:Q108308863,
+		wd:Q105760475 ;
+	pq:P6824 wd:P1552 .
+
+wd:P31 p:P2302 wds:P31-b692adef-4686-f369-7a7a-fa4e6c4afbbd .
+
+wds:P31-b692adef-4686-f369-7a7a-fa4e6c4afbbd a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q7927917 .
+
+wd:P31 p:P2302 wds:P31-aaab02fc-4cd5-612e-ab30-cb6cdddadf97 .
+
+wds:P31-aaab02fc-4cd5-612e-ab30-cb6cdddadf97 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q668711,
+		wd:Q22669665 ;
+	pq:P6824 wd:P1552 .
+
+wd:P31 p:P2302 wds:P31-3508c3a9-4f91-b455-0536-a0f33ae9babc .
+
+wds:P31-3508c3a9-4f91-b455-0536-a0f33ae9babc a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1399352 ;
+	pq:P2316 wd:Q21502408 ;
+	pq:P6607 "to indicate a featured musical artist, use the qualifier \"object has role\" (P3831) on the performer statement"@en,
+		"要标明特色音乐艺术家，请在表演者声明中使用限定词“对象具有角色”（P3831）"@zh .
+
+wd:P31 p:P2302 wds:P31-8f836cd7-4589-12d6-092e-c6fd1122f07e .
+
+wds:P31-8f836cd7-4589-12d6-092e-c6fd1122f07e a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q94489757 ;
+	pq:P9729 wd:Q15206795 ;
+	pq:P6607 "Q94489757 refers to the mathematical area of the space, not the space itself"@en,
+		"Q94489757指的是空间的数学面积，而不是空间本身"@zh .
+
+wd:P31 p:P2302 wds:P31-5a11673d-41d2-e7a5-1fd6-8ea021a20c02 .
+
+wds:P31-5a11673d-41d2-e7a5-1fd6-8ea021a20c02 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q12271,
+		wd:Q65805058,
+		wd:Q1349760,
+		wd:Q46261,
+		wd:Q236122 ;
+	pq:P9729 wd:Q811979,
+		wd:Q5327174,
+		wd:Q111972893,
+		wd:Q811102,
+		wd:Q784969,
+		wd:Q41176 ;
+	pq:P6824 wd:P279,
+		wd:P136 ;
+	pq:P6607 "architecture and its subclasses are practices and genres, not classes of structure."@en,
+		"建筑及其子类是实践和类型，而不是结构类别。"@zh .
+
+wd:P31 p:P2302 wds:P31-62753255-4057-fcee-b826-2899db09e243 .
+
+wds:P31-62753255-4057-fcee-b826-2899db09e243 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q11642 ;
+	pq:P9729 wd:Q17379525,
+		wd:Q18587891 ;
+	pq:P6824 wd:P279 .
+
+wd:P31 p:P2302 wds:P31-c52c2f08-485b-00d9-3e6f-d686953d5ec0 .
+
+wds:P31-c52c2f08-485b-00d9-3e6f-d686953d5ec0 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q212431 ;
+	pq:P9729 wd:Q20437094 ;
+	pq:P6824 wd:P279,
+		wd:P136 .
+
+wd:P31 p:P2302 wds:P31-b86917d5-4681-a71d-1ff8-de19de55c768 .
+
+wds:P31-b86917d5-4681-a71d-1ff8-de19de55c768 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q184784 ;
+	pq:P9729 wd:Q47597 .
+
+wd:P31 p:P2302 wds:P31-e8b98ff2-419e-444e-216e-4660dcf794b5 .
+
+wds:P31-e8b98ff2-419e-444e-216e-4660dcf794b5 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q161439 ;
+	pq:P9729 wd:Q2142903 ;
+	pq:P6607 "Q161439 is the process of creation, which should not usually have instances; Q2142903 is the product."@en,
+		"Q161439 是创建过程，通常不应该有实例；Q2142903 是产品"@zh ;
+	pq:P6824 wd:P279 .
+
+wd:P31 p:P2302 wds:P31-f7f76fd7-4bd6-4e50-abb5-551a798fbf17 .
+
+wds:P31-f7f76fd7-4bd6-4e50-abb5-551a798fbf17 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q192296 ;
+	pq:P9729 wd:Q1314278,
+		wd:Q2862826 ;
+	pq:P6824 wd:P279 .
+
+wd:P31 p:P2302 wds:P31-ad98318b-4e42-7602-d1c9-c8803a1ccc3f .
+
+wds:P31-ad98318b-4e42-7602-d1c9-c8803a1ccc3f a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q202344,
+		wd:Q393148,
+		wd:Q339380,
+		wd:Q6912675,
+		wd:Q3831116,
+		wd:Q1366370,
+		wd:Q335414,
+		wd:Q3985225,
+		wd:Q1084059,
+		wd:Q109361415,
+		wd:Q2642350,
+		wd:Q12617225 ;
+	pq:P6824 wd:P136 ;
+	pq:P9729 wd:Q179461 .
+
+wd:P31 p:P2302 wds:P31-1cd0986f-43f1-1943-ad1c-7c275f3eb3da .
+
+wds:P31-1cd0986f-43f1-1943-ad1c-7c275f3eb3da a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q11417,
+		wd:Q3705105,
+		wd:Q857972 ;
+	pq:P6824 wd:P279 ;
+	pq:P6607 "Many martial arts disciplines have sub-types; for consistent modeling, they should all be classes of martial art"@en,
+		"许多武术流派都有子类型；为了保持建模的一致性，它们都应该被视为武术的类别。"@zh .
+
+wd:P31 p:P2302 wds:P31-418d33a8-4eb5-82fd-ef15-07a12bd1465c .
+
+wds:P31-418d33a8-4eb5-82fd-ef15-07a12bd1465c a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q15220419 ;
+	pq:P6824 wd:P136 .
+
+wd:P31 p:P2302 wds:P31-904510b7-4e4a-399e-4a70-2521caec1d18 .
+
+wds:P31-904510b7-4e4a-399e-4a70-2521caec1d18 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1400612 ;
+	pq:P9729 wd:Q29541662 .
+
+wd:P31 p:P2302 wds:P31-bd90df45-4205-bfa7-5eb0-68de79a4543b .
+
+wds:P31-bd90df45-4205-bfa7-5eb0-68de79a4543b a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q18281 ;
+	pq:P9729 wd:Q28966302 ;
+	pq:P6824 wd:P279 .
+
+wd:P31 p:P2302 wds:P31-14f102e2-4b24-f8cc-ed77-5d995b04cffd .
+
+wds:P31-14f102e2-4b24-f8cc-ed77-5d995b04cffd a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q203209 ;
+	pq:P9729 wd:Q123079143 ;
+	pq:P6824 wd:P279 .
+
+wd:P31 p:P2302 wds:P31-941abeed-4200-e9cc-8e78-ac50e569ed3b .
+
+wds:P31-941abeed-4200-e9cc-8e78-ac50e569ed3b a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q180494,
+		wd:Q24284321 ;
+	pq:P6824 wd:P136 ;
+	pq:P9729 wd:Q1318295 .
+
+wd:P31 p:P2302 wds:P31-77996a17-4c86-f560-57d3-8cadad83d578 .
+
+wds:P31-77996a17-4c86-f560-57d3-8cadad83d578 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q82604 ;
+	pq:P6824 wd:P279 ;
+	pq:P6607 "Q82604 is a process, Q41553020 is a product"@en,
+		"Q82604 是一个过程，Q41553020 是一个产品"@zh ;
+	pq:P9729 wd:Q1462272 .
+
+wd:P31 p:P2302 wds:P31-adaee900-4a9a-f1fd-a366-67279dc8cb4b .
+
+wds:P31-adaee900-4a9a-f1fd-a366-67279dc8cb4b a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q55960075 ;
+	pq:P6824 wd:P1552 .
+
+wd:P31 p:P2302 wds:P31-a3aa36d1-49cd-811d-02fd-fb23f7647f19 .
+
+wds:P31-a3aa36d1-49cd-811d-02fd-fb23f7647f19 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q192521 ;
+	pq:P9729 wd:Q1788588 ;
+	pq:P6824 wd:P279 ;
+	pq:P6607 "Q192521 is a process, Q1788588 is a product"@en,
+		"Q192521 是一个过程，Q1788588 是一个产品。"@zh .
+
+wd:P31 p:P2302 wds:P31-2c6a4d31-47b6-2278-b9d0-5339143a0154 .
+
+wds:P31-2c6a4d31-47b6-2278-b9d0-5339143a0154 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q184793 ;
+	pq:P9729 wd:Q15548076 ;
+	pq:P6824 wd:P366 .
+
+wd:P31 p:P2302 wds:P31-5cb5b826-4830-fb1e-bcda-22364a3925b9 .
+
+wds:P31-5cb5b826-4830-fb1e-bcda-22364a3925b9 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q196113 ;
+	pq:P9729 wd:Q1763187 ;
+	pq:P6824 wd:P279 .
+
+wd:P31 p:P2302 wds:P31-c2636bc5-448f-c0ed-3b31-38525833f48a .
+
+wds:P31-c2636bc5-448f-c0ed-3b31-38525833f48a a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q24869,
+		wd:Q24865,
+		wd:Q336144,
+		wd:Q455315,
+		wd:Q29168811 ;
+	pq:P6824 wd:P7937 .
+
+wd:P31 p:P2302 wds:P31-9960a5c5-4da3-679c-efda-0e78a9af7d16 .
+
+wds:P31-9960a5c5-4da3-679c-efda-0e78a9af7d16 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q229390,
+		wd:Q120243801,
+		wd:Q111241092,
+		wd:Q1320115 ;
+	pq:P6824 wd:P1552 .
+
+wd:P31 p:P2302 wds:P31-56ef6493-4e2d-e124-37ed-57c4d09265cb .
+
+wds:P31-56ef6493-4e2d-e124-37ed-57c4d09265cb a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1366112,
+		wd:Q122143112 ;
+	pq:P6824 wd:P136 .
+
+wd:P31 p:P2302 wds:P31-8dc2b4d1-41c1-c1bb-5cf5-799108ce1b72 .
+
+wds:P31-8dc2b4d1-41c1-c1bb-5cf5-799108ce1b72 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q28968258,
+		wd:Q18089617,
+		wd:Q28968511,
+		wd:Q124242658,
+		wd:Q18089587,
+		wd:Q25405194,
+		wd:Q116771444 ;
+	pq:P6824 wd:P2079 .
+
+wd:P31 p:P2302 wds:P31-f408e5af-48dd-07c3-0ad0-b69f5f574693 .
+
+wds:P31-f408e5af-48dd-07c3-0ad0-b69f5f574693 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q987831 ;
+	pq:P9729 wd:Q202866,
+		wd:Q136438882,
+		wd:Q136438922 .
+
+wd:P31 p:P2302 wds:P31-accb4f4c-4c19-6bb2-e92b-ce89d8736d83 .
+
+wds:P31-accb4f4c-4c19-6bb2-e92b-ce89d8736d83 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q21191019 ;
+	pq:P9729 wd:Q5398426 ;
+	pq:P6607 "The type is 'television series' and the country should be filled in as 'country of origin' according to the project's scheme."@en,
+		"根据计划方案，类型应填写为“电视剧”，国家应填写为“原产国”。"@zh .
+
+wd:P31 p:P2302 wds:P31-3b93f28b-4303-5f3c-2a5d-a05a7cd5270d .
+
+wds:P31-3b93f28b-4303-5f3c-2a5d-a05a7cd5270d a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q315 ;
+	pq:P9729 wd:Q34770 .
+
+wd:P31 p:P2302 wds:P31-2066cb00-4bb7-034c-6517-bf8f63b4f8e7 .
+
+wds:P31-2066cb00-4bb7-034c-6517-bf8f63b4f8e7 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1369644 ;
+	pq:P6824 wd:P2079 .
+
+wd:P31 p:P2302 wds:P31-0744bde2-4978-5064-7842-1a30c51a12d4 .
+
+wds:P31-0744bde2-4978-5064-7842-1a30c51a12d4 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1107 ;
+	pq:P9729 wd:Q63952888,
+		wd:Q20650540,
+		wd:Q102364578 .
+
+wd:P31 p:P2302 wds:P31-208c88e0-4c02-af9f-4b6b-025f17eeb9c4 .
+
+wds:P31-208c88e0-4c02-af9f-4b6b-025f17eeb9c4 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q662729,
+		wd:Q211236 ;
+	pq:P6824 wd:P106 ;
+	pq:P6607 "Use instance of human (Q5) and occupation (P106) = public figure."@en,
+		"使用“人类”（Q5）实例，并将“职业”（P106）设置为“公众人物”。"@zh .
+
+wd:P31 p:P2302 wds:P31-1cad79a0-492c-2f82-2a30-a7530cde3e9e .
+
+wds:P31-1cad79a0-492c-2f82-2a30-a7530cde3e9e a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q557141 ;
+	pq:P9729 wd:Q860861,
+		wd:Q219423,
+		wd:Q838948 ;
+	pq:P6607 "Describe the work as its general type (sculpture, mural...) and add public art (Q557141) as genre (P136). See Wikidata:WikiProject Public art/Data model"@en,
+		"描述作品的类型（例如雕塑、壁画等），并将公共艺术（Q557141）添加为作品类型（P136）。参见 Wikidata:WikiProject Public art/Data model。"@zh ;
+	pq:P6824 wd:P136 .
+
+wd:P31 p:P2302 wds:P31-09023f1e-491d-d441-0108-376a0003d4d7 .
+
+wds:P31-09023f1e-491d-d441-0108-376a0003d4d7 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q118189123,
+		wd:Q111241092,
+		wd:Q111223304,
+		wd:Q111241100,
+		wd:Q111241357 ;
+	pq:P6824 wd:P1552 .
+
+wd:P31 p:P2302 wds:P31-e6efb2df-4868-729c-2dfa-05b551e36599 .
+
+wds:P31-e6efb2df-4868-729c-2dfa-05b551e36599 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q104541980,
+		wd:Q107408274 ;
+	pq:P6824 wd:P1552 .
+
+wd:P31 p:P2302 wds:P31-03182300-48da-552c-1f15-4a4c55a59e28 .
+
+wds:P31-03182300-48da-552c-1f15-4a4c55a59e28 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1343020 ;
+	pq:P6607 "Too broad, use a more specific subclass instead"@en,
+		"范围太广，请使用更具体的子类"@zh .
+
+wd:P31 p:P2302 wds:P31-81DFA62A-3C5E-4631-8F01-32B4F99B1A7B .
+
+wds:P31-81DFA62A-3C5E-4631-8F01-32B4F99B1A7B a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1257444,
+		wd:Q52162262,
+		wd:Q52207310,
+		wd:Q52207399,
+		wd:Q28146524,
+		wd:Q101716172,
+		wd:Q117216668 ;
+	pq:P6824 wd:P1552 ;
+	pq:P6607 "Too broad, use a more specific subclass instead and move it to \"has characteristic (P1552)\""@en,
+		"范围太广，请使用更具体的子类，并将其移至“具有特征”(P1552)下"@zh .
+
+wd:P31 p:P2302 wds:P31-3c61fa91-4f2e-c244-bfe4-52abb3a3339c .
+
+wds:P31-3c61fa91-4f2e-c244-bfe4-52abb3a3339c a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q270171,
+		wd:Q719645,
+		wd:Q841983,
+		wd:Q918887,
+		wd:Q2073093,
+		wd:Q3246734,
+		wd:Q4132319,
+		wd:Q4274081,
+		wd:Q5281629,
+		wd:Q5806951,
+		wd:Q6124900,
+		wd:Q6865030,
+		wd:Q7202981,
+		wd:Q7206420,
+		wd:Q7278966,
+		wd:Q7322429,
+		wd:Q7611194,
+		wd:Q41339170,
+		wd:Q58959170,
+		wd:Q59112725,
+		wd:Q59590412,
+		wd:Q59604726,
+		wd:Q59913845,
+		wd:Q60679829,
+		wd:Q61034545,
+		wd:Q61996919,
+		wd:Q61996997,
+		wd:Q62713833,
+		wd:Q64445892,
+		wd:Q64447045,
+		wd:Q64682895,
+		wd:Q64764212,
+		wd:Q66679998,
+		wd:Q67175754,
+		wd:Q72857184,
+		wd:Q81212296,
+		wd:Q95482440,
+		wd:Q106612454,
+		wd:Q106612650,
+		wd:Q106826394,
+		wd:Q107124972,
+		wd:Q109663871,
+		wd:Q110736830,
+		wd:Q113577985,
+		wd:Q123177475 ;
+	pq:P6824 wd:P437 .
+
+wd:P31 p:P2302 wds:P31-77d06272-4fba-c075-d76e-7b4ad82d2f1b .
+
+wds:P31-77d06272-4fba-c075-d76e-7b4ad82d2f1b a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q123490564,
+		wd:Q104439050,
+		wd:Q104438889,
+		wd:Q104439055,
+		wd:Q1268687,
+		wd:Q4140840,
+		wd:Q104438884,
+		wd:Q1585442,
+		wd:Q107737653,
+		wd:Q104438898,
+		wd:Q122965806,
+		wd:Q104438918 ;
+	pq:P6824 wd:P793 .
+
+wd:P31 p:P2302 wds:P31-8578aff0-427f-9257-4ddb-d5007a75551f .
+
+wds:P31-8578aff0-427f-9257-4ddb-d5007a75551f a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q21752591,
+		wd:Q63154570,
+		wd:Q131872574 ;
+	pq:P6607 "Too broad, use a more specific subclass instead and move it to \"significant event (P793)\""@en,
+		"范围太广，请使用更具体的子类别，并将其移至“重要事件 (P793)”属性下"@zh ;
+	pq:P6824 wd:P793 .
+
+wd:P31 p:P2302 wds:P31-b39cf913-43b3-6a10-5753-5ac3a1e49495 .
+
+wds:P31-b39cf913-43b3-6a10-5753-5ac3a1e49495 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q26160672 ;
+	pq:P6607 "Too broad, use a more specific subclass instead"@en,
+		"范围太广，请使用更具体的子类"@zh .
+
+wd:P31 p:P2302 wds:P31-346e2519-49f8-14ee-95df-0ed066a8b515 .
+
+wds:P31-346e2519-49f8-14ee-95df-0ed066a8b515 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q8261,
+		wd:Q49084,
+		wd:Q472808,
+		wd:Q149537,
+		wd:Q105420,
+		wd:Q125544547,
+		wd:Q19357149,
+		wd:Q1279564,
+		wd:Q12106333,
+		wd:Q133500522,
+		wd:Q20024995,
+		wd:Q111180384,
+		wd:Q80056,
+		wd:Q65085460,
+		wd:Q5457615,
+		wd:Q119318561 ;
+	pq:P6824 wd:P7937 ;
+	pq:P9729 wd:Q7725634 ;
+	pq:P6607 "Move to P7937 and use Q7725634 as value instead"@en,
+		"À déplacer vers P7937 et utiliser  Q7725634 à la place"@fr,
+		"移动到 P7937，并使用 Q7725634 作为值"@zh .
+
+wd:P31 p:P2302 wds:P31-0a64e30c-4ea3-0a89-5ad2-6259f6cbaf61 .
+
+wds:P31-0a64e30c-4ea3-0a89-5ad2-6259f6cbaf61 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q2552040 ;
+	pq:P6824 wd:P1552 .
+
+wd:P31 p:P2302 wds:P31-13f23c8e-4390-ca5c-d5b5-ddeef7f3d967 .
+
+wds:P31-13f23c8e-4390-ca5c-d5b5-ddeef7f3d967 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q26961029,
+		wd:Q26932615 ;
+	pq:P6607 "Due to a software flaw, this claim was potentially inserted with an incorrect calendar model. Check the provided source, re-insert the claim with the correct calendar model (if needed) and remove this qualifier, or remove this claim altogether if a more reliable claim has been added."@en,
+		"由于软件缺陷，此断言可能使用了错误的日历模型。请检查提供的来源，如有必要，使用正确的日历模型重新插入该断言并删除此限定词；如果已添加更可靠的断言，则可以完全删除此断言。"@zh .
+
+wd:P31 p:P2302 wds:P31-03290204-4953-a5a8-0c3f-85ff82fc188c .
+
+wds:P31-03290204-4953-a5a8-0c3f-85ff82fc188c a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q131531819,
+		wd:Q131531858 ;
+	pq:P9729 wd:Q94,
+		wd:Q48493 ;
+	pq:P6824 wd:P400 .
+
+wd:P31 p:P2302 wds:P31-ef3e02d1-40be-30ae-7915-24837a3f3ff7 .
+
+wds:P31-ef3e02d1-40be-30ae-7915-24837a3f3ff7 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q19847637 ;
+	pq:P6607 "Too generic. Use a more specific subclass instead"@en,
+		"太笼统了。请使用更具体的子类"@zh,
+		"Слишком общее. Используйте вместо этого более конкретный подтип."@ru ;
+	pq:P2316 wd:Q62026391 .
+
+wd:P31 p:P2302 wds:P31-4230c0c8-4cb0-dffe-4b32-65db21a0b7ad .
+
+wds:P31-4230c0c8-4cb0-dffe-4b32-65db21a0b7ad a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q116920433 ;
+	pq:P6824 wd:P91,
+		wd:P21 ;
+	pq:P9729 wd:Q5 .
+
+wd:P31 p:P2302 wds:P31-26c45d2a-4c8c-a284-2b81-69eca7b77442 .
+
+wds:P31-26c45d2a-4c8c-a284-2b81-69eca7b77442 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q106376619,
+		wd:Q106343524,
+		wd:Q18093573 ;
+	pq:P9729 wd:Q5 .
+
+wd:P31 p:P2302 wds:P31-5e3766b2-4312-770f-674b-cc5be4399f38 .
+
+wds:P31-5e3766b2-4312-770f-674b-cc5be4399f38 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q6549529 ;
+	pq:P6824 wd:P1552 .
+
+wd:P31 p:P2302 wds:P31-dd950425-4b23-ef55-365e-905ca4fbb4ae .
+
+wds:P31-dd950425-4b23-ef55-365e-905ca4fbb4ae a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q4308 ;
+	pq:P9729 wd:Q122760264,
+		wd:Q133176289 ;
+	pq:P6607 "Q4308 (graphics card) would represent a specific individual graphics card (e.g. the specific RTX 4080 that John Doe owns, not all RTX 4080s). Individual graphics cards are rarely notable; usually, the intended value is either Q122760264 (graphics card model; e.g. RTX 4080) or Q122760264 (manufacturer graphics card model; e.g. MSI GeForce RTX 4080 SUPER 16G EXPERT)."@en,
+		"Q4308（显卡）代表的是一块特定的显卡（例如，约翰·多伊拥有的那块具体的 RTX 4080，而不是所有 RTX 4080 显卡）。单个显卡通常不值得特别提及；通常情况下，我们指的是显卡型号（例如 Q122760264，代表 RTX 4080）或制造商的显卡型号（例如 Q122760264，代表 MSI GeForce RTX 4080 SUPER 16G EXPERT）。"@zh ;
+	pq:P2316 wd:Q62026391 .
+
+wd:P31 p:P2302 wds:P31-20579f52-4bae-cf58-a83b-daa21ac825b7 .
+
+wds:P31-20579f52-4bae-cf58-a83b-daa21ac825b7 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q18325436,
+		wd:Q240625,
+		wd:Q18325483,
+		wd:Q18325460,
+		wd:Q67883649,
+		wd:Q111110126,
+		wd:Q97118982,
+		wd:Q111034948,
+		wd:Q111037101 ;
+	pq:P6824 wd:P1454 .
+
+wd:P31 p:P2302 wds:P31-aab4ba61-4f3e-0588-0fdf-23325940b62b .
+
+wds:P31-aab4ba61-4f3e-0588-0fdf-23325940b62b a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q5369900 ;
+	pq:P6824 wd:P408 ;
+	pq:P9729 wd:Q165658 .
+
+wd:P31 p:P2302 wds:P31-407496ae-463c-981f-8871-91177978f96d .
+
+wds:P31-407496ae-463c-981f-8871-91177978f96d a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q183484 ;
+	pq:P9729 wd:Q122760330 .
+
+wd:P31 p:P2302 wds:P31-7e70bd19-474f-6a66-f7a2-8e76fdf0abb2 .
+
+wds:P31-7e70bd19-474f-6a66-f7a2-8e76fdf0abb2 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q28528178,
+		wd:Q15954665,
+		wd:Q124844451,
+		wd:Q42182030 .
+
+wd:P31 p:P2302 wds:P31-95c75d2e-45ca-e5fa-6467-b21c51bd6b88 .
+
+wds:P31-95c75d2e-45ca-e5fa-6467-b21c51bd6b88 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q622548 ;
+	pq:P6824 wd:P136 .
+
+wd:P31 p:P2302 wds:P31-43e1dc20-4fa0-79e5-36e5-738184bd59c9 .
+
+wds:P31-43e1dc20-4fa0-79e5-36e5-738184bd59c9 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q848991 ;
+	pq:P9729 wd:Q6368 ;
+	pq:P6824 wd:P400 .
+
+wd:P31 p:P2302 wds:P31-ff721feb-48d4-a54d-07e3-67e280f2950b .
+
+wds:P31-ff721feb-48d4-a54d-07e3-67e280f2950b a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q71683375 ;
+	pq:P9729 wd:Q6368 ;
+	pq:P6824 wd:P400 .
+
+wd:P31 p:P2302 wds:P31-306101e1-4f26-bfaf-7e04-7c2f013af515 .
+
+wds:P31-306101e1-4f26-bfaf-7e04-7c2f013af515 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q88008417,
+		wd:Q348303 ;
+	pq:P6824 wd:P6195 ;
+	pq:P9729 wd:Q348303 .
+
+wd:P31 p:P2302 wds:P31-086736C3-FC07-4B40-A5CF-8F4853158C0E .
+
+wds:P31-086736C3-FC07-4B40-A5CF-8F4853158C0E a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q49084,
+		wd:Q8261,
+		wd:Q25379,
+		wd:Q3328821,
+		wd:Q1279564,
+		wd:Q133500522,
+		wd:Q119318561,
+		wd:Q5185279,
+		wd:Q12106333,
+		wd:Q16324495 ;
+	pq:P6607 "move to literary form i.e. P7937"@en,
+		"转换为文学形式，例如 P7937"@zh ;
+	pq:P6824 wd:P7937 .
+
+wd:P31 p:P2302 wds:P31-06A16510-AEF1-479F-B428-581B488D61E7 .
+
+wds:P31-06A16510-AEF1-479F-B428-581B488D61E7 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q193955,
+		wd:Q193934,
+		wd:Q128093,
+		wd:Q990683,
+		wd:Q361880,
+		wd:Q2558308,
+		wd:Q241996,
+		wd:Q17994250,
+		wd:Q16929794,
+		wd:Q12566525,
+		wd:Q124685562,
+		wd:Q11502500,
+		wd:Q1009641,
+		wd:Q1294318 ;
+	pq:P6824 wd:P437 .
+
+wd:P31 p:P2302 wds:P31-5B103809-86BC-4491-96B4-EBECFF979950 .
+
+wds:P31-5B103809-86BC-4491-96B4-EBECFF979950 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q5300 ;
+	pq:P9729 wd:Q122967152 .
+
+wd:P31 p:P2302 wds:P31-994190c3-4314-5ace-c736-2989a093d4e3 .
+
+wds:P31-994190c3-4314-5ace-c736-2989a093d4e3 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q4119870,
+		wd:Q12042160 ;
+	pq:P6824 wd:P136 .
+
+wd:P31 p:P2302 wds:P31-2a57cb38-46d6-a345-047f-1b79bbdef0f7 .
+
+wds:P31-2a57cb38-46d6-a345-047f-1b79bbdef0f7 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q136466138,
+		wd:Q136465905 .
+
+wd:P31 p:P2302 wds:P31-3babb04a-44d9-9a29-6b15-49c79b672abd .
+
+wds:P31-3babb04a-44d9-9a29-6b15-49c79b672abd a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q3002431,
+		wd:Q864825,
+		wd:Q21192427 ;
+	pq:P6824 wd:P136 .
+
+wd:P31 p:P2302 wds:P31-57e5d9c5-4a3b-92a1-ed04-3f793c84c210 .
+
+wds:P31-57e5d9c5-4a3b-92a1-ed04-3f793c84c210 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q370502,
+		wd:Q472971,
+		wd:Q131030 ;
+	pq:P6607 "Use something with widely accepted precise definition."@en .
+
+wd:P31 p:P2302 wds:P31-80f8a40f-4214-8472-040e-7c37733c4076 .
+
+wds:P31-80f8a40f-4214-8472-040e-7c37733c4076 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q10383930,
+		wd:Q11826511 ;
+	pq:P6824 wd:P7937 .
+
+wd:P31 p:P2302 wds:P31-43ac7248-47a7-8581-bf99-c24076f855f3 .
+
+wds:P31-43ac7248-47a7-8581-bf99-c24076f855f3 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q149789,
+		wd:Q88537331,
+		wd:Q5015128,
+		wd:Q2901333,
+		wd:Q112149813 ;
+	pq:P6824 wd:P1454 .
+
+wd:P31 p:P2302 wds:P31-481ab26a-4453-aa39-2af8-ddb4b4c88c67 .
+
+wds:P31-481ab26a-4453-aa39-2af8-ddb4b4c88c67 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1588658 ;
+	pq:P9729 wd:Q4830453 ;
+	pq:P6824 wd:P1454 .
+
+wd:P31 p:P2302 wds:P31-086e9717-4991-43de-c6dd-6006e5b61caa .
+
+wds:P31-086e9717-4991-43de-c6dd-6006e5b61caa a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q178285 ;
+	pq:P6824 wd:P275 .
+
+wd:P31 p:P2302 wds:P31-d539f984-47e5-f19f-0fd8-55192041fa74 .
+
+wds:P31-d539f984-47e5-f19f-0fd8-55192041fa74 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q3288281,
+		wd:Q87741364,
+		wd:Q1395577,
+		wd:Q2762504,
+		wd:Q906556,
+		wd:Q1046920 ;
+	pq:P6824 wd:P1552 .
+
+wd:P31 p:P2302 wds:P31-2e1f315c-4da1-9a66-69b2-daaf116ccdb1 .
+
+wds:P31-2e1f315c-4da1-9a66-69b2-daaf116ccdb1 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q1130645,
+		wd:Q1015325,
+		wd:Q506883,
+		wd:Q21125433 ;
+	pq:P6824 wd:P1552 .
+
+wd:P31 p:P2302 wds:P31-f222d2c8-44fe-4c1e-f15f-d1d9538c89b6 .
+
+wds:P31-f222d2c8-44fe-4c1e-f15f-d1d9538c89b6 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q461524 ;
+	pq:P6824 wd:P136 .
+
+wd:P31 p:P2302 wds:P31-6c69f00e-43d6-83c3-f03d-304585e50ca9 .
+
+wds:P31-6c69f00e-43d6-83c3-f03d-304585e50ca9 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P2302 wd:Q52558054 ;
+	pq:P2305 wd:Q131401 ;
+	pq:P6824 wd:P122 .
+
+wd:P31 p:P31 wds:P31-9d042001-4a7e-2432-a7e1-233360062379 .
+
+wds:P31-9d042001-4a7e-2432-a7e1-233360062379 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P31 wd:Q18616576 .
+
+wd:P31 p:P31 wds:P31-2A2CC003-14A8-4C56-8E6B-DFC522478DA0 .
+
+wds:P31-2A2CC003-14A8-4C56-8E6B-DFC522478DA0 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P31 wd:Q115490628 .
+
+wd:P31 p:P31 wds:P31-69a194b3-40e4-fce6-881a-f2028f61a8d6 .
+
+wds:P31-69a194b3-40e4-fce6-881a-f2028f61a8d6 a wikibase:Statement,
+		wikibase:BestRank ;
+	wikibase:rank wikibase:NormalRank ;
+	ps:P31 wd:Q28326730 .
+
+wd:P31 rdfs:label "instance of"@en ;
+	skos:prefLabel "instance of"@en ;
+	schema:name "instance of"@en ;
+	rdfs:label "nature de l’élément"@fr ;
+	skos:prefLabel "nature de l’élément"@fr ;
+	schema:name "nature de l’élément"@fr ;
+	rdfs:label "ist ein(e)"@de ;
+	skos:prefLabel "ist ein(e)"@de ;
+	schema:name "ist ein(e)"@de ;
+	rdfs:label "istanza di"@it ;
+	skos:prefLabel "istanza di"@it ;
+	schema:name "istanza di"@it ;
+	rdfs:label "estas"@eo ;
+	skos:prefLabel "estas"@eo ;
+	schema:name "estas"@eo ;
+	rdfs:label "מופע של"@he ;
+	skos:prefLabel "מופע של"@he ;
+	schema:name "מופע של"@he ;
+	rdfs:label "instancia de"@es ;
+	skos:prefLabel "instancia de"@es ;
+	schema:name "instancia de"@es ;
+	rdfs:label "esiintymä kohteesta"@fi ;
+	skos:prefLabel "esiintymä kohteesta"@fi ;
+	schema:name "esiintymä kohteesta"@fi ;
+	rdfs:label "osztály, amelynek példánya"@hu ;
+	skos:prefLabel "osztály, amelynek példánya"@hu ;
+	schema:name "osztály, amelynek példánya"@hu ;
+	rdfs:label "это частный случай понятия"@ru ;
+	skos:prefLabel "это частный случай понятия"@ru ;
+	schema:name "это частный случай понятия"@ru ;
+	rdfs:label "jest"@hr ;
+	skos:prefLabel "jest"@hr ;
+	schema:name "jest"@hr ;
+	rdfs:label "is een"@nl ;
+	skos:prefLabel "is een"@nl ;
+	schema:name "is een"@nl ;
+	rdfs:label "είναι"@el ;
+	skos:prefLabel "είναι"@el ;
+	schema:name "είναι"@el ;
+	rdfs:label "jest to"@pl ;
+	skos:prefLabel "jest to"@pl ;
+	schema:name "jest to"@pl ;
+	rdfs:label "је"@sr ;
+	skos:prefLabel "је"@sr ;
+	schema:name "је"@sr ;
+	rdfs:label "instància de"@ca ;
+	skos:prefLabel "instància de"@ca ;
+	schema:name "instància de"@ca ;
+	rdfs:label "instance (čeho)"@cs ;
+	skos:prefLabel "instance (čeho)"@cs ;
+	schema:name "instance (čeho)"@cs ;
+	rdfs:label "forekomst av"@nb ;
+	skos:prefLabel "forekomst av"@nb ;
+	schema:name "forekomst av"@nb ;
+	rdfs:label "instância de"@pt ;
+	skos:prefLabel "instância de"@pt ;
+	schema:name "instância de"@pt ;
+	rdfs:label "pagarigan iti"@ilo ;
+	skos:prefLabel "pagarigan iti"@ilo ;
+	schema:name "pagarigan iti"@ilo ;
+	rdfs:label "primerek od"@sl ;
+	skos:prefLabel "primerek od"@sl ;
+	schema:name "primerek od"@sl ;
+	rdfs:label "гэта"@be ;
+	skos:prefLabel "гэта"@be ;
+	schema:name "гэта"@be ;
+	rdfs:label "다음 종류에 속함"@ko ;
+	skos:prefLabel "다음 종류에 속함"@ko ;
+	schema:name "다음 종류에 속함"@ko ;
+	rdfs:label "førekomst av"@nn ;
+	skos:prefLabel "førekomst av"@nn ;
+	schema:name "førekomst av"@nn ;
+	rdfs:label "là một"@vi ;
+	skos:prefLabel "là một"@vi ;
+	schema:name "là một"@vi ;
+	rdfs:label "асобны выпадак панятку"@be-tarask ;
+	skos:prefLabel "асобны выпадак панятку"@be-tarask ;
+	schema:name "асобны выпадак панятку"@be-tarask ;
+	rdfs:label "je"@bs ;
+	skos:prefLabel "je"@bs ;
+	schema:name "je"@bs ;
+	rdfs:label "เป็น"@th ;
+	skos:prefLabel "เป็น"@th ;
+	schema:name "เป็น"@th ;
+	rdfs:label "є одним із"@uk ;
+	skos:prefLabel "є одним із"@uk ;
+	schema:name "є одним із"@uk ;
+	rdfs:label "分類"@ja ;
+	skos:prefLabel "分類"@ja ;
+	schema:name "分類"@ja ;
+	rdfs:label "bu konsepsiyaning alohida holati"@uz ;
+	skos:prefLabel "bu konsepsiyaning alohida holati"@uz ;
+	schema:name "bu konsepsiyaning alohida holati"@uz ;
+	rdfs:label "ir"@lv ;
+	skos:prefLabel "ir"@lv ;
+	schema:name "ir"@lv ;
+	rdfs:label "est"@la ;
+	skos:prefLabel "est"@la ;
+	schema:name "est"@la ;
+	rdfs:label "نمونه‌ای از"@fa ;
+	skos:prefLabel "نمونه‌ای از"@fa ;
+	schema:name "نمونه‌ای از"@fa ;
+	rdfs:label "instans av"@sv ;
+	skos:prefLabel "instans av"@sv ;
+	schema:name "instans av"@sv ;
+	rdfs:label "is en"@nds ;
+	skos:prefLabel "is en"@nds ;
+	schema:name "is en"@nds ;
+	rdfs:label "este un/o"@ro ;
+	skos:prefLabel "este un/o"@ro ;
+	schema:name "este un/o"@ro ;
+	rdfs:label "வகை"@ta ;
+	skos:prefLabel "வகை"@ta ;
+	schema:name "வகை"@ta ;
+	rdfs:label "adolah"@min ;
+	skos:prefLabel "adolah"@min ;
+	schema:name "adolah"@min ;
+	rdfs:label "adalah"@id ;
+	skos:prefLabel "adalah"@id ;
+	schema:name "adalah"@id ;
+	rdfs:label "instancia de"@gl ;
+	skos:prefLabel "instancia de"@gl ;
+	schema:name "instancia de"@gl ;
+	rdfs:label "er"@is ;
+	skos:prefLabel "er"@is ;
+	schema:name "er"@is ;
+	rdfs:label "is 'n"@af ;
+	skos:prefLabel "is 'n"@af ;
+	schema:name "is 'n"@af ;
+	rdfs:label "არის"@ka ;
+	skos:prefLabel "არის"@ka ;
+	schema:name "არის"@ka ;
+	rdfs:label "ist eine Instanz von"@de-at ;
+	skos:prefLabel "ist eine Instanz von"@de-at ;
+	schema:name "ist eine Instanz von"@de-at ;
+	rdfs:label "tilfælde af"@da ;
+	skos:prefLabel "tilfælde af"@da ;
+	schema:name "tilfælde af"@da ;
+	rdfs:label "instance o"@sco ;
+	skos:prefLabel "instance o"@sco ;
+	schema:name "instance o"@sco ;
+	rdfs:label "je"@sk ;
+	skos:prefLabel "je"@sk ;
+	schema:name "je"@sk ;
+	rdfs:label "ist eine Instanz von"@de-ch ;
+	skos:prefLabel "ist eine Instanz von"@de-ch ;
+	schema:name "ist eine Instanz von"@de-ch ;
+	rdfs:label "is a"@bar ;
+	skos:prefLabel "is a"@bar ;
+	schema:name "is a"@bar ;
+	rdfs:label "নিদর্শন"@bn ;
+	skos:prefLabel "নিদর্শন"@bn ;
+	schema:name "নিদর্শন"@bn ;
+	rdfs:label "l'è un(a)"@lmo ;
+	skos:prefLabel "l'è un(a)"@lmo ;
+	schema:name "l'è un(a)"@lmo ;
+	rdfs:label "is een"@nds-nl ;
+	skos:prefLabel "is een"@nds-nl ;
+	schema:name "is een"@nds-nl ;
+	rdfs:label "je(su)"@sh ;
+	skos:prefLabel "je(su)"@sh ;
+	schema:name "je(su)"@sh ;
+	rdfs:label "natur an elfenn"@br ;
+	skos:prefLabel "natur an elfenn"@br ;
+	schema:name "natur an elfenn"@br ;
+	rdfs:label "екземпляр на"@bg ;
+	skos:prefLabel "екземпляр на"@bg ;
+	schema:name "екземпляр на"@bg ;
+	rdfs:label "प्रकार"@mr ;
+	skos:prefLabel "प्रकार"@mr ;
+	schema:name "प्रकार"@mr ;
+	rdfs:label "نموونەیەک لە"@ckb ;
+	skos:prefLabel "نموونەیەک لە"@ckb ;
+	schema:name "نموونەیەک لە"@ckb ;
+	rdfs:label "نموذج من"@ar ;
+	skos:prefLabel "نموذج من"@ar ;
+	schema:name "نموذج من"@ar ;
+	rdfs:label "üksikjuht nähtusest"@et ;
+	skos:prefLabel "üksikjuht nähtusest"@et ;
+	schema:name "üksikjuht nähtusest"@et ;
+	rdfs:label "est un"@pcd ;
+	skos:prefLabel "est un"@pcd ;
+	schema:name "est un"@pcd ;
+	rdfs:label "nedir"@tr ;
+	skos:prefLabel "nedir"@tr ;
+	schema:name "nedir"@tr ;
+	rdfs:label "प्रकार"@hi ;
+	skos:prefLabel "प्रकार"@hi ;
+	schema:name "प्रकार"@hi ;
+	rdfs:label "је"@sr-ec ;
+	skos:prefLabel "је"@sr-ec ;
+	schema:name "је"@sr-ec ;
+	rdfs:label "istanza di"@co ;
+	skos:prefLabel "istanza di"@co ;
+	schema:name "istanza di"@co ;
+	rdfs:label "natura de l'element"@oc ;
+	skos:prefLabel "natura de l'element"@oc ;
+	schema:name "natura de l'element"@oc ;
+	rdfs:label "е"@mk ;
+	skos:prefLabel "е"@mk ;
+	schema:name "е"@mk ;
+	rdfs:label "פֿאַל"@yi ;
+	skos:prefLabel "פֿאַל"@yi ;
+	schema:name "פֿאַל"@yi ;
+	rdfs:label "隶属于"@zh ;
+	skos:prefLabel "隶属于"@zh ;
+	schema:name "隶属于"@zh ;
+	rdfs:label "serese mupli"@jbo ;
+	skos:prefLabel "serese mupli"@jbo ;
+	schema:name "serese mupli"@jbo ;
+	rdfs:label "ઉદાહરણ"@gu ;
+	skos:prefLabel "ઉદાહરણ"@gu ;
+	schema:name "ઉદાહરણ"@gu ;
+	rdfs:label "contoh"@ms ;
+	skos:prefLabel "contoh"@ms ;
+	schema:name "contoh"@ms ;
+	rdfs:label "ay halimbawa ng"@tl ;
+	skos:prefLabel "ay halimbawa ng"@tl ;
+	schema:name "ay halimbawa ng"@tl ;
+	rdfs:label "è in(a)"@rm ;
+	skos:prefLabel "è in(a)"@rm ;
+	schema:name "è in(a)"@rm ;
+	rdfs:label "es e Beischpell för e(n(e))"@ksh ;
+	skos:prefLabel "es e Beischpell för e(n(e))"@ksh ;
+	schema:name "es e Beischpell för e(n(e))"@ksh ;
+	rdfs:label "ass en(g)"@lb ;
+	skos:prefLabel "ass en(g)"@lb ;
+	schema:name "ass en(g)"@lb ;
+	rdfs:label "to je"@csb ;
+	skos:prefLabel "to je"@csb ;
+	schema:name "to je"@csb ;
+	rdfs:label "Nchumu"@ts ;
+	skos:prefLabel "Nchumu"@ts ;
+	schema:name "Nchumu"@ts ;
+	rdfs:label "isch e"@gsw ;
+	skos:prefLabel "isch e"@gsw ;
+	schema:name "isch e"@gsw ;
+	rdfs:label "ات‌جور…"@mzn ;
+	skos:prefLabel "ات‌جور…"@mzn ;
+	schema:name "ات‌جور…"@mzn ;
+	rdfs:label "అవతారం"@te ;
+	skos:prefLabel "అవతారం"@te ;
+	schema:name "అవతారం"@te ;
+	rdfs:label "ଦୃଷ୍ଟାନ୍ତ"@or ;
+	skos:prefLabel "ଦୃଷ୍ଟାନ୍ତ"@or ;
+	schema:name "ଦୃଷ୍ଟାନ୍ତ"@or ;
+	rdfs:label "je"@sr-el ;
+	skos:prefLabel "je"@sr-el ;
+	schema:name "je"@sr-el ;
+	rdfs:label "is n(e)"@stq ;
+	skos:prefLabel "is n(e)"@stq ;
+	schema:name "is n(e)"@stq ;
+	rdfs:label "instantia de"@ia ;
+	skos:prefLabel "instantia de"@ia ;
+	schema:name "instantia de"@ia ;
+	rdfs:label "no tipo 'e"@nap ;
+	skos:prefLabel "no tipo 'e"@nap ;
+	schema:name "no tipo 'e"@nap ;
+	rdfs:label "係一個"@yue ;
+	skos:prefLabel "係一個"@yue ;
+	schema:name "係一個"@yue ;
+	rdfs:label "karazana"@mg ;
+	skos:prefLabel "karazana"@mg ;
+	schema:name "karazana"@mg ;
+	rdfs:label "zoccu è"@scn ;
+	skos:prefLabel "zoccu è"@scn ;
+	schema:name "zoccu è"@scn ;
+	rdfs:label "honako hau da"@eu ;
+	skos:prefLabel "honako hau da"@eu ;
+	schema:name "honako hau da"@eu ;
+	rdfs:label "is in"@fy ;
+	skos:prefLabel "is in"@fy ;
+	schema:name "is in"@fy ;
+	rdfs:label "തരം"@ml ;
+	skos:prefLabel "തരം"@ml ;
+	schema:name "തരം"@ml ;
+	rdfs:label "нинди төшенчәнең аерым очрагы"@tt ;
+	skos:prefLabel "нинди төшенчәнең аерым очрагы"@tt ;
+	schema:name "нинди төшенчәнең аерым очрагы"@tt ;
+	rdfs:label "хӀара долара кхетам бу"@ce ;
+	skos:prefLabel "хӀара долара кхетам бу"@ce ;
+	schema:name "хӀара долара кхетам бу"@ce ;
+	rdfs:label "उदाहरण"@ne ;
+	skos:prefLabel "उदाहरण"@ne ;
+	schema:name "उदाहरण"@ne ;
+	rdfs:label "instancia de"@ast ;
+	skos:prefLabel "instancia de"@ast ;
+	schema:name "instancia de"@ast ;
+	rdfs:label "enghraifft o'r canlynol"@cy ;
+	skos:prefLabel "enghraifft o'r canlynol"@cy ;
+	schema:name "enghraifft o'r canlynol"@cy ;
+	rdfs:label "tai yra"@lt ;
+	skos:prefLabel "tai yra"@lt ;
+	schema:name "tai yra"@lt ;
+	rdfs:label "հասկացության մասնավոր դեպք"@hy ;
+	skos:prefLabel "հասկացության մասնավոր դեպք"@hy ;
+	schema:name "հասկացության մասնավոր դեպք"@hy ;
+	rdfs:label "as en"@frr ;
+	skos:prefLabel "as en"@frr ;
+	schema:name "as en"@frr ;
+	rdfs:label "er eitt"@fo ;
+	skos:prefLabel "er eitt"@fo ;
+	schema:name "er eitt"@fo ;
+	rdfs:label "ಉದಾಹರಣೆಗೆ"@kn ;
+	skos:prefLabel "ಉದಾಹರಣೆಗೆ"@kn ;
+	schema:name "ಉದಾಹರಣೆಗೆ"@kn ;
+	rdfs:label "sampla de"@ga ;
+	skos:prefLabel "sampla de"@ga ;
+	schema:name "sampla de"@ga ;
+	rdfs:label "se yon"@ht ;
+	skos:prefLabel "se yon"@ht ;
+	schema:name "se yon"@ht ;
+	rdfs:label "esas"@io ;
+	skos:prefLabel "esas"@io ;
+	schema:name "esas"@io ;
+	rdfs:label "binon"@vo ;
+	skos:prefLabel "binon"@vo ;
+	schema:name "binon"@vo ;
+	rdfs:label "隸屬於"@zh-hant ;
+	skos:prefLabel "隸屬於"@zh-hant ;
+	schema:name "隸屬於"@zh-hant ;
+	rdfs:label "隶属于"@zh-hans ;
+	skos:prefLabel "隶属于"@zh-hans ;
+	schema:name "隶属于"@zh-hans ;
+	rdfs:label "隸屬於"@zh-hk ;
+	skos:prefLabel "隸屬於"@zh-hk ;
+	schema:name "隸屬於"@zh-hk ;
+	rdfs:label "隶属于"@zh-cn ;
+	skos:prefLabel "隶属于"@zh-cn ;
+	schema:name "隶属于"@zh-cn ;
+	rdfs:label "隸屬於"@zh-mo ;
+	skos:prefLabel "隸屬於"@zh-mo ;
+	schema:name "隸屬於"@zh-mo ;
+	rdfs:label "隶属于"@zh-sg ;
+	skos:prefLabel "隶属于"@zh-sg ;
+	schema:name "隶属于"@zh-sg ;
+	rdfs:label "隸屬於"@zh-tw ;
+	skos:prefLabel "隸屬於"@zh-tw ;
+	schema:name "隸屬於"@zh-tw ;
+	rdfs:label "ਨਮੂਨਾ"@pa ;
+	skos:prefLabel "ਨਮੂਨਾ"@pa ;
+	schema:name "ਨਮੂਨਾ"@pa ;
+	rdfs:label "instancë e"@sq ;
+	skos:prefLabel "instancë e"@sq ;
+	schema:name "instancë e"@sq ;
+	rdfs:label "alimbawa ning"@pam ;
+	skos:prefLabel "alimbawa ning"@pam ;
+	schema:name "alimbawa ning"@pam ;
+	rdfs:label "je"@hsb ;
+	skos:prefLabel "je"@hsb ;
+	schema:name "je"@hsb ;
+	rdfs:label "instancia de"@an ;
+	skos:prefLabel "instancia de"@an ;
+	schema:name "instancia de"@an ;
+	rdfs:label "як намуна аз"@tg ;
+	skos:prefLabel "як намуна аз"@tg ;
+	schema:name "як намуна аз"@tg ;
+	rdfs:label "классы"@ky ;
+	skos:prefLabel "классы"@ky ;
+	schema:name "классы"@ky ;
+	rdfs:label "төшөнсәнең шәхсән осрағы"@ba ;
+	skos:prefLabel "төшөнсәнең шәхсән осрағы"@ba ;
+	schema:name "төшөнсәнең шәхсән осрағы"@ba ;
+	rdfs:label "àkórí"@yo ;
+	skos:prefLabel "àkórí"@yo ;
+	schema:name "àkórí"@yo ;
+	rdfs:label "ಉದಾರ್ಮೆಗ್"@tcy ;
+	skos:prefLabel "ಉದಾರ್ಮೆಗ್"@tcy ;
+	schema:name "ಉದಾರ್ಮೆಗ್"@tcy ;
+	rdfs:label "як намуна аз"@tg-cyrl ;
+	skos:prefLabel "як намуна аз"@tg-cyrl ;
+	schema:name "як намуна аз"@tg-cyrl ;
+	rdfs:label "yak namuna az"@tg-latn ;
+	skos:prefLabel "yak namuna az"@tg-latn ;
+	schema:name "yak namuna az"@tg-latn ;
+	rdfs:label "töşençäneñ ayırım oçrağı"@tt-latn ;
+	skos:prefLabel "töşençäneñ ayırım oçrağı"@tt-latn ;
+	schema:name "töşençäneñ ayırım oçrağı"@tt-latn ;
+	rdfs:label "төшенчәнең аерым очрагы"@tt-cyrl ;
+	skos:prefLabel "төшенчәнең аерым очрагы"@tt-cyrl ;
+	schema:name "төшенчәнең аерым очрагы"@tt-cyrl ;
+	rdfs:label "anlayışın sinfi"@az ;
+	skos:prefLabel "anlayışın sinfi"@az ;
+	schema:name "anlayışın sinfi"@az ;
+	rdfs:label "نوع"@ur ;
+	skos:prefLabel "نوع"@ur ;
+	schema:name "نوع"@ur ;
+	rdfs:label "واحد من"@arz ;
+	skos:prefLabel "واحد من"@arz ;
+	schema:name "واحد من"@arz ;
+	rdfs:label "өйдөбүл сорҕото (биирдэмэ)"@sah ;
+	skos:prefLabel "өйдөбүл сорҕото (биирдэмэ)"@sah ;
+	schema:name "өйдөбүл сорҕото (биирдэмэ)"@sah ;
+	rdfs:label "व्यक्तिः कस्या जातेः?"@sa ;
+	skos:prefLabel "व्यक्तिः कस्या जातेः?"@sa ;
+	schema:name "व्यक्तिः कस्या जातेः?"@sa ;
+	rdfs:label "nateure di l’ elemint"@wa ;
+	skos:prefLabel "nateure di l’ elemint"@wa ;
+	schema:name "nateure di l’ elemint"@wa ;
+	rdfs:label "тайӧ торъя вӧвлӧмтор"@kv ;
+	skos:prefLabel "тайӧ торъя вӧвлӧмтор"@kv ;
+	schema:name "тайӧ торъя вӧвлӧмтор"@kv ;
+	rdfs:label "es"@lfn ;
+	skos:prefLabel "es"@lfn ;
+	schema:name "es"@lfn ;
+	rdfs:label "iri"@ha ;
+	skos:prefLabel "iri"@ha ;
+	schema:name "iri"@ha ;
+	rdfs:label "隶属于"@zh-my ;
+	skos:prefLabel "隶属于"@zh-my ;
+	schema:name "隶属于"@zh-my ;
+	rdfs:label "minangka"@jv ;
+	skos:prefLabel "minangka"@jv ;
+	schema:name "minangka"@jv ;
+	rdfs:label "بېلګه د"@ps ;
+	skos:prefLabel "بېلګه د"@ps ;
+	schema:name "بېلګه د"@ps ;
+	rdfs:label "sī chi̍t ê"@nan ;
+	skos:prefLabel "sī chi̍t ê"@nan ;
+	schema:name "sī chi̍t ê"@nan ;
+	rdfs:label "sê siŏh ciáh"@cdo ;
+	skos:prefLabel "sê siŏh ciáh"@cdo ;
+	schema:name "sê siŏh ciáh"@cdo ;
+	rdfs:label "he yit chak"@hak ;
+	skos:prefLabel "he yit chak"@hak ;
+	schema:name "he yit chak"@hak ;
+	rdfs:label "али ангилалда багтадаг"@bxr ;
+	skos:prefLabel "али ангилалда багтадаг"@bxr ;
+	schema:name "али ангилалда багтадаг"@bxr ;
+	rdfs:label "වර්ගය"@si ;
+	skos:prefLabel "වර්ගය"@si ;
+	schema:name "වර්ගය"@si ;
+	rdfs:label "izahat"@diq ;
+	skos:prefLabel "izahat"@diq ;
+	schema:name "izahat"@diq ;
+	rdfs:label "አይነተ አባል"@am ;
+	skos:prefLabel "አይነተ አባል"@am ;
+	schema:name "አይነተ አባል"@am ;
+	rdfs:label "ကနဦး အားဖြင့်"@my ;
+	skos:prefLabel "ကနဦး အားဖြင့်"@my ;
+	schema:name "ကနဦး အားဖြင့်"@my ;
+	rdfs:label "ߝߌ߬ߛߌ ߛߎ߲ߞߎ߲"@nqo ;
+	skos:prefLabel "ߝߌ߬ߛߌ ߛߎ߲ߞߎ߲"@nqo ;
+	schema:name "ߝߌ߬ߛߌ ߛߎ߲ߞߎ߲"@nqo ;
+	rdfs:label "istansa de"@vec ;
+	skos:prefLabel "istansa de"@vec ;
+	schema:name "istansa de"@vec ;
+	rdfs:label "inggih punika"@ban ;
+	skos:prefLabel "inggih punika"@ban ;
+	schema:name "inggih punika"@ban ;
+	rdfs:label "موضيل ديال"@ary ;
+	skos:prefLabel "موضيل ديال"@ary ;
+	schema:name "موضيل ديال"@ary ;
+	rdfs:label "ensampel a"@kw ;
+	skos:prefLabel "ensampel a"@kw ;
+	schema:name "ensampel a"@kw ;
+	rdfs:label "جو مثال"@sd ;
+	skos:prefLabel "جو مثال"@sd ;
+	schema:name "جو مثال"@sd ;
+	rdfs:label "buɣusi la"@dag ;
+	skos:prefLabel "buɣusi la"@dag ;
+	schema:name "buɣusi la"@dag ;
+	rdfs:label "lea"@se ;
+	skos:prefLabel "lea"@se ;
+	schema:name "lea"@se ;
+	rdfs:label "lii"@smn ;
+	skos:prefLabel "lii"@smn ;
+	schema:name "lii"@smn ;
+	rdfs:label "lij, leäi leʹbe lij leämmaš"@sms ;
+	skos:prefLabel "lij, leäi leʹbe lij leämmaš"@sms ;
+	schema:name "lij, leäi leʹbe lij leämmaš"@sms ;
+	rdfs:label "ᱫᱟᱹᱭᱠᱟᱹ"@sat ;
+	skos:prefLabel "ᱫᱟᱹᱭᱠᱟᱹ"@sat ;
+	schema:name "ᱫᱟᱹᱭᱠᱟᱹ"@sat ;
+	rdfs:label "nyaéta"@su ;
+	skos:prefLabel "nyaéta"@su ;
+	schema:name "nyaéta"@su ;
+	rdfs:label "бірі болып табылады"@kk ;
+	skos:prefLabel "бірі болып табылады"@kk ;
+	schema:name "бірі болып табылады"@kk ;
+	rdfs:label "je to"@szl ;
+	skos:prefLabel "je to"@szl ;
+	schema:name "je to"@szl ;
+	rdfs:label "ኣብነት"@ti ;
+	skos:prefLabel "ኣብነት"@ti ;
+	schema:name "ኣብነት"@ti ;
+	rdfs:label "ni mfano wa"@sw ;
+	skos:prefLabel "ni mfano wa"@sw ;
+	schema:name "ni mfano wa"@sw ;
+	rdfs:label "ta un"@pap ;
+	skos:prefLabel "ta un"@pap ;
+	schema:name "ta un"@pap ;
+	rdfs:label "istanza ta'"@mt ;
+	skos:prefLabel "istanza ta'"@mt ;
+	schema:name "istanza ta'"@mt ;
+	rdfs:label "masadumaay a tuud"@szy ;
+	skos:prefLabel "masadumaay a tuud"@szy ;
+	schema:name "masadumaay a tuud"@szy ;
+	rdfs:label "چونتوه"@ms-arab ;
+	skos:prefLabel "چونتوه"@ms-arab ;
+	schema:name "چونتوه"@ms-arab ;
+	rdfs:label "нимаз учыр"@udm ;
+	skos:prefLabel "нимаз учыр"@udm ;
+	schema:name "нимаз учыр"@udm ;
+	rdfs:label "kóva ha'e peteĩ"@gn ;
+	skos:prefLabel "kóva ha'e peteĩ"@gn ;
+	schema:name "kóva ha'e peteĩ"@gn ;
+	rdfs:label "ᬳᬶᬂᬕᬶᬄᬧᬸᬦᬶᬓ"@ban-bali ;
+	skos:prefLabel "ᬳᬶᬂᬕᬶᬄᬧᬸᬦᬶᬓ"@ban-bali ;
+	schema:name "ᬳᬶᬂᬕᬶᬄᬧᬸᬦᬶᬓ"@ban-bali ;
+	rdfs:label "жишээ"@mn ;
+	skos:prefLabel "жишээ"@mn ;
+	schema:name "жишээ"@mn ;
+	rdfs:label "ឧ​ទា​ហរ​ណ៏​នៃ"@km ;
+	skos:prefLabel "ឧ​ទា​ហរ​ណ៏​នៃ"@km ;
+	schema:name "ឧ​ទា​ហរ​ណ៏​នៃ"@km ;
+	rdfs:label "რე"@xmf ;
+	skos:prefLabel "რე"@xmf ;
+	schema:name "რე"@xmf ;
+	rdfs:label "isibonelo se"@zu ;
+	skos:prefLabel "isibonelo se"@zu ;
+	schema:name "isibonelo se"@zu ;
+	rdfs:label "halimbawa sang"@hil ;
+	skos:prefLabel "halimbawa sang"@hil ;
+	schema:name "halimbawa sang"@hil ;
+	rdfs:label "ta un"@pap-aw ;
+	skos:prefLabel "ta un"@pap-aw ;
+	schema:name "ta un"@pap-aw ;
+	rdfs:label "قسٕم"@ks ;
+	skos:prefLabel "قسٕم"@ks ;
+	schema:name "قسٕم"@ks ;
+	rdfs:label "yet kidee"@kcg ;
+	skos:prefLabel "yet kidee"@kcg ;
+	schema:name "yet kidee"@kcg ;
+	rdfs:label "eisimpleir de"@gd ;
+	skos:prefLabel "eisimpleir de"@gd ;
+	schema:name "eisimpleir de"@gd ;
+	rdfs:label "N'ụdị ndị dị ka"@ig ;
+	skos:prefLabel "N'ụdị ndị dị ka"@ig ;
+	schema:name "N'ụdị ndị dị ka"@ig ;
+	rdfs:label "є єдным из"@rue ;
+	skos:prefLabel "є єдным из"@rue ;
+	schema:name "є єдным из"@rue ;
+	rdfs:label "instance give"@gpe ;
+	skos:prefLabel "instance give"@gpe ;
+	schema:name "instance give"@gpe ;
+	rdfs:label "نمونہ"@pnb ;
+	skos:prefLabel "نمونہ"@pnb ;
+	schema:name "نمونہ"@pnb ;
+	rdfs:label "নিদৰ্শন"@as ;
+	skos:prefLabel "নিদৰ্শন"@as ;
+	schema:name "নিদৰ্শন"@as ;
+	rdfs:label "wunmẹ onú tọn"@guw ;
+	skos:prefLabel "wunmẹ onú tọn"@guw ;
+	schema:name "wunmẹ onú tọn"@guw ;
+	rdfs:label "as in"@pcm ;
+	skos:prefLabel "as in"@pcm ;
+	schema:name "as in"@pcm ;
+	rdfs:label "natura de s'elementu"@sc ;
+	skos:prefLabel "natura de s'elementu"@sc ;
+	schema:name "natura de s'elementu"@sc ;
+	rdfs:label "l'è un"@rgn ;
+	skos:prefLabel "l'è un"@rgn ;
+	schema:name "l'è un"@rgn ;
+	rdfs:label "tiykarǵı taypası"@kaa ;
+	skos:prefLabel "tiykarǵı taypası"@kaa ;
+	schema:name "tiykarǵı taypası"@kaa ;
+	rdfs:label "ona li seme"@tok ;
+	skos:prefLabel "ona li seme"@tok ;
+	schema:name "ona li seme"@tok ;
+	rdfs:label "эзда фкясь"@mdf ;
+	skos:prefLabel "эзда фкясь"@mdf ;
+	schema:name "эзда фкясь"@mdf ;
+	rdfs:label "分類"@ryu ;
+	skos:prefLabel "分類"@ryu ;
+	schema:name "分類"@ryu ;
+	rdfs:label "ເປັນ"@lo ;
+	skos:prefLabel "ເປັນ"@lo ;
+	schema:name "ເປັນ"@lo ;
+	rdfs:label "ꠎꠦ ꠎꠤꠘꠤꠡꠞ"@syl ;
+	skos:prefLabel "ꠎꠦ ꠎꠤꠘꠤꠡꠞ"@syl ;
+	schema:name "ꠎꠦ ꠎꠤꠘꠤꠡꠞ"@syl ;
+	rdfs:label "是一个"@nan-hani ;
+	skos:prefLabel "是一个"@nan-hani ;
+	schema:name "是一个"@nan-hani ;
+	rdfs:label "у"@os ;
+	skos:prefLabel "у"@os ;
+	schema:name "у"@os ;
+	rdfs:label "Iruŋ tɔ"@dga ;
+	skos:prefLabel "Iruŋ tɔ"@dga ;
+	schema:name "Iruŋ tɔ"@dga ;
+	rdfs:label "forekomst av"@no ;
+	skos:prefLabel "forekomst av"@no ;
+	schema:name "forekomst av"@no ;
+	rdfs:label "instance of"@en-ca ;
+	skos:prefLabel "instance of"@en-ca ;
+	schema:name "instance of"@en-ca ;
+	rdfs:label "instance of"@en-gb ;
+	skos:prefLabel "instance of"@en-gb ;
+	schema:name "instance of"@en-gb ;
+	rdfs:label "instance of"@en-us ;
+	skos:prefLabel "instance of"@en-us ;
+	schema:name "instance of"@en-us ;
+	rdfs:label "xysusijə hodisə"@tly ;
+	skos:prefLabel "xysusijə hodisə"@tly ;
+	schema:name "xysusijə hodisə"@tly ;
+	rdfs:label "audāi si"@prg ;
+	skos:prefLabel "audāi si"@prg ;
+	schema:name "audāi si"@prg ;
+	rdfs:label "是一个"@nan-hant ;
+	skos:prefLabel "是一个"@nan-hant ;
+	schema:name "是一个"@nan-hant ;
+	rdfs:label "sī chi̍t-ê"@nan-latn-pehoeji ;
+	skos:prefLabel "sī chi̍t-ê"@nan-latn-pehoeji ;
+	schema:name "sī chi̍t-ê"@nan-latn-pehoeji ;
+	rdfs:label "sī tsi̍t-ê"@nan-latn-tailo ;
+	skos:prefLabel "sī tsi̍t-ê"@nan-latn-tailo ;
+	schema:name "sī tsi̍t-ê"@nan-latn-tailo ;
+	rdfs:label "istancia de"@ext ;
+	skos:prefLabel "istancia de"@ext ;
+	schema:name "istancia de"@ext ;
+	rdfs:label "ኖዕ ምን"@tig ;
+	skos:prefLabel "ኖዕ ምን"@tig ;
+	schema:name "ኖዕ ምን"@tig ;
+	rdfs:label "bo nedír"@crh-ro ;
+	skos:prefLabel "bo nedír"@crh-ro ;
+	schema:name "bo nedír"@crh-ro ;
+	rdfs:label "ѥстъ"@cu ;
+	skos:prefLabel "ѥстъ"@cu ;
+	schema:name "ѥстъ"@cu ;
+	rdfs:label "ἐστι"@grc ;
+	skos:prefLabel "ἐστι"@grc ;
+	schema:name "ἐστι"@grc ;
+	rdfs:label "ӑнлавӑн уйрӑмлӑ тӗслӗхӗ"@cv ;
+	skos:prefLabel "ӑнлавӑн уйрӑмлӑ тӗслӗхӗ"@cv ;
+	schema:name "ӑнлавӑн уйрӑмлӑ тӗслӗхӗ"@cv ;
+	rdfs:label "инстанциялъун жиб кколеб"@av ;
+	skos:prefLabel "инстанциялъун жиб кколеб"@av ;
+	schema:name "инстанциялъун жиб кколеб"@av ;
+	rdfs:label "ⵜⵓⵎⴰⵙⵜ ⵏ ⵓⴼⵔⴷⵉⵙ"@zgh ;
+	skos:prefLabel "ⵜⵓⵎⴰⵙⵜ ⵏ ⵓⴼⵔⴷⵉⵙ"@zgh ;
+	schema:name "ⵜⵓⵎⴰⵙⵜ ⵏ ⵓⴼⵔⴷⵉⵙ"@zgh ;
+	rdfs:label "instância de"@pt-br ;
+	skos:prefLabel "instância de"@pt-br ;
+	schema:name "instância de"@pt-br ;
+	rdfs:label "nyooth de"@din ;
+	skos:prefLabel "nyooth de"@din ;
+	schema:name "nyooth de"@din ;
+	rdfs:label "oriraan"@ami ;
+	skos:prefLabel "oriraan"@ami ;
+	schema:name "oriraan"@ami ;
+	rdfs:label "iyâ rèya"@mad ;
+	skos:prefLabel "iyâ rèya"@mad ;
+	schema:name "iyâ rèya"@mad ;
+	rdfs:label "na"@trv ;
+	skos:prefLabel "na"@trv ;
+	schema:name "na"@trv ;
+	rdfs:label "a wa yinɩŋ tɔ"@wlx ;
+	skos:prefLabel "a wa yinɩŋ tɔ"@wlx ;
+	schema:name "a wa yinɩŋ tɔ"@wlx ;
+	rdfs:label "chunto"@iba ;
+	skos:prefLabel "chunto"@iba ;
+	schema:name "chunto"@iba ;
+	rdfs:label "نوع من"@acm ;
+	skos:prefLabel "نوع من"@acm ;
+	schema:name "نوع من"@acm ;
+	rdfs:label "An bo"@kus ;
+	skos:prefLabel "An bo"@kus ;
+	schema:name "An bo"@kus ;
+	rdfs:label "a wan"@aig ;
+	skos:prefLabel "a wan"@aig ;
+	schema:name "a wan"@aig ;
+	rdfs:label "то"@rsk ;
+	skos:prefLabel "то"@rsk ;
+	schema:name "то"@rsk ;
+	rdfs:label "iri"@kai ;
+	skos:prefLabel "iri"@kai ;
+	schema:name "iri"@kai ;
+	rdfs:label "མཚན་གཞི།"@bo ;
+	skos:prefLabel "མཚན་གཞི།"@bo ;
+	schema:name "མཚན་གཞི།"@bo ;
+	rdfs:label "instansiya kang"@krj ;
+	skos:prefLabel "instansiya kang"@krj ;
+	schema:name "instansiya kang"@krj ;
+	rdfs:label "halimbawà sa"@ceb ;
+	skos:prefLabel "halimbawà sa"@ceb ;
+	schema:name "halimbawà sa"@ceb ;
+	rdfs:label "qommuwa"@wal ;
+	skos:prefLabel "qommuwa"@wal ;
+	schema:name "qommuwa"@wal ;
+	rdfs:label "bir mysaly"@tk ;
+	skos:prefLabel "bir mysaly"@tk ;
+	schema:name "bir mysaly"@tk ;
+	rdfs:label "प्रकार"@mai ;
+	skos:prefLabel "प्रकार"@mai ;
+	schema:name "प्रकार"@mai ;
+	rdfs:label "лӣ"@sjd ;
+	skos:prefLabel "лӣ"@sjd ;
+	schema:name "лӣ"@sjd ;
+	rdfs:label "ᎾᏍᎩ ᎨᏐᎢ"@chr ;
+	skos:prefLabel "ᎾᏍᎩ ᎨᏐᎢ"@chr ;
+	schema:name "ᎾᏍᎩ ᎨᏐᎢ"@chr ;
+	rdfs:label "mînakek ji bo"@ku ;
+	skos:prefLabel "mînakek ji bo"@ku ;
+	schema:name "mînakek ji bo"@ku ;
+	rdfs:label "instance of"@lg ;
+	skos:prefLabel "instance of"@lg ;
+	schema:name "instance of"@lg ;
+	rdfs:label "ဗွဲကိုပ်ကၠာ မ္ဂး"@mnw ;
+	skos:prefLabel "ဗွဲကိုပ်ကၠာ မ္ဂး"@mnw ;
+	schema:name "ဗွဲကိုပ်ကၠာ မ္ဂး"@mnw ;
+	schema:description "type to which this subject corresponds/belongs. Different from P279 (subclass of); for example: K2 is an instance of mountain; volcano is a subclass of mountain"@en,
+		"questo elemento è un'istanza di questa classe, categoria o gruppo di oggetti"@it,
+		"un type auquel cet élément correspond. Ne pas confondre avec P279 (sous-classe de). Par ex., le Vésuve est{P31} un volcan ; les volcans sont une sous-classe{P279} de montagnes (qui est{P31} formation volcanique)"@fr,
+		"a csoport, amelynek az elem egy példánya vagy tagja; nem egyenlő a P279 (alosztálya ennek) tulajdonsággal. Példa: a K2 a hegynek egy példánya; a vulkán egy alosztálya a hegynek (és példánya a vulkáni képződménynek)"@hu,
+		"ova stavka primjerak je ili član ove druge klase, spada u tu klasu, ubraja se u nju; za potklase rabiti P279"@hr,
+		"Ausprägung oder Exemplar einer Sache, Mitglied einer Klasse. Anders als P279 (Unterklasse von), z. B. der K2 „ist ein“ Berg; Vulkan ist „Unterklasse von“ Berg (aber Vulkan „ist eine“ vulkanogene Landform)"@de,
+		"αυτό το αντικείμενο είναι εξειδικευμένο παράδειγμα και μέλος αυτής της τάξης. Δεν θα πρέπει να συγχέεται με την Ιδιότητα:P279"@el,
+		"luokka, jota tämä kohde edustaa ja jonka yksittäinen jäsen tämä kohde on. Esimerkiksi tulivuori on esiintymä vulkaanisesta pinnanmuodosta."@fi,
+		"daytoy a banag ket maysa a pagarigan iti daytoy a sabali a banag"@ilo,
+		"dette elementet er et konkret objekt/eksemplar (instans) av denne klassen, kategorien eller objektgruppen"@nb,
+		"tipo al que corresponde o pertenece este sujeto. Es diferente de «subclase de» (P279); por ejemplo: K2 es una instancia de montaña; volcán es una subclase de montaña"@es,
+		"một phân loại mà đối tượng này là một thành viên hoặc một ví dụ cụ thể"@vi,
+		"агульнае азначэньне, чым зьяўляецца аб’ект"@be-tarask,
+		"この項目をインスタンス（実例・実体）とする種類や概念。この項目がクラス（種類・概念）の場合は、代わりに上位クラス（P279）を使用。（例：山のインスタンスの1つが富士山、火山の上位クラスは山）"@ja,
+		"klasa, której dany obiekt jest konkretnym przykładem i członkiem; różni się od \"podklasa dla\"; na przykład: K2 jest to góra; wulkan jest podklasą dla góry (i jest to wulkaniczna forma terenu)."@pl,
+		"šī vienība ir šīs citas vienības instance"@lv,
+		"aquest element és un objecte concret (instància) d'aquesta classe, categoria o grup d'objectes"@ca,
+		"är ett konkret objekt (instans) av denna klass, kategori eller objektgrupp"@sv,
+		"آیتم مورد نظر یک نوع ... است"@fa,
+		"o elemento é unha instancia doutro elemento"@gl,
+		"Þessi hlutur er dæmi um annan hlut"@is,
+		"die klasse waarvan dit onderwerp een bepaald voorbeeld en lid is; verschilt van P279 (subklasse van); bijvoorbeeld: K2 is een instantie van berg; vulkaan is een subklasse van berg"@nl,
+		"данный элемент представляет собой конкретный объект (экземпляр / частный случай) класса, категории. Не путать с Property:P279 (\"подкласс от\")"@ru,
+		"цей елемент є конкретним прикладом об'єкта (окремим випадком) такого класу, категорії чи групи об'єктів"@uk,
+		"Ausprägung oder Exemplar einer Sache"@de-at,
+		"dette emne er et konkret objekt af denne kategori, klasse eller objektgruppe."@da,
+		"clasă din care acest subiect este un exemplu specific și membru; diferă de P279 (subclasa a); de exemplu: K2 este o instanță de munte; vulcanul este o subclasă de munte"@ro,
+		"Ausprägung oder Exemplar einer Sache"@de-ch,
+		"dit objekt is een eksemplaar (instanty) van disse grup objekten"@nds-nl,
+		"הקבוצה או המחלקה שהנדון שייך אליה"@he,
+		"обектът представлява екземпляр (конкретен обект) от даден клас"@bg,
+		"एक विषय का दूसरे विषय के उदाहरण के रूप में होना"@hi,
+		"класа чији је субјекат посебан пример и члан. (Субјекат је обично појединачни члан са ознаком Исправан назив.) Различито од P279 (је подкласа од)"@sr,
+		"ова ставка је конкретан објекат (инстанца) класе, категорије или групе објеката"@sr-ec,
+		"предметот е примерок/случај на друг предмет"@mk,
+		"tato položka je jedna konkrétní věc (exemplář, případ, příklad) patřící do uvedené třídy, kategorie nebo typu předmětů"@cs,
+		"આ લેખ આ પ્રકાર અથવા શ્રેણીના અન્ય લેખોનું સચોટ ઉદાહરણ છે."@gu,
+		"di Saach es ene beschtemmpte, konkrete Jääjeschtand vun dä Zoot, udder Jropp, udder dä Aat"@ksh,
+		"tiu ĉi ero estas konkreta aĵo (instanco) de tiu ĉi klaso, kategorio aŭ objektogrupo"@eo,
+		"항목 주제는 다음 종류에 속함 (해당 종류에 속하는 것 중 하나를 고르라고 했을 때 이 항목도 고를 수 있어야 함)"@ko,
+		"natura de, expression de o exemplar de"@oc,
+		"آیتم جور، نمونه‌ای از…، نوعی…، اتی…"@mzn,
+		"该项目所属的类别；与父类（P279）不同，例：富士山隶属于山、火山父类是山"@zh,
+		"aquela classe a qual este sujeito é um membro e exemplo particular; diferente da P279 (subclasse de)"@pt,
+		"butir ini adalah contoh spesifik dan anggota dari sebuah kelas tertentu. Bedakan dengan atribut Property:P279 (subkelas dari)."@id,
+		"ova stavka je konkretan objekat (instanca) klase, kategorije ili grupe objekata"@sr-el,
+		"bez' ez eo an elfenn-mañ un draezenn fetis eus ar c'hevrennad, rummad pe strollad traezoù-mañ"@br,
+		"je konkretna izvedba objekta v razredu, kategoriji ali skupini objektov"@sl,
+		"sto fatto o sta cosa è no tipo 'e nato elemento"@nap,
+		"حجيج"@rif,
+		"呢件嘢係以下概念嘅一個實例（特別係嗰啲擁有名號嘅獨立個體），同 P279 唔同，如果您要攞嚟做限定符嘅話，請改用 P2868 或者 P3831 代替。"@yue,
+		"a classi chi sta cosa ci apparteni"@scn,
+		"elementu hau mota, kategoria edo ale talde honen ale (adibide) konkretu bat da"@eu,
+		"कुनै पनि वस्तुको एक स्थिती जनाउँछ र कुनै पनि समूहको सदस्य रहेको जनाउँछ"@ne,
+		"esti elementu ye un casu concretu d'esta categoría o grupu"@ast,
+		"இந்த பொருள் எந்த வகைக்கு ஒத்திருக்கிறது / சேர்ந்தது. P279 என்பது இதன் கீழ் அமையும் துணைவகையாகும்.எடுத்துக்காட்டாக, K2 மலை வகையாகும். எரிமலை என்பது இதன் துணைவகையாகும்."@ta,
+		"該項目所屬的類別；與父類（P279）不同，例：富士山隸屬於山、火山父類是山"@zh-hant,
+		"此主体是其中特定示例及成员的类别；与上级分类（P279）不同；例如：富士山隶属于山，火山上级分类是山（且隶属于火山地貌）"@zh-hans,
+		"此主體是其中特定示例及成員的類別；與上級分類（P279）不同；例如：富士山隸屬於山，火山上級分類是山（且隸屬於火山地貌）"@zh-hk,
+		"此主体是其中特定示例及成员的类别；与上级分类（P279）不同；例如：K2隶属于山，火山上级分类是山（且隶属于火山地貌）"@zh-cn,
+		"此主體是其中特定示例及成員的類別；與上級分類（P279）不同；例如：富士山隸屬於山，火山上級分類是山（且隸屬於火山地貌）"@zh-mo,
+		"此主体是其中特定示例及成员的类别；与上级分类（P279）不同；例如：富士山隶属于山，火山上级分类是山（且隶属于火山地貌）"@zh-sg,
+		"該項目所屬的類別；與父類（P279）不同，例：富士山隸屬於山、火山父類是山"@zh-tw,
+		"აღნიშნული ელემენტი წარმოადგენს კონკრეტული ობიექტის კლასს, კატეგორიას ან ობიექტთა ჯგუფს"@ka,
+		"ky artikull është një shembull specifik dhe një anëtar i asaj klase. Për të mos ngatërrohet me tiparin Property:P279 (nënklasën e)"@sq,
+		"táto položka je jedna konkrétna vec (exemplár, príklad) patriaci do tejto triedy, kategórie alebo skupiny predmetov"@sk,
+		"Bu madde belirli bir örnektir ve o sınıfın bir üyesidir. Özellikle karıştırılmamalıdır:P279 (alt sınıfı)"@tr,
+		"što je objekt?"@hsb,
+		"يُعتبر هذا الموضوع مثالًا وعضوًا خاصا في ذلك الصنف؛ يختلف عن P279 (صنف فرعي من)؛ على سبيل المثال: إيفرست هو نموذج لجبل؛ أما البركان فهو صنف فرعي من الجبل (وكذلك شكل بركاني أرضي)"@ar,
+		"คุณลักษณะที่บ่งบอกถึงสิ่งๆ นั้นว่าเป็นตัวอย่างและเป็นสมาชิกของกลุ่มใด (โดยปกติทุกรายการมีป้ายชื่อที่ถูกต้อง) แตกต่างจาก P279 (กลุ่มย่อยของ)"@th,
+		"Element vun enger Grupp, Kategorie oder Klass"@lb,
+		"ಈ ವಿಸಯೊ ಒಂಜಿ ನಿರ್ದಿಸ್ಟೊ ಉದಾರ್ಮೆ ಬುಕ್ಕೊ ಸದಸ್ಯೆ ಆದಿಪ್ಪುನ ಹ್ಯಾಟ್ ವರ್ಗೊ."@tcy,
+		"that cless o that this subject is a particular exemple an member. (Subject teepically an individual member wi Proper Name label.) Different frae P279 (subcless o)."@sco,
+		"bu element müəyyən anlayışın xüsusi halını təsvir edir. P279 (yarımsinif) ilə səhv salmayın."@az,
+		"kelas di mana subjek ini ialah contoh dan anggota tertentu. (Subjek biasanya ahli individu dengan label Nama Khas.) Berbeza daripada P279 (subkelas)"@ms,
+		"бу тыл ханнык эрэ бөлөх биирдэмэ. Маны кытта булкуйума: Property:P279"@sah,
+		"بنیادی موضوع"@ur,
+		"该项目所属的类别；与父类（P279）不同，例：富士山隶属于山、火山父类是山"@zh-my,
+		"klass, mida see konkreetne objekt esindab ja mille üksikliige see objekt on"@et,
+		"dette elementet er eit konkret objekt/eksemplar (døme) av denne klassen, kategorien eller objektgruppa"@nn,
+		"ଏହି ଉଦାହରଣଟି କେଉଁ ଶ୍ରେଣୀ କିମ୍ବା ପ୍ରଜାତିକୁ ସୂଚାଉଛି ଓ ଏହାର ଅନ୍ୟ କୌଣସି ଉଇକି ଡାଟା ଆଇଟମ ସହିତ ସାମଞ୍ଜସ୍ଯ କଣ"@or,
+		"чӣ будани элементро нишон медиҳад. Бо Property:P279 (зернавъ аз) иштибоҳ насозед"@tg,
+		"Butir iko adolah contoh spesifik dan anggota dari sabuah kelas tatantu.Ijan binguang jo atribut Property:P279 (subkelas dari)."@min,
+		"sto elemento la xé on istansa de sta clase, categoria o grupo de ojeti"@vec,
+		"ఈ విషయం ఒక ప్రత్యేక ఉదాహరణ మరియు సభ్యుడు"@te,
+		"اهو طبقو جنهن جو هي موضوع هڪ خاص مثال ۽ ميمبر آهي"@sd,
+		"an aicme sin ar sampla agus ball faoi leith den tsuibiacht seo"@ga,
+		"бұл нысан қандай да бір санаттың, класстың немесе нысандар тобының бөлігі болып табылады"@kk,
+		"stanowi przikłŏd (je elymyntym) danyj klasy"@szl,
+		"il-klassi li tagħha suġġett huwa eżempju jew membru"@mt,
+		"ang klase na ang paksang ito ay isang halimbawa at miyembro"@tl,
+		"যে শ্রেণীর অন্তর্ভুক্ত"@bn,
+		"та арбери со класслэн нимаз учырез луэ. Эн суралэ Property:P279 аслыкен (\"улкласс\")"@udm,
+		"ഈ വിഷയം ഒരു പ്രത്യേക ഉദാഹരണവും അംഗവുമായ തരം/ക്ലാസ്/വർഗ്ഗം"@ml,
+		"агульнае значэнне, чым з’яўляецца аб’ект"@be,
+		"ეშანილი ელემენტი წუმარინუანს კონკრეტული ობიექტიშ კლასის, კატეგორიას ვარ-და ობიექტეფიშ ბუნას"@xmf,
+		"kidee kyang nang a̱ngga wu yet kap kidee a̱ni"@kcg,
+		"klas ahụ nke isiokwu a bụ otu ihe atụ na otu;  dị iche na P279 (subclass nke);  ọmụmaatụ: K2 bụ ihe atụ nke ugwu;  ugwu mgbawa bụ subclass nke ugwu (na ihe atụ nke ugwu mgbawa ugwu)"@ig,
+		"dat class wey dis subject be particular example den member"@gpe,
+		"بنیادی موضوع"@pnb,
+		"ਉਹ ਵਰਗ ਜਿਸਦੀ ਇਹ ਵਿਸ਼ਾ ਇੱਕ ਖਾਸ ਉਦਾਹਰਣ ਅਤੇ ਮੈਂਬਰ ਹੈ; P279 (ਉਪ-ਸ਼੍ਰੇਣੀ) ਤੋਂ ਵੱਖਰਾ; ਉਦਾਹਰਣ ਵਜੋਂ: K2, ਪਹਾੜ ਦੀ ਇੱਕ ਉਦਾਹਰਣ ਹੈ; ਜਵਾਲਾਮੁਖੀ, ਪਹਾੜ ਦਾ ਇੱਕ ਉਪ-ਸ਼੍ਰੇਣੀ ਹੈ (ਅਤੇ ਜਵਾਲਾਮੁਖੀ, ਭੂਮੀ ਰੂਪ ਦੀ ਇੱਕ ਉਦਾਹਰਣ)"@pa,
+		"de ite classe o categoria custu elementu est parte. Est diferente dae P279 (suta-classe de); a es., su K2 est un'istàntzia de monte (sa natura sua est \"monte\"), ma \"vulcanu\" est una suta-classe de monte (sa natura sua est \"formatzione vulcànica\")"@sc,
+		"ushbu mavzu muayyan misol va a'zo bo'lgan sinf; P279 dan farqli (quyi sinf);  masalan: K2 - tog'ning misoli; vulqon - tog'ning kichik sinfi (va vulqon relef shaklining namunasi)"@uz,
+		"अइसन वर्ग (क्लास) जेकर ई बिसय सटीक उदाहरण आ सदस्य बा; P279 (सबक्लास) से अलग: के2 परबत के उदाहरण हवे; ज्वालामुखी परबत के सबक्लास हवे (आ जवालामुखी थलरूप सभ के उदाहरण हवे)"@bho,
+		"the set weh this pesin belong to"@pcm,
+		"kilasi yẹn ti koko-ọrọ yii jẹ apẹẹrẹ ati ọmọ ẹgbẹ kan pato; yatọ si P279 (subclass ti); fun apẹẹrẹ: K2 jẹ ẹya apẹẹrẹ ti oke; onina ni a subclass ti oke (ati awọn ẹya apẹẹrẹ ti folkano landform"@yo,
+		"ຄຸນລັກສະນະທີ່ບົ່ງບອກເຖິງສິ່ງໆນັ້ນວ່າເປັນຕົວຢ່າງ ແລະ ເປັນສະມາຊິດຂອງກຸ່ມໃດ (ໂດຍປົກກະຕິທຸກລາຍການມີປ້າຍຊື່ທີ່ຖືກຕ້ອງ) ແຕກຕ່າງຈາກ P279 (ກຸ່ມຍ່ອຍຂອງ)"@lo,
+		"bul obyekt qanday da bir taypa, klass yamasa obyektler toparınıń bir bólegi bolıp tabıladı"@kaa,
+		"dette elementet er et konkret objekt/eksemplar (instans) av denne klassen, kategorien eller objektgruppen"@no,
+		"that class of which this subject is a particular example and member; different from P279 (subclass of); for example: K2 is an instance of mountain; volcano is a subclass of mountain (and an instance of volcanic landform)"@en-gb,
+		"chit-ê mi̍h-kiāⁿ sī kî-tiong te̍k-tēng ê hoān-lē kah sêng-oân ê lūi-pia̍t: kah téng-koân hun-lūi(P279) bô-kâng; pí-jū-kóng, Hù-sū-san sī chi̍t-ê soaⁿ, hóe-soaⁿ téng-koân hun-lūi sī soaⁿ (mā sī chi̍t-ê hóe-soaⁿ tē-hêng)"@nan,
+		"這个物件是其中特定的範例佮成員的類別：佮頂懸分類(P279) 無仝;比喻講，富士山是一个山，火山頂懸分類是山 (嘛是一个火山地形)"@nan-hani,
+		"這个物件是其中特定的範例佮成員的類別：佮頂懸分類(P279) 無仝;比喻講，富士山是一个山，火山頂懸分類是山 (嘛是一个火山地形)"@nan-hant,
+		"chit-ê mi̍h-kiāⁿ sī kî-tiong te̍k-tēng ê hoān-lē kah sêng-oân ê lūi-pia̍t: kah téng-koân hun-lūi(P279) bô-kâng; pí-jū-kóng, Hù-sū-san sī chi̍t-ê soaⁿ, hóe-soaⁿ téng-koân hun-lūi sī soaⁿ (mā sī chi̍t-ê hóe-soaⁿ tē-hêng)"@nan-latn-pehoeji,
+		"tsit-ê mi̍h-kiānn sī kî-tiong ti̍k-tīng ê huān-lē kah sîng-uân ê luī-pia̍t: kah tíng-kuân hun-luī(P279) bô-kâng; pí-jū-kóng, Hù-sū-san sī tsi̍t-ê suann, hué-suann tíng-kuân hun-luī sī suann (mā sī tsi̍t-ê hué-suann tē-hîng)"@nan-latn-tailo,
+		"esti elementu es un exempral del sotru elementu"@ext,
+		"ᱡᱟᱦᱟᱸ ᱜᱩᱴ ᱨᱮᱭᱟᱜ ᱥᱟᱛᱟᱢ ᱠᱟᱱᱟ; P279 (ᱨᱮᱱᱟᱜ ᱪᱟᱸᱜᱟ ᱦᱟᱹᱴᱤᱧ) ᱠᱷᱚᱱ ᱡᱩᱫᱟᱹ ᱜᱮᱭᱟ : ᱟᱡᱳᱫᱤᱭᱟᱹ ᱫᱚ ᱵᱩᱨᱩ ᱨᱮᱭᱟᱜ ᱫᱟᱹᱭᱠᱟᱹ ᱠᱟᱱᱟ; ᱥᱮᱸᱜᱮᱞ ᱵᱩᱨᱩ ᱫᱚ ᱵᱩᱨᱩ (ᱢᱤᱫ ᱞᱮᱠᱟᱱ ᱵᱩᱨᱩ)ᱸᱨᱮᱭᱟᱜ ᱢᱤᱫ ᱪᱟᱸᱜᱟ ᱦᱟᱹᱴᱤᱧ ᱠᱟᱱᱟ"@sat,
+		"aquela classe a qual este sujeito é um membro e exemplo particular; diferente da P279 (subclasse de)"@pt-br,
+		"butir ini adalah contoh spesifik dan anggota dari sebuah kelas tertentu. Bedakan dengan atribut Property:P279 (subkelas dari)."@mad,
+		"type to which this subject corresponds/belongs. Different from P279 (subclass of); for example: K2 is an instance of mountain; volcanoes form a subclass of mountains"@en-us,
+		"бу элемент сыйныфның, төркемнең конкрет бер данәсен тәшкил итә. Property:P279 (\"нәрсәнең ассыйныфы\") белән бутамагыз. Мисал өчен: Q513 (Җомолуңма) — тауларның аерым бер очрагы; Q8072 (вулкан) — тауларның ассыйныфы"@tt,
+		"མཚན་གཞི་གང་ཞིག་གི་རིགས་སུ་གཏོགས་པ། ནང་གསེས་དང་མི་འདྲ། དཔེར་ན་ཇོ་མོ་གླང་མ་ནི་རིའི་རིགས་སུ་གཏོགས་ཡིན་ལ་མེ་རི་ནི་རིའི་ནང་གསེས་ཤིག་རེད།"@bo,
+		"issibay aybakkonne qonccissiyagaa"@wal,
+		"د پام وړ توکی د... يو ډول دی"@ps,
+		"type to which this subject corresponds/belongs. Different from P279 (subclass of); for example: K2 is an instance of mountain; volcano is a subclass of mountain"@lg ;
+	skos:altLabel "est un"@fr,
+		"est une"@fr,
+		"instance de"@fr,
+		"a pour classe"@fr,
+		"est un exemple de"@fr,
+		"type de média"@fr,
+		"quoi"@fr,
+		"nature"@fr,
+		"nature de l'élément"@fr,
+		"ceci est un ..."@fr,
+		"ist Instanz von"@de,
+		"Beispiel von"@de,
+		"Exemplar von"@de,
+		"Einzelfall von"@de,
+		"ist eine"@de,
+		"war eine"@de,
+		"ist ein"@de,
+		"war ein"@de,
+		"דוגמה של"@he,
+		"מקרה של"@he,
+		"היא"@he,
+		"הוא"@he,
+		"is a"@en,
+		"is an"@en,
+		"is a[n]"@en,
+		"unique individual of"@en,
+		"unitary element of class"@en,
+		"type"@en,
+		"example of"@en,
+		"is of type"@en,
+		"has type"@en,
+		"item of type"@en,
+		"was a[n]"@en,
+		"will be a[n] (use 'nature of statement' = 'expected')"@en,
+		"element av"@nb,
+		"eksempel på"@nb,
+		"utgave av"@nb,
+		"eksemplar av"@nb,
+		"instans av"@nb,
+		"er"@nb,
+		"представляет собой"@ru,
+		"частный случай для"@ru,
+		"является одним из экземпляров"@ru,
+		"принадлежит классу"@ru,
+		"является одним из"@ru,
+		"экземпляр от"@ru,
+		"класс объекта:"@ru,
+		"вид сущности"@ru,
+		"это"@ru,
+		"один из"@ru,
+		"это пример"@ru,
+		"пример"@ru,
+		"является"@ru,
+		"есть"@ru,
+		"là cái"@vi,
+		"là một thực thể của"@vi,
+		"là một trong những"@vi,
+		"là ví dụ"@vi,
+		"là thí dụ"@vi,
+		"és un"@ca,
+		"és una"@ca,
+		"és instància de"@ca,
+		"คือ"@th,
+		"อยู่ในกลุ่มของ"@th,
+		"อยู่ในกลุ่ม"@th,
+		"เป็นสมาชิกของ"@th,
+		"เป็นสมาชิก"@th,
+		"อยู่ในประเภท"@th,
+		"จัดว่าเป็น"@th,
+		"є"@uk,
+		"це"@uk,
+		"належить до"@uk,
+		"приклад"@uk,
+		"випадок"@uk,
+		"являє собою"@uk,
+		"окремий приклад"@uk,
+		"екземпляр"@uk,
+		"один з"@uk,
+		"одне з"@uk,
+		"одна з"@uk,
+		"обов’язок"@uk,
+		"обов’язком є"@uk,
+		"ket maysa a"@ilo,
+		"ket maysa nga"@ilo,
+		"هست یک"@fa,
+		"است یک:"@fa,
+		"یک مثال از"@fa,
+		"نمونه ای از"@fa,
+		"مثالی از"@fa,
+		"است یک"@fa,
+		"زیرمجموعهٔ"@fa,
+		"este o"@ro,
+		"este un"@ro,
+		"este o/un"@ro,
+		"reprezintă"@ro,
+		"este"@ro,
+		"e"@ro,
+		"exemplu de"@ro,
+		"es una"@es,
+		"es un"@es,
+		"ejemplar de"@es,
+		"ejemplo de"@es,
+		"término genérico"@es,
+		"è un"@it,
+		"è una"@it,
+		"è uno"@it,
+		"è un esempio di"@it,
+		"種類"@ja,
+		"インスタンスの元"@ja,
+		"実体の元"@ja,
+		"クラス"@ja,
+		"以下の実体"@ja,
+		"〜のインスタンス"@ja,
+		"部類"@ja,
+		"ist ein"@de-at,
+		"ist eine"@de-at,
+		"ist Instanz von"@de-at,
+		"Instanz von"@de-at,
+		"instantie van"@nl,
+		"was een"@nl,
+		"is"@nl,
+		"exemplaar van (algemeen)"@nl,
+		"is een uniek exemplaar van"@nl,
+		"instance van"@nl,
+		"ist ein"@de-ch,
+		"ist eine"@de-ch,
+		"ist Instanz von"@de-ch,
+		"Instanz von"@de-ch,
+		"is a Instanz vo"@bar,
+		"Instanz vo"@bar,
+		"war a"@bar,
+		"je"@sh,
+		"su"@sh,
+		"jest"@sh,
+		"e"@bg,
+		"屬於"@zh,
+		"是一个"@zh,
+		"性質"@zh,
+		"属于"@zh,
+		"類別"@zh,
+		"所属的类"@zh,
+		"隸屬於"@zh,
+		"是"@zh,
+		"是...的一个实例"@zh,
+		"性质"@zh,
+		"实例"@zh,
+		"示例"@zh,
+		"是一個"@zh,
+		"איז א"@yi,
+		"איז אן"@yi,
+		"je"@cs,
+		"prvek třídy"@cs,
+		"třída prvku"@cs,
+		"zástupce třídy/druhu"@cs,
+		"exemplář (čeho)"@cs,
+		"příklad (čeho)"@cs,
+		"případ (čeho)"@cs,
+		"instance (čeho)"@cs,
+		"on"@fi,
+		"kuuluu ryhmään"@fi,
+		"выключны выпадак панятку"@be-tarask,
+		"é do tipo"@pt,
+		"é membro de"@pt,
+		"é um"@pt,
+		"é um exemplo de"@pt,
+		"é um indivíduo"@pt,
+		"é uma"@pt,
+		"natureza do elemento"@pt,
+		"possui classe"@pt,
+		"రకం"@te,
+		"ఇది ఒక"@te,
+		"ఉదాహరణ"@te,
+		"నమూనా"@te,
+		"అంశ"@te,
+		"పర్యాయ"@te,
+		"ଉଦାହରଣ"@or,
+		"ପ୍ରଜାତି"@or,
+		"kategória"@hu,
+		"példánya ennek"@hu,
+		"példa erre"@hu,
+		"típus"@hu,
+		"osztály"@hu,
+		"ez egy"@hu,
+		"è nu"@scn,
+		"è na"@scn,
+		"è un"@scn,
+		"natura di l'elimentu"@scn,
+		"er en"@da,
+		"er et"@da,
+		"eksemplar af"@da,
+		"har typen"@da,
+		"forekomst af"@da,
+		"instans af"@da,
+		"er ein"@nn,
+		"är ett"@sv,
+		"har klass"@sv,
+		"har typ"@sv,
+		"är en speciell"@sv,
+		"är en specifik"@sv,
+		"är en individuell"@sv,
+		"är en unik"@sv,
+		"är ett exempel på"@sv,
+		"medlem av"@sv,
+		"unik individ av"@sv,
+		"distinkt medlem av"@sv,
+		"inte en typ men en instans av"@sv,
+		"rdf:type"@sv,
+		"type"@sv,
+		"typ"@sv,
+		"huvudtyp"@sv,
+		"är en"@sv,
+		"ye un"@ast,
+		"ye una"@ast,
+		"instancija"@lt,
+		"yra"@lt,
+		"enghraifft o"@cy,
+		"속한 종류"@ko,
+		"다음에 속해 있음"@ko,
+		"속한 범주"@ko,
+		"다음의 범주에 속함"@ko,
+		"타입"@ko,
+		"종류"@ko,
+		"부류"@ko,
+		"분류"@ko,
+		"이것의 종류"@ko,
+		"이것의 범주"@ko,
+		"다음 부류에 속함"@ko,
+		"다음 분류에 속함"@ko,
+		"범주"@ko,
+		"다음의 종류에 속함"@ko,
+		"다음에 속함"@ko,
+		"다음 중 하나로 볼 수 있음"@ko,
+		"merupakan"@id,
+		"ialah"@id,
+		"contoh dari"@id,
+		"zer da?"@eu,
+		"da"@eu,
+		"er ein"@fo,
+		"આ શું છે તે"@gu,
+		"es"@io,
+		"natyra e elmentit"@sq,
+		"shembull i"@sq,
+		"është një shembull i"@sq,
+		"lloj i"@sq,
+		"metung yang"@pam,
+		"inštancie (čoho)"@sk,
+		"είναι ένας"@el,
+		"είναι μία"@el,
+		"είναι ένα"@el,
+		"στιγμιότυπο του"@el,
+		"στιγμιότυπο της"@el,
+		"περίπτωση"@el,
+		"παράδειγμα του"@el,
+		"παράδειγμα της"@el,
+		"περίπτωση του"@el,
+		"περίπτωση της"@el,
+		"στοιχείο της τάξης"@el,
+		"ήταν ένας"@el,
+		"ήταν μία"@el,
+		"ήταν ένα"@el,
+		"ήταν"@el,
+		"فرد مميز من"@ar,
+		"نوع"@ar,
+		"مثال من"@ar,
+		"هو من نوع"@ar,
+		"له نوع"@ar,
+		"نوع العنصر"@ar,
+		"عنصر وحيد من الصنف"@ar,
+		"гэта асобны выпадак паняцця"@be,
+		"прадстаўляе сабой"@be,
+		"doare an elfenn"@br,
+		"è un"@co,
+		"è una"@co,
+		"è unu"@co,
+		"sò di"@co,
+		"sò un"@co,
+		"mille üksikjuht"@et,
+		"é un/unha"@gl,
+		"é un"@gl,
+		"é unha"@gl,
+		"primjerak"@hr,
+		"član klase"@hr,
+		"pripadnik"@hr,
+		"jedan od"@hr,
+		"jedno od"@hr,
+		"jedna od"@hr,
+		"spada u"@hr,
+		"ubraja se u"@hr,
+		"instantia"@ia,
+		"es un"@ia,
+		"es"@ia,
+		"მაგალითი"@ka,
+		"instance no"@lv,
+		"struktūra no"@lv,
+		"eksemplārs no"@lv,
+		"pieder"@lv,
+		"piemērs no"@lv,
+		"iyolah"@min,
+		"iolah"@min,
+		"ialah"@ms,
+		"mempunyai kelas"@ms,
+		"mempunyai jenis"@ms,
+		"ahli kepada"@ms,
+		"ahli berbeza kepada"@ms,
+		"ahli bukan jenis kepada"@ms,
+		"unsur berbeza"@ms,
+		"kelakuan"@ms,
+		"jenis"@ms,
+		"rdf:type"@ms,
+		"merupakan"@ms,
+		"ဥပမာ အားဖြင့်"@my,
+		"အမျိုးအစား အားဖြင့်"@my,
+		"အမျိုးအစား"@my,
+		"အဖွဲ့ဝင် အားဖြင့်"@my,
+		"အထူးဖော်ပြချက်အားဖြင့်"@my,
+		"es un"@oc,
+		"es una"@oc,
+		"jest"@pl,
+		"są to"@pl,
+		"był to"@pl,
+		"była to"@pl,
+		"było to"@pl,
+		"byli to"@pl,
+		"były to"@pl,
+		"to jest"@pl,
+		"jest instancją"@pl,
+		"is a"@sco,
+		"ay"@tl,
+		"ay isang"@tl,
+		"ay miyembro ng"@tl,
+		"ay kasama ng"@tl,
+		"ay grupo ng"@tl,
+		"miyembro ng"@tl,
+		"ne olduğu"@tr,
+		"neyin örneği olduğu"@tr,
+		"sınıfı"@tr,
+		"sınıflandırması"@tr,
+		"sınıflandırılması"@tr,
+		"türü"@tr,
+		"türleri"@tr,
+		"içinde yer aldığı tür"@tr,
+		"нәрсәнең төре"@tt,
+		"нәрсәнең мисалы"@tt,
+		"нәрсәнең үрнәге"@tt,
+		"үрнәк"@tt,
+		"性質"@yue,
+		"性质"@zh-cn,
+		"种类"@zh-cn,
+		"类型"@zh-cn,
+		"属于"@zh-hans,
+		"性质"@zh-hans,
+		"性質"@zh-hant,
+		"性質"@zh-mo,
+		"性质"@zh-sg,
+		"屬於"@zh-tw,
+		"本質"@zh-tw,
+		"是一個"@zh-tw,
+		"性質"@zh-tw,
+		"ಒಂಜಿ"@tcy,
+		"ಒಂಜಿ ವರ್ಗೊ"@tcy,
+		"ಒರಿ ವ್ಯಕ್ತಿ"@tcy,
+		"ಒಂಜಿ ಉದ್ಆರ್ಮೆ"@tcy,
+		"ಸಮಾನೊ ವ್ಯಕ್ತಿ"@tcy,
+		"nümunəsidir"@az,
+		"биирдэмэ"@sah,
+		"чилиэнэ"@sah,
+		"иһинээҕитэ"@sah,
+		"көрүҥэ"@sah,
+		"тиибэ"@sah,
+		"элбэхтэн биирэ"@sah,
+		"кэрискэттэн биирэ"@sah,
+		"نمونہ"@ur,
+		"نظیر"@ur,
+		"مثال"@ur,
+		"उदाहरणं कस्य?"@sa,
+		"тайӧ"@kv,
+		"торъя вӧвлӧмтор"@kv,
+		"irin"@ha,
+		"性质"@zh-my,
+		"гээшэ"@bxr,
+		"болбол"@bxr,
+		"хадаа"@bxr,
+		"багтадаг"@bxr,
+		"харьяалагдадаг"@bxr,
+		"አይነት"@am,
+		"አብነት"@am,
+		"tuladha saka"@jv,
+		"conto saka"@jv,
+		"намуд"@tg,
+		"навъ"@tg,
+		"як навъи"@tg,
+		"як намунаи"@tg,
+		"як намуди"@tg,
+		"ин"@tg,
+		"la xé na istansa de"@vec,
+		"l'è on"@vec,
+		"l'è na"@vec,
+		"wantah"@ban,
+		"স্বরূপ"@bn,
+		"সত্ত্বার ধরন"@bn,
+		"যার উদাহরণ"@bn,
+		"যার অন্তর্ভুক্ত"@bn,
+		"যা"@bn,
+		"نمونو"@sd,
+		"آهي هڪ"@sd,
+		"هڪ درجو اٿس"@sd,
+		"هڪ قِسمُ"@sd,
+		"هڪ مخصوص"@sd,
+		"هڪ فرد"@sd,
+		"هڪ نيارو"@sd,
+		"هڪ نرالو"@sd,
+		"جو رڪن يا ميمبر"@sd,
+		"buɣusibu"@dag,
+		"nahingbaŋ"@dag,
+		"buɣusiri la"@dag,
+		"ŋmani la"@dag,
+		"je"@szl,
+		"było"@szl,
+		"sōm"@szl,
+		"mfano wa"@sw,
+		"ni aina ya"@sw,
+		"huwa"@mt,
+		"hija"@mt,
+		"huma"@mt,
+		"każ ta'"@mt,
+		"eżempju ta'"@mt,
+		"tip ta'"@mt,
+		"u canan kuyni"@szy,
+		"چونتوه باݢي"@ms-arab,
+		"луэ"@udm,
+		"классэз"@udm,
+		"типез"@udm,
+		"бұл"@kk,
+		"வகைப்பாடு"@ta,
+		"yet"@kcg,
+		"tangka̱i"@kcg,
+		"bụ"@ig,
+		"dị ka ndị a"@ig,
+		"So na otu"@ig,
+		"Kọwara kpọmkwem"@ig,
+		"ਕੀ ਹੈ"@pa,
+		"ਦੀ ਉਦਾਹਰਨ"@pa,
+		"ਉਦਾਹਰਨ"@pa,
+		"ਕਿਸਮ ਦਾ"@pa,
+		"ਕਿਸਮ ਹੈ"@pa,
+		"ਕਿਸਮ"@pa,
+		"اُداہرن"@pnb,
+		"دی اُداہرن"@pnb,
+		"قِسم"@pnb,
+		"istàntzia de"@sc,
+		"ite est"@sc,
+		"est unu"@sc,
+		"est una"@sc,
+		"est un'esèmpiu de"@sc,
+		"natura"@sc,
+		"casta"@sc,
+		"l'è una"@rgn,
+		"نمودج ديال"@ary,
+		"ميتال ديال"@ary,
+		"حالة خاصة ديال"@ary,
+		"উদাহৰণ"@as,
+		"जेकर उदाहरण हवे"@bho,
+		"種類"@ryu,
+		"ແມ່ນ"@lo,
+		"ຢູ່ໃນກຸ່ມຂອງ"@lo,
+		"ຢູ່ໃນກຸ່ມ"@lo,
+		"ເປັນສະມາຊິກຂອງ"@lo,
+		"ເປັນສະມາຊິກ"@lo,
+		"ຢູ່ໃນປະເພດ"@lo,
+		"ຈັດວ່າເປັນ"@lo,
+		"性質"@nan-hani,
+		"sèng-chit"@nan,
+		"Yieneŋto"@dga,
+		"ass eng"@lb,
+		"ass en"@lb,
+		"ass e"@lb,
+		"ass een"@lb,
+		"ass ee"@lb,
+		"ass eng/e(n)"@lb,
+		"ass eng/en"@lb,
+		"ass en/eng"@lb,
+		"bul"@kaa,
+		"bir bólegi"@kaa,
+		"element av"@no,
+		"eksempel på"@no,
+		"utgave av"@no,
+		"eksemplar av"@no,
+		"instans av"@no,
+		"er"@no,
+		"是蜀種"@cdo,
+		"是蜀芘"@cdo,
+		"是蜀隻"@cdo,
+		"sê siŏh cṳ̄ng"@cdo,
+		"sê siŏh biĕh"@cdo,
+		"sê siŏh bĭh"@cdo,
+		"性質"@nan-hant,
+		"li"@tok,
+		"rdf:type"@mul,
+		"∈"@mul,
+		"nediy bírşiy"@crh-ro,
+		"ⵉⴳⴰ"@zgh,
+		"ⵜⴳⴰ"@zgh,
+		"ⴰⵏⴰⵡ"@zgh,
+		"sèng-chit"@nan-latn-pehoeji,
+		"是一个"@nan-latn-pehoeji,
+		"性質"@nan-latn-pehoeji,
+		"sìng-tsit"@nan-latn-tailo,
+		"是一个"@nan-latn-tailo,
+		"性質"@nan-latn-tailo,
+		"engghi-panèka"@mad,
+		"èngghi-panèka"@mad,
+		"èngghi-ka'ḍinto"@mad,
+		"yi taa"@wlx,
+		"is a"@en-us,
+		"is an"@en-us,
+		"unique individual of"@en-us,
+		"unitary element of class"@en-us,
+		"type"@en-us,
+		"example of"@en-us,
+		"is of type"@en-us,
+		"has type"@en-us,
+		"item of type"@en-us,
+		"a matsayi mà"@kai,
+		"རིགས།"@bo,
+		"ဥပမာ"@mnw,
+		"သာဓက"@mnw,
+		"ဗီုပြင်"@mnw,
+		"တင်မပ္တိုန်ထ္ၜး"@mnw ;
+	wikibase:propertyType <http://wikiba.se/ontology#WikibaseItem> ;
+	wikibase:directClaim wdt:P31 ;
+	wikibase:claim p:P31 ;
+	wikibase:statementProperty ps:P31 ;
+	wikibase:statementValue psv:P31 ;
+	wikibase:qualifier pq:P31 ;
+	wikibase:qualifierValue pqv:P31 ;
+	wikibase:reference pr:P31 ;
+	wikibase:referenceValue prv:P31 ;
+	wikibase:novalue wdno:P31 .
+
+p:P31 a owl:ObjectProperty .
+
+psv:P31 a owl:ObjectProperty .
+
+pqv:P31 a owl:ObjectProperty .
+
+prv:P31 a owl:ObjectProperty .
+
+wdt:P31 a owl:ObjectProperty .
+
+ps:P31 a owl:ObjectProperty .
+
+pq:P31 a owl:ObjectProperty .
+
+pr:P31 a owl:ObjectProperty .
+
+wdno:P31 a owl:Class ;
+	owl:complementOf _:0b8bd71b926a65ca3fa72e5d9103e4d6 .
+
+_:0b8bd71b926a65ca3fa72e5d9103e4d6 a owl:Restriction ;
+	owl:onProperty wdt:P31 ;
+	owl:someValuesFrom owl:Thing .
+
+wdv:90af7ef78a77d0835f3fdd423b8bb978 a wikibase:TimeValue ;
+	wikibase:timeValue "2023-05-10T00:00:00Z"^^xsd:dateTime ;
+	wikibase:timePrecision "11"^^xsd:integer ;
+	wikibase:timeTimezone "0"^^xsd:integer ;
+	wikibase:timeCalendarModel <http://www.wikidata.org/entity/Q1985727> .
+
+wdref:9d0a4d1a20a3d5a22c6907c1cad3e5048a882957 a wikibase:Reference ;
+	pr:P5997 "https://www.wikidata.org/wiki/Wikidata:Verifiability" .
+
+wdref:17f0c8c0d0f168450af1bedda469340ac5cb0ade a wikibase:Reference ;
+	pr:P2306 wd:P2868 ;
+	pr:P5997 "https://w.wiki/EMEW" .
+
+wdref:d9ffd0481fb36e62b21de4d35b954564f8d84329 a wikibase:Reference ;
+	pr:P2306 wd:P1683 ;
+	pr:P5997 "https://www.wikidata.org/w/index.php?title=Q6579317&diff=prev&oldid=2424370103" .
+
+wdref:666ab5628c1f347ca4f97531b5df394d22f84194 a wikibase:Reference ;
+	pr:P2306 wd:P1107,
+		wd:P5102 ;
+	pr:P5997 "https://www.wikidata.org/w/index.php?title=Q13591319&diff=prev&oldid=2206997655" .
+
+wdref:d05b78c48bc2dcc3387b9800cd06959319dfcafe a wikibase:Reference ;
+	pr:P2306 wd:P1793 ;
+	pr:P5997 "https://www.wikidata.org/w/index.php?title=Q90034242&diff=prev&oldid=2396057411" .
+
+wdref:6ab0189c77d2952f2ff755b61602db75ce4d1fdf a wikibase:Reference ;
+	pr:P2306 wd:P279 ;
+	pr:P3452 wd:Q7113591 ;
+	pr:P5997 "preventing Q7113591 e.g. https://www.wikidata.org/w/index.php?title=Q137967494&diff=prev&oldid=2462444319" .
+
+wdref:42faf462842e35e7be6c4090481408e60eda90c3 a wikibase:Reference ;
+	pr:P143 wd:Q2013 ;
+	pr:P4656 <https://www.wikidata.org/wiki/Talk:Q18593264#instance_of_=_item_of_collection_or_exhibition> ;
+	pr:P813 "2023-05-10T00:00:00Z"^^xsd:dateTime ;
+	prv:P813 wdv:90af7ef78a77d0835f3fdd423b8bb978 .

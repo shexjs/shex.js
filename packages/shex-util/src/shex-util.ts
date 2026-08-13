@@ -1759,19 +1759,41 @@ const ShExUtil = {
    * the POST form for exactly this. */
   sparqlGetLimit: 2000,
 
+  /** Who we are, for services that insist on being told: Wikimedia's robot
+   * policy 403s a request with no User-Agent (T400119).  A browser has one
+   * of its own and refuses to let anyone set that header -- it warns rather
+   * than obeying -- so only a shim that has none is told.  Assign to it to
+   * identify your own tool instead. */
+  sparqlUserAgent: "shex.js (https://github.com/shexjs/shex.js)",
+
+  /** is there a browser here, with a User-Agent of its own? */
+  inBrowser: function (): boolean {
+    const global = globalThis as any;
+    return typeof global.window !== "undefined" && typeof global.window.document !== "undefined";
+  },
+
+  /** the given headers, plus who we are where that can be said */
+  requestHeaders: function (headers: {[name: string]: string}): {[name: string]: string} {
+    return this.inBrowser()
+      ? headers
+      : Object.assign({"User-Agent": this.sparqlUserAgent}, headers);
+  },
+
   executeQueryPromise: function (query: string, endpoint: string, dataFactory: any): Promise<any[][]> {
     if (!endpoint)
       throw Error(`Can't execute a SPARQL query with no endpoint`);
 
     const queryURL = endpoint + "?query=" + encodeURIComponent(query);
     const request = queryURL.length <= this.sparqlGetLimit
-          ? fetch(queryURL, {headers: {'Accept': 'application/sparql-results+json'}})
+          ? fetch(queryURL, {headers: this.requestHeaders({
+            'Accept': 'application/sparql-results+json',
+          })})
           : fetch(endpoint, {
             method: 'POST',
-            headers: {
+            headers: this.requestHeaders({
               'Accept': 'application/sparql-results+json',
               'Content-Type': 'application/sparql-query',
-            },
+            }),
             body: query,
           });
     return request.then(resp => resp.json()).then(jsonObject => {
@@ -1788,6 +1810,8 @@ const ShExUtil = {
     const xhr = new XMLHttpRequest();
     xhr.open(byUrl ? "GET" : "POST", byUrl ? queryURL : endpoint, false);
     xhr.setRequestHeader('Accept', 'application/sparql-results+json');
+    if (!this.inBrowser())
+      xhr.setRequestHeader('User-Agent', this.sparqlUserAgent);
     if (byUrl) {
       xhr.send();
     } else {
