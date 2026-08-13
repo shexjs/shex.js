@@ -872,9 +872,17 @@ if (!TEST_browser) {
           .to.equal('"1999-12-31"^^xsd:date');
       });
 
-      it("should look like the panes it replaced", function () {
+      it("should look like the panes it replaced", async function () {
         // the app paints the schema pane blue and the data pane green; the
         // editors standing in for those textareas say the same thing
+        source().select("rdfjs");
+        const set = (selector, value) => $(selector).first().val(value).trigger("change");
+        set("#inputSchema textarea", "PREFIX : <http://a.example/>\n:S { :p . }\n");
+        set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .\n");
+        set("#textMap", "<http://a.example/x>@<http://a.example/S>");
+        $("#validate").trigger("click");
+        await shared.promise;
+
         const es = shared.Caches.editorSupport;
         const painted = [];
         $("head style, style").each((i, s) => painted.push($(s).text()));
@@ -1039,6 +1047,12 @@ if (!TEST_browser) {
         const es = shared.Caches.editorSupport;
         const rw = es.app.resultsWidget;
         expect(rw.resultPanes.length, "appinfo pane created").to.be.above(0);
+        // a results pane has no textarea to inherit from, so it takes the
+        // colours of where the app put it
+        expect($("#results .results").length, "the pane sits in a painted holder").to.be.above(0);
+        const painted = [];
+        $("style").each((i, s) => painted.push($(s).text()));
+        expect(painted.join("\n"), "the results tint").to.include("rgb(255, 255, 244)");
         const {pane, ranges} = rw.resultPanes[0];
         expect(ranges.length, "TestedTriples mapped").to.be.above(0);
         // fitted to the bottom of the window; scrolls internally

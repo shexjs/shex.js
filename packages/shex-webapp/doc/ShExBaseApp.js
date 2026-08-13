@@ -2326,10 +2326,13 @@ class ShExResultsRenderer {
     try {
       const {text, ranges} = ShExWebApp.EditorServices.stringifyWithOffsets(
         results, o => o && (o.type === "TestedTriple" || results.indexOf(o) !== -1));
-      const pane = ShExWebApp.EditorPanes.makeJsonPane(text);
+      // the pane takes its colours from where it is put, so put it there
+      // first: an unattached div has no computed style to read
       const klass = this.appinfo.every(({klass}) => klass === "passes") ? "passes" : "fails";
-      const elt = $("<div/>").addClass(klass).append(pane.dom).data("rawText", text);
+      const elt = $("<div/>").addClass(klass).addClass("results").data("rawText", text);
       this.resultsWidget.append(elt);
+      const pane = ShExWebApp.EditorPanes.makeJsonPane(text, {colorsFrom: elt[0]});
+      elt.append(pane.dom);
       this.resultsWidget.fitPaneToWindow(pane.dom);
       pane.requestMeasure();   // now that it is attached and sized
 

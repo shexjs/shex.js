@@ -124,6 +124,25 @@ describe("EditorPanes", function () {
     }
   });
 
+  /* A result pane replaces nothing, so it has nothing to inherit; the host
+   * says what it should look like by handing over an element it styled. */
+  it("should dress a result pane like the place it is put", function () {
+    const {makeResultPane} = require("../lib/editor-panes");
+    const holder = dom.window.document.createElement("div");
+    holder.style.backgroundColor = "rgb(255, 255, 244)";
+    dom.window.document.body.appendChild(holder);
+    const pane = makeResultPane('{"a": 1}', "json", {colorsFrom: holder});
+    try {
+      holder.appendChild(pane.dom);
+      const styles = [];
+      dom.window.document.querySelectorAll("style").forEach(s => styles.push(s.textContent));
+      expect(styles.join("\n"), "the pane takes the holder's tint")
+        .to.include("rgb(255, 255, 244)");
+    } finally {
+      holder.remove();       // a result pane is discarded with its holder
+    }
+  });
+
   it("should leave an unpainted textarea's pane alone", function () {
     const textarea = dom.window.document.createElement("textarea");
     textarea.value = "<x> <p> 1 .\n";

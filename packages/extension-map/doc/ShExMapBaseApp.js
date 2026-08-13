@@ -735,18 +735,22 @@ class ShExMapBaseApp extends ShExBaseApp {
         $("<span/>", {class: "data"}).text($("#outputShapeMap").val()),
       ));
     // with the editors on, the materialized graph renders in a Turtle pane
-    // whose triples hover-link back to the output schema and the bindings
+    // whose triples hover-link back to the output schema and the bindings.
+    // It takes its colours from where it lands, so it lands first.
+    const holder = $("<div/>", {class: "results"}).data("rawText", result);
+    if (this.editorSupport && "EditorPanes" in ShExWebApp)
+      div.append(holder);
+    this.resultsWidget.append(div);
     const pane = this.editorSupport && "EditorPanes" in ShExWebApp
-          ? ShExWebApp.EditorPanes.makeResultPane(result, "turtle")
+          ? ShExWebApp.EditorPanes.makeResultPane(result, "turtle", {colorsFrom: holder[0]})
           : null;
     if (pane) {
-      div.append($("<div/>").append(pane.dom).data("rawText", result));
+      holder.append(pane.dom);
       this.materializationPanes.push({pane, text: result});
       this.resultsWidget.resultPanes.push({pane, ranges: []}); // for generic clearing
     } else {
       div.append($("<pre/>").text(result));
     }
-    this.resultsWidget.append(div);
     if (pane)
       this.resultsWidget.fitPaneToWindow(pane.dom);
   }

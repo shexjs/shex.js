@@ -217,17 +217,43 @@ export interface ResultPane {
   setHoverRegions (regions: HoverRegion[], leave?: () => void): void;
 }
 
+/** paintedLike - dress a pane in an element's colours, so an editor looks
+ * like the thing it stands in for (or, for a result pane, like the place it
+ * is put).  An element nobody painted contributes nothing rather than
+ * painting a pane transparent. */
+function paintedLike (elt: HTMLElement): Extension[] {
+  const dressed = window.getComputedStyle(elt);
+  const background = dressed.backgroundColor;
+  const foreground = dressed.color;
+  if (!background || /^(transparent|rgba\(0, 0, 0, 0\))$/.test(background))
+    return [];
+  return [EditorView.theme({
+    "&": {backgroundColor: background, color: foreground},
+    // the gutter reads as part of the pane, edged rather than shaded
+    ".cm-gutters": {backgroundColor: background, color: foreground,
+                    border: "none", borderRight: "1px solid rgba(0, 0, 0, 0.1)"},
+    ".cm-activeLineGutter": {backgroundColor: "rgba(0, 0, 0, 0.05)"},
+    ".cm-activeLine": {backgroundColor: "rgba(0, 0, 0, 0.03)"},
+  })];
+}
+
 /** makeResultPane - a read-only, syntax-highlighted view of a result
  * document (validation results as JSON, a materialized graph as Turtle)
  * sharing the highlight machinery of editor panes: highlight(ranges, cls,
  * {scroll}) marks and scrolls to result regions; setHoverRegions supports
  * results → schema/data cross-highlighting. */
-export function makeResultPane (text: string, language: PaneLanguage = "json"): ResultPane {
+export function makeResultPane (text: string, language: PaneLanguage = "json",
+                                opts: {colorsFrom?: HTMLElement} = {}): ResultPane {
+  // a result pane replaces no textarea, so it has no colours of its own to
+  // inherit; the host says what it should look like by handing over an
+  // element it has styled (and attached, or there is nothing to compute)
+  const dressing = opts.colorsFrom ? paintedLike(opts.colorsFrom) : [];
   const view = new EditorView({doc: text, extensions: [
     basicSetup,
     languages[language](),
     highlightField,
     paneTheme,
+    ...dressing,
     EditorView.editable.of(false),
     EditorState.readOnly.of(true),
   ]});
@@ -257,8 +283,8 @@ export function makeResultPane (text: string, language: PaneLanguage = "json"): 
 }
 
 /** makeJsonPane - makeResultPane's original JSON-only spelling */
-export function makeJsonPane (text: string): ResultPane {
-  return makeResultPane(text, "json");
+export function makeJsonPane (text: string, opts: {colorsFrom?: HTMLElement} = {}): ResultPane {
+  return makeResultPane(text, "json", opts);
 }
 
 /** track mouse-over-sensitive ranges on a view; returns the function that
@@ -590,19 +616,7 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
   // the editors are a nicer way to show the same thing, not a different
   // thing.  Read before hiding it, and only believe a real colour (jsdom
   // and an unstyled page report none).
-  const dressed = window.getComputedStyle(textarea);
-  const background = dressed.backgroundColor;
-  const foreground = dressed.color;
-  const painted = background && !/^(transparent|rgba\(0, 0, 0, 0\))$/.test(background);
-  if (painted)
-    extensions.push(EditorView.theme({
-      "&": {backgroundColor: background, color: foreground},
-      // the gutter reads as part of the pane, edged rather than shaded
-      ".cm-gutters": {backgroundColor: background, color: foreground,
-                      border: "none", borderRight: "1px solid rgba(0, 0, 0, 0.1)"},
-      ".cm-activeLineGutter": {backgroundColor: "rgba(0, 0, 0, 0.05)"},
-      ".cm-activeLine": {backgroundColor: "rgba(0, 0, 0, 0.03)"},
-    }));
+  extensions.push(...paintedLike(textarea));
 
   const view = new EditorView({doc: textarea.value, extensions});
   view.dom.classList.add("shexjs-editor-pane");
