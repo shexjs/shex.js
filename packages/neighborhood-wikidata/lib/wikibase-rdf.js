@@ -366,10 +366,20 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
                 where = outer;
             }
         };
+        /** an arc a member of the value object states: that member names it and
+         * holds its object, so `wikibase:timePrecision 11` marks "precision": 11
+         * rather than the whole value again */
+        const said = (name, emit) => {
+            const V = where.o;
+            from({ s: where.s, p: V && V.concat(name), o: V && V.concat(name) }, emit);
+        };
         const wd = iri(NS.wd + id);
         /** where this entity is in the page: everything below is relative */
         const ENTITY = ["entities", id];
-        where = { s: ENTITY, o: ENTITY };
+        // an entity said as a subject is its "id", the way a Turtle subject is
+        // the term that names it -- not the whole {...}, which is the document
+        const ID = ENTITY.concat("id");
+        where = { s: ID, o: ENTITY };
         const COMPLEX_VALUES = {
             time: emitTimeValueNode,
             quantity: emitQuantityValueNode,
@@ -417,16 +427,16 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
         }
         function emitTerms() {
             for (const [key, term] of Object.entries(entity.labels || {}))
-                from({ s: ENTITY, p: ENTITY.concat("labels", key), o: ENTITY.concat("labels", key, "value") }, () => {
+                from({ s: ID, p: ENTITY.concat("labels", key), o: ENTITY.concat("labels", key, "value") }, () => {
                     add(wd, exports.RDFS + "label", langLit(term.value, term.language));
                     add(wd, exports.SKOS + "prefLabel", langLit(term.value, term.language));
                     add(wd, exports.SCHEMA + "name", langLit(term.value, term.language));
                 });
             for (const [key, term] of Object.entries(entity.descriptions || {}))
-                from({ s: ENTITY, p: ENTITY.concat("descriptions", key),
+                from({ s: ID, p: ENTITY.concat("descriptions", key),
                     o: ENTITY.concat("descriptions", key, "value") }, () => add(wd, exports.SCHEMA + "description", langLit(term.value, term.language)));
             for (const [key, aliases] of Object.entries(entity.aliases || {}))
-                aliases.forEach((term, i) => from({ s: ENTITY, p: ENTITY.concat("aliases", key),
+                aliases.forEach((term, i) => from({ s: ID, p: ENTITY.concat("aliases", key),
                     o: ENTITY.concat("aliases", key, i, "value") }, () => add(wd, exports.SKOS + "altLabel", langLit(term.value, term.language))));
         }
         function emitSitelinks() {
@@ -454,7 +464,7 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
                     add(article, exports.WIKIBASE + "badge", iri(NS.wd + badge));
                 add(iri(home), exports.WIKIBASE + "wikiGroup", string(info.group));
             }
-            where = { s: ENTITY, o: ENTITY };
+            where = { s: ID, o: ENTITY };
         }
         function emitPropertyOntology() {
             const dt = entity.datatype;
@@ -502,7 +512,7 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
                 const wds = iri(NS.wds + stLName);
                 // the statement node is that claim's whole object, the way a blank
                 // node is its whole [ ... ]
-                from({ s: ENTITY, p: ENTITY.concat("claims", pid), o: CLAIM }, () => add(wd, NS.p + pid, wds));
+                from({ s: ID, p: ENTITY.concat("claims", pid), o: CLAIM }, () => add(wd, NS.p + pid, wds));
                 from({ s: CLAIM, p: CLAIM, o: CLAIM }, () => {
                     add(wds, "a", iri(exports.WIKIBASE + "Statement"));
                     if (st.rank === bestRank)
@@ -512,7 +522,7 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
                 const PROPERTY = ENTITY.concat("claims", pid);
                 emitSnak(wds, stLName, st.mainsnak, "statement", CLAIM.concat("mainsnak"), CLAIM, PROPERTY);
                 if (st.rank === bestRank)
-                    emitSnak(wd, stLName, st.mainsnak, "direct", CLAIM.concat("mainsnak"), ENTITY, PROPERTY);
+                    emitSnak(wd, stLName, st.mainsnak, "direct", CLAIM.concat("mainsnak"), ID, PROPERTY);
                 for (const [qid, snaks] of Object.entries(st.qualifiers || {}))
                     snaks.forEach((snak, qi) => emitSnak(wds, stLName, snak, "qualifier", CLAIM.concat("qualifiers", qid, qi), CLAIM, CLAIM.concat("qualifiers", qid)));
                 (st.references || []).forEach((ref, ri) => {
@@ -593,29 +603,29 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
             add(node, "a", iri(exports.WIKIBASE + "TimeValue"));
             const cleaned = cleanTimeValue(v);
             if (cleaned !== null)
-                add(node, exports.WIKIBASE + "timeValue", typed(cleaned, exports.XSD + "dateTime"));
-            add(node, exports.WIKIBASE + "timePrecision", integer(v.precision));
-            add(node, exports.WIKIBASE + "timeTimezone", integer(v.timezone));
-            add(node, exports.WIKIBASE + "timeCalendarModel", iri(v.calendarmodel));
+                said("time", () => add(node, exports.WIKIBASE + "timeValue", typed(cleaned, exports.XSD + "dateTime")));
+            said("precision", () => add(node, exports.WIKIBASE + "timePrecision", integer(v.precision)));
+            said("timezone", () => add(node, exports.WIKIBASE + "timeTimezone", integer(v.timezone)));
+            said("calendarmodel", () => add(node, exports.WIKIBASE + "timeCalendarModel", iri(v.calendarmodel)));
         }
         function emitQuantityValueNode(node, v) {
             add(node, "a", iri(exports.WIKIBASE + "QuantityValue"));
-            add(node, exports.WIKIBASE + "quantityAmount", typed(v.amount, exports.XSD + "decimal"));
+            said("amount", () => add(node, exports.WIKIBASE + "quantityAmount", typed(v.amount, exports.XSD + "decimal")));
             if (v.upperBound != null)
-                add(node, exports.WIKIBASE + "quantityUpperBound", typed(v.upperBound, exports.XSD + "decimal"));
+                said("upperBound", () => add(node, exports.WIKIBASE + "quantityUpperBound", typed(v.upperBound, exports.XSD + "decimal")));
             if (v.lowerBound != null)
-                add(node, exports.WIKIBASE + "quantityLowerBound", typed(v.lowerBound, exports.XSD + "decimal"));
-            add(node, exports.WIKIBASE + "quantityUnit", iri(v.unit === "1" ? UNIT_ONE : v.unit));
+                said("lowerBound", () => add(node, exports.WIKIBASE + "quantityLowerBound", typed(v.lowerBound, exports.XSD + "decimal")));
+            said("unit", () => add(node, exports.WIKIBASE + "quantityUnit", iri(v.unit === "1" ? UNIT_ONE : v.unit)));
             // wikibase:quantityNormalized needs unit conversion tables; see the
             // module comment
         }
         function emitGlobeValueNode(node, v) {
             add(node, "a", iri(exports.WIKIBASE + "GlobecoordinateValue"));
-            add(node, exports.WIKIBASE + "geoLatitude", typed(phpFloatStr(v.latitude), exports.XSD + "double"));
-            add(node, exports.WIKIBASE + "geoLongitude", typed(phpFloatStr(v.longitude), exports.XSD + "double"));
+            said("latitude", () => add(node, exports.WIKIBASE + "geoLatitude", typed(phpFloatStr(v.latitude), exports.XSD + "double")));
+            said("longitude", () => add(node, exports.WIKIBASE + "geoLongitude", typed(phpFloatStr(v.longitude), exports.XSD + "double")));
             if (v.precision != null)
-                add(node, exports.WIKIBASE + "geoPrecision", typed(phpFloatStr(v.precision), exports.XSD + "double"));
-            add(node, exports.WIKIBASE + "geoGlobe", iri(v.globe));
+                said("precision", () => add(node, exports.WIKIBASE + "geoPrecision", typed(phpFloatStr(v.precision), exports.XSD + "double")));
+            said("globe", () => add(node, exports.WIKIBASE + "geoGlobe", iri(v.globe)));
         }
     }
     return { entityToQuads, namespaces: NS, provenance: provenanceIndex };

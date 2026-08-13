@@ -266,6 +266,17 @@ describe("where a quad was uttered", () => {
     assert.equal(JSON.parse(claim).mainsnak.property, "P569");
   });
 
+  it("should say an entity by its id, not by the whole page", () => {
+    const utt = utterance("http://www.wikidata.org/prop/direct/P31");
+    assert.equal(JSON.parse(said(utt.subject)), "Q42");
+  });
+
+  it("should point a value node's arcs at the members that state them", () => {
+    const utt = utterance("http://wikiba.se/ontology#timePrecision");
+    assert.equal(said(utt.predicate), '"precision"');
+    assert.equal(said(utt.object), "11");
+  });
+
   it("should point a label at its language and its text", () => {
     const utt = utterance("http://www.w3.org/2000/01/rdf-schema#label");
     assert.match(said(utt.predicate), /^"[a-z-]+"$/);

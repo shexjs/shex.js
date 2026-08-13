@@ -485,10 +485,21 @@ export function wikibaseRdfConverter (dataFactory: RdfJs.DataFactory, options: W
         where = outer;
       }
     };
+
+    /** an arc a member of the value object states: that member names it and
+     * holds its object, so `wikibase:timePrecision 11` marks "precision": 11
+     * rather than the whole value again */
+    const said = (name: string, emit: () => void) => {
+      const V = where.o;
+      from({s: where.s, p: V && V.concat(name), o: V && V.concat(name)}, emit);
+    };
     const wd = iri(NS.wd + id);
     /** where this entity is in the page: everything below is relative */
     const ENTITY: JsonPath = ["entities", id];
-    where = {s: ENTITY, o: ENTITY};
+    // an entity said as a subject is its "id", the way a Turtle subject is
+    // the term that names it -- not the whole {...}, which is the document
+    const ID: JsonPath = ENTITY.concat("id");
+    where = {s: ID, o: ENTITY};
 
     const COMPLEX_VALUES: { [type: string]: (node: RdfJs.Quad_Subject, v: any) => void } = {
       time: emitTimeValueNode,
@@ -541,18 +552,18 @@ export function wikibaseRdfConverter (dataFactory: RdfJs.DataFactory, options: W
 
     function emitTerms (): void {
       for (const [key, term] of Object.entries(entity.labels || {}) as [string, any][])
-        from({s: ENTITY, p: ENTITY.concat("labels", key), o: ENTITY.concat("labels", key, "value")}, () => {
+        from({s: ID, p: ENTITY.concat("labels", key), o: ENTITY.concat("labels", key, "value")}, () => {
           add(wd, RDFS + "label", langLit(term.value, term.language));
           add(wd, SKOS + "prefLabel", langLit(term.value, term.language));
           add(wd, SCHEMA + "name", langLit(term.value, term.language));
         });
       for (const [key, term] of Object.entries(entity.descriptions || {}) as [string, any][])
-        from({s: ENTITY, p: ENTITY.concat("descriptions", key),
+        from({s: ID, p: ENTITY.concat("descriptions", key),
               o: ENTITY.concat("descriptions", key, "value")}, () =>
           add(wd, SCHEMA + "description", langLit(term.value, term.language)));
       for (const [key, aliases] of Object.entries(entity.aliases || {}) as [string, any[]][])
         aliases.forEach((term, i) =>
-          from({s: ENTITY, p: ENTITY.concat("aliases", key),
+          from({s: ID, p: ENTITY.concat("aliases", key),
                 o: ENTITY.concat("aliases", key, i, "value")}, () =>
             add(wd, SKOS + "altLabel", langLit(term.value, term.language))));
     }
@@ -581,7 +592,7 @@ export function wikibaseRdfConverter (dataFactory: RdfJs.DataFactory, options: W
           add(article, WIKIBASE + "badge", iri(NS.wd + badge));
         add(iri(home), WIKIBASE + "wikiGroup", string(info.group));
       }
-      where = {s: ENTITY, o: ENTITY};
+      where = {s: ID, o: ENTITY};
     }
 
     function emitPropertyOntology (): void {
@@ -634,7 +645,7 @@ export function wikibaseRdfConverter (dataFactory: RdfJs.DataFactory, options: W
         const wds = iri(NS.wds + stLName);
         // the statement node is that claim's whole object, the way a blank
         // node is its whole [ ... ]
-        from({s: ENTITY, p: ENTITY.concat("claims", pid), o: CLAIM}, () =>
+        from({s: ID, p: ENTITY.concat("claims", pid), o: CLAIM}, () =>
           add(wd, NS.p + pid, wds));
         from({s: CLAIM, p: CLAIM, o: CLAIM}, () => {
           add(wds, "a", iri(WIKIBASE + "Statement"));
@@ -648,7 +659,7 @@ export function wikibaseRdfConverter (dataFactory: RdfJs.DataFactory, options: W
         const PROPERTY = ENTITY.concat("claims", pid);
         emitSnak(wds, stLName, st.mainsnak, "statement", CLAIM.concat("mainsnak"), CLAIM, PROPERTY);
         if (st.rank === bestRank)
-          emitSnak(wd, stLName, st.mainsnak, "direct", CLAIM.concat("mainsnak"), ENTITY, PROPERTY);
+          emitSnak(wd, stLName, st.mainsnak, "direct", CLAIM.concat("mainsnak"), ID, PROPERTY);
 
         for (const [qid, snaks] of Object.entries(st.qualifiers || {}) as [string, any[]][])
           snaks.forEach((snak, qi) =>
@@ -742,31 +753,36 @@ export function wikibaseRdfConverter (dataFactory: RdfJs.DataFactory, options: W
       add(node, "a", iri(WIKIBASE + "TimeValue"));
       const cleaned = cleanTimeValue(v);
       if (cleaned !== null)
-        add(node, WIKIBASE + "timeValue", typed(cleaned, XSD + "dateTime"));
-      add(node, WIKIBASE + "timePrecision", integer(v.precision));
-      add(node, WIKIBASE + "timeTimezone", integer(v.timezone));
-      add(node, WIKIBASE + "timeCalendarModel", iri(v.calendarmodel));
+        said("time", () => add(node, WIKIBASE + "timeValue", typed(cleaned, XSD + "dateTime")));
+      said("precision", () => add(node, WIKIBASE + "timePrecision", integer(v.precision)));
+      said("timezone", () => add(node, WIKIBASE + "timeTimezone", integer(v.timezone)));
+      said("calendarmodel", () => add(node, WIKIBASE + "timeCalendarModel", iri(v.calendarmodel)));
     }
 
     function emitQuantityValueNode (node: RdfJs.Quad_Subject, v: any): void {
       add(node, "a", iri(WIKIBASE + "QuantityValue"));
-      add(node, WIKIBASE + "quantityAmount", typed(v.amount, XSD + "decimal"));
+      said("amount", () => add(node, WIKIBASE + "quantityAmount", typed(v.amount, XSD + "decimal")));
       if (v.upperBound != null)
-        add(node, WIKIBASE + "quantityUpperBound", typed(v.upperBound, XSD + "decimal"));
+        said("upperBound", () =>
+          add(node, WIKIBASE + "quantityUpperBound", typed(v.upperBound, XSD + "decimal")));
       if (v.lowerBound != null)
-        add(node, WIKIBASE + "quantityLowerBound", typed(v.lowerBound, XSD + "decimal"));
-      add(node, WIKIBASE + "quantityUnit", iri(v.unit === "1" ? UNIT_ONE : v.unit));
+        said("lowerBound", () =>
+          add(node, WIKIBASE + "quantityLowerBound", typed(v.lowerBound, XSD + "decimal")));
+      said("unit", () => add(node, WIKIBASE + "quantityUnit", iri(v.unit === "1" ? UNIT_ONE : v.unit)));
       // wikibase:quantityNormalized needs unit conversion tables; see the
       // module comment
     }
 
     function emitGlobeValueNode (node: RdfJs.Quad_Subject, v: any): void {
       add(node, "a", iri(WIKIBASE + "GlobecoordinateValue"));
-      add(node, WIKIBASE + "geoLatitude", typed(phpFloatStr(v.latitude), XSD + "double"));
-      add(node, WIKIBASE + "geoLongitude", typed(phpFloatStr(v.longitude), XSD + "double"));
+      said("latitude", () =>
+        add(node, WIKIBASE + "geoLatitude", typed(phpFloatStr(v.latitude), XSD + "double")));
+      said("longitude", () =>
+        add(node, WIKIBASE + "geoLongitude", typed(phpFloatStr(v.longitude), XSD + "double")));
       if (v.precision != null)
-        add(node, WIKIBASE + "geoPrecision", typed(phpFloatStr(v.precision), XSD + "double"));
-      add(node, WIKIBASE + "geoGlobe", iri(v.globe));
+        said("precision", () =>
+          add(node, WIKIBASE + "geoPrecision", typed(phpFloatStr(v.precision), XSD + "double")));
+      said("globe", () => add(node, WIKIBASE + "geoGlobe", iri(v.globe)));
     }
   }
 
