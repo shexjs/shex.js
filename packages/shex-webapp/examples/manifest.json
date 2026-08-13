@@ -115,8 +115,8 @@
     "neighborhood": "wikidata",
     "base": "https://www.wikidata.org/wiki/Special:EntityData/",
     "queryMap": "QENTITIES \"227339\"@START\n",
-    "status": "nonconformant",
-    "comment": "GeneWiki's human gene schema (EntitySchema:E37), with the two schemas it imports inlined: a gene's chromosome is E109's and the genome assembly its coordinates are given against is E108's.  So validating BRCA1 (Q227339) walks from the gene to chromosome 17 (Q220677) and on to GRCh38 (Q20966585) -- three entities, three shapes, each page fetched as the walk reaches it.  It fails, truthfully: the schema wants a retrieval date (P813) on the Ensembl references that today's data doesn't carry.",
+    "status": "conformant",
+    "comment": "GeneWiki's human gene schema (EntitySchema:E37), with the two schemas it imports inlined: a gene's chromosome is E109's and the genome assembly its coordinates are given against is E108's.  So validating BRCA1 (Q227339) walks from the gene to chromosome 17 (Q220677) and on to GRCh38 (Q20966585) -- three entities, three shapes, each page fetched as the walk reaches it.  Four constraints are relaxed here, each marked RELAXED IN THIS COPY where it stands: three are places where the data cites a source the schema enumerates without (a newer Ensembl release, the OMA browser), and one is a normalized value this source can't derive from an entity page.",
     "data": "Q227339\n",
     "regexpEngine": "eval-simple-1err"
   }

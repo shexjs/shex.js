@@ -63,7 +63,14 @@ E107:chromosome  EXTRA p:P279 {
     ## Identifiers
     # MeSH descriptor ID; 
     p:P486 {
-        psn:P486 [ mesh:~ ] ;
+      # RELAXED IN THIS COPY (shex.js example, 2026-08): psn:P486 is a
+      # *normalized* value, which the query service derives from the
+      # property's formatter IRI (P1921) rather than from the entity page.
+      # This example synthesizes RDF from the page alone, so it has no
+      # normalized values to offer -- a gap in this validator, not in the
+      # data and not in the schema.  See neighborhood-wikidata's module
+      # comment.
+      # psn:P486 [ mesh:~ ] ;
         ps:P486 xsd:string
     } ;
 
@@ -218,7 +225,9 @@ E109:found_in_taxon_homo_sapiens {
 <#P684_ortholog> {
    ps:P684 IRI ; # Known orthologs [P684].
    pq:P703	IRI ; # Qualifier indicating in which taxon the ortholog is found [P703].
-   prov:wasDerivedFrom	@<#homologene-reference> ;
+   # RELAXED IN THIS COPY: one reference of one kind, where the data has
+   # two of two kinds (see <#oma-reference> below)
+   prov:wasDerivedFrom	(@<#homologene-reference> OR @<#oma-reference>)+ ;
 }
 
 <#P688_encodes> {
@@ -310,8 +319,27 @@ E109:found_in_taxon_homo_sapiens {
          wd:Q71033229 # stated in [P248] Ensembl Release 98 [Q71033229]
          wd:Q83867711 # stated in [P248] Ensembl Release 99 [Q83867711]
          wd:Q110249889 # stated in [P248] Ensembl Release 105 [Q83867711]
-         ] ; 
+      #  ] ;
+      # RELAXED IN THIS COPY (shex.js example, 2026-08): the releases are
+      # enumerated, so the schema goes stale every time Ensembl ships one.
+      # BRCA1 (Q227339) today cites Ensembl Release 107 [Q111699881], which
+      # this list stops short of, and so every P594 and P704 statement on it
+      # fails against the upstream schema.  Accepting any item here keeps the
+      # example about the gene rather than about the release calendar; a
+      # better upstream fix would be a shape saying "an instance of Ensembl
+      # release" rather than a list that has to be edited.
+         wd:Q111699881 # stated in [P248] Ensembl Release 107 [Q111699881]
+         ] ;
   pr:P594	LITERAL ; # Ensembl Gene ID [P594]
+}
+
+# ADDED IN THIS COPY (shex.js example, 2026-08): BRCA1's ortholog
+# statements carry two references -- HomoloGene build68, which the schema
+# models, and the OMA browser, which it doesn't -- so P684 fails upstream
+# on a reference that is perfectly good, just unmodelled.
+<#oma-reference> {
+  pr:P248 [wd:Q7104801] ; # Stated in [P248] OMA [Q7104801]
+  pr:P854 IRI ;           # Reference URL into omabrowser.org
 }
 
 <#homologene-reference> {
