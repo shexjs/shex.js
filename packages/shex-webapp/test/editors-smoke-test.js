@@ -328,14 +328,15 @@ if (!TEST_browser) {
         // settings on the left, one document tab beside it, and that
         // document is what shows (jsdom lays nothing out, so "showing" is
         // the display style)
-        expect(tabs()).to.deep.equal(["settings", "Turtle data"]);
+        // an empty document has nothing to name itself after yet
+        expect(tabs()).to.deep.equal(["settings", "Turtle 1"]);
         expect($("#neighborhoodFields .noSettings").text(), "nothing to configure")
           .to.equal("nothing to configure for Turtle");
         // one setting per line, so a source with several doesn't run off the side
         expect($("#neighborhoodFields label").css("display")).to.not.equal("inline-block");
-        expect(source().paneParam.pane.label).to.equal("Turtle data");
+        expect(source().paneParam.pane.label).to.equal("Turtle");
         expect(shown("#dataDocument")).to.equal(true);
-        expect(shown("#addDataPane"), "one graph is one document").to.equal(false);
+        expect(shown("#addDataPane"), "a graph may be written as several documents").to.equal(true);
       });
 
       it("should draw a query service as fields, with no document at all", function () {
@@ -810,6 +811,65 @@ if (!TEST_browser) {
         // leave no QENTITIES map behind: the next source can't read one
         $("#textMap").val("").trigger("change");
         await shared.promise;
+      });
+
+      /* A graph is not a file: rdfjs holds as many Turtle documents as the
+       * data was written in, parses them into one store, and names each tab
+       * after what the document says it is.  A result about a triple in the
+       * other document highlights there. */
+      it("should validate across two Turtle documents and follow a result between them", async function () {
+        this.timeout(60000);
+        const examples = Path.join(__dirname, "../examples");
+        const read = f => Fs.readFileSync(Path.join(examples, f), "utf8");
+
+        await shared.Caches.manifest.set([{
+          schemaLabel: "FHIR-ish", schema: read("ClinObs-fhir.shex"),
+          dataLabel: "two documents", neighborhood: "rdfjs",
+          data: [read("ClinObs-observation.ttl"), read("ClinObs-patient.ttl")],
+          queryMap: "<http://hl7.example/Obs1>@<ObservationShape>",
+        }], "http://localhost/manifest.json");
+        $("#inputSchema .manifest li").last().trigger("click");
+        await shared.promise;
+        $("#inputData .indeterminant li").last().trigger("click");
+        await shared.promise;
+
+        const source = shared.neighborhoods;
+        // each document is named by what it says it is
+        expect($("#dataPaneTabs > li > a").map((i, a) => $(a).text()).get())
+          .to.deep.equal(["settings", "Observation", "Patient"]);
+
+        $("#validate").trigger("click");
+        await shared.promise;
+        expect($("#results .passes").length, "one graph, from two documents").to.be.above(0);
+
+        // the patient's triples are in the second document
+        const mapped = shared.Caches.editorSupport.lastMapped;
+        const docs = source.documents();
+        const patientAt = docs.findIndex(d => d.text.indexOf(":birthdate") !== -1);
+        expect(patientAt, "a document with the patient in it").to.be.above(0);
+        const there = mapped.pairs.find(
+          p => p.doc === patientAt && p.anchors.object && p.message.indexOf("birthdate") !== -1);
+        expect(there, "a result anchored in the patient document").to.exist;
+
+        source.show(docs.findIndex(d => d.text.indexOf(":valueQuantity") !== -1));
+        expect($("#inputData textarea").first().val()).to.include(":valueQuantity");
+
+        const es = shared.Caches.editorSupport;
+        const spy = {regions: []};
+        const was = es.panes.inputSchema.setHoverRegions;
+        try {
+          es.panes.inputSchema.setHoverRegions = regions => { spy.regions = regions; };
+          es.setPairHovers([there]);
+          spy.regions[0].enter();
+        } finally {
+          es.panes.inputSchema.setHoverRegions = was;
+        }
+        expect(source.showing, "switched to the patient document").to.equal(patientAt);
+        const shown = $("#inputData textarea").first().val();
+        expect(shown, "which is what the pane holds").to.include(":birthdate");
+        const {from, to} = there.anchors.object;
+        expect(shown.substring(from, to), "and the range points into it")
+          .to.equal('"1999-12-31"^^xsd:date');
       });
 
       it("should carry the source and its settings in the permalink", async function () {

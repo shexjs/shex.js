@@ -739,8 +739,8 @@ class TurtleCache extends InterfaceCache {
     const turtlePane = ShExWebApp.NeighborhoodApi.paneParams(module.dbParams || [])
           .find(p => ((p.schema.items || {}).contentMediaType || "") === "text/turtle");
     if (turtlePane)
-      params.store = this.turtleParser.parseString(
-        (params[turtlePane.name] || []).join("\n"), this.meta, base);
+      params.store = this.turtleParser.parseDocuments(
+        params[turtlePane.name] || [], this.meta, base);
 
     const res = module.fromParams(params, this.queryTrackerController.queryTracker);
     this.callOnLoad();
@@ -2016,6 +2016,36 @@ class TurtleParser {
     meta.prefixes = parser._prefixes;
     return ret;
   }
+  /** Several documents, one graph.  A source may hold more than one -- a
+   * patient here, an observation about them there -- and they still make a
+   * single store to validate against.  Each parses on its own, though:
+   * prefixes belong to the document that declares them, and so do blank
+   * nodes, which two documents may both call _:x without meaning the same
+   * node.  So later documents' blank nodes are renamed apart.
+   */
+  parseDocuments (texts, meta, base) {
+    if (texts.length <= 1)
+      return this.parseString(texts[0] || "", meta, base);
+    const ret = new RdfJs.Store();
+    const prefixes = {};
+    texts.forEach((text, index) => {
+      const one = {};
+      const store = this.parseString(text, one, base);
+      const scope = (term) => term.termType !== "BlankNode" ? term
+            : RdfJs.DataFactory.blankNode("d" + index + "_" + term.value);
+      ret.addQuads(store.getQuads().map(q => index === 0 ? q : RdfJs.DataFactory.quad(
+        scope(q.subject), q.predicate, scope(q.object), q.graph)));
+      // the first declaration of a prefix wins, as it would in one document
+      for (const [prefix, iri] of Object.entries(one.prefixes || {}))
+        if (!(prefix in prefixes))
+          prefixes[prefix] = iri;
+      if (index === 0)
+        meta.base = one.base;
+    });
+    meta.prefixes = prefixes;
+    return ret;
+  }
+
   termToLd (lex, resolver) { // returns ShExJ objectValue
     let nz;
     try {

@@ -298,3 +298,13 @@
   data: |
     Q227339
   regexpEngine: eval-simple-1err
+- schemaLabel: clinical observation (FHIR-ish)
+  schemaURL: ClinObs-fhir.shex
+  dataLabel: an observation and a patient, in two documents
+  dataURL:
+  - ClinObs-observation.ttl
+  - ClinObs-patient.ttl
+  queryMap: |
+    <http://hl7.example/Obs1>@<ObservationShape>
+  status: conformant
+  comment: 'The clinical observation example with more of the elements FHIR carries, and with the graph written as two documents: an observation from an instrument, a patient from a registry, meeting at the IRI one names and the other describes.  Validation neither knows nor cares which document a triple came from; the editors do, so hovering a constraint whose match is in the other document brings that document forward and highlights it there.'

@@ -69,13 +69,44 @@ export const ctor = rdfjsDB;
  * pairing.  Fetching and parsing them is the host's business (it's async
  * and needs parsers this module doesn't ship), so `fromParams` takes the
  * store the host built rather than the file lists. */
+/** What to call a document in a tab.  A leading comment is the writer
+ * saying what this file is, which beats anything a parser could work out;
+ * failing that, the first subject names it, since a document usually is
+ * about the thing it starts by describing.  Neither is a parse: a tab has
+ * to have a name while the document is still half-typed. */
+export function documentTitle (text: string): string | null {
+  const lines = text.split("\n");
+  for (const line of lines) {
+    const bare = line.trim();
+    if (bare === "")
+      continue;
+    if (bare.startsWith("#"))                      // the writer's own name for it
+      return bare.replace(/^#+\s*/, "").substring(0, 24) || null;
+    if (/^(@?(prefix|base)\b|PREFIX\b|BASE\b)/i.test(bare))
+      continue;                                    // directives name the document's words, not it
+    const subject = bare.match(/^(?:<([^>]*)>|((?:[A-Za-z][\w.-]*)?:[^\s;,.]*))/);
+    if (subject) {
+      const iri = subject[1] || subject[2];
+      const local = iri.split(/[#/]/).pop() || iri;
+      return (local.startsWith(":") ? local.substring(1) : local).substring(0, 24) || null;
+    }
+    return null;
+  }
+  return null;
+}
+
 export const dbParams: DbParamSpec[] = [
   { name: "data", selector: true, required: true,
     description: "Turtle data",
     schema: {type: "array", items: {type: "string", format: "uri", contentMediaType: "text/turtle"}},
-    // one graph, so one pane, and the user can't open another: a second
-    // document would just be more of the same graph
-    pane: {label: "Turtle data", editor: {language: "turtle"}, min: 1, max: 1},
+    // One graph, but not necessarily one document: a patient in one file
+    // and an observation about them in another are still one graph, and
+    // keeping them apart is how they were written and how they are edited.
+    // So a document can be opened, and each is named by the first thing it
+    // says about itself.
+    pane: {label: "Turtle", editor: {language: "turtle"}, min: 1, creatable: true,
+           template: "# a document\nPREFIX : <http://a.example/>\n\n",
+           titleOf: (text: string) => documentTitle(text)},
     cli: {option: "dataURL", alias: "d", typeLabel: "file|URL"} },
   { name: "jsonld",
     description: "JSON-LD data",

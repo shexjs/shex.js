@@ -148,12 +148,20 @@ describe("neighborhood pane claims", () => {
   describe("panes and fields", () => {
     const {paneParams, fieldParams, moduleId} = require("..");
 
-    it("should give a local store exactly one document, which the user can't multiply", () => {
+    it("should let a local store be written as several documents, and name each", () => {
       const [pane] = paneParams(RdfJs.dbParams);
       expect(pane.name).to.equal("data");
-      expect(pane.pane).to.deep.include({label: "Turtle data", min: 1, max: 1});
-      expect(pane.pane.creatable).to.not.equal(true);
+      expect(pane.pane).to.deep.include({label: "Turtle", min: 1, creatable: true});
+      expect(pane.pane.max, "a graph is not a file: as many as it was written in")
+        .to.equal(undefined);
       expect(pane.pane.editor.language).to.equal("turtle");
+      // a tab is named while the document is still half-typed, so this is a
+      // look at the text rather than a parse
+      expect(pane.pane.titleOf("# Patient\nPREFIX : <http://a.example/>\n")).to.equal("Patient");
+      expect(pane.pane.titleOf("PREFIX : <http://a.example/>\n:Patient2 :name 'Bob' ."))
+        .to.equal("Patient2");
+      expect(pane.pane.titleOf("<http://hl7.example/Obs1> :status 'final' .")).to.equal("Obs1");
+      expect(pane.pane.titleOf("PREFIX : <http://a.example/>\n"), "nothing to go on").to.equal(null);
     });
 
     it("should sort documents into the panes they belong in", () => {
