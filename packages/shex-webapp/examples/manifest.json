@@ -9,51 +9,97 @@
   },
   {
     "schemaLabel": "clinical observation",
-    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "the least an Observation can be",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1> :subject <Patient2> .\n",
+    "queryMap": "<Obs1>@START\n",
+    "status": "conformant",
+    "comment": "Everything in <ObservationShape> is optional but :subject, so this is the whole of a conforming Observation.  Each example below adds one thing to it."
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schemaURL": "ClinObs.shex",
     "dataLabel": "with birthdate",
     "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31\"^^xsd:date .\n",
     "queryMap": "{FOCUS :status _}@START,\n<Patient2>@!<ObservationShape>\n",
-    "status": "conformant"
+    "status": "conformant",
+    "comment": "The query map is core ShapeMap: every node with a :status, and a claim that the patient is *not* an Observation."
   },
   {
     "schemaLabel": "clinical observation",
-    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
-    "dataLabel": "without birthdate",
-    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"preliminary\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" .\n",
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "a whole measurement",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nPREFIX loinc: <http://loinc.org/rdf#>\n\n<Obs1>\n  :status            \"final\" ;\n  :code              loinc:29463-7 ;        # Body weight\n  :effectiveDateTime \"2026-08-13T09:41:00Z\"^^xsd:dateTime ;\n  :performer         <Practitioner7> ;\n  :subject           <Patient2> ;\n  :valueQuantity     [\n    :value  81.2 ;\n    :unit   \"kg\" ;\n    :system <http://unitsofmeasure.org> ;\n    :code   \"kg\"\n  ] .\n\n<Practitioner7> :name \"Dr. Alice Chen\" .\n\n<Patient2>\n  :active     true ;\n  :name       \"Bob\" , \"Robert Smith\" ;\n  :gender     \"male\" ;\n  :birthdate  \"1999-12-31\"^^xsd:date ;\n  :identifier [\n    :system <http://hospital.example/mrn> ;\n    :value  \"MRN-40281\"\n  ] .\n",
     "queryMap": "<Obs1>@START\n",
-    "status": "conformant"
+    "status": "conformant",
+    "comment": "Every element the schema knows, in one document."
   },
   {
     "schemaLabel": "clinical observation",
-    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
-    "dataLabel": "no subject name",
-    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :birthdate \"1999-12-31\"^^xsd:date .\n",
-    "queryMap": "<Obs1>@START\n",
-    "status": "conformant"
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "the same measurement, in two documents",
+    "dataURL": [
+      "ClinObs-observation.ttl",
+      "ClinObs-patient.ttl"
+    ],
+    "queryMap": "<http://hl7.example/Obs1>@<ObservationShape>\n",
+    "status": "conformant",
+    "comment": "A graph is not a file: the observation comes from an instrument, the patient from a registry, and they meet at the IRI one names and the other describes.  The tabs are named after what each document says it is, and hovering a constraint whose match is in the other document brings that document forward to highlight it."
   },
   {
     "schemaLabel": "clinical observation",
-    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
-    "dataLabel": "bad status",
-    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"finally\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31\"^^xsd:date .\n",
-    "queryMap": "<Obs1>@START\n",
-    "status": "nonconformant"
-  },
-  {
-    "schemaLabel": "clinical observation",
-    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
+    "schemaURL": "ClinObs.shex",
     "dataLabel": "no subject",
-    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31\"^^xsd:date .\n",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1> :status \"final\" .\n",
+    "queryMap": "<Obs1>@START\n",
+    "status": "nonconformant",
+    "comment": "The one thing an Observation must have."
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "a status outside the value set",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"finally\" ;\n  :subject   <Patient2> .\n",
     "queryMap": "<Obs1>@START\n",
     "status": "nonconformant"
   },
   {
     "schemaLabel": "clinical observation",
-    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
-    "dataLabel": "wrong birthdate datatype",
-    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31T01:23:45\"^^xsd:dateTime .\n",
-    "queryMap": "<Obs1>@START",
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "a birthdate that is a dateTime",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1> :subject <Patient2> .\n\n<Patient2> :birthdate \"1999-12-31T01:23:45\"^^xsd:dateTime .\n",
+    "queryMap": "<Obs1>@START\n",
+    "status": "nonconformant",
+    "comment": "A date and a dateTime are different datatypes, however alike they read."
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "a quantity with no number in it",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :subject       <Patient2> ;\n  :valueQuantity [ :unit \"kg\" ] .\n",
+    "queryMap": "<Obs1>@START\n",
+    "status": "nonconformant",
+    "comment": ":value is the one part of a Quantity that isn't optional."
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "a gender outside the value set",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1> :subject <Patient2> .\n\n<Patient2> :gender \"M\" .\n",
+    "queryMap": "<Obs1>@START\n",
     "status": "nonconformant"
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "two documents, and the mistake is in the second",
+    "data": [
+      "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nBASE <http://hl7.example/>\n\n# Observation\n<Obs1>\n  :status  \"final\" ;\n  :subject <Patient2> .\n",
+      "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nBASE <http://hl7.example/>\n\n# Patient\n<Patient2>\n  :name   \"Bob\" ;\n  :gender \"M\" .\n"
+    ],
+    "queryMap": "<http://hl7.example/Obs1>@<ObservationShape>\n",
+    "status": "nonconformant",
+    "comment": "Validating the observation walks into the patient, so a bad gender code in the second document fails the first.  Hovering the failure switches to the document that caused it."
   },
   {
     "schemaLabel": "GO-CAM example",
@@ -119,17 +165,5 @@
     "comment": "GeneWiki's human gene schema (EntitySchema:E37), with the two schemas it imports inlined: a gene's chromosome is E109's and the genome assembly its coordinates are given against is E108's.  So validating BRCA1 (Q227339) walks from the gene to chromosome 17 (Q220677) and on to GRCh38 (Q20966585) -- three entities, three shapes, each page fetched as the walk reaches it.  Four constraints are relaxed here, each marked RELAXED IN THIS COPY where it stands: three are places where the data cites a source the schema enumerates without (a newer Ensembl release, the OMA browser), and one is a normalized value this source can't derive from an entity page.",
     "data": "Q227339\n",
     "regexpEngine": "eval-simple-1err"
-  },
-  {
-    "schemaLabel": "clinical observation (FHIR-ish)",
-    "schemaURL": "ClinObs-fhir.shex",
-    "dataLabel": "an observation and a patient, in two documents",
-    "dataURL": [
-      "ClinObs-observation.ttl",
-      "ClinObs-patient.ttl"
-    ],
-    "queryMap": "<http://hl7.example/Obs1>@<ObservationShape>\n",
-    "status": "conformant",
-    "comment": "The clinical observation example with more of the elements FHIR carries, and with the graph written as two documents: an observation from an instrument, a patient from a registry, meeting at the IRI one names and the other describes.  Validation neither knows nor cares which document a triple came from; the editors do, so hovering a constraint whose match is in the other document brings that document forward and highlights it there."
   }
 ]

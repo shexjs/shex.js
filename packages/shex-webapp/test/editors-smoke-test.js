@@ -823,7 +823,7 @@ if (!TEST_browser) {
         const read = f => Fs.readFileSync(Path.join(examples, f), "utf8");
 
         await shared.Caches.manifest.set([{
-          schemaLabel: "FHIR-ish", schema: read("ClinObs-fhir.shex"),
+          schemaLabel: "FHIR-ish", schema: read("ClinObs.shex"),
           dataLabel: "two documents", neighborhood: "rdfjs",
           data: [read("ClinObs-observation.ttl"), read("ClinObs-patient.ttl")],
           queryMap: "<http://hl7.example/Obs1>@<ObservationShape>",

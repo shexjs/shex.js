@@ -4,12 +4,42 @@ BASE <http://schema.example/>
 
 start = @<ObservationShape>
 
-<ObservationShape> {               # An Observation has:
-  :status ["preliminary" "final"]; #   status in this value set
-  :subject @<PatientShape>         #   a subject matching <PatientShape>.
+# A few of the elements a FHIR Observation and Patient carry.  Everything
+# is optional but :subject, so the smallest conforming Observation is one
+# triple -- which is what makes a failing example minimal too: add one
+# triple and see exactly what it costs.
+
+<ObservationShape> {                    # An Observation has:
+  :status ["preliminary" "final"
+           "amended"]? ;                #   a status in this value set,
+  :code IRI? ;                          #   a code saying what was measured,
+  :effectiveDateTime xsd:dateTime? ;    #   when it applies,
+  :valueQuantity @<QuantityShape>? ;    #   what was measured,
+  :performer @<PractitionerShape>* ;    #   who measured it,
+  :subject @<PatientShape>              #   and a subject, which it must have.
 }
 
-<PatientShape> {                   # A Patient has:
- :name xsd:string*;                #   one or more names
- :birthdate xsd:date?              #   and an optional birthdate.
+<QuantityShape> {                       # A Quantity is a number with units:
+  :value xsd:decimal ;                  #   the number,
+  :unit xsd:string? ;                   #   how a human writes the unit,
+  :system IRI? ;                        #   which code system says so,
+  :code xsd:string?                     #   and that system's code for it.
+}
+
+<PractitionerShape> {                   # A Practitioner has:
+  :name xsd:string+                     #   at least one name.
+}
+
+<PatientShape> {                        # A Patient has:
+ :active xsd:boolean? ;                 #   whether the record is in use,
+ :name xsd:string* ;                    #   zero or more names,
+ :gender ["male" "female" "other"
+          "unknown"]? ;                 #   an administrative gender,
+ :birthdate xsd:date? ;                 #   an optional birthdate,
+ :identifier @<IdentifierShape>*        #   and any number of identifiers.
+}
+
+<IdentifierShape> {                     # An Identifier is a value in a system:
+  :system IRI ;                         #   who issued it,
+  :value xsd:string                     #   and what they issued.
 }

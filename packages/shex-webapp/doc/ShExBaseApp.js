@@ -905,7 +905,11 @@ class ManifestCache extends InterfaceCache {
       }
       ["schemaURL", "dataURL", "queryMapURL"].forEach(parm => {
         if (parm in elt) {
-          elt[parm] = new URL(elt[parm], url).href;
+          // an entry may name several documents under one key; each is a
+          // reference of its own, not one comma-joined reference
+          elt[parm] = Array.isArray(elt[parm])
+            ? elt[parm].map(each => new URL(each, url).href)
+            : new URL(elt[parm], url).href;
         } else {
           delete elt[parm];
         }
