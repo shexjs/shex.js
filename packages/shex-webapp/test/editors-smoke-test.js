@@ -696,6 +696,11 @@ if (!TEST_browser) {
         pageTab.trigger("click");
         const shown = $("#inputData textarea").first().val();
         expect(shown.trimStart()[0], "the pane holds the entity page").to.equal("{");
+        // ...in an editor: the ids pane before it describes no language, and
+        // moving between panes of one source changes language as much as
+        // moving between sources does
+        expect(shared.app.editorSupport.panes.inputData,
+               "an editor over the page, to highlight in").to.exist;
 
         $("#validate").trigger("click");
         await shared.promise;

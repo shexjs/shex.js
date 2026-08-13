@@ -351,6 +351,10 @@ class NeighborhoodConfig {
   show (n) {
     if (this.showingPane)
       return;                 // render() moved the tab set; not a new choice
+    // one source's panes need not share a language -- wikidata's list of
+    // entity ids and the entity pages themselves don't -- so moving between
+    // them is a language change as much as changing source is
+    const was = this.paneParam;
     this.showingPane = true;
     try {
       this.stash();
@@ -363,7 +367,7 @@ class NeighborhoodConfig {
     } finally {
       this.showingPane = false;
     }
-    this.onChange();
+    this.onChange(was === this.paneParam ? undefined : {language: true});
   }
 
   /** the parameter a new document would be added to */
