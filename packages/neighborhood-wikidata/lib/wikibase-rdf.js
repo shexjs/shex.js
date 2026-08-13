@@ -24,6 +24,16 @@ const CALENDAR_JULIAN = "http://www.wikidata.org/entity/Q1985786";
 /** wikibase:quantityUnit for a unit of "1" (dimensionless). */
 const UNIT_ONE = "http://www.wikidata.org/entity/Q199";
 const EARTH = "http://www.wikidata.org/entity/Q2";
+/** Which member of a datavalue's `value` object a simple (truthy, `ps:`,
+ * `pq:`, `pr:`) arc's object is written as.  A value that is a plain string
+ * is its own member, and a globe coordinate is composed of several, so
+ * neither appears here. */
+const SIMPLE_FROM = {
+    time: "time",
+    quantity: "amount",
+    monolingualtext: "text",
+    "wikibase-entityid": "id",
+};
 // ── PHP compatibility ───────────────────────────────────────────────────────
 // The derived names above hash PHP serializations, so the byte-for-byte
 // quirks of PHP's formatting are part of the data model.
@@ -550,7 +560,12 @@ function wikibaseRdfConverter(dataFactory, options = {}) {
                 case "value": {
                     const term = simpleValueTerm(snak.datavalue, snak.datatype);
                     if (term !== null)
-                        add(subject, simple + pid, term);
+                        // a simple arc's object is one member of the value: the date in a
+                        // time, the number in a quantity.  Only a value with no one member
+                        // behind it -- a coordinate, made of two -- is the whole object.
+                        from(Object.assign(Object.assign({}, where), { o: SIMPLE_FROM[snak.datavalue.type]
+                                ? VALUE && VALUE.concat(SIMPLE_FROM[snak.datavalue.type])
+                                : VALUE }), () => add(subject, simple + pid, term));
                     if (value !== null && snak.datavalue.type in COMPLEX_VALUES) {
                         const node = iri(NS.wdv + valueNodeHash(snak.datavalue));
                         add(subject, value + pid, node);

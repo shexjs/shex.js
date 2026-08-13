@@ -253,9 +253,8 @@ describe("where a quad was uttered", () => {
     const utt = utterance("http://www.wikidata.org/prop/direct/P569");
     // the property is named by the member that groups the claims
     assert.equal(said(utt.predicate), '"P569"');
-    // and the object is the value, whole
-    assert.equal(JSON.parse(said(utt.object)).time,
-                 "+1952-03-11T00:00:00Z");
+    // and the object is the member the date is written as
+    assert.equal(said(utt.object), '"+1952-03-11T00:00:00Z"');
   });
 
   it("should give a statement the range of its whole object, as Turtle gives a bnode its []", () => {
