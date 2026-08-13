@@ -2450,17 +2450,43 @@ class EditorSupport {
       // Locating the data is worth doing whether or not it is showing in an
       // editor: the results widget anchors to these ranges too.
       const db = inputData.parsed;
-      const dataText = inputData.selection.val();
-      const dataParsed = !dataText
-            ? null
-            : (db && typeof db.locateDocument === "function"
-               && db.locateDocument(dataText))
+      const locate = text => !text ? null
+            : (db && typeof db.locateDocument === "function" && db.locateDocument(text))
             || ShExWebApp.EditorServices.parseTurtle(
-              dataText, {baseIRI: inputData.meta && inputData.meta.base});
+              text, {baseIRI: inputData.meta && inputData.meta.base});
+      // A source can hold several documents -- an entity page each, and
+      // later a named graph each -- and a validation reaches all of them,
+      // so locate them all.  The showing one comes first: its diagnostics
+      // are the ones the pane on screen can carry.
+      const showing = this.app.neighborhoods ? this.app.neighborhoods.showing : -1;
+      const documents = this.app.neighborhoods ? this.app.neighborhoods.documents() : [];
+      // the showing document is read from the pane, which holds edits the
+      // stashed copy hasn't seen yet
+      const dataDocuments = [{at: documents.length ? showing : -1,
+                              parsed: locate(inputData.selection.val())}].concat(
+        documents.map((d, at) => ({at, parsed: at === showing ? null : locate(d.text)})))
+            .filter(d => d.parsed);
       const merged = {schema: [], data: [], pairs: []};
       entries.forEach(entry => {
-        const mapped = ShExWebApp.EditorServices.mapValidationErrors(
-          entry.appinfo, located, dataParsed);
+        // one mapping per document; a pair takes the anchors of whichever
+        // document turns out to have said its triple
+        const perDocument = dataDocuments.map(d => ({
+          at: d.at,
+          mapped: ShExWebApp.EditorServices.mapValidationErrors(entry.appinfo, located, d.parsed),
+        }));
+        const mapped = perDocument[0].mapped;
+        mapped.pairs.forEach((pair, i) => {
+          pair.doc = perDocument[0].at;
+          if (pair.anchors && pair.anchors.object)
+            return;
+          const elsewhere = perDocument.slice(1).find(
+            d => (d.mapped.pairs[i] || {}).anchors && d.mapped.pairs[i].anchors.object);
+          if (elsewhere) {
+            pair.anchors = elsewhere.mapped.pairs[i].anchors;
+            pair.data = elsewhere.mapped.pairs[i].data;
+            pair.doc = elsewhere.at;
+          }
+        });
         mapped.pairs.forEach(p => { p.id += merged.pairs.length; });
         merged.pairs.push.apply(merged.pairs, mapped.pairs);
         const actualFail = entry.status === "nonconformant";
@@ -2550,6 +2576,19 @@ class EditorSupport {
         anchorRanges(p, "object"), anchorRanges(p, "subject"), anchorRanges(p, "predicate")));
       // don't auto-scroll the pane the mouse is in
       schemaPane.highlight(schemaRanges, cls, {scroll: hoveredSide !== "schema"});
+      // the data may be in a document that isn't showing -- another entity
+      // page, later another named graph -- so bring it forward.  Showing a
+      // document can rebuild the pane (a new language), so ask for the pane
+      // again rather than highlighting the one that was just destroyed.
+      const neighborhoods = this.app.neighborhoods;
+      if (neighborhoods && lead.doc >= 0 && lead.doc !== neighborhoods.showing
+          && dataRanges.length) {
+        neighborhoods.show(lead.doc);
+        const showingPane = this.panes.inputData;
+        if (showingPane)
+          showingPane.highlight(dataRanges, cls, {scroll: true});
+        return showInResults(group, cls, hoveredSide !== "results");
+      }
       dataPane.highlight(dataRanges, cls, {scroll: hoveredSide !== "data"});
       showInResults(group, cls, hoveredSide !== "results");
     };

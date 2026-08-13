@@ -746,6 +746,72 @@ if (!TEST_browser) {
         expect(shown.substring(close.from, close.to)).to.equal("}");
       });
 
+      /* A source can hold several documents -- an entity page each -- and a
+       * result about one of them can't highlight in another, so hovering a
+       * constraint whose match is in a page that isn't showing brings that
+       * page forward first. */
+      it("should switch to the document a result was about, and highlight there", async function () {
+        this.timeout(60000);
+        const examples = Path.join(__dirname, "../examples");
+        const page = JSON.parse(Fs.readFileSync(Path.join(examples, "wikidata-Q42.json"), "utf8"));
+        delete page.entities.Q42.sitelinks;
+        const other = {entities: {Q5: {type: "item", id: "Q5", labels: {}, claims: {}}}};
+
+        await shared.Caches.manifest.set([{
+          schemaLabel: "person", schema: Fs.readFileSync(
+            Path.join(examples, "wikidata-person.shex"), "utf8"),
+          dataLabel: "two pages", neighborhood: "wikidata",
+          data: JSON.stringify(page, null, 2),
+          regexpEngine: "eval-simple-1err",
+          queryMap: 'QENTITIES "42"@START',
+        }], "http://localhost/manifest.json");
+        $("#inputSchema .manifest li").last().trigger("click");
+        await shared.promise;
+        $("#inputData .indeterminant li").last().trigger("click");
+        await shared.promise;
+
+        const source = shared.neighborhoods;
+        // a second page, the way slurping leaves one
+        source.addPageDocument("Q5", JSON.stringify(other, null, 2));
+        // pages only: the list of entity ids is a document too, and it has
+        // no editor to highlight in
+        const pages = source.documents()
+              .map((d, at) => ({at, d, isQ42: d.text.indexOf('"Q42"') !== -1}))
+              .filter(p => p.d.text.trimStart()[0] === "{");
+        const q42 = pages.find(p => p.isQ42), otherDoc = pages.find(p => !p.isQ42);
+        expect(q42, "a document per page").to.exist;
+        expect(otherDoc, "and one that isn't Q42").to.exist;
+
+        source.show(otherDoc.at);          // look away from the page under test
+        $("#validate").trigger("click");
+        await shared.promise;
+
+        const mapped = shared.Caches.editorSupport.lastMapped;
+        const elsewhere = mapped.pairs.find(p => p.doc === q42.at && p.anchors.object);
+        expect(elsewhere, "a result anchored in the page that isn't showing").to.exist;
+        expect(source.showing, "still looking away").to.equal(otherDoc.at);
+
+        // hovering it brings that page forward and highlights in it
+        const es = shared.Caches.editorSupport;
+        const spy = {regions: []};
+        const wasSetHoverRegions = es.panes.inputSchema.setHoverRegions;
+        try {
+          es.panes.inputSchema.setHoverRegions = regions => { spy.regions = regions; };
+          es.setPairHovers([elsewhere]);
+          expect(spy.regions.length, "a hover region for it").to.be.above(0);
+          spy.regions[0].enter();
+        } finally {
+          es.panes.inputSchema.setHoverRegions = wasSetHoverRegions;
+        }
+        expect(source.showing, "switched to the page the result was about").to.equal(q42.at);
+        const shown = $("#inputData textarea").first().val();
+        expect(shown.indexOf('"Q42"'), "and that page is what the pane holds").to.be.above(-1);
+
+        // leave no QENTITIES map behind: the next source can't read one
+        $("#textMap").val("").trigger("change");
+        await shared.promise;
+      });
+
       it("should carry the source and its settings in the permalink", async function () {
         source().select("sparql");
         $("#nbhd-endpoint").val("http://ex.example/sparql").trigger("change");
