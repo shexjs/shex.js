@@ -96,6 +96,47 @@ describe("EditorPanes", function () {
     }
   });
 
+  /* The application colours its textareas to say what they hold -- the
+   * schema pane blue, the data pane green -- and a pane standing in for one
+   * should look like the thing it replaced, not like a white box dropped
+   * on the page. */
+  it("should take the colours of the textarea it stands in for", function () {
+    const textarea = dom.window.document.createElement("textarea");
+    textarea.value = "<x> <p> 1 .\n";
+    textarea.style.backgroundColor = "rgb(244, 255, 244)";   // #inputData's green
+    textarea.style.color = "rgb(0, 0, 0)";
+    dom.window.document.body.appendChild(textarea);
+    const pane = makePane(textarea, {language: "turtle", lint: false});
+    try {
+      const styles = [];
+      dom.window.document.querySelectorAll("style").forEach(s => styles.push(s.textContent));
+      const css = styles.join("\n");
+      expect(css, "the pane is painted the textarea's colour").to.include("rgb(244, 255, 244)");
+      // and the gutter belongs to the pane rather than sitting in grey
+      // (the base theme has a .cm-gutters rule too; ours is the one that
+      // says the pane's colour)
+      const gutterRules = css.split("}").filter(rule => rule.includes(".cm-gutters"));
+      expect(gutterRules.some(rule => rule.includes("rgb(244, 255, 244)")),
+             "a gutter rule in the pane's colour").to.equal(true);
+    } finally {
+      pane.destroy();
+      textarea.remove();
+    }
+  });
+
+  it("should leave an unpainted textarea's pane alone", function () {
+    const textarea = dom.window.document.createElement("textarea");
+    textarea.value = "<x> <p> 1 .\n";
+    dom.window.document.body.appendChild(textarea);
+    const pane = makePane(textarea, {language: "turtle", lint: false});
+    try {
+      expect(pane.view.dom).to.exist;   // nothing to copy, nothing broken
+    } finally {
+      pane.destroy();
+      textarea.remove();
+    }
+  });
+
   it("should complete prefixes, shape labels and predicates", function () {
     const {completionSource, lexicalize} = require("../lib/editor-panes");
     const {EditorState} = require("@codemirror/state");

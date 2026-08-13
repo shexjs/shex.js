@@ -872,6 +872,18 @@ if (!TEST_browser) {
           .to.equal('"1999-12-31"^^xsd:date');
       });
 
+      it("should look like the panes it replaced", function () {
+        // the app paints the schema pane blue and the data pane green; the
+        // editors standing in for those textareas say the same thing
+        const es = shared.Caches.editorSupport;
+        const painted = [];
+        $("head style, style").each((i, s) => painted.push($(s).text()));
+        const css = painted.join("\n");
+        expect(es.panes.inputSchema, "a schema pane to look at").to.exist;
+        expect(css, "the schema pane's blue").to.include("rgb(244, 244, 255)");
+        expect(css, "the data pane's green").to.include("rgb(244, 255, 244)");
+      });
+
       it("should carry the source and its settings in the permalink", async function () {
         source().select("sparql");
         $("#nbhd-endpoint").val("http://ex.example/sparql").trigger("change");

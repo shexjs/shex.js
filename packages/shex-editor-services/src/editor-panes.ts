@@ -584,6 +584,26 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
   if (lintSource && (langLintSource || opts.supplied))
     extensions.push(linter(lintSource, {delay: 500}));
 
+  // A pane stands where a textarea stood, and the application coloured that
+  // textarea to say what it holds -- the schema pane blue, the data pane
+  // green.  Take the colours with it rather than turning the pane white:
+  // the editors are a nicer way to show the same thing, not a different
+  // thing.  Read before hiding it, and only believe a real colour (jsdom
+  // and an unstyled page report none).
+  const dressed = window.getComputedStyle(textarea);
+  const background = dressed.backgroundColor;
+  const foreground = dressed.color;
+  const painted = background && !/^(transparent|rgba\(0, 0, 0, 0\))$/.test(background);
+  if (painted)
+    extensions.push(EditorView.theme({
+      "&": {backgroundColor: background, color: foreground},
+      // the gutter reads as part of the pane, edged rather than shaded
+      ".cm-gutters": {backgroundColor: background, color: foreground,
+                      border: "none", borderRight: "1px solid rgba(0, 0, 0, 0.1)"},
+      ".cm-activeLineGutter": {backgroundColor: "rgba(0, 0, 0, 0.05)"},
+      ".cm-activeLine": {backgroundColor: "rgba(0, 0, 0, 0.03)"},
+    }));
+
   const view = new EditorView({doc: textarea.value, extensions});
   view.dom.classList.add("shexjs-editor-pane");
   // match the textarea's rendered size (measured before it's hidden); fall
