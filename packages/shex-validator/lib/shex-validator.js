@@ -45,6 +45,7 @@ const Hierarchy = __importStar(require("hierarchy-closure"));
 const neighborhood_api_1 = require("@shexjs/neighborhood-api");
 const shex_xsd_1 = require("./shex-xsd");
 const feasibility_1 = require("./feasibility");
+const repairs_1 = require("./repairs");
 const visitor_1 = require("@shexjs/visitor");
 exports.InterfaceOptions = {
     "coverage": {
@@ -249,6 +250,8 @@ class ShExValidator {
      *   diagnose(false): boolean: make validate return a structure with errors.
      */
     constructor(schema, db, options = {}) {
+        /** one repair search per triple expression, reused across nodes */
+        this.nearestBags = new Map();
         const index = schema._index || visitor_1.ShExIndexVisitor.index(schema);
         if (index.labelToTcs === undefined) // make sure there's a labelToTcs in the index
             index.labelToTcs = {};
@@ -530,6 +533,18 @@ class ShExValidator {
         const tripleConstraints = extendsTCs.concat(localTCs);
         // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
         const { t2tcs, t2tcErrors, tc2TResults } = this.matchByPredicate(tripleConstraints, fromDB, ctx);
+        // The bag the node has, counted before the feasibility layer prunes
+        // candidates out of t2tcs -- it is what the node holds, not what is left
+        // of the search.  One count per triple, against the first constraint
+        // that would take it; which of two indistinguishable constraints gets it
+        // doesn't matter, since the repair search deals them out again.
+        const observedBag = new Map();
+        t2tcs.reduce((_ret, _triple, tcs) => {
+            const local = tcs.filter(tc => extendsTCs.indexOf(tc) === -1);
+            if (local.length > 0)
+                observedBag.set(local[0], (observedBag.get(local[0]) || 0) + 1);
+            return null;
+        }, null);
         const { missErrors, matchedExtras } = this.whatsMissing(t2tcs, t2tcErrors, shape.extra || []);
         // Feasibility layer: refute assignments to the *local* triple expression that cannot
         // appear in any accepted bag, before and during partition enumeration.
@@ -589,6 +604,12 @@ class ShExValidator {
                 shape: ctx.label,
                 errors: errors
             };
+        // What would make the node conform, said as the difference between the
+        // bag of arcs it has and the nearest bag this shape accepts.  Unlike the
+        // errors above it doesn't depend on how the expression was written.
+        if (this.options.repairs && ret !== null && ret.type === "Failure"
+            && shape.expression !== undefined)
+            ret.repairs = this.nearestBagRepairs(shape.expression, observedBag);
         // A reported result may contain ResultReferences whose named referents appeared
         // only in partitions that are not part of the report: attach those referents in
         // a "shared" side table so every reference is resolvable within the document.
@@ -717,6 +738,21 @@ class ShExValidator {
             }, null);
         }
         return errors;
+    }
+    /**
+     * The repairs for a failed shape: the arcs to add or drop to reach the
+     * nearest bag the expression accepts (see ./repairs.ts).
+     */
+    nearestBagRepairs(expression, observed) {
+        try {
+            let nearest = this.nearestBags.get(expression);
+            if (nearest === undefined)
+                this.nearestBags.set(expression, nearest = new repairs_1.NearestAcceptedBag(expression, label => this.index.tripleExprs[label]));
+            return nearest.repairs(observed);
+        }
+        catch (e) {
+            return []; // e.g. a recursive triple expression
+        }
     }
     /** Is there room for this constraint among the arcs `granted` allows? */
     wouldSeat(feasibility, granted, tc, alsoOneMoreOf) {

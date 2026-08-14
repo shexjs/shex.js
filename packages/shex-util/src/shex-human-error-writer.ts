@@ -38,11 +38,21 @@ class ShExHumanErrorWriter {
       return val.errors.reduce((ret: string[], e: any) => {
         return ret.concat(_HumanErrorWriter.write(e));
       }, []);
-    case "Failure":
+    case "Failure": {
       // everything in a Failure's list is wrong with the node at once; the
       // alternatives live in PossibleErrors below
-      return ["validating " + val.node + " as " + val.shape + ":"]
-        .concat(_HumanErrorWriter.joined(errorList(val.errors), "AND").map(s => "  " + s));
+      const said = ["validating " + val.node + " as " + val.shape + ":"]
+            .concat(_HumanErrorWriter.joined(errorList(val.errors), "AND").map(s => "  " + s));
+      // ...and, where the validator was asked for them, what would make the
+      // node conform: the nearest bag of arcs this shape accepts
+      const ways = (val.repairs || [])
+            .map((repair: any) => (repair.arcs || []).map(
+              (arc: any) => (arc.delta > 0 ? "add " : "remove ") + Math.abs(arc.delta)
+                + " " + arc.property).join(" and "))
+            .filter((way: string) => way !== "");
+      return ways.length === 0 ? said
+        : said.concat(["  to conform: " + ways.join(", or ")]);
+    }
     case "PossibleErrors":
       // one list per way of reading the neighborhood: any one of them, put
       // right, would settle it

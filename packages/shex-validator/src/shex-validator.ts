@@ -62,6 +62,7 @@ import {
 } from "shexj";
 import {getNumericDatatype, testFacets, testKnownTypes} from "./shex-xsd";
 import {TripleExprFeasibility, TcCounts} from "./feasibility";
+import {NearestAcceptedBag, Repair} from "./repairs";
 import * as RdfJs from "@rdfjs/types/data-model";
 import {Literal as RdfJsLiteral} from "@rdfjs/types/data-model";
 import {ShExVisitor, ShExIndexVisitor} from "@shexjs/visitor";
@@ -103,6 +104,10 @@ interface ValidatorOptions {
   validateExtern?: (point: RdfJsTerm, shapeLabel: LabelOrStart, ctx: ShapeExprValidationContext) => shapeExprTest;
   /** debugger callbacks forwarded to the regex engine (doc/debugger-design.md §4) */
   debugHooks?: RegexDebugHooks;
+  /** Report each failure as the nearest bag the schema accepts: what to add
+   * and what to take away (doc/error-normalization.md §4).  The classic
+   * errors are reported as well; this adds a `repairs` field beside them. */
+  repairs?: boolean;
 }
 
 export interface ShExJsResultMapEntry extends ShapeMapEntry {
@@ -392,6 +397,8 @@ export class ShExValidator {
   public readonly index: SchemaIndex;
   private readonly db: NeighborhoodDb;
   private regexModule: ValidatorRegexModule;
+  /** one repair search per triple expression, reused across nodes */
+  private nearestBags = new Map<ShExJ.tripleExprOrRef, NearestAcceptedBag>();
 
   /* ShExValidator - construct an object for validating a schema.
    *
@@ -706,6 +713,18 @@ export class ShExValidator {
 
     // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
     const {t2tcs, t2tcErrors, tc2TResults} = this.matchByPredicate(tripleConstraints, fromDB, ctx);
+    // The bag the node has, counted before the feasibility layer prunes
+    // candidates out of t2tcs -- it is what the node holds, not what is left
+    // of the search.  One count per triple, against the first constraint
+    // that would take it; which of two indistinguishable constraints gets it
+    // doesn't matter, since the repair search deals them out again.
+    const observedBag: TcCounts = new Map();
+    t2tcs.reduce<null>((_ret, _triple, tcs) => {
+      const local = tcs.filter(tc => extendsTCs.indexOf(tc) === -1);
+      if (local.length > 0)
+        observedBag.set(local[0], (observedBag.get(local[0]) || 0) + 1);
+      return null;
+    }, null);
     const {missErrors, matchedExtras} = this.whatsMissing(t2tcs, t2tcErrors, shape.extra || [])
 
     // Feasibility layer: refute assignments to the *local* triple expression that cannot
@@ -774,6 +793,13 @@ export class ShExValidator {
         shape: ctx.label,
         errors: errors
       };
+
+    // What would make the node conform, said as the difference between the
+    // bag of arcs it has and the nearest bag this shape accepts.  Unlike the
+    // errors above it doesn't depend on how the expression was written.
+    if (this.options.repairs && ret !== null && (ret as any).type === "Failure"
+        && shape.expression !== undefined)
+      (ret as any).repairs = this.nearestBagRepairs(shape.expression, observedBag);
 
     // A reported result may contain ResultReferences whose named referents appeared
     // only in partitions that are not part of the report: attach those referents in
@@ -898,6 +924,22 @@ export class ShExValidator {
       }, null);
     }
     return errors;
+  }
+
+  /**
+   * The repairs for a failed shape: the arcs to add or drop to reach the
+   * nearest bag the expression accepts (see ./repairs.ts).
+   */
+  protected nearestBagRepairs(expression: ShExJ.tripleExprOrRef, observed: TcCounts): Repair[] {
+    try {
+      let nearest = this.nearestBags.get(expression);
+      if (nearest === undefined)
+        this.nearestBags.set(expression, nearest = new NearestAcceptedBag(
+          expression, label => this.index.tripleExprs[label]));
+      return nearest.repairs(observed);
+    } catch (e) {
+      return [];               // e.g. a recursive triple expression
+    }
   }
 
   /** Is there room for this constraint among the arcs `granted` allows? */

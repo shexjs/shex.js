@@ -46,6 +46,21 @@ describe("errsToSimple", function () {
     expect(text).to.include("Missing property: " + P + "a");
   });
 
+  /* A failure the validator was asked to repair ends with the recipe. */
+  it("should end a failure with what would make it conform", function () {
+    const text = ShExUtil.errsToSimple(Object.assign(
+      failure([missing("mbox")]),
+      {repairs: [{type: "NearestBag", cost: 1, arcs: [{property: P + "mbox", delta: 1}]},
+                 {type: "NearestBag", cost: 1, arcs: [{property: P + "name", delta: -1},
+                                                      {property: P + "nick", delta: 1}]}]},
+    )).join("\n");
+    expect(text).to.include("to conform: add 1 " + P + "mbox, or remove 1 " + P
+                            + "name and add 1 " + P + "nick");
+    // a failure nobody asked to repair says nothing about conforming
+    expect(ShExUtil.errsToSimple(failure([missing("mbox")])).join("\n"))
+      .to.not.include("to conform");
+  });
+
   /* A triple the schema has nowhere to put: say what would settle it. */
   it("should offer the repairs a homeless triple has", function () {
     const violation = repairs => ({

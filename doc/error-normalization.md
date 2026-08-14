@@ -1,12 +1,12 @@
 # Reporting failures as repairs
 
 An investigation of the eval-threaded-nerr blowup, and what "report all the
-errors" should mean.  §1 and §3 are built; §4 is a design, with a prototype
-beside this note (`repair-normalization-prototype.js`) that produces the
-numbers quoted there.  §3 says what a triple with nowhere to go would take
-to settle it, which is a repair asked at one place; §4 asks it of the whole
-neighborhood at once, which is what makes the answer independent of how the
-schema was written.
+errors" should mean.  All of it is built.  §3 says what a triple with
+nowhere to go would take to settle it, which is a repair asked at one place;
+§4 asks it of the whole neighborhood at once, which is what makes the answer
+independent of how the schema was written.  The prototype beside this note
+(`repair-normalization-prototype.js`) is what §4 was designed against and
+still runs; `packages/shex-validator/src/repairs.ts` is the real thing.
 
 ## 1. The blowup was not about errors
 
@@ -144,7 +144,7 @@ as the thing to add — while still differing in form: one reports a missing
 property, the other a triple with nowhere to go that a `foaf:mbox` would
 seat.  Making the report itself identical is what remains.
 
-## 4. The proposal: say what would fix it
+## 4. Saying what would fix it
 
 A ShEx triple expression denotes a set of **bags** — multisets of triple
 constraints — which is the RBE view ShEx was designed around (Staworko et
@@ -156,8 +156,9 @@ constraint, is also a bag.  So:
 > arcs to add, which to take away.
 
 This is defined on the language and the data, not on the syntax tree, so
-equivalent schemas give equal answers — the normalization asked for.  From
-the prototype, both spellings above, in every case:
+equivalent schemas give equal answers — the normalization asked for.  Ask
+the validator for them (`{repairs: true}`) and it attaches them to each
+Failure; both spellings of §2, in every case:
 
 | the node has | repair (identical for both spellings) |
 | --- | --- |
@@ -171,12 +172,19 @@ answer is `+1 :a` **or** `+1 :b` — two repairs, because the language offers
 two.  Alternatives survive exactly where they mean something, which is what
 the "n errors" in the engine's name should have meant all along.
 
+The §3 Quantity, whose `:system` is contingent on a `:code`, now ends its
+report with two whole recipes rather than one arc's worth of advice:
+
+```
+  to conform: add 1 :value and remove 1 :system, or add 1 :value and add 1 :code
+```
+
 ### The algorithm
 
 Not the prototype's exhaustive search: a bottom-up dynamic program over the
 expression, which is the repair version of the interval computation ShEx
 tractability already rests on — and of `feasibility.ts`, which computes the
-same intervals as a *refutation* today.
+same intervals as a *refutation*.
 
 For a subexpression `E` and a number of iterations `r`, compute the minimum
 cost of accounting for the observed counts in `E`'s slice of the constraints:
@@ -192,15 +200,31 @@ cost of accounting for the observed counts in `E`'s slice of the constraints:
 
 Costs are small integers and `r` is bounded by the observed counts, so this is
 linear in the expression times a small factor — no threads, no backtracking,
-and complete over the counts.  Recovering the witness bag by backtracking
-gives the repair; keeping every argmin gives the alternatives.
+and complete over the counts.  The bags come back with the costs rather than
+being recovered by backtracking, since they are small; keeping every argmin
+gives the alternatives.
+
+One thing the note didn't foresee: the counts arrive per *constraint*, and a
+triple satisfying one of two indistinguishable constraints satisfies the
+other, so which one it was counted against is an accident of the caller.
+The triples of each arc are pooled and dealt out again every way they can be,
+and the best deal is the answer.  Without that, the two spellings of §2
+disagree about a node holding a given name and an mbox — the second spelling
+constrains `foaf:mbox` twice, and the answer depended on which of the two got
+the count.
+
+Over the shexTest validation manifest with repairs on: **1176 tests, 0
+verdicts moved**, 561 failures carrying a repair and 16 carrying none (see
+below), the slowest 13 ms.  Q42 against the person schema is 38 ms with
+repairs on, against 52 ms without — the search is not what costs.
 
 ### What it does not normalize, and shouldn't
 
 - **Value-level failures** (`TypeMismatch`, a failed shape reference) are
   per-triple, already canonical, and orthogonal: they say a triple is wrong,
   where repairs say the *shape* of the neighborhood is wrong.  A node can
-  need both reports.
+  need both reports.  Most of the 16 failures above that carry no repair are
+  these: the bag is right, so there is nothing for a bag repair to say.
 - **The assignment** of triples to constraints when more than one could take
   a triple (`EXTRA`, a predicate constrained twice with different value
   expressions).  Counts and assignment then interact, and general RBE
@@ -211,8 +235,14 @@ gives the repair; keeping every argmin gives the alternatives.
   `feasibility.ts` deliberately ignores, and the corner where §1 found both
   engines already wrong.  A repair story is only as good as the matcher
   underneath it.
+- **Arcs the expression never mentions.**  The rest of those 16 are
+  `ClosedShapeViolation`s: a triple whose predicate is nowhere in the shape
+  is not in the bag at all, so the DP cannot see it.  "Remove it" is a
+  repair, and a caller with the closed-shape error in hand could add it.
 - **Which repair to prefer** when several tie.  Report the set; picking one
-  is a UI decision, not a semantic one.
+  is a UI decision, not a semantic one.  The set is capped (8 bags carried
+  through the DP, 64 deals of a repeated arc) because ties multiply; a schema
+  that hits either cap gets some of its alternatives, not all.
 
 ### What adopting it would cost
 
@@ -226,10 +256,12 @@ this, done at the refutation layer:
 1. ~~Compute repairs alongside the current errors and expose them under a
    new key~~ — done for homeless triples (`repairs` on
    FeasibilityViolation); the same for missing and excess arcs is the DP.
-2. Compute the whole-neighborhood repair and compare it with the classic
-   errors over shexTest, behind a flag: same verdicts, different accounts.
+2. ~~Compute the whole-neighborhood repair and compare it with the classic
+   errors over shexTest, behind a flag~~ — done: `{repairs: true}`, measured
+   above, and `errsToSimple` ends a failure with "to conform: ...".
 3. Move the WebApp's error rendering to repairs (this is where the payoff is
-   visible: "add one `foaf:mbox`" beside the constraint it belongs to).
+   visible: "add one `foaf:mbox`" beside the constraint it belongs to), and
+   decide whether the flag should default on.
 4. Replace the classic errors once the repairs have been read in anger for a
    while, and rewrite the failure tests then, once.
 
