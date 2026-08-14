@@ -8,9 +8,10 @@
     <script src="webpacks/jquery-components.min.js"></script>
     <link rel="stylesheet" href="shex-app.css" />
     <style>
-      /* how this page scrolls is its own business (note: "none" is not a
-         valid overflow value, so this reads as "visible") */
-      #inputarea { overflow-x: none; }
+      /* how this page scrolls is its own business: a validator's inputs sit
+         side by side and overflow rather than scroll (this said "none",
+         which is not a valid value and so already meant this) */
+      #inputarea { overflow-x: visible; }
     </style>
   </head>
 
