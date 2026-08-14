@@ -148,18 +148,21 @@
   comment: 'A date and a dateTime are different datatypes, however alike they read.'
 - schemaLabel: clinical observation
   schemaURL: ClinObs.shex
-  dataLabel: a quantity with no number in it
+  dataLabel: a quantity with no number and no code
   data: |
     PREFIX : <http://hl7.org/fhir/>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     
     <Obs1>
       :subject       <Patient2> ;
-      :valueQuantity [ :unit "kg" ] .
+      :valueQuantity [
+        :unit "kg" ;
+        :system <http://unitsofmeasure.org> ;
+      ] .
   queryMap: |
     <Obs1>@START
   status: nonconformant
-  comment: ':value is the one part of a Quantity that isn''t optional.'
+  comment: 'Quantity :value is required and :system is contingent on :code'
 - schemaLabel: clinical observation
   schemaURL: ClinObs.shex
   dataLabel: a gender outside the value set

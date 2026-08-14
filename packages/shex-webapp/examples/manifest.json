@@ -75,11 +75,11 @@
   {
     "schemaLabel": "clinical observation",
     "schemaURL": "ClinObs.shex",
-    "dataLabel": "a quantity with no number in it",
-    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :subject       <Patient2> ;\n  :valueQuantity [ :unit \"kg\" ] .\n",
+    "dataLabel": "a quantity with no number and no code",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :subject       <Patient2> ;\n  :valueQuantity [\n    :unit \"kg\" ;\n    :system <http://unitsofmeasure.org> ;\n  ] .\n",
     "queryMap": "<Obs1>@START\n",
     "status": "nonconformant",
-    "comment": ":value is the one part of a Quantity that isn't optional."
+    "comment": "Quantity :value is required and :system is contingent on :code"
   },
   {
     "schemaLabel": "clinical observation",

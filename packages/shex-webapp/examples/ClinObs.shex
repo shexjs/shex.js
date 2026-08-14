@@ -21,9 +21,11 @@ start = @<ObservationShape>
 
 <QuantityShape> {                       # A Quantity is a number with units:
   :value xsd:decimal ;                  #   the number,
-  :unit xsd:string? ;                   #   how a human writes the unit,
-  :system IRI? ;                        #   which code system says so,
-  :code xsd:string?                     #   and that system's code for it.
+  :unit xsd:string ;                    #   how a human writes the unit,
+  (                                     #   optional
+    :code xsd:string ;                  #     code for the quantity
+    :system IRI? ;                      #     code system defining that code
+  )?
 }
 
 <PractitionerShape> {                   # A Practitioner has:

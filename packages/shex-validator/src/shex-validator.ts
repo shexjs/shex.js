@@ -828,21 +828,25 @@ export class ShExValidator {
             hi.set(tc, hi.get(tc)! - 1);
             changed = true;
             if (tcs.length === 0) {
-              // Prefer the classic explanation when one exists: a mandatory property
-              // with no candidate triples at all makes every assignment infeasible.
+              // A mandatory property with no candidate triples at all makes every
+              // assignment infeasible, and says so better than "this triple has
+              // nowhere to go" does.
               const missing = feasibility.unattainableMandatory(hi0);
-              if (missing.length > 0) {
-                missing.forEach(mtc => {
-                  if (!errors.some(e => (e as any).type === "MissingProperty" && (e as any).property === mtc.predicate))
-                    errors.push({type: "MissingProperty", property: mtc.predicate} as any as error);
-                });
-              } else {
+              missing.forEach(mtc => {
+                if (!errors.some(e => (e as any).type === "MissingProperty" && (e as any).property === mtc.predicate))
+                  errors.push({type: "MissingProperty", property: mtc.predicate} as any as error);
+              });
+              // But it explains this triple only if supplying it would give the
+              // triple somewhere to go.  Where it wouldn't, they are two
+              // separate things wrong with the node -- a missing :value and a
+              // :system with no :code beside it -- and reporting one hides the
+              // other.
+              if (missing.length === 0 || !this.repairedBy(feasibility, missing, tc, hi))
                 errors.push({
                   type: "FeasibilityViolation",
                   triple: {type: "TestedTriple", subject: rdfJsTerm2Ld(triple.subject), predicate: rdfJsTerm2Ld(triple.predicate), object: rdfJsTerm2Ld(triple.object)},
                   constraints: [tc],
                 } as any as error);
-              }
             }
           }
         }
@@ -850,6 +854,21 @@ export class ShExValidator {
       }, null);
     }
     return errors;
+  }
+
+  /**
+   * Would supplying the missing mandatory properties make room for this
+   * constraint?  If it would, the triple's homelessness is a consequence of
+   * what is missing rather than a fault of its own, and saying both would
+   * report one problem twice.
+   */
+  protected repairedBy(feasibility: TripleExprFeasibility, missing: TripleConstraint[],
+                       tc: TripleConstraint, hi: TcCounts): boolean {
+    const granted: TcCounts = new Map(hi);
+    missing.forEach(mtc => granted.set(mtc, Math.max(granted.get(mtc) || 0,
+                                                     mtc.min === undefined ? 1 : mtc.min || 1)));
+    granted.set(tc, Math.max(granted.get(tc) || 0, 1));
+    return feasibility.feasible(new Map([[tc, 1]]), granted);
   }
 
   /** Whether a complete partition's bag over the local expression passes the
