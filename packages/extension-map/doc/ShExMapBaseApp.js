@@ -605,7 +605,7 @@ class ShExMapBaseApp extends ShExBaseApp {
       // each result pane holds one rendering; pair every generated triple
       // with its position there.  The rendering travels with the pairs: the
       // ranges only mean anything against it, and #results may be cleared
-      // (a debounced pane edit reaches copyTextMapToEditMap) while this
+      // (a debounced pane edit reaches copyQueryMapToEditMap) while this
       // mapping remains the record of what was materialized.
       const rendered = this.materializationPanes.map(({pane, text}) => ({
         pane,

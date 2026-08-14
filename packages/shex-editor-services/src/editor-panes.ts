@@ -549,7 +549,7 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
         // It says "the user stopped typing", so a write through the proxy
         // must not raise it -- assigning to a plain textarea's value fires
         // no change either, and handlers that react to one discard work the
-        // application did meanwhile: dataInputHandler's copyTextMapToEditMap
+        // application did meanwhile: dataInputHandler's copyQueryMapToEditMap
         // clears #results, wiping a materialization rendered since.  Any
         // pending change from a real edit still stands: the application
         // replacing the text does not mean the user's edit went unmade.

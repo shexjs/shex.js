@@ -269,7 +269,7 @@ if (!TEST_browser) {
 
     it("should tie each materialized triple to its constraint and binding", async function () {
       // the rendering comes with the mapping: #results is live DOM that a
-      // debounced pane edit can clear (copyTextMapToEditMap), and these
+      // debounced pane edit can clear (copyQueryMapToEditMap), and these
       // ranges only mean anything against the text they were mapped onto
       const [{pairs, text: resultText}] = shared.Caches.editorSupport.lastMaterialized;
       expect(pairs.length, "one pair per generated triple").to.equal(2);

@@ -72,7 +72,7 @@ describe("EditorPanes", function () {
       // a write THROUGH the proxy still reports keyup -- the caches' dirty
       // tracking listens for it -- but raises no change: it isn't a typing
       // pause, and a change would tell handlers to discard work the
-      // application did meanwhile (copyTextMapToEditMap clears #results)
+      // application did meanwhile (copyQueryMapToEditMap clears #results)
       keyups = changes = 0;
       textarea.value = "PREFIX : <http://b.example/>";
       expect(pane.view.state.doc.toString()).to.equal("PREFIX : <http://b.example/>");

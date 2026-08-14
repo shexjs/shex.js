@@ -1230,11 +1230,11 @@ class ManifestCache extends InterfaceCache {
   async queryMapLoaded (dataTest, text) {
     dataTest.entry.queryMap = text;
     try {
-      $("#shapeMap").val(JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
+      $("#queryMap").val(JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
     } catch (e) {
-      $("#shapeMap").val(dataTest.entry.queryMap);
+      $("#queryMap").val(dataTest.entry.queryMap);
     }
-    await this.caches.shapeMap.copyTextMapToEditMap();
+    await this.caches.shapeMap.copyQueryMapToEditMap();
     // callValidator();
   }
 
@@ -1260,7 +1260,7 @@ class ManifestCache extends InterfaceCache {
     delete this.caches.inputData.endpoint;
 
     // Clear out every form of ShapeMap.
-    $("#shapeMap").val("").removeClass("error");
+    $("#queryMap").val("").removeClass("error");
     this.caches.shapeMap.makeFreshEditMap();
     $("#fixedMap").find("tbody").empty();
 
@@ -1407,7 +1407,7 @@ class ShapeMapCache extends InterfaceCache {
     this.tabsElement = $("#shapeMap-tabs");
     this.editMapSelector = "#editMap";
     this.editMap = $("#editMap");
-    this.shapeMap = $("#shapeMap");
+    this.queryMap = $("#queryMap");
     this.fixedMap = $("#fixedMap");
     this.fixedMapTab = this.tabsElement.find('[href="#fixedMap-tab"]');
     this.caches = caches;
@@ -1418,8 +1418,8 @@ class ShapeMapCache extends InterfaceCache {
 
   async parse (text) {
     this.removeEditMapPair(null);
-    this.shapeMap.val(text);
-    this.copyTextMapToEditMap();
+    this.queryMap.val(text);
+    this.copyQueryMapToEditMap();
     await this.copyEditMapToFixedMap();
   };
 
@@ -1430,7 +1430,7 @@ class ShapeMapCache extends InterfaceCache {
   /**
    * @return list of errors encountered
    */
-  async copyEditMapToTextMap () {
+  async copyEditMapToQueryMap () {
     if (this.editMap.attr("data-dirty") === "true") {
       const text = this.editMap.find(".pair").get().reduce((acc, queryPair) => {
         const node = $(queryPair).find(".focus").val();
@@ -1440,7 +1440,7 @@ class ShapeMapCache extends InterfaceCache {
         const status = $(queryPair).find(".shapeMap-joiner").hasClass("nonconformant") ? "!" : "";
         return acc.concat([node+"@"+status+shape]);
       }, []).join(",\n");
-      this.shapeMap.empty().val(text);
+      this.queryMap.empty().val(text);
       const ret = await this.copyEditMapToFixedMap();
       this.markEditMapClean();
       return ret;
@@ -1453,9 +1453,9 @@ class ShapeMapCache extends InterfaceCache {
    * Parse query map to populate editMap and fixedMap.
    * @returns list of errors. ([] means everything was good.)
    */
-  async copyTextMapToEditMap () {
-    this.shapeMap.removeClass("error");
-    const written = this.shapeMap.val();
+  async copyQueryMapToEditMap () {
+    this.queryMap.removeClass("error");
+    const written = this.queryMap.val();
     this.resultsWidget.clear();
     let currentAction = "parsing input schema";
     try {
@@ -1479,7 +1479,7 @@ class ShapeMapCache extends InterfaceCache {
       this.resultsWidget.clear();
       return ret;
     } catch (e) {
-      this.shapeMap.addClass("error");
+      this.queryMap.addClass("error");
       this.resultsWidget.failMessage(e, currentAction);
       this.makeFreshEditMap()
       return [e];
@@ -2718,7 +2718,7 @@ class ShExBaseApp {
     const inputSchema = new SchemaCache($("#inputSchema textarea.schema"), this.onDataLoad.bind(this), this.shexcParser, this.turtleParser);
     const inputData = new TurtleCache($("#inputData textarea"), this.onDataLoad.bind(this), this.turtleParser, this.queryTrackerController);
     const extension = new ExtensionCache($("#extensionDrop"), this.resultsWidget);
-    const shapeMap = new ShapeMapCache($("#shapeMap"), {inputSchema, inputData}, this.turtleParser, this.resultsWidget);
+    const shapeMap = new ShapeMapCache($("#queryMap"), {inputSchema, inputData}, this.turtleParser, this.resultsWidget);
 
     this.Caches = { inputSchema, inputData, extension, shapeMap };
 
@@ -2749,7 +2749,7 @@ class ShExBaseApp {
       {queryStringParm: "data",         location: this.Caches.inputData.selection,   cache: this.Caches.inputData,
        manifest: {key: "data", spillName: "data.ttl", labelKey: "dataLabel", label: "data"}},
       {queryStringParm: "extension",    location: this.Caches.extension.selection,   cache: this.Caches.extension  },
-      {queryStringParm: "shape-map",    location: $("#shapeMap"),                     cache: this.Caches.shapeMap,
+      {queryStringParm: "shape-map",    location: $("#queryMap"),                     cache: this.Caches.shapeMap,
        manifest: {key: "queryMap", spillName: "queryMap.qm"}},
     ];
     this.QueryParams = this.Getables.concat([
@@ -3013,14 +3013,14 @@ class ShExBaseApp {
     $("#shapeMap-tabs").tabs({
       activate: async (event, ui) => {
         if (ui.oldPanel.get(0) === $("#editMap-tab").get(0))
-          await this.Caches.shapeMap.copyEditMapToTextMap();
-        else if (ui.oldPanel.get(0) === $("#shapeMap").get(0))
-          await this.Caches.shapeMap.copyTextMapToEditMap()
+          await this.Caches.shapeMap.copyEditMapToQueryMap();
+        else if (ui.oldPanel.get(0) === $("#queryMap").get(0))
+          await this.Caches.shapeMap.copyQueryMapToEditMap()
       }
     });
-    $("#shapeMap").on("change", evt => {
+    $("#queryMap").on("change", evt => {
       this.resultsWidget.clear();
-      SharedForTests.promise = this.Caches.shapeMap.copyTextMapToEditMap();
+      SharedForTests.promise = this.Caches.shapeMap.copyQueryMapToEditMap();
     });
     this.Caches.inputData.selection.on("change", this.dataInputHandler.bind(this)); // input + paste?
     // $("#copyEditMapToFixedMap").on("click", copyEditMapToFixedMap); // may add this button to tutorial
@@ -3146,8 +3146,8 @@ class ShExBaseApp {
     }, {});
 
     // Parse the shape-map using the prefixes and base.
-    const shapeMapErrors = $("#shapeMap").val().trim().length > 0
-          ? this.Caches.shapeMap.copyTextMapToEditMap()
+    const shapeMapErrors = $("#queryMap").val().trim().length > 0
+          ? this.Caches.shapeMap.copyQueryMapToEditMap()
           : this.Caches.shapeMap.makeFreshEditMap();
 
     this.customizeInterface();
@@ -3207,7 +3207,7 @@ class ShExBaseApp {
       setTimeout(async () => {
         const began = new Date().getTime();
         try {
-          const errors = await this.Caches.shapeMap.copyEditMapToTextMap(); // will update if #editMap is dirty
+          const errors = await this.Caches.shapeMap.copyEditMapToQueryMap(); // will update if #editMap is dirty
           if (errors.length === 0)
             resolve(await this.callValidator());
         } finally {
@@ -3616,9 +3616,9 @@ class ShExBaseApp {
   async dataInputHandler (evt) {
     const active = $('#shapeMap-tabs ul li.ui-tabs-active a').attr('href');
     if (active === "#editMap-tab")
-      return await this.Caches.shapeMap.copyEditMapToTextMap();
-    else // if (active === "#shapeMap")
-      return await this.Caches.shapeMap.copyTextMapToEditMap();
+      return await this.Caches.shapeMap.copyEditMapToQueryMap();
+    else // if (active === "#queryMap")
+      return await this.Caches.shapeMap.copyQueryMapToEditMap();
   }
 
   /* Keyboard events */
@@ -3749,7 +3749,7 @@ class ShExBaseApp {
    */
   async getPermalink () {
     let parms = [];
-    await this.Caches.shapeMap.copyEditMapToTextMap();
+    await this.Caches.shapeMap.copyEditMapToQueryMap();
     parms = parms.concat(this.QueryParams.reduce((acc, input) => {
       let parm = input.queryStringParm;
       let val = input.location.val();
@@ -3910,7 +3910,7 @@ class ShExBaseApp {
    * built from the QueryParams manifest descriptors, plus a spill-over file
    * per input whose text is over GIST_INLINE_LINES lines */
   async assembleGistFiles () {
-    await this.Caches.shapeMap.copyEditMapToTextMap();
+    await this.Caches.shapeMap.copyEditMapToQueryMap();
     const status = $("#results .fails").length ? "nonconformant" : "conformant";
     const files = {};
     const part = (parm, fileName, text) => {
