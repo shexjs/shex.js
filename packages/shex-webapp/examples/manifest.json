@@ -116,8 +116,7 @@
     "queryMap": "SPARQL '''SELECT ?item ?itemLabel WHERE {\n  ?item wdt:P279* wd:Q12078 .\n  SERVICE wikibase:label {\n    bd:serviceParam wikibase:language \"en\"\n  }\n} LIMIT 10'''@START",
     "status": "conformant",
     "neighborhood": "sparql",
-    "endpoint": "https://query.wikidata.org/sparql",
-    "regexpEngine": "eval-simple-1err"
+    "endpoint": "https://query.wikidata.org/sparql"
   },
   {
     "schemaLabel": "Wikidata person",
@@ -127,8 +126,7 @@
     "endpoint": "https://query.wikidata.org/sparql",
     "queryMap": "<http://www.wikidata.org/entity/Q42>@START\n",
     "status": "conformant",
-    "comment": "Douglas Adams, validated by asking query.wikidata.org for each neighborhood as the walk needs it.",
-    "regexpEngine": "eval-simple-1err"
+    "comment": "Douglas Adams, validated by asking query.wikidata.org for each neighborhood as the walk needs it."
   },
   {
     "schemaLabel": "Wikidata person",
@@ -139,8 +137,7 @@
     "queryMap": "QENTITIES \"42 76\"@START\n",
     "status": "conformant",
     "comment": "The same entity from the JSON pages Wikidata is edited through, turned back into the RDF the query service would serve.  The QueryMap names entities by id and lets this source work out what they are called.",
-    "data": "Q42\n",
-    "regexpEngine": "eval-simple-1err"
+    "data": "Q42\n"
   },
   {
     "schemaLabel": "Wikidata person",
@@ -151,8 +148,7 @@
     "queryMap": "<http://www.wikidata.org/entity/Q42>@START\n",
     "status": "conformant",
     "comment": "The same entity from a page downloaded earlier: edit it in the pane to see what an edit would validate as before making it.  With a downloaded site table too (the sitelinks in a page name wikis like \"enwiki\", and only that table says which URL and language that is), this entry needs no network at all.",
-    "sitematrix": "../examples/wikidata-sitematrix.json",
-    "regexpEngine": "eval-simple-1err"
+    "sitematrix": "../examples/wikidata-sitematrix.json"
   },
   {
     "schemaLabel": "Wikidata human gene",
@@ -163,7 +159,6 @@
     "queryMap": "QENTITIES \"227339\"@START\n",
     "status": "conformant",
     "comment": "GeneWiki's human gene schema (EntitySchema:E37), with the two schemas it imports inlined: a gene's chromosome is E109's and the genome assembly its coordinates are given against is E108's.  So validating BRCA1 (Q227339) walks from the gene to chromosome 17 (Q220677) and on to GRCh38 (Q20966585) -- three entities, three shapes, each page fetched as the walk reaches it.  Four constraints are relaxed here, each marked RELAXED IN THIS COPY where it stands: three are places where the data cites a source the schema enumerates without (a newer Ensembl release, the OMA browser), and one is a normalized value this source can't derive from an entity page.",
-    "data": "Q227339\n",
-    "regexpEngine": "eval-simple-1err"
+    "data": "Q227339\n"
   }
 ]

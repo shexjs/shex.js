@@ -110,12 +110,67 @@ interface TripleTestedErrors {
 class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
   public outerExpression: ShExJ.tripleExprOrRef;
   protected node: RdfJsTerm | null = null; // the focus node while match() runs
+  /** Constraints this engine may satisfy greedily: see takesAllItCan. */
+  protected greedy: Set<ShExJ.TripleConstraint>;
   constructor(
       public shape: ShExJ.Shape,
       public index: SchemaIndex,
       public debugHooks?: RegexDebugHooks,
   ) {
     this.outerExpression = shape.expression!;
+    this.greedy = this.takesAllItCan(this.outerExpression);
+  }
+
+  /**
+   * Which constraints can take every triple assigned to them at once.
+   *
+   * The validator hands this engine an assignment: each triple in the
+   * neighborhood belongs to exactly one TripleConstraint (t2tc), and a
+   * triple this expression doesn't consume is an ExcessTripleViolation.  So
+   * for a constraint the expression reaches once, consuming fewer than all
+   * of its triples cannot lead anywhere the maximum doesn't: there is no
+   * other constraint those triples could go to.  Trying every prefix
+   * length, as this engine did, multiplies out -- one thread per
+   * combination of prefix lengths across the repeated constraints, all of
+   * them passing, all but one of them discarded.
+   *
+   * Two shapes of expression still need the enumeration, and are left to
+   * it: a constraint reached twice (the same TripleConstraint object under
+   * two Inclusions) shares one pool of triples between two occurrences, and
+   * a constraint under a repeated group is visited once per iteration.  In
+   * both, what one visit takes is what another goes without -- e.g.
+   * `&<onePlus>; &<onePlus>` over two triples matches only 1 + 1.
+   */
+  takesAllItCan (expr: ShExJ.tripleExprOrRef): Set<ShExJ.TripleConstraint> {
+    const once = new Set<ShExJ.TripleConstraint>();
+    const twice = new Set<ShExJ.TripleConstraint>();
+    const walk = (e: ShExJ.tripleExprOrRef, repeated: boolean, seen: Set<string>): void => {
+      if (typeof e === "string") {
+        if (seen.has(e))
+          return;                     // recursive inclusion: already counted
+        const included = this.index.tripleExprs[e];
+        if (included === undefined)
+          return;
+        return walk(included, repeated, new Set(seen).add(e));
+      }
+      switch (e.type) {
+        case "TripleConstraint":
+          if (repeated || once.has(e))
+            twice.add(e);
+          once.add(e);
+          return;
+        case "EachOf":
+        case "OneOf": {
+          const max = e.max === undefined ? 1 : e.max;
+          const iterates = repeated || max === UNBOUNDED || max > 1;
+          e.expressions.forEach(nested => walk(nested, iterates, seen));
+          return;
+        }
+      }
+    };
+    walk(expr, false, new Set());
+    twice.forEach(tc => once.delete(tc));
+    return once;
   }
 
   match (node: RdfJsTerm, constraintToTripleMapping: ConstraintToTripleResults,
@@ -277,7 +332,11 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
       });
     if (thread.avail.get(constraint) === undefined)
       thread.avail.set(constraint, constraintToTripleMapping.get(constraint)!.map(pair => pair.triple));
-    const taken = thread.avail.get(constraint)!.splice(0, min);
+    // all of them at once where nothing else could want them (takesAllItCan),
+    // otherwise the minimum, and one more thread per triple after that
+    const greedy = this.greedy.has(constraint);
+    const wanted = greedy ? Math.min(thread.avail.get(constraint)!.length, max) : min;
+    const taken = thread.avail.get(constraint)!.splice(0, Math.max(wanted, min));
 
     if (!(taken.length >= min)) // Early return
       return [thread.makeMissingPropertyThread(constraint, thread.matched)];
@@ -329,7 +388,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
         )
       }
     } while ((() => {
-      if (thread.avail.get(constraint)!.length > 0 && taken.length < max) {
+      if (!greedy && thread.avail.get(constraint)!.length > 0 && taken.length < max) {
         // build another thread.
         taken.push(thread.avail.get(constraint)!.shift()!);
         return true;
@@ -390,7 +449,9 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
       const failures: RegexpThread[] = [];
       for (const newThread of newThreads) {
         const ctx = {
-          triples: newThread.matched.flatMap(m => m.triples),
+          // (concat rather than flatMap: this package compiles against
+          // lib ES2021.String, which brings no Array.prototype.flatMap)
+          triples: ([] as RdfJsQuad[]).concat(...newThread.matched.map(m => m.triples)),
           tripleExpr: groupTE,
         }
         const semActErrors = semActHandler.dispatchAll(groupTE.semActs, ctx, newThread)
