@@ -259,11 +259,54 @@ this, done at the refutation layer:
 2. ~~Compute the whole-neighborhood repair and compare it with the classic
    errors over shexTest, behind a flag~~ — done: `{repairs: true}`, measured
    above, and `errsToSimple` ends a failure with "to conform: ...".
-3. Move the WebApp's error rendering to repairs (this is where the payoff is
-   visible: "add one `foaf:mbox`" beside the constraint it belongs to), and
-   decide whether the flag should default on.
+3. ~~Move the WebApp's error rendering to repairs~~ — done: the apps ask for
+   repairs, the results say "to conform: ..." in words, and each arc is
+   pinned on the constraint it is about, so "to conform: add 1" sits beside
+   the `foaf:mbox` the node hasn't got.  The flag stays off by default in the
+   library (a caller that doesn't want the search shouldn't pay for it) and
+   on in the apps, which is where a reader is.
 4. Replace the classic errors once the repairs have been read in anger for a
    while, and rewrite the failure tests then, once.
+
+## 5. Implementation note: the pruned state is not the node
+
+Every reporting feature in §3 and §4 was written wrong the first time, in
+the same way, and it is worth saying why once.
+
+`pruneInfeasibleCandidates` implements the arc-consistency pass the spec
+describes ([algorithms.html §Bag-Directed Search with Partial-Bag
+Refutation](https://shexspec.github.io/spec/algorithms.html)): for every
+(triple, candidate constraint) pair, if committing that one triple is
+already refutable, delete the pair.  It does that **by mutating `t2tcs`**.
+
+The pruning is sound as a search filter — it only ever deletes pairs that
+appear in no accepted matching, so the set of accepted matchings is
+unchanged, which is exactly what the spec promises.  But the corollary is
+easy to miss: *anything else* computed from that structure afterwards is
+not unchanged.  When a node cannot conform for any reason, refutation
+cascades and can empty every triple's candidate list — so the state after
+pruning says "this node has nothing", whatever the node has.
+
+Three features read it anyway, and each was wrong in a way that looked like
+a different bug:
+
+| asked after pruning | what it reported |
+| --- | --- |
+| does the missing property explain this homeless triple? | granting it never helped, because the node's other arcs had been deleted too |
+| what would seat this homeless triple? | nothing would, so every report said "remove it" |
+| what bag does this node have? | the empty bag, so every repair said "add everything" |
+
+The rule, for anything that reports rather than searches: **count the node
+before the search starts**.  `hi0` (candidate counts) and `observedBag`
+(the bag) are both computed immediately after `matchByPredicate` and before
+the first deletion, and the reporting code takes them as arguments rather
+than re-reading `t2tcs`.  A comment at the mutation site says so, since
+that is where the next person will be standing.
+
+This is not peculiar to this codebase — any validator that prunes and then
+reports has the same trap — which is why it may be worth a sentence in the
+spec's pruning section: the invariant it states is about *accepted
+matchings*, and readers should not extend it to the pre-matching itself.
 
 ## Literature
 

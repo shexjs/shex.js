@@ -517,6 +517,47 @@ function constraintStr(tc) {
                 : tc.valueExpr.type;
     return `<${tc.predicate}> ${ve}${card}`;
 }
+/**
+ * repairNotes - a failure's repairs, pinned on the constraints they are
+ * about.
+ *
+ * The validator can report what would make a node conform: arcs to add,
+ * arcs to take away (doc/error-normalization.md §4).  Each arc belongs to a
+ * constraint the reader is looking at, so it belongs *there* -- "to conform:
+ * add 1" beside the `foaf:mbox` the node hasn't got -- rather than only in
+ * the results.  An arc whose constraint can't be located (a repair naming a
+ * predicate the reader's schema spells elsewhere) is dropped rather than
+ * pinned at a guess.
+ */
+function repairNotes(valResult, shexcParsed) {
+    const notes = [];
+    const seen = new Set();
+    (function walk(node) {
+        if (Array.isArray(node))
+            return node.forEach(walk);
+        if (node === null || typeof node !== "object")
+            return;
+        if (node.type === "Failure" && Array.isArray(node.repairs) && typeof node.shape === "string") {
+            const ways = node.repairs.filter((repair) => (repair.arcs || []).length > 0);
+            ways.forEach((repair, at) => repair.arcs.forEach((arc) => {
+                const found = shexcParsed.locate.constraintAnchors(node.shape, arc.property, 0);
+                const where = found && found.parts.length > 0 ? found.parts[0] : null;
+                if (where === null)
+                    return;
+                const said = (arc.delta > 0 ? "add " : "remove ") + Math.abs(arc.delta);
+                const message = (ways.length > 1 ? "to conform (way " + (at + 1) + " of "
+                    + ways.length + "): " : "to conform: ") + said;
+                const key = where.from + ":" + where.to + ":" + message;
+                if (seen.has(key))
+                    return;
+                seen.add(key);
+                notes.push({ from: where.from, to: where.to, severity: "info", message });
+            }));
+        }
+        Object.values(node).forEach(walk);
+    })(valResult);
+    return notes;
+}
 /** mapValidationErrors - walk a validation result (single Failure, a
  * ShapeMap entry list, or anything ShExValidator returns) and resolve each
  * error to ranges in the schema and data documents.
@@ -624,7 +665,8 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed) {
         .filter(p => p.status === "nonconformant" && p[side])
         .map(p => ({ from: p[side].from, to: p[side].to, severity: "error",
         message: p.message, pair: p.id }));
-    return { schema: toDiagnostics("schema"), data: toDiagnostics("data"), pairs };
+    return { schema: toDiagnostics("schema").concat(repairNotes(valResult, shexcParsed)),
+        data: toDiagnostics("data"), pairs };
 }
 /** mapMaterialization - tie each generated triple to its constraint in the
  * output schema and its position in the rendered result Turtle.

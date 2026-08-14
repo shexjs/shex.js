@@ -988,6 +988,38 @@ if (!TEST_browser) {
       }
     });
 
+    /* A failure comes with what would make the node conform, and each arc of
+     * that is pinned on the constraint it is about -- "to conform: add 1"
+     * beside the property the node hasn't got (doc/error-normalization.md
+     * §4). */
+    it("should pin what would make the node conform on the constraint it is about", async function () {
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      set("#inputSchema textarea", [
+        "PREFIX : <http://a.example/>",
+        ":S { :name . ; :mbox . }",
+      ].join("\n"));
+      set("#inputData textarea", [
+        "PREFIX : <http://a.example/>",
+        ':x :name "Bob" .',
+      ].join("\n"));
+      set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
+      await shared.promise;
+      $("#validate").trigger("click");
+      await shared.promise;
+
+      const mapped = shared.Caches.editorSupport.lastMapped;
+      const schemaText = $("#inputSchema textarea").first().val();
+      const notes = mapped.schema.filter(d => d.message.indexOf("to conform") !== -1);
+      expect(notes.length, "a note about conforming").to.be.above(0);
+      expect(notes[0].message).to.equal("to conform: add 1");
+      // ...on the constraint that wants it, not on the one the node has
+      expect(schemaText.substring(notes[0].from, notes[0].to)).to.include(":mbox");
+    });
+
     it("should anchor validation errors in both panes", async function () {
       const warns = [];
       const origWarn = dom.window.console.warn;

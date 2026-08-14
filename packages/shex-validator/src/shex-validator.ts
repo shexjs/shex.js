@@ -841,6 +841,17 @@ export class ShExValidator {
    * (such triples can never be matched, and a value-matching triple may not be left
    * unmatched, so no partition can succeed).
    */
+  /**
+   * !! This mutates t2tcs: arc consistency deletes candidates from it.
+   *
+   * What is left afterwards is a *search state*, not a description of the
+   * node.  When a node is unsatisfiable for any reason, refutation cascades
+   * and can empty every triple's candidate list -- so anything asked of
+   * t2tcs after this reads "the node has nothing", whatever the node has.
+   * Three reporting features were wrong in exactly that way before this
+   * comment existed; see doc/error-normalization.md §5.  Ask before, or ask
+   * hi0/observedBag, which are counted before the first deletion.
+   */
   protected pruneInfeasibleCandidates(t2tcs: T2TCs, feasibility: TripleExprFeasibility, extendsTCs: TripleConstraint[]): error[] {
     const errors: error[] = [];
     const localOf = (tcs: TripleConstraint[]) => tcs.filter(tc => extendsTCs.indexOf(tc) === -1);
