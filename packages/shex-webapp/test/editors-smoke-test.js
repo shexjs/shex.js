@@ -892,6 +892,70 @@ if (!TEST_browser) {
         expect(css, "the data pane's green").to.include("rgb(244, 255, 244)");
       });
 
+      /* A range is an offset into the document it was located in.  The data
+       * pane shows one document at a time, so results about another one have
+       * no business lighting up text here -- and a hover in the data pane
+       * must never switch documents, which would pull the page out from
+       * under the mouse that is pointing at it. */
+      it("should keep one document's hovers out of another's", async function () {
+        this.timeout(60000);
+        const examples = Path.join(__dirname, "../examples");
+        const read = f => Fs.readFileSync(Path.join(examples, f), "utf8");
+
+        await shared.Caches.manifest.set([{
+          schemaLabel: "FHIR-ish", schema: read("ClinObs.shex"),
+          dataLabel: "two documents", neighborhood: "rdfjs",
+          data: [read("ClinObs-observation.ttl"), read("ClinObs-patient.ttl")],
+          queryMap: "<http://hl7.example/Obs1>@<ObservationShape>",
+        }], "http://localhost/manifest.json");
+        $("#inputSchema .manifest li").last().trigger("click");
+        await shared.promise;
+        $("#inputData .indeterminant li").last().trigger("click");
+        await shared.promise;
+        $("#validate").trigger("click");
+        await shared.promise;
+
+        const source = shared.neighborhoods;
+        const es = shared.Caches.editorSupport;
+        const docs = source.documents();
+        const observationAt = docs.findIndex(d => d.text.indexOf(":valueQuantity") !== -1);
+        const patientAt = docs.findIndex(d => d.text.indexOf(":birthdate") !== -1);
+        source.show(observationAt);
+
+        const regions = [];
+        const pane = es.panes.inputData;
+        const wasSet = pane.setHoverRegions;
+        pane.setHoverRegions = (rs, leave) => {
+          regions.length = 0; regions.push(...(rs || []));
+          return wasSet.call(pane, rs, leave);
+        };
+        try {
+          es.setPairHovers(es.lastMapped.pairs);
+          // exactly the ranges of the results about this document: an object
+          // and a predicate each, and nothing from the document next door
+          const here = es.lastMapped.pairs.filter(p => p.doc === observationAt);
+          const there = es.lastMapped.pairs.filter(p => p.doc === patientAt);
+          expect(there.length, "results about the other document exist").to.be.above(0);
+          const ranges = pairs => pairs.reduce((n, p) => n
+            + (p.anchors.objectParts || (p.anchors.object ? [p.anchors.object] : [])).length
+            + (p.anchors.predicateParts || (p.anchors.predicate ? [p.anchors.predicate] : [])).length, 0);
+          expect(regions.length, "one per range of the results shown here")
+            .to.equal(ranges(here));
+
+          // a region built while this document was showing, hovered after
+          // another has come forward: it may not drag the reader back
+          const stale = regions[0];
+          expect(stale, "a region to hover").to.exist;
+          source.show(patientAt);
+          expect(source.showing, "moved by the tab, not by a hover").to.equal(patientAt);
+          stale.enter();
+          expect(source.showing, "a data hover leaves the document alone").to.equal(patientAt);
+        } finally {
+          pane.setHoverRegions = wasSet;
+          source.show(observationAt);
+        }
+      });
+
       it("should carry the source and its settings in the permalink", async function () {
         source().select("sparql");
         $("#nbhd-endpoint").val("http://ex.example/sparql").trigger("change");

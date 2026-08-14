@@ -2551,6 +2551,7 @@ class EditorSupport {
         } // else: expected failure -- no error marks
       });
       this.lastMapped = merged; // introspection for tests/debugging
+      this.mappedDoc = showing;  // the document these data ranges are offsets into
       this.panes.inputSchema.setDiagnostics(merged.schema);
       if (this.panes.inputData)
         this.panes.inputData.setDiagnostics(merged.data);
@@ -2558,6 +2559,18 @@ class EditorSupport {
     } catch (e) {
       console.warn("editor diagnostics failed:", e);
     }
+  }
+
+  /** Another document is showing: the data-side ranges were offsets into
+   * the one before it, so aim them again -- and take away the marks that
+   * belong to a document nobody is looking at. */
+  reaimAtShowingDocument () {
+    if (!this.lastMapped)
+      return;
+    const showing = this.app.neighborhoods ? this.app.neighborhoods.showing : -1;
+    if (this.panes.inputData)
+      this.panes.inputData.setDiagnostics(showing === this.mappedDoc ? this.lastMapped.data : []);
+    this.setPairHovers(this.lastMapped.pairs);
   }
 
   /** cross-pane hover highlighting for validation matches and failures:
@@ -2625,7 +2638,10 @@ class EditorSupport {
       // page, later another named graph -- so bring it forward.  Showing a
       // document can rebuild the pane (a new language), so ask for the pane
       // again rather than highlighting the one that was just destroyed.
-      const neighborhoods = this.app.neighborhoods;
+      // ...unless the mouse is in the data pane, where switching would pull
+      // the document out from under it: a data-side hover is already about
+      // the document being pointed at
+      const neighborhoods = hoveredSide === "data" ? null : this.app.neighborhoods;
       if (neighborhoods && lead.doc >= 0 && lead.doc !== neighborhoods.showing
           && dataRanges.length) {
         neighborhoods.show(lead.doc);
@@ -2643,10 +2659,16 @@ class EditorSupport {
           from: r.from, to: r.to, enter: () => show(group, "schema"),
         }))),
       clearAll);
-    // both the object and the predicate trigger data-side hovers
+    // Both the object and the predicate trigger data-side hovers -- but
+    // only for results about the document on screen.  A range is an offset
+    // into the document it was located in, so a pair from another document
+    // would light up whatever text happens to sit at those offsets here.
+    const showingDoc = this.app.neighborhoods ? this.app.neighborhoods.showing : -1;
+    const shownHere = (p) => p.doc === undefined || p.doc < 0 || p.doc === showingDoc;
     dataPane.setHoverRegions(
-      pairs.flatMap(p => [].concat(anchorRanges(p, "object"), anchorRanges(p, "predicate"))
-        .map(r => ({from: r.from, to: r.to, enter: () => show([p], "data")}))),
+      pairs.filter(shownHere).flatMap(
+        p => [].concat(anchorRanges(p, "object"), anchorRanges(p, "predicate"))
+          .map(r => ({from: r.from, to: r.to, enter: () => show([p], "data")}))),
       clearAll);
     // hovering a TestedTriple in an appinfo results pane highlights its
     // constraint in the schema and its triple in the data
@@ -2741,6 +2763,9 @@ class ShExBaseApp {
         inputData.dirty(true);
         if (changed && changed.language)
           this.refreshDataPaneEditor();
+        // the results' data ranges belong to whichever document is showing
+        if (this.editorSupport)
+          this.editorSupport.reaimAtShowingDocument();
       },
       () => {
         const pane = this.editorSupport && this.editorSupport.panes.inputData;
