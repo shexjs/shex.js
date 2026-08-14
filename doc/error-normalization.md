@@ -1,9 +1,12 @@
 # Reporting failures as repairs
 
-An investigation of the eval-threaded-nerr blowup, and a proposal for what
-"report all the errors" should mean.  The first part is done and committed;
-the second is a design, with a prototype beside this note
-(`repair-normalization-prototype.js`) that produces the numbers quoted here.
+An investigation of the eval-threaded-nerr blowup, and what "report all the
+errors" should mean.  §1 and §3 are built; §4 is a design, with a prototype
+beside this note (`repair-normalization-prototype.js`) that produces the
+numbers quoted there.  §3 says what a triple with nowhere to go would take
+to settle it, which is a repair asked at one place; §4 asks it of the whole
+neighborhood at once, which is what makes the answer independent of how the
+schema was written.
 
 ## 1. The blowup was not about errors
 
@@ -60,7 +63,7 @@ neither engine searches.  shexTest repeats groups only over *fixed* inner
 cardinalities (`open3Eachdotclosecard23`), so nothing catches it.  Recorded as
 a skipped test in `packages/eval-threaded-nerr/test/`.
 
-## 2. What "all the errors" reports today
+## 2. Where the reporting started
 
 The same data, missing an `mbox`, against two spellings of one language:
 
@@ -81,7 +84,67 @@ The second blames the one triple the node actually got right.  Both are
 wrong with it, and they disagree because they are about the *parse*, not
 about the data.
 
-## 3. The proposal: say what would fix it
+## 3. What the refutation layer says now
+
+Some of §4 is built, at the place a refutation is raised rather than over
+the expression as a whole.  A triple the schema has nowhere to put is
+reported with what would settle it:
+
+```shex
+<QuantityShape> {
+  :value xsd:decimal ; :unit xsd:string ;
+  ( :code xsd:string ; :system IRI? )?     # a :system wants a :code beside it
+}
+```
+```
+data: [ :unit "kg" ; :system <http://unitsofmeasure.org> ]
+
+Missing property: http://hl7.org/fhir/value
+AND
+Triple _:b http://hl7.org/fhir/system http://unitsofmeasure.org
+  fits no triple constraint: either add http://hl7.org/fhir/code, or remove it.
+```
+
+Two independent faults, two reports, and the second says both ways out.
+The error carries them as data too — `repairs: [{type: "AddArcs", arcs:
+[...]}]` — one entry per alternative, each naming the arcs that go together.
+
+Where it is exact, and where it is a heuristic:
+
+- **A missing property explains a homeless triple only if supplying it
+  would seat it.**  `( :a . ; :b . )` holding only a `:b` reports the
+  missing `:a` alone — the `:b` is homeless *because* of it.  Supplying a
+  `:value` leaves the `:system` above just as stranded, so both are said.
+- **Every constraint that could have taken the triple is asked**, so a
+  `:z` three branches offer a home to reports all three ways out rather
+  than whichever constraint pruning removed last.
+- **Where no single arc settles it, the arcs that settle it together**:
+  `( :a . ; :b . ; :c . )?` holding only a `:c` says "either add `:a` and
+  `:b`, or remove it".  One minimal set, found by granting everything and
+  putting back what turns out not to be needed — not every minimal set,
+  which is what §4 is for.
+- **Short of a minimum counts as absent.**  One `:d` where the schema
+  wants two is as unsatisfiable as none: it is granted before the question
+  is asked (so nothing beside it is wrongly called homeless) and reported
+  as a missing property.
+- **Of the partitions tried, the one that found least wrong is reported.**
+  The code said "report only last errors until we have a better idea", and
+  the last one tried is an accident of enumeration order — it could name a
+  constraint as missing because the partition being reported had left its
+  triple unassigned.  Fewest-errors is a heuristic, not a semantics; §4's
+  minimum-distance bag is the principled version.
+
+Measured over the shexTest validation manifest: **1181 tests, 0 verdicts
+changed, 7 reports changed**, three of them a cardinality shortfall that now
+reads `Missing property` where it read "this triple fits nowhere" —
+which is what eval-simple-1err has always said about it.
+
+The two spellings in §2 now agree on the *advice* — both name `foaf:mbox`
+as the thing to add — while still differing in form: one reports a missing
+property, the other a triple with nowhere to go that a `foaf:mbox` would
+seat.  Making the report itself identical is what remains.
+
+## 4. The proposal: say what would fix it
 
 A ShEx triple expression denotes a set of **bags** — multisets of triple
 constraints — which is the RBE view ShEx was designed around (Staworko et
@@ -154,16 +217,20 @@ gives the repair; keeping every argmin gives the alternatives.
 ### What adopting it would cost
 
 The result shape already fits: `PossibleErrors` is a disjunction of error
-lists, which is what a set of repairs is.  What changes is which errors
-appear in them, so the failure tests that assert error *structure* would need
-rewriting — the ones that assert conformance would not.  Worth doing in this
-order:
+lists, which is what a set of repairs is, and §3's errors already carry a
+`repairs` field of the shape a bag repair would use.  What changes is which
+errors appear, so the failure tests that assert error *structure* would need
+rewriting — the ones that assert conformance would not.  §3 is step 1 of
+this, done at the refutation layer:
 
-1. Compute repairs alongside the current errors and expose them under a new
-   key; nothing breaks, and the two can be compared over shexTest.
-2. Move the WebApp's error rendering to repairs (this is where the payoff is
+1. ~~Compute repairs alongside the current errors and expose them under a
+   new key~~ — done for homeless triples (`repairs` on
+   FeasibilityViolation); the same for missing and excess arcs is the DP.
+2. Compute the whole-neighborhood repair and compare it with the classic
+   errors over shexTest, behind a flag: same verdicts, different accounts.
+3. Move the WebApp's error rendering to repairs (this is where the payoff is
    visible: "add one `foaf:mbox`" beside the constraint it belongs to).
-3. Replace the classic errors once the repairs have been read in anger for a
+4. Replace the classic errors once the repairs have been read in anger for a
    while, and rewrite the failure tests then, once.
 
 ## Literature
