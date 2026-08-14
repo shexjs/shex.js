@@ -124,6 +124,65 @@ describe("EditorPanes", function () {
     }
   });
 
+  /* A range that spans lines is one range, but painting it as one paints
+   * every following line's indentation too -- and, in a pane wider than its
+   * text, the empty space out to the right edge. */
+  it("should highlight the text a multi-line range covers, not the block", function () {
+    const textarea = dom.window.document.createElement("textarea");
+    textarea.value = '{\n    "a": 1,\n    "b": 2\n}\n';
+    dom.window.document.body.appendChild(textarea);
+    const pane = makePane(textarea, {language: "json", lint: false});
+    try {
+      pane.highlight([{from: 0, to: textarea.value.indexOf("}") + 1}], "shexjs-highlight");
+      const marks = [];
+      pane.view.dom.querySelectorAll(".shexjs-highlight").forEach(e => marks.push(e.textContent));
+      expect(marks.length, "a piece per line").to.be.above(1);
+      for (const mark of marks) {
+        expect(mark, "no leading indentation").to.equal(mark.replace(/^\s+/, ""));
+        expect(mark.trim(), "nothing but whitespace highlighted").to.not.equal("");
+      }
+      expect(marks.join("")).to.include('"a": 1');
+    } finally {
+      pane.destroy();
+      textarea.remove();
+    }
+  });
+
+  /* posAtCoords answers for anywhere in the content, so the comment column
+   * beside a short line reports that line's end -- inside any range that
+   * spans the line.  Hovering there used to light the range up. */
+  it("should not take the space beside a line as a hover over it", function () {
+    const textarea = dom.window.document.createElement("textarea");
+    textarea.value = ':gender ["male" "female"\n         "unknown"]? ;   # a comment\n';
+    dom.window.document.body.appendChild(textarea);
+    const pane = makePane(textarea, {language: "turtle", lint: false});
+    try {
+      const view = pane.view;
+      const firstLineEnd = textarea.value.indexOf("\n");
+      // jsdom lays nothing out, so say where the text is: line 1 runs from
+      // x=0 to x=240, and the mouse is at y=5 either side of its end
+      view.coordsAtPos = (pos) => pos <= firstLineEnd
+        ? (pos === 0 ? {left: 0, right: 0, top: 0, bottom: 10}
+           : {left: 240, right: 240, top: 0, bottom: 10})
+        : {left: 0, right: 200, top: 10, bottom: 20};
+      view.posAtCoords = () => firstLineEnd;      // as it does past a line's end
+
+      const entered = [];
+      pane.setHoverRegions([{from: 0, to: textarea.value.length - 1,
+                             enter: () => entered.push("hit")}]);
+      const move = (x, y) => view.contentDOM.dispatchEvent(
+        new dom.window.MouseEvent("mousemove", {clientX: x, clientY: y, bubbles: true}));
+
+      move(400, 5);                 // out in the comment column, past the text
+      expect(entered, "nothing under the mouse").to.deep.equal([]);
+      move(100, 5);                 // over the value set itself
+      expect(entered, "over the text").to.deep.equal(["hit"]);
+    } finally {
+      pane.destroy();
+      textarea.remove();
+    }
+  });
+
   /* A result pane replaces nothing, so it has nothing to inherit; the host
    * says what it should look like by handing over an element it styled. */
   it("should dress a result pane like the place it is put", function () {
