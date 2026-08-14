@@ -119,7 +119,7 @@ if (!TEST_browser) {
       };
       set("#inputSchema textarea", "PREFIX : <http://a.example/>\n:S { :p . }");
       set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .");
-      set("#textMap", "<http://a.example/x>@<http://a.example/S>");
+      set("#shapeMap", "<http://a.example/x>@<http://a.example/S>");
       await shared.promise;
 
       const button = $("#validate");
@@ -166,7 +166,7 @@ if (!TEST_browser) {
         // changing the data starts a rebuild; changing the map starts another
         // before the first has resolved
         set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .\n:y :p 2 .");
-        set("#textMap", "<http://a.example/x>@<http://a.example/S>,\n" +
+        set("#shapeMap", "<http://a.example/x>@<http://a.example/S>,\n" +
             "<http://a.example/y>@<http://a.example/S>");
         await shared.promise;
 
@@ -176,14 +176,14 @@ if (!TEST_browser) {
         ]);
 
         // and again, to a map with fewer pairs than the one before
-        set("#textMap", "<http://a.example/y>@<http://a.example/S>");
+        set("#shapeMap", "<http://a.example/y>@<http://a.example/S>");
         await shared.promise;
         expect(rows(), "the pair that went away is gone").to.deep.equal([
           "http://a.example/y@http://a.example/S",
         ]);
       } finally {
         shared.Caches.shapeMap.removeEditMapPair(null);
-        set("#textMap", "<http://a.example/x>@<http://a.example/S>");
+        set("#shapeMap", "<http://a.example/x>@<http://a.example/S>");
         await shared.promise;
       }
     });
@@ -208,7 +208,7 @@ if (!TEST_browser) {
         set("#inputSchema textarea", "PREFIX : <http://a.example/>\n:S { :p . }");
         set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .\n:y :p 2 .");
         shared.Caches.shapeMap.removeEditMapPair(null);
-        set("#textMap", "<http://a.example/x>@<http://a.example/S>,\n" +
+        set("#shapeMap", "<http://a.example/x>@<http://a.example/S>,\n" +
             "<http://a.example/y>@<http://a.example/S>");
         await shared.promise;
       });
@@ -218,7 +218,7 @@ if (!TEST_browser) {
         $("#editors").val("1").trigger("change");
         // put back the one entry the other tests were left expecting
         shared.Caches.shapeMap.removeEditMapPair(null);
-        set("#textMap", "<http://a.example/x>@<http://a.example/S>");
+        set("#shapeMap", "<http://a.example/x>@<http://a.example/S>");
         await shared.promise;
       });
 
@@ -809,7 +809,7 @@ if (!TEST_browser) {
         expect(shown.indexOf('"Q42"'), "and that page is what the pane holds").to.be.above(-1);
 
         // leave no QENTITIES map behind: the next source can't read one
-        $("#textMap").val("").trigger("change");
+        $("#shapeMap").val("").trigger("change");
         await shared.promise;
       });
 
@@ -879,7 +879,7 @@ if (!TEST_browser) {
         const set = (selector, value) => $(selector).first().val(value).trigger("change");
         set("#inputSchema textarea", "PREFIX : <http://a.example/>\n:S { :p . }\n");
         set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .\n");
-        set("#textMap", "<http://a.example/x>@<http://a.example/S>");
+        set("#shapeMap", "<http://a.example/x>@<http://a.example/S>");
         $("#validate").trigger("click");
         await shared.promise;
 
@@ -945,8 +945,8 @@ if (!TEST_browser) {
         "PREFIX : <http://a.example/>",
         ':x :p "not a number" .',
       ].join("\n"));
-      set("#textMap", "<http://a.example/x>@<http://a.example/S>");
-      await shared.promise; // the #textMap change handler's copyTextMapToEditMap
+      set("#shapeMap", "<http://a.example/x>@<http://a.example/S>");
+      await shared.promise; // the #shapeMap change handler's copyTextMapToEditMap
       $("#validate").trigger("click");
       await shared.promise; // the validation
       dom.window.console.warn = origWarn;
@@ -1016,7 +1016,7 @@ if (!TEST_browser) {
         "PREFIX : <http://a.example/>",
         ':x :p "not a number" .',
       ].join("\n"));
-      set("#textMap", "<http://a.example/x>@!<http://a.example/S>"); // expected to fail
+      set("#shapeMap", "<http://a.example/x>@!<http://a.example/S>"); // expected to fail
       await shared.promise;
       $("#validate").trigger("click");
       await shared.promise;
@@ -1055,7 +1055,7 @@ if (!TEST_browser) {
         elt.val(value);
         elt.trigger("change");
       };
-      set("#textMap", "<http://a.example/x>@<http://a.example/S>"); // conformant again
+      set("#shapeMap", "<http://a.example/x>@<http://a.example/S>"); // conformant again
       await shared.promise;
       const origInterface = $("#interface").val();
       $("#interface").val("appinfo");
@@ -1167,7 +1167,7 @@ if (!TEST_browser) {
         "PREFIX : <http://a.example/>",
         ":x :p 0 ; :q 1 ; :r 2 ; :q 3 ; :r 4 .",
       ].join("\n"));
-      set("#textMap", "<http://a.example/x>@<http://a.example/S>");
+      set("#shapeMap", "<http://a.example/x>@<http://a.example/S>");
       await shared.promise;
 
       // a gutter breakpoint on the :q constraint's line

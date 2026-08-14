@@ -134,8 +134,8 @@ if (!TEST_browser) {
         "PREFIX : <http://a.example/>",
         ':x :p "not a number" .',
       ].join("\n"));
-      set("#textMap", "<http://a.example/x>@<http://a.example/S>");
-      await shared.promise; // the #textMap change handler's copyTextMapToEditMap
+      set("#shapeMap", "<http://a.example/x>@<http://a.example/S>");
+      await shared.promise; // the #shapeMap change handler's copyTextMapToEditMap
       $("#validate").trigger("click");
       await shared.promise; // the validation, round-tripped through the worker
 
