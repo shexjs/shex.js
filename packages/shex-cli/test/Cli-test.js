@@ -215,6 +215,44 @@ if (!TEST_cli) {
       }
     });
 
+    /* What would make a failing node conform, on the command line
+     * (doc/error-normalization.md §4).  Off unless asked for: a caller who
+     * doesn't want the search shouldn't pay for it. */
+    describe("--repairs", function () {
+      const shape = "<http://a.example/S>";
+      function inTmp (name, text) {
+        const dir = Fs.mkdtempSync(Path.join(require("os").tmpdir(), "repairs-"));
+        const at = Path.join(dir, name);
+        Fs.writeFileSync(at, text);
+        return at;
+      }
+      const schema = inTmp("s.shex", "PREFIX : <http://a.example/>\n" +
+                           "<http://a.example/S> { :name . ; :mbox . }\n");
+      const data = inTmp("d.ttl", "PREFIX : <http://a.example/>\n" +
+                         '<http://a.example/x> :name "Bob" .\n');
+      const args = ["-x", schema, "-d", data, "-m", "<http://a.example/x>@" + shape];
+
+      it("should say what to add", async function () {
+        const {stdout} = await validate(args.concat(["--repairs"]));
+        const repairs = JSON.parse(stdout).repairs;
+        expect(repairs.length).to.equal(1);
+        expect(repairs[0].arcs.map(a => a.delta + " " + a.property))
+          .to.deep.equal(["1 http://a.example/mbox"]);
+      });
+
+      it("should say it in words for a reader", async function () {
+        const {stdout} = await validate(args.concat(["--repairs", "--human"]));
+        expect(stdout).to.include("to conform: add 1 http://a.example/mbox");
+        // and the human output is lines, not an array literal
+        expect(stdout).to.not.include("[ '");
+      });
+
+      it("should not compute them unasked", async function () {
+        const {stdout} = await validate(args);
+        expect(JSON.parse(stdout)).to.not.have.property("repairs");
+      });
+    });
+
     it("by neighborhood-sparql over an endpoint holding the same synthesized graph", async function () {
       this.timeout(60000);
       const {startSparqlTestServer} = require("../../neighborhood-sparql/test/sparql-test-server");

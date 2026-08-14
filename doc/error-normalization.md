@@ -266,7 +266,12 @@ this, done at the refutation layer:
    library (a caller that doesn't want the search shouldn't pay for it) and
    on in the apps, which is where a reader is.
 4. Replace the classic errors once the repairs have been read in anger for a
-   while, and rewrite the failure tests then, once.
+   while, and rewrite the failure tests then, once.  Two things gate it, and
+   neither is code that could be written today: the repairs have to be *used*
+   — `validate --repairs` (and `--human`) is how, which is why it exists —
+   and the matcher underneath them has to be right, which task #13 says it
+   isn't for a repeated group with an unbounded cardinality inside it.  A
+   repair is only as good as the matcher it is computed from.
 
 ## 5. Implementation note: the pruned state is not the node
 
