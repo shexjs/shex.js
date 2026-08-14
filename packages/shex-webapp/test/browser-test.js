@@ -721,7 +721,11 @@ async function materializationResults ($, expected) {
 async function testResults ($, expected, resultsProperty) {
   const validationResponse = await SharedForTests.promise
   expect(validationResponse).to.have.property(resultsProperty)
-  const resDiv = $('#results > div')
+  // where the app writes results: a map app keeps validations in one tab
+  // and materializations in another, and the widget points at the one it
+  // just filled, so ask it rather than assuming the shape of #results
+  const resDiv = SharedForTests.app ? SharedForTests.app.resultsWidget.resultsSel
+        : $('#results > div')
   expect(resDiv.length).to.equal(1)
   const res = resDiv.find(expected.selector)
 

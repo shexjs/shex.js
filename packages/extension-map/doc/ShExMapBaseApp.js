@@ -46,6 +46,13 @@ class ShExMapResultsRenderer extends ShExResultsRenderer {
 }
 
 class ShExMapBaseApp extends ShExBaseApp {
+  /* Two kinds of results, a tab each.  A materialization is *of* a
+   * validation -- it consumes the bindings one produced -- so its tab shows
+   * up when there is one and goes away when a new validation replaces the
+   * bindings underneath it, rather than sitting there stale. */
+  get resultsTarget () { return "#validationResults > div"; }
+  get materializationTarget () { return "#materializationResults > div"; }
+
   constructor (base, validatorClass) {
     super(base, validatorClass);
     this.currentRenderer = null;
@@ -123,8 +130,12 @@ class ShExMapBaseApp extends ShExBaseApp {
     ]);
   }
 
+  /** the bindings a materialization consumed are about to be replaced */
+  startingValidation () { this.hideMaterialization(); }
+
   prepareControls () {
     super.prepareControls();
+    $("#resultsTabs").tabs();
     $("#materialize").on("click", evt => this.materialize(evt));
     $("#debugMaterialize").on("click", () => { SharedForTests.promise = this.startDebugSession(); });
     $("#dbgInto").on("click", () => this.debugStep("stepInto"));
@@ -138,6 +149,7 @@ class ShExMapBaseApp extends ShExBaseApp {
    * gutter breakpoints in the outputSchema pane become constraint
    * breakpoints; the step buttons drive a MaterializerDebugger. */
   async startDebugSession () {
+    this.showMaterialization();
     const pane = this.editorSupport && this.editorSupport.panes.outputSchema;
     if (!pane) {
       this.resultsWidget.replace("Enable the language-aware editors (Menu → user interface) to debug materialization.")
@@ -462,6 +474,7 @@ class ShExMapBaseApp extends ShExBaseApp {
   }
 
   async materialize () {
+    this.showMaterialization();
     this.resultsWidget.clear();
     this.resultsWidget.start();
     SharedForTests.promise = this.materializeAsync();
@@ -487,8 +500,11 @@ class ShExMapBaseApp extends ShExBaseApp {
       // on success: clear stale error marks, but surface never-bound
       // variables and unreferenced statics as warnings
       this.anchorMaterializationFailures(null, materializer.lastReport);
-      if (this.currentRenderer) // absent when bindings were pasted, not validated
-        this.currentRenderer.finish();
+      // The validation renderer's finish() used to be called here, back
+      // when materializing emptied #results and something had to put the
+      // validation results back.  It renders the appinfo results, which it
+      // already did when the validation ended and which now sit in their own
+      // tab, so calling it again only rendered them a second time.
       $("#results .status").text("materialization results").show();
       this.renderMaterializedGraph(generatedGraph, outputShapeMap, materializer.provenance);
       this.renderAcceptAlternatives(materializer, outputShapeMap);
@@ -514,11 +530,46 @@ class ShExMapBaseApp extends ShExBaseApp {
     return {outputSchema, resultBindings, staticVars, outputShapeMap};
   }
 
-  /** empty #results, dropping the panes that rendered into it */
+  /** empty the results panel now being written, dropping the panes that
+   * rendered into it */
   clearResults () {
     this.materializationPanes = [];
     this.resultsWidget.resultPanes = [];
-    $("#results div").empty();
+    this.resultsWidget.resultsSel.empty();
+  }
+
+  /** Show the materialization tab and write there.  Nothing else moves: the
+   * validation results stay in their own tab, still true of the bindings
+   * this materialization consumed. */
+  showMaterialization () {
+    const tabs = $("#resultsTabs");
+    if (tabs.find('[href="#materializationResults"]').length === 0)
+      tabs.find("> ul").append(
+        $("<li/>").append($("<a/>", {href: "#materializationResults"}).text("materialization")));
+    $("#materializationResults").show();
+    if (tabs.data("ui-tabs")) {
+      tabs.tabs("refresh");
+      tabs.tabs("option", "active", tabs.find("> ul > li").length - 1);
+    }
+    this.resultsWidget.setTarget(this.materializationTarget);
+  }
+
+  /** A validation replaces the bindings a materialization was made from, so
+   * its results are no longer about anything: the tab goes. */
+  hideMaterialization () {
+    const tabs = $("#resultsTabs");
+    const tab = tabs.find('[href="#materializationResults"]').closest("li");
+    this.materializationPanes = [];
+    $("#materializationResults > div").empty();
+    $("#materializationResults").hide();
+    if (tab.length) {
+      tab.remove();
+      if (tabs.data("ui-tabs")) {
+        tabs.tabs("refresh");
+        tabs.tabs("option", "active", 0);
+      }
+    }
+    this.resultsWidget.setTarget(this.resultsTarget);
   }
 
   /** render a materialized graph into #results (shared by materializeAsync
@@ -737,7 +788,9 @@ class ShExMapBaseApp extends ShExBaseApp {
     // with the editors on, the materialized graph renders in a Turtle pane
     // whose triples hover-link back to the output schema and the bindings.
     // It takes its colours from where it lands, so it lands first.
-    const holder = $("<div/>", {class: "results"}).data("rawText", result);
+    // a materialized graph is data -- the app's green -- not a result
+    // document like the validation JSON beside it
+    const holder = $("<div/>", {class: "data"}).data("rawText", result);
     if (this.editorSupport && "EditorPanes" in ShExWebApp)
       div.append(holder);
     this.resultsWidget.append(div);

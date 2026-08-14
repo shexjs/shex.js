@@ -240,7 +240,15 @@
     </div>
     <div id="results">
       <h2 class="status"> </h2>
-      <div></div>
+      <!-- two kinds of results, a tab each: a validation, and the
+           materialization of one.  The materialization tab appears when
+           there is a materialization and goes when a validation replaces
+           the bindings it came from. -->
+      <div id="resultsTabs">
+        <ul><li><a href="#validationResults">validation</a></li></ul>
+        <div id="validationResults"><div></div></div>
+        <div id="materializationResults" style="display: none;"><div></div></div>
+      </div>
     </div>
     <script src="../../shex-webapp/doc/webpacks/n3js.js"></script>
 

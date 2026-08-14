@@ -2115,12 +2115,20 @@ class FlowControlError extends Error {  }
 // Control results area content.
 let LastFailTime = 0;
 class ResultsWidget {
-  constructor () {
-    this.resultsElt = document.querySelector("#results div");
-    this.resultsSel = $("#results div");
+  constructor (target = "#results > div") {
+    this.setTarget(target);
     // appinfo renderings: [{pane, ranges}] linking TestedTriple objects (by
     // identity) to their {from, to} in the rendered results JSON
     this.resultPanes = [];
+  }
+
+  /** Where results are written.  An app with two kinds of results -- a
+   * validation and a materialization of it -- gives each its own panel and
+   * points the widget at whichever it is filling. */
+  setTarget (target) {
+    this.resultsSel = $(target);
+    this.resultsElt = this.resultsSel.get(0);
+    return this;
   }
   /** fit a result pane to the bottom of the window so the inputs and the
    * results stay visible together; without a height the pane grows to its
@@ -2706,9 +2714,13 @@ const ShExLoader = ShExWebApp.Loader({
   fetch: window.fetch.bind(window), rdfjs: RdfJs, jsonld: null
 })
 class ShExBaseApp {
+  /** where this app's results are written; a subclass with more than one
+   * kind of result says which panel is the default one */
+  get resultsTarget () { return "#results > div"; }
+
   constructor (base) {
     this.base = base;
-    this.resultsWidget = new ResultsWidget();
+    this.resultsWidget = new ResultsWidget(this.resultsTarget);
 
     // make parser/serializers available to extending classes
     this.shexcParser = new ShExCParser();
@@ -3183,6 +3195,10 @@ class ShExBaseApp {
   /* Executions */
 
   // Validation UI
+  /** a validation is starting: an app with results derived from the last
+   * one says so here.  Nothing to do for a validator. */
+  startingValidation () {}
+
   disableResultsAndValidate (evt) {
     if (new Date().getTime() - LastFailTime < 100) {
       this.resultsWidget.append(
@@ -3194,6 +3210,9 @@ class ShExBaseApp {
       );
       return; // return if < 100ms since last error.
     }
+    // a validation replaces whatever the last one produced, including
+    // anything an app derived from it (see ShExMapBaseApp)
+    this.startingValidation();
     this.resultsWidget.clear();
     this.resultsWidget.start();
     // Say what is happening before it starts, and let the browser paint it:
