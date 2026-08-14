@@ -113,6 +113,52 @@ if (!TEST_browser) {
       expect($("#outputShapeMap").val()).to.equal("<tag:b0>@<BPunitsDAM>");
     });
 
+    /* Two kinds of results, a tab each: materializing doesn't overwrite (or
+     * pile onto) the validation whose bindings it consumed, and validating
+     * again takes the materialization away, since it was about bindings
+     * that no longer exist. */
+    it("should keep validation and materialization results in their own tabs", async function () {
+      this.timeout(60000);
+      if (!$("#queryMap").val().trim()) {   // a preceding test may have deselected
+        $("#inputSchema .manifest li").filter((_, e) => $(e).text() === "BP").trigger("click");
+        await shared.promise;
+        $("#inputData .passes li").filter((_, e) => $(e).text() === "simple").trigger("click");
+        await shared.promise;
+      }
+      const tabs = () => $("#resultsTabs > ul > li > a").map((i, a) => $(a).text()).get();
+      const panes = sel => ({json: $(sel + " .shexjs-json-pane").length,
+                             turtle: $(sel + " .shexjs-turtle-pane").length});
+
+      $("#interface").val("appinfo").trigger("change");
+      $("#validate").trigger("click");
+      await shared.promise;
+      expect(tabs(), "nothing has been materialized yet").to.deep.equal(["validation"]);
+      expect(panes("#validationResults").json, "the validation's JSON").to.equal(1);
+
+      $("#materialize").trigger("click");
+      await shared.promise;
+      expect(tabs(), "and now there is one").to.deep.equal(["validation", "materialization"]);
+      // the materialized graph is its own tab's business...
+      expect(panes("#materializationResults")).to.deep.equal({json: 0, turtle: 1});
+      // ...and the validation is still there, rendered once, not twice
+      expect(panes("#validationResults")).to.deep.equal({json: 1, turtle: 0});
+      expect($("#materializationResults").css("display"), "showing what was just made")
+        .to.not.equal("none");
+
+      // a materialized graph is data, so it wears the data colour
+      const holder = $("#materializationResults div.data");
+      expect(holder.length, "the graph sits in a data-coloured holder").to.be.above(0);
+      expect(holder.css("background-color"), "the data green, not the results tint")
+        .to.equal("rgb(244, 255, 244)");
+
+      $("#validate").trigger("click");
+      await shared.promise;
+      expect(tabs(), "the bindings it came from are gone, so it goes").to.deep.equal(["validation"]);
+      expect(panes("#materializationResults"), "and takes its pane with it")
+        .to.deep.equal({json: 0, turtle: 0});
+      expect(panes("#validationResults").json, "the new validation").to.equal(1);
+    });
+
     it("should step through a materialization with a gutter breakpoint", async function () {
       const set = (selector, value) => {
         const elt = $(selector).first();
@@ -269,7 +315,7 @@ if (!TEST_browser) {
 
     it("should tie each materialized triple to its constraint and binding", async function () {
       // the rendering comes with the mapping: #results is live DOM that a
-      // debounced pane edit can clear (copyTextMapToEditMap), and these
+      // debounced pane edit can clear (copyQueryMapToEditMap), and these
       // ranges only mean anything against the text they were mapped onto
       const [{pairs, text: resultText}] = shared.Caches.editorSupport.lastMaterialized;
       expect(pairs.length, "one pair per generated triple").to.equal(2);

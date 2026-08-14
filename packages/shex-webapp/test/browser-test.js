@@ -203,7 +203,7 @@ if (!TEST_browser) {
 
         describe('should set query map to', function () {
           it("empty", async function () {
-            await set($, "#textMap", "")
+            await set($, "#queryMap", "")
             expect($("#editMap .pair").length).to.equal(1)
             expect($("#fixedMap .pair").length).to.equal(0)
             expect(mapToText($("#editMap"))).to.equal("@")
@@ -211,7 +211,7 @@ if (!TEST_browser) {
           })
 
           it("one entry", async function () {
-            await set($, "#textMap", "{FOCUS :subject _}@START")
+            await set($, "#queryMap", "{FOCUS :subject _}@START")
             expect($("#editMap .pair").length).to.equal(1)
             expect($("#fixedMap .pair").length).to.equal(1)
             expect(mapToText($("#editMap"))).to.equal("{FOCUS :subject _}@START")
@@ -219,7 +219,7 @@ if (!TEST_browser) {
           })
 
           it("one entry with trailing comma", async function () {
-            await set($, "#textMap", "{FOCUS :subject _}@START,")
+            await set($, "#queryMap", "{FOCUS :subject _}@START,")
             expect($("#editMap .pair").length).to.equal(1)
             expect($("#fixedMap .pair").length).to.equal(1)
             expect(mapToText($("#editMap"))).to.equal("{FOCUS :subject _}@START")
@@ -227,7 +227,7 @@ if (!TEST_browser) {
           })
 
           it("two entries with produce one fixed map entry", async function () {
-            await set($, "#textMap", "{FOCUS :subject _}@START,{FOCUS :lalala _}@START")
+            await set($, "#queryMap", "{FOCUS :subject _}@START,{FOCUS :lalala _}@START")
             expect($("#editMap .pair").length).to.equal(2)
             expect($("#fixedMap .pair").length).to.equal(1)
             expect(mapToText($("#editMap"))).to.equal("{FOCUS :subject _}@START,{FOCUS :lalala _}@START")
@@ -609,7 +609,7 @@ if (!TEST_browser) {
       const shortData = 'PREFIX : <http://a.example/>\n:x :p 42 .'
       $('#inputSchema textarea.schema').val(longSchema)
       $('#inputData textarea').val(shortData)
-      await set($, '#textMap', '<http://a.example/x>@<http://a.example/S>')
+      await set($, '#queryMap', '<http://a.example/x>@<http://a.example/S>')
       dom.window.prompt = () => 'EJP-RD-LOVD' // the gist-title prompt
 
       let postedBody, patchedBody
@@ -678,7 +678,7 @@ if (!TEST_browser) {
 
       g$('#inputSchema textarea.schema').val('PREFIX : <http://a.example/>\n:S { :p . }')
       g$('#inputData textarea').val('PREFIX : <http://a.example/>\n:x :p 42 .')
-      await set(g$, '#textMap', '<http://a.example/x>@<http://a.example/S>')
+      await set(g$, '#queryMap', '<http://a.example/x>@<http://a.example/S>')
 
       let patchedBody
       nock('https://api.github.com')
@@ -721,7 +721,11 @@ async function materializationResults ($, expected) {
 async function testResults ($, expected, resultsProperty) {
   const validationResponse = await SharedForTests.promise
   expect(validationResponse).to.have.property(resultsProperty)
-  const resDiv = $('#results > div')
+  // where the app writes results: a map app keeps validations in one tab
+  // and materializations in another, and the widget points at the one it
+  // just filled, so ask it rather than assuming the shape of #results
+  const resDiv = SharedForTests.app ? SharedForTests.app.resultsWidget.resultsSel
+        : $('#results > div')
   expect(resDiv.length).to.equal(1)
   const res = resDiv.find(expected.selector)
 

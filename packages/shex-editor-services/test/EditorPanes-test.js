@@ -72,7 +72,7 @@ describe("EditorPanes", function () {
       // a write THROUGH the proxy still reports keyup -- the caches' dirty
       // tracking listens for it -- but raises no change: it isn't a typing
       // pause, and a change would tell handlers to discard work the
-      // application did meanwhile (copyTextMapToEditMap clears #results)
+      // application did meanwhile (copyQueryMapToEditMap clears #results)
       keyups = changes = 0;
       textarea.value = "PREFIX : <http://b.example/>";
       expect(pane.view.state.doc.toString()).to.equal("PREFIX : <http://b.example/>");
@@ -93,6 +93,125 @@ describe("EditorPanes", function () {
       pane.clearHighlights();
     } finally {
       pane.view.destroy();
+    }
+  });
+
+  /* The application colours its textareas to say what they hold -- the
+   * schema pane blue, the data pane green -- and a pane standing in for one
+   * should look like the thing it replaced, not like a white box dropped
+   * on the page. */
+  it("should take the colours of the textarea it stands in for", function () {
+    const textarea = dom.window.document.createElement("textarea");
+    textarea.value = "<x> <p> 1 .\n";
+    textarea.style.backgroundColor = "rgb(244, 255, 244)";   // #inputData's green
+    textarea.style.color = "rgb(0, 0, 0)";
+    dom.window.document.body.appendChild(textarea);
+    const pane = makePane(textarea, {language: "turtle", lint: false});
+    try {
+      const styles = [];
+      dom.window.document.querySelectorAll("style").forEach(s => styles.push(s.textContent));
+      const css = styles.join("\n");
+      expect(css, "the pane is painted the textarea's colour").to.include("rgb(244, 255, 244)");
+      // and the gutter belongs to the pane rather than sitting in grey
+      // (the base theme has a .cm-gutters rule too; ours is the one that
+      // says the pane's colour)
+      const gutterRules = css.split("}").filter(rule => rule.includes(".cm-gutters"));
+      expect(gutterRules.some(rule => rule.includes("rgb(244, 255, 244)")),
+             "a gutter rule in the pane's colour").to.equal(true);
+    } finally {
+      pane.destroy();
+      textarea.remove();
+    }
+  });
+
+  /* A range that spans lines is one range, but painting it as one paints
+   * every following line's indentation too -- and, in a pane wider than its
+   * text, the empty space out to the right edge. */
+  it("should highlight the text a multi-line range covers, not the block", function () {
+    const textarea = dom.window.document.createElement("textarea");
+    textarea.value = '{\n    "a": 1,\n    "b": 2\n}\n';
+    dom.window.document.body.appendChild(textarea);
+    const pane = makePane(textarea, {language: "json", lint: false});
+    try {
+      pane.highlight([{from: 0, to: textarea.value.indexOf("}") + 1}], "shexjs-highlight");
+      const marks = [];
+      pane.view.dom.querySelectorAll(".shexjs-highlight").forEach(e => marks.push(e.textContent));
+      expect(marks.length, "a piece per line").to.be.above(1);
+      for (const mark of marks) {
+        expect(mark, "no leading indentation").to.equal(mark.replace(/^\s+/, ""));
+        expect(mark.trim(), "nothing but whitespace highlighted").to.not.equal("");
+      }
+      expect(marks.join("")).to.include('"a": 1');
+    } finally {
+      pane.destroy();
+      textarea.remove();
+    }
+  });
+
+  /* posAtCoords answers for anywhere in the content, so the comment column
+   * beside a short line reports that line's end -- inside any range that
+   * spans the line.  Hovering there used to light the range up. */
+  it("should not take the space beside a line as a hover over it", function () {
+    const textarea = dom.window.document.createElement("textarea");
+    textarea.value = ':gender ["male" "female"\n         "unknown"]? ;   # a comment\n';
+    dom.window.document.body.appendChild(textarea);
+    const pane = makePane(textarea, {language: "turtle", lint: false});
+    try {
+      const view = pane.view;
+      const firstLineEnd = textarea.value.indexOf("\n");
+      // jsdom lays nothing out, so say where the text is: line 1 runs from
+      // x=0 to x=240, and the mouse is at y=5 either side of its end
+      view.coordsAtPos = (pos) => pos <= firstLineEnd
+        ? (pos === 0 ? {left: 0, right: 0, top: 0, bottom: 10}
+           : {left: 240, right: 240, top: 0, bottom: 10})
+        : {left: 0, right: 200, top: 10, bottom: 20};
+      view.posAtCoords = () => firstLineEnd;      // as it does past a line's end
+
+      const entered = [];
+      pane.setHoverRegions([{from: 0, to: textarea.value.length - 1,
+                             enter: () => entered.push("hit")}]);
+      const move = (x, y) => view.contentDOM.dispatchEvent(
+        new dom.window.MouseEvent("mousemove", {clientX: x, clientY: y, bubbles: true}));
+
+      move(400, 5);                 // out in the comment column, past the text
+      expect(entered, "nothing under the mouse").to.deep.equal([]);
+      move(100, 5);                 // over the value set itself
+      expect(entered, "over the text").to.deep.equal(["hit"]);
+    } finally {
+      pane.destroy();
+      textarea.remove();
+    }
+  });
+
+  /* A result pane replaces nothing, so it has nothing to inherit; the host
+   * says what it should look like by handing over an element it styled. */
+  it("should dress a result pane like the place it is put", function () {
+    const {makeResultPane} = require("../lib/editor-panes");
+    const holder = dom.window.document.createElement("div");
+    holder.style.backgroundColor = "rgb(255, 255, 244)";
+    dom.window.document.body.appendChild(holder);
+    const pane = makeResultPane('{"a": 1}', "json", {colorsFrom: holder});
+    try {
+      holder.appendChild(pane.dom);
+      const styles = [];
+      dom.window.document.querySelectorAll("style").forEach(s => styles.push(s.textContent));
+      expect(styles.join("\n"), "the pane takes the holder's tint")
+        .to.include("rgb(255, 255, 244)");
+    } finally {
+      holder.remove();       // a result pane is discarded with its holder
+    }
+  });
+
+  it("should leave an unpainted textarea's pane alone", function () {
+    const textarea = dom.window.document.createElement("textarea");
+    textarea.value = "<x> <p> 1 .\n";
+    dom.window.document.body.appendChild(textarea);
+    const pane = makePane(textarea, {language: "turtle", lint: false});
+    try {
+      expect(pane.view.dom).to.exist;   // nothing to copy, nothing broken
+    } finally {
+      pane.destroy();
+      textarea.remove();
     }
   });
 

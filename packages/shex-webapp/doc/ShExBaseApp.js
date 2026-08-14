@@ -1230,11 +1230,11 @@ class ManifestCache extends InterfaceCache {
   async queryMapLoaded (dataTest, text) {
     dataTest.entry.queryMap = text;
     try {
-      $("#textMap").val(JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
+      $("#queryMap").val(JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
     } catch (e) {
-      $("#textMap").val(dataTest.entry.queryMap);
+      $("#queryMap").val(dataTest.entry.queryMap);
     }
-    await this.caches.shapeMap.copyTextMapToEditMap();
+    await this.caches.shapeMap.copyQueryMapToEditMap();
     // callValidator();
   }
 
@@ -1260,7 +1260,7 @@ class ManifestCache extends InterfaceCache {
     delete this.caches.inputData.endpoint;
 
     // Clear out every form of ShapeMap.
-    $("#textMap").val("").removeClass("error");
+    $("#queryMap").val("").removeClass("error");
     this.caches.shapeMap.makeFreshEditMap();
     $("#fixedMap").find("tbody").empty();
 
@@ -1407,7 +1407,7 @@ class ShapeMapCache extends InterfaceCache {
     this.tabsElement = $("#shapeMap-tabs");
     this.editMapSelector = "#editMap";
     this.editMap = $("#editMap");
-    this.textMap = $("#textMap");
+    this.queryMap = $("#queryMap");
     this.fixedMap = $("#fixedMap");
     this.fixedMapTab = this.tabsElement.find('[href="#fixedMap-tab"]');
     this.caches = caches;
@@ -1418,8 +1418,8 @@ class ShapeMapCache extends InterfaceCache {
 
   async parse (text) {
     this.removeEditMapPair(null);
-    this.textMap.val(text);
-    this.copyTextMapToEditMap();
+    this.queryMap.val(text);
+    this.copyQueryMapToEditMap();
     await this.copyEditMapToFixedMap();
   };
 
@@ -1430,7 +1430,7 @@ class ShapeMapCache extends InterfaceCache {
   /**
    * @return list of errors encountered
    */
-  async copyEditMapToTextMap () {
+  async copyEditMapToQueryMap () {
     if (this.editMap.attr("data-dirty") === "true") {
       const text = this.editMap.find(".pair").get().reduce((acc, queryPair) => {
         const node = $(queryPair).find(".focus").val();
@@ -1440,7 +1440,7 @@ class ShapeMapCache extends InterfaceCache {
         const status = $(queryPair).find(".shapeMap-joiner").hasClass("nonconformant") ? "!" : "";
         return acc.concat([node+"@"+status+shape]);
       }, []).join(",\n");
-      this.textMap.empty().val(text);
+      this.queryMap.empty().val(text);
       const ret = await this.copyEditMapToFixedMap();
       this.markEditMapClean();
       return ret;
@@ -1453,9 +1453,9 @@ class ShapeMapCache extends InterfaceCache {
    * Parse query map to populate editMap and fixedMap.
    * @returns list of errors. ([] means everything was good.)
    */
-  async copyTextMapToEditMap () {
-    this.textMap.removeClass("error");
-    const shapeMap = this.textMap.val();
+  async copyQueryMapToEditMap () {
+    this.queryMap.removeClass("error");
+    const written = this.queryMap.val();
     this.resultsWidget.clear();
     let currentAction = "parsing input schema";
     try {
@@ -1467,7 +1467,7 @@ class ShapeMapCache extends InterfaceCache {
         this.meta.base, this.caches.inputSchema.meta, this.caches.inputData.meta);
       let sm;
       try {
-        sm = smparser.parse(shapeMap);
+        sm = smparser.parse(written);
       } catch (e) {
         e.inputError = true;
         throw e;
@@ -1479,7 +1479,7 @@ class ShapeMapCache extends InterfaceCache {
       this.resultsWidget.clear();
       return ret;
     } catch (e) {
-      this.textMap.addClass("error");
+      this.queryMap.addClass("error");
       this.resultsWidget.failMessage(e, currentAction);
       this.makeFreshEditMap()
       return [e];
@@ -2115,12 +2115,20 @@ class FlowControlError extends Error {  }
 // Control results area content.
 let LastFailTime = 0;
 class ResultsWidget {
-  constructor () {
-    this.resultsElt = document.querySelector("#results div");
-    this.resultsSel = $("#results div");
+  constructor (target = "#results > div") {
+    this.setTarget(target);
     // appinfo renderings: [{pane, ranges}] linking TestedTriple objects (by
     // identity) to their {from, to} in the rendered results JSON
     this.resultPanes = [];
+  }
+
+  /** Where results are written.  An app with two kinds of results -- a
+   * validation and a materialization of it -- gives each its own panel and
+   * points the widget at whichever it is filling. */
+  setTarget (target) {
+    this.resultsSel = $(target);
+    this.resultsElt = this.resultsSel.get(0);
+    return this;
   }
   /** fit a result pane to the bottom of the window so the inputs and the
    * results stay visible together; without a height the pane grows to its
@@ -2326,10 +2334,13 @@ class ShExResultsRenderer {
     try {
       const {text, ranges} = ShExWebApp.EditorServices.stringifyWithOffsets(
         results, o => o && (o.type === "TestedTriple" || results.indexOf(o) !== -1));
-      const pane = ShExWebApp.EditorPanes.makeJsonPane(text);
+      // the pane takes its colours from where it is put, so put it there
+      // first: an unattached div has no computed style to read
       const klass = this.appinfo.every(({klass}) => klass === "passes") ? "passes" : "fails";
-      const elt = $("<div/>").addClass(klass).append(pane.dom).data("rawText", text);
+      const elt = $("<div/>").addClass(klass).addClass("results").data("rawText", text);
       this.resultsWidget.append(elt);
+      const pane = ShExWebApp.EditorPanes.makeJsonPane(text, {colorsFrom: elt[0]});
+      elt.append(pane.dom);
       this.resultsWidget.fitPaneToWindow(pane.dom);
       pane.requestMeasure();   // now that it is attached and sized
 
@@ -2540,6 +2551,7 @@ class EditorSupport {
         } // else: expected failure -- no error marks
       });
       this.lastMapped = merged; // introspection for tests/debugging
+      this.mappedDoc = showing;  // the document these data ranges are offsets into
       this.panes.inputSchema.setDiagnostics(merged.schema);
       if (this.panes.inputData)
         this.panes.inputData.setDiagnostics(merged.data);
@@ -2547,6 +2559,18 @@ class EditorSupport {
     } catch (e) {
       console.warn("editor diagnostics failed:", e);
     }
+  }
+
+  /** Another document is showing: the data-side ranges were offsets into
+   * the one before it, so aim them again -- and take away the marks that
+   * belong to a document nobody is looking at. */
+  reaimAtShowingDocument () {
+    if (!this.lastMapped)
+      return;
+    const showing = this.app.neighborhoods ? this.app.neighborhoods.showing : -1;
+    if (this.panes.inputData)
+      this.panes.inputData.setDiagnostics(showing === this.mappedDoc ? this.lastMapped.data : []);
+    this.setPairHovers(this.lastMapped.pairs);
   }
 
   /** cross-pane hover highlighting for validation matches and failures:
@@ -2614,7 +2638,10 @@ class EditorSupport {
       // page, later another named graph -- so bring it forward.  Showing a
       // document can rebuild the pane (a new language), so ask for the pane
       // again rather than highlighting the one that was just destroyed.
-      const neighborhoods = this.app.neighborhoods;
+      // ...unless the mouse is in the data pane, where switching would pull
+      // the document out from under it: a data-side hover is already about
+      // the document being pointed at
+      const neighborhoods = hoveredSide === "data" ? null : this.app.neighborhoods;
       if (neighborhoods && lead.doc >= 0 && lead.doc !== neighborhoods.showing
           && dataRanges.length) {
         neighborhoods.show(lead.doc);
@@ -2632,10 +2659,16 @@ class EditorSupport {
           from: r.from, to: r.to, enter: () => show(group, "schema"),
         }))),
       clearAll);
-    // both the object and the predicate trigger data-side hovers
+    // Both the object and the predicate trigger data-side hovers -- but
+    // only for results about the document on screen.  A range is an offset
+    // into the document it was located in, so a pair from another document
+    // would light up whatever text happens to sit at those offsets here.
+    const showingDoc = this.app.neighborhoods ? this.app.neighborhoods.showing : -1;
+    const shownHere = (p) => p.doc === undefined || p.doc < 0 || p.doc === showingDoc;
     dataPane.setHoverRegions(
-      pairs.flatMap(p => [].concat(anchorRanges(p, "object"), anchorRanges(p, "predicate"))
-        .map(r => ({from: r.from, to: r.to, enter: () => show([p], "data")}))),
+      pairs.filter(shownHere).flatMap(
+        p => [].concat(anchorRanges(p, "object"), anchorRanges(p, "predicate"))
+          .map(r => ({from: r.from, to: r.to, enter: () => show([p], "data")}))),
       clearAll);
     // hovering a TestedTriple in an appinfo results pane highlights its
     // constraint in the schema and its triple in the data
@@ -2703,9 +2736,13 @@ const ShExLoader = ShExWebApp.Loader({
   fetch: window.fetch.bind(window), rdfjs: RdfJs, jsonld: null
 })
 class ShExBaseApp {
+  /** where this app's results are written; a subclass with more than one
+   * kind of result says which panel is the default one */
+  get resultsTarget () { return "#results > div"; }
+
   constructor (base) {
     this.base = base;
-    this.resultsWidget = new ResultsWidget();
+    this.resultsWidget = new ResultsWidget(this.resultsTarget);
 
     // make parser/serializers available to extending classes
     this.shexcParser = new ShExCParser();
@@ -2715,7 +2752,7 @@ class ShExBaseApp {
     const inputSchema = new SchemaCache($("#inputSchema textarea.schema"), this.onDataLoad.bind(this), this.shexcParser, this.turtleParser);
     const inputData = new TurtleCache($("#inputData textarea"), this.onDataLoad.bind(this), this.turtleParser, this.queryTrackerController);
     const extension = new ExtensionCache($("#extensionDrop"), this.resultsWidget);
-    const shapeMap = new ShapeMapCache($("#textMap"), {inputSchema, inputData}, this.turtleParser, this.resultsWidget); // @@ rename to #shapeMap
+    const shapeMap = new ShapeMapCache($("#queryMap"), {inputSchema, inputData}, this.turtleParser, this.resultsWidget);
 
     this.Caches = { inputSchema, inputData, extension, shapeMap };
 
@@ -2726,6 +2763,9 @@ class ShExBaseApp {
         inputData.dirty(true);
         if (changed && changed.language)
           this.refreshDataPaneEditor();
+        // the results' data ranges belong to whichever document is showing
+        if (this.editorSupport)
+          this.editorSupport.reaimAtShowingDocument();
       },
       () => {
         const pane = this.editorSupport && this.editorSupport.panes.inputData;
@@ -2746,7 +2786,7 @@ class ShExBaseApp {
       {queryStringParm: "data",         location: this.Caches.inputData.selection,   cache: this.Caches.inputData,
        manifest: {key: "data", spillName: "data.ttl", labelKey: "dataLabel", label: "data"}},
       {queryStringParm: "extension",    location: this.Caches.extension.selection,   cache: this.Caches.extension  },
-      {queryStringParm: "shape-map",    location: $("#textMap"),                     cache: this.Caches.shapeMap,
+      {queryStringParm: "shape-map",    location: $("#queryMap"),                     cache: this.Caches.shapeMap,
        manifest: {key: "queryMap", spillName: "queryMap.qm"}},
     ];
     this.QueryParams = this.Getables.concat([
@@ -3010,14 +3050,14 @@ class ShExBaseApp {
     $("#shapeMap-tabs").tabs({
       activate: async (event, ui) => {
         if (ui.oldPanel.get(0) === $("#editMap-tab").get(0))
-          await this.Caches.shapeMap.copyEditMapToTextMap();
-        else if (ui.oldPanel.get(0) === $("#textMap").get(0))
-          await this.Caches.shapeMap.copyTextMapToEditMap()
+          await this.Caches.shapeMap.copyEditMapToQueryMap();
+        else if (ui.oldPanel.get(0) === $("#queryMap").get(0))
+          await this.Caches.shapeMap.copyQueryMapToEditMap()
       }
     });
-    $("#textMap").on("change", evt => {
+    $("#queryMap").on("change", evt => {
       this.resultsWidget.clear();
-      SharedForTests.promise = this.Caches.shapeMap.copyTextMapToEditMap();
+      SharedForTests.promise = this.Caches.shapeMap.copyQueryMapToEditMap();
     });
     this.Caches.inputData.selection.on("change", this.dataInputHandler.bind(this)); // input + paste?
     // $("#copyEditMapToFixedMap").on("click", copyEditMapToFixedMap); // may add this button to tutorial
@@ -3143,8 +3183,8 @@ class ShExBaseApp {
     }, {});
 
     // Parse the shape-map using the prefixes and base.
-    const shapeMapErrors = $("#textMap").val().trim().length > 0
-          ? this.Caches.shapeMap.copyTextMapToEditMap()
+    const shapeMapErrors = $("#queryMap").val().trim().length > 0
+          ? this.Caches.shapeMap.copyQueryMapToEditMap()
           : this.Caches.shapeMap.makeFreshEditMap();
 
     this.customizeInterface();
@@ -3180,6 +3220,10 @@ class ShExBaseApp {
   /* Executions */
 
   // Validation UI
+  /** a validation is starting: an app with results derived from the last
+   * one says so here.  Nothing to do for a validator. */
+  startingValidation () {}
+
   disableResultsAndValidate (evt) {
     if (new Date().getTime() - LastFailTime < 100) {
       this.resultsWidget.append(
@@ -3191,6 +3235,9 @@ class ShExBaseApp {
       );
       return; // return if < 100ms since last error.
     }
+    // a validation replaces whatever the last one produced, including
+    // anything an app derived from it (see ShExMapBaseApp)
+    this.startingValidation();
     this.resultsWidget.clear();
     this.resultsWidget.start();
     // Say what is happening before it starts, and let the browser paint it:
@@ -3204,7 +3251,7 @@ class ShExBaseApp {
       setTimeout(async () => {
         const began = new Date().getTime();
         try {
-          const errors = await this.Caches.shapeMap.copyEditMapToTextMap(); // will update if #editMap is dirty
+          const errors = await this.Caches.shapeMap.copyEditMapToQueryMap(); // will update if #editMap is dirty
           if (errors.length === 0)
             resolve(await this.callValidator());
         } finally {
@@ -3613,9 +3660,9 @@ class ShExBaseApp {
   async dataInputHandler (evt) {
     const active = $('#shapeMap-tabs ul li.ui-tabs-active a').attr('href');
     if (active === "#editMap-tab")
-      return await this.Caches.shapeMap.copyEditMapToTextMap();
-    else // if (active === "#textMap")
-      return await this.Caches.shapeMap.copyTextMapToEditMap();
+      return await this.Caches.shapeMap.copyEditMapToQueryMap();
+    else // if (active === "#queryMap")
+      return await this.Caches.shapeMap.copyQueryMapToEditMap();
   }
 
   /* Keyboard events */
@@ -3746,7 +3793,7 @@ class ShExBaseApp {
    */
   async getPermalink () {
     let parms = [];
-    await this.Caches.shapeMap.copyEditMapToTextMap();
+    await this.Caches.shapeMap.copyEditMapToQueryMap();
     parms = parms.concat(this.QueryParams.reduce((acc, input) => {
       let parm = input.queryStringParm;
       let val = input.location.val();
@@ -3907,7 +3954,7 @@ class ShExBaseApp {
    * built from the QueryParams manifest descriptors, plus a spill-over file
    * per input whose text is over GIST_INLINE_LINES lines */
   async assembleGistFiles () {
-    await this.Caches.shapeMap.copyEditMapToTextMap();
+    await this.Caches.shapeMap.copyEditMapToQueryMap();
     const status = $("#results .fails").length ? "nonconformant" : "conformant";
     const files = {};
     const part = (parm, fileName, text) => {
@@ -3963,7 +4010,8 @@ class ShExBaseApp {
   if ($("#interface").val() === "minimal") {
     $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").show();
     $("#inputData .status").html("data (<span id=\"dataDialect\">" + this.neighborhoods.dialect() + "</span>)").show();
-    $("#actions").parent().children().not("#actions").hide();
+    // minimal: the shape map is all that stays beside the schema
+    $("#shapeMapArea").siblings().hide();
     $("#title img, #title h1").hide();
     $("#menuForm").css("position", "absolute").css(
       "left",
@@ -3974,7 +4022,7 @@ class ShExBaseApp {
   } else {
     $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").hide();
     $("#inputData .status").html("data (<span id=\"dataDialect\">" + this.neighborhoods.dialect() + "</span>)").hide();
-    $("#actions").parent().children().not("#actions").show();
+    $("#shapeMapArea").siblings().show();
     $("#title img, #title h1").show();
     $("#menuForm").removeAttr("style");
     $("#controls").css("position", "absolute");

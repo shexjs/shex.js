@@ -4,230 +4,15 @@
     <meta charset="utf-8" />
     <title>ShExMap — Simple Online Translator</title>
     <meta name="description" content="simple ShEx2 demo" />
+    <link rel="icon" href="../../shex-webapp/doc/ShEx-bones-min.svg" />
     <script src="../../shex-webapp/doc/webpacks/jquery-components.min.js"></script>
+    <link rel="stylesheet" href="../../shex-webapp/doc/shex-app.css" />
     <style>
-      h1 { font-size: 1.3em; }
-      h1, p, ul { margin: 0; margin-left: .1em; }
-      .ShExLogo { float:left; height:1.3em; padding-left: .3em; }
-      /* uncomment for breathing icon
-      .ShExLogo {
-        animation-duration: 2s;
-        animation-name: ShExLogo-breath;
-        animation-iteration-count: infinite;
-        animation-direction: alternate;
-      }
-      @keyframes ShExLogo-breath {
-        from { transform: scale(1, 1); }
-        to { transform: scale(1.2, 1.2); }
-      }
-      */
-      .passes999 { margin-right: 1em; }
-      .passes, #results div .passes { padding-left: .1em; border-left: thick solid #bfb; }
-      .pair.passes { border-left: none; padding-left: none; }
-      .pair.passes { background-color: #bfb; }
-      .fails , #results div .fails  { padding-left: .1em; border-left: thick solid #fbb; }
-      .pair.fails { border-left: none; padding-left: none; }
-      .pair.fails { background-color: #fbb; }
-      .error , #results div .error  { padding-left: .1em; border-left: thick solid #b00; }
-      /* one validation result per block, told apart by a rule rather than
-         by the punctuation of a JSON array */
-      #results > div > * + * { border-top: 1px solid #ccc; margin-top: .5em; padding-top: .5em; }
-      .running { background-color: #ddf; }
-      /* a validation over a synchronous data source holds the main thread,
-         so the button says so before it starts and nothing else can */
-      #validate.running { background-color: #ffe9a8; border-color: #d0a400; font-style: italic; }
-      #inputarea { overflow-x: auto; white-space:nowrap; }
-      #inputarea textarea { overflow-x: auto }
-      #inputarea textarea.data.focus {
-        width: 100%;
-        overflow: hidden;
-        border-style: inset;
-        border-width: 2px;
-        padding: 1px 0px;
-      }
-      ul[data-navColumn] button:focus::before { content: "> "; color: #730; margin-left: -1em; }
-      ul[data-navColumn] button:focus::after  { content: " <"; color: #730; margin-right: -1em; }
-      .schema.textarea, .schema, .schema.ui-dialog-content { background-color: #f4f4ff; color: #000000; border-color: #fc561c }
-      #inputSchema li.selected button { background-color: #e8e8ff; color: #000000; }
-      #inputData textarea, .data, .data.ui-dialog-content { background-color: #f4fff4; color: #000000; border-color: #f0a133 }
-      #inputData li.selected button { background-color: #e8ffe8; color: #000000; }
-      #manifestDrop { border-color: white; width: 100%; }
-      #manifestDrop div.manifest { overflow: auto; max-height: 10ex; }
-      #extensionDrop { border-color: #00ffff; width: 88%; border-width: thin; }
-      #inputSchema li button, #inputData li button {
-        font-size: .7em;
-        padding: 0em 2ex;
-        border-radius: .5em;
-        border: thin solid #000;
-        cursor: pointer;
-        box-shadow: 0.1em 0px 1em rgba(255, 255, 255, 0.9) inset;
-      }
-      #inputSchema li button.disabled, #inputData li button.disabled {
-        color: #777;
-      }
-      body { border-width: .25em; border-style: solid; border-color: white; }
+      /* a map app has an output panel too, so its inputs may need scrolling */
+      #inputarea { overflow-x: auto; }
+      /* and a bindings pane, which is neither schema nor data */
       #bindings1 textarea, .meta { background-color: #fffff4; color: #000000; border-color: #56fc1c}
       #bindings1 li.selected { background-color: #ffffe8; }
-      /* the tab set and the document share one box, whose height the app
-         fixes to what a document needs once it has measured one (see
-         showDocumentArea) so the buttons below don't move when the settings
-         tab, which is short, is showing */
-      #dataSource-tabs { margin-bottom: .2em; padding: .2em; }
-      #dataSource-tabs .ui-tabs-nav { padding-left: .2em; }
-      #dataSource-tabs .ui-tabs-panel { padding: .3em .2em; }
-      /* one setting per line: they are a form, not a sentence, and a row of
-         them runs off the side of a panel that is half the window wide */
-      #neighborhoodFields label.neighborhoodField { font-size: .85em; display: block; margin: .15em 0; }
-      #neighborhoodFields label.neighborhoodField > span { display: inline-block; min-width: 11em; }
-      #neighborhoodFields input[type=text], #neighborhoodFields input[type=number] { width: 22em; max-width: 60%; }
-      #neighborhoodFields .noSettings { font-size: .85em; font-style: italic; color: #666; }
-      #dataPaneControls { float: right; }
-      #dataPaneControls button { font-size: .8em; }
-      #dataSource { font-size: .8em; }
-      .droparea { border-width: .25em; border-style: dashed; }
-      .droparea.hover, body.hover { border: .25em dashed #0c0; }
-      .stoppable { background-color: red; }
-      #results div:disabled { background-color: #fff; }
-      #results div { width: 99%; border: none; }
-      /* the 99% width above must not reach into CodeMirror internals
-         (appinfo results panes): 99%-wide gutters push the code offscreen */
-      #results .cm-editor div { width: unset; }
-      #results div:disabled.passes { color: #373; }
-      #results div:disabled.fails  { color: #733; }
-      #results div:disabled.error  { color: #300; }
-      #results div.human { margin: 1ex 0; }
-      #results div.human pre { margin: 0 2em; }
-      #results h3 { font-size: larger; margin: 0; }
-      #results pre { margin: 1ex; }
-      #results .data, #results .schema { border-style: dotted; border-width: 2px; }
-      .status { display: none; } /* disable .status 'cause it's redundant against the selected marker. */
-      #navlist li {
-        display: inline;
-        list-style-type: none;
-        padding-right: 10px;
-      }
-      #actions {
-        float:right;
-        margin-right: .1em;
-      }
-      /* #actions input { height: 1.5ex; }  */
-      /* #actions button { height: 2.5ex; } */
-      /* http://stackoverflow.com/questions/686905/labeling-file-upload-button#answer-35767488 */
-      .inputfile {
-        /* visibility: hidden etc. wont work */
-        width: 0.1px;
-        height: 0.1px;
-        opacity: 0;
-        overflow: hidden;
-        position: absolute;
-        z-index: -1;
-      }
-      .inputfile:focus + label {
-        /* keyboard navigation */
-        outline: 1px dotted #000;
-        outline: -webkit-focus-ring-color auto 5px;
-      }
-      .inputfile + label * {
-        pointer-events: none;
-      }
-      label {
-        /* border: thin solid black; */
-        padding: 0 .3em;
-      }
-      .heading {
-        font-weight: bold;
-      }
-      .panel {
-        width: 48.5%;
-        display: inline-block;
-        margin: 0 .4em;
-        vertical-align: top;
-      }
-      h2.status { margin: 0; }
-      #addPair, #removePair { text-decoration: none; }
-      #schemaDialect, #dataDialect { font-size: .7em; }
-      #shapeMap { padding-left: .25em; } /* !! doesn't exist */
-      #shapeMap-tabs textarea.error { padding-left: default; border-left: default; background-color: #fdd; }
-      #editMap input.error { padding-left: none; border-left: none; background-color: #fdd; }
-      .pair { list-style-type: none; }
-      .addPair, .removePair { font-size: 80%; line-height: 1ex; font-family: monospace; }
-      .pair button {
-        width: 1em;
-        padding: .5em 0;
-        padding-right: .5em; /* for firefox rendering issue */
-      }
-
-#menuForm > fieldset {
-    box-shadow: -.3ex .3ex grey;
-    display: inline;
-}
-
-#controls {
-    position: absolute;
-    left: 0;
-    top: 0;
-    list-style: none;
-    margin: 0;
-    display: none;
-    background: white; opacity: 1;
-    border: thin solid buttontext;
-    /* box-shadow: -.3ex .3ex grey; */
-}
-#controls div {
-    border: 10px solid buttonface;
-}
-#controls h3 {
-    margin: 0;
-}
-#menu-button { margin-left: 1em; }
-#menu-button svg { width: 1em; height: 1.5ex; }
-#about {
-  margin: 3em;
-}
-#dismiss-about { text-align: center; }
-#controls ul { padding-left: 0; margin-left: 0; list-style-type: none; }
-#controls li { padding: 0 1em; }
-#controls li.menuitem:hover { background-color: buttonface; }
-
-.ui-tabs .ui-tabs-nav .ui-tabs-anchor {
-    padding: 0 .1em;
-}
-.ui-tabs .ui-tabs-panel {
-    padding: 0;
-}
-.ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button {
-    font-size: small;
-}
-#shapeMap-tabs .ui-tabs-panel {
-    font-family: monospace;
-    min-height: 10ex;
-}
-#shapeMap-tabs {
-    font-family: inherit;
-    font-size: inherit;
-    margin-top: .5ex;
-}
-#editMap, #fixedMap {
-    padding: 0;
-}
-#editMap td {
-    padding: 0;
-}
-#editMap td:nth-child(2),
-#editMap td:nth-child(4),
-#editMap td:nth-child(5) {
-    width: .01em;
-}
-#editMap input, #fixedMap input {
-    width: 100%;
-}
-#fixedMap tr td:nth-child(2),
-#fixedMap tr td:nth-child(4),
-#fixedMap tr td:nth-child(5) { width: .8em; }
-ul {
-    padding-left: 1.2em;
-    padding-right: .4em;
-}
     </style>
   </head>
 
@@ -361,16 +146,16 @@ ul {
               </ul>
             </div>
           </div>
-          <div id="actions" style="margin-right: .1em; width:100%;">
+          <div id="shapeMapArea" style="margin-right: .1em; width:100%;">
             <div>
             <div id="shapeMap-tabs" class="droparea" style="width: 100%">
               <ul>
-                <li><a href="#textMap">Query Map</a></li>
+                <li><a href="#queryMap">Query Map</a></li>
                 <li><a href="#editMap-tab">Query Map Editor</a></li>
                 <li><a href="#fixedMap-tab">Fixed Map</a></li>
               </ul>
-              <!-- <div id="textMap-tab"> -->
-                <textarea id="textMap" style="width:100%; height:100%;" spellcheck="false"></textarea>
+              <!-- <div id="queryMap-tab"> -->
+                <textarea id="queryMap" style="width:100%; height:100%;" spellcheck="false"></textarea>
               <!-- </div> -->
               <div id="editMap-tab">
                 <table id="editMap" data-dirty="false" style="width:100%;">
@@ -462,7 +247,15 @@ ul {
     </div>
     <div id="results">
       <h2 class="status"> </h2>
-      <div></div>
+      <!-- two kinds of results, a tab each: a validation, and the
+           materialization of one.  The materialization tab appears when
+           there is a materialization and goes when a validation replaces
+           the bindings it came from. -->
+      <div id="resultsTabs">
+        <ul><li><a href="#validationResults">validation</a></li></ul>
+        <div id="validationResults"><div></div></div>
+        <div id="materializationResults" style="display: none;"><div></div></div>
+      </div>
     </div>
     <script src="../../shex-webapp/doc/webpacks/n3js.js"></script>
 

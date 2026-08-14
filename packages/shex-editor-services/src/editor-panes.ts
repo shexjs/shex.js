@@ -217,17 +217,43 @@ export interface ResultPane {
   setHoverRegions (regions: HoverRegion[], leave?: () => void): void;
 }
 
+/** paintedLike - dress a pane in an element's colours, so an editor looks
+ * like the thing it stands in for (or, for a result pane, like the place it
+ * is put).  An element nobody painted contributes nothing rather than
+ * painting a pane transparent. */
+function paintedLike (elt: HTMLElement): Extension[] {
+  const dressed = window.getComputedStyle(elt);
+  const background = dressed.backgroundColor;
+  const foreground = dressed.color;
+  if (!background || /^(transparent|rgba\(0, 0, 0, 0\))$/.test(background))
+    return [];
+  return [EditorView.theme({
+    "&": {backgroundColor: background, color: foreground},
+    // the gutter reads as part of the pane, edged rather than shaded
+    ".cm-gutters": {backgroundColor: background, color: foreground,
+                    border: "none", borderRight: "1px solid rgba(0, 0, 0, 0.1)"},
+    ".cm-activeLineGutter": {backgroundColor: "rgba(0, 0, 0, 0.05)"},
+    ".cm-activeLine": {backgroundColor: "rgba(0, 0, 0, 0.03)"},
+  })];
+}
+
 /** makeResultPane - a read-only, syntax-highlighted view of a result
  * document (validation results as JSON, a materialized graph as Turtle)
  * sharing the highlight machinery of editor panes: highlight(ranges, cls,
  * {scroll}) marks and scrolls to result regions; setHoverRegions supports
  * results → schema/data cross-highlighting. */
-export function makeResultPane (text: string, language: PaneLanguage = "json"): ResultPane {
+export function makeResultPane (text: string, language: PaneLanguage = "json",
+                                opts: {colorsFrom?: HTMLElement} = {}): ResultPane {
+  // a result pane replaces no textarea, so it has no colours of its own to
+  // inherit; the host says what it should look like by handing over an
+  // element it has styled (and attached, or there is nothing to compute)
+  const dressing = opts.colorsFrom ? paintedLike(opts.colorsFrom) : [];
   const view = new EditorView({doc: text, extensions: [
     basicSetup,
     languages[language](),
     highlightField,
     paneTheme,
+    ...dressing,
     EditorView.editable.of(false),
     EditorState.readOnly.of(true),
   ]});
@@ -244,7 +270,8 @@ export function makeResultPane (text: string, language: PaneLanguage = "json"): 
     },
     highlight (ranges: Range[], cls = "shexjs-highlight", opts: {scroll?: boolean} = {}): void {
       const inRange = (ranges || []).filter(clampRange).sort((a, b) => a.from - b.from);
-      const decos = inRange.map(r => Decoration.mark({class: cls}).range(r.from, r.to));
+      const decos = ([] as Range[]).concat(...inRange.map(r => textRanges(view, r)))
+            .map((r: Range) => Decoration.mark({class: cls}).range(r.from, r.to));
       view.dispatch({effects: setHighlightsEffect.of(Decoration.set(decos, true))});
       if (inRange.length && opts.scroll !== false)
         view.dispatch({effects: EditorView.scrollIntoView(inRange[0].from, {y: "center"})});
@@ -257,8 +284,48 @@ export function makeResultPane (text: string, language: PaneLanguage = "json"): 
 }
 
 /** makeJsonPane - makeResultPane's original JSON-only spelling */
-export function makeJsonPane (text: string): ResultPane {
-  return makeResultPane(text, "json");
+export function makeJsonPane (text: string, opts: {colorsFrom?: HTMLElement} = {}): ResultPane {
+  return makeResultPane(text, "json", opts);
+}
+
+/** onText - is this mouse position over text, or past the end of a line?
+ *
+ * posAtCoords answers with a document offset for anywhere in the content,
+ * so a mouse in the comment column to the right of a short line reports
+ * that line's end -- which sits *inside* any range that spans the line.
+ * A range is about text, so a position with no text under it is a miss.
+ */
+function onText (view: EditorView, x: number, y: number, pos: number): boolean {
+  const line = view.state.doc.lineAt(pos);
+  const end = view.coordsAtPos(line.to);
+  const start = view.coordsAtPos(line.from);
+  if (!end || !start)
+    return true;                      // nothing measured (jsdom): don't guess
+  return x <= end.right && x >= start.left && y >= start.top && y <= end.bottom;
+}
+
+/** textRanges - a highlight, line by line, over the text it covers.
+ *
+ * A range that spans lines is one range, but painting it as one paints the
+ * indentation of every line after the first -- and, where the pane is wider
+ * than the text, everything to the right as well.  Splitting it per line and
+ * dropping each line's leading whitespace marks what was written instead of
+ * the rectangle it was written in.
+ */
+function textRanges (view: EditorView, range: Range): Range[] {
+  const doc = view.state.doc;
+  const first = doc.lineAt(range.from), last = doc.lineAt(range.to);
+  if (first.number === last.number)
+    return [range];
+  const out: Range[] = [];
+  for (let n = first.number; n <= last.number; ++n) {
+    const line = doc.line(n);
+    const from = Math.max(range.from, line.from + (line.text.match(/^\s*/) || [""])[0].length);
+    const to = Math.min(range.to, line.to);
+    if (to > from)
+      out.push({from, to});
+  }
+  return out;
 }
 
 /** track mouse-over-sensitive ranges on a view; returns the function that
@@ -278,7 +345,7 @@ function attachHoverRegions (view: EditorView): (regions: HoverRegion[], leave?:
     const pos = view.posAtCoords({x: e.clientX, y: e.clientY});
     // smallest containing region wins: nested constructs (inline shapes,
     // bnode property lists) sit inside their parents' regions
-    const hit = pos === null ? null
+    const hit = pos === null || !onText(view, e.clientX, e.clientY, pos) ? null
           : hoverRegions.reduce((best: HoverRegion | null, r) =>
               pos >= r.from && pos < r.to && (!best || r.to - r.from < best.to - best.from)
                 ? r : best, null);
@@ -523,7 +590,7 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
         // It says "the user stopped typing", so a write through the proxy
         // must not raise it -- assigning to a plain textarea's value fires
         // no change either, and handlers that react to one discard work the
-        // application did meanwhile: dataInputHandler's copyTextMapToEditMap
+        // application did meanwhile: dataInputHandler's copyQueryMapToEditMap
         // clears #results, wiping a materialization rendered since.  Any
         // pending change from a real edit still stands: the application
         // replacing the text does not mean the user's edit went unmade.
@@ -584,6 +651,14 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
   if (lintSource && (langLintSource || opts.supplied))
     extensions.push(linter(lintSource, {delay: 500}));
 
+  // A pane stands where a textarea stood, and the application coloured that
+  // textarea to say what it holds -- the schema pane blue, the data pane
+  // green.  Take the colours with it rather than turning the pane white:
+  // the editors are a nicer way to show the same thing, not a different
+  // thing.  Read before hiding it, and only believe a real colour (jsdom
+  // and an unstyled page report none).
+  extensions.push(...paintedLike(textarea));
+
   const view = new EditorView({doc: textarea.value, extensions});
   view.dom.classList.add("shexjs-editor-pane");
   // match the textarea's rendered size (measured before it's hidden); fall
@@ -623,7 +698,8 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
     },
     highlight (ranges: Range[], cls = "shexjs-highlight", opts: {scroll?: boolean} = {}): void {
       const inRange = (ranges || []).filter(clampRange).sort((a, b) => a.from - b.from);
-      const decos = inRange.map(r => Decoration.mark({class: cls}).range(r.from, r.to));
+      const decos = ([] as Range[]).concat(...inRange.map(r => textRanges(view, r)))
+            .map((r: Range) => Decoration.mark({class: cls}).range(r.from, r.to));
       view.dispatch({effects: setHighlightsEffect.of(Decoration.set(decos, true))});
       if (inRange.length && opts.scroll !== false)
         view.dispatch({effects: EditorView.scrollIntoView(inRange[0].from)});

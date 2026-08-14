@@ -119,7 +119,7 @@ if (!TEST_browser) {
       };
       set("#inputSchema textarea", "PREFIX : <http://a.example/>\n:S { :p . }");
       set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .");
-      set("#textMap", "<http://a.example/x>@<http://a.example/S>");
+      set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
       await shared.promise;
 
       const button = $("#validate");
@@ -166,7 +166,7 @@ if (!TEST_browser) {
         // changing the data starts a rebuild; changing the map starts another
         // before the first has resolved
         set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .\n:y :p 2 .");
-        set("#textMap", "<http://a.example/x>@<http://a.example/S>,\n" +
+        set("#queryMap", "<http://a.example/x>@<http://a.example/S>,\n" +
             "<http://a.example/y>@<http://a.example/S>");
         await shared.promise;
 
@@ -176,14 +176,14 @@ if (!TEST_browser) {
         ]);
 
         // and again, to a map with fewer pairs than the one before
-        set("#textMap", "<http://a.example/y>@<http://a.example/S>");
+        set("#queryMap", "<http://a.example/y>@<http://a.example/S>");
         await shared.promise;
         expect(rows(), "the pair that went away is gone").to.deep.equal([
           "http://a.example/y@http://a.example/S",
         ]);
       } finally {
         shared.Caches.shapeMap.removeEditMapPair(null);
-        set("#textMap", "<http://a.example/x>@<http://a.example/S>");
+        set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
         await shared.promise;
       }
     });
@@ -208,7 +208,7 @@ if (!TEST_browser) {
         set("#inputSchema textarea", "PREFIX : <http://a.example/>\n:S { :p . }");
         set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .\n:y :p 2 .");
         shared.Caches.shapeMap.removeEditMapPair(null);
-        set("#textMap", "<http://a.example/x>@<http://a.example/S>,\n" +
+        set("#queryMap", "<http://a.example/x>@<http://a.example/S>,\n" +
             "<http://a.example/y>@<http://a.example/S>");
         await shared.promise;
       });
@@ -218,7 +218,7 @@ if (!TEST_browser) {
         $("#editors").val("1").trigger("change");
         // put back the one entry the other tests were left expecting
         shared.Caches.shapeMap.removeEditMapPair(null);
-        set("#textMap", "<http://a.example/x>@<http://a.example/S>");
+        set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
         await shared.promise;
       });
 
@@ -809,7 +809,7 @@ if (!TEST_browser) {
         expect(shown.indexOf('"Q42"'), "and that page is what the pane holds").to.be.above(-1);
 
         // leave no QENTITIES map behind: the next source can't read one
-        $("#textMap").val("").trigger("change");
+        $("#queryMap").val("").trigger("change");
         await shared.promise;
       });
 
@@ -872,6 +872,90 @@ if (!TEST_browser) {
           .to.equal('"1999-12-31"^^xsd:date');
       });
 
+      it("should look like the panes it replaced", async function () {
+        // the app paints the schema pane blue and the data pane green; the
+        // editors standing in for those textareas say the same thing
+        source().select("rdfjs");
+        const set = (selector, value) => $(selector).first().val(value).trigger("change");
+        set("#inputSchema textarea", "PREFIX : <http://a.example/>\n:S { :p . }\n");
+        set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .\n");
+        set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
+        $("#validate").trigger("click");
+        await shared.promise;
+
+        const es = shared.Caches.editorSupport;
+        const painted = [];
+        $("head style, style").each((i, s) => painted.push($(s).text()));
+        const css = painted.join("\n");
+        expect(es.panes.inputSchema, "a schema pane to look at").to.exist;
+        expect(css, "the schema pane's blue").to.include("rgb(244, 244, 255)");
+        expect(css, "the data pane's green").to.include("rgb(244, 255, 244)");
+      });
+
+      /* A range is an offset into the document it was located in.  The data
+       * pane shows one document at a time, so results about another one have
+       * no business lighting up text here -- and a hover in the data pane
+       * must never switch documents, which would pull the page out from
+       * under the mouse that is pointing at it. */
+      it("should keep one document's hovers out of another's", async function () {
+        this.timeout(60000);
+        const examples = Path.join(__dirname, "../examples");
+        const read = f => Fs.readFileSync(Path.join(examples, f), "utf8");
+
+        await shared.Caches.manifest.set([{
+          schemaLabel: "FHIR-ish", schema: read("ClinObs.shex"),
+          dataLabel: "two documents", neighborhood: "rdfjs",
+          data: [read("ClinObs-observation.ttl"), read("ClinObs-patient.ttl")],
+          queryMap: "<http://hl7.example/Obs1>@<ObservationShape>",
+        }], "http://localhost/manifest.json");
+        $("#inputSchema .manifest li").last().trigger("click");
+        await shared.promise;
+        $("#inputData .indeterminant li").last().trigger("click");
+        await shared.promise;
+        $("#validate").trigger("click");
+        await shared.promise;
+
+        const source = shared.neighborhoods;
+        const es = shared.Caches.editorSupport;
+        const docs = source.documents();
+        const observationAt = docs.findIndex(d => d.text.indexOf(":valueQuantity") !== -1);
+        const patientAt = docs.findIndex(d => d.text.indexOf(":birthdate") !== -1);
+        source.show(observationAt);
+
+        const regions = [];
+        const pane = es.panes.inputData;
+        const wasSet = pane.setHoverRegions;
+        pane.setHoverRegions = (rs, leave) => {
+          regions.length = 0; regions.push(...(rs || []));
+          return wasSet.call(pane, rs, leave);
+        };
+        try {
+          es.setPairHovers(es.lastMapped.pairs);
+          // exactly the ranges of the results about this document: an object
+          // and a predicate each, and nothing from the document next door
+          const here = es.lastMapped.pairs.filter(p => p.doc === observationAt);
+          const there = es.lastMapped.pairs.filter(p => p.doc === patientAt);
+          expect(there.length, "results about the other document exist").to.be.above(0);
+          const ranges = pairs => pairs.reduce((n, p) => n
+            + (p.anchors.objectParts || (p.anchors.object ? [p.anchors.object] : [])).length
+            + (p.anchors.predicateParts || (p.anchors.predicate ? [p.anchors.predicate] : [])).length, 0);
+          expect(regions.length, "one per range of the results shown here")
+            .to.equal(ranges(here));
+
+          // a region built while this document was showing, hovered after
+          // another has come forward: it may not drag the reader back
+          const stale = regions[0];
+          expect(stale, "a region to hover").to.exist;
+          source.show(patientAt);
+          expect(source.showing, "moved by the tab, not by a hover").to.equal(patientAt);
+          stale.enter();
+          expect(source.showing, "a data hover leaves the document alone").to.equal(patientAt);
+        } finally {
+          pane.setHoverRegions = wasSet;
+          source.show(observationAt);
+        }
+      });
+
       it("should carry the source and its settings in the permalink", async function () {
         source().select("sparql");
         $("#nbhd-endpoint").val("http://ex.example/sparql").trigger("change");
@@ -883,6 +967,25 @@ if (!TEST_browser) {
         source().select("rdfjs");
         expect(await shared.app.getPermalink()).not.to.include("endpoint=");
       });
+    });
+
+    /* "minimal" strips the page back to the schema, the data and the shape
+     * map; the shape map area is what stays beside the schema, which is the
+     * whole reason that div has a name. */
+    it("should keep the shape map, and only that, beside the schema in minimal mode", function () {
+      const was = $("#interface").val();
+      const display = selector => $(selector).first()[0].style.display;
+      try {
+        $("#interface").val("minimal").trigger("change");
+        expect(display("#shapeMapArea"), "the shape map stays").to.not.equal("none");
+        expect(display("#manifestDrop"), "the manifest goes").to.equal("none");
+        expect($("#shapeMapArea").siblings().length, "something to hide").to.be.above(0);
+
+        $("#interface").val(was).trigger("change");
+        expect(display("#manifestDrop"), "and comes back").to.not.equal("none");
+      } finally {
+        $("#interface").val(was).trigger("change");
+      }
     });
 
     it("should anchor validation errors in both panes", async function () {
@@ -906,8 +1009,8 @@ if (!TEST_browser) {
         "PREFIX : <http://a.example/>",
         ':x :p "not a number" .',
       ].join("\n"));
-      set("#textMap", "<http://a.example/x>@<http://a.example/S>");
-      await shared.promise; // the #textMap change handler's copyTextMapToEditMap
+      set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
+      await shared.promise; // the #queryMap change handler's copyQueryMapToEditMap
       $("#validate").trigger("click");
       await shared.promise; // the validation
       dom.window.console.warn = origWarn;
@@ -977,7 +1080,7 @@ if (!TEST_browser) {
         "PREFIX : <http://a.example/>",
         ':x :p "not a number" .',
       ].join("\n"));
-      set("#textMap", "<http://a.example/x>@!<http://a.example/S>"); // expected to fail
+      set("#queryMap", "<http://a.example/x>@!<http://a.example/S>"); // expected to fail
       await shared.promise;
       $("#validate").trigger("click");
       await shared.promise;
@@ -1016,7 +1119,7 @@ if (!TEST_browser) {
         elt.val(value);
         elt.trigger("change");
       };
-      set("#textMap", "<http://a.example/x>@<http://a.example/S>"); // conformant again
+      set("#queryMap", "<http://a.example/x>@<http://a.example/S>"); // conformant again
       await shared.promise;
       const origInterface = $("#interface").val();
       $("#interface").val("appinfo");
@@ -1027,6 +1130,12 @@ if (!TEST_browser) {
         const es = shared.Caches.editorSupport;
         const rw = es.app.resultsWidget;
         expect(rw.resultPanes.length, "appinfo pane created").to.be.above(0);
+        // a results pane has no textarea to inherit from, so it takes the
+        // colours of where the app put it
+        expect($("#results .results").length, "the pane sits in a painted holder").to.be.above(0);
+        const painted = [];
+        $("style").each((i, s) => painted.push($(s).text()));
+        expect(painted.join("\n"), "the results tint").to.include("rgb(255, 255, 244)");
         const {pane, ranges} = rw.resultPanes[0];
         expect(ranges.length, "TestedTriples mapped").to.be.above(0);
         // fitted to the bottom of the window; scrolls internally
@@ -1086,7 +1195,7 @@ if (!TEST_browser) {
           ":x :q :y .",
         ].join("\n"));
         dataTextarea.trigger("change"); // as the pane's debounced change would
-        await shared.promise;           // dataInputHandler -> copyTextMapToEditMap
+        await shared.promise;           // dataInputHandler -> copyQueryMapToEditMap
         await new Promise(resolve => setTimeout(resolve, 50));
       } finally {
         dom.window.console.error = origError;
@@ -1122,7 +1231,7 @@ if (!TEST_browser) {
         "PREFIX : <http://a.example/>",
         ":x :p 0 ; :q 1 ; :r 2 ; :q 3 ; :r 4 .",
       ].join("\n"));
-      set("#textMap", "<http://a.example/x>@<http://a.example/S>");
+      set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
       await shared.promise;
 
       // a gutter breakpoint on the :q constraint's line
