@@ -3966,7 +3966,8 @@ class ShExBaseApp {
   if ($("#interface").val() === "minimal") {
     $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").show();
     $("#inputData .status").html("data (<span id=\"dataDialect\">" + this.neighborhoods.dialect() + "</span>)").show();
-    $("#actions").parent().children().not("#actions").hide();
+    // minimal: the shape map is all that stays beside the schema
+    $("#shapeMapArea").siblings().hide();
     $("#title img, #title h1").hide();
     $("#menuForm").css("position", "absolute").css(
       "left",
@@ -3977,7 +3978,7 @@ class ShExBaseApp {
   } else {
     $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").hide();
     $("#inputData .status").html("data (<span id=\"dataDialect\">" + this.neighborhoods.dialect() + "</span>)").hide();
-    $("#actions").parent().children().not("#actions").show();
+    $("#shapeMapArea").siblings().show();
     $("#title img, #title h1").show();
     $("#menuForm").removeAttr("style");
     $("#controls").css("position", "absolute");

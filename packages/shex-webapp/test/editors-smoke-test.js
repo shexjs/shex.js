@@ -905,6 +905,25 @@ if (!TEST_browser) {
       });
     });
 
+    /* "minimal" strips the page back to the schema, the data and the shape
+     * map; the shape map area is what stays beside the schema, which is the
+     * whole reason that div has a name. */
+    it("should keep the shape map, and only that, beside the schema in minimal mode", function () {
+      const was = $("#interface").val();
+      const display = selector => $(selector).first()[0].style.display;
+      try {
+        $("#interface").val("minimal").trigger("change");
+        expect(display("#shapeMapArea"), "the shape map stays").to.not.equal("none");
+        expect(display("#manifestDrop"), "the manifest goes").to.equal("none");
+        expect($("#shapeMapArea").siblings().length, "something to hide").to.be.above(0);
+
+        $("#interface").val(was).trigger("change");
+        expect(display("#manifestDrop"), "and comes back").to.not.equal("none");
+      } finally {
+        $("#interface").val(was).trigger("change");
+      }
+    });
+
     it("should anchor validation errors in both panes", async function () {
       const warns = [];
       const origWarn = dom.window.console.warn;
