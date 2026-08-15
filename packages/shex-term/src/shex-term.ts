@@ -48,6 +48,15 @@ export interface SchemaIndex {
     shapeExprs: { [id: string]: ShExJ.ShapeDecl };
     tripleExprs: { [id: string]: ShExJ.tripleExpr };
     labelToTcs: { [id: string]: ShExJ.TripleConstraint[] }
+    /**
+     * label -> the labels of every shape that EXTENDS it, transitively.
+     *
+     * Built by the validator the first time a validation needs it and kept
+     * here because it is a fact about the schema, not about a validation:
+     * building it walks every shape in the schema, which for FHIR's ~1400
+     * is most of a second.  Absent until something asks.
+     */
+    extensions?: { [id: string]: string[] };
 }
 
 export interface InternalSchema extends ShExJ.Schema {

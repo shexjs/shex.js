@@ -545,7 +545,14 @@ export class ShExValidator {
 
     // Find all non-abstract shapeExprs extended with label.
     let candidates:shapeDeclRef[] = [shapeLabel];
-    candidates = candidates.concat(indexExtensions(this.schema)[shapeLabel] || []);
+    // Built once per schema, not once per validation: it walks every shape
+    // there is, which for FHIR's ~1400 was 650ms of an 810ms validation --
+    // 80% of the time, spent re-deriving something the schema had already
+    // determined.  It lives on the index for the same reason labelToTcs
+    // does, so a second validator over the same schema doesn't pay again.
+    if (this.index.extensions === undefined)
+      this.index.extensions = indexExtensions(this.schema);
+    candidates = candidates.concat(this.index.extensions[shapeLabel] || []);
     // Uniquify list.
     for (let i = candidates.length - 1; i >= 0; --i) {
       if (candidates.indexOf(candidates[i]) < i)
