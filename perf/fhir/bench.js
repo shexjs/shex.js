@@ -102,6 +102,21 @@ const schemaFixups = [
     apply: text => text.replace(/\) OR\n(\t\(NOT \{ fhir:nodeRole)/g, ") AND\n$1"),
   },
   {
+    what: "<Uri> has no fhir:l, though every URI-valued node carries one",
+    // FHIR RDF gives a URI-valued node both spellings -- the lexical form
+    // as fhir:v and the IRI as fhir:l:
+    //     fhir:system [ fhir:v "urn:oid:0.1.2"^^xsd:anyURI ;
+    //                   fhir:l <urn:oid:0.1.2> ]
+    // but <Reference> is the only shape in the file that declares fhir:l,
+    // so every other such node fails its CLOSED shape with "unexpected
+    // fhir:l".  On <Uri> it reaches Url, Canonical, Oid and Uuid through
+    // EXTENDS.  Worth 3 -> 29 conformant of the first 60 examples on its
+    // own, which makes it the largest single gap after <All>.
+    apply: text => text.replace(
+      /<Uri> EXTENDS @<PrimitiveType> CLOSED \{\s*\n    a \[fhir:Uri\]\?;/,
+      "<Uri> EXTENDS @<PrimitiveType> CLOSED {\n    a [fhir:Uri]?;\n    fhir:l IRI?;"),
+  },
+  {
     what: "<Xhtml> is referenced (fhir:div @<Xhtml>) but never declared",
     // One reference, no declaration, so any document with a Narrative --
     // most of them -- fails to validate with "shape ... Xhtml not found".
