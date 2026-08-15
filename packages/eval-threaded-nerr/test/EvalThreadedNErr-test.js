@@ -98,8 +98,8 @@ describe("eval-threaded-nerr", function () {
    * they should own.  The pool a constraint's triples come from was shared
    * between forked threads, so what one spent another went without; and an
    * iteration gave up on the first thread that couldn't take another turn,
-   * discarding the ones that could.  eval-simple-1err still can't do this
-   * (see the test below); this engine can. */
+   * discarding the ones that could.  eval-simple-1err needed a third fix,
+   * of its own kind: see the test below. */
   it("should split for a constraint under a repeated group", function () {
     const schemaText = [
       "PREFIX : <http://a.example/>",
@@ -126,12 +126,13 @@ describe("eval-threaded-nerr", function () {
     expect(errors.length, "one triple too many, one error").to.equal(1);
   });
 
-  /* What the other engine still does with the same schema, stated rather
-   * than left to be discovered: eval-simple-1err takes as many triples as a
-   * constraint's maximum allows and never gives any back, so the first
-   * iteration eats both :p's.  Backtracking across iterations is a change
-   * to an NFA simulation, not a bug fix; F0 in doc/error-reporting.md. */
-  it("should record that eval-simple-1err cannot do the same", function () {
+  /* The same schema through the other engine, which failed it for a
+   * different reason: eval-simple-1err took as many triples as a
+   * constraint's maximum allowed and never gave any back, so the first
+   * iteration ate both :p's.  Its loop was already written to offer each
+   * larger take as its own thread -- it just started at the maximum, so the
+   * loop never went round twice. */
+  it("should let eval-simple-1err do the same", function () {
     const schema = ShExParser.construct(base, {}, {index: true}).parse([
       "PREFIX : <http://a.example/>",
       "start = @<S>",
@@ -143,8 +144,7 @@ describe("eval-threaded-nerr", function () {
     const result = new ShExValidator(schema, RdfJsDb(graph),
                                      {regexModule: require("@shexjs/eval-simple-1err").RegexpModule})
           .validateShapeMap([{node: base + "x", shape: ShExValidator.Start}])[0];
-    expect(result.status, "still nonconformant, and this test should fail the day it isn't")
-      .to.equal("nonconformant");
+    expect(result.status, JSON.stringify(result.appinfo)).to.equal("conformant");
   });
 
   it("should still report a missing property as missing", function () {
