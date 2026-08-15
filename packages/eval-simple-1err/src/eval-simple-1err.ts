@@ -27,7 +27,23 @@ import {
 
 export {};
 
-type ConstraintToTriples = Map<ShExJ.TripleConstraint, RdfJsQuad[]>; // TODO: prefer MapArray<>?
+type ConstraintToTriples = Map<ShExJ.TripleConstraint, RdfJsQuad[]>;
+
+/**
+ * A thread's remaining triples, cloned.
+ *
+ * Threads take their triples by splicing them out of these arrays, so
+ * sharing the arrays means what one thread takes another goes without.  The
+ * comments here used to say reuse was "safe... but I've not thought about
+ * it": it isn't, once a constraint is visited more than once.  A repeated
+ * group's second iteration found the pool drained by a *sibling* thread's
+ * first iteration and reported the property missing.
+ */
+function ownPool (avail: ConstraintToTriples): ConstraintToTriples {
+  const mine: ConstraintToTriples = new Map();
+  avail.forEach((triples, constraint) => mine.set(constraint, triples.slice()));
+  return mine;
+} // TODO: prefer MapArray<>?
 
 enum ControlType {
   Split, Rept, Match
@@ -586,7 +602,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
         return [list.push(new RegExpThread( // return [new list element index]
             stateNo,
             thread.repeats,
-            thread.avail, // Experiments indicate this and it's arrays safe to reuse, but I've not thought about it.
+            ownPool(thread.avail), // a thread spends its own triples: see ownPool
             thread.stack,
             thread.matched,
             thread.errors
@@ -603,7 +619,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
       return new RegExpThread(
           thread.state/*???*/,
           trimmedRepeats,
-          thread.avail, // Experiments indicate this is safe to reuse, but I've not thought about it.
+          ownPool(thread.avail),
           thread.stack,
           thread.matched,
           []
@@ -618,7 +634,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
       return new RegExpThread(
         thread.state/*???*/,
         incrmedRepeats,
-        [...thread.avail.keys()].reduce<ConstraintToTriples>((acc, tc) => {acc.set(tc, thread.avail.get(tc)!); return acc;}, new Map()),
+        ownPool(thread.avail),
         thread.stack,
         thread.matched,
         []

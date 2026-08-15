@@ -38,6 +38,23 @@ interface TripleList {
   triples: RdfJsQuad[];
 }
 
+/**
+ * A thread's remaining pool, cloned.
+ *
+ * The Map was copied but the arrays inside it were not, and
+ * matchTripleConstraint takes its triples by splicing them out -- so two
+ * threads forked from one shared a pool, and what either took the other went
+ * without.  Where a constraint is visited once that is invisible (the winner
+ * consumed everything anyway); where it is visited again -- an iteration of a
+ * repeated group -- the second visit found the pool drained by the first
+ * visit's *other* branch, and reported the property missing.
+ */
+function ownPool (avail: ConstraintToTriples): ConstraintToTriples {
+  const mine: ConstraintToTriples = new Map();
+  avail.forEach((triples, constraint) => mine.set(constraint, triples.slice()));
+  return mine;
+}
+
 class RegexpThread {
   public avail: ConstraintToTriples;   // triples remaining by constraint
   public matched: TripleList[]; // triples matched in this thread
@@ -54,7 +71,7 @@ class RegexpThread {
   makeResultsThread (expr: ShExJ.TripleConstraint, tests: TripleTestedErrors[],
                      errors: error[], matched: TripleList[], minmax: GroupAttrs): RegexpThread {
     return new RegexpThread(
-      new Map(this.avail), // copy parent thread's avail vector,
+      ownPool(this.avail), // the parent's remaining triples, this thread's to spend
       errors,
       matched.concat({
         triples: tests.map(p => p.triple)
@@ -71,7 +88,7 @@ class RegexpThread {
 
   makeMissingPropertyThread (expr: ShExJ.TripleConstraint, matched: TripleList[]) {
     return new RegexpThread(
-      this.avail,
+      ownPool(this.avail),
       this.errors.concat([
         Object.assign(
             {type: "MissingProperty", property: expr.predicate},
@@ -262,7 +279,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
       const failed: RegexpThread[] = [];
       for (const nested of oneOf.expressions) {
         const thcopy = new RegexpThread(
-          new Map(th.avail),
+          ownPool(th.avail),
           th.errors,
           th.matched //.slice() ever needed??
         );
@@ -420,6 +437,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
       minmax.annotations = groupTE.annotations;
     for (; repeated < max && !errOut; ++repeated) {
       let inner: RegexpThread[] = [];
+      let stumbled: RegexpThread[] = [];
       for (let t = 0; t < newThreads.length; ++t) {
         const newt = newThreads[t];
         const sub = evalGroup(newt);
@@ -435,13 +453,22 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
               solutions: solutions
             }, minmax) as groupSolutions;
           });
-        }
-        if (sub.length === 0 /* min:0 */ || sub[0].errors.length > 0)
-          return repeated < min ? sub : newThreads;
-        else
           inner = inner.concat(sub);
-        // newThreads.expressions.push(sub);
+        } else {
+          // This thread can't take another iteration.  Another might: the
+          // threads here are the ways the last iteration could have gone,
+          // and they leave different triples behind.  Returning on the
+          // first that stumbles discards the ones that would have finished
+          // -- which is how `( :p . + ; :q . ){2}` over two of each came to
+          // report :p missing, having spent both :p's in one iteration of
+          // the thread that happened to be looked at second.
+          stumbled = stumbled.concat(sub);
+        }
       }
+      if (inner.length === 0)
+        // none of them could: short of the minimum that is the failure,
+        // and past it the iterations already made stand
+        return repeated < min ? stumbled : newThreads;
       newThreads = inner;
     }
     if (newThreads.length > 0 && newThreads[0].errors.length === 0 && groupTE.semActs !== undefined) {

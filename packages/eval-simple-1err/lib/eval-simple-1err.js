@@ -2,6 +2,21 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MatchDebugger = exports.RegexpModule = void 0;
 const term_1 = require("@shexjs/term");
+/**
+ * A thread's remaining triples, cloned.
+ *
+ * Threads take their triples by splicing them out of these arrays, so
+ * sharing the arrays means what one thread takes another goes without.  The
+ * comments here used to say reuse was "safe... but I've not thought about
+ * it": it isn't, once a constraint is visited more than once.  A repeated
+ * group's second iteration found the pool drained by a *sibling* thread's
+ * first iteration and reported the property missing.
+ */
+function ownPool(avail) {
+    const mine = new Map();
+    avail.forEach((triples, constraint) => mine.set(constraint, triples.slice()));
+    return mine;
+} // TODO: prefer MapArray<>?
 var ControlType;
 (function (ControlType) {
     ControlType[ControlType["Split"] = 0] = "Split";
@@ -473,7 +488,7 @@ class EvalSimple1ErrRegexEngine {
             //   return r2 || avail.length > 0;
             // }, false))
             return [list.push(new RegExpThread(// return [new list element index]
-                stateNo, thread.repeats, thread.avail, // Experiments indicate this and it's arrays safe to reuse, but I've not thought about it.
+                stateNo, thread.repeats, ownPool(thread.avail), // a thread spends its own triples: see ownPool
                 thread.stack, thread.matched, thread.errors)) - 1];
         }
     }
@@ -483,15 +498,14 @@ class EvalSimple1ErrRegexEngine {
                 r[k] = thread.repeats[k];
             return r;
         }, {});
-        return new RegExpThread(thread.state /*???*/, trimmedRepeats, thread.avail, // Experiments indicate this is safe to reuse, but I've not thought about it.
-        thread.stack, thread.matched, []);
+        return new RegExpThread(thread.state /*???*/, trimmedRepeats, ownPool(thread.avail), thread.stack, thread.matched, []);
     }
     incrmRepeat(thread, repeatedState) {
         const incrmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
             r[k] = parseInt(k) == repeatedState ? thread.repeats[k] + 1 : thread.repeats[k];
             return r;
         }, {});
-        return new RegExpThread(thread.state /*???*/, incrmedRepeats, [...thread.avail.keys()].reduce((acc, tc) => { acc.set(tc, thread.avail.get(tc)); return acc; }, new Map()), thread.stack, thread.matched, []);
+        return new RegExpThread(thread.state /*???*/, incrmedRepeats, ownPool(thread.avail), thread.stack, thread.matched, []);
     }
     stateString(state, repeats) {
         const rs = Object.keys(repeats).map(rpt => {

@@ -94,14 +94,13 @@ describe("eval-threaded-nerr", function () {
   /* Two iterations of a group, each needing one :p and one :q: the four
    * triples match only as 1+1 and 1+1.
    *
-   * Skipped because both engines get this wrong today -- eval-simple-1err
-   * and eval-threaded-nerr, before this change and after it, all three
-   * report MissingProperty :p.  A repeated group with an unbounded
-   * cardinality inside it wants a partition across iterations, which
-   * neither engine searches; the shexTest suite repeats groups only over
-   * fixed cardinalities (open3Eachdotclosecard23), so nothing caught it.
-   * Kept here as the statement of what should happen. */
-  it.skip("should still split for a constraint under a repeated group", function () {
+   * Two things stood in the way, and both were about threads sharing what
+   * they should own.  The pool a constraint's triples come from was shared
+   * between forked threads, so what one spent another went without; and an
+   * iteration gave up on the first thread that couldn't take another turn,
+   * discarding the ones that could.  eval-simple-1err still can't do this
+   * (see the test below); this engine can. */
+  it("should split for a constraint under a repeated group", function () {
     const schemaText = [
       "PREFIX : <http://a.example/>",
       "start = @<S>",
@@ -125,6 +124,27 @@ describe("eval-threaded-nerr", function () {
     const errors = result.appinfo.errors;
     expect(errors.map(e => e.type)).to.deep.equal(["ExcessTripleViolation"]);
     expect(errors.length, "one triple too many, one error").to.equal(1);
+  });
+
+  /* What the other engine still does with the same schema, stated rather
+   * than left to be discovered: eval-simple-1err takes as many triples as a
+   * constraint's maximum allows and never gives any back, so the first
+   * iteration eats both :p's.  Backtracking across iterations is a change
+   * to an NFA simulation, not a bug fix; F0 in doc/error-reporting.md. */
+  it("should record that eval-simple-1err cannot do the same", function () {
+    const schema = ShExParser.construct(base, {}, {index: true}).parse([
+      "PREFIX : <http://a.example/>",
+      "start = @<S>",
+      "<S> { ( :p . + ; :q . ){2} }",
+    ].join("\n"));
+    const graph = new N3.Store();
+    graph.addQuads(new N3.Parser({baseIRI: base, format: "text/turtle"})
+      .parse('PREFIX : <http://a.example/>\n:x :p 1 , 2 ; :q 3 , 4 .'));
+    const result = new ShExValidator(schema, RdfJsDb(graph),
+                                     {regexModule: require("@shexjs/eval-simple-1err").RegexpModule})
+          .validateShapeMap([{node: base + "x", shape: ShExValidator.Start}])[0];
+    expect(result.status, "still nonconformant, and this test should fail the day it isn't")
+      .to.equal("nonconformant");
   });
 
   it("should still report a missing property as missing", function () {
