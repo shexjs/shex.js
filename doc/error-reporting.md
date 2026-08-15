@@ -120,11 +120,24 @@ the bare `error[][]`, matching how `repairs` already reads. Then
 `errorList()`'s flattening — which exists only to cope with the unnamed
 nesting — goes away.
 
-### F5. Then the companion note's step 4 (M)
+### F5. Then the companion note's step 4 (M) — half done
 
-With F1–F4 in place, repairs can become the primary account of a failure and
-the classic errors its detail, and the failure tests that assert error
-structure are rewritten **once**, for all of it, rather than once per step.
+The presentation half is in: where a failure carries repairs, the report
+**leads** with them and the classic errors are the detail underneath.
+
+```
+validating :x as :S:
+  to conform: add 1 foaf:mbox
+    missing property <foaf:mbox>
+```
+
+The other half — making them the *default*, so every consumer gets them —
+is left for review.  Turning it on measured fine (13 ms at its worst over
+shexTest, and no verdict moves) but it puts a `repairs` key in every failure
+anyone has ever compared against a fixture: 36 tests here, and whatever else
+downstream.  That is a decision for someone ready to rewrite those fixtures
+in one go, which is what this step was always about.  `{repairs: true}`,
+`validate --repairs`, and the apps ask for it today.
 
 ### F0. Before trusting any of it: the matcher (M/L)
 

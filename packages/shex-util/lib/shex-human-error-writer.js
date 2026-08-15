@@ -47,13 +47,14 @@ class ShExHumanErrorWriter {
             case "Failure": {
                 // everything in a Failure's list is wrong with the node at once; the
                 // alternatives live in PossibleErrors below
-                const lines = ["validating " + val.node + " as " + val.shape + ":"]
-                    .concat(this.joined(errorList(val.errors), "AND", said).map(s => "  " + s));
-                // ...and, where the validator was asked for them, what would make the
-                // node conform: the nearest bag of arcs this shape accepts
+                // What would make the node conform leads, where the validator worked
+                // it out: it is the part of a report a reader can act on.  The errors
+                // are the detail under it -- why it doesn't, arc by arc.
                 const ways = (0, error_messages_1.repairText)(val.repairs);
-                return ways.length === 0 ? lines
-                    : lines.concat(["  to conform: " + ways.join(", or ")]);
+                const detail = this.joined(errorList(val.errors), "AND", said).map(s => "  " + s);
+                return ["validating " + val.node + " as " + val.shape + ":"]
+                    .concat(ways.length === 0 ? [] : ["  to conform: " + ways.join(", or ")])
+                    .concat(detail);
             }
             case "Alternatives":
             case "PossibleErrors": // its older spelling

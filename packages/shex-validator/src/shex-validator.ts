@@ -105,8 +105,13 @@ interface ValidatorOptions {
   /** debugger callbacks forwarded to the regex engine (doc/debugger-design.md §4) */
   debugHooks?: RegexDebugHooks;
   /** Report each failure as the nearest bag the schema accepts: what to add
-   * and what to take away (doc/error-normalization.md §4).  The classic
-   * errors are reported as well; this adds a `repairs` field beside them. */
+   * and what to take away (doc/error-normalization.md §4), beside the
+   * classic errors.  Off unless asked for -- not because the search costs
+   * much (13ms at its worst over the shexTest suite) but because turning it
+   * on puts a `repairs` key in every failure a caller has ever compared
+   * against a fixture.  The apps and `validate --repairs` ask for it; making
+   * it the default is a decision for whoever is ready to rewrite those
+   * fixtures (doc/error-reporting.md F5). */
   repairs?: boolean;
 }
 

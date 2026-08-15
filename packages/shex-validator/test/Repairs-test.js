@@ -118,7 +118,10 @@ describe("nearest-bag repairs", function () {
     const off = new ShExValidator(schema, RdfJsDb(graph), {})
           .validateShapeMap([{node: base + "x", shape: ShExValidator.Start}])[0];
     expect(off.status).to.equal("nonconformant");
-    expect(off.appinfo).to.not.have.property("repairs");
+    expect(off.appinfo, "not unless asked").to.not.have.property("repairs");
+    const on = new ShExValidator(schema, RdfJsDb(graph), {repairs: true})
+          .validateShapeMap([{node: base + "x", shape: ShExValidator.Start}])[0];
+    expect(on.appinfo, "and there when asked").to.have.property("repairs");
   });
 
   it("should read as a recipe", function () {
