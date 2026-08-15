@@ -20119,6 +20119,21 @@ SafeBuffer.allocUnsafeSlow = function (size) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MatchDebugger = exports.RegexpModule = void 0;
 const term_1 = __webpack_require__(2130);
+/**
+ * A thread's remaining triples, cloned.
+ *
+ * Threads take their triples by splicing them out of these arrays, so
+ * sharing the arrays means what one thread takes another goes without.  The
+ * comments here used to say reuse was "safe... but I've not thought about
+ * it": it isn't, once a constraint is visited more than once.  A repeated
+ * group's second iteration found the pool drained by a *sibling* thread's
+ * first iteration and reported the property missing.
+ */
+function ownPool(avail) {
+    const mine = new Map();
+    avail.forEach((triples, constraint) => mine.set(constraint, triples.slice()));
+    return mine;
+} // TODO: prefer MapArray<>?
 var ControlType;
 (function (ControlType) {
     ControlType[ControlType["Split"] = 0] = "Split";
@@ -20405,19 +20420,32 @@ class EvalSimple1ErrRegexEngine {
                     let max = state.c.max !== undefined ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
                     if (!thread.avail.has(tripleConstraint))
                         thread.avail.set(tripleConstraint, constraintToTripleMapping.get(tripleConstraint).map(pair => pair.triple));
-                    const taken = thread.avail.get(tripleConstraint).splice(0, max);
+                    const pool = thread.avail.get(tripleConstraint);
+                    // Start at the minimum and offer each larger take as its own
+                    // thread.  Starting at the maximum -- as this did -- left nothing
+                    // for the loop below to add, so a constraint under a repeated
+                    // group ate every triple on its first iteration and the second
+                    // went without.
+                    const taken = pool.splice(0, min);
                     if (taken.length >= min) {
+                        const matched0 = thread.matched;
                         do {
-                            this.addStates(nlist, thread, taken);
+                            // `taken` and `matched` are both read by reference downstream:
+                            // addStates keeps the array as a match's `triples` and appends
+                            // to `thread.matched`.  Each turn of this loop is a separate
+                            // thread, so each needs its own of both.
+                            thread.matched = matched0;
+                            this.addStates(nlist, thread, taken.slice());
                         } while ((function () {
-                            if (thread.avail.get(tripleConstraint).length > 0 && taken.length < max) {
-                                taken.push(thread.avail.get(tripleConstraint).shift());
-                                return true; // stay in look to take more.
+                            if (pool.length > 0 && taken.length < max) {
+                                taken.push(pool.shift());
+                                return true; // stay in loop to take more.
                             }
                             else {
                                 return false; // no more to take or we're already at max
                             }
                         })());
+                        thread.matched = matched0;
                     }
                     if (nlist.length === nlistlen)
                         yield { type: "fail", tc: tripleConstraint, generation,
@@ -20590,7 +20618,7 @@ class EvalSimple1ErrRegexEngine {
             //   return r2 || avail.length > 0;
             // }, false))
             return [list.push(new RegExpThread(// return [new list element index]
-                stateNo, thread.repeats, thread.avail, // Experiments indicate this and it's arrays safe to reuse, but I've not thought about it.
+                stateNo, thread.repeats, ownPool(thread.avail), // a thread spends its own triples: see ownPool
                 thread.stack, thread.matched, thread.errors)) - 1];
         }
     }
@@ -20600,15 +20628,14 @@ class EvalSimple1ErrRegexEngine {
                 r[k] = thread.repeats[k];
             return r;
         }, {});
-        return new RegExpThread(thread.state /*???*/, trimmedRepeats, thread.avail, // Experiments indicate this is safe to reuse, but I've not thought about it.
-        thread.stack, thread.matched, []);
+        return new RegExpThread(thread.state /*???*/, trimmedRepeats, ownPool(thread.avail), thread.stack, thread.matched, []);
     }
     incrmRepeat(thread, repeatedState) {
         const incrmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
             r[k] = parseInt(k) == repeatedState ? thread.repeats[k] + 1 : thread.repeats[k];
             return r;
         }, {});
-        return new RegExpThread(thread.state /*???*/, incrmedRepeats, [...thread.avail.keys()].reduce((acc, tc) => { acc.set(tc, thread.avail.get(tc)); return acc; }, new Map()), thread.stack, thread.matched, []);
+        return new RegExpThread(thread.state /*???*/, incrmedRepeats, ownPool(thread.avail), thread.stack, thread.matched, []);
     }
     stateString(state, repeats) {
         const rs = Object.keys(repeats).map(rpt => {
@@ -20829,6 +20856,22 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RegexpModule = void 0;
 const term_1 = __webpack_require__(2130);
 const UNBOUNDED = -1;
+/**
+ * A thread's remaining pool, cloned.
+ *
+ * The Map was copied but the arrays inside it were not, and
+ * matchTripleConstraint takes its triples by splicing them out -- so two
+ * threads forked from one shared a pool, and what either took the other went
+ * without.  Where a constraint is visited once that is invisible (the winner
+ * consumed everything anyway); where it is visited again -- an iteration of a
+ * repeated group -- the second visit found the pool drained by the first
+ * visit's *other* branch, and reported the property missing.
+ */
+function ownPool(avail) {
+    const mine = new Map();
+    avail.forEach((triples, constraint) => mine.set(constraint, triples.slice()));
+    return mine;
+}
 class RegexpThread {
     constructor(avail = new Map(), errors = [], matched = [], expression) {
         this.avail = avail;
@@ -20837,13 +20880,13 @@ class RegexpThread {
         this.expression = expression;
     }
     makeResultsThread(expr, tests, errors, matched, minmax) {
-        return new RegexpThread(new Map(this.avail), // copy parent thread's avail vector,
+        return new RegexpThread(ownPool(this.avail), // the parent's remaining triples, this thread's to spend
         errors, matched.concat({
             triples: tests.map(p => p.triple)
         }), Object.assign({ type: "TripleConstraintSolutions", predicate: expr.predicate }, expr.valueExpr !== undefined ? { valueExpr: expr.valueExpr } : {}, expr.id !== undefined ? { productionLabel: expr.id } : {}, minmax, { solutions: tests.map(p => p.tested) }));
     }
     makeMissingPropertyThread(expr, matched) {
-        return new RegexpThread(this.avail, this.errors.concat([
+        return new RegexpThread(ownPool(this.avail), this.errors.concat([
             Object.assign({ type: "MissingProperty", property: expr.predicate }, expr.valueExpr ? { valueExpr: expr.valueExpr } : {})
         ]), matched);
     }
@@ -20991,7 +21034,7 @@ class EvalThreadedNErrRegexEngine {
             const matched = [];
             const failed = [];
             for (const nested of oneOf.expressions) {
-                const thcopy = new RegexpThread(new Map(th.avail), th.errors, th.matched //.slice() ever needed??
+                const thcopy = new RegexpThread(ownPool(th.avail), th.errors, th.matched //.slice() ever needed??
                 );
                 const sub = this.matchTripleExpression(nested, thcopy, constraintToTripleMapping, semActHandler);
                 if (sub[0].errors.length === 0) { // all subs pass or all fail
@@ -21128,6 +21171,7 @@ class EvalThreadedNErrRegexEngine {
             minmax.annotations = groupTE.annotations;
         for (; repeated < max && !errOut; ++repeated) {
             let inner = [];
+            let stumbled = [];
             for (let t = 0; t < newThreads.length; ++t) {
                 const newt = newThreads[t];
                 const sub = evalGroup(newt);
@@ -21142,13 +21186,23 @@ class EvalThreadedNErrRegexEngine {
                             solutions: solutions
                         }, minmax);
                     });
-                }
-                if (sub.length === 0 /* min:0 */ || sub[0].errors.length > 0)
-                    return repeated < min ? sub : newThreads;
-                else
                     inner = inner.concat(sub);
-                // newThreads.expressions.push(sub);
+                }
+                else {
+                    // This thread can't take another iteration.  Another might: the
+                    // threads here are the ways the last iteration could have gone,
+                    // and they leave different triples behind.  Returning on the
+                    // first that stumbles discards the ones that would have finished
+                    // -- which is how `( :p . + ; :q . ){2}` over two of each came to
+                    // report :p missing, having spent both :p's in one iteration of
+                    // the thread that happened to be looked at second.
+                    stumbled = stumbled.concat(sub);
+                }
             }
+            if (inner.length === 0)
+                // none of them could: short of the minimum that is the failure,
+                // and past it the iterations already made stand
+                return repeated < min ? stumbled : newThreads;
             newThreads = inner;
         }
         if (newThreads.length > 0 && newThreads[0].errors.length === 0 && groupTE.semActs !== undefined) {
