@@ -146,9 +146,11 @@ class EvalThreadedNErrRegexEngine {
         }
         else {
             return ret.length > 1 ? {
-                type: "PossibleErrors",
+                // more than one way to read this neighborhood, and each of them
+                // failed: say so as a disjunction rather than as a nested array
+                type: "Alternatives",
                 errors: ret.reduce((all, e) => {
-                    return all.concat([e.errors]);
+                    return all.concat([{ type: "AllOf", errors: e.errors }]);
                 }, [])
             } : {
                 type: "Failure",

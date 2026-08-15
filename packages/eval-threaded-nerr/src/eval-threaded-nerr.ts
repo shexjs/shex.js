@@ -40,7 +40,11 @@ type ConstraintToTriples = Map<ShExJ.TripleConstraint, RdfJsQuad[]>; // TODO: pr
  */
 interface Alternatives {
   type: "Alternatives";
-  of: error[][];
+  /** each entry an AllOf: the errors of one reading, true together.  The
+   * field keeps its name because `"errors" in x` is how a failure is
+   * recognised throughout the validator; what is new is that both levels
+   * now say what they are. */
+  errors: error[];
 }
 
 interface TripleList {
@@ -243,9 +247,11 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
       return fromValidationPoint;
     } else {
       return ret.length > 1 ? {
-        type: "PossibleErrors",
+        // more than one way to read this neighborhood, and each of them
+        // failed: say so as a disjunction rather than as a nested array
+        type: "Alternatives",
         errors: ret.reduce<error[]>((all, e) => {
-          return all.concat([e.errors]);
+          return all.concat([{type: "AllOf", errors: e.errors} as unknown as error]);
         }, [])
       } : {
         type: "Failure",

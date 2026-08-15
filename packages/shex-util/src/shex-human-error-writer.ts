@@ -61,9 +61,12 @@ class ShExHumanErrorWriter {
         .concat(ways.length === 0 ? [] : ["  to conform: " + ways.join(", or ")])
         .concat(detail);
     }
+    case "AllOf":
+      // one reading's errors, all true at once
+      return this.joined(errorList(val.errors), "AND", said);
     case "Alternatives":
     case "PossibleErrors":       // its older spelling
-      // one list per way of reading the neighborhood: any one of them, put
+      // one entry per way of reading the neighborhood: any one of them, put
       // right, would settle it
       return (val.of || val.errors).reduce((ret: string[], alternative: any) => {
         const nested = (Array.isArray(alternative)
@@ -109,6 +112,8 @@ class ShExHumanErrorWriter {
         return false;             // its errors are the stringified form of itself
       return Array.isArray(e.errors) ? e.errors.length > 0 : e.errors !== undefined;
     }
+    /** unwrap the anonymous {errors: [...]} boxes the validator still nests;
+     * an AllOf or an Alternatives says what it is and is left alone */
     function errorList (errors: any[]): any[] {
       return (errors || []).reduce(function (acc: any[], e: any) {
         const attrs = Object.keys(e || {});

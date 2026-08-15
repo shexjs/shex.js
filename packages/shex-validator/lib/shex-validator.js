@@ -909,8 +909,15 @@ class ShExValidator {
             }
         }
         // TODO: what if results is a TypedError (i.e. not a container of further errors)?
-        if (results !== null && results.errors !== undefined)
-            Array.prototype.push.apply(errors, results.errors);
+        if (results !== null && results.errors !== undefined) {
+            // An Alternatives is one error saying "any of these": spreading its
+            // children into this list would turn a choice into a conjunction,
+            // which is how "either an :a or a :b" came to be read as needing both.
+            if (results.type === "Alternatives")
+                errors.push(results);
+            else
+                Array.prototype.push.apply(errors, results.errors);
+        }
         return { errors, triples: usedTriples, results };
     }
     /**
