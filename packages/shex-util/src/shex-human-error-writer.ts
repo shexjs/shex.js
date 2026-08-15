@@ -24,6 +24,11 @@ class ShExHumanErrorWriter {
   /** a list of errors with a connector between them: AND for things that are
    * all wrong, OR for alternative accounts of one thing */
   joined (errors: any[], connector: "AND" | "OR", ctx: ErrorContext = {}): string[] {
+    // one thing joined to nothing is just the thing: the indent is there to
+    // show what the connector governs, and with no connector it only buries
+    // the sentence a level deeper for every wrapper it passes through
+    if (errors.length === 1)
+      return this.write(errors[0], this.prefixes, ctx);
     return errors.reduce((ret: string[], e: any) => {
       const nested = this.write(e, this.prefixes, ctx).map(s => "  " + s);
       return ret.length > 0 ? ret.concat([connector]).concat(nested) : nested;
