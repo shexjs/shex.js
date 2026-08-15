@@ -29,9 +29,18 @@ const UNBOUNDED = -1;
 
 type ConstraintToTriples = Map<ShExJ.TripleConstraint, RdfJsQuad[]>; // TODO: prefer MapArray<>?
 
-interface PossibleErrors {
-  type: "PossibleErrors"
-  errors: error[][];
+/**
+ * Alternative readings of one neighborhood: any one of them, put right,
+ * would settle it.  Each is a list of errors that are true together.
+ *
+ * This used to be `{type: "PossibleErrors", errors: error[][]}`, where the
+ * disjunction was the *nesting* -- a list of lists, in a field named like
+ * the list of errors every other failure carries, so every consumer had to
+ * know which it was holding.  See doc/error-reporting.md (F4).
+ */
+interface Alternatives {
+  type: "Alternatives";
+  of: error[][];
 }
 
 interface TripleList {

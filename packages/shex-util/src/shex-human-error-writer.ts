@@ -60,10 +60,11 @@ class ShExHumanErrorWriter {
       return ways.length === 0 ? lines
         : lines.concat(["  to conform: " + ways.join(", or ")]);
     }
-    case "PossibleErrors":
+    case "Alternatives":
+    case "PossibleErrors":       // its older spelling
       // one list per way of reading the neighborhood: any one of them, put
       // right, would settle it
-      return val.errors.reduce((ret: string[], alternative: any) => {
+      return (val.of || val.errors).reduce((ret: string[], alternative: any) => {
         const nested = (Array.isArray(alternative)
                         ? this.joined(alternative, "AND", said)
                         : this.write(alternative, this.prefixes, ctx)).map(s => "  " + s);

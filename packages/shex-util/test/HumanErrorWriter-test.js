@@ -26,8 +26,8 @@ describe("errsToSimple", function () {
 
   it("should join alternative readings with OR", function () {
     const text = ShExUtil.errsToSimple({
-      type: "PossibleErrors",
-      errors: [[missing("a")], [missing("b"), missing("c")]],
+      type: "Alternatives",
+      of: [[missing("a")], [missing("b"), missing("c")]],
     }).join("\n");
     expect(text, "one alternative or the other").to.include("OR");
     // ...and within an alternative, both are wrong together
@@ -36,6 +36,16 @@ describe("errsToSimple", function () {
 
   /* Nested errors were concatenated onto a string where they weren't in an
    * array, which stringified them: "validating x:,Missing property: ...". */
+  /* The name is new; a result made by an older validator still reads. */
+  it("should still understand the older spelling", function () {
+    const text = ShExUtil.errsToSimple({
+      type: "PossibleErrors",
+      errors: [[missing("a")], [missing("b")]],
+    }).join("\n");
+    expect(text).to.include("OR");
+    expect(text).to.include("missing property <" + P + "a>");
+  });
+
   it("should not stringify a nested error into commas", function () {
     const text = ShExUtil.errsToSimple({
       type: "TypeMismatch",
