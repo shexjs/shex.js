@@ -18,8 +18,12 @@ try {
           : ShExWebApp.RdfJsDb(makeStaticDB(msg.data.data.map(t => WorkerMarshalling.jsonTripleToRdfjsTriple(t, N3js.DataFactory))));
 
     let createOpts = msg.data.options;
-    createOpts.regexModule = ShExWebApp[createOpts.regexModule || "nfax-val-1err"];
-    createOpts = Object.create({ results: "api" }, createOpts); // default to API results
+    // an unknown (or absent) name leaves it to the validator's own default
+    createOpts.regexModule = ShExWebApp[createOpts.regexModule];
+    // Object.assign, not Object.create: the second argument of Object.create
+    // is a map of property *descriptors*, so every option arrived undefined
+    // -- the chosen regex engine among them -- and a plain `true` threw.
+    createOpts = Object.assign({ results: "api" }, createOpts); // default to API results
     validator = new ShExWebApp.Validator(
       msg.data.schema,
       inputData,

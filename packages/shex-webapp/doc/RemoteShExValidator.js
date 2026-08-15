@@ -54,7 +54,9 @@ class RemoteShExValidator {
           schema: loaded.schema,
           schemaURL: schemaURL,
           slurp: this.renderer.caches.inputData.neighborhoods.slurping(),
-          options: {regexModule: $("#regexpEngine").val()},
+          // repairs: as for the in-page validator, what would make a failing
+          // node conform (doc/error-normalization.md §4)
+          options: {regexModule: $("#regexpEngine").val(), repairs: true},
         },
         endpoint
           ? { endpoint }

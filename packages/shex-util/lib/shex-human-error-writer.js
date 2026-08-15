@@ -7,6 +7,18 @@ XSD._namespace = "http://www.w3.org/2001/XMLSchema#";
     XSD[p] = XSD._namespace + p;
 });
 class ShExHumanErrorWriter {
+    /** nested errors, each indented under what they explain */
+    nest(errors) {
+        return (Array.isArray(errors) ? errors : [errors]).reduce((ret, e) => ret.concat((typeof e === "string" ? [e] : this.write(e)).map(s => "  " + s)), []);
+    }
+    /** a list of errors with a connector between them: AND for things that are
+     * all wrong, OR for alternative accounts of one thing */
+    joined(errors, connector) {
+        return errors.reduce((ret, e) => {
+            const nested = (typeof e === "string" ? [e] : this.write(e)).map(s => "  " + s);
+            return ret.length > 0 ? ret.concat([connector]).concat(nested) : nested;
+        }, []);
+    }
     write(val) {
         const _HumanErrorWriter = this;
         if (Array.isArray(val)) {
@@ -22,39 +34,38 @@ class ShExHumanErrorWriter {
                 return val.errors.reduce((ret, e) => {
                     return ret.concat(_HumanErrorWriter.write(e));
                 }, []);
-            case "Failure":
-                return ["validating " + val.node + " as " + val.shape + ":"].concat(errorList(val.errors).reduce((ret, e) => {
-                    const nested = _HumanErrorWriter.write(e).map(s => "  " + s);
-                    return ret.length > 0 ? ret.concat(["  OR"]).concat(nested) : nested.map(s => "  " + s);
-                }, []));
-            case "TypeMismatch": {
-                const nested = Array.isArray(val.errors) ?
-                    val.errors.reduce((ret, e) => {
-                        return ret.concat((typeof e === "string" ? [e] : _HumanErrorWriter.write(e)).map(s => "  " + s));
-                    }, []) :
-                    "  " + _HumanErrorWriter.write(val.errors);
-                return ["validating " + n3ify(val.triple.object) + ":"].concat(nested);
+            case "Failure": {
+                // everything in a Failure's list is wrong with the node at once; the
+                // alternatives live in PossibleErrors below
+                const said = ["validating " + val.node + " as " + val.shape + ":"]
+                    .concat(_HumanErrorWriter.joined(errorList(val.errors), "AND").map(s => "  " + s));
+                // ...and, where the validator was asked for them, what would make the
+                // node conform: the nearest bag of arcs this shape accepts
+                const ways = (val.repairs || [])
+                    .map((repair) => (repair.arcs || []).map((arc) => (arc.delta > 0 ? "add " : "remove ") + Math.abs(arc.delta)
+                    + " " + arc.property).join(" and "))
+                    .filter((way) => way !== "");
+                return ways.length === 0 ? said
+                    : said.concat(["  to conform: " + ways.join(", or ")]);
             }
-            case "RestrictionError": {
-                const nested = val.errors.constructor === Array ?
-                    val.errors.reduce((ret, e) => {
-                        return ret.concat((typeof e === "string" ? [e] : _HumanErrorWriter.write(e)).map(s => "  " + s));
-                    }, []) :
-                    "  " + _HumanErrorWriter.write(val.errors);
-                return ["validating restrictions on " + n3ify(val.focus) + ":"].concat(nested);
-            }
+            case "PossibleErrors":
+                // one list per way of reading the neighborhood: any one of them, put
+                // right, would settle it
+                return val.errors.reduce((ret, alternative) => {
+                    const nested = (Array.isArray(alternative)
+                        ? _HumanErrorWriter.joined(alternative, "AND")
+                        : _HumanErrorWriter.write(alternative)).map(s => "  " + s);
+                    return ret.length > 0 ? ret.concat(["OR"]).concat(nested) : nested;
+                }, []);
+            case "TypeMismatch":
+                return ["validating " + n3ify(val.triple.object) + ":"].concat(_HumanErrorWriter.nest(val.errors));
+            case "RestrictionError":
+                return ["validating restrictions on " + n3ify(val.focus) + ":"]
+                    .concat(_HumanErrorWriter.nest(val.errors));
             case "ShapeAndFailure":
-                return Array.isArray(val.errors) ?
-                    val.errors.reduce((ret, e) => {
-                        return ret.concat((typeof e === "string" ? [e] : _HumanErrorWriter.write(e)).map(s => "  " + s));
-                    }, []) :
-                    ("  " + _HumanErrorWriter.write(val.errors));
+                return _HumanErrorWriter.nest(val.errors);
             case "ShapeOrFailure":
-                return Array.isArray(val.errors) ?
-                    val.errors.reduce((ret, e) => {
-                        return ret.concat(" OR " + (typeof e === "string" ? [e] : _HumanErrorWriter.write(e)));
-                    }, []) :
-                    (" OR " + _HumanErrorWriter.write(val.errors));
+                return _HumanErrorWriter.joined(Array.isArray(val.errors) ? val.errors : [val.errors], "OR");
             case "ShapeNotFailure":
                 return ["Node " + val.errors.node + " expected to NOT pass " + val.errors.shape];
             case "ExcessTripleViolation":
@@ -71,19 +82,27 @@ class ShExHumanErrorWriter {
                 return ["Unexpected property: " + val.property];
             case "AbstractShapeFailure":
                 return ["Abstract Shape: " + val.shape];
-            case "SemActFailure": {
-                const nested = Array.isArray(val.errors) ?
-                    val.errors.reduce((ret, e) => {
-                        return ret.concat((typeof e === "string" ? [e] : _HumanErrorWriter.write(e)).map(s => "  " + s));
-                    }, []) :
-                    "  " + _HumanErrorWriter.write(val.errors);
-                return ["rejected by semantic action:"].concat(nested);
-            }
+            case "SemActFailure":
+                return ["rejected by semantic action:"].concat(_HumanErrorWriter.nest(val.errors));
             case "SemActViolation":
                 return [val.message];
-            case "FeasibilityViolation":
-                return ["Triple " + val.triple.subject + " " + val.triple.predicate + " " + n3ify(val.triple.object)
-                        + " can be assigned to no triple constraint in any solution."];
+            case "FeasibilityViolation": {
+                // Say what would settle it rather than only that nothing does: a
+                // :system inside `( :code . ; :system . ? )?` wants a :code beside it,
+                // and the two ways out are worth naming.
+                const arc = "Triple " + val.triple.subject + " " + val.triple.predicate + " "
+                    + n3ify(val.triple.object);
+                // each repair is a set of arcs to add together; the repairs are the
+                // alternatives, and removing the triple is always one of them
+                const ways = (val.repairs || []).map((r) => (r.arcs || []).map((a) => a.property));
+                const every1 = ways.every((arcs) => arcs.length === 1);
+                const said = every1
+                    ? "add " + ways.map((arcs) => arcs[0]).join(" or ")
+                    : ways.map((arcs) => "add " + arcs.join(" and ")).join(", or ");
+                return [ways.length === 0
+                        ? arc + " fits no triple constraint: remove it."
+                        : arc + " fits no triple constraint: either " + said + ", or remove it."];
+            }
             case "ResultReference":
                 return ["see " + val.ref];
             default:

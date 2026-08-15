@@ -2091,6 +2091,10 @@ class DirectShExValidator {
         results: "api",
         regexModule: ShExWebApp[$("#regexpEngine").val()],
         ignoreClosed: $("#ignoreClosed").is(":checked"),
+        // what would make a failing node conform, said as arcs to add and
+        // arcs to drop (doc/error-normalization.md §4).  The editors pin
+        // each on the constraint it is about; the results say it in words.
+        repairs: true,
       });
     $(".extensionControl:checked").each(() => {
       $(this).data("code").register(validator, ShExWebApp);

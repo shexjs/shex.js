@@ -45,6 +45,7 @@ const Hierarchy = __importStar(require("hierarchy-closure"));
 const neighborhood_api_1 = require("@shexjs/neighborhood-api");
 const shex_xsd_1 = require("./shex-xsd");
 const feasibility_1 = require("./feasibility");
+const repairs_1 = require("./repairs");
 const visitor_1 = require("@shexjs/visitor");
 exports.InterfaceOptions = {
     "coverage": {
@@ -52,6 +53,7 @@ exports.InterfaceOptions = {
         "exhaustive": "find as many errors as possible (usually used with eval-threaded-nerr)"
     }
 };
+const minOf = (tc) => tc.min === undefined ? 1 : tc.min || 1;
 const VERBOSE = false; // "VERBOSE" in process.env;
 const EvalThreadedNErr = require("@shexjs/eval-threaded-nerr").RegexpModule;
 class SemActDispatcherImpl {
@@ -248,6 +250,8 @@ class ShExValidator {
      *   diagnose(false): boolean: make validate return a structure with errors.
      */
     constructor(schema, db, options = {}) {
+        /** one repair search per triple expression, reused across nodes */
+        this.nearestBags = new Map();
         const index = schema._index || visitor_1.ShExIndexVisitor.index(schema);
         if (index.labelToTcs === undefined) // make sure there's a labelToTcs in the index
             index.labelToTcs = {};
@@ -529,6 +533,18 @@ class ShExValidator {
         const tripleConstraints = extendsTCs.concat(localTCs);
         // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
         const { t2tcs, t2tcErrors, tc2TResults } = this.matchByPredicate(tripleConstraints, fromDB, ctx);
+        // The bag the node has, counted before the feasibility layer prunes
+        // candidates out of t2tcs -- it is what the node holds, not what is left
+        // of the search.  One count per triple, against the first constraint
+        // that would take it; which of two indistinguishable constraints gets it
+        // doesn't matter, since the repair search deals them out again.
+        const observedBag = new Map();
+        t2tcs.reduce((_ret, _triple, tcs) => {
+            const local = tcs.filter(tc => extendsTCs.indexOf(tc) === -1);
+            if (local.length > 0)
+                observedBag.set(local[0], (observedBag.get(local[0]) || 0) + 1);
+            return null;
+        }, null);
         const { missErrors, matchedExtras } = this.whatsMissing(t2tcs, t2tcErrors, shape.extra || []);
         // Feasibility layer: refute assignments to the *local* triple expression that cannot
         // appear in any accepted bag, before and during partition enumeration.
@@ -575,9 +591,12 @@ class ShExValidator {
             const { errors } = this.tryPartition(firstPruned, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine, extendsResultCache);
             partitionErrors.push(errors);
         }
-        // Report only last errors until we have a better idea.
-        const lastErrors = partitionErrors.length === 0 ? [] : partitionErrors[partitionErrors.length - 1];
-        let errors = missErrors.concat(feasibilityErrors, lastErrors.length === 1 ? lastErrors[0] : lastErrors);
+        // Of the partitions tried, report the one that found least wrong: the
+        // last one tried is an accident of enumeration order, and a partition
+        // that left a triple unassigned reports the constraint it was assigned
+        // to as missing -- an artifact of the reading, not a fault of the node.
+        const bestErrors = partitionErrors.reduce((best, errs) => best === null || errs.length < best.length ? errs : best, null) || [];
+        let errors = missErrors.concat(feasibilityErrors, bestErrors.length === 1 ? bestErrors[0] : bestErrors);
         if (errors.length > 0)
             ret = {
                 type: "Failure",
@@ -585,6 +604,12 @@ class ShExValidator {
                 shape: ctx.label,
                 errors: errors
             };
+        // What would make the node conform, said as the difference between the
+        // bag of arcs it has and the nearest bag this shape accepts.  Unlike the
+        // errors above it doesn't depend on how the expression was written.
+        if (this.options.repairs && ret !== null && ret.type === "Failure"
+            && shape.expression !== undefined)
+            ret.repairs = this.nearestBagRepairs(shape.expression, observedBag);
         // A reported result may contain ResultReferences whose named referents appeared
         // only in partitions that are not part of the report: attach those referents in
         // a "shared" side table so every reference is resolvable within the document.
@@ -630,14 +655,29 @@ class ShExValidator {
      * (such triples can never be matched, and a value-matching triple may not be left
      * unmatched, so no partition can succeed).
      */
+    /**
+     * !! This mutates t2tcs: arc consistency deletes candidates from it.
+     *
+     * What is left afterwards is a *search state*, not a description of the
+     * node.  When a node is unsatisfiable for any reason, refutation cascades
+     * and can empty every triple's candidate list -- so anything asked of
+     * t2tcs after this reads "the node has nothing", whatever the node has.
+     * Three reporting features were wrong in exactly that way before this
+     * comment existed; see doc/error-normalization.md §5.  Ask before, or ask
+     * hi0/observedBag, which are counted before the first deletion.
+     */
     pruneInfeasibleCandidates(t2tcs, feasibility, extendsTCs) {
         const errors = [];
         const localOf = (tcs) => tcs.filter(tc => extendsTCs.indexOf(tc) === -1);
         // Candidate counts before any pruning: a mandatory property is *missing* when it had
         // no candidates to begin with, not when arc consistency removed them.
         const hi0 = new Map();
-        t2tcs.reduce((_ret, _t, tcs) => {
+        // ...and which constraints each triple could have gone to, since pruning
+        // empties that list and a triple's repairs are the union over all of them
+        const candidates0 = new Map();
+        t2tcs.reduce((_ret, triple, tcs) => {
             localOf(tcs).forEach(tc => hi0.set(tc, (hi0.get(tc) || 0) + 1));
+            candidates0.set(triple, localOf(tcs).slice());
             return null;
         }, null);
         let changed = true;
@@ -660,22 +700,48 @@ class ShExValidator {
                         hi.set(tc, hi.get(tc) - 1);
                         changed = true;
                         if (tcs.length === 0) {
-                            // Prefer the classic explanation when one exists: a mandatory property
-                            // with no candidate triples at all makes every assignment infeasible.
-                            const missing = feasibility.unattainableMandatory(hi0);
-                            if (missing.length > 0) {
-                                missing.forEach(mtc => {
-                                    if (!errors.some(e => e.type === "MissingProperty" && e.property === mtc.predicate))
-                                        errors.push({ type: "MissingProperty", property: mtc.predicate });
-                                });
-                            }
-                            else {
+                            // Grant what the node is short of, not only what it lacks
+                            // entirely: one :d where the schema wants two leaves it as
+                            // unsatisfiable as none would, and nothing can be seated beside
+                            // it until that is granted too.
+                            const asAbsent = new Map(hi0);
+                            feasibility.tripleConstraints.forEach(candidate => {
+                                if ((hi0.get(candidate) || 0) < minOf(candidate))
+                                    asAbsent.set(candidate, 0);
+                            });
+                            // A mandatory property the node hasn't enough of makes every
+                            // assignment infeasible, and says so better than "this triple
+                            // has nowhere to go" does.
+                            const missing = feasibility.unattainableMandatory(asAbsent);
+                            missing.forEach(mtc => {
+                                if (!errors.some(e => e.type === "MissingProperty" && e.property === mtc.predicate))
+                                    errors.push({ type: "MissingProperty", property: mtc.predicate });
+                            });
+                            // But it explains this triple only if supplying it would give the
+                            // triple somewhere to go.  Asked of the node as it stands (hi0,
+                            // before pruning took its other arcs away) plus what it is
+                            // missing: the question is what *this* triple wants.
+                            const granted = new Map(hi0);
+                            missing.forEach(short => granted.set(short, Math.max(granted.get(short) || 0, minOf(short))));
+                            // Where supplying them wouldn't seat it, they are two separate
+                            // things wrong with the node -- a missing :value and a :system
+                            // with no :code beside it -- and reporting one hides the other.
+                            // Report it only if, once the node is granted what it is short
+                            // of, the triple still has nowhere to go.  Where granting is
+                            // enough, what is wrong is the shortfall, and the constraints
+                            // that are short say it better than every triple in the
+                            // neighborhood complaining that it can't be placed.
+                            const couldHaveGone = candidates0.get(triple) || [tc];
+                            if (!couldHaveGone.some(seat => this.wouldSeat(feasibility, granted, seat)))
                                 errors.push({
                                     type: "FeasibilityViolation",
                                     triple: { type: "TestedTriple", subject: (0, term_1.rdfJsTerm2Ld)(triple.subject), predicate: (0, term_1.rdfJsTerm2Ld)(triple.predicate), object: (0, term_1.rdfJsTerm2Ld)(triple.object) },
-                                    constraints: [tc],
+                                    constraints: couldHaveGone,
+                                    // ...and what would settle it: the arcs to add, over every
+                                    // constraint it could have gone to, or nothing at all, in
+                                    // which case removing it is the whole story
+                                    repairs: this.arcsThatWouldSeat(feasibility, granted, couldHaveGone),
                                 });
-                            }
                         }
                     }
                 }
@@ -683,6 +749,78 @@ class ShExValidator {
             }, null);
         }
         return errors;
+    }
+    /**
+     * The repairs for a failed shape: the arcs to add or drop to reach the
+     * nearest bag the expression accepts (see ./repairs.ts).
+     */
+    nearestBagRepairs(expression, observed) {
+        try {
+            let nearest = this.nearestBags.get(expression);
+            if (nearest === undefined)
+                this.nearestBags.set(expression, nearest = new repairs_1.NearestAcceptedBag(expression, label => this.index.tripleExprs[label]));
+            return nearest.repairs(observed);
+        }
+        catch (e) {
+            return []; // e.g. a recursive triple expression
+        }
+    }
+    /** Is there room for this constraint among the arcs `granted` allows? */
+    wouldSeat(feasibility, granted, tc, alsoOneMoreOf) {
+        const hi = new Map(granted);
+        if (alsoOneMoreOf !== undefined)
+            hi.set(alsoOneMoreOf, (hi.get(alsoOneMoreOf) || 0) + 1);
+        hi.set(tc, Math.max(hi.get(tc) || 0, 1));
+        return feasibility.feasible(new Map([[tc, 1]]), hi);
+    }
+    /**
+     * A homeless triple's repairs: what to add so that it has somewhere to go.
+     *
+     * A `:system` inside `( :code . ; :system . ? )?` has nowhere to go without
+     * a `:code` beside it, and two things would settle that -- a `:code`, or no
+     * `:system`.  Removing it always works and is left implicit.
+     *
+     * Every constraint the triple could have gone to is asked, so a `:z` that
+     * three branches offer a home to reports all three ways out; and where no
+     * single arc settles it, the arcs that settle it together.  One minimal set
+     * in that case, not every one of them: the search for all of them, over the
+     * nearest bag the schema accepts, is doc/error-normalization.md.
+     */
+    arcsThatWouldSeat(feasibility, granted, seats) {
+        const arcOf = (tc) => Object.assign({ property: tc.predicate }, tc.valueExpr === undefined ? {} : { valueExpr: tc.valueExpr });
+        // One arc at a time, over every constraint the triple could have gone
+        // to: a :z that three branches offer a home to is seated by whichever
+        // of them is completed, so all three are ways out.
+        const singles = [];
+        seats.forEach(seat => feasibility.tripleConstraints.forEach(candidate => {
+            if (this.wouldSeat(feasibility, granted, seat, candidate))
+                singles.push({ type: "AddArcs", arcs: [arcOf(candidate)] });
+        }));
+        const byProperty = (repair) => repair.arcs.map(a => a.property).join(" ");
+        const deduped = singles.filter((repair, at, all) => all.findIndex(r => byProperty(r) === byProperty(repair)) === at);
+        if (deduped.length > 0)
+            return deduped;
+        // Nothing alone: a group wanting an :a and a :b beside the triple takes
+        // both.  Grant everything, and if that seats it, put back what it turns
+        // out not to need -- one minimal set rather than every one of them,
+        // which is the search doc/error-normalization.md describes.
+        for (const seat of seats) {
+            const everything = new Map(granted);
+            feasibility.tripleConstraints.forEach(candidate => everything.set(candidate, (everything.get(candidate) || 0) + 1));
+            if (!this.wouldSeat(feasibility, everything, seat))
+                continue;
+            const needed = feasibility.tripleConstraints.filter(candidate => {
+                const without = new Map(everything);
+                without.set(candidate, granted.get(candidate) || 0);
+                if (!this.wouldSeat(feasibility, without, seat))
+                    return true; // it was load-bearing: keep it
+                everything.set(candidate, granted.get(candidate) || 0);
+                return false;
+            });
+            if (needed.length > 0)
+                return [{ type: "AddArcs", arcs: needed.map(arcOf) }];
+        }
+        return [];
     }
     /** Whether a complete partition's bag over the local expression passes the
      * feasibility test (a necessary condition for the regex engine to accept). */

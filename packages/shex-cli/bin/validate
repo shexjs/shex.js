@@ -121,6 +121,7 @@ const CommandLineOptions = [
   { name: "diagnose",              type: Boolean, description: "parse and diagnose schema, the exit" },
   { name: "skipCycleCheck",        type: Boolean, description: "don't look for cycles in schema" },
   { name: "coverage",              type: String, typeLabel: covgChoices, multiple: false, defaultValue: undefined, description: "whether to collect all errors or stop on the first one" },
+  { name: "repairs",               type: Boolean, description: "say what would make a failing node conform: arcs to add, arcs to take away" },
   { name: "yaml-manifest",         type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON manifest" },
   { name: "json-manifest",         type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON manifest" },
   { name: "turtle-manifest",       type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle manifest" },
@@ -200,6 +201,10 @@ async function main () {
 
   if ("duplicate-shape" in cmds)
     SchemaOptions.duplicateShape = cmds["duplicate-shape"];
+
+  // what would make a failing node conform (doc/error-normalization.md §4)
+  if (cmds.repairs)
+    ValidatorOptions.repairs = true;
 
   if (cmds.coverage) {
     if (!(cmds.coverage in ShExValidator.InterfaceOptions.coverage))
@@ -657,7 +662,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions, cmd
               // a query map extension, or a triple pattern, yields a node
               // per match rather than the one node -n names
               ? (res.solutions || [res]).map(s => `${s.node}@${s.shape}`).join("\n")
-              : ShExUtil.errsToSimple(res)
+              : ShExUtil.errsToSimple(res).join("\n")   // lines, not an array literal
               : JSON.stringify(res, null, "  ")
           );
           return passed ? ExitCode.shape_test_pass : ExitCode.shape_test_fail;

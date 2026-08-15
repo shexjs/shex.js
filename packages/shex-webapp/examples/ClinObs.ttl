@@ -98,8 +98,6 @@ PREFIX sx: <http://www.w3.org/ns/shex#>
         ]
         [
           a sx:TripleConstraint ;
-          sx:max 1 ;
-          sx:min 0 ;
           sx:predicate :unit ;
           sx:valueExpr [
             a sx:NodeConstraint ;
@@ -107,24 +105,29 @@ PREFIX sx: <http://www.w3.org/ns/shex#>
           ]
         ]
         [
-          a sx:TripleConstraint ;
+          a sx:EachOf ;
           sx:max 1 ;
           sx:min 0 ;
-          sx:predicate :system ;
-          sx:valueExpr [
-            a sx:NodeConstraint ;
-            sx:nodeKind sx:iri
-          ]
-        ]
-        [
-          a sx:TripleConstraint ;
-          sx:max 1 ;
-          sx:min 0 ;
-          sx:predicate :code ;
-          sx:valueExpr [
-            a sx:NodeConstraint ;
-            sx:datatype xsd:string
-          ]
+          sx:expressions (
+            [
+              a sx:TripleConstraint ;
+              sx:predicate :code ;
+              sx:valueExpr [
+                a sx:NodeConstraint ;
+                sx:datatype xsd:string
+              ]
+            ]
+            [
+              a sx:TripleConstraint ;
+              sx:max 1 ;
+              sx:min 0 ;
+              sx:predicate :system ;
+              sx:valueExpr [
+                a sx:NodeConstraint ;
+                sx:nodeKind sx:iri
+              ]
+            ]
+          )
         ]
       )
     ]
