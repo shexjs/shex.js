@@ -269,8 +269,9 @@ this, done at the refutation layer:
    while, and rewrite the failure tests then, once.  Two things gate it, and
    neither is code that could be written today: the repairs have to be *used*
    — `validate --repairs` (and `--human`) is how, which is why it exists —
-   and the matcher underneath them has to be right, which task #13 says it
-   isn't for a repeated group with an unbounded cardinality inside it.  A
+   and the matcher underneath them has to be right, which it isn't for a
+   repeated group with an unbounded cardinality inside it (§1's "a bug found
+   on the way", filed as F0 in [error-reporting.md](error-reporting.md)).  A
    repair is only as good as the matcher it is computed from.
 
 ## 5. Implementation note: the pruned state is not the node
@@ -312,6 +313,13 @@ This is not peculiar to this codebase — any validator that prunes and then
 reports has the same trap — which is why it may be worth a sentence in the
 spec's pruning section: the invariant it states is about *accepted
 matchings*, and readers should not extend it to the pre-matching itself.
+
+## See also
+
+[error-reporting.md](error-reporting.md) — the shape of an error and how it
+reads: two renderers that have drifted, strings where structure belongs, and
+the order to fix them in.  This note says *what* to report; that one says
+*how a report is shaped and said*.
 
 ## Literature
 

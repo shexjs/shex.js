@@ -203,3 +203,24 @@ review first.
     js-yaml 5, pre-commit→husky; lerna already removed); remaining
     `npm audit` findings live in pre-commit's transitive chains.
     Take these only on request.
+
+## F. Error reporting
+
+Rationale, findings and sizing in
+[error-reporting.md](error-reporting.md); that note is the task list for
+this section, and its items are numbered F0-F5 to match.
+
+- **F0 (M/L)** the matcher: a repeated group with an unbounded cardinality
+  inside it (`( :p . + ; :q . ){2}`) is mis-reported by every engine.  A
+  skipped test in `packages/eval-threaded-nerr/test/` states the
+  expectation.  Gates F5.
+- **F1 (S)** one renderer: `ShExHumanErrorWriter` and editor-services'
+  `ErrorLeaves` write the same sentences twice, and have drifted.
+- **F2 (S)** ShExC, not JSON, where a schema fragment appears in a message.
+- **F3 (M)** structured leaves for node-constraint failures, in place of
+  pre-stringified English.
+- **F4 (S)** name the disjunction (`Alternatives`) instead of implying it
+  with an array of arrays.
+- **F5 (M)** then repairs become the primary account of a failure
+  (step 4 of [error-normalization.md](error-normalization.md)), with the
+  failure tests rewritten once for all of it.
