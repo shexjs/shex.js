@@ -50,13 +50,36 @@ const SLOW = parseInt(opt("slow", "10"), 10);
 /** Every change this makes to what FHIR publishes, with why. */
 const schemaFixups = [
   {
-    what: "duplicate <Resource>: an empty CLOSED {} beside the real disjunction",
-    // The generator emits `<Resource> CLOSED {\n}` immediately before a
-    // comment, in addition to the real `<Resource> @<Account> OR ...` later
-    // in the file.  Two declarations of one label; the parser rejects the
-    // schema outright ("http://hl7.org/fhir/Resource already defined").
-    // The empty one would match only a node with no arcs at all.
-    apply: text => text.replace(/<Resource> CLOSED \{\s*\n\}/, ""),
+    what: "<Resource> declared twice, for two different jobs: dropping the "
+      + "'any resource' union and keeping the structural base",
+    // fhir.shex declares <Resource> twice:
+    //   ~4246  <Resource> CLOSED {}          the structural base, which
+    //                                        <DomainResource> EXTENDS
+    //   ~13184 <Resource> @<Account> OR ...  the "any resource" union, for
+    //                                        reference targets
+    // The parser rejects the schema outright ("Resource already defined"),
+    // so one has to go, and which one is not a free choice: keeping the
+    // union closes a cycle in EXTENDS -- <Account> EXTENDS <DomainResource>
+    // EXTENDS <Resource>, and the union names <Account> again -- which
+    // ShEx.js follows until the stack gives out.  Keeping the base leaves
+    // reference targets pointing at an empty CLOSED shape, which is wrong
+    // but bounded.  The real fix is upstream: these are two ideas sharing
+    // one name.
+    apply: text => {
+      const lines = text.split("\n");
+      const start = lines.findIndex(l => /^<Resource>\s+@</.test(l));
+      if (start === -1) return text;
+      const end = lines.findIndex((l, i) => i > start && /^<[A-Za-z]/.test(l));
+      return lines.slice(0, start).concat(lines.slice(end === -1 ? start + 1 : end)).join("\n");
+    },
+  },
+  {
+    what: "<Xhtml> is referenced (fhir:div @<Xhtml>) but never declared",
+    // One reference, no declaration, so any document with a Narrative --
+    // most of them -- fails to validate with "shape ... Xhtml not found".
+    // A permissive stand-in keeps the rest of the run meaningful.
+    apply: text => /^<Xhtml>/m.test(text) ? text
+      : text + "\n# stand-in for the dangling reference at fhir:div @<Xhtml>\n<Xhtml> .\n",
   },
 ];
 
