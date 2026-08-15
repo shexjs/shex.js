@@ -196,9 +196,21 @@ by reference and appends to `thread.matched` in place, so each turn needs
 its own of both.
 
 Both fixes are on `main` (`c018dc49`, `e526b191`) — they are matcher
-corrections, useful whether or not any of the rest of this lands.  The
-shape stays exponential on both engines: the ways to split N triples
-across iterations are the compositions of N.  Bag reasoning is what sheds
-that (SORBE, Staworko et al. ICDT 2015), but an interval answers yes or no
-where ShEx has to report which triple matched which constraint — which is
-why `feasibility.ts` refutes rather than matches.
+corrections, useful whether or not any of the rest of this lands.
+
+What neither fixes is the cost.  The ways to split N triples across
+iterations are the compositions of N, and both engines search them.  On
+`( :p . + ; :q . )*` over N of each, the default engine measures:
+
+| N | 18 | 19 | 20 | 21 | 22 |
+| --- | --- | --- | --- | --- | --- |
+| | 7.3 s | 17.9 s | 69.5 s | 293 s | out of heap at 4 GB |
+
+So a repeated group with an unbounded cardinality inside it is usable on
+small neighbourhoods and falls over on a page of data.  Bag reasoning is
+what sheds that (SORBE, Staworko et al. ICDT 2015): counts compose, so
+nothing ever asks which `:p` belongs to which iteration.  The catch is
+that an interval answers yes or no where ShEx has to report which triple
+matched which constraint — which is why `feasibility.ts` refutes rather
+than matches.  Using it to *decide*, and searching only to build the
+witness for a decision already made, is the shape of the fix.
