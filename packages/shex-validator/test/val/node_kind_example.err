@@ -45,13 +45,18 @@
               "value": "just fine"
             },
             "shape": "http://schema.example/IssueShape",
-            "errors": [
-              "Error validating \"just fine\" as {\"type\":\"NodeConstraint\",\"nodeKind\":\"iri\"}: literal found when iri expected"
-            ],
             "shapeExpr": {
-              "nodeKind": "iri",
-              "type": "NodeConstraint"
-            }
+              "type": "NodeConstraint",
+              "nodeKind": "iri"
+            },
+            "errors": [
+              {
+                "type": "NodeKindMismatch",
+                "expected": "iri",
+                "actual": "literal",
+                "message": "literal found when iri expected"
+              }
+            ]
           }
         },
         {

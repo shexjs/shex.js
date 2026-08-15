@@ -33,10 +33,16 @@
                     "type": "TestedTriple",
                     "subject": "http://a.example/n1",
                     "predicate": "http://a.example/p1",
-                    "object": { "value": "ab", "type": "http://a.example/dt1" },
+                    "object": {
+                      "value": "ab",
+                      "type": "http://a.example/dt1"
+                    },
                     "referenced": {
                       "type": "NodeConstraintTest",
-                      "node": { "value": "ab", "type": "http://a.example/dt1" },
+                      "node": {
+                        "value": "ab",
+                        "type": "http://a.example/dt1"
+                      },
                       "shape": "http://a.example/S1",
                       "shapeExpr": {
                         "type": "NodeConstraint",
@@ -113,13 +119,13 @@
                     "type": "TestedTriple",
                     "subject": "http://a.example/n1",
                     "predicate": "http://a.example/p2",
-                    "object": "_:n2",
+                    "object": "_:b0",
                     "referenced": {
                       "type": "ShapeAndResults",
                       "solutions": [
                         {
                           "type": "NodeConstraintTest",
-                          "node": "_:n2",
+                          "node": "_:b0",
                           "shape": "http://a.example/S1",
                           "shapeExpr": {
                             "type": "NodeConstraint",
@@ -128,7 +134,7 @@
                         },
                         {
                           "type": "ShapeTest",
-                          "node": "_:n2",
+                          "node": "_:b0",
                           "shape": "http://a.example/S1",
                           "solution": {
                             "type": "EachOfSolutions",
@@ -146,14 +152,16 @@
                                     "solutions": [
                                       {
                                         "type": "TestedTriple",
-                                        "subject": "_:n2",
+                                        "subject": "_:b0",
                                         "predicate": "http://a.example/p3",
                                         "object": {
                                           "value": "ab"
                                         },
                                         "referenced": {
                                           "type": "NodeConstraintTest",
-                                          "node": { "value": "ab" },
+                                          "node": {
+                                            "value": "ab"
+                                          },
                                           "shape": "http://a.example/S1",
                                           "shapeExpr": {
                                             "type": "NodeConstraint",
@@ -182,7 +190,7 @@
                                     "solutions": [
                                       {
                                         "type": "TestedTriple",
-                                        "subject": "_:n2",
+                                        "subject": "_:b0",
                                         "predicate": "http://a.example/p4",
                                         "object": "http://a.example/n1",
                                         "referenced": {
@@ -215,7 +223,7 @@
                         },
                         {
                           "type": "ShapeTest",
-                          "node": "_:n2",
+                          "node": "_:b0",
                           "shape": "http://a.example/S1",
                           "solution": {
                             "type": "EachOfSolutions",
@@ -229,9 +237,11 @@
                                     "solutions": [
                                       {
                                         "type": "TestedTriple",
-                                        "subject": "_:n2",
+                                        "subject": "_:b0",
                                         "predicate": "http://a.example/p3",
-                                        "object": { "value": "ab" }
+                                        "object": {
+                                          "value": "ab"
+                                        }
                                       }
                                     ]
                                   },
@@ -241,7 +251,7 @@
                                     "solutions": [
                                       {
                                         "type": "TestedTriple",
-                                        "subject": "_:n2",
+                                        "subject": "_:b0",
                                         "predicate": "http://a.example/p4",
                                         "object": "http://a.example/n1"
                                       }

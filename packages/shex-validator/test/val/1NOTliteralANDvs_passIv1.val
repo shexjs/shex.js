@@ -44,7 +44,12 @@
                   "nodeKind": "literal"
                 },
                 "errors": [
-                  "Error validating <http://a.example/v1> as {\"type\":\"NodeConstraint\",\"nodeKind\":\"literal\"}: iri found when literal expected"
+                  {
+                    "type": "NodeKindMismatch",
+                    "expected": "literal",
+                    "actual": "iri",
+                    "message": "iri found when literal expected"
+                  }
                 ]
               }
             },

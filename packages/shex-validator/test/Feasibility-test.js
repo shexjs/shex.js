@@ -154,6 +154,83 @@ describe("feasibility refutations", function () {
       ["MissingProperty :a", "MissingProperty :d", "Feasibility :c"]);
   });
 
+  /* Why a node missed a constraint, as structure rather than as English
+   * with ShExJ embedded in it (doc/error-reporting.md F3). */
+  describe("node-constraint failures", function () {
+    const leavesOf = (shapeText, dataText) => {
+      const schema = ShExParser.construct(base, {}, {index: true})
+            .parse("PREFIX : <http://a.example/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n"
+                   + "start = @<S>\n" + shapeText);
+      const graph = new N3.Store();
+      graph.addQuads(new N3.Parser({baseIRI: base, format: "text/turtle"})
+        .parse("PREFIX : <http://a.example/>\n" + dataText));
+      const result = new ShExValidator(schema, RdfJsDb(graph), {})
+            .validateShapeMap([{node: base + "x", shape: ShExValidator.Start}])[0];
+      const found = [];
+      JSON.stringify(result.appinfo, (key, value) => {
+        if (key === "errors" && Array.isArray(value))
+          value.forEach(leaf => { if (leaf && leaf.type && !leaf.errors) found.push(leaf); });
+        return value;
+      });
+      return {leaves: found, said: ShExUtil.errsToSimple(result.appinfo, schema._prefixes).join("\n")};
+    };
+
+    it("should say a datatype mismatch as one", function () {
+      const {leaves, said} = leavesOf("<S> { :p xsd:integer }", ':x :p "bob" .');
+      const leaf = leaves.find(l => l.type === "DatatypeMismatch");
+      expect(leaf, JSON.stringify(leaves)).to.exist;
+      expect(leaf.expected).to.equal("http://www.w3.org/2001/XMLSchema#integer");
+      expect(leaf.actual).to.equal("http://www.w3.org/2001/XMLSchema#string");
+      // and it reads in the schema's own spelling, with no ShExJ in sight
+      expect(said).to.include("has type xsd:string, not xsd:integer");
+      expect(said).to.not.include('{"type"');
+    });
+
+    it("should say a node kind mismatch as one", function () {
+      const {leaves, said} = leavesOf("<S> { :p IRI }", ':x :p "lit" .');
+      const leaf = leaves.find(l => l.type === "NodeKindMismatch");
+      expect(leaf).to.exist;
+      expect([leaf.expected, leaf.actual]).to.deep.equal(["iri", "literal"]);
+      expect(said).to.include("is a literal, not an iri");
+    });
+
+    it("should say a value set miss as one", function () {
+      const {leaves, said} = leavesOf("<S> { :p [ :a :b ] }", ":x :p :c .");
+      const leaf = leaves.find(l => l.type === "ValueSetMismatch");
+      expect(leaf).to.exist;
+      expect(leaf.values).to.deep.equal([base + "a", base + "b"]);
+      expect(said).to.include("is not in [:a :b]");
+    });
+
+    it("should say a facet violation as one", function () {
+      const {leaves, said} = leavesOf("<S> { :p xsd:integer MinInclusive 3 }", ":x :p 1 .");
+      const leaf = leaves.find(l => l.type === "FacetViolation");
+      expect(leaf).to.exist;
+      expect([leaf.facet, leaf.expected]).to.deep.equal(["mininclusive", 3]);
+      expect(said).to.include('is "1", not mininclusive 3');
+    });
+
+    it("should say a pattern miss as one", function () {
+      const {leaves, said} = leavesOf("<S> { :p /^ab/ }", ':x :p "xy" .');
+      const leaf = leaves.find(l => l.type === "PatternMismatch");
+      expect(leaf).to.exist;
+      expect(leaf.pattern).to.equal("^ab");
+      expect(said).to.include("doesn't match /^ab/");
+    });
+
+    /* Every node-constraint leaf keeps the English it used to be, so a
+     * consumer that hasn't learned the types still has something to print.
+     * (The errors *around* it -- MissingProperty and friends -- were always
+     * structured and carry no message.) */
+    it("should keep a message on every node-constraint leaf", function () {
+      const {leaves} = leavesOf("<S> { :p xsd:integer }", ':x :p "bob" .');
+      const detail = leaves.filter(leaf => leaf.type.match(/Mismatch|Violation$/)
+                                  && leaf.type !== "FeasibilityViolation");
+      expect(detail.length, "some detail to check").to.be.above(0);
+      detail.forEach(leaf => expect(leaf.message, JSON.stringify(leaf)).to.be.a("string"));
+    });
+  });
+
   it("should leave a conforming node alone", function () {
     const {status} = report("<S> { :a . ; ( :b . ; :c . )? }", ":x :a 1 ; :b 2 ; :c 3 .");
     expect(status).to.equal("conformant");

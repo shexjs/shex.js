@@ -5,6 +5,13 @@
   "solution": {
     "type": "TripleConstraintSolutions",
     "predicate": "http://a.example/p1",
+    "valueExpr": {
+      "type": "ShapeNot",
+      "shapeExpr": {
+        "type": "NodeConstraint",
+        "nodeKind": "iri"
+      }
+    },
     "solutions": [
       {
         "type": "TestedTriple",
@@ -26,18 +33,16 @@
               "nodeKind": "iri"
             },
             "errors": [
-              "Error validating \"v\" as {\"type\":\"NodeConstraint\",\"nodeKind\":\"iri\"}: literal found when iri expected"
+              {
+                "type": "NodeKindMismatch",
+                "expected": "iri",
+                "actual": "literal",
+                "message": "literal found when iri expected"
+              }
             ]
           }
         }
       }
-    ],
-    "valueExpr": {
-      "type": "ShapeNot",
-      "shapeExpr": {
-        "type": "NodeConstraint",
-        "nodeKind": "iri"
-      }
-    }
+    ]
   }
 }

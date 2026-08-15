@@ -22,6 +22,8 @@ const ShExWriter = require("@shexjs/writer");
 
 /** what a caller may already know about where an error was found */
 export interface ErrorContext {
+  /** the node has been named by whatever this nests under: say only why */
+  terse?: boolean;
   /** the TripleConstraint being tested, when the error is nested under one */
   constraint?: ShExJ.TripleConstraint;
   triple?: any;
@@ -40,6 +42,15 @@ export interface ErrorDescription {
   triple?: any;
   triples?: any[];
   node?: any;
+}
+
+/** an IRI as the schema spells it, where it has a prefix for it */
+export function iriText (iri: string, prefixes?: { [prefix: string]: string }): string {
+  for (const [prefix, namespace] of Object.entries(prefixes || {}))
+    if (typeof namespace === "string" && namespace.length > 0 && iri.startsWith(namespace)
+        && iri.substring(namespace.length).match(/^[A-Za-z_][-\w.]*$/))
+      return prefix + ":" + iri.substring(namespace.length);
+  return "<" + iri + ">";
 }
 
 /** an RDF term as a reader writes it */
@@ -94,6 +105,35 @@ export function constraintText (tc: any, prefixes?: { [prefix: string]: string }
   return (tc.predicate ? "<" + tc.predicate + "> " : "") + value + card;
 }
 
+/**
+ * Why a node missed a constraint, from the leaf the validator now records.
+ * A leaf it hasn't typed yet carries only its English, which is used as-is.
+ */
+export function nodeConstraintDetail (leaf: any, prefixes?: {[prefix: string]: string}): string {
+  if (typeof leaf === "string")
+    return firstLine(leaf);
+  if (leaf === null || typeof leaf !== "object")
+    return String(leaf);
+  switch (leaf.type) {
+  case "DatatypeMismatch":
+    return leaf.actual === null || leaf.actual === undefined
+      ? "not a literal of type " + iriText(leaf.expected, prefixes)
+      : "has type " + iriText(leaf.actual, prefixes) + ", not "
+        + iriText(leaf.expected, prefixes);
+  case "NodeKindMismatch":
+    return "is a " + leaf.actual + ", not an " + leaf.expected;
+  case "ValueSetMismatch":
+    return "is not in "
+      + (shexcFragment({type: "NodeConstraint", values: leaf.values || []}, prefixes) || "the value set");
+  case "PatternMismatch":
+    return "doesn't match /" + leaf.pattern + "/" + (leaf.flags || "");
+  case "FacetViolation":
+    return "is " + JSON.stringify(leaf.actual) + ", not " + leaf.facet + " " + leaf.expected;
+  default:
+    return firstLine(leaf.message !== undefined ? leaf.message : JSON.stringify(leaf));
+  }
+}
+
 /** the first line of a legacy stringified explanation, minus any ShExJ in it */
 function firstLine (said: any): string {
   const text = typeof said === "string" ? said : JSON.stringify(said);
@@ -131,9 +171,15 @@ const leaves: {[type: string]: (err: any, ctx: ErrorContext) => ErrorDescription
     node: ctx.node,
   }),
   NodeConstraintViolation: (err, ctx) => ({
-    text: termText(err.node) + " doesn't satisfy "
-      + (shexcFragment(err.shapeExpr, ctx.prefixes)
-         || firstLine((err.errors || [])[0] || "the node constraint")),
+    text: (ctx.terse
+           ? ""
+           : termText(err.node) + " doesn't satisfy "
+             + (shexcFragment(err.shapeExpr, ctx.prefixes) || "the node constraint")
+             + ((err.errors || []).length === 0 ? "" : ": "))
+      + (err.errors || []).map((leaf: any) => nodeConstraintDetail(leaf, ctx.prefixes)).join("; ")
+      + ((err.errors || []).length === 0 && ctx.terse
+         ? "doesn't satisfy " + (shexcFragment(err.shapeExpr, ctx.prefixes) || "the node constraint")
+         : ""),
     schemaObj: err.shapeExpr || ctx.constraint,
     predicate: (ctx.constraint || {}).predicate || (ctx.triple && ctx.triple.predicate),
     triple: ctx.triple,

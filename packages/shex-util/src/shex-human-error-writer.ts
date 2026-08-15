@@ -74,10 +74,10 @@ class ShExHumanErrorWriter {
       // the header names the triple and the constraint; a cause that says no
       // more than the header does isn't worth a line of its own
       const header = leaf !== null ? leaf.text : "validating " + n3ify(val.triple.object);
+      // the causes say only *why*: the header has named the node already
       const causes = this.nest(val.errors, Object.assign({}, said, {
-        constraint: val.constraint || said.constraint, triple: val.triple,
-      // ...including one that only drops the predicate the header names
-      })).filter(line => !header.endsWith(line.trim()));
+        constraint: val.constraint || said.constraint, triple: val.triple, terse: true,
+      })).filter(line => line.trim() !== "" && !header.endsWith(line.trim()));
       return [header + (causes.length ? ":" : "")].concat(causes);
     }
     case "RestrictionError":

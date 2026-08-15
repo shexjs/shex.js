@@ -1183,9 +1183,17 @@ class ShExValidator {
      */
     validateNodeConstraint(focus, nc, ctx) {
         const errors = [];
-        function validationError(...s) {
-            const errorStr = Array.prototype.join.call(s, "");
-            errors.push("Error validating " + ShExTerm.rdfJsTerm2Turtle(focus) + " as " + JSON.stringify(nc) + ": " + errorStr);
+        /**
+         * Why a node didn't satisfy this constraint: a leaf saying what failed,
+         * and the English that used to be all of it.  Called either way --
+         * `validationError("...")` for the cases with nothing worth typing, or
+         * with a leaf first (see shex-xsd's ValidationError, and
+         * doc/error-reporting.md F3).
+         */
+        function validationError(leafOrText, ...s) {
+            const leaf = typeof leafOrText === "string" ? {} : leafOrText;
+            const said = (typeof leafOrText === "string" ? [leafOrText] : []).concat(s).join("");
+            errors.push(Object.assign({ type: "NodeConstraintDetail" }, leaf, { message: said }));
             return false;
         }
         if (nc.nodeKind !== undefined) {
@@ -1194,23 +1202,23 @@ class ShExValidator {
             }
             if (focus.termType === "BlankNode") {
                 if (nc.nodeKind === "iri" || nc.nodeKind === "literal") {
-                    validationError(`blank node found when ${nc.nodeKind} expected`);
+                    validationError({ type: "NodeKindMismatch", expected: nc.nodeKind, actual: "bnode" }, `blank node found when ${nc.nodeKind} expected`);
                 }
             }
             else if (focus.termType === "Literal") {
                 if (nc.nodeKind !== "literal") {
-                    validationError(`literal found when ${nc.nodeKind} expected`);
+                    validationError({ type: "NodeKindMismatch", expected: nc.nodeKind, actual: "literal" }, `literal found when ${nc.nodeKind} expected`);
                 }
             }
             else if (nc.nodeKind === "bnode" || nc.nodeKind === "literal") {
-                validationError(`iri found when ${nc.nodeKind} expected`);
+                validationError({ type: "NodeKindMismatch", expected: nc.nodeKind, actual: "iri" }, `iri found when ${nc.nodeKind} expected`);
             }
         }
         if (nc.datatype && nc.values)
             validationError("found both datatype and values in " + nc);
         if (nc.values !== undefined) {
             if (!nc.values.some(valueSetValue => testValueSetValue(valueSetValue, focus))) {
-                validationError(`value ${(focus.value)} not found in set ${JSON.stringify(nc.values)}`);
+                validationError({ type: "ValueSetMismatch", values: nc.values, actual: (0, term_1.rdfJsTerm2Ld)(focus) }, `value ${(focus.value)} not found in set ${JSON.stringify(nc.values)}`);
             }
         }
         const numeric = (0, shex_xsd_1.getNumericDatatype)(focus);
