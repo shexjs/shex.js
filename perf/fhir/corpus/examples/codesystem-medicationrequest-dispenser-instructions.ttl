@@ -1,0 +1,85 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/medicationrequest-dispenser-instructions> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "medicationrequest-dispenser-instructions"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem medicationrequest-dispenser-instructions</b></p><a name=\"medicationrequest-dispenser-instructions\"> </a><a name=\"hcmedicationrequest-dispenser-instructions\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/CodeSystem/medicationrequest-dispenser-instructions</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">dispense-as-written<a name=\"medicationrequest-dispenser-instructions-dispense-as-written\"> </a></td><td>Dispenser as written</td><td>Medication should be dispensed exactly as indicated in the request.</td></tr><tr><td style=\"white-space:nowrap\">split-pack-allowed<a name=\"medicationrequest-dispenser-instructions-split-pack-allowed\"> </a></td><td>Split pack allowed</td><td>Split pack allowed.</td></tr><tr><td style=\"white-space:nowrap\">counsel-patient<a name=\"medicationrequest-dispenser-instructions-counsel-patient\"> </a></td><td>Counsel patient</td><td>Dispenser should provide counseling to the patient.</td></tr><tr><td style=\"white-space:nowrap\">additional-monitoring-required<a name=\"medicationrequest-dispenser-instructions-additional-monitoring-required\"> </a></td><td>Additional monitoring required</td><td>Flag that extra monitoring is needed when dispensing.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "phx"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/CodeSystem/medicationrequest-dispenser-instructions"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/CodeSystem/medicationrequest-dispenser-instructions>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "MedicationRequestDispenserInstructions"] ; # 
+  fhir:title [ fhir:v "MedicationRequest dispenser instructions"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7 International"] ; # 
+  fhir:description [ fhir:v "MedicationRequest dispenser instructions"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/medicationrequest-dispenser-instructions"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/medicationrequest-dispenser-instructions>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "dispense-as-written" ] ;
+     fhir:display [ fhir:v "Dispenser as written" ] ;
+     fhir:definition [ fhir:v "Medication should be dispensed exactly as indicated in the request." ]
+  ] [
+     fhir:code [ fhir:v "split-pack-allowed" ] ;
+     fhir:display [ fhir:v "Split pack allowed" ] ;
+     fhir:definition [ fhir:v "Split pack allowed." ]
+  ] [
+     fhir:code [ fhir:v "counsel-patient" ] ;
+     fhir:display [ fhir:v "Counsel patient" ] ;
+     fhir:definition [ fhir:v "Dispenser should provide counseling to the patient." ]
+  ] [
+     fhir:code [ fhir:v "additional-monitoring-required" ] ;
+     fhir:display [ fhir:v "Additional monitoring required" ] ;
+     fhir:definition [ fhir:v "Flag that extra monitoring is needed when dispensing." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,125 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/regulated-authorization-basis> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "regulated-authorization-basis"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T11:01:55.562+11:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem regulated-authorization-basis</b></p><a name=\"regulated-authorization-basis\"> </a><a name=\"hcregulated-authorization-basis\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">Last updated: 2021-01-05T10:01:24.148+11:00</p></div><p>This case-sensitive code system <code>http://hl7.org/fhir/regulated-authorization-basis</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td></tr><tr><td style=\"white-space:nowrap\">Full<a name=\"regulated-authorization-basis-Full\"> </a></td><td>Full application</td></tr><tr><td style=\"white-space:nowrap\">NewSubstance<a name=\"regulated-authorization-basis-NewSubstance\"> </a></td><td>New active substance</td></tr><tr><td style=\"white-space:nowrap\">KnownSubstance<a name=\"regulated-authorization-basis-KnownSubstance\"> </a></td><td>Known active substance</td></tr><tr><td style=\"white-space:nowrap\">SimilarBiological<a name=\"regulated-authorization-basis-SimilarBiological\"> </a></td><td>Similar biological application</td></tr><tr><td style=\"white-space:nowrap\">Well-establishedUse<a name=\"regulated-authorization-basis-Well-establishedUse\"> </a></td><td>Well-established use application</td></tr><tr><td style=\"white-space:nowrap\">TraditionalUse<a name=\"regulated-authorization-basis-TraditionalUse\"> </a></td><td>Traditional use registration for herbal medicinal product application</td></tr><tr><td style=\"white-space:nowrap\">Bibliographical<a name=\"regulated-authorization-basis-Bibliographical\"> </a></td><td>Bibliographical application (stand-alone)</td></tr><tr><td style=\"white-space:nowrap\">KnownHumanBlood<a name=\"regulated-authorization-basis-KnownHumanBlood\"> </a></td><td>Known human blood/plasma derived ancillary medicinal substance</td></tr><tr><td style=\"white-space:nowrap\">TemporaryUse<a name=\"regulated-authorization-basis-TemporaryUse\"> </a></td><td>Authorizations for temporary use</td></tr><tr><td style=\"white-space:nowrap\">ParallelTrade<a name=\"regulated-authorization-basis-ParallelTrade\"> </a></td><td>Parallel traded products</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "brr"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/regulated-authorization-basis"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/regulated-authorization-basis>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1907" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "RegulatedAuthorizationBasisExample"] ; # 
+  fhir:title [ fhir:v "Regulated Authorization Basis"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "RegulatedAuthorizationBasis"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/regulated-authorization-basis"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/regulated-authorization-basis>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "Full" ] ;
+     fhir:display [ fhir:v "Full application" ]
+  ] [
+     fhir:code [ fhir:v "NewSubstance" ] ;
+     fhir:display [ fhir:v "New active substance" ]
+  ] [
+     fhir:code [ fhir:v "KnownSubstance" ] ;
+     fhir:display [ fhir:v "Known active substance" ]
+  ] [
+     fhir:code [ fhir:v "SimilarBiological" ] ;
+     fhir:display [ fhir:v "Similar biological application" ]
+  ] [
+     fhir:code [ fhir:v "Well-establishedUse" ] ;
+     fhir:display [ fhir:v "Well-established use application" ]
+  ] [
+     fhir:code [ fhir:v "TraditionalUse" ] ;
+     fhir:display [ fhir:v "Traditional use registration for herbal medicinal product application" ]
+  ] [
+     fhir:code [ fhir:v "Bibliographical" ] ;
+     fhir:display [ fhir:v "Bibliographical application (stand-alone)" ]
+  ] [
+     fhir:code [ fhir:v "KnownHumanBlood" ] ;
+     fhir:display [ fhir:v "Known human blood/plasma derived ancillary medicinal substance" ]
+  ] [
+     fhir:code [ fhir:v "TemporaryUse" ] ;
+     fhir:display [ fhir:v "Authorizations for temporary use" ]
+  ] [
+     fhir:code [ fhir:v "ParallelTrade" ] ;
+     fhir:display [ fhir:v "Parallel traded products" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

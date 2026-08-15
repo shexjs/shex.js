@@ -1,0 +1,52 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/AppointmentResponse/exampleresp> a fhir:AppointmentResponse ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "exampleresp"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Accept Brian MRI results discussion</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://example.org/sampleappointmentresponse-identifier"^^xsd:anyURI ;
+       fhir:l <http://example.org/sampleappointmentresponse-identifier>
+     ] ;
+     fhir:value [ fhir:v "response123" ]
+  ] ) ; # 
+  fhir:appointment [
+     fhir:l <http://hl7.org/fhir/Appointment/examplereq> ;
+     fhir:reference [ fhir:v "Appointment/examplereq" ] ;
+     fhir:display [ fhir:v "Brian MRI results discussion" ]
+  ] ; # 
+  fhir:start [ fhir:v "2013-12-25T13:15:00Z"^^xsd:dateTime] ; # 
+  fhir:end [ fhir:v "2013-12-25T13:30:00Z"^^xsd:dateTime] ; # 
+  fhir:participantType ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationType"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationType>
+       ] ;
+       fhir:code [ fhir:v "ATND" ]
+     ] )
+  ] ) ; # 
+  fhir:actor [
+     fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+     fhir:reference [ fhir:v "Practitioner/example" ] ;
+     fhir:display [ fhir:v "Dr Adam Careful" ]
+  ] ; # 
+  fhir:participantStatus [ fhir:v "tentative"] ; # 
+  fhir:comment [ fhir:v "can't we try for this time, can't do mornings"] . # 
+
+<http://hl7.org/fhir/Appointment/examplereq> a fhir:Appointment .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

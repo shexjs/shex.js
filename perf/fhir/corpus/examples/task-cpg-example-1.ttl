@@ -1,0 +1,36 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Task/cpg-example-1> a fhir:Task ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "cpg-example-1"] ; # Example from https://hl7.org/fhir/uv/cpg/Task-request-dnci-scenario4.xml.html
+  fhir:status [ fhir:v "ready"] ; # <instantiatesCanonical value="http://hl7.org/fhir/uv/cpg/ActivityDefinition/activity-example-collectinformation"/>
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:doNotPerform [ fhir:v true] ; # 
+  fhir:code [
+     fhir:text [ fhir:v "Collect information" ] # <coding>\n      <system value=\"http:\/\/hl7.org\/fhir\/uv\/cpg\/CodeSystem\/cpg-activity-type\"\/>\n      <code value=\"collect-information\"\/>\n      <display value=\"Collect information\"\/>\n    <\/coding>
+  ] ; # 
+  fhir:for [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] # <reference value=\"Patient\/dnci-scenario4\"\/>
+  ] ; # 
+  fhir:input ( [
+     fhir:type [
+       fhir:text [ fhir:v "Collect information" ] # <coding>\n        <system value=\"http:\/\/hl7.org\/fhir\/uv\/cpg\/CodeSystem\/cpg-activity-type\"\/>\n        <code value=\"collect-information\"\/>\n        <display value=\"Collect information\"\/>\n      <\/coding>
+     ] ;
+     fhir:value [
+       a fhir:Canonical ;
+       fhir:v "http://hl7.org/fhir/Questionnaire/f201"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Questionnaire/f201>
+     ] # <valueCanonical value=\"http:\/\/hl7.org\/fhir\/uv\/cpg\/Questionnaire\/activity-example-collectinformation\"\/>
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

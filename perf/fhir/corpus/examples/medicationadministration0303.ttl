@@ -1,0 +1,114 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/MedicationAdministration/medadmin0303> a fhir:MedicationAdministration ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "medadmin0303"] ; # 
+  fhir:contained ( [
+     a fhir:Medication ;
+     fhir:id [ fhir:v "med0303" ] ;
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/sid/ndc"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/sid/ndc>
+         ] ;
+         fhir:code [ fhir:v "0206-8862-02" ] ;
+         fhir:display [ fhir:v "Zosyn in Galaxy Containers, 12 BAG in 1 BOX (0206-8862-02) > 100 mL in 1 BAG (0206-8862-01) (package)" ]
+       ] ) # Zosyn (piperacillin\/tazobactam) 4.5gm injection
+     ]
+  ] ) ; # 
+  fhir:status [ fhir:v "entered-in-error"] ; # 
+  fhir:medication [
+     fhir:reference [
+       fhir:l <#med0303> ;
+       fhir:reference [ fhir:v "#med0303" ]
+     ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/pat1> ;
+     fhir:reference [ fhir:v "Patient/pat1" ] ;
+     fhir:display [ fhir:v "Donald Duck" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/f001> ;
+     fhir:reference [ fhir:v "Encounter/f001" ] ;
+     fhir:display [ fhir:v "encounter who leads to this prescription" ]
+  ] ; # 
+  fhir:occurrence [
+     a fhir:Period ;
+     fhir:start [ fhir:v "2015-01-15T04:30:00+01:00"^^xsd:dateTime ] ;
+     fhir:end [ fhir:v "2015-01-15T14:30:00+01:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:performer ( [
+     fhir:actor [
+       fhir:reference [
+         fhir:l <http://hl7.org/fhir/Practitioner/f007> ;
+         fhir:reference [ fhir:v "Practitioner/f007" ] ;
+         fhir:display [ fhir:v "Patrick Pump" ]
+       ]
+     ]
+  ] ) ; # 
+  fhir:request [
+     fhir:l <http://hl7.org/fhir/MedicationRequest/medrx0319> ;
+     fhir:reference [ fhir:v "MedicationRequest/medrx0319" ]
+  ] ; # 
+  fhir:dosage [
+     fhir:text [ fhir:v "4.5 grams in D5W 250 ml. IV every 6 hours. Infuse over 30 min at 8L/min " ] ;
+     fhir:route [
+       a sct:47625008 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "47625008" ] ;
+         fhir:display [ fhir:v "Intravenous route" ]
+       ] )
+     ] ;
+     fhir:dose [
+       fhir:value [ fhir:v 4.5 ] ;
+       fhir:unit [ fhir:v "g" ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "g" ]
+     ] ;
+     fhir:rate [
+       a fhir:Ratio ;
+       fhir:numerator [
+         fhir:value [ fhir:v "8"^^xsd:decimal ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "ml" ]
+       ] ;
+       fhir:denominator [
+         fhir:value [ fhir:v "1"^^xsd:decimal ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "min" ]
+       ]
+     ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/pat1> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/f001> a fhir:Encounter .
+
+<http://hl7.org/fhir/Practitioner/f007> a fhir:Practitioner .
+
+<http://hl7.org/fhir/MedicationRequest/medrx0319> a fhir:MedicationRequest .
+
+# -------------------------------------------------------------------------------------
+

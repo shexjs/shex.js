@@ -1,0 +1,93 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/MedicationAdministration/medadmin0313> a fhir:MedicationAdministration ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "medadmin0313"] ; # 
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:medication [
+     fhir:concept [
+       a sct:322254008 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "322254008" ] ;
+         fhir:display [ fhir:v "Acetaminophen 240 mg rectal suppository" ]
+       ] )
+     ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/pat1> ;
+     fhir:reference [ fhir:v "Patient/pat1" ] ;
+     fhir:display [ fhir:v "Donald Duck" ]
+  ] ; # 
+  fhir:occurrence [
+     a fhir:Period ;
+     fhir:start [ fhir:v "2015-01-15T22:03:00+01:00"^^xsd:dateTime ] ;
+     fhir:end [ fhir:v "2015-01-16T02:03:00+01:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:performer ( [
+     fhir:actor [
+       fhir:reference [
+         fhir:l <http://hl7.org/fhir/Practitioner/f007> ;
+         fhir:reference [ fhir:v "Practitioner/f007" ] ;
+         fhir:display [ fhir:v "Patrick Pump" ]
+       ]
+     ]
+  ] ) ; # 
+  fhir:reason ( [
+     fhir:concept [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/reason-medication-given"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/reason-medication-given>
+         ] ;
+         fhir:code [ fhir:v "c" ] ;
+         fhir:display [ fhir:v "Emergency" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:request [
+     fhir:l <http://hl7.org/fhir/MedicationRequest/medrx0324> ;
+     fhir:reference [ fhir:v "MedicationRequest/medrx0324" ]
+  ] ; # 
+  fhir:dosage [
+     fhir:text [ fhir:v "Insert one suppository rectally twice daily as needed for fever to a maximim of 3 per day" ] ;
+     fhir:site [
+       a sct:34402009 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "34402009" ] ;
+         fhir:display [ fhir:v "Rectum structure" ]
+       ] )
+     ] ;
+     fhir:dose [
+       fhir:value [ fhir:v "240"^^xsd:decimal ] ;
+       fhir:unit [ fhir:v "mg" ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "mg" ]
+     ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/pat1> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/f007> a fhir:Practitioner .
+
+<http://hl7.org/fhir/MedicationRequest/medrx0324> a fhir:MedicationRequest .
+
+# -------------------------------------------------------------------------------------
+

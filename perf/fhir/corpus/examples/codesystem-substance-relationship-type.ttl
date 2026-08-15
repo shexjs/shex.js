@@ -1,0 +1,134 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/substance-relationship-type> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "substance-relationship-type"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T11:01:55.562+11:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem substance-relationship-type</b></p><a name=\"substance-relationship-type\"> </a><a name=\"hcsubstance-relationship-type\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">Last updated: 2021-01-05T10:01:24.148+11:00</p></div><p>This case-sensitive code system <code>http://hl7.org/fhir/substance-relationship-type</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">Salt<a name=\"substance-relationship-type-Salt\"> </a></td><td>Salt to parent</td><td/></tr><tr><td style=\"white-space:nowrap\">ActiveMoiety<a name=\"substance-relationship-type-ActiveMoiety\"> </a></td><td>Active moiety</td><td/></tr><tr><td style=\"white-space:nowrap\">StartingMaterial<a name=\"substance-relationship-type-StartingMaterial\"> </a></td><td>Starting material for</td><td/></tr><tr><td style=\"white-space:nowrap\">Polymorph<a name=\"substance-relationship-type-Polymorph\"> </a></td><td>Polymorph of</td><td/></tr><tr><td style=\"white-space:nowrap\">Impurity<a name=\"substance-relationship-type-Impurity\"> </a></td><td>Impurity of</td><td/></tr><tr><td style=\"white-space:nowrap\">TherapeuticTarget<a name=\"substance-relationship-type-TherapeuticTarget\"> </a></td><td>Therapeutic target</td><td>The substance acts therapeutically on the target.</td></tr><tr><td style=\"white-space:nowrap\">MetabolicTarget<a name=\"substance-relationship-type-MetabolicTarget\"> </a></td><td>Metabolic target</td><td>The substance is metabolised by or interacts with the target as part of metabolism.</td></tr><tr><td style=\"white-space:nowrap\">ToxicityTarget<a name=\"substance-relationship-type-ToxicityTarget\"> </a></td><td>Toxicity target</td><td>The substance interacts with the target in a way that contributes to toxicity.</td></tr><tr><td style=\"white-space:nowrap\">TargetUnknownEffect<a name=\"substance-relationship-type-TargetUnknownEffect\"> </a></td><td>Target (unknown effect)</td><td>The substance is known to interact with the target, but the effect is not characterised.</td></tr><tr><td style=\"white-space:nowrap\">GeneOfOrigin<a name=\"substance-relationship-type-GeneOfOrigin\"> </a></td><td>Gene of origin</td><td>The substance was derived from this gene (used e.g. for recombinant proteins and nucleic acid products).</td></tr><tr><td style=\"white-space:nowrap\">Component<a name=\"substance-relationship-type-Component\"> </a></td><td>Component</td><td>The substance is a component (constituent) of a mixture substance. Used to relate a mixture's component substances to the mixture itself.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "brr"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/substance-relationship-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/substance-relationship-type>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.2088" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "SubstanceRelationshipTypeExample"] ; # 
+  fhir:title [ fhir:v "Substance Relationship Type"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "The relationship between two substance types."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/substance-relationship-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/substance-relationship-type>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "Salt" ] ;
+     fhir:display [ fhir:v "Salt to parent" ]
+  ] [
+     fhir:code [ fhir:v "ActiveMoiety" ] ;
+     fhir:display [ fhir:v "Active moiety" ]
+  ] [
+     fhir:code [ fhir:v "StartingMaterial" ] ;
+     fhir:display [ fhir:v "Starting material for" ]
+  ] [
+     fhir:code [ fhir:v "Polymorph" ] ;
+     fhir:display [ fhir:v "Polymorph of" ]
+  ] [
+     fhir:code [ fhir:v "Impurity" ] ;
+     fhir:display [ fhir:v "Impurity of" ]
+  ] [
+     fhir:code [ fhir:v "TherapeuticTarget" ] ;
+     fhir:display [ fhir:v "Therapeutic target" ] ;
+     fhir:definition [ fhir:v "The substance acts therapeutically on the target." ]
+  ] [
+     fhir:code [ fhir:v "MetabolicTarget" ] ;
+     fhir:display [ fhir:v "Metabolic target" ] ;
+     fhir:definition [ fhir:v "The substance is metabolised by or interacts with the target as part of metabolism." ]
+  ] [
+     fhir:code [ fhir:v "ToxicityTarget" ] ;
+     fhir:display [ fhir:v "Toxicity target" ] ;
+     fhir:definition [ fhir:v "The substance interacts with the target in a way that contributes to toxicity." ]
+  ] [
+     fhir:code [ fhir:v "TargetUnknownEffect" ] ;
+     fhir:display [ fhir:v "Target (unknown effect)" ] ;
+     fhir:definition [ fhir:v "The substance is known to interact with the target, but the effect is not characterised." ]
+  ] [
+     fhir:code [ fhir:v "GeneOfOrigin" ] ;
+     fhir:display [ fhir:v "Gene of origin" ] ;
+     fhir:definition [ fhir:v "The substance was derived from this gene (used e.g. for recombinant proteins and nucleic acid products)." ]
+  ] [
+     fhir:code [ fhir:v "Component" ] ;
+     fhir:display [ fhir:v "Component" ] ;
+     fhir:definition [ fhir:v "The substance is a component (constituent) of a mixture substance. Used to relate a mixture's component substances to the mixture itself." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

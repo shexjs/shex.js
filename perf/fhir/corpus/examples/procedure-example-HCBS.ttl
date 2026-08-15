@@ -1,0 +1,63 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Procedure/HCBS> a fhir:Procedure ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "HCBS"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n			<p>\n				<b> Personal care services provided at person's home</b>\n			</p>\n			<p>\n				<b> Based On</b> : Peter's Long Term Services and Supports (LTSS) care plan</p>\n			<p>\n				<b> Status</b> : completed</p>\n			<p>\n				<b> Beneficiary</b> : Peter James</p>\n			<p>\n				<b> Service Name/Code</b> : Personal care services <span> (Details : {HCPCS code 'T1019' = 'Personal care services, per 15 minutes'})</span>\n			</p>\n			<p>\n				<b> Service Date</b> : Apr 5, 2018</p>\n			<p>\n				<b> Service Provider</b> : Adam Careful</p>\n			<p>\n				<b> Service Delivery Address</b> : Peter's home</p>\n			<p>\n				<b> Service Comment</b> : Assisted with bathing and dressing, doing laundry, and meal preparation</p>\n		</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:basedOn ( [
+     fhir:display [ fhir:v "Peter's Long Term Service and Supports (LTSS) Care Plan" ] # <reference value=\"CarePlan\/example-HCBS\"\/>
+  ] ) ; # 
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:code [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "https://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets/Alpha-Numeric-HCPCS.html"^^xsd:anyURI ;
+         fhir:l <https://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets/Alpha-Numeric-HCPCS.html>
+       ] ;
+       fhir:code [ fhir:v "T1019" ] ;
+       fhir:display [ fhir:v "Personal care services, per 15 minutes, not for an inpatient or resident of a hospital, nursing facility, icf/mr or imd, part of the individualized plan of treatment." ]
+     ] ) ;
+     fhir:text [ fhir:v "Personal care services" ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Peter James" ]
+  ] ; # 
+  fhir:occurrence [
+     a fhir:DateTime ;
+     fhir:v "2018-04-05"^^xsd:date
+  ] ; # 
+  fhir:performer ( [
+     fhir:actor [
+       fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+       fhir:reference [ fhir:v "Practitioner/example" ] ;
+       fhir:display [ fhir:v "Adam Careful" ]
+     ]
+  ] ) ; # 
+  fhir:location [
+     fhir:l <http://hl7.org/fhir/Location/ph> ;
+     fhir:reference [ fhir:v "Location/ph" ] ;
+     fhir:display [ fhir:v "Peter's Home" ]
+  ] ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "Assisted with bathing and dressing, doing laundry, and meal preparation" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Location/ph> a fhir:Location .
+
+# -------------------------------------------------------------------------------------
+

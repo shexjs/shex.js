@@ -1,0 +1,234 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/MedicationRequest/medrx0301> a fhir:MedicationRequest ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "medrx0301"] ; # 
+  fhir:contained ( [
+     a fhir:Medication ;
+     fhir:id [ fhir:v "med0310" ] ;
+     fhir:code [
+       a sct:430127000 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "430127000" ] ;
+         fhir:display [ fhir:v "Oxycodone-containing product in oral dose form" ]
+       ] )
+     ]
+  ] [
+     a fhir:Provenance ;
+     fhir:id [ fhir:v "signature" ] ;
+     fhir:target ( [
+       fhir:l <http://hl7.org/fhir/ServiceRequest/physiotherapy> ;
+       fhir:reference [ fhir:v "ServiceRequest/physiotherapy" ]
+     ] ) ;
+     fhir:recorded [ fhir:v "2017-02-01T17:23:07Z"^^xsd:dateTime ] ;
+     fhir:agent ( [
+       fhir:role ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationType"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationType>
+           ] ;
+           fhir:code [ fhir:v "AUT" ]
+         ] )
+       ] ) ;
+       fhir:who [
+         fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+         fhir:reference [ fhir:v "Practitioner/example" ] ;
+         fhir:display [ fhir:v "Dr Adam Careful" ]
+       ]
+     ] ) ;
+     fhir:signature ( [
+       fhir:type ( [
+         fhir:system [
+           fhir:v "urn:iso-astm:E1762-95:2013"^^xsd:anyURI ;
+           fhir:l <urn:iso-astm:E1762-95:2013>
+         ] ;
+         fhir:code [ fhir:v "1.2.840.10065.1.12.1.1" ] ;
+         fhir:display [ fhir:v "Author's Signature" ]
+       ] ) ;
+       fhir:when [ fhir:v "2017-02-01T17:23:07Z"^^xsd:dateTime ] ;
+       fhir:who [
+         fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+         fhir:reference [ fhir:v "Practitioner/example" ] ;
+         fhir:display [ fhir:v "Dr Adam Careful" ]
+       ] ;
+       fhir:targetFormat [ fhir:v "application/fhir+xml" ] ;
+       fhir:sigFormat [ fhir:v "application/signature+xml" ] ;
+       fhir:data [ fhir:v "dGhpcyBibG9iIGlzIHNuaXBwZWQ="^^xsd:base64Binary ]
+     ] )
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:system [
+       fhir:v "http://www.bmc.nl/portal/prescriptions"^^xsd:anyURI ;
+       fhir:l <http://www.bmc.nl/portal/prescriptions>
+     ] ;
+     fhir:value [ fhir:v "12345689" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:statusReason [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/medicationrequest-status-reason"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/medicationrequest-status-reason>
+       ] ;
+       fhir:code [ fhir:v "altchoice" ] ;
+       fhir:display [ fhir:v "Try another treatment first" ]
+     ] )
+  ] ; # 
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/medicationrequest-admin-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/medicationrequest-admin-category>
+       ] ;
+       fhir:code [ fhir:v "inpatient" ] ;
+       fhir:display [ fhir:v "Inpatient" ]
+     ] )
+  ] ) ; # 
+  fhir:medication [
+     fhir:reference [
+       fhir:l <#med0310> ;
+       fhir:reference [ fhir:v "#med0310" ]
+     ] # Linked to a RESOURCE Medication
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/pat1> ;
+     fhir:reference [ fhir:v "Patient/pat1" ] ; # Linked to the resource patient who needs the medication
+     fhir:display [ fhir:v "Donald Duck" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/f201> ;
+     fhir:reference [ fhir:v "Encounter/f201" ] ; # Linked to a resource Encounter between patient and practitioner
+     fhir:display [ fhir:v "encounter who leads to this prescription" ]
+  ] ; # 
+  fhir:supportingInformation ( [
+     fhir:l <http://hl7.org/fhir/Procedure/biopsy> ;
+     fhir:reference [ fhir:v "Procedure/biopsy" ]
+  ] ) ; # 
+  fhir:authoredOn [ fhir:v "2015-01-15"^^xsd:date] ; # 
+  fhir:requester [
+     fhir:l <http://hl7.org/fhir/Practitioner/f007> ;
+     fhir:reference [ fhir:v "Practitioner/f007" ] ;
+     fhir:display [ fhir:v "Patrick Pump" ]
+  ] ; # 
+  fhir:performerType [
+     a sct:26369006 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "26369006" ] ;
+       fhir:display [ fhir:v "Public Health Nurse" ]
+     ] )
+  ] ; # 
+  fhir:performer ( [
+     fhir:l <http://hl7.org/fhir/Practitioner/f204> ;
+     fhir:reference [ fhir:v "Practitioner/f204" ] ;
+     fhir:display [ fhir:v "Carla Espinosa" ]
+  ] ) ; # 
+  fhir:reason ( [
+     fhir:concept [
+       a sct:297217002 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "297217002" ] ;
+         fhir:display [ fhir:v "Rib Pain (finding)" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:insurance ( [
+     fhir:l <http://hl7.org/fhir/Coverage/9876B1> ;
+     fhir:reference [ fhir:v "Coverage/9876B1" ]
+  ] ) ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "Patient told to take with food" ]
+  ] ) ; # 
+  fhir:dosageInstruction [] ; # 
+  fhir:dispenseRequest [
+     fhir:validityPeriod [
+       fhir:start [ fhir:v "2015-01-15"^^xsd:date ] ;
+       fhir:end [ fhir:v "2016-01-15"^^xsd:date ]
+     ] ;
+     fhir:numberOfRepeatsAllowed [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:quantity [
+       fhir:value [ fhir:v "30"^^xsd:decimal ] ;
+       fhir:unit [ fhir:v "TAB" ] ;
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm>
+       ] ;
+       fhir:code [ fhir:v "TAB" ]
+     ] ;
+     fhir:expectedSupplyDuration [
+       fhir:value [ fhir:v "10"^^xsd:decimal ] ;
+       fhir:unit [ fhir:v "days" ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "d" ]
+     ] ;
+     fhir:dispenser [
+       fhir:l <http://hl7.org/fhir/Organization/2.16.840.1.113883.19.5> ;
+       fhir:reference [ fhir:v "Organization/2.16.840.1.113883.19.5" ]
+     ]
+  ] ; # 
+  fhir:substitution [
+     fhir:allowed [
+       a fhir:Boolean ;
+       fhir:v true
+     ] ;
+     fhir:reason [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActReason"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActReason>
+         ] ;
+         fhir:code [ fhir:v "FP" ] ;
+         fhir:display [ fhir:v "formulary policy" ]
+       ] )
+     ]
+  ] ; # 
+  fhir:eventHistory ( [
+     fhir:l <#signature> ;
+     fhir:reference [ fhir:v "#signature" ] ;
+     fhir:display [ fhir:v "Author's Signature" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/ServiceRequest/physiotherapy> a fhir:ServiceRequest .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Patient/pat1> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/f201> a fhir:Encounter .
+
+<http://hl7.org/fhir/Procedure/biopsy> a fhir:Procedure .
+
+<http://hl7.org/fhir/Practitioner/f007> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Practitioner/f204> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Coverage/9876B1> a fhir:Coverage .
+
+<http://hl7.org/fhir/Organization/2.16.840.1.113883.19.5> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

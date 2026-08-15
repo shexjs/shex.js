@@ -1,0 +1,85 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/RelatedPerson/benedicte> a fhir:RelatedPerson ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "benedicte"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <table>\n        <tbody>\n          <tr>\n            <td>Name</td>\n            <td>Bénédicte du Marché</td>\n          </tr>\n          <tr>\n            <td>Address</td>\n            <td>43, Place du Marché Sainte Catherine, 75004 Paris, France</td>\n          </tr>\n          <tr>\n            <td>Contacts</td>\n            <td>Phone: +33 (237) 998327</td>\n          </tr>\n        </tbody>\n      </table>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:type [
+       fhir:text [ fhir:v "INSEE" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:oid:1.2.250.1.61"^^xsd:anyURI ;
+       fhir:l <urn:oid:1.2.250.1.61>
+     ] ;
+     fhir:value [ fhir:v "272117510400399" ]
+  ] ) ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:relationship ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v2-0131"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v2-0131>
+       ] ;
+       fhir:code [ fhir:v "N" ]
+     ] [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-RoleCode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-RoleCode>
+       ] ;
+       fhir:code [ fhir:v "WIFE" ]
+     ] )
+  ] ) ; # 
+  fhir:name ( [
+     fhir:family [
+       fhir:v "du Marché" ;
+       fhir:extension ( [
+         fhir:url [
+           fhir:v "http://hl7.org/fhir/StructureDefinition/humanname-own-prefix"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/StructureDefinition/humanname-own-prefix>
+         ] ;
+         fhir:value [
+           a fhir:String ;
+           fhir:v "VV"
+         ]
+       ] ) # the \"du\" part is a family name prefix (VV in iso 21090)
+     ] ;
+     fhir:given ( [ fhir:v "Bénédicte" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "+33 (237) 998327" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:line ( [ fhir:v "43, Place du Marché Sainte Catherine" ] ) ;
+     fhir:city [ fhir:v "Paris" ] ;
+     fhir:postalCode [ fhir:v "75004" ] ;
+     fhir:country [ fhir:v "FRA" ]
+  ] ) ; # 
+  fhir:photo ( [
+     fhir:contentType [ fhir:v "image/jpeg" ] ;
+     fhir:url [
+       fhir:v "Binary/f016"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Binary/f016>
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

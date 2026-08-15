@@ -1,0 +1,159 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/drug-combo-product-bundle> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "drug-combo-product-bundle"] ; # 
+  fhir:type [ fhir:v "collection"] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:e19deb42-7137-48b0-aef1-d37019d0316e"^^xsd:anyURI ;
+       fhir:l <urn:uuid:e19deb42-7137-48b0-aef1-d37019d0316e>
+     ] ;
+     fhir:resource ( <urn:uuid:e19deb42-7137-48b0-aef1-d37019d0316e> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:7d95129b-ea17-48fb-844c-70317219723d"^^xsd:anyURI ;
+       fhir:l <urn:uuid:7d95129b-ea17-48fb-844c-70317219723d>
+     ] ;
+     fhir:resource ( <urn:uuid:7d95129b-ea17-48fb-844c-70317219723d> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:4b9d12e2-c4c3-4533-85d0-7f78a6b91a53"^^xsd:anyURI ;
+       fhir:l <urn:uuid:4b9d12e2-c4c3-4533-85d0-7f78a6b91a53>
+     ] ;
+     fhir:resource ( <urn:uuid:4b9d12e2-c4c3-4533-85d0-7f78a6b91a53> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:9a66d8b9-1793-4e43-8cc3-89af55d86d0c"^^xsd:anyURI ;
+       fhir:l <urn:uuid:9a66d8b9-1793-4e43-8cc3-89af55d86d0c>
+     ] ;
+     fhir:resource ( <urn:uuid:9a66d8b9-1793-4e43-8cc3-89af55d86d0c> )
+  ] ) . # 
+
+<urn:uuid:e19deb42-7137-48b0-aef1-d37019d0316e> a fhir:MedicinalProductDefinition ;
+  fhir:id [ fhir:v "drug-combo-product-bundle-mp"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n						<p>\n							<b>\n								Generated Narrative\n							</b>\n						</p>\n						<p>\n							<b>\n								id\n							</b>\n							: drug-combo-product\n						</p>\n						<p>\n							<b>\n								identifier\n							</b>\n							: id: ThrushTreatCombo\n						</p>\n						<p>\n							<b>\n								combinedPharmaceuticalDoseForm\n							</b>\n							:\n							<span title=\"Codes: {http://example.org.uk/fhir/doseform Tablet and Cream for topical application}\">\n								Tablet and Cream for topical application\n							</span>\n						</p>\n						<p>\n							<b>\n								packagedMedicinalProduct\n							</b>\n							:\n							<a name=\"packageCombo\"/>\n						</p>\n						<blockquote>\n							<p>\n								<b>\n									id\n								</b>\n								:packageCombo\n							</p>\n							<blockquote>\n								<p>\n									<b>\n										package (outer)\n									</b>\n								</p>\n								<p>\n									<b>\n										type\n									</b>\n									:\n									<span title=\"Codes: \">\n										Box\n									</span>\n								</p>\n								<blockquote>\n									<p>\n										<b>\n											Package (inner 1)\n										</b>\n									</p>\n									<p>\n										<b>\n											Type\n										</b>\n										: Blister pack\n									</p>\n									<p>\n										<b>\n											Items quantity\n										</b>\n										: 1\n									</p>\n									<blockquote>\n										<p>\n											<b>\n												Form\n											</b>\n											: Tablet\n										</p>\n										<blockquote>\n											<p>\n												<b>\n													Ingredient\n												</b>\n												: 150mg fluconazole\n											</p>\n										</blockquote>\n									</blockquote>\n								</blockquote>\n								<blockquote>\n									<p>\n										<b>\n											Package (inner 2)\n										</b>\n									</p>\n									<p>\n										<b>\n											Type\n										</b>\n										: Tube\n									</p>\n									<p>\n										<b>\n											Items quantity\n										</b>\n										: 20g\n									</p>\n									<blockquote>\n										<p>\n											<b>\n												Package Item\n											</b>\n											: Cap\n										</p>\n									</blockquote>\n									<blockquote>\n										<p>\n											<b>\n												Form\n											</b>\n											: Cream for topical application\n										</p>\n										<blockquote>\n											<p>\n												<b>\n													Ingredient\n												</b>\n												: 2% w/w clotrimazole\n											</p>\n										</blockquote>\n									</blockquote>\n								</blockquote>\n							</blockquote>\n						</blockquote>\n						<h3>\n							Names\n						</h3>\n						<table class=\"grid\">\n							<tr>\n								<td>\n									-\n								</td>\n								<td>\n									<b>\n										ProductName\n									</b>\n								</td>\n							</tr>\n							<tr>\n								<td>\n									*\n								</td>\n								<td>\n									ThrushTreat Combo\n								</td>\n							</tr>\n						</table>\n					</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://example.org.uk/fhir/product"^^xsd:anyURI ;
+       fhir:l <http://example.org.uk/fhir/product>
+     ] ;
+     fhir:value [ fhir:v "ThrushTreatCombo" ]
+  ] ) ; # 
+  fhir:combinedPharmaceuticalDoseForm [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.org.uk/fhir/doseform"^^xsd:anyURI ;
+         fhir:l <http://example.org.uk/fhir/doseform>
+       ] ;
+       fhir:code [ fhir:v "Tablet and Cream for topical application" ]
+     ] )
+  ] ; # 
+  fhir:name ( [
+     fhir:productName [ fhir:v "ThrushTreat Combo" ]
+  ] ) . # 
+
+<urn:uuid:7d95129b-ea17-48fb-844c-70317219723d> a fhir:PackagedProductDefinition ;
+  fhir:id [ fhir:v "packageCombo"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n						(left blank to stop example creating something automatically)\n					</div>"^^rdf:XMLLiteral ]
+  ] ; # text not needed here
+  fhir:packageFor ( [
+     fhir:l <http://hl7.org/fhir/MedicinalProductDefinition/drug-combo-product-bundle-mp> ;
+     fhir:reference [ fhir:v "MedicinalProductDefinition/drug-combo-product-bundle-mp" ]
+  ] ) ; # 
+  fhir:packaging [
+     fhir:type [
+       fhir:coding ( [
+         fhir:code [ fhir:v "Box" ]
+       ] )
+     ] ;
+     fhir:packaging ( [
+       fhir:type [
+         fhir:coding ( [
+           fhir:code [ fhir:v "blister pack" ]
+         ] )
+       ] ;
+       fhir:containedItem ( [
+         fhir:item [
+           fhir:reference [
+             fhir:l <http://hl7.org/fhir/ManufacturedItemDefinition/tabletItem> ;
+             fhir:reference [ fhir:v "ManufacturedItemDefinition/tabletItem" ]
+           ]
+         ] ;
+         fhir:amount [
+           fhir:value [ fhir:v "1"^^xsd:decimal ]
+         ]
+       ] )
+     ] [
+       fhir:type [
+         fhir:coding ( [
+           fhir:code [ fhir:v "tube" ]
+         ] )
+       ] ;
+       fhir:containedItem ( [
+         fhir:item [
+           fhir:reference [
+             fhir:l <http://hl7.org/fhir/ManufacturedItemDefinition/creamItem> ;
+             fhir:reference [ fhir:v "ManufacturedItemDefinition/creamItem" ]
+           ]
+         ] ;
+         fhir:amount [
+           fhir:value [ fhir:v "1"^^xsd:decimal ]
+         ]
+       ] )
+     ] )
+  ] . # 
+
+<http://hl7.org/fhir/MedicinalProductDefinition/drug-combo-product-bundle-mp> a fhir:MedicinalProductDefinition .
+
+<http://hl7.org/fhir/ManufacturedItemDefinition/tabletItem> a fhir:ManufacturedItemDefinition .
+
+<http://hl7.org/fhir/ManufacturedItemDefinition/creamItem> a fhir:ManufacturedItemDefinition .
+
+<urn:uuid:4b9d12e2-c4c3-4533-85d0-7f78a6b91a53> a fhir:ManufacturedItemDefinition ;
+  fhir:id [ fhir:v "tabletItem"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n						(left blank to stop example creating something automatically)\n					</div>"^^rdf:XMLLiteral ]
+  ] ; # text not needed here
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:manufacturedDoseForm [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.org.uk/fhir/doseform"^^xsd:anyURI ;
+         fhir:l <http://example.org.uk/fhir/doseform>
+       ] ;
+       fhir:code [ fhir:v "tablet" ]
+     ] )
+  ] . # 
+
+<urn:uuid:9a66d8b9-1793-4e43-8cc3-89af55d86d0c> a fhir:ManufacturedItemDefinition ;
+  fhir:id [ fhir:v "creamItem"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n						(left blank to stop example creating something automatically)\n					</div>"^^rdf:XMLLiteral ]
+  ] ; # text not needed here
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:manufacturedDoseForm [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.org.uk/fhir/doseform"^^xsd:anyURI ;
+         fhir:l <http://example.org.uk/fhir/doseform>
+       ] ;
+       fhir:code [ fhir:v "Cream for topical applcation" ]
+     ] )
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

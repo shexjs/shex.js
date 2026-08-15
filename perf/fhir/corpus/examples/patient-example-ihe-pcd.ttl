@@ -1,0 +1,27 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# PID|||AB60001^^^A^PI||BROOKS^ALBERT^^^^^L
+
+<http://hl7.org/fhir/Patient/ihe-pcd> a fhir:Patient ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "ihe-pcd"] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:text [ fhir:v "Internal Identifier" ]
+     ] ;
+     fhir:value [ fhir:v "AB60001" ]
+  ] ) ; # MRN assigned by ACME healthcare on 6-May 2001
+  fhir:active [ fhir:v true] ; # 
+  fhir:name ( [
+     fhir:family [ fhir:v "BROOKS" ] ;
+     fhir:given ( [ fhir:v "ALBERT" ] )
+  ] ) . # Peter James Chalmers, but called "Jim"
+
+# -------------------------------------------------------------------------------------
+

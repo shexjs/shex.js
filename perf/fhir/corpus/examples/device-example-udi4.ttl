@@ -1,0 +1,42 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# The use case illustrates the use of Example of ICCBBA UDI for blood bags
+# <association>
+#	  <status> 
+#	     <coding>
+#		   <system value="http://terminology.hl7.org/CodeSystem/device-association-status" />
+#           <code value="attached"/>
+#		 </coding>
+#	  </status>
+#      <humanSubject>
+#		<reference value="Patient/example"/>
+#	  </humanSubject>
+#	</association>
+
+<http://hl7.org/fhir/Device/example-udi4> a fhir:Device ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-udi4"] ; # 
+  fhir:udiCarrier ( [
+     fhir:deviceIdentifier [ fhir:v "A4599XQZ990T0474" ] ;
+     fhir:issuer [
+       fhir:v "http://hl7.org/fhir/NamingSystem/iccbba-blood"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/NamingSystem/iccbba-blood>
+     ] ;
+     fhir:jurisdiction [
+       fhir:v "http://hl7.org/fhir/NamingSystem/fda-udi"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/NamingSystem/fda-udi>
+     ] ;
+     fhir:carrierHRF [ fhir:v "=)1TE123456A&)RZ12345678" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "inactive"] ; # 
+  fhir:manufacturer [ fhir:v "GlobalMed, Inc"] ; # 
+  fhir:lotNumber [ fhir:v "RZ12345678"] . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,105 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ConceptMap/cm-address-use-v2> a fhir:ConceptMap ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "cm-address-use-v2"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: ConceptMap cm-address-use-v2</b></p><a name=\"cm-address-use-v2\"> </a><a name=\"hccm-address-use-v2\"> </a><p>Mapping from <a href=\"valueset-address-use.html\">AddressUse</a> to <a href=\"http://terminology.hl7.org/7.3.0/ValueSet-v2-0190.html\">hl7VS-addressType</a></p><br/><p>Mapping from <a href=\"codesystem-address-use.html\">AddressUse</a> to <a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v2-0190.html\">addressType</a></p><table class=\"grid\"><tr><td><b>Source Code</b></td><td><b>Relationship</b></td><td><b>Target Code</b></td><td><b>Comment</b></td></tr><tr><td>home</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>H (Home)</td><td/></tr><tr><td>work</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>O (Office/Business)</td><td/></tr><tr><td>temp (Temporary)</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>C (Current Or Temporary)</td><td/></tr><tr><td>old (Old / Incorrect)</td><td><a href=\"codesystem-concept-map-relationship.html#source-is-broader-than-target\" title=\"source-is-broader-than-target\">is broader than</a></td><td>BA (Bad address)</td><td>unclear about old addresses</td></tr><tr><td>billing</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>BI (Billing Address)</td><td/></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ConceptMap/cm-address-use-v2"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ConceptMap/cm-address-use-v2>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "v2.AddressUse"] ; # 
+  fhir:title [ fhir:v "v2 map for AddressUse"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:sourceScope [
+     a fhir:Canonical ;
+     fhir:v "http://hl7.org/fhir/ValueSet/address-use"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/address-use>
+  ] ; # 
+  fhir:targetScope [
+     a fhir:Canonical ;
+     fhir:v "http://terminology.hl7.org/ValueSet/v2-0190"^^xsd:anyURI ;
+     fhir:l <http://terminology.hl7.org/ValueSet/v2-0190>
+  ] ; # 
+  fhir:group ( [
+     fhir:source [
+       fhir:v "http://hl7.org/fhir/address-use"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/address-use>
+     ] ;
+     fhir:target [
+       fhir:v "http://terminology.hl7.org/CodeSystem/v2-0190"^^xsd:anyURI ;
+       fhir:l <http://terminology.hl7.org/CodeSystem/v2-0190>
+     ] ;
+     fhir:element ( [
+       fhir:code [ fhir:v "home" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "H" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "work" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "O" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "temp" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "C" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "old" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "BA" ] ;
+         fhir:relationship [ fhir:v "source-is-broader-than-target" ] ;
+         fhir:comment [ fhir:v "unclear about old addresses" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "billing" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "BI" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

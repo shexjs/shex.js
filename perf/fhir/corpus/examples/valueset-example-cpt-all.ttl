@@ -1,0 +1,92 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ValueSet/example-cpt-all> a fhir:ValueSet ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-cpt-all"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p class=\"res-header-id\">\n        <b>Generated Narrative: ValueSet example-cpt-all</b>\n      </p>\n      <a name=\"example-cpt-all\"> </a>\n      <a name=\"hcexample-cpt-all\"> </a>\n      <ul>\n        <li>Include all codes defined in \n          <a href=\"http://tx.fhir.org/r5\">\n            <code>http://www.ama-assn.org/go/cpt</code>\n          </a>\n          <span title=\"Version is not explicitly stated. No matching Code System found\"> version Not Stated (use latest from terminology server)</span>\n        </li>\n      </ul>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "vocab"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ValueSet/example-cpt-all"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/example-cpt-all>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.3.3138" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "AllCPTCodes"] ; # 
+  fhir:title [ fhir:v "All CPT codes"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2015-03-12"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Terminology Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/Vocab" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "A value set that includes all CPT codes"] ; # 
+  fhir:useContext ( [
+     fhir:code [
+       fhir:system [
+         fhir:v "http://example.org/fhir/CodeSystem/use-contexts"^^xsd:anyURI ;
+         fhir:l <http://example.org/fhir/CodeSystem/use-contexts>
+       ] ;
+       fhir:code [ fhir:v "species" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept, sct:337915000 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "337915000" ] ;
+         fhir:display [ fhir:v "Homo sapiens (organism)" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "urn:iso:std:iso:3166"^^xsd:anyURI ;
+         fhir:l <urn:iso:std:iso:3166>
+       ] ;
+       fhir:code [ fhir:v "US" ]
+     ] )
+  ] ) ; # 
+  fhir:copyright [ fhir:v "CPT Copyright © 2014 American Medical Association. All rights reserved."] ; # 
+  fhir:compose [
+     fhir:include ( [
+       fhir:system [
+         fhir:v "http://www.ama-assn.org/go/cpt"^^xsd:anyURI ;
+         fhir:l <http://www.ama-assn.org/go/cpt>
+       ]
+     ] )
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

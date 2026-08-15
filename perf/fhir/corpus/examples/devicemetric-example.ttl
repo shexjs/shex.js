@@ -1,0 +1,92 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/DeviceMetric/example> a fhir:DeviceMetric ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://goodcare.org/devicemetric/id"^^xsd:anyURI ;
+       fhir:l <http://goodcare.org/devicemetric/id>
+     ] ;
+     fhir:value [ fhir:v "345675" ]
+  ] ) ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+         fhir:l <urn:iso:std:iso:11073:10101>
+       ] ;
+       fhir:code [ fhir:v "150456" ] ;
+       fhir:display [ fhir:v "MDC_PULS_OXIM_SAT_O2" ]
+     ] )
+  ] ; # 
+  fhir:unit [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+         fhir:l <urn:iso:std:iso:11073:10101>
+       ] ;
+       fhir:code [ fhir:v "262688" ] ;
+       fhir:display [ fhir:v "MDC_DIM_PERCENT" ]
+     ] )
+  ] ; # 
+  fhir:device [
+     fhir:l <http://hl7.org/fhir/Device/dev1> ;
+     fhir:reference [ fhir:v "Device/dev1" ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:operationalStatus [ fhir:v "on"] ; # 
+  fhir:color [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/color-names"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/color-names>
+       ] ;
+       fhir:code [ fhir:v "blue" ] ;
+       fhir:display [ fhir:v "Blue" ]
+     ] )
+  ] ; # 
+  fhir:category [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/metric-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/metric-category>
+       ] ;
+       fhir:code [ fhir:v "measurement" ] ;
+       fhir:display [ fhir:v "Measurement" ]
+     ] )
+  ] ; # 
+  fhir:measurementFrequency [
+     fhir:value [ fhir:v "1"^^xsd:decimal ] ;
+     fhir:unit [ fhir:v "Hertz" ] ;
+     fhir:system [
+       fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+       fhir:l <http://unitsofmeasure.org>
+     ] ;
+     fhir:code [ fhir:v "Hz" ]
+  ] ; # 
+  fhir:calibration ( [
+     fhir:type [ ] ;
+     fhir:state [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/metric-calibration-state"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/metric-calibration-state>
+         ] ;
+         fhir:code [ fhir:v "calibrated" ] ;
+         fhir:display [ fhir:v "Calibrated" ]
+       ] )
+     ] ;
+     fhir:time [ fhir:v "2016-12-28T09:03:04-05:00"^^xsd:dateTime ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Device/dev1> a fhir:Device .
+
+# -------------------------------------------------------------------------------------
+

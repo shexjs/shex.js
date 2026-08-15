@@ -1,0 +1,34 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# no items on the list, it's just empty 
+#    e.g. you don't need to have any empty reason
+
+<http://hl7.org/fhir/List/example-simple-empty> a fhir:List ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-simple-empty"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p>Patient Admission Waitoing list</p>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "current"] ; # 
+  fhir:mode [ fhir:v "snapshot"] ; # 
+  fhir:code [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://acme.com/list-codes"^^xsd:anyURI ;
+         fhir:l <http://acme.com/list-codes>
+       ] ;
+       fhir:code [ fhir:v "346638" ] ;
+       fhir:display [ fhir:v "Patient Admission List" ]
+     ] )
+  ] ; # 
+  fhir:date [ fhir:v "2016-07-14T11:54:05+10:00"^^xsd:dateTime] . # 
+
+# -------------------------------------------------------------------------------------
+

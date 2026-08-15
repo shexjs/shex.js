@@ -1,0 +1,248 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Device/AndroidGatewayPHG> a fhir:Device ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "AndroidGatewayPHG"] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ContinuaDeviceIdentifiers"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ContinuaDeviceIdentifiers>
+         ] ;
+         fhir:code [ fhir:v "SYSID" ] ;
+         fhir:display [ fhir:v "System Identifier" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "urn:oid:1.2.840.10004.1.1.1.0.0.1.0.0.1.2680"^^xsd:anyURI ;
+       fhir:l <urn:oid:1.2.840.10004.1.1.1.0.0.1.0.0.1.2680>
+     ] ;
+     fhir:value [ fhir:v "4C-4E-49-12-34-56-FF-FF" ]
+  ] ) ; # 
+  fhir:type ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+         fhir:l <urn:iso:std:iso:11073:10101>
+       ] ;
+       fhir:code [ fhir:v "531981" ] ;
+       fhir:display [ fhir:v "MDC_MOC_VMS_MDS_AHD" ]
+     ] ) ;
+     fhir:text [ fhir:v "MDC_MOC_VMS_MDS_AHD: Continua compliant Gateway" ]
+  ] ) ; # 
+  fhir:deviceVersion ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "532352" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_REG_CERT_DATA_CONTINUA_VERSION: Continua version" ]
+     ] ;
+     fhir:value [ fhir:v "6.0" ]
+  ] ) ; # 
+  fhir:property ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "532353" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_REG_CERT_DATA_CONTINUA_CERT_DEV_LIST: Continua certified device list" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ContinuaPAN"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ContinuaPAN>
+         ] ;
+         fhir:code [ fhir:v "4" ]
+       ] )
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "532355" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_REG_CERT_DATA_CONTINUA_AHD_CERT_LIST: Continua certified Health&Fitness interfaces list" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ContinuaHFS"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ContinuaHFS>
+         ] ;
+         fhir:code [ fhir:v "0" ]
+       ] )
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "532355" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_REG_CERT_DATA_CONTINUA_AHD_CERT_LIST: Continua certified Health&Fitness interfaces list" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ContinuaHFS"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ContinuaHFS>
+         ] ;
+         fhir:code [ fhir:v "3" ]
+       ] )
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "532355" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_REG_CERT_DATA_CONTINUA_AHD_CERT_LIST: Continua certified Health&Fitness interfaces list" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ContinuaHFS"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ContinuaHFS>
+         ] ;
+         fhir:code [ fhir:v "7" ]
+       ] )
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "532355" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_REG_CERT_DATA_CONTINUA_AHD_CERT_LIST: Continua certified Health&Fitness interfaces list" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ContinuaHFS"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ContinuaHFS>
+         ] ;
+         fhir:code [ fhir:v "2" ]
+       ] )
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "532355" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_REG_CERT_DATA_CONTINUA_AHD_CERT_LIST: Continua certified Health&Fitness interfaces list" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ContinuaHFS"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ContinuaHFS>
+         ] ;
+         fhir:code [ fhir:v "6" ]
+       ] )
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ASN1ToHL7"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ASN1ToHL7>
+         ] ;
+         fhir:code [ fhir:v "532354.0" ] ;
+         fhir:display [ fhir:v "regulation-status" ]
+       ] )
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0136"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0136>
+         ] ;
+         fhir:code [ fhir:v "Y" ]
+       ] ) ;
+       fhir:text [ fhir:v "Device is Unregulated" ]
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "68220" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_TIME_SYNC_PROTOCOL: Time synchronization protocol" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "532226" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_TIME_SYNC_NTPV4: NTPV4 time synchronization" ]
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "68221" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_TIME_SYNC_ACCURACY: unknown code" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "us" ]
+       ] ) ;
+       fhir:text [ fhir:v "120000000" ]
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,100 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/BiologicallyDerivedProduct/example> a fhir:BiologicallyDerivedProduct ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:productCode [
+     fhir:coding ( [
+       fhir:code [ fhir:v "E0398" ]
+     ] )
+  ] ; # <text>
+#    <status value="generated" />
+#    <div xmlns="http://www.w3.org/1999/xhtml">[Put rendering here]</div>
+#  </text>
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "https://www.isbt128.org/uri/MPHOUniqueIdentifier"^^xsd:anyURI ;
+       fhir:l <https://www.isbt128.org/uri/MPHOUniqueIdentifier>
+     ] ;
+     fhir:value [ fhir:v "A9999E0398A999921123456A00000" ]
+  ] ) ; # 
+  fhir:biologicalSourceEvent [
+     fhir:system [
+       fhir:v "https://www.isbt128.org/uri/DonationIdentificationNumber"^^xsd:anyURI ;
+       fhir:l <https://www.isbt128.org/uri/DonationIdentificationNumber>
+     ] ;
+     fhir:value [ fhir:v "A999921123456" ]
+  ] ; # 
+  fhir:processingFacility ( [
+     fhir:l <http://hl7.org/fhir/Organization/example> ;
+     fhir:reference [ fhir:v "Organization/example" ]
+  ] ) ; # 
+  fhir:division [ fhir:v "A00000"] ; # 
+  fhir:productStatus [
+     fhir:code [ fhir:v "available" ]
+  ] ; # 
+  fhir:expirationDate [ fhir:v "2021-08-02T23:59:00-05:00"^^xsd:dateTime] ; # 
+  fhir:storageTempRequirements [
+     fhir:low [
+       fhir:value [ fhir:v "1"^^xsd:decimal ] ;
+       fhir:unit [ fhir:v "degrees C" ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ]
+     ] ;
+     fhir:high [
+       fhir:value [ fhir:v "6"^^xsd:decimal ] ;
+       fhir:unit [ fhir:v "degrees C" ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ]
+     ]
+  ] ; # 
+  fhir:property ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:code [ fhir:v "ABORhD" ]
+       ] )
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://www.isbt128.org/uri/ABORhD"^^xsd:anyURI ;
+           fhir:l <https://www.isbt128.org/uri/ABORhD>
+         ] ;
+         fhir:code [ fhir:v "62" ] ;
+         fhir:display [ fhir:v "A RhD Positive" ]
+       ] )
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:code [ fhir:v "Donor" ]
+       ] )
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://www.isbt128.org/uri/CollectionType"^^xsd:anyURI ;
+           fhir:l <https://www.isbt128.org/uri/CollectionType>
+         ] ;
+         fhir:code [ fhir:v "V" ] ;
+         fhir:display [ fhir:v "Volunteer" ]
+       ] )
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Organization/example> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

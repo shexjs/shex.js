@@ -1,0 +1,61 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Encounter/xcda> a fhir:Encounter ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "xcda"] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:system [
+       fhir:v "http://healthcare.example.org/identifiers/enocunter"^^xsd:anyURI ;
+       fhir:l <http://healthcare.example.org/identifiers/enocunter>
+     ] ;
+     fhir:value [ fhir:v "1234213.52345873" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:class ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+       ] ;
+       fhir:code [ fhir:v "AMB" ] ;
+       fhir:display [ fhir:v "ambulatory" ] # outpatient
+     ] )
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/xcda> ;
+     fhir:reference [ fhir:v "Patient/xcda" ]
+  ] ; # 
+  fhir:participant ( [
+     fhir:actor [
+       fhir:l <http://hl7.org/fhir/Practitioner/xcda1> ;
+       fhir:reference [ fhir:v "Practitioner/xcda1" ]
+     ]
+  ] ) ; # 
+  fhir:reason ( [
+     fhir:value ( [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://ihe.net/xds/connectathon/eventCodes"^^xsd:anyURI ;
+             fhir:l <http://ihe.net/xds/connectathon/eventCodes>
+           ] ;
+           fhir:code [ fhir:v "T-D8200" ] ;
+           fhir:display [ fhir:v "Arm" ]
+         ] )
+       ]
+     ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/xcda> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/xcda1> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

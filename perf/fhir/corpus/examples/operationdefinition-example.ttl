@@ -1,0 +1,123 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/OperationDefinition/example> a fhir:OperationDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/OperationDefinition/example"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/OperationDefinition/example>
+  ] ; # 
+  fhir:version [ fhir:v "B"] ; # 
+  fhir:name [ fhir:v "PopulateQuestionnaire"] ; # 
+  fhir:title [ fhir:v "Populate Questionnaire"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:kind [ fhir:v "operation"] ; # 
+  fhir:date [ fhir:v "2015-08-04"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Limited implementation of the Populate Questionnaire implementation"] ; # 
+  fhir:useContext ( [
+     fhir:code [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/usage-context-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/usage-context-type>
+       ] ;
+       fhir:code [ fhir:v "venue" ] ;
+       fhir:display [ fhir:v "Clinical Venue" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+         ] ;
+         fhir:code [ fhir:v "IMP" ] ;
+         fhir:display [ fhir:v "inpatient encounter" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "urn:iso:std:iso:3166"^^xsd:anyURI ;
+         fhir:l <urn:iso:std:iso:3166>
+       ] ;
+       fhir:code [ fhir:v "GB" ] ;
+       fhir:display [ fhir:v "United Kingdom of Great Britain and Northern Ireland" ]
+     ] )
+  ] ) ; # 
+  fhir:code [ fhir:v "populate"] ; # 
+  fhir:comment [ fhir:v "Only implemented for Labs and Medications so far"] ; # 
+  fhir:base [
+     fhir:v "http://hl7.org/fhir/OperationDefinition/Questionnaire-populate"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/OperationDefinition/Questionnaire-populate>
+  ] ; # 
+  fhir:resource ( [
+     fhir:v "Questionnaire"^^xsd:anyURI ;
+     fhir:l fhir:Questionnaire
+  ] ) ; # 
+  fhir:system [ fhir:v false] ; # 
+  fhir:type [ fhir:v false] ; # 
+  fhir:instance [ fhir:v true] ; # 
+  fhir:parameter ( [
+     fhir:name [ fhir:v "subject" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "1"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The resource that is to be the *QuestionnaireResponse.subject*. The [[[QuestionnaireResponse]]]      instance will reference the provided subject.  In addition, if the *local* parameter is      set to true, server information about the specified subject will be used to populate the      instance." ] ;
+     fhir:type [
+       fhir:v "Reference"^^xsd:anyURI ;
+       fhir:l fhir:Reference
+     ]
+  ] [
+     fhir:name [ fhir:v "local" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "If the *local* parameter is set to true, server information about the specified subject will be used to populate the instance." ] ;
+     fhir:type [
+       fhir:v "Reference"^^xsd:anyURI ;
+       fhir:l fhir:Reference
+     ]
+  ] [
+     fhir:name [ fhir:v "return" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "1"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The partially (or fully)-populated set of answers for the specified Questionnaire" ] ;
+     fhir:type [
+       fhir:v "QuestionnaireResponse"^^xsd:anyURI ;
+       fhir:l fhir:QuestionnaireResponse
+     ]
+  ] ) ; # 
+  fhir:overload ( [
+     fhir:parameterName ( [ fhir:v "subject" ] [ fhir:v "local" ] )
+  ] [
+     fhir:parameterName ( [ fhir:v "subject" ] ) ;
+     fhir:comment [ fhir:v "local defaults to false when not passed as a parameter" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

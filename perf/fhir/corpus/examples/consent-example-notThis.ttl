@@ -1,0 +1,68 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Consent/consent-example-notThis> a fhir:Consent ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "consent-example-notThis"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p>The following scenario is based on existing jurisdictional policy and are realized in existing systems in Canada. \n	      The default policy is one of implied consent for the provision of care, so these scenarios all deal with withdrawal or withholding consent for that purpose. \n	       Withhold or withdraw consent for disclosure of a specific record (e.g. Lab Order/Result) \n      </p>\n      <p>\n    Patient \"Donal D DUCK\"'s Primary Care Provider, Dr. Philip Primary, has ordered a set of lab test which Adam \n   wishes to keep as private as possible.  At the sample collection facility, he indicates that he would \n   like withhold consent to disclose the order and all results associated with that specific order from \n   all other providers  \n      </p>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:category ( [
+     a loinc:59284-0 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "59284-0" ]
+     ] )
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/f001> ;
+     fhir:reference [ fhir:v "Patient/f001" ] ;
+     fhir:display [ fhir:v "P. van de Heuvel" ]
+  ] ; # 
+  fhir:date [ fhir:v "2018-12-28"^^xsd:date] ; # 
+  fhir:controller ( [
+     fhir:l <http://hl7.org/fhir/Organization/f001> ;
+     fhir:reference [ fhir:v "Organization/f001" ]
+  ] ) ; # 
+  fhir:sourceAttachment ( [
+     fhir:title [ fhir:v "The terms of the consent in lawyer speak." ]
+  ] ) ; # likely use url pointer to common text
+  fhir:regulatoryBasis ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+       ] ;
+       fhir:code [ fhir:v "INFA" ]
+     ] )
+  ] ) ; # 
+  fhir:decision [ fhir:v "permit"] ; # 
+  fhir:provision ( [
+     fhir:data ( [
+       fhir:meaning [ fhir:v "related" ] ;
+       fhir:reference [
+         fhir:l <http://hl7.org/fhir/MedicationRequest/medrx0305> ;
+         fhir:reference [ fhir:v "MedicationRequest/medrx0305" ]
+       ]
+     ] )
+  ] ) . # this is opt-in - e.g. everything approved unless otherwise stated
+
+<http://hl7.org/fhir/Patient/f001> a fhir:Patient .
+
+<http://hl7.org/fhir/Organization/f001> a fhir:Organization .
+
+<http://hl7.org/fhir/MedicationRequest/medrx0305> a fhir:MedicationRequest .
+
+# -------------------------------------------------------------------------------------
+

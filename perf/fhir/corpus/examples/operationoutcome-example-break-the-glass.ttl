@@ -1,0 +1,37 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/OperationOutcome/break-the-glass> a fhir:OperationOutcome ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "break-the-glass"] ; # :md: 
+#This is an example of an operation outcome that would be returned
+#as part of a set of search results (e.g. in the bundle with search.mode = outcome)
+#to indicate that additional results may be available using the break-the-glass
+#protocol. The correct use of this is discussed on the [security labels](security-labels.html#break-the-glass) page
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p>Additional information may be available using the Break-The-Glass Protocol</p>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:issue ( [
+     fhir:severity [ fhir:v "information" ] ;
+     fhir:code [ fhir:v "suppressed" ] ;
+     fhir:details [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActReason"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActReason>
+         ] ;
+         fhir:code [ fhir:v "BTG" ] ;
+         fhir:display [ fhir:v "Break the glass" ]
+       ] ) ; # this is not really the right code; it's being used at cross -purposes to its definition.\n        todo: get a more correct concept defined
+       fhir:text [ fhir:v "Additional information may be available using the Break-The-Glass Protocol" ]
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

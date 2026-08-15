@@ -1,0 +1,114 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# This is a silly exmple showing how Basic could be used to convey a UML diagram.  It is extremely
+#unlikely anyone would ever use FHIR to do this.  (XMI is not *that* unpleasant :>).  However, it shows
+#how somewhat esoteric requirements that won't ever be supported by the core FHIR specification can still
+#be managed in a conformant manner.
+
+<http://hl7.org/fhir/Basic/classModel> a fhir:Basic ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "classModel"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p><b>Class1</b></p>\n      <ul>\n        <li>Attribute1: 1..*</li>\n        <li>Attribute2: 0..1</li>\n      </ul>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://example.org/do-not-use/fhir-extensions/UMLclass"^^xsd:anyURI ;
+       fhir:l <http://example.org/do-not-use/fhir-extensions/UMLclass>
+     ] ;
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "name"^^xsd:anyURI ;
+         fhir:l fhir:name
+       ] ;
+       fhir:value [
+         a fhir:String ;
+         fhir:v "Class1"
+       ]
+     ] [
+       fhir:url [
+         fhir:v "attribute"^^xsd:anyURI ;
+         fhir:l fhir:attribute
+       ] ;
+       fhir:extension ( [
+         fhir:url [
+           fhir:v "name"^^xsd:anyURI ;
+           fhir:l fhir:name
+         ] ;
+         fhir:value [
+           a fhir:String ;
+           fhir:v "attribute1"
+         ]
+       ] [
+         fhir:url [
+           fhir:v "minOccurs"^^xsd:anyURI ;
+           fhir:l fhir:minOccurs
+         ] ;
+         fhir:value [
+           a fhir:Integer ;
+           fhir:v 1
+         ]
+       ] [
+         fhir:url [
+           fhir:v "maxOccurs"^^xsd:anyURI ;
+           fhir:l fhir:maxOccurs
+         ] ;
+         fhir:value [
+           a fhir:Code ;
+           fhir:v "*"
+         ]
+       ] )
+     ] [
+       fhir:url [
+         fhir:v "attribute"^^xsd:anyURI ;
+         fhir:l fhir:attribute
+       ] ;
+       fhir:extension ( [
+         fhir:url [
+           fhir:v "name"^^xsd:anyURI ;
+           fhir:l fhir:name
+         ] ;
+         fhir:value [
+           a fhir:String ;
+           fhir:v "attribute2"
+         ]
+       ] [
+         fhir:url [
+           fhir:v "minOccurs"^^xsd:anyURI ;
+           fhir:l fhir:minOccurs
+         ] ;
+         fhir:value [
+           a fhir:Integer ;
+           fhir:v 0
+         ]
+       ] [
+         fhir:url [
+           fhir:v "maxOccurs"^^xsd:anyURI ;
+           fhir:l fhir:maxOccurs
+         ] ;
+         fhir:value [
+           a fhir:Integer ;
+           fhir:v 1
+         ]
+       ] )
+     ] )
+  ] ) ; # 
+  fhir:code [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.org/do-not-use/fhir-codes#resourceTypes"^^xsd:anyURI ;
+         fhir:l <http://example.org/do-not-use/fhir-codes#resourceTypes>
+       ] ;
+       fhir:code [ fhir:v "UMLCLASSMODEL" ]
+     ] )
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

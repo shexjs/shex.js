@@ -1,0 +1,49 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/OrganizationAffiliation/orgrole2> a fhir:OrganizationAffiliation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "orgrole2"] ; # describes the relationship between Monument HIE and Founding Fathers Memorial Hospital. Founding Fathers is a member of the HIE
+  fhir:identifier ( [
+     fhir:use [ fhir:v "secondary" ] ; # internal business ID for Founding Fathers Memorial Hospital assigned by Monument HIE
+     fhir:type [
+       fhir:text [ fhir:v "member hospital" ]
+     ] ;
+     fhir:system [
+       fhir:v "http://example.org/www.monumentHIE.com"^^xsd:anyURI ;
+       fhir:l <http://example.org/www.monumentHIE.com>
+     ] ;
+     fhir:value [ fhir:v "hosp32" ] ;
+     fhir:assigner [
+       fhir:display [ fhir:v "Monument Health Information Exchange" ] # <reference value=\"http:\/\/hl7.org\/fhir\/ig\/vhdir\/Organization\/monumentHIE\"\/>
+     ]
+  ] ) ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:organization [
+     fhir:display [ fhir:v "Monument Health Information Exchange" ] # Reference to the resource describing the HIE, <reference value=\"http:\/\/hl7.org\/fhir\/ig\/vhdir\/Organization\/monumentHIE\"\/>
+  ] ; # this record is active
+  fhir:participatingOrganization [
+     fhir:display [ fhir:v "Founding Fathers Memorial Hospital" ] # Founding Fathers participates in the HIE, <reference value=\"http:\/\/hl7.org\/fhir\/ig\/vhdir\/Organization\/foundingfathers\"\/>
+  ] ; # 
+  fhir:code ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/organization-role"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/organization-role>
+       ] ;
+       fhir:code [ fhir:v "member" ] ;
+       fhir:display [ fhir:v "Member" ]
+     ] ) ; # Founding Fathers is a member of the HIE
+     fhir:text [ fhir:v "Hospital member" ]
+  ] ) ; # 
+  fhir:endpoint ( [
+     fhir:display [ fhir:v "Founding Fathers Memorial Hospital HIE endpoint" ] # Reference to the endpoint for sending data to Founding Fathers through the HIE, <reference value=\"http:\/\/hl7.org\/fhir\/ig\/vhdir\/Endpoint\/foundingfathersHIE\"\/>
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

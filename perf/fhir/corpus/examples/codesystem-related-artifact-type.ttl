@@ -1,0 +1,127 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/related-artifact-type> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "related-artifact-type"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem related-artifact-type</b></p><a name=\"related-artifact-type\"> </a><a name=\"hcrelated-artifact-type\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/related-artifact-type</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">documentation<a name=\"related-artifact-type-documentation\"> </a></td><td>Documentation</td><td>Additional documentation for the knowledge resource. This would include additional instructions on usage as well as additional information on clinical context or appropriateness.</td></tr><tr><td style=\"white-space:nowrap\">justification<a name=\"related-artifact-type-justification\"> </a></td><td>Justification</td><td>The target artifact is a summary of the justification for the knowledge resource including supporting evidence, relevant guidelines, or other clinically important information. This information is intended to provide a way to make the justification for the knowledge resource available to the consumer of interventions or results produced by the knowledge resource.</td></tr><tr><td style=\"white-space:nowrap\">citation<a name=\"related-artifact-type-citation\"> </a></td><td>Citation</td><td>Bibliographic citation for papers, references, or other relevant material for the knowledge resource. This is intended to allow for citation of related material, but that was not necessarily specifically prepared in connection with this knowledge resource.</td></tr><tr><td style=\"white-space:nowrap\">predecessor<a name=\"related-artifact-type-predecessor\"> </a></td><td>Predecessor</td><td>The previous version of the knowledge artifact, used to establish an ordering of versions of an artifact, independent of the status of each version.</td></tr><tr><td style=\"white-space:nowrap\">successor<a name=\"related-artifact-type-successor\"> </a></td><td>Successor</td><td>The subsequent version of the knowledge artfact, used to establish an ordering of versions of an artifact, independent of the status of each version.</td></tr><tr><td style=\"white-space:nowrap\">derived-from<a name=\"related-artifact-type-derived-from\"> </a></td><td>Derived From</td><td>This artifact is derived from the target artifact. This is intended to capture the relationship in which a particular knowledge resource is based on the content of another artifact, but is modified to capture either a different set of overall requirements, or a more specific set of requirements such as those involved in a particular institution or clinical setting. The artifact may be derived from one or more target artifacts.</td></tr><tr><td style=\"white-space:nowrap\">depends-on<a name=\"related-artifact-type-depends-on\"> </a></td><td>Depends On</td><td>This artifact depends on the target artifact. There is a requirement to use the target artifact in the creation or interpretation of this artifact.</td></tr><tr><td style=\"white-space:nowrap\">composed-of<a name=\"related-artifact-type-composed-of\"> </a></td><td>Composed Of</td><td>This artifact is composed of the target artifact. This artifact is constructed with the target artifact as a component. The target artifact is a part of this artifact. (A dataset is composed of data.).</td></tr><tr><td style=\"white-space:nowrap\">part-of<a name=\"related-artifact-type-part-of\"> </a></td><td>Part Of</td><td>This artifact is a part of the target artifact. The target artifact is composed of this artifact (and possibly other artifacts).</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/related-artifact-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/related-artifact-type>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.100" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "RelatedArtifactType"] ; # 
+  fhir:title [ fhir:v "RelatedArtifactType"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "The type of relationship to the related artifact."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/related-artifact-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/related-artifact-type>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "documentation" ] ;
+     fhir:display [ fhir:v "Documentation" ] ;
+     fhir:definition [ fhir:v "Additional documentation for the knowledge resource. This would include additional instructions on usage as well as additional information on clinical context or appropriateness." ]
+  ] [
+     fhir:code [ fhir:v "justification" ] ;
+     fhir:display [ fhir:v "Justification" ] ;
+     fhir:definition [ fhir:v "The target artifact is a summary of the justification for the knowledge resource including supporting evidence, relevant guidelines, or other clinically important information. This information is intended to provide a way to make the justification for the knowledge resource available to the consumer of interventions or results produced by the knowledge resource." ]
+  ] [
+     fhir:code [ fhir:v "citation" ] ;
+     fhir:display [ fhir:v "Citation" ] ;
+     fhir:definition [ fhir:v "Bibliographic citation for papers, references, or other relevant material for the knowledge resource. This is intended to allow for citation of related material, but that was not necessarily specifically prepared in connection with this knowledge resource." ]
+  ] [
+     fhir:code [ fhir:v "predecessor" ] ;
+     fhir:display [ fhir:v "Predecessor" ] ;
+     fhir:definition [ fhir:v "The previous version of the knowledge artifact, used to establish an ordering of versions of an artifact, independent of the status of each version." ]
+  ] [
+     fhir:code [ fhir:v "successor" ] ;
+     fhir:display [ fhir:v "Successor" ] ;
+     fhir:definition [ fhir:v "The subsequent version of the knowledge artfact, used to establish an ordering of versions of an artifact, independent of the status of each version." ]
+  ] [
+     fhir:code [ fhir:v "derived-from" ] ;
+     fhir:display [ fhir:v "Derived From" ] ;
+     fhir:definition [ fhir:v "This artifact is derived from the target artifact. This is intended to capture the relationship in which a particular knowledge resource is based on the content of another artifact, but is modified to capture either a different set of overall requirements, or a more specific set of requirements such as those involved in a particular institution or clinical setting. The artifact may be derived from one or more target artifacts." ]
+  ] [
+     fhir:code [ fhir:v "depends-on" ] ;
+     fhir:display [ fhir:v "Depends On" ] ;
+     fhir:definition [ fhir:v "This artifact depends on the target artifact. There is a requirement to use the target artifact in the creation or interpretation of this artifact." ]
+  ] [
+     fhir:code [ fhir:v "composed-of" ] ;
+     fhir:display [ fhir:v "Composed Of" ] ;
+     fhir:definition [ fhir:v "This artifact is composed of the target artifact. This artifact is constructed with the target artifact as a component. The target artifact is a part of this artifact. (A dataset is composed of data.)." ]
+  ] [
+     fhir:code [ fhir:v "part-of" ] ;
+     fhir:display [ fhir:v "Part Of" ] ;
+     fhir:definition [ fhir:v "This artifact is a part of the target artifact. The target artifact is composed of this artifact (and possibly other artifacts)." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

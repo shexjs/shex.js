@@ -1,0 +1,165 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/PlanDefinition/plandefinition-predecessor-example> a fhir:PlanDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "plandefinition-predecessor-example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Id: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">PlanDefinition/zika-virus-intervention-initial</td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Identifier: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  \n            <b>value: </b>\n                  \n            <span>zika-virus-intervention</span>\n               \n          </td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Title: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">Example Zika Virus Intervention</td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Status: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">active</td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Description: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">Zika Virus Management intervention describing the CDC Guidelines for Zika Virus Reporting and Management.</td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Topic: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  \n            <span>\n                     \n              <b>text: </b>\n                     \n              <span>Zika Virus Management</span>\n                  \n            </span>\n               \n          </td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Library: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  \n            <b>reference: </b>\n                  \n            <span>Library/zika-virus-intervention-logic</span>\n               \n          </td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <h2>Actions</h2>\n         \n      <p style=\"width: 100%;\" class=\"hierarchy\">\n            \n        <span>\n               \n          <b>Step: </b>\n               \n          <br/>\n               \n          <span style=\"padding-left: 25px;\">\n                  \n            <b>title: </b>\n                  \n            <span>Zika Virus Assessment</span>\n                  \n            <br/>\n               \n          </span>\n               \n          <span style=\"padding-left: 25px;\">\n                  \n            <b>condition: </b>\n                  \n            <br/>\n                  \n            <span style=\"padding-left: 50px;\">\n                     \n              <b>type: </b>\n                     \n              <span>applicability</span>\n                     \n              <br/>\n                  \n            </span>\n                  \n            <span style=\"padding-left: 50px;\">\n                     \n              <b>expression: </b>\n                     \n              <span>Is Patient Pregnant</span>\n                     \n              <br/>\n                  \n            </span>\n               \n          </span>\n               \n          <span style=\"padding-left: 25px;\">\n                  \n            <span>\n                     \n              <b>Step: </b>\n                     \n              <br/>\n                     \n              <span style=\"padding-left: 50px;\">\n                        \n                <b>condition: </b>\n                        \n                <br/>\n                        \n                <span style=\"padding-left: 75px;\">\n                           \n                  <b>type: </b>\n                           \n                  <span>applicability</span>\n                           \n                  <br/>\n                        \n                </span>\n                        \n                <span style=\"padding-left: 75px;\">\n                           \n                  <b>expression: </b>\n                           \n                  <span>Should Administer Zika Virus Exposure Assessment</span>\n                           \n                  <br/>\n                        \n                </span>\n                     \n              </span>\n                     \n              <span style=\"padding-left: 50px;\">\n                        \n                <b>condition: </b>\n                        \n                <br/>\n                        \n                <span style=\"padding-left: 75px;\">\n                           \n                  <b>reference: </b>\n                           \n                  <br/>\n                           \n                  <span style=\"padding-left: 100px;\">#administer-zika-virus-exposure-assessment</span>\n                           \n                  <br/>\n                           \n                  <span>\n							 \n                    <span style=\"padding-left: 75px;\">\n								\n                      <b>description: </b>\n								\n                      <span>Administer Zika Virus Exposure Assessment</span>\n								\n                      <br/>\n							 \n                    </span>\n							 \n                    <span style=\"padding-left: 75px;\">\n								\n                      <b>category: </b>\n								\n                      <span>procedure</span>\n								\n                      <br/>\n							 \n                    </span>\n                           \n                  </span>\n                        \n                </span>\n                     \n              </span>\n                     \n              <span style=\"padding-left: 50px;\"/>\n                  \n            </span>\n                  \n            <span>\n                     \n              <b>Step: </b>\n                     \n              <br/>\n                     \n              <span style=\"padding-left: 75px;\">\n                        \n                <b>condition: </b>\n                        \n                <br/>\n                        \n                <span style=\"padding-left: 100px;\">\n                           \n                  <b>type: </b>\n                           \n                  <span>applicability</span>\n                           \n                  <br/>\n                        \n                </span>\n                        \n                <span style=\"padding-left: 100px;\">\n                           \n                  <b>expression: </b>\n                           \n                  <span>Should Order Serum + Urine rRT-PCR Test</span>\n                           \n                  <br/>\n                        \n                </span>\n                     \n              </span>\n                     \n              <span style=\"padding-left: 75px;\">\n                        \n                <b>condition: </b>\n                        \n                <br/>\n                        \n                <span style=\"padding-left: 100px;\">\n                           \n                  <b>reference: </b>\n                           \n                  <br/>\n                           \n                  <span style=\"padding-left: 125px;\">ActivityDefinition/order-serum-urine-rrt-pcr-test</span>\n                           \n                  <br/>\n                        \n                </span>\n                     \n              </span>\n                     \n              <span style=\"padding-left: 50px;\"/>\n                  \n            </span>\n                  \n            <span>\n                     \n              <b>Step: </b>\n                     \n              <br/>\n                     \n              <span style=\"padding-left: 75px;\">\n                        \n                <b>condition: </b>\n                        \n                <br/>\n                        \n                <span style=\"padding-left: 100px;\">\n                           \n                  <b>type: </b>\n                           \n                  <span>applicability</span>\n                           \n                  <br/>\n                        \n                </span>\n                        \n                <span style=\"padding-left: 100px;\">\n                           \n                  <b>expression: </b>\n                           \n                  <span>Should Order Serum Zika Virus IgM + Dengue Virus IgM</span>\n                           \n                  <br/>\n                        \n                </span>\n                     \n              </span>\n                     \n              <span style=\"padding-left: 75px;\">\n                        \n                <b>condition: </b>\n                        \n                <br/>\n                        \n                <span style=\"padding-left: 100px;\">\n                           \n                  <b>reference: </b>\n                           \n                  <br/>\n                           \n                  <span style=\"padding-left: 125px;\">#order-serum-zika-dengue-virus-igm</span>\n                           \n                  <br/>\n                           \n                  <span>\n                              \n                    <span style=\"padding-left: 50px;\">\n                                 \n                      <span style=\"padding-left: 50px;\">\n                                    \n                        <b>description: </b>\n                                    \n                        <span>Order Serum Zika and Dengue Virus IgM</span>\n                                    \n                        <br/>\n                                 \n                      </span>\n                                 \n                      <span style=\"padding-left: 75px;\">\n                                    \n                        <b>related:</b>\n                                    \n                        <br/>\n                                    \n                        <span style=\"padding-left: 100px;\">\n                                       \n                          <b>type: </b>\n                                       \n                          <span>documentation</span>\n                                       \n                          <br/>\n                                    \n                        </span>\n                                    \n                        <span style=\"padding-left: 100px;\">\n                                       \n                          <b>display: </b>\n                                       \n                          <span>Explanation of diagnostic tests for Zika virus and which to use based on the patients clinical and exposure history.</span>\n                                       \n                          <br/>\n                                    \n                        </span>\n                                 \n                      </span>\n                                 \n                      <span style=\"padding-left: 100px;\">\n                                    \n                        <b>category: </b>\n                                    \n                        <span>diagnostic</span>\n                                    \n                        <br/>\n                                 \n                      </span>\n                              \n                    </span>\n                           \n                  </span>\n                           \n                  <span/>\n                        \n                </span>\n                     \n              </span>\n                     \n              <span style=\"padding-left: 50px;\"/>\n                  \n            </span>\n                  \n            <span>\n                     \n              <b>Step: </b>\n                     \n              <br/>\n                     \n              <span style=\"padding-left: 75px;\">\n                        \n                <b>condition: </b>\n                        \n                <br/>\n                        \n                <span style=\"padding-left: 100px;\">\n                           \n                  <b>type: </b>\n                           \n                  <span>applicability</span>\n                           \n                  <br/>\n                        \n                </span>\n                        \n                <span style=\"padding-left: 100px;\">\n                           \n                  <b>expression: </b>\n                           \n                  <span>Should Consider IgM Antibody Testing</span>\n                           \n                  <br/>\n                        \n                </span>\n                     \n              </span>\n                     \n              <span style=\"padding-left: 75px;\">\n                        \n                <b>condition: </b>\n                        \n                <br/>\n                        \n                <span style=\"padding-left: 100px;\">\n                           \n                  <b>reference: </b>\n                           \n                  <br/>\n                           \n                  <span style=\"padding-left: 125px;\">ActivityDefinition/consider-igm-antibody-testing</span>\n                           \n                  <br/>\n                        \n                </span>\n                     \n              </span>\n                     \n              <span style=\"padding-left: 50px;\"/>\n                  \n            </span>\n                  \n            <span>\n                     \n              <b>Step: </b>\n                     \n              <br/>\n                     \n              <span style=\"padding-left: 75px;\">\n                        \n                <b>condition: </b>\n                        \n                <br/>\n                        \n                <span style=\"padding-left: 100px;\">\n                           \n                  <b>type: </b>\n                           \n                  <span>applicability</span>\n                           \n                  <br/>\n                        \n                </span>\n                        \n                <span style=\"padding-left: 100px;\">\n                           \n                  <b>expression: </b>\n                           \n                  <span>Should Provide Mosquito Prevention and Contraception Advice</span>\n                           \n                  <br/>\n                        \n                </span>\n                     \n              </span>\n                     \n              <span style=\"padding-left: 50px;\">\n                        \n                <span>\n                           \n                  <b>Step: </b>\n                           \n                  <br/>\n                           \n                  <span style=\"padding-left: 75px;\">\n                              \n                    <b>condition: </b>\n                              \n                    <br/>\n                              \n                    <span style=\"padding-left: 100px;\">\n                                 \n                      <b>reference: </b>\n                                 \n                      <br/>\n                                 \n                      <span style=\"padding-left: 125px;\">#provide-mosquito-prevention-advice</span>\n                                 \n                      <span>\n                                    \n                        <span style=\"padding-left: 75px;\">\n                                       \n                          <br/>\n                                       \n                          <span style=\"padding-left: 100px;\">\n                                          \n                            <b>description: </b>\n                                          \n                            <span>Provide mosquito prevention advice</span>\n                                          \n                            <br/>\n                                       \n                          </span>\n                                       \n                          <span style=\"padding-left: 75px;\">\n                                          \n                            <b>related:</b>\n                                          \n                            <br/>\n                                          \n                            <span style=\"padding-left: 100px;\">\n                                             \n                              <b>type: </b>\n                                             \n                              <span>documentation</span>\n                                             \n                              <br/>\n                                          \n                            </span>\n                                          \n                            <span style=\"padding-left: 100px;\">\n                                             \n                              <b>display: </b>\n                                             \n                              <span>Advice for patients about how to avoid Mosquito bites.</span>\n                                             \n                              <br/>\n                                          \n                            </span>\n                                       \n                          </span>\n                                       \n                          <span style=\"padding-left: 75px;\">\n                                          \n                            <b>related:</b>\n                                          \n                            <br/>\n                                          \n                            <span style=\"padding-left: 100px;\">\n                                             \n                              <b>type: </b>\n                                             \n                              <span>documentation</span>\n                                             \n                              <br/>\n                                          \n                            </span>\n                                          \n                            <span style=\"padding-left: 100px;\">\n                                             \n                              <b>display: </b>\n                                             \n                              <span>Advice for patients about which mosquito repellents are effective and safe to use in pregnancy. [DEET, IF3535 and Picardin are safe during]</span>\n                                             \n                              <br/>\n                                          \n                            </span>\n                                       \n                          </span>\n                                       \n                          <span style=\"padding-left: 100px;\">\n                                          \n                            <b>category: </b>\n                                          \n                            <span>communication</span>\n                                          \n                            <br/>\n                                       \n                          </span>\n                                    \n                        </span>\n                                 \n                      </span>\n                              \n                    </span>\n                           \n                  </span>\n                           \n                  <span style=\"padding-left: 75px;\"/>\n                        \n                </span>\n                        \n                <span>\n                           \n                  <b>Step: </b>\n                           \n                  <br/>\n                           \n                  <span style=\"padding-left: 75px;\">\n                              \n                    <b>condition: </b>\n                              \n                    <br/>\n                              \n                    <span style=\"padding-left: 100px;\">\n                                 \n                      <b>reference: </b>\n                                 \n                      <br/>\n                                 \n                      <span style=\"padding-left: 125px;\">ActivityDefinition/provide-contraception-advice</span>\n                                 \n                      <br/>\n                              \n                    </span>\n                           \n                  </span>\n                        \n                </span>\n                     \n              </span>\n                  \n            </span>\n               \n          </span>\n            \n        </span>\n         \n      </p>\n      \n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://example.org/PlanDefinition/plandefinition-predecessor-example"^^xsd:anyURI ;
+     fhir:l <http://example.org/PlanDefinition/plandefinition-predecessor-example>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.11.9" ]
+  ] [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:value [ fhir:v "plandefinition-predecessor-example" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "1.0.0"] ; # 
+  fhir:name [ fhir:v "ExampleZikaVirusIntervention"] ; # 
+  fhir:title [ fhir:v "Example Zika Virus Intervention"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:date [ fhir:v "2016-11-14"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Decision Support"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/dss" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Zika Virus Management intervention describing the CDC Guidelines for Zika Virus Reporting and Management."] ; # 
+  fhir:topic ( [
+     fhir:text [ fhir:v "Zika Virus Management" ]
+  ] ) ; # 
+  fhir:relatedArtifact ( [
+     fhir:type [ fhir:v "derived-from" ] ;
+     fhir:document [
+       fhir:url [
+         fhir:v "https://www.cdc.gov/mmwr/volumes/65/wr/mm6539e1.htm?s_cid=mm6539e1_w"^^xsd:anyURI ;
+         fhir:l <https://www.cdc.gov/mmwr/volumes/65/wr/mm6539e1.htm?s_cid=mm6539e1_w>
+       ]
+     ]
+  ] [
+     fhir:type [ fhir:v "successor" ] ;
+     fhir:resource [
+       fhir:v "http://example.org/fhir/PlanDefinition/zika-virus-intervention"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/PlanDefinition/zika-virus-intervention>
+     ]
+  ] ) ; # 
+  fhir:library ( [
+     fhir:v "http://example.org/fhir/Library/zika-virus-intervention-logic"^^xsd:anyURI ;
+     fhir:l <http://example.org/fhir/Library/zika-virus-intervention-logic>
+  ] ) ; # 
+  fhir:action ( [
+     fhir:title [ fhir:v "Zika Virus Assessment" ] ;
+     fhir:trigger ( [
+       fhir:type [ fhir:v "named-event" ] ;
+       fhir:name [ fhir:v "patient-view" ]
+     ] ) ;
+     fhir:condition ( [
+       fhir:kind [ fhir:v "applicability" ] ;
+       fhir:expression [
+         fhir:language [ fhir:v "text/cql-identifier" ] ;
+         fhir:expression [ fhir:v "Is Patient Pregnant" ]
+       ]
+     ] ) ;
+     fhir:action ( [
+       fhir:condition ( [
+         fhir:kind [ fhir:v "applicability" ] ;
+         fhir:expression [
+           fhir:language [ fhir:v "text/cql-identifier" ] ;
+           fhir:expression [ fhir:v "Should Administer Zika Virus Exposure Assessment" ]
+         ]
+       ] ) ;
+       fhir:definition [
+         a fhir:Canonical ;
+         fhir:v "http://example.org/fhir/ActivityDefinition/administer-zika-virus-exposure-assessment"^^xsd:anyURI ;
+         fhir:l <http://example.org/fhir/ActivityDefinition/administer-zika-virus-exposure-assessment>
+       ]
+     ] [
+       fhir:condition ( [
+         fhir:kind [ fhir:v "applicability" ] ;
+         fhir:expression [
+           fhir:language [ fhir:v "text/cql-identifier" ] ;
+           fhir:expression [ fhir:v "Should Order Serum + Urine rRT-PCR Test" ]
+         ]
+       ] ) ;
+       fhir:definition [
+         a fhir:Canonical ;
+         fhir:v "http://example.org/fhir/ActivityDefinition/order-serum-urine-rrt-pcr-test"^^xsd:anyURI ;
+         fhir:l <http://example.org/fhir/ActivityDefinition/order-serum-urine-rrt-pcr-test>
+       ]
+     ] [
+       fhir:condition ( [
+         fhir:kind [ fhir:v "applicability" ] ;
+         fhir:expression [
+           fhir:language [ fhir:v "text/cql-identifier" ] ;
+           fhir:expression [ fhir:v "Should Order Serum Zika Virus IgM + Dengue Virus IgM" ]
+         ]
+       ] ) ;
+       fhir:definition [
+         a fhir:Canonical ;
+         fhir:v "http://example.org/fhir/ActivityDefinition/order-serum-zika-dengue-virus-igm"^^xsd:anyURI ;
+         fhir:l <http://example.org/fhir/ActivityDefinition/order-serum-zika-dengue-virus-igm>
+       ]
+     ] [
+       fhir:condition ( [
+         fhir:kind [ fhir:v "applicability" ] ;
+         fhir:expression [
+           fhir:language [ fhir:v "text/cql-identifier" ] ;
+           fhir:expression [ fhir:v "Should Consider IgM Antibody Testing" ]
+         ]
+       ] ) ;
+       fhir:definition [
+         a fhir:Canonical ;
+         fhir:v "http://example.org/fhir/ActivityDefinition/consider-igm-antibody-testing"^^xsd:anyURI ;
+         fhir:l <http://example.org/fhir/ActivityDefinition/consider-igm-antibody-testing>
+       ]
+     ] [
+       fhir:condition ( [
+         fhir:kind [ fhir:v "applicability" ] ;
+         fhir:expression [
+           fhir:language [ fhir:v "text/cql-identifier" ] ;
+           fhir:expression [ fhir:v "Should Provide Mosquito Prevention and Contraception Advice" ]
+         ]
+       ] ) ;
+       fhir:action ( [
+         fhir:definition [
+           a fhir:Canonical ;
+           fhir:v "http://example.org/fhir/ActivityDefinition/provide-mosquito-prevention-advice"^^xsd:anyURI ;
+           fhir:l <http://example.org/fhir/ActivityDefinition/provide-mosquito-prevention-advice>
+         ]
+       ] [
+         fhir:definition [
+           a fhir:Canonical ;
+           fhir:v "http://example.org/fhir/ActivityDefinition/provide-contraception-advice"^^xsd:anyURI ;
+           fhir:l <http://example.org/fhir/ActivityDefinition/provide-contraception-advice>
+         ]
+       ] )
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

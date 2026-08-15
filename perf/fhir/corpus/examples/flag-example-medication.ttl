@@ -1,0 +1,57 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Flag/medication> a fhir:Flag ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "medication"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Warning: Usage of Oxycodone in the formulary requires special approval before prescription</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:value [ fhir:v "warning-2024-drug-Oxycodone" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/flag-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/flag-category>
+       ] ;
+       fhir:code [ fhir:v "admin" ] ;
+       fhir:display [ fhir:v "Administrative" ]
+     ] ) ;
+     fhir:text [ fhir:v "Administrative" ]
+  ] ) ; # 
+  fhir:code [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.org/local"^^xsd:anyURI ;
+         fhir:l <http://example.org/local>
+       ] ;
+       fhir:code [ fhir:v "special-approval-required" ] ;
+       fhir:display [ fhir:v "Special Approval Required" ]
+     ] ) ;
+     fhir:text [ fhir:v "Usage of Oxycodone requires special approval before prescription." ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Medication/med0310> ;
+     fhir:reference [ fhir:v "Medication/med0310" ] ;
+     fhir:display [ fhir:v "Oxycodone" ]
+  ] ; # 
+  fhir:period [
+     fhir:start [ fhir:v "2024-09-01"^^xsd:date ]
+  ] ; # 
+  fhir:author [
+     fhir:display [ fhir:v "Pharmacy and Therapeutics Co" ]
+  ] . # 
+
+<http://hl7.org/fhir/Medication/med0310> a fhir:Medication .
+
+# -------------------------------------------------------------------------------------
+

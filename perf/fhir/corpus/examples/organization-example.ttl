@@ -1,0 +1,26 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Organization/example> a fhir:Organization ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      ACME Health - generic example\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:name [ fhir:v "ACME Health"] ; # HL7 itself
+  fhir:alias ( [ fhir:v "Example Health Org"] ) ; # 
+  fhir:endpoint ( [
+     fhir:l <http://hl7.org/fhir/Endpoint/example> ;
+     fhir:reference [ fhir:v "Endpoint/example" ] # Endpoint that handles the v2 messaging for the external organization
+  ] ) . # 
+
+<http://hl7.org/fhir/Endpoint/example> a fhir:Endpoint .
+
+# -------------------------------------------------------------------------------------
+

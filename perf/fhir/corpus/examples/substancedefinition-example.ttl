@@ -1,0 +1,132 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/SubstanceDefinition/example> a fhir:SubstanceDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://example.europa.eu/fhir/SMSId"^^xsd:anyURI ;
+       fhir:l <http://example.europa.eu/fhir/SMSId>
+     ] ;
+     fhir:value [ fhir:v "100000099270" ]
+  ] ) ; # 
+  fhir:status [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.europa.eu/fhir/Status"^^xsd:anyURI ;
+         fhir:l <http://example.europa.eu/fhir/Status>
+       ] ;
+       fhir:code [ fhir:v "200000005004" ] ;
+       fhir:display [ fhir:v "Current" ]
+     ] )
+  ] ; # 
+  fhir:classification ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.europa.eu/fhir/SubstanceType"^^xsd:anyURI ;
+         fhir:l <http://example.europa.eu/fhir/SubstanceType>
+       ] ;
+       fhir:code [ fhir:v "100000075670" ] ;
+       fhir:display [ fhir:v "Chemical" ]
+     ] )
+  ] ) ; # 
+  fhir:domain [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.europa.eu/fhir/Domain"^^xsd:anyURI ;
+         fhir:l <http://example.europa.eu/fhir/Domain>
+       ] ;
+       fhir:code [ fhir:v "100000000012" ] ;
+       fhir:display [ fhir:v "Human use" ]
+     ] )
+  ] ; # 
+  fhir:code ( [
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.europa.eu/fhir/Substance"^^xsd:anyURI ;
+           fhir:l <http://example.europa.eu/fhir/Substance>
+         ] ;
+         fhir:code [ fhir:v "SUB99611MIG" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:name [ fhir:v "PARACETAMOL" ] ;
+     fhir:status [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.europa.eu/fhir/Status"^^xsd:anyURI ;
+           fhir:l <http://example.europa.eu/fhir/Status>
+         ] ;
+         fhir:code [ fhir:v "200000005004" ] ;
+         fhir:display [ fhir:v "Current" ]
+       ] )
+     ] ;
+     fhir:preferred [ fhir:v true ] ;
+     fhir:language ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:ietf:bcp:47"^^xsd:anyURI ;
+           fhir:l <urn:ietf:bcp:47>
+         ] ;
+         fhir:code [ fhir:v "en" ] ;
+         fhir:display [ fhir:v "English" ]
+       ] )
+     ] )
+  ] [
+     fhir:name [ fhir:v "ПАРАЦЕТАМОЛ" ] ;
+     fhir:status [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.europa.eu/fhir/Status"^^xsd:anyURI ;
+           fhir:l <http://example.europa.eu/fhir/Status>
+         ] ;
+         fhir:code [ fhir:v "200000005004" ] ;
+         fhir:display [ fhir:v "Current" ]
+       ] )
+     ] ;
+     fhir:preferred [ fhir:v false ] ;
+     fhir:language ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:ietf:bcp:47"^^xsd:anyURI ;
+           fhir:l <urn:ietf:bcp:47>
+         ] ;
+         fhir:code [ fhir:v "bg" ] ;
+         fhir:display [ fhir:v "Bulgarian" ]
+       ] )
+     ] )
+  ] [
+     fhir:name [ fhir:v "ACETAMINOPHEN" ] ;
+     fhir:status [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.europa.eu/fhir/Status"^^xsd:anyURI ;
+           fhir:l <http://example.europa.eu/fhir/Status>
+         ] ;
+         fhir:code [ fhir:v "200000005004" ] ;
+         fhir:display [ fhir:v "Current" ]
+       ] )
+     ] ;
+     fhir:preferred [ fhir:v false ] ;
+     fhir:language ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:ietf:bcp:47"^^xsd:anyURI ;
+           fhir:l <urn:ietf:bcp:47>
+         ] ;
+         fhir:code [ fhir:v "en" ] ;
+         fhir:display [ fhir:v "English" ]
+       ] )
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,227 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/fhir-old-types> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "fhir-old-types"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem fhir-old-types</b></p><a name=\"fhir-old-types\"> </a><a name=\"hcfhir-old-types\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/fhir-old-types</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td></tr><tr><td style=\"white-space:nowrap\">BodySite<a name=\"fhir-old-types-BodySite\"> </a></td></tr><tr><td style=\"white-space:nowrap\">CatalogEntry<a name=\"fhir-old-types-CatalogEntry\"> </a></td></tr><tr><td style=\"white-space:nowrap\">Conformance<a name=\"fhir-old-types-Conformance\"> </a></td></tr><tr><td style=\"white-space:nowrap\">DataElement<a name=\"fhir-old-types-DataElement\"> </a></td></tr><tr><td style=\"white-space:nowrap\">DeviceComponent<a name=\"fhir-old-types-DeviceComponent\"> </a></td></tr><tr><td style=\"white-space:nowrap\">DeviceUseRequest<a name=\"fhir-old-types-DeviceUseRequest\"> </a></td></tr><tr><td style=\"white-space:nowrap\">DeviceUseStatement<a name=\"fhir-old-types-DeviceUseStatement\"> </a></td></tr><tr><td style=\"white-space:nowrap\">DiagnosticOrder<a name=\"fhir-old-types-DiagnosticOrder\"> </a></td></tr><tr><td style=\"white-space:nowrap\">DocumentManifest<a name=\"fhir-old-types-DocumentManifest\"> </a></td></tr><tr><td style=\"white-space:nowrap\">EffectEvidenceSynthesis<a name=\"fhir-old-types-EffectEvidenceSynthesis\"> </a></td></tr><tr><td style=\"white-space:nowrap\">EligibilityRequest<a name=\"fhir-old-types-EligibilityRequest\"> </a></td></tr><tr><td style=\"white-space:nowrap\">EligibilityResponse<a name=\"fhir-old-types-EligibilityResponse\"> </a></td></tr><tr><td style=\"white-space:nowrap\">ExpansionProfile<a name=\"fhir-old-types-ExpansionProfile\"> </a></td></tr><tr><td style=\"white-space:nowrap\">ImagingManifest<a name=\"fhir-old-types-ImagingManifest\"> </a></td></tr><tr><td style=\"white-space:nowrap\">ImagingObjectSelection<a name=\"fhir-old-types-ImagingObjectSelection\"> </a></td></tr><tr><td style=\"white-space:nowrap\">Media<a name=\"fhir-old-types-Media\"> </a></td></tr><tr><td style=\"white-space:nowrap\">MedicationOrder<a name=\"fhir-old-types-MedicationOrder\"> </a></td></tr><tr><td style=\"white-space:nowrap\">MedicationUsage<a name=\"fhir-old-types-MedicationUsage\"> </a></td></tr><tr><td style=\"white-space:nowrap\">MedicinalProduct<a name=\"fhir-old-types-MedicinalProduct\"> </a></td></tr><tr><td style=\"white-space:nowrap\">MedicinalProductAuthorization<a name=\"fhir-old-types-MedicinalProductAuthorization\"> </a></td></tr><tr><td style=\"white-space:nowrap\">MedicinalProductContraindication<a name=\"fhir-old-types-MedicinalProductContraindication\"> </a></td></tr><tr><td style=\"white-space:nowrap\">MedicinalProductIndication<a name=\"fhir-old-types-MedicinalProductIndication\"> </a></td></tr><tr><td style=\"white-space:nowrap\">MedicinalProductIngredient<a name=\"fhir-old-types-MedicinalProductIngredient\"> </a></td></tr><tr><td style=\"white-space:nowrap\">MedicinalProductInteraction<a name=\"fhir-old-types-MedicinalProductInteraction\"> </a></td></tr><tr><td style=\"white-space:nowrap\">MedicinalProductManufactured<a name=\"fhir-old-types-MedicinalProductManufactured\"> </a></td></tr><tr><td style=\"white-space:nowrap\">MedicinalProductPackaged<a name=\"fhir-old-types-MedicinalProductPackaged\"> </a></td></tr><tr><td style=\"white-space:nowrap\">MedicinalProductPharmaceutical<a name=\"fhir-old-types-MedicinalProductPharmaceutical\"> </a></td></tr><tr><td style=\"white-space:nowrap\">MedicinalProductUndesirableEffect<a name=\"fhir-old-types-MedicinalProductUndesirableEffect\"> </a></td></tr><tr><td style=\"white-space:nowrap\">Order<a name=\"fhir-old-types-Order\"> </a></td></tr><tr><td style=\"white-space:nowrap\">OrderResponse<a name=\"fhir-old-types-OrderResponse\"> </a></td></tr><tr><td style=\"white-space:nowrap\">ProcedureRequest<a name=\"fhir-old-types-ProcedureRequest\"> </a></td></tr><tr><td style=\"white-space:nowrap\">ProcessRequest<a name=\"fhir-old-types-ProcessRequest\"> </a></td></tr><tr><td style=\"white-space:nowrap\">ProcessResponse<a name=\"fhir-old-types-ProcessResponse\"> </a></td></tr><tr><td style=\"white-space:nowrap\">ReferralRequest<a name=\"fhir-old-types-ReferralRequest\"> </a></td></tr><tr><td style=\"white-space:nowrap\">RequestGroup<a name=\"fhir-old-types-RequestGroup\"> </a></td></tr><tr><td style=\"white-space:nowrap\">ResearchDefinition<a name=\"fhir-old-types-ResearchDefinition\"> </a></td></tr><tr><td style=\"white-space:nowrap\">ResearchElementDefinition<a name=\"fhir-old-types-ResearchElementDefinition\"> </a></td></tr><tr><td style=\"white-space:nowrap\">RiskEvidenceSynthesis<a name=\"fhir-old-types-RiskEvidenceSynthesis\"> </a></td></tr><tr><td style=\"white-space:nowrap\">Sequence<a name=\"fhir-old-types-Sequence\"> </a></td></tr><tr><td style=\"white-space:nowrap\">ServiceDefinition<a name=\"fhir-old-types-ServiceDefinition\"> </a></td></tr><tr><td style=\"white-space:nowrap\">SubstanceSpecification<a name=\"fhir-old-types-SubstanceSpecification\"> </a></td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "inm"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 5
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/fhir-old-types"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/fhir-old-types>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.2113" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "FHIROldTypes"] ; # 
+  fhir:title [ fhir:v "Old FHIR Types"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Infrastructure And Messaging"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/inm" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "An old resource name no longer used in this version of FHIR (deleted or renamed)."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/fhir-old-types"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/fhir-old-types>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "BodySite" ] ;
+     fhir:display [ fhir:v "BodySite" ]
+  ] [
+     fhir:code [ fhir:v "CatalogEntry" ] ;
+     fhir:display [ fhir:v "CatalogEntry" ]
+  ] [
+     fhir:code [ fhir:v "Conformance" ] ;
+     fhir:display [ fhir:v "Conformance" ]
+  ] [
+     fhir:code [ fhir:v "DataElement" ] ;
+     fhir:display [ fhir:v "DataElement" ]
+  ] [
+     fhir:code [ fhir:v "DeviceComponent" ] ;
+     fhir:display [ fhir:v "DeviceComponent" ]
+  ] [
+     fhir:code [ fhir:v "DeviceUseRequest" ] ;
+     fhir:display [ fhir:v "DeviceUseRequest" ]
+  ] [
+     fhir:code [ fhir:v "DeviceUseStatement" ] ;
+     fhir:display [ fhir:v "DeviceUseStatement" ]
+  ] [
+     fhir:code [ fhir:v "DiagnosticOrder" ] ;
+     fhir:display [ fhir:v "DiagnosticOrder" ]
+  ] [
+     fhir:code [ fhir:v "DocumentManifest" ] ;
+     fhir:display [ fhir:v "DocumentManifest" ]
+  ] [
+     fhir:code [ fhir:v "EffectEvidenceSynthesis" ] ;
+     fhir:display [ fhir:v "EffectEvidenceSynthesis" ]
+  ] [
+     fhir:code [ fhir:v "EligibilityRequest" ] ;
+     fhir:display [ fhir:v "EligibilityRequest" ]
+  ] [
+     fhir:code [ fhir:v "EligibilityResponse" ] ;
+     fhir:display [ fhir:v "EligibilityResponse" ]
+  ] [
+     fhir:code [ fhir:v "ExpansionProfile" ] ;
+     fhir:display [ fhir:v "ExpansionProfile" ]
+  ] [
+     fhir:code [ fhir:v "ImagingManifest" ] ;
+     fhir:display [ fhir:v "ImagingManifest" ]
+  ] [
+     fhir:code [ fhir:v "ImagingObjectSelection" ] ;
+     fhir:display [ fhir:v "ImagingObjectSelection" ]
+  ] [
+     fhir:code [ fhir:v "Media" ] ;
+     fhir:display [ fhir:v "Media" ]
+  ] [
+     fhir:code [ fhir:v "MedicationOrder" ] ;
+     fhir:display [ fhir:v "MedicationOrder" ]
+  ] [
+     fhir:code [ fhir:v "MedicationUsage" ] ;
+     fhir:display [ fhir:v "MedicationUsage" ]
+  ] [
+     fhir:code [ fhir:v "MedicinalProduct" ] ;
+     fhir:display [ fhir:v "MedicinalProduct" ]
+  ] [
+     fhir:code [ fhir:v "MedicinalProductAuthorization" ] ;
+     fhir:display [ fhir:v "MedicinalProductAuthorization" ]
+  ] [
+     fhir:code [ fhir:v "MedicinalProductContraindication" ] ;
+     fhir:display [ fhir:v "MedicinalProductContraindication" ]
+  ] [
+     fhir:code [ fhir:v "MedicinalProductIndication" ] ;
+     fhir:display [ fhir:v "MedicinalProductIndication" ]
+  ] [
+     fhir:code [ fhir:v "MedicinalProductIngredient" ] ;
+     fhir:display [ fhir:v "MedicinalProductIngredient" ]
+  ] [
+     fhir:code [ fhir:v "MedicinalProductInteraction" ] ;
+     fhir:display [ fhir:v "MedicinalProductInteraction" ]
+  ] [
+     fhir:code [ fhir:v "MedicinalProductManufactured" ] ;
+     fhir:display [ fhir:v "MedicinalProductManufactured" ]
+  ] [
+     fhir:code [ fhir:v "MedicinalProductPackaged" ] ;
+     fhir:display [ fhir:v "MedicinalProductPackaged" ]
+  ] [
+     fhir:code [ fhir:v "MedicinalProductPharmaceutical" ] ;
+     fhir:display [ fhir:v "MedicinalProductPharmaceutical" ]
+  ] [
+     fhir:code [ fhir:v "MedicinalProductUndesirableEffect" ] ;
+     fhir:display [ fhir:v "MedicinalProductUndesirableEffect" ]
+  ] [
+     fhir:code [ fhir:v "Order" ] ;
+     fhir:display [ fhir:v "Order" ]
+  ] [
+     fhir:code [ fhir:v "OrderResponse" ] ;
+     fhir:display [ fhir:v "OrderResponse" ]
+  ] [
+     fhir:code [ fhir:v "ProcedureRequest" ] ;
+     fhir:display [ fhir:v "ProcedureRequest" ]
+  ] [
+     fhir:code [ fhir:v "ProcessRequest" ] ;
+     fhir:display [ fhir:v "ProcessRequest" ]
+  ] [
+     fhir:code [ fhir:v "ProcessResponse" ] ;
+     fhir:display [ fhir:v "ProcessResponse" ]
+  ] [
+     fhir:code [ fhir:v "ReferralRequest" ] ;
+     fhir:display [ fhir:v "ReferralRequest" ]
+  ] [
+     fhir:code [ fhir:v "RequestGroup" ] ;
+     fhir:display [ fhir:v "RequestGroup" ]
+  ] [
+     fhir:code [ fhir:v "ResearchDefinition" ] ;
+     fhir:display [ fhir:v "ResearchDefinition" ]
+  ] [
+     fhir:code [ fhir:v "ResearchElementDefinition" ] ;
+     fhir:display [ fhir:v "ResearchElementDefinition" ]
+  ] [
+     fhir:code [ fhir:v "RiskEvidenceSynthesis" ] ;
+     fhir:display [ fhir:v "RiskEvidenceSynthesis" ]
+  ] [
+     fhir:code [ fhir:v "Sequence" ] ;
+     fhir:display [ fhir:v "Sequence" ]
+  ] [
+     fhir:code [ fhir:v "ServiceDefinition" ] ;
+     fhir:display [ fhir:v "ServiceDefinition" ]
+  ] [
+     fhir:code [ fhir:v "SubstanceSpecification" ] ;
+     fhir:display [ fhir:v "SubstanceSpecification" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

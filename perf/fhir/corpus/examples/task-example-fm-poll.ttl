@@ -1,0 +1,87 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Task/fm-example2> a fhir:Task ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "fm-example2"] ; # This is an example to demonstrate using task for actioning a poll request for only undelivered ClaimResponses created during a
+#			specified period
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p>\n        <b> Generated Narrative with Details</b>\n      </p>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:system [
+       fhir:v "http:/happyvalley.com/task"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/http:/happyvalley.com/task>
+     ] ;
+     fhir:value [ fhir:v "20181012-005" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "requested"] ; # 
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:priority [ fhir:v "stat"] ; # 
+  fhir:code [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/financialtaskcode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/financialtaskcode>
+       ] ;
+       fhir:code [ fhir:v "poll" ]
+     ] )
+  ] ; # real time request and response required, fictive code and description elements populated for this example
+  fhir:authoredOn [ fhir:v "2018-10-12T08:25:05+10:00"^^xsd:dateTime] ; # 
+  fhir:lastModified [ fhir:v "2018-10-12T08:25:05+10:00"^^xsd:dateTime] ; # 
+  fhir:requester [
+     fhir:l <http://hl7.org/fhir/Organization/example> ;
+     fhir:reference [ fhir:v "Organization/example" ] ;
+     fhir:display [ fhir:v "Happy Valley Clinic" ]
+  ] ; # 
+  fhir:owner [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://nationalinsurers.com/identifiers"^^xsd:anyURI ;
+         fhir:l <http://nationalinsurers.com/identifiers>
+       ] ;
+       fhir:value [ fhir:v "12345" ]
+     ]
+  ] ; # 
+  fhir:input ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/financialtaskinputtype"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/financialtaskinputtype>
+         ] ;
+         fhir:code [ fhir:v "include" ]
+       ] )
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "ClaimResponse"
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/financialtaskinputtype"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/financialtaskinputtype>
+         ] ;
+         fhir:code [ fhir:v "period" ]
+       ] )
+     ] ;
+     fhir:value [
+       a fhir:Period ;
+       fhir:start [ fhir:v "2018-10-01"^^xsd:date ] ;
+       fhir:end [ fhir:v "2018-10-12"^^xsd:date ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Organization/example> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,39 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Substance/f205> a fhir:Substance ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f205"] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/substance-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/substance-category>
+       ] ;
+       fhir:code [ fhir:v "drug" ] ;
+       fhir:display [ fhir:v "Drug or Medicament" ]
+     ] )
+  ] ) ; # 
+  fhir:code [
+     fhir:concept [
+       a sct:392259005 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "392259005" ] ;
+         fhir:display [ fhir:v "Product containing precisely amoxicillin 875 milligram and clavulanic acid (as clavulanate potassium) 125 milligram/1 each conventional release oral tablet (clinical drug)" ]
+       ] )
+     ]
+  ] ; # 
+  fhir:description [ fhir:v "Augmentin 875"] . # 
+
+# -------------------------------------------------------------------------------------
+

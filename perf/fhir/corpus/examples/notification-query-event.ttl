@@ -1,0 +1,170 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/787e69f6-81a8-44e4-b404-257013dec332> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "787e69f6-81a8-44e4-b404-257013dec332"] ; # 
+  fhir:type [ fhir:v "subscription-notification"] ; # 
+  fhir:timestamp [ fhir:v "2020-04-17T10:24:13.1882432-05:00"^^xsd:dateTime] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:63c7e4fb-0a83-4cd9-9f42-cdcf7d5cd3ed"^^xsd:anyURI ;
+       fhir:l <urn:uuid:63c7e4fb-0a83-4cd9-9f42-cdcf7d5cd3ed>
+     ] ;
+     fhir:resource ( <urn:uuid:63c7e4fb-0a83-4cd9-9f42-cdcf7d5cd3ed> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "https://example.org/FHIR/R5/Encounter/307"^^xsd:anyURI ;
+       fhir:l <https://example.org/FHIR/R5/Encounter/307>
+     ] ;
+     fhir:resource ( <https://example.org/FHIR/R5/Encounter/307> ) ;
+     fhir:request [
+       fhir:method [ fhir:v "PUT" ] ;
+       fhir:url [
+         fhir:v "Encounter/307"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/Encounter/307>
+       ]
+     ] ;
+     fhir:response [
+       fhir:status [ fhir:v "201" ]
+     ]
+  ] [
+     fhir:fullUrl [
+       fhir:v "https://example.org/FHIR/R5/Patient/ABC"^^xsd:anyURI ;
+       fhir:l <https://example.org/FHIR/R5/Patient/ABC>
+     ] ;
+     fhir:resource ( <https://example.org/FHIR/R5/Patient/ABC> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "https://example.org/FHIR/R5/Encounter/308"^^xsd:anyURI ;
+       fhir:l <https://example.org/FHIR/R5/Encounter/308>
+     ] ;
+     fhir:resource ( <https://example.org/FHIR/R5/Encounter/308> ) ;
+     fhir:request [
+       fhir:method [ fhir:v "PUT" ] ;
+       fhir:url [
+         fhir:v "Encounter/308"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/Encounter/308>
+       ]
+     ] ;
+     fhir:response [
+       fhir:status [ fhir:v "201" ]
+     ]
+  ] ) . # 
+
+<urn:uuid:63c7e4fb-0a83-4cd9-9f42-cdcf7d5cd3ed> a fhir:SubscriptionStatus ;
+  fhir:id [ fhir:v "815477f2-a94c-4197-a82a-9f974155debc"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: SubscriptionStatus 815477f2-a94c-4197-a82a-9f974155debc</b></p><a name=\"815477f2-a94c-4197-a82a-9f974155debc\"> </a><a name=\"hc815477f2-a94c-4197-a82a-9f974155debc\"> </a><p><b>status</b>: Active</p><p><b>type</b>: Query Event</p><p><b>eventsSinceSubscriptionStart</b>: 310</p><blockquote><p><b>notificationEvent</b></p><p><b>eventNumber</b>: 307</p><p><b>focus</b>: <a href=\"broken-link.html\">http://example.org/FHIR/R5/Encounter/307</a></p><p><b>additionalContext</b>: <a href=\"broken-link.html\">http://example.org/FHIR/R5/Patient/ABC</a></p></blockquote><blockquote><p><b>notificationEvent</b></p><p><b>eventNumber</b>: 308</p><p><b>focus</b>: <a href=\"broken-link.html\">http://example.org/FHIR/R5/Encounter/308</a></p><p><b>additionalContext</b>: <a href=\"broken-link.html\">http://example.org/FHIR/R5/Patient/ABC</a></p></blockquote><p><b>subscription</b>: <a href=\"broken-link.html\">http://example.org/FHIR/R5/Subscription/123</a></p><p><b>topic</b>: <a href=\"broken-link.html\">http://example.org/FHIR/R5/SubscriptionTopic/admission</a></p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:type [ fhir:v "query-event"] ; # 
+  fhir:eventsSinceSubscriptionStart [ fhir:v "310"^^xsd:long] ; # 
+  fhir:notificationEvent ( [
+     fhir:eventNumber [ fhir:v "307"^^xsd:long ] ;
+     fhir:focus [
+       fhir:l <http://example.org/FHIR/R5/Encounter/307> ;
+       fhir:reference [ fhir:v "http://example.org/FHIR/R5/Encounter/307" ]
+     ] ;
+     fhir:additionalContext ( [
+       fhir:l <http://example.org/FHIR/R5/Patient/ABC> ;
+       fhir:reference [ fhir:v "http://example.org/FHIR/R5/Patient/ABC" ]
+     ] )
+  ] [
+     fhir:eventNumber [ fhir:v "308"^^xsd:long ] ;
+     fhir:focus [
+       fhir:l <http://example.org/FHIR/R5/Encounter/308> ;
+       fhir:reference [ fhir:v "http://example.org/FHIR/R5/Encounter/308" ]
+     ] ;
+     fhir:additionalContext ( [
+       fhir:l <http://example.org/FHIR/R5/Patient/ABC> ;
+       fhir:reference [ fhir:v "http://example.org/FHIR/R5/Patient/ABC" ]
+     ] )
+  ] ) ; # 
+  fhir:subscription [
+     fhir:l <http://example.org/FHIR/R5/Subscription/123> ;
+     fhir:reference [ fhir:v "http://example.org/FHIR/R5/Subscription/123" ]
+  ] ; # 
+  fhir:topic [
+     fhir:v "http://example.org/FHIR/R5/SubscriptionTopic/admission"^^xsd:anyURI ;
+     fhir:l <http://example.org/FHIR/R5/SubscriptionTopic/admission>
+  ] . # 
+
+<https://example.org/FHIR/R5/Encounter/307> a fhir:Encounter ;
+  fhir:id [ fhir:v "307"] ; # 
+  fhir:meta [
+     fhir:versionId [ fhir:v "1" ] ;
+     fhir:lastUpdated [ fhir:v "2019-08-07T10:49:22Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Encounter 307</b></p><a name=\"307\"> </a><a name=\"hc307\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">version: 1; Last updated: 2019-08-07T10:49:22Z</p></div><p><b>status</b>: In Progress</p><p><b>class</b>: <span title=\"Codes:{http://terminology.hl7.org/CodeSystem/v3-ActCode VR}\">virtual</span></p><p><b>subject</b>: <a href=\"broken-link.html\">Patient/ABC</a></p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "in-progress"] ; # 
+  fhir:class ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+       ] ;
+       fhir:code [ fhir:v "VR" ] ;
+       fhir:display [ fhir:v "virtual" ]
+     ] )
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/ABC> ;
+     fhir:reference [ fhir:v "Patient/ABC" ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/ABC> a fhir:Patient .
+
+<https://example.org/FHIR/R5/Patient/ABC> a fhir:Patient ;
+  fhir:id [ fhir:v "ABC"] ; # 
+  fhir:meta [
+     fhir:versionId [ fhir:v "1" ] ;
+     fhir:lastUpdated [ fhir:v "2019-08-07T10:49:22Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Patient ABC</b></p><a name=\"ABC\"> </a><a name=\"hcABC\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">version: 1; Last updated: 2019-08-07T10:49:22Z</p></div><p style=\"border: 1px #661aff solid; background-color: #e6e6ff; padding: 10px;\">Patient Example (official) (no stated gender), DoB Unknown</p><hr/></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Example" ] ;
+     fhir:given ( [ fhir:v "Patient" ] )
+  ] ) . # 
+
+<https://example.org/FHIR/R5/Encounter/308> a fhir:Encounter ;
+  fhir:id [ fhir:v "308"] ; # 
+  fhir:meta [
+     fhir:versionId [ fhir:v "1" ] ;
+     fhir:lastUpdated [ fhir:v "2019-08-07T10:49:22Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Encounter 308</b></p><a name=\"308\"> </a><a name=\"hc308\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">version: 1; Last updated: 2019-08-07T10:49:22Z</p></div><p><b>status</b>: In Progress</p><p><b>class</b>: <span title=\"Codes:{http://terminology.hl7.org/CodeSystem/v3-ActCode VR}\">virtual</span></p><p><b>subject</b>: <a href=\"broken-link.html\">Patient/ABC</a></p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "in-progress"] ; # 
+  fhir:class ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+       ] ;
+       fhir:code [ fhir:v "VR" ] ;
+       fhir:display [ fhir:v "virtual" ]
+     ] )
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/ABC> ;
+     fhir:reference [ fhir:v "Patient/ABC" ]
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

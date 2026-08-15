@@ -1,0 +1,246 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/issue-type> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "issue-type"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem issue-type</b></p><a name=\"issue-type\"> </a><a name=\"hcissue-type\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/issue-type</code> defines the following codes in a Is-A hierarchy:</p><table class=\"codes\"><tr><td><b>Lvl</b></td><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td>1</td><td style=\"white-space:nowrap\">invalid<a name=\"issue-type-invalid\"> </a></td><td>Invalid Content</td><td>Content invalid against the specification or a profile.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  structure<a name=\"issue-type-structure\"> </a></td><td>Structural Issue</td><td>A structural issue in the content such as wrong namespace, unable to parse the content completely, invalid syntax, etc.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  required<a name=\"issue-type-required\"> </a></td><td>Required element missing</td><td>A required element is missing.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  value<a name=\"issue-type-value\"> </a></td><td>Element value invalid</td><td>An element or header value is invalid.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  invariant<a name=\"issue-type-invariant\"> </a></td><td>Validation rule failed</td><td>A content validation rule failed - e.g. a schematron rule.</td></tr><tr><td>1</td><td style=\"white-space:nowrap\">security<a name=\"issue-type-security\"> </a></td><td>Security Problem</td><td>An authentication/authorization/permissions issue of some kind.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  login<a name=\"issue-type-login\"> </a></td><td>Login Required</td><td>The client needs to initiate an authentication process.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  unknown<a name=\"issue-type-unknown\"> </a></td><td>Unknown User</td><td>The user or system was not able to be authenticated (either there is no process, or the proferred token is unacceptable).</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  expired<a name=\"issue-type-expired\"> </a></td><td>Session Expired</td><td>User session expired; a login may be required.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  forbidden<a name=\"issue-type-forbidden\"> </a></td><td>Forbidden</td><td>The user does not have the rights to perform this action.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  suppressed<a name=\"issue-type-suppressed\"> </a></td><td>Information  Suppressed</td><td>Some information was not or might not have been returned due to business rules, consent or privacy rules, or access permission constraints.  This information may be accessible through alternate processes.</td></tr><tr><td>1</td><td style=\"white-space:nowrap\">processing<a name=\"issue-type-processing\"> </a></td><td>Processing Failure</td><td>Processing issues. These are expected to be final e.g. there is no point resubmitting the same content unchanged.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  not-supported<a name=\"issue-type-not-supported\"> </a></td><td>Content not supported</td><td>The interaction, operation, resource or profile is not supported.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  duplicate<a name=\"issue-type-duplicate\"> </a></td><td>Duplicate</td><td>An attempt was made to create a duplicate record.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  multiple-matches<a name=\"issue-type-multiple-matches\"> </a></td><td>Multiple Matches</td><td>Multiple matching records were found when the operation required only one match.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  not-found<a name=\"issue-type-not-found\"> </a></td><td>Not Found</td><td>The reference provided was not found. In a pure RESTful environment, this would be an HTTP 404 error, but this code may be used where the content is not found further into the application architecture.</td></tr><tr><td>3</td><td style=\"white-space:nowrap\">    deleted<a name=\"issue-type-deleted\"> </a></td><td>Deleted</td><td>The reference pointed to content (usually a resource) that has been deleted.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  too-long<a name=\"issue-type-too-long\"> </a></td><td>Content Too Long</td><td>Provided content is too long (typically, this is a denial of service protection type of error).</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  code-invalid<a name=\"issue-type-code-invalid\"> </a></td><td>Invalid Code</td><td>The code or system could not be understood, or it was not valid in the context of a particular ValueSet.code.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  extension<a name=\"issue-type-extension\"> </a></td><td>Unacceptable Extension</td><td>An extension was found that was not acceptable, could not be resolved, or a modifierExtension was not recognized.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  too-costly<a name=\"issue-type-too-costly\"> </a></td><td>Operation Too Costly</td><td>The operation was stopped to protect server resources; e.g. a request for a value set expansion on all of SNOMED CT.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  business-rule<a name=\"issue-type-business-rule\"> </a></td><td>Business Rule Violation</td><td>The content/operation failed to pass some business rule and so could not proceed.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  conflict<a name=\"issue-type-conflict\"> </a></td><td>Edit Version Conflict</td><td>Content could not be accepted because of an edit conflict (i.e. version aware updates). (In a pure RESTful environment, this would be an HTTP 409 error, but this code may be used where the conflict is discovered further into the application architecture.).</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  limited-filter<a name=\"issue-type-limited-filter\"> </a></td><td>Limited Filter Application</td><td>Some search filters might not have applied on all results.  Data may have been included that does not meet all of the filters listed in the `self` `Bundle.link`.</td></tr><tr><td>1</td><td style=\"white-space:nowrap\">transient<a name=\"issue-type-transient\"> </a></td><td>Transient Issue</td><td>Transient processing issues. The system receiving the message may be able to resubmit the same content once an underlying issue is resolved.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  lock-error<a name=\"issue-type-lock-error\"> </a></td><td>Lock Error</td><td>A resource/record locking failure (usually in an underlying database).</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  no-store<a name=\"issue-type-no-store\"> </a></td><td>No Store Available</td><td>The persistent store is unavailable; e.g. the database is down for maintenance or similar action, and the interaction or operation cannot be processed.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  exception<a name=\"issue-type-exception\"> </a></td><td>Exception</td><td>An unexpected internal error has occurred.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  timeout<a name=\"issue-type-timeout\"> </a></td><td>Timeout</td><td>An internal timeout has occurred.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  incomplete<a name=\"issue-type-incomplete\"> </a></td><td>Incomplete Results</td><td>Not all data sources typically accessed could be reached or responded in time, so the returned information might not be complete (applies to search interactions and some operations).</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  throttled<a name=\"issue-type-throttled\"> </a></td><td>Throttled</td><td>The system is not prepared to handle this request due to load management.</td></tr><tr><td>1</td><td style=\"white-space:nowrap\">informational<a name=\"issue-type-informational\"> </a></td><td>Informational Note</td><td>A message unrelated to the processing success of the completed operation (examples of the latter include things like reminders of password expiry, system maintenance times, etc.).</td></tr><tr><td>1</td><td style=\"white-space:nowrap\">success<a name=\"issue-type-success\"> </a></td><td>Operation Successful</td><td>The operation completed successfully.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 5
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/issue-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/issue-type>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.411" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.1.400" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.2.224" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "IssueType"] ; # 
+  fhir:title [ fhir:v "Issue Type"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "A code that describes the type of issue."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/issue-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/issue-type>
+  ] ; # 
+  fhir:hierarchyMeaning [ fhir:v "is-a"] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "invalid" ] ;
+     fhir:display [ fhir:v "Invalid Content" ] ;
+     fhir:definition [ fhir:v "Content invalid against the specification or a profile." ] ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "structure" ] ;
+       fhir:display [ fhir:v "Structural Issue" ] ;
+       fhir:definition [ fhir:v "A structural issue in the content such as wrong namespace, unable to parse the content completely, invalid syntax, etc." ]
+     ] [
+       fhir:code [ fhir:v "required" ] ;
+       fhir:display [ fhir:v "Required element missing" ] ;
+       fhir:definition [ fhir:v "A required element is missing." ]
+     ] [
+       fhir:code [ fhir:v "value" ] ;
+       fhir:display [ fhir:v "Element value invalid" ] ;
+       fhir:definition [ fhir:v "An element or header value is invalid." ]
+     ] [
+       fhir:code [ fhir:v "invariant" ] ;
+       fhir:display [ fhir:v "Validation rule failed" ] ;
+       fhir:definition [ fhir:v "A content validation rule failed - e.g. a schematron rule." ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "security" ] ;
+     fhir:display [ fhir:v "Security Problem" ] ;
+     fhir:definition [ fhir:v "An authentication/authorization/permissions issue of some kind." ] ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "login" ] ;
+       fhir:display [ fhir:v "Login Required" ] ;
+       fhir:definition [ fhir:v "The client needs to initiate an authentication process." ]
+     ] [
+       fhir:code [ fhir:v "unknown" ] ;
+       fhir:display [ fhir:v "Unknown User" ] ;
+       fhir:definition [ fhir:v "The user or system was not able to be authenticated (either there is no process, or the proferred token is unacceptable)." ]
+     ] [
+       fhir:code [ fhir:v "expired" ] ;
+       fhir:display [ fhir:v "Session Expired" ] ;
+       fhir:definition [ fhir:v "User session expired; a login may be required." ]
+     ] [
+       fhir:code [ fhir:v "forbidden" ] ;
+       fhir:display [ fhir:v "Forbidden" ] ;
+       fhir:definition [ fhir:v "The user does not have the rights to perform this action." ]
+     ] [
+       fhir:code [ fhir:v "suppressed" ] ;
+       fhir:display [ fhir:v "Information  Suppressed" ] ;
+       fhir:definition [ fhir:v "Some information was not or might not have been returned due to business rules, consent or privacy rules, or access permission constraints.  This information may be accessible through alternate processes." ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "processing" ] ;
+     fhir:display [ fhir:v "Processing Failure" ] ;
+     fhir:definition [ fhir:v "Processing issues. These are expected to be final e.g. there is no point resubmitting the same content unchanged." ] ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "not-supported" ] ;
+       fhir:display [ fhir:v "Content not supported" ] ;
+       fhir:definition [ fhir:v "The interaction, operation, resource or profile is not supported." ]
+     ] [
+       fhir:code [ fhir:v "duplicate" ] ;
+       fhir:display [ fhir:v "Duplicate" ] ;
+       fhir:definition [ fhir:v "An attempt was made to create a duplicate record." ]
+     ] [
+       fhir:code [ fhir:v "multiple-matches" ] ;
+       fhir:display [ fhir:v "Multiple Matches" ] ;
+       fhir:definition [ fhir:v "Multiple matching records were found when the operation required only one match." ]
+     ] [
+       fhir:code [ fhir:v "not-found" ] ;
+       fhir:display [ fhir:v "Not Found" ] ;
+       fhir:definition [ fhir:v "The reference provided was not found. In a pure RESTful environment, this would be an HTTP 404 error, but this code may be used where the content is not found further into the application architecture." ] ;
+       fhir:concept ( [
+         fhir:code [ fhir:v "deleted" ] ;
+         fhir:display [ fhir:v "Deleted" ] ;
+         fhir:definition [ fhir:v "The reference pointed to content (usually a resource) that has been deleted." ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "too-long" ] ;
+       fhir:display [ fhir:v "Content Too Long" ] ;
+       fhir:definition [ fhir:v "Provided content is too long (typically, this is a denial of service protection type of error)." ]
+     ] [
+       fhir:code [ fhir:v "code-invalid" ] ;
+       fhir:display [ fhir:v "Invalid Code" ] ;
+       fhir:definition [ fhir:v "The code or system could not be understood, or it was not valid in the context of a particular ValueSet.code." ]
+     ] [
+       fhir:code [ fhir:v "extension" ] ;
+       fhir:display [ fhir:v "Unacceptable Extension" ] ;
+       fhir:definition [ fhir:v "An extension was found that was not acceptable, could not be resolved, or a modifierExtension was not recognized." ]
+     ] [
+       fhir:code [ fhir:v "too-costly" ] ;
+       fhir:display [ fhir:v "Operation Too Costly" ] ;
+       fhir:definition [ fhir:v "The operation was stopped to protect server resources; e.g. a request for a value set expansion on all of SNOMED CT." ]
+     ] [
+       fhir:code [ fhir:v "business-rule" ] ;
+       fhir:display [ fhir:v "Business Rule Violation" ] ;
+       fhir:definition [ fhir:v "The content/operation failed to pass some business rule and so could not proceed." ]
+     ] [
+       fhir:code [ fhir:v "conflict" ] ;
+       fhir:display [ fhir:v "Edit Version Conflict" ] ;
+       fhir:definition [ fhir:v "Content could not be accepted because of an edit conflict (i.e. version aware updates). (In a pure RESTful environment, this would be an HTTP 409 error, but this code may be used where the conflict is discovered further into the application architecture.)." ]
+     ] [
+       fhir:code [ fhir:v "limited-filter" ] ;
+       fhir:display [ fhir:v "Limited Filter Application" ] ;
+       fhir:definition [ fhir:v "Some search filters might not have applied on all results.  Data may have been included that does not meet all of the filters listed in the `self` `Bundle.link`." ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "transient" ] ;
+     fhir:display [ fhir:v "Transient Issue" ] ;
+     fhir:definition [ fhir:v "Transient processing issues. The system receiving the message may be able to resubmit the same content once an underlying issue is resolved." ] ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "lock-error" ] ;
+       fhir:display [ fhir:v "Lock Error" ] ;
+       fhir:definition [ fhir:v "A resource/record locking failure (usually in an underlying database)." ]
+     ] [
+       fhir:code [ fhir:v "no-store" ] ;
+       fhir:display [ fhir:v "No Store Available" ] ;
+       fhir:definition [ fhir:v "The persistent store is unavailable; e.g. the database is down for maintenance or similar action, and the interaction or operation cannot be processed." ]
+     ] [
+       fhir:code [ fhir:v "exception" ] ;
+       fhir:display [ fhir:v "Exception" ] ;
+       fhir:definition [ fhir:v "An unexpected internal error has occurred." ]
+     ] [
+       fhir:code [ fhir:v "timeout" ] ;
+       fhir:display [ fhir:v "Timeout" ] ;
+       fhir:definition [ fhir:v "An internal timeout has occurred." ]
+     ] [
+       fhir:code [ fhir:v "incomplete" ] ;
+       fhir:display [ fhir:v "Incomplete Results" ] ;
+       fhir:definition [ fhir:v "Not all data sources typically accessed could be reached or responded in time, so the returned information might not be complete (applies to search interactions and some operations)." ]
+     ] [
+       fhir:code [ fhir:v "throttled" ] ;
+       fhir:display [ fhir:v "Throttled" ] ;
+       fhir:definition [ fhir:v "The system is not prepared to handle this request due to load management." ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "informational" ] ;
+     fhir:display [ fhir:v "Informational Note" ] ;
+     fhir:definition [ fhir:v "A message unrelated to the processing success of the completed operation (examples of the latter include things like reminders of password expiry, system maintenance times, etc.)." ]
+  ] [
+     fhir:code [ fhir:v "success" ] ;
+     fhir:display [ fhir:v "Operation Successful" ] ;
+     fhir:definition [ fhir:v "The operation completed successfully." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

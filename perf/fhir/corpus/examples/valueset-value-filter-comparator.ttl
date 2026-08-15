@@ -1,0 +1,106 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ValueSet/value-filter-comparator> a fhir:ValueSet ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "value-filter-comparator"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "extensions" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: ValueSet value-filter-comparator</b></p><a name=\"value-filter-comparator\"> </a><a name=\"hcvalue-filter-comparator\"> </a><ul><li>Include these codes as defined in <a href=\"codesystem-search-comparator.html\"><code>http://hl7.org/fhir/search-comparator</code></a><span title=\"Version is not explicitly stated, which means it is fixed to the version provided in this specification\"> version ?6.0.0-ballot4</span><table class=\"none\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td><a href=\"codesystem-search-comparator.html#search-comparator-eq\">eq</a></td><td>Equals</td><td>the value for the parameter in the resource is equal to the provided value.</td></tr><tr><td><a href=\"codesystem-search-comparator.html#search-comparator-gt\">gt</a></td><td>Greater Than</td><td>the value for the parameter in the resource is greater than the provided value.</td></tr><tr><td><a href=\"codesystem-search-comparator.html#search-comparator-lt\">lt</a></td><td>Less Than</td><td>the value for the parameter in the resource is less than the provided value.</td></tr><tr><td><a href=\"codesystem-search-comparator.html#search-comparator-ge\">ge</a></td><td>Greater or Equals</td><td>the value for the parameter in the resource is greater or equal to the provided value.</td></tr><tr><td><a href=\"codesystem-search-comparator.html#search-comparator-le\">le</a></td><td>Less of Equal</td><td>the value for the parameter in the resource is less or equal to the provided value.</td></tr><tr><td><a href=\"codesystem-search-comparator.html#search-comparator-sa\">sa</a></td><td>Starts After</td><td>the value for the parameter in the resource starts after the provided value.</td></tr><tr><td><a href=\"codesystem-search-comparator.html#search-comparator-eb\">eb</a></td><td>Ends Before</td><td>the value for the parameter in the resource ends before the provided value.</td></tr></table></li></ul></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ValueSet/value-filter-comparator"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/value-filter-comparator>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.3.3306" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ValueFilterComparator"] ; # 
+  fhir:title [ fhir:v "Value Filter Comparator"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "The type of comparator operator to use"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:compose [
+     fhir:include ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/search-comparator"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/search-comparator>
+       ] ;
+       fhir:concept ( [
+         fhir:code [ fhir:v "eq" ] ;
+         fhir:display [ fhir:v "Equals" ]
+       ] [
+         fhir:code [ fhir:v "gt" ] ;
+         fhir:display [ fhir:v "Greater Than" ]
+       ] [
+         fhir:code [ fhir:v "lt" ] ;
+         fhir:display [ fhir:v "Less Than" ]
+       ] [
+         fhir:code [ fhir:v "ge" ] ;
+         fhir:display [ fhir:v "Greater or Equals" ]
+       ] [
+         fhir:code [ fhir:v "le" ] ;
+         fhir:display [ fhir:v "Less of Equal" ]
+       ] [
+         fhir:code [ fhir:v "sa" ] ;
+         fhir:display [ fhir:v "Starts After" ]
+       ] [
+         fhir:code [ fhir:v "eb" ] ;
+         fhir:display [ fhir:v "Ends Before" ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:expansion [] . # 
+
+# -------------------------------------------------------------------------------------
+

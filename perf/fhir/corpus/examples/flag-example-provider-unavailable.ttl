@@ -1,0 +1,62 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Flag/provider-unavailable> a fhir:Flag ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "provider-unavailable"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Dr. Adam Careful is unavailable for referrals from 10/1/2023 to 11/30/2023</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:value [ fhir:v "provider-unavailable-2024" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "inactive"] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/flag-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/flag-category>
+       ] ;
+       fhir:code [ fhir:v "admin" ] ;
+       fhir:display [ fhir:v "Administrative" ]
+     ] ) ;
+     fhir:text [ fhir:v "Administrative" ]
+  ] ) ; # 
+  fhir:code [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.org/local"^^xsd:anyURI ;
+         fhir:l <http://example.org/local>
+       ] ;
+       fhir:code [ fhir:v "unavailable" ] ;
+       fhir:display [ fhir:v "Unavailable for Referrals" ]
+     ] ) ;
+     fhir:text [ fhir:v "Dr. Adam Careful is unavailable for referrals from 10/1/2023 to 11/30/2023" ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+     fhir:reference [ fhir:v "Practitioner/example" ] ;
+     fhir:display [ fhir:v "Dr. Adam Careful" ]
+  ] ; # 
+  fhir:period [
+     fhir:start [ fhir:v "2023-09-12"^^xsd:date ] ;
+     fhir:end [ fhir:v "2023-11-30"^^xsd:date ]
+  ] ; # 
+  fhir:author [
+     fhir:l <http://hl7.org/fhir/Organization/example> ;
+     fhir:reference [ fhir:v "Organization/example" ] ;
+     fhir:display [ fhir:v "ACME Health" ]
+  ] . # 
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Organization/example> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

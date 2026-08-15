@@ -1,0 +1,173 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/group-type> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "group-type"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem group-type</b></p><a name=\"group-type\"> </a><a name=\"hcgroup-type\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/group-type</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">person<a name=\"group-type-person\"> </a></td><td>Person</td><td>Group contains \"person\" Patient resources.</td></tr><tr><td style=\"white-space:nowrap\">animal<a name=\"group-type-animal\"> </a></td><td>Animal</td><td>Group contains \"animal\" Patient resources.</td></tr><tr><td style=\"white-space:nowrap\">practitioner<a name=\"group-type-practitioner\"> </a></td><td>Practitioner</td><td>Group contains healthcare practitioner resources (Practitioner or PractitionerRole).</td></tr><tr><td style=\"white-space:nowrap\">device<a name=\"group-type-device\"> </a></td><td>Device</td><td>Group contains Device resources.</td></tr><tr><td style=\"white-space:nowrap\">careteam<a name=\"group-type-careteam\"> </a></td><td>CareTeam</td><td>Group contains CareTeam resources.</td></tr><tr><td style=\"white-space:nowrap\">healthcareservice<a name=\"group-type-healthcareservice\"> </a></td><td>HealthcareService</td><td>Group contains HealthcareService resources.</td></tr><tr><td style=\"white-space:nowrap\">location<a name=\"group-type-location\"> </a></td><td>Location</td><td>Group contains Location resources.</td></tr><tr><td style=\"white-space:nowrap\">organization<a name=\"group-type-organization\"> </a></td><td>Organization</td><td>Group contains Organization resources.</td></tr><tr><td style=\"white-space:nowrap\">relatedperson<a name=\"group-type-relatedperson\"> </a></td><td>RelatedPerson</td><td>Group contains RelatedPerson resources.</td></tr><tr><td style=\"white-space:nowrap\">specimen<a name=\"group-type-specimen\"> </a></td><td>Specimen</td><td>Group contains Specimen resources.</td></tr><tr><td style=\"white-space:nowrap\">medication<a name=\"group-type-medication\"> </a></td><td>Medication</td><td>Group contains Medication resources.</td></tr><tr><td style=\"white-space:nowrap\">medicinalproductdefinition<a name=\"group-type-medicinalproductdefinition\"> </a></td><td>MedicinalProductDefinition</td><td>Group contains MedicinalProductDefinition resources.</td></tr><tr><td style=\"white-space:nowrap\">substance<a name=\"group-type-substance\"> </a></td><td>Substance</td><td>Group contains Substance resources.</td></tr><tr><td style=\"white-space:nowrap\">substancedefinition<a name=\"group-type-substancedefinition\"> </a></td><td>SubstanceDefinition</td><td>Group contains SubstanceDefinition resources.</td></tr><tr><td style=\"white-space:nowrap\">biologicallyDerivedProduct<a name=\"group-type-biologicallyDerivedProduct\"> </a></td><td>BiologicallyDerivedProduct</td><td>Group contains BiologicallyDerivedProduct resources.</td></tr><tr><td style=\"white-space:nowrap\">nutritionProduct<a name=\"group-type-nutritionProduct\"> </a></td><td>NutritionProduct</td><td>Group contains NutritionProduct resources.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 3
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/group-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/group-type>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.285" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.1.278" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.2.156" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "GroupType"] ; # 
+  fhir:title [ fhir:v "Group Type"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Types of resources that are part of group."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/group-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/group-type>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "person" ] ;
+     fhir:display [ fhir:v "Person" ] ;
+     fhir:definition [ fhir:v "Group contains \"person\" Patient resources." ]
+  ] [
+     fhir:code [ fhir:v "animal" ] ;
+     fhir:display [ fhir:v "Animal" ] ;
+     fhir:definition [ fhir:v "Group contains \"animal\" Patient resources." ]
+  ] [
+     fhir:code [ fhir:v "practitioner" ] ;
+     fhir:display [ fhir:v "Practitioner" ] ;
+     fhir:definition [ fhir:v "Group contains healthcare practitioner resources (Practitioner or PractitionerRole)." ]
+  ] [
+     fhir:code [ fhir:v "device" ] ;
+     fhir:display [ fhir:v "Device" ] ;
+     fhir:definition [ fhir:v "Group contains Device resources." ]
+  ] [
+     fhir:code [ fhir:v "careteam" ] ;
+     fhir:display [ fhir:v "CareTeam" ] ;
+     fhir:definition [ fhir:v "Group contains CareTeam resources." ]
+  ] [
+     fhir:code [ fhir:v "healthcareservice" ] ;
+     fhir:display [ fhir:v "HealthcareService" ] ;
+     fhir:definition [ fhir:v "Group contains HealthcareService resources." ]
+  ] [
+     fhir:code [ fhir:v "location" ] ;
+     fhir:display [ fhir:v "Location" ] ;
+     fhir:definition [ fhir:v "Group contains Location resources." ]
+  ] [
+     fhir:code [ fhir:v "organization" ] ;
+     fhir:display [ fhir:v "Organization" ] ;
+     fhir:definition [ fhir:v "Group contains Organization resources." ]
+  ] [
+     fhir:code [ fhir:v "relatedperson" ] ;
+     fhir:display [ fhir:v "RelatedPerson" ] ;
+     fhir:definition [ fhir:v "Group contains RelatedPerson resources." ]
+  ] [
+     fhir:code [ fhir:v "specimen" ] ;
+     fhir:display [ fhir:v "Specimen" ] ;
+     fhir:definition [ fhir:v "Group contains Specimen resources." ]
+  ] [
+     fhir:code [ fhir:v "medication" ] ;
+     fhir:display [ fhir:v "Medication" ] ;
+     fhir:definition [ fhir:v "Group contains Medication resources." ]
+  ] [
+     fhir:code [ fhir:v "medicinalproductdefinition" ] ;
+     fhir:display [ fhir:v "MedicinalProductDefinition" ] ;
+     fhir:definition [ fhir:v "Group contains MedicinalProductDefinition resources." ]
+  ] [
+     fhir:code [ fhir:v "substance" ] ;
+     fhir:display [ fhir:v "Substance" ] ;
+     fhir:definition [ fhir:v "Group contains Substance resources." ]
+  ] [
+     fhir:code [ fhir:v "substancedefinition" ] ;
+     fhir:display [ fhir:v "SubstanceDefinition" ] ;
+     fhir:definition [ fhir:v "Group contains SubstanceDefinition resources." ]
+  ] [
+     fhir:code [ fhir:v "biologicallyDerivedProduct" ] ;
+     fhir:display [ fhir:v "BiologicallyDerivedProduct" ] ;
+     fhir:definition [ fhir:v "Group contains BiologicallyDerivedProduct resources." ]
+  ] [
+     fhir:code [ fhir:v "nutritionProduct" ] ;
+     fhir:display [ fhir:v "NutritionProduct" ] ;
+     fhir:definition [ fhir:v "Group contains NutritionProduct resources." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

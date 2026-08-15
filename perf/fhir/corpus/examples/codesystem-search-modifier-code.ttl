@@ -1,0 +1,174 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/search-modifier-code> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "search-modifier-code"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem search-modifier-code</b></p><a name=\"search-modifier-code\"> </a><a name=\"hcsearch-modifier-code\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/search-modifier-code</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">missing<a name=\"search-modifier-code-missing\"> </a></td><td>Missing</td><td>The search parameter returns resources that have a value or not.</td></tr><tr><td style=\"white-space:nowrap\">exact<a name=\"search-modifier-code-exact\"> </a></td><td>Exact</td><td>The search parameter returns resources that have a value that exactly matches the supplied parameter (the whole string, including casing and accents).</td></tr><tr><td style=\"white-space:nowrap\">contains<a name=\"search-modifier-code-contains\"> </a></td><td>Contains</td><td>The search parameter returns resources that include the supplied parameter value anywhere within the field being searched.</td></tr><tr><td style=\"white-space:nowrap\">not<a name=\"search-modifier-code-not\"> </a></td><td>Not</td><td>The search parameter returns resources that do not contain a match.</td></tr><tr><td style=\"white-space:nowrap\">text<a name=\"search-modifier-code-text\"> </a></td><td>Text</td><td>The search parameter is processed as a string that searches text associated with the code/value - either CodeableConcept.text, Coding.display, Identifier.type.text, or Reference.display.</td></tr><tr><td style=\"white-space:nowrap\">in<a name=\"search-modifier-code-in\"> </a></td><td>In</td><td>The search parameter is a URI (relative or absolute) that identifies a value set, and the search parameter tests whether the coding is in the specified value set.</td></tr><tr><td style=\"white-space:nowrap\">not-in<a name=\"search-modifier-code-not-in\"> </a></td><td>Not In</td><td>The search parameter is a URI (relative or absolute) that identifies a value set, and the search parameter tests whether the coding is not in the specified value set.</td></tr><tr><td style=\"white-space:nowrap\">below<a name=\"search-modifier-code-below\"> </a></td><td>Below</td><td>The search parameter tests whether the value in a resource is subsumed by the specified value (is-a, or hierarchical relationships).</td></tr><tr><td style=\"white-space:nowrap\">above<a name=\"search-modifier-code-above\"> </a></td><td>Above</td><td>The search parameter tests whether the value in a resource subsumes the specified value (is-a, or hierarchical relationships).</td></tr><tr><td style=\"white-space:nowrap\">type<a name=\"search-modifier-code-type\"> </a></td><td>Type</td><td>The search parameter only applies to the Resource Type specified as a modifier (e.g. the modifier is not actually :type, but :Patient etc.).</td></tr><tr><td style=\"white-space:nowrap\">identifier<a name=\"search-modifier-code-identifier\"> </a></td><td>Identifier</td><td>The search parameter applies to the identifier on the resource, not the reference.</td></tr><tr><td style=\"white-space:nowrap\">of-type<a name=\"search-modifier-code-of-type\"> </a></td><td>Of Type</td><td>The search parameter has the format system|code|value, where the system and code refer to an Identifier.type.coding.system and .code, and match if any of the type codes match. All 3 parts must be present.</td></tr><tr><td style=\"white-space:nowrap\">code-text<a name=\"search-modifier-code-code-text\"> </a></td><td>Code Text</td><td>Tests whether the textual display value in a resource (e.g., CodeableConcept.text, Coding.display, or Reference.display) matches the supplied parameter value.</td></tr><tr><td style=\"white-space:nowrap\">text-advanced<a name=\"search-modifier-code-text-advanced\"> </a></td><td>Text Advanced</td><td>Tests whether the value in a resource matches the supplied parameter value using advanced text handling that searches text associated with the code/value - e.g., CodeableConcept.text, Coding.display, or Identifier.type.text.</td></tr><tr><td style=\"white-space:nowrap\">iterate<a name=\"search-modifier-code-iterate\"> </a></td><td>Iterate</td><td>The search parameter indicates an inclusion directive (_include, _revinclude) that is applied to an included resource instead of the matching resource.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 5
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/search-modifier-code"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/search-modifier-code>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.640" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.1.625" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.2.92" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "SearchModifierCode"] ; # 
+  fhir:title [ fhir:v "Search Modifier Code"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "A supported modifier for a search parameter."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/search-modifier-code"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/search-modifier-code>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "missing" ] ;
+     fhir:display [ fhir:v "Missing" ] ;
+     fhir:definition [ fhir:v "The search parameter returns resources that have a value or not." ]
+  ] [
+     fhir:code [ fhir:v "exact" ] ;
+     fhir:display [ fhir:v "Exact" ] ;
+     fhir:definition [ fhir:v "The search parameter returns resources that have a value that exactly matches the supplied parameter (the whole string, including casing and accents)." ]
+  ] [
+     fhir:code [ fhir:v "contains" ] ;
+     fhir:display [ fhir:v "Contains" ] ;
+     fhir:definition [ fhir:v "The search parameter returns resources that include the supplied parameter value anywhere within the field being searched." ]
+  ] [
+     fhir:code [ fhir:v "not" ] ;
+     fhir:display [ fhir:v "Not" ] ;
+     fhir:definition [ fhir:v "The search parameter returns resources that do not contain a match." ]
+  ] [
+     fhir:code [ fhir:v "text" ] ;
+     fhir:display [ fhir:v "Text" ] ;
+     fhir:definition [ fhir:v "The search parameter is processed as a string that searches text associated with the code/value - either CodeableConcept.text, Coding.display, Identifier.type.text, or Reference.display." ]
+  ] [
+     fhir:code [ fhir:v "in" ] ;
+     fhir:display [ fhir:v "In" ] ;
+     fhir:definition [ fhir:v "The search parameter is a URI (relative or absolute) that identifies a value set, and the search parameter tests whether the coding is in the specified value set." ]
+  ] [
+     fhir:code [ fhir:v "not-in" ] ;
+     fhir:display [ fhir:v "Not In" ] ;
+     fhir:definition [ fhir:v "The search parameter is a URI (relative or absolute) that identifies a value set, and the search parameter tests whether the coding is not in the specified value set." ]
+  ] [
+     fhir:code [ fhir:v "below" ] ;
+     fhir:display [ fhir:v "Below" ] ;
+     fhir:definition [ fhir:v "The search parameter tests whether the value in a resource is subsumed by the specified value (is-a, or hierarchical relationships)." ]
+  ] [
+     fhir:code [ fhir:v "above" ] ;
+     fhir:display [ fhir:v "Above" ] ;
+     fhir:definition [ fhir:v "The search parameter tests whether the value in a resource subsumes the specified value (is-a, or hierarchical relationships)." ]
+  ] [
+     fhir:code [ fhir:v "type" ] ;
+     fhir:display [ fhir:v "Type" ] ;
+     fhir:definition [ fhir:v "The search parameter only applies to the Resource Type specified as a modifier (e.g. the modifier is not actually :type, but :Patient etc.)." ]
+  ] [
+     fhir:code [ fhir:v "identifier" ] ;
+     fhir:display [ fhir:v "Identifier" ] ;
+     fhir:definition [ fhir:v "The search parameter applies to the identifier on the resource, not the reference." ]
+  ] [
+     fhir:code [ fhir:v "of-type" ] ;
+     fhir:display [ fhir:v "Of Type" ] ;
+     fhir:definition [ fhir:v "The search parameter has the format system|code|value, where the system and code refer to an Identifier.type.coding.system and .code, and match if any of the type codes match. All 3 parts must be present." ]
+  ] [
+     fhir:code [ fhir:v "code-text" ] ;
+     fhir:display [ fhir:v "Code Text" ] ;
+     fhir:definition [ fhir:v "Tests whether the textual display value in a resource (e.g., CodeableConcept.text, Coding.display, or Reference.display) matches the supplied parameter value." ]
+  ] [
+     fhir:code [ fhir:v "text-advanced" ] ;
+     fhir:display [ fhir:v "Text Advanced" ] ;
+     fhir:definition [ fhir:v "Tests whether the value in a resource matches the supplied parameter value using advanced text handling that searches text associated with the code/value - e.g., CodeableConcept.text, Coding.display, or Identifier.type.text." ]
+  ] [
+     fhir:code [ fhir:v "iterate" ] ;
+     fhir:display [ fhir:v "Iterate" ] ;
+     fhir:definition [ fhir:v "The search parameter indicates an inclusion directive (_include, _revinclude) that is applied to an included resource instead of the matching resource." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

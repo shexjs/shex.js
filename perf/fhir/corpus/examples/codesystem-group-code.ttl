@@ -1,0 +1,128 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/group-code> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "group-code"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem group-code</b></p><a name=\"group-code\"> </a><a name=\"hcgroup-code\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/group-code</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">patient-list<a name=\"group-code-patient-list\"> </a></td><td>Patient-List</td><td>A list of patients for the purpose of some kind of clinical treatment.</td></tr><tr><td style=\"white-space:nowrap\">family<a name=\"group-code-family\"> </a></td><td>Family</td><td>A group of persons and/or animals that constitute a family. The definition of family is not precisely fixed and subject to much variableness in interpretation.</td></tr><tr><td style=\"white-space:nowrap\">household<a name=\"group-code-household\"> </a></td><td>Household</td><td>A group of persons and/or animals that reside in a singe house. Both the definitions of 'reside' and 'house' are not precisely fixed.</td></tr><tr><td style=\"white-space:nowrap\">workplace<a name=\"group-code-workplace\"> </a></td><td>Workplace</td><td>A group of persons who work together in a single place.</td></tr><tr><td style=\"white-space:nowrap\">event-attendee<a name=\"group-code-event-attendee\"> </a></td><td>Event Attendee</td><td>Group contains a set of persons and/or animals who were at the same place at the same time. This is typically used for an infection event</td></tr><tr><td style=\"white-space:nowrap\">exposure-group<a name=\"group-code-exposure-group\"> </a></td><td>Exposure Group</td><td>Group contains a set of persons and/or animals who were exposed to some antigen or infectious agent.</td></tr><tr><td style=\"white-space:nowrap\">herd<a name=\"group-code-herd\"> </a></td><td>Herd</td><td>Group contains a set of animals that are treated as a coherent group.</td></tr><tr><td style=\"white-space:nowrap\">locality<a name=\"group-code-locality\"> </a></td><td>Locality</td><td>Group contains HealthcareService resources that are found in a single geographical location.</td></tr><tr><td style=\"white-space:nowrap\">organization<a name=\"group-code-organization\"> </a></td><td>Organization</td><td>A collection of healthcare services.</td></tr><tr><td style=\"white-space:nowrap\">collection<a name=\"group-code-collection\"> </a></td><td>Collection</td><td>A collection of entities for an arbitrary reason.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 3
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/group-code"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/group-code>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "GroupType"] ; # 
+  fhir:title [ fhir:v "Group Type"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "A code that describes the use of the group. The use of the group usually dictates what kind of entities can be members of the group."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/group-code"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/group-code>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "patient-list" ] ;
+     fhir:display [ fhir:v "Patient-List" ] ;
+     fhir:definition [ fhir:v "A list of patients for the purpose of some kind of clinical treatment." ]
+  ] [
+     fhir:code [ fhir:v "family" ] ;
+     fhir:display [ fhir:v "Family" ] ;
+     fhir:definition [ fhir:v "A group of persons and/or animals that constitute a family. The definition of family is not precisely fixed and subject to much variableness in interpretation." ]
+  ] [
+     fhir:code [ fhir:v "household" ] ;
+     fhir:display [ fhir:v "Household" ] ;
+     fhir:definition [ fhir:v "A group of persons and/or animals that reside in a singe house. Both the definitions of 'reside' and 'house' are not precisely fixed." ]
+  ] [
+     fhir:code [ fhir:v "workplace" ] ;
+     fhir:display [ fhir:v "Workplace" ] ;
+     fhir:definition [ fhir:v "A group of persons who work together in a single place." ]
+  ] [
+     fhir:code [ fhir:v "event-attendee" ] ;
+     fhir:display [ fhir:v "Event Attendee" ] ;
+     fhir:definition [ fhir:v "Group contains a set of persons and/or animals who were at the same place at the same time. This is typically used for an infection event" ]
+  ] [
+     fhir:code [ fhir:v "exposure-group" ] ;
+     fhir:display [ fhir:v "Exposure Group" ] ;
+     fhir:definition [ fhir:v "Group contains a set of persons and/or animals who were exposed to some antigen or infectious agent." ]
+  ] [
+     fhir:code [ fhir:v "herd" ] ;
+     fhir:display [ fhir:v "Herd" ] ;
+     fhir:definition [ fhir:v "Group contains a set of animals that are treated as a coherent group." ]
+  ] [
+     fhir:code [ fhir:v "locality" ] ;
+     fhir:display [ fhir:v "Locality" ] ;
+     fhir:definition [ fhir:v "Group contains HealthcareService resources that are found in a single geographical location." ]
+  ] [
+     fhir:code [ fhir:v "organization" ] ;
+     fhir:display [ fhir:v "Organization" ] ;
+     fhir:definition [ fhir:v "A collection of healthcare services." ]
+  ] [
+     fhir:code [ fhir:v "collection" ] ;
+     fhir:display [ fhir:v "Collection" ] ;
+     fhir:definition [ fhir:v "A collection of entities for an arbitrary reason." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

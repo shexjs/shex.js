@@ -1,0 +1,104 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/resource-aggregation-mode> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "resource-aggregation-mode"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem resource-aggregation-mode</b></p><a name=\"resource-aggregation-mode\"> </a><a name=\"hcresource-aggregation-mode\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/resource-aggregation-mode</code> defines the following codes in an undefined hierarchy:</p><table class=\"codes\"><tr><td><b>Lvl</b></td><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td>1</td><td style=\"white-space:nowrap\">contained<a name=\"resource-aggregation-mode-contained\"> </a></td><td>Contained</td><td>The reference is a local reference to a contained resource.</td></tr><tr><td>1</td><td style=\"white-space:nowrap\">referenced<a name=\"resource-aggregation-mode-referenced\"> </a></td><td>Referenced</td><td>The reference to a resource that has to be resolved externally to the resource that includes the reference.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  bundled<a name=\"resource-aggregation-mode-bundled\"> </a></td><td>Bundled</td><td>When the resource is in a Bundle, the resource the reference points to will be found in the same bundle as the resource that includes the reference.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/resource-aggregation-mode"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/resource-aggregation-mode>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.86" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "AggregationMode"] ; # 
+  fhir:title [ fhir:v "AggregationMode"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "How resource references can be aggregated."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/resource-aggregation-mode"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/resource-aggregation-mode>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "contained" ] ;
+     fhir:display [ fhir:v "Contained" ] ;
+     fhir:definition [ fhir:v "The reference is a local reference to a contained resource." ]
+  ] [
+     fhir:code [ fhir:v "referenced" ] ;
+     fhir:display [ fhir:v "Referenced" ] ;
+     fhir:definition [ fhir:v "The reference to a resource that has to be resolved externally to the resource that includes the reference." ] ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "bundled" ] ;
+       fhir:display [ fhir:v "Bundled" ] ;
+       fhir:definition [ fhir:v "When the resource is in a Bundle, the resource the reference points to will be found in the same bundle as the resource that includes the reference." ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,59 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Provenance/example-create-consent> a fhir:Provenance ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-create-consent"] ; # 
+  fhir:target ( [
+     fhir:l <http://hl7.org/fhir/Consent/consent-example-basic/_history/1> ;
+     fhir:reference [ fhir:v "Consent/consent-example-basic/_history/1" ]
+  ] ) ; # 
+  fhir:recorded [ fhir:v "2021-09-10T07:08:21.722+00:00"^^xsd:dateTime] ; # 
+  fhir:activity [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-DataOperation"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-DataOperation>
+       ] ;
+       fhir:code [ fhir:v "CREATE" ] ;
+       fhir:display [ fhir:v "create" ]
+     ] )
+  ] ; # 
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:agent ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/provenance-participant-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/provenance-participant-type>
+         ] ;
+         fhir:code [ fhir:v "assembler" ] ;
+         fhir:display [ fhir:v "Assembler" ]
+       ] )
+     ] ;
+     fhir:who [
+       fhir:display [ fhir:v "LEAP Consent Management Service" ]
+     ]
+  ] ) ; # 
+  fhir:entity ( [
+     fhir:role [ fhir:v "source" ] ;
+     fhir:what [
+       fhir:l <http://example.org/fhir/QuestionnaireResponse/some-questionnaire-response> ;
+       fhir:reference [ fhir:v "http://example.org/fhir/QuestionnaireResponse/some-questionnaire-response" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Consent/consent-example-basic/_history/1> a fhir:Consent .
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

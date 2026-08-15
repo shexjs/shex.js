@@ -1,0 +1,125 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Provenance/example-advanced> a fhir:Provenance ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-advanced"] ; # 
+  fhir:target ( [
+     fhir:l <http://hl7.org/fhir/List/example> ;
+     fhir:reference [ fhir:v "List/example" ]
+  ] ) ; # an example Provenance fully populated
+  fhir:occurred [
+     a fhir:DateTime ;
+     fhir:v "2020-04-29T09:49:00.000Z"^^xsd:dateTime
+  ] ; # 
+  fhir:recorded [ fhir:v "2020-04-29T09:49:00.000Z"^^xsd:dateTime] ; # 
+  fhir:policy ( [
+     fhir:v "http://example.org/policy/1234"^^xsd:anyURI ;
+     fhir:l <http://example.org/policy/1234>
+  ] ) ; # 
+  fhir:location [
+     fhir:l <http://hl7.org/fhir/Location/1/_history/1> ;
+     fhir:reference [ fhir:v "Location/1/_history/1" ]
+  ] ; # 
+  fhir:authorization ( [] ) ; # 
+  fhir:activity [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/iso-21089-lifecycle"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/iso-21089-lifecycle>
+       ] ;
+       fhir:code [ fhir:v "originate" ]
+     ] )
+  ] ; # 
+  fhir:basedOn ( [
+     fhir:l <http://hl7.org/fhir/CarePlan/example> ;
+     fhir:reference [ fhir:v "CarePlan/example" ]
+  ] ) ; # 
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/home> ;
+     fhir:reference [ fhir:v "Encounter/home" ]
+  ] ; # 
+  fhir:agent ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://dicom.nema.org/resources/ontology/DCM"^^xsd:anyURI ;
+           fhir:l <http://dicom.nema.org/resources/ontology/DCM>
+         ] ;
+         fhir:code [ fhir:v "110153" ] ;
+         fhir:display [ fhir:v "Source Role ID" ]
+       ] )
+     ] ;
+     fhir:who [
+       fhir:display [ fhir:v "myMachine.example.org" ]
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://dicom.nema.org/resources/ontology/DCM"^^xsd:anyURI ;
+           fhir:l <http://dicom.nema.org/resources/ontology/DCM>
+         ] ;
+         fhir:code [ fhir:v "110152" ] ;
+         fhir:display [ fhir:v "Destination Role ID" ]
+       ] )
+     ] ;
+     fhir:who [
+       fhir:l <http://hl7.org/fhir/Device/example> ;
+       fhir:reference [ fhir:v "Device/example" ]
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationType"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationType>
+         ] ;
+         fhir:code [ fhir:v "INF" ] ;
+         fhir:display [ fhir:v "Informant" ]
+       ] )
+     ] ;
+     fhir:who [
+       fhir:display [ fhir:v "Betty Jones" ]
+     ]
+  ] ) ; # 
+  fhir:signature ( [
+     fhir:type ( [
+       fhir:system [
+         fhir:v "urn:iso-astm:E1762-95:2013"^^xsd:anyURI ;
+         fhir:l <urn:iso-astm:E1762-95:2013>
+       ] ;
+       fhir:code [ fhir:v "1.2.840.10065.1.12.1.5" ] ;
+       fhir:display [ fhir:v "Verification Signature" ]
+     ] ) ; # verification signature
+     fhir:when [ fhir:v "2020-04-29T09:49:00.000Z"^^xsd:dateTime ] ;
+     fhir:who [
+       fhir:display [ fhir:v "Betty Jones" ]
+     ] ;
+     fhir:sigFormat [ fhir:v "image/jpeg" ] ;
+     fhir:data [ fhir:v "/9j/4AAQSkZJRgABAQEAYABgAAD/4QAiRXhpZgAATU0AKgAAAAgAAQESAAMAAAABAAEAAAAAAAD/2wBDAAIBAQIBAQICAgICAgICAwUDAwMDAwYEBAMFBwYHBwcGBwcICQsJCAgKCAcHCg0KCgsMDAwMBwkODw0MDgsMDAz/2wBDAQICAgMDAwYDAwYMCAcIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAz/wAARCAAXACQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD92rfxVJqU6vDIq/6SIUtNgaSSPeAZiQT8pQh1IxgEbuTtFq51y6t7u6k225s7OdIZQQQ6qVRjJuzjCh+QR0UnPasfwUxspoJF/wCXx4bWQH0WyWRSPcEMPfd7CneNtUms7u7tLG0k1GTUoljniiIVbfBAd3PJ5jkUfKrOAqfK2QKAOuorDfxRqFraxSz6HdjcmXSGRZX3bGYKoH+6FJbYAzDkjJEmi+JptTvLaCaxktXltTNIWLAJICgZFDKrMBv+/gA8cc8AGxRRRQBzvhvQrq2WzjmhMP2KVpZJXK5nIjMSBVUngIRknB+QcHcSNLQ9C/sfzXaXzp5j8z7dowGZgMZPOWYk9yx6DCgooA0Kr2mnJaXE026SSa4PzO55CjO1R2CjJwPck5JJJRQBYooooA//2Q=="^^xsd:base64Binary ]
+  ] ) . # 
+
+<http://hl7.org/fhir/List/example> a fhir:List .
+
+<http://hl7.org/fhir/Location/1/_history/1> a fhir:Location .
+
+<http://hl7.org/fhir/CarePlan/example> a fhir:CarePlan .
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/home> a fhir:Encounter .
+
+<http://hl7.org/fhir/Device/example> a fhir:Device .
+
+# -------------------------------------------------------------------------------------
+

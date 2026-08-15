@@ -1,0 +1,54 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# This example is a fully populated example where a care giver reports they are taking a certain medication and has the bottle
+
+<http://hl7.org/fhir/MedicationStatement/example006> a fhir:MedicationStatement ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example006"] ; # 
+  fhir:status [ fhir:v "recorded"] ; # 
+  fhir:medication [
+     fhir:concept [
+       a sct:27658006 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "27658006" ] ;
+         fhir:display [ fhir:v "Product containing amoxicillin (medicinal product)" ]
+       ] )
+     ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/pat1> ;
+     fhir:reference [ fhir:v "Patient/pat1" ] ;
+     fhir:display [ fhir:v "Donald Duck" ]
+  ] ; # 
+  fhir:effective [
+     a fhir:DateTime ;
+     fhir:v "2014-02-01"^^xsd:date
+  ] ; # 
+  fhir:dateAsserted [ fhir:v "2014-02-22"^^xsd:date] ; # 
+  fhir:informationSource ( [
+     fhir:l <http://hl7.org/fhir/RelatedPerson/peter> ;
+     fhir:reference [ fhir:v "RelatedPerson/peter" ] ;
+     fhir:display [ fhir:v "Peter Chalmers" ]
+  ] ) ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "Father indicates they miss the occasional dose" ]
+  ] ) ; # 
+  fhir:dosage [] . # 
+
+<http://hl7.org/fhir/Patient/pat1> a fhir:Patient .
+
+<http://hl7.org/fhir/RelatedPerson/peter> a fhir:RelatedPerson .
+
+# -------------------------------------------------------------------------------------
+

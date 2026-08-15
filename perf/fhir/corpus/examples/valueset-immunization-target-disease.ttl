@@ -1,0 +1,180 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ValueSet/immunization-target-disease> a fhir:ValueSet ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "immunization-target-disease"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: ValueSet immunization-target-disease</b></p><a name=\"immunization-target-disease\"> </a><a name=\"hcimmunization-target-disease\"> </a><ul><li>Include these codes as defined in <a href=\"http://www.snomed.org/\"><code>http://snomed.info/sct</code></a><span title=\"Version is not explicitly stated. No matching Code System found\"> version Not Stated (use latest from terminology server)</span><table class=\"none\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td></tr><tr><td><a href=\"http://snomed.info/id/397428000\">397428000</a></td><td style=\"color: #cccccc\">Diphtheria</td></tr><tr><td><a href=\"http://snomed.info/id/27836007\">27836007</a></td><td style=\"color: #cccccc\">Pertussis</td></tr><tr><td><a href=\"http://snomed.info/id/76902006\">76902006</a></td><td style=\"color: #cccccc\">Tetanus</td></tr><tr><td><a href=\"http://snomed.info/id/721764008\">721764008</a></td><td style=\"color: #cccccc\">Infection caused by Human poliovirus</td></tr><tr><td><a href=\"http://snomed.info/id/14189004\">14189004</a></td><td style=\"color: #cccccc\">Measles</td></tr><tr><td><a href=\"http://snomed.info/id/36989005\">36989005</a></td><td style=\"color: #cccccc\">Mumps</td></tr><tr><td><a href=\"http://snomed.info/id/36653000\">36653000</a></td><td style=\"color: #cccccc\">Rubella</td></tr><tr><td><a href=\"http://snomed.info/id/16814004\">16814004</a></td><td style=\"color: #cccccc\">Pneumococcal infectious disease</td></tr><tr><td><a href=\"http://snomed.info/id/23511006\">23511006</a></td><td style=\"color: #cccccc\">Meningococcal infectious disease</td></tr><tr><td><a href=\"http://snomed.info/id/709410003\">709410003</a></td><td style=\"color: #cccccc\">Haemophilus influenzae type b infection</td></tr><tr><td><a href=\"http://snomed.info/id/56717001\">56717001</a></td><td style=\"color: #cccccc\">Tuberculosis</td></tr><tr><td><a href=\"http://snomed.info/id/363354003\">363354003</a></td><td style=\"color: #cccccc\">Malignant neoplasm of cervix uteri</td></tr><tr><td><a href=\"http://snomed.info/id/266113007\">266113007</a></td><td style=\"color: #cccccc\">Genital warts</td></tr><tr><td><a href=\"http://snomed.info/id/415822001\">415822001</a></td><td style=\"color: #cccccc\">Viral gastroenteritis caused by Rotavirus</td></tr><tr><td><a href=\"http://snomed.info/id/66071002\">66071002</a></td><td style=\"color: #cccccc\">Type B viral hepatitis</td></tr><tr><td><a href=\"http://snomed.info/id/40468003\">40468003</a></td><td style=\"color: #cccccc\">Viral hepatitis, type A</td></tr><tr><td><a href=\"http://snomed.info/id/7111000119109\">7111000119109</a></td><td style=\"color: #cccccc\">Viral hepatitis E</td></tr><tr><td><a href=\"http://snomed.info/id/719590007\">719590007</a></td><td style=\"color: #cccccc\">Influenza caused by seasonal influenza virus</td></tr><tr><td><a href=\"http://snomed.info/id/719865001\">719865001</a></td><td style=\"color: #cccccc\">Influenza caused by pandemic influenza virus</td></tr><tr><td><a href=\"http://snomed.info/id/38907003\">38907003</a></td><td style=\"color: #cccccc\">Varicella</td></tr><tr><td><a href=\"http://snomed.info/id/4740000\">4740000</a></td><td style=\"color: #cccccc\">Herpes zoster</td></tr><tr><td><a href=\"http://snomed.info/id/55735004\">55735004</a></td><td style=\"color: #cccccc\">Respiratory syncytial virus infection</td></tr><tr><td><a href=\"http://snomed.info/id/240613006\">240613006</a></td><td style=\"color: #cccccc\">Typhus group rickettsial disease</td></tr><tr><td><a href=\"http://snomed.info/id/4834000\">4834000</a></td><td style=\"color: #cccccc\">Typhoid fever</td></tr><tr><td><a href=\"http://snomed.info/id/85904008\">85904008</a></td><td style=\"color: #cccccc\">Paratyphoid fever</td></tr><tr><td><a href=\"http://snomed.info/id/63650001\">63650001</a></td><td style=\"color: #cccccc\">Cholera</td></tr><tr><td><a href=\"http://snomed.info/id/16541001\">16541001</a></td><td style=\"color: #cccccc\">Yellow fever</td></tr><tr><td><a href=\"http://snomed.info/id/38362002\">38362002</a></td><td style=\"color: #cccccc\">Dengue</td></tr><tr><td><a href=\"http://snomed.info/id/61462000\">61462000</a></td><td style=\"color: #cccccc\">Malaria</td></tr><tr><td><a href=\"http://snomed.info/id/14168008\">14168008</a></td><td style=\"color: #cccccc\">Rabies</td></tr><tr><td><a href=\"http://snomed.info/id/186772009\">186772009</a></td><td style=\"color: #cccccc\">Rocky Mountain spotted fever</td></tr><tr><td><a href=\"http://snomed.info/id/712986001\">712986001</a></td><td style=\"color: #cccccc\">Encephalitis caused by tick-borne encephalitis virus</td></tr><tr><td><a href=\"http://snomed.info/id/52947006\">52947006</a></td><td style=\"color: #cccccc\">Japanese encephalitis virus disease</td></tr><tr><td><a href=\"http://snomed.info/id/186788009\">186788009</a></td><td style=\"color: #cccccc\">Q fever</td></tr><tr><td><a href=\"http://snomed.info/id/409498004\">409498004</a></td><td style=\"color: #cccccc\">Anthrax</td></tr><tr><td><a href=\"http://snomed.info/id/58750007\">58750007</a></td><td style=\"color: #cccccc\">Plague</td></tr><tr><td><a href=\"http://snomed.info/id/19265001\">19265001</a></td><td style=\"color: #cccccc\">Tularemia</td></tr><tr><td><a href=\"http://snomed.info/id/23502006\">23502006</a></td><td style=\"color: #cccccc\">Lyme disease</td></tr><tr><td><a href=\"http://snomed.info/id/75702008\">75702008</a></td><td style=\"color: #cccccc\">Brucellosis</td></tr><tr><td><a href=\"http://snomed.info/id/80612004\">80612004</a></td><td style=\"color: #cccccc\">Leishmaniasis</td></tr><tr><td><a href=\"http://snomed.info/id/186747009\">186747009</a></td><td style=\"color: #cccccc\">Coronavirus infection</td></tr><tr><td><a href=\"http://snomed.info/id/67924001\">67924001</a></td><td style=\"color: #cccccc\">Smallpox</td></tr><tr><td><a href=\"http://snomed.info/id/70090004\">70090004</a></td><td style=\"color: #cccccc\">Cowpox</td></tr></table></li></ul></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "pher"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ValueSet/immunization-target-disease"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/immunization-target-disease>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.3.1047" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ImmunizationTargetDiseaseCodes"] ; # 
+  fhir:title [ fhir:v "Immunization Target Disease Codes"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "FHIR Project team"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "The value set to instantiate this attribute should be drawn from a terminologically robust code system that consists of or contains concepts to support describing the disease that the dose is being administered against. This value set is provided as a suggestive example and includes SNOMED CT concepts from the 64572001 (Disease) hierarchy."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:copyright [ fhir:v "This resource includes content from SNOMED Clinical Terms® (SNOMED CT®) which is copyright of the International Health Terminology Standards Development Organisation (IHTSDO). Implementers of these specifications must have the appropriate SNOMED CT Affiliate license - for more information contact http://www.snomed.org/snomed-ct/get-snomed-ct or info@snomed.org"] ; # 
+  fhir:compose [
+     fhir:include ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:concept ( [
+         fhir:code [ fhir:v "397428000" ]
+       ] [
+         fhir:code [ fhir:v "27836007" ]
+       ] [
+         fhir:code [ fhir:v "76902006" ]
+       ] [
+         fhir:code [ fhir:v "721764008" ]
+       ] [
+         fhir:code [ fhir:v "14189004" ]
+       ] [
+         fhir:code [ fhir:v "36989005" ]
+       ] [
+         fhir:code [ fhir:v "36653000" ]
+       ] [
+         fhir:code [ fhir:v "16814004" ]
+       ] [
+         fhir:code [ fhir:v "23511006" ]
+       ] [
+         fhir:code [ fhir:v "709410003" ]
+       ] [
+         fhir:code [ fhir:v "56717001" ]
+       ] [
+         fhir:code [ fhir:v "363354003" ]
+       ] [
+         fhir:code [ fhir:v "266113007" ]
+       ] [
+         fhir:code [ fhir:v "415822001" ]
+       ] [
+         fhir:code [ fhir:v "66071002" ]
+       ] [
+         fhir:code [ fhir:v "40468003" ]
+       ] [
+         fhir:code [ fhir:v "7111000119109" ]
+       ] [
+         fhir:code [ fhir:v "719590007" ]
+       ] [
+         fhir:code [ fhir:v "719865001" ]
+       ] [
+         fhir:code [ fhir:v "38907003" ]
+       ] [
+         fhir:code [ fhir:v "4740000" ]
+       ] [
+         fhir:code [ fhir:v "55735004" ]
+       ] [
+         fhir:code [ fhir:v "240613006" ]
+       ] [
+         fhir:code [ fhir:v "4834000" ]
+       ] [
+         fhir:code [ fhir:v "85904008" ]
+       ] [
+         fhir:code [ fhir:v "63650001" ]
+       ] [
+         fhir:code [ fhir:v "16541001" ]
+       ] [
+         fhir:code [ fhir:v "38362002" ]
+       ] [
+         fhir:code [ fhir:v "61462000" ]
+       ] [
+         fhir:code [ fhir:v "14168008" ]
+       ] [
+         fhir:code [ fhir:v "186772009" ]
+       ] [
+         fhir:code [ fhir:v "712986001" ]
+       ] [
+         fhir:code [ fhir:v "52947006" ]
+       ] [
+         fhir:code [ fhir:v "186788009" ]
+       ] [
+         fhir:code [ fhir:v "409498004" ]
+       ] [
+         fhir:code [ fhir:v "58750007" ]
+       ] [
+         fhir:code [ fhir:v "19265001" ]
+       ] [
+         fhir:code [ fhir:v "23502006" ]
+       ] [
+         fhir:code [ fhir:v "75702008" ]
+       ] [
+         fhir:code [ fhir:v "80612004" ]
+       ] [
+         fhir:code [ fhir:v "186747009" ]
+       ] [
+         fhir:code [ fhir:v "67924001" ]
+       ] [
+         fhir:code [ fhir:v "70090004" ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:expansion [] . # 
+
+# -------------------------------------------------------------------------------------
+

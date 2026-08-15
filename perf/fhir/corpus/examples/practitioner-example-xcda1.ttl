@@ -1,0 +1,30 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Practitioner/xcda1> a fhir:Practitioner ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "xcda1"] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:system [
+       fhir:v "http://healthcare.example.org/identifiers/staff"^^xsd:anyURI ;
+       fhir:l <http://healthcare.example.org/identifiers/staff>
+     ] ;
+     fhir:value [ fhir:v "D234123" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:family [ fhir:v "Dopplemeyer" ] ;
+     fhir:given ( [ fhir:v "Sherry" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "email" ] ;
+     fhir:value [ fhir:v "john.doe@healthcare.example.org" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

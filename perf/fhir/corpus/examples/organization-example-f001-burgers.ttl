@@ -1,0 +1,98 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Organization/f001> a fhir:Organization ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f001"] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:system [
+       fhir:v "urn:oid:2.16.528.1"^^xsd:anyURI ;
+       fhir:l <urn:oid:2.16.528.1>
+     ] ;
+     fhir:value [ fhir:v "91654" ]
+  ] [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:system [
+       fhir:v "urn:oid:2.16.840.1.113883.2.4.6.1"^^xsd:anyURI ;
+       fhir:l <urn:oid:2.16.840.1.113883.2.4.6.1>
+     ] ;
+     fhir:value [ fhir:v "17-0112278" ] # Dutch VEKTIS AGB-Z
+  ] ) ; # 
+  fhir:type ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "urn:oid:2.16.840.1.113883.2.4.15.1060"^^xsd:anyURI ;
+         fhir:l <urn:oid:2.16.840.1.113883.2.4.15.1060>
+       ] ;
+       fhir:code [ fhir:v "V6" ] ; # RoleCodeNLUZIRoleCodeOrganisaties
+       fhir:display [ fhir:v "University Medical Hospital" ]
+     ] [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/organization-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/organization-type>
+       ] ;
+       fhir:code [ fhir:v "prov" ] ;
+       fhir:display [ fhir:v "Healthcare Provider" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "Burgers University Medical Center"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "phone" ] ;
+       fhir:value [ fhir:v "022-655 2300" ] ;
+       fhir:use [ fhir:v "work" ]
+     ] )
+  ] [
+     fhir:address [
+       fhir:use [ fhir:v "work" ] ;
+       fhir:line ( [ fhir:v "Galapagosweg 91" ] ) ;
+       fhir:city [ fhir:v "Den Burg" ] ;
+       fhir:postalCode [ fhir:v "9105 PZ" ] ;
+       fhir:country [ fhir:v "NLD" ]
+     ]
+  ] [
+     fhir:address [
+       fhir:use [ fhir:v "work" ] ;
+       fhir:line ( [ fhir:v "PO Box 2311" ] ) ;
+       fhir:city [ fhir:v "Den Burg" ] ;
+       fhir:postalCode [ fhir:v "9100 AA" ] ;
+       fhir:country [ fhir:v "NLD" ]
+     ]
+  ] [
+     fhir:purpose [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/contactentity-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/contactentity-type>
+         ] ;
+         fhir:code [ fhir:v "PRESS" ]
+       ] )
+     ] ;
+     fhir:telecom ( [
+       fhir:system [ fhir:v "phone" ] ;
+       fhir:value [ fhir:v "022-655 2334" ]
+     ] )
+  ] [
+     fhir:purpose [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/contactentity-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/contactentity-type>
+         ] ;
+         fhir:code [ fhir:v "PATINF" ]
+       ] )
+     ] ;
+     fhir:telecom ( [
+       fhir:system [ fhir:v "phone" ] ;
+       fhir:value [ fhir:v "022-655 2335" ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

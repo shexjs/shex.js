@@ -96,7 +96,7 @@ exports.RegexpModule = {
                 patch(pair.tail, matchstate);
                 startNo = pair.start;
             }
-            return new EvalSimple1ErrRegexEngine(shape, states, startNo, matchstate, debugHooks);
+            return new EvalSimple1ErrRegexEngine(shape, index, states, startNo, matchstate, debugHooks);
             function maybeAddRept(expr, start, tail) {
                 if ((expr.min == undefined || expr.min === 1) &&
                     (expr.max == undefined || expr.max === 1))
@@ -237,10 +237,53 @@ class RegExpThread {
         this.errors = errors;
     }
 }
+/**
+ * The semantic actions written anywhere in here, by name.
+ *
+ * Without any, ShEx asks only how many triples a constraint took, so two
+ * ways of matching the same bag are the same answer and the frontier can
+ * keep one of them.  An action is handed the triples it fired on and does
+ * something opaque with them, so where one is watching the specific
+ * assignment is part of the answer and the merge has to be off.
+ *
+ * Names rather than a flag, because an action nobody handles is never
+ * dispatched (SemActDispatcher.dispatchAll skips it) and so cannot observe
+ * anything.  Which handlers are registered isn't known until match().
+ */
+function semActNamesIn(exprOrRef, index, seen, into) {
+    if (typeof exprOrRef === "string") {
+        if (seen.has(exprOrRef))
+            return into; // an Inclusion cycle
+        seen.add(exprOrRef);
+        const included = index.tripleExprs[exprOrRef];
+        return included === undefined ? into : semActNamesIn(included, index, seen, into);
+    }
+    (exprOrRef.semActs || []).forEach(sa => into.add(sa.name));
+    switch (exprOrRef.type) {
+        case "EachOf":
+        case "OneOf":
+            exprOrRef.expressions.forEach(nested => semActNamesIn(nested, index, seen, into));
+    }
+    return into;
+}
+/** May the frontier be deduplicated, given who is listening? */
+function merging(names, semActHandler) {
+    if (names.size === 0)
+        return true;
+    if (semActHandler.isRegistered === undefined)
+        return false; // can't ask: assume it is live
+    for (const name of names)
+        if (semActHandler.isRegistered(name))
+            return false;
+    return true; // written, but nobody is handling them
+}
 class EvalSimple1ErrRegexEngine {
-    constructor(shape, states, startNo, matchstate, debugHooks) {
+    constructor(shape, index, states, startNo, matchstate, debugHooks) {
         this._live = null;
         this.shape = shape;
+        this.semActNames = new Set((shape.semActs || []).map(sa => sa.name));
+        if (shape.expression !== undefined)
+            semActNamesIn(shape.expression, index, new Set(), this.semActNames);
         this.end = matchstate;
         this.states = states;
         this.start = startNo;
@@ -267,6 +310,7 @@ class EvalSimple1ErrRegexEngine {
      */
     *runMatch(node, constraintToTripleMapping, semActHandler, trace) {
         const thisEvalSimple1ErrRegexEngine = this;
+        const mayMerge = merging(this.semActNames, semActHandler);
         let clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
         let generation = 0;
         this._live = () => ({ clist, nlist }); // closes over the swapped lists
@@ -358,7 +402,7 @@ class EvalSimple1ErrRegexEngine {
             // filled in lazily, so a thread that hasn't reached a constraint
             // still has all of its triples.
             const seenFrontier = new Set();
-            clist = nlist.filter(thread => {
+            clist = !mayMerge ? nlist : nlist.filter(thread => {
                 const counts = [];
                 constraintToTripleMapping.data.forEach((pairs, constraint) => counts.push(thread.avail.has(constraint) ? thread.avail.get(constraint).length : pairs.length));
                 const key = thread.state + "|" + JSON.stringify(thread.repeats)

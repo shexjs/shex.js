@@ -1,0 +1,190 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/10bb101f-a121-4264-a920-67be9cb82c74> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "10bb101f-a121-4264-a920-67be9cb82c74"] ; # 
+  fhir:identifier [
+     fhir:system [
+       fhir:v "urn:example-org:sender.identifiers"^^xsd:anyURI ;
+       fhir:l <urn:example-org:sender.identifiers>
+     ] ;
+     fhir:value [ fhir:v "efdd254b-0e09-4164-883e-35cf3871715f" ]
+  ] ; # 
+  fhir:type [ fhir:v "message"] ; # 
+  fhir:timestamp [ fhir:v "2015-07-14T11:15:33+10:00"^^xsd:dateTime] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:267b18ce-3d37-4581-9baa-6fada338038b"^^xsd:anyURI ;
+       fhir:l <urn:uuid:267b18ce-3d37-4581-9baa-6fada338038b>
+     ] ;
+     fhir:resource ( <urn:uuid:267b18ce-3d37-4581-9baa-6fada338038b> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://acme.com/ehr/fhir/Patient/pat1"^^xsd:anyURI ;
+       fhir:l <http://acme.com/ehr/fhir/Patient/pat1>
+     ] ;
+     fhir:resource ( <http://acme.com/ehr/fhir/Patient/pat1> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://acme.com/ehr/fhir/Patient/pat2"^^xsd:anyURI ;
+       fhir:l <http://acme.com/ehr/fhir/Patient/pat2>
+     ] ;
+     fhir:resource ( <http://acme.com/ehr/fhir/Patient/pat2> )
+  ] ) . # 
+
+<urn:uuid:267b18ce-3d37-4581-9baa-6fada338038b> a fhir:MessageHeader ;
+  fhir:id [ fhir:v "267b18ce-3d37-4581-9baa-6fada338038b"] ; # Note about the id: according to the spec, the fullUrl must not 
+#          disagree with the id in the resource. For instance, if the fullUrl 
+#          was http://server/path/MessageHeader/267b18ce-3d37-4581-9baa-6fada338038b,
+#          then the id of the resource must be 267b18ce-3d37-4581-9baa-6fada338038b.
+#          
+#          However, in this case, a fullUrl of urn:uuid:[x] makes no claim about
+#          the id of the resource, and it can be different, or missing. Note, though
+#          that this doesn't really make sense; if it's present, there's less 
+#          potential for confusion if they match, like in this case
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n						<p>This message is a request to link Patient records 654321 (Patient Donald DUCK @ Acme Healthcare, Inc) and 123456 (Patient Donald D DUCK @ Acme Healthcare, Inc)</p>\n					</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:event [
+     a fhir:Coding ;
+     fhir:system [
+       fhir:v "http://example.org/fhir/message-events"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/message-events>
+     ] ;
+     fhir:code [ fhir:v "patient-link" ]
+  ] ; # 
+  fhir:source [
+     fhir:endpoint [
+       a fhir:Url ;
+       fhir:v "http://example.org/clients/ehr-lite"^^xsd:anyURI ;
+       fhir:l <http://example.org/clients/ehr-lite>
+     ]
+  ] ; # 
+  fhir:focus ( [
+     fhir:l <http://acme.com/ehr/fhir/Patient/pat1> ;
+     fhir:reference [ fhir:v "http://acme.com/ehr/fhir/Patient/pat1" ]
+  ] [
+     fhir:l <http://acme.com/ehr/fhir/Patient/pat2> ;
+     fhir:reference [ fhir:v "http://acme.com/ehr/fhir/Patient/pat2" ]
+  ] ) . # this message is posted to http://acme.com/ehr/fhir, 
+#             with an event 'link' to link 2 patient records, and nominates
+#             2 patients on the server
+
+<http://acme.com/ehr/fhir/Patient/pat1> a fhir:Patient ;
+  fhir:id [ fhir:v "pat1"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n						<p>Patient Donald DUCK @ Acme Healthcare, Inc. MR = 654321</p>\n					</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "MR" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "urn:oid:0.1.2.3.4.5.6.7"^^xsd:anyURI ;
+       fhir:l <urn:oid:0.1.2.3.4.5.6.7>
+     ] ;
+     fhir:value [ fhir:v "654321" ]
+  ] ) ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Donald" ] ;
+     fhir:given ( [ fhir:v "Duck" ] )
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:contact ( [
+     fhir:relationship ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.org/fhir/CodeSystem/patient-contact-relationship"^^xsd:anyURI ;
+           fhir:l <http://example.org/fhir/CodeSystem/patient-contact-relationship>
+         ] ;
+         fhir:code [ fhir:v "E" ]
+       ] )
+     ] ) ;
+     fhir:organization [
+       fhir:l <http://hl7.org/fhir/Organization/1> ;
+       fhir:reference [ fhir:v "Organization/1" ] ;
+       fhir:display [ fhir:v "Walt Disney Corporation" ]
+     ]
+  ] ) ; # 
+  fhir:managingOrganization [
+     fhir:l <http://hl7.org/fhir/Organization/1> ;
+     fhir:reference [ fhir:v "Organization/1" ] ;
+     fhir:display [ fhir:v "ACME Healthcare, Inc" ]
+  ] . # 
+
+<http://hl7.org/fhir/Organization/1> a fhir:Organization .
+
+<http://acme.com/ehr/fhir/Patient/pat2> a fhir:Patient ;
+  fhir:id [ fhir:v "pat2"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n						<p>Patient Donald D DUCK @ Acme Healthcare, Inc. MR = 123456</p>\n					</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "MR" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "urn:oid:0.1.2.3.4.5.6.7"^^xsd:anyURI ;
+       fhir:l <urn:oid:0.1.2.3.4.5.6.7>
+     ] ;
+     fhir:value [ fhir:v "123456" ]
+  ] ) ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Donald" ] ;
+     fhir:given ( [ fhir:v "Duck" ] [ fhir:v "D" ] )
+  ] ) ; # 
+  fhir:gender [
+     fhir:v "other" ;
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "http://example.org/Profile/administrative-status"^^xsd:anyURI ;
+         fhir:l <http://example.org/Profile/administrative-status>
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/v2-0001"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/v2-0001>
+           ] ;
+           fhir:code [ fhir:v "A" ] ;
+           fhir:display [ fhir:v "Ambiguous" ]
+         ] )
+       ]
+     ] )
+  ] ; # 
+  fhir:managingOrganization [
+     fhir:l <http://hl7.org/fhir/Organization/1> ;
+     fhir:reference [ fhir:v "Organization/1" ] ;
+     fhir:display [ fhir:v "ACME Healthcare, Inc" ]
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,65 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Location/hl7> a fhir:Location ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "hl7"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      Health Level Seven International<br/>\n				3300 Washtenaw Avenue, Suite 227<br/>\n				Ann Arbor, MI 48104<br/>\n				USA<br/>\n				(+1) 734-677-7777 (phone)<br/>\n				(+1) 734-677-6622 (fax)<br/>\n				E-mail:  <a href=\"mailto:hq@HL7.org\">hq@HL7.org</a>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # HL7 itself
+  fhir:name [ fhir:v "Health Level Seven International"] ; # 
+  fhir:description [ fhir:v "HL7 Headquarters"] ; # 
+  fhir:mode [ fhir:v "instance"] ; # 
+  fhir:type ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-RoleCode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-RoleCode>
+       ] ;
+       fhir:code [ fhir:v "SLEEP" ] ;
+       fhir:display [ fhir:v "Sleep disorders unit" ]
+     ] )
+  ] ) ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "phone" ] ;
+       fhir:value [ fhir:v "(+1) 734-677-7777" ]
+     ] [
+       fhir:system [ fhir:v "fax" ] ;
+       fhir:value [ fhir:v "(+1) 734-677-6622" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "hq@HL7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:address [
+     fhir:line ( [ fhir:v "3300 Washtenaw Avenue, Suite 227" ] ) ;
+     fhir:city [ fhir:v "Ann Arbor" ] ;
+     fhir:state [ fhir:v "MI" ] ;
+     fhir:postalCode [ fhir:v "48104" ] ;
+     fhir:country [ fhir:v "USA" ]
+  ] ; # 
+  fhir:form [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/location-physical-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/location-physical-type>
+       ] ;
+       fhir:code [ fhir:v "bu" ] ;
+       fhir:display [ fhir:v "Building" ]
+     ] )
+  ] ; # 
+  fhir:position [
+     fhir:longitude [ fhir:v 42.256500 ] ;
+     fhir:latitude [ fhir:v -83.694710 ]
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

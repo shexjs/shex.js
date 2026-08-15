@@ -1,0 +1,120 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/price-component-type> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "price-component-type"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T11:01:55.562+11:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem price-component-type</b></p><a name=\"price-component-type\"> </a><a name=\"hcprice-component-type\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">Last updated: 2021-01-05T10:01:24.148+11:00</p></div><p>This case-sensitive code system <code>http://hl7.org/fhir/price-component-type</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">base<a name=\"price-component-type-base\"> </a></td><td>Base price</td><td>The amount is the base price used for calculating the total price before applying surcharges, discount or taxes.</td></tr><tr><td style=\"white-space:nowrap\">surcharge<a name=\"price-component-type-surcharge\"> </a></td><td>Surcharge</td><td>The amount (either directly specified, or calculated using a factor) that increases the cost of the item.</td></tr><tr><td style=\"white-space:nowrap\">discount<a name=\"price-component-type-discount\"> </a></td><td>Discount</td><td>The amount (either directly specified, or calculated using a factor) that reduces the cost of the item.  This is sometimes referred to as a deduction.</td></tr><tr><td style=\"white-space:nowrap\">tax<a name=\"price-component-type-tax\"> </a></td><td>Tax</td><td>The amount (either directly specified, or calculated using a factor) that is levied by a government on the item.</td></tr><tr><td style=\"white-space:nowrap\">informational<a name=\"price-component-type-informational\"> </a></td><td>Informational</td><td>The amount (either directly specified, or calculated using a factor) is of informational character, it has not been applied in the calculation of the total price.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "pa"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 0
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/price-component-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/price-component-type>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1807" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "PriceComponentType"] ; # 
+  fhir:title [ fhir:v "Price Component Type"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Patient Administration"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/pafm" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Codes indicating the kind of the price component."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/price-component-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/price-component-type>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "base" ] ;
+     fhir:display [ fhir:v "Base price" ] ;
+     fhir:definition [ fhir:v "The amount is the base price used for calculating the total price before applying surcharges, discount or taxes." ]
+  ] [
+     fhir:code [ fhir:v "surcharge" ] ;
+     fhir:display [ fhir:v "Surcharge" ] ;
+     fhir:definition [ fhir:v "The amount (either directly specified, or calculated using a factor) that increases the cost of the item." ]
+  ] [
+     fhir:code [ fhir:v "discount" ] ;
+     fhir:display [ fhir:v "Discount" ] ;
+     fhir:definition [ fhir:v "The amount (either directly specified, or calculated using a factor) that reduces the cost of the item.  This is sometimes referred to as a deduction." ]
+  ] [
+     fhir:code [ fhir:v "tax" ] ;
+     fhir:display [ fhir:v "Tax" ] ;
+     fhir:definition [ fhir:v "The amount (either directly specified, or calculated using a factor) that is levied by a government on the item." ]
+  ] [
+     fhir:code [ fhir:v "informational" ] ;
+     fhir:display [ fhir:v "Informational" ] ;
+     fhir:definition [ fhir:v "The amount (either directly specified, or calculated using a factor) is of informational character, it has not been applied in the calculation of the total price." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

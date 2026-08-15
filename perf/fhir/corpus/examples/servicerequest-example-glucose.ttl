@@ -1,0 +1,40 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ServiceRequest/glucose> a fhir:ServiceRequest ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "glucose"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "original-order"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/dicom> ;
+     fhir:reference [ fhir:v "Patient/dicom" ]
+  ] ; # 
+  fhir:occurrence [
+     a fhir:DateTime ;
+     fhir:v "2013-05-08T09:33:27+07:00"^^xsd:dateTime
+  ] ; # 
+  fhir:asNeeded [ fhir:v true] ; # 
+  fhir:asNeededFor ( [] ) ; # 
+  fhir:requester [
+     fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+     fhir:reference [ fhir:v "Practitioner/example" ] ;
+     fhir:display [ fhir:v "Dr. Adam Careful" ]
+  ] ; # 
+  fhir:reason ( [
+     fhir:concept [
+       fhir:text [ fhir:v "Glucose monitoring" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/dicom> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

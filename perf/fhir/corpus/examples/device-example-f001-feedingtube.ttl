@@ -1,0 +1,23 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Device/f001> a fhir:Device ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f001"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http:/goodhealthhospital/identifier/devices"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/http:/goodhealthhospital/identifier/devices>
+     ] ;
+     fhir:value [ fhir:v "12345" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] . # <udiCarrier>
+#		<system value="urn:oid:2.16.840.1.113883.3.3719"/>, FDA UDI root - urn:oid:2.16.840.1.113883.3.3719  Add following udi system URN to fhir identifier registry :, <value value="(01)00000123000017(10)ABC123(17)120415"/>, this udi is fictitious and will be updated when more information and better examples of UDI's become active, </udiCarrier>
+
+# -------------------------------------------------------------------------------------
+

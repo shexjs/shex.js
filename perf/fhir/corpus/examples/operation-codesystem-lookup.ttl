@@ -1,0 +1,360 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/OperationDefinition/CodeSystem-lookup> a fhir:OperationDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "CodeSystem-lookup"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: OperationDefinition CodeSystem-lookup</b></p><a name=\"CodeSystem-lookup\"> </a><a name=\"hcCodeSystem-lookup\"> </a><p>URL: [base]/CodeSystem/$lookup</p><p>URL: [base]/CodeSystem/[id]/$lookup</p><h3>Parameters</h3><table class=\"grid\"><tr><td><b>Use</b></td><td><b>Name</b></td><td><b>Scope</b></td><td><b>Cardinality</b></td><td><b>Type</b></td><td><b>Binding</b></td><td><b>Documentation</b></td></tr><tr><td>IN</td><td>code</td><td/><td>0..1</td><td><a href=\"datatypes.html#code\">code</a></td><td/><td><div><p>The code that is to be located. If a code is provided, a system must be provided</p>\n</div></td></tr><tr><td>IN</td><td>system</td><td>type</td><td>0..1</td><td><a href=\"datatypes.html#uri\">uri</a></td><td/><td><div><p>The system for the code that is to be located</p>\n</div></td></tr><tr><td>IN</td><td>version</td><td>type</td><td>0..1</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>The version of the system, if one was provided in the source data</p>\n</div></td></tr><tr><td>IN</td><td>coding</td><td/><td>0..1</td><td><a href=\"datatypes.html#Coding\">Coding</a></td><td/><td><div><p>A coding to look up</p>\n</div></td></tr><tr><td>IN</td><td>date</td><td/><td>0..1</td><td><a href=\"datatypes.html#dateTime\">dateTime</a></td><td/><td><div><p>The date for which the information should be returned. Normally, this is the current conditions (which is the default value) but under some circumstances, systems need to acccess this information as it would have been in the past. A typical example of this would be where code selection is constrained to the set of codes that were available when the patient was treated, not when the record is being edited. Note that which date is appropriate is a matter for implementation policy.</p>\n</div></td></tr><tr><td>IN</td><td>displayLanguage</td><td/><td>0..1</td><td><a href=\"datatypes.html#code\">code</a></td><td/><td><div><p>The requested language for display (see CodeSystem.concept.designation.language)</p>\n</div></td></tr><tr><td>IN</td><td>property</td><td/><td>0..*</td><td><a href=\"datatypes.html#code\">code</a></td><td/><td><div><p>A property that the client wishes to be returned in the output. If no properties are specified, the server chooses what to return. The following properties are defined for all code systems: name, version (code system info) and code information: display, designation, and lang.X where X is a designation language code. These properties are returned explicitly in named out parameters with matching names, or in designations. In addition, any property codes defined by <a href=\"codesystem.html#defined-props\">this specification</a> or by the CodeSystem (<a href=\"codesystem-definitions.html#CodeSystem.property\">CodeSystem.property.code</a>) are allowed, and these are returned in the out parameter <code>property</code></p>\n</div></td></tr><tr><td>IN</td><td>useSupplement</td><td/><td>0..*</td><td><a href=\"datatypes.html#canonical\">canonical</a></td><td/><td><div><p>Supplements to take into account when performing the $lookup operation. The supplements must be for the same CodeSystem. By default, supplements for the code system are not automatically included except where they provide additional designations that may be indicated by, for example, the displayLanguage parameter</p>\n</div></td></tr><tr><td>OUT</td><td>name</td><td/><td>1..1</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>A display name for the code system</p>\n</div></td></tr><tr><td>OUT</td><td>version</td><td/><td>0..1</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>The version that these details are based on</p>\n</div></td></tr><tr><td>OUT</td><td>display</td><td/><td>1..1</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>The preferred display for this concept</p>\n</div></td></tr><tr><td>OUT</td><td>definition</td><td/><td>0..1</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>A statement of the meaning of the concept from the code system</p>\n</div></td></tr><tr><td>OUT</td><td>designation</td><td/><td>0..*</td><td></td><td/><td><div><p>Additional representations for this concept</p>\n</div></td></tr><tr><td>OUT</td><td>designation.language</td><td/><td>0..1</td><td><a href=\"datatypes.html#code\">code</a></td><td/><td><div><p>The language this designation is defined for</p>\n</div></td></tr><tr><td>OUT</td><td>designation.use</td><td/><td>0..1</td><td><a href=\"datatypes.html#Coding\">Coding</a></td><td/><td><div><p>A code that details how this designation would be used</p>\n</div></td></tr><tr><td>OUT</td><td>designation.additionalUse</td><td/><td>0..*</td><td><a href=\"datatypes.html#Coding\">Coding</a></td><td/><td><div><p>Additional codes that detail how this designation would be used (if there is more than one)</p>\n</div></td></tr><tr><td>OUT</td><td>designation.value</td><td/><td>1..1</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>The text value for this designation</p>\n</div></td></tr><tr><td>OUT</td><td>property</td><td/><td>0..*</td><td></td><td/><td><div><p>One or more properties that contain additional information about the code, including status. For complex terminologies (e.g. SNOMED CT, LOINC, medications), these properties serve to decompose the code</p>\n</div></td></tr><tr><td>OUT</td><td>property.code</td><td/><td>1..1</td><td><a href=\"datatypes.html#code\">code</a></td><td/><td><div><p>Identifies the property returned</p>\n</div></td></tr><tr><td>OUT</td><td>property.value</td><td/><td>0..1</td><td><a href=\"types.html#Element\">Element</a></td><td/><td><div><p>The value of the property returned</p>\n</div></td></tr><tr><td>OUT</td><td>property.description</td><td/><td>0..1</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>Human Readable representation of the property value (e.g. display for a code)</p>\n</div></td></tr><tr><td>OUT</td><td>property.source</td><td/><td>0..1</td><td><a href=\"datatypes.html#canonical\">canonical</a></td><td/><td><div><p>If information from a supplement is included as a property (e.g. any additional property or property value), then this parameter must assert the url of the supplement.</p>\n</div></td></tr><tr><td>OUT</td><td>property.subproperty</td><td/><td>0..*</td><td></td><td/><td><div><p>Nested Properties (mainly used for SNOMED CT decomposition, for relationship Groups)</p>\n</div></td></tr><tr><td>OUT</td><td>property.subproperty.code</td><td/><td>1..1</td><td><a href=\"datatypes.html#code\">code</a></td><td/><td><div><p>Identifies the sub-property returned</p>\n</div></td></tr><tr><td>OUT</td><td>property.subproperty.value</td><td/><td>1..1</td><td><a href=\"types.html#Element\">Element</a></td><td/><td><div><p>The value of the sub-property returned</p>\n</div></td></tr><tr><td>OUT</td><td>property.subproperty.description</td><td/><td>0..1</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>Human Readable representation of the sub-property value (e.g. display for a code)</p>\n</div></td></tr><tr><td>OUT</td><td>property.subproperty.source</td><td/><td>0..1</td><td><a href=\"datatypes.html#canonical\">canonical</a></td><td/><td><div><p>If information from a supplement is included as a subproperty (e.g. any additional subproperty or subproperty value), then this parameter must assert the url of the supplement.</p>\n</div></td></tr></table><div><p>Note that the $lookup operation is more than just a code system search  - the server finds the concept, and gathers the return information from the underlying code system definitions.</p>\n</div></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 5
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "vocab"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/OperationDefinition/CodeSystem-lookup"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/OperationDefinition/CodeSystem-lookup>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "Lookup"] ; # 
+  fhir:title [ fhir:v "Concept Look Up & Decomposition"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:kind [ fhir:v "operation"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Terminology Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/Vocab" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Given a code/system, or a Coding, get additional details about the concept, including definition, status, designations, and properties. One of the products of this operation is a full decomposition of a code from a structured terminology.\n\nWhen invoking this operation, a client SHALL provide both a system and a code, either using the system+code parameters, or in the coding parameter. Other parameters are optional"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:affectsState [ fhir:v false] ; # 
+  fhir:code [ fhir:v "lookup"] ; # 
+  fhir:comment [ fhir:v "Note that the $lookup operation is more than just a code system search  - the server finds the concept, and gathers the return information from the underlying code system definitions."] ; # 
+  fhir:resource ( [
+     fhir:v "CodeSystem"^^xsd:anyURI ;
+     fhir:l fhir:CodeSystem
+  ] ) ; # 
+  fhir:system [ fhir:v false] ; # 
+  fhir:type [ fhir:v true] ; # 
+  fhir:instance [ fhir:v true] ; # 
+  fhir:parameter ( [
+     fhir:name [ fhir:v "code" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The code that is to be located. If a code is provided, a system must be provided" ] ;
+     fhir:type [
+       fhir:v "code"^^xsd:anyURI ;
+       fhir:l fhir:code
+     ]
+  ] [
+     fhir:name [ fhir:v "system" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:scope ( [ fhir:v "type" ] ) ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The system for the code that is to be located" ] ;
+     fhir:type [
+       fhir:v "uri"^^xsd:anyURI ;
+       fhir:l fhir:uri
+     ]
+  ] [
+     fhir:name [ fhir:v "version" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:scope ( [ fhir:v "type" ] ) ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The version of the system, if one was provided in the source data" ] ;
+     fhir:type [
+       fhir:v "string"^^xsd:anyURI ;
+       fhir:l fhir:string
+     ]
+  ] [
+     fhir:name [ fhir:v "coding" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "A coding to look up" ] ;
+     fhir:type [
+       fhir:v "Coding"^^xsd:anyURI ;
+       fhir:l fhir:Coding
+     ]
+  ] [
+     fhir:name [ fhir:v "date" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The date for which the information should be returned. Normally, this is the current conditions (which is the default value) but under some circumstances, systems need to acccess this information as it would have been in the past. A typical example of this would be where code selection is constrained to the set of codes that were available when the patient was treated, not when the record is being edited. Note that which date is appropriate is a matter for implementation policy." ] ;
+     fhir:type [
+       fhir:v "dateTime"^^xsd:anyURI ;
+       fhir:l fhir:dateTime
+     ]
+  ] [
+     fhir:name [ fhir:v "displayLanguage" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The requested language for display (see CodeSystem.concept.designation.language)" ] ;
+     fhir:type [
+       fhir:v "code"^^xsd:anyURI ;
+       fhir:l fhir:code
+     ]
+  ] [
+     fhir:name [ fhir:v "property" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "A property that the client wishes to be returned in the output. If no properties are specified, the server chooses what to return. The following properties are defined for all code systems: name, version (code system info) and code information: display, designation, and lang.X where X is a designation language code. These properties are returned explicitly in named out parameters with matching names, or in designations. In addition, any property codes defined by [this specification](codesystem.html#defined-props) or by the CodeSystem ([CodeSystem.property.code](codesystem-definitions.html#CodeSystem.property)) are allowed, and these are returned in the out parameter ```property```" ] ;
+     fhir:type [
+       fhir:v "code"^^xsd:anyURI ;
+       fhir:l fhir:code
+     ]
+  ] [
+     fhir:name [ fhir:v "useSupplement" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "Supplements to take into account when performing the $lookup operation. The supplements must be for the same CodeSystem. By default, supplements for the code system are not automatically included except where they provide additional designations that may be indicated by, for example, the displayLanguage parameter" ] ;
+     fhir:type [
+       fhir:v "canonical"^^xsd:anyURI ;
+       fhir:l fhir:canonical
+     ]
+  ] [
+     fhir:name [ fhir:v "name" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "1"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "A display name for the code system" ] ;
+     fhir:type [
+       fhir:v "string"^^xsd:anyURI ;
+       fhir:l fhir:string
+     ]
+  ] [
+     fhir:name [ fhir:v "version" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The version that these details are based on" ] ;
+     fhir:type [
+       fhir:v "string"^^xsd:anyURI ;
+       fhir:l fhir:string
+     ]
+  ] [
+     fhir:name [ fhir:v "display" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "1"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The preferred display for this concept" ] ;
+     fhir:type [
+       fhir:v "string"^^xsd:anyURI ;
+       fhir:l fhir:string
+     ]
+  ] [
+     fhir:name [ fhir:v "definition" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "A statement of the meaning of the concept from the code system" ] ;
+     fhir:type [
+       fhir:v "string"^^xsd:anyURI ;
+       fhir:l fhir:string
+     ]
+  ] [
+     fhir:name [ fhir:v "designation" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "Additional representations for this concept" ] ;
+     fhir:type [ ] ;
+     fhir:part ( [
+       fhir:name [ fhir:v "language" ] ;
+       fhir:use [ fhir:v "out" ] ;
+       fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+       fhir:max [ fhir:v "1" ] ;
+       fhir:documentation [ fhir:v "The language this designation is defined for" ] ;
+       fhir:type [
+         fhir:v "code"^^xsd:anyURI ;
+         fhir:l fhir:code
+       ]
+     ] [
+       fhir:name [ fhir:v "use" ] ;
+       fhir:use [ fhir:v "out" ] ;
+       fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+       fhir:max [ fhir:v "1" ] ;
+       fhir:documentation [ fhir:v "A code that details how this designation would be used" ] ;
+       fhir:type [
+         fhir:v "Coding"^^xsd:anyURI ;
+         fhir:l fhir:Coding
+       ]
+     ] [
+       fhir:name [ fhir:v "additionalUse" ] ;
+       fhir:use [ fhir:v "out" ] ;
+       fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+       fhir:max [ fhir:v "*" ] ;
+       fhir:documentation [ fhir:v "Additional codes that detail how this designation would be used (if there is more than one)" ] ;
+       fhir:type [
+         fhir:v "Coding"^^xsd:anyURI ;
+         fhir:l fhir:Coding
+       ]
+     ] [
+       fhir:name [ fhir:v "value" ] ;
+       fhir:use [ fhir:v "out" ] ;
+       fhir:min [ fhir:v "1"^^xsd:nonNegativeInteger ] ;
+       fhir:max [ fhir:v "1" ] ;
+       fhir:documentation [ fhir:v "The text value for this designation" ] ;
+       fhir:type [
+         fhir:v "string"^^xsd:anyURI ;
+         fhir:l fhir:string
+       ]
+     ] )
+  ] [
+     fhir:name [ fhir:v "property" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "One or more properties that contain additional information about the code, including status. For complex terminologies (e.g. SNOMED CT, LOINC, medications), these properties serve to decompose the code" ] ;
+     fhir:type [ ] ;
+     fhir:part ( [
+       fhir:name [ fhir:v "code" ] ;
+       fhir:use [ fhir:v "out" ] ;
+       fhir:min [ fhir:v "1"^^xsd:nonNegativeInteger ] ;
+       fhir:max [ fhir:v "1" ] ;
+       fhir:documentation [ fhir:v "Identifies the property returned" ] ;
+       fhir:type [
+         fhir:v "code"^^xsd:anyURI ;
+         fhir:l fhir:code
+       ]
+     ] [
+       fhir:name [ fhir:v "value" ] ;
+       fhir:use [ fhir:v "out" ] ;
+       fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+       fhir:max [ fhir:v "1" ] ;
+       fhir:documentation [ fhir:v "The value of the property returned" ] ;
+       fhir:type [
+         fhir:v "Element"^^xsd:anyURI ;
+         fhir:l fhir:Element
+       ]
+     ] [
+       fhir:name [ fhir:v "description" ] ;
+       fhir:use [ fhir:v "out" ] ;
+       fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+       fhir:max [ fhir:v "1" ] ;
+       fhir:documentation [ fhir:v "Human Readable representation of the property value (e.g. display for a code)" ] ;
+       fhir:type [
+         fhir:v "string"^^xsd:anyURI ;
+         fhir:l fhir:string
+       ]
+     ] [
+       fhir:name [ fhir:v "source" ] ;
+       fhir:use [ fhir:v "out" ] ;
+       fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+       fhir:max [ fhir:v "1" ] ;
+       fhir:documentation [ fhir:v "If information from a supplement is included as a property (e.g. any additional property or property value), then this parameter must assert the url of the supplement." ] ;
+       fhir:type [
+         fhir:v "canonical"^^xsd:anyURI ;
+         fhir:l fhir:canonical
+       ]
+     ] [
+       fhir:name [ fhir:v "subproperty" ] ;
+       fhir:use [ fhir:v "out" ] ;
+       fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+       fhir:max [ fhir:v "*" ] ;
+       fhir:documentation [ fhir:v "Nested Properties (mainly used for SNOMED CT decomposition, for relationship Groups)" ] ;
+       fhir:type [ ] ;
+       fhir:part ( [
+         fhir:name [ fhir:v "code" ] ;
+         fhir:use [ fhir:v "out" ] ;
+         fhir:min [ fhir:v "1"^^xsd:nonNegativeInteger ] ;
+         fhir:max [ fhir:v "1" ] ;
+         fhir:documentation [ fhir:v "Identifies the sub-property returned" ] ;
+         fhir:type [
+           fhir:v "code"^^xsd:anyURI ;
+           fhir:l fhir:code
+         ]
+       ] [
+         fhir:name [ fhir:v "value" ] ;
+         fhir:use [ fhir:v "out" ] ;
+         fhir:min [ fhir:v "1"^^xsd:nonNegativeInteger ] ;
+         fhir:max [ fhir:v "1" ] ;
+         fhir:documentation [ fhir:v "The value of the sub-property returned" ] ;
+         fhir:type [
+           fhir:v "Element"^^xsd:anyURI ;
+           fhir:l fhir:Element
+         ]
+       ] [
+         fhir:name [ fhir:v "description" ] ;
+         fhir:use [ fhir:v "out" ] ;
+         fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+         fhir:max [ fhir:v "1" ] ;
+         fhir:documentation [ fhir:v "Human Readable representation of the sub-property value (e.g. display for a code)" ] ;
+         fhir:type [
+           fhir:v "string"^^xsd:anyURI ;
+           fhir:l fhir:string
+         ]
+       ] [
+         fhir:name [ fhir:v "source" ] ;
+         fhir:use [ fhir:v "out" ] ;
+         fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+         fhir:max [ fhir:v "1" ] ;
+         fhir:documentation [ fhir:v "If information from a supplement is included as a subproperty (e.g. any additional subproperty or subproperty value), then this parameter must assert the url of the supplement." ] ;
+         fhir:type [
+           fhir:v "canonical"^^xsd:anyURI ;
+           fhir:l fhir:canonical
+         ]
+       ] )
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

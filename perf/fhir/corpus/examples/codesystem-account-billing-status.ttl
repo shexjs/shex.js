@@ -1,0 +1,123 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/account-billing-status> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "account-billing-status"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T11:01:55.562+11:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem account-billing-status</b></p><a name=\"account-billing-status\"> </a><a name=\"hcaccount-billing-status\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">Last updated: 2021-01-05T10:01:24.148+11:00</p></div><p>This case-sensitive code system <code>http://hl7.org/fhir/account-billing-status</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">open<a name=\"account-billing-status-open\"> </a></td><td>Open</td><td>The account is open for charging transactions (account.status is active)</td></tr><tr><td style=\"white-space:nowrap\">carecomplete-notbilled<a name=\"account-billing-status-carecomplete-notbilled\"> </a></td><td>CareComplete/Not Billed</td><td>The account.status is still active and may have charges recorded against it (only for events in the servicePeriod), however the encounters associated are completed. (Also known as Discharged not billed) This BillingStatus is often not used in ongoing accounts. (account.status is active)</td></tr><tr><td style=\"white-space:nowrap\">billing<a name=\"account-billing-status-billing\"> </a></td><td>Billing</td><td>Indicates that all transactions are recorded and the finance system can perform the billing process, including preparing insurance claims, scrubbing charges, invoicing etc. During this time any new charges will not be included in the current billing run/cycle. (account.status is active)</td></tr><tr><td style=\"white-space:nowrap\">closed-baddebt<a name=\"account-billing-status-closed-baddebt\"> </a></td><td>Closed-Bad Debt</td><td>The balance of this debt has not been able to be recovered, and the organization has decided not to persue debt recovery. (account.status is in-active)</td></tr><tr><td style=\"white-space:nowrap\">closed-voided<a name=\"account-billing-status-closed-voided\"> </a></td><td>Closed-Voided</td><td>The account was not created in error, however the organization has decided that it will not be charging any transactions associated. (account.status is i n-active)</td></tr><tr><td style=\"white-space:nowrap\">closed-completed<a name=\"account-billing-status-closed-completed\"> </a></td><td>Closed-Completed</td><td>The account is closed and all charges are processed and accounted for. (account.status is i n-active)</td></tr><tr><td style=\"white-space:nowrap\">closed-combined<a name=\"account-billing-status-closed-combined\"> </a></td><td>Closed-Combined</td><td>This account has been merged into another account, all charged have been migrated. This account should no longer be used, and will not be billed. (account.status is i n-active)</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "pa"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 0
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/account-billing-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/account-billing-status>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.2063" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "AccountBillingStatus"] ; # 
+  fhir:title [ fhir:v "Example Account Billing Statuses"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2021-05-26"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Indicates whether the account is available to be used for billing purposes."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/account-billing-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/account-billing-status>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "open" ] ;
+     fhir:display [ fhir:v "Open" ] ;
+     fhir:definition [ fhir:v "The account is open for charging transactions (account.status is active)" ]
+  ] [
+     fhir:code [ fhir:v "carecomplete-notbilled" ] ;
+     fhir:display [ fhir:v "CareComplete/Not Billed" ] ;
+     fhir:definition [ fhir:v "The account.status is still active and may have charges recorded against it (only for events in the servicePeriod), however the encounters associated are completed. (Also known as Discharged not billed) This BillingStatus is often not used in ongoing accounts. (account.status is active)" ]
+  ] [
+     fhir:code [ fhir:v "billing" ] ;
+     fhir:display [ fhir:v "Billing" ] ;
+     fhir:definition [ fhir:v "Indicates that all transactions are recorded and the finance system can perform the billing process, including preparing insurance claims, scrubbing charges, invoicing etc. During this time any new charges will not be included in the current billing run/cycle. (account.status is active)" ]
+  ] [
+     fhir:code [ fhir:v "closed-baddebt" ] ;
+     fhir:display [ fhir:v "Closed-Bad Debt" ] ;
+     fhir:definition [ fhir:v "The balance of this debt has not been able to be recovered, and the organization has decided not to persue debt recovery. (account.status is in-active)" ]
+  ] [
+     fhir:code [ fhir:v "closed-voided" ] ;
+     fhir:display [ fhir:v "Closed-Voided" ] ;
+     fhir:definition [ fhir:v "The account was not created in error, however the organization has decided that it will not be charging any transactions associated. (account.status is i n-active)" ]
+  ] [
+     fhir:code [ fhir:v "closed-completed" ] ;
+     fhir:display [ fhir:v "Closed-Completed" ] ;
+     fhir:definition [ fhir:v "The account is closed and all charges are processed and accounted for. (account.status is i n-active)" ]
+  ] [
+     fhir:code [ fhir:v "closed-combined" ] ;
+     fhir:display [ fhir:v "Closed-Combined" ] ;
+     fhir:definition [ fhir:v "This account has been merged into another account, all charged have been migrated. This account should no longer be used, and will not be billed. (account.status is i n-active)" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

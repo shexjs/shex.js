@@ -1,0 +1,79 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Schedule/exampleloc2> a fhir:Schedule ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "exampleloc2"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      Dr. Beverly Crusher - Starfleet HQ Sickbay Schedule\n		</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:system [
+       fhir:v "http://example.org/scheduleid"^^xsd:anyURI ;
+       fhir:l <http://example.org/scheduleid>
+     ] ;
+     fhir:value [ fhir:v "47" ]
+  ] ) ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:serviceCategory ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/service-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/service-category>
+       ] ;
+       fhir:code [ fhir:v "31" ] ;
+       fhir:display [ fhir:v "Specialist Surgical" ]
+     ] )
+  ] ) ; # 
+  fhir:serviceType ( [
+     fhir:concept [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/service-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/service-type>
+         ] ;
+         fhir:code [ fhir:v "221" ] ;
+         fhir:display [ fhir:v "Surgery - General" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:specialty ( [
+     a sct:394610002 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "394610002" ] ;
+       fhir:display [ fhir:v "Neurosurgery" ]
+     ] )
+  ] ) ; # 
+  fhir:actor ( [
+     fhir:l <http://hl7.org/fhir/Practitioner/1> ;
+     fhir:reference [ fhir:v "Practitioner/1" ] ;
+     fhir:display [ fhir:v "Dr. Beverly Crusher" ]
+  ] [
+     fhir:l <http://hl7.org/fhir/Location/2> ;
+     fhir:reference [ fhir:v "Location/2" ] ;
+     fhir:display [ fhir:v "Starfleet HQ Sickbay" ]
+  ] ) ; # 
+  fhir:planningHorizon [
+     fhir:start [ fhir:v "2017-12-25T09:15:00Z"^^xsd:dateTime ] ;
+     fhir:end [ fhir:v "2017-12-25T09:30:00Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:comment [ fhir:v "The slots attached to this schedule are for neurosurgery operations at Starfleet HQ only."] . # 
+
+<http://hl7.org/fhir/Practitioner/1> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Location/2> a fhir:Location .
+
+# -------------------------------------------------------------------------------------
+

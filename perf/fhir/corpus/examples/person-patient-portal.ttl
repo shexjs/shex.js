@@ -1,0 +1,83 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Person/pp> a fhir:Person ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "pp"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <table>\n        <tbody>\n          <tr>\n            <td>Name</td>\n            <td>Eve Marie <b>Everywoman</b></td>\n          </tr>\n          <tr>\n            <td>Address</td>\n            <td>2086 College St, Sandusky, OH, 44870</td>\n          </tr>\n        </tbody>\n      </table>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "DL" ]
+       ] ) ;
+       fhir:text [ fhir:v "Ohio driver license" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:oid:2.16.840.1.113883.4.3.39"^^xsd:anyURI ;
+       fhir:l <urn:oid:2.16.840.1.113883.4.3.39>
+     ] ;
+     fhir:value [ fhir:v "TL545786" ] ;
+     fhir:period [
+       fhir:start [ fhir:v "2041-09-23"^^xsd:date ]
+     ] ;
+     fhir:assigner [
+       fhir:display [ fhir:v "Ohio Bureau of Motor Vehicles" ]
+     ]
+  ] ) ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Everywoman" ] ;
+     fhir:given ( [ fhir:v "Eve" ] [ fhir:v "Marie" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "(621)-479-9743" ] ;
+     fhir:use [ fhir:v "home" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:birthDate [ fhir:v "1974-03-07"^^xsd:date] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "2086 College St" ] ) ;
+     fhir:city [ fhir:v "Sandusky" ] ;
+     fhir:state [ fhir:v "OH" ] ;
+     fhir:postalCode [ fhir:v "44870" ] ;
+     fhir:country [ fhir:v "USA" ]
+  ] ) ; # 
+  fhir:managingOrganization [
+     fhir:l <http://www.goodhealth.com/Organization/12> ;
+     fhir:reference [ fhir:v "http://www.goodhealth.com/Organization/12" ] ;
+     fhir:display [ fhir:v "Goodhealth Patient Portal" ]
+  ] ; # 
+  fhir:link ( [
+     fhir:target [
+       fhir:l <http://www.goodhealth.com/Patient/98574> ;
+       fhir:reference [ fhir:v "http://www.goodhealth.com/Patient/98574" ] ;
+       fhir:display [ fhir:v "Eve Everywoman" ]
+     ] ;
+     fhir:assurance [ fhir:v "level3" ]
+  ] [
+     fhir:target [
+       fhir:l <http://www.acme-medical.com/Patient/ab34d> ;
+       fhir:reference [ fhir:v "http://www.acme-medical.com/Patient/ab34d" ] ;
+       fhir:display [ fhir:v "Eve Marie Everywoman" ]
+     ] ;
+     fhir:assurance [ fhir:v "level2" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

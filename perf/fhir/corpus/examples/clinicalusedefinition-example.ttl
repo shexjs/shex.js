@@ -1,0 +1,42 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ClinicalUseDefinition/example> a fhir:ClinicalUseDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "brr"
+     ]
+  ] ) ; # 
+  fhir:type [ fhir:v "contraindication"] ; # 
+  fhir:subject ( [
+     fhir:reference [ ]
+  ] ) ; # 
+  fhir:contraindication [
+     fhir:diseaseSymptomProcedure [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://ema.europa.eu/example/contraindicationsasdisease-symptom-procedure"^^xsd:anyURI ;
+             fhir:l <http://ema.europa.eu/example/contraindicationsasdisease-symptom-procedure>
+           ] ;
+           fhir:code [ fhir:v "hepatic-example-code" ]
+         ] ) ;
+         fhir:text [ fhir:v "Hepatic disease associated with coagulopathy and clinically relevant bleeding risk" ]
+       ]
+     ]
+  ] . # example product is contraindicated with Hepatic disease
+
+# -------------------------------------------------------------------------------------
+

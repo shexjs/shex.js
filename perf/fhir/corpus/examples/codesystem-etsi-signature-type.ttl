@@ -1,0 +1,78 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/etsi-signature-type> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "etsi-signature-type"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem etsi-signature-type</b></p><a name=\"etsi-signature-type\"> </a><a name=\"hcetsi-signature-type\"> </a><p>This case-sensitive code system <code>http://uri.etsi.org/01903/v1.2.2</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">ProofOfOrigin<a name=\"etsi-signature-type-ProofOfOrigin\"> </a></td><td>Proof of origin</td><td>indicates that the signer recognizes to have created, approved and sent the signed data object.</td></tr><tr><td style=\"white-space:nowrap\">ProofOfReceipt<a name=\"etsi-signature-type-ProofOfReceipt\"> </a></td><td>Proof of receipt</td><td>indicates that signer recognizes to have received the content of the signed data object.</td></tr><tr><td style=\"white-space:nowrap\">ProofOfDelivery<a name=\"etsi-signature-type-ProofOfDelivery\"> </a></td><td>Proof of delivery</td><td>indicates that the TSP providing that indication has delivered a signed data object in a local store accessible to the recipient of the signed data object.</td></tr><tr><td style=\"white-space:nowrap\">ProofOfSender<a name=\"etsi-signature-type-ProofOfSender\"> </a></td><td>Proof of sender</td><td>indicates that the entity providing that indication has sent the signed data object (but not necessarily created it).</td></tr><tr><td style=\"white-space:nowrap\">ProofOfapproval<a name=\"etsi-signature-type-ProofOfapproval\"> </a></td><td>Proof of approval</td><td>indicates that the signer has approved the content of the signed data object.</td></tr><tr><td style=\"white-space:nowrap\">ProofOfCreation<a name=\"etsi-signature-type-ProofOfCreation\"> </a></td><td>Proof of creation</td><td>indicates that the signer has created the signed data object (but not necessarily approved, nor sent it).</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:url [
+     fhir:v "http://uri.etsi.org/01903/v1.2.2"^^xsd:anyURI ;
+     fhir:l <http://uri.etsi.org/01903/v1.2.2>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1808" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ETSISignatureTypeCodes"] ; # 
+  fhir:title [ fhir:v "ETSI Signature Type Codes"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "ETSI"] ; # 
+  fhir:description [ fhir:v "The ETSI TS 101 733 V2.2.1 (2013-04) - Electronic Signatures and Infrastructures (ESI) - defines a set of Commitment Types (Purpose of Signature). ETSI TS 101 903 V1.2.2 defines vocabulary identifiers for these Commitment Types. Digital Signature Purposes, an indication of the reason an entity signs a document. This is included in the signed information and can be used when determining accountability for various actions concerning the document. "] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:copyright [ fhir:v "These codes are excerpted from ETSI Standard for Digital Signatures and XAdES, Copyright by ETSI International. Copies of this standard are available through the ETSI Web Site at www.etsi.org."] ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "ProofOfOrigin" ] ;
+     fhir:display [ fhir:v "Proof of origin" ] ;
+     fhir:definition [ fhir:v "indicates that the signer recognizes to have created, approved and sent the signed data object." ]
+  ] [
+     fhir:code [ fhir:v "ProofOfReceipt" ] ;
+     fhir:display [ fhir:v "Proof of receipt" ] ;
+     fhir:definition [ fhir:v "indicates that signer recognizes to have received the content of the signed data object." ]
+  ] [
+     fhir:code [ fhir:v "ProofOfDelivery" ] ;
+     fhir:display [ fhir:v "Proof of delivery" ] ;
+     fhir:definition [ fhir:v "indicates that the TSP providing that indication has delivered a signed data object in a local store accessible to the recipient of the signed data object." ]
+  ] [
+     fhir:code [ fhir:v "ProofOfSender" ] ;
+     fhir:display [ fhir:v "Proof of sender" ] ;
+     fhir:definition [ fhir:v "indicates that the entity providing that indication has sent the signed data object (but not necessarily created it)." ]
+  ] [
+     fhir:code [ fhir:v "ProofOfapproval" ] ;
+     fhir:display [ fhir:v "Proof of approval" ] ;
+     fhir:definition [ fhir:v "indicates that the signer has approved the content of the signed data object." ]
+  ] [
+     fhir:code [ fhir:v "ProofOfCreation" ] ;
+     fhir:display [ fhir:v "Proof of creation" ] ;
+     fhir:definition [ fhir:v "indicates that the signer has created the signed data object (but not necessarily approved, nor sent it)." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

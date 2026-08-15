@@ -1,0 +1,76 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/EvidenceVariable/example-mRS0-2-at-90days> a fhir:EvidenceVariable ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-mRS0-2-at-90days"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      \n      <p>\n        \"mRS 0-2 at 90 days\" is an outcome, defined by a CQL expression, used in expressing what an Evidence is about.\n      </p>\n	\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:contained ( [
+     a fhir:Group ;
+     fhir:id [ fhir:v "Definition-Group" ] ;
+     fhir:title [ fhir:v "VariableDefinition: mRS 0-2 at 90 days" ] ;
+     fhir:type [ fhir:v "person" ] ;
+     fhir:membership [ fhir:v "definitional" ] ;
+     fhir:characteristic ( [
+       fhir:code [
+         a sct:260905004 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "260905004" ] ;
+           fhir:display [ fhir:v "Condition" ]
+         ] )
+       ] ;
+       fhir:value [
+         a fhir:Expression ;
+         fhir:description [ fhir:v "mRS 0-2" ] ;
+         fhir:language [ fhir:v "text/cql-expression" ] ;
+         fhir:expression [ fhir:v "[\"Observation\": code in \"75859-9|LOINC\"] mRS where mRS.value between 0 and 2" ]
+       ] ;
+       fhir:exclude [ fhir:v false ] ;
+       fhir:description [ fhir:v "mRS 0-2 at 90 days" ]
+     ] )
+  ] ) ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] ) ; # 
+  fhir:name [ fhir:v "ModifiedRankinScaleScore02At90DaysAfterTreatment"] ; # 
+  fhir:title [ fhir:v "Modified Rankin Scale score 0-2 at 90 days after treatment"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Decision Support"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/dss" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Modified Rankin Scale score 0-2 at 90 days after treatment"] ; # 
+  fhir:actual [ fhir:v true] ; # 
+  fhir:definition [
+     fhir:reference [
+       fhir:l <#Definition-Group> ;
+       fhir:reference [ fhir:v "#Definition-Group" ]
+     ]
+  ] ; # 
+  fhir:handling [] . # 
+
+# -------------------------------------------------------------------------------------
+

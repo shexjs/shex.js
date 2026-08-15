@@ -1,0 +1,214 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Questionnaire/zika-virus-exposure-assessment> a fhir:Questionnaire ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "zika-virus-exposure-assessment"] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://example.org/Questionnaire/zika-virus-exposure-assessment"^^xsd:anyURI ;
+     fhir:l <http://example.org/Questionnaire/zika-virus-exposure-assessment>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.20.1" ]
+  ] ) ; # 
+  fhir:name [ fhir:v "ExampleZikaVirusExposureAssessment"] ; # 
+  fhir:title [ fhir:v "Example Zika Virus Exposure Assessment"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:subjectType ( [ fhir:v "Patient"] ) ; # 
+  fhir:date [ fhir:v "2016-11-14"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Example questionnaire to assess Zika virus exposure potential."] ; # 
+  fhir:effectivePeriod [
+     fhir:start [ fhir:v "2016-11-14"^^xsd:date ]
+  ] ; # 
+  fhir:item ( [
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "http://example.org/additional-information"^^xsd:anyURI ;
+         fhir:l <http://example.org/additional-information>
+       ] ;
+       fhir:value [
+         a fhir:Attachment ;
+         fhir:url [
+           fhir:v "http://www.cdc.gov/zika/geo/index.html"^^xsd:anyURI ;
+           fhir:l <http://www.cdc.gov/zika/geo/index.html>
+         ] ;
+         fhir:title [ fhir:v "Areas with active Zika virus transmission/exposure risk" ]
+       ]
+     ] ) ;
+     fhir:linkId [ fhir:v "1" ] ;
+     fhir:code ( [
+       fhir:system [
+         fhir:v "http://example.org/questionnaires"^^xsd:anyURI ;
+         fhir:l <http://example.org/questionnaires>
+       ] ;
+       fhir:code [ fhir:v "CDE: Resident of or Frequent Traveler to Zika Area" ]
+     ] ) ;
+     fhir:text [ fhir:v "Are you a resident of, or do you travel frequently to, an area with active Zika transmission?" ] ;
+     fhir:type [ fhir:v "boolean" ]
+  ] [
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "http://example.org/additional-information"^^xsd:anyURI ;
+         fhir:l <http://example.org/additional-information>
+       ] ;
+       fhir:value [
+         a fhir:Attachment ;
+         fhir:url [
+           fhir:v "http://www.cdc.gov/zika/geo/index.html"^^xsd:anyURI ;
+           fhir:l <http://www.cdc.gov/zika/geo/index.html>
+         ] ;
+         fhir:title [ fhir:v "Areas with active Zika virus transmission/exposure risk" ]
+       ]
+     ] ) ;
+     fhir:linkId [ fhir:v "2" ] ;
+     fhir:code ( [
+       fhir:system [
+         fhir:v "http://example.org/questionnaires"^^xsd:anyURI ;
+         fhir:l <http://example.org/questionnaires>
+       ] ;
+       fhir:code [ fhir:v "CDE: Recent Travel to Zika Area" ]
+     ] ) ;
+     fhir:text [ fhir:v "Have you recently traveled to an area with active Zika transmission?" ] ;
+     fhir:type [ fhir:v "boolean" ] ;
+     fhir:enableWhen ( [
+       fhir:question [ fhir:v "1" ] ;
+       fhir:operator [ fhir:v "=" ] ;
+       fhir:answer [
+         a fhir:Boolean ;
+         fhir:v false
+       ]
+     ] )
+  ] [
+     fhir:linkId [ fhir:v "3" ] ;
+     fhir:code ( [
+       fhir:system [
+         fhir:v "http://example.org/questionnaires"^^xsd:anyURI ;
+         fhir:l <http://example.org/questionnaires>
+       ] ;
+       fhir:code [ fhir:v "CDE: Time Since Returned From Travel" ]
+     ] ) ;
+     fhir:text [ fhir:v "How long has it been since you returned?" ] ;
+     fhir:type [ fhir:v "quantity" ] ;
+     fhir:enableWhen ( [
+       fhir:question [ fhir:v "2" ] ;
+       fhir:operator [ fhir:v "=" ] ;
+       fhir:answer [
+         a fhir:Boolean ;
+         fhir:v true
+       ]
+     ] )
+  ] [
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "http://example.org/additional-information"^^xsd:anyURI ;
+         fhir:l <http://example.org/additional-information>
+       ] ;
+       fhir:value [
+         a fhir:Attachment ;
+         fhir:url [
+           fhir:v "http://www.cdc.gov/zika/geo/index.html"^^xsd:anyURI ;
+           fhir:l <http://www.cdc.gov/zika/geo/index.html>
+         ] ;
+         fhir:title [ fhir:v "Areas with active Zika virus transmission/exposure risk" ]
+       ]
+     ] ) ;
+     fhir:linkId [ fhir:v "4" ] ;
+     fhir:code ( [
+       fhir:system [
+         fhir:v "http://example.org/questionnaires"^^xsd:anyURI ;
+         fhir:l <http://example.org/questionnaires>
+       ] ;
+       fhir:code [ fhir:v "CDE: Recent Sexual Encounter with Traveler to Zika Area" ]
+     ] ) ;
+     fhir:text [ fhir:v "Have you recently had condomless sex with a partner that has travelled in an area with active Zika transmission?" ] ;
+     fhir:type [ fhir:v "boolean" ] ;
+     fhir:enableWhen ( [
+       fhir:question [ fhir:v "2" ] ;
+       fhir:operator [ fhir:v "=" ] ;
+       fhir:answer [
+         a fhir:Boolean ;
+         fhir:v false
+       ]
+     ] )
+  ] [
+     fhir:linkId [ fhir:v "5" ] ;
+     fhir:code ( [
+       fhir:system [
+         fhir:v "http://example.org/questionnaires"^^xsd:anyURI ;
+         fhir:l <http://example.org/questionnaires>
+       ] ;
+       fhir:code [ fhir:v "CDE: Time Since Sexual Encounter" ]
+     ] ) ;
+     fhir:text [ fhir:v "How long has it been since your last condomless sexual encounter?" ] ;
+     fhir:type [ fhir:v "quantity" ] ;
+     fhir:enableWhen ( [
+       fhir:question [ fhir:v "4" ] ;
+       fhir:operator [ fhir:v "=" ] ;
+       fhir:answer [
+         a fhir:Boolean ;
+         fhir:v true
+       ]
+     ] )
+  ] [
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "http://example.org/additional-information"^^xsd:anyURI ;
+         fhir:l <http://example.org/additional-information>
+       ] ;
+       fhir:value [
+         a fhir:Attachment ;
+         fhir:url [
+           fhir:v "http://www.cdc.gov/zika/geo/index.html"^^xsd:anyURI ;
+           fhir:l <http://www.cdc.gov/zika/geo/index.html>
+         ] ;
+         fhir:title [ fhir:v "Areas with active Zika virus transmission/exposure risk" ]
+       ]
+     ] ) ;
+     fhir:linkId [ fhir:v "6" ] ;
+     fhir:code ( [
+       fhir:system [
+         fhir:v "http://example.org/questionnaires"^^xsd:anyURI ;
+         fhir:l <http://example.org/questionnaires>
+       ] ;
+       fhir:code [ fhir:v "CDE: Planned Travel to Zika Area" ]
+     ] ) ;
+     fhir:text [ fhir:v "Do you plan to travel to an area with active Zika transmission?" ] ;
+     fhir:type [ fhir:v "boolean" ] ;
+     fhir:enableWhen ( [
+       fhir:question [ fhir:v "4" ] ;
+       fhir:operator [ fhir:v "=" ] ;
+       fhir:answer [
+         a fhir:Boolean ;
+         fhir:v false
+       ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,124 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/substance-measurement-type> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "substance-measurement-type"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem substance-measurement-type</b></p><a name=\"substance-measurement-type\"> </a><a name=\"hcsubstance-measurement-type\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/substance-measurement-type</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">ic50<a name=\"substance-measurement-type-ic50\"> </a></td><td>IC50</td><td>Half maximal inhibitory concentration.</td></tr><tr><td style=\"white-space:nowrap\">ec50<a name=\"substance-measurement-type-ec50\"> </a></td><td>EC50</td><td>Half maximal effective concentration.</td></tr><tr><td style=\"white-space:nowrap\">kd<a name=\"substance-measurement-type-kd\"> </a></td><td>Kd</td><td>Equilibrium dissociation constant.</td></tr><tr><td style=\"white-space:nowrap\">ki<a name=\"substance-measurement-type-ki\"> </a></td><td>Ki</td><td>Inhibition constant.</td></tr><tr><td style=\"white-space:nowrap\">km<a name=\"substance-measurement-type-km\"> </a></td><td>Km</td><td>Michaelis constant.</td></tr><tr><td style=\"white-space:nowrap\">kon<a name=\"substance-measurement-type-kon\"> </a></td><td>Kon</td><td>Association rate constant.</td></tr><tr><td style=\"white-space:nowrap\">koff<a name=\"substance-measurement-type-koff\"> </a></td><td>Koff</td><td>Dissociation rate constant.</td></tr><tr><td style=\"white-space:nowrap\">mole-ratio<a name=\"substance-measurement-type-mole-ratio\"> </a></td><td>Mole ratio</td><td>Ratio expressed in moles.</td></tr><tr><td style=\"white-space:nowrap\">weight-ratio<a name=\"substance-measurement-type-weight-ratio\"> </a></td><td>Weight ratio</td><td>Ratio expressed by weight (mass).</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "brr"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/substance-measurement-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/substance-measurement-type>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "SubstanceMeasurementTypeExample"] ; # 
+  fhir:title [ fhir:v "Substance Measurement Type"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2026-06-23"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "The kind of numeric measurement being recorded for a substance amount or relationship, e.g. IC50, Kd, mole ratio."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/substance-measurement-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/substance-measurement-type>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "ic50" ] ;
+     fhir:display [ fhir:v "IC50" ] ;
+     fhir:definition [ fhir:v "Half maximal inhibitory concentration." ]
+  ] [
+     fhir:code [ fhir:v "ec50" ] ;
+     fhir:display [ fhir:v "EC50" ] ;
+     fhir:definition [ fhir:v "Half maximal effective concentration." ]
+  ] [
+     fhir:code [ fhir:v "kd" ] ;
+     fhir:display [ fhir:v "Kd" ] ;
+     fhir:definition [ fhir:v "Equilibrium dissociation constant." ]
+  ] [
+     fhir:code [ fhir:v "ki" ] ;
+     fhir:display [ fhir:v "Ki" ] ;
+     fhir:definition [ fhir:v "Inhibition constant." ]
+  ] [
+     fhir:code [ fhir:v "km" ] ;
+     fhir:display [ fhir:v "Km" ] ;
+     fhir:definition [ fhir:v "Michaelis constant." ]
+  ] [
+     fhir:code [ fhir:v "kon" ] ;
+     fhir:display [ fhir:v "Kon" ] ;
+     fhir:definition [ fhir:v "Association rate constant." ]
+  ] [
+     fhir:code [ fhir:v "koff" ] ;
+     fhir:display [ fhir:v "Koff" ] ;
+     fhir:definition [ fhir:v "Dissociation rate constant." ]
+  ] [
+     fhir:code [ fhir:v "mole-ratio" ] ;
+     fhir:display [ fhir:v "Mole ratio" ] ;
+     fhir:definition [ fhir:v "Ratio expressed in moles." ]
+  ] [
+     fhir:code [ fhir:v "weight-ratio" ] ;
+     fhir:display [ fhir:v "Weight ratio" ] ;
+     fhir:definition [ fhir:v "Ratio expressed by weight (mass)." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

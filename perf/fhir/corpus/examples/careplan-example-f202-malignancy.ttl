@@ -1,0 +1,94 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CarePlan/f202> a fhir:CarePlan ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f202"] ; # 
+  fhir:contained ( [
+     a fhir:CareTeam ;
+     fhir:id [ fhir:v "careteam" ] ;
+     fhir:participant ( [
+       fhir:role [
+         a sct:28995006 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "28995006" ] ;
+           fhir:display [ fhir:v "Treated with" ]
+         ] )
+       ] ;
+       fhir:member [
+         fhir:l <http://hl7.org/fhir/Practitioner/f201> ;
+         fhir:reference [ fhir:v "Practitioner/f201" ] ;
+         fhir:display [ fhir:v "Dokter Bronsig" ]
+       ]
+     ] )
+  ] [
+     a fhir:Goal ;
+     fhir:id [ fhir:v "goal" ] ;
+     fhir:lifecycleStatus [ fhir:v "active" ] ;
+     fhir:description [
+       fhir:text [ fhir:v "Elimination of the spenoid bone tumor" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/f201> ;
+       fhir:reference [ fhir:v "Patient/f201" ] ;
+       fhir:display [ fhir:v "Roel" ]
+     ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "plan"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/f201> ;
+     fhir:reference [ fhir:v "Patient/f201" ] ; # It entails Roel's careplan
+     fhir:display [ fhir:v "Roel" ]
+  ] ; # 
+  fhir:careTeam ( [
+     fhir:l <#careteam> ;
+     fhir:reference [ fhir:v "#careteam" ]
+  ] ) ; # 
+  fhir:addresses ( [
+     fhir:reference [
+       fhir:l <http://hl7.org/fhir/Condition/f202> ;
+       fhir:reference [ fhir:v "Condition/f202" ] ;
+       fhir:display [ fhir:v "Roel's head-neck tumor" ]
+     ]
+  ] ) ; # 
+  fhir:goal ( [
+     fhir:l <#goal> ;
+     fhir:reference [ fhir:v "#goal" ]
+  ] ) ; # 
+  fhir:activity ( [
+     fhir:performedActivity ( [
+       fhir:reference [
+         fhir:l <http://hl7.org/fhir/Procedure/f201> ;
+         fhir:reference [ fhir:v "Procedure/f201" ] ;
+         fhir:display [ fhir:v "Roel's Chemotherapy" ]
+       ]
+     ] ) ;
+     fhir:plannedActivityReference [
+       fhir:l <http://hl7.org/fhir/RequestOrchestration/example> ;
+       fhir:reference [ fhir:v "RequestOrchestration/example" ]
+     ] # Chemotherapy
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/f201> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Patient/f201> a fhir:Patient .
+
+<http://hl7.org/fhir/Condition/f202> a fhir:Condition .
+
+<http://hl7.org/fhir/Procedure/f201> a fhir:Procedure .
+
+<http://hl7.org/fhir/RequestOrchestration/example> a fhir:RequestOrchestration .
+
+# -------------------------------------------------------------------------------------
+

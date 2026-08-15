@@ -1,0 +1,145 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Communication/fm-attachment> a fhir:Communication ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "fm-attachment"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Attachment which is unsolicited</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://www.providerco.com/communication"^^xsd:anyURI ;
+       fhir:l <http://www.providerco.com/communication>
+     ] ;
+     fhir:value [ fhir:v "12345" ]
+  ] ) ; # insert contents here, <contained>
+#    <Organization>
+#      <id value="provider"/>
+#      <identifier>
+#        <system value="http://www.jurisdiction.com/provideroffices"/>
+#        <value value="3456"/>
+#      </identifier>
+#    </Organization>
+#  </contained>
+#
+#  <contained>
+#    <Organization>
+#      <id value="payor"/>
+#      <identifier>
+#        <system value="http://www.jurisdiction.com/insurer"/>
+#        <value value="123456"/>
+#      </identifier>
+#    </Organization>
+#  </contained>
+#
+#  <contained>
+#    <Claim>
+#      <id value="claim"/>
+#      <identifier>
+#	    <system value="http://happyvalley.com/claim"/>
+#        <value value="12345"/>
+#      </identifier>
+#	  <status value="draft"/>
+#	  <type>
+#        <system value="http://hl7.org/fhir/ex-claimtype"/>
+#        <code value="oral"/>
+#	  </type>
+#      <patientReference>
+#        <reference value="Patient/1"/>
+#      </patientReference>
+#    </Claim>
+#  </contained>
+#
+#  <contained>
+#    <ClaimResponse>
+#      <id value="claimresponse"/>
+#      <identifier>
+#	    <system value="http://www.BenefitsInc.com/fhir/claimresponse"/>
+#        <value value="R3500"/>
+#      </identifier>
+#	  <status value="draft"/>
+#    </ClaimResponse>
+#  </contained>, body of the resource
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://acme.org/messagetypes"^^xsd:anyURI ;
+         fhir:l <http://acme.org/messagetypes>
+       ] ;
+       fhir:code [ fhir:v "SolicitedAttachment" ]
+     ] )
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/1> ;
+     fhir:reference [ fhir:v "Patient/1" ]
+  ] ; # 
+  fhir:about ( [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://happyvalley.com/claim"^^xsd:anyURI ;
+         fhir:l <http://happyvalley.com/claim>
+       ] ;
+       fhir:value [ fhir:v "12345" ]
+     ] # reference value=\"#claim\"\/
+  ] [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://www.BenefitsInc.com/fhir/claimresponse"^^xsd:anyURI ;
+         fhir:l <http://www.BenefitsInc.com/fhir/claimresponse>
+       ] ;
+       fhir:value [ fhir:v "R3500" ]
+     ] # reference value=\"#claimresponse\"\/
+  ] ) ; # Example using about 0..* Resource(Any) to provide focal resources
+  fhir:sent [ fhir:v "2016-06-12T18:01:10-08:00"^^xsd:dateTime] ; # 
+  fhir:recipient ( [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://www.jurisdiction.com/insurer"^^xsd:anyURI ;
+         fhir:l <http://www.jurisdiction.com/insurer>
+       ] ;
+       fhir:value [ fhir:v "123456" ]
+     ] # reference value=\"#payor\"\/
+  ] ) ; # 
+  fhir:sender [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://www.jurisdiction.com/provideroffices"^^xsd:anyURI ;
+         fhir:l <http://www.jurisdiction.com/provideroffices>
+       ] ;
+       fhir:value [ fhir:v "3456" ]
+     ] # reference value=\"#provider\"\/
+  ] ; # 
+  fhir:payload ( [
+     fhir:content [
+       a fhir:Attachment ;
+       fhir:contentType [ fhir:v "application/pdf" ] ;
+       fhir:data [ fhir:v "SGVsbG8="^^xsd:base64Binary ] ;
+       fhir:title [ fhir:v "accident notes 20100201.pdf" ] ;
+       fhir:creation [ fhir:v "2010-02-01T11:50:23-05:00"^^xsd:dateTime ]
+     ]
+  ] [
+     fhir:content [
+       a fhir:Attachment ;
+       fhir:contentType [ fhir:v "application/pdf" ] ;
+       fhir:url [
+         fhir:v "https://www.fhir.org/fhir-glossy.pdf"^^xsd:anyURI ;
+         fhir:l <https://www.fhir.org/fhir-glossy.pdf>
+       ] ;
+       fhir:size [ fhir:v "387569"^^xsd:long ] ;
+       fhir:hash [ fhir:v "9Vd6+eYTfCoKoNv6y2x5aMlZdUY="^^xsd:base64Binary ] ;
+       fhir:creation [ fhir:v "2010-02-01T10:57:34+01:00"^^xsd:dateTime ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/1> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

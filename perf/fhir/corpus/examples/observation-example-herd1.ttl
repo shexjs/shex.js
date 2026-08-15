@@ -1,0 +1,104 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# An example of a herd screening observation for Mycoplasmal Pneumonia in Pigs
+#(Enzootic pneumonia).  Many thanks to Veterinary Diagnostic Laboratory Iowa State University for the data.
+#This uses the Group resource as the subject
+
+<http://hl7.org/fhir/Observation/herd1> a fhir:Observation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "herd1"] ; # 
+  fhir:status [ fhir:v "final"] ; # the mandatory status
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/observation-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/observation-category>
+       ] ;
+       fhir:code [ fhir:v "laboratory" ] ;
+       fhir:display [ fhir:v "Laboratory" ]
+     ] ) ;
+     fhir:text [ fhir:v "Laboratory" ]
+  ] ) ; # category code is A code that classifies the general type of observation being made. This is used for searching, sorting and display purposes.
+  fhir:code [
+     a loinc:80219-9 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "80219-9" ] ;
+       fhir:display [ fhir:v "Mycoplasma hyopneumoniae Ab sample/Positive control in Serum by Immunoassay" ] # more generic methodless LOINC
+     ] [
+       fhir:system [
+         fhir:v "http://acme.org/devices/clinical-codes"^^xsd:anyURI ;
+         fhir:l <http://acme.org/devices/clinical-codes>
+       ] ;
+       fhir:code [ fhir:v "Mycoplasma" ] ;
+       fhir:display [ fhir:v "Mycoplasma" ]
+     ] ) ; # LOINC - always recommended to have a LOINC code
+     fhir:text [ fhir:v "Mycoplasma hyopneumoniae - MHP" ]
+  ] ; # Observations are often coded in multiple code systems.
+#      - LOINC provides codes of varying granularity (though not usefully more specific in this particular case) and more generic LOINCs  can be mapped to more specific codes as shown here
+#      - snomed provides a clinically relevant code that is usually less granular than LOINC
+#      - the source system provides its own code, which may be less or more granular than LOINC
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Group/herd1> ;
+     fhir:reference [ fhir:v "Group/herd1" ]
+  ] ; # subject is a herd of 2500 breding sows
+  fhir:encounter [
+     fhir:display [ fhir:v "part of a health assurance program" ]
+  ] ; # 
+  fhir:effective [
+     a fhir:DateTime ;
+     fhir:v "2017-11-20"^^xsd:date
+  ] ; # 
+  fhir:value [
+     a fhir:Quantity ;
+     fhir:value [ fhir:v 0.2 ] ;
+     fhir:unit [ fhir:v "% (sample/positive control)" ] ;
+     fhir:system [
+       fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+       fhir:l <http://unitsofmeasure.org>
+     ] ;
+     fhir:code [ fhir:v "%" ]
+  ] ; # In FHIR, units may be represented twice. Once in the
+#    agreed human representation, and once in a coded form.
+#    Both is best, since it's not always possible to infer
+#    one from the other in code.
+#
+#    When a computable unit is provided, UCUM (http://unitsofmeasure.org)
+#    is always preferred, but it doesn't provide notional units (such as
+#    "tablet"), etc. For these, something else is required (e.g. SNOMED CT)
+  fhir:interpretation ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation>
+       ] ;
+       fhir:code [ fhir:v "NEG" ] ;
+       fhir:display [ fhir:v "Negative" ]
+     ] ) ;
+     fhir:text [ fhir:v "Negative" ]
+  ] ) ; # 
+  fhir:specimen [
+     fhir:l <http://hl7.org/fhir/Specimen/pooled-serum> ;
+     fhir:reference [ fhir:v "Specimen/pooled-serum" ] ;
+     fhir:display [ fhir:v "30 serum" ]
+  ] ; # Specimen is a pooled serology sample of 30 animals.
+  fhir:referenceRange ( [
+     fhir:text [ fhir:v ">0.4 Positive; 0.3 to 0.4 Suspect < 0.3 Negative" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Group/herd1> a fhir:Group .
+
+<http://hl7.org/fhir/Specimen/pooled-serum> a fhir:Specimen .
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,84 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# @version June 2013 @author Melchior Ferdinand Pot
+# ReferenceRange and component are not applicable
+
+<http://hl7.org/fhir/Observation/f206> a fhir:Observation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f206"] ; # 
+  fhir:status [ fhir:v "final"] ; # 
+  fhir:code [
+     a loinc:600-7 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://acmelabs.org"^^xsd:anyURI ;
+         fhir:l <http://acmelabs.org>
+       ] ;
+       fhir:code [ fhir:v "104177" ] ;
+       fhir:display [ fhir:v "Blood culture" ]
+     ] [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "600-7" ] ;
+       fhir:display [ fhir:v "Bacteria identified in Blood by Culture" ]
+     ] ) # Kind of observation = Blood culture
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/f201> ;
+     fhir:reference [ fhir:v "Patient/f201" ] ;
+     fhir:display [ fhir:v "Roel" ]
+  ] ; # No identifier could be provided to this observation
+  fhir:issued [ fhir:v "2013-03-11T10:28:00+01:00"^^xsd:dateTime] ; # 
+  fhir:performer ( [
+     fhir:l <http://hl7.org/fhir/Practitioner/f202> ;
+     fhir:reference [ fhir:v "Practitioner/f202" ] ;
+     fhir:display [ fhir:v "Luigi Maas" ]
+  ] ) ; # 
+  fhir:value [
+     a fhir:CodeableConcept, sct:3092008 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "3092008" ] ;
+       fhir:display [ fhir:v "Staphylococcus aureus" ]
+     ] )
+  ] ; # 
+  fhir:interpretation ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation>
+       ] ;
+       fhir:code [ fhir:v "POS" ]
+     ] )
+  ] ) ; # 
+  fhir:method [
+     a sct:104177005 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "104177005" ] ;
+       fhir:display [ fhir:v "Blood culture for bacteria, including anaerobic screen" ]
+     ] )
+  ] . # BodySite not relevant
+
+<http://hl7.org/fhir/Patient/f201> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/f202> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

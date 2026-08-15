@@ -1,0 +1,112 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/binding-strength> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "binding-strength"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem binding-strength</b></p><a name=\"binding-strength\"> </a><a name=\"hcbinding-strength\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/binding-strength</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">required<a name=\"binding-strength-required\"> </a></td><td>Required</td><td>To be conformant, the concept in this element SHALL be from the specified value set.</td></tr><tr><td style=\"white-space:nowrap\">extensible<a name=\"binding-strength-extensible\"> </a></td><td>Extensible</td><td>To be conformant, the concept in this element SHALL be from the specified value set if any of the codes within the value set can apply to the concept being communicated.  If the value set does not cover the concept (based on human review), alternate codings (or, data type allowing, text) may be included instead.</td></tr><tr><td style=\"white-space:nowrap\">preferred<a name=\"binding-strength-preferred\"> </a></td><td>Preferred</td><td>Instances are encouraged to draw from the specified codes for interoperability purposes but are not required to do so to be considered conformant.</td></tr><tr><td style=\"white-space:nowrap\">example<a name=\"binding-strength-example\"> </a></td><td>Example</td><td>Instances are not expected or even encouraged to draw from the specified value set.  The value set merely provides examples of the types of concepts intended to be included.</td></tr><tr><td style=\"white-space:nowrap\">descriptive<a name=\"binding-strength-descriptive\"> </a></td><td>descriptive</td><td>There is no constraint on the allowed set of codes at the root level, though there may be additional bindings that apply in certain contexts.  The root binding element will be a description that gives guidance on potential downstream constraint of the allowed codes and/or highlights the presence of additional bindings.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 5
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/binding-strength"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/binding-strength>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.44" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "BindingStrength"] ; # 
+  fhir:title [ fhir:v "BindingStrength"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Indication of the degree of conformance expectations associated with a binding."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/binding-strength"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/binding-strength>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "required" ] ;
+     fhir:display [ fhir:v "Required" ] ;
+     fhir:definition [ fhir:v "To be conformant, the concept in this element SHALL be from the specified value set." ]
+  ] [
+     fhir:code [ fhir:v "extensible" ] ;
+     fhir:display [ fhir:v "Extensible" ] ;
+     fhir:definition [ fhir:v "To be conformant, the concept in this element SHALL be from the specified value set if any of the codes within the value set can apply to the concept being communicated.  If the value set does not cover the concept (based on human review), alternate codings (or, data type allowing, text) may be included instead." ]
+  ] [
+     fhir:code [ fhir:v "preferred" ] ;
+     fhir:display [ fhir:v "Preferred" ] ;
+     fhir:definition [ fhir:v "Instances are encouraged to draw from the specified codes for interoperability purposes but are not required to do so to be considered conformant." ]
+  ] [
+     fhir:code [ fhir:v "example" ] ;
+     fhir:display [ fhir:v "Example" ] ;
+     fhir:definition [ fhir:v "Instances are not expected or even encouraged to draw from the specified value set.  The value set merely provides examples of the types of concepts intended to be included." ]
+  ] [
+     fhir:code [ fhir:v "descriptive" ] ;
+     fhir:display [ fhir:v "descriptive" ] ;
+     fhir:definition [ fhir:v "There is no constraint on the allowed set of codes at the root level, though there may be additional bindings that apply in certain contexts.  The root binding element will be a description that gives guidance on potential downstream constraint of the allowed codes and/or highlights the presence of additional bindings." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

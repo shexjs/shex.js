@@ -1,0 +1,164 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/AllergyIntolerance/example> a fhir:AllergyIntolerance ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://acme.com/ids/patients/risks"^^xsd:anyURI ;
+       fhir:l <http://acme.com/ids/patients/risks>
+     ] ;
+     fhir:value [ fhir:v "49476534" ]
+  ] ) ; # an identifier used for this allergic propensity (adverse reaction risk)
+  fhir:clinicalStatus [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical>
+       ] ;
+       fhir:code [ fhir:v "active" ] ;
+       fhir:display [ fhir:v "Active" ]
+     ] )
+  ] ; # this individual has had several reactions
+  fhir:verificationStatus [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/allergyintolerance-verification>
+       ] ;
+       fhir:code [ fhir:v "confirmed" ] ;
+       fhir:display [ fhir:v "Confirmed" ]
+     ] )
+  ] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/allergy-intolerance-type"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/allergy-intolerance-type>
+       ] ;
+       fhir:code [ fhir:v "allergy" ] ;
+       fhir:display [ fhir:v "Allergy" ]
+     ] )
+  ] ; # note: it's often unknown whether an allergy is mediated by an immune response, and not as significant as once thought
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/allergy-intolerance-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/allergy-intolerance-category>
+       ] ;
+       fhir:code [ fhir:v "food" ] ;
+       fhir:display [ fhir:v "Food" ]
+     ] )
+  ] ) ; # this categorization is implied by "cashew nut" and therefore basically 
+#    redundant, but many systems collect this field anyway, since it's either 
+#    useful when the substance is not coded, or it's quicker to sort/filter on
+#    than using terminology based reasoning
+  fhir:criticality [ fhir:v "high"] ; # there is no question that the allergy is real and serious
+  fhir:code [
+     a sct:227493005 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "227493005" ] ;
+       fhir:display [ fhir:v "Cashew nuts" ]
+     ] )
+  ] ; # Allergy or intolerance code (substance, product, condition or negated/excluded statement) or text. A few times, 
+#    there's a full description of a complex substance/product - in these caes, use the
+#    extension [url] to refer to a Substance resource.
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # the patient that actually has the risk of adverse reaction
+  fhir:onset [
+     a fhir:DateTime ;
+     fhir:v "2004"^^xsd:gYear
+  ] ; # when the allergy was first noted (in this case the same as reaction.onset of the first occurrence)
+  fhir:recordedDate [ fhir:v "2014-10-09T14:58:00+11:00"^^xsd:dateTime] ; # the date that this entry was recorded
+  fhir:recorder [
+     fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+     fhir:reference [ fhir:v "Practitioner/example" ]
+  ] ; # who made the record / last updated it
+  fhir:asserter [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # the patient is the reporter in this case
+  fhir:lastOccurrence [ fhir:v "2012-06"^^xsd:gYearMonth] ; # last happened June 2012. Typically, systems either track lastOccurrence,
+#     or a list of events.
+  fhir:note ( [
+     fhir:text [ fhir:v "The criticality is high becasue of the observed anaphylactic reaction when challenged with cashew extract." ]
+  ] ) ; # an additional note about the allergy propensity by the recorder
+  fhir:reaction ( [
+     fhir:substance [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://www.nlm.nih.gov/research/umls/rxnorm"^^xsd:anyURI ;
+           fhir:l <http://www.nlm.nih.gov/research/umls/rxnorm>
+         ] ;
+         fhir:code [ fhir:v "1160593" ] ;
+         fhir:display [ fhir:v "cashew nut allergenic extract Injectable Product" ]
+       ] )
+     ] ; # It's possible to list specific things to which the patient responded,\n      e.g. chocolate (that happened to contain cashew nuts). This event has\n      such a specific substance. Note that systems should ensure that what\n      goes in here does not conflict with the substance above, and systems\n      processing the data can be sure that what is here does not contravene\n      the substance above
+     fhir:manifestation ( [
+       fhir:concept [
+         a sct:39579001 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "39579001" ] ;
+           fhir:display [ fhir:v "Anaphylactic reaction" ]
+         ] )
+       ]
+     ] ) ;
+     fhir:description [ fhir:v "Challenge Protocol. Severe reaction to subcutaneous cashew extract. Epinephrine administered" ] ;
+     fhir:onset [ fhir:v "2012-06-12"^^xsd:date ] ;
+     fhir:severity [ fhir:v "severe" ] ;
+     fhir:exposureRoute [
+       a sct:34206005 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "34206005" ] ;
+         fhir:display [ fhir:v "Subcutaneous route" ]
+       ] )
+     ]
+  ] [
+     fhir:manifestation ( [
+       fhir:concept [
+         a sct:64305001 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "64305001" ] ;
+           fhir:display [ fhir:v "Urticaria" ]
+         ] )
+       ]
+     ] ) ;
+     fhir:onset [ fhir:v "2004"^^xsd:gYear ] ;
+     fhir:severity [ fhir:v "moderate" ] ;
+     fhir:note ( [
+       fhir:text [ fhir:v "The patient reports that the onset of urticaria was within 15 minutes of eating cashews." ]
+     ] ) # an additional note about the reaction by the recorder
+  ] ) . # past events. There's no claim that this is all the events, and 
+#     that should not be assumed
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

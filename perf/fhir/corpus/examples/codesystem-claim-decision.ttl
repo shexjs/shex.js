@@ -1,0 +1,89 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/claim-decision> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "claim-decision"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem claim-decision</b></p><a name=\"claim-decision\"> </a><a name=\"hcclaim-decision\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/claim-decision</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">denied<a name=\"claim-decision-denied\"> </a></td><td>Denied</td><td>The claim, or individual services, are not approved for any payment. This may also be known as 'rejected'.</td></tr><tr><td style=\"white-space:nowrap\">approved<a name=\"claim-decision-approved\"> </a></td><td>Approved</td><td>The claim, or individual services, are approved as submitted.</td></tr><tr><td style=\"white-space:nowrap\">partial<a name=\"claim-decision-partial\"> </a></td><td>Partial</td><td>The claim, or individual services, are approved at an amount less than as submitted.</td></tr><tr><td style=\"white-space:nowrap\">pending<a name=\"claim-decision-pending\"> </a></td><td>Pending</td><td>The adjudication processing is not complete. This may be due to requiring manual review or receipt of additional information.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fm"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/claim-decision"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/claim-decision>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1896" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ClaimAdjudicationDecisionCodes"] ; # 
+  fhir:title [ fhir:v "Claim Adjudication Decision Codes"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7 International"] ; # 
+  fhir:description [ fhir:v "This value set provides Claim Adjudication Decision codes."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:copyright [ fhir:v "HL7 Inc."] ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "denied" ] ;
+     fhir:display [ fhir:v "Denied" ] ;
+     fhir:definition [ fhir:v "The claim, or individual services, are not approved for any payment. This may also be known as 'rejected'." ]
+  ] [
+     fhir:code [ fhir:v "approved" ] ;
+     fhir:display [ fhir:v "Approved" ] ;
+     fhir:definition [ fhir:v "The claim, or individual services, are approved as submitted." ]
+  ] [
+     fhir:code [ fhir:v "partial" ] ;
+     fhir:display [ fhir:v "Partial" ] ;
+     fhir:definition [ fhir:v "The claim, or individual services, are approved at an amount less than as submitted." ]
+  ] [
+     fhir:code [ fhir:v "pending" ] ;
+     fhir:display [ fhir:v "Pending" ] ;
+     fhir:definition [ fhir:v "The adjudication processing is not complete. This may be due to requiring manual review or receipt of additional information." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

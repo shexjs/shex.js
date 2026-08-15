@@ -1,0 +1,117 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/QuestionnaireResponse/f201> a fhir:QuestionnaireResponse ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f201"] ; # 
+  fhir:questionnaire [
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "http://hl7.org/fhir/StructureDefinition/display"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/StructureDefinition/display>
+       ] ;
+       fhir:value [
+         a fhir:String ;
+         fhir:v "Lifelines"
+       ]
+     ] )
+  ] ; # 
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/f201> ;
+     fhir:reference [ fhir:v "Patient/f201" ] ;
+     fhir:display [ fhir:v "Roel" ]
+  ] ; # Fictive, only the below answers are non-fictive
+  fhir:authored [ fhir:v "2013-06-18T00:00:00+01:00"^^xsd:dateTime] ; # 
+  fhir:author [
+     fhir:l <http://hl7.org/fhir/Practitioner/f201> ;
+     fhir:reference [ fhir:v "Practitioner/f201" ]
+  ] ; # 
+  fhir:source [
+     fhir:l <http://hl7.org/fhir/Practitioner/f201> ;
+     fhir:reference [ fhir:v "Practitioner/f201" ]
+  ] ; # 
+  fhir:item ( [
+     fhir:linkId [ fhir:v "1" ] ;
+     fhir:text [ fhir:v "Do you have allergies?" ] ;
+     fhir:answer ( [
+       fhir:value [
+         a fhir:Boolean ;
+         fhir:v true
+       ]
+     ] )
+  ] [
+     fhir:linkId [ fhir:v "2" ] ; # Answers to general questions
+     fhir:text [ fhir:v "General questions" ] ;
+     fhir:item ( [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:text [ fhir:v "What is your gender?" ] ;
+       fhir:answer ( [
+         fhir:value [
+           a fhir:String ;
+           fhir:v "Male"
+         ]
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.2" ] ;
+       fhir:text [ fhir:v "What is your date of birth?" ] ;
+       fhir:answer ( [
+         fhir:value [
+           a fhir:Date ;
+           fhir:v "1960-03-13"^^xsd:date
+         ]
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.3" ] ;
+       fhir:text [ fhir:v "What is your country of birth?" ] ;
+       fhir:answer ( [
+         fhir:value [
+           a fhir:String ;
+           fhir:v "The Netherlands"
+         ]
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.4" ] ;
+       fhir:text [ fhir:v "What is your marital status?" ] ;
+       fhir:answer ( [
+         fhir:value [
+           a fhir:String ;
+           fhir:v "married"
+         ]
+       ] )
+     ] )
+  ] [
+     fhir:linkId [ fhir:v "3" ] ; # Answers to intoxications
+     fhir:text [ fhir:v "Intoxications" ] ;
+     fhir:item ( [
+       fhir:linkId [ fhir:v "3.1" ] ;
+       fhir:text [ fhir:v "Do you smoke?" ] ;
+       fhir:answer ( [
+         fhir:value [
+           a fhir:Boolean ;
+           fhir:v false
+         ]
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "3.2" ] ;
+       fhir:text [ fhir:v "Do you drink alchohol?" ] ;
+       fhir:answer ( [
+         fhir:value [
+           a fhir:Boolean ;
+           fhir:v false
+         ]
+       ] )
+     ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/f201> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/f201> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

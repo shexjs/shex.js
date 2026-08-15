@@ -1,0 +1,114 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Patient/f001> a fhir:Patient ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f001"] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:system [
+       fhir:v "urn:oid:2.16.840.1.113883.2.4.6.3"^^xsd:anyURI ;
+       fhir:l <urn:oid:2.16.840.1.113883.2.4.6.3>
+     ] ;
+     fhir:value [ fhir:v "738472983" ] # BSN identification system
+  ] [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:system [
+       fhir:v "urn:oid:2.16.840.1.113883.2.4.6.3"^^xsd:anyURI ;
+       fhir:l <urn:oid:2.16.840.1.113883.2.4.6.3>
+     ]
+  ] ) ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:family [ fhir:v "van de Heuvel" ] ;
+     fhir:given ( [ fhir:v "Pieter" ] ) ;
+     fhir:suffix ( [ fhir:v "MSc" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "0648352638" ] ;
+     fhir:use [ fhir:v "mobile" ]
+  ] [
+     fhir:system [ fhir:v "email" ] ;
+     fhir:value [ fhir:v "p.heuvel@gmail.com" ] ;
+     fhir:use [ fhir:v "home" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:birthDate [ fhir:v "1944-11-17"^^xsd:date] ; # 
+  fhir:deceased [
+     a fhir:Boolean ;
+     fhir:v false
+  ] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "Van Egmondkade 23" ] ) ;
+     fhir:city [ fhir:v "Amsterdam" ] ;
+     fhir:postalCode [ fhir:v "1024 RJ" ] ;
+     fhir:country [ fhir:v "NLD" ]
+  ] ) ; # ISO 3166 Codes (Countries)
+  fhir:maritalStatus [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-MaritalStatus>
+       ] ;
+       fhir:code [ fhir:v "M" ] ;
+       fhir:display [ fhir:v "Married" ]
+     ] ) ;
+     fhir:text [ fhir:v "Getrouwd" ]
+  ] ; # 
+  fhir:multipleBirth [
+     a fhir:Boolean ;
+     fhir:v true
+  ] ; # 
+  fhir:contact ( [
+     fhir:relationship ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0131"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0131>
+         ] ;
+         fhir:code [ fhir:v "C" ]
+       ] )
+     ] ) ;
+     fhir:name [
+       fhir:use [ fhir:v "usual" ] ;
+       fhir:family [ fhir:v "Abels" ] ;
+       fhir:given ( [ fhir:v "Sarah" ] )
+     ] ;
+     fhir:telecom ( [
+       fhir:system [ fhir:v "phone" ] ;
+       fhir:value [ fhir:v "0690383372" ] ;
+       fhir:use [ fhir:v "mobile" ]
+     ] )
+  ] ) ; # 
+  fhir:communication ( [
+     fhir:language [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:ietf:bcp:47"^^xsd:anyURI ;
+           fhir:l <urn:ietf:bcp:47>
+         ] ;
+         fhir:code [ fhir:v "nl" ] ; # IETF language tag
+         fhir:display [ fhir:v "Dutch" ]
+       ] ) ;
+       fhir:text [ fhir:v "Nederlands" ]
+     ] ;
+     fhir:preferred [ fhir:v true ]
+  ] ) ; # 
+  fhir:managingOrganization [
+     fhir:l <http://hl7.org/fhir/Organization/f001> ;
+     fhir:reference [ fhir:v "Organization/f001" ] ;
+     fhir:display [ fhir:v "Burgers University Medical Centre" ]
+  ] . # 
+
+<http://hl7.org/fhir/Organization/f001> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

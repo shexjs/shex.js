@@ -1,0 +1,61 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# insert contents here
+
+<http://hl7.org/fhir/DeviceAssociation/example> a fhir:DeviceAssociation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://acme.com/deviceassociations/id"^^xsd:anyURI ;
+       fhir:l <http://acme.com/deviceassociations/id>
+     ] ;
+     fhir:value [ fhir:v "DA12345" ]
+  ] ) ; # 
+  fhir:device [
+     fhir:l <http://hl7.org/fhir/Device/prod1> ;
+     fhir:reference [ fhir:v "Device/prod1" ]
+  ] ; # 
+  fhir:relationship [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/deviceassociation-relationship"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/deviceassociation-relationship>
+       ] ;
+       fhir:code [ fhir:v "implanted-in" ] ;
+       fhir:display [ fhir:v "Implanted In" ]
+     ] )
+  ] ; # 
+  fhir:status [ fhir:v "inactive"] ; # 
+  fhir:relationshipStatus [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/deviceassociation-relationship-status"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/deviceassociation-relationship-status>
+       ] ;
+       fhir:code [ fhir:v "removed" ] ;
+       fhir:display [ fhir:v "Removed" ]
+     ] )
+  ] ; # Relationship lifecycle state moved here
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/pat1> ;
+     fhir:reference [ fhir:v "Patient/pat1" ] ;
+     fhir:display [ fhir:v "Donald Duck" ]
+  ] ; # 
+  fhir:period [
+     fhir:start [ fhir:v "2023-01-01T08:00:00Z"^^xsd:dateTime ] ;
+     fhir:end [ fhir:v "2023-12-31T17:00:00Z"^^xsd:dateTime ]
+  ] . # 
+
+<http://hl7.org/fhir/Device/prod1> a fhir:Device .
+
+<http://hl7.org/fhir/Patient/pat1> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

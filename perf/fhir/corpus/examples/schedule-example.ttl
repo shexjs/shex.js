@@ -1,0 +1,74 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Schedule/example> a fhir:Schedule ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      Burgers UMC, South Wing, second floor Physiotherapy Schedule\n		</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:system [
+       fhir:v "http://example.org/scheduleid"^^xsd:anyURI ;
+       fhir:l <http://example.org/scheduleid>
+     ] ;
+     fhir:value [ fhir:v "45" ]
+  ] ) ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:serviceCategory ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/service-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/service-category>
+       ] ;
+       fhir:code [ fhir:v "17" ] ;
+       fhir:display [ fhir:v "General Practice" ]
+     ] )
+  ] ) ; # 
+  fhir:serviceType ( [
+     fhir:concept [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/service-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/service-type>
+         ] ;
+         fhir:code [ fhir:v "57" ] ;
+         fhir:display [ fhir:v "Immunization" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:specialty ( [
+     a sct:408480009 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "408480009" ] ;
+       fhir:display [ fhir:v "Clinical immunology" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "Burgers UMC, South Wing - Immunizations"] ; # 
+  fhir:actor ( [
+     fhir:l <http://hl7.org/fhir/Location/1> ;
+     fhir:reference [ fhir:v "Location/1" ] ;
+     fhir:display [ fhir:v "Burgers UMC, South Wing, second floor" ]
+  ] ) ; # 
+  fhir:planningHorizon [
+     fhir:start [ fhir:v "2013-12-25T09:15:00Z"^^xsd:dateTime ] ;
+     fhir:end [ fhir:v "2013-12-25T09:30:00Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:comment [ fhir:v "The slots attached to this schedule should be specialized to cover immunizations within the clinic"] . # 
+
+<http://hl7.org/fhir/Location/1> a fhir:Location .
+
+# -------------------------------------------------------------------------------------
+

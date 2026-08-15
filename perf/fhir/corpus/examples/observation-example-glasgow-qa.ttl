@@ -1,0 +1,108 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# This is an example of a Glasgow Coma Score using the .related to bundle the  measurements  will use contained elements for this example only but coudl just as easily use external or bundled elements..  source http://www.choa.org/~/media/CHOA/Documents/Services/Concussion/Concussion-glasgow-coma-scale.pdf
+
+<http://hl7.org/fhir/Observation/gcs-qa> a fhir:Observation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "gcs-qa"] ; # 
+  fhir:status [ fhir:v "final"] ; # the mandatory quality flags:
+  fhir:code [
+     a loinc:9269-2 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "9269-2" ] ;
+       fhir:display [ fhir:v "Glasgow coma score total" ]
+     ] ) ; # LOINC - always recommended to have a LOINC code
+     fhir:text [ fhir:v "Glasgow Coma Scale , (GCS)" ]
+  ] ; # Observations are often coded in multiple code systems.
+#      - LOINC
+#		- or SNOMED
+#      -and/or the source system may provides its own "local" code, which may be less or more granular than LOINC.
+#	In this example there is only LOINC
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Peter James Chalmers" ]
+  ] ; # 
+  fhir:effective [
+     a fhir:DateTime ;
+     fhir:v "2014-12-11T04:44:16Z"^^xsd:dateTime
+  ] ; # 
+  fhir:value [
+     a fhir:Quantity ;
+     fhir:value [ fhir:v "13"^^xsd:decimal ] ;
+     fhir:system [
+       fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+       fhir:l <http://unitsofmeasure.org>
+     ] ;
+     fhir:code [ fhir:v "{score}" ]
+  ] ; # In FHIR, units may be represented twice. Once in the
+#    agreed human representation, and once in a coded form.
+#    In this example the UCUM unit is provided but no human representation since this is often not displayed
+  fhir:referenceRange ( [
+     fhir:high [
+       fhir:value [ fhir:v "8"^^xsd:decimal ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "{score}" ]
+     ] ;
+     fhir:type [
+       fhir:text [ fhir:v "Severe TBI" ]
+     ] # meaning as text
+  ] [
+     fhir:low [
+       fhir:value [ fhir:v "9"^^xsd:decimal ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "{score}" ]
+     ] ;
+     fhir:high [
+       fhir:value [ fhir:v "12"^^xsd:decimal ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "{score}" ]
+     ] ;
+     fhir:type [
+       fhir:text [ fhir:v "Moderate TBI" ]
+     ] # meaning as text
+  ] [
+     fhir:low [
+       fhir:value [ fhir:v "13"^^xsd:decimal ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "{score}" ]
+     ] ;
+     fhir:type [
+       fhir:text [ fhir:v "Mild TBI" ]
+     ] # meaning as text
+  ] ) ; # 
+  fhir:derivedFrom ( [
+     fhir:l <http://hl7.org/fhir/QuestionnaireResponse/gcs> ;
+     fhir:reference [ fhir:v "QuestionnaireResponse/gcs" ] ;
+     fhir:display [ fhir:v "GCS form results" ]
+  ] ) . # put the references to the QuestionnairAnswer example here using the derived-From type
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/QuestionnaireResponse/gcs> a fhir:QuestionnaireResponse .
+
+# -------------------------------------------------------------------------------------
+

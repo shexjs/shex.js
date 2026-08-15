@@ -1,0 +1,164 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/DeviceAlert/example> a fhir:DeviceAlert ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:type [
+       fhir:text [ fhir:v "Alarm Unique Id" ]
+     ] ;
+     fhir:value [ fhir:v "0600dcFFFF750001^^^EUI-64_d1130a75-316c-4401-88c4-9c71704cdf6b_d629bc41-0310-4fec-b1a4-41356b66a7eb" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "in-progress"] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/devicealert-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/devicealert-type>
+       ] ;
+       fhir:code [ fhir:v "physiological" ]
+     ] )
+  ] ; # 
+  fhir:priority [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/devicealert-priority"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/devicealert-priority>
+       ] ;
+       fhir:code [ fhir:v "medium" ] ;
+       fhir:display [ fhir:v "Medium Priority" ]
+     ] )
+  ] ; # 
+  fhir:code [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+         fhir:l <urn:iso:std:iso:11073:10101>
+       ] ;
+       fhir:code [ fhir:v "196670" ] ;
+       fhir:display [ fhir:v "MDC_EVT_LO" ]
+     ] )
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/pat1> ;
+     fhir:reference [ fhir:v "Patient/pat1" ]
+  ] ; # 
+  fhir:occurrence [
+     fhir:start [ fhir:v "2025-10-30T10:00:00Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:device [
+     fhir:l <http://hl7.org/fhir/Device/example> ;
+     fhir:reference [ fhir:v "Device/example" ]
+  ] ; # 
+  fhir:acknowledged [ fhir:v false] ; # 
+  fhir:derivedFrom ( [
+     fhir:observation [
+       fhir:l <http://hl7.org/fhir/Observation/f001> ;
+       fhir:reference [ fhir:v "Observation/f001" ] ;
+       fhir:type [
+         fhir:v "Observation"^^xsd:anyURI ;
+         fhir:l fhir:Observation
+       ]
+     ] ;
+     fhir:limit [
+       fhir:low [
+         fhir:value [ fhir:v "87"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "MDC_DIM_PERCENT" ] ;
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "262688" ]
+       ] ;
+       fhir:high [
+         fhir:value [ fhir:v "98"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "MDC_DIM_PERCENT" ] ;
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "262688" ]
+       ]
+     ]
+  ] ) ; # 
+  fhir:label [ fhir:v "**SpO2   86  <87  "] ; # 
+  fhir:signal ( [
+     fhir:activationState [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/devicealert-activationState"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/devicealert-activationState>
+         ] ;
+         fhir:code [ fhir:v "on" ] ;
+         fhir:display [ fhir:v "On" ]
+       ] )
+     ] ;
+     fhir:presence [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/devicealert-presence"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/devicealert-presence>
+         ] ;
+         fhir:code [ fhir:v "on" ] ;
+         fhir:display [ fhir:v "On" ]
+       ] )
+     ] ;
+     fhir:annunciator [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+             fhir:l <urn:iso:std:iso:11073:10101>
+           ] ;
+           fhir:code [ fhir:v "188420" ] ;
+           fhir:display [ fhir:v "MDC_TEMP_RECT" ]
+         ] ) ;
+         fhir:text [ fhir:v "Light annunciator" ]
+       ] ;
+       fhir:reference [
+         fhir:l <http://hl7.org/fhir/Device/example> ;
+         fhir:reference [ fhir:v "Device/example" ]
+       ]
+     ] ;
+     fhir:manifestation [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/devicealert-manifestation"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/devicealert-manifestation>
+         ] ;
+         fhir:code [ fhir:v "visual" ] ;
+         fhir:display [ fhir:v "Visual" ]
+       ] ) ;
+       fhir:text [ fhir:v "visual alert" ]
+     ] ;
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "188420" ] ;
+         fhir:display [ fhir:v "MDC_TEMP_RECT" ]
+       ] ) ;
+       fhir:text [ fhir:v "Light annunciator" ]
+     ] ) ;
+     fhir:period [
+       fhir:start [ fhir:v "2025-10-30T10:00:00Z"^^xsd:dateTime ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/pat1> a fhir:Patient .
+
+<http://hl7.org/fhir/Device/example> a fhir:Device .
+
+<http://hl7.org/fhir/Observation/f001> a fhir:Observation .
+
+# -------------------------------------------------------------------------------------
+

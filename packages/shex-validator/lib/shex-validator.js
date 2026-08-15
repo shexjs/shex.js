@@ -77,6 +77,10 @@ class SemActDispatcherImpl {
     register(name, handler) {
         this.handlers[name] = handler;
     }
+    /** Is there a handler for this action?  If not, dispatchAll skips it. */
+    isRegistered(name) {
+        return name in this.handlers;
+    }
     /**
      * Calls all semantic actions, allowing each to write to resultsArtifact.
      *

@@ -1,0 +1,344 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Claim/760152> a fhir:Claim ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "760152"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">A human-readable rendering of the Pharmacy Claim</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://happypharma.com/claim"^^xsd:anyURI ;
+       fhir:l <http://happypharma.com/claim>
+     ] ;
+     fhir:value [ fhir:v "7612345" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/claim-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/claim-type>
+       ] ;
+       fhir:code [ fhir:v "pharmacy" ]
+     ] )
+  ] ; # 
+  fhir:use [ fhir:v "claim"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/1> ;
+     fhir:reference [ fhir:v "Patient/1" ]
+  ] ; # 
+  fhir:created [ fhir:v "2014-08-16"^^xsd:date] ; # 
+  fhir:insurer [
+     fhir:l <http://hl7.org/fhir/Organization/2> ;
+     fhir:reference [ fhir:v "Organization/2" ]
+  ] ; # 
+  fhir:provider [
+     fhir:l <http://hl7.org/fhir/Organization/1> ;
+     fhir:reference [ fhir:v "Organization/1" ]
+  ] ; # 
+  fhir:priority [
+     fhir:coding ( [
+       fhir:code [ fhir:v "stat" ]
+     ] )
+  ] ; # 
+  fhir:payee [
+     fhir:type [
+       fhir:coding ( [
+         fhir:code [ fhir:v "provider" ]
+       ] )
+     ]
+  ] ; # 
+  fhir:careTeam ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:provider [
+       fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+       fhir:reference [ fhir:v "Practitioner/example" ]
+     ]
+  ] ) ; # 
+  fhir:supportingInfo ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:category [
+       fhir:coding ( [
+         fhir:code [ fhir:v "pharmacyrefill" ]
+       ] )
+     ] ;
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.org/fhir/CodeSystem/pharmacy-refill"^^xsd:anyURI ;
+           fhir:l <http://example.org/fhir/CodeSystem/pharmacy-refill>
+         ] ;
+         fhir:code [ fhir:v "new" ]
+       ] )
+     ]
+  ] [
+     fhir:sequence [ fhir:v "2"^^xsd:positiveInteger ] ;
+     fhir:category [
+       fhir:coding ( [
+         fhir:code [ fhir:v "pharmacyinformation" ]
+       ] )
+     ] ;
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.org/fhir/CodeSystem/pharmacy-information"^^xsd:anyURI ;
+           fhir:l <http://example.org/fhir/CodeSystem/pharmacy-information>
+         ] ;
+         fhir:code [ fhir:v "refillsremaining" ]
+       ] )
+     ] ;
+     fhir:value [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v "0"^^xsd:decimal ]
+     ]
+  ] [
+     fhir:sequence [ fhir:v "3"^^xsd:positiveInteger ] ;
+     fhir:category [
+       fhir:coding ( [
+         fhir:code [ fhir:v "pharmacyinformation" ]
+       ] )
+     ] ;
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.org/fhir/CodeSystem/pharmacy-information"^^xsd:anyURI ;
+           fhir:l <http://example.org/fhir/CodeSystem/pharmacy-information>
+         ] ;
+         fhir:code [ fhir:v "dayssupply" ]
+       ] )
+     ] ;
+     fhir:value [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v "10"^^xsd:decimal ]
+     ]
+  ] [
+     fhir:sequence [ fhir:v "4"^^xsd:positiveInteger ] ;
+     fhir:category [
+       fhir:coding ( [
+         fhir:code [ fhir:v "pharmacy" ]
+       ] )
+     ] ;
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.org/fhir/CodeSystem/pharmacy-form"^^xsd:anyURI ;
+           fhir:l <http://example.org/fhir/CodeSystem/pharmacy-form>
+         ] ;
+         fhir:code [ fhir:v "capsule" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:diagnosis ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:diagnosis [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:code [ fhir:v "654456" ]
+         ] )
+       ]
+     ]
+  ] ) ; # 
+  fhir:insurance ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:focal [ fhir:v true ] ;
+     fhir:coverage [
+       fhir:l <http://hl7.org/fhir/Coverage/9876B1> ;
+       fhir:reference [ fhir:v "Coverage/9876B1" ]
+     ]
+  ] ) ; # 
+  fhir:item ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:careTeamSequence ( [ fhir:v "1"^^xsd:positiveInteger ] ) ;
+     fhir:informationSequence ( [ fhir:v "1"^^xsd:positiveInteger ] [ fhir:v "2"^^xsd:positiveInteger ] [ fhir:v "3"^^xsd:positiveInteger ] [ fhir:v "4"^^xsd:positiveInteger ] ) ;
+     fhir:productOrService [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://localdruglist.org"^^xsd:anyURI ;
+           fhir:l <http://localdruglist.org>
+         ] ;
+         fhir:code [ fhir:v "compound" ] ;
+         fhir:display [ fhir:v "Custom compound" ]
+       ] )
+     ] ; # type=compoundmedication
+     fhir:serviced [
+       a fhir:Date ;
+       fhir:v "2014-08-16"^^xsd:date
+     ] ;
+     fhir:quantity [
+       fhir:value [ fhir:v "30"^^xsd:decimal ] ;
+       fhir:unit [ fhir:v "TAB" ] ;
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm>
+       ] ;
+       fhir:code [ fhir:v "TAB" ]
+     ] ;
+     fhir:net [
+       fhir:value [ fhir:v 155.00 ] ;
+       fhir:currency [ fhir:v "USD" ]
+     ] ;
+     fhir:detail ( [
+       fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+       fhir:productOrService [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://localdruglist.org"^^xsd:anyURI ;
+             fhir:l <http://localdruglist.org>
+           ] ;
+           fhir:code [ fhir:v "44001" ] ;
+           fhir:display [ fhir:v "Acetaminophen 250mg" ]
+         ] )
+       ] ; # type=packagemedication
+       fhir:quantity [
+         fhir:value [ fhir:v "250"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "mg" ]
+       ] ;
+       fhir:net [
+         fhir:value [ fhir:v 20.00 ] ;
+         fhir:currency [ fhir:v "USD" ]
+       ] ;
+       fhir:subDetail ( [
+         fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+         fhir:productOrService [
+           fhir:coding ( [
+             fhir:system [
+               fhir:v "http://hl7.org/fhir/ex-pharmaservice"^^xsd:anyURI ;
+               fhir:l <http://hl7.org/fhir/ex-pharmaservice>
+             ] ;
+             fhir:code [ fhir:v "drugcost" ]
+           ] )
+         ] ; # type=costitem
+         fhir:net [
+           fhir:value [ fhir:v 20.00 ] ;
+           fhir:currency [ fhir:v "USD" ]
+         ]
+       ] )
+     ] [
+       fhir:sequence [ fhir:v "2"^^xsd:positiveInteger ] ;
+       fhir:productOrService [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://localdruglist.org"^^xsd:anyURI ;
+             fhir:l <http://localdruglist.org>
+           ] ;
+           fhir:code [ fhir:v "44035" ] ;
+           fhir:display [ fhir:v "Phenacetin 50mg" ]
+         ] )
+       ] ; # type=packagemedication
+       fhir:quantity [
+         fhir:value [ fhir:v "50"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "mg" ]
+       ] ;
+       fhir:net [
+         fhir:value [ fhir:v 25.00 ] ;
+         fhir:currency [ fhir:v "USD" ]
+       ] ;
+       fhir:subDetail ( [
+         fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+         fhir:productOrService [
+           fhir:coding ( [
+             fhir:system [
+               fhir:v "http://hl7.org/fhir/ex-pharmaservice"^^xsd:anyURI ;
+               fhir:l <http://hl7.org/fhir/ex-pharmaservice>
+             ] ;
+             fhir:code [ fhir:v "drugcost" ]
+           ] )
+         ] ; # type=costitem
+         fhir:net [
+           fhir:value [ fhir:v 25.00 ] ;
+           fhir:currency [ fhir:v "USD" ]
+         ]
+       ] )
+     ] [
+       fhir:sequence [ fhir:v "3"^^xsd:positiveInteger ] ;
+       fhir:productOrService [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://localdruglist.org"^^xsd:anyURI ;
+             fhir:l <http://localdruglist.org>
+           ] ;
+           fhir:code [ fhir:v "44057" ] ;
+           fhir:display [ fhir:v "Codeine 25mg" ]
+         ] )
+       ] ; # type=packagemedication
+       fhir:quantity [
+         fhir:value [ fhir:v "25"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "mg" ]
+       ] ;
+       fhir:net [
+         fhir:value [ fhir:v 28.00 ] ;
+         fhir:currency [ fhir:v "USD" ]
+       ] ;
+       fhir:subDetail ( [
+         fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+         fhir:productOrService [
+           fhir:coding ( [
+             fhir:system [
+               fhir:v "http://hl7.org/fhir/ex-pharmaservice"^^xsd:anyURI ;
+               fhir:l <http://hl7.org/fhir/ex-pharmaservice>
+             ] ;
+             fhir:code [ fhir:v "drugcost" ]
+           ] )
+         ] ; # type=costitem
+         fhir:net [
+           fhir:value [ fhir:v 28.00 ] ;
+           fhir:currency [ fhir:v "USD" ]
+         ]
+       ] )
+     ] [
+       fhir:sequence [ fhir:v "2"^^xsd:positiveInteger ] ;
+       fhir:productOrService [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/ex-pharmaservice"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/ex-pharmaservice>
+           ] ;
+           fhir:code [ fhir:v "markup" ]
+         ] )
+       ] ; # type=costitem
+       fhir:net [
+         fhir:value [ fhir:v 22.00 ] ;
+         fhir:currency [ fhir:v "USD" ]
+       ]
+     ] [
+       fhir:sequence [ fhir:v "3"^^xsd:positiveInteger ] ;
+       fhir:productOrService [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/ex-pharmaservice"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/ex-pharmaservice>
+           ] ;
+           fhir:code [ fhir:v "compoundfee" ]
+         ] )
+       ] ; # type=costitem
+       fhir:net [
+         fhir:value [ fhir:v 60.00 ] ;
+         fhir:currency [ fhir:v "USD" ]
+       ]
+     ] )
+  ] ) ; # 
+  fhir:total [
+     fhir:value [ fhir:v 155.00 ] ;
+     fhir:currency [ fhir:v "USD" ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/1> a fhir:Patient .
+
+<http://hl7.org/fhir/Organization/2> a fhir:Organization .
+
+<http://hl7.org/fhir/Organization/1> a fhir:Organization .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Coverage/9876B1> a fhir:Coverage .
+
+# -------------------------------------------------------------------------------------
+

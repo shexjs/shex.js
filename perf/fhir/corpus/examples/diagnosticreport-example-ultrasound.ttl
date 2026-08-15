@@ -1,0 +1,73 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/DiagnosticReport/ultrasound> a fhir:DiagnosticReport ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "ultrasound"] ; # 
+  fhir:status [ fhir:v "final"] ; # 
+  fhir:category ( [
+     a sct:394914008 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "394914008" ] ;
+       fhir:display [ fhir:v "Radiology" ]
+     ] [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v2-0074"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v2-0074>
+       ] ;
+       fhir:code [ fhir:v "RAD" ]
+     ] )
+  ] ) ; # 
+  fhir:code [
+     a sct:45036003 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "45036003" ] ;
+       fhir:display [ fhir:v "Ultrasonography of abdomen" ]
+     ] ) ;
+     fhir:text [ fhir:v "Abdominal Ultrasound" ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:effective [
+     a fhir:DateTime ;
+     fhir:v "2012-12-01T12:00:00+01:00"^^xsd:dateTime
+  ] ; # 
+  fhir:issued [ fhir:v "2012-12-01T12:00:00+01:00"^^xsd:dateTime] ; # 
+  fhir:performer ( [
+     fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+     fhir:reference [ fhir:v "Practitioner/example" ]
+  ] ) ; # 
+  fhir:media ( [
+     fhir:comment [ fhir:v "A comment about the image" ] ;
+     fhir:link [
+       fhir:l <http://hl7.org/fhir/DocumentReference/1.2.840.11361907579238403408700.3.1.04.19970327150033> ;
+       fhir:reference [ fhir:v "DocumentReference/1.2.840.11361907579238403408700.3.1.04.19970327150033" ] ;
+       fhir:display [ fhir:v "WADO example image" ]
+     ]
+  ] ) ; # 
+  fhir:conclusion [ fhir:v "Unremarkable study"] . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+<http://hl7.org/fhir/DocumentReference/1.2.840.11361907579238403408700.3.1.04.19970327150033> a fhir:DocumentReference .
+
+# -------------------------------------------------------------------------------------
+

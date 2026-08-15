@@ -1,0 +1,124 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# This is an example of a simple weight measurement.
+
+<http://hl7.org/fhir/Observation/example> a fhir:Observation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:status [ fhir:v "final"] ; # the mandatory quality flags:
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/observation-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/observation-category>
+       ] ;
+       fhir:code [ fhir:v "vital-signs" ] ;
+       fhir:display [ fhir:v "Vital Signs" ]
+     ] )
+  ] [
+     a loinc:29463-7 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "29463-7" ] ;
+       fhir:display [ fhir:v "Body Weight" ] # methodless LOINC \"interoperability category\" code
+     ] )
+  ] ) ; # category code is A code that classifies the general type of observation being made. This is used for searching, sorting and display purposes.
+  fhir:code [
+     a loinc:29463-7, sct:27113001 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "29463-7" ] ;
+       fhir:display [ fhir:v "Body weight" ]
+     ] [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "27113001" ] ;
+       fhir:display [ fhir:v "Body weight" ]
+     ] [
+       fhir:system [
+         fhir:v "http://acme.org/devices/clinical-codes"^^xsd:anyURI ;
+         fhir:l <http://acme.org/devices/clinical-codes>
+       ] ;
+       fhir:code [ fhir:v "body-weight" ] ;
+       fhir:display [ fhir:v "Body Weight" ]
+     ] ) # LOINC - always recommended to have a LOINC code
+  ] ; # Observations are often coded in multiple code systems.
+#      - LOINC provides codes of varying granularity (though not usefully more specific in this particular case) and more generic LOINCs  can be mapped to more specific codes as shown here
+#      - snomed provides a clinically relevant code that is usually less granular than LOINC
+#      - the source system provides its own code, which may be less or more granular than LOINC
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/example> ;
+     fhir:reference [ fhir:v "Encounter/example" ]
+  ] ; # 
+  fhir:effective [
+     a fhir:DateTime ;
+     fhir:v "2016-03-28"^^xsd:date
+  ] ; # 
+  fhir:value [
+     a fhir:Quantity ;
+     fhir:value [ fhir:v "185"^^xsd:decimal ] ;
+     fhir:unit [ fhir:v "lbs" ] ;
+     fhir:system [
+       fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+       fhir:l <http://unitsofmeasure.org>
+     ] ;
+     fhir:code [ fhir:v "[lb_av]" ]
+  ] ; # In FHIR, units may be represented twice. Once in the
+#    agreed human representation, and once in a coded form.
+#    Both is best, since it's not always possible to infer
+#    one from the other in code.
+#
+#    When a computable unit is provided, UCUM (http://unitsofmeasure.org)
+#    is always preferred, but it doesn't provide notional units (such as
+#    "tablet"), etc. For these, something else is required (e.g. SNOMED CT)
+  fhir:component ( [
+     fhir:code [
+       a loinc:8361-8 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:code [ fhir:v "8361-8" ] ;
+         fhir:display [ fhir:v "Body position with respect to gravity" ]
+       ] )
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept, sct:10904000 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "10904000" ] ;
+         fhir:display [ fhir:v "Standing position" ]
+       ] )
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/example> a fhir:Encounter .
+
+# -------------------------------------------------------------------------------------
+

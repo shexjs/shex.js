@@ -1,0 +1,112 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/devicedefinition-warnings-example> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "devicedefinition-warnings-example"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T11:01:55.562+11:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem devicedefinition-warnings-example</b></p><a name=\"devicedefinition-warnings-example\"> </a><a name=\"hcdevicedefinition-warnings-example\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">Last updated: 2026-03-16T10:01:24.148+11:00</p></div><p>This case-sensitive code system <code>http://hl7.org/fhir/devicedefinition-warnings-example</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">flammable<a name=\"devicedefinition-warnings-example-flammable\"> </a></td><td>Flammable</td><td>Flammable - keep away from heat/open flame.</td></tr><tr><td style=\"white-space:nowrap\">electrical-shock-risk<a name=\"devicedefinition-warnings-example-electrical-shock-risk\"> </a></td><td>Electrical Shock Risk</td><td>Risk of electrical shock - follow grounding/earthing instructions.</td></tr><tr><td style=\"white-space:nowrap\">do-not-submerge<a name=\"devicedefinition-warnings-example-do-not-submerge\"> </a></td><td>Do Not Submerge</td><td>Do not immerse / keep dry.</td></tr><tr><td style=\"white-space:nowrap\">temperature-limit<a name=\"devicedefinition-warnings-example-temperature-limit\"> </a></td><td>Temperature Limit</td><td>Temperature limits must be observed.</td></tr><tr><td style=\"white-space:nowrap\">requires-training<a name=\"devicedefinition-warnings-example-requires-training\"> </a></td><td>Requires Training</td><td>Operator training required.</td></tr><tr><td style=\"white-space:nowrap\">battery-handling<a name=\"devicedefinition-warnings-example-battery-handling\"> </a></td><td>Battery Handling</td><td>Battery handling / charging instructions.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "oo"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 0
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/devicedefinition-warnings-example"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/devicedefinition-warnings-example>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "DeviceWarningsExample"] ; # 
+  fhir:title [ fhir:v "Device Warnings"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2026-03-16T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Hazards of using a device."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/devicedefinition-warnings-example"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/devicedefinition-warnings-example>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "flammable" ] ;
+     fhir:display [ fhir:v "Flammable" ] ;
+     fhir:definition [ fhir:v "Flammable - keep away from heat/open flame." ]
+  ] [
+     fhir:code [ fhir:v "electrical-shock-risk" ] ;
+     fhir:display [ fhir:v "Electrical Shock Risk" ] ;
+     fhir:definition [ fhir:v "Risk of electrical shock - follow grounding/earthing instructions." ]
+  ] [
+     fhir:code [ fhir:v "do-not-submerge" ] ;
+     fhir:display [ fhir:v "Do Not Submerge" ] ;
+     fhir:definition [ fhir:v "Do not immerse / keep dry." ]
+  ] [
+     fhir:code [ fhir:v "temperature-limit" ] ;
+     fhir:display [ fhir:v "Temperature Limit" ] ;
+     fhir:definition [ fhir:v "Temperature limits must be observed." ]
+  ] [
+     fhir:code [ fhir:v "requires-training" ] ;
+     fhir:display [ fhir:v "Requires Training" ] ;
+     fhir:definition [ fhir:v "Operator training required." ]
+  ] [
+     fhir:code [ fhir:v "battery-handling" ] ;
+     fhir:display [ fhir:v "Battery Handling" ] ;
+     fhir:definition [ fhir:v "Battery handling / charging instructions." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

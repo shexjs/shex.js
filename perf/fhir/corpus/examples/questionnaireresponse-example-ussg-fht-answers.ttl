@@ -1,0 +1,2787 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/QuestionnaireResponse/ussg-fht-answers> a fhir:QuestionnaireResponse ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "ussg-fht-answers"] ; # 
+  fhir:questionnaire [
+     fhir:v "http://hl7.org/fhir/Questionnaire/ussg-fht"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/Questionnaire/ussg-fht>
+  ] ; # 
+  fhir:status [ fhir:v "in-progress"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/proband> ;
+     fhir:reference [ fhir:v "http://hl7.org/fhir/Patient/proband" ] ;
+     fhir:type [
+       fhir:v "Patient"^^xsd:anyURI ;
+       fhir:l fhir:Patient
+     ]
+  ] ; # 
+  fhir:authored [ fhir:v "2008-01-17"^^xsd:date] ; # 
+  fhir:item ( [
+     fhir:linkId [ fhir:v "0" ] ;
+     fhir:item ( [
+       fhir:linkId [ fhir:v "0.1" ] ;
+       fhir:text [ fhir:v "Date Done" ] ;
+       fhir:answer ( [
+         fhir:value [
+           a fhir:Date ;
+           fhir:v "2008-01-17"^^xsd:date
+         ]
+       ] )
+     ] )
+  ] [
+     fhir:linkId [ fhir:v "1" ] ;
+     fhir:definition ( [
+       fhir:v "http://loinc.org/fhir/DataElement/54126-8"^^xsd:anyURI ;
+       fhir:l <http://loinc.org/fhir/DataElement/54126-8>
+     ] ) ;
+     fhir:text [ fhir:v "Your health information" ] ;
+     fhir:item ( [
+       fhir:linkId [ fhir:v "1.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "1.1.1" ] ;
+         fhir:definition ( [
+           fhir:v "http://loinc.org/fhir/DataElement/54125-0"^^xsd:anyURI ;
+           fhir:l <http://loinc.org/fhir/DataElement/54125-0>
+         ] ) ;
+         fhir:text [ fhir:v "Name" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Annie Proband"
+           ]
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "1.1.2" ] ;
+         fhir:definition ( [
+           fhir:v "http://loinc.org/fhir/DataElement/54131-8"^^xsd:anyURI ;
+           fhir:l <http://loinc.org/fhir/DataElement/54131-8>
+         ] ) ;
+         fhir:text [ fhir:v "Gender" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:system [
+               fhir:v "http://loinc.org"^^xsd:anyURI ;
+               fhir:l <http://loinc.org>
+             ] ;
+             fhir:code [ fhir:v "LA3-6" ] ;
+             fhir:display [ fhir:v "Female" ]
+           ]
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "1.1.3" ] ;
+         fhir:definition ( [
+           fhir:v "http://loinc.org/fhir/DataElement/21112-8"^^xsd:anyURI ;
+           fhir:l <http://loinc.org/fhir/DataElement/21112-8>
+         ] ) ;
+         fhir:text [ fhir:v "Date of Birth" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Date ;
+             fhir:v "1966-04-04"^^xsd:date
+           ]
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "1.1.4" ] ;
+         fhir:definition ( [
+           fhir:v "http://loinc.org/fhir/DataElement/54132-6"^^xsd:anyURI ;
+           fhir:l <http://loinc.org/fhir/DataElement/54132-6>
+         ] ) ;
+         fhir:text [ fhir:v "Were you born a twin?" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:system [
+               fhir:v "http://loinc.org"^^xsd:anyURI ;
+               fhir:l <http://loinc.org>
+             ] ;
+             fhir:code [ fhir:v "LA32-8" ] ;
+             fhir:display [ fhir:v "No" ]
+           ]
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "1.1.5" ] ;
+         fhir:definition ( [
+           fhir:v "http://loinc.org/fhir/DataElement/54128-4"^^xsd:anyURI ;
+           fhir:l <http://loinc.org/fhir/DataElement/54128-4>
+         ] ) ;
+         fhir:text [ fhir:v "Were you adopted?" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:system [
+               fhir:v "http://loinc.org"^^xsd:anyURI ;
+               fhir:l <http://loinc.org>
+             ] ;
+             fhir:code [ fhir:v "LA32-8" ] ;
+             fhir:display [ fhir:v "No" ]
+           ]
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "1.1.6" ] ;
+         fhir:definition ( [
+           fhir:v "http://loinc.org/fhir/DataElement/54135-9"^^xsd:anyURI ;
+           fhir:l <http://loinc.org/fhir/DataElement/54135-9>
+         ] ) ;
+         fhir:text [ fhir:v "Are your parents related to each other in any way other than marriage?" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:system [
+               fhir:v "http://loinc.org"^^xsd:anyURI ;
+               fhir:l <http://loinc.org>
+             ] ;
+             fhir:code [ fhir:v "LA32-8" ] ;
+             fhir:display [ fhir:v "No" ]
+           ]
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "1.1.7" ] ;
+         fhir:definition ( [
+           fhir:v "http://loinc.org/fhir/DataElement/8302-2"^^xsd:anyURI ;
+           fhir:l <http://loinc.org/fhir/DataElement/8302-2>
+         ] ) ;
+         fhir:text [ fhir:v "Height" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Decimal ;
+             fhir:v "63"^^xsd:decimal
+           ] ;
+           fhir:item ( [
+             fhir:linkId [ fhir:v "1.1.7.1" ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "1.1.7.1.1" ] ;
+               fhir:text [ fhir:v "Units" ] ;
+               fhir:answer ( [
+                 fhir:value [
+                   a fhir:Coding ;
+                   fhir:system [
+                     fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+                     fhir:l <http://unitsofmeasure.org>
+                   ] ;
+                   fhir:code [ fhir:v "[in_i]" ] ;
+                   fhir:display [ fhir:v "inches" ]
+                 ]
+               ] )
+             ] )
+           ] )
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "1.1.8" ] ;
+         fhir:definition ( [
+           fhir:v "http://loinc.org/fhir/DataElement/29463-7"^^xsd:anyURI ;
+           fhir:l <http://loinc.org/fhir/DataElement/29463-7>
+         ] ) ;
+         fhir:text [ fhir:v "Weight" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Decimal ;
+             fhir:v "127"^^xsd:decimal
+           ] ;
+           fhir:item ( [
+             fhir:linkId [ fhir:v "1.1.8.1" ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "1.1.8.1.1" ] ;
+               fhir:text [ fhir:v "Units" ] ;
+               fhir:answer ( [
+                 fhir:value [
+                   a fhir:Coding ;
+                   fhir:system [
+                     fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+                     fhir:l <http://unitsofmeasure.org>
+                   ] ;
+                   fhir:code [ fhir:v "[lb_av]" ] ;
+                   fhir:display [ fhir:v "pounds" ]
+                 ]
+               ] )
+             ] )
+           ] )
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "1.1.9" ] ;
+         fhir:definition ( [
+           fhir:v "http://loinc.org/fhir/DataElement/39156-5"^^xsd:anyURI ;
+           fhir:l <http://loinc.org/fhir/DataElement/39156-5>
+         ] ) ;
+         fhir:text [ fhir:v "Body mass index (BMI) [Ratio]" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Decimal ;
+             fhir:v 22.5
+           ]
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "1.1.10" ] ;
+         fhir:definition ( [
+           fhir:v "http://loinc.org/fhir/DataElement/54134-2"^^xsd:anyURI ;
+           fhir:l <http://loinc.org/fhir/DataElement/54134-2>
+         ] ) ;
+         fhir:text [ fhir:v "Race" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:system [
+               fhir:v "http://loinc.org"^^xsd:anyURI ;
+               fhir:l <http://loinc.org>
+             ] ;
+             fhir:code [ fhir:v "LA4457-3" ] ;
+             fhir:display [ fhir:v "White" ]
+           ]
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "1.1.11" ] ;
+         fhir:definition ( [
+           fhir:v "http://loinc.org/fhir/DataElement/54133-4"^^xsd:anyURI ;
+           fhir:l <http://loinc.org/fhir/DataElement/54133-4>
+         ] ) ;
+         fhir:text [ fhir:v "Ethnicity" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:system [
+               fhir:v "http://loinc.org"^^xsd:anyURI ;
+               fhir:l <http://loinc.org>
+             ] ;
+             fhir:code [ fhir:v "LA4611-5" ] ;
+             fhir:display [ fhir:v "Mexican" ]
+           ]
+         ] [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:system [
+               fhir:v "http://loinc.org"^^xsd:anyURI ;
+               fhir:l <http://loinc.org>
+             ] ;
+             fhir:code [ fhir:v "LA10606-4" ] ;
+             fhir:display [ fhir:v "-- South American" ]
+           ]
+         ] )
+       ] )
+     ] )
+  ] [
+     fhir:linkId [ fhir:v "2" ] ;
+     fhir:definition ( [
+       fhir:v "http://loinc.org/fhir/DataElement/54114-4"^^xsd:anyURI ;
+       fhir:l <http://loinc.org/fhir/DataElement/54114-4>
+     ] ) ;
+     fhir:text [ fhir:v "Family member health information" ] ;
+     fhir:item ( [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.1.1" ] ;
+         fhir:definition ( [
+           fhir:v "http://loinc.org/fhir/DataElement/54136-7"^^xsd:anyURI ;
+           fhir:l <http://loinc.org/fhir/DataElement/54136-7>
+         ] ) ;
+         fhir:text [ fhir:v "Relationship to you" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:system [
+               fhir:v "http://loinc.org"^^xsd:anyURI ;
+               fhir:l <http://loinc.org>
+             ] ;
+             fhir:code [ fhir:v "LA10405-1" ] ;
+             fhir:display [ fhir:v "Daughter" ]
+           ]
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "2.1.1.2" ] ;
+         fhir:definition ( [
+           fhir:v "http://loinc.org/fhir/DataElement/54138-3"^^xsd:anyURI ;
+           fhir:l <http://loinc.org/fhir/DataElement/54138-3>
+         ] ) ;
+         fhir:text [ fhir:v "Name" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Susan"
+           ]
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "2.1.1.3" ] ;
+         fhir:definition ( [
+           fhir:v "http://loinc.org/fhir/DataElement/54123-5"^^xsd:anyURI ;
+           fhir:l <http://loinc.org/fhir/DataElement/54123-5>
+         ] ) ;
+         fhir:text [ fhir:v "Gender" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:system [
+               fhir:v "http://loinc.org"^^xsd:anyURI ;
+               fhir:l <http://loinc.org>
+             ] ;
+             fhir:code [ fhir:v "LA3-6" ] ;
+             fhir:display [ fhir:v "Female" ]
+           ]
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "2.1.1.4" ] ;
+         fhir:definition ( [
+           fhir:v "http://loinc.org/fhir/DataElement/54139-1"^^xsd:anyURI ;
+           fhir:l <http://loinc.org/fhir/DataElement/54139-1>
+         ] ) ;
+         fhir:text [ fhir:v "Living?" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:system [
+               fhir:v "http://loinc.org"^^xsd:anyURI ;
+               fhir:l <http://loinc.org>
+             ] ;
+             fhir:code [ fhir:v "LA33-6" ] ;
+             fhir:display [ fhir:v "Yes" ]
+           ] ;
+           fhir:item ( [
+             fhir:linkId [ fhir:v "2.1.1.4.2" ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "2.1.1.4.2.2" ] ;
+               fhir:definition ( [
+                 fhir:v "http://loinc.org/fhir/DataElement/54141-7"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org/fhir/DataElement/54141-7>
+               ] ) ;
+               fhir:text [ fhir:v "Age" ] ;
+               fhir:answer ( [
+                 fhir:value [
+                   a fhir:Decimal ;
+                   fhir:v "17"^^xsd:decimal
+                 ]
+               ] )
+             ] )
+           ] )
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "2.1.1.5" ] ;
+         fhir:definition ( [
+           fhir:v "http://loinc.org/fhir/DataElement/54121-9"^^xsd:anyURI ;
+           fhir:l <http://loinc.org/fhir/DataElement/54121-9>
+         ] ) ;
+         fhir:text [ fhir:v "Was this person born a twin?" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:system [
+               fhir:v "http://loinc.org"^^xsd:anyURI ;
+               fhir:l <http://loinc.org>
+             ] ;
+             fhir:code [ fhir:v "LA32-8" ] ;
+             fhir:display [ fhir:v "No" ]
+           ]
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "2.1.1.6" ] ;
+         fhir:definition ( [
+           fhir:v "http://loinc.org/fhir/DataElement/54122-7"^^xsd:anyURI ;
+           fhir:l <http://loinc.org/fhir/DataElement/54122-7>
+         ] ) ;
+         fhir:text [ fhir:v "Was this person adopted?" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:system [
+               fhir:v "http://loinc.org"^^xsd:anyURI ;
+               fhir:l <http://loinc.org>
+             ] ;
+             fhir:code [ fhir:v "LA32-8" ] ;
+             fhir:display [ fhir:v "No" ]
+           ]
+         ] )
+       ] ) # see comment in questionnaire     <item>\n        <linkId value=\"2.1.1\"\/>
+     ] [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.1" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.1.1" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54136-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54136-7>
+           ] ) ;
+           fhir:text [ fhir:v "Relationship to you" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10415-0" ] ;
+               fhir:display [ fhir:v "Brother" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.2" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54138-3"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54138-3>
+           ] ) ;
+           fhir:text [ fhir:v "Name" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:String ;
+               fhir:v "Brian"
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.3" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54123-5"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54123-5>
+           ] ) ;
+           fhir:text [ fhir:v "Gender" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA2-8" ] ;
+               fhir:display [ fhir:v "Male" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.4" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54139-1"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54139-1>
+           ] ) ;
+           fhir:text [ fhir:v "Living?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA33-6" ] ;
+               fhir:display [ fhir:v "Yes" ]
+             ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "2.1.1.4.2" ] ;
+               fhir:item ( [
+                 fhir:linkId [ fhir:v "2.1.1.4.2.2" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54141-7"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54141-7>
+                 ] ) ;
+                 fhir:text [ fhir:v "Age" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Decimal ;
+                     fhir:v "32"^^xsd:decimal
+                   ]
+                 ] )
+               ] )
+             ] )
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.5" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54121-9"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54121-9>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person born a twin?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.6" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54122-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54122-7>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person adopted?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "2.1.2" ] ;
+         fhir:text [ fhir:v "This family member's history of disease" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.2.1" ] ;
+           fhir:text [ fhir:v "Disease or Condition" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA14284-6" ] ;
+               fhir:display [ fhir:v "Other Cancer" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.2.2" ] ;
+           fhir:text [ fhir:v "Age at Diagnosis" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10397-0" ] ;
+               fhir:display [ fhir:v "30-39" ]
+             ]
+           ] )
+         ] )
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.1" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.1.1" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54136-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54136-7>
+           ] ) ;
+           fhir:text [ fhir:v "Relationship to you" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10418-4" ] ;
+               fhir:display [ fhir:v "Sister" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.2" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54138-3"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54138-3>
+           ] ) ;
+           fhir:text [ fhir:v "Name" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:String ;
+               fhir:v "Janet"
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.3" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54123-5"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54123-5>
+           ] ) ;
+           fhir:text [ fhir:v "Gender" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA3-6" ] ;
+               fhir:display [ fhir:v "Female" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.4" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54139-1"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54139-1>
+           ] ) ;
+           fhir:text [ fhir:v "Living?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA33-6" ] ;
+               fhir:display [ fhir:v "Yes" ]
+             ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "2.1.1.4.2" ] ;
+               fhir:item ( [
+                 fhir:linkId [ fhir:v "2.1.1.4.2.2" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54141-7"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54141-7>
+                 ] ) ;
+                 fhir:text [ fhir:v "Age" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Decimal ;
+                     fhir:v "36"^^xsd:decimal
+                   ]
+                 ] )
+               ] )
+             ] )
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.5" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54121-9"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54121-9>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person born a twin?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.6" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54122-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54122-7>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person adopted?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "2.1.2" ] ;
+         fhir:text [ fhir:v "This family member's history of disease" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.2.1" ] ;
+           fhir:text [ fhir:v "Disease or Condition" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA14283-8" ] ;
+               fhir:display [ fhir:v "-- Breast Cancer" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.2.2" ] ;
+           fhir:text [ fhir:v "Age at Diagnosis" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10397-0" ] ;
+               fhir:display [ fhir:v "30-39" ]
+             ]
+           ] )
+         ] )
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.1" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.1.1" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54136-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54136-7>
+           ] ) ;
+           fhir:text [ fhir:v "Relationship to you" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10419-2" ] ;
+               fhir:display [ fhir:v "Nephew" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.2" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54138-3"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54138-3>
+           ] ) ;
+           fhir:text [ fhir:v "Name" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:String ;
+               fhir:v "Ian"
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.3" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54123-5"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54123-5>
+           ] ) ;
+           fhir:text [ fhir:v "Gender" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA2-8" ] ;
+               fhir:display [ fhir:v "Male" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.4" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54139-1"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54139-1>
+           ] ) ;
+           fhir:text [ fhir:v "Living?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA33-6" ] ;
+               fhir:display [ fhir:v "Yes" ]
+             ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "2.1.1.4.2" ] ;
+               fhir:item ( [
+                 fhir:linkId [ fhir:v "2.1.1.4.2.2" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54141-7"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54141-7>
+                 ] ) ;
+                 fhir:text [ fhir:v "Age" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Decimal ;
+                     fhir:v "16"^^xsd:decimal
+                   ]
+                 ] )
+               ] )
+             ] )
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.5" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54121-9"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54121-9>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person born a twin?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.6" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54122-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54122-7>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person adopted?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] )
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.1" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.1.1" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54136-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54136-7>
+           ] ) ;
+           fhir:text [ fhir:v "Relationship to you" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10420-0" ] ;
+               fhir:display [ fhir:v "Niece" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.2" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54138-3"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54138-3>
+           ] ) ;
+           fhir:text [ fhir:v "Name" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:String ;
+               fhir:v "Helen"
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.3" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54123-5"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54123-5>
+           ] ) ;
+           fhir:text [ fhir:v "Gender" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA3-6" ] ;
+               fhir:display [ fhir:v "Female" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.4" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54139-1"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54139-1>
+           ] ) ;
+           fhir:text [ fhir:v "Living?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA33-6" ] ;
+               fhir:display [ fhir:v "Yes" ]
+             ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "2.1.1.4.2" ] ;
+               fhir:item ( [
+                 fhir:linkId [ fhir:v "2.1.1.4.2.2" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54141-7"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54141-7>
+                 ] ) ;
+                 fhir:text [ fhir:v "Age" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Decimal ;
+                     fhir:v "15"^^xsd:decimal
+                   ]
+                 ] )
+               ] )
+             ] )
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.5" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54121-9"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54121-9>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person born a twin?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.6" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54122-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54122-7>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person adopted?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] )
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.1" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.1.1" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54136-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54136-7>
+           ] ) ;
+           fhir:text [ fhir:v "Relationship to you" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10416-8" ] ;
+               fhir:display [ fhir:v "Father" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.2" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54138-3"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54138-3>
+           ] ) ;
+           fhir:text [ fhir:v "Name" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:String ;
+               fhir:v "Donald"
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.3" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54123-5"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54123-5>
+           ] ) ;
+           fhir:text [ fhir:v "Gender" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA2-8" ] ;
+               fhir:display [ fhir:v "Male" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.4" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54139-1"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54139-1>
+           ] ) ;
+           fhir:text [ fhir:v "Living?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA33-6" ] ;
+               fhir:display [ fhir:v "Yes" ]
+             ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "2.1.1.4.2" ] ;
+               fhir:item ( [
+                 fhir:linkId [ fhir:v "2.1.1.4.2.2" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54141-7"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54141-7>
+                 ] ) ;
+                 fhir:text [ fhir:v "Age" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Decimal ;
+                     fhir:v "52"^^xsd:decimal
+                   ]
+                 ] )
+               ] )
+             ] )
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.5" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54121-9"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54121-9>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person born a twin?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.6" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54122-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54122-7>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person adopted?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] )
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.1" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.1.1" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54136-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54136-7>
+           ] ) ;
+           fhir:text [ fhir:v "Relationship to you" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10425-9" ] ;
+               fhir:display [ fhir:v "Paternal Uncle" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.2" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54138-3"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54138-3>
+           ] ) ;
+           fhir:text [ fhir:v "Name" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:String ;
+               fhir:v "Eric"
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.3" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54123-5"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54123-5>
+           ] ) ;
+           fhir:text [ fhir:v "Gender" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA2-8" ] ;
+               fhir:display [ fhir:v "Male" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.4" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54139-1"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54139-1>
+           ] ) ;
+           fhir:text [ fhir:v "Living?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA33-6" ] ;
+               fhir:display [ fhir:v "Yes" ]
+             ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "2.1.1.4.2" ] ;
+               fhir:item ( [
+                 fhir:linkId [ fhir:v "2.1.1.4.2.2" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54141-7"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54141-7>
+                 ] ) ;
+                 fhir:text [ fhir:v "Age" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Decimal ;
+                     fhir:v "56"^^xsd:decimal
+                   ]
+                 ] )
+               ] )
+             ] )
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.5" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54121-9"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54121-9>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person born a twin?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.6" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54122-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54122-7>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person adopted?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] )
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.1" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.1.1" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54136-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54136-7>
+           ] ) ;
+           fhir:text [ fhir:v "Relationship to you" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10421-8" ] ;
+               fhir:display [ fhir:v "Paternal Aunt" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.2" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54138-3"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54138-3>
+           ] ) ;
+           fhir:text [ fhir:v "Name" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:String ;
+               fhir:v "Fiona"
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.3" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54123-5"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54123-5>
+           ] ) ;
+           fhir:text [ fhir:v "Gender" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA3-6" ] ;
+               fhir:display [ fhir:v "Female" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.4" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54139-1"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54139-1>
+           ] ) ;
+           fhir:text [ fhir:v "Living?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA33-6" ] ;
+               fhir:display [ fhir:v "Yes" ]
+             ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "2.1.1.4.2" ] ;
+               fhir:item ( [
+                 fhir:linkId [ fhir:v "2.1.1.4.2.2" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54141-7"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54141-7>
+                 ] ) ;
+                 fhir:text [ fhir:v "Age" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Decimal ;
+                     fhir:v "57"^^xsd:decimal
+                   ]
+                 ] )
+               ] )
+             ] )
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.5" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54121-9"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54121-9>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person born a twin?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.6" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54122-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54122-7>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person adopted?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "2.1.2" ] ;
+         fhir:text [ fhir:v "This family member's history of disease" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.2.1" ] ;
+           fhir:text [ fhir:v "Disease or Condition" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10543-9" ] ;
+               fhir:display [ fhir:v "-- Skin Cancer" ]
+             ]
+           ] )
+         ] )
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.1" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.1.1" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54136-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54136-7>
+           ] ) ;
+           fhir:text [ fhir:v "Relationship to you" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10423-4" ] ;
+               fhir:display [ fhir:v "Paternal Grandfather" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.2" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54138-3"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54138-3>
+           ] ) ;
+           fhir:text [ fhir:v "Name" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:String ;
+               fhir:v "Bob"
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.3" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54123-5"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54123-5>
+           ] ) ;
+           fhir:text [ fhir:v "Gender" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA2-8" ] ;
+               fhir:display [ fhir:v "Male" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.4" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54139-1"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54139-1>
+           ] ) ;
+           fhir:text [ fhir:v "Living?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "2.1.1.4.1" ] ;
+               fhir:item ( [
+                 fhir:linkId [ fhir:v "2.1.1.4.1.1" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54112-8"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54112-8>
+                 ] ) ;
+                 fhir:text [ fhir:v "Cause of Death" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Coding ;
+                     fhir:system [
+                       fhir:v "http://loinc.org"^^xsd:anyURI ;
+                       fhir:l <http://loinc.org>
+                     ] ;
+                     fhir:code [ fhir:v "LA10537-1" ] ;
+                     fhir:display [ fhir:v "-- Colon Cancer" ]
+                   ]
+                 ] )
+               ] [
+                 fhir:linkId [ fhir:v "2.1.1.4.1.2" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54113-6"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54113-6>
+                 ] ) ;
+                 fhir:text [ fhir:v "Age at Death" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Coding ;
+                     fhir:system [
+                       fhir:v "http://loinc.org"^^xsd:anyURI ;
+                       fhir:l <http://loinc.org>
+                     ] ;
+                     fhir:code [ fhir:v "LA10400-2" ] ;
+                     fhir:display [ fhir:v "OVER 60" ]
+                   ]
+                 ] )
+               ] )
+             ] )
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.5" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54121-9"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54121-9>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person born a twin?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.6" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54122-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54122-7>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person adopted?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "2.1.2" ] ;
+         fhir:text [ fhir:v "This family member's history of disease" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.2.1" ] ;
+           fhir:text [ fhir:v "Disease or Condition" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10537-1" ] ;
+               fhir:display [ fhir:v "-- Colon Cancer" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.2.2" ] ;
+           fhir:text [ fhir:v "Age at Diagnosis" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10400-2" ] ;
+               fhir:display [ fhir:v "OVER 60" ]
+             ]
+           ] )
+         ] )
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.1" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.1.1" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54136-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54136-7>
+           ] ) ;
+           fhir:text [ fhir:v "Relationship to you" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10424-2" ] ;
+               fhir:display [ fhir:v "Paternal Grandmother" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.2" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54138-3"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54138-3>
+           ] ) ;
+           fhir:text [ fhir:v "Name" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:String ;
+               fhir:v "Claire"
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.3" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54123-5"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54123-5>
+           ] ) ;
+           fhir:text [ fhir:v "Gender" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA3-6" ] ;
+               fhir:display [ fhir:v "Female" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.4" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54139-1"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54139-1>
+           ] ) ;
+           fhir:text [ fhir:v "Living?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "2.1.1.4.1" ] ;
+               fhir:item ( [
+                 fhir:linkId [ fhir:v "2.1.1.4.1.1" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54112-8"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54112-8>
+                 ] ) ;
+                 fhir:text [ fhir:v "Cause of Death" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Coding ;
+                     fhir:system [
+                       fhir:v "http://loinc.org"^^xsd:anyURI ;
+                       fhir:l <http://loinc.org>
+                     ] ;
+                     fhir:code [ fhir:v "LA10589-2" ] ;
+                     fhir:display [ fhir:v "-- Other/Unexpected" ]
+                   ] ;
+                   fhir:item ( [
+                     fhir:linkId [ fhir:v "2.1.1.4.1.1.1" ] ;
+                     fhir:text [ fhir:v "Please specify" ] ;
+                     fhir:answer ( [
+                       fhir:value [
+                         a fhir:String ;
+                         fhir:v "Lou Gehrigs"
+                       ]
+                     ] )
+                   ] )
+                 ] )
+               ] [
+                 fhir:linkId [ fhir:v "2.1.1.4.1.2" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54113-6"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54113-6>
+                 ] ) ;
+                 fhir:text [ fhir:v "Age at Death" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Coding ;
+                     fhir:system [
+                       fhir:v "http://loinc.org"^^xsd:anyURI ;
+                       fhir:l <http://loinc.org>
+                     ] ;
+                     fhir:code [ fhir:v "LA10400-2" ] ;
+                     fhir:display [ fhir:v "OVER 60" ]
+                   ]
+                 ] )
+               ] )
+             ] )
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.5" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54121-9"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54121-9>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person born a twin?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.6" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54122-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54122-7>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person adopted?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] )
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.1" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.1.1" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54136-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54136-7>
+           ] ) ;
+           fhir:text [ fhir:v "Relationship to you" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10417-6" ] ;
+               fhir:display [ fhir:v "Mother" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.2" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54138-3"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54138-3>
+           ] ) ;
+           fhir:text [ fhir:v "Name" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:String ;
+               fhir:v "Harriet"
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.3" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54123-5"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54123-5>
+           ] ) ;
+           fhir:text [ fhir:v "Gender" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA3-6" ] ;
+               fhir:display [ fhir:v "Female" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.4" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54139-1"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54139-1>
+           ] ) ;
+           fhir:text [ fhir:v "Living?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "2.1.1.4.1" ] ;
+               fhir:item ( [
+                 fhir:linkId [ fhir:v "2.1.1.4.1.1" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54112-8"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54112-8>
+                 ] ) ;
+                 fhir:text [ fhir:v "Cause of Death" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Coding ;
+                     fhir:system [
+                       fhir:v "http://loinc.org"^^xsd:anyURI ;
+                       fhir:l <http://loinc.org>
+                     ] ;
+                     fhir:code [ fhir:v "LA15682-0" ] ;
+                     fhir:display [ fhir:v "-- Ovarian Cancer" ]
+                   ]
+                 ] )
+               ] [
+                 fhir:linkId [ fhir:v "2.1.1.4.1.2" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54113-6"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54113-6>
+                 ] ) ;
+                 fhir:text [ fhir:v "Age at Death" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Coding ;
+                     fhir:system [
+                       fhir:v "http://loinc.org"^^xsd:anyURI ;
+                       fhir:l <http://loinc.org>
+                     ] ;
+                     fhir:code [ fhir:v "LA10399-6" ] ;
+                     fhir:display [ fhir:v "50-59" ]
+                   ]
+                 ] )
+               ] )
+             ] )
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.5" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54121-9"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54121-9>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person born a twin?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.6" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54122-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54122-7>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person adopted?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "2.1.2" ] ;
+         fhir:text [ fhir:v "This family member's history of disease" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.2.1" ] ;
+           fhir:text [ fhir:v "Disease or Condition" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA15682-0" ] ;
+               fhir:display [ fhir:v "-- Ovarian Cancer" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.2.2" ] ;
+           fhir:text [ fhir:v "Age at Diagnosis" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10398-8" ] ;
+               fhir:display [ fhir:v "40-49" ]
+             ]
+           ] )
+         ] )
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.1" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.1.1" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54136-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54136-7>
+           ] ) ;
+           fhir:text [ fhir:v "Relationship to you" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10414-3" ] ;
+               fhir:display [ fhir:v "Maternal Uncle" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.2" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54138-3"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54138-3>
+           ] ) ;
+           fhir:text [ fhir:v "Name" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:String ;
+               fhir:v "Rudy"
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.3" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54123-5"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54123-5>
+           ] ) ;
+           fhir:text [ fhir:v "Gender" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA2-8" ] ;
+               fhir:display [ fhir:v "Male" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.4" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54139-1"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54139-1>
+           ] ) ;
+           fhir:text [ fhir:v "Living?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA33-6" ] ;
+               fhir:display [ fhir:v "Yes" ]
+             ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "2.1.1.4.2" ] ;
+               fhir:item ( [
+                 fhir:linkId [ fhir:v "2.1.1.4.2.2" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54141-7"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54141-7>
+                 ] ) ;
+                 fhir:text [ fhir:v "Age" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Decimal ;
+                     fhir:v "60"^^xsd:decimal
+                   ]
+                 ] )
+               ] )
+             ] )
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.5" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54121-9"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54121-9>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person born a twin?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.6" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54122-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54122-7>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person adopted?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] )
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.1" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.1.1" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54136-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54136-7>
+           ] ) ;
+           fhir:text [ fhir:v "Relationship to you" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10410-1" ] ;
+               fhir:display [ fhir:v "Maternal Aunt" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.2" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54138-3"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54138-3>
+           ] ) ;
+           fhir:text [ fhir:v "Name" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:String ;
+               fhir:v "Julie"
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.3" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54123-5"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54123-5>
+           ] ) ;
+           fhir:text [ fhir:v "Gender" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA3-6" ] ;
+               fhir:display [ fhir:v "Female" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.4" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54139-1"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54139-1>
+           ] ) ;
+           fhir:text [ fhir:v "Living?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA33-6" ] ;
+               fhir:display [ fhir:v "Yes" ]
+             ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "2.1.1.4.2" ] ;
+               fhir:item ( [
+                 fhir:linkId [ fhir:v "2.1.1.4.2.2" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54141-7"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54141-7>
+                 ] ) ;
+                 fhir:text [ fhir:v "Age" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Decimal ;
+                     fhir:v "57"^^xsd:decimal
+                   ]
+                 ] )
+               ] )
+             ] )
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.5" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54121-9"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54121-9>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person born a twin?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.6" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54122-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54122-7>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person adopted?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] )
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.1" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.1.1" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54136-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54136-7>
+           ] ) ;
+           fhir:text [ fhir:v "Relationship to you" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10412-7" ] ;
+               fhir:display [ fhir:v "Maternal Grandfather" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.2" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54138-3"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54138-3>
+           ] ) ;
+           fhir:text [ fhir:v "Name" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:String ;
+               fhir:v "Ian"
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.3" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54123-5"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54123-5>
+           ] ) ;
+           fhir:text [ fhir:v "Gender" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA2-8" ] ;
+               fhir:display [ fhir:v "Male" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.4" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54139-1"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54139-1>
+           ] ) ;
+           fhir:text [ fhir:v "Living?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "2.1.1.4.1" ] ;
+               fhir:item ( [
+                 fhir:linkId [ fhir:v "2.1.1.4.1.1" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54112-8"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54112-8>
+                 ] ) ;
+                 fhir:text [ fhir:v "Cause of Death" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Coding ;
+                     fhir:system [
+                       fhir:v "http://loinc.org"^^xsd:anyURI ;
+                       fhir:l <http://loinc.org>
+                     ] ;
+                     fhir:code [ fhir:v "LA16286-9" ] ;
+                     fhir:display [ fhir:v "-- Heart Attack" ]
+                   ]
+                 ] )
+               ] [
+                 fhir:linkId [ fhir:v "2.1.1.4.1.2" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54113-6"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54113-6>
+                 ] ) ;
+                 fhir:text [ fhir:v "Age at Death" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Coding ;
+                     fhir:system [
+                       fhir:v "http://loinc.org"^^xsd:anyURI ;
+                       fhir:l <http://loinc.org>
+                     ] ;
+                     fhir:code [ fhir:v "LA10400-2" ] ;
+                     fhir:display [ fhir:v "OVER 60" ]
+                   ]
+                 ] )
+               ] )
+             ] )
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.5" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54121-9"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54121-9>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person born a twin?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.6" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54122-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54122-7>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person adopted?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] )
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.1" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.1.1" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54136-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54136-7>
+           ] ) ;
+           fhir:text [ fhir:v "Relationship to you" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10413-5" ] ;
+               fhir:display [ fhir:v "Maternal Grandmother" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.2" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54138-3"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54138-3>
+           ] ) ;
+           fhir:text [ fhir:v "Name" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:String ;
+               fhir:v "Gladys"
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.3" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54123-5"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54123-5>
+           ] ) ;
+           fhir:text [ fhir:v "Gender" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA3-6" ] ;
+               fhir:display [ fhir:v "Female" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.4" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54139-1"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54139-1>
+           ] ) ;
+           fhir:text [ fhir:v "Living?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "2.1.1.4.1" ] ;
+               fhir:item ( [
+                 fhir:linkId [ fhir:v "2.1.1.4.1.1" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54112-8"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54112-8>
+                 ] ) ;
+                 fhir:text [ fhir:v "Cause of Death" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Coding ;
+                     fhir:system [
+                       fhir:v "http://loinc.org"^^xsd:anyURI ;
+                       fhir:l <http://loinc.org>
+                     ] ;
+                     fhir:code [ fhir:v "LA19526-5" ] ;
+                     fhir:display [ fhir:v "-- Other/Unknown" ]
+                   ]
+                 ] )
+               ] [
+                 fhir:linkId [ fhir:v "2.1.1.4.1.2" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54113-6"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54113-6>
+                 ] ) ;
+                 fhir:text [ fhir:v "Age at Death" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Coding ;
+                     fhir:system [
+                       fhir:v "http://loinc.org"^^xsd:anyURI ;
+                       fhir:l <http://loinc.org>
+                     ] ;
+                     fhir:code [ fhir:v "LA10400-2" ] ;
+                     fhir:display [ fhir:v "OVER 60" ]
+                   ]
+                 ] )
+               ] )
+             ] )
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.5" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54121-9"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54121-9>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person born a twin?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.6" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54122-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54122-7>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person adopted?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "2.1.2" ] ;
+         fhir:text [ fhir:v "This family member's history of disease" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.2.1" ] ;
+           fhir:text [ fhir:v "Disease or Condition" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA14283-8" ] ;
+               fhir:display [ fhir:v "-- Breast Cancer" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.2.2" ] ;
+           fhir:text [ fhir:v "Age at Diagnosis" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10399-6" ] ;
+               fhir:display [ fhir:v "50-59" ]
+             ]
+           ] )
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "2.1.2" ] ;
+         fhir:text [ fhir:v "This family member's history of disease" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.2.1" ] ;
+           fhir:text [ fhir:v "Disease or Condition" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA16982-3" ] ;
+               fhir:display [ fhir:v "-- Asthma" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.2.2" ] ;
+           fhir:text [ fhir:v "Age at Diagnosis" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10395-4" ] ;
+               fhir:display [ fhir:v "Childhood" ]
+             ]
+           ] )
+         ] )
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.1" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.1.1" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54136-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54136-7>
+           ] ) ;
+           fhir:text [ fhir:v "Relationship to you" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10411-9" ] ;
+               fhir:display [ fhir:v "Maternal Cousin" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.2" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54138-3"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54138-3>
+           ] ) ;
+           fhir:text [ fhir:v "Name" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:String ;
+               fhir:v "Karren"
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.3" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54123-5"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54123-5>
+           ] ) ;
+           fhir:text [ fhir:v "Gender" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA3-6" ] ;
+               fhir:display [ fhir:v "Female" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.4" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54139-1"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54139-1>
+           ] ) ;
+           fhir:text [ fhir:v "Living?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA33-6" ] ;
+               fhir:display [ fhir:v "Yes" ]
+             ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "2.1.1.4.2" ] ;
+               fhir:item ( [
+                 fhir:linkId [ fhir:v "2.1.1.4.2.2" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54141-7"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54141-7>
+                 ] ) ;
+                 fhir:text [ fhir:v "Age" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Decimal ;
+                     fhir:v "30"^^xsd:decimal
+                   ]
+                 ] )
+               ] )
+             ] )
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.5" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54121-9"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54121-9>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person born a twin?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.6" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54122-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54122-7>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person adopted?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "2.1.2" ] ;
+         fhir:text [ fhir:v "This family member's history of disease" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.2.1" ] ;
+           fhir:text [ fhir:v "Disease or Condition" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA14283-8" ] ;
+               fhir:display [ fhir:v "-- Breast Cancer" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.2.2" ] ;
+           fhir:text [ fhir:v "Age at Diagnosis" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10397-0" ] ;
+               fhir:display [ fhir:v "30-39" ]
+             ]
+           ] )
+         ] )
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.1" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "2.1.1.1" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54136-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54136-7>
+           ] ) ;
+           fhir:text [ fhir:v "Relationship to you" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA10411-9" ] ;
+               fhir:display [ fhir:v "Maternal Cousin" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.2" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54138-3"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54138-3>
+           ] ) ;
+           fhir:text [ fhir:v "Name" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:String ;
+               fhir:v "Mary"
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.3" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54123-5"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54123-5>
+           ] ) ;
+           fhir:text [ fhir:v "Gender" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA3-6" ] ;
+               fhir:display [ fhir:v "Female" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.4" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54139-1"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54139-1>
+           ] ) ;
+           fhir:text [ fhir:v "Living?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA33-6" ] ;
+               fhir:display [ fhir:v "Yes" ]
+             ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "2.1.1.4.2" ] ;
+               fhir:item ( [
+                 fhir:linkId [ fhir:v "2.1.1.4.2.2" ] ;
+                 fhir:definition ( [
+                   fhir:v "http://loinc.org/fhir/DataElement/54141-7"^^xsd:anyURI ;
+                   fhir:l <http://loinc.org/fhir/DataElement/54141-7>
+                 ] ) ;
+                 fhir:text [ fhir:v "Age" ] ;
+                 fhir:answer ( [
+                   fhir:value [
+                     a fhir:Decimal ;
+                     fhir:v "31"^^xsd:decimal
+                   ]
+                 ] )
+               ] )
+             ] )
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.5" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54121-9"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54121-9>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person born a twin?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "2.1.1.6" ] ;
+           fhir:definition ( [
+             fhir:v "http://loinc.org/fhir/DataElement/54122-7"^^xsd:anyURI ;
+             fhir:l <http://loinc.org/fhir/DataElement/54122-7>
+           ] ) ;
+           fhir:text [ fhir:v "Was this person adopted?" ] ;
+           fhir:answer ( [
+             fhir:value [
+               a fhir:Coding ;
+               fhir:system [
+                 fhir:v "http://loinc.org"^^xsd:anyURI ;
+                 fhir:l <http://loinc.org>
+               ] ;
+               fhir:code [ fhir:v "LA32-8" ] ;
+               fhir:display [ fhir:v "No" ]
+             ]
+           ] )
+         ] )
+       ] )
+     ] ) # <\/item>
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/proband> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

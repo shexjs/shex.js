@@ -1,0 +1,77 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/List/current-allergies> a fhir:List ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "current-allergies"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p>List prepared for Dr Adam Careful</p>\n      <p>Patient Peter Chalmers, DOB = Dec 25, 1974, MRN = 12345 (Acme Healthcare) has the following allergies</p>\n      <ul>\n        <li>cashew nut allergenic extract Injectable Product (<b>High</b>)</li>\n        <li>Allergenic extract, penicillin (high)</li>\n      </ul>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/list-for"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/list-for>
+     ] ;
+     fhir:value [
+       a fhir:Reference ;
+       fhir:l <http://hl7.org/fhir/Patient/example> ;
+       fhir:reference [ fhir:v "Patient/example" ] ;
+       fhir:display [ fhir:v "Dr Adam Careful" ]
+     ]
+  ] ) ; # 
+  fhir:status [ fhir:v "current"] ; # 
+  fhir:mode [ fhir:v "working"] ; # 
+  fhir:title [ fhir:v "Current Allergy List"] ; # 
+  fhir:code [
+     a loinc:52472-8 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "52472-8" ] ;
+       fhir:display [ fhir:v "Allergies and Adverse Drug Reactions" ]
+     ] ) ;
+     fhir:text [ fhir:v "Current Allergy List" ]
+  ] ; # 
+  fhir:date [ fhir:v "2015-07-14T23:10:23+11:00"^^xsd:dateTime] ; # 
+  fhir:source [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:orderedBy [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/list-order"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/list-order>
+       ] ;
+       fhir:code [ fhir:v "entry-date" ]
+     ] )
+  ] ; # 
+  fhir:entry ( [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/AllergyIntolerance/example> ;
+       fhir:reference [ fhir:v "AllergyIntolerance/example" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/AllergyIntolerance/medication> ;
+       fhir:reference [ fhir:v "AllergyIntolerance/medication" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/AllergyIntolerance/example> a fhir:AllergyIntolerance .
+
+<http://hl7.org/fhir/AllergyIntolerance/medication> a fhir:AllergyIntolerance .
+
+# -------------------------------------------------------------------------------------
+

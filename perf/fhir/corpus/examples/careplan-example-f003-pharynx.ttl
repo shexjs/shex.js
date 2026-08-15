@@ -1,0 +1,147 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CarePlan/f003> a fhir:CarePlan ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f003"] ; # 
+  fhir:contained ( [
+     a fhir:CareTeam ;
+     fhir:id [ fhir:v "careteam" ] ;
+     fhir:participant ( [
+       fhir:member [
+         fhir:l <http://hl7.org/fhir/Practitioner/f001> ;
+         fhir:reference [ fhir:v "Practitioner/f001" ] ;
+         fhir:display [ fhir:v "E.M. van den broek" ]
+       ]
+     ] )
+  ] [
+     a fhir:Goal ;
+     fhir:id [ fhir:v "goal" ] ;
+     fhir:lifecycleStatus [ fhir:v "completed" ] ;
+     fhir:achievementStatus [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/goal-achievement"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/goal-achievement>
+         ] ;
+         fhir:code [ fhir:v "achieved" ] ;
+         fhir:display [ fhir:v "Achieved" ]
+       ] ) ;
+       fhir:text [ fhir:v "Achieved" ]
+     ] ;
+     fhir:description [
+       fhir:text [ fhir:v "Retropharyngeal abscess removal" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/f001> ;
+       fhir:reference [ fhir:v "Patient/f001" ] ;
+       fhir:display [ fhir:v "P. van de Heuvel" ]
+     ] ;
+     fhir:note ( [
+       fhir:text [ fhir:v "goal accomplished without complications" ]
+     ] )
+  ] [
+     a fhir:ServiceRequest ;
+     fhir:id [ fhir:v "activity" ] ;
+     fhir:status [ fhir:v "completed" ] ;
+     fhir:intent [ fhir:v "order" ] ;
+     fhir:code [
+       fhir:concept [
+         a sct:172960003 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "172960003" ] ;
+           fhir:display [ fhir:v "Incision of retropharyngeal abscess" ]
+         ] )
+       ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/f001> ;
+       fhir:reference [ fhir:v "Patient/f001" ] ;
+       fhir:display [ fhir:v "P. van de Heuvel" ]
+     ] ;
+     fhir:occurrence [
+       a fhir:DateTime ;
+       fhir:v "2011-06-27T09:30:10+01:00"^^xsd:dateTime
+     ] ;
+     fhir:performer ( [
+       fhir:l <http://hl7.org/fhir/Practitioner/f001> ;
+       fhir:reference [ fhir:v "Practitioner/f001" ] ;
+       fhir:display [ fhir:v "E.M. van den broek" ]
+     ] )
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:system [
+       fhir:v "http://www.bmc.nl/zorgportal/identifiers/careplans"^^xsd:anyURI ;
+       fhir:l <http://www.bmc.nl/zorgportal/identifiers/careplans>
+     ] ; # urn:oid:2.16.840.1.113883.4.642.1.36
+     fhir:value [ fhir:v "CP3953" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:intent [ fhir:v "plan"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/f001> ;
+     fhir:reference [ fhir:v "Patient/f001" ] ;
+     fhir:display [ fhir:v "P. van de Heuvel" ]
+  ] ; # 
+  fhir:period [
+     fhir:start [ fhir:v "2013-03-08T09:00:10+01:00"^^xsd:dateTime ] ;
+     fhir:end [ fhir:v "2013-03-08T09:30:10+01:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:careTeam ( [
+     fhir:l <#careteam> ;
+     fhir:reference [ fhir:v "#careteam" ]
+  ] ) ; # 
+  fhir:addresses ( [
+     fhir:reference [
+       fhir:l <http://hl7.org/fhir/Condition/f201> ;
+       fhir:reference [ fhir:v "Condition/f201" ] ;
+       fhir:display [ fhir:v "?????" ] # TODO Correcte referentie
+     ]
+  ] ) ; # 
+  fhir:goal ( [
+     fhir:l <#goal> ;
+     fhir:reference [ fhir:v "#goal" ]
+  ] ) ; # 
+  fhir:activity ( [
+     fhir:plannedActivityReference [
+       fhir:l <#activity> ;
+       fhir:reference [ fhir:v "#activity" ]
+     ]
+  ] ) . # moved to contained
+#    <plannedActivityDetail>
+#      <kind value="ServiceRequest"/>
+#      <code>
+#        <coding>
+#          <system value="http://snomed.info/sct"/>
+#          <code value="172960003"/>
+#          <display value="Incision of retropharyngeal abscess"/>
+#        </coding>
+#      </code>
+#      <status value="completed"/>
+#      <doNotPerform value="true"/>
+#      <scheduledString value="2011-06-27T09:30:10+01:00"/>
+#      <performer>
+#        <reference value="Practitioner/f001"/>
+#        <display value="E.M. van den broek"/>
+#      </performer>
+#    </plannedActivityDetail>
+
+<http://hl7.org/fhir/Practitioner/f001> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Patient/f001> a fhir:Patient .
+
+<http://hl7.org/fhir/Condition/f201> a fhir:Condition .
+
+# -------------------------------------------------------------------------------------
+

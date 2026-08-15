@@ -1,0 +1,83 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/MessageHeader/1cbdfb97-5859-48a4-8301-d54eab818d68> a fhir:MessageHeader ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "1cbdfb97-5859-48a4-8301-d54eab818d68"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n			<p>Update Person resource for Peter James CHALMERS (Jim), MRN: 12345 (Acme Healthcare)</p>\n		</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:event [
+     a fhir:Coding ;
+     fhir:system [
+       fhir:v "http://example.org/fhir/message-events"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/message-events>
+     ] ;
+     fhir:code [ fhir:v "admin-notify" ]
+  ] ; # 
+  fhir:destination ( [
+     fhir:endpoint [
+       a fhir:Url ;
+       fhir:v "llp:10.11.12.14:5432"^^xsd:anyURI ;
+       fhir:l fhir:llp:10.11.12.14:5432
+     ] ;
+     fhir:name [ fhir:v "Acme Message Gateway" ] ;
+     fhir:receiver [
+       fhir:l <http://acme.com/ehr/fhir/Practitioner/2323-33-4> ;
+       fhir:reference [ fhir:v "http://acme.com/ehr/fhir/Practitioner/2323-33-4" ]
+     ] # this is to indicate to the Acme Message Gateway that this particular message \n       is intended for Practitioner \"xcda\"
+  ] ) ; # 
+  fhir:source [
+     fhir:endpoint [
+       a fhir:Url ;
+       fhir:v "llp:10.11.12.13:5432"^^xsd:anyURI ;
+       fhir:l fhir:llp:10.11.12.13:5432
+     ] ;
+     fhir:name [ fhir:v "Acme Central Patient Registry" ] ;
+     fhir:software [ fhir:v "FooBar Patient Manager" ] ;
+     fhir:version [ fhir:v "3.1.45.AABB" ] ;
+     fhir:contact [
+       fhir:system [ fhir:v "phone" ] ;
+       fhir:value [ fhir:v "+1 (555) 123 4567" ]
+     ] ;
+     fhir:sender [
+       fhir:l <http://hl7.org/fhir/Organization/1> ;
+       fhir:reference [ fhir:v "Organization/1" ]
+     ]
+  ] ; # 
+  fhir:reason [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/message-reasons-encounter"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/message-reasons-encounter>
+       ] ;
+       fhir:code [ fhir:v "admit" ]
+     ] )
+  ] ; # 
+  fhir:response [
+     fhir:identifier [
+       fhir:value [ fhir:v "5015fe84-8e76-4526-89d8-44b322e8d4fb" ]
+     ] ;
+     fhir:code [ fhir:v "ok" ]
+  ] ; # 
+  fhir:focus ( [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ) ; # Here's the payload, the resource that this admin-update concerns
+  fhir:definition [
+     fhir:v "http:////acme.com/ehr/fhir/messagedefinition/patientrequest"^^xsd:anyURI ;
+     fhir:l <http:////acme.com/ehr/fhir/messagedefinition/patientrequest>
+  ] . # 
+
+<http://hl7.org/fhir/Organization/1> a fhir:Organization .
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

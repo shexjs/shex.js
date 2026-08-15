@@ -1,0 +1,43 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/RegulatedAuthorization/basic-drug-auth> a fhir:RegulatedAuthorization ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "basic-drug-auth"] ; # 
+  fhir:subject ( [
+     fhir:l <http://hl7.org/fhir/MedicinalProductDefinition/equilidem> ;
+     fhir:reference [ fhir:v "MedicinalProductDefinition/equilidem" ]
+  ] ) ; # 
+  fhir:type [
+     fhir:text [ fhir:v "Regulatory Drug Marketing Approval" ]
+  ] ; # 
+  fhir:status [
+     fhir:coding ( [
+       fhir:code [ fhir:v "active" ]
+     ] )
+  ] ; # 
+  fhir:statusDate [ fhir:v "2016-01-01"^^xsd:date] ; # 
+  fhir:holder [
+     fhir:l <http://hl7.org/fhir/Organization/EqlidrugCo> ;
+     fhir:reference [ fhir:v "Organization/EqlidrugCo" ] ;
+     fhir:display [ fhir:v "EquiliDrugCo Holdings Inc." ]
+  ] ; # 
+  fhir:regulator [
+     fhir:l <http://hl7.org/fhir/Organization/FDA> ;
+     fhir:reference [ fhir:v "Organization/FDA" ] ;
+     fhir:display [ fhir:v "FDA" ]
+  ] . # 
+
+<http://hl7.org/fhir/MedicinalProductDefinition/equilidem> a fhir:MedicinalProductDefinition .
+
+<http://hl7.org/fhir/Organization/EqlidrugCo> a fhir:Organization .
+
+<http://hl7.org/fhir/Organization/FDA> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

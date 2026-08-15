@@ -157,6 +157,11 @@ class SemActDispatcherImpl implements SemActDispatcher {
     this.handlers[name] = handler;
   }
 
+  /** Is there a handler for this action?  If not, dispatchAll skips it. */
+  isRegistered (name: string): boolean {
+    return name in this.handlers;
+  }
+
   /**
    * Calls all semantic actions, allowing each to write to resultsArtifact.
    *

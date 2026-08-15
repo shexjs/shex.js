@@ -1,0 +1,91 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ActivityDefinition/serum-zika-dengue-virus-igm> a fhir:ActivityDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "serum-zika-dengue-virus-igm"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Id: </b>\n               </td>\n            </tr>\n            <tr>\n               <td style=\"padding-left: 25px; padding-right: 25px;\">ActivityDefinition/serum-zika-dengue-virus-igm</td>\n            </tr>\n         </table>\n         <p/>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Status: </b>\n               </td>\n            </tr>\n            <tr>\n               <td style=\"padding-left: 25px; padding-right: 25px;\">draft</td>\n            </tr>\n         </table>\n         <p/>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Description: </b>\n               </td>\n            </tr>\n            <tr>\n               <td style=\"padding-left: 25px; padding-right: 25px;\">Order Serum Zika and Dengue Virus IgM</td>\n            </tr>\n         </table>\n         <p/>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Related: </b>\n               </td>\n            </tr>\n            <tr style=\"vertical-align: top;\">\n               <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  <p style=\"margin-top: 5px;\">\n                     <b>type: </b>\n                     <span>documentation</span>\n                  </p>\n                  <p style=\"margin-top: 5px;\">\n                     <b>display: </b>\n                     <span>Explanation of diagnostic tests for Zika virus and which to use based on the patients clinical and exposure history.</span>\n                  </p>\n                  <p style=\"margin-top: 5px;\">\n                     <b>url: </b>\n                     <span>http://www.cdc.gov/zika/hc-providers/diagnostic.html</span>\n                  </p>\n               </td>\n            </tr>\n         </table>\n         <p/>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Category: </b>\n               </td>\n            </tr>\n            <tr>\n               <td style=\"padding-left: 25px; padding-right: 25px;\">diagnostic</td>\n            </tr>\n         </table>\n         <p/>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Code: </b>\n               </td>\n            </tr>\n            <tr>\n               <td style=\"padding-right: 25px;\">\n                  <span style=\"padding-left: 25px;\">\n                     <b>text: </b>\n                     <span>Serum Zika and Dengue Virus IgM</span>\n                     <br/>\n                  </span>\n               </td>\n            </tr>\n         </table>\n         <p/>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Participant: </b>\n               </td>\n            </tr>\n            <tr style=\"vertical-align: top;\">\n               <td style=\"padding-left: 25px; padding-right: 25px;\">practitioner</td>\n            </tr>\n         </table>\n      </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://example.org/ActivityDefinition/serum-zika-dengue-virus-igm"^^xsd:anyURI ;
+     fhir:l <http://example.org/ActivityDefinition/serum-zika-dengue-virus-igm>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.19.2" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Decision Support"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/dss" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Order Serum Zika and Dengue Virus IgM"] ; # 
+  fhir:relatedArtifact ( [
+     fhir:type [ fhir:v "documentation" ] ;
+     fhir:display [ fhir:v "Explanation of diagnostic tests for Zika virus and which to use based on the patient’s clinical and exposure history." ] ;
+     fhir:document [
+       fhir:url [
+         fhir:v "http://www.cdc.gov/zika/hc-providers/diagnostic.html"^^xsd:anyURI ;
+         fhir:l <http://www.cdc.gov/zika/hc-providers/diagnostic.html>
+       ]
+     ]
+  ] [
+     fhir:type [ fhir:v "derived-from" ] ;
+     fhir:resource [
+       fhir:v "http://example.org/fhir/ActivityDefinition/serum-dengue-virus-igm"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/ActivityDefinition/serum-dengue-virus-igm>
+     ]
+  ] ) ; # 
+  fhir:library ( [
+     fhir:v "http://example.org/fhir/Library/zika-virus-intervention-logic"^^xsd:anyURI ;
+     fhir:l <http://example.org/fhir/Library/zika-virus-intervention-logic>
+  ] ) ; # 
+  fhir:kind [ fhir:v "ServiceRequest"] ; # 
+  fhir:code [
+     fhir:text [ fhir:v "Serum Zika and Dengue Virus IgM" ]
+  ] ; # 
+  fhir:timing [
+     a fhir:Timing ;
+     fhir:event ( [
+       fhir:extension ( [
+         fhir:url [
+           fhir:v "http://hl7.org/fhir/StructureDefinition/cqf-expression"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/StructureDefinition/cqf-expression>
+         ] ;
+         fhir:value [
+           a fhir:Expression ;
+           fhir:language [ fhir:v "text/cql-expression" ] ;
+           fhir:expression [ fhir:v "Now()" ]
+         ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:participant ( [
+     fhir:type [ fhir:v "practitioner" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

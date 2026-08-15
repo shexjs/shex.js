@@ -1,0 +1,89 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/device-action> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "device-action"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem device-action</b></p><a name=\"device-action\"> </a><a name=\"hcdevice-action\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/device-action</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">implanted<a name=\"device-action-implanted\"> </a></td><td>Implanted</td><td>The device was implanted in the patient during the procedure.</td></tr><tr><td style=\"white-space:nowrap\">explanted<a name=\"device-action-explanted\"> </a></td><td>Explanted</td><td>The device was explanted from the patient during the procedure.</td></tr><tr><td style=\"white-space:nowrap\">manipulated<a name=\"device-action-manipulated\"> </a></td><td>Manipulated</td><td>The device remains in the patient, but its location, settings, or functionality was changed.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "pc"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/device-action"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/device-action>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.426" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.1.417" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.2.236" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ProcedureDeviceActionCodes"] ; # 
+  fhir:title [ fhir:v "Procedure Device Action Codes"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7 International"] ; # 
+  fhir:description [ fhir:v "Example value set for Procedure Device Action code (what happened to a device during a procedure."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "implanted" ] ;
+     fhir:display [ fhir:v "Implanted" ] ;
+     fhir:definition [ fhir:v "The device was implanted in the patient during the procedure." ]
+  ] [
+     fhir:code [ fhir:v "explanted" ] ;
+     fhir:display [ fhir:v "Explanted" ] ;
+     fhir:definition [ fhir:v "The device was explanted from the patient during the procedure." ]
+  ] [
+     fhir:code [ fhir:v "manipulated" ] ;
+     fhir:display [ fhir:v "Manipulated" ] ;
+     fhir:definition [ fhir:v "The device remains in the patient, but its location, settings, or functionality was changed." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

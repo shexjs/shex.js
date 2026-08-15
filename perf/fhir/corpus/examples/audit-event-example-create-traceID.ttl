@@ -1,0 +1,160 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/AuditEvent/example-rest-create-traceID> a fhir:AuditEvent ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-rest-create-traceID"] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/audit-event-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/audit-event-type>
+       ] ;
+       fhir:code [ fhir:v "rest" ] ;
+       fhir:display [ fhir:v "Restful Operation" ]
+     ] )
+  ] ; # 
+  fhir:subtype ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/restful-interaction"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/restful-interaction>
+       ] ;
+       fhir:code [ fhir:v "create" ] ;
+       fhir:display [ fhir:v "create" ]
+     ] )
+  ] ) ; # 
+  fhir:action [ fhir:v "C"] ; # 
+  fhir:recorded [ fhir:v "2019-12-04T11:59:28.646+00:00"^^xsd:dateTime] ; # 
+  fhir:outcome [
+     fhir:code [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/audit-event-outcome"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/audit-event-outcome>
+       ] ;
+       fhir:code [ fhir:v "0" ] ;
+       fhir:display [ fhir:v "Success" ]
+     ]
+  ] ; # 
+  fhir:agent ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/extra-security-role-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/extra-security-role-type>
+         ] ;
+         fhir:code [ fhir:v "humanuser" ] ;
+         fhir:display [ fhir:v "human user" ]
+       ] )
+     ] ;
+     fhir:who [
+       fhir:identifier [
+         fhir:value [ fhir:v "95" ]
+       ]
+     ] ;
+     fhir:requestor [ fhir:v true ]
+  ] [
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "http://hl7.org/fhir/StructureDefinition/auditevent-AlternativeUserID"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/StructureDefinition/auditevent-AlternativeUserID>
+       ] ;
+       fhir:value [
+         a fhir:Identifier ;
+         fhir:type [
+           fhir:text [ fhir:v "process ID" ]
+         ] ;
+         fhir:value [ fhir:v "6580" ]
+       ]
+     ] ) ; # Source active participant, the software making the . AlternativeUserId - Process ID
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://dicom.nema.org/resources/ontology/DCM"^^xsd:anyURI ;
+           fhir:l <http://dicom.nema.org/resources/ontology/DCM>
+         ] ;
+         fhir:code [ fhir:v "110153" ] ;
+         fhir:display [ fhir:v "Source Role ID" ]
+       ] )
+     ] ;
+     fhir:who [
+       fhir:identifier [
+         fhir:system [
+           fhir:v "urn:oid:2.16.840.1.113883.4.2"^^xsd:anyURI ;
+           fhir:l <urn:oid:2.16.840.1.113883.4.2>
+         ] ;
+         fhir:value [ fhir:v "2.16.840.1.113883.4.2" ]
+       ]
+     ] ;
+     fhir:requestor [ fhir:v false ] ;
+     fhir:network [
+       a fhir:String ;
+       fhir:v "Workstation1.ehr.familyclinic.com"
+     ]
+  ] ) ; # 
+  fhir:source [
+     fhir:observer [
+       fhir:identifier [
+         fhir:value [ fhir:v "hl7connect.healthintersections.com.au" ]
+       ]
+     ] ;
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/security-source-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/security-source-type>
+         ] ;
+         fhir:code [ fhir:v "3" ] ;
+         fhir:display [ fhir:v "Web Server" ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:entity ( [
+     fhir:what [
+       fhir:l <http://hl7.org/fhir/Patient/example/_history/1> ;
+       fhir:reference [ fhir:v "Patient/example/_history/1" ]
+     ] ;
+     fhir:role [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/object-role"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/object-role>
+         ] ;
+         fhir:code [ fhir:v "1" ] ;
+         fhir:display [ fhir:v "Patient" ]
+       ] )
+     ]
+  ] [
+     fhir:what [
+       fhir:identifier [
+         fhir:type [
+           fhir:text [ fhir:v "TraceID" ]
+         ] ;
+         fhir:system [
+           fhir:v "http://example.com/server"^^xsd:anyURI ;
+           fhir:l <http://example.com/server>
+         ] ;
+         fhir:value [ fhir:v "6b507ee2d716780372c255df69ece653" ]
+       ]
+     ] ; # The TraceID from the software stack
+     fhir:role [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/object-role"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/object-role>
+         ] ;
+         fhir:code [ fhir:v "21" ] ;
+         fhir:display [ fhir:v "Job Stream" ]
+       ] )
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example/_history/1> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

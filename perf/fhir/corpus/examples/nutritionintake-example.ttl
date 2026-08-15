@@ -1,0 +1,355 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/NutritionIntake/example> a fhir:NutritionIntake ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # id = example  file name = nutritionintake-example.xml  Name=Simple   Description = General NutritionIntake Example edited by Jean Duteau & Becky Gradl
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://example.org"^^xsd:anyURI ;
+       fhir:l <http://example.org>
+     ] ;
+     fhir:value [ fhir:v "1144223344" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:code [
+     a sct:435771000124106 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "435771000124106" ] ;
+       fhir:display [ fhir:v "General healthful diet" ]
+     ] )
+  ] ; # 
+  fhir:subject [
+     fhir:display [ fhir:v "Paula Patient Chalmers" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/inpatient-encounter> ;
+     fhir:reference [ fhir:v "Encounter/inpatient-encounter" ]
+  ] ; # 
+  fhir:occurrence [
+     a fhir:DateTime ;
+     fhir:v "2019-08-02T12:45:18+04:00"^^xsd:dateTime
+  ] ; # 
+  fhir:reported [
+     a fhir:Reference ;
+     fhir:l <http://hl7.org/fhir/PractitionerRole/example> ;
+     fhir:reference [ fhir:v "PractitionerRole/example" ]
+  ] ; # 
+  fhir:nutritionItem ( [
+     fhir:type [
+       a sct:102263004 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "102263004" ] ;
+         fhir:display [ fhir:v "Eggs (edible) (substance)" ]
+       ] )
+     ] ;
+     fhir:nutritionProduct [
+       fhir:concept [
+         a sct:226886006 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "226886006" ] ;
+           fhir:display [ fhir:v "Scrambled egg (substance)" ]
+         ] )
+       ]
+     ] ;
+     fhir:consumedItem ( [
+       fhir:amount [
+         fhir:value [ fhir:v "1"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "egg" ]
+       ] ;
+       fhir:totalIntake ( [
+         fhir:nutrient [
+           fhir:concept [
+             a sct:735252001 ;
+             fhir:coding ( [
+               fhir:system [
+                 fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+                 fhir:l <http://snomed.info/sct>
+               ] ;
+               fhir:code [ fhir:v "735252001" ] ;
+               fhir:display [ fhir:v "Protein and/or protein derivative (substance)" ]
+             ] )
+           ]
+         ] ;
+         fhir:amount [
+           fhir:value [ fhir:v "6"^^xsd:decimal ] ;
+           fhir:unit [ fhir:v "grams" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "g" ]
+         ] ;
+         fhir:energy [
+           fhir:value [ fhir:v "78"^^xsd:decimal ] ;
+           fhir:unit [ fhir:v "kilocalories" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "kcal" ]
+         ]
+       ] )
+     ] )
+  ] [
+     fhir:type [
+       a sct:22836000 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "22836000" ] ;
+         fhir:display [ fhir:v "Vegetable (substance)" ]
+       ] )
+     ] ;
+     fhir:nutritionProduct [
+       fhir:concept [
+         a sct:227848008 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "227848008" ] ;
+           fhir:display [ fhir:v "Mixed vegetable curry (substance)" ]
+         ] )
+       ]
+     ] ;
+     fhir:consumedItem ( [
+       fhir:amount [
+         fhir:value [ fhir:v "1"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "cup" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "[cup_us]" ]
+       ] ;
+       fhir:totalIntake ( [
+         fhir:nutrient [
+           fhir:concept [
+             a sct:735252001 ;
+             fhir:coding ( [
+               fhir:system [
+                 fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+                 fhir:l <http://snomed.info/sct>
+               ] ;
+               fhir:code [ fhir:v "735252001" ] ;
+               fhir:display [ fhir:v "Protein and/or protein derivative (substance)" ]
+             ] )
+           ]
+         ] ;
+         fhir:amount [
+           fhir:value [ fhir:v "6"^^xsd:decimal ] ;
+           fhir:unit [ fhir:v "grams" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "g" ]
+         ] ;
+         fhir:energy [
+           fhir:value [ fhir:v "188"^^xsd:decimal ] ;
+           fhir:unit [ fhir:v "kilocalories" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "kcal" ]
+         ]
+       ] )
+     ] )
+  ] [
+     fhir:type [
+       a sct:226529007 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "226529007" ] ;
+         fhir:display [ fhir:v "Starchy food (substance)" ]
+       ] )
+     ] ;
+     fhir:nutritionProduct [
+       fhir:concept [
+         a sct:226756007 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "226756007" ] ;
+           fhir:display [ fhir:v "Brown rice (substance)" ]
+         ] )
+       ]
+     ] ;
+     fhir:consumedItem ( [
+       fhir:amount [
+         fhir:value [ fhir:v 0.5 ] ;
+         fhir:unit [ fhir:v "cup" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "[cup_us]" ]
+       ] ;
+       fhir:totalIntake ( [
+         fhir:nutrient [
+           fhir:concept [
+             a sct:735252001 ;
+             fhir:coding ( [
+               fhir:system [
+                 fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+                 fhir:l <http://snomed.info/sct>
+               ] ;
+               fhir:code [ fhir:v "735252001" ] ;
+               fhir:display [ fhir:v "Protein and/or protein derivative (substance)" ]
+             ] )
+           ]
+         ] ;
+         fhir:amount [
+           fhir:value [ fhir:v "4"^^xsd:decimal ] ;
+           fhir:unit [ fhir:v "grams" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "g" ]
+         ] ;
+         fhir:energy [
+           fhir:value [ fhir:v "108"^^xsd:decimal ] ;
+           fhir:unit [ fhir:v "kilocalories" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "kcal" ]
+         ]
+       ] )
+     ] )
+  ] [
+     fhir:type [
+       a sct:226465004 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "226465004" ] ;
+         fhir:display [ fhir:v "Drinks (substance)" ]
+       ] )
+     ] ;
+     fhir:nutritionProduct [
+       fhir:concept [
+         a sct:226475001 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "226475001" ] ;
+           fhir:display [ fhir:v "Tea with milk and sugar (substance)" ]
+         ] )
+       ]
+     ] ;
+     fhir:consumedItem ( [
+       fhir:amount [
+         fhir:value [ fhir:v "6"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "ounces" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "[oz_av]" ]
+       ] ;
+       fhir:totalIntake ( [
+         fhir:nutrient [
+           fhir:concept [
+             a sct:735252001 ;
+             fhir:coding ( [
+               fhir:system [
+                 fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+                 fhir:l <http://snomed.info/sct>
+               ] ;
+               fhir:code [ fhir:v "735252001" ] ;
+               fhir:display [ fhir:v "Protein and/or protein derivative (substance)" ]
+             ] )
+           ]
+         ] ;
+         fhir:amount [
+           fhir:value [ fhir:v "0"^^xsd:decimal ] ;
+           fhir:unit [ fhir:v "grams" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "g" ]
+         ]
+       ] )
+     ] )
+  ] [
+     fhir:type [
+       a sct:72511004 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "72511004" ] ;
+         fhir:display [ fhir:v "Fruit (substance)" ]
+       ] )
+     ] ;
+     fhir:nutritionProduct [
+       fhir:concept [
+         a sct:735215001 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "735215001" ] ;
+           fhir:display [ fhir:v "Apple (substance)" ]
+         ] )
+       ]
+     ] ;
+     fhir:notConsumedItem ( [
+       fhir:reason [
+         a sct:3797007 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "3797007" ] ;
+           fhir:display [ fhir:v "Periodontal cyst" ]
+         ] )
+       ]
+     ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Encounter/inpatient-encounter> a fhir:Encounter .
+
+<http://hl7.org/fhir/PractitionerRole/example> a fhir:PractitionerRole .
+
+# -------------------------------------------------------------------------------------
+

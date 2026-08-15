@@ -1,0 +1,345 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CarePlan/integrate> a fhir:CarePlan ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "integrate"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p>Patient family is not ready to commit to goal setting at this time.  Goal setting will be addressed in the future</p>\n      <table>\n        <thead>\n          <tr>\n            <th>Start Date</th>\n            <th>Goal</th>\n            <th>Action Steps</th>\n            <th>Status</th>\n            <th>Date Last Updated</th>\n            <th>Comments</th>\n          </tr>\n        </thead>\n        <tbody>\n          <tr>\n            <td>10 Sep 2012</td>\n            <td>Eve will lose weight and reduce her GERDS symptoms by improving her diet</td>\n            <td>Eve will review photos of high and low density foods and share with her parents</td>\n            <td>New Goal</td>\n            <td>10 Sep 2012</td>\n            <td>9/10/12 Eve eats one meal a day with her parents</td>\n          </tr>\n          <tr>\n            <td>10 Sep 2012</td>\n            <td>Eve will lose weight and reduce her GERDS symptoms by improving her diet</td>\n            <td>Eve will ask her dad to asist her to put the head of her bed on blocks</td>\n            <td>New Goal</td>\n            <td>10 Sep 2012</td>\n            <td>9/10/12 Eve will sleep in her bed more often than the couch</td>\n          </tr>\n          <tr>\n            <td>10 Sep 2012</td>\n            <td>Eve will improve her GERDS symptoms</td>\n            <td>Eve will reduce her intake of coffee and chocolate</td>\n            <td>In Process</td>\n            <td>10 Sep 2012</td>\n            <td/>\n          </tr>\n          <tr>\n            <td>27 Aug 2012</td>\n            <td>Eve will increase her energy by being more active</td>\n            <td>Eve will walk her friend's dog up and down a big hill 15-30 minutes 3 days a week</td>\n            <td>In Process</td>\n            <td>10 Sep 2012</td>\n            <td>8/27/12 Eve would like to try for 5 days a week.  9/10/12 Eve is still walking the dogs.</td>\n          </tr>\n          <tr>\n            <td>23 Jul 2012</td>\n            <td>Eve will increase her energy by being more active</td>\n            <td>Eve will walk 3 blocks to her parents house twice a week</td>\n            <td>In Process</td>\n            <td>10 Sep 2012</td>\n            <td>8/13/12 Eve walked 4 times the last week.  9/10/12 Eve did not walk to her parents the last week, but has plans to start again</td>\n          </tr>\n          <tr>\n            <td>23 Jul 2012</td>\n            <td>Eve will set up her medications and take as prescribed</td>\n            <td>Eve will us a calendar to check off after medications are taken</td>\n            <td>In Process</td>\n            <td>13 Aug 2012</td>\n            <td/>\n          </tr>\n          <tr>\n            <td>23 Jul 2012</td>\n            <td>Eve will restart her light treatments</td>\n            <td>Eve will use her lights MWF after her shower for 3 minutes</td>\n            <td>In Process</td>\n            <td>27 Aug 2012</td>\n            <td>8/13/12 After restarting the vinegar soaks the psoriasis is improved and Eve plans to treat the remainder with light treatments.  She plans to start this week.  8/27/12 Since her skin is improved Eve has not been using the light treatment as often, maybe once a week.  She would like to increase to 3 times a week again</td>\n          </tr>\n          <tr>\n            <td>10 Jul 2012</td>\n            <td>Eve will set up her medications and take as prescribed</td>\n            <td>Eve will use a calendar of a chart to help her remember when to take her medications</td>\n            <td>In Process</td>\n            <td>10 Sep 2012</td>\n            <td>7/23/12 Eve created a chart as a reminer to take the medications that do not fit in her pill box</td>\n          </tr>\n          <tr>\n            <td>23 Jul 2012</td>\n            <td>Eve will increase her energy by being more active</td>\n            <td>Eve will start using stretch bands and one step 2 days a week Mon/Wed 6-7am and maybe Friday afternoon</td>\n            <td>On-Hold</td>\n            <td>23 Aug 2012</td>\n            <td>7/30/12 will be able to esume exercise.  8/13/12 Eve prefers to focus on walking at this time</td>\n          </tr>\n          <tr>\n            <td>10 Jul 2012</td>\n            <td>Eve will set up her medications and take as prescribed</td>\n            <td>Eve will match a printed medication worksheet with the medication bottles at home</td>\n            <td>Completed</td>\n            <td>23 Jul 2012</td>\n            <td/>\n          </tr>\n          <tr>\n            <td>10 Jul 2012</td>\n            <td>Eve will set up her medications and take as prescribed</td>\n            <td>Eve will get a medication box to sort her pills.  She will have one for scheduled medications and one for as needed</td>\n            <td>Completed</td>\n            <td>16 Jul 2012</td>\n            <td>7/16/12 Eve now has some of her medications set up in pill packs by her pharmacist</td>\n          </tr>\n          <tr>\n            <td>23 Jul 2012</td>\n            <td>Eve will increase her energy by being more active</td>\n            <td>Eve will open \"The Firm\" DVD workout package and listen to it</td>\n            <td>Discontinued</td>\n            <td>13 Aug 2012</td>\n            <td>7/30/12 Eve will be able to resume exercise on 7/30/12.  8/13/12 -hold until \"less busy\"</td>\n          </tr>\n        </tbody>\n      </table>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:contained ( [
+     a fhir:Condition ;
+     fhir:id [ fhir:v "p1" ] ;
+     fhir:clinicalStatus [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/condition-clinical"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/condition-clinical>
+         ] ;
+         fhir:code [ fhir:v "active" ]
+       ] )
+     ] ;
+     fhir:verificationStatus [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/condition-ver-status"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/condition-ver-status>
+         ] ;
+         fhir:code [ fhir:v "confirmed" ]
+       ] )
+     ] ;
+     fhir:code [
+       fhir:text [ fhir:v "GERDS" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/1> ;
+       fhir:reference [ fhir:v "Patient/1" ] ;
+       fhir:display [ fhir:v "Eve Everywoman" ]
+     ]
+  ] [
+     a fhir:Condition ;
+     fhir:id [ fhir:v "p2" ] ;
+     fhir:clinicalStatus [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/condition-clinical"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/condition-clinical>
+         ] ;
+         fhir:code [ fhir:v "active" ]
+       ] )
+     ] ;
+     fhir:verificationStatus [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/condition-ver-status"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/condition-ver-status>
+         ] ;
+         fhir:code [ fhir:v "confirmed" ]
+       ] )
+     ] ;
+     fhir:code [
+       fhir:text [ fhir:v "Obesity" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/1> ;
+       fhir:reference [ fhir:v "Patient/1" ] ;
+       fhir:display [ fhir:v "Eve Everywoman" ]
+     ]
+  ] [
+     a fhir:Condition ;
+     fhir:id [ fhir:v "p3" ] ;
+     fhir:clinicalStatus [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/condition-clinical"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/condition-clinical>
+         ] ;
+         fhir:code [ fhir:v "active" ]
+       ] )
+     ] ;
+     fhir:verificationStatus [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/condition-ver-status"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/condition-ver-status>
+         ] ;
+         fhir:code [ fhir:v "confirmed" ]
+       ] )
+     ] ;
+     fhir:code [
+       fhir:text [ fhir:v "Psoriasis" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/1> ;
+       fhir:reference [ fhir:v "Patient/1" ] ;
+       fhir:display [ fhir:v "Eve Everywoman" ]
+     ]
+  ] [
+     a fhir:Goal ;
+     fhir:id [ fhir:v "g1" ] ;
+     fhir:lifecycleStatus [ fhir:v "active" ] ;
+     fhir:description [
+       fhir:text [ fhir:v "Eve will lose weight and reduce her GERDS symptoms by improving her diet" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/1> ;
+       fhir:reference [ fhir:v "Patient/1" ] ;
+       fhir:display [ fhir:v "Eve Everywoman" ]
+     ]
+  ] [
+     a fhir:Goal ;
+     fhir:id [ fhir:v "g2" ] ;
+     fhir:lifecycleStatus [ fhir:v "active" ] ;
+     fhir:description [
+       fhir:text [ fhir:v "Eve will improve her GERDS symptoms" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/1> ;
+       fhir:reference [ fhir:v "Patient/1" ] ;
+       fhir:display [ fhir:v "Eve Everywoman" ]
+     ]
+  ] [
+     a fhir:Goal ;
+     fhir:id [ fhir:v "g3" ] ;
+     fhir:lifecycleStatus [ fhir:v "active" ] ;
+     fhir:description [
+       fhir:text [ fhir:v "Eve will increase her energy by being more active" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/1> ;
+       fhir:reference [ fhir:v "Patient/1" ] ;
+       fhir:display [ fhir:v "Eve Everywoman" ]
+     ]
+  ] [
+     a fhir:Goal ;
+     fhir:id [ fhir:v "g4" ] ;
+     fhir:lifecycleStatus [ fhir:v "active" ] ;
+     fhir:description [
+       fhir:text [ fhir:v "Eve will set up her medications and take as prescribed" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/1> ;
+       fhir:reference [ fhir:v "Patient/1" ] ;
+       fhir:display [ fhir:v "Eve Everywoman" ]
+     ]
+  ] [
+     a fhir:Goal ;
+     fhir:id [ fhir:v "g5" ] ;
+     fhir:lifecycleStatus [ fhir:v "active" ] ;
+     fhir:description [
+       fhir:text [ fhir:v "Eve will restart her light treatments" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/1> ;
+       fhir:reference [ fhir:v "Patient/1" ] ;
+       fhir:display [ fhir:v "Eve Everywoman" ]
+     ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "plan"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/1> ;
+     fhir:reference [ fhir:v "Patient/1" ] ;
+     fhir:display [ fhir:v "Eve Everywoman" ]
+  ] ; # 
+  fhir:addresses ( [
+     fhir:reference [
+       fhir:l <#p1> ;
+       fhir:reference [ fhir:v "#p1" ] ;
+       fhir:display [ fhir:v "GERDS" ] # Local reference
+     ]
+  ] [
+     fhir:reference [
+       fhir:l <#p2> ;
+       fhir:reference [ fhir:v "#p2" ] ;
+       fhir:display [ fhir:v "Obesity" ] # Local reference
+     ]
+  ] [
+     fhir:reference [
+       fhir:l <#p3> ;
+       fhir:reference [ fhir:v "#p3" ] ;
+       fhir:display [ fhir:v "Psoriasis" ] # Local reference
+     ]
+  ] ) ; # 
+  fhir:goal ( [
+     fhir:l <#g1> ;
+     fhir:reference [ fhir:v "#g1" ]
+  ] [
+     fhir:l <#g2> ;
+     fhir:reference [ fhir:v "#g2" ]
+  ] [
+     fhir:l <#g3> ;
+     fhir:reference [ fhir:v "#g3" ]
+  ] [
+     fhir:l <#g4> ;
+     fhir:reference [ fhir:v "#g4" ]
+  ] [
+     fhir:l <#g5> ;
+     fhir:reference [ fhir:v "#g5" ]
+  ] ) ; # 
+  fhir:activity ( [
+     fhir:progress ( [
+       fhir:time [ fhir:v "2012-09-10"^^xsd:date ] ;
+       fhir:text [ fhir:v "Eve eats one meal a day with her parents" ]
+     ] ) ;
+     fhir:plannedActivityReference [
+       fhir:l <http://hl7.org/fhir/ServiceRequest/activity-1> ;
+       fhir:reference [ fhir:v "ServiceRequest/activity-1" ]
+     ] # Eve will review photos of high and low density foods and share with her parents
+  ] [
+     fhir:plannedActivityReference [
+       fhir:l <http://hl7.org/fhir/ServiceRequest/activity-2> ;
+       fhir:reference [ fhir:v "ServiceRequest/activity-2" ]
+     ] # Eve will ask her dad to asist her to put the head of her bed on blocks
+  ] [
+     fhir:plannedActivityReference [
+       fhir:l <http://hl7.org/fhir/NutritionOrder/activity-3> ;
+       fhir:reference [ fhir:v "NutritionOrder/activity-3" ]
+     ] # Eve will reduce her intake of coffee and chocolate
+  ] [
+     fhir:progress ( [
+       fhir:time [ fhir:v "2012-08-27"^^xsd:date ] ;
+       fhir:text [ fhir:v "Eve would like to try for 5 days a week." ]
+     ] [
+       fhir:time [ fhir:v "2012-09-10"^^xsd:date ] ;
+       fhir:text [ fhir:v "Eve is still walking the dogs." ]
+     ] ) ;
+     fhir:plannedActivityReference [
+       fhir:l <http://hl7.org/fhir/ServiceRequest/activity-4> ;
+       fhir:reference [ fhir:v "ServiceRequest/activity-4" ]
+     ] # Eve will walk her friend's dog up and down a big hill 15-30 minutes 3 days a week
+  ] [
+     fhir:progress ( [
+       fhir:time [ fhir:v "2012-08-13"^^xsd:date ] ;
+       fhir:text [ fhir:v "Eve walked 4 times the last week." ]
+     ] [
+       fhir:time [ fhir:v "2012-09-10"^^xsd:date ] ;
+       fhir:text [ fhir:v "Eve did not walk to her parents the last week, but has plans to start again" ]
+     ] ) ;
+     fhir:plannedActivityReference [
+       fhir:l <http://hl7.org/fhir/ServiceRequest/activity-5> ;
+       fhir:reference [ fhir:v "ServiceRequest/activity-5" ]
+     ] # Eve will walk 3 blocks to her parents house twice a week
+  ] [
+     fhir:plannedActivityReference [
+       fhir:l <http://hl7.org/fhir/ServiceRequest/activity-6> ;
+       fhir:reference [ fhir:v "ServiceRequest/activity-6" ]
+     ] # Eve will use a calendar to check off after medications are taken
+  ] [
+     fhir:progress ( [
+       fhir:time [ fhir:v "2012-08-13"^^xsd:date ] ;
+       fhir:text [ fhir:v "After restarting the vinegar soaks the psoriasis is improved and Eve plans to treat the remainder with light treatments.  She plans to start this week." ]
+     ] [
+       fhir:time [ fhir:v "2012-08-27"^^xsd:date ] ;
+       fhir:text [ fhir:v "Since her skin is improved Eve has not been using the light treatment as often, maybe once a week.  She would like to increase to 3 times a week again" ]
+     ] ) ;
+     fhir:plannedActivityReference [
+       fhir:l <http://hl7.org/fhir/ServiceRequest/activity-7> ;
+       fhir:reference [ fhir:v "ServiceRequest/activity-7" ]
+     ] # Eve will use her lights MWF after her shower for 3 minutes
+  ] [
+     fhir:progress ( [
+       fhir:time [ fhir:v "2012-07-23"^^xsd:date ] ;
+       fhir:text [ fhir:v "Eve created a chart as a reminer to take the medications that do not fit in her pill box" ]
+     ] ) ;
+     fhir:plannedActivityReference [
+       fhir:l <http://hl7.org/fhir/ServiceRequest/activity-8> ;
+       fhir:reference [ fhir:v "ServiceRequest/activity-8" ]
+     ] # Eve will use a calendar of a chart to help her remember when to take her medications
+  ] [
+     fhir:progress ( [
+       fhir:time [ fhir:v "2012-07-30"^^xsd:date ] ;
+       fhir:text [ fhir:v "Will be able to esume exercise." ]
+     ] [
+       fhir:time [ fhir:v "2012-08-13"^^xsd:date ] ;
+       fhir:text [ fhir:v "Eve prefers to focus on walking at this time" ]
+     ] ) ;
+     fhir:plannedActivityReference [
+       fhir:l <http://hl7.org/fhir/ServiceRequest/activity-9> ;
+       fhir:reference [ fhir:v "ServiceRequest/activity-9" ]
+     ] # Eve will start using stretch bands and one step 2 days a week Mon\/Wed 6-7am and maybe Friday afternoon
+  ] [
+     fhir:plannedActivityReference [
+       fhir:l <http://hl7.org/fhir/ServiceRequest/activity-10> ;
+       fhir:reference [ fhir:v "ServiceRequest/activity-10" ]
+     ] # Eve will match a printed medication worksheet with the medication bottles at home
+  ] [
+     fhir:progress ( [
+       fhir:time [ fhir:v "2012-07-16"^^xsd:date ] ;
+       fhir:text [ fhir:v "Eve now has some of her medications set up in pill packs by her pharmacist" ]
+     ] ) ;
+     fhir:plannedActivityReference [
+       fhir:l <http://hl7.org/fhir/ServiceRequest/activity-11> ;
+       fhir:reference [ fhir:v "ServiceRequest/activity-11" ]
+     ] # Eve will get a medication box to sort her pills.  She will have one for scheduled medications and one for as needed
+  ] [
+     fhir:progress ( [
+       fhir:time [ fhir:v "2012-07-12"^^xsd:date ] ;
+       fhir:text [ fhir:v "Eve will be able to resume exercise on 7/30/12" ]
+     ] [
+       fhir:time [ fhir:v "2012-08-13"^^xsd:date ] ;
+       fhir:text [ fhir:v "hold until \"less busy\"" ]
+     ] ) ;
+     fhir:plannedActivityReference [
+       fhir:l <http://hl7.org/fhir/ServiceRequest/activity-12> ;
+       fhir:reference [ fhir:v "ServiceRequest/activity-12" ]
+     ] # Eve will open execersie DVD workout package and listen to it
+  ] ) ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "Patient family is not ready to commit to goal setting at this time.  Goal setting will be addressed in the future" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/1> a fhir:Patient .
+
+<http://hl7.org/fhir/ServiceRequest/activity-1> a fhir:ServiceRequest .
+
+<http://hl7.org/fhir/ServiceRequest/activity-2> a fhir:ServiceRequest .
+
+<http://hl7.org/fhir/NutritionOrder/activity-3> a fhir:NutritionOrder .
+
+<http://hl7.org/fhir/ServiceRequest/activity-4> a fhir:ServiceRequest .
+
+<http://hl7.org/fhir/ServiceRequest/activity-5> a fhir:ServiceRequest .
+
+<http://hl7.org/fhir/ServiceRequest/activity-6> a fhir:ServiceRequest .
+
+<http://hl7.org/fhir/ServiceRequest/activity-7> a fhir:ServiceRequest .
+
+<http://hl7.org/fhir/ServiceRequest/activity-8> a fhir:ServiceRequest .
+
+<http://hl7.org/fhir/ServiceRequest/activity-9> a fhir:ServiceRequest .
+
+<http://hl7.org/fhir/ServiceRequest/activity-10> a fhir:ServiceRequest .
+
+<http://hl7.org/fhir/ServiceRequest/activity-11> a fhir:ServiceRequest .
+
+<http://hl7.org/fhir/ServiceRequest/activity-12> a fhir:ServiceRequest .
+
+# -------------------------------------------------------------------------------------
+

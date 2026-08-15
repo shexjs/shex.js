@@ -1,0 +1,119 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/contact-point-system> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "contact-point-system"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem contact-point-system</b></p><a name=\"contact-point-system\"> </a><a name=\"hccontact-point-system\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/contact-point-system</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">phone<a name=\"contact-point-system-phone\"> </a></td><td>Phone</td><td>The value is a telephone number used for voice calls. Use of full international numbers starting with + is recommended to enable automatic dialing support but not required.</td></tr><tr><td style=\"white-space:nowrap\">fax<a name=\"contact-point-system-fax\"> </a></td><td>Fax</td><td>The value is a fax machine. Use of full international numbers starting with + is recommended to enable automatic dialing support but not required.</td></tr><tr><td style=\"white-space:nowrap\">email<a name=\"contact-point-system-email\"> </a></td><td>Email</td><td>The value is an email address.</td></tr><tr><td style=\"white-space:nowrap\">pager<a name=\"contact-point-system-pager\"> </a></td><td>Pager</td><td>The value is a pager number. These may be local pager numbers that are only usable on a particular pager system.</td></tr><tr><td style=\"white-space:nowrap\">url<a name=\"contact-point-system-url\"> </a></td><td>URL</td><td>A contact that is not a phone, fax, pager or email address and is expressed as a URL.  This is intended for various institutional or personal contacts including web sites, blogs, Skype, Twitter, Facebook, etc. Do not use for email addresses.</td></tr><tr><td style=\"white-space:nowrap\">sms<a name=\"contact-point-system-sms\"> </a></td><td>SMS</td><td>A contact that can be used for sending a sms message (e.g. mobile phones, some landlines).</td></tr><tr><td style=\"white-space:nowrap\">other<a name=\"contact-point-system-other\"> </a></td><td>Other</td><td>A contact that is not a phone, fax, page or email address and is not expressible as a URL.  E.g. Internal mail address.  This SHOULD NOT be used for contacts that are expressible as a URL (e.g. Skype, Twitter, Facebook, etc.)  Extensions may be used to distinguish \"other\" contact types.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/contact-point-system"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/contact-point-system>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.1.72" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ContactPointSystem"] ; # 
+  fhir:title [ fhir:v "ContactPointSystem"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Telecommunications form for contact point."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/contact-point-system"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/contact-point-system>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "phone" ] ;
+     fhir:display [ fhir:v "Phone" ] ;
+     fhir:definition [ fhir:v "The value is a telephone number used for voice calls. Use of full international numbers starting with + is recommended to enable automatic dialing support but not required." ]
+  ] [
+     fhir:code [ fhir:v "fax" ] ;
+     fhir:display [ fhir:v "Fax" ] ;
+     fhir:definition [ fhir:v "The value is a fax machine. Use of full international numbers starting with + is recommended to enable automatic dialing support but not required." ]
+  ] [
+     fhir:code [ fhir:v "email" ] ;
+     fhir:display [ fhir:v "Email" ] ;
+     fhir:definition [ fhir:v "The value is an email address." ]
+  ] [
+     fhir:code [ fhir:v "pager" ] ;
+     fhir:display [ fhir:v "Pager" ] ;
+     fhir:definition [ fhir:v "The value is a pager number. These may be local pager numbers that are only usable on a particular pager system." ]
+  ] [
+     fhir:code [ fhir:v "url" ] ;
+     fhir:display [ fhir:v "URL" ] ;
+     fhir:definition [ fhir:v "A contact that is not a phone, fax, pager or email address and is expressed as a URL.  This is intended for various institutional or personal contacts including web sites, blogs, Skype, Twitter, Facebook, etc. Do not use for email addresses." ]
+  ] [
+     fhir:code [ fhir:v "sms" ] ;
+     fhir:display [ fhir:v "SMS" ] ;
+     fhir:definition [ fhir:v "A contact that can be used for sending a sms message (e.g. mobile phones, some landlines)." ]
+  ] [
+     fhir:code [ fhir:v "other" ] ;
+     fhir:display [ fhir:v "Other" ] ;
+     fhir:definition [ fhir:v "A contact that is not a phone, fax, page or email address and is not expressible as a URL.  E.g. Internal mail address.  This SHOULD NOT be used for contacts that are expressible as a URL (e.g. Skype, Twitter, Facebook, etc.)  Extensions may be used to distinguish \"other\" contact types." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,375 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/DiagnosticReport/lipid-panel-example> a fhir:DiagnosticReport ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "lipid-panel-example"] ; # 
+  fhir:meta [
+     fhir:profile ( [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/lipids-diagnostic-report"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/lipids-diagnostic-report>
+     ] )
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <h3>Lipid Report for Wile. E. COYOTE (MRN: 23453) issued 3-Mar 2009 14:26</h3>\n      <pre>\nTest                  Units       Value       Reference Range\nCholesterol           mmol/L      6.3         &lt;4.5\nTriglyceride          mmol/L      1.3         &lt;2.0\nHDL Cholesterol       mmol/L      1.3         &gt;1.5\nLDL Chol. (calc)      mmol/L      4.2         &lt;3.0\n      </pre>\n      <p>Acme Laboratory, Inc signed: Dr Pete Pathologist</p>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:contained ( [
+     a fhir:Observation ;
+     fhir:id [ fhir:v "cholesterol" ] ;
+     fhir:status [ fhir:v "final" ] ;
+     fhir:category ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/observation-category"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/observation-category>
+         ] ;
+         fhir:code [ fhir:v "laboratory" ] ;
+         fhir:display [ fhir:v "Laboratory" ]
+       ] )
+     ] ) ;
+     fhir:code [
+       a loinc:35200-5 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:code [ fhir:v "35200-5" ] ;
+         fhir:display [ fhir:v "Cholesterol [Mass or Moles/volume] in Serum or Plasma" ]
+       ] )
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/pat2> ;
+       fhir:reference [ fhir:v "Patient/pat2" ]
+     ] ;
+     fhir:effective [
+       a fhir:DateTime ;
+       fhir:v "2011-03-04T08:30:00+11:00"^^xsd:dateTime
+     ] ;
+     fhir:performer ( [
+       fhir:l <http://hl7.org/fhir/Organization/1832473e-2fe0-452d-abe9-3cdb9879522f> ;
+       fhir:reference [ fhir:v "Organization/1832473e-2fe0-452d-abe9-3cdb9879522f" ] ;
+       fhir:display [ fhir:v "Acme Laboratory, Inc" ]
+     ] ) ;
+     fhir:value [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v 6.3 ] ;
+       fhir:unit [ fhir:v "mmol/L" ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "mmol/L" ]
+     ] ;
+     fhir:interpretation ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation>
+         ] ;
+         fhir:code [ fhir:v "H" ] ;
+         fhir:display [ fhir:v "High" ]
+       ] )
+     ] ) ;
+     fhir:note ( [
+       fhir:text [ fhir:v "Patient reported having eaten fatty foods the day before." ]
+     ] ) ;
+     fhir:referenceRange ( [
+       fhir:high [
+         fhir:value [ fhir:v 4.5 ] ;
+         fhir:unit [ fhir:v "mmol/l" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "mmol/L" ]
+       ] ;
+       fhir:text [ fhir:v "High Risk at or above 4.5 mmol/L (Per Australian NHF Recommendations)" ]
+     ] )
+  ] [
+     a fhir:Observation ;
+     fhir:id [ fhir:v "triglyceride" ] ;
+     fhir:status [ fhir:v "final" ] ;
+     fhir:category ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/observation-category"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/observation-category>
+         ] ;
+         fhir:code [ fhir:v "laboratory" ] ;
+         fhir:display [ fhir:v "Laboratory" ]
+       ] )
+     ] ) ;
+     fhir:code [
+       a loinc:35217-9 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:code [ fhir:v "35217-9" ] ;
+         fhir:display [ fhir:v "Triglyceride [Mass or Moles/volume] in Serum or Plasma" ]
+       ] ) ;
+       fhir:text [ fhir:v "Triglyceride" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/pat2> ;
+       fhir:reference [ fhir:v "Patient/pat2" ]
+     ] ;
+     fhir:effective [
+       a fhir:DateTime ;
+       fhir:v "2011-03-04T08:30:00+11:00"^^xsd:dateTime
+     ] ;
+     fhir:performer ( [
+       fhir:l <http://hl7.org/fhir/Organization/1832473e-2fe0-452d-abe9-3cdb9879522f> ;
+       fhir:reference [ fhir:v "Organization/1832473e-2fe0-452d-abe9-3cdb9879522f" ] ;
+       fhir:display [ fhir:v "Acme Laboratory, Inc" ]
+     ] ) ;
+     fhir:value [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v 1.3 ] ;
+       fhir:unit [ fhir:v "mmol/L" ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "mmol/L" ]
+     ] ;
+     fhir:interpretation ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation>
+         ] ;
+         fhir:code [ fhir:v "N" ] ;
+         fhir:display [ fhir:v "Normal" ]
+       ] )
+     ] ) ;
+     fhir:referenceRange ( [
+       fhir:high [
+         fhir:value [ fhir:v 2.0 ] ;
+         fhir:unit [ fhir:v "mmol/L" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "mmol/L" ]
+       ] ;
+       fhir:text [ fhir:v "Normal range: less than 2.0 mmol/L" ]
+     ] )
+  ] [
+     a fhir:Observation ;
+     fhir:id [ fhir:v "hdlcholesterol" ] ;
+     fhir:status [ fhir:v "final" ] ;
+     fhir:category ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/observation-category"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/observation-category>
+         ] ;
+         fhir:code [ fhir:v "laboratory" ] ;
+         fhir:display [ fhir:v "Laboratory" ]
+       ] )
+     ] ) ;
+     fhir:code [
+       a loinc:2085-9 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:code [ fhir:v "2085-9" ] ;
+         fhir:display [ fhir:v "Cholesterol in HDL [Mass/volume] in Serum or Plasma" ]
+       ] ) ;
+       fhir:text [ fhir:v "Cholesterol in HDL" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/pat2> ;
+       fhir:reference [ fhir:v "Patient/pat2" ]
+     ] ;
+     fhir:effective [
+       a fhir:DateTime ;
+       fhir:v "2011-03-04T08:30:00+11:00"^^xsd:dateTime
+     ] ;
+     fhir:performer ( [
+       fhir:l <http://hl7.org/fhir/Organization/1832473e-2fe0-452d-abe9-3cdb9879522f> ;
+       fhir:reference [ fhir:v "Organization/1832473e-2fe0-452d-abe9-3cdb9879522f" ] ;
+       fhir:display [ fhir:v "Acme Laboratory, Inc" ]
+     ] ) ;
+     fhir:value [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v 1.3 ] ;
+       fhir:unit [ fhir:v "mmol/L" ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "mmol/L" ]
+     ] ;
+     fhir:interpretation ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation>
+         ] ;
+         fhir:code [ fhir:v "L" ] ;
+         fhir:display [ fhir:v "Low" ]
+       ] )
+     ] ) ;
+     fhir:referenceRange ( [
+       fhir:low [
+         fhir:value [ fhir:v 1.5 ] ;
+         fhir:unit [ fhir:v "mmol/L" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "mmol/L" ]
+       ] ;
+       fhir:text [ fhir:v "Desirable: greater than 1.5 mmol/L" ]
+     ] )
+  ] [
+     a fhir:Observation ;
+     fhir:id [ fhir:v "ldlcholesterol" ] ;
+     fhir:status [ fhir:v "final" ] ;
+     fhir:category ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/observation-category"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/observation-category>
+         ] ;
+         fhir:code [ fhir:v "laboratory" ] ;
+         fhir:display [ fhir:v "Laboratory" ]
+       ] )
+     ] ) ;
+     fhir:code [
+       a loinc:13457-7 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:code [ fhir:v "13457-7" ] ;
+         fhir:display [ fhir:v "Cholesterol in LDL [Mass/volume] in Serum or Plasma by calculation" ]
+       ] ) ;
+       fhir:text [ fhir:v "LDL Chol. (Calc)" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/pat2> ;
+       fhir:reference [ fhir:v "Patient/pat2" ]
+     ] ;
+     fhir:effective [
+       a fhir:DateTime ;
+       fhir:v "2011-03-04T08:30:00+11:00"^^xsd:dateTime
+     ] ;
+     fhir:performer ( [
+       fhir:l <http://hl7.org/fhir/Organization/1832473e-2fe0-452d-abe9-3cdb9879522f> ;
+       fhir:reference [ fhir:v "Organization/1832473e-2fe0-452d-abe9-3cdb9879522f" ] ;
+       fhir:display [ fhir:v "Acme Laboratory, Inc" ]
+     ] ) ;
+     fhir:value [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v 4.6 ] ;
+       fhir:unit [ fhir:v "mmol/L" ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "mmol/L" ]
+     ] ;
+     fhir:interpretation ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation>
+         ] ;
+         fhir:code [ fhir:v "H" ] ;
+         fhir:display [ fhir:v "High" ]
+       ] )
+     ] ) ;
+     fhir:referenceRange ( [
+       fhir:high [
+         fhir:value [ fhir:v 3.0 ] ;
+         fhir:unit [ fhir:v "mmol/L" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "mmol/L" ]
+       ] ;
+       fhir:text [ fhir:v "Optimal: less than 3.0 mmol/L" ]
+     ] )
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://acme.com/lab/reports"^^xsd:anyURI ;
+       fhir:l <http://acme.com/lab/reports>
+     ] ;
+     fhir:value [ fhir:v "5234342" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "final"] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v2-0074"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v2-0074>
+       ] ;
+       fhir:code [ fhir:v "HM" ] ;
+       fhir:display [ fhir:v "Hematology" ]
+     ] )
+  ] ) ; # 
+  fhir:code [
+     a loinc:57698-3 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "57698-3" ] ;
+       fhir:display [ fhir:v "Lipid panel with direct LDL - Serum or Plasma" ]
+     ] ) ;
+     fhir:text [ fhir:v "Lipid Panel" ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/pat2> ;
+     fhir:reference [ fhir:v "Patient/pat2" ] ;
+     fhir:display [ fhir:v "Wile E. Coyote" ]
+  ] ; # 
+  fhir:effective [
+     a fhir:DateTime ;
+     fhir:v "2011-03-04T08:30:00+11:00"^^xsd:dateTime
+  ] ; # 
+  fhir:issued [ fhir:v "2013-01-27T11:45:33+11:00"^^xsd:dateTime] ; # 
+  fhir:performer ( [
+     fhir:l <http://hl7.org/fhir/Organization/1832473e-2fe0-452d-abe9-3cdb9879522f> ;
+     fhir:reference [ fhir:v "Organization/1832473e-2fe0-452d-abe9-3cdb9879522f" ] ;
+     fhir:display [ fhir:v "Acme Laboratory, Inc" ]
+  ] ) ; # 
+  fhir:result ( [
+     fhir:l <#cholesterol> ;
+     fhir:reference [ fhir:v "#cholesterol" ]
+  ] [
+     fhir:l <#triglyceride> ;
+     fhir:reference [ fhir:v "#triglyceride" ]
+  ] [
+     fhir:l <#hdlcholesterol> ;
+     fhir:reference [ fhir:v "#hdlcholesterol" ]
+  ] [
+     fhir:l <#ldlcholesterol> ;
+     fhir:reference [ fhir:v "#ldlcholesterol" ]
+  ] ) ; # References to contained observations
+  fhir:conclusion [ fhir:v "Patient has elevated total cholesterol and LDL levels with borderline low HDL. Recommend lifestyle modifications and consideration of lipid-lowering therapy."] . # Contained resources
+
+<http://hl7.org/fhir/Patient/pat2> a fhir:Patient .
+
+<http://hl7.org/fhir/Organization/1832473e-2fe0-452d-abe9-3cdb9879522f> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

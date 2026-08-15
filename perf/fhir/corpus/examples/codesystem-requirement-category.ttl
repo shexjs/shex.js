@@ -1,0 +1,145 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/requirement-category> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "requirement-category"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem requirement-category</b></p><a name=\"requirement-category\"> </a><a name=\"hcrequirement-category\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/requirement-category</code> defines the following codes in a Is-A hierarchy:</p><table class=\"codes\"><tr><td><b>Lvl</b></td><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td>1</td><td style=\"white-space:nowrap\">behavioral<a name=\"requirement-category-behavioral\"> </a></td><td/><td>Categories related to how the system behaves</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  business<a name=\"requirement-category-business\"> </a></td><td>Business</td><td>Requirements relating to the business operations of the entities responsible for a system</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  functional<a name=\"requirement-category-functional\"> </a></td><td>Functional</td><td>Requirements related to what the system does (inputs turned into outputs)</td></tr><tr><td>3</td><td style=\"white-space:nowrap\">    exchange<a name=\"requirement-category-exchange\"> </a></td><td>Exchange</td><td>Requirements relating to when, how, or what data is exchanged with other systems</td></tr><tr><td>3</td><td style=\"white-space:nowrap\">    processing<a name=\"requirement-category-processing\"> </a></td><td>Processing</td><td>Requirements related to how data must be analyzed, transformed, considered, or otherwise used within a system</td></tr><tr><td>3</td><td style=\"white-space:nowrap\">    storage<a name=\"requirement-category-storage\"> </a></td><td>Storage</td><td>Requirements related to if or how data is persisted in a system</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  non-functional<a name=\"requirement-category-non-functional\"> </a></td><td>Non-functional</td><td>Requirements related to how the system accomplishes functional requirements</td></tr><tr><td>3</td><td style=\"white-space:nowrap\">    availability<a name=\"requirement-category-availability\"> </a></td><td>Availability</td><td>Requirements related to how and when a system needs to be reachable and useable</td></tr><tr><td>3</td><td style=\"white-space:nowrap\">    ui<a name=\"requirement-category-ui\"> </a></td><td>User Interface</td><td>Requirements related to how information is collected from and exposed to humans (or animals)</td></tr><tr><td>4</td><td style=\"white-space:nowrap\">      ui-accessibility<a name=\"requirement-category-ui-accessibility\"> </a></td><td>UI Accessibility</td><td>Requirements around user interface that ensure a satisfactory experience for users from different backgrounds or with varying physical, cognitive, and/or sensory abilities</td></tr><tr><td>4</td><td style=\"white-space:nowrap\">      ui-consistency<a name=\"requirement-category-ui-consistency\"> </a></td><td>UI Consistency</td><td>Requirements around ensuring that different implementations have sufficiently aligned appearance and mechanisms of interaction</td></tr><tr><td>4</td><td style=\"white-space:nowrap\">      ui-usability<a name=\"requirement-category-ui-usability\"> </a></td><td>UI Usability</td><td>Requirements related to the intuitiveness, simplicity, and ease-of-use of a user-interface</td></tr><tr><td>3</td><td style=\"white-space:nowrap\">    security<a name=\"requirement-category-security\"> </a></td><td>Security/Privacy</td><td>Requirements that ensure that data is appropriately protected from threats and respects rules around what parties are permitted to access or manipulate</td></tr><tr><td>3</td><td style=\"white-space:nowrap\">    safety<a name=\"requirement-category-safety\"> </a></td><td>Safety</td><td>Requirements that ensure that system operation does not negatively impact the wellbeing of people or assets</td></tr><tr><td>3</td><td style=\"white-space:nowrap\">    performance<a name=\"requirement-category-performance\"> </a></td><td>Performance/Scalability</td><td>Requirements that deal with timeliness of processing and/or responsiveness under differing levels of load/volume</td></tr><tr><td>1</td><td style=\"white-space:nowrap\">source<a name=\"requirement-category-source\"> </a></td><td/><td>Categories related to where the requirement came from</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  user<a name=\"requirement-category-user\"> </a></td><td>User</td><td>Requirements originating from the community of individuals expected to use the system/solution</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  legal<a name=\"requirement-category-legal\"> </a></td><td>Legal</td><td>Requirements originating from regulation or law</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  design<a name=\"requirement-category-design\"> </a></td><td>Design decision</td><td>Requirements documenting decisions made in the design of the solution</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/requirement-category"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/requirement-category>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "RequirementCategory"] ; # 
+  fhir:title [ fhir:v "Requirement Category"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7 International"] ; # 
+  fhir:description [ fhir:v "Requirement Category"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:hierarchyMeaning [ fhir:v "is-a"] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:count [ fhir:v "19"^^xsd:nonNegativeInteger] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "behavioral" ] ;
+     fhir:definition [ fhir:v "Categories related to how the system behaves" ] ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "business" ] ;
+       fhir:display [ fhir:v "Business" ] ;
+       fhir:definition [ fhir:v "Requirements relating to the business operations of the entities responsible for a system" ]
+     ] [
+       fhir:code [ fhir:v "functional" ] ;
+       fhir:display [ fhir:v "Functional" ] ;
+       fhir:definition [ fhir:v "Requirements related to what the system does (inputs turned into outputs)" ] ;
+       fhir:concept ( [
+         fhir:code [ fhir:v "exchange" ] ;
+         fhir:display [ fhir:v "Exchange" ] ;
+         fhir:definition [ fhir:v "Requirements relating to when, how, or what data is exchanged with other systems" ]
+       ] [
+         fhir:code [ fhir:v "processing" ] ;
+         fhir:display [ fhir:v "Processing" ] ;
+         fhir:definition [ fhir:v "Requirements related to how data must be analyzed, transformed, considered, or otherwise used within a system" ]
+       ] [
+         fhir:code [ fhir:v "storage" ] ;
+         fhir:display [ fhir:v "Storage" ] ;
+         fhir:definition [ fhir:v "Requirements related to if or how data is persisted in a system" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "non-functional" ] ;
+       fhir:display [ fhir:v "Non-functional" ] ;
+       fhir:definition [ fhir:v "Requirements related to how the system accomplishes functional requirements" ] ;
+       fhir:concept ( [
+         fhir:code [ fhir:v "availability" ] ;
+         fhir:display [ fhir:v "Availability" ] ;
+         fhir:definition [ fhir:v "Requirements related to how and when a system needs to be reachable and useable" ]
+       ] [
+         fhir:code [ fhir:v "ui" ] ;
+         fhir:display [ fhir:v "User Interface" ] ;
+         fhir:definition [ fhir:v "Requirements related to how information is collected from and exposed to humans (or animals)" ] ;
+         fhir:concept ( [
+           fhir:code [ fhir:v "ui-accessibility" ] ;
+           fhir:display [ fhir:v "UI Accessibility" ] ;
+           fhir:definition [ fhir:v "Requirements around user interface that ensure a satisfactory experience for users from different backgrounds or with varying physical, cognitive, and/or sensory abilities" ]
+         ] [
+           fhir:code [ fhir:v "ui-consistency" ] ;
+           fhir:display [ fhir:v "UI Consistency" ] ;
+           fhir:definition [ fhir:v "Requirements around ensuring that different implementations have sufficiently aligned appearance and mechanisms of interaction" ]
+         ] [
+           fhir:code [ fhir:v "ui-usability" ] ;
+           fhir:display [ fhir:v "UI Usability" ] ;
+           fhir:definition [ fhir:v "Requirements related to the intuitiveness, simplicity, and ease-of-use of a user-interface" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "security" ] ;
+         fhir:display [ fhir:v "Security/Privacy" ] ;
+         fhir:definition [ fhir:v "Requirements that ensure that data is appropriately protected from threats and respects rules around what parties are permitted to access or manipulate" ]
+       ] [
+         fhir:code [ fhir:v "safety" ] ;
+         fhir:display [ fhir:v "Safety" ] ;
+         fhir:definition [ fhir:v "Requirements that ensure that system operation does not negatively impact the wellbeing of people or assets" ]
+       ] [
+         fhir:code [ fhir:v "performance" ] ;
+         fhir:display [ fhir:v "Performance/Scalability" ] ;
+         fhir:definition [ fhir:v "Requirements that deal with timeliness of processing and/or responsiveness under differing levels of load/volume" ]
+       ] )
+     ] )
+  ] [
+     fhir:code [ fhir:v "source" ] ;
+     fhir:definition [ fhir:v "Categories related to where the requirement came from" ] ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "user" ] ;
+       fhir:display [ fhir:v "User" ] ;
+       fhir:definition [ fhir:v "Requirements originating from the community of individuals expected to use the system/solution" ]
+     ] [
+       fhir:code [ fhir:v "legal" ] ;
+       fhir:display [ fhir:v "Legal" ] ;
+       fhir:definition [ fhir:v "Requirements originating from regulation or law" ]
+     ] [
+       fhir:code [ fhir:v "design" ] ;
+       fhir:display [ fhir:v "Design decision" ] ;
+       fhir:definition [ fhir:v "Requirements documenting decisions made in the design of the solution" ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

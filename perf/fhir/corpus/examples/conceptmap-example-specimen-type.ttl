@@ -1,0 +1,2374 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ConceptMap/102> a fhir:ConceptMap ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "102"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p class=\"res-header-id\">\n        <b>Generated Narrative: ConceptMap 102</b>\n      </p>\n      <a name=\"102\"> </a>\n      <a name=\"hc102\"> </a>\n      <p>Mapping from \n        <a href=\"http://terminology.hl7.org/7.3.0/ValueSet-v2-0487.html\">hl7VS-specimenType</a> to \n        <a href=\"https://browser.ihtsdotools.org/\">All Codes SCT ValueSet</a>\n      </p>\n      <br/>\n      <p>Mapping from \n        <a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v2-0487.html\">specimenType</a> to \n        <code>http://snomed.info/sct</code> (SNOMED CT International Edition)\n      </p>\n      <table class=\"grid\">\n        <tr>\n          <td colspan=\"2\">\n            <b>Source Concept Details</b>\n          </td>\n          <td>\n            <b>Relationship</b>\n          </td>\n          <td colspan=\"5\">\n            <b>Target Concept Details</b>\n          </td>\n          <td>\n            <b>Comment</b>\n          </td>\n        </tr>\n        <tr>\n          <td colspan=\"2\">\n            <b>Codes</b> from \n            <a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v2-0487.html\" title=\"http://terminology.hl7.org/CodeSystem/v2-0487\">specimenType</a>\n          </td>\n          <td/>\n          <td colspan=\"2\">\n            <b>Codes</b> from http://snomed.info/sct\n          </td>\n          <td>\n            <b>type-mod</b>\n          </td>\n          <td>\n            <b>spec-src</b>\n          </td>\n          <td>\n            <b>coll-method</b>\n          </td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">ACNE</td>\n          <td style=\"border-left-width: 0px\">Tissue, Acne</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309068002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">ACNFLD</td>\n          <td style=\"border-left-width: 0px\">Fluid, Acne</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119323008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>47002008</td>\n          <td/>\n          <td/>\n          <td>HL7 term is a historical term. mapped to Pus</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">AIRS</td>\n          <td style=\"border-left-width: 0px\">Air Sample</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">446302006</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">ALL</td>\n          <td style=\"border-left-width: 0px\">Allograft</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119376003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>7970006</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">AMP</td>\n          <td style=\"border-left-width: 0px\">Amputation</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">408654003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td>81723002</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">ANGI</td>\n          <td style=\"border-left-width: 0px\">Catheter Tip, Angio</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">ARTC</td>\n          <td style=\"border-left-width: 0px\">Catheter Tip, Arterial</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">ASERU</td>\n          <td style=\"border-left-width: 0px\">Serum, Acute</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">ASP</td>\n          <td style=\"border-left-width: 0px\">Aspirate</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119295008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td>14766002</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">ATTE</td>\n          <td style=\"border-left-width: 0px\">Environment, Attest</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">AUTOC</td>\n          <td style=\"border-left-width: 0px\">Environmental, Autoclave Capsule</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">AUTP</td>\n          <td style=\"border-left-width: 0px\">Autopsy</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">BBL</td>\n          <td style=\"border-left-width: 0px\">Blood bag</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119304001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">BCYST</td>\n          <td style=\"border-left-width: 0px\">Cyst, Baker's</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">BITE</td>\n          <td style=\"border-left-width: 0px\">Bite</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">BLEB</td>\n          <td style=\"border-left-width: 0px\">Bleb</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309049000</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>339008</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">BLIST</td>\n          <td style=\"border-left-width: 0px\">Blister</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309049000</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>339008</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">BOIL</td>\n          <td style=\"border-left-width: 0px\">Boil</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119295008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>59843005</td>\n          <td/>\n          <td>14766002</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">BON</td>\n          <td style=\"border-left-width: 0px\">Bone</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">430268003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">BOWL</td>\n          <td style=\"border-left-width: 0px\">Bowel contents</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">BPU</td>\n          <td style=\"border-left-width: 0px\">Blood product unit</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119300005</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">BRN</td>\n          <td style=\"border-left-width: 0px\">Burn</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119367005</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">BRSH</td>\n          <td style=\"border-left-width: 0px\">Brush</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258415003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td>439336003</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">BRTH</td>\n          <td style=\"border-left-width: 0px\">Breath (use EXHLD)</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119336008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">BRUS</td>\n          <td style=\"border-left-width: 0px\">Brushing</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309176002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td>80657008</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">BUB</td>\n          <td style=\"border-left-width: 0px\">Bubo</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">302795002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>11585000</td>\n          <td/>\n          <td>14766002</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">BULLA</td>\n          <td style=\"border-left-width: 0px\">Bulla/Bullae</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258482009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>339008</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">BX</td>\n          <td style=\"border-left-width: 0px\">Biopsy</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258415003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td>86273004</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">CALC</td>\n          <td style=\"border-left-width: 0px\">Calculus (=Stone)</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119350003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">CARBU</td>\n          <td style=\"border-left-width: 0px\">Carbuncle</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309051001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>41570003</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">CAT</td>\n          <td style=\"border-left-width: 0px\">Catheter</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119311002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">CBITE</td>\n          <td style=\"border-left-width: 0px\">Bite, Cat</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">CLIPP</td>\n          <td style=\"border-left-width: 0px\">Clippings</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119327009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>Be more specific use either: 119326000^hair specimen or 119327009^nail specimen</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">CNJT</td>\n          <td style=\"border-left-width: 0px\">Conjunctiva</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119401005</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">CNJT</td>\n          <td style=\"border-left-width: 0px\">Conjunctiva</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">128160006</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">CNJT</td>\n          <td style=\"border-left-width: 0px\">Conjunctiva</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258498002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">COL</td>\n          <td style=\"border-left-width: 0px\">Colostrum</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119329007</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">CONE</td>\n          <td style=\"border-left-width: 0px\">Biospy, Cone</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">399713008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>71252005</td>\n          <td>54535009</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">CSCR</td>\n          <td style=\"border-left-width: 0px\">Scratch, Cat</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">CSERU</td>\n          <td style=\"border-left-width: 0px\">Serum, Convalescent</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">CSITE</td>\n          <td style=\"border-left-width: 0px\">Catheter Insertion Site</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258507003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>386144009</td>\n          <td/>\n          <td>285570007</td>\n          <td>Prefer to have aspirate of the pus oozing out from cleaned insertion site - if swab is all that can be obtained, then swab after cleaning, otherwise you may get a contaminated specimen and a falsely identified infected central line. Do not just swab the reddened area - that will just collect skin flora</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">CSMY</td>\n          <td style=\"border-left-width: 0px\">Fluid,  Cystostomy Tube</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309051001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">CST</td>\n          <td style=\"border-left-width: 0px\">Fluid, Cyst</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258453008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">CSVR</td>\n          <td style=\"border-left-width: 0px\">Blood, Cell Saver</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">CTP</td>\n          <td style=\"border-left-width: 0px\">Catheter tip</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">CVPS</td>\n          <td style=\"border-left-width: 0px\">Site, CVP</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258507003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">CVPT</td>\n          <td style=\"border-left-width: 0px\">Catheter Tip, CVP</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>445085009</td>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">CYN</td>\n          <td style=\"border-left-width: 0px\">Nodule, Cystic</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119368000</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>27925004</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">CYST</td>\n          <td style=\"border-left-width: 0px\">Cyst</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119368000</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">DBITE</td>\n          <td style=\"border-left-width: 0px\">Bite, Dog</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">DCS</td>\n          <td style=\"border-left-width: 0px\">Sputum, Deep Cough</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119335007</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">DEC</td>\n          <td style=\"border-left-width: 0px\">Ulcer, Decubitus</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258505006</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">DEION</td>\n          <td style=\"border-left-width: 0px\">Environmental, Water  (Deionized)</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">DIA</td>\n          <td style=\"border-left-width: 0px\">Dialysate</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119360007</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">DISCHG</td>\n          <td style=\"border-left-width: 0px\">Discharge</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258439008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">DIV</td>\n          <td style=\"border-left-width: 0px\">Diverticulum</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119376003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>31113003</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">DRN</td>\n          <td style=\"border-left-width: 0px\">Drain</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119306004</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">DRNG</td>\n          <td style=\"border-left-width: 0px\">Drainage, Tube</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258455001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td>122462000</td>\n          <td>Historical term - consider what is being drained and indicate that in SPM-4 instead: not an acceptable specimen for micro - not specific enough term</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">DRNGP</td>\n          <td style=\"border-left-width: 0px\">Drainage, Penrose</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309051001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td>122462000</td>\n          <td>Historical term - consider what is being drained and indicate that in SPM-4 instead</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">EARW</td>\n          <td style=\"border-left-width: 0px\">Ear wax (cerumen)</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">122580007</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">EBRUSH</td>\n          <td style=\"border-left-width: 0px\">Brush, Esophageal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309210009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>32849002</td>\n          <td>36213007</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">EEYE</td>\n          <td style=\"border-left-width: 0px\">Environmental, Eye Wash</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">EFF</td>\n          <td style=\"border-left-width: 0px\">Environmental, Effluent</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">EFFUS</td>\n          <td style=\"border-left-width: 0px\">Effusion</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258440005</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">EFOD</td>\n          <td style=\"border-left-width: 0px\">Environmental, Food</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119320006</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">EISO</td>\n          <td style=\"border-left-width: 0px\">Environmental, Isolette</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258536003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">ELT</td>\n          <td style=\"border-left-width: 0px\">Electrode</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119314005</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">ENVIR</td>\n          <td style=\"border-left-width: 0px\">Environmental, Unidentified Substance</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119324002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">EOTH</td>\n          <td style=\"border-left-width: 0px\">Environmental, Other Substance</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">ESOI</td>\n          <td style=\"border-left-width: 0px\">Environmental, Soil</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">ESOS</td>\n          <td style=\"border-left-width: 0px\">Environmental, Solution (Sterile)</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">ETA</td>\n          <td style=\"border-left-width: 0px\">Aspirate,  Endotrach</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119307008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>321667001</td>\n          <td>14766002</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">ETTP</td>\n          <td style=\"border-left-width: 0px\">Catheter Tip, Endotracheal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">ETTUB</td>\n          <td style=\"border-left-width: 0px\">Tube, Endotracheal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119307008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>321667001</td>\n          <td>14766002</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">EWHI</td>\n          <td style=\"border-left-width: 0px\">Environmental, Whirlpool</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">EXG</td>\n          <td style=\"border-left-width: 0px\">Gas, exhaled (=breath)</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119336008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">EXS</td>\n          <td style=\"border-left-width: 0px\">Shunt, External</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">EXUDTE</td>\n          <td style=\"border-left-width: 0px\">Exudate</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258441009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">FAW</td>\n          <td style=\"border-left-width: 0px\">Environmental, Water  (Well)</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">FBLOOD</td>\n          <td style=\"border-left-width: 0px\">Blood, Fetal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119297000</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>303112003</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">FGA</td>\n          <td style=\"border-left-width: 0px\">Fluid,  Abdomen</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">168139001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>83670000</td>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">FIST</td>\n          <td style=\"border-left-width: 0px\">Fistula</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119370009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">FLD</td>\n          <td style=\"border-left-width: 0px\">Fluid, Other</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309051001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">FLT</td>\n          <td style=\"border-left-width: 0px\">Filter</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">FLU</td>\n          <td style=\"border-left-width: 0px\">Fluid, Body unsp</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309051001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">FLUID</td>\n          <td style=\"border-left-width: 0px\">Fluid</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258442002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">FOLEY</td>\n          <td style=\"border-left-width: 0px\">Catheter Tip, Foley</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">FRS</td>\n          <td style=\"border-left-width: 0px\">Fluid, Respiratory</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258442002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>272626006</td>\n          <td/>\n          <td>this term is not specific enough, choose from terms that more accurately describe the specimen</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">FSCLP</td>\n          <td style=\"border-left-width: 0px\">Scalp, Fetal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309502007</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>41695006</td>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">FUR</td>\n          <td style=\"border-left-width: 0px\">Furuncle</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119295008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>59843005</td>\n          <td/>\n          <td/>\n          <td>Further describe the sample as tissue or pus. or by the collection method. The term boil is not specific to a body site - need to indicate source site (spm.8). preferred term is Aspirate_Boil</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">GAS</td>\n          <td style=\"border-left-width: 0px\">Gas</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119317003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">GASA</td>\n          <td style=\"border-left-width: 0px\">Aspirate, Gastric</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">168137004</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>69695003</td>\n          <td>14766002</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">GASAN</td>\n          <td style=\"border-left-width: 0px\">Antrum, Gastric</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119379005</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>66051006</td>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">GASBR</td>\n          <td style=\"border-left-width: 0px\">Brushing, Gastric</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309213006</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>69695003</td>\n          <td>235157009</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">GASD</td>\n          <td style=\"border-left-width: 0px\">Drainage, Gastric</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258459007</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>69695003</td>\n          <td>122462000</td>\n          <td>Historical term - consider what is being drained and indicate that in SPM-4 instead</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">GAST</td>\n          <td style=\"border-left-width: 0px\">Fluid/contents, Gastric</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258459007</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">GENV</td>\n          <td style=\"border-left-width: 0px\">Genital vaginal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119394009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">GRAFT</td>\n          <td style=\"border-left-width: 0px\">Graft</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">440493002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">GRANU</td>\n          <td style=\"border-left-width: 0px\">Granuloma</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119376003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>45647009</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">GROSH</td>\n          <td style=\"border-left-width: 0px\">Catheter, Groshong</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119311002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">GSOL</td>\n          <td style=\"border-left-width: 0px\">Solution, Gastrostomy</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">GSPEC</td>\n          <td style=\"border-left-width: 0px\">Biopsy, Gastric</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309211008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>69695003</td>\n          <td>79121003</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">GT</td>\n          <td style=\"border-left-width: 0px\">Tube, Gastric</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">GTUBE</td>\n          <td style=\"border-left-width: 0px\">Drainage Tube, Drainage (Gastrostomy)</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258459007</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>127490009</td>\n          <td>69695003</td>\n          <td>122462000</td>\n          <td>Historical term - consider what is being drained and indicate that in SPM-4 instead</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">HBITE</td>\n          <td style=\"border-left-width: 0px\">Bite, Human</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">HBLUD</td>\n          <td style=\"border-left-width: 0px\">Blood, Autopsy</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119297000</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>303113008</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">HEMAQ</td>\n          <td style=\"border-left-width: 0px\">Catheter Tip, Hemaquit</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">HEMO</td>\n          <td style=\"border-left-width: 0px\">Catheter Tip, Hemovac</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">HERNI</td>\n          <td style=\"border-left-width: 0px\">Tissue, Herniated</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119376003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">HEV</td>\n          <td style=\"border-left-width: 0px\">Drain, Hemovac</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119306004</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">HIC</td>\n          <td style=\"border-left-width: 0px\">Catheter, Hickman</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>445085009</td>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">HYDC</td>\n          <td style=\"border-left-width: 0px\">Fluid, Hydrocele</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309051001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>55434001</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">IBITE</td>\n          <td style=\"border-left-width: 0px\">Bite, Insect</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">ICYST</td>\n          <td style=\"border-left-width: 0px\">Cyst, Inclusion</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309075001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">IDC</td>\n          <td style=\"border-left-width: 0px\">Catheter Tip, Indwelling</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">IHG</td>\n          <td style=\"border-left-width: 0px\">Gas, Inhaled</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119337004</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">ILEO</td>\n          <td style=\"border-left-width: 0px\">Drainage, Ileostomy</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258455001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>419954003</td>\n          <td/>\n          <td/>\n          <td>Historical term - consider what is being drained and indicate that in SPM-4 instead: stool is what is expected, should use stool sample</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">ILLEG</td>\n          <td style=\"border-left-width: 0px\">Source of Specimen Is Illegible</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">IMP</td>\n          <td style=\"border-left-width: 0px\">Implant</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">439961009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">INCI</td>\n          <td style=\"border-left-width: 0px\">Site, Incision/Surgical</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">438660002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">INFIL</td>\n          <td style=\"border-left-width: 0px\">Infiltrate</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">INS</td>\n          <td style=\"border-left-width: 0px\">Insect</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258614005</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">INTRD</td>\n          <td style=\"border-left-width: 0px\">Catheter Tip, Introducer</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">IT</td>\n          <td style=\"border-left-width: 0px\">Intubation tube</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119307008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">IUD</td>\n          <td style=\"border-left-width: 0px\">Intrauterine Device</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">IVCAT</td>\n          <td style=\"border-left-width: 0px\">Catheter Tip, IV</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>255560000</td>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">IVFLD</td>\n          <td style=\"border-left-width: 0px\">Fluid, IV</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258649003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">IVTIP</td>\n          <td style=\"border-left-width: 0px\">Tubing Tip, IV</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">JEJU</td>\n          <td style=\"border-left-width: 0px\">Drainage, Jejunal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258463000</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>21306003</td>\n          <td>122462000</td>\n          <td>Historical term - consider what is being drained and indicate that in SPM-4 instead: stool is what is expected, should use stool sample</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">JNTFLD</td>\n          <td style=\"border-left-width: 0px\">Fluid, Joint</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119332005</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">JP</td>\n          <td style=\"border-left-width: 0px\">Drainage, Jackson Pratt</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309051001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td>122462000</td>\n          <td>Historical term - consider what is being drained and indicate that in SPM-4 instead</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">KELOI</td>\n          <td style=\"border-left-width: 0px\">Lavage</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">440674008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td>67889009</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">KIDFLD</td>\n          <td style=\"border-left-width: 0px\">Fluid, Kidney</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309051001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>64033007</td>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">LAVG</td>\n          <td style=\"border-left-width: 0px\">Lavage, Bronhial</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258607008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td>397394009</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">LAVGG</td>\n          <td style=\"border-left-width: 0px\">Lavage, Gastric</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">168138009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>69695003</td>\n          <td>173830003</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">LAVGP</td>\n          <td style=\"border-left-width: 0px\">Lavage, Peritoneal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">440137008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">LAVPG</td>\n          <td style=\"border-left-width: 0px\">Lavage, Pre-Bronch</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">440674008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>44567001</td>\n          <td>67889009</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">LENS1</td>\n          <td style=\"border-left-width: 0px\">Contact Lens</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">440473005</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">LENS2</td>\n          <td style=\"border-left-width: 0px\">Contact Lens Case</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">LESN</td>\n          <td style=\"border-left-width: 0px\">Lesion</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309049000</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>should be more specific what kind of lesion is observed - be more specific is it a wound, abscess, mass - specify! Ask SNOMED CT to mark it as a grouper term only (309049000)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">LIQ</td>\n          <td style=\"border-left-width: 0px\">Liquid, Unspecified</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258442002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">LIQO</td>\n          <td style=\"border-left-width: 0px\">Liquid, Other</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">LSAC</td>\n          <td style=\"border-left-width: 0px\">Fluid, Lumbar Sac</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258450006</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>303949008</td>\n          <td/>\n          <td>The HL7 term is a historical term Mapped to CSF obtained by lumbar puncture</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">MAHUR</td>\n          <td style=\"border-left-width: 0px\">Catheter Tip, Makurkour</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">MASS</td>\n          <td style=\"border-left-width: 0px\">Mass</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">420548004</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>4147007</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">MBLD</td>\n          <td style=\"border-left-width: 0px\">Blood, Menstrual</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119345009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">MUCOS</td>\n          <td style=\"border-left-width: 0px\">Mucosa</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119376003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>414781009</td>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">MUCUS</td>\n          <td style=\"border-left-width: 0px\">Mucus</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258483004</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">NASDR</td>\n          <td style=\"border-left-width: 0px\">Drainage, Nasal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258474009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>2095001</td>\n          <td>122462000</td>\n          <td>Historical term - consider what is being drained and indicate that in SPM-4 instead</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">NEDL</td>\n          <td style=\"border-left-width: 0px\">Needle</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">NEPH</td>\n          <td style=\"border-left-width: 0px\">Site, Nephrostomy</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">438660002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">NGASP</td>\n          <td style=\"border-left-width: 0px\">Aspirate, Nasogastric</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">302794003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>69695003</td>\n          <td>6853008</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">NGAST</td>\n          <td style=\"border-left-width: 0px\">Drainage, Nasogastric</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258459007</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>127492001</td>\n          <td>69695003</td>\n          <td>122462000</td>\n          <td>Historical term - consider what is being drained and indicate that in SPM-4 instead</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">NGS</td>\n          <td style=\"border-left-width: 0px\">Site, Naso/Gastric</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">438660002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">NODUL</td>\n          <td style=\"border-left-width: 0px\">Nodule(s)</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">NSECR</td>\n          <td style=\"border-left-width: 0px\">Secretion, Nasal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">168141000</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">ORH</td>\n          <td style=\"border-left-width: 0px\">Other</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">123038009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">ORL</td>\n          <td style=\"border-left-width: 0px\">Lesion, Oral</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">OTH</td>\n          <td style=\"border-left-width: 0px\">Source, Other</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">123038009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">PACEM</td>\n          <td style=\"border-left-width: 0px\">Pacemaker</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PCFL</td>\n          <td style=\"border-left-width: 0px\">Fluid, Pericardial</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">122571007</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PDSIT</td>\n          <td style=\"border-left-width: 0px\">Site, Peritoneal Dialysis</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">438660002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">PDTS</td>\n          <td style=\"border-left-width: 0px\">Site, Peritoneal Dialysis Tunnel</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PELVA</td>\n          <td style=\"border-left-width: 0px\">Abscess, Pelvic</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119371008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>12921003</td>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">PENIL</td>\n          <td style=\"border-left-width: 0px\">Lesion, Penile</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PERIA</td>\n          <td style=\"border-left-width: 0px\">Abscess, Perianal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119371008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>397158004</td>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PILOC</td>\n          <td style=\"border-left-width: 0px\">Cyst, Pilonidal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119368000</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PINS</td>\n          <td style=\"border-left-width: 0px\">Site, Pin</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">438660002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PIS</td>\n          <td style=\"border-left-width: 0px\">Site, Pacemaker Insetion</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258507003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PLAN</td>\n          <td style=\"border-left-width: 0px\">Plant Material</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119301009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PLAS</td>\n          <td style=\"border-left-width: 0px\">Plasma</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119361006</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PLB</td>\n          <td style=\"border-left-width: 0px\">Plasma bag</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119305000</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PLEVS</td>\n          <td style=\"border-left-width: 0px\">Serum, Peak Level</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119364003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>255587001</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PND</td>\n          <td style=\"border-left-width: 0px\">Drainage, Penile</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258439008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>13648007</td>\n          <td>122462000</td>\n          <td>Historical term -though in this case more often used for discharge</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">POL</td>\n          <td style=\"border-left-width: 0px\">Polyps</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119376003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>41329004</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">POPGS</td>\n          <td style=\"border-left-width: 0px\">Graft Site, Popliteal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">440493002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>6902008</td>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">POPLG</td>\n          <td style=\"border-left-width: 0px\">Graft, Popliteal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">440493002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>6902008</td>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">POPLV</td>\n          <td style=\"border-left-width: 0px\">Site, Popliteal Vein</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PORTA</td>\n          <td style=\"border-left-width: 0px\">Catheter, Porta</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119311002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PPP</td>\n          <td style=\"border-left-width: 0px\">Plasma, Platelet poor</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119362004</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PROST</td>\n          <td style=\"border-left-width: 0px\">Prosthetic Device</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">438660002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PRP</td>\n          <td style=\"border-left-width: 0px\">Plasma, Platelet rich</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119363009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PSC</td>\n          <td style=\"border-left-width: 0px\">Pseudocyst</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119368000</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PUNCT</td>\n          <td style=\"border-left-width: 0px\">Wound, Puncture</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119365002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>129300006</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PUS</td>\n          <td style=\"border-left-width: 0px\">Pus</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119323008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PUSFR</td>\n          <td style=\"border-left-width: 0px\">Pustule</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119323008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>47002008</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">PUST</td>\n          <td style=\"border-left-width: 0px\">Pus</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119323008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>47002008</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">QC3</td>\n          <td style=\"border-left-width: 0px\">Quality Control</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">RANDU</td>\n          <td style=\"border-left-width: 0px\">Urine, Random</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">278020009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">RBITE</td>\n          <td style=\"border-left-width: 0px\">Bite, Reptile</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">RECT</td>\n          <td style=\"border-left-width: 0px\">Drainage, Rectal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119339001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>34402009</td>\n          <td>122462000</td>\n          <td>Historical term - consider what is being drained and indicate that in SPM-4 instead: stool is what is expected, should use stool sample</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">RECTA</td>\n          <td style=\"border-left-width: 0px\">Abscess, Rectal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119371008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>34402009</td>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">RENALC</td>\n          <td style=\"border-left-width: 0px\">Cyst, Renal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258420003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>64033007</td>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">RENC</td>\n          <td style=\"border-left-width: 0px\">Fluid, Renal Cyst</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258453008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>64033007</td>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">RES</td>\n          <td style=\"border-left-width: 0px\">Respiratory</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258603007</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SAL</td>\n          <td style=\"border-left-width: 0px\">Saliva</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119342007</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SCAR</td>\n          <td style=\"border-left-width: 0px\">Tissue, Keloid (Scar)</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119376003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SCLV</td>\n          <td style=\"border-left-width: 0px\">Catheter Tip, Subclavian</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>9454009</td>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SCROA</td>\n          <td style=\"border-left-width: 0px\">Abscess, Scrotal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119371008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>20233005</td>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SECRE</td>\n          <td style=\"border-left-width: 0px\">Secretion(s)</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">432825001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SER</td>\n          <td style=\"border-left-width: 0px\">Serum</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119364003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SHU</td>\n          <td style=\"border-left-width: 0px\">Site, Shunt</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119295008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>257351008</td>\n          <td/>\n          <td>14766002</td>\n          <td>Preferred is aspiration with sterile syringe from inflamed area. Specify body location of shunt site</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SHUNF</td>\n          <td style=\"border-left-width: 0px\">Fluid, Shunt</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">446861007</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>279107003</td>\n          <td>446860008</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">SHUNT</td>\n          <td style=\"border-left-width: 0px\">Shunt</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">SITE</td>\n          <td style=\"border-left-width: 0px\">Site</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SKBP</td>\n          <td style=\"border-left-width: 0px\">Biopsy, Skin</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309066003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td>240977001</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SKN</td>\n          <td style=\"border-left-width: 0px\">Skin</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119325001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SMM</td>\n          <td style=\"border-left-width: 0px\">Mass, Sub-Mandibular</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">420548004</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>4147007</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SNV</td>\n          <td style=\"border-left-width: 0px\">Fluid, synovial (Joint fluid)</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119332005</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SPRM</td>\n          <td style=\"border-left-width: 0px\">Spermatozoa</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119349003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SPRP</td>\n          <td style=\"border-left-width: 0px\">Catheter Tip, Suprapubic</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SPRPB</td>\n          <td style=\"border-left-width: 0px\">Cathether Tip, Suprapubic</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">SPS</td>\n          <td style=\"border-left-width: 0px\">Environmental, Spore Strip</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SPT</td>\n          <td style=\"border-left-width: 0px\">Sputum</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119334006</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SPTC</td>\n          <td style=\"border-left-width: 0px\">Sputum - coughed</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119335007</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SPTT</td>\n          <td style=\"border-left-width: 0px\">Sputum - tracheal aspirate</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258609006</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">SPUT1</td>\n          <td style=\"border-left-width: 0px\">Sputum, Simulated</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SPUTIN</td>\n          <td style=\"border-left-width: 0px\">Sputum, Inducted</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258610001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SPUTSP</td>\n          <td style=\"border-left-width: 0px\">Sputum, Spontaneous</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119335007</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">STER</td>\n          <td style=\"border-left-width: 0px\">Environmental, Sterrad</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">STL</td>\n          <td style=\"border-left-width: 0px\">Stool = Fecal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119339001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">STONE</td>\n          <td style=\"border-left-width: 0px\">Stone, Kidney</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119350003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>64033007</td>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SUBMA</td>\n          <td style=\"border-left-width: 0px\">Abscess, Submandibular</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119371008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>5713008</td>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SUBMX</td>\n          <td style=\"border-left-width: 0px\">Abscess, Submaxillary</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119371008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>4335006</td>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SUMP</td>\n          <td style=\"border-left-width: 0px\">Drainage, Sump</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">446562005</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td>122462000</td>\n          <td>Historical term - consider what is being drained and indicate that in SPM-4 instead</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SUP</td>\n          <td style=\"border-left-width: 0px\">Suprapubic Tap</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">122575003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td>58088002</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">SUTUR</td>\n          <td style=\"border-left-width: 0px\">Suture</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">SWGZ</td>\n          <td style=\"border-left-width: 0px\">Catheter Tip, Swan Gantz</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">TASP</td>\n          <td style=\"border-left-width: 0px\">Aspirate, Tracheal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">122877000</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>44567001</td>\n          <td>129112001</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">TISS</td>\n          <td style=\"border-left-width: 0px\">Tissue</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119376003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">TISU</td>\n          <td style=\"border-left-width: 0px\">Tissue ulcer</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">122593002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">TLC</td>\n          <td style=\"border-left-width: 0px\">Cathether Tip, Triple Lumen</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">TRAC</td>\n          <td style=\"border-left-width: 0px\">Site, Tracheostomy</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">438660002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">TRANS</td>\n          <td style=\"border-left-width: 0px\">Transudate</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258538002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">TSERU</td>\n          <td style=\"border-left-width: 0px\">Serum, Trough</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119364003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td>255588006</td>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">TSTES</td>\n          <td style=\"border-left-width: 0px\">Abscess, Testicular</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119371008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>279572002</td>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">TTRA</td>\n          <td style=\"border-left-width: 0px\">Aspirate, Transtracheal</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258480001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td>129112001</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">TUBES</td>\n          <td style=\"border-left-width: 0px\">Tubes</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119310001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">TUMOR</td>\n          <td style=\"border-left-width: 0px\">Tumor</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258435002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">TZANC</td>\n          <td style=\"border-left-width: 0px\">Smear, Tzanck</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">UDENT</td>\n          <td style=\"border-left-width: 0px\">Source, Unidentified</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">123038009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">UR</td>\n          <td style=\"border-left-width: 0px\">Urine</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">122575003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">URC</td>\n          <td style=\"border-left-width: 0px\">Urine clean catch</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">122880004</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">URINB</td>\n          <td style=\"border-left-width: 0px\">Urine, Bladder Washings</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">122575003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td>78533007</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">URINC</td>\n          <td style=\"border-left-width: 0px\">Urine, Catheterized</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">446846006</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">URINM</td>\n          <td style=\"border-left-width: 0px\">Urine, Midstream</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258574006</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>431938005</td>\n          <td>225271002</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">URINN</td>\n          <td style=\"border-left-width: 0px\">Urine, Nephrostomy</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">446277003</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td>25990002</td>\n          <td>225109005</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">URINP</td>\n          <td style=\"border-left-width: 0px\">Urine, Pedibag</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">URT</td>\n          <td style=\"border-left-width: 0px\">Urine catheter</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">122565001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">USCOP</td>\n          <td style=\"border-left-width: 0px\">Urine, Cystoscopy</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">USPEC</td>\n          <td style=\"border-left-width: 0px\">Source, Unspecified</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">123038009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">VASTIP</td>\n          <td style=\"border-left-width: 0px\">Catheter Tip, Vas</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">VENT</td>\n          <td style=\"border-left-width: 0px\">Catheter Tip, Ventricular</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119312009</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td>TBD in detail</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">VITF</td>\n          <td style=\"border-left-width: 0px\">Vitreous Fluid</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258438000</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">VOM</td>\n          <td style=\"border-left-width: 0px\">Vomitus</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">122572000</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">WASH</td>\n          <td style=\"border-left-width: 0px\">Wash</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">440674008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">WASI</td>\n          <td style=\"border-left-width: 0px\">Washing, e.g. bronchial washing</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">122609004</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">WAT</td>\n          <td style=\"border-left-width: 0px\">Water</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119318008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">WB</td>\n          <td style=\"border-left-width: 0px\">Blood, Whole</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">WEN</td>\n          <td style=\"border-left-width: 0px\">Wen</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309075001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">WICK</td>\n          <td style=\"border-left-width: 0px\">Wick</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">WND</td>\n          <td style=\"border-left-width: 0px\">Wound</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119365002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">WNDA</td>\n          <td style=\"border-left-width: 0px\">Wound abscess</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119366001</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">WNDD</td>\n          <td style=\"border-left-width: 0px\">Wound drainage</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">122566000</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td>122462000</td>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">WNDE</td>\n          <td style=\"border-left-width: 0px\">Wound exudate</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">122568004</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">WORM</td>\n          <td style=\"border-left-width: 0px\">Worm</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">258618008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">WRT</td>\n          <td style=\"border-left-width: 0px\">Wart</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">309068002</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px\">WWA</td>\n          <td style=\"border-left-width: 0px\">Environmental, Water</td>\n          <td>\n            <a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a>\n          </td>\n          <td style=\"border-right-width: 0px\">119318008</td>\n          <td style=\"border-left-width: 0px\"/>\n          <td/>\n          <td/>\n          <td/>\n          <td/>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">WWO</td>\n          <td style=\"border-left-width: 0px\">Environmental, Water (Ocean)</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">WWT</td>\n          <td style=\"border-left-width: 0px\">Environmental, Water  (Tap)</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">CSITE</td>\n          <td style=\"border-left-width: 0px\">Catheter Insertion Site</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">CLIPP</td>\n          <td style=\"border-left-width: 0px\">Clippings</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n        <tr>\n          <td style=\"border-right-width: 0px; border-bottom-style: none\">SHU</td>\n          <td style=\"border-left-width: 0px\">Site, Shunt</td>\n          <td colspan=\"4\" style=\"background-color: #efefef\">(not mapped)</td>\n        </tr>\n      </table>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "vocab"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ConceptMap/102"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ConceptMap/102>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.14.3" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "SpecimenMappingFromV2Table0487ToSNOMEDCT"] ; # 
+  fhir:title [ fhir:v "Specimen mapping from v2 table 0487 to SNOMED CT"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2013-07-25"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Terminology Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/Vocab" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Specimen mapping from v2 table 0487 to SNOMED CT"] ; # 
+  fhir:additionalAttribute ( [
+     fhir:code [ fhir:v "type-mod" ] ;
+     fhir:uri [
+       fhir:v "TypeModifier"^^xsd:anyURI ;
+       fhir:l fhir:TypeModifier
+     ] ;
+     fhir:type [ fhir:v "code" ]
+  ] [
+     fhir:code [ fhir:v "coll-method" ] ;
+     fhir:uri [
+       fhir:v "http://snomed.info/id/246380002"^^xsd:anyURI ;
+       fhir:l <http://snomed.info/id/246380002>
+     ] ;
+     fhir:description [ fhir:v "Method of collection" ] ;
+     fhir:type [ fhir:v "code" ]
+  ] [
+     fhir:code [ fhir:v "spec-src" ] ;
+     fhir:uri [
+       fhir:v "http://snomed.info/id/3006873018"^^xsd:anyURI ;
+       fhir:l <http://snomed.info/id/3006873018>
+     ] ;
+     fhir:description [ fhir:v "Specimen source" ] ;
+     fhir:type [ fhir:v "code" ]
+  ] ) ; # 
+  fhir:sourceScope [
+     a fhir:Canonical ;
+     fhir:v "http://terminology.hl7.org/ValueSet/v2-0487"^^xsd:anyURI ;
+     fhir:l <http://terminology.hl7.org/ValueSet/v2-0487>
+  ] ; # 
+  fhir:targetScope [
+     a fhir:Canonical ;
+     fhir:v "http://snomed.info/sct?fhir_vs"^^xsd:anyURI ;
+     fhir:l <http://snomed.info/sct?fhir_vs>
+  ] ; # 
+  fhir:group ( [
+     fhir:source [
+       fhir:v "http://terminology.hl7.org/CodeSystem/v2-0487"^^xsd:anyURI ;
+       fhir:l <http://terminology.hl7.org/CodeSystem/v2-0487>
+     ] ;
+     fhir:target [
+       fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+       fhir:l <http://snomed.info/sct>
+     ] ;
+     fhir:element ( [
+       fhir:code [ fhir:v "ACNE" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309068002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "ACNFLD" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119323008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "HL7 term is a historical term. mapped to Pus" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "47002008"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "AIRS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "446302006" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "ALL" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119376003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "7970006"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "AMP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "408654003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "81723002"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "ANGI" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "ARTC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "ASERU" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "ASP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119295008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "14766002"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "ATTE" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "AUTOC" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "AUTP" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "BBL" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119304001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "BCYST" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "BITE" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "BLEB" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309049000" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "339008"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "BLIST" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309049000" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "339008"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "BOIL" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119295008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "59843005"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "14766002"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "BON" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "430268003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "BOWL" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "BPU" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119300005" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "BRN" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119367005" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "BRSH" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258415003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "439336003"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "BRTH" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119336008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "BRUS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309176002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "80657008"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "BUB" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "302795002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "11585000"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "14766002"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "BULLA" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258482009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "339008"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "BX" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258415003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "86273004"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "CALC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119350003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "CARBU" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309051001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "41570003"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "CAT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119311002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "CBITE" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "CLIPP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119327009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "Be more specific use either: 119326000^hair specimen or 119327009^nail specimen" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "CNJT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119401005" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "CNJT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "128160006" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "CNJT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258498002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "COL" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119329007" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "CONE" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "399713008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "54535009"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "71252005"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "CSCR" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "CSERU" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "CSITE" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258507003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "Prefer to have aspirate of the pus oozing out from cleaned insertion site - if swab is all that can be obtained, then swab after cleaning, otherwise you may get a contaminated specimen and a falsely identified infected central line. Do not just swab the reddened area - that will just collect skin flora" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "386144009"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "285570007"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "CSMY" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309051001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "CST" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258453008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "CSVR" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "CTP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "CVPS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258507003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "CVPT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "445085009"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "CYN" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119368000" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "27925004"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "CYST" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119368000" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "DBITE" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "DCS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119335007" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "DEC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258505006" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "DEION" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "DIA" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119360007" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "DISCHG" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258439008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "DIV" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119376003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "31113003"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "DRN" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119306004" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "DRNG" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258455001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "Historical term - consider what is being drained and indicate that in SPM-4 instead: not an acceptable specimen for micro - not specific enough term" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "122462000"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "DRNGP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309051001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "Historical term - consider what is being drained and indicate that in SPM-4 instead" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "122462000"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "EARW" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "122580007" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "EBRUSH" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309210009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "36213007"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "32849002"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "EEYE" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "EFF" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "EFFUS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258440005" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "EFOD" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119320006" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "EISO" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258536003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "ELT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119314005" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "ENVIR" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119324002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "EOTH" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "ESOI" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "ESOS" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "ETA" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119307008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "14766002"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "321667001"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "ETTP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "ETTUB" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119307008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "14766002"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "321667001"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "EWHI" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "EXG" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119336008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "EXS" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "EXUDTE" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258441009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "FAW" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "FBLOOD" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119297000" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "303112003"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "FGA" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "168139001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "83670000"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "FIST" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119370009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "FLD" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309051001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "FLT" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "FLU" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309051001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "FLUID" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258442002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "FOLEY" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "FRS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258442002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "this term is not specific enough, choose from terms that more accurately describe the specimen" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "272626006"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "FSCLP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309502007" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "41695006"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "FUR" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119295008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "Further describe the sample as tissue or pus. or by the collection method. The term boil is not specific to a body site - need to indicate source site (spm.8). preferred term is Aspirate_Boil" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "59843005"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "GAS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119317003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "GASA" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "168137004" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "14766002"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "69695003"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "GASAN" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119379005" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "66051006"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "GASBR" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309213006" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "235157009"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "69695003"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "GASD" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258459007" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "Historical term - consider what is being drained and indicate that in SPM-4 instead" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "122462000"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "69695003"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "GAST" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258459007" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "GENV" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119394009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "GRAFT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "440493002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "GRANU" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119376003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "45647009"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "GROSH" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119311002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "GSOL" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "GSPEC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309211008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "79121003"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "69695003"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "GT" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "GTUBE" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258459007" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "Historical term - consider what is being drained and indicate that in SPM-4 instead" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "127490009"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "122462000"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "69695003"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "HBITE" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "HBLUD" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119297000" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "303113008"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "HEMAQ" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "HEMO" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "HERNI" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119376003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "HEV" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119306004" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "HIC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "445085009"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "HYDC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309051001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "55434001"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "IBITE" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "ICYST" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309075001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "IDC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "IHG" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119337004" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "ILEO" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258455001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "Historical term - consider what is being drained and indicate that in SPM-4 instead: stool is what is expected, should use stool sample" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "419954003"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "ILLEG" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "IMP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "439961009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "INCI" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "438660002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "INFIL" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "INS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258614005" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "INTRD" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "IT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119307008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "IUD" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "IVCAT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "255560000"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "IVFLD" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258649003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "IVTIP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "JEJU" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258463000" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "Historical term - consider what is being drained and indicate that in SPM-4 instead: stool is what is expected, should use stool sample" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "122462000"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "21306003"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "JNTFLD" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119332005" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "JP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309051001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "Historical term - consider what is being drained and indicate that in SPM-4 instead" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "122462000"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "KELOI" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "440674008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "67889009"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "KIDFLD" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309051001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "64033007"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "LAVG" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258607008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "397394009"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "LAVGG" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "168138009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "173830003"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "69695003"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "LAVGP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "440137008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "LAVPG" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "440674008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "67889009"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "44567001"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "LENS1" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "440473005" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "LENS2" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "LESN" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309049000" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "should be more specific what kind of lesion is observed - be more specific is it a wound, abscess, mass - specify! Ask SNOMED CT to mark it as a grouper term only (309049000)" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "LIQ" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258442002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "LIQO" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "LSAC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258450006" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "The HL7 term is a historical term Mapped to CSF obtained by lumbar puncture" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "303949008"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "MAHUR" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "MASS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "420548004" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "4147007"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "MBLD" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119345009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "MUCOS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119376003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "414781009"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "MUCUS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258483004" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "NASDR" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258474009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "Historical term - consider what is being drained and indicate that in SPM-4 instead" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "122462000"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "2095001"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "NEDL" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "NEPH" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "438660002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "NGASP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "302794003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "6853008"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "69695003"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "NGAST" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258459007" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "Historical term - consider what is being drained and indicate that in SPM-4 instead" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "127492001"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "122462000"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "69695003"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "NGS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "438660002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "NODUL" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "NSECR" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "168141000" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "ORH" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "123038009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "ORL" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "OTH" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "123038009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "PACEM" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "PCFL" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "122571007" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "PDSIT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "438660002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "PDTS" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "PELVA" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119371008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "12921003"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "PENIL" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "PERIA" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119371008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "397158004"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "PILOC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119368000" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "PINS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "438660002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "PIS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258507003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "PLAN" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119301009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "PLAS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119361006" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "PLB" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119305000" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "PLEVS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119364003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "255587001"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "PND" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258439008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "Historical term -though in this case more often used for discharge" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "122462000"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "13648007"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "POL" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119376003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "41329004"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "POPGS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "440493002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "6902008"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "POPLG" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "440493002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "6902008"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "POPLV" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "PORTA" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119311002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "PPP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119362004" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "PROST" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "438660002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "PRP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119363009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "PSC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119368000" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "PUNCT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119365002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "129300006"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "PUS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119323008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "PUSFR" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119323008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "47002008"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "PUST" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119323008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "47002008"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "QC3" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "RANDU" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "278020009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "RBITE" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "RECT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119339001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "Historical term - consider what is being drained and indicate that in SPM-4 instead: stool is what is expected, should use stool sample" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "122462000"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "34402009"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "RECTA" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119371008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "34402009"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "RENALC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258420003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "64033007"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "RENC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258453008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "64033007"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "RES" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258603007" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "SAL" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119342007" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "SCAR" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119376003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "SCLV" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "9454009"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "SCROA" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119371008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "20233005"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "SECRE" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "432825001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "SER" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119364003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "SHU" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119295008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "Preferred is aspiration with sterile syringe from inflamed area. Specify body location of shunt site" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "257351008"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "14766002"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "SHUNF" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "446861007" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "446860008"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "279107003"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "SHUNT" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "SITE" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "SKBP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309066003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "240977001"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "SKN" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119325001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "SMM" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "420548004" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "4147007"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "SNV" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119332005" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "SPRM" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119349003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "SPRP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "SPRPB" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "SPS" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "SPT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119334006" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "SPTC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119335007" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "SPTT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258609006" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "SPUT1" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "SPUTIN" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258610001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "SPUTSP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119335007" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "STER" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "STL" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119339001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "STONE" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119350003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "64033007"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "SUBMA" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119371008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "5713008"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "SUBMX" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119371008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "4335006"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "SUMP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "446562005" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "Historical term - consider what is being drained and indicate that in SPM-4 instead" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "122462000"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "SUP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "122575003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "58088002"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "SUTUR" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "SWGZ" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "TASP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "122877000" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "129112001"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "44567001"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "TISS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119376003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "TISU" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "122593002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "TLC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "TRAC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "438660002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "TRANS" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258538002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "TSERU" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119364003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "type-mod" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "255588006"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "TSTES" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119371008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "279572002"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "TTRA" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258480001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "129112001"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "TUBES" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119310001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "TUMOR" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258435002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "TZANC" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "UDENT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "123038009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "UR" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "122575003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "URC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "122880004" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "URINB" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "122575003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "78533007"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "URINC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "446846006" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "URINM" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258574006" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "225271002"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "431938005"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "URINN" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "446277003" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "225109005"
+           ]
+         ] [
+           fhir:attribute [ fhir:v "spec-src" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "25990002"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "URINP" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "URT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "122565001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "USCOP" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "USPEC" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "123038009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "VASTIP" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "VENT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119312009" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:comment [ fhir:v "TBD in detail" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "VITF" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258438000" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "VOM" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "122572000" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "WASH" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "440674008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "WASI" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "122609004" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "WAT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119318008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "WB" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "WEN" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309075001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "WICK" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "WND" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119365002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "WNDA" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119366001" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "WNDD" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "122566000" ] ;
+         fhir:relationship [ fhir:v "equivalent" ] ;
+         fhir:product ( [
+           fhir:attribute [ fhir:v "coll-method" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "122462000"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:code [ fhir:v "WNDE" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "122568004" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "WORM" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "258618008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "WRT" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "309068002" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "WWA" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "119318008" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "WWO" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "WWT" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "CSITE" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "CLIPP" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] [
+       fhir:code [ fhir:v "SHU" ] ;
+       fhir:noMap [ fhir:v true ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

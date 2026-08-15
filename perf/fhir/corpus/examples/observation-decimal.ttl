@@ -1,0 +1,82 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Observation/decimal> a fhir:Observation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "decimal"] ; # 
+  fhir:status [ fhir:v "final"] ; # 
+  fhir:code [
+     fhir:text [ fhir:v "Decimal Testing Observation" ]
+  ] ; # 
+  fhir:component ( [
+     fhir:code [
+       fhir:text [ fhir:v "Component" ]
+     ] ;
+     fhir:value [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v 1.0 ] ;
+       fhir:unit [ fhir:v "g" ]
+     ]
+  ] [
+     fhir:code [
+       fhir:text [ fhir:v "Component" ]
+     ] ;
+     fhir:value [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v 1.00 ] ;
+       fhir:unit [ fhir:v "g" ]
+     ]
+  ] [
+     fhir:code [
+       fhir:text [ fhir:v "Component" ]
+     ] ;
+     fhir:value [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v 1.0e0 ] ;
+       fhir:unit [ fhir:v "g" ]
+     ]
+  ] [
+     fhir:code [
+       fhir:text [ fhir:v "Component" ]
+     ] ;
+     fhir:value [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v 0.00000000000000001 ] ;
+       fhir:unit [ fhir:v "g" ]
+     ]
+  ] [
+     fhir:code [
+       fhir:text [ fhir:v "Component" ]
+     ] ;
+     fhir:value [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v "10000000000000000"^^xsd:decimal ] ;
+       fhir:unit [ fhir:v "g" ]
+     ]
+  ] [
+     fhir:code [
+       fhir:text [ fhir:v "Component" ]
+     ] ;
+     fhir:value [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v 1.00000000000000000e-24 ] ;
+       fhir:unit [ fhir:v "g" ]
+     ]
+  ] [
+     fhir:code [
+       fhir:text [ fhir:v "Component" ]
+     ] ;
+     fhir:value [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v -1.00000000000000000e245 ] ;
+       fhir:unit [ fhir:v "g" ]
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

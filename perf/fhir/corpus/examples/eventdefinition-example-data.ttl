@@ -1,0 +1,86 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/EventDefinition/example-data> a fhir:EventDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-data"] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 6
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/cqf-library"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/cqf-library>
+     ] ;
+     fhir:value [
+       a fhir:Canonical ;
+       fhir:v "http://hl7.org/fhir/EventDefinition/ExampleEventDefinitionLogic"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/EventDefinition/ExampleEventDefinitionLogic>
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/EventDefinition/example-data"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/EventDefinition/example-data>
+  ] ; # 
+  fhir:name [ fhir:v "DataEventDefinitionExample"] ; # 
+  fhir:title [ fhir:v "Data EventDefinition Example"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Decision Support"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/dss" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Example of an EventDefinition using the data event approach."] ; # 
+  fhir:purpose [ fhir:v "Monitor when 3 consecutive negative stick tests have occurred using a data change event."] ; # 
+  fhir:trigger ( [
+     fhir:type [ fhir:v "data-changed" ] ;
+     fhir:data ( [
+       fhir:type [ fhir:v "Observation" ] ;
+       fhir:codeFilter ( [
+         fhir:path [ fhir:v "code" ] ;
+         fhir:valueSet [
+           fhir:v "http://example.org/ValueSet/stick-test-codes"^^xsd:anyURI ;
+           fhir:l <http://example.org/ValueSet/stick-test-codes>
+         ]
+       ] )
+     ] ) ;
+     fhir:condition [
+       fhir:language [ fhir:v "text/cql-expression" ] ;
+       fhir:expression [ fhir:v "StickTest.consecutivelyAfter(%context).take(3).negative().count() = 3" ]
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

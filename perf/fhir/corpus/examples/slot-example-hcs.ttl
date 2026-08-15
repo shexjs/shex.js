@@ -1,0 +1,37 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Slot/example-hcs> a fhir:Slot ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-hcs"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n			25 Dec 2013 9:15am - 9:30am: <b>Busy</b> Physiotherapy\n		</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:serviceType ( [
+     fhir:reference [
+       fhir:l <http://hl7.org/fhir/HealthcareService/example> ;
+       fhir:reference [ fhir:v "HealthcareService/example" ] ;
+       fhir:display [ fhir:v "Burgers UMC, Posttraumatic Stress Disorder Clinic" ]
+     ]
+  ] ) ; # 
+  fhir:schedule [
+     fhir:l <http://hl7.org/fhir/Schedule/example-hcs> ;
+     fhir:reference [ fhir:v "Schedule/example-hcs" ]
+  ] ; # 
+  fhir:status [ fhir:v "free"] ; # 
+  fhir:start [ fhir:v "2023-12-25T09:15:00Z"^^xsd:dateTime] ; # 
+  fhir:end [ fhir:v "2023-12-25T09:30:00Z"^^xsd:dateTime] ; # 
+  fhir:comment [ fhir:v "Assessments should be performed before requesting appointments in this slot."] . # 
+
+<http://hl7.org/fhir/HealthcareService/example> a fhir:HealthcareService .
+
+<http://hl7.org/fhir/Schedule/example-hcs> a fhir:Schedule .
+
+# -------------------------------------------------------------------------------------
+

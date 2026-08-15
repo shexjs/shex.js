@@ -1,0 +1,105 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ServiceRequest/myringotomy> a fhir:ServiceRequest ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "myringotomy"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://orionhealth.com/fhir/apps/referralids"^^xsd:anyURI ;
+       fhir:l <http://orionhealth.com/fhir/apps/referralids>
+     ] ;
+     fhir:value [ fhir:v "ret4421" ]
+  ] ) ; # 
+  fhir:basedOn ( [
+     fhir:display [ fhir:v "ServiceRequest for Myringotomy and insertion of short-term grommet" ]
+  ] ) ; # 
+  fhir:replaces ( [
+     fhir:display [ fhir:v "prior ServiceRequest" ]
+  ] ) ; # 
+  fhir:requisition [
+     fhir:value [ fhir:v "1234" ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:category ( [
+     a sct:103696004 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "103696004" ] ;
+       fhir:display [ fhir:v "Patient referral to specialist" ]
+     ] )
+  ] ) ; # 
+  fhir:priority [ fhir:v "routine"] ; # 
+  fhir:code [
+     fhir:concept [
+       a sct:172676009 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "172676009" ] ;
+         fhir:display [ fhir:v "Myringotomy and insertion of short-term grommet" ]
+       ] ) ;
+       fhir:text [ fhir:v "Insertion of grommets" ]
+     ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <https://fhir.example.org/blaze/fhir/Patient/77662> ;
+     fhir:reference [ fhir:v "https://fhir.example.org/blaze/fhir/Patient/77662" ] ;
+     fhir:display [ fhir:v "Beverly Weaver" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:display [ fhir:v "Beverly Waver's encounter on 2014-02-14" ]
+  ] ; # 
+  fhir:occurrence [
+     a fhir:Period ;
+     fhir:end [ fhir:v "2014-03-14"^^xsd:date ]
+  ] ; # 
+  fhir:authoredOn [ fhir:v "2014-02-14"^^xsd:date] ; # 
+  fhir:requester [
+     fhir:l <https://fhir.example.org/blaze/fhir/Practitioner/77272> ;
+     fhir:reference [ fhir:v "https://fhir.example.org/blaze/fhir/Practitioner/77272" ] ;
+     fhir:display [ fhir:v "Serena Shrink" ]
+  ] ; # 
+  fhir:performerType [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://orionhealth.com/fhir/apps/specialties"^^xsd:anyURI ;
+         fhir:l <http://orionhealth.com/fhir/apps/specialties>
+       ] ;
+       fhir:code [ fhir:v "ent" ] ;
+       fhir:display [ fhir:v "ENT" ]
+     ] )
+  ] ; # 
+  fhir:performer ( [
+     fhir:l <https://fhir.example.org/blaze/fhir/Practitioner/76597> ;
+     fhir:reference [ fhir:v "https://fhir.example.org/blaze/fhir/Practitioner/76597" ] ;
+     fhir:display [ fhir:v "Dr Dave" ]
+  ] ) ; # 
+  fhir:reason ( [
+     fhir:concept [
+       fhir:text [ fhir:v "For consideration of Grommets" ]
+     ]
+  ] ) ; # 
+  fhir:note ( [
+     fhir:author [
+       a fhir:String ;
+       fhir:v "Serena Shrink"
+     ] ;
+     fhir:time [ fhir:v "2014-02-14"^^xsd:date ] ;
+     fhir:text [ fhir:v "In the past 2 years Beverly has had 6 instances of rt-sided Otitis media. She is     falling behind her peers at school, and displaying some learning difficulties." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

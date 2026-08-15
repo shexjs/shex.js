@@ -1,0 +1,125 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Observation/f202> a fhir:Observation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f202"] ; # 
+  fhir:status [ fhir:v "entered-in-error"] ; # Oral temperature was measured on April fourth
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/observation-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/observation-category>
+       ] ;
+       fhir:code [ fhir:v "vital-signs" ] ;
+       fhir:display [ fhir:v "Vital Signs" ]
+     ] )
+  ] ) ; # category code is A code that classifies the general type of observation being made. This is used for searching, sorting and display purposes.
+  fhir:code [
+     a loinc:8310-5, loinc:8331-1, sct:56342008 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ; # \"interoperability standard\" code
+       fhir:code [ fhir:v "8310-5" ] ;
+       fhir:display [ fhir:v "Body temperature" ]
+     ] [
+       fhir:system [
+         fhir:v "http://acme.lab"^^xsd:anyURI ;
+         fhir:l <http://acme.lab>
+       ] ;
+       fhir:code [ fhir:v "BT" ] ;
+       fhir:display [ fhir:v "Body temperature" ]
+     ] [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "8331-1" ] ;
+       fhir:display [ fhir:v "Oral temperature" ]
+     ] [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "56342008" ] ;
+       fhir:display [ fhir:v "Temperature taking" ]
+     ] ) ; # Kind of observation = Temperature, local code here
+     fhir:text [ fhir:v "Temperature" ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/f201> ;
+     fhir:reference [ fhir:v "Patient/f201" ] ;
+     fhir:display [ fhir:v "Roel" ]
+  ] ; # No identifier could be provided to this observation
+  fhir:effective [
+     a fhir:DateTime ;
+     fhir:v "2013-04-04T13:27:00+01:00"^^xsd:dateTime
+  ] ; # 
+  fhir:issued [ fhir:v "2013-04-04T13:27:00+01:00"^^xsd:dateTime] ; # 
+  fhir:performer ( [
+     fhir:l <http://hl7.org/fhir/Practitioner/f201> ;
+     fhir:reference [ fhir:v "Practitioner/f201" ]
+  ] ) ; # 
+  fhir:value [
+     a fhir:Quantity ;
+     fhir:value [ fhir:v "39"^^xsd:decimal ] ; # Temperature=39 degrees Celsius
+     fhir:unit [ fhir:v "degrees C" ] ;
+     fhir:system [
+       fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+       fhir:l <http://unitsofmeasure.org>
+     ] ;
+     fhir:code [ fhir:v "Cel" ]
+  ] ; # 
+  fhir:interpretation ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation>
+       ] ;
+       fhir:code [ fhir:v "H" ]
+     ] )
+  ] ) ; # 
+  fhir:bodySite [
+     a sct:74262004 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "74262004" ] ;
+       fhir:display [ fhir:v "Oral cavity" ]
+     ] )
+  ] ; # In the meantime a new oral temperature is measured, http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3418963/
+  fhir:method [
+     a sct:89003005 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "89003005" ] ;
+       fhir:display [ fhir:v "Oral temperature taking" ]
+     ] )
+  ] ; # 
+  fhir:referenceRange ( [
+     fhir:high [
+       fhir:value [ fhir:v 38.2 ] ;
+       fhir:unit [ fhir:v "degrees C" ]
+     ] # 0..* Provides guide for interpretation
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/f201> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/f201> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

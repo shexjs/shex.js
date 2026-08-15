@@ -1,0 +1,154 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/task-status> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "task-status"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem task-status</b></p><a name=\"task-status\"> </a><a name=\"hctask-status\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/task-status</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">draft<a name=\"task-status-draft\"> </a></td><td>Draft</td><td>The task is not yet ready to be acted upon.</td></tr><tr><td style=\"white-space:nowrap\">requested<a name=\"task-status-requested\"> </a></td><td>Requested</td><td>The task is ready to be acted upon and action is sought.</td></tr><tr><td style=\"white-space:nowrap\">received<a name=\"task-status-received\"> </a></td><td>Received</td><td>A potential performer has claimed ownership of the task and is evaluating whether to perform it.</td></tr><tr><td style=\"white-space:nowrap\">accepted<a name=\"task-status-accepted\"> </a></td><td>Accepted</td><td>The potential performer has agreed to execute the task but has not yet started work.</td></tr><tr><td style=\"white-space:nowrap\">rejected<a name=\"task-status-rejected\"> </a></td><td>Rejected</td><td>The potential performer who claimed ownership of the task has decided not to execute it prior to performing any action.</td></tr><tr><td style=\"white-space:nowrap\">ready<a name=\"task-status-ready\"> </a></td><td>Ready</td><td>The task is ready to be performed, but no action has yet been taken.  Used in place of requested/received/accepted/rejected when request assignment and acceptance is a given.</td></tr><tr><td style=\"white-space:nowrap\">cancelled<a name=\"task-status-cancelled\"> </a></td><td>Cancelled</td><td>The task was not completed.</td></tr><tr><td style=\"white-space:nowrap\">in-progress<a name=\"task-status-in-progress\"> </a></td><td>In Progress</td><td>The task has been started but is not yet complete.</td></tr><tr><td style=\"white-space:nowrap\">on-hold<a name=\"task-status-on-hold\"> </a></td><td>On Hold</td><td>The task has been started but work has been paused.</td></tr><tr><td style=\"white-space:nowrap\">failed<a name=\"task-status-failed\"> </a></td><td>Failed</td><td>The task was attempted but was not successful.  No further activity will occur for this task.</td></tr><tr><td style=\"white-space:nowrap\">completed<a name=\"task-status-completed\"> </a></td><td>Completed</td><td>The task has been completed.</td></tr><tr><td style=\"white-space:nowrap\">entered-in-error<a name=\"task-status-entered-in-error\"> </a></td><td>Entered in Error</td><td>The task should never have existed and is retained only because of the possibility it may have used.</td></tr><tr><td style=\"white-space:nowrap\">unknown<a name=\"task-status-unknown\"> </a></td><td>Unknown</td><td>The authoring/source system does not know which of the status values currently applies for this task. Note: This concept is not to be used for \"other\" - one of the listed statuses is presumed to apply, but the authoring/source system does not know which.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "oo"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 4
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/task-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/task-status>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.791" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.1.774" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "TaskStatus"] ; # 
+  fhir:title [ fhir:v "Task Status"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "The current status of the task."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/task-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/task-status>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "draft" ] ;
+     fhir:display [ fhir:v "Draft" ] ;
+     fhir:definition [ fhir:v "The task is not yet ready to be acted upon." ]
+  ] [
+     fhir:code [ fhir:v "requested" ] ;
+     fhir:display [ fhir:v "Requested" ] ;
+     fhir:definition [ fhir:v "The task is ready to be acted upon and action is sought." ]
+  ] [
+     fhir:code [ fhir:v "received" ] ;
+     fhir:display [ fhir:v "Received" ] ;
+     fhir:definition [ fhir:v "A potential performer has claimed ownership of the task and is evaluating whether to perform it." ]
+  ] [
+     fhir:code [ fhir:v "accepted" ] ;
+     fhir:display [ fhir:v "Accepted" ] ;
+     fhir:definition [ fhir:v "The potential performer has agreed to execute the task but has not yet started work." ]
+  ] [
+     fhir:code [ fhir:v "rejected" ] ;
+     fhir:display [ fhir:v "Rejected" ] ;
+     fhir:definition [ fhir:v "The potential performer who claimed ownership of the task has decided not to execute it prior to performing any action." ]
+  ] [
+     fhir:code [ fhir:v "ready" ] ;
+     fhir:display [ fhir:v "Ready" ] ;
+     fhir:definition [ fhir:v "The task is ready to be performed, but no action has yet been taken.  Used in place of requested/received/accepted/rejected when request assignment and acceptance is a given." ]
+  ] [
+     fhir:code [ fhir:v "cancelled" ] ;
+     fhir:display [ fhir:v "Cancelled" ] ;
+     fhir:definition [ fhir:v "The task was not completed." ]
+  ] [
+     fhir:code [ fhir:v "in-progress" ] ;
+     fhir:display [ fhir:v "In Progress" ] ;
+     fhir:definition [ fhir:v "The task has been started but is not yet complete." ]
+  ] [
+     fhir:code [ fhir:v "on-hold" ] ;
+     fhir:display [ fhir:v "On Hold" ] ;
+     fhir:definition [ fhir:v "The task has been started but work has been paused." ]
+  ] [
+     fhir:code [ fhir:v "failed" ] ;
+     fhir:display [ fhir:v "Failed" ] ;
+     fhir:definition [ fhir:v "The task was attempted but was not successful.  No further activity will occur for this task." ]
+  ] [
+     fhir:code [ fhir:v "completed" ] ;
+     fhir:display [ fhir:v "Completed" ] ;
+     fhir:definition [ fhir:v "The task has been completed." ]
+  ] [
+     fhir:code [ fhir:v "entered-in-error" ] ;
+     fhir:display [ fhir:v "Entered in Error" ] ;
+     fhir:definition [ fhir:v "The task should never have existed and is retained only because of the possibility it may have used." ]
+  ] [
+     fhir:code [ fhir:v "unknown" ] ;
+     fhir:display [ fhir:v "Unknown" ] ;
+     fhir:definition [ fhir:v "The authoring/source system does not know which of the status values currently applies for this task. Note: This concept is not to be used for \"other\" - one of the listed statuses is presumed to apply, but the authoring/source system does not know which." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

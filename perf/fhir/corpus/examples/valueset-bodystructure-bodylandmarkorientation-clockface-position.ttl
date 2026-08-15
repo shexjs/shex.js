@@ -1,0 +1,123 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ValueSet/bodystructure-bodylandmarkorientation-clockface-position> a fhir:ValueSet ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "bodystructure-bodylandmarkorientation-clockface-position"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: ValueSet bodystructure-bodylandmarkorientation-clockface-position</b></p><a name=\"bodystructure-bodylandmarkorientation-clockface-position\"> </a><a name=\"hcbodystructure-bodylandmarkorientation-clockface-position\"> </a><ul><li>Include these codes as defined in <a href=\"http://www.snomed.org/\"><code>http://snomed.info/sct</code></a><span title=\"Version is not explicitly stated. No matching Code System found\"> version Not Stated (use latest from terminology server)</span><table class=\"none\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td></tr><tr><td><a href=\"http://snomed.info/id/260318004\">260318004</a></td><td>1 o'clock position</td></tr><tr><td><a href=\"http://snomed.info/id/260328008\">260328008</a></td><td>2 o'clock position</td></tr><tr><td><a href=\"http://snomed.info/id/260330005\">260330005</a></td><td>3 o'clock position</td></tr><tr><td><a href=\"http://snomed.info/id/260333007\">260333007</a></td><td>4 o'clock position</td></tr><tr><td><a href=\"http://snomed.info/id/260335000\">260335000</a></td><td>5 o'clock position</td></tr><tr><td><a href=\"http://snomed.info/id/260337008\">260337008</a></td><td>6 o'clock position</td></tr><tr><td><a href=\"http://snomed.info/id/260339006\">260339006</a></td><td>7 o'clock position</td></tr><tr><td><a href=\"http://snomed.info/id/260341007\">260341007</a></td><td>8 o'clock position</td></tr><tr><td><a href=\"http://snomed.info/id/260343005\">260343005</a></td><td>9 o'clock position</td></tr><tr><td><a href=\"http://snomed.info/id/260322009\">260322009</a></td><td>10 o'clock position</td></tr><tr><td><a href=\"http://snomed.info/id/260324005\">260324005</a></td><td>11 o'clock position</td></tr><tr><td><a href=\"http://snomed.info/id/260326007\">260326007</a></td><td>12 o'clock position</td></tr></table></li></ul></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "oo"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ValueSet/bodystructure-bodylandmarkorientation-clockface-position"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/bodystructure-bodylandmarkorientation-clockface-position>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "BodystructureBodyLandmarkClockFacePosition"] ; # 
+  fhir:title [ fhir:v "Bodystructure  Body Landmark  Clock  Face  Position"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "FHIR Project team"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Select SNOMED CT codes. A set of codes that describe a things orientation based on a hourly positions of a clock face."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:copyright [ fhir:v "This resource includes content from SNOMED Clinical Terms® (SNOMED CT®) which is copyright of the International Health Terminology Standards Development Organisation (IHTSDO). Implementers of these specifications must have the appropriate SNOMED CT Affiliate license - for more information contact http://www.snomed.org/snomed-ct/get-snomed-ct or info@snomed.org"] ; # 
+  fhir:compose [
+     fhir:include ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:concept ( [
+         fhir:code [ fhir:v "260318004" ] ;
+         fhir:display [ fhir:v "1 o'clock position" ]
+       ] [
+         fhir:code [ fhir:v "260328008" ] ;
+         fhir:display [ fhir:v "2 o'clock position" ]
+       ] [
+         fhir:code [ fhir:v "260330005" ] ;
+         fhir:display [ fhir:v "3 o'clock position" ]
+       ] [
+         fhir:code [ fhir:v "260333007" ] ;
+         fhir:display [ fhir:v "4 o'clock position" ]
+       ] [
+         fhir:code [ fhir:v "260335000" ] ;
+         fhir:display [ fhir:v "5 o'clock position" ]
+       ] [
+         fhir:code [ fhir:v "260337008" ] ;
+         fhir:display [ fhir:v "6 o'clock position" ]
+       ] [
+         fhir:code [ fhir:v "260339006" ] ;
+         fhir:display [ fhir:v "7 o'clock position" ]
+       ] [
+         fhir:code [ fhir:v "260341007" ] ;
+         fhir:display [ fhir:v "8 o'clock position" ]
+       ] [
+         fhir:code [ fhir:v "260343005" ] ;
+         fhir:display [ fhir:v "9 o'clock position" ]
+       ] [
+         fhir:code [ fhir:v "260322009" ] ;
+         fhir:display [ fhir:v "10 o'clock position" ]
+       ] [
+         fhir:code [ fhir:v "260324005" ] ;
+         fhir:display [ fhir:v "11 o'clock position" ]
+       ] [
+         fhir:code [ fhir:v "260326007" ] ;
+         fhir:display [ fhir:v "12 o'clock position" ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:expansion [] . # 
+
+# -------------------------------------------------------------------------------------
+

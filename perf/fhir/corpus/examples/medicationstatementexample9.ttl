@@ -1,0 +1,75 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# This example where a patient reports is not taking now but will be taking in future
+
+<http://hl7.org/fhir/MedicationStatement/example009> a fhir:MedicationStatement ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example009"] ; # 
+  fhir:contained ( [
+     a fhir:Medication ;
+     fhir:id [ fhir:v "med0315" ] ;
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/sid/ndc"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/sid/ndc>
+         ] ;
+         fhir:code [ fhir:v "0378-9112-93" ] ;
+         fhir:display [ fhir:v "Nitroglycerin, 30 POUCH in 1 CARTON (0378-9112-93) > 1 PATCH in 1 POUCH (0378-9112-16) > 14 h in 1 PATCH (package)" ]
+       ] )
+     ] ;
+     fhir:doseForm [
+       a sct:376251004 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "376251004" ] ;
+         fhir:display [ fhir:v "Nitroglycerin 200 microgram/hour prolonged-release transdermal patch" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:partOf ( [
+     fhir:l <http://hl7.org/fhir/MedicationStatement/example008> ;
+     fhir:reference [ fhir:v "MedicationStatement/example008" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "recorded"] ; # 
+  fhir:medication [
+     fhir:reference [
+       fhir:l <#med0315> ;
+       fhir:reference [ fhir:v "#med0315" ]
+     ] # Linked to a RESOURCE Medication
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/pat1> ;
+     fhir:reference [ fhir:v "Patient/pat1" ] ;
+     fhir:display [ fhir:v "Donald Duck" ]
+  ] ; # 
+  fhir:effective [
+     a fhir:DateTime ;
+     fhir:v "2015-01-23"^^xsd:date
+  ] ; # 
+  fhir:dateAsserted [ fhir:v "2015-02-22"^^xsd:date] ; # 
+  fhir:informationSource ( [
+     fhir:l <http://hl7.org/fhir/Patient/pat1> ;
+     fhir:reference [ fhir:v "Patient/pat1" ] ;
+     fhir:display [ fhir:v "Donald Duck" ]
+  ] ) ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "Patient reports they used the medication patch on this day." ]
+  ] ) . # 
+
+<http://hl7.org/fhir/MedicationStatement/example008> a fhir:MedicationStatement .
+
+<http://hl7.org/fhir/Patient/pat1> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

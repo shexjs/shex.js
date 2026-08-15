@@ -1,0 +1,97 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/deviceassociation-relationship-status> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "deviceassociation-relationship-status"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem deviceassociation-relationship-status</b></p><a name=\"deviceassociation-relationship-status\"> </a><a name=\"hcdeviceassociation-relationship-status\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/deviceassociation-relationship-status</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">planned<a name=\"deviceassociation-relationship-status-planned\"> </a></td><td>Planned</td><td>The relationship is intended or scheduled but is not yet active.</td></tr><tr><td style=\"white-space:nowrap\">active<a name=\"deviceassociation-relationship-status-active\"> </a></td><td>Active</td><td>The relationship is currently active.</td></tr><tr><td style=\"white-space:nowrap\">suspended<a name=\"deviceassociation-relationship-status-suspended\"> </a></td><td>Suspended</td><td>The relationship is temporarily inactive and may resume.</td></tr><tr><td style=\"white-space:nowrap\">ended<a name=\"deviceassociation-relationship-status-ended\"> </a></td><td>Ended</td><td>The relationship has concluded.</td></tr><tr><td style=\"white-space:nowrap\">removed<a name=\"deviceassociation-relationship-status-removed\"> </a></td><td>Removed</td><td>The relationship ended because the device was removed from the subject, location, or context.</td></tr><tr><td style=\"white-space:nowrap\">abandoned<a name=\"deviceassociation-relationship-status-abandoned\"> </a></td><td>Abandoned</td><td>The relationship has been left in place but is no longer intended to be active.</td></tr><tr><td style=\"white-space:nowrap\">unknown<a name=\"deviceassociation-relationship-status-unknown\"> </a></td><td>Unknown</td><td>The relationship status is not known.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "oo"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/deviceassociation-relationship-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/deviceassociation-relationship-status>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "DeviceAssociationRelationshipStatusCodes"] ; # 
+  fhir:title [ fhir:v "DeviceAssociation Relationship Status Codes"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7 International"] ; # 
+  fhir:description [ fhir:v "Codes that describe the lifecycle state of a DeviceAssociation relationship."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/deviceassociation-relationship-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/deviceassociation-relationship-status>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "planned" ] ;
+     fhir:display [ fhir:v "Planned" ] ;
+     fhir:definition [ fhir:v "The relationship is intended or scheduled but is not yet active." ]
+  ] [
+     fhir:code [ fhir:v "active" ] ;
+     fhir:display [ fhir:v "Active" ] ;
+     fhir:definition [ fhir:v "The relationship is currently active." ]
+  ] [
+     fhir:code [ fhir:v "suspended" ] ;
+     fhir:display [ fhir:v "Suspended" ] ;
+     fhir:definition [ fhir:v "The relationship is temporarily inactive and may resume." ]
+  ] [
+     fhir:code [ fhir:v "ended" ] ;
+     fhir:display [ fhir:v "Ended" ] ;
+     fhir:definition [ fhir:v "The relationship has concluded." ]
+  ] [
+     fhir:code [ fhir:v "removed" ] ;
+     fhir:display [ fhir:v "Removed" ] ;
+     fhir:definition [ fhir:v "The relationship ended because the device was removed from the subject, location, or context." ]
+  ] [
+     fhir:code [ fhir:v "abandoned" ] ;
+     fhir:display [ fhir:v "Abandoned" ] ;
+     fhir:definition [ fhir:v "The relationship has been left in place but is no longer intended to be active." ]
+  ] [
+     fhir:code [ fhir:v "unknown" ] ;
+     fhir:display [ fhir:v "Unknown" ] ;
+     fhir:definition [ fhir:v "The relationship status is not known." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

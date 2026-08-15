@@ -1,0 +1,113 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/organization-role> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "organization-role"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem organization-role</b></p><a name=\"organization-role\"> </a><a name=\"hcorganization-role\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/organization-role</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">provider<a name=\"organization-role-provider\"> </a></td><td>Provider</td><td>An organization that delivers care services (e.g. hospitals, clinics, community and social services, etc.).</td></tr><tr><td style=\"white-space:nowrap\">agency<a name=\"organization-role-agency\"> </a></td><td>Agency</td><td>An organization such as a public health agency, community/social services provider, etc.</td></tr><tr><td style=\"white-space:nowrap\">research<a name=\"organization-role-research\"> </a></td><td>Research</td><td>An organization providing research-related services such as conducting research, recruiting research participants, analyzing data, etc.</td></tr><tr><td style=\"white-space:nowrap\">payer<a name=\"organization-role-payer\"> </a></td><td>Payer</td><td>An organization providing reimbursement, payment, or related services</td></tr><tr><td style=\"white-space:nowrap\">diagnostics<a name=\"organization-role-diagnostics\"> </a></td><td>Diagnostics</td><td>An organization providing diagnostic testing/laboratory services</td></tr><tr><td style=\"white-space:nowrap\">supplier<a name=\"organization-role-supplier\"> </a></td><td>Supplier</td><td>An organization that provides medical supplies (e.g. medical devices, equipment, pharmaceutical products, etc.)</td></tr><tr><td style=\"white-space:nowrap\">HIE/HIO<a name=\"organization-role-HIE.47HIO\"> </a></td><td>HIE/HIO</td><td>An organization that facilitates electronic clinical data exchange between entities</td></tr><tr><td style=\"white-space:nowrap\">member<a name=\"organization-role-member\"> </a></td><td>Member</td><td>A type of non-ownership relationship between entities (encompasses partnerships, collaboration, joint ventures, etc.)</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "pa"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/organization-role"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/organization-role>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.881" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "OrganizationAffiliationRole"] ; # 
+  fhir:title [ fhir:v "Organization Affiliation Role"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7 International"] ; # 
+  fhir:description [ fhir:v "This example code system defines a set of codes that can be used to indicate the role of one Organization in relation to its affiliation with another."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "provider" ] ;
+     fhir:display [ fhir:v "Provider" ] ;
+     fhir:definition [ fhir:v "An organization that delivers care services (e.g. hospitals, clinics, community and social services, etc.)." ]
+  ] [
+     fhir:code [ fhir:v "agency" ] ;
+     fhir:display [ fhir:v "Agency" ] ;
+     fhir:definition [ fhir:v "An organization such as a public health agency, community/social services provider, etc." ]
+  ] [
+     fhir:code [ fhir:v "research" ] ;
+     fhir:display [ fhir:v "Research" ] ;
+     fhir:definition [ fhir:v "An organization providing research-related services such as conducting research, recruiting research participants, analyzing data, etc." ]
+  ] [
+     fhir:code [ fhir:v "payer" ] ;
+     fhir:display [ fhir:v "Payer" ] ;
+     fhir:definition [ fhir:v "An organization providing reimbursement, payment, or related services" ]
+  ] [
+     fhir:code [ fhir:v "diagnostics" ] ;
+     fhir:display [ fhir:v "Diagnostics" ] ;
+     fhir:definition [ fhir:v "An organization providing diagnostic testing/laboratory services" ]
+  ] [
+     fhir:code [ fhir:v "supplier" ] ;
+     fhir:display [ fhir:v "Supplier" ] ;
+     fhir:definition [ fhir:v "An organization that provides medical supplies (e.g. medical devices, equipment, pharmaceutical products, etc.)" ]
+  ] [
+     fhir:code [ fhir:v "HIE/HIO" ] ;
+     fhir:display [ fhir:v "HIE/HIO" ] ;
+     fhir:definition [ fhir:v "An organization that facilitates electronic clinical data exchange between entities" ]
+  ] [
+     fhir:code [ fhir:v "member" ] ;
+     fhir:display [ fhir:v "Member" ] ;
+     fhir:definition [ fhir:v "A type of non-ownership relationship between entities (encompasses partnerships, collaboration, joint ventures, etc.)" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,39 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/DocumentReference/sound> a fhir:DocumentReference ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "sound"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Sound recording of speech example for Patient Henry Levin (MRN 12345):<br/><img src=\"#s11\" alt=\"diagram\"/></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "current"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/xcda> ;
+     fhir:reference [ fhir:v "Patient/xcda" ]
+  ] ; # 
+  fhir:author ( [
+     fhir:l <http://hl7.org/fhir/Practitioner/xcda-author> ;
+     fhir:reference [ fhir:v "Practitioner/xcda-author" ]
+  ] ) ; # 
+  fhir:content ( [
+     fhir:id [ fhir:v "s11" ] ;
+     fhir:attachment [
+       fhir:contentType [ fhir:v "audio/mpeg" ] ;
+       fhir:data [ fhir:v "dG9vIGJpZyB0b28gaW5jbHVkZSB0aGUgd2hvbGU="^^xsd:base64Binary ] ; # too big too include the whole
+       fhir:duration [ fhir:v "65"^^xsd:decimal ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/xcda> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/xcda-author> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,431 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/OperationDefinition/ValueSet-validate-code> a fhir:OperationDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "ValueSet-validate-code"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: OperationDefinition ValueSet-validate-code</b></p><a name=\"ValueSet-validate-code\"> </a><a name=\"hcValueSet-validate-code\"> </a><p>URL: [base]/ValueSet/$validate-code</p><p>URL: [base]/ValueSet/[id]/$validate-code</p><h3>Parameters</h3><table class=\"grid\"><tr><td><b>Use</b></td><td><b>Name</b></td><td><b>Scope</b></td><td><b>Cardinality</b></td><td><b>Type</b></td><td><b>Binding</b></td><td><b>Documentation</b></td></tr><tr><td>IN</td><td>url</td><td>type</td><td>0..1</td><td><a href=\"datatypes.html#uri\">uri</a></td><td/><td><div><p>Value set Canonical URL. The server must know the value set (e.g. it is defined explicitly in the server's value sets, or it is defined implicitly by some code system known to the server</p>\n</div></td></tr><tr><td>IN</td><td>context</td><td/><td>0..1</td><td><a href=\"datatypes.html#uri\">uri</a></td><td/><td><div><p>The context of the value set, so that the server can resolve this to a value set to validate against. The recommended format for this URI is [Structure Definition URL]#[name or path into structure definition] e.g. http://hl7.org/fhir/StructureDefinition/observation-hspc-height-hspcheight#Observation.interpretation. Other forms may be used but are not defined. This form is only usable if the terminology server also has access to the conformance registry that the server is using, but can be used to delegate the mapping from an application context to a binding at run-time</p>\n</div></td></tr><tr><td>IN</td><td>valueSet</td><td>type</td><td>0..1</td><td><a href=\"valueset.html\">ValueSet</a></td><td/><td><div><p>The value set is provided directly as part of the request. Servers may choose not to accept value sets in this fashion. This parameter is used when the client wants the server to expand a value set that is not stored on the server</p>\n</div></td></tr><tr><td>IN</td><td>valueSetVersion</td><td>type</td><td>0..1</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>The identifier that is used to identify a specific version of the value set to be used when validating the code. This is an arbitrary value managed by the value set author and is not expected to be globally unique. For example, it might be a timestamp (e.g. yyyymmdd) if a managed version is not available</p>\n</div></td></tr><tr><td>IN</td><td>code</td><td/><td>0..1</td><td><a href=\"datatypes.html#code\">code</a></td><td/><td><div><p>The code that is to be validated. If a code is provided, a system or a context must be provided (if a context is provided, then the server SHALL ensure that the code is not ambiguous without a system)</p>\n</div></td></tr><tr><td>IN</td><td>system</td><td/><td>0..1</td><td><a href=\"datatypes.html#uri\">uri</a></td><td/><td><div><p>The system for the code that is to be validated</p>\n</div></td></tr><tr><td>IN</td><td>systemVersion</td><td/><td>0..1</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>The version of the system, if one was provided in the source data. Note that this is a different parameter to system-version</p>\n</div></td></tr><tr><td>IN</td><td>display</td><td/><td>0..1</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>The display associated with the code, if provided. If a display is provided a code must be provided. If no display is provided, the server cannot validate the display value, but may choose to return a recommended display name using the display parameter in the outcome. Whether displays are case sensitive is code system dependent</p>\n</div></td></tr><tr><td>IN</td><td>coding</td><td/><td>0..1</td><td><a href=\"datatypes.html#Coding\">Coding</a></td><td/><td><div><p>A coding to validate</p>\n</div></td></tr><tr><td>IN</td><td>codeableConcept</td><td/><td>0..1</td><td><a href=\"datatypes.html#CodeableConcept\">CodeableConcept</a></td><td/><td><div><p>A full codeableConcept to validate. The server returns true if one of the coding values is in the value set, and may also validate that the codings are not in conflict with each other if more than one is present</p>\n</div></td></tr><tr><td>IN</td><td>date</td><td/><td>0..1</td><td><a href=\"datatypes.html#dateTime\">dateTime</a></td><td/><td><div><p>The date for which the validation should be checked. Normally, this is the current conditions (which is the default values) but under some circumstances, systems need to validate that a correct code was used at some point in the past. A typical example of this would be where code selection is constrained to the set of codes that were available when the patient was treated, not when the record is being edited. Note that which date is appropriate is a matter for implementation policy.</p>\n</div></td></tr><tr><td>IN</td><td>abstract</td><td/><td>0..1</td><td><a href=\"datatypes.html#boolean\">boolean</a></td><td/><td><div><p>If this parameter has a value of true or the parameter is omitted, the client is stating that the validation is being performed in a context where a concept designated as 'abstract' is appropriate/allowed to be used, and the server should regard abstract codes as valid. If this parameter is false, abstract codes are not considered to be valid.</p>\n<p>Note that 'abstract' is a property defined by many HL7 code systems that indicates that the concept is a logical grouping concept that is not intended to be used as a 'concrete' concept to in an actual patient/care/process record. This language is borrowed from object-orientated theory where 'abstract' entities are never instantiated. However in the general record and terminology eco-system, there are many contexts where it is appropriate to use these codes e.g. as decision making criterion, or when editing value sets themselves. This parameter allows a client to indicate to the server that it is working in such a context.</p>\n</div></td></tr><tr><td>IN</td><td>displayLanguage</td><td/><td>0..*</td><td><a href=\"datatypes.html#code\">code</a></td><td/><td><div><p>Specifies the language for display validation.  Note: the display value only needs to match 1 displayLanguage in order for the validate operation to return true.</p>\n</div></td></tr><tr><td>IN</td><td>useSupplement</td><td/><td>0..*</td><td><a href=\"datatypes.html#canonical\">canonical</a></td><td/><td><div><p>The supplement must be used when validating the code. Use of this parameter should result in $validate-code behaving the same way as if the supplements were included in the value set definition using the <a href=\"https://build.fhir.org/ig/HL7/fhir-extensions/StructureDefinition-valueset-supplement.html\">ValueSet Supplement</a></p>\n</div></td></tr><tr><td>IN</td><td>lenient-display-validation</td><td/><td>0..1</td><td><a href=\"datatypes.html#boolean\">boolean</a></td><td/><td><div><p>When the 'lenient-display-validation' parameter is true, an invalid display string will not cause the 'result' output parameter to be 'false'. If the 'lenient-display-validation' parameter is false or absent, then an invalid display will cause the 'result' output parameter to be 'false', i.e. the validation will fail.</p>\n</div></td></tr><tr><td>IN</td><td>valueset-membership-only</td><td/><td>0..1</td><td><a href=\"datatypes.html#boolean\">boolean</a></td><td/><td><div><p>When 'true', the server will not perform the additional validation tasks beyond validating membership in the value set (e.g. the server won't check displays, etc.)</p>\n</div></td></tr><tr><td>IN</td><td>inferSystem</td><td/><td>0..1</td><td><a href=\"datatypes.html#boolean\">boolean</a></td><td/><td><div><p>If true, the terminology server is required to infer the system from evaluation of the value set definition. The inferSystem parameter is only to be used with the code parameter, and not with the coding nor codeableConcept parameters.</p>\n</div></td></tr><tr><td>IN</td><td>system-version</td><td/><td>0..*</td><td><a href=\"datatypes.html#canonical\">canonical</a></td><td/><td><div><p>Specifies a version to use for a system, if the value set does not specify which one to use. The format is the same as a canonical URL: [system]|[version] - e.g. http://loinc.org|2.56. Note that this is a different parameter to systemVersion</p>\n</div></td></tr><tr><td>IN</td><td>check-system-version</td><td/><td>0..*</td><td><a href=\"datatypes.html#canonical\">canonical</a></td><td/><td><div><p>Edge Case: Specifies a version to use for a system. If a value set specifies a different version, an error is returned instead of the expansion. The format is the same as a canonical URL: [system]|[version] - e.g. http://loinc.org|2.56</p>\n</div></td></tr><tr><td>IN</td><td>force-system-version</td><td/><td>0..*</td><td><a href=\"datatypes.html#canonical\">canonical</a></td><td/><td><div><p>Edge Case: Specifies a version to use for a system. This parameter overrides any specified version in the value set (and any it depends on). The format is the same as a canonical URL: [system]|[version] - e.g. http://loinc.org|2.56. Note that this has obvious safety issues, in that it may result in a value set expansion giving a different list of codes that is both wrong and unsafe, and implementers should only use this capability reluctantly. It primarily exists to deal with situations where specifications have fallen into decay as time passes. If the value is overridden, the version used SHALL explicitly be represented in the expansion parameters</p>\n</div></td></tr><tr><td>IN</td><td>default-valueset-version</td><td/><td>0..*</td><td><a href=\"datatypes.html#canonical\">canonical</a></td><td/><td><div><p>Specifies a version to use for a valueset, if the reference to the value set does not specify which version to use. The format is the same as a canonical URL: [system]|[version] - e.g. http://example.org/ValueSet/example|1.0.0. Note that this is similar to the force-system-version parameter but applied to valuesets</p>\n</div></td></tr><tr><td>IN</td><td>check-valueset-version</td><td/><td>0..*</td><td><a href=\"datatypes.html#canonical\">canonical</a></td><td/><td><div><p>Edge Case: Specifies a version to use for a valueset. If a reference to a value set specifies a different version, an error is returned instead of the expansion. The format is the same as a canonical URL: [system]|[version] - e.g. http://example.org/ValueSet/example|1.0.0. Note that this is similar to the force-system-version parameter but applied to valuesets</p>\n</div></td></tr><tr><td>IN</td><td>force-valueset-version</td><td/><td>0..*</td><td><a href=\"datatypes.html#canonical\">canonical</a></td><td/><td><div><p>Edge Case: Specifies a version to use for a valueset. This parameter overrides any specified version in the reference to the value set (and any it depends on). The format is the same as a canonical URL: [system]|[version] - e.g. http://example.org/ValueSet/example|1.0.0. Note that this has obvious safety issues, in that it may result in a value set expansion giving a different list of codes that is both wrong and unsafe, and implementers should only use this capability reluctantly. It primarily exists to deal with situations where specifications have fallen into decay as time passes. If the value is overridden, the version used SHALL explicitly be represented in the expansion parameters. Note that this is similar to the force-system-version parameter but applied to valuesets.</p>\n</div></td></tr><tr><td>IN</td><td>manifest</td><td/><td>0..1</td><td><a href=\"datatypes.html#canonical\">canonical</a> (<a href=\"library.html\" title=\"http://hl7.org/fhir/StructureDefinition/Library\">Library</a>)</td><td/><td><div><p>Specifies an library that provides expansion rules for the operation. The library has an extension expansionParameters that references a contained Parameters resource that contains additional $expand parameters. See the [CRMI specification description of manifests]https://hl7.org/fhir/uv/crmi/STU1/StructureDefinition-crmi-manifestlibrary.html) and <a href=\"https://hl7.org/fhir/uv/crmi/STU1/artifact-terminology-service.html#expansion-rules\">CRMI expansion rules</a> for a complete description of how manifest values are used to provide defaults for expansion parameters. Parameters specified directly in an $expand operation override behaviors specified by the manifest parameter.</p>\n</div></td></tr><tr><td>IN</td><td>tx-resource</td><td/><td>0..*</td><td><a href=\"resource.html\">Resource</a></td><td/><td><div><p>One or more additional resources that are referred to from the value set provided with the $expand or $validate-code invocation. These may be additional value sets or code systems that the client believes will or may be necessary to perform the operation. Resources provided in this fashion are used preferentially to those known to the system, though servers may return an error if these resources are already known to the server (by URL and version) but differ from that information on the server.</p>\n</div></td></tr><tr><td>OUT</td><td>result</td><td/><td>1..1</td><td><a href=\"datatypes.html#boolean\">boolean</a></td><td/><td><div><p>True if the concept details supplied are valid</p>\n</div></td></tr><tr><td>OUT</td><td>message</td><td/><td>0..1</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>Error details, if result = false. If this is provided when result = true, the message carries hints and warnings</p>\n</div></td></tr><tr><td>OUT</td><td>display</td><td/><td>0..1</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>A valid display for the concept if the system wishes to display this to a user</p>\n</div></td></tr><tr><td>OUT</td><td>code</td><td/><td>0..1</td><td><a href=\"datatypes.html#code\">code</a></td><td/><td><div><p>The code that was validated</p>\n</div></td></tr><tr><td>OUT</td><td>system</td><td/><td>0..1</td><td><a href=\"datatypes.html#uri\">uri</a></td><td/><td><div><p>The system for the code that was validated</p>\n</div></td></tr><tr><td>OUT</td><td>version</td><td/><td>0..1</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>The version of the system of the code that was validated</p>\n</div></td></tr><tr><td>OUT</td><td>codeableConcept</td><td/><td>0..1</td><td><a href=\"datatypes.html#CodeableConcept\">CodeableConcept</a></td><td/><td><div><p>A codeableConcept containing codings for all the validated codes</p>\n</div></td></tr><tr><td>OUT</td><td>issues</td><td/><td>0..1</td><td><a href=\"operationoutcome.html\">OperationOutcome</a></td><td/><td><div><p>List of itemised issues with paths constrained to simple FHIRPath. Examples are CodeableConcept, CodeableConcept.coding[0], CodeableConcept.coding[1].display, or Coding.display</p>\n</div></td></tr></table><div><p>Note: the correct behavior of validation with regard to language for Coding.display items is currently undefined, and further development and testing may lead to specific requirements or recommendations in subsequent releases</p>\n</div></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 5
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "vocab"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/OperationDefinition/ValueSet-validate-code"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/OperationDefinition/ValueSet-validate-code>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ValidateCode"] ; # 
+  fhir:title [ fhir:v "Value Set based Validation"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:kind [ fhir:v "operation"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Terminology Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/Vocab" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Validate that a coded value is in the set of codes allowed by a value set.\n\nIf the operation is not called at the instance level, one of the in parameters url, context or valueSet must be provided.  One (and only one) of the in parameters code, coding, or codeableConcept must be provided. If a code is provided, either a system or inferSystem **SHOULD** be provided. The operation returns a result (true / false), an error message, and the recommended display for the code. When validating a code or a coding, then the code, system and version output parameters **SHOULD** be populated when possible. When a validating a CodeableConcept, then the codeableConcept output parameter **SHOULD** be populated when possible.\n\nImplementers should note that additional requirements are made on terminology servers that wish to be part of the public HL7 terminology ecosystem in the [FHIR Terminology Ecosystem IG](https://hl7.org/fhir/uv/tx-ecosystem/)."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:affectsState [ fhir:v false] ; # 
+  fhir:code [ fhir:v "validate-code"] ; # 
+  fhir:comment [ fhir:v "Note: the correct behavior of validation with regard to language for Coding.display items is currently undefined, and further development and testing may lead to specific requirements or recommendations in subsequent releases"] ; # 
+  fhir:resource ( [
+     fhir:v "ValueSet"^^xsd:anyURI ;
+     fhir:l fhir:ValueSet
+  ] ) ; # 
+  fhir:system [ fhir:v false] ; # 
+  fhir:type [ fhir:v true] ; # 
+  fhir:instance [ fhir:v true] ; # 
+  fhir:parameter ( [
+     fhir:name [ fhir:v "url" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:scope ( [ fhir:v "type" ] ) ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "Value set Canonical URL. The server must know the value set (e.g. it is defined explicitly in the server's value sets, or it is defined implicitly by some code system known to the server" ] ;
+     fhir:type [
+       fhir:v "uri"^^xsd:anyURI ;
+       fhir:l fhir:uri
+     ]
+  ] [
+     fhir:name [ fhir:v "context" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The context of the value set, so that the server can resolve this to a value set to validate against. The recommended format for this URI is [Structure Definition URL]#[name or path into structure definition] e.g. http://hl7.org/fhir/StructureDefinition/observation-hspc-height-hspcheight#Observation.interpretation. Other forms may be used but are not defined. This form is only usable if the terminology server also has access to the conformance registry that the server is using, but can be used to delegate the mapping from an application context to a binding at run-time" ] ;
+     fhir:type [
+       fhir:v "uri"^^xsd:anyURI ;
+       fhir:l fhir:uri
+     ]
+  ] [
+     fhir:name [ fhir:v "valueSet" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:scope ( [ fhir:v "type" ] ) ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The value set is provided directly as part of the request. Servers may choose not to accept value sets in this fashion. This parameter is used when the client wants the server to expand a value set that is not stored on the server" ] ;
+     fhir:type [
+       fhir:v "ValueSet"^^xsd:anyURI ;
+       fhir:l fhir:ValueSet
+     ]
+  ] [
+     fhir:name [ fhir:v "valueSetVersion" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:scope ( [ fhir:v "type" ] ) ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The identifier that is used to identify a specific version of the value set to be used when validating the code. This is an arbitrary value managed by the value set author and is not expected to be globally unique. For example, it might be a timestamp (e.g. yyyymmdd) if a managed version is not available" ] ;
+     fhir:type [
+       fhir:v "string"^^xsd:anyURI ;
+       fhir:l fhir:string
+     ]
+  ] [
+     fhir:name [ fhir:v "code" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The code that is to be validated. If a code is provided, a system or a context must be provided (if a context is provided, then the server SHALL ensure that the code is not ambiguous without a system)" ] ;
+     fhir:type [
+       fhir:v "code"^^xsd:anyURI ;
+       fhir:l fhir:code
+     ]
+  ] [
+     fhir:name [ fhir:v "system" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The system for the code that is to be validated" ] ;
+     fhir:type [
+       fhir:v "uri"^^xsd:anyURI ;
+       fhir:l fhir:uri
+     ]
+  ] [
+     fhir:name [ fhir:v "systemVersion" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The version of the system, if one was provided in the source data. Note that this is a different parameter to system-version" ] ;
+     fhir:type [
+       fhir:v "string"^^xsd:anyURI ;
+       fhir:l fhir:string
+     ]
+  ] [
+     fhir:name [ fhir:v "display" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The display associated with the code, if provided. If a display is provided a code must be provided. If no display is provided, the server cannot validate the display value, but may choose to return a recommended display name using the display parameter in the outcome. Whether displays are case sensitive is code system dependent" ] ;
+     fhir:type [
+       fhir:v "string"^^xsd:anyURI ;
+       fhir:l fhir:string
+     ]
+  ] [
+     fhir:name [ fhir:v "coding" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "A coding to validate" ] ;
+     fhir:type [
+       fhir:v "Coding"^^xsd:anyURI ;
+       fhir:l fhir:Coding
+     ]
+  ] [
+     fhir:name [ fhir:v "codeableConcept" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "A full codeableConcept to validate. The server returns true if one of the coding values is in the value set, and may also validate that the codings are not in conflict with each other if more than one is present" ] ;
+     fhir:type [
+       fhir:v "CodeableConcept"^^xsd:anyURI ;
+       fhir:l fhir:CodeableConcept
+     ]
+  ] [
+     fhir:name [ fhir:v "date" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The date for which the validation should be checked. Normally, this is the current conditions (which is the default values) but under some circumstances, systems need to validate that a correct code was used at some point in the past. A typical example of this would be where code selection is constrained to the set of codes that were available when the patient was treated, not when the record is being edited. Note that which date is appropriate is a matter for implementation policy." ] ;
+     fhir:type [
+       fhir:v "dateTime"^^xsd:anyURI ;
+       fhir:l fhir:dateTime
+     ]
+  ] [
+     fhir:name [ fhir:v "abstract" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "If this parameter has a value of true or the parameter is omitted, the client is stating that the validation is being performed in a context where a concept designated as 'abstract' is appropriate/allowed to be used, and the server should regard abstract codes as valid. If this parameter is false, abstract codes are not considered to be valid.\n\nNote that 'abstract' is a property defined by many HL7 code systems that indicates that the concept is a logical grouping concept that is not intended to be used as a 'concrete' concept to in an actual patient/care/process record. This language is borrowed from object-orientated theory where 'abstract' entities are never instantiated. However in the general record and terminology eco-system, there are many contexts where it is appropriate to use these codes e.g. as decision making criterion, or when editing value sets themselves. This parameter allows a client to indicate to the server that it is working in such a context." ] ;
+     fhir:type [
+       fhir:v "boolean"^^xsd:anyURI ;
+       fhir:l fhir:boolean
+     ]
+  ] [
+     fhir:name [ fhir:v "displayLanguage" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "Specifies the language for display validation.  Note: the display value only needs to match 1 displayLanguage in order for the validate operation to return true." ] ;
+     fhir:type [
+       fhir:v "code"^^xsd:anyURI ;
+       fhir:l fhir:code
+     ]
+  ] [
+     fhir:name [ fhir:v "useSupplement" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "The supplement must be used when validating the code. Use of this parameter should result in $validate-code behaving the same way as if the supplements were included in the value set definition using the [ValueSet Supplement](https://build.fhir.org/ig/HL7/fhir-extensions/StructureDefinition-valueset-supplement.html)" ] ;
+     fhir:type [
+       fhir:v "canonical"^^xsd:anyURI ;
+       fhir:l fhir:canonical
+     ]
+  ] [
+     fhir:name [ fhir:v "lenient-display-validation" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "When the 'lenient-display-validation' parameter is true, an invalid display string will not cause the 'result' output parameter to be 'false'. If the 'lenient-display-validation' parameter is false or absent, then an invalid display will cause the 'result' output parameter to be 'false', i.e. the validation will fail." ] ;
+     fhir:type [
+       fhir:v "boolean"^^xsd:anyURI ;
+       fhir:l fhir:boolean
+     ]
+  ] [
+     fhir:name [ fhir:v "valueset-membership-only" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "When 'true', the server will not perform the additional validation tasks beyond validating membership in the value set (e.g. the server won't check displays, etc.)" ] ;
+     fhir:type [
+       fhir:v "boolean"^^xsd:anyURI ;
+       fhir:l fhir:boolean
+     ]
+  ] [
+     fhir:name [ fhir:v "inferSystem" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "If true, the terminology server is required to infer the system from evaluation of the value set definition. The inferSystem parameter is only to be used with the code parameter, and not with the coding nor codeableConcept parameters." ] ;
+     fhir:type [
+       fhir:v "boolean"^^xsd:anyURI ;
+       fhir:l fhir:boolean
+     ]
+  ] [
+     fhir:name [ fhir:v "system-version" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "Specifies a version to use for a system, if the value set does not specify which one to use. The format is the same as a canonical URL: [system]|[version] - e.g. http://loinc.org|2.56. Note that this is a different parameter to systemVersion" ] ;
+     fhir:type [
+       fhir:v "canonical"^^xsd:anyURI ;
+       fhir:l fhir:canonical
+     ]
+  ] [
+     fhir:name [ fhir:v "check-system-version" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "Edge Case: Specifies a version to use for a system. If a value set specifies a different version, an error is returned instead of the expansion. The format is the same as a canonical URL: [system]|[version] - e.g. http://loinc.org|2.56" ] ;
+     fhir:type [
+       fhir:v "canonical"^^xsd:anyURI ;
+       fhir:l fhir:canonical
+     ]
+  ] [
+     fhir:name [ fhir:v "force-system-version" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "Edge Case: Specifies a version to use for a system. This parameter overrides any specified version in the value set (and any it depends on). The format is the same as a canonical URL: [system]|[version] - e.g. http://loinc.org|2.56. Note that this has obvious safety issues, in that it may result in a value set expansion giving a different list of codes that is both wrong and unsafe, and implementers should only use this capability reluctantly. It primarily exists to deal with situations where specifications have fallen into decay as time passes. If the value is overridden, the version used SHALL explicitly be represented in the expansion parameters" ] ;
+     fhir:type [
+       fhir:v "canonical"^^xsd:anyURI ;
+       fhir:l fhir:canonical
+     ]
+  ] [
+     fhir:name [ fhir:v "default-valueset-version" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "Specifies a version to use for a valueset, if the reference to the value set does not specify which version to use. The format is the same as a canonical URL: [system]|[version] - e.g. http://example.org/ValueSet/example|1.0.0. Note that this is similar to the force-system-version parameter but applied to valuesets" ] ;
+     fhir:type [
+       fhir:v "canonical"^^xsd:anyURI ;
+       fhir:l fhir:canonical
+     ]
+  ] [
+     fhir:name [ fhir:v "check-valueset-version" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "Edge Case: Specifies a version to use for a valueset. If a reference to a value set specifies a different version, an error is returned instead of the expansion. The format is the same as a canonical URL: [system]|[version] - e.g. http://example.org/ValueSet/example|1.0.0. Note that this is similar to the force-system-version parameter but applied to valuesets" ] ;
+     fhir:type [
+       fhir:v "canonical"^^xsd:anyURI ;
+       fhir:l fhir:canonical
+     ]
+  ] [
+     fhir:name [ fhir:v "force-valueset-version" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "Edge Case: Specifies a version to use for a valueset. This parameter overrides any specified version in the reference to the value set (and any it depends on). The format is the same as a canonical URL: [system]|[version] - e.g. http://example.org/ValueSet/example|1.0.0. Note that this has obvious safety issues, in that it may result in a value set expansion giving a different list of codes that is both wrong and unsafe, and implementers should only use this capability reluctantly. It primarily exists to deal with situations where specifications have fallen into decay as time passes. If the value is overridden, the version used SHALL explicitly be represented in the expansion parameters. Note that this is similar to the force-system-version parameter but applied to valuesets." ] ;
+     fhir:type [
+       fhir:v "canonical"^^xsd:anyURI ;
+       fhir:l fhir:canonical
+     ]
+  ] [
+     fhir:name [ fhir:v "manifest" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "Specifies an library that provides expansion rules for the operation. The library has an extension expansionParameters that references a contained Parameters resource that contains additional $expand parameters. See the [CRMI specification description of manifests]https://hl7.org/fhir/uv/crmi/STU1/StructureDefinition-crmi-manifestlibrary.html) and [CRMI expansion rules](https://hl7.org/fhir/uv/crmi/STU1/artifact-terminology-service.html#expansion-rules) for a complete description of how manifest values are used to provide defaults for expansion parameters. Parameters specified directly in an $expand operation override behaviors specified by the manifest parameter." ] ;
+     fhir:type [
+       fhir:v "canonical"^^xsd:anyURI ;
+       fhir:l fhir:canonical
+     ] ;
+     fhir:targetProfile ( [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/Library"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/Library>
+     ] )
+  ] [
+     fhir:name [ fhir:v "tx-resource" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "One or more additional resources that are referred to from the value set provided with the $expand or $validate-code invocation. These may be additional value sets or code systems that the client believes will or may be necessary to perform the operation. Resources provided in this fashion are used preferentially to those known to the system, though servers may return an error if these resources are already known to the server (by URL and version) but differ from that information on the server." ] ;
+     fhir:type [
+       fhir:v "Resource"^^xsd:anyURI ;
+       fhir:l fhir:Resource
+     ]
+  ] [
+     fhir:name [ fhir:v "result" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "1"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "True if the concept details supplied are valid" ] ;
+     fhir:type [
+       fhir:v "boolean"^^xsd:anyURI ;
+       fhir:l fhir:boolean
+     ]
+  ] [
+     fhir:name [ fhir:v "message" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "Error details, if result = false. If this is provided when result = true, the message carries hints and warnings" ] ;
+     fhir:type [
+       fhir:v "string"^^xsd:anyURI ;
+       fhir:l fhir:string
+     ]
+  ] [
+     fhir:name [ fhir:v "display" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "A valid display for the concept if the system wishes to display this to a user" ] ;
+     fhir:type [
+       fhir:v "string"^^xsd:anyURI ;
+       fhir:l fhir:string
+     ]
+  ] [
+     fhir:name [ fhir:v "code" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The code that was validated" ] ;
+     fhir:type [
+       fhir:v "code"^^xsd:anyURI ;
+       fhir:l fhir:code
+     ]
+  ] [
+     fhir:name [ fhir:v "system" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The system for the code that was validated" ] ;
+     fhir:type [
+       fhir:v "uri"^^xsd:anyURI ;
+       fhir:l fhir:uri
+     ]
+  ] [
+     fhir:name [ fhir:v "version" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The version of the system of the code that was validated" ] ;
+     fhir:type [
+       fhir:v "string"^^xsd:anyURI ;
+       fhir:l fhir:string
+     ]
+  ] [
+     fhir:name [ fhir:v "codeableConcept" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "A codeableConcept containing codings for all the validated codes" ] ;
+     fhir:type [
+       fhir:v "CodeableConcept"^^xsd:anyURI ;
+       fhir:l fhir:CodeableConcept
+     ]
+  ] [
+     fhir:name [ fhir:v "issues" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "List of itemised issues with paths constrained to simple FHIRPath. Examples are CodeableConcept, CodeableConcept.coding[0], CodeableConcept.coding[1].display, or Coding.display" ] ;
+     fhir:type [
+       fhir:v "OperationOutcome"^^xsd:anyURI ;
+       fhir:l fhir:OperationOutcome
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

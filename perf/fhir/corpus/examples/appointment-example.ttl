@@ -1,0 +1,141 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Appointment/example> a fhir:Appointment ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Brian MRI results discussion</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "booked"] ; # 
+  fhir:class ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+       ] ;
+       fhir:code [ fhir:v "AMB" ] ;
+       fhir:display [ fhir:v "ambulatory" ]
+     ] )
+  ] ) ; # 
+  fhir:serviceCategory ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.org/service-category"^^xsd:anyURI ;
+         fhir:l <http://example.org/service-category>
+       ] ;
+       fhir:code [ fhir:v "gp" ] ;
+       fhir:display [ fhir:v "General Practice" ]
+     ] )
+  ] ) ; # 
+  fhir:serviceType ( [
+     fhir:concept [
+       fhir:coding ( [
+         fhir:code [ fhir:v "52" ] ;
+         fhir:display [ fhir:v "General Discussion" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:specialty ( [
+     a sct:394814009 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "394814009" ] ;
+       fhir:display [ fhir:v "General practice (specialty)" ]
+     ] )
+  ] ) ; # 
+  fhir:appointmentType [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v2-0276"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v2-0276>
+       ] ;
+       fhir:code [ fhir:v "FOLLOWUP" ] ;
+       fhir:display [ fhir:v "A follow up visit from a previous appointment" ]
+     ] )
+  ] ; # 
+  fhir:reason ( [
+     fhir:reference [
+       fhir:l <http://hl7.org/fhir/Condition/example> ;
+       fhir:reference [ fhir:v "Condition/example" ] ;
+       fhir:display [ fhir:v "Severe burn of left ear" ]
+     ]
+  ] ) ; # 
+  fhir:description [ fhir:v "Discussion on the results of your recent MRI"] ; # <priority value="5" />
+  fhir:start [ fhir:v "2013-12-10T09:00:00Z"^^xsd:dateTime] ; # 
+  fhir:end [ fhir:v "2013-12-10T11:00:00Z"^^xsd:dateTime] ; # 
+  fhir:created [ fhir:v "2013-10-10"^^xsd:date] ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "Further expand on the results of the MRI and determine the next actions that may be appropriate." ]
+  ] ) ; # 
+  fhir:patientInstruction ( [
+     fhir:concept [
+       fhir:text [ fhir:v "Please avoid excessive travel (specifically flying) before this appointment" ]
+     ]
+  ] ) ; # 
+  fhir:basedOn ( [
+     fhir:l <http://hl7.org/fhir/ServiceRequest/myringotomy> ;
+     fhir:reference [ fhir:v "ServiceRequest/myringotomy" ]
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Peter James Chalmers" ]
+  ] ; # 
+  fhir:participant ( [
+     fhir:actor [
+       fhir:l <http://hl7.org/fhir/Patient/example> ;
+       fhir:reference [ fhir:v "Patient/example" ] ;
+       fhir:display [ fhir:v "Peter James Chalmers" ]
+     ] ;
+     fhir:required [ fhir:v true ] ;
+     fhir:status [ fhir:v "accepted" ]
+  ] [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationType"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationType>
+         ] ;
+         fhir:code [ fhir:v "ATND" ]
+       ] )
+     ] ) ;
+     fhir:actor [
+       fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+       fhir:reference [ fhir:v "Practitioner/example" ] ;
+       fhir:display [ fhir:v "Dr Adam Careful" ]
+     ] ;
+     fhir:required [ fhir:v true ] ;
+     fhir:status [ fhir:v "accepted" ]
+  ] [
+     fhir:actor [
+       fhir:l <http://hl7.org/fhir/Location/1> ;
+       fhir:reference [ fhir:v "Location/1" ] ;
+       fhir:display [ fhir:v "South Wing, second floor" ]
+     ] ;
+     fhir:required [ fhir:v true ] ;
+     fhir:status [ fhir:v "accepted" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Condition/example> a fhir:Condition .
+
+<http://hl7.org/fhir/ServiceRequest/myringotomy> a fhir:ServiceRequest .
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Location/1> a fhir:Location .
+
+# -------------------------------------------------------------------------------------
+

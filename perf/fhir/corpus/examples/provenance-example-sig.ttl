@@ -1,0 +1,77 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Provenance/signature> a fhir:Provenance ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "signature"] ; # 
+  fhir:target ( [
+     fhir:l <http://hl7.org/fhir/DocumentReference/example/_history/4> ;
+     fhir:reference [ fhir:v "DocumentReference/example/_history/4" ]
+  ] ) ; # <text>
+#		<status value="extensions"/>
+#		<div xmlns="http://www.w3.org/1999/xhtml">procedure record authored on 27-June 2015 by Harold Hippocrates, MD Content extracted from Referral received 26-June</div>
+#	</text>, where possible, provenance targets SHOULD be version specific,
+#    so that there is no ambiguity about which version of the 
+#    record this relates to
+  fhir:recorded [ fhir:v "2015-08-27T08:39:24+10:00"^^xsd:dateTime] ; # 
+  fhir:authorization ( [] ) ; # 
+  fhir:activity [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-DocumentCompletion"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-DocumentCompletion>
+       ] ;
+       fhir:code [ fhir:v "AU" ] ;
+       fhir:display [ fhir:v "authenticated" ]
+     ] )
+  ] ; # 
+  fhir:agent ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/contractsignertypecodes"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/contractsignertypecodes>
+         ] ;
+         fhir:code [ fhir:v "VERF" ]
+       ] )
+     ] ;
+     fhir:who [
+       fhir:identifier [
+         fhir:system [
+           fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+           fhir:l <urn:ietf:rfc:3986>
+         ] ;
+         fhir:value [ fhir:v "mailto://hhd@ssa.gov" ]
+       ]
+     ] # very often, the user won't have a known system - these aren't available \n      for security system log ons. But where you can define it, you SHOULD.\n      Most of the time the userId is fully qualfied such as an email address
+  ] ) ; # signer = Harold Hippocrates
+  fhir:signature ( [
+     fhir:type ( [
+       fhir:system [
+         fhir:v "urn:iso-astm:E1762-95:2013"^^xsd:anyURI ;
+         fhir:l <urn:iso-astm:E1762-95:2013>
+       ] ;
+       fhir:code [ fhir:v "1.2.840.10065.1.12.1.5" ] ;
+       fhir:display [ fhir:v "Verification Signature" ]
+     ] ) ; # verification signature
+     fhir:when [ fhir:v "2015-08-27T08:39:24+10:00"^^xsd:dateTime ] ;
+     fhir:who [
+       fhir:l <http://hl7.org/fhir/Practitioner/xcda-author> ;
+       fhir:reference [ fhir:v "Practitioner/xcda-author" ]
+     ] ;
+     fhir:targetFormat [ fhir:v "application/fhir+xml" ] ;
+     fhir:sigFormat [ fhir:v "application/signature+xml" ] ;
+     fhir:data [ fhir:v "Li4u"^^xsd:base64Binary ]
+  ] ) . # 
+
+<http://hl7.org/fhir/DocumentReference/example/_history/4> a fhir:DocumentReference .
+
+<http://hl7.org/fhir/Practitioner/xcda-author> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,41 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/9601c07a-e34f-4945-93ca-6efb5394c995> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "9601c07a-e34f-4945-93ca-6efb5394c995"] ; # 
+  fhir:type [ fhir:v "subscription-notification"] ; # 
+  fhir:timestamp [ fhir:v "2020-04-17T10:24:13.1882432-05:00"^^xsd:dateTime] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:b21e4fae-ce73-45cb-8e37-1e203362b2ae"^^xsd:anyURI ;
+       fhir:l <urn:uuid:b21e4fae-ce73-45cb-8e37-1e203362b2ae>
+     ] ;
+     fhir:resource ( <urn:uuid:b21e4fae-ce73-45cb-8e37-1e203362b2ae> )
+  ] ) . # 
+
+<urn:uuid:b21e4fae-ce73-45cb-8e37-1e203362b2ae> a fhir:SubscriptionStatus ;
+  fhir:id [ fhir:v "b21e4fae-ce73-45cb-8e37-1e203362b2ae"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: SubscriptionStatus b21e4fae-ce73-45cb-8e37-1e203362b2ae</b></p><a name=\"b21e4fae-ce73-45cb-8e37-1e203362b2ae\"> </a><a name=\"hcb21e4fae-ce73-45cb-8e37-1e203362b2ae\"> </a><p><b>status</b>: Active</p><p><b>type</b>: Event Notification</p><p><b>eventsSinceSubscriptionStart</b>: 2</p><h3>NotificationEvents</h3><table class=\"grid\"><tr><td style=\"display: none\">-</td><td><b>EventNumber</b></td><td><b>Timestamp</b></td></tr><tr><td style=\"display: none\">*</td><td>2</td><td>2020-04-17T10:20:00-05:00</td></tr></table><p><b>subscription</b>: <a href=\"broken-link.html\">http://example.org/FHIR/R5/Subscription/123</a></p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:type [ fhir:v "event-notification"] ; # 
+  fhir:eventsSinceSubscriptionStart [ fhir:v "2"^^xsd:long] ; # 
+  fhir:notificationEvent ( [
+     fhir:eventNumber [ fhir:v "2"^^xsd:long ] ;
+     fhir:timestamp [ fhir:v "2020-04-17T10:20:00.0000000-05:00"^^xsd:dateTime ]
+  ] ) ; # 
+  fhir:subscription [
+     fhir:l <http://example.org/FHIR/R5/Subscription/123> ;
+     fhir:reference [ fhir:v "http://example.org/FHIR/R5/Subscription/123" ]
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

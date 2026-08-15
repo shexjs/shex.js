@@ -1,0 +1,298 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ValueSet/timing-abbreviation> a fhir:ValueSet ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "timing-abbreviation"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "extensions" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: ValueSet timing-abbreviation</b></p><a name=\"timing-abbreviation\"> </a><a name=\"hctiming-abbreviation\"> </a><p>This value set includes codes based on the following rules:</p><ul><li>Include all codes defined in <a href=\"codesystem-timing-abbreviation.html\"><code>http://terminology.hl7.org/CodeSystem/timing-abbreviation</code></a><span title=\"Version is not explicitly stated, which means it is fixed to the version provided in this specification\"> version ?6.0.0-ballot4</span></li><li>Include these codes as defined in <a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v3-GTSAbbreviation.html\"><code>http://terminology.hl7.org/CodeSystem/v3-GTSAbbreviation</code></a><span title=\"Version is not explicitly stated, which means it is fixed to 5.0.0, the version found through the package references\"> version ?5.0.0</span><table class=\"none\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v3-GTSAbbreviation.html#v3-GTSAbbreviation-BID\">BID</a></td><td>BID</td><td>Two times a day at institution specified time</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v3-GTSAbbreviation.html#v3-GTSAbbreviation-TID\">TID</a></td><td>TID</td><td>Three times a day at institution specified time</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v3-GTSAbbreviation.html#v3-GTSAbbreviation-QID\">QID</a></td><td>QID</td><td>Four times a day at institution specified time</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v3-GTSAbbreviation.html#v3-GTSAbbreviation-AM\">AM</a></td><td>AM</td><td>Every morning at institution specified times</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v3-GTSAbbreviation.html#v3-GTSAbbreviation-PM\">PM</a></td><td>PM</td><td>Every afternoon at institution specified times</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v3-GTSAbbreviation.html#v3-GTSAbbreviation-QD\">QD</a></td><td>QD</td><td>Every Day at institution specified times</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v3-GTSAbbreviation.html#v3-GTSAbbreviation-QOD\">QOD</a></td><td>QOD</td><td>Every Other Day at institution specified times</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v3-GTSAbbreviation.html#v3-GTSAbbreviation-Q1H\">Q1H</a></td><td>every hour</td><td>Every hour at institution specified times</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v3-GTSAbbreviation.html#v3-GTSAbbreviation-Q2H\">Q2H</a></td><td>every 2 hours</td><td>Every 2 hours at institution specified times</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v3-GTSAbbreviation.html#v3-GTSAbbreviation-Q3H\">Q3H</a></td><td>every 3 hours</td><td>Every 3 hours at institution specified times</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v3-GTSAbbreviation.html#v3-GTSAbbreviation-Q4H\">Q4H</a></td><td>Q4H</td><td>Every 4 hours at institution specified times</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v3-GTSAbbreviation.html#v3-GTSAbbreviation-Q6H\">Q6H</a></td><td>Q6H</td><td>Every 6 Hours  at institution specified times</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v3-GTSAbbreviation.html#v3-GTSAbbreviation-Q8H\">Q8H</a></td><td>every 8 hours</td><td>Every 8 hours at institution specified times</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v3-GTSAbbreviation.html#v3-GTSAbbreviation-BED\">BED</a></td><td>at bedtime</td><td>At bedtime (institution specified time)</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v3-GTSAbbreviation.html#v3-GTSAbbreviation-WK\">WK</a></td><td>weekly</td><td>Weekly at institution specified time</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v3-GTSAbbreviation.html#v3-GTSAbbreviation-MO\">MO</a></td><td>monthly</td><td>Monthly at institution specified time</td></tr></table></li></ul></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ValueSet/timing-abbreviation"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/timing-abbreviation>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.3.78" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "TimingAbbreviation"] ; # 
+  fhir:title [ fhir:v "TimingAbbreviation"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Code for a known / defined timing pattern."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:immutable [ fhir:v true] ; # 
+  fhir:compose [
+     fhir:include ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/timing-abbreviation"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/timing-abbreviation>
+       ]
+     ] [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-GTSAbbreviation"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-GTSAbbreviation>
+       ] ;
+       fhir:concept ( [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-concept-definition"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-concept-definition>
+           ] ;
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Two times a day at institution specified time"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "BID" ] ;
+         fhir:display [ fhir:v "BID" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-concept-definition"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-concept-definition>
+           ] ;
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Three times a day at institution specified time"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "TID" ] ;
+         fhir:display [ fhir:v "TID" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-concept-definition"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-concept-definition>
+           ] ;
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Four times a day at institution specified time"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "QID" ] ;
+         fhir:display [ fhir:v "QID" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-concept-definition"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-concept-definition>
+           ] ;
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Every morning at institution specified times"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "AM" ] ;
+         fhir:display [ fhir:v "AM" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-concept-definition"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-concept-definition>
+           ] ;
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Every afternoon at institution specified times"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "PM" ] ;
+         fhir:display [ fhir:v "PM" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-concept-definition"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-concept-definition>
+           ] ;
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Every Day at institution specified times"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "QD" ] ;
+         fhir:display [ fhir:v "QD" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-concept-definition"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-concept-definition>
+           ] ;
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Every Other Day at institution specified times"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "QOD" ] ;
+         fhir:display [ fhir:v "QOD" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-concept-definition"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-concept-definition>
+           ] ;
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Every hour at institution specified times"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "Q1H" ] ;
+         fhir:display [ fhir:v "every hour" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-concept-definition"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-concept-definition>
+           ] ;
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Every 2 hours at institution specified times"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "Q2H" ] ;
+         fhir:display [ fhir:v "every 2 hours" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-concept-definition"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-concept-definition>
+           ] ;
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Every 3 hours at institution specified times"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "Q3H" ] ;
+         fhir:display [ fhir:v "every 3 hours" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-concept-definition"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-concept-definition>
+           ] ;
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Every 4 hours at institution specified times"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "Q4H" ] ;
+         fhir:display [ fhir:v "Q4H" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-concept-definition"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-concept-definition>
+           ] ;
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Every 6 Hours  at institution specified times"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "Q6H" ] ;
+         fhir:display [ fhir:v "Q6H" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-concept-definition"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-concept-definition>
+           ] ;
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Every 8 hours at institution specified times"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "Q8H" ] ;
+         fhir:display [ fhir:v "every 8 hours" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-concept-definition"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-concept-definition>
+           ] ;
+           fhir:value [
+             a fhir:String ;
+             fhir:v "At bedtime (institution specified time)"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "BED" ] ;
+         fhir:display [ fhir:v "at bedtime" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-concept-definition"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-concept-definition>
+           ] ;
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Weekly at institution specified time"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "WK" ] ;
+         fhir:display [ fhir:v "weekly" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-concept-definition"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-concept-definition>
+           ] ;
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Monthly at institution specified time"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "MO" ] ;
+         fhir:display [ fhir:v "monthly" ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:expansion [] . # 
+
+# -------------------------------------------------------------------------------------
+

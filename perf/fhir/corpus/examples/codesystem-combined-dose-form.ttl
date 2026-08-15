@@ -1,0 +1,326 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/combined-dose-form> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "combined-dose-form"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T11:01:55.562+11:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem combined-dose-form</b></p><a name=\"combined-dose-form\"> </a><a name=\"hccombined-dose-form\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">Last updated: 2021-01-05T10:01:24.148+11:00</p></div><p>This case-sensitive code system <code>http://hl7.org/fhir/combined-dose-form</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td></tr><tr><td style=\"white-space:nowrap\">100000073366<a name=\"combined-dose-form-100000073366\"> </a></td><td>Powder and solvent for oral solution</td></tr><tr><td style=\"white-space:nowrap\">100000073651<a name=\"combined-dose-form-100000073651\"> </a></td><td>Powder and solvent for oral suspension</td></tr><tr><td style=\"white-space:nowrap\">100000073774<a name=\"combined-dose-form-100000073774\"> </a></td><td>Eye drops, powder and solvent for solution</td></tr><tr><td style=\"white-space:nowrap\">100000073781<a name=\"combined-dose-form-100000073781\"> </a></td><td>Eye drops, powder and solvent for suspension</td></tr><tr><td style=\"white-space:nowrap\">100000073801<a name=\"combined-dose-form-100000073801\"> </a></td><td>Ear drops, powder and solvent for suspension</td></tr><tr><td style=\"white-space:nowrap\">100000073860<a name=\"combined-dose-form-100000073860\"> </a></td><td>Powder and solvent for solution for infusion</td></tr><tr><td style=\"white-space:nowrap\">100000073868<a name=\"combined-dose-form-100000073868\"> </a></td><td>Powder and solvent for solution for injection</td></tr><tr><td style=\"white-space:nowrap\">100000073869<a name=\"combined-dose-form-100000073869\"> </a></td><td>Powder and solvent for suspension for injection</td></tr><tr><td style=\"white-space:nowrap\">100000073884<a name=\"combined-dose-form-100000073884\"> </a></td><td>Powder and solvent for implantation paste</td></tr><tr><td style=\"white-space:nowrap\">100000073891<a name=\"combined-dose-form-100000073891\"> </a></td><td>Endotracheopulmonary instillation, powder and solvent for solution</td></tr><tr><td style=\"white-space:nowrap\">100000073892<a name=\"combined-dose-form-100000073892\"> </a></td><td>Powder and solvent for endocervical gel</td></tr><tr><td style=\"white-space:nowrap\">100000073941<a name=\"combined-dose-form-100000073941\"> </a></td><td>Powder and solvent for sealant</td></tr><tr><td style=\"white-space:nowrap\">100000073972<a name=\"combined-dose-form-100000073972\"> </a></td><td>Concentrate and solvent for concentrate for solution for infusion</td></tr><tr><td style=\"white-space:nowrap\">100000073973<a name=\"combined-dose-form-100000073973\"> </a></td><td>Concentrate and solvent for cutaneous use</td></tr><tr><td style=\"white-space:nowrap\">100000073974<a name=\"combined-dose-form-100000073974\"> </a></td><td>Concentrate and solvent for injection</td></tr><tr><td style=\"white-space:nowrap\">100000073975<a name=\"combined-dose-form-100000073975\"> </a></td><td>Concentrate and solvent for solution for infusion</td></tr><tr><td style=\"white-space:nowrap\">100000073987<a name=\"combined-dose-form-100000073987\"> </a></td><td>Concentrate and diluent for solution for infusion</td></tr><tr><td style=\"white-space:nowrap\">100000073988<a name=\"combined-dose-form-100000073988\"> </a></td><td>Concentrate and solvent for cutaneous solution</td></tr><tr><td style=\"white-space:nowrap\">100000073989<a name=\"combined-dose-form-100000073989\"> </a></td><td>Concentrate and solvent for solution for injection</td></tr><tr><td style=\"white-space:nowrap\">100000073990<a name=\"combined-dose-form-100000073990\"> </a></td><td>Concentrate and solvent for suspension for injection</td></tr><tr><td style=\"white-space:nowrap\">100000073999<a name=\"combined-dose-form-100000073999\"> </a></td><td>Granules and solvent for suspension for injection</td></tr><tr><td style=\"white-space:nowrap\">100000074015<a name=\"combined-dose-form-100000074015\"> </a></td><td>Powder and solvent for concentrate for solution for infusion</td></tr><tr><td style=\"white-space:nowrap\">100000074016<a name=\"combined-dose-form-100000074016\"> </a></td><td>Powder and solvent for cutaneous solution</td></tr><tr><td style=\"white-space:nowrap\">100000074017<a name=\"combined-dose-form-100000074017\"> </a></td><td>Powder and solvent for gingival gel</td></tr><tr><td style=\"white-space:nowrap\">100000074018<a name=\"combined-dose-form-100000074018\"> </a></td><td>Powder and solvent for prolonged-release suspension for injection</td></tr><tr><td style=\"white-space:nowrap\">100000074030<a name=\"combined-dose-form-100000074030\"> </a></td><td>Powder and solvent for endosinusial solution</td></tr><tr><td style=\"white-space:nowrap\">100000074031<a name=\"combined-dose-form-100000074031\"> </a></td><td>Powder and solvent for intraocular instillation solution</td></tr><tr><td style=\"white-space:nowrap\">100000074032<a name=\"combined-dose-form-100000074032\"> </a></td><td>Powder and suspension for suspension for injection</td></tr><tr><td style=\"white-space:nowrap\">100000074048<a name=\"combined-dose-form-100000074048\"> </a></td><td>Suspension and effervescent granules for oral suspension</td></tr><tr><td style=\"white-space:nowrap\">100000074051<a name=\"combined-dose-form-100000074051\"> </a></td><td>Tablet and solvent for rectal suspension</td></tr><tr><td style=\"white-space:nowrap\">100000074053<a name=\"combined-dose-form-100000074053\"> </a></td><td>Powder and solvent for dental gel</td></tr><tr><td style=\"white-space:nowrap\">100000074056<a name=\"combined-dose-form-100000074056\"> </a></td><td>Gas and solvent for dispersion for injection/infusion</td></tr><tr><td style=\"white-space:nowrap\">100000074057<a name=\"combined-dose-form-100000074057\"> </a></td><td>Powder and solvent for solution for injection/infusion</td></tr><tr><td style=\"white-space:nowrap\">100000074061<a name=\"combined-dose-form-100000074061\"> </a></td><td>Suspension and solution for spray</td></tr><tr><td style=\"white-space:nowrap\">100000074064<a name=\"combined-dose-form-100000074064\"> </a></td><td>Tablet and powder for oral solution</td></tr><tr><td style=\"white-space:nowrap\">100000075580<a name=\"combined-dose-form-100000075580\"> </a></td><td>Emulsion and suspension for emulsion for injection</td></tr><tr><td style=\"white-space:nowrap\">100000075584<a name=\"combined-dose-form-100000075584\"> </a></td><td>Powder and solvent for dispersion for injection</td></tr><tr><td style=\"white-space:nowrap\">100000075587<a name=\"combined-dose-form-100000075587\"> </a></td><td>Powder for mouth wash</td></tr><tr><td style=\"white-space:nowrap\">100000116137<a name=\"combined-dose-form-100000116137\"> </a></td><td>Lyophilisate and solvent for solution for injection</td></tr><tr><td style=\"white-space:nowrap\">100000116141<a name=\"combined-dose-form-100000116141\"> </a></td><td>Fibrin sealant-powder and solvent for fibrin sealant</td></tr><tr><td style=\"white-space:nowrap\">100000116155<a name=\"combined-dose-form-100000116155\"> </a></td><td>Granules and solvent for oral suspension</td></tr><tr><td style=\"white-space:nowrap\">100000116160<a name=\"combined-dose-form-100000116160\"> </a></td><td>Lyophilisate and solvent for suspension for injection</td></tr><tr><td style=\"white-space:nowrap\">100000116172<a name=\"combined-dose-form-100000116172\"> </a></td><td>Powder and gel for gel</td></tr><tr><td style=\"white-space:nowrap\">100000116173<a name=\"combined-dose-form-100000116173\"> </a></td><td>Powder and solution for solution for injection</td></tr><tr><td style=\"white-space:nowrap\">100000116174<a name=\"combined-dose-form-100000116174\"> </a></td><td>Powder and solvent for epilesional solution</td></tr><tr><td style=\"white-space:nowrap\">100000116175<a name=\"combined-dose-form-100000116175\"> </a></td><td>Powder and solvent for intravesical solution</td></tr><tr><td style=\"white-space:nowrap\">100000116176<a name=\"combined-dose-form-100000116176\"> </a></td><td>Powder and solvent for intravesical suspension</td></tr><tr><td style=\"white-space:nowrap\">100000116177<a name=\"combined-dose-form-100000116177\"> </a></td><td>Powder and solvent for nebuliser solution</td></tr><tr><td style=\"white-space:nowrap\">100000116179<a name=\"combined-dose-form-100000116179\"> </a></td><td>Powder, dispersion and solvent for concentrate for dispersion for infusion</td></tr><tr><td style=\"white-space:nowrap\">100000125746<a name=\"combined-dose-form-100000125746\"> </a></td><td>Powder and solvent for emulsion for injection</td></tr><tr><td style=\"white-space:nowrap\">100000125747<a name=\"combined-dose-form-100000125747\"> </a></td><td>Nasal drops, powder and solvent for solution</td></tr><tr><td style=\"white-space:nowrap\">100000125777<a name=\"combined-dose-form-100000125777\"> </a></td><td>Suspension and solvent for suspension for injection</td></tr><tr><td style=\"white-space:nowrap\">100000136318<a name=\"combined-dose-form-100000136318\"> </a></td><td>Concentrate and solvent for solution for injection/infusion</td></tr><tr><td style=\"white-space:nowrap\">100000136325<a name=\"combined-dose-form-100000136325\"> </a></td><td>Powder and solvent for solution for injection/skin-prick test</td></tr><tr><td style=\"white-space:nowrap\">100000136558<a name=\"combined-dose-form-100000136558\"> </a></td><td>Lyophilisate and solvent for suspension for nasal administration</td></tr><tr><td style=\"white-space:nowrap\">100000136560<a name=\"combined-dose-form-100000136560\"> </a></td><td>Powder and solvent for solution for sealant</td></tr><tr><td style=\"white-space:nowrap\">100000136907<a name=\"combined-dose-form-100000136907\"> </a></td><td>Solution for dispersion for injection/infusion</td></tr><tr><td style=\"white-space:nowrap\">100000143502<a name=\"combined-dose-form-100000143502\"> </a></td><td>Powder and solution for dental cement</td></tr><tr><td style=\"white-space:nowrap\">100000143546<a name=\"combined-dose-form-100000143546\"> </a></td><td>Endotracheopulmonary instillation, powder and solvent for suspension</td></tr><tr><td style=\"white-space:nowrap\">100000143552<a name=\"combined-dose-form-100000143552\"> </a></td><td>Powder, solvent and matrix for implantation matrix</td></tr><tr><td style=\"white-space:nowrap\">100000156068<a name=\"combined-dose-form-100000156068\"> </a></td><td>Nasal drops, lyophilisate and solvent for suspension</td></tr><tr><td style=\"white-space:nowrap\">100000157796<a name=\"combined-dose-form-100000157796\"> </a></td><td>Lyophilisate and suspension for suspension for injection</td></tr><tr><td style=\"white-space:nowrap\">100000164467<a name=\"combined-dose-form-100000164467\"> </a></td><td>Powder for concentrate and solution for solution for infusion</td></tr><tr><td style=\"white-space:nowrap\">100000169997<a name=\"combined-dose-form-100000169997\"> </a></td><td>Powder and solution for bee-hive solution</td></tr><tr><td style=\"white-space:nowrap\">100000170588<a name=\"combined-dose-form-100000170588\"> </a></td><td>Suspension and solvent for oral spray</td></tr><tr><td style=\"white-space:nowrap\">100000171127<a name=\"combined-dose-form-100000171127\"> </a></td><td>Lyophilisate and solvent for oral suspension</td></tr><tr><td style=\"white-space:nowrap\">100000171193<a name=\"combined-dose-form-100000171193\"> </a></td><td>Concentrate and solvent for concentrate for oral spray, suspension</td></tr><tr><td style=\"white-space:nowrap\">100000171238<a name=\"combined-dose-form-100000171238\"> </a></td><td>Lyophilisate and solvent for oculonasal suspension</td></tr><tr><td style=\"white-space:nowrap\">100000171935<a name=\"combined-dose-form-100000171935\"> </a></td><td>Emulsion and lyophilisate for suspension for injection</td></tr><tr><td style=\"white-space:nowrap\">100000174065<a name=\"combined-dose-form-100000174065\"> </a></td><td>Powder and solvent for syrup</td></tr><tr><td style=\"white-space:nowrap\">200000002161<a name=\"combined-dose-form-200000002161\"> </a></td><td>Nasal spray, lyophilisate and solvent for suspension</td></tr><tr><td style=\"white-space:nowrap\">200000002287<a name=\"combined-dose-form-200000002287\"> </a></td><td>Powder and solution for bee-hive dispersion</td></tr><tr><td style=\"white-space:nowrap\">200000004201<a name=\"combined-dose-form-200000004201\"> </a></td><td>Solution and dispersion for nebuliser dispersion</td></tr><tr><td style=\"white-space:nowrap\">200000004819<a name=\"combined-dose-form-200000004819\"> </a></td><td>Effervescent powder and powder for oral suspension</td></tr><tr><td style=\"white-space:nowrap\">200000004820<a name=\"combined-dose-form-200000004820\"> </a></td><td>Lyophilisate and solvent for emulsion for injection</td></tr><tr><td style=\"white-space:nowrap\">200000005547<a name=\"combined-dose-form-200000005547\"> </a></td><td>Powder and solution for suspension for injection</td></tr><tr><td style=\"white-space:nowrap\">200000010382<a name=\"combined-dose-form-200000010382\"> </a></td><td>Lyophilisate and solvent for suspension for nasal spray or injection</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "brr"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/combined-dose-form"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/combined-dose-form>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1923" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "CombinedDoseFormExample"] ; # 
+  fhir:title [ fhir:v "Combined Dose Form"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Dose forms for a product as a whole, considering all individual parts, but before any mixing"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/combined-dose-form"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/combined-dose-form>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "100000073366" ] ;
+     fhir:display [ fhir:v "Powder and solvent for oral solution" ]
+  ] [
+     fhir:code [ fhir:v "100000073651" ] ;
+     fhir:display [ fhir:v "Powder and solvent for oral suspension" ]
+  ] [
+     fhir:code [ fhir:v "100000073774" ] ;
+     fhir:display [ fhir:v "Eye drops, powder and solvent for solution" ]
+  ] [
+     fhir:code [ fhir:v "100000073781" ] ;
+     fhir:display [ fhir:v "Eye drops, powder and solvent for suspension" ]
+  ] [
+     fhir:code [ fhir:v "100000073801" ] ;
+     fhir:display [ fhir:v "Ear drops, powder and solvent for suspension" ]
+  ] [
+     fhir:code [ fhir:v "100000073860" ] ;
+     fhir:display [ fhir:v "Powder and solvent for solution for infusion" ]
+  ] [
+     fhir:code [ fhir:v "100000073868" ] ;
+     fhir:display [ fhir:v "Powder and solvent for solution for injection" ]
+  ] [
+     fhir:code [ fhir:v "100000073869" ] ;
+     fhir:display [ fhir:v "Powder and solvent for suspension for injection" ]
+  ] [
+     fhir:code [ fhir:v "100000073884" ] ;
+     fhir:display [ fhir:v "Powder and solvent for implantation paste" ]
+  ] [
+     fhir:code [ fhir:v "100000073891" ] ;
+     fhir:display [ fhir:v "Endotracheopulmonary instillation, powder and solvent for solution" ]
+  ] [
+     fhir:code [ fhir:v "100000073892" ] ;
+     fhir:display [ fhir:v "Powder and solvent for endocervical gel" ]
+  ] [
+     fhir:code [ fhir:v "100000073941" ] ;
+     fhir:display [ fhir:v "Powder and solvent for sealant" ]
+  ] [
+     fhir:code [ fhir:v "100000073972" ] ;
+     fhir:display [ fhir:v "Concentrate and solvent for concentrate for solution for infusion" ]
+  ] [
+     fhir:code [ fhir:v "100000073973" ] ;
+     fhir:display [ fhir:v "Concentrate and solvent for cutaneous use" ]
+  ] [
+     fhir:code [ fhir:v "100000073974" ] ;
+     fhir:display [ fhir:v "Concentrate and solvent for injection" ]
+  ] [
+     fhir:code [ fhir:v "100000073975" ] ;
+     fhir:display [ fhir:v "Concentrate and solvent for solution for infusion" ]
+  ] [
+     fhir:code [ fhir:v "100000073987" ] ;
+     fhir:display [ fhir:v "Concentrate and diluent for solution for infusion" ]
+  ] [
+     fhir:code [ fhir:v "100000073988" ] ;
+     fhir:display [ fhir:v "Concentrate and solvent for cutaneous solution" ]
+  ] [
+     fhir:code [ fhir:v "100000073989" ] ;
+     fhir:display [ fhir:v "Concentrate and solvent for solution for injection" ]
+  ] [
+     fhir:code [ fhir:v "100000073990" ] ;
+     fhir:display [ fhir:v "Concentrate and solvent for suspension for injection" ]
+  ] [
+     fhir:code [ fhir:v "100000073999" ] ;
+     fhir:display [ fhir:v "Granules and solvent for suspension for injection" ]
+  ] [
+     fhir:code [ fhir:v "100000074015" ] ;
+     fhir:display [ fhir:v "Powder and solvent for concentrate for solution for infusion" ]
+  ] [
+     fhir:code [ fhir:v "100000074016" ] ;
+     fhir:display [ fhir:v "Powder and solvent for cutaneous solution" ]
+  ] [
+     fhir:code [ fhir:v "100000074017" ] ;
+     fhir:display [ fhir:v "Powder and solvent for gingival gel" ]
+  ] [
+     fhir:code [ fhir:v "100000074018" ] ;
+     fhir:display [ fhir:v "Powder and solvent for prolonged-release suspension for injection" ]
+  ] [
+     fhir:code [ fhir:v "100000074030" ] ;
+     fhir:display [ fhir:v "Powder and solvent for endosinusial solution" ]
+  ] [
+     fhir:code [ fhir:v "100000074031" ] ;
+     fhir:display [ fhir:v "Powder and solvent for intraocular instillation solution" ]
+  ] [
+     fhir:code [ fhir:v "100000074032" ] ;
+     fhir:display [ fhir:v "Powder and suspension for suspension for injection" ]
+  ] [
+     fhir:code [ fhir:v "100000074048" ] ;
+     fhir:display [ fhir:v "Suspension and effervescent granules for oral suspension" ]
+  ] [
+     fhir:code [ fhir:v "100000074051" ] ;
+     fhir:display [ fhir:v "Tablet and solvent for rectal suspension" ]
+  ] [
+     fhir:code [ fhir:v "100000074053" ] ;
+     fhir:display [ fhir:v "Powder and solvent for dental gel" ]
+  ] [
+     fhir:code [ fhir:v "100000074056" ] ;
+     fhir:display [ fhir:v "Gas and solvent for dispersion for injection/infusion" ]
+  ] [
+     fhir:code [ fhir:v "100000074057" ] ;
+     fhir:display [ fhir:v "Powder and solvent for solution for injection/infusion" ]
+  ] [
+     fhir:code [ fhir:v "100000074061" ] ;
+     fhir:display [ fhir:v "Suspension and solution for spray" ]
+  ] [
+     fhir:code [ fhir:v "100000074064" ] ;
+     fhir:display [ fhir:v "Tablet and powder for oral solution" ]
+  ] [
+     fhir:code [ fhir:v "100000075580" ] ;
+     fhir:display [ fhir:v "Emulsion and suspension for emulsion for injection" ]
+  ] [
+     fhir:code [ fhir:v "100000075584" ] ;
+     fhir:display [ fhir:v "Powder and solvent for dispersion for injection" ]
+  ] [
+     fhir:code [ fhir:v "100000075587" ] ;
+     fhir:display [ fhir:v "Powder for mouth wash" ]
+  ] [
+     fhir:code [ fhir:v "100000116137" ] ;
+     fhir:display [ fhir:v "Lyophilisate and solvent for solution for injection" ]
+  ] [
+     fhir:code [ fhir:v "100000116141" ] ;
+     fhir:display [ fhir:v "Fibrin sealant-powder and solvent for fibrin sealant" ]
+  ] [
+     fhir:code [ fhir:v "100000116155" ] ;
+     fhir:display [ fhir:v "Granules and solvent for oral suspension" ]
+  ] [
+     fhir:code [ fhir:v "100000116160" ] ;
+     fhir:display [ fhir:v "Lyophilisate and solvent for suspension for injection" ]
+  ] [
+     fhir:code [ fhir:v "100000116172" ] ;
+     fhir:display [ fhir:v "Powder and gel for gel" ]
+  ] [
+     fhir:code [ fhir:v "100000116173" ] ;
+     fhir:display [ fhir:v "Powder and solution for solution for injection" ]
+  ] [
+     fhir:code [ fhir:v "100000116174" ] ;
+     fhir:display [ fhir:v "Powder and solvent for epilesional solution" ]
+  ] [
+     fhir:code [ fhir:v "100000116175" ] ;
+     fhir:display [ fhir:v "Powder and solvent for intravesical solution" ]
+  ] [
+     fhir:code [ fhir:v "100000116176" ] ;
+     fhir:display [ fhir:v "Powder and solvent for intravesical suspension" ]
+  ] [
+     fhir:code [ fhir:v "100000116177" ] ;
+     fhir:display [ fhir:v "Powder and solvent for nebuliser solution" ]
+  ] [
+     fhir:code [ fhir:v "100000116179" ] ;
+     fhir:display [ fhir:v "Powder, dispersion and solvent for concentrate for dispersion for infusion" ]
+  ] [
+     fhir:code [ fhir:v "100000125746" ] ;
+     fhir:display [ fhir:v "Powder and solvent for emulsion for injection" ]
+  ] [
+     fhir:code [ fhir:v "100000125747" ] ;
+     fhir:display [ fhir:v "Nasal drops, powder and solvent for solution" ]
+  ] [
+     fhir:code [ fhir:v "100000125777" ] ;
+     fhir:display [ fhir:v "Suspension and solvent for suspension for injection" ]
+  ] [
+     fhir:code [ fhir:v "100000136318" ] ;
+     fhir:display [ fhir:v "Concentrate and solvent for solution for injection/infusion" ]
+  ] [
+     fhir:code [ fhir:v "100000136325" ] ;
+     fhir:display [ fhir:v "Powder and solvent for solution for injection/skin-prick test" ]
+  ] [
+     fhir:code [ fhir:v "100000136558" ] ;
+     fhir:display [ fhir:v "Lyophilisate and solvent for suspension for nasal administration" ]
+  ] [
+     fhir:code [ fhir:v "100000136560" ] ;
+     fhir:display [ fhir:v "Powder and solvent for solution for sealant" ]
+  ] [
+     fhir:code [ fhir:v "100000136907" ] ;
+     fhir:display [ fhir:v "Solution for dispersion for injection/infusion" ]
+  ] [
+     fhir:code [ fhir:v "100000143502" ] ;
+     fhir:display [ fhir:v "Powder and solution for dental cement" ]
+  ] [
+     fhir:code [ fhir:v "100000143546" ] ;
+     fhir:display [ fhir:v "Endotracheopulmonary instillation, powder and solvent for suspension" ]
+  ] [
+     fhir:code [ fhir:v "100000143552" ] ;
+     fhir:display [ fhir:v "Powder, solvent and matrix for implantation matrix" ]
+  ] [
+     fhir:code [ fhir:v "100000156068" ] ;
+     fhir:display [ fhir:v "Nasal drops, lyophilisate and solvent for suspension" ]
+  ] [
+     fhir:code [ fhir:v "100000157796" ] ;
+     fhir:display [ fhir:v "Lyophilisate and suspension for suspension for injection" ]
+  ] [
+     fhir:code [ fhir:v "100000164467" ] ;
+     fhir:display [ fhir:v "Powder for concentrate and solution for solution for infusion" ]
+  ] [
+     fhir:code [ fhir:v "100000169997" ] ;
+     fhir:display [ fhir:v "Powder and solution for bee-hive solution" ]
+  ] [
+     fhir:code [ fhir:v "100000170588" ] ;
+     fhir:display [ fhir:v "Suspension and solvent for oral spray" ]
+  ] [
+     fhir:code [ fhir:v "100000171127" ] ;
+     fhir:display [ fhir:v "Lyophilisate and solvent for oral suspension" ]
+  ] [
+     fhir:code [ fhir:v "100000171193" ] ;
+     fhir:display [ fhir:v "Concentrate and solvent for concentrate for oral spray, suspension" ]
+  ] [
+     fhir:code [ fhir:v "100000171238" ] ;
+     fhir:display [ fhir:v "Lyophilisate and solvent for oculonasal suspension" ]
+  ] [
+     fhir:code [ fhir:v "100000171935" ] ;
+     fhir:display [ fhir:v "Emulsion and lyophilisate for suspension for injection" ]
+  ] [
+     fhir:code [ fhir:v "100000174065" ] ;
+     fhir:display [ fhir:v "Powder and solvent for syrup" ]
+  ] [
+     fhir:code [ fhir:v "200000002161" ] ;
+     fhir:display [ fhir:v "Nasal spray, lyophilisate and solvent for suspension" ]
+  ] [
+     fhir:code [ fhir:v "200000002287" ] ;
+     fhir:display [ fhir:v "Powder and solution for bee-hive dispersion" ]
+  ] [
+     fhir:code [ fhir:v "200000004201" ] ;
+     fhir:display [ fhir:v "Solution and dispersion for nebuliser dispersion" ]
+  ] [
+     fhir:code [ fhir:v "200000004819" ] ;
+     fhir:display [ fhir:v "Effervescent powder and powder for oral suspension" ]
+  ] [
+     fhir:code [ fhir:v "200000004820" ] ;
+     fhir:display [ fhir:v "Lyophilisate and solvent for emulsion for injection" ]
+  ] [
+     fhir:code [ fhir:v "200000005547" ] ;
+     fhir:display [ fhir:v "Powder and solution for suspension for injection" ]
+  ] [
+     fhir:code [ fhir:v "200000010382" ] ;
+     fhir:display [ fhir:v "Lyophilisate and solvent for suspension for nasal spray or injection" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

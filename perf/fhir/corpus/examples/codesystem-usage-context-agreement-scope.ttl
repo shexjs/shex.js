@@ -1,0 +1,102 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/usage-context-agreement-scope> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "usage-context-agreement-scope"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem usage-context-agreement-scope</b></p><a name=\"usage-context-agreement-scope\"> </a><a name=\"hcusage-context-agreement-scope\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/CodeSystem/usage-context-agreement-scope</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">realm-base<a name=\"usage-context-agreement-scope-realm-base\"> </a></td><td>Realm Base</td><td>Defines use-case independent foundational expectations for exchange within a particular country or jurisdiction.  Should be accompanied by a jurisdiction.  Commonly used as a 'base' for more restrictive artifacts.</td></tr><tr><td style=\"white-space:nowrap\">knowledge<a name=\"usage-context-agreement-scope-knowledge\"> </a></td><td>Knowledge</td><td>Defines use-case-specific information or guidance that is relevant to a specific business or health domain but is not mandated for particular use.</td></tr><tr><td style=\"white-space:nowrap\">domain<a name=\"usage-context-agreement-scope-domain\"> </a></td><td>Domain</td><td>Defines use-case-specific requirements for a specific business or health domain.  May vary in jurisdictional scope from international to small region and in business scope from broad to narrow.</td></tr><tr><td style=\"white-space:nowrap\">community<a name=\"usage-context-agreement-scope-community\"> </a></td><td>Community</td><td>Sets contractual or business expectations for systems participating in a particular exchange community.</td></tr><tr><td style=\"white-space:nowrap\">system-design<a name=\"usage-context-agreement-scope-system-design\"> </a></td><td>System Design</td><td>Documents the specific capabilities of a single system as 'available' for purchase or use.  May have some variability reflecting options that can be configured.</td></tr><tr><td style=\"white-space:nowrap\">system-implementation<a name=\"usage-context-agreement-scope-system-implementation\"> </a></td><td>System Implementation</td><td>Documents the specific points of a single production system or endpoint.  This may be time-specific - i.e. reflecting the system 'as it is now' or 'as it was at some point in the past'.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/CodeSystem/usage-context-agreement-scope"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/CodeSystem/usage-context-agreement-scope>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1798" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "UsageContextAgreementScope"] ; # 
+  fhir:title [ fhir:v "Usage Context Agreement Scope"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "This codesystem defines codes describing the type of agreement represented by an artifact, for example for use in CanonicalResource.usageContext."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/usage-context-agreement-scope"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/usage-context-agreement-scope>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "realm-base" ] ;
+     fhir:display [ fhir:v "Realm Base" ] ;
+     fhir:definition [ fhir:v "Defines use-case independent foundational expectations for exchange within a particular country or jurisdiction.  Should be accompanied by a jurisdiction.  Commonly used as a 'base' for more restrictive artifacts." ]
+  ] [
+     fhir:code [ fhir:v "knowledge" ] ;
+     fhir:display [ fhir:v "Knowledge" ] ;
+     fhir:definition [ fhir:v "Defines use-case-specific information or guidance that is relevant to a specific business or health domain but is not mandated for particular use." ]
+  ] [
+     fhir:code [ fhir:v "domain" ] ;
+     fhir:display [ fhir:v "Domain" ] ;
+     fhir:definition [ fhir:v "Defines use-case-specific requirements for a specific business or health domain.  May vary in jurisdictional scope from international to small region and in business scope from broad to narrow." ]
+  ] [
+     fhir:code [ fhir:v "community" ] ;
+     fhir:display [ fhir:v "Community" ] ;
+     fhir:definition [ fhir:v "Sets contractual or business expectations for systems participating in a particular exchange community." ]
+  ] [
+     fhir:code [ fhir:v "system-design" ] ;
+     fhir:display [ fhir:v "System Design" ] ;
+     fhir:definition [ fhir:v "Documents the specific capabilities of a single system as 'available' for purchase or use.  May have some variability reflecting options that can be configured." ]
+  ] [
+     fhir:code [ fhir:v "system-implementation" ] ;
+     fhir:display [ fhir:v "System Implementation" ] ;
+     fhir:definition [ fhir:v "Documents the specific points of a single production system or endpoint.  This may be time-specific - i.e. reflecting the system 'as it is now' or 'as it was at some point in the past'." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

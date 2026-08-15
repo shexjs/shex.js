@@ -1,0 +1,231 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/OperationDefinition/Observation-stats> a fhir:OperationDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "Observation-stats"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: OperationDefinition Observation-stats</b></p><a name=\"Observation-stats\"> </a><a name=\"hcObservation-stats\"> </a><p>URL: [base]/Observation/$stats</p><h3>Parameters</h3><table class=\"grid\"><tr><td><b>Use</b></td><td><b>Name</b></td><td><b>Scope</b></td><td><b>Cardinality</b></td><td><b>Type</b></td><td><b>Binding</b></td><td><b>Documentation</b></td></tr><tr><td>IN</td><td>subject</td><td/><td>1..1</td><td><a href=\"datatypes.html#uri\">uri</a></td><td/><td><div><p>The subject of the relevant Observations, which has the value of the Observation.subject.reference. E.g. 'Patient/123'. Reference can be to an absolute URL, but servers only perform stats on their own observations</p>\n</div></td></tr><tr><td>IN</td><td>code</td><td/><td>0..*</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>The test code(s) upon which the statistics are being performed. Provide along with a system, or as a coding. For example, the LOINC code  =\n2339-0 (Glucose [Mass/​volume] in Blood) will evaluate all relevant Observations with this code in <code>Observation.code</code> and <code>Observation.component.code</code>. For LOINC codes that are panels, e.g., 85354-9(Blood pressure panel with all children optional), the stats operation returns statistics for each of the individual panel measurements.  That means it will include and evaluate all values grouped by code for all the individual observations that are: 1) referenced in   <code>.related</code> for <code>.related.type</code> = 'has-member'  and 2) component observations in <code>Observation.component</code>.</p>\n</div></td></tr><tr><td>IN</td><td>system</td><td/><td>0..1</td><td><a href=\"datatypes.html#uri\">uri</a></td><td/><td><div><p>The system for the code(s). Or provide a coding instead</p>\n</div></td></tr><tr><td>IN</td><td>coding</td><td/><td>0..*</td><td><a href=\"datatypes.html#Coding\">Coding</a></td><td/><td><div><p>The test code upon which the statistics are being performed, as a Coding</p>\n</div></td></tr><tr><td>IN</td><td>duration</td><td/><td>0..1</td><td><a href=\"datatypes.html#decimal\">decimal</a></td><td/><td><div><p>The time period of interest given as hours.  For example, the duration = \"1\" represents the last hour - the time period from on hour ago to now</p>\n</div></td></tr><tr><td>IN</td><td>period</td><td/><td>0..1</td><td><a href=\"datatypes.html#Period\">Period</a></td><td/><td><div><p>The time period over which the calculations to be performed, if a duration is not provided</p>\n</div></td></tr><tr><td>IN</td><td>statistic</td><td/><td>1..*</td><td><a href=\"datatypes.html#code\">code</a></td><td><a href=\"valueset-observation-statistics.html\">Statistics Code</a> (Required)</td><td><div><p>average|max|min|count  The statistical operations to be performed on the relevant operations. Multiple statistics operations can be specified. These codes are defined <a href=\"valueset-observation-statistics.html\">here</a></p>\n</div></td></tr><tr><td>IN</td><td>include</td><td/><td>0..1</td><td><a href=\"datatypes.html#boolean\">boolean</a></td><td/><td><div><p>Whether to return the observations on which the statistics are based</p>\n</div></td></tr><tr><td>IN</td><td>limit</td><td/><td>0..1</td><td><a href=\"datatypes.html#positiveInt\">positiveInt</a></td><td/><td><div><p>If an include parameter is specified, a limit may also be specified to limit the number of source Observations returned.  If the include parameter is absent or equal to \"false\" the limit parameter SHALL be ignored by the server</p>\n</div></td></tr><tr><td>IN</td><td>include-statuses</td><td/><td>0..*</td><td><a href=\"datatypes.html#code\">code</a></td><td/><td><div><p>This parameter is used to specify inclusion of observations in the response based on Observation.status by including the Observation instances with a status listed in this parameter. When the parameter is absent, the default is to include all values except <code>entered-in-error</code></p>\n</div></td></tr><tr><td>OUT</td><td>statistics</td><td/><td>1..*</td><td><a href=\"observation.html\">Observation</a></td><td/><td><div><p>A set of observations, one observation for each code, each containing one component for each statistic. The Observation.component.code contains the statistic, and is relative to the Observation.code and cannot be interpreted independently.  The Observation will also contain a subject, effectivePeriod, and code reflecting the input parameters.  The status is fixed to <code>final</code>.</p>\n</div></td></tr><tr><td>OUT</td><td>source</td><td/><td>0..*</td><td><a href=\"observation.html\">Observation</a></td><td/><td><div><p>Source observations on which the statistics are based</p>\n</div></td></tr></table><div><p>If <a href=\"extensibility.html#modifierExtension\">modifier extensions</a> are present in the Observation, they must be accounted for by implementers.  A modifier extension may affect the observation.value in a way that it should be excluded from the from the calculations.</p>\n<p>This operation cannot be performed on observations that the user is not authorized to see.  It is assumed that the server has identified and secured the context appropriately, and can either associate the authorization context with a single patient, or determine whether the context has the rights to the nominated patient, if there is one. If there is no nominated patient (e.g. the operation is invoked at the system level) and the context is not associated with a single patient record, then the server should return an error. Specifying the relationship between the context, a user and patient records is outside the scope of this specification.</p>\n</div></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 3
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "oo"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/OperationDefinition/Observation-stats"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/OperationDefinition/Observation-stats>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "Stats"] ; # 
+  fhir:title [ fhir:v "Observation Statistics"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:kind [ fhir:v "operation"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Orders and Observations"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/orders" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "The Statistics operation performs a set of statistical calculations on a set of clinical measurements such as a blood pressure as stored on the server.  This operation evaluates [Observation](observation.html) resources having valueQuantity elements that have UCUM unit codes.      \r\rAlternatively, the [measure workflow pattern](measure.html) should be used when defining a quality measure (e.g. a description of how to calculate a particular measurement or set of measurements) as part of a workflow. \r\rThe set of Observations is defined by 4 parameters:\r\r*  the subject of the observations for which the statistics are being generated (`subject`)\r* which observations to generate statistics for (`code` and `system`, or `coding`)\r* the time period over which to generate statistics 'duration` or `period`)\r* the set of statistical analyses to return (`statistic`)\r\rPossible statistical analyses (see [StatisticsCode](valueset-observation-statistics.html)):\r\r - **average** (\"Average\"): The [mean](https://en.wikipedia.org/wiki/Arithmetic_mean) of N measurements over the stated period.\r\n - **maximum** (\"Maximum\"): The [maximum](https://en.wikipedia.org/wiki/Maximal_element) value of N measurements over the stated period.\r\n - **minimum** (\"Minimum\"): The [minimum](https://en.wikipedia.org/wiki/Minimal_element) value of N measurements over the stated period.\r\n - **count** (\"Count\"): The [number] of valid measurements over the stated period that contributed to the other statistical outputs.\r\n - **total-count** (\"Total Count\"): The total [number] of valid measurements over the stated period, including observations that were ignored because they did not contain valid result values.\r\n - **median** (\"Median\"): The [median](https://en.wikipedia.org/wiki/Median) of N measurements over the stated period.\r\n - **std-dev** (\"Standard Deviation\"): The [standard deviation](https://en.wikipedia.org/wiki/Standard_deviation) of N measurements over the stated period.\r\n - **sum** (\"Sum\"): The [sum](https://en.wikipedia.org/wiki/Summation) of N measurements over the stated period.\r\n - **variance** (\"Variance\"): The [variance](https://en.wikipedia.org/wiki/Variance) of N measurements over the stated period.\r\n - **20-percent** (\"20th Percentile\"): The 20th [Percentile](https://en.wikipedia.org/wiki/Percentile) of N measurements over the stated period.\r\n - **80-percent** (\"80th Percentile\"): The 80th [Percentile](https://en.wikipedia.org/wiki/Percentile) of N measurements over the stated period.\r\n - **4-lower** (\"Lower Quartile\"): The lower [Quartile](https://en.wikipedia.org/wiki/Quartile) Boundary of N measurements over the stated period.\r\n - **4-upper** (\"Upper Quartile\"): The upper [Quartile](https://en.wikipedia.org/wiki/Quartile) Boundary of N measurements over the stated period.\r\n - **4-dev** (\"Quartile Deviation\"): The difference between the upper and lower [Quartiles](https://en.wikipedia.org/wiki/Quartile) is called the Interquartile range. (IQR = Q3-Q1) Quartile deviation or Semi-interquartile range is one-half the difference between the first and the third quartiles.\r\n - **5-1** (\"1st Quintile\"): The lowest of four values that divide the N measurements into a frequency distribution of five classes with each containing one fifth of the total population.\r\n - **5-2** (\"2nd Quintile\"): The second of four values that divide the N measurements into a frequency distribution of five classes with each containing one fifth of the total population.\r\n - **5-3** (\"3rd Quintile\"): The third of four values that divide the N measurements into a frequency distribution of five classes with each containing one fifth of the total population.\r\n - **5-4** (\"4th Quintile\"): The fourth of four values that divide the N measurements into a frequency distribution of five classes with each containing one fifth of the total population.\r\n - **skew** (\"Skew\"): Skewness is a measure of the asymmetry of the probability distribution of a real-valued random variable about its mean. The skewness value can be positive or negative, or even undefined.  Source: [Wikipedia](https://en.wikipedia.org/wiki/Skewness).\r\n - **kurtosis** (\"Kurtosis\"): Kurtosis  is a measure of the \"tailedness\" of the probability distribution of a real-valued random variable.   Source: [Wikipedia](https://en.wikipedia.org/wiki/Kurtosis).\r\n - **regression** (\"Regression\"): Linear regression is an approach for modeling two-dimensional sample points with one independent variable and one dependent variable (conventionally, the x and y coordinates in a Cartesian coordinate system) and finds a linear function (a non-vertical straight line) that, as accurately as possible, predicts the dependent variable values as a function of the independent variables. Source: [Wikipedia](https://en.wikipedia.org/wiki/Simple_linear_regression)  This Statistic code will return both a gradient and an intercept value.\r\n\r\rIf successful, the operation returns an Observation resource for each code with the results of the statistical calculations as component value pairs where the component code = the statistical code. The Observation also contains the input parameters `patient`,`code` and `duration` parameters. If unsuccessful, an [OperationOutcome](operationoutcome.html) with an error message will be returned.\r\rThe client can request that all the observations on which the statistics are based be returned as well, using the include parameter. If an include parameter is specified, a limit may also be specified; the sources observations are subsetted at the server's discretion if count > limit. This functionality is included with the intent of supporting graphical presentation"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:affectsState [ fhir:v false] ; # 
+  fhir:code [ fhir:v "stats"] ; # 
+  fhir:comment [ fhir:v "If [modifier extensions](extensibility.html#modifierExtension) are present in the Observation, they must be accounted for by implementers.  A modifier extension may affect the observation.value in a way that it should be excluded from the from the calculations.\r\rThis operation cannot be performed on observations that the user is not authorized to see.  It is assumed that the server has identified and secured the context appropriately, and can either associate the authorization context with a single patient, or determine whether the context has the rights to the nominated patient, if there is one. If there is no nominated patient (e.g. the operation is invoked at the system level) and the context is not associated with a single patient record, then the server should return an error. Specifying the relationship between the context, a user and patient records is outside the scope of this specification."] ; # 
+  fhir:resource ( [
+     fhir:v "Observation"^^xsd:anyURI ;
+     fhir:l fhir:Observation
+  ] ) ; # 
+  fhir:system [ fhir:v false] ; # 
+  fhir:type [ fhir:v true] ; # 
+  fhir:instance [ fhir:v false] ; # 
+  fhir:parameter ( [
+     fhir:name [ fhir:v "subject" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "1"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The subject of the relevant Observations, which has the value of the Observation.subject.reference. E.g. 'Patient/123'. Reference can be to an absolute URL, but servers only perform stats on their own observations" ] ;
+     fhir:type [
+       fhir:v "uri"^^xsd:anyURI ;
+       fhir:l fhir:uri
+     ]
+  ] [
+     fhir:name [ fhir:v "code" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "The test code(s) upon which the statistics are being performed. Provide along with a system, or as a coding. For example, the LOINC code  = \r2339-0 (Glucose [Mass/​volume] in Blood) will evaluate all relevant Observations with this code in `Observation.code` and `Observation.component.code`. For LOINC codes that are panels, e.g., 85354-9(Blood pressure panel with all children optional), the stats operation returns statistics for each of the individual panel measurements.  That means it will include and evaluate all values grouped by code for all the individual observations that are: 1) referenced in   `.related` for `.related.type` = 'has-member'  and 2) component observations in `Observation.component`." ] ;
+     fhir:type [
+       fhir:v "string"^^xsd:anyURI ;
+       fhir:l fhir:string
+     ]
+  ] [
+     fhir:name [ fhir:v "system" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The system for the code(s). Or provide a coding instead" ] ;
+     fhir:type [
+       fhir:v "uri"^^xsd:anyURI ;
+       fhir:l fhir:uri
+     ]
+  ] [
+     fhir:name [ fhir:v "coding" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "The test code upon which the statistics are being performed, as a Coding" ] ;
+     fhir:type [
+       fhir:v "Coding"^^xsd:anyURI ;
+       fhir:l fhir:Coding
+     ]
+  ] [
+     fhir:name [ fhir:v "duration" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The time period of interest given as hours.  For example, the duration = \"1\" represents the last hour - the time period from on hour ago to now" ] ;
+     fhir:type [
+       fhir:v "decimal"^^xsd:anyURI ;
+       fhir:l fhir:decimal
+     ]
+  ] [
+     fhir:name [ fhir:v "period" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The time period over which the calculations to be performed, if a duration is not provided" ] ;
+     fhir:type [
+       fhir:v "Period"^^xsd:anyURI ;
+       fhir:l fhir:Period
+     ]
+  ] [
+     fhir:name [ fhir:v "statistic" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "1"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "average|max|min|count  The statistical operations to be performed on the relevant operations. Multiple statistics operations can be specified. These codes are defined [here](valueset-observation-statistics.html)" ] ;
+     fhir:type [
+       fhir:v "code"^^xsd:anyURI ;
+       fhir:l fhir:code
+     ] ;
+     fhir:binding [
+       fhir:extension ( [
+         fhir:url [
+           fhir:v "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName>
+         ] ;
+         fhir:value [
+           a fhir:String ;
+           fhir:v "ObservationStatsCode"
+         ]
+       ] ) ;
+       fhir:strength [ fhir:v "required" ] ;
+       fhir:valueSet [
+         fhir:v "http://hl7.org/fhir/ValueSet/observation-statistics|6.0.0-ballot4"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/ValueSet/observation-statistics?version=6.0.0-ballot4>
+       ]
+     ]
+  ] [
+     fhir:name [ fhir:v "include" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "Whether to return the observations on which the statistics are based" ] ;
+     fhir:type [
+       fhir:v "boolean"^^xsd:anyURI ;
+       fhir:l fhir:boolean
+     ]
+  ] [
+     fhir:name [ fhir:v "limit" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "If an include parameter is specified, a limit may also be specified to limit the number of source Observations returned.  If the include parameter is absent or equal to \"false\" the limit parameter SHALL be ignored by the server" ] ;
+     fhir:type [
+       fhir:v "positiveInt"^^xsd:anyURI ;
+       fhir:l fhir:positiveInt
+     ]
+  ] [
+     fhir:name [ fhir:v "include-statuses" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "This parameter is used to specify inclusion of observations in the response based on Observation.status by including the Observation instances with a status listed in this parameter. When the parameter is absent, the default is to include all values except `entered-in-error`" ] ;
+     fhir:type [
+       fhir:v "code"^^xsd:anyURI ;
+       fhir:l fhir:code
+     ]
+  ] [
+     fhir:name [ fhir:v "statistics" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "1"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "A set of observations, one observation for each code, each containing one component for each statistic. The Observation.component.code contains the statistic, and is relative to the Observation.code and cannot be interpreted independently.  The Observation will also contain a subject, effectivePeriod, and code reflecting the input parameters.  The status is fixed to `final`." ] ;
+     fhir:type [
+       fhir:v "Observation"^^xsd:anyURI ;
+       fhir:l fhir:Observation
+     ]
+  ] [
+     fhir:name [ fhir:v "source" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "Source observations on which the statistics are based" ] ;
+     fhir:type [
+       fhir:v "Observation"^^xsd:anyURI ;
+       fhir:l fhir:Observation
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

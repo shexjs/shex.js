@@ -1,0 +1,226 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# source data from http://wiki.ihe.net/index.php?title=Annotated_ProvideAndRegister.b_Transaction.
+#  <homeCommunity>1.2.36.1.1001.1.1.1.1</homeCommunity>
+
+<http://hl7.org/fhir/DocumentReference/example> a fhir:DocumentReference ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:contained ( [
+     a fhir:Practitioner ;
+     fhir:id [ fhir:v "a2" ] ;
+     fhir:name ( [
+       fhir:family [ fhir:v "Smitty" ] ;
+       fhir:given ( [ fhir:v "Gerald" ] )
+     ] )
+  ] ) ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/workflow-supportingInfo"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/workflow-supportingInfo>
+     ] ;
+     fhir:value [
+       a fhir:Reference ;
+       fhir:l <http://hl7.org/fhir/Patient/xcda> ;
+       fhir:reference [ fhir:v "Patient/xcda" ] ;
+       fhir:identifier [
+         fhir:system [
+           fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+           fhir:l <urn:ietf:rfc:3986>
+         ] ;
+         fhir:value [ fhir:v "urn:oid:1.3.6.1.4.1.21367.2005.3.7.2345" ]
+       ]
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/documentreference-sourcepatient"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/documentreference-sourcepatient>
+     ] ;
+     fhir:value [
+       a fhir:Reference ;
+       fhir:l <http://hl7.org/fhir/Patient/xcda> ;
+       fhir:reference [ fhir:v "Patient/xcda" ]
+     ]
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:text [ fhir:v "entryUUID" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:1.3.6.1.4.1.21367.2005.3.7.1234" ]
+  ] [
+     fhir:type [
+       fhir:text [ fhir:v "uniqueId" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:1.3.6.1.4.1.21367.2005.3.7" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "current"] ; # 
+  fhir:docStatus [ fhir:v "preliminary"] ; # 
+  fhir:type [
+     a loinc:34108-1 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "34108-1" ] ;
+       fhir:display [ fhir:v "Outpatient Note" ]
+     ] )
+  ] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://ihe.net/xds/connectathon/classCodes"^^xsd:anyURI ;
+         fhir:l <http://ihe.net/xds/connectathon/classCodes>
+       ] ;
+       fhir:code [ fhir:v "History and Physical" ] ;
+       fhir:display [ fhir:v "History and Physical" ]
+     ] )
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/xcda> ;
+     fhir:reference [ fhir:v "Patient/xcda" ]
+  ] ; # 
+  fhir:context ( [
+     fhir:l <http://hl7.org/fhir/Encounter/xcda> ;
+     fhir:reference [ fhir:v "Encounter/xcda" ]
+  ] ) ; # 
+  fhir:event ( [
+     fhir:concept [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://ihe.net/xds/connectathon/eventCodes"^^xsd:anyURI ;
+           fhir:l <http://ihe.net/xds/connectathon/eventCodes>
+         ] ;
+         fhir:code [ fhir:v "T-D8200" ] ;
+         fhir:display [ fhir:v "Arm" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:facilityType [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://www.ihe.net/xds/connectathon/healthcareFacilityTypeCodes"^^xsd:anyURI ;
+         fhir:l <http://www.ihe.net/xds/connectathon/healthcareFacilityTypeCodes>
+       ] ;
+       fhir:code [ fhir:v "Outpatient" ] ;
+       fhir:display [ fhir:v "Outpatient" ]
+     ] )
+  ] ; # 
+  fhir:practiceSetting [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://www.ihe.net/xds/connectathon/practiceSettingCodes"^^xsd:anyURI ;
+         fhir:l <http://www.ihe.net/xds/connectathon/practiceSettingCodes>
+       ] ;
+       fhir:code [ fhir:v "General Medicine" ] ;
+       fhir:display [ fhir:v "General Medicine" ]
+     ] )
+  ] ; # 
+  fhir:period [
+     fhir:start [ fhir:v "2004-12-23T08:00:00+11:00"^^xsd:dateTime ] ;
+     fhir:end [ fhir:v "2004-12-23T08:01:00+11:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:date [ fhir:v "2005-12-24T09:43:41+11:00"^^xsd:dateTime] ; # 
+  fhir:author ( [
+     fhir:l <http://hl7.org/fhir/Practitioner/xcda1> ;
+     fhir:reference [ fhir:v "Practitioner/xcda1" ]
+  ] [
+     fhir:l <#a2> ;
+     fhir:reference [ fhir:v "#a2" ]
+  ] ) ; # 
+  fhir:attester ( [
+     fhir:mode [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/composition-attestation-mode"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/composition-attestation-mode>
+         ] ;
+         fhir:code [ fhir:v "official" ]
+       ] )
+     ] ;
+     fhir:party [
+       fhir:l <http://hl7.org/fhir/Organization/f001> ;
+       fhir:reference [ fhir:v "Organization/f001" ]
+     ]
+  ] ) ; # 
+  fhir:custodian [
+     fhir:l <http://hl7.org/fhir/Organization/f001> ;
+     fhir:reference [ fhir:v "Organization/f001" ]
+  ] ; # 
+  fhir:relatesTo ( [
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/document-relationship-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/document-relationship-type>
+         ] ;
+         fhir:code [ fhir:v "appends" ]
+       ] )
+     ] ;
+     fhir:target [
+       fhir:l <http://hl7.org/fhir/DocumentReference/example> ;
+       fhir:reference [ fhir:v "DocumentReference/example" ]
+     ]
+  ] ) ; # 
+  fhir:description [ fhir:v "Physical"] ; # 
+  fhir:securityLabel ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-Confidentiality"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-Confidentiality>
+       ] ;
+       fhir:code [ fhir:v "V" ] ;
+       fhir:display [ fhir:v "very restricted" ]
+     ] )
+  ] ) ; # 
+  fhir:content ( [
+     fhir:attachment [
+       fhir:contentType [ fhir:v "application/hl7-v3+xml" ] ;
+       fhir:language [ fhir:v "en-US" ] ;
+       fhir:url [
+         fhir:v "http://example.org/xds/mhd/Binary/07a6483f-732b-461e-86b6-edb665c45510"^^xsd:anyURI ;
+         fhir:l <http://example.org/xds/mhd/Binary/07a6483f-732b-461e-86b6-edb665c45510>
+       ] ;
+       fhir:size [ fhir:v "3654"^^xsd:long ] ;
+       fhir:hash [ fhir:v "2jmj7l5rSw0yVb/vlWAYkK/YBwk="^^xsd:base64Binary ] ;
+       fhir:title [ fhir:v "Physical" ] ;
+       fhir:creation [ fhir:v "2005-12-24T09:35:00+11:00"^^xsd:dateTime ]
+     ] ;
+     fhir:profile ( [
+       fhir:value [
+         a fhir:Coding ;
+         fhir:system [
+           fhir:v "urn:oid:1.3.6.1.4.1.19376.1.2.3"^^xsd:anyURI ;
+           fhir:l <urn:oid:1.3.6.1.4.1.19376.1.2.3>
+         ] ;
+         fhir:code [ fhir:v "urn:ihe:pcc:handp:2008" ] ;
+         fhir:display [ fhir:v "History and Physical Specification" ]
+       ]
+     ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/xcda> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/xcda> a fhir:Encounter .
+
+<http://hl7.org/fhir/Practitioner/xcda1> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Organization/f001> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

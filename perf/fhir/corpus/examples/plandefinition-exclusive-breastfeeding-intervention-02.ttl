@@ -1,0 +1,104 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/PlanDefinition/exclusive-breastfeeding-intervention-02> a fhir:PlanDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "exclusive-breastfeeding-intervention-02"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <table class=\"grid dict\">\n        <tr>\n          <td>\n            <b>Id: </b>\n          </td>\n        </tr>\n        <tr>\n          <td style=\"padding-left: 25px; padding-right: 25px;\">PlanDefinition/exclusive-breastfeeding-intervention-02</td>\n        </tr>\n      </table>\n      <p/>\n      <table class=\"grid dict\">\n        <tr>\n          <td>\n            <b>Identifier: </b>\n          </td>\n        </tr>\n        <tr>\n          <td style=\"padding-left: 25px; padding-right: 25px;\">\n            <b>value: </b>\n            <span>exclusive-breastfeeding-intervention-02</span>\n          </td>\n        </tr>\n      </table>\n      <p/>\n      <table class=\"grid dict\">\n        <tr>\n          <td>\n            <b>Title: </b>\n          </td>\n        </tr>\n        <tr>\n          <td style=\"padding-left: 25px; padding-right: 25px;\">Exclusive Breastfeeding Intervention-02</td>\n        </tr>\n      </table>\n      <p/>\n      <table class=\"grid dict\">\n        <tr>\n          <td>\n            <b>Status: </b>\n          </td>\n        </tr>\n        <tr>\n          <td style=\"padding-left: 25px; padding-right: 25px;\">active</td>\n        </tr>\n      </table>\n      <p/>\n      <table class=\"grid dict\">\n        <tr>\n          <td>\n            <b>Description: </b>\n          </td>\n        </tr>\n        <tr>\n          <td style=\"padding-left: 25px; padding-right: 25px;\">Exclusive breastfeeding intervention intended to improve outcomes for exclusive breastmilk feeding of newborns by notifying the provider to sign the breastmilk feeding readiness assessment order, if necessary.</td>\n        </tr>\n      </table>\n      <p/>\n      <table class=\"grid dict\">\n        <tr>\n          <td>\n            <b>Topic: </b>\n          </td>\n        </tr>\n        <tr>\n          <td style=\"padding-left: 25px; padding-right: 25px;\">\n            <span>\n              <b>text: </b>\n              <span>Exclusive Breastfeeding</span>\n            </span>\n          </td>\n        </tr>\n      </table>\n      <p/>\n      <table class=\"grid dict\">\n        <tr>\n          <td>\n            <b>Library: </b>\n          </td>\n        </tr>\n        <tr>\n          <td style=\"padding-left: 25px; padding-right: 25px;\">\n            <b>reference: </b>\n            <span>Library/library-exclusive-breastfeeding-cds-logic</span>\n          </td>\n        </tr>\n      </table>\n      <p/>\n      <h2>Actions</h2>\n      <p style=\"width: 100%;\" class=\"hierarchy\">\n        <span>\n          <b>Step: </b>\n          <br/>\n          <span style=\"padding-left: 25px;\">\n            <b>title: </b>\n            <span>Mother should be administered a breastfeeding readiness assessment.</span>\n            <br/>\n          </span>\n          <span style=\"padding-left: 25px;\">\n            <b>condition: </b>\n            <br/>\n            <span style=\"padding-left: 50px;\">\n              <b>type: </b>\n              <span>applicability</span>\n              <br/>\n            </span>\n            <span style=\"padding-left: 50px;\">\n              <b>expression: </b>\n              <span>Should Notify Provider to Sign Assessment Order</span>\n              <br/>\n            </span>\n          </span>\n          <span style=\"padding-left: 25px;\">\n            <span>\n              <b>Step: </b>\n              <br/>\n              <span style=\"padding-left: 50px;\">\n                <b>title: </b>\n                <span>Notify the provider to sign the order.</span>\n                <br/>\n              </span>\n              <span style=\"padding-left: 50px;\">\n                <b>text: </b>\n                <span>A Breastfeeding Readiness Assessment is recommended, please authorize or reject the order.</span>\n                <br/>\n              </span>\n            </span>\n          </span>\n        </span>\n      </p>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:value [ fhir:v "exclusive-breastfeeding-intervention-02" ]
+  ] [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.11.20" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "1.0.0"] ; # 
+  fhir:name [ fhir:v "ExclusiveBreastfeedingIntervention02"] ; # 
+  fhir:title [ fhir:v "Exclusive Breastfeeding Intervention-02"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:date [ fhir:v "2015-03-08"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Decision Support"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/dss" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Exclusive breastfeeding intervention intended to improve outcomes for exclusive breastmilk feeding of newborns by notifying the provider to sign the breastmilk feeding readiness assessment order, if necessary."] ; # 
+  fhir:topic ( [
+     fhir:text [ fhir:v "Exclusive Breastfeeding" ]
+  ] ) ; # 
+  fhir:relatedArtifact ( [
+     fhir:type [ fhir:v "derived-from" ] ;
+     fhir:resource [
+       fhir:v "http://example.org/fhir/Measure/measure-exclusive-breastfeeding"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Measure/measure-exclusive-breastfeeding>
+     ]
+  ] ) ; # 
+  fhir:library ( [
+     fhir:v "http://example.org/fhir/Library/library-exclusive-breastfeeding-cds-logic"^^xsd:anyURI ;
+     fhir:l <http://example.org/fhir/Library/library-exclusive-breastfeeding-cds-logic>
+  ] ) ; # 
+  fhir:action ( [
+     fhir:title [ fhir:v "Mother should be administered a breastfeeding readiness assessment." ] ;
+     fhir:trigger ( [
+       fhir:type [ fhir:v "named-event" ] ;
+       fhir:name [ fhir:v "Admission" ]
+     ] [
+       fhir:type [ fhir:v "named-event" ] ;
+       fhir:name [ fhir:v "Birth" ]
+     ] [
+       fhir:type [ fhir:v "named-event" ] ;
+       fhir:name [ fhir:v "Infant Transfer to Recovery" ]
+     ] [
+       fhir:type [ fhir:v "named-event" ] ;
+       fhir:name [ fhir:v "Transfer to Post-Partum" ]
+     ] ) ;
+     fhir:condition ( [
+       fhir:kind [ fhir:v "applicability" ] ;
+       fhir:expression [
+         fhir:language [ fhir:v "text/cql-identifier" ] ;
+         fhir:expression [ fhir:v "Should Notify Provider to Sign Assessment Order" ]
+       ]
+     ] ) ;
+     fhir:action ( [
+       fhir:title [ fhir:v "Notify the provider to sign the order." ] ;
+       fhir:textEquivalent [ fhir:v "A Breastfeeding Readiness Assessment is recommended, please authorize or reject the order." ] ;
+       fhir:type [
+         fhir:coding ( [
+           fhir:code [ fhir:v "create" ]
+         ] )
+       ] ;
+       fhir:dynamicValue ( [
+         fhir:path [ fhir:v "/" ] ;
+         fhir:expression [
+           fhir:language [ fhir:v "text/cql-identifier" ] ;
+           fhir:expression [ fhir:v "Communication Request to Provider" ]
+         ]
+       ] )
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,54 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# The use case illustrates the use of an HCT/P (Human Cells and Tissues Product), which UDI is built with ISBT 128 (ICCBBA) and includes traceability to the donor.
+# 014032 = this is the expiration date expressed in YYYDDD (three digit year, three digit day number)
+# <association>
+#	  <status> 
+#	     <coding>
+#		   <system value="http://terminology.hl7.org/CodeSystem/device-associationstatus" />
+#           <code value="attached"/>
+#		 </coding>
+#	  </status>
+#      <humanSubject>
+#		<reference value="Patient/example"/>
+#	  </humanSubject>
+#	</association>
+
+<http://hl7.org/fhir/Device/example-udi2> a fhir:Device ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-udi2"] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/NamingSystem/iccbba-din"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/NamingSystem/iccbba-din>
+         ]
+       ] )
+     ] ;
+     fhir:value [ fhir:v "A99971312345600" ]
+  ] ) ; # 
+  fhir:udiCarrier ( [
+     fhir:deviceIdentifier [ fhir:v "A9999XYZ100T0474" ] ;
+     fhir:issuer [
+       fhir:v "http://hl7.org/fhir/NamingSystem/iccbba-other"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/NamingSystem/iccbba-other>
+     ] ;
+     fhir:jurisdiction [
+       fhir:v "http://hl7.org/fhir/NamingSystem/fda-udi"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/NamingSystem/fda-udi>
+     ]
+  ] ) ; # 
+  fhir:status [ fhir:v "inactive"] ; # 
+  fhir:manufacturer [ fhir:v "Acme Devices, Inc"] ; # 
+  fhir:manufactureDate [ fhir:v "2013-02-01"^^xsd:date] ; # 
+  fhir:expirationDate [ fhir:v "2014-02-01"^^xsd:date] . # 013032 = this is the manufacturing date expressed in YYYDDD (three digit year, three digit day number)
+
+# -------------------------------------------------------------------------------------
+

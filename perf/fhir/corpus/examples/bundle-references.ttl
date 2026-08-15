@@ -1,0 +1,294 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/bundle-references> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "bundle-references"] ; # 
+  fhir:type [ fhir:v "collection"] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "http://example.org/fhir/Patient/23"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Patient/23>
+     ] ;
+     fhir:resource ( <http://example.org/fhir/Patient/23> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:04121321-4af5-424c-a0e1-ed3aab1c349d"^^xsd:anyURI ;
+       fhir:l <urn:uuid:04121321-4af5-424c-a0e1-ed3aab1c349d>
+     ] ;
+     fhir:resource ( <urn:uuid:04121321-4af5-424c-a0e1-ed3aab1c349d> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://example.org/fhir/Observation/123"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Observation/123>
+     ] ;
+     fhir:resource ( <http://example.org/fhir/Observation/123> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://example.org/fhir/Observation/124"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Observation/124>
+     ] ;
+     fhir:resource ( <http://example.org/fhir/Observation/124> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://example.org/fhir/Observation/12"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Observation/12>
+     ] ;
+     fhir:resource ( <http://example.org/fhir/Observation/12> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://example.org/fhir/Observation/14"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Observation/14>
+     ] ;
+     fhir:resource ( <http://example.org/fhir/Observation/14> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://example.org/fhir-2/Observation/14"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir-2/Observation/14>
+     ] ;
+     fhir:resource ( <http://example.org/fhir-2/Observation/14> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://example.org/fhir/Patient/45"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Patient/45>
+     ] ;
+     fhir:resource ( <http://example.org/fhir/Patient/45> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://example.org/fhir/Patient/45"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Patient/45>
+     ] ;
+     fhir:resource ( <http://example.org/fhir/Patient/45> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://example.org/fhir/Observation/47"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Observation/47>
+     ] ;
+     fhir:resource ( <http://example.org/fhir/Observation/47> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://example.org/fhir/Observation/48"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Observation/48>
+     ] ;
+     fhir:resource ( <http://example.org/fhir/Observation/48> )
+  ] ) . # A patient that already has an id on a server
+
+<http://example.org/fhir/Patient/23> a fhir:Patient ;
+  fhir:id [ fhir:v "23"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Patient 23</b></p><a name=\"23\"> </a><a name=\"hc23\"> </a><p style=\"border: 1px #661aff solid; background-color: #e6e6ff; padding: 10px;\">Anonymous Patient (no stated gender), DoB Unknown ( http://example.org/ids#1234567)</p><hr/></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://example.org/ids"^^xsd:anyURI ;
+       fhir:l <http://example.org/ids>
+     ] ;
+     fhir:value [ fhir:v "1234567" ]
+  ] ) . # 
+
+<urn:uuid:04121321-4af5-424c-a0e1-ed3aab1c349d> a fhir:Patient ;
+  fhir:id [ fhir:v "temp"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Patient temp</b></p><a name=\"temp\"> </a><a name=\"hctemp\"> </a><p style=\"border: 1px #661aff solid; background-color: #e6e6ff; padding: 10px;\">Anonymous Patient (no stated gender), DoB Unknown</p><hr/></div>"^^rdf:XMLLiteral ]
+  ] . # 
+
+<http://example.org/fhir/Observation/123> a fhir:Observation ;
+  fhir:id [ fhir:v "123"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Observation 123</b></p><a name=\"123\"> </a><a name=\"hc123\"> </a><p><b>status</b>: Final</p><p><b>code</b>: <span title=\"Codes:{http://loinc.org 15074-8}\">Glucose [Moles/volume] in Blood</span></p><p><b>subject</b>: <a href=\"broken-link.html\">Patient/23</a></p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "final"] ; # 
+  fhir:code [
+     a loinc:15074-8 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "15074-8" ] ;
+       fhir:display [ fhir:v "Glucose [Moles/volume] in Blood" ]
+     ] )
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/23> ;
+     fhir:reference [ fhir:v "Patient/23" ] # this is reference to the first patient above
+  ] . # 
+
+<http://hl7.org/fhir/Patient/23> a fhir:Patient .
+
+<http://example.org/fhir/Observation/124> a fhir:Observation ;
+  fhir:id [ fhir:v "124"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Observation 124</b></p><a name=\"124\"> </a><a name=\"hc124\"> </a><p><b>status</b>: Final</p><p><b>code</b>: <span title=\"Codes:{http://loinc.org 15074-8}\">Glucose [Moles/volume] in Blood</span></p><p><b>subject</b>: <a href=\"broken-link.html\">http://example.org/fhir/Patient/23</a></p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "final"] ; # 
+  fhir:code [
+     a loinc:15074-8 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "15074-8" ] ;
+       fhir:display [ fhir:v "Glucose [Moles/volume] in Blood" ]
+     ] )
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://example.org/fhir/Patient/23> ;
+     fhir:reference [ fhir:v "http://example.org/fhir/Patient/23" ] # this is reference to the first patient above
+  ] . # 
+
+<http://example.org/fhir/Observation/12> a fhir:Observation ;
+  fhir:id [ fhir:v "12"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Observation 12</b></p><a name=\"12\"> </a><a name=\"hc12\"> </a><p><b>status</b>: Final</p><p><b>code</b>: <span title=\"Codes:{http://loinc.org 15074-8}\">Glucose [Moles/volume] in Blood</span></p><p><b>subject</b>: <a href=\"broken-link.html\">urn:uuid:04121321-4af5-424c-a0e1-ed3aab1c349d</a></p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "final"] ; # 
+  fhir:code [
+     a loinc:15074-8 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "15074-8" ] ;
+       fhir:display [ fhir:v "Glucose [Moles/volume] in Blood" ]
+     ] )
+  ] ; # 
+  fhir:subject [
+     fhir:l <urn:uuid:04121321-4af5-424c-a0e1-ed3aab1c349d> ;
+     fhir:reference [ fhir:v "urn:uuid:04121321-4af5-424c-a0e1-ed3aab1c349d" ] # reference to the second patient above
+  ] . # 
+
+<http://example.org/fhir/Observation/14> a fhir:Observation ;
+  fhir:id [ fhir:v "14"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Observation 14</b></p><a name=\"14\"> </a><a name=\"hc14\"> </a><p><b>status</b>: Final</p><p><b>code</b>: <span title=\"Codes:{http://loinc.org 15074-8}\">Glucose [Moles/volume] in Blood</span></p><p><b>subject</b>: <a href=\"broken-link.html\">http://example.org/fhir-2/Patient/1</a></p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "final"] ; # 
+  fhir:code [
+     a loinc:15074-8 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "15074-8" ] ;
+       fhir:display [ fhir:v "Glucose [Moles/volume] in Blood" ]
+     ] )
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://example.org/fhir-2/Patient/1> ;
+     fhir:reference [ fhir:v "http://example.org/fhir-2/Patient/1" ] # reference to a patient not found in this bundle
+  ] . # 
+
+<http://example.org/fhir-2/Observation/14> a fhir:Observation ;
+  fhir:id [ fhir:v "14"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Observation 14</b></p><p><b>status</b>: Final</p><p><b>code</b>: <span title=\"Codes:{http://loinc.org 15074-8}\">Glucose [Moles/volume] in Blood</span></p><p><b>subject</b>: <a href=\"broken-link.html\">Patient/23</a></p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "final"] ; # 
+  fhir:code [
+     a loinc:15074-8 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "15074-8" ] ;
+       fhir:display [ fhir:v "Glucose [Moles/volume] in Blood" ]
+     ] )
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/23> ;
+     fhir:reference [ fhir:v "Patient/23" ] # reference to a patient not found in this bundle
+  ] . # 
+
+<http://example.org/fhir/Patient/45> a fhir:Patient, fhir:Patient ;
+  fhir:id [ fhir:v "45"], [ fhir:v "45"] ; # 
+  fhir:meta [
+     fhir:versionId [ fhir:v "1" ]
+  ], [
+     fhir:versionId [ fhir:v "2" ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Patient 45</b></p><a name=\"45\"> </a><a name=\"hc45\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">version: 1</p></div><p style=\"border: 1px #661aff solid; background-color: #e6e6ff; padding: 10px;\">Name 1 (no stated gender), DoB Unknown</p><hr/></div>"^^rdf:XMLLiteral ]
+  ], [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Patient 45</b></p><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">version: 2</p></div><p style=\"border: 1px #661aff solid; background-color: #e6e6ff; padding: 10px;\">Name 2 (no stated gender), DoB Unknown</p><hr/></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:name ( [
+     fhir:text [ fhir:v "Name 1" ]
+  ] [
+     fhir:text [ fhir:v "Name 2" ]
+  ] ) . # 
+
+<http://example.org/fhir/Observation/47> a fhir:Observation ;
+  fhir:id [ fhir:v "47"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Observation 47</b></p><a name=\"47\"> </a><a name=\"hc47\"> </a><p><b>status</b>: Final</p><p><b>code</b>: <span title=\"Codes:{http://loinc.org 15074-8}\">Glucose [Moles/volume] in Blood</span></p><p><b>subject</b>: <a href=\"broken-link.html\">Patient/45</a></p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "final"] ; # 
+  fhir:code [
+     a loinc:15074-8 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "15074-8" ] ;
+       fhir:display [ fhir:v "Glucose [Moles/volume] in Blood" ]
+     ] )
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/45/_history/2> ;
+     fhir:reference [ fhir:v "Patient/45/_history/2" ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/45/_history/2> a fhir:Patient .
+
+<http://example.org/fhir/Observation/48> a fhir:Observation ;
+  fhir:id [ fhir:v "48"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Observation 48</b></p><a name=\"48\"> </a><a name=\"hc48\"> </a><p><b>status</b>: Final</p><p><b>code</b>: <span title=\"Codes:{http://loinc.org 15074-8}\">Glucose [Moles/volume] in Blood</span></p><p><b>subject</b>: Identifier: <code>http://example.org/ids</code>/1234567</p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "final"] ; # 
+  fhir:code [
+     a loinc:15074-8 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "15074-8" ] ;
+       fhir:display [ fhir:v "Glucose [Moles/volume] in Blood" ]
+     ] )
+  ] ; # 
+  fhir:subject [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://example.org/ids"^^xsd:anyURI ;
+         fhir:l <http://example.org/ids>
+       ] ;
+       fhir:value [ fhir:v "1234567" ]
+     ]
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

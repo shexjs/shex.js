@@ -1,0 +1,45 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Substance/f203> a fhir:Substance ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f203"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://acme.org/identifiers/substances"^^xsd:anyURI ;
+       fhir:l <http://acme.org/identifiers/substances>
+     ] ;
+     fhir:value [ fhir:v "1234" ]
+  ] ) ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/substance-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/substance-category>
+       ] ;
+       fhir:code [ fhir:v "chemical" ] ;
+       fhir:display [ fhir:v "Chemical" ]
+     ] )
+  ] ) ; # 
+  fhir:code [
+     fhir:concept [
+       a sct:88480006 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "88480006" ] ;
+         fhir:display [ fhir:v "Potassium" ]
+       ] )
+     ]
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

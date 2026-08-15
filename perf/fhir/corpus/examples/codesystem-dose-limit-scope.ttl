@@ -1,0 +1,95 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/dose-limit-scope> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "dose-limit-scope"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem dose-limit-scope</b></p><a name=\"dose-limit-scope\"> </a><a name=\"hcdose-limit-scope\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/CodeSystem/dose-limit-scope</code> defines the following codes in a Is-A hierarchy:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">dosage<a name=\"dose-limit-scope-dosage\"> </a></td><td>Dosage</td><td>Maximum quantity for the dosage (depends on scope whether it's the course, a step, or a choice)</td></tr><tr><td style=\"white-space:nowrap\">period<a name=\"dose-limit-scope-period\"> </a></td><td>Period</td><td>Maximum dosage per specified period</td></tr><tr><td style=\"white-space:nowrap\">administration<a name=\"dose-limit-scope-administration\"> </a></td><td>Administration</td><td>Maximum Dosage for a single dose</td></tr><tr><td style=\"white-space:nowrap\">lifetime<a name=\"dose-limit-scope-lifetime\"> </a></td><td>Lifetime</td><td>Maximum amount of lifetime exposure across all dosages ever</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "phx"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/CodeSystem/dose-limit-scope"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/CodeSystem/dose-limit-scope>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "DoseLimitScopeCodes"] ; # 
+  fhir:title [ fhir:v "Dose Limit Scope Codes"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Pharmacy"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/medication" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Additional Binding Purpose"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/dose-limit-scope"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/dose-limit-scope>
+  ] ; # 
+  fhir:hierarchyMeaning [ fhir:v "is-a"] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "dosage" ] ;
+     fhir:display [ fhir:v "Dosage" ] ;
+     fhir:definition [ fhir:v "Maximum quantity for the dosage (depends on scope whether it's the course, a step, or a choice)" ]
+  ] [
+     fhir:code [ fhir:v "period" ] ;
+     fhir:display [ fhir:v "Period" ] ;
+     fhir:definition [ fhir:v "Maximum dosage per specified period" ]
+  ] [
+     fhir:code [ fhir:v "administration" ] ;
+     fhir:display [ fhir:v "Administration" ] ;
+     fhir:definition [ fhir:v "Maximum Dosage for a single dose" ]
+  ] [
+     fhir:code [ fhir:v "lifetime" ] ;
+     fhir:display [ fhir:v "Lifetime" ] ;
+     fhir:definition [ fhir:v "Maximum amount of lifetime exposure across all dosages ever" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

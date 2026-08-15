@@ -1,0 +1,63 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/3945182f-d315-4dbf-9259-09d863c7e7da> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "3945182f-d315-4dbf-9259-09d863c7e7da"] ; # 
+  fhir:type [ fhir:v "subscription-notification"] ; # 
+  fhir:timestamp [ fhir:v "2020-04-17T10:24:13.1882432-05:00"^^xsd:dateTime] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:c144782b-da2f-4125-a9e2-9fa4b9085a40"^^xsd:anyURI ;
+       fhir:l <urn:uuid:c144782b-da2f-4125-a9e2-9fa4b9085a40>
+     ] ;
+     fhir:resource ( <urn:uuid:c144782b-da2f-4125-a9e2-9fa4b9085a40> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://example.org/FHIR/R5/Encounter/2"^^xsd:anyURI ;
+       fhir:l <http://example.org/FHIR/R5/Encounter/2>
+     ] ;
+     fhir:request [
+       fhir:method [ fhir:v "PUT" ] ;
+       fhir:url [
+         fhir:v "Encounter/2"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/Encounter/2>
+       ]
+     ] ;
+     fhir:response [
+       fhir:status [ fhir:v "201" ]
+     ]
+  ] ) . # 
+
+<urn:uuid:c144782b-da2f-4125-a9e2-9fa4b9085a40> a fhir:SubscriptionStatus ;
+  fhir:id [ fhir:v "c144782b-da2f-4125-a9e2-9fa4b9085a40"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: SubscriptionStatus c144782b-da2f-4125-a9e2-9fa4b9085a40</b></p><a name=\"c144782b-da2f-4125-a9e2-9fa4b9085a40\"> </a><a name=\"hcc144782b-da2f-4125-a9e2-9fa4b9085a40\"> </a><p><b>status</b>: Active</p><p><b>type</b>: Event Notification</p><p><b>eventsSinceSubscriptionStart</b>: 2</p><h3>NotificationEvents</h3><table class=\"grid\"><tr><td style=\"display: none\">-</td><td><b>EventNumber</b></td><td><b>Focus</b></td></tr><tr><td style=\"display: none\">*</td><td>2</td><td><a href=\"broken-link.html\">http://example.org/FHIR/R5/Encounter/2</a></td></tr></table><p><b>subscription</b>: <a href=\"broken-link.html\">http://example.org/FHIR/R5/Subscription/123</a></p><p><b>topic</b>: <a href=\"broken-link.html\">http://example.org/FHIR/R5/SubscriptionTopic/admission</a></p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:type [ fhir:v "event-notification"] ; # 
+  fhir:eventsSinceSubscriptionStart [ fhir:v "2"^^xsd:long] ; # 
+  fhir:notificationEvent ( [
+     fhir:eventNumber [ fhir:v "2"^^xsd:long ] ;
+     fhir:focus [
+       fhir:l <http://example.org/FHIR/R5/Encounter/2> ;
+       fhir:reference [ fhir:v "http://example.org/FHIR/R5/Encounter/2" ]
+     ]
+  ] ) ; # 
+  fhir:subscription [
+     fhir:l <http://example.org/FHIR/R5/Subscription/123> ;
+     fhir:reference [ fhir:v "http://example.org/FHIR/R5/Subscription/123" ]
+  ] ; # 
+  fhir:topic [
+     fhir:v "http://example.org/FHIR/R5/SubscriptionTopic/admission"^^xsd:anyURI ;
+     fhir:l <http://example.org/FHIR/R5/SubscriptionTopic/admission>
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

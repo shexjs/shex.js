@@ -1,0 +1,195 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/HealthcareService/example> a fhir:HealthcareService ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n			25 Dec 2013 9:15am - 9:30am: <b>Busy</b> Physiotherapy\n		</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:contained ( [
+     a fhir:Location ;
+     fhir:id [ fhir:v "DenBurg" ] ;
+     fhir:description [ fhir:v "Greater Denburg area" ] ;
+     fhir:mode [ fhir:v "instance" ] ;
+     fhir:form [
+       fhir:coding ( [
+         fhir:code [ fhir:v "area" ] ;
+         fhir:display [ fhir:v "Area" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://example.org/shared-ids"^^xsd:anyURI ;
+       fhir:l <http://example.org/shared-ids>
+     ] ;
+     fhir:value [ fhir:v "HS-12" ]
+  ] ) ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:providedBy [
+     fhir:l <http://hl7.org/fhir/Organization/f001> ;
+     fhir:reference [ fhir:v "Organization/f001" ] ;
+     fhir:display [ fhir:v "Burgers University Medical Center" ]
+  ] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/service-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/service-category>
+       ] ;
+       fhir:code [ fhir:v "8" ] ;
+       fhir:display [ fhir:v "Counselling" ]
+     ] ) ;
+     fhir:text [ fhir:v "Counselling" ]
+  ] ) ; # 
+  fhir:type ( [
+     a sct:394913002 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "394913002" ] ;
+       fhir:display [ fhir:v "Psychotherapy (specialty)" ]
+     ] )
+  ] [
+     a sct:394587001 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "394587001" ] ;
+       fhir:display [ fhir:v "Psychiatry" ]
+     ] )
+  ] ) ; # 
+  fhir:specialty ( [
+     a sct:47505003 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "47505003" ] ;
+       fhir:display [ fhir:v "Posttraumatic stress disorder" ]
+     ] )
+  ] ) ; # 
+  fhir:location ( [
+     fhir:l <http://hl7.org/fhir/Location/1> ;
+     fhir:reference [ fhir:v "Location/1" ]
+  ] ) ; # 
+  fhir:name [ fhir:v "Consulting psychologists and/or psychology services"] ; # 
+  fhir:comment [ fhir:v "Providing Specialist psychology services to the greater Den Burg area, many years of experience dealing with PTSD issues"] ; # 
+  fhir:extraDetails [ fhir:v "Several assessments are required for these specialist services, and the waiting times can be greater than 3 months at times. Existing patients are prioritized when requesting appointments on the schedule."] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "phone" ] ;
+       fhir:value [ fhir:v "(555) silent" ] ;
+       fhir:use [ fhir:v "work" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "directaddress@example.com" ] ;
+       fhir:use [ fhir:v "work" ]
+     ] )
+  ] ) ; # 
+  fhir:coverageArea ( [
+     fhir:l <#DenBurg> ;
+     fhir:reference [ fhir:v "#DenBurg" ] ;
+     fhir:display [ fhir:v "Greater Denburg area" ]
+  ] ) ; # 
+  fhir:serviceProvisionCode ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/service-provision-conditions"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/service-provision-conditions>
+       ] ;
+       fhir:code [ fhir:v "cost" ] ;
+       fhir:display [ fhir:v "Fees apply" ]
+     ] )
+  ] ) ; # 
+  fhir:eligibility ( [
+     fhir:code [
+       fhir:coding ( [
+         fhir:display [ fhir:v "DVA Required" ]
+       ] )
+     ] ;
+     fhir:comment [ fhir:v "Evidence of application for DVA status may be sufficient for commencing assessment" ]
+  ] ) ; # 
+  fhir:program ( [
+     fhir:text [ fhir:v "PTSD outreach" ]
+  ] ) ; # 
+  fhir:characteristic ( [
+     fhir:coding ( [
+       fhir:display [ fhir:v "Wheelchair access" ]
+     ] )
+  ] ) ; # 
+  fhir:referralMethod ( [
+     fhir:coding ( [
+       fhir:code [ fhir:v "phone" ] ;
+       fhir:display [ fhir:v "Phone" ]
+     ] )
+  ] [
+     fhir:coding ( [
+       fhir:code [ fhir:v "fax" ] ;
+       fhir:display [ fhir:v "Fax" ]
+     ] )
+  ] [
+     fhir:coding ( [
+       fhir:code [ fhir:v "elec" ] ;
+       fhir:display [ fhir:v "Secure Messaging" ]
+     ] )
+  ] [
+     fhir:coding ( [
+       fhir:code [ fhir:v "semail" ] ;
+       fhir:display [ fhir:v "Secure Email" ]
+     ] )
+  ] ) ; # 
+  fhir:appointmentRequired [ fhir:v false] ; # 
+  fhir:availability [
+     fhir:availableTime ( [
+       fhir:daysOfWeek ( [ fhir:v "wed" ] ) ; # This is a 24 hour service on wednesdays (due to weekly local service needs)
+       fhir:allDay [ fhir:v true ]
+     ] [
+       fhir:daysOfWeek ( [ fhir:v "mon" ] [ fhir:v "tue" ] [ fhir:v "thu" ] [ fhir:v "fri" ] ) ;
+       fhir:availableStartTime [ fhir:v "08:30:00"^^xsd:time ] ;
+       fhir:availableEndTime [ fhir:v "05:30:00"^^xsd:time ]
+     ] [
+       fhir:daysOfWeek ( [ fhir:v "sat" ] [ fhir:v "fri" ] ) ;
+       fhir:availableStartTime [ fhir:v "09:30:00"^^xsd:time ] ;
+       fhir:availableEndTime [ fhir:v "04:30:00"^^xsd:time ]
+     ] ) ;
+     fhir:notAvailableTime ( [
+       fhir:description [ fhir:v "Christmas/Boxing Day, Reduced capacity is available during the Christmas period" ] ;
+       fhir:during [
+         fhir:start [ fhir:v "2015-12-25"^^xsd:date ] ;
+         fhir:end [ fhir:v "2015-12-26"^^xsd:date ]
+       ]
+     ] [
+       fhir:description [ fhir:v "New Years Day" ] ;
+       fhir:during [
+         fhir:start [ fhir:v "2016-01-01"^^xsd:date ] ;
+         fhir:end [ fhir:v "2016-01-01"^^xsd:date ]
+       ]
+     ] )
+  ] ; # 
+  fhir:endpoint ( [
+     fhir:l <http://hl7.org/fhir/Endpoint/example> ;
+     fhir:reference [ fhir:v "Endpoint/example" ] # Endpoint that handles the v2 messaging for the external organization
+  ] ) . # 
+
+<http://hl7.org/fhir/Organization/f001> a fhir:Organization .
+
+<http://hl7.org/fhir/Location/1> a fhir:Location .
+
+<http://hl7.org/fhir/Endpoint/example> a fhir:Endpoint .
+
+# -------------------------------------------------------------------------------------
+

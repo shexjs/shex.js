@@ -1,0 +1,44 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/DocumentReference/example-genomicfile-hla00001> a fhir:DocumentReference ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-genomicfile-hla00001"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://www.somesystemabc.net/identifiers/files"^^xsd:anyURI ;
+       fhir:l <http://www.somesystemabc.net/identifiers/files>
+     ] ;
+     fhir:value [ fhir:v "11111" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "current"] ; # 
+  fhir:docStatus [ fhir:v "preliminary"] ; # 
+  fhir:description [ fhir:v "A sample Document Reference instance representing HLA00001."] ; # 
+  fhir:securityLabel ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-Confidentiality"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-Confidentiality>
+       ] ;
+       fhir:code [ fhir:v "R" ] ;
+       fhir:display [ fhir:v "Restricted" ]
+     ] )
+  ] ) ; # 
+  fhir:content ( [
+     fhir:attachment [
+       fhir:contentType [ fhir:v "text/html" ] ;
+       fhir:url [
+         fhir:v "https://www.ebi.ac.uk/Tools/dbfetch/dbfetch?db=imgthla;id=HLA00001;format=fasta;style=raw"^^xsd:anyURI ;
+         fhir:l <https://www.ebi.ac.uk/Tools/dbfetch/dbfetch?db=imgthla;id=HLA00001;format=fasta;style=raw>
+       ] ;
+       fhir:title [ fhir:v "HLA00001" ]
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

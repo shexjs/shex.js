@@ -1,0 +1,62 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# This example is used for DetectedIssue/Duplicate Therapy example will need to edit that as well
+
+<http://hl7.org/fhir/ServiceRequest/di> a fhir:ServiceRequest ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "di"] ; # 
+  fhir:status [ fhir:v "active"] ; # <extension url="http://hl7.org/fhir/StructureDefinition/bodysitecode">
+#		<valueCodeableConcept>
+#			<coding>
+#				<system value="http://snomed.info/sct"/>
+#				<code value="51185008"/>
+#				<display value="Thoracic structure"/>
+#			</coding>
+#		</valueCodeableConcept>
+#</extension>
+  fhir:intent [ fhir:v "original-order"] ; # 
+  fhir:code [
+     fhir:concept [
+       a loinc:24627-2 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:code [ fhir:v "24627-2" ]
+       ] ) ;
+       fhir:text [ fhir:v "Chest CT" ]
+     ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/dicom> ;
+     fhir:reference [ fhir:v "Patient/dicom" ]
+  ] ; # 
+  fhir:occurrence [
+     a fhir:DateTime ;
+     fhir:v "2013-05-08T09:33:27+07:00"^^xsd:dateTime
+  ] ; # 
+  fhir:requester [
+     fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+     fhir:reference [ fhir:v "Practitioner/example" ] ;
+     fhir:display [ fhir:v "Dr. Adam Careful" ]
+  ] ; # 
+  fhir:reason ( [
+     fhir:concept [
+       fhir:text [ fhir:v "Check for metastatic disease" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/dicom> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

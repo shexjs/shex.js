@@ -1,0 +1,81 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Observation/vitals-panel> a fhir:Observation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "vitals-panel"] ; # 
+  fhir:meta [
+     fhir:profile ( [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/vitalsigns"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/vitalsigns>
+     ] )
+  ] ; # 
+  fhir:status [ fhir:v "final"] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/observation-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/observation-category>
+       ] ;
+       fhir:code [ fhir:v "vital-signs" ] ;
+       fhir:display [ fhir:v "Vital Signs" ]
+     ] ) ;
+     fhir:text [ fhir:v "Vital Signs" ]
+  ] ) ; # 
+  fhir:code [
+     a loinc:85353-1 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "85353-1" ] ;
+       fhir:display [ fhir:v "Vital signs, weight, height, head circumference, oxygen saturation and BMI panel" ]
+     ] ) ;
+     fhir:text [ fhir:v "Vital signs Panel" ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:organizer [ fhir:v true] ; # 
+  fhir:effective [
+     a fhir:DateTime ;
+     fhir:v "1999-07-02"^^xsd:date
+  ] ; # 
+  fhir:hasMember ( [
+     fhir:l <http://hl7.org/fhir/Observation/respiratory-rate> ;
+     fhir:reference [ fhir:v "Observation/respiratory-rate" ] ;
+     fhir:display [ fhir:v "Respiratory Rate" ]
+  ] [
+     fhir:l <http://hl7.org/fhir/Observation/heart-rate> ;
+     fhir:reference [ fhir:v "Observation/heart-rate" ] ;
+     fhir:display [ fhir:v "Heart Rate" ]
+  ] [
+     fhir:l <http://hl7.org/fhir/Observation/blood-pressure> ;
+     fhir:reference [ fhir:v "Observation/blood-pressure" ] ;
+     fhir:display [ fhir:v "Blood Pressure" ]
+  ] [
+     fhir:l <http://hl7.org/fhir/Observation/body-temperature> ;
+     fhir:reference [ fhir:v "Observation/body-temperature" ] ;
+     fhir:display [ fhir:v "Body Temperature" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Observation/respiratory-rate> a fhir:Observation .
+
+<http://hl7.org/fhir/Observation/heart-rate> a fhir:Observation .
+
+<http://hl7.org/fhir/Observation/blood-pressure> a fhir:Observation .
+
+<http://hl7.org/fhir/Observation/body-temperature> a fhir:Observation .
+
+# -------------------------------------------------------------------------------------
+

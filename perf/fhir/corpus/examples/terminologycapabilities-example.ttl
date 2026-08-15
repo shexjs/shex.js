@@ -1,0 +1,59 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/TerminologyCapabilities/example> a fhir:TerminologyCapabilities ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n			\n      <p>The EHR Server supports the following transactions for the resource Person: read, vread, \n        update, history, search(name,gender), create and updates.</p>\n			\n      <p>The EHR System supports the following message: admin-notify::Person.</p>\n			\n      <p>The EHR Application has a \n        \n        <a href=\"http://fhir.hl7.org/base/Profilebc054d23-75e1-4dc6-aca5-838b6b1ac81d/_history/b5fdd9fc-b021-4ea1-911a-721a60663796\">general document profile</a>.\n      \n      </p>\n		\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "vocab"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "urn:uuid:620878ef-e693-4290-a45e-16f5c7b06a56"^^xsd:anyURI ;
+     fhir:l <urn:uuid:620878ef-e693-4290-a45e-16f5c7b06a56>
+  ] ; # 
+  fhir:version [ fhir:v "20130510"] ; # 
+  fhir:name [ fhir:v "ACMEEHR"] ; # 
+  fhir:title [ fhir:v "ACME EHR capability statement"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2012-01-04"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Terminology Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/Vocab" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "This is the FHIR capability statement for the main EHR at ACME for the private interface - it does not describe the public interface"] ; # 
+  fhir:kind [ fhir:v "instance"] ; # 
+  fhir:software [
+     fhir:name [ fhir:v "TxServer" ] ;
+     fhir:version [ fhir:v "0.1.2" ]
+  ] ; # 
+  fhir:implementation [
+     fhir:description [ fhir:v "Acme Terminology Server" ] ;
+     fhir:url [
+       fhir:v "http://example.org/tx"^^xsd:anyURI ;
+       fhir:l <http://example.org/tx>
+     ]
+  ] ; # 
+  fhir:codeSearch [ fhir:v "in-compose-or-expansion"] . # 
+
+# -------------------------------------------------------------------------------------
+

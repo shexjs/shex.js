@@ -1,0 +1,141 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/action-relationship-type> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "action-relationship-type"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem action-relationship-type</b></p><a name=\"action-relationship-type\"> </a><a name=\"hcaction-relationship-type\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/action-relationship-type</code> defines the following codes in a Is-A hierarchy:</p><table class=\"codes\"><tr><td><b>Lvl</b></td><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td>1</td><td style=\"white-space:nowrap\">before<a name=\"action-relationship-type-before\"> </a></td><td>Before</td><td>The action must be performed before the related action.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  before-start<a name=\"action-relationship-type-before-start\"> </a></td><td>Before Start</td><td>The action must be performed before the start of the related action.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  before-end<a name=\"action-relationship-type-before-end\"> </a></td><td>Before End</td><td>The action must be performed before the end of the related action.</td></tr><tr><td>1</td><td style=\"white-space:nowrap\">concurrent<a name=\"action-relationship-type-concurrent\"> </a></td><td>Concurrent</td><td>The action must be performed concurrent with the related action.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  concurrent-with-start<a name=\"action-relationship-type-concurrent-with-start\"> </a></td><td>Concurrent With Start</td><td>The action must be performed concurrent with the start of the related action.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  concurrent-with-end<a name=\"action-relationship-type-concurrent-with-end\"> </a></td><td>Concurrent With End</td><td>The action must be performed concurrent with the end of the related action.</td></tr><tr><td>1</td><td style=\"white-space:nowrap\">after<a name=\"action-relationship-type-after\"> </a></td><td>After</td><td>The action must be performed after the related action.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  after-start<a name=\"action-relationship-type-after-start\"> </a></td><td>After Start</td><td>The action must be performed after the start of the related action.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  after-end<a name=\"action-relationship-type-after-end\"> </a></td><td>After End</td><td>The action must be performed after the end of the related action.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 4
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/action-relationship-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/action-relationship-type>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.814" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.1.797" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ActionRelationshipType"] ; # 
+  fhir:title [ fhir:v "Action Relationship Type"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Defines the types of relationships between actions."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/action-relationship-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/action-relationship-type>
+  ] ; # 
+  fhir:hierarchyMeaning [ fhir:v "is-a"] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "before" ] ;
+     fhir:display [ fhir:v "Before" ] ;
+     fhir:definition [ fhir:v "The action must be performed before the related action." ] ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "before-start" ] ;
+       fhir:display [ fhir:v "Before Start" ] ;
+       fhir:definition [ fhir:v "The action must be performed before the start of the related action." ]
+     ] [
+       fhir:code [ fhir:v "before-end" ] ;
+       fhir:display [ fhir:v "Before End" ] ;
+       fhir:definition [ fhir:v "The action must be performed before the end of the related action." ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "concurrent" ] ;
+     fhir:display [ fhir:v "Concurrent" ] ;
+     fhir:definition [ fhir:v "The action must be performed concurrent with the related action." ] ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "concurrent-with-start" ] ;
+       fhir:display [ fhir:v "Concurrent With Start" ] ;
+       fhir:definition [ fhir:v "The action must be performed concurrent with the start of the related action." ]
+     ] [
+       fhir:code [ fhir:v "concurrent-with-end" ] ;
+       fhir:display [ fhir:v "Concurrent With End" ] ;
+       fhir:definition [ fhir:v "The action must be performed concurrent with the end of the related action." ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "after" ] ;
+     fhir:display [ fhir:v "After" ] ;
+     fhir:definition [ fhir:v "The action must be performed after the related action." ] ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "after-start" ] ;
+       fhir:display [ fhir:v "After Start" ] ;
+       fhir:definition [ fhir:v "The action must be performed after the start of the related action." ]
+     ] [
+       fhir:code [ fhir:v "after-end" ] ;
+       fhir:display [ fhir:v "After End" ] ;
+       fhir:definition [ fhir:v "The action must be performed after the end of the related action." ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

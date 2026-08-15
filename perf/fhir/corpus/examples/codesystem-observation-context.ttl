@@ -1,0 +1,87 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/observation-context> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "observation-context"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem observation-context</b></p><a name=\"observation-context\"> </a><a name=\"hcobservation-context\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/CodeSystem/observation-context</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">diabetic<a name=\"observation-context-diabetic\"> </a></td><td>Diabetic</td><td>The patient has diabetes mellitus, which may affect interpretation of glucose and other metabolic observations.</td></tr><tr><td style=\"white-space:nowrap\">fasting<a name=\"observation-context-fasting\"> </a></td><td>Fasting</td><td>The patient was fasting at the time of the observation, which affects interpretation of metabolic and nutritional observations.</td></tr><tr><td style=\"white-space:nowrap\">paraplegic<a name=\"observation-context-paraplegic\"> </a></td><td>Paraplegic</td><td>The patient has paraplegia, which may affect interpretation of mobility, neurological, and other physical observations.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "oo"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/CodeSystem/observation-context"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/CodeSystem/observation-context>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ObservationContextCodes"] ; # 
+  fhir:title [ fhir:v "Observation Context Codes"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Orders and Observations"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/orders" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Codes identifying contextual factors that affect interpretation of observations. This provides examples of conditions or states that may be critical to understanding the significance of an observation."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/observation-context"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/observation-context>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "diabetic" ] ;
+     fhir:display [ fhir:v "Diabetic" ] ;
+     fhir:definition [ fhir:v "The patient has diabetes mellitus, which may affect interpretation of glucose and other metabolic observations." ]
+  ] [
+     fhir:code [ fhir:v "fasting" ] ;
+     fhir:display [ fhir:v "Fasting" ] ;
+     fhir:definition [ fhir:v "The patient was fasting at the time of the observation, which affects interpretation of metabolic and nutritional observations." ]
+  ] [
+     fhir:code [ fhir:v "paraplegic" ] ;
+     fhir:display [ fhir:v "Paraplegic" ] ;
+     fhir:definition [ fhir:v "The patient has paraplegia, which may affect interpretation of mobility, neurological, and other physical observations." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

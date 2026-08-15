@@ -1,0 +1,96 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/NutritionOrder/proteinsupplement> a fhir:NutritionOrder ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "proteinsupplement"] ; # id = proteinsupplement  file name = nutritionorder-example-proteinsupplement.xml  Name= Protein Supplement  Description = Nutrition Order Protein Supplement Canonical Example
+#edited by Eric Haas Health eData Inc, EH: This example has no food exclusions or preferences, EH: use supplement element
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://goodhealthhospital.org/nutrition-requests"^^xsd:anyURI ;
+       fhir:l <http://goodhealthhospital.org/nutrition-requests>
+     ] ;
+     fhir:value [ fhir:v "123" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Peter Chalmers" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/example> ;
+     fhir:reference [ fhir:v "Encounter/example" ] ;
+     fhir:display [ fhir:v "Inpatient" ]
+  ] ; # 
+  fhir:dateTime [ fhir:v "2014-09-17"^^xsd:date] ; # 
+  fhir:oralDiet [
+     fhir:type ( [
+       a sct:182922004 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "182922004" ] ;
+         fhir:display [ fhir:v "Regular diet care" ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:additive ( [
+     fhir:modularType [
+       fhir:concept [
+         a sct:443581000124102 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "443581000124102" ] ;
+           fhir:display [ fhir:v "Modular protein formula component (product)" ]
+         ] [
+           fhir:system [
+             fhir:v "http://goodhealthhospital.org/supplement-type-codes"^^xsd:anyURI ;
+             fhir:l <http://goodhealthhospital.org/supplement-type-codes>
+           ] ;
+           fhir:code [ fhir:v "1000" ] ;
+           fhir:display [ fhir:v "High Protein Powder" ]
+         ] ) ;
+         fhir:text [ fhir:v "High Protein Powder" ]
+       ]
+     ] ;
+     fhir:productName [ fhir:v "Beneprotein" ] ;
+     fhir:quantity [
+       fhir:value [ fhir:v "1"^^xsd:decimal ] ;
+       fhir:unit [ fhir:v "scoop" ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "{scoop}" ]
+     ] ;
+     fhir:routeOfAdministration ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-RouteOfAdministration"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-RouteOfAdministration>
+         ] ;
+         fhir:code [ fhir:v "PO" ] ;
+         fhir:display [ fhir:v "Swallow, oral" ]
+       ] )
+     ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/example> a fhir:Encounter .
+
+# -------------------------------------------------------------------------------------
+

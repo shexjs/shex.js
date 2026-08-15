@@ -1,0 +1,61 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Flag/protocol> a fhir:Flag ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "protocol"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Special guidance: Ensure patients meet all inclusion criteria before starting Zika Virus Infection Management Process</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:value [ fhir:v "guidance-2024-abc" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/flag-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/flag-category>
+       ] ;
+       fhir:code [ fhir:v "safety" ] ;
+       fhir:display [ fhir:v "Safety" ]
+     ] ) ;
+     fhir:text [ fhir:v "Safety" ]
+  ] ) ; # 
+  fhir:code [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.org/local"^^xsd:anyURI ;
+         fhir:l <http://example.org/local>
+       ] ;
+       fhir:code [ fhir:v "special-guidance" ] ;
+       fhir:display [ fhir:v "Special Guidance" ]
+     ] ) ;
+     fhir:text [ fhir:v "Ensure patients meet all inclusion criteria before starting Zika Virus Infection Management Process" ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/PlanDefinition/zika-virus-intervention> ;
+     fhir:reference [ fhir:v "PlanDefinition/zika-virus-intervention" ] ;
+     fhir:display [ fhir:v "Zika Virus Infection Management Process" ]
+  ] ; # 
+  fhir:period [
+     fhir:start [ fhir:v "2024-09-01"^^xsd:date ]
+  ] ; # 
+  fhir:author [
+     fhir:l <http://hl7.org/fhir/Organization/example> ;
+     fhir:reference [ fhir:v "Organization/example" ] ;
+     fhir:display [ fhir:v "ACME Health" ]
+  ] . # 
+
+<http://hl7.org/fhir/PlanDefinition/zika-virus-intervention> a fhir:PlanDefinition .
+
+<http://hl7.org/fhir/Organization/example> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

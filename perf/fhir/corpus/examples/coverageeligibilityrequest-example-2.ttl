@@ -1,0 +1,94 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CoverageEligibilityRequest/52346> a fhir:CoverageEligibilityRequest ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "52346"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">A human-readable rendering of the CoverageEligibilityRequest</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://happyvalley.com/coverageelegibilityrequest"^^xsd:anyURI ;
+       fhir:l <http://happyvalley.com/coverageelegibilityrequest>
+     ] ;
+     fhir:value [ fhir:v "52346" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:priority [
+     fhir:coding ( [
+       fhir:code [ fhir:v "normal" ]
+     ] )
+  ] ; # 
+  fhir:purpose ( [ fhir:v "validation"] [ fhir:v "benefits"] ) ; # 
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/pat1> ;
+     fhir:reference [ fhir:v "Patient/pat1" ]
+  ] ; # 
+  fhir:serviced [
+     a fhir:Date ;
+     fhir:v "2014-09-17"^^xsd:date
+  ] ; # 
+  fhir:created [ fhir:v "2014-08-16"^^xsd:date] ; # Anticipated service date
+  fhir:enterer [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://happyvalleyclinic.com/staff"^^xsd:anyURI ;
+         fhir:l <http://happyvalleyclinic.com/staff>
+       ] ;
+       fhir:value [ fhir:v "14" ]
+     ]
+  ] ; # 
+  fhir:provider [
+     fhir:l <http://hl7.org/fhir/Organization/1> ;
+     fhir:reference [ fhir:v "Organization/1" ]
+  ] ; # 
+  fhir:insurer [
+     fhir:l <http://hl7.org/fhir/Organization/2> ;
+     fhir:reference [ fhir:v "Organization/2" ]
+  ] ; # 
+  fhir:facility [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://statecliniclicensor.com/clinicid"^^xsd:anyURI ;
+         fhir:l <http://statecliniclicensor.com/clinicid>
+       ] ;
+       fhir:value [ fhir:v "G35B9" ]
+     ]
+  ] ; # 
+  fhir:insurance ( [
+     fhir:coverage [
+       fhir:l <http://hl7.org/fhir/Coverage/9876B1> ;
+       fhir:reference [ fhir:v "Coverage/9876B1" ]
+     ] ;
+     fhir:businessArrangement [ fhir:v "NB8742" ]
+  ] ) ; # 
+  fhir:item ( [
+     fhir:category [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ex-benefitcategory"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ex-benefitcategory>
+         ] ;
+         fhir:code [ fhir:v "69" ] ;
+         fhir:display [ fhir:v "Maternity" ]
+       ] )
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/pat1> a fhir:Patient .
+
+<http://hl7.org/fhir/Organization/1> a fhir:Organization .
+
+<http://hl7.org/fhir/Organization/2> a fhir:Organization .
+
+<http://hl7.org/fhir/Coverage/9876B1> a fhir:Coverage .
+
+# -------------------------------------------------------------------------------------
+

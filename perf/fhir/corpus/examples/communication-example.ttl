@@ -1,0 +1,90 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Communication/example> a fhir:Communication ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Patient has very high serum potassium</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:text [ fhir:v "Paging System" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:oid:1.3.4.5.6.7"^^xsd:anyURI ;
+       fhir:l <urn:oid:1.3.4.5.6.7>
+     ] ;
+     fhir:value [ fhir:v "2345678901" ]
+  ] ) ; # 
+  fhir:partOf ( [
+     fhir:display [ fhir:v "Serum Potassium Observation" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://acme.org/messagetypes"^^xsd:anyURI ;
+         fhir:l <http://acme.org/messagetypes>
+       ] ;
+       fhir:code [ fhir:v "Alert" ]
+     ] ) ;
+     fhir:text [ fhir:v "Alert" ]
+  ] ) ; # 
+  fhir:medium ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationMode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationMode>
+       ] ;
+       fhir:code [ fhir:v "WRITTEN" ] ;
+       fhir:display [ fhir:v "written" ]
+     ] ) ;
+     fhir:text [ fhir:v "written" ]
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/example> ;
+     fhir:reference [ fhir:v "Encounter/example" ]
+  ] ; # 
+  fhir:sent [ fhir:v "2014-12-12T18:01:10-08:00"^^xsd:dateTime] ; # 
+  fhir:received [ fhir:v "2014-12-12T18:01:11-08:00"^^xsd:dateTime] ; # 
+  fhir:recipient ( [
+     fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+     fhir:reference [ fhir:v "Practitioner/example" ]
+  ] ) ; # 
+  fhir:sender [
+     fhir:l <http://hl7.org/fhir/Device/f001> ;
+     fhir:reference [ fhir:v "Device/f001" ]
+  ] ; # 
+  fhir:payload ( [
+     fhir:content [
+       a fhir:CodeableConcept ;
+       fhir:text [ fhir:v "Patient 1 has a very high serum potassium value (7.2 mmol/L on 2014-Dec-12 at 5:55 pm)" ]
+     ]
+  ] [
+     fhir:content [
+       a fhir:Reference ;
+       fhir:display [ fhir:v "Serum Potassium Observation" ]
+     ] # Reference to the lab result
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/example> a fhir:Encounter .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Device/f001> a fhir:Device .
+
+# -------------------------------------------------------------------------------------
+

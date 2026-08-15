@@ -1,0 +1,91 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/example-supplement> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-supplement"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "additional" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      \n      \n      \n      <p>A supplement pack for \n        \n        \n        <code>http://hl7.org/fhir/CodeSystem/example</code> that defines the administrative property 'legacy' for whether the test is currently performed \n      \n      \n      </p>\n      \n      \n      \n      <table class=\"grid\">\n        \n        \n        \n        <tr>\n          \n          \n          \n          <td>\n            \n            \n            \n            <b>Code</b>\n          \n          \n          \n          </td>\n          \n          \n          \n          <td>\n            \n            \n            \n            <b>Legacy</b>\n          \n          \n          \n          </td>\n        \n        \n        \n        </tr>\n        \n        \n        \n        <tr>\n          \n          \n          \n          <td>chol-mmol</td>\n          \n          \n          \n          <td>false</td>\n        \n        \n        \n        </tr>\n        \n        \n        \n        <tr>\n          \n          \n          \n          <td>chol-mass</td>\n          \n          \n          \n          <td>true</td>\n        \n        \n        \n        </tr>\n        \n        \n        \n        <tr>\n          \n          \n          \n          <td>chol</td>\n          \n          \n          \n          <td>true</td>\n        \n        \n        \n        </tr>\n      \n      \n      \n      </table>\n    \n    \n    \n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "vocab"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/CodeSystem/example-supplement"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/CodeSystem/example-supplement>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1820" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "CholCodeLegacyStatus"] ; # 
+  fhir:title [ fhir:v "Cholesterol Code Legacy Status"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2016-01-28"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Terminology Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/Vocab" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "CholCodeLegacyStatus"] ; # 
+  fhir:content [ fhir:v "supplement"] ; # 
+  fhir:supplements [
+     fhir:v "http://hl7.org/fhir/CodeSystem/example"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/CodeSystem/example>
+  ] ; # 
+  fhir:property ( [
+     fhir:code [ fhir:v "legacy" ] ;
+     fhir:description [ fhir:v "hether the test is currently performed" ] ;
+     fhir:type [ fhir:v "boolean" ]
+  ] ) ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "chol-mmol" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "legacy" ] ;
+       fhir:value [
+         a fhir:Boolean ;
+         fhir:v false
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "chol-mass" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "legacy" ] ;
+       fhir:value [
+         a fhir:Boolean ;
+         fhir:v true
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "chol" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "legacy" ] ;
+       fhir:value [
+         a fhir:Boolean ;
+         fhir:v true
+       ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

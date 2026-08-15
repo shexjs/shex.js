@@ -1,0 +1,47 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Parameters/example> a fhir:Parameters ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:parameter ( [
+     fhir:name [ fhir:v "exact" ] ;
+     fhir:value [
+       a fhir:Boolean ;
+       fhir:v true
+     ]
+  ] [
+     fhir:name [ fhir:v "property" ] ;
+     fhir:part ( [
+       fhir:name [ fhir:v "code" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "focus"
+       ]
+     ] [
+       fhir:name [ fhir:v "value" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "top"
+       ]
+     ] )
+  ] [
+     fhir:name [ fhir:v "patient" ] ;
+     fhir:Parameters.parameter.resource ( [
+       a fhir:Patient ;
+       fhir:id [ fhir:v "example" ] ;
+       fhir:name ( [
+         fhir:use [ fhir:v "official" ] ;
+         fhir:family [ fhir:v "Chalmers" ] ;
+         fhir:given ( [ fhir:v "Peter" ] [ fhir:v "James" ] )
+       ] )
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

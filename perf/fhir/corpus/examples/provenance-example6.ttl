@@ -1,0 +1,52 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Provenance/example6> a fhir:Provenance ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example6"] ; # 
+  fhir:target ( [
+     fhir:l <http://hl7.org/fhir/Procedure/example/_history/1> ;
+     fhir:reference [ fhir:v "Procedure/example/_history/1" ]
+  ] ) ; # Use path when the target resource doesn't have an id to point to
+#    Note that the path is constrained to simple FHIRPath - see 
+#    https://hl7.org/fhir/fhirpath.html#simple
+#    
+#    This asserts that the follow up note came from a different author than
+#    the rest of the Procedure (see Provenance/example)
+  fhir:recorded [ fhir:v "2021-12-08T16:54:24+11:00"^^xsd:dateTime] ; # 
+  fhir:agent ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationType"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationType>
+         ] ;
+         fhir:code [ fhir:v "AUT" ]
+       ] )
+     ] ;
+     fhir:who [
+       fhir:l <http://hl7.org/fhir/Practitioner/f007> ;
+       fhir:reference [ fhir:v "Practitioner/f007" ]
+     ]
+  ] ) ; # 
+  fhir:entity ( [
+     fhir:role [ fhir:v "instantiates" ] ;
+     fhir:what [
+       fhir:l <http://hl7.org/fhir/Consent/consent-example-basic> ;
+       fhir:reference [ fhir:v "Consent/consent-example-basic" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Procedure/example/_history/1> a fhir:Procedure .
+
+<http://hl7.org/fhir/Practitioner/f007> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Consent/consent-example-basic> a fhir:Consent .
+
+# -------------------------------------------------------------------------------------
+

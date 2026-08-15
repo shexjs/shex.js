@@ -142,6 +142,10 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
   protected node: RdfJsTerm | null = null; // the focus node while match() runs
   /** Constraints this engine may satisfy greedily: see takesAllItCan. */
   protected greedy: Set<ShExJ.TripleConstraint>;
+  /** Semantic actions anywhere in this shape, by name: see mayMerge. */
+  protected semActNames: Set<string>;
+  /** Set per match(): whether the frontier may be deduplicated. */
+  protected mayMerge = true;
   constructor(
       public shape: ShExJ.Shape,
       public index: SchemaIndex,
@@ -149,6 +153,56 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
   ) {
     this.outerExpression = shape.expression!;
     this.greedy = this.takesAllItCan(this.outerExpression);
+    this.semActNames = new Set();
+    (this.shape.semActs || []).forEach(sa => this.semActNames.add(sa.name));
+    this.collectSemActs(this.outerExpression, new Set());
+  }
+
+  /**
+   * The semantic actions written anywhere in this shape, by name.
+   *
+   * Without any, ShEx asks only how many triples a constraint took: two
+   * ways of matching the same bag are the same answer, which is what lets
+   * mergeEquivalent drop all but one of them.  An action is handed the
+   * triples it fired on and does something opaque with them, so where one
+   * is watching the specific assignment is part of the answer -- both which
+   * triples it sees and, for a group's actions, how many threads it is
+   * dispatched over.
+   *
+   * Names rather than a flag, because an action nobody handles is never
+   * dispatched (SemActDispatcher.dispatchAll skips it) and so cannot
+   * observe anything.  Which handlers are registered isn't known until
+   * match() is called, so the question is asked there.
+   */
+  collectSemActs (exprOrRef: ShExJ.tripleExprOrRef, seen: Set<string>): void {
+    if (typeof exprOrRef === "string") {
+      if (seen.has(exprOrRef))
+        return;                             // an Inclusion cycle
+      seen.add(exprOrRef);
+      const included = this.index.tripleExprs[exprOrRef];
+      if (included !== undefined)
+        this.collectSemActs(included, seen);
+      return;
+    }
+    (exprOrRef.semActs || []).forEach(sa => this.semActNames.add(sa.name));
+    switch (exprOrRef.type) {
+    case "EachOf":
+    case "OneOf":
+      exprOrRef.expressions.forEach(nested => this.collectSemActs(nested, seen));
+      return;
+    }
+  }
+
+  /** May the frontier be deduplicated, given who is listening? */
+  merging (semActHandler: SemActDispatcher): boolean {
+    if (this.semActNames.size === 0)
+      return true;
+    if (semActHandler.isRegistered === undefined)
+      return false;                         // can\'t ask: assume it is live
+    for (const name of this.semActNames)
+      if (semActHandler.isRegistered(name))
+        return false;
+    return true;                            // written, but nobody is handling them
   }
 
   /**
@@ -206,6 +260,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
   match (node: RdfJsTerm, constraintToTripleMapping: ConstraintToTripleResults,
          semActHandler: SemActDispatcher, _trace: object[] | null): shapeExprTest {
     this.node = node;
+    this.mayMerge = this.merging(semActHandler);
     const allTriples = constraintToTripleMapping.reduce<Set<RdfJsQuad>>(
         (allTriples, _tripleConstraint, tripleResult) => {
             tripleResult.forEach(res => allTriples.add(res.triple));
@@ -316,7 +371,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
           Array.prototype.push.apply(failed, sub);
       }
       return matched.length > 0 ? matched : failed;
-    }, semActHandler);
+    }, semActHandler, this.mayMerge);
   }
 
   matchEachOf (expr: ShExJ.EachOf, min: number, max: number,
@@ -350,7 +405,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
           return nextThreads.concat(sub);
         }, []));
       }, [th]);
-    }, semActHandler));
+    }, semActHandler, this.mayMerge));
   }
 
   // Early return in case of insufficient matching triples
@@ -467,7 +522,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
 
   static matchRepeat (groupTE: ShExJ.EachOf | ShExJ.OneOf, min: number, max: number, thread: RegexpThread,
                       type: "EachOfSolutions" | "OneOfSolutions", evalGroup: (th: RegexpThread) => RegexpThread[],
-                      semActHandler: SemActDispatcher): RegexpThread[] {
+                      semActHandler: SemActDispatcher, mayMerge: boolean): RegexpThread[] {
     let repeated = 0, errOut = false;
     let newThreads = [thread];
     const minmax = {} as GroupAttrs;
@@ -513,7 +568,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
         // none of them could: short of the minimum that is the failure,
         // and past it the iterations already made stand
         return repeated < min ? stumbled : newThreads;
-      newThreads = EvalThreadedNErrRegexEngine.mergeEquivalent(inner);
+      newThreads = mayMerge ? EvalThreadedNErrRegexEngine.mergeEquivalent(inner) : inner;
     }
     if (newThreads.length > 0 && newThreads[0].errors.length === 0 && groupTE.semActs !== undefined) {
       const passes: RegexpThread[] = [];

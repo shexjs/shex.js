@@ -1,0 +1,111 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/service-mode> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "service-mode"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem service-mode</b></p><a name=\"service-mode\"> </a><a name=\"hcservice-mode\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/service-mode</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">in-person<a name=\"service-mode-in-person\"> </a></td><td>In Person</td><td>The service will be provided in person</td></tr><tr><td style=\"white-space:nowrap\">telephone<a name=\"service-mode-telephone\"> </a></td><td>Telephone</td><td>The service will be provided by a teleconferencing facility or regular telephone</td></tr><tr><td style=\"white-space:nowrap\">videoconference<a name=\"service-mode-videoconference\"> </a></td><td>Video Conference</td><td>The service will be provided over a video-conference facility</td></tr><tr><td style=\"white-space:nowrap\">chat<a name=\"service-mode-chat\"> </a></td><td>Chat/Messaging</td><td>This service will be provided via a realtime chat/messaging conversation</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "pa"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 0
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/service-mode"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/service-mode>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.2116" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ServiceMode"] ; # 
+  fhir:title [ fhir:v "Service Mode"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2023-02-20"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "An example set of Service Modes that could be applicable to use to characterize HealthcareServices or PractitionerRoles while searching"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/service-mode"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/service-mode>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "in-person" ] ;
+     fhir:display [ fhir:v "In Person" ] ;
+     fhir:definition [ fhir:v "The service will be provided in person" ]
+  ] [
+     fhir:code [ fhir:v "telephone" ] ;
+     fhir:display [ fhir:v "Telephone" ] ;
+     fhir:definition [ fhir:v "The service will be provided by a teleconferencing facility or regular telephone" ]
+  ] [
+     fhir:code [ fhir:v "videoconference" ] ;
+     fhir:display [ fhir:v "Video Conference" ] ;
+     fhir:definition [ fhir:v "The service will be provided over a video-conference facility" ]
+  ] [
+     fhir:code [ fhir:v "chat" ] ;
+     fhir:display [ fhir:v "Chat/Messaging" ] ;
+     fhir:definition [ fhir:v "This service will be provided via a realtime chat/messaging conversation" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

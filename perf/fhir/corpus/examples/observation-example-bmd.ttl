@@ -1,0 +1,61 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Observation/bmd> a fhir:Observation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "bmd"] ; # BMD measurements of left femur encoded as an observation for example purposes.
+  fhir:status [ fhir:v "final"] ; # 
+  fhir:code [
+     a loinc:24701-5 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "24701-5" ] ;
+       fhir:display [ fhir:v "DXA Femur [Mass/Area] Bone density" ]
+     ] ) ;
+     fhir:text [ fhir:v "BMD - Left Femur" ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/pat2> ;
+     fhir:reference [ fhir:v "Patient/pat2" ]
+  ] ; # 
+  fhir:performer ( [
+     fhir:l <http://hl7.org/fhir/Organization/1832473e-2fe0-452d-abe9-3cdb9879522f> ;
+     fhir:reference [ fhir:v "Organization/1832473e-2fe0-452d-abe9-3cdb9879522f" ] ;
+     fhir:display [ fhir:v "Acme Imaging Diagnostics" ]
+  ] ) ; # well, actually. this isn't the patient, but it'll do for now
+  fhir:value [
+     a fhir:Quantity ;
+     fhir:value [ fhir:v 0.887 ] ;
+     fhir:unit [ fhir:v "g/cm²" ] ;
+     fhir:system [
+       fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+       fhir:l <http://unitsofmeasure.org>
+     ] ;
+     fhir:code [ fhir:v "g/cm-2" ]
+  ] ; # 
+  fhir:bodySite [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "71341001:272741003=7771000" ]
+     ] ) ; # example of a post coordinated term
+     fhir:text [ fhir:v "Left Femur" ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/pat2> a fhir:Patient .
+
+<http://hl7.org/fhir/Organization/1832473e-2fe0-452d-abe9-3cdb9879522f> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

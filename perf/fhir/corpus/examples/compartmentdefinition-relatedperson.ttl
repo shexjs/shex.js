@@ -1,0 +1,861 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CompartmentDefinition/relatedPerson> a fhir:CompartmentDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "relatedPerson"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CompartmentDefinition relatedPerson</b></p><a name=\"relatedPerson\"> </a><a name=\"hcrelatedPerson\"> </a><p>#xD;\nThe following resources may be in this compartment:#xD;\n</p>#xD;\n<table class=\"grid\">#xD;\n <tr><td><b>Resource</b></td><td><b>Inclusion Criteria</b></td></tr>#xD;\n <tr><td><a href=\"adverseevent.html\">AdverseEvent</a></td><td>recorder</td></tr>#xD;\n <tr><td><a href=\"allergyintolerance.html\">AllergyIntolerance</a></td><td>asserter</td></tr>#xD;\n <tr><td><a href=\"appointment.html\">Appointment</a></td><td>actor</td></tr>#xD;\n <tr><td><a href=\"appointmentresponse.html\">AppointmentResponse</a></td><td>actor</td></tr>#xD;\n <tr><td><a href=\"basic.html\">Basic</a></td><td>author</td></tr>#xD;\n <tr><td><a href=\"careteam.html\">CareTeam</a></td><td>participant</td></tr>#xD;\n <tr><td><a href=\"claim.html\">Claim</a></td><td>payee</td></tr>#xD;\n <tr><td><a href=\"communication.html\">Communication</a></td><td>sender, recipient</td></tr>#xD;\n <tr><td><a href=\"communicationrequest.html\">CommunicationRequest</a></td><td>information-provider, recipient, requester</td></tr>#xD;\n <tr><td><a href=\"composition.html\">Composition</a></td><td>author</td></tr>#xD;\n <tr><td><a href=\"condition.html\">Condition</a></td><td>asserter</td></tr>#xD;\n <tr><td><a href=\"coverage.html\">Coverage</a></td><td>policy-holder, subscriber, paymentby-party</td></tr>#xD;\n <tr><td><a href=\"devicealert.html\">DeviceAlert</a></td><td>acknowledged-by</td></tr>#xD;\n <tr><td><a href=\"deviceassociation.html\">DeviceAssociation</a></td><td>focus</td></tr>#xD;\n <tr><td><a href=\"devicerequest.html\">DeviceRequest</a></td><td>performer, requester</td></tr>#xD;\n <tr><td><a href=\"documentreference.html\">DocumentReference</a></td><td>author</td></tr>#xD;\n <tr><td><a href=\"encounter.html\">Encounter</a></td><td>participant</td></tr>#xD;\n <tr><td><a href=\"explanationofbenefit.html\">ExplanationOfBenefit</a></td><td>payee</td></tr>#xD;\n <tr><td><a href=\"medicationstatement.html\">MedicationStatement</a></td><td>source</td></tr>#xD;\n <tr><td><a href=\"nutritionintake.html\">NutritionIntake</a></td><td>source</td></tr>#xD;\n <tr><td><a href=\"observation.html\">Observation</a></td><td>performer</td></tr>#xD;\n <tr><td><a href=\"patient.html\">Patient</a></td><td>link</td></tr>#xD;\n <tr><td><a href=\"person.html\">Person</a></td><td>link</td></tr>#xD;\n <tr><td><a href=\"procedure.html\">Procedure</a></td><td>performer</td></tr>#xD;\n <tr><td><a href=\"provenance.html\">Provenance</a></td><td>agent</td></tr>#xD;\n <tr><td><a href=\"questionnaireresponse.html\">QuestionnaireResponse</a></td><td>author, source</td></tr>#xD;\n <tr><td><a href=\"relatedperson.html\">RelatedPerson</a></td><td>{def}</td></tr>#xD;\n <tr><td><a href=\"requestorchestration.html\">RequestOrchestration</a></td><td>participant</td></tr>#xD;\n <tr><td><a href=\"schedule.html\">Schedule</a></td><td>actor</td></tr>#xD;\n <tr><td><a href=\"servicerequest.html\">ServiceRequest</a></td><td>performer</td></tr>#xD;\n</table>#xD;\n<p>#xD;\nA resource is in this compartment if the nominated search parameter (or chain) refers to the patient resource that defines the compartment.#xD;\n</p>#xD;\n<p>#xD;\n#xD;\n</p>#xD;\n<p>#xD;\nThe following resources are never in this compartment:#xD;\n</p>#xD;\n<ul>#xD;\n <li><a href=\"account.html\">Account</a></li>#xD;\n <li><a href=\"activitydefinition.html\">ActivityDefinition</a></li>#xD;\n <li><a href=\"actordefinition.html\">ActorDefinition</a></li>#xD;\n <li><a href=\"administrableproductdefinition.html\">AdministrableProductDefinition</a></li>#xD;\n <li><a href=\"artifactassessment.html\">ArtifactAssessment</a></li>#xD;\n <li><a href=\"auditevent.html\">AuditEvent</a></li>#xD;\n <li><a href=\"binary.html\">Binary</a></li>#xD;\n <li><a href=\"biologicallyderivedproduct.html\">BiologicallyDerivedProduct</a></li>#xD;\n <li><a href=\"bodystructure.html\">BodyStructure</a></li>#xD;\n <li><a href=\"bundle.html\">Bundle</a></li>#xD;\n <li><a href=\"capabilitystatement.html\">CapabilityStatement</a></li>#xD;\n <li><a href=\"careplan.html\">CarePlan</a></li>#xD;\n <li><a href=\"claimresponse.html\">ClaimResponse</a></li>#xD;\n <li><a href=\"clinicalusedefinition.html\">ClinicalUseDefinition</a></li>#xD;\n <li><a href=\"codesystem.html\">CodeSystem</a></li>#xD;\n <li><a href=\"compartmentdefinition.html\">CompartmentDefinition</a></li>#xD;\n <li><a href=\"conceptmap.html\">ConceptMap</a></li>#xD;\n <li><a href=\"consent.html\">Consent</a></li>#xD;\n <li><a href=\"coverageeligibilityrequest.html\">CoverageEligibilityRequest</a></li>#xD;\n <li><a href=\"coverageeligibilityresponse.html\">CoverageEligibilityResponse</a></li>#xD;\n <li><a href=\"detectedissue.html\">DetectedIssue</a></li>#xD;\n <li><a href=\"device.html\">Device</a></li>#xD;\n <li><a href=\"devicedefinition.html\">DeviceDefinition</a></li>#xD;\n <li><a href=\"devicemetric.html\">DeviceMetric</a></li>#xD;\n <li><a href=\"diagnosticreport.html\">DiagnosticReport</a></li>#xD;\n <li><a href=\"endpoint.html\">Endpoint</a></li>#xD;\n <li><a href=\"episodeofcare.html\">EpisodeOfCare</a></li>#xD;\n <li><a href=\"eventdefinition.html\">EventDefinition</a></li>#xD;\n <li><a href=\"evidence.html\">Evidence</a></li>#xD;\n <li><a href=\"evidencevariable.html\">EvidenceVariable</a></li>#xD;\n <li><a href=\"examplescenario.html\">ExampleScenario</a></li>#xD;\n <li><a href=\"familymemberhistory.html\">FamilyMemberHistory</a></li>#xD;\n <li><a href=\"flag.html\">Flag</a></li>#xD;\n <li><a href=\"goal.html\">Goal</a></li>#xD;\n <li><a href=\"group.html\">Group</a></li>#xD;\n <li><a href=\"guidanceresponse.html\">GuidanceResponse</a></li>#xD;\n <li><a href=\"healthcareservice.html\">HealthcareService</a></li>#xD;\n <li><a href=\"imagingselection.html\">ImagingSelection</a></li>#xD;\n <li><a href=\"imagingstudy.html\">ImagingStudy</a></li>#xD;\n <li><a href=\"immunization.html\">Immunization</a></li>#xD;\n <li><a href=\"implementationguide.html\">ImplementationGuide</a></li>#xD;\n <li><a href=\"ingredient.html\">Ingredient</a></li>#xD;\n <li><a href=\"library.html\">Library</a></li>#xD;\n <li><a href=\"list.html\">List</a></li>#xD;\n <li><a href=\"location.html\">Location</a></li>#xD;\n <li><a href=\"manufactureditemdefinition.html\">ManufacturedItemDefinition</a></li>#xD;\n <li><a href=\"measure.html\">Measure</a></li>#xD;\n <li><a href=\"measurereport.html\">MeasureReport</a></li>#xD;\n <li><a href=\"medication.html\">Medication</a></li>#xD;\n <li><a href=\"medicationadministration.html\">MedicationAdministration</a></li>#xD;\n <li><a href=\"medicationdispense.html\">MedicationDispense</a></li>#xD;\n <li><a href=\"medicationrequest.html\">MedicationRequest</a></li>#xD;\n <li><a href=\"medicinalproductdefinition.html\">MedicinalProductDefinition</a></li>#xD;\n <li><a href=\"messagedefinition.html\">MessageDefinition</a></li>#xD;\n <li><a href=\"messageheader.html\">MessageHeader</a></li>#xD;\n <li><a href=\"namingsystem.html\">NamingSystem</a></li>#xD;\n <li><a href=\"nutritionorder.html\">NutritionOrder</a></li>#xD;\n <li><a href=\"nutritionproduct.html\">NutritionProduct</a></li>#xD;\n <li><a href=\"observationdefinition.html\">ObservationDefinition</a></li>#xD;\n <li><a href=\"operationdefinition.html\">OperationDefinition</a></li>#xD;\n <li><a href=\"operationoutcome.html\">OperationOutcome</a></li>#xD;\n <li><a href=\"organization.html\">Organization</a></li>#xD;\n <li><a href=\"organizationaffiliation.html\">OrganizationAffiliation</a></li>#xD;\n <li><a href=\"packagedproductdefinition.html\">PackagedProductDefinition</a></li>#xD;\n <li><a href=\"paymentnotice.html\">PaymentNotice</a></li>#xD;\n <li><a href=\"paymentreconciliation.html\">PaymentReconciliation</a></li>#xD;\n <li><a href=\"plandefinition.html\">PlanDefinition</a></li>#xD;\n <li><a href=\"practitioner.html\">Practitioner</a></li>#xD;\n <li><a href=\"practitionerrole.html\">PractitionerRole</a></li>#xD;\n <li><a href=\"questionnaire.html\">Questionnaire</a></li>#xD;\n <li><a href=\"regulatedauthorization.html\">RegulatedAuthorization</a></li>#xD;\n <li><a href=\"requirements.html\">Requirements</a></li>#xD;\n <li><a href=\"researchstudy.html\">ResearchStudy</a></li>#xD;\n <li><a href=\"researchsubject.html\">ResearchSubject</a></li>#xD;\n <li><a href=\"riskassessment.html\">RiskAssessment</a></li>#xD;\n <li><a href=\"searchparameter.html\">SearchParameter</a></li>#xD;\n <li><a href=\"slot.html\">Slot</a></li>#xD;\n <li><a href=\"specimen.html\">Specimen</a></li>#xD;\n <li><a href=\"specimendefinition.html\">SpecimenDefinition</a></li>#xD;\n <li><a href=\"structuredefinition.html\">StructureDefinition</a></li>#xD;\n <li><a href=\"subscription.html\">Subscription</a></li>#xD;\n <li><a href=\"subscriptionstatus.html\">SubscriptionStatus</a></li>#xD;\n <li><a href=\"subscriptiontopic.html\">SubscriptionTopic</a></li>#xD;\n <li><a href=\"substance.html\">Substance</a></li>#xD;\n <li><a href=\"substancedefinition.html\">SubstanceDefinition</a></li>#xD;\n <li><a href=\"task.html\">Task</a></li>#xD;\n <li><a href=\"terminologycapabilities.html\">TerminologyCapabilities</a></li>#xD;\n <li><a href=\"valueset.html\">ValueSet</a></li>#xD;\n <li><a href=\"visionprescription.html\">VisionPrescription</a></li>#xD;\n</ul></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/CompartmentDefinition/relatedPerson"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/CompartmentDefinition/relatedPerson>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "Base FHIR compartment definition for RelatedPerson"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "There is an instance of the relatedPerson compartment for each relatedPerson resource, and the identity of the compartment is the same as the relatedPerson. The set of resources associated with a particular 'related person'"] ; # 
+  fhir:code [ fhir:v "RelatedPerson"] ; # 
+  fhir:search [ fhir:v true] ; # 
+  fhir:resource ( [
+     fhir:code [ fhir:v "Account" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "period"^^xsd:anyURI ;
+       fhir:l fhir:period
+     ] ;
+     fhir:endParam [
+       fhir:v "period"^^xsd:anyURI ;
+       fhir:l fhir:period
+     ]
+  ] [
+     fhir:code [ fhir:v "ActivityDefinition" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "ActorDefinition" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "AdministrableProductDefinition" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "AdverseEvent" ] ;
+     fhir:param ( [ fhir:v "recorder" ] ) ;
+     fhir:startParam [
+       fhir:v "occurrence"^^xsd:anyURI ;
+       fhir:l fhir:occurrence
+     ] ;
+     fhir:endParam [
+       fhir:v "occurrence"^^xsd:anyURI ;
+       fhir:l fhir:occurrence
+     ]
+  ] [
+     fhir:code [ fhir:v "AllergyIntolerance" ] ;
+     fhir:param ( [ fhir:v "asserter" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "Appointment" ] ;
+     fhir:param ( [ fhir:v "actor" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "AppointmentResponse" ] ;
+     fhir:param ( [ fhir:v "actor" ] )
+  ] [
+     fhir:code [ fhir:v "ArtifactAssessment" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "AuditEvent" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "Basic" ] ;
+     fhir:param ( [ fhir:v "author" ] ) ;
+     fhir:startParam [
+       fhir:v "created"^^xsd:anyURI ;
+       fhir:l fhir:created
+     ] ;
+     fhir:endParam [
+       fhir:v "created"^^xsd:anyURI ;
+       fhir:l fhir:created
+     ]
+  ] [
+     fhir:code [ fhir:v "Binary" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "BiologicallyDerivedProduct" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "BodyStructure" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "Bundle" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "CapabilityStatement" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "CarePlan" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "CareTeam" ] ;
+     fhir:param ( [ fhir:v "participant" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "Claim" ] ;
+     fhir:param ( [ fhir:v "payee" ] ) ;
+     fhir:startParam [
+       fhir:v "created"^^xsd:anyURI ;
+       fhir:l fhir:created
+     ] ;
+     fhir:endParam [
+       fhir:v "created"^^xsd:anyURI ;
+       fhir:l fhir:created
+     ]
+  ] [
+     fhir:code [ fhir:v "ClaimResponse" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "created"^^xsd:anyURI ;
+       fhir:l fhir:created
+     ] ;
+     fhir:endParam [
+       fhir:v "created"^^xsd:anyURI ;
+       fhir:l fhir:created
+     ]
+  ] [
+     fhir:code [ fhir:v "ClinicalUseDefinition" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "CodeSystem" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "Communication" ] ;
+     fhir:param ( [ fhir:v "sender" ] [ fhir:v "recipient" ] ) ;
+     fhir:startParam [
+       fhir:v "sent"^^xsd:anyURI ;
+       fhir:l fhir:sent
+     ] ;
+     fhir:endParam [
+       fhir:v "sent"^^xsd:anyURI ;
+       fhir:l fhir:sent
+     ]
+  ] [
+     fhir:code [ fhir:v "CommunicationRequest" ] ;
+     fhir:param ( [ fhir:v "information-provider" ] [ fhir:v "recipient" ] [ fhir:v "requester" ] ) ;
+     fhir:startParam [
+       fhir:v "authored"^^xsd:anyURI ;
+       fhir:l fhir:authored
+     ] ;
+     fhir:endParam [
+       fhir:v "authored"^^xsd:anyURI ;
+       fhir:l fhir:authored
+     ]
+  ] [
+     fhir:code [ fhir:v "CompartmentDefinition" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "Composition" ] ;
+     fhir:param ( [ fhir:v "author" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "ConceptMap" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "Condition" ] ;
+     fhir:param ( [ fhir:v "asserter" ] )
+  ] [
+     fhir:code [ fhir:v "Consent" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "period"^^xsd:anyURI ;
+       fhir:l fhir:period
+     ] ;
+     fhir:endParam [
+       fhir:v "period"^^xsd:anyURI ;
+       fhir:l fhir:period
+     ]
+  ] [
+     fhir:code [ fhir:v "Coverage" ] ;
+     fhir:param ( [ fhir:v "policy-holder" ] [ fhir:v "subscriber" ] [ fhir:v "paymentby-party" ] ) ;
+     fhir:startParam [
+       fhir:v "period"^^xsd:anyURI ;
+       fhir:l fhir:period
+     ] ;
+     fhir:endParam [
+       fhir:v "period"^^xsd:anyURI ;
+       fhir:l fhir:period
+     ]
+  ] [
+     fhir:code [ fhir:v "CoverageEligibilityRequest" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "created"^^xsd:anyURI ;
+       fhir:l fhir:created
+     ] ;
+     fhir:endParam [
+       fhir:v "created"^^xsd:anyURI ;
+       fhir:l fhir:created
+     ]
+  ] [
+     fhir:code [ fhir:v "CoverageEligibilityResponse" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "created"^^xsd:anyURI ;
+       fhir:l fhir:created
+     ] ;
+     fhir:endParam [
+       fhir:v "created"^^xsd:anyURI ;
+       fhir:l fhir:created
+     ]
+  ] [
+     fhir:code [ fhir:v "DetectedIssue" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "identified"^^xsd:anyURI ;
+       fhir:l fhir:identified
+     ] ;
+     fhir:endParam [
+       fhir:v "identified"^^xsd:anyURI ;
+       fhir:l fhir:identified
+     ]
+  ] [
+     fhir:code [ fhir:v "Device" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "DeviceAlert" ] ;
+     fhir:param ( [ fhir:v "acknowledged-by" ] ) ;
+     fhir:startParam [
+       fhir:v "occurrence"^^xsd:anyURI ;
+       fhir:l fhir:occurrence
+     ] ;
+     fhir:endParam [
+       fhir:v "occurrence"^^xsd:anyURI ;
+       fhir:l fhir:occurrence
+     ]
+  ] [
+     fhir:code [ fhir:v "DeviceAssociation" ] ;
+     fhir:param ( [ fhir:v "focus" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "DeviceDefinition" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "DeviceMetric" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "DeviceRequest" ] ;
+     fhir:param ( [ fhir:v "performer" ] [ fhir:v "requester" ] ) ;
+     fhir:startParam [
+       fhir:v "event-date"^^xsd:anyURI ;
+       fhir:l fhir:event-date
+     ] ;
+     fhir:endParam [
+       fhir:v "event-date"^^xsd:anyURI ;
+       fhir:l fhir:event-date
+     ]
+  ] [
+     fhir:code [ fhir:v "DiagnosticReport" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "DocumentReference" ] ;
+     fhir:param ( [ fhir:v "author" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "Encounter" ] ;
+     fhir:param ( [ fhir:v "participant" ] ) ;
+     fhir:startParam [
+       fhir:v "date-start"^^xsd:anyURI ;
+       fhir:l fhir:date-start
+     ] ;
+     fhir:endParam [
+       fhir:v "date-start"^^xsd:anyURI ;
+       fhir:l fhir:date-start
+     ]
+  ] [
+     fhir:code [ fhir:v "Endpoint" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "EpisodeOfCare" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "EventDefinition" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "Evidence" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "EvidenceVariable" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "ExampleScenario" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "ExplanationOfBenefit" ] ;
+     fhir:param ( [ fhir:v "payee" ] ) ;
+     fhir:startParam [
+       fhir:v "created"^^xsd:anyURI ;
+       fhir:l fhir:created
+     ] ;
+     fhir:endParam [
+       fhir:v "created"^^xsd:anyURI ;
+       fhir:l fhir:created
+     ]
+  ] [
+     fhir:code [ fhir:v "FamilyMemberHistory" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "Flag" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "Goal" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "start-date"^^xsd:anyURI ;
+       fhir:l fhir:start-date
+     ] ;
+     fhir:endParam [
+       fhir:v "start-date"^^xsd:anyURI ;
+       fhir:l fhir:start-date
+     ]
+  ] [
+     fhir:code [ fhir:v "Group" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "GuidanceResponse" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "HealthcareService" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "ImagingSelection" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "issued"^^xsd:anyURI ;
+       fhir:l fhir:issued
+     ] ;
+     fhir:endParam [
+       fhir:v "issued"^^xsd:anyURI ;
+       fhir:l fhir:issued
+     ]
+  ] [
+     fhir:code [ fhir:v "ImagingStudy" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "started"^^xsd:anyURI ;
+       fhir:l fhir:started
+     ] ;
+     fhir:endParam [
+       fhir:v "started"^^xsd:anyURI ;
+       fhir:l fhir:started
+     ]
+  ] [
+     fhir:code [ fhir:v "Immunization" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "ImplementationGuide" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "Ingredient" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "Library" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "List" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "Location" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "ManufacturedItemDefinition" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "Measure" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "MeasureReport" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "Medication" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "MedicationAdministration" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "MedicationDispense" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "whenhandedover"^^xsd:anyURI ;
+       fhir:l fhir:whenhandedover
+     ] ;
+     fhir:endParam [
+       fhir:v "whenhandedover"^^xsd:anyURI ;
+       fhir:l fhir:whenhandedover
+     ]
+  ] [
+     fhir:code [ fhir:v "MedicationRequest" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "combo-date"^^xsd:anyURI ;
+       fhir:l fhir:combo-date
+     ] ;
+     fhir:endParam [
+       fhir:v "combo-date"^^xsd:anyURI ;
+       fhir:l fhir:combo-date
+     ]
+  ] [
+     fhir:code [ fhir:v "MedicationStatement" ] ;
+     fhir:param ( [ fhir:v "source" ] ) ;
+     fhir:startParam [
+       fhir:v "effective"^^xsd:anyURI ;
+       fhir:l fhir:effective
+     ] ;
+     fhir:endParam [
+       fhir:v "effective"^^xsd:anyURI ;
+       fhir:l fhir:effective
+     ]
+  ] [
+     fhir:code [ fhir:v "MedicinalProductDefinition" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "MessageDefinition" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "MessageHeader" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "NamingSystem" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "NutritionIntake" ] ;
+     fhir:param ( [ fhir:v "source" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "NutritionOrder" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "datetime"^^xsd:anyURI ;
+       fhir:l fhir:datetime
+     ] ;
+     fhir:endParam [
+       fhir:v "datetime"^^xsd:anyURI ;
+       fhir:l fhir:datetime
+     ]
+  ] [
+     fhir:code [ fhir:v "NutritionProduct" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "Observation" ] ;
+     fhir:param ( [ fhir:v "performer" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "ObservationDefinition" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "OperationDefinition" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "OperationOutcome" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "Organization" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "OrganizationAffiliation" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "PackagedProductDefinition" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "Patient" ] ;
+     fhir:param ( [ fhir:v "link" ] )
+  ] [
+     fhir:code [ fhir:v "PaymentNotice" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "created"^^xsd:anyURI ;
+       fhir:l fhir:created
+     ] ;
+     fhir:endParam [
+       fhir:v "created"^^xsd:anyURI ;
+       fhir:l fhir:created
+     ]
+  ] [
+     fhir:code [ fhir:v "PaymentReconciliation" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "created"^^xsd:anyURI ;
+       fhir:l fhir:created
+     ] ;
+     fhir:endParam [
+       fhir:v "created"^^xsd:anyURI ;
+       fhir:l fhir:created
+     ]
+  ] [
+     fhir:code [ fhir:v "Person" ] ;
+     fhir:param ( [ fhir:v "link" ] )
+  ] [
+     fhir:code [ fhir:v "PlanDefinition" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "Practitioner" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "PractitionerRole" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "Procedure" ] ;
+     fhir:param ( [ fhir:v "performer" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "Provenance" ] ;
+     fhir:param ( [ fhir:v "agent" ] ) ;
+     fhir:startParam [
+       fhir:v "when"^^xsd:anyURI ;
+       fhir:l fhir:when
+     ] ;
+     fhir:endParam [
+       fhir:v "when"^^xsd:anyURI ;
+       fhir:l fhir:when
+     ]
+  ] [
+     fhir:code [ fhir:v "Questionnaire" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "QuestionnaireResponse" ] ;
+     fhir:param ( [ fhir:v "author" ] [ fhir:v "source" ] ) ;
+     fhir:startParam [
+       fhir:v "answer-date"^^xsd:anyURI ;
+       fhir:l fhir:answer-date
+     ] ;
+     fhir:endParam [
+       fhir:v "answer-date"^^xsd:anyURI ;
+       fhir:l fhir:answer-date
+     ]
+  ] [
+     fhir:code [ fhir:v "RegulatedAuthorization" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "RelatedPerson" ] ;
+     fhir:param ( [ fhir:v "{def}" ] )
+  ] [
+     fhir:code [ fhir:v "RequestOrchestration" ] ;
+     fhir:param ( [ fhir:v "participant" ] )
+  ] [
+     fhir:code [ fhir:v "Requirements" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "ResearchStudy" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "ResearchSubject" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "RiskAssessment" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "Schedule" ] ;
+     fhir:param ( [ fhir:v "actor" ] ) ;
+     fhir:startParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ] ;
+     fhir:endParam [
+       fhir:v "date"^^xsd:anyURI ;
+       fhir:l fhir:date
+     ]
+  ] [
+     fhir:code [ fhir:v "SearchParameter" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "ServiceRequest" ] ;
+     fhir:param ( [ fhir:v "performer" ] ) ;
+     fhir:startParam [
+       fhir:v "occurrence"^^xsd:anyURI ;
+       fhir:l fhir:occurrence
+     ] ;
+     fhir:endParam [
+       fhir:v "occurrence"^^xsd:anyURI ;
+       fhir:l fhir:occurrence
+     ]
+  ] [
+     fhir:code [ fhir:v "Slot" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "Specimen" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "collected"^^xsd:anyURI ;
+       fhir:l fhir:collected
+     ] ;
+     fhir:endParam [
+       fhir:v "collected"^^xsd:anyURI ;
+       fhir:l fhir:collected
+     ]
+  ] [
+     fhir:code [ fhir:v "SpecimenDefinition" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "StructureDefinition" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "Subscription" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "SubscriptionStatus" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "SubscriptionTopic" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "Substance" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "SubstanceDefinition" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "Task" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "period"^^xsd:anyURI ;
+       fhir:l fhir:period
+     ] ;
+     fhir:endParam [
+       fhir:v "period"^^xsd:anyURI ;
+       fhir:l fhir:period
+     ]
+  ] [
+     fhir:code [ fhir:v "TerminologyCapabilities" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "ValueSet" ] ;
+     fhir:param ( [ fhir:v "" ] )
+  ] [
+     fhir:code [ fhir:v "VisionPrescription" ] ;
+     fhir:param ( [ fhir:v "" ] ) ;
+     fhir:startParam [
+       fhir:v "datewritten"^^xsd:anyURI ;
+       fhir:l fhir:datewritten
+     ] ;
+     fhir:endParam [
+       fhir:v "datewritten"^^xsd:anyURI ;
+       fhir:l fhir:datewritten
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

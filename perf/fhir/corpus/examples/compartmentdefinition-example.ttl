@@ -1,0 +1,70 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CompartmentDefinition/example> a fhir:CompartmentDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/CompartmentDefinition/example"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/CompartmentDefinition/example>
+  ] ; # 
+  fhir:name [ fhir:v "EXAMPLE"] ; # 
+  fhir:title [ fhir:v "EXAMPLE"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2017-02-24"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "The set of resources associated with a particular Device (example with Communication and CommunicationRequest resourses only)."] ; # 
+  fhir:useContext ( [
+     fhir:code [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/usage-context-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/usage-context-type>
+       ] ;
+       fhir:code [ fhir:v "focus" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/fhir-types"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/fhir-types>
+         ] ;
+         fhir:code [ fhir:v "Device" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:purpose [ fhir:v "Provides an example of a FHIR compartment definition based on the Device resource type."] ; # 
+  fhir:code [ fhir:v "Device"] ; # 
+  fhir:search [ fhir:v true] ; # 
+  fhir:resource ( [
+     fhir:code [ fhir:v "Communication" ] ;
+     fhir:param ( [ fhir:v "sender" ] [ fhir:v "recipient" ] )
+  ] [
+     fhir:code [ fhir:v "CommunicationRequest" ] ;
+     fhir:param ( [ fhir:v "sender" ] [ fhir:v "recipient" ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

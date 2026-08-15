@@ -1,0 +1,51 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/FamilyMemberHistory/negation> a fhir:FamilyMemberHistory ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "negation"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Mother has no history of malignant tumor of breast</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/100> ;
+     fhir:reference [ fhir:v "Patient/100" ] ;
+     fhir:display [ fhir:v "Peter Patient" ]
+  ] ; # 
+  fhir:relationship [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-RoleCode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-RoleCode>
+       ] ;
+       fhir:code [ fhir:v "MTH" ] ;
+       fhir:display [ fhir:v "mother" ]
+     ] )
+  ] ; # 
+  fhir:condition ( [
+     fhir:code [
+       a sct:700146008 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "700146008" ] ;
+         fhir:display [ fhir:v "No history of malignant neoplasm of breast" ]
+       ] ) ;
+       fhir:text [ fhir:v "No history of malignant tumor of breast" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/100> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

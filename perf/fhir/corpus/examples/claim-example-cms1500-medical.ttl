@@ -1,0 +1,331 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Claim/MED-00050> a fhir:Claim ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "MED-00050"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">A human-readable rendering of a CMS 1500 Claim</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:contained ( [
+     a fhir:Patient ;
+     fhir:id [ fhir:v "patient-1" ] ;
+     fhir:name ( [
+       fhir:use [ fhir:v "official" ] ;
+       fhir:family [ fhir:v "Ashcraft" ] ;
+       fhir:given ( [ fhir:v "Alvina" ] )
+     ] ) ;
+     fhir:gender [ fhir:v "female" ] ;
+     fhir:birthDate [ fhir:v "1954-06-11"^^xsd:date ] ;
+     fhir:address ( [
+       fhir:use [ fhir:v "home" ] ;
+       fhir:line ( [ fhir:v "123 Main Street" ] ) ;
+       fhir:city [ fhir:v "Portland" ] ;
+       fhir:state [ fhir:v "OR" ] ;
+       fhir:postalCode [ fhir:v "97125" ] ;
+       fhir:country [ fhir:v "USA" ]
+     ] )
+  ] [
+     a fhir:Coverage ;
+     fhir:id [ fhir:v "coverage-1" ] ;
+     fhir:identifier ( [
+       fhir:system [
+         fhir:v "http://benefitsinc.com/certificate"^^xsd:anyURI ;
+         fhir:l <http://benefitsinc.com/certificate>
+       ] ;
+       fhir:value [ fhir:v "10138556" ]
+     ] ) ;
+     fhir:status [ fhir:v "active" ] ;
+     fhir:kind [ fhir:v "insurance" ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+         ] ;
+         fhir:code [ fhir:v "HIP" ] ;
+         fhir:display [ fhir:v "health insurance plan policy" ]
+       ] )
+     ] ;
+     fhir:subscriber [
+       fhir:l <#patient-1> ;
+       fhir:reference [ fhir:v "#patient-1" ]
+     ] ;
+     fhir:beneficiary [
+       fhir:l <#patient-1> ;
+       fhir:reference [ fhir:v "#patient-1" ]
+     ] ;
+     fhir:relationship [
+       fhir:coding ( [
+         fhir:code [ fhir:v "self" ]
+       ] )
+     ] ;
+     fhir:period [
+       fhir:start [ fhir:v "2015-01-01T00:00:00-07:00"^^xsd:dateTime ] ;
+       fhir:end [ fhir:v "2016-01-01T00:00:00-07:00"^^xsd:dateTime ]
+     ] ;
+     fhir:insurer [
+       fhir:identifier [
+         fhir:system [
+           fhir:v "http://www.bindb.com/bin"^^xsd:anyURI ;
+           fhir:l <http://www.bindb.com/bin>
+         ] ;
+         fhir:value [ fhir:v "123456" ]
+       ] ;
+       fhir:display [ fhir:v "Humana Inc." ]
+     ] ;
+     fhir:class ( [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/coverage-class"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/coverage-class>
+           ] ;
+           fhir:code [ fhir:v "group" ]
+         ] )
+       ] ;
+       fhir:value [
+         fhir:value [ fhir:v "80902206" ]
+       ]
+     ] )
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://CedarArmsMedicalCenter.com/claim"^^xsd:anyURI ;
+       fhir:l <http://CedarArmsMedicalCenter.com/claim>
+     ] ;
+     fhir:value [ fhir:v "MED-00050" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/claim-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/claim-type>
+       ] ;
+       fhir:code [ fhir:v "institutional" ]
+     ] )
+  ] ; # 
+  fhir:subType [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "https://www.cms.gov/codes/billtype"^^xsd:anyURI ;
+         fhir:l <https://www.cms.gov/codes/billtype>
+       ] ;
+       fhir:code [ fhir:v "831" ] ;
+       fhir:display [ fhir:v "Hospital Outpatient Surgery performed in an Ambulatory ​Surgical Center" ]
+     ] )
+  ] ; # 
+  fhir:use [ fhir:v "claim"] ; # 
+  fhir:subject [
+     fhir:l <#patient-1> ;
+     fhir:reference [ fhir:v "#patient-1" ]
+  ] ; # 
+  fhir:created [ fhir:v "2015-10-16T00:00:00-07:00"^^xsd:dateTime] ; # 
+  fhir:insurer [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://www.bindb.com/bin"^^xsd:anyURI ;
+         fhir:l <http://www.bindb.com/bin>
+       ] ;
+       fhir:value [ fhir:v "123456" ]
+     ] ;
+     fhir:display [ fhir:v "Humana Inc." ]
+  ] ; # 
+  fhir:provider [
+     fhir:l <http://hl7.org/fhir/Organization/1> ;
+     fhir:reference [ fhir:v "Organization/1" ]
+  ] ; # 
+  fhir:priority [
+     fhir:coding ( [
+       fhir:code [ fhir:v "normal" ]
+     ] )
+  ] ; # 
+  fhir:payee [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/payeetype"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/payeetype>
+         ] ;
+         fhir:code [ fhir:v "provider" ]
+       ] )
+     ] ;
+     fhir:party [
+       fhir:l <http://hl7.org/fhir/Organization/1> ;
+       fhir:reference [ fhir:v "Organization/1" ]
+     ]
+  ] ; # 
+  fhir:careTeam ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:provider [
+       fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+       fhir:reference [ fhir:v "Practitioner/example" ]
+     ]
+  ] ) ; # 
+  fhir:supportingInfo ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:category [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/claiminformationcategory"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/claiminformationcategory>
+         ] ;
+         fhir:code [ fhir:v "hospitalized" ]
+       ] )
+     ] ;
+     fhir:timing [
+       a fhir:Period ;
+       fhir:start [ fhir:v "2015-10-01T00:00:00-07:00"^^xsd:dateTime ] ;
+       fhir:end [ fhir:v "2015-10-05T00:00:00-07:00"^^xsd:dateTime ]
+     ]
+  ] [
+     fhir:sequence [ fhir:v "2"^^xsd:positiveInteger ] ;
+     fhir:category [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/claiminformationcategory"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/claiminformationcategory>
+         ] ;
+         fhir:code [ fhir:v "discharge" ]
+       ] )
+     ] ;
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://www.cms.gov/Outreach-and-Education/Medicare-Learning-Network-MLN/MLNMattersArticles/downloads/SE0801.pdf"^^xsd:anyURI ;
+           fhir:l <https://www.cms.gov/Outreach-and-Education/Medicare-Learning-Network-MLN/MLNMattersArticles/downloads/SE0801.pdf>
+         ] ;
+         fhir:code [ fhir:v "01" ] ;
+         fhir:display [ fhir:v "Discharge to Home or Self Care" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:diagnosis ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:diagnosis [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/sid/icd-10-cm"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/sid/icd-10-cm>
+           ] ;
+           fhir:code [ fhir:v "M96.1" ] ;
+           fhir:display [ fhir:v "Postlaminectomy syndrome, not elsewhere classified" ]
+         ] )
+       ]
+     ]
+  ] [
+     fhir:sequence [ fhir:v "2"^^xsd:positiveInteger ] ;
+     fhir:diagnosis [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/sid/icd-10-cm"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/sid/icd-10-cm>
+           ] ;
+           fhir:code [ fhir:v "G89.4" ] ;
+           fhir:display [ fhir:v "Chronic pain syndrome" ]
+         ] )
+       ]
+     ]
+  ] [
+     fhir:sequence [ fhir:v "3"^^xsd:positiveInteger ] ;
+     fhir:diagnosis [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/sid/icd-10-cm"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/sid/icd-10-cm>
+           ] ;
+           fhir:code [ fhir:v "M53.88" ] ;
+           fhir:display [ fhir:v "Other specified dorsopathies, sacral and sacrococcygeal region" ]
+         ] )
+       ]
+     ]
+  ] [
+     fhir:sequence [ fhir:v "4"^^xsd:positiveInteger ] ;
+     fhir:diagnosis [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/sid/icd-10-cm"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/sid/icd-10-cm>
+           ] ;
+           fhir:code [ fhir:v "M47.816" ] ;
+           fhir:display [ fhir:v "Spondylosis without myelopathy or radiculopathy, lumbar region" ]
+         ] )
+       ]
+     ]
+  ] ) ; # 
+  fhir:insurance ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:focal [ fhir:v true ] ;
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://CedarArmsMedicalCenter.com/claim"^^xsd:anyURI ;
+         fhir:l <http://CedarArmsMedicalCenter.com/claim>
+       ] ;
+       fhir:value [ fhir:v "MED-00050" ]
+     ] ;
+     fhir:coverage [
+       fhir:l <#coverage-1> ;
+       fhir:reference [ fhir:v "#coverage-1" ]
+     ]
+  ] ) ; # 
+  fhir:item ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:careTeamSequence ( [ fhir:v "1"^^xsd:positiveInteger ] ) ;
+     fhir:diagnosisSequence ( [ fhir:v "2"^^xsd:positiveInteger ] [ fhir:v "4"^^xsd:positiveInteger ] ) ;
+     fhir:informationSequence ( [ fhir:v "1"^^xsd:positiveInteger ] ) ;
+     fhir:productOrService [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://www.ama-assn.org/go/cpt"^^xsd:anyURI ;
+           fhir:l <http://www.ama-assn.org/go/cpt>
+         ] ;
+         fhir:code [ fhir:v "62264" ] ;
+         fhir:display [ fhir:v "Percutaneous lysis of epidural adhesions using solution injection (eg, hypertonic saline, enzyme) or mechanical means (eg, catheter) including radiologic localization (includes contrast when administered), multiple adhesiolysis sessions; 1 day" ]
+       ] )
+     ] ;
+     fhir:serviced [
+       a fhir:Date ;
+       fhir:v "2015-10-13"^^xsd:date
+     ] ;
+     fhir:location [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://www.cms.gov/medicare/coding/place-of-service-codes/place_of_service_code_set.html"^^xsd:anyURI ;
+           fhir:l <https://www.cms.gov/medicare/coding/place-of-service-codes/place_of_service_code_set.html>
+         ] ;
+         fhir:code [ fhir:v "24" ] ;
+         fhir:display [ fhir:v "Ambulatory Surgical Center" ]
+       ] )
+     ] ;
+     fhir:unitPrice [
+       fhir:value [ fhir:v 12500.00 ] ;
+       fhir:currency [ fhir:v "USD" ]
+     ] ;
+     fhir:net [
+       fhir:value [ fhir:v 12500.00 ] ;
+       fhir:currency [ fhir:v "USD" ]
+     ]
+  ] ) ; # 
+  fhir:total [
+     fhir:value [ fhir:v 12500.00 ] ;
+     fhir:currency [ fhir:v "USD" ]
+  ] . # 
+
+<http://hl7.org/fhir/Organization/1> a fhir:Organization .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

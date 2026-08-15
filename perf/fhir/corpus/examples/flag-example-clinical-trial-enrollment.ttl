@@ -1,0 +1,57 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Flag/clinical-trial-enrollment> a fhir:Flag ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "clinical-trial-enrollment"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Patients in Group 102 are enrolled in the XYZ123 Clinical Trial.</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:value [ fhir:v "clinical-trial-2024-group-a" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/flag-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/flag-category>
+       ] ;
+       fhir:code [ fhir:v "research" ] ;
+       fhir:display [ fhir:v "Research" ]
+     ] ) ;
+     fhir:text [ fhir:v "Research" ]
+  ] ) ; # 
+  fhir:code [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.org/local"^^xsd:anyURI ;
+         fhir:l <http://example.org/local>
+       ] ;
+       fhir:code [ fhir:v "clinical-trial" ] ;
+       fhir:display [ fhir:v "Clinical Trial Enrollment" ]
+     ] ) ;
+     fhir:text [ fhir:v "Patients are enrolled in the XYZ123 Clinical Trial." ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Group/102> ;
+     fhir:reference [ fhir:v "Group/102" ] ;
+     fhir:display [ fhir:v "Group 102" ]
+  ] ; # 
+  fhir:period [
+     fhir:start [ fhir:v "2024-01-01"^^xsd:date ]
+  ] ; # 
+  fhir:author [
+     fhir:display [ fhir:v "ABC Research Institute" ]
+  ] . # 
+
+<http://hl7.org/fhir/Group/102> a fhir:Group .
+
+# -------------------------------------------------------------------------------------
+

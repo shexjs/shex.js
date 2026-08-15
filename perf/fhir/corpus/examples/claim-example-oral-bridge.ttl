@@ -1,0 +1,371 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Claim/100156> a fhir:Claim ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "100156"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">A human-readable rendering of the Oral Health Claim</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:contained ( [
+     a fhir:Device ;
+     fhir:id [ fhir:v "device-bridge" ]
+  ] [
+     a fhir:ServiceRequest ;
+     fhir:id [ fhir:v "referral" ] ;
+     fhir:status [ fhir:v "active" ] ;
+     fhir:intent [ fhir:v "order" ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/1> ;
+       fhir:reference [ fhir:v "Patient/1" ]
+     ]
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://happyvalley.com/claim"^^xsd:anyURI ;
+       fhir:l <http://happyvalley.com/claim>
+     ] ;
+     fhir:value [ fhir:v "123466" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/claim-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/claim-type>
+       ] ;
+       fhir:code [ fhir:v "oral" ]
+     ] )
+  ] ; # 
+  fhir:use [ fhir:v "claim"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/1> ;
+     fhir:reference [ fhir:v "Patient/1" ]
+  ] ; # 
+  fhir:created [ fhir:v "2014-08-16"^^xsd:date] ; # 
+  fhir:insurer [
+     fhir:l <http://hl7.org/fhir/Organization/2> ;
+     fhir:reference [ fhir:v "Organization/2" ]
+  ] ; # 
+  fhir:provider [
+     fhir:l <http://hl7.org/fhir/Organization/1> ;
+     fhir:reference [ fhir:v "Organization/1" ]
+  ] ; # 
+  fhir:priority [
+     fhir:coding ( [
+       fhir:code [ fhir:v "normal" ]
+     ] )
+  ] ; # 
+  fhir:related ( [
+     fhir:claim [
+       fhir:l <http://hl7.org/fhir/Claim/100151> ;
+       fhir:reference [ fhir:v "Claim/100151" ]
+     ] ;
+     fhir:relationship [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ex-relatedclaimrelationship"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ex-relatedclaimrelationship>
+         ] ;
+         fhir:code [ fhir:v "associated" ]
+       ] )
+     ] ;
+     fhir:reference [
+       fhir:value [ fhir:v "CASE156746B" ]
+     ] # case number
+  ] ) ; # 
+  fhir:payee [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/payeetype"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/payeetype>
+         ] ;
+         fhir:code [ fhir:v "other" ]
+       ] )
+     ] ;
+     fhir:party [
+       fhir:l <http://hl7.org/fhir/RelatedPerson/peter> ;
+       fhir:reference [ fhir:v "RelatedPerson/peter" ]
+     ]
+  ] ; # 
+  fhir:referral [
+     fhir:l <#referral> ;
+     fhir:reference [ fhir:v "#referral" ]
+  ] ; # 
+  fhir:careTeam ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:provider [
+       fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+       fhir:reference [ fhir:v "Practitioner/example" ]
+     ]
+  ] ) ; # 
+  fhir:supportingInfo ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:category [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/claiminformationcategory"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/claiminformationcategory>
+         ] ;
+         fhir:code [ fhir:v "prosthesis" ]
+       ] )
+     ] ;
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/ex-oralprostho"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/ex-oralprostho>
+         ] ;
+         fhir:code [ fhir:v "2" ] ;
+         fhir:display [ fhir:v "Maryland Bridge" ]
+       ] )
+     ] ;
+     fhir:timing [
+       a fhir:DateTime ;
+       fhir:v "2001-04-07"^^xsd:date
+     ]
+  ] ) ; # original placement
+  fhir:procedure ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:date [ fhir:v "2014-07-04"^^xsd:date ] ;
+     fhir:procedure [
+       fhir:concept [
+         fhir:text [ fhir:v "Resection of gum to increase exposed tooth." ]
+       ]
+     ]
+  ] ) ; # 
+  fhir:insurance ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:focal [ fhir:v true ] ;
+     fhir:coverage [
+       fhir:l <http://hl7.org/fhir/Coverage/9876B1> ;
+       fhir:reference [ fhir:v "Coverage/9876B1" ]
+     ]
+  ] ) ; # 
+  fhir:item ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:careTeamSequence ( [ fhir:v "1"^^xsd:positiveInteger ] ) ;
+     fhir:informationSequence ( [ fhir:v "1"^^xsd:positiveInteger ] ) ;
+     fhir:productOrService [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.org/fhir/oralservicecodes"^^xsd:anyURI ;
+           fhir:l <http://example.org/fhir/oralservicecodes>
+         ] ;
+         fhir:code [ fhir:v "67221" ] ;
+         fhir:display [ fhir:v "Maryland Bridge" ]
+       ] )
+     ] ;
+     fhir:serviced [
+       a fhir:Date ;
+       fhir:v "2014-08-16"^^xsd:date
+     ] ;
+     fhir:location [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ex-serviceplace"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ex-serviceplace>
+         ] ;
+         fhir:code [ fhir:v "11" ]
+       ] )
+     ] ;
+     fhir:unitPrice [
+       fhir:value [ fhir:v 1400.00 ] ;
+       fhir:currency [ fhir:v "USD" ]
+     ] ;
+     fhir:factor [ fhir:v 0.75 ] ;
+     fhir:net [
+       fhir:value [ fhir:v 1050.00 ] ;
+       fhir:currency [ fhir:v "USD" ]
+     ] ; # student discount
+     fhir:udi ( [
+       fhir:l <#device-bridge> ;
+       fhir:reference [ fhir:v "#device-bridge" ]
+     ] ) ;
+     fhir:bodySite ( [
+       fhir:site ( [
+         fhir:concept [
+           fhir:coding ( [
+             fhir:system [
+               fhir:v "http://fdi.org/fhir/oraltoothcodes"^^xsd:anyURI ;
+               fhir:l <http://fdi.org/fhir/oraltoothcodes>
+             ] ;
+             fhir:code [ fhir:v "01" ]
+           ] )
+         ]
+       ] )
+     ] )
+  ] [
+     fhir:sequence [ fhir:v "2"^^xsd:positiveInteger ] ;
+     fhir:careTeamSequence ( [ fhir:v "1"^^xsd:positiveInteger ] ) ;
+     fhir:productOrService [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.org/fhir/oralservicecodes"^^xsd:anyURI ;
+           fhir:l <http://example.org/fhir/oralservicecodes>
+         ] ;
+         fhir:code [ fhir:v "21211" ]
+       ] )
+     ] ;
+     fhir:serviced [
+       a fhir:Date ;
+       fhir:v "2014-08-16"^^xsd:date
+     ] ;
+     fhir:location [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ex-serviceplace"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ex-serviceplace>
+         ] ;
+         fhir:code [ fhir:v "11" ]
+       ] )
+     ] ;
+     fhir:unitPrice [
+       fhir:value [ fhir:v 105.00 ] ;
+       fhir:currency [ fhir:v "USD" ]
+     ] ;
+     fhir:net [
+       fhir:value [ fhir:v 105.00 ] ;
+       fhir:currency [ fhir:v "USD" ]
+     ] ;
+     fhir:bodySite ( [
+       fhir:site ( [
+         fhir:concept [
+           fhir:coding ( [
+             fhir:system [
+               fhir:v "http://fdi.org/fhir/oraltoothcodes"^^xsd:anyURI ;
+               fhir:l <http://fdi.org/fhir/oraltoothcodes>
+             ] ;
+             fhir:code [ fhir:v "21" ]
+           ] )
+         ]
+       ] ) ;
+       fhir:subSite ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://fdi.org/fhir/oralsurfacecodes"^^xsd:anyURI ;
+             fhir:l <http://fdi.org/fhir/oralsurfacecodes>
+           ] ;
+           fhir:code [ fhir:v "L" ]
+         ] )
+       ] )
+     ] )
+  ] [
+     fhir:sequence [ fhir:v "3"^^xsd:positiveInteger ] ;
+     fhir:careTeamSequence ( [ fhir:v "1"^^xsd:positiveInteger ] ) ;
+     fhir:procedureSequence ( [ fhir:v "1"^^xsd:positiveInteger ] ) ;
+     fhir:productOrService [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.org/fhir/oralservicecodes"^^xsd:anyURI ;
+           fhir:l <http://example.org/fhir/oralservicecodes>
+         ] ;
+         fhir:code [ fhir:v "27211" ]
+       ] )
+     ] ;
+     fhir:serviced [
+       a fhir:Date ;
+       fhir:v "2014-08-16"^^xsd:date
+     ] ;
+     fhir:location [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ex-serviceplace"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ex-serviceplace>
+         ] ;
+         fhir:code [ fhir:v "11" ]
+       ] )
+     ] ;
+     fhir:unitPrice [
+       fhir:value [ fhir:v 1100.00 ] ;
+       fhir:currency [ fhir:v "USD" ]
+     ] ;
+     fhir:net [
+       fhir:value [ fhir:v 1100.00 ] ;
+       fhir:currency [ fhir:v "USD" ]
+     ] ;
+     fhir:bodySite ( [
+       fhir:site ( [
+         fhir:concept [
+           fhir:coding ( [
+             fhir:system [
+               fhir:v "http://fdi.org/fhir/oraltoothcodes"^^xsd:anyURI ;
+               fhir:l <http://fdi.org/fhir/oraltoothcodes>
+             ] ;
+             fhir:code [ fhir:v "24" ]
+           ] )
+         ]
+       ] )
+     ] ) ;
+     fhir:detail ( [
+       fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+       fhir:productOrService [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://example.org/fhir/oralservicecodes"^^xsd:anyURI ;
+             fhir:l <http://example.org/fhir/oralservicecodes>
+           ] ;
+           fhir:code [ fhir:v "27211" ]
+         ] )
+       ] ;
+       fhir:unitPrice [
+         fhir:value [ fhir:v 1000.00 ] ;
+         fhir:currency [ fhir:v "USD" ]
+       ] ;
+       fhir:factor [ fhir:v 0.75 ] ;
+       fhir:net [
+         fhir:value [ fhir:v 750.00 ] ;
+         fhir:currency [ fhir:v "USD" ]
+       ] # Student discount
+     ] [
+       fhir:sequence [ fhir:v "2"^^xsd:positiveInteger ] ;
+       fhir:productOrService [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://example.org/fhir/oralservicecodes"^^xsd:anyURI ;
+             fhir:l <http://example.org/fhir/oralservicecodes>
+           ] ;
+           fhir:code [ fhir:v "lab" ]
+         ] )
+       ] ;
+       fhir:unitPrice [
+         fhir:value [ fhir:v 350.00 ] ;
+         fhir:currency [ fhir:v "USD" ]
+       ] ;
+       fhir:net [
+         fhir:value [ fhir:v 350.00 ] ;
+         fhir:currency [ fhir:v "USD" ]
+       ]
+     ] )
+  ] ) ; # 
+  fhir:total [
+     fhir:value [ fhir:v 2255.00 ] ;
+     fhir:currency [ fhir:v "USD" ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/1> a fhir:Patient .
+
+<http://hl7.org/fhir/Organization/2> a fhir:Organization .
+
+<http://hl7.org/fhir/Organization/1> a fhir:Organization .
+
+<http://hl7.org/fhir/Claim/100151> a fhir:Claim .
+
+<http://hl7.org/fhir/RelatedPerson/peter> a fhir:RelatedPerson .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Coverage/9876B1> a fhir:Coverage .
+
+# -------------------------------------------------------------------------------------
+

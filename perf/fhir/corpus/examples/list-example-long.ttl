@@ -1,0 +1,1803 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/List/long> a fhir:List ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "long"] ; # 
+  fhir:status [ fhir:v "current"] ; # 
+  fhir:mode [ fhir:v "changes"] ; # 
+  fhir:date [ fhir:v "2018-02-21T12:17:00+11:00"^^xsd:dateTime] ; # 
+  fhir:entry ( [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/example> ;
+       fhir:reference [ fhir:v "Patient/example" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/pat1> ;
+       fhir:reference [ fhir:v "Patient/pat1" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/pat2> ;
+       fhir:reference [ fhir:v "Patient/pat2" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/pat3> ;
+       fhir:reference [ fhir:v "Patient/pat3" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/pat4> ;
+       fhir:reference [ fhir:v "Patient/pat4" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/1> ;
+       fhir:reference [ fhir:v "Patient/1" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/2> ;
+       fhir:reference [ fhir:v "Patient/2" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/3> ;
+       fhir:reference [ fhir:v "Patient/3" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/4> ;
+       fhir:reference [ fhir:v "Patient/4" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/5> ;
+       fhir:reference [ fhir:v "Patient/5" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/6> ;
+       fhir:reference [ fhir:v "Patient/6" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/7> ;
+       fhir:reference [ fhir:v "Patient/7" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/8> ;
+       fhir:reference [ fhir:v "Patient/8" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/9> ;
+       fhir:reference [ fhir:v "Patient/9" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/10> ;
+       fhir:reference [ fhir:v "Patient/10" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/11> ;
+       fhir:reference [ fhir:v "Patient/11" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/12> ;
+       fhir:reference [ fhir:v "Patient/12" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/71> ;
+       fhir:reference [ fhir:v "Patient/71" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/72> ;
+       fhir:reference [ fhir:v "Patient/72" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/73> ;
+       fhir:reference [ fhir:v "Patient/73" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/74> ;
+       fhir:reference [ fhir:v "Patient/74" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/75> ;
+       fhir:reference [ fhir:v "Patient/75" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/76> ;
+       fhir:reference [ fhir:v "Patient/76" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/77> ;
+       fhir:reference [ fhir:v "Patient/77" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/78> ;
+       fhir:reference [ fhir:v "Patient/78" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/79> ;
+       fhir:reference [ fhir:v "Patient/79" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/80> ;
+       fhir:reference [ fhir:v "Patient/80" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/81> ;
+       fhir:reference [ fhir:v "Patient/81" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/82> ;
+       fhir:reference [ fhir:v "Patient/82" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/83> ;
+       fhir:reference [ fhir:v "Patient/83" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/84> ;
+       fhir:reference [ fhir:v "Patient/84" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/85> ;
+       fhir:reference [ fhir:v "Patient/85" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/86> ;
+       fhir:reference [ fhir:v "Patient/86" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/87> ;
+       fhir:reference [ fhir:v "Patient/87" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/88> ;
+       fhir:reference [ fhir:v "Patient/88" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/89> ;
+       fhir:reference [ fhir:v "Patient/89" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/90> ;
+       fhir:reference [ fhir:v "Patient/90" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/91> ;
+       fhir:reference [ fhir:v "Patient/91" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/92> ;
+       fhir:reference [ fhir:v "Patient/92" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/93> ;
+       fhir:reference [ fhir:v "Patient/93" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/94> ;
+       fhir:reference [ fhir:v "Patient/94" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/95> ;
+       fhir:reference [ fhir:v "Patient/95" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/96> ;
+       fhir:reference [ fhir:v "Patient/96" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/97> ;
+       fhir:reference [ fhir:v "Patient/97" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/98> ;
+       fhir:reference [ fhir:v "Patient/98" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/99> ;
+       fhir:reference [ fhir:v "Patient/99" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/100> ;
+       fhir:reference [ fhir:v "Patient/100" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/101> ;
+       fhir:reference [ fhir:v "Patient/101" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/102> ;
+       fhir:reference [ fhir:v "Patient/102" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/103> ;
+       fhir:reference [ fhir:v "Patient/103" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/104> ;
+       fhir:reference [ fhir:v "Patient/104" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/105> ;
+       fhir:reference [ fhir:v "Patient/105" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/106> ;
+       fhir:reference [ fhir:v "Patient/106" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/107> ;
+       fhir:reference [ fhir:v "Patient/107" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/108> ;
+       fhir:reference [ fhir:v "Patient/108" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/109> ;
+       fhir:reference [ fhir:v "Patient/109" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/110> ;
+       fhir:reference [ fhir:v "Patient/110" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/111> ;
+       fhir:reference [ fhir:v "Patient/111" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/112> ;
+       fhir:reference [ fhir:v "Patient/112" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/113> ;
+       fhir:reference [ fhir:v "Patient/113" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/114> ;
+       fhir:reference [ fhir:v "Patient/114" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/115> ;
+       fhir:reference [ fhir:v "Patient/115" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/116> ;
+       fhir:reference [ fhir:v "Patient/116" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/117> ;
+       fhir:reference [ fhir:v "Patient/117" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/118> ;
+       fhir:reference [ fhir:v "Patient/118" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/119> ;
+       fhir:reference [ fhir:v "Patient/119" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/120> ;
+       fhir:reference [ fhir:v "Patient/120" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/121> ;
+       fhir:reference [ fhir:v "Patient/121" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/122> ;
+       fhir:reference [ fhir:v "Patient/122" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/123> ;
+       fhir:reference [ fhir:v "Patient/123" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/124> ;
+       fhir:reference [ fhir:v "Patient/124" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/125> ;
+       fhir:reference [ fhir:v "Patient/125" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/126> ;
+       fhir:reference [ fhir:v "Patient/126" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/127> ;
+       fhir:reference [ fhir:v "Patient/127" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/128> ;
+       fhir:reference [ fhir:v "Patient/128" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/129> ;
+       fhir:reference [ fhir:v "Patient/129" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/130> ;
+       fhir:reference [ fhir:v "Patient/130" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/131> ;
+       fhir:reference [ fhir:v "Patient/131" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/132> ;
+       fhir:reference [ fhir:v "Patient/132" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/133> ;
+       fhir:reference [ fhir:v "Patient/133" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/134> ;
+       fhir:reference [ fhir:v "Patient/134" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/135> ;
+       fhir:reference [ fhir:v "Patient/135" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/136> ;
+       fhir:reference [ fhir:v "Patient/136" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/137> ;
+       fhir:reference [ fhir:v "Patient/137" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/138> ;
+       fhir:reference [ fhir:v "Patient/138" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/139> ;
+       fhir:reference [ fhir:v "Patient/139" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/140> ;
+       fhir:reference [ fhir:v "Patient/140" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/141> ;
+       fhir:reference [ fhir:v "Patient/141" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/142> ;
+       fhir:reference [ fhir:v "Patient/142" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/143> ;
+       fhir:reference [ fhir:v "Patient/143" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/144> ;
+       fhir:reference [ fhir:v "Patient/144" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/145> ;
+       fhir:reference [ fhir:v "Patient/145" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/146> ;
+       fhir:reference [ fhir:v "Patient/146" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/147> ;
+       fhir:reference [ fhir:v "Patient/147" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/148> ;
+       fhir:reference [ fhir:v "Patient/148" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/149> ;
+       fhir:reference [ fhir:v "Patient/149" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/150> ;
+       fhir:reference [ fhir:v "Patient/150" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/151> ;
+       fhir:reference [ fhir:v "Patient/151" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/152> ;
+       fhir:reference [ fhir:v "Patient/152" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/153> ;
+       fhir:reference [ fhir:v "Patient/153" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/154> ;
+       fhir:reference [ fhir:v "Patient/154" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/155> ;
+       fhir:reference [ fhir:v "Patient/155" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/156> ;
+       fhir:reference [ fhir:v "Patient/156" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/157> ;
+       fhir:reference [ fhir:v "Patient/157" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/158> ;
+       fhir:reference [ fhir:v "Patient/158" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/159> ;
+       fhir:reference [ fhir:v "Patient/159" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/160> ;
+       fhir:reference [ fhir:v "Patient/160" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/161> ;
+       fhir:reference [ fhir:v "Patient/161" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/162> ;
+       fhir:reference [ fhir:v "Patient/162" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/163> ;
+       fhir:reference [ fhir:v "Patient/163" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/164> ;
+       fhir:reference [ fhir:v "Patient/164" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/165> ;
+       fhir:reference [ fhir:v "Patient/165" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/166> ;
+       fhir:reference [ fhir:v "Patient/166" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/167> ;
+       fhir:reference [ fhir:v "Patient/167" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/168> ;
+       fhir:reference [ fhir:v "Patient/168" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/169> ;
+       fhir:reference [ fhir:v "Patient/169" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/170> ;
+       fhir:reference [ fhir:v "Patient/170" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/171> ;
+       fhir:reference [ fhir:v "Patient/171" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/172> ;
+       fhir:reference [ fhir:v "Patient/172" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/173> ;
+       fhir:reference [ fhir:v "Patient/173" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/174> ;
+       fhir:reference [ fhir:v "Patient/174" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/175> ;
+       fhir:reference [ fhir:v "Patient/175" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/176> ;
+       fhir:reference [ fhir:v "Patient/176" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/177> ;
+       fhir:reference [ fhir:v "Patient/177" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/178> ;
+       fhir:reference [ fhir:v "Patient/178" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/179> ;
+       fhir:reference [ fhir:v "Patient/179" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/180> ;
+       fhir:reference [ fhir:v "Patient/180" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/181> ;
+       fhir:reference [ fhir:v "Patient/181" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/182> ;
+       fhir:reference [ fhir:v "Patient/182" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/183> ;
+       fhir:reference [ fhir:v "Patient/183" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/184> ;
+       fhir:reference [ fhir:v "Patient/184" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/185> ;
+       fhir:reference [ fhir:v "Patient/185" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/186> ;
+       fhir:reference [ fhir:v "Patient/186" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/187> ;
+       fhir:reference [ fhir:v "Patient/187" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/188> ;
+       fhir:reference [ fhir:v "Patient/188" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/189> ;
+       fhir:reference [ fhir:v "Patient/189" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/190> ;
+       fhir:reference [ fhir:v "Patient/190" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/191> ;
+       fhir:reference [ fhir:v "Patient/191" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/192> ;
+       fhir:reference [ fhir:v "Patient/192" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/193> ;
+       fhir:reference [ fhir:v "Patient/193" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/194> ;
+       fhir:reference [ fhir:v "Patient/194" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/195> ;
+       fhir:reference [ fhir:v "Patient/195" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/196> ;
+       fhir:reference [ fhir:v "Patient/196" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/197> ;
+       fhir:reference [ fhir:v "Patient/197" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/198> ;
+       fhir:reference [ fhir:v "Patient/198" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/199> ;
+       fhir:reference [ fhir:v "Patient/199" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/200> ;
+       fhir:reference [ fhir:v "Patient/200" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/201> ;
+       fhir:reference [ fhir:v "Patient/201" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/202> ;
+       fhir:reference [ fhir:v "Patient/202" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/203> ;
+       fhir:reference [ fhir:v "Patient/203" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/204> ;
+       fhir:reference [ fhir:v "Patient/204" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/205> ;
+       fhir:reference [ fhir:v "Patient/205" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/206> ;
+       fhir:reference [ fhir:v "Patient/206" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/207> ;
+       fhir:reference [ fhir:v "Patient/207" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/208> ;
+       fhir:reference [ fhir:v "Patient/208" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/209> ;
+       fhir:reference [ fhir:v "Patient/209" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/210> ;
+       fhir:reference [ fhir:v "Patient/210" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/211> ;
+       fhir:reference [ fhir:v "Patient/211" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/212> ;
+       fhir:reference [ fhir:v "Patient/212" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/213> ;
+       fhir:reference [ fhir:v "Patient/213" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/214> ;
+       fhir:reference [ fhir:v "Patient/214" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/215> ;
+       fhir:reference [ fhir:v "Patient/215" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/216> ;
+       fhir:reference [ fhir:v "Patient/216" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/217> ;
+       fhir:reference [ fhir:v "Patient/217" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/218> ;
+       fhir:reference [ fhir:v "Patient/218" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/219> ;
+       fhir:reference [ fhir:v "Patient/219" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/220> ;
+       fhir:reference [ fhir:v "Patient/220" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/221> ;
+       fhir:reference [ fhir:v "Patient/221" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/222> ;
+       fhir:reference [ fhir:v "Patient/222" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/223> ;
+       fhir:reference [ fhir:v "Patient/223" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/224> ;
+       fhir:reference [ fhir:v "Patient/224" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/225> ;
+       fhir:reference [ fhir:v "Patient/225" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/226> ;
+       fhir:reference [ fhir:v "Patient/226" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/227> ;
+       fhir:reference [ fhir:v "Patient/227" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/228> ;
+       fhir:reference [ fhir:v "Patient/228" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/229> ;
+       fhir:reference [ fhir:v "Patient/229" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/230> ;
+       fhir:reference [ fhir:v "Patient/230" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/231> ;
+       fhir:reference [ fhir:v "Patient/231" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/232> ;
+       fhir:reference [ fhir:v "Patient/232" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/233> ;
+       fhir:reference [ fhir:v "Patient/233" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/234> ;
+       fhir:reference [ fhir:v "Patient/234" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/235> ;
+       fhir:reference [ fhir:v "Patient/235" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/236> ;
+       fhir:reference [ fhir:v "Patient/236" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/237> ;
+       fhir:reference [ fhir:v "Patient/237" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/238> ;
+       fhir:reference [ fhir:v "Patient/238" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/239> ;
+       fhir:reference [ fhir:v "Patient/239" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/240> ;
+       fhir:reference [ fhir:v "Patient/240" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/241> ;
+       fhir:reference [ fhir:v "Patient/241" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/242> ;
+       fhir:reference [ fhir:v "Patient/242" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/243> ;
+       fhir:reference [ fhir:v "Patient/243" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/244> ;
+       fhir:reference [ fhir:v "Patient/244" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/245> ;
+       fhir:reference [ fhir:v "Patient/245" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/246> ;
+       fhir:reference [ fhir:v "Patient/246" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/247> ;
+       fhir:reference [ fhir:v "Patient/247" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/248> ;
+       fhir:reference [ fhir:v "Patient/248" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/249> ;
+       fhir:reference [ fhir:v "Patient/249" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/250> ;
+       fhir:reference [ fhir:v "Patient/250" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/251> ;
+       fhir:reference [ fhir:v "Patient/251" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/252> ;
+       fhir:reference [ fhir:v "Patient/252" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/253> ;
+       fhir:reference [ fhir:v "Patient/253" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/254> ;
+       fhir:reference [ fhir:v "Patient/254" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/255> ;
+       fhir:reference [ fhir:v "Patient/255" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/256> ;
+       fhir:reference [ fhir:v "Patient/256" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/257> ;
+       fhir:reference [ fhir:v "Patient/257" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/258> ;
+       fhir:reference [ fhir:v "Patient/258" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/259> ;
+       fhir:reference [ fhir:v "Patient/259" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/260> ;
+       fhir:reference [ fhir:v "Patient/260" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/261> ;
+       fhir:reference [ fhir:v "Patient/261" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/262> ;
+       fhir:reference [ fhir:v "Patient/262" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/263> ;
+       fhir:reference [ fhir:v "Patient/263" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/264> ;
+       fhir:reference [ fhir:v "Patient/264" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/265> ;
+       fhir:reference [ fhir:v "Patient/265" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/266> ;
+       fhir:reference [ fhir:v "Patient/266" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/267> ;
+       fhir:reference [ fhir:v "Patient/267" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/268> ;
+       fhir:reference [ fhir:v "Patient/268" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/269> ;
+       fhir:reference [ fhir:v "Patient/269" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/270> ;
+       fhir:reference [ fhir:v "Patient/270" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/271> ;
+       fhir:reference [ fhir:v "Patient/271" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/272> ;
+       fhir:reference [ fhir:v "Patient/272" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/273> ;
+       fhir:reference [ fhir:v "Patient/273" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/274> ;
+       fhir:reference [ fhir:v "Patient/274" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/275> ;
+       fhir:reference [ fhir:v "Patient/275" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/276> ;
+       fhir:reference [ fhir:v "Patient/276" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/277> ;
+       fhir:reference [ fhir:v "Patient/277" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/278> ;
+       fhir:reference [ fhir:v "Patient/278" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/279> ;
+       fhir:reference [ fhir:v "Patient/279" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/280> ;
+       fhir:reference [ fhir:v "Patient/280" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/281> ;
+       fhir:reference [ fhir:v "Patient/281" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/282> ;
+       fhir:reference [ fhir:v "Patient/282" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/283> ;
+       fhir:reference [ fhir:v "Patient/283" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/284> ;
+       fhir:reference [ fhir:v "Patient/284" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/285> ;
+       fhir:reference [ fhir:v "Patient/285" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/286> ;
+       fhir:reference [ fhir:v "Patient/286" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/287> ;
+       fhir:reference [ fhir:v "Patient/287" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/288> ;
+       fhir:reference [ fhir:v "Patient/288" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/289> ;
+       fhir:reference [ fhir:v "Patient/289" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/290> ;
+       fhir:reference [ fhir:v "Patient/290" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/291> ;
+       fhir:reference [ fhir:v "Patient/291" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/292> ;
+       fhir:reference [ fhir:v "Patient/292" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/293> ;
+       fhir:reference [ fhir:v "Patient/293" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/294> ;
+       fhir:reference [ fhir:v "Patient/294" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/295> ;
+       fhir:reference [ fhir:v "Patient/295" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/xcda> ;
+       fhir:reference [ fhir:v "Patient/xcda" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/xds> ;
+       fhir:reference [ fhir:v "Patient/xds" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/animal> ;
+       fhir:reference [ fhir:v "Patient/animal" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/dicom> ;
+       fhir:reference [ fhir:v "Patient/dicom" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/ihe-pcd> ;
+       fhir:reference [ fhir:v "Patient/ihe-pcd" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/f001> ;
+       fhir:reference [ fhir:v "Patient/f001" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/f201> ;
+       fhir:reference [ fhir:v "Patient/f201" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/glossy> ;
+       fhir:reference [ fhir:v "Patient/glossy" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/proband> ;
+       fhir:reference [ fhir:v "Patient/proband" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/genetics-example1> ;
+       fhir:reference [ fhir:v "Patient/genetics-example1" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/ch-example> ;
+       fhir:reference [ fhir:v "Patient/ch-example" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/newborn> ;
+       fhir:reference [ fhir:v "Patient/newborn" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Patient/mom> ;
+       fhir:reference [ fhir:v "Patient/mom" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/pat1> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/pat2> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/pat3> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/pat4> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/1> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/2> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/3> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/4> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/5> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/6> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/7> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/8> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/9> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/10> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/11> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/12> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/71> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/72> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/73> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/74> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/75> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/76> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/77> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/78> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/79> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/80> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/81> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/82> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/83> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/84> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/85> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/86> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/87> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/88> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/89> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/90> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/91> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/92> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/93> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/94> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/95> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/96> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/97> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/98> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/99> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/100> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/101> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/102> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/103> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/104> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/105> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/106> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/107> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/108> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/109> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/110> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/111> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/112> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/113> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/114> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/115> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/116> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/117> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/118> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/119> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/120> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/121> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/122> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/123> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/124> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/125> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/126> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/127> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/128> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/129> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/130> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/131> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/132> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/133> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/134> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/135> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/136> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/137> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/138> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/139> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/140> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/141> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/142> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/143> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/144> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/145> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/146> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/147> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/148> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/149> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/150> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/151> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/152> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/153> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/154> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/155> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/156> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/157> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/158> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/159> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/160> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/161> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/162> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/163> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/164> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/165> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/166> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/167> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/168> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/169> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/170> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/171> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/172> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/173> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/174> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/175> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/176> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/177> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/178> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/179> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/180> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/181> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/182> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/183> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/184> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/185> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/186> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/187> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/188> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/189> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/190> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/191> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/192> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/193> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/194> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/195> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/196> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/197> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/198> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/199> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/200> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/201> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/202> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/203> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/204> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/205> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/206> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/207> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/208> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/209> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/210> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/211> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/212> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/213> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/214> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/215> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/216> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/217> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/218> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/219> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/220> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/221> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/222> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/223> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/224> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/225> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/226> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/227> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/228> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/229> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/230> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/231> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/232> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/233> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/234> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/235> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/236> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/237> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/238> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/239> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/240> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/241> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/242> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/243> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/244> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/245> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/246> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/247> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/248> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/249> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/250> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/251> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/252> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/253> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/254> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/255> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/256> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/257> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/258> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/259> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/260> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/261> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/262> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/263> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/264> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/265> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/266> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/267> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/268> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/269> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/270> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/271> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/272> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/273> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/274> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/275> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/276> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/277> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/278> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/279> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/280> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/281> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/282> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/283> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/284> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/285> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/286> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/287> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/288> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/289> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/290> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/291> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/292> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/293> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/294> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/295> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/xcda> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/xds> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/animal> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/dicom> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/ihe-pcd> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/f001> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/f201> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/glossy> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/proband> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/genetics-example1> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/ch-example> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/newborn> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/mom> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

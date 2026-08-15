@@ -1,0 +1,77 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Patient/infant-fetal> a fhir:Patient ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "infant-fetal"] ; # example of a fetal (pre-birth) patient
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/patient-mothersMaidenName"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/patient-mothersMaidenName>
+     ] ;
+     fhir:value [
+       a fhir:String ;
+       fhir:v "Organa"
+     ]
+  ] ) ; # The details of the child
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "MR" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://coruscanthealth.org/main-hospital/patient-identifier"^^xsd:anyURI ;
+       fhir:l <http://coruscanthealth.org/main-hospital/patient-identifier>
+     ] ;
+     fhir:value [ fhir:v "MRN657865757378" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:contact ( [
+     fhir:relationship ( [
+       a sct:72705000 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "72705000" ] ;
+         fhir:display [ fhir:v "Mother" ]
+       ] [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0131"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0131>
+         ] ;
+         fhir:code [ fhir:v "N" ]
+       ] [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-RoleCode"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-RoleCode>
+         ] ;
+         fhir:code [ fhir:v "MTH" ]
+       ] ) # Indicates that the contact is the patient's mother
+     ] ) ; # Contact of the patient
+     fhir:name [
+       fhir:use [ fhir:v "maiden" ] ;
+       fhir:family [ fhir:v "Organa" ] ;
+       fhir:given ( [ fhir:v "Leia" ] )
+     ] ;
+     fhir:telecom ( [
+       fhir:system [ fhir:v "phone" ] ;
+       fhir:value [ fhir:v "+31201234567" ] ;
+       fhir:use [ fhir:v "mobile" ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

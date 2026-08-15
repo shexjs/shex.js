@@ -1,0 +1,281 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Library/suiciderisk-orderset-logic> a fhir:Library ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "suiciderisk-orderset-logic"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Id: </b>\n               </td>\n            </tr>\n            <tr>\n               <td style=\"padding-left: 25px; padding-right: 25px;\">Library/mmi-suiciderisk-orderset-logic</td>\n            </tr>\n         </table>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Identifier: </b>\n               </td>\n            </tr>\n            <tr>\n               <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  <b>value: </b>\n                  <span>SuicideRiskLogic</span>\n               </td>\n            </tr>\n         </table>\n         <p/>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Version: </b>\n               </td>\n            </tr>\n            <tr>\n               <td style=\"padding-left: 25px; padding-right: 25px;\">1.0.0</td>\n            </tr>\n         </table>\n         <p/>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Title: </b>\n               </td>\n            </tr>\n            <tr>\n               <td style=\"padding-left: 25px; padding-right: 25px;\">Suicide Risk Order Set Logic</td>\n            </tr>\n         </table>\n         <p/>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Type: </b>\n               </td>\n            </tr>\n            <tr>\n               <td style=\"padding-right: 25px;\">\n                  <span>\n                     <span>\n                        <span style=\"padding-left: 25px;\">\n                           <b>code: </b>\n                           <span>logic-library</span>\n                        </span>\n                     </span>\n                  </span>\n               </td>\n            </tr>\n         </table>\n         <p/>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Status: </b>\n               </td>\n            </tr>\n            <tr>\n               <td style=\"padding-left: 25px; padding-right: 25px;\">draft</td>\n            </tr>\n         </table>\n         <p/>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Description: </b>\n               </td>\n            </tr>\n            <tr>\n               <td style=\"padding-left: 25px; padding-right: 25px;\">Logic for Suicide Risk Order Sets</td>\n            </tr>\n         </table>\n         <p/>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Topic: </b>\n               </td>\n            </tr>\n            <tr>\n               <td style=\"padding-right: 25px;\">\n                  <span style=\"padding-left: 25px;\">\n                     <b>text: </b>\n                     <span>Suicide Risk Order Set Logic</span>\n                  </span>\n               </td>\n            </tr>\n         </table>\n         <p/>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Related: </b>\n               </td>\n            </tr>\n            <tr style=\"vertical-align: top;\">\n               <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  <p style=\"margin-bottom: 5px;\">\n                     <b>type: </b>\n                     <span>depends-on</span>\n                  </p>\n                  <p style=\"margin-bottom: 5px;\">\n                     <b>Resource: </b>\n                     <br/>\n                     <span>\n                        <span style=\"padding-left: 25px;\">\n                           <b>reference: </b>\n                           <span>Library/library-fhir-model-definition</span>\n                        </span>\n                     </span>\n                  </p>\n               </td>\n            </tr>\n         </table>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Related: </b>\n               </td>\n            </tr>\n            <tr style=\"vertical-align: top;\">\n               <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  <p style=\"margin-bottom: 5px;\">\n                     <b>type: </b>\n                     <span>depends-on</span>\n                  </p>\n                  <p style=\"margin-bottom: 5px;\">\n                     <b>Resource: </b>\n                     <br/>\n                     <span>\n                        <span style=\"padding-left: 25px;\">\n                           <b>reference: </b>\n                           <span>Library/library-fhir-helpers</span>\n                           <br/>\n                        </span>\n                        <span style=\"padding-left: 25px;\">\n                           <b>display: </b>\n                           <span>FHIRHelpers</span>\n                        </span>\n                     </span>\n                  </p>\n               </td>\n            </tr>\n         </table>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Related: </b>\n               </td>\n            </tr>\n            <tr style=\"vertical-align: top;\">\n               <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  <p style=\"margin-bottom: 5px;\">\n                     <b>type: </b>\n                     <span>depends-on</span>\n                  </p>\n                  <p style=\"margin-bottom: 5px;\">\n                     <b>Resource: </b>\n                     <br/>\n                     <span>\n                        <span style=\"padding-left: 25px;\">\n                           <b>reference: </b>\n                           <span>http://nucc.org/provider-taxonomy</span>\n                        </span>\n                     </span>\n                  </p>\n               </td>\n            </tr>\n         </table>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Related: </b>\n               </td>\n            </tr>\n            <tr style=\"vertical-align: top;\">\n               <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  <p style=\"margin-bottom: 5px;\">\n                     <b>type: </b>\n                     <span>depends-on</span>\n                  </p>\n                  <p style=\"margin-bottom: 5px;\">\n                     <b>Resource: </b>\n                     <br/>\n                     <span>\n                        <span style=\"padding-left: 25px;\">\n                           <b>reference: </b>\n                           <span>ValueSet/1.2.3.4.5</span>\n                           <br/>\n                        </span>\n                        <span style=\"padding-left: 25px;\">\n                           <b>display: </b>\n                           <span>Suicide Risk Assessment</span>\n                        </span>\n                     </span>\n                  </p>\n               </td>\n            </tr>\n         </table>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Parameter: </b>\n               </td>\n            </tr>\n            <tr style=\"vertical-align: top;\">\n               <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  <span>\n                     <b>name: </b>\n                     <span>Patient</span>\n                     <br/>\n                  </span>\n                  <b>use: </b>\n                  <span>in</span>\n                  <br/>\n                  <span>\n                     <b>minimum cardinality: </b>\n                     <span>1</span>\n                     <br/>\n                  </span>\n                  <span>\n                     <b>maximum cardinality: </b>\n                     <span>1</span>\n                     <br/>\n                  </span>\n                  <b>type: </b>\n                  <span>Patient</span>\n                  <br/>\n                  <p style=\"margin-bottom: 5px;\"/>\n               </td>\n            </tr>\n         </table>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Parameter: </b>\n               </td>\n            </tr>\n            <tr style=\"vertical-align: top;\">\n               <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  <span>\n                     <b>name: </b>\n                     <span>Encounter</span>\n                     <br/>\n                  </span>\n                  <b>use: </b>\n                  <span>in</span>\n                  <br/>\n                  <span>\n                     <b>minimum cardinality: </b>\n                     <span>1</span>\n                     <br/>\n                  </span>\n                  <span>\n                     <b>maximum cardinality: </b>\n                     <span>1</span>\n                     <br/>\n                  </span>\n                  <b>type: </b>\n                  <span>Encounter</span>\n                  <br/>\n                  <p style=\"margin-bottom: 5px;\"/>\n               </td>\n            </tr>\n         </table>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Parameter: </b>\n               </td>\n            </tr>\n            <tr style=\"vertical-align: top;\">\n               <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  <span>\n                     <b>name: </b>\n                     <span>Practitioner</span>\n                     <br/>\n                  </span>\n                  <b>use: </b>\n                  <span>in</span>\n                  <br/>\n                  <span>\n                     <b>minimum cardinality: </b>\n                     <span>1</span>\n                     <br/>\n                  </span>\n                  <span>\n                     <b>maximum cardinality: </b>\n                     <span>1</span>\n                     <br/>\n                  </span>\n                  <b>type: </b>\n                  <span>Practitioner</span>\n                  <br/>\n                  <p style=\"margin-bottom: 5px;\"/>\n               </td>\n            </tr>\n         </table>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Data Requirements: </b>\n               </td>\n            </tr>\n            <tr>\n               <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  <div>\n                     <p style=\"margin-bottom: 5px;\">\n                        <b>type: </b>\n                        <span>RiskAssessment</span>\n                     </p>\n                     <p style=\"margin-bottom: 5px;\">\n                        <b>code filter:</b>\n                        <br/>\n                        <span style=\"padding-left: 25px;\">\n                           <b>path: </b>\n                           <span>code</span>\n                        </span>\n                        <br/>\n                        <span style=\"padding-left: 25px;\">\n                           <b>valueset: </b>\n                           <span>Suicide Risk Assessment</span>\n                        </span>\n                     </p>\n                  </div>\n               </td>\n            </tr>\n         </table>\n         <table class=\"grid dict\">\n            <tr>\n               <td>\n                  <b>Content: </b>\n               </td>\n            </tr>\n            <tr>\n               <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  <p style=\"margin-bottom: 5px;\">\n                     <b>type: </b>\n                     <span>text/cql</span>\n                  </p>\n                  <p style=\"margin-bottom: 5px;\">\n                     <b>url: </b>\n                     <span>library-mmi-suiciderisk-orderset-logic-content.cql</span>\n                  </p>\n               </td>\n            </tr>\n         </table>\n      </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://motivemi.com/artifacts/Library/suiciderisk-orderset-logic"^^xsd:anyURI ;
+     fhir:l <http://motivemi.com/artifacts/Library/suiciderisk-orderset-logic>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.17.3" ]
+  ] [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:system [
+       fhir:v "http://motivemi.com/artifacts"^^xsd:anyURI ;
+       fhir:l <http://motivemi.com/artifacts>
+     ] ;
+     fhir:value [ fhir:v "mmi:suiciderisk-orderset-logic" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "1.0.0"] ; # 
+  fhir:name [ fhir:v "SuicideRiskOrderSetLogic"] ; # 
+  fhir:title [ fhir:v "Suicide Risk Order Set Logic"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:code [ fhir:v "logic-library" ]
+     ] )
+  ] ; # 
+  fhir:date [ fhir:v "2015-07-22"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Decision Support"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/dss" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Logic for Suicide Risk Order Sets"] ; # 
+  fhir:useContext ( [
+     fhir:code [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/usage-context-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/usage-context-type>
+       ] ;
+       fhir:code [ fhir:v "age" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://meshb.nlm.nih.gov"^^xsd:anyURI ;
+           fhir:l <https://meshb.nlm.nih.gov>
+         ] ;
+         fhir:code [ fhir:v "D000328" ] ;
+         fhir:display [ fhir:v "Adult" ]
+       ] )
+     ]
+  ] [
+     fhir:code [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/usage-context-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/usage-context-type>
+       ] ;
+       fhir:code [ fhir:v "focus" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept, sct:87512008 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "87512008" ] ;
+         fhir:display [ fhir:v "Mild major depression" ]
+       ] )
+     ]
+  ] [
+     fhir:code [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/usage-context-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/usage-context-type>
+       ] ;
+       fhir:code [ fhir:v "focus" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept, sct:40379007 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "40379007" ] ;
+         fhir:display [ fhir:v "Mild recurrent major depression" ]
+       ] )
+     ]
+  ] [
+     fhir:code [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/usage-context-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/usage-context-type>
+       ] ;
+       fhir:code [ fhir:v "focus" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept, sct:225444004 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "225444004" ] ;
+         fhir:display [ fhir:v "At increased risk for suicide (finding)" ]
+       ] )
+     ]
+  ] [
+     fhir:code [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/usage-context-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/usage-context-type>
+       ] ;
+       fhir:code [ fhir:v "user" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept, sct:309343006 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "309343006" ] ;
+         fhir:display [ fhir:v "Physician" ]
+       ] )
+     ]
+  ] [
+     fhir:code [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/usage-context-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/usage-context-type>
+       ] ;
+       fhir:code [ fhir:v "venue" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept, sct:440655000 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "440655000" ] ;
+         fhir:display [ fhir:v "Outpatient environment" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "urn:iso:std:iso:3166"^^xsd:anyURI ;
+         fhir:l <urn:iso:std:iso:3166>
+       ] ;
+       fhir:code [ fhir:v "US" ]
+     ] )
+  ] ) ; # 
+  fhir:purpose [ fhir:v "Defines a referral to a mental-health integrated care program for use in suicide risk order sets. The definition is independent of the order set in which it appears to allow reuse of the general definition of the referrral."] ; # 
+  fhir:usage [ fhir:v "This activity definition is used as the definition of a referral request within various suicide risk order sets. Elements that apply universally are defined here, while elements that apply to the specific setting of a referral within a particular order set are defined in the order set."] ; # 
+  fhir:copyright [ fhir:v "© Copyright 2016 Motive Medical Intelligence. All rights reserved."] ; # 
+  fhir:approvalDate [ fhir:v "2016-03-12"^^xsd:date] ; # 
+  fhir:lastReviewDate [ fhir:v "2016-08-15"^^xsd:date] ; # 
+  fhir:effectivePeriod [
+     fhir:start [ fhir:v "2016-01-01"^^xsd:date ] ;
+     fhir:end [ fhir:v "2017-12-31"^^xsd:date ]
+  ] ; # 
+  fhir:topic ( [
+     fhir:text [ fhir:v "Suicide Risk Order Set Logic" ]
+  ] ) ; # 
+  fhir:author ( [
+     fhir:name [ fhir:v "Motive Medical Intelligence" ] ;
+     fhir:telecom ( [
+       fhir:system [ fhir:v "phone" ] ;
+       fhir:value [ fhir:v "415-362-4007" ] ;
+       fhir:use [ fhir:v "work" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "info@motivemi.com" ] ;
+       fhir:use [ fhir:v "work" ]
+     ] )
+  ] ) ; # 
+  fhir:relatedArtifact ( [
+     fhir:type [ fhir:v "citation" ] ;
+     fhir:display [ fhir:v "Practice Guideline for the Treatment of Patients with Major Depressive Disorder" ] ;
+     fhir:document [
+       fhir:url [
+         fhir:v "http://psychiatryonline.org/pb/assets/raw/sitewide/practice_guidelines/guidelines/mdd.pdf"^^xsd:anyURI ;
+         fhir:l <http://psychiatryonline.org/pb/assets/raw/sitewide/practice_guidelines/guidelines/mdd.pdf>
+       ]
+     ]
+  ] [
+     fhir:type [ fhir:v "depends-on" ] ;
+     fhir:resource [
+       fhir:v "http://hl7.org/fhir/Library/library-fhir-model-definition"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Library/library-fhir-model-definition>
+     ]
+  ] [
+     fhir:type [ fhir:v "depends-on" ] ;
+     fhir:resource [
+       fhir:v "http://hl7.org/fhir/Library/library-fhir-helpers"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Library/library-fhir-helpers>
+     ]
+  ] [
+     fhir:type [ fhir:v "depends-on" ] ;
+     fhir:resource [
+       fhir:v "http://nucc.org/provider-taxonomy"^^xsd:anyURI ;
+       fhir:l <http://nucc.org/provider-taxonomy>
+     ]
+  ] [
+     fhir:type [ fhir:v "depends-on" ] ;
+     fhir:resource [
+       fhir:v "http://hl7.org/fhir/ValueSet/1.2.3.4.5"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/ValueSet/1.2.3.4.5>
+     ]
+  ] ) ; # 
+  fhir:parameter ( [
+     fhir:name [ fhir:v "Patient" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v 1 ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:type [ fhir:v "Patient" ]
+  ] [
+     fhir:name [ fhir:v "Encounter" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v 1 ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:type [ fhir:v "Encounter" ]
+  ] [
+     fhir:name [ fhir:v "Practitioner" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v 1 ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:type [ fhir:v "Practitioner" ]
+  ] ) ; # 
+  fhir:dataRequirement ( [
+     fhir:type [ fhir:v "RiskAssessment" ] ;
+     fhir:codeFilter ( [
+       fhir:path [ fhir:v "code" ] ;
+       fhir:valueSet [
+         fhir:v "http://example.org/valueset/1.2.3.4.5"^^xsd:anyURI ;
+         fhir:l <http://example.org/valueset/1.2.3.4.5>
+       ]
+     ] ) # Suicide Risk Assessment
+  ] ) ; # 
+  fhir:content ( [
+     fhir:contentType [ fhir:v "text/cql" ] ;
+     fhir:data [ fhir:v "bGlicmFyeSBTdWljaWRlUmlza0xvZ2ljCgp1c2luZyBGSElSCgppbmNsdWRlIEZISVJIZWxwZXJzIGNhbGxlZCBGSElSSGVscGVycwoKY29kZXN5c3RlbSAiTlBJIFRheG9ub215IjogJ2h0dHA6Ly9udWNjLm9yZy9wcm92aWRlci10YXhvbm9teScKCnZhbHVlc2V0ICJTdWljaWRlIFJpc2sgQXNzZXNzbWVudCI6ICd1cm46b2lkOjEuMi4zLjQuNScgLy8gVmFsdWUgc2V0IG9pZCBmb3Igc3VpY2lkZSByaXNrIGFzc2Vzc21lbnRzCgpwYXJhbWV0ZXIgUGF0aWVudCBQYXRpZW50CnBhcmFtZXRlciBFbmNvdW50ZXIgRW5jb3VudGVyCnBhcmFtZXRlciBQcmFjdGl0aW9uZXIgUHJhY3RpdGlvbmVyCgpjb250ZXh0IFBhdGllbnQKCmRlZmluZSBTZXJ2aWNlUmVxdWVzdEZ1bGZpbGxtZW50VGltZTogSW50ZXJ2YWxbTm93KCksIG51bGxdCgpkZWZpbmUgUmlza0Fzc2Vzc21lbnRTY29yZToKCS8vIFNhbXBsZSBjYWxjdWxhdGlvbiBvbmx5LCB0aGlzIGxvZ2ljIGlzIGluY29tcGxldGUKICAgIGNhc2UKICAgICAgICB3aGVuIG5vdChSZXF1aXJlc0JyaWVmUmlza0Fzc2Vzc21lbnQpCiAgICAgICAgICAgIHRoZW4gJ05vIFJpc2snCiAgICAgICAgd2hlbiBSZXF1aXJlZFF1ZXN0aW9uc051bGwKICAgICAgICAgICAgdGhlbiBudWxsCiAgICAgICAgd2hlbiBJZGVhdGlvblJpc2sgPSAnSGlnaCcKICAgICAgICAgICAgb3IgSW50ZW50aW9uUmlzayA9ICdIaWdoJwogICAgICAgICAgICBvciBBdHRlbXB0UmlzayA9ICdIaWdoJwogICAgICAgICAgICBvciBQcmVwYXJhdGlvblJpc2sgPSAnSGlnaCcKICAgICAgICAgICAgdGhlbiAnSGlnaCcKICAgICAgICB3aGVuIElkZWF0aW9uUmlzayA9ICdMb3cnCiAgICAgICAgICAgIGFuZCBJbnRlbnRpb25SaXNrID0gJ0xvdycKICAgICAgICAgICAgYW5kIEltcHVsc2VDb250cm9sUmlzayA9ICdMb3cnCiAgICAgICAgICAgIGFuZCBBdHRlbXB0UmlzayA9ICdMb3cnCiAgICAgICAgICAgIGFuZCBQcmVwYXJhdGlvblJpc2sgPSAnTG93JwogICAgICAgICAgICB0aGVuICdMb3cnCiAgICAgICAgd2hlbiBJZGVhdGlvblJpc2sgaXMgbnVsbAogICAgICAgICAgICBvciBJbnRlbnRpb25SaXNrIGlzIG51bGwKICAgICAgICAgICAgb3IgSW1wdWxzZUNvbnRyb2xSaXNrIGlzIG51bGwKICAgICAgICAgICAgb3IgQXR0ZW1wdFJpc2sgaXMgbnVsbAogICAgICAgICAgICBvciBQcmVwYXJhdGlvblJpc2sgaXMgbnVsbAogICAgICAgICAgICB0aGVuICdVbmRldGVybWluZWQnCiAgICAgICAgZWxzZSAnSW50ZXJtZWRpYXRlJwogICAgZW5kCgpkZWZpbmUgUmlza0Fzc2Vzc21lbnQ6CglbUmlza0Fzc2Vzc21lbnQ6ICJTdWljaWRlIFJpc2sgQXNzZXNzbWVudCJdIFIKCQl3aGVyZSBSLmNvbnRleHQucmVmZXJlbmNlLmVuZHNXaXRoKEVuY291bnRlci5pZCkK"^^xsd:base64Binary ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

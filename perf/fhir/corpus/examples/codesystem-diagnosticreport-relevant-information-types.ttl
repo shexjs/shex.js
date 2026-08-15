@@ -1,0 +1,142 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/diagnosticreport-relevant-information-types> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "diagnosticreport-relevant-information-types"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem diagnosticreport-relevant-information-types</b></p><a name=\"diagnosticreport-relevant-information-types\"> </a><a name=\"hcdiagnosticreport-relevant-information-types\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/diagnosticreport-relevant-information-types</code> defines the following codes in a Is-A hierarchy:</p><table class=\"codes\"><tr><td><b>Lvl</b></td><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td>1</td><td style=\"white-space:nowrap\">QST<a name=\"diagnosticreport-relevant-information-types-QST\"> </a></td><td>Question</td><td>Question</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  AOE<a name=\"diagnosticreport-relevant-information-types-AOE\"> </a></td><td>Ask at Order Entry</td><td>Ask at Order Entry</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  ASC<a name=\"diagnosticreport-relevant-information-types-ASC\"> </a></td><td>Ask at Specimen Collection</td><td>Ask at Specimen Collection</td></tr><tr><td>1</td><td style=\"white-space:nowrap\">RSLT<a name=\"diagnosticreport-relevant-information-types-RSLT\"> </a></td><td>Result</td><td>Result</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  MCS<a name=\"diagnosticreport-relevant-information-types-MCS\"> </a></td><td>Micro Culture Status</td><td>Sub-type of RSLT (Result) This term identifies observations that give overall culture outcome, when no specific organism is being named.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  MID<a name=\"diagnosticreport-relevant-information-types-MID\"> </a></td><td>Micro Isolate Descriptor</td><td>Sub-type of RSLT (Result) This term identifies any other observations about the isolate.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  MIG<a name=\"diagnosticreport-relevant-information-types-MIG\"> </a></td><td>Micro Isolate Growth Quantity</td><td>Sub-type of RSLT (Result) This term identifies growth levels of an isolate – can be numeric or categorical.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  MIN<a name=\"diagnosticreport-relevant-information-types-MIN\"> </a></td><td>Micro Isolate Name</td><td>NSub-type of RSLT (Result) This term identifies observations that name a specific organism either at the species or the genus level.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  MOD<a name=\"diagnosticreport-relevant-information-types-MOD\"> </a></td><td>Micro Other Descriptor</td><td>Sub-type of RSLT (Result) This term identifies observations that do not fit the culture status, but is not at the isolate level.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  MSS<a name=\"diagnosticreport-relevant-information-types-MSS\"> </a></td><td>Micro Sample Stain</td><td>Sub-type of RSLT (Result) This term identifies observations on gram stains (and other stains or smears) on the clinical sample.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  SUP<a name=\"diagnosticreport-relevant-information-types-SUP\"> </a></td><td>Supplemental Result</td><td>Supplemental Result</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  SUR<a name=\"diagnosticreport-relevant-information-types-SUR\"> </a></td><td>Susceptibility Related</td><td>Susceptibility Related</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  UNSP<a name=\"diagnosticreport-relevant-information-types-UNSP\"> </a></td><td>Unspecified</td><td>Unspecified</td></tr><tr><td>1</td><td style=\"white-space:nowrap\">SCI<a name=\"diagnosticreport-relevant-information-types-SCI\"> </a></td><td>Supporting Clinical Information</td><td>Supporting Clinical Information</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  PHX<a name=\"diagnosticreport-relevant-information-types-PHX\"> </a></td><td>Patient History</td><td>Historical patient data</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "oo"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/diagnosticreport-relevant-information-types"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/diagnosticreport-relevant-information-types>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "DiagnosticReportRelevantInformationTypes"] ; # 
+  fhir:title [ fhir:v "Diagnostic Report Relevant Information Types"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2025-11-01T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Concepts specifying how referenced information is considered relevant in a DiagnosticReport. Level 1 derives from v2-0936; Level 2 derives from v2-0937; PHX (Patient History) is added under SCI."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/diagnosticreport-relevant-information-types"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/diagnosticreport-relevant-information-types>
+  ] ; # 
+  fhir:hierarchyMeaning [ fhir:v "is-a"] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "QST" ] ;
+     fhir:display [ fhir:v "Question" ] ;
+     fhir:definition [ fhir:v "Question" ] ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "AOE" ] ;
+       fhir:display [ fhir:v "Ask at Order Entry" ] ;
+       fhir:definition [ fhir:v "Ask at Order Entry" ]
+     ] [
+       fhir:code [ fhir:v "ASC" ] ;
+       fhir:display [ fhir:v "Ask at Specimen Collection" ] ;
+       fhir:definition [ fhir:v "Ask at Specimen Collection" ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "RSLT" ] ;
+     fhir:display [ fhir:v "Result" ] ;
+     fhir:definition [ fhir:v "Result" ] ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "MCS" ] ;
+       fhir:display [ fhir:v "Micro Culture Status" ] ;
+       fhir:definition [ fhir:v "Sub-type of RSLT (Result) This term identifies observations that give overall culture outcome, when no specific organism is being named." ]
+     ] [
+       fhir:code [ fhir:v "MID" ] ;
+       fhir:display [ fhir:v "Micro Isolate Descriptor" ] ;
+       fhir:definition [ fhir:v "Sub-type of RSLT (Result) This term identifies any other observations about the isolate." ]
+     ] [
+       fhir:code [ fhir:v "MIG" ] ;
+       fhir:display [ fhir:v "Micro Isolate Growth Quantity" ] ;
+       fhir:definition [ fhir:v "Sub-type of RSLT (Result) This term identifies growth levels of an isolate – can be numeric or categorical." ]
+     ] [
+       fhir:code [ fhir:v "MIN" ] ;
+       fhir:display [ fhir:v "Micro Isolate Name" ] ;
+       fhir:definition [ fhir:v "NSub-type of RSLT (Result) This term identifies observations that name a specific organism either at the species or the genus level." ]
+     ] [
+       fhir:code [ fhir:v "MOD" ] ;
+       fhir:display [ fhir:v "Micro Other Descriptor" ] ;
+       fhir:definition [ fhir:v "Sub-type of RSLT (Result) This term identifies observations that do not fit the culture status, but is not at the isolate level." ]
+     ] [
+       fhir:code [ fhir:v "MSS" ] ;
+       fhir:display [ fhir:v "Micro Sample Stain" ] ;
+       fhir:definition [ fhir:v "Sub-type of RSLT (Result) This term identifies observations on gram stains (and other stains or smears) on the clinical sample." ]
+     ] [
+       fhir:code [ fhir:v "SUP" ] ;
+       fhir:display [ fhir:v "Supplemental Result" ] ;
+       fhir:definition [ fhir:v "Supplemental Result" ]
+     ] [
+       fhir:code [ fhir:v "SUR" ] ;
+       fhir:display [ fhir:v "Susceptibility Related" ] ;
+       fhir:definition [ fhir:v "Susceptibility Related" ]
+     ] [
+       fhir:code [ fhir:v "UNSP" ] ;
+       fhir:display [ fhir:v "Unspecified" ] ;
+       fhir:definition [ fhir:v "Unspecified" ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "SCI" ] ;
+     fhir:display [ fhir:v "Supporting Clinical Information" ] ;
+     fhir:definition [ fhir:v "Supporting Clinical Information" ] ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "PHX" ] ;
+       fhir:display [ fhir:v "Patient History" ] ;
+       fhir:definition [ fhir:v "Historical patient data" ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

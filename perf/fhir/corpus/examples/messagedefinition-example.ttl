@@ -1,0 +1,62 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/MessageDefinition/example> a fhir:MessageDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Message definition base example</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "inm"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/MessageDefinition/example"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/MessageDefinition/example>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.15.3" ]
+  ] ) ; # 
+  fhir:name [ fhir:v "EXAMPLE"] ; # 
+  fhir:title [ fhir:v "Message definition base example"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2016-11-09"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Infrastructure And Messaging"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/inm" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Message definition base example"] ; # 
+  fhir:purpose [ fhir:v "Defines a base example for other MessageDefinition instances."] ; # 
+  fhir:event [
+     a fhir:Coding ;
+     fhir:system [
+       fhir:v "http://example.org/fhir/message-events"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/message-events>
+     ] ;
+     fhir:code [ fhir:v "admin-notify" ]
+  ] ; # 
+  fhir:category [ fhir:v "notification"] . # 
+
+# -------------------------------------------------------------------------------------
+

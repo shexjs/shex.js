@@ -1,0 +1,372 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/concept-properties> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "concept-properties"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem concept-properties</b></p><a name=\"concept-properties\"> </a><a name=\"hcconcept-properties\"> </a><p><b>Properties</b></p><p><b>This code system defines the following properties for its concepts</b></p><table class=\"grid\"><tr><td><b>Name</b></td><td><b>Code</b></td><td><b>URI</b></td><td><b>Type</b></td><td><b>Description</b></td><td><b>Value Set</b></td></tr><tr><td>dataType</td><td>dataType</td><td>http://hl7.org/fhir/concept-properties#dataType</td><td>code</td><td>data type of property value</td><td/></tr><tr><td>Status</td><td>status</td><td>http://hl7.org/fhir/concept-properties#status</td><td>code</td><td>A code that indicates the status of the concept. Typical values are active, experimental, deprecated, and retired</td><td><a href=\"valueset-concept-property-type.html\">Property Type</a></td></tr></table><p><b>Concepts</b></p><p>This case-sensitive code system <code>http://hl7.org/fhir/concept-properties</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td><td><b>dataType</b></td><td><b>Status</b></td></tr><tr><td style=\"white-space:nowrap\">status<a name=\"concept-properties-status\"> </a></td><td>Status</td><td><div><p>A code that indicates the status of the concept. Typical values are active, experimental, deprecated, and retired</p>\n</div></td><td>code</td><td/></tr><tr><td style=\"white-space:nowrap\">inactive<a name=\"concept-properties-inactive\"> </a></td><td>Inactive</td><td><div><p>True if the concept is not considered active - e.g. not a valid concept any more. Property type is boolean, default value is false. Note that the status property may also be used to indicate that a concept is inactive</p>\n</div></td><td>boolean</td><td/></tr><tr><td style=\"white-space:nowrap\">effectiveDate<a name=\"concept-properties-effectiveDate\"> </a></td><td>effectiveDate</td><td><div><p>The date at which the concept status was last changed</p>\n</div></td><td>dateTime</td><td/></tr><tr style=\"background-color: #ffeeee\"><td style=\"white-space:nowrap\">deprecated<a name=\"concept-properties-deprecated\"> </a></td><td>Deprecated</td><td><div><p>The date at which a concept was deprecated. Concepts that are deprecated but not inactive can still be used, but their use is discouraged, and they should be expected to be made inactive in a future release. Property type is dateTime. Note that the status property may also be used to indicate that a concept is deprecated. This property is itself deprecated due to potential confusion with status - use deprecationDate instead</p>\n</div></td><td>dateTime</td><td>deprecated</td></tr><tr><td style=\"white-space:nowrap\">deprecationDate<a name=\"concept-properties-deprecationDate\"> </a></td><td>Deprecation Date</td><td><div><p>The date at which a concept was deprecated. Concepts that are deprecated but not inactive can still be used, but their use is discouraged, and they should be expected to be made inactive in a future release. Property type is dateTime. Note that the status property may also be used to indicate that a concept is deprecated</p>\n</div></td><td>dateTime</td><td/></tr><tr><td style=\"white-space:nowrap\">retirementDate<a name=\"concept-properties-retirementDate\"> </a></td><td>Retirement Date</td><td><div><p>The date at which a concept was retired</p>\n</div></td><td>dateTime</td><td/></tr><tr><td style=\"white-space:nowrap\">notSelectable<a name=\"concept-properties-notSelectable\"> </a></td><td>Not Selectable</td><td><div><p>The concept is not intended to be chosen by the user - only intended to be used as a selector for other concepts. Note, though, that the interpretation of this is highly contextual; all concepts are selectable in some context. Property type is boolean, default value is false</p>\n</div></td><td>boolean</td><td/></tr><tr><td style=\"white-space:nowrap\">parent<a name=\"concept-properties-parent\"> </a></td><td>Parent</td><td><div><p>The concept identified in this property is a parent of the concept on which it is a property. The property type will be 'code'. The meaning of 'parent' is defined by the hierarchyMeaning attribute</p>\n</div></td><td>code</td><td/></tr><tr><td style=\"white-space:nowrap\">child<a name=\"concept-properties-child\"> </a></td><td>Child</td><td><div><p>The concept identified in this property is a child of the concept on which it is a property. The property type will be 'code'. The meaning of 'child' is defined by the hierarchyMeaning attribute</p>\n</div></td><td>code</td><td/></tr><tr><td style=\"white-space:nowrap\">partOf<a name=\"concept-properties-partOf\"> </a></td><td>Part Of</td><td><div><p>The concept identified in this property (by its code) contains this concept as a component (i.e. a part-of relationship rather than a subsumption relationship such as elbow is part-of arm</p>\n</div></td><td>code</td><td/></tr><tr style=\"background-color: #ffeeee\"><td style=\"white-space:nowrap\">synonym<a name=\"concept-properties-synonym\"> </a></td><td>Synonym</td><td><div><p>This property contains an alternative code that may be used to identify this concept instead of the primary code. Synonyms should not be used due to the operational complexity they introduce - see alternateCode</p>\n</div></td><td>code</td><td>deprecated</td></tr><tr><td style=\"white-space:nowrap\">alternateCode<a name=\"concept-properties-alternateCode\"> </a></td><td>Alternate Code</td><td><div><p>This property contains the code for another representation of this concept, with the same real-world meaning, in this code system.</p>\n</div></td><td>code</td><td/></tr><tr><td style=\"white-space:nowrap\">comment<a name=\"concept-properties-comment\"> </a></td><td>Comment</td><td><div><p>A string that provides additional detail pertinent to the use or understanding of the concept</p>\n</div></td><td>string</td><td/></tr><tr><td style=\"white-space:nowrap\">itemWeight<a name=\"concept-properties-itemWeight\"> </a></td><td>itemWeight</td><td><div><p>A numeric value that allows the comparison (less than, greater than) or other numerical manipulation of a concept (e.g. Adding up components of a score). Scores are usually a whole number, but occasionally decimals are encountered in scores. In questionnaires, the item weight may be represented using the <a href=\"https://build.fhir.org/ig/HL7/fhir-extensions/StructureDefinition-itemWeight.html\">http://hl7.org/fhir/StructureDefinition/itemWeight</a> extension</p>\n</div></td><td>decimal</td><td/></tr><tr><td style=\"white-space:nowrap\">order<a name=\"concept-properties-order\"> </a></td><td>Order</td><td><div><p>Order of the concept amongst sibling concepts as a decimal value</p>\n</div></td><td>decimal</td><td/></tr><tr><td style=\"white-space:nowrap\">definition<a name=\"concept-properties-definition\"> </a></td><td>Definition</td><td><div><p>A numeric value that allows the comparison (less than, greater than) or other numerical manipulation of a concept (e.g. Adding up components of a score). Scores are usually a whole number, but occasionally decimals are encountered in scores. In questionnaires, the item weight may be represented using the <a href=\"https://build.fhir.org/ig/HL7/fhir-extensions/StructureDefinition-itemWeight.html\">http://hl7.org/fhir/StructureDefinition/itemWeight</a> extension</p>\n</div></td><td>string</td><td/></tr><tr><td style=\"white-space:nowrap\">lastVersionActive<a name=\"concept-properties-lastVersionActive\"> </a></td><td>LastVersionActive</td><td><div><p>If the code is not active (properties inActive or based on status), then this property conveys in what code system version it was last an active code.</p>\n</div></td><td>string</td><td/></tr><tr><td style=\"white-space:nowrap\">lastVersionPresent<a name=\"concept-properties-lastVersionPresent\"> </a></td><td>LastVersionPresent</td><td><div><p>The value of the property is the version of the code system where the concept was last known to be present. This property is used in value set expansions to indicate concepts that are explicitly referenced in value set definitions but are no longer present in the code system version being used for the expansion. See the includeLastVersionPresent parameter in the Canonical Resource Management Infrastructure specialization of the ValueSet/$expand operation for a description of when this parameter is used. This property will only appear in expansions because it describes concepts that are not in the code system version used in the $expand.</p>\n</div></td><td>string</td><td/></tr><tr><td style=\"white-space:nowrap\">replacedByCode<a name=\"concept-properties-replacedByCode\"> </a></td><td>ReplacedByCode</td><td><div><p>This property identifies a concept in this code system that is considered to replace the use of this concept.  This property is generally only used on deprecated, withdrawn or inactive concepts.</p>\n</div></td><td>code</td><td/></tr><tr><td style=\"white-space:nowrap\">replacedByCoding<a name=\"concept-properties-replacedByCoding\"> </a></td><td>ReplacedByCoding</td><td><div><p>This property identifies a concept in another code system that is considered to replace the use of this concept.  This property is generally only used on deprecated, withdrawn or inactive concepts.</p>\n</div></td><td>Coding</td><td/></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "vocab"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 4
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/codesystem-use-markdown"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/codesystem-use-markdown>
+     ] ;
+     fhir:value [
+       a fhir:Boolean ;
+       fhir:v true
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/concept-properties"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/concept-properties>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1826" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ConceptProperties"] ; # 
+  fhir:title [ fhir:v "FHIR Defined Concept Properties"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Terminology Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/Vocab/index.cfm" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "A set of common concept properties for use on coded systems throughout the FHIR eco-system."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/concept-properties"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/concept-properties>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:property ( [
+     fhir:code [ fhir:v "dataType" ] ;
+     fhir:uri [
+       fhir:v "http://hl7.org/fhir/concept-properties#dataType"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/concept-properties#dataType>
+     ] ;
+     fhir:description [ fhir:v "data type of property value" ] ;
+     fhir:type [ fhir:v "code" ]
+  ] [
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "http://hl7.org/fhir/StructureDefinition/codesystem-property-valueset"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/StructureDefinition/codesystem-property-valueset>
+       ] ;
+       fhir:value [
+         a fhir:Canonical ;
+         fhir:v "http://hl7.org/fhir/ValueSet/concept-property-type"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/ValueSet/concept-property-type>
+       ]
+     ] ) ;
+     fhir:code [ fhir:v "status" ] ;
+     fhir:uri [
+       fhir:v "http://hl7.org/fhir/concept-properties#status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/concept-properties#status>
+     ] ;
+     fhir:description [ fhir:v "A code that indicates the status of the concept. Typical values are active, experimental, deprecated, and retired" ] ;
+     fhir:type [ fhir:v "code" ]
+  ] ) ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "status" ] ;
+     fhir:display [ fhir:v "Status" ] ;
+     fhir:definition [ fhir:v "A code that indicates the status of the concept. Typical values are active, experimental, deprecated, and retired" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "code"
+       ]
+     ] )
+  ] [
+     fhir:id [ fhir:v "t1" ] ;
+     fhir:code [ fhir:v "inactive" ] ;
+     fhir:display [ fhir:v "Inactive" ] ;
+     fhir:definition [ fhir:v "True if the concept is not considered active - e.g. not a valid concept any more. Property type is boolean, default value is false. Note that the status property may also be used to indicate that a concept is inactive" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "boolean"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "effectiveDate" ] ;
+     fhir:display [ fhir:v "effectiveDate" ] ;
+     fhir:definition [ fhir:v "The date at which the concept status was last changed" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "dateTime"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "deprecated" ] ;
+     fhir:display [ fhir:v "Deprecated" ] ;
+     fhir:definition [ fhir:v "The date at which a concept was deprecated. Concepts that are deprecated but not inactive can still be used, but their use is discouraged, and they should be expected to be made inactive in a future release. Property type is dateTime. Note that the status property may also be used to indicate that a concept is deprecated. This property is itself deprecated due to potential confusion with status - use deprecationDate instead" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "status" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "deprecated"
+       ]
+     ] [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "dateTime"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "deprecationDate" ] ;
+     fhir:display [ fhir:v "Deprecation Date" ] ;
+     fhir:definition [ fhir:v "The date at which a concept was deprecated. Concepts that are deprecated but not inactive can still be used, but their use is discouraged, and they should be expected to be made inactive in a future release. Property type is dateTime. Note that the status property may also be used to indicate that a concept is deprecated" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "dateTime"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "retirementDate" ] ;
+     fhir:display [ fhir:v "Retirement Date" ] ;
+     fhir:definition [ fhir:v "The date at which a concept was retired" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "dateTime"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "notSelectable" ] ;
+     fhir:display [ fhir:v "Not Selectable" ] ;
+     fhir:definition [ fhir:v "The concept is not intended to be chosen by the user - only intended to be used as a selector for other concepts. Note, though, that the interpretation of this is highly contextual; all concepts are selectable in some context. Property type is boolean, default value is false" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "boolean"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "parent" ] ;
+     fhir:display [ fhir:v "Parent" ] ;
+     fhir:definition [ fhir:v "The concept identified in this property is a parent of the concept on which it is a property. The property type will be 'code'. The meaning of 'parent' is defined by the hierarchyMeaning attribute" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "code"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "child" ] ;
+     fhir:display [ fhir:v "Child" ] ;
+     fhir:definition [ fhir:v "The concept identified in this property is a child of the concept on which it is a property. The property type will be 'code'. The meaning of 'child' is defined by the hierarchyMeaning attribute" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "code"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "partOf" ] ;
+     fhir:display [ fhir:v "Part Of" ] ;
+     fhir:definition [ fhir:v "The concept identified in this property (by its code) contains this concept as a component (i.e. a part-of relationship rather than a subsumption relationship such as elbow is part-of arm" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "code"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "synonym" ] ;
+     fhir:display [ fhir:v "Synonym" ] ;
+     fhir:definition [ fhir:v "This property contains an alternative code that may be used to identify this concept instead of the primary code. Synonyms should not be used due to the operational complexity they introduce - see alternateCode" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "code"
+       ]
+     ] [
+       fhir:code [ fhir:v "status" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "deprecated"
+       ]
+     ] [
+       fhir:code [ fhir:v "deprecationDate" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "2025-03-14"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "alternateCode" ] ;
+     fhir:display [ fhir:v "Alternate Code" ] ;
+     fhir:definition [ fhir:v "This property contains the code for another representation of this concept, with the same real-world meaning, in this code system." ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "code"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "comment" ] ;
+     fhir:display [ fhir:v "Comment" ] ;
+     fhir:definition [ fhir:v "A string that provides additional detail pertinent to the use or understanding of the concept" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "string"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "itemWeight" ] ;
+     fhir:display [ fhir:v "itemWeight" ] ;
+     fhir:definition [ fhir:v "A numeric value that allows the comparison (less than, greater than) or other numerical manipulation of a concept (e.g. Adding up components of a score). Scores are usually a whole number, but occasionally decimals are encountered in scores. In questionnaires, the item weight may be represented using the [[[http://hl7.org/fhir/StructureDefinition/itemWeight]]] extension" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "decimal"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "order" ] ;
+     fhir:display [ fhir:v "Order" ] ;
+     fhir:definition [ fhir:v "Order of the concept amongst sibling concepts as a decimal value" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "decimal"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "definition" ] ;
+     fhir:display [ fhir:v "Definition" ] ;
+     fhir:definition [ fhir:v "A numeric value that allows the comparison (less than, greater than) or other numerical manipulation of a concept (e.g. Adding up components of a score). Scores are usually a whole number, but occasionally decimals are encountered in scores. In questionnaires, the item weight may be represented using the [[[http://hl7.org/fhir/StructureDefinition/itemWeight]]] extension" ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "string"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "lastVersionActive" ] ;
+     fhir:display [ fhir:v "LastVersionActive" ] ;
+     fhir:definition [ fhir:v "If the code is not active (properties inActive or based on status), then this property conveys in what code system version it was last an active code." ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "string"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "lastVersionPresent" ] ;
+     fhir:display [ fhir:v "LastVersionPresent" ] ;
+     fhir:definition [ fhir:v "The value of the property is the version of the code system where the concept was last known to be present. This property is used in value set expansions to indicate concepts that are explicitly referenced in value set definitions but are no longer present in the code system version being used for the expansion. See the includeLastVersionPresent parameter in the Canonical Resource Management Infrastructure specialization of the ValueSet/$expand operation for a description of when this parameter is used. This property will only appear in expansions because it describes concepts that are not in the code system version used in the $expand." ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "string"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "replacedByCode" ] ;
+     fhir:display [ fhir:v "ReplacedByCode" ] ;
+     fhir:definition [ fhir:v "This property identifies a concept in this code system that is considered to replace the use of this concept.  This property is generally only used on deprecated, withdrawn or inactive concepts." ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "code"
+       ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "replacedByCoding" ] ;
+     fhir:display [ fhir:v "ReplacedByCoding" ] ;
+     fhir:definition [ fhir:v "This property identifies a concept in another code system that is considered to replace the use of this concept.  This property is generally only used on deprecated, withdrawn or inactive concepts." ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "dataType" ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "Coding"
+       ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

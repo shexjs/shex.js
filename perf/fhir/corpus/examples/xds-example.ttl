@@ -1,0 +1,254 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# this is an example of an XDR transaction - a 
+#  package that contains a document reference and related content
+
+<http://hl7.org/fhir/Bundle/xds> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "xds"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2013-07-01T13:11:33Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:type [ fhir:v "transaction"] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:3fdc72f4-a11d-4a9d-9260-a9f745779e1d"^^xsd:anyURI ;
+       fhir:l <urn:uuid:3fdc72f4-a11d-4a9d-9260-a9f745779e1d>
+     ] ;
+     fhir:resource ( <urn:uuid:3fdc72f4-a11d-4a9d-9260-a9f745779e1d> ) ;
+     fhir:request [
+       fhir:method [ fhir:v "POST" ] ;
+       fhir:url [
+         fhir:v "DocumentReference"^^xsd:anyURI ;
+         fhir:l fhir:DocumentReference
+       ]
+     ]
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://localhost:9556/svc/fhir/Patient/a2"^^xsd:anyURI ;
+       fhir:l <http://localhost:9556/svc/fhir/Patient/a2>
+     ] ;
+     fhir:resource ( <http://localhost:9556/svc/fhir/Patient/a2> ) ;
+     fhir:request [
+       fhir:method [ fhir:v "POST" ] ;
+       fhir:url [
+         fhir:v "Patient"^^xsd:anyURI ;
+         fhir:l fhir:Patient
+       ] ;
+       fhir:ifNoneExist [ fhir:v "Patient?identifier=http://acme.org/xds/patients!89765a87b" ]
+     ]
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://localhost:9556/svc/fhir/Practitioner/a3"^^xsd:anyURI ;
+       fhir:l <http://localhost:9556/svc/fhir/Practitioner/a3>
+     ] ;
+     fhir:resource ( <http://localhost:9556/svc/fhir/Practitioner/a3> ) ;
+     fhir:request [
+       fhir:method [ fhir:v "POST" ] ;
+       fhir:url [
+         fhir:v "Practitioner"^^xsd:anyURI ;
+         fhir:l fhir:Practitioner
+       ]
+     ]
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://localhost:9556/svc/fhir/Practitioner/a4"^^xsd:anyURI ;
+       fhir:l <http://localhost:9556/svc/fhir/Practitioner/a4>
+     ] ;
+     fhir:resource ( <http://localhost:9556/svc/fhir/Practitioner/a4> ) ;
+     fhir:request [
+       fhir:method [ fhir:v "POST" ] ;
+       fhir:url [
+         fhir:v "Practitioner"^^xsd:anyURI ;
+         fhir:l fhir:Practitioner
+       ]
+     ]
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://localhost:9556/svc/fhir/Binary/1e404af3-077f-4bee-b7a6-a9be97e1ce32"^^xsd:anyURI ;
+       fhir:l <http://localhost:9556/svc/fhir/Binary/1e404af3-077f-4bee-b7a6-a9be97e1ce32>
+     ] ;
+     fhir:resource ( <http://localhost:9556/svc/fhir/Binary/1e404af3-077f-4bee-b7a6-a9be97e1ce32> ) ;
+     fhir:request [
+       fhir:method [ fhir:v "POST" ] ;
+       fhir:url [
+         fhir:v "Binary"^^xsd:anyURI ;
+         fhir:l fhir:Binary
+       ]
+     ]
+  ] ) . # 
+
+<urn:uuid:3fdc72f4-a11d-4a9d-9260-a9f745779e1d> a fhir:DocumentReference ;
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2013-07-01T13:11:33Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n\n						<a href=\"http://localhost:9556/svc/fhir/Binary/1e404af3-077f-4bee-b7a6-a9be97e1ce32\">Document: urn:oid:129.6.58.92.88336</a>undefined, created 24/12/2005\n					</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:text [ fhir:v "uniqueId" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:129.6.58.92.88336" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "current"] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://ihe.net/connectathon/classCodes"^^xsd:anyURI ;
+         fhir:l <http://ihe.net/connectathon/classCodes>
+       ] ;
+       fhir:code [ fhir:v "History and Physical" ] ;
+       fhir:display [ fhir:v "History and Physical" ]
+     ] )
+  ] ; # 
+  fhir:category ( [
+     a loinc:47039-3 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "47039-3" ] ;
+       fhir:display [ fhir:v "Hospital Admission history and physical note" ]
+     ] )
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/a2> ;
+     fhir:reference [ fhir:v "Patient/a2" ]
+  ] ; # 
+  fhir:practiceSetting [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://ihe.net/connectathon/practiceSettingCodes"^^xsd:anyURI ;
+         fhir:l <http://ihe.net/connectathon/practiceSettingCodes>
+       ] ;
+       fhir:code [ fhir:v "General Medicine" ] ;
+       fhir:display [ fhir:v "General Medicine" ]
+     ] )
+  ] ; # 
+  fhir:period [
+     fhir:start [ fhir:v "2004-12-23T08:00:00+10:00"^^xsd:dateTime ] ;
+     fhir:end [ fhir:v "2004-12-23T08:01:00+10:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:date [ fhir:v "2013-07-01T23:11:33+10:00"^^xsd:dateTime] ; # 
+  fhir:author ( [
+     fhir:l <http://hl7.org/fhir/Practitioner/a3> ;
+     fhir:reference [ fhir:v "Practitioner/a3" ]
+  ] [
+     fhir:l <http://hl7.org/fhir/Practitioner/a4> ;
+     fhir:reference [ fhir:v "Practitioner/a4" ]
+  ] ) ; # 
+  fhir:description [ fhir:v "Physical"] ; # 
+  fhir:securityLabel ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-Confidentiality"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-Confidentiality>
+       ] ;
+       fhir:code [ fhir:v "N" ] ;
+       fhir:display [ fhir:v "normal" ]
+     ] )
+  ] ) ; # 
+  fhir:content ( [
+     fhir:attachment [
+       fhir:contentType [ fhir:v "text/plain" ] ;
+       fhir:language [ fhir:v "en-US" ] ;
+       fhir:url [
+         fhir:v "http://localhost:9556/svc/fhir/Binary/1e404af3-077f-4bee-b7a6-a9be97e1ce32"^^xsd:anyURI ;
+         fhir:l <http://localhost:9556/svc/fhir/Binary/1e404af3-077f-4bee-b7a6-a9be97e1ce32>
+       ] ;
+       fhir:title [ fhir:v "Physical" ] ;
+       fhir:creation [ fhir:v "2005-12-24"^^xsd:date ]
+     ] ;
+     fhir:profile ( [
+       fhir:value [
+         a fhir:Coding ;
+         fhir:system [
+           fhir:v "urn:oid:1.3.6.1.4.1.19376.1.2.3"^^xsd:anyURI ;
+           fhir:l <urn:oid:1.3.6.1.4.1.19376.1.2.3>
+         ] ;
+         fhir:code [ fhir:v "urn:ihe:pcc:handp:2008" ]
+       ]
+     ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/a2> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/a3> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Practitioner/a4> a fhir:Practitioner .
+
+<http://localhost:9556/svc/fhir/Patient/a2> a fhir:Patient ;
+  fhir:id [ fhir:v "a2"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2013-07-01T13:11:33Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Person DOE, John, M, dob: 27/05/1956</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:value [ fhir:v "MRN" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:text [ fhir:v "DOE, John" ] ;
+     fhir:family [ fhir:v "Doe" ] ;
+     fhir:given ( [ fhir:v "John" ] )
+  ] ) ; # 
+  fhir:birthDate [ fhir:v "1956-05-27"^^xsd:date] . # 
+
+<http://localhost:9556/svc/fhir/Practitioner/a3> a fhir:Practitioner ;
+  fhir:id [ fhir:v "a3"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2013-07-01T13:11:33Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Author Gerald Smitty @ Cleveland Clinic</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:family [ fhir:v "Smitty" ] ;
+     fhir:given ( [ fhir:v "Gerald" ] )
+  ] ) . # 
+
+<http://localhost:9556/svc/fhir/Practitioner/a4> a fhir:Practitioner ;
+  fhir:id [ fhir:v "a4"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2013-07-01T13:11:33Z"^^xsd:dateTime ]
+  ] ; # cid:51b578b4-3ccb-4e67-b0dc-ef519d82ef2d@healthintersections.com.au
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Author Person @ Cleveland Clinic</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:family [ fhir:v "Dopplemeyer" ] ;
+     fhir:given ( [ fhir:v "Sherry" ] )
+  ] ) . # 
+
+<http://localhost:9556/svc/fhir/Binary/1e404af3-077f-4bee-b7a6-a9be97e1ce32> a fhir:Binary ;
+  fhir:id [ fhir:v "1e404af3-077f-4bee-b7a6-a9be97e1ce32"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2013-07-01T13:11:33Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:contentType [ fhir:v "text/plain"] ; # 
+  fhir:data [ fhir:v "YXNkYXNkYXNkYXNkYXNk"^^xsd:base64Binary] . # 
+
+# -------------------------------------------------------------------------------------
+

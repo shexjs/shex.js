@@ -1,0 +1,120 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/polymer-geometry> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "polymer-geometry"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem polymer-geometry</b></p><a name=\"polymer-geometry\"> </a><a name=\"hcpolymer-geometry\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/polymer-geometry</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">linear<a name=\"polymer-geometry-linear\"> </a></td><td>Linear</td><td>Linear polymer geometry.</td></tr><tr><td style=\"white-space:nowrap\">branched<a name=\"polymer-geometry-branched\"> </a></td><td>Branched</td><td>Branched polymer geometry.</td></tr><tr><td style=\"white-space:nowrap\">cross-linked<a name=\"polymer-geometry-cross-linked\"> </a></td><td>Cross-linked</td><td>Cross-linked polymer network.</td></tr><tr><td style=\"white-space:nowrap\">network<a name=\"polymer-geometry-network\"> </a></td><td>Network</td><td>Network polymer.</td></tr><tr><td style=\"white-space:nowrap\">dendritic<a name=\"polymer-geometry-dendritic\"> </a></td><td>Dendritic</td><td>Dendritic polymer.</td></tr><tr><td style=\"white-space:nowrap\">star<a name=\"polymer-geometry-star\"> </a></td><td>Star</td><td>Star polymer geometry.</td></tr><tr><td style=\"white-space:nowrap\">comb<a name=\"polymer-geometry-comb\"> </a></td><td>Comb</td><td>Comb polymer geometry.</td></tr><tr><td style=\"white-space:nowrap\">brush<a name=\"polymer-geometry-brush\"> </a></td><td>Brush</td><td>Brush polymer geometry.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "brr"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/polymer-geometry"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/polymer-geometry>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "PolymerGeometryExample"] ; # 
+  fhir:title [ fhir:v "Polymer Geometry"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2026-06-19"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Polymer geometry, e.g. linear, branched, cross-linked."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/polymer-geometry"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/polymer-geometry>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "linear" ] ;
+     fhir:display [ fhir:v "Linear" ] ;
+     fhir:definition [ fhir:v "Linear polymer geometry." ]
+  ] [
+     fhir:code [ fhir:v "branched" ] ;
+     fhir:display [ fhir:v "Branched" ] ;
+     fhir:definition [ fhir:v "Branched polymer geometry." ]
+  ] [
+     fhir:code [ fhir:v "cross-linked" ] ;
+     fhir:display [ fhir:v "Cross-linked" ] ;
+     fhir:definition [ fhir:v "Cross-linked polymer network." ]
+  ] [
+     fhir:code [ fhir:v "network" ] ;
+     fhir:display [ fhir:v "Network" ] ;
+     fhir:definition [ fhir:v "Network polymer." ]
+  ] [
+     fhir:code [ fhir:v "dendritic" ] ;
+     fhir:display [ fhir:v "Dendritic" ] ;
+     fhir:definition [ fhir:v "Dendritic polymer." ]
+  ] [
+     fhir:code [ fhir:v "star" ] ;
+     fhir:display [ fhir:v "Star" ] ;
+     fhir:definition [ fhir:v "Star polymer geometry." ]
+  ] [
+     fhir:code [ fhir:v "comb" ] ;
+     fhir:display [ fhir:v "Comb" ] ;
+     fhir:definition [ fhir:v "Comb polymer geometry." ]
+  ] [
+     fhir:code [ fhir:v "brush" ] ;
+     fhir:display [ fhir:v "Brush" ] ;
+     fhir:definition [ fhir:v "Brush polymer geometry." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

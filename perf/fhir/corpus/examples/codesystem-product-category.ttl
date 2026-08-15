@@ -1,0 +1,119 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/product-category> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "product-category"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem product-category</b></p><a name=\"product-category\"> </a><a name=\"hcproduct-category\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/product-category</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">organ<a name=\"product-category-organ\"> </a></td><td>Organ</td><td>A collection of tissues joined in a structural unit to serve a common function.</td></tr><tr><td style=\"white-space:nowrap\">tissue<a name=\"product-category-tissue\"> </a></td><td>Tissue</td><td>An ensemble of similar cells and their extracellular matrix from the same origin that together carry out a specific function.</td></tr><tr><td style=\"white-space:nowrap\">fluid<a name=\"product-category-fluid\"> </a></td><td>Fluid</td><td>Body fluid.</td></tr><tr><td style=\"white-space:nowrap\">cells<a name=\"product-category-cells\"> </a></td><td>Cells</td><td>Collection of cells.</td></tr><tr><td style=\"white-space:nowrap\">biological-agent<a name=\"product-category-biological-agent\"> </a></td><td>Biological agent</td><td>Biological agent of unspecified type.</td></tr><tr><td style=\"white-space:nowrap\">mpho<a name=\"product-category-mpho\"> </a></td><td>Medical Product of Human Origin (MPHO)</td><td>A product derived from a human donor intended for clinical application in a human recipient.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "oo"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/product-category"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/product-category>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.901" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "BiologicallyDerivedProductCategory"] ; # 
+  fhir:title [ fhir:v "Biologically Derived Product Category"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Biologically Derived Product Category."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/product-category"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/product-category>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "organ" ] ;
+     fhir:display [ fhir:v "Organ" ] ;
+     fhir:definition [ fhir:v "A collection of tissues joined in a structural unit to serve a common function." ]
+  ] [
+     fhir:code [ fhir:v "tissue" ] ;
+     fhir:display [ fhir:v "Tissue" ] ;
+     fhir:definition [ fhir:v "An ensemble of similar cells and their extracellular matrix from the same origin that together carry out a specific function." ]
+  ] [
+     fhir:code [ fhir:v "fluid" ] ;
+     fhir:display [ fhir:v "Fluid" ] ;
+     fhir:definition [ fhir:v "Body fluid." ]
+  ] [
+     fhir:code [ fhir:v "cells" ] ;
+     fhir:display [ fhir:v "Cells" ] ;
+     fhir:definition [ fhir:v "Collection of cells." ]
+  ] [
+     fhir:code [ fhir:v "biological-agent" ] ;
+     fhir:display [ fhir:v "Biological agent" ] ;
+     fhir:definition [ fhir:v "Biological agent of unspecified type." ]
+  ] [
+     fhir:code [ fhir:v "mpho" ] ;
+     fhir:display [ fhir:v "Medical Product of Human Origin (MPHO)" ] ;
+     fhir:definition [ fhir:v "A product derived from a human donor intended for clinical application in a human recipient." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

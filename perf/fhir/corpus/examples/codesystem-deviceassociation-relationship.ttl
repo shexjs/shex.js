@@ -1,0 +1,153 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/deviceassociation-relationship> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "deviceassociation-relationship"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem deviceassociation-relationship</b></p><a name=\"deviceassociation-relationship\"> </a><a name=\"hcdeviceassociation-relationship\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/deviceassociation-relationship</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">used-by<a name=\"deviceassociation-relationship-used-by\"> </a></td><td>Used By</td><td>The device is used by the referenced subject.</td></tr><tr><td style=\"white-space:nowrap\">assigned-to<a name=\"deviceassociation-relationship-assigned-to\"> </a></td><td>Assigned To</td><td>The device is assigned to the referenced subject for use or responsibility.</td></tr><tr><td style=\"white-space:nowrap\">leased-by<a name=\"deviceassociation-relationship-leased-by\"> </a></td><td>Leased By</td><td>The device is leased by the referenced subject.</td></tr><tr><td style=\"white-space:nowrap\">worn-by<a name=\"deviceassociation-relationship-worn-by\"> </a></td><td>Worn By</td><td>The device is worn by the referenced subject.</td></tr><tr><td style=\"white-space:nowrap\">carried-by<a name=\"deviceassociation-relationship-carried-by\"> </a></td><td>Carried By</td><td>The device is carried by the referenced subject.</td></tr><tr><td style=\"white-space:nowrap\">monitored-by<a name=\"deviceassociation-relationship-monitored-by\"> </a></td><td>Monitored By</td><td>The device is monitored by the referenced subject.</td></tr><tr><td style=\"white-space:nowrap\">implanted-in<a name=\"deviceassociation-relationship-implanted-in\"> </a></td><td>Implanted In</td><td>The device is implanted in the referenced subject.</td></tr><tr><td style=\"white-space:nowrap\">attached-to<a name=\"deviceassociation-relationship-attached-to\"> </a></td><td>Attached To</td><td>The device is physically attached to the referenced subject.</td></tr><tr><td style=\"white-space:nowrap\">installed-at<a name=\"deviceassociation-relationship-installed-at\"> </a></td><td>Installed At</td><td>The device is installed at the referenced location.</td></tr><tr><td style=\"white-space:nowrap\">located-at<a name=\"deviceassociation-relationship-located-at\"> </a></td><td>Located At</td><td>The device is located at the referenced location.</td></tr><tr><td style=\"white-space:nowrap\">stored-at<a name=\"deviceassociation-relationship-stored-at\"> </a></td><td>Stored At</td><td>The device is stored at the referenced location.</td></tr><tr><td style=\"white-space:nowrap\">connected-to<a name=\"deviceassociation-relationship-connected-to\"> </a></td><td>Connected To</td><td>The device is connected to the referenced device or entity.</td></tr><tr><td style=\"white-space:nowrap\">controls<a name=\"deviceassociation-relationship-controls\"> </a></td><td>Controls</td><td>The device controls the referenced device or entity.</td></tr><tr><td style=\"white-space:nowrap\">programs<a name=\"deviceassociation-relationship-programs\"> </a></td><td>Programs</td><td>The device programs the referenced device or entity.</td></tr><tr><td style=\"white-space:nowrap\">calibrates<a name=\"deviceassociation-relationship-calibrates\"> </a></td><td>Calibrates</td><td>The device calibrates the referenced device or entity.</td></tr><tr><td style=\"white-space:nowrap\">maintains<a name=\"deviceassociation-relationship-maintains\"> </a></td><td>Maintains</td><td>The device maintains the referenced device or entity.</td></tr><tr><td style=\"white-space:nowrap\">powers<a name=\"deviceassociation-relationship-powers\"> </a></td><td>Powers</td><td>The device supplies power to the referenced device or entity.</td></tr><tr><td style=\"white-space:nowrap\">communicates-with<a name=\"deviceassociation-relationship-communicates-with\"> </a></td><td>Communicates With</td><td>The device communicates with the referenced device or entity.</td></tr><tr><td style=\"white-space:nowrap\">managed-by<a name=\"deviceassociation-relationship-managed-by\"> </a></td><td>Managed By</td><td>The device is managed by the referenced subject.</td></tr><tr><td style=\"white-space:nowrap\">in-custody-of<a name=\"deviceassociation-relationship-in-custody-of\"> </a></td><td>In Custody Of</td><td>The device is in the custody of the referenced subject.</td></tr><tr><td style=\"white-space:nowrap\">maintained-by<a name=\"deviceassociation-relationship-maintained-by\"> </a></td><td>Maintained By</td><td>The device is maintained by the referenced subject.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "oo"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/deviceassociation-relationship"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/deviceassociation-relationship>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "DeviceAssociationRelationship"] ; # 
+  fhir:title [ fhir:v "DeviceAssociation Relationship Codes"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:publisher [ fhir:v "HL7 International"] ; # 
+  fhir:description [ fhir:v "DeviceAssociation Relationship Codes"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/deviceassociation-relationship"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/deviceassociation-relationship>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "used-by" ] ;
+     fhir:display [ fhir:v "Used By" ] ;
+     fhir:definition [ fhir:v "The device is used by the referenced subject." ]
+  ] [
+     fhir:code [ fhir:v "assigned-to" ] ;
+     fhir:display [ fhir:v "Assigned To" ] ;
+     fhir:definition [ fhir:v "The device is assigned to the referenced subject for use or responsibility." ]
+  ] [
+     fhir:code [ fhir:v "leased-by" ] ;
+     fhir:display [ fhir:v "Leased By" ] ;
+     fhir:definition [ fhir:v "The device is leased by the referenced subject." ]
+  ] [
+     fhir:code [ fhir:v "worn-by" ] ;
+     fhir:display [ fhir:v "Worn By" ] ;
+     fhir:definition [ fhir:v "The device is worn by the referenced subject." ]
+  ] [
+     fhir:code [ fhir:v "carried-by" ] ;
+     fhir:display [ fhir:v "Carried By" ] ;
+     fhir:definition [ fhir:v "The device is carried by the referenced subject." ]
+  ] [
+     fhir:code [ fhir:v "monitored-by" ] ;
+     fhir:display [ fhir:v "Monitored By" ] ;
+     fhir:definition [ fhir:v "The device is monitored by the referenced subject." ]
+  ] [
+     fhir:code [ fhir:v "implanted-in" ] ;
+     fhir:display [ fhir:v "Implanted In" ] ;
+     fhir:definition [ fhir:v "The device is implanted in the referenced subject." ]
+  ] [
+     fhir:code [ fhir:v "attached-to" ] ;
+     fhir:display [ fhir:v "Attached To" ] ;
+     fhir:definition [ fhir:v "The device is physically attached to the referenced subject." ]
+  ] [
+     fhir:code [ fhir:v "installed-at" ] ;
+     fhir:display [ fhir:v "Installed At" ] ;
+     fhir:definition [ fhir:v "The device is installed at the referenced location." ]
+  ] [
+     fhir:code [ fhir:v "located-at" ] ;
+     fhir:display [ fhir:v "Located At" ] ;
+     fhir:definition [ fhir:v "The device is located at the referenced location." ]
+  ] [
+     fhir:code [ fhir:v "stored-at" ] ;
+     fhir:display [ fhir:v "Stored At" ] ;
+     fhir:definition [ fhir:v "The device is stored at the referenced location." ]
+  ] [
+     fhir:code [ fhir:v "connected-to" ] ;
+     fhir:display [ fhir:v "Connected To" ] ;
+     fhir:definition [ fhir:v "The device is connected to the referenced device or entity." ]
+  ] [
+     fhir:code [ fhir:v "controls" ] ;
+     fhir:display [ fhir:v "Controls" ] ;
+     fhir:definition [ fhir:v "The device controls the referenced device or entity." ]
+  ] [
+     fhir:code [ fhir:v "programs" ] ;
+     fhir:display [ fhir:v "Programs" ] ;
+     fhir:definition [ fhir:v "The device programs the referenced device or entity." ]
+  ] [
+     fhir:code [ fhir:v "calibrates" ] ;
+     fhir:display [ fhir:v "Calibrates" ] ;
+     fhir:definition [ fhir:v "The device calibrates the referenced device or entity." ]
+  ] [
+     fhir:code [ fhir:v "maintains" ] ;
+     fhir:display [ fhir:v "Maintains" ] ;
+     fhir:definition [ fhir:v "The device maintains the referenced device or entity." ]
+  ] [
+     fhir:code [ fhir:v "powers" ] ;
+     fhir:display [ fhir:v "Powers" ] ;
+     fhir:definition [ fhir:v "The device supplies power to the referenced device or entity." ]
+  ] [
+     fhir:code [ fhir:v "communicates-with" ] ;
+     fhir:display [ fhir:v "Communicates With" ] ;
+     fhir:definition [ fhir:v "The device communicates with the referenced device or entity." ]
+  ] [
+     fhir:code [ fhir:v "managed-by" ] ;
+     fhir:display [ fhir:v "Managed By" ] ;
+     fhir:definition [ fhir:v "The device is managed by the referenced subject." ]
+  ] [
+     fhir:code [ fhir:v "in-custody-of" ] ;
+     fhir:display [ fhir:v "In Custody Of" ] ;
+     fhir:definition [ fhir:v "The device is in the custody of the referenced subject." ]
+  ] [
+     fhir:code [ fhir:v "maintained-by" ] ;
+     fhir:display [ fhir:v "Maintained By" ] ;
+     fhir:definition [ fhir:v "The device is maintained by the referenced subject." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

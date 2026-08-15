@@ -1,0 +1,102 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ValueSet/device-versiontype> a fhir:ValueSet ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "device-versiontype"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "extensions" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: ValueSet device-versiontype</b></p><a name=\"device-versiontype\"> </a><a name=\"hcdevice-versiontype\"> </a><ul><li>Include these codes as defined in <a href=\"http://tx.fhir.org/r5\"><code>urn:iso:std:iso:11073:10101</code></a><span style=\"opacity: 0.5\" title=\"Version is not explicitly stated. When building this specification, the most recent version 2024-12-05 has been used\"> version ⏿2024-12-05</span><table class=\"none\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td><a href=\"http://tx.fhir.org/r5/ValueSet/MDC#MDC-531974\">531974</a></td><td>Hardware revision</td><td>The hardware-revision component id group of the MDC_ATTR_ID_PROD_SPECN attribute.</td></tr><tr><td><a href=\"http://tx.fhir.org/r5/ValueSet/MDC#MDC-531975\">531975</a></td><td>Software revision</td><td>The software-revision component id group of the MDC_ATTR_ID_PROD_SPECN attribute.</td></tr><tr><td><a href=\"http://tx.fhir.org/r5/ValueSet/MDC#MDC-531976\">531976</a></td><td>Firmware revision</td><td>The firmware-revision component id group of the MDC_ATTR_ID_PROD_SPECN attribute.</td></tr><tr><td><a href=\"http://tx.fhir.org/r5/ValueSet/MDC#MDC-531977\">531977</a></td><td>Protocol revision</td><td>The protocol-revision component id group of the MDC_ATTR_ID_PROD_SPECN attribute.</td></tr><tr><td><a href=\"http://tx.fhir.org/r5/ValueSet/MDC#MDC-532352\">532352</a></td><td>Continua version</td><td>Regulation-Certification-Continua-Version (hypothetical decomposition of MDC_ATTR_REG-CERT-DATALIST Continua Body Certified Device Version sub element)</td></tr></table></li></ul></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "oo"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ValueSet/device-versiontype"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/device-versiontype>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.3.3202" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "DeviceVersionType"] ; # 
+  fhir:title [ fhir:v "Device Version Type"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7 International"] ; # 
+  fhir:description [ fhir:v "Describes the type of version"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:compose [
+     fhir:include ( [
+       fhir:system [
+         fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+         fhir:l <urn:iso:std:iso:11073:10101>
+       ] ;
+       fhir:concept ( [
+         fhir:code [ fhir:v "531974" ] ;
+         fhir:display [ fhir:v "Hardware revision" ]
+       ] [
+         fhir:code [ fhir:v "531975" ] ;
+         fhir:display [ fhir:v "Software revision" ]
+       ] [
+         fhir:code [ fhir:v "531976" ] ;
+         fhir:display [ fhir:v "Firmware revision" ]
+       ] [
+         fhir:code [ fhir:v "531977" ] ;
+         fhir:display [ fhir:v "Protocol revision" ]
+       ] [
+         fhir:code [ fhir:v "532352" ] ;
+         fhir:display [ fhir:v "Continua version" ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:expansion [] . # 
+
+# -------------------------------------------------------------------------------------
+

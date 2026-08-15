@@ -1,0 +1,75 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/DeviceAssociation/lab-device-association> a fhir:DeviceAssociation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "lab-device-association"] ; # 
+  fhir:contained ( [
+     a fhir:Practitioner ;
+     fhir:id [ fhir:v "repair-tech" ]
+  ] [
+     a fhir:Device ;
+     fhir:id [ fhir:v "lab-analyzer" ] ;
+     fhir:status [ fhir:v "active" ] ;
+     fhir:name ( [
+       fhir:value [ fhir:v "Beckman AU5800" ] ;
+       fhir:type [
+         fhir:coding ( [
+           fhir:code [ fhir:v "model-name" ]
+         ] )
+       ]
+     ] ) ;
+     fhir:type ( [
+       a sct:11987000 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "11987000" ] ;
+         fhir:display [ fhir:v "Clinical chemistry analyzer" ]
+       ] )
+     ] )
+  ] ) ; # 
+  fhir:device [
+     fhir:l <#lab-analyzer> ;
+     fhir:reference [ fhir:v "#lab-analyzer" ]
+  ] ; # 
+  fhir:relationship [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/deviceassociation-relationship"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/deviceassociation-relationship>
+       ] ;
+       fhir:code [ fhir:v "maintained-by" ] ;
+       fhir:display [ fhir:v "Maintained By" ]
+     ] )
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:relationshipStatus [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/deviceassociation-relationship-status"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/deviceassociation-relationship-status>
+       ] ;
+       fhir:code [ fhir:v "ended" ] ;
+       fhir:display [ fhir:v "Ended" ]
+     ] )
+  ] ; # 
+  fhir:subject [
+     fhir:l <#repair-tech> ;
+     fhir:reference [ fhir:v "#repair-tech" ]
+  ] ; # 
+  fhir:period [
+     fhir:start [ fhir:v "2025-07-10T10:00:00Z"^^xsd:dateTime ] ;
+     fhir:end [ fhir:v "2025-07-10T12:00:00Z"^^xsd:dateTime ]
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,77 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ServiceRequest/vent> a fhir:ServiceRequest ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "vent"] ; # 
+  fhir:status [ fhir:v "completed"] ; # Example of a ventilation order with provider instructions
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:code [
+     fhir:concept [
+       a sct:40617009 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "40617009" ] ;
+         fhir:display [ fhir:v "Artificial ventilation (regime/therapy)" ]
+       ] ) ;
+       fhir:text [ fhir:v "Mechanical Ventilation" ]
+     ]
+  ] ; # 
+  fhir:orderDetail ( [
+     fhir:parameter ( [
+       fhir:code [
+         a sct:243144002 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "243144002" ] ;
+           fhir:display [ fhir:v "Patient triggered inspiratory assistance (procedure)" ]
+         ] ) ;
+         fhir:text [ fhir:v "IPPB" ]
+       ] ;
+       fhir:value [
+         a fhir:String ;
+         fhir:v "Initial Settings : Sens: -1 cm H20 Pressure 15 cm H2O moderate flow:  Monitor VS every 15 minutes x 4 at the start of mechanical ventilation, then routine for unit OR every 5 hr"
+       ]
+     ] )
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:authoredOn [ fhir:v "2018-02-20"^^xsd:date] ; # 
+  fhir:requester [
+     fhir:l <http://hl7.org/fhir/Practitioner/3ad0687e-f477-468c-afd5-fcc2bf897809> ;
+     fhir:reference [ fhir:v "Practitioner/3ad0687e-f477-468c-afd5-fcc2bf897809" ] ;
+     fhir:display [ fhir:v "Dr. Beverly Crusher" ]
+  ] ; # 
+  fhir:performer ( [
+     fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+     fhir:reference [ fhir:v "Practitioner/example" ] ;
+     fhir:display [ fhir:v "Dr Cecil Surgeon" ]
+  ] ) ; # 
+  fhir:reason ( [
+     fhir:concept [
+       fhir:text [ fhir:v "chronic obstructive lung disease (COLD)" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/3ad0687e-f477-468c-afd5-fcc2bf897809> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

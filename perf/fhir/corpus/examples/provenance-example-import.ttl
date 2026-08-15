@@ -1,0 +1,79 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Provenance/example-import> a fhir:Provenance ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-import"] ; # 
+  fhir:target ( [
+     fhir:l <http://hl7.org/fhir/Condition/example> ;
+     fhir:reference [ fhir:v "Condition/example" ]
+  ] [
+     fhir:l <http://hl7.org/fhir/Condition/example2> ;
+     fhir:reference [ fhir:v "Condition/example2" ]
+  ] [
+     fhir:l <http://hl7.org/fhir/Encounter/example> ;
+     fhir:reference [ fhir:v "Encounter/example" ]
+  ] [
+     fhir:l <http://hl7.org/fhir/Immunization/example> ;
+     fhir:reference [ fhir:v "Immunization/example" ]
+  ] ) ; # 
+  fhir:recorded [ fhir:v "2015-06-27T08:39:24+10:00"^^xsd:dateTime] ; # 
+  fhir:policy ( [
+     fhir:v "urn:ihe:pcc:qedm:2017:document-provenance-policy"^^xsd:anyURI ;
+     fhir:l <urn:ihe:pcc:qedm:2017:document-provenance-policy>
+  ] ) ; # 
+  fhir:activity [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/w3c-provenance-activity-type"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/w3c-provenance-activity-type>
+       ] ;
+       fhir:code [ fhir:v "Derivation" ]
+     ] )
+  ] ; # 
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:agent ( [
+     fhir:id [ fhir:v "a1" ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/provenance-participant-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/provenance-participant-type>
+         ] ;
+         fhir:code [ fhir:v "assembler" ]
+       ] )
+     ] ;
+     fhir:who [
+       fhir:display [ fhir:v "Device/software" ]
+     ]
+  ] ) ; # 
+  fhir:entity ( [
+     fhir:role [ fhir:v "source" ] ;
+     fhir:what [
+       fhir:l <http://hl7.org/fhir/DocumentReference/example> ;
+       fhir:reference [ fhir:v "DocumentReference/example" ]
+     ]
+  ] ) . # information extract from a DICOM document, could be anything (e.g. CDA)
+
+<http://hl7.org/fhir/Condition/example> a fhir:Condition .
+
+<http://hl7.org/fhir/Condition/example2> a fhir:Condition .
+
+<http://hl7.org/fhir/Encounter/example> a fhir:Encounter .
+
+<http://hl7.org/fhir/Immunization/example> a fhir:Immunization .
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/DocumentReference/example> a fhir:DocumentReference .
+
+# -------------------------------------------------------------------------------------
+

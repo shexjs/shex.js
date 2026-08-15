@@ -1,0 +1,215 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/restful-interaction> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "restful-interaction"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem restful-interaction</b></p><a name=\"restful-interaction\"> </a><a name=\"hcrestful-interaction\"> </a><p><b>Properties</b></p><p><b>This code system defines the following properties for its concepts</b></p><table class=\"grid\"><tr><td><b>Name</b></td><td><b>Code</b></td><td><b>URI</b></td><td><b>Type</b></td></tr><tr><td>Not Selectable</td><td>abstract</td><td>http://hl7.org/fhir/concept-properties#notSelectable</td><td>boolean</td></tr></table><p><b>Concepts</b></p><p>This case-sensitive code system <code>http://hl7.org/fhir/restful-interaction</code> defines the following codes in a Is-A hierarchy:</p><table class=\"codes\"><tr><td><b>Lvl</b></td><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Definition</b></td><td><b>Not Selectable</b></td></tr><tr><td>1</td><td style=\"white-space:nowrap\">read<a name=\"restful-interaction-read\"> </a></td><td>Read the current state of the resource.</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">vread<a name=\"restful-interaction-vread\"> </a></td><td>Read the state of a specific version of the resource.</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">update<a name=\"restful-interaction-update\"> </a></td><td>Update an existing resource by its id (or create it if it is new).</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">update-conditional<a name=\"restful-interaction-update-conditional\"> </a></td><td>Update an existing resource based on some identification criteria (or create it if it is new).</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">patch<a name=\"restful-interaction-patch\"> </a></td><td>Update an existing resource by posting a set of changes to it.</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">patch-conditional<a name=\"restful-interaction-patch-conditional\"> </a></td><td>Update an existing resource, based on some identification criteria, by posting a set of changes to it.</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">delete<a name=\"restful-interaction-delete\"> </a></td><td>Delete a resource.</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">delete-conditional-single<a name=\"restful-interaction-delete-conditional-single\"> </a></td><td>Delete a single resource based on some identification criteria.</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">delete-conditional-multiple<a name=\"restful-interaction-delete-conditional-multiple\"> </a></td><td>Delete one or more resources based on some identification criteria.</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">delete-history<a name=\"restful-interaction-delete-history\"> </a></td><td>Delete all historical versions of a resource.</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">delete-history-version<a name=\"restful-interaction-delete-history-version\"> </a></td><td>Delete a specific version of a resource.</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">history<a name=\"restful-interaction-history\"> </a></td><td>Retrieve the change history for a particular resource, type of resource, or the entire system.</td><td>true</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  history-instance<a name=\"restful-interaction-history-instance\"> </a></td><td>Retrieve the change history for a particular resource.</td><td/></tr><tr><td>2</td><td style=\"white-space:nowrap\">  history-type<a name=\"restful-interaction-history-type\"> </a></td><td>Retrieve the change history for all resources of a particular type.</td><td/></tr><tr><td>2</td><td style=\"white-space:nowrap\">  history-system<a name=\"restful-interaction-history-system\"> </a></td><td>Retrieve the change history for all resources on a system.</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">create<a name=\"restful-interaction-create\"> </a></td><td>Create a new resource with a server assigned id.</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">create-conditional<a name=\"restful-interaction-create-conditional\"> </a></td><td>Create a new resource with a server assigned id if an equivalent resource does not already exist.</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">search<a name=\"restful-interaction-search\"> </a></td><td>Search a resource type or all resources based on some filter criteria.</td><td>true</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  search-type<a name=\"restful-interaction-search-type\"> </a></td><td>Search all resources of the specified type based on some filter criteria.</td><td/></tr><tr><td>2</td><td style=\"white-space:nowrap\">  search-system<a name=\"restful-interaction-search-system\"> </a></td><td>Search all resources based on some filter criteria.</td><td/></tr><tr><td>2</td><td style=\"white-space:nowrap\">  search-compartment<a name=\"restful-interaction-search-compartment\"> </a></td><td>Search resources in a compartment based on some filter criteria.</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">capabilities<a name=\"restful-interaction-capabilities\"> </a></td><td>Get a Capability Statement for the system.</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">transaction<a name=\"restful-interaction-transaction\"> </a></td><td>Update, create or delete a set of resources as a single transaction.</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">batch<a name=\"restful-interaction-batch\"> </a></td><td>perform a set of a separate interactions in a single http operation</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">operation<a name=\"restful-interaction-operation\"> </a></td><td>Perform an operation as defined by an OperationDefinition.</td><td/></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 5
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/restful-interaction"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/restful-interaction>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1823" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "FHIRRestfulInteractions"] ; # 
+  fhir:title [ fhir:v "FHIR Restful Interactions"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "The set of interactions defined by the RESTful part of the FHIR specification."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/restful-interaction"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/restful-interaction>
+  ] ; # 
+  fhir:hierarchyMeaning [ fhir:v "is-a"] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:property ( [
+     fhir:code [ fhir:v "abstract" ] ;
+     fhir:uri [
+       fhir:v "http://hl7.org/fhir/concept-properties#notSelectable"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/concept-properties#notSelectable>
+     ] ;
+     fhir:type [ fhir:v "boolean" ]
+  ] ) ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "read" ] ;
+     fhir:display [ fhir:v "read" ] ;
+     fhir:definition [ fhir:v "Read the current state of the resource." ]
+  ] [
+     fhir:code [ fhir:v "vread" ] ;
+     fhir:display [ fhir:v "vread" ] ;
+     fhir:definition [ fhir:v "Read the state of a specific version of the resource." ]
+  ] [
+     fhir:code [ fhir:v "update" ] ;
+     fhir:display [ fhir:v "update" ] ;
+     fhir:definition [ fhir:v "Update an existing resource by its id (or create it if it is new)." ]
+  ] [
+     fhir:code [ fhir:v "update-conditional" ] ;
+     fhir:display [ fhir:v "update-conditional" ] ;
+     fhir:definition [ fhir:v "Update an existing resource based on some identification criteria (or create it if it is new)." ]
+  ] [
+     fhir:code [ fhir:v "patch" ] ;
+     fhir:display [ fhir:v "patch" ] ;
+     fhir:definition [ fhir:v "Update an existing resource by posting a set of changes to it." ]
+  ] [
+     fhir:code [ fhir:v "patch-conditional" ] ;
+     fhir:display [ fhir:v "patch-conditional" ] ;
+     fhir:definition [ fhir:v "Update an existing resource, based on some identification criteria, by posting a set of changes to it." ]
+  ] [
+     fhir:code [ fhir:v "delete" ] ;
+     fhir:display [ fhir:v "delete" ] ;
+     fhir:definition [ fhir:v "Delete a resource." ]
+  ] [
+     fhir:code [ fhir:v "delete-conditional-single" ] ;
+     fhir:display [ fhir:v "delete-conditional-single" ] ;
+     fhir:definition [ fhir:v "Delete a single resource based on some identification criteria." ]
+  ] [
+     fhir:code [ fhir:v "delete-conditional-multiple" ] ;
+     fhir:display [ fhir:v "delete-conditional-multiple" ] ;
+     fhir:definition [ fhir:v "Delete one or more resources based on some identification criteria." ]
+  ] [
+     fhir:code [ fhir:v "delete-history" ] ;
+     fhir:display [ fhir:v "delete-history" ] ;
+     fhir:definition [ fhir:v "Delete all historical versions of a resource." ]
+  ] [
+     fhir:code [ fhir:v "delete-history-version" ] ;
+     fhir:display [ fhir:v "delete-history-version" ] ;
+     fhir:definition [ fhir:v "Delete a specific version of a resource." ]
+  ] [
+     fhir:code [ fhir:v "history" ] ;
+     fhir:display [ fhir:v "history" ] ;
+     fhir:definition [ fhir:v "Retrieve the change history for a particular resource, type of resource, or the entire system." ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "abstract" ] ;
+       fhir:value [
+         a fhir:Boolean ;
+         fhir:v true
+       ]
+     ] ) ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "history-instance" ] ;
+       fhir:display [ fhir:v "history-instance" ] ;
+       fhir:definition [ fhir:v "Retrieve the change history for a particular resource." ]
+     ] [
+       fhir:code [ fhir:v "history-type" ] ;
+       fhir:display [ fhir:v "history-type" ] ;
+       fhir:definition [ fhir:v "Retrieve the change history for all resources of a particular type." ]
+     ] [
+       fhir:code [ fhir:v "history-system" ] ;
+       fhir:display [ fhir:v "history-system" ] ;
+       fhir:definition [ fhir:v "Retrieve the change history for all resources on a system." ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "create" ] ;
+     fhir:display [ fhir:v "create" ] ;
+     fhir:definition [ fhir:v "Create a new resource with a server assigned id." ]
+  ] [
+     fhir:code [ fhir:v "create-conditional" ] ;
+     fhir:display [ fhir:v "create-conditional" ] ;
+     fhir:definition [ fhir:v "Create a new resource with a server assigned id if an equivalent resource does not already exist." ]
+  ] [
+     fhir:code [ fhir:v "search" ] ;
+     fhir:display [ fhir:v "search" ] ;
+     fhir:definition [ fhir:v "Search a resource type or all resources based on some filter criteria." ] ;
+     fhir:property ( [
+       fhir:code [ fhir:v "abstract" ] ;
+       fhir:value [
+         a fhir:Boolean ;
+         fhir:v true
+       ]
+     ] ) ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "search-type" ] ;
+       fhir:display [ fhir:v "search-type" ] ;
+       fhir:definition [ fhir:v "Search all resources of the specified type based on some filter criteria." ]
+     ] [
+       fhir:code [ fhir:v "search-system" ] ;
+       fhir:display [ fhir:v "search-system" ] ;
+       fhir:definition [ fhir:v "Search all resources based on some filter criteria." ]
+     ] [
+       fhir:code [ fhir:v "search-compartment" ] ;
+       fhir:display [ fhir:v "search-compartment" ] ;
+       fhir:definition [ fhir:v "Search resources in a compartment based on some filter criteria." ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "capabilities" ] ;
+     fhir:display [ fhir:v "capabilities" ] ;
+     fhir:definition [ fhir:v "Get a Capability Statement for the system." ]
+  ] [
+     fhir:code [ fhir:v "transaction" ] ;
+     fhir:display [ fhir:v "transaction" ] ;
+     fhir:definition [ fhir:v "Update, create or delete a set of resources as a single transaction." ]
+  ] [
+     fhir:code [ fhir:v "batch" ] ;
+     fhir:display [ fhir:v "batch" ] ;
+     fhir:definition [ fhir:v "perform a set of a separate interactions in a single http operation" ]
+  ] [
+     fhir:code [ fhir:v "operation" ] ;
+     fhir:display [ fhir:v "operation" ] ;
+     fhir:definition [ fhir:v "Perform an operation as defined by an OperationDefinition." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

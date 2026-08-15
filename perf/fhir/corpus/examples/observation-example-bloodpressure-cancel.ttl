@@ -1,0 +1,180 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# This is an example of a cancelled standard blood pressure measurement. with an Observation/component/dataAbsentReason valued due to cancellation.
+#
+# Blood Pressure is a regarded as a single observation, and
+# presented that way in plain text: 120/80. Also, it is usually
+# interpreted as a single value, though intepretation can also
+# be offered to the parts individually
+#
+# Technically, though, a blood pressure is a pair of component
+# observations. LOINC code 85354-9 notes say:
+#   This term is intended as a section header for various
+#   blood pressure measurements (e.g. systolic, diastolic).
+#   LOINC discourages the reporting of two numbers, such as
+#   systolic and diastolic blood pressure (e.g. 120/80),
+#   in one observation. They should be reported as two
+#   separate variables, systolic (LOINC 8480-6) and
+#   diastolic (LOINC 8462-4)
+#
+# This example shows the standard way to represent a meaurement that cause the expected values to be empty
+# single resource, with a narrative in the standard form, and two
+# component observations for the actual values with Observation/component/dataAbsentReason valued due to cancellation
+
+<http://hl7.org/fhir/Observation/blood-pressure-cancel> a fhir:Observation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "blood-pressure-cancel"] ; # 
+  fhir:meta [
+     fhir:profile ( [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/vitalsigns"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/vitalsigns>
+     ] )
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:uuid:187e0c12-8dd2-67e2-99b2-bf273c878281" ]
+  ] ) ; # EH  Narrative created by build
+#	<text>
+#		<status value="generated"/>
+#		<div xmlns="http://www.w3.org/1999/xhtml">Sept 17, 2012: Systolic Blood pressure 107/60 mmHg (low)</div>
+#	</text>
+  fhir:status [ fhir:v "cancelled"] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/observation-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/observation-category>
+       ] ;
+       fhir:code [ fhir:v "vital-signs" ] ;
+       fhir:display [ fhir:v "Vital Signs" ]
+     ] )
+  ] ) ; # 
+  fhir:code [
+     a loinc:85354-9 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "85354-9" ] ;
+       fhir:display [ fhir:v "Blood pressure panel with all children optional" ]
+     ] ) ; # replaced by 85354-9\n		<coding>\n			<system value=\"http:\/\/loinc.org\"\/>\n			<code value=\"85354-9\"\/>\n			<display value=\"Blood pressure systolic &amp; diastolic\"\/>\n		<\/coding>
+     fhir:text [ fhir:v "Blood pressure systolic & diastolic" ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:effective [
+     a fhir:DateTime ;
+     fhir:v "2012-09-17"^^xsd:date
+  ] ; # 
+  fhir:performer ( [
+     fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+     fhir:reference [ fhir:v "Practitioner/example" ]
+  ] ) ; # 
+  fhir:interpretation ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation>
+       ] ;
+       fhir:code [ fhir:v "L" ] ;
+       fhir:display [ fhir:v "low" ]
+     ] ) ;
+     fhir:text [ fhir:v "Below low normal" ]
+  ] ) ; # an interpretation offered to the combination observation
+#        generally, it would only be appropriate to offer an interpretation
+#        of an observation that has no value if it has "COMP" (component)
+#        observations
+  fhir:note ( [
+     fhir:text [ fhir:v "In this example, the blood pressure measurements are not available due to cancellation of the order.  Data absent reason is present for each component" ]
+  ] ) ; # 
+  fhir:bodySite [
+     a sct:368209003 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "368209003" ] ;
+       fhir:display [ fhir:v "Right arm" ]
+     ] )
+  ] ; # for an observation with components, these cannot disagree with the flags on the components
+  fhir:component ( [
+     fhir:code [
+       a loinc:8480-6, sct:271649006 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:code [ fhir:v "8480-6" ] ;
+         fhir:display [ fhir:v "Systolic blood pressure" ]
+       ] [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "271649006" ] ;
+         fhir:display [ fhir:v "Systolic blood pressure" ]
+       ] [
+         fhir:system [
+           fhir:v "http://acme.org/devices/clinical-codes"^^xsd:anyURI ;
+           fhir:l <http://acme.org/devices/clinical-codes>
+         ] ;
+         fhir:code [ fhir:v "bp-s" ] ;
+         fhir:display [ fhir:v "Systolic Blood pressure" ]
+       ] ) # LOINC - always recommended to have a LOINC code
+     ] ; # Observations are often coded in multiple code systems.\n           - LOINC provides a very specific code (though not usefully more specific in this particular case)\n           - snomed provides a clinically relevant code that is usually less granular than LOINC\n           - the source system provides its own code, which may be less or more granular than LOINC\n	 this instance shows the concept. The other codes only have a LOINC code, that shows the concept. The next two names only have a LOINC code
+     fhir:dataAbsentReason [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/data-absent-reason"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/data-absent-reason>
+         ] ;
+         fhir:code [ fhir:v "not-asked" ] ;
+         fhir:display [ fhir:v "Not Asked" ]
+       ] )
+     ] # no value due to some error\n    <valueQuantity>\n      <value value=\"107\"\/>\n      <unit value=\"mm[Hg]\"\/>\n    <\/valueQuantity>
+  ] [
+     fhir:code [
+       a loinc:8462-4 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:code [ fhir:v "8462-4" ] ;
+         fhir:display [ fhir:v "Diastolic blood pressure" ]
+       ] )
+     ] ;
+     fhir:dataAbsentReason [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/data-absent-reason"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/data-absent-reason>
+         ] ;
+         fhir:code [ fhir:v "not-asked" ] ;
+         fhir:display [ fhir:v "Not Asked" ]
+       ] )
+     ] # no value due to some error\n    <valueQuantity>\n      <value value=\"60\"\/>\n      <unit value=\"mm[Hg]\"\/>\n    <\/valueQuantity>
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

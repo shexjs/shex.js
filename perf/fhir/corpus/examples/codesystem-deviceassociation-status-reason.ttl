@@ -1,0 +1,101 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/deviceassociation-status-reason> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "deviceassociation-status-reason"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem deviceassociation-status-reason</b></p><a name=\"deviceassociation-status-reason\"> </a><a name=\"hcdeviceassociation-status-reason\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/deviceassociation-status-reason</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">lost-to-follow-up<a name=\"deviceassociation-status-reason-lost-to-follow-up\"> </a></td><td>Lost To Follow-Up</td><td>The relationship status changed because follow-up with the subject or responsible party was lost.</td></tr><tr><td style=\"white-space:nowrap\">record-archived<a name=\"deviceassociation-status-reason-record-archived\"> </a></td><td>Record Archived</td><td>The relationship status changed because the association record was archived.</td></tr><tr><td style=\"white-space:nowrap\">superseded<a name=\"deviceassociation-status-reason-superseded\"> </a></td><td>Superseded</td><td>The relationship status changed because the association was replaced by a newer association record.</td></tr><tr><td style=\"white-space:nowrap\">duplicate<a name=\"deviceassociation-status-reason-duplicate\"> </a></td><td>Duplicate</td><td>The relationship status changed because the association record was identified as a duplicate.</td></tr><tr><td style=\"white-space:nowrap\">patient-deceased<a name=\"deviceassociation-status-reason-patient-deceased\"> </a></td><td>Patient Deceased</td><td>The relationship status changed because the patient associated with the device is deceased.</td></tr><tr><td style=\"white-space:nowrap\">device-retired<a name=\"deviceassociation-status-reason-device-retired\"> </a></td><td>Device Retired</td><td>The relationship status changed because the device was retired from service.</td></tr><tr><td style=\"white-space:nowrap\">association-ended<a name=\"deviceassociation-status-reason-association-ended\"> </a></td><td>Association Ended</td><td>The relationship status changed because the association ended.</td></tr><tr><td style=\"white-space:nowrap\">unknown<a name=\"deviceassociation-status-reason-unknown\"> </a></td><td>Unknown</td><td>The reason for the relationship status is not known.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "oo"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/deviceassociation-status-reason"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/deviceassociation-status-reason>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "DeviceAssociationStatusReason"] ; # 
+  fhir:title [ fhir:v "DeviceAssociation Status Reason Codes"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7 International"] ; # 
+  fhir:description [ fhir:v "DeviceAssociation Status Reason Codes"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/deviceassociation-status-reason"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/deviceassociation-status-reason>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "lost-to-follow-up" ] ;
+     fhir:display [ fhir:v "Lost To Follow-Up" ] ;
+     fhir:definition [ fhir:v "The relationship status changed because follow-up with the subject or responsible party was lost." ]
+  ] [
+     fhir:code [ fhir:v "record-archived" ] ;
+     fhir:display [ fhir:v "Record Archived" ] ;
+     fhir:definition [ fhir:v "The relationship status changed because the association record was archived." ]
+  ] [
+     fhir:code [ fhir:v "superseded" ] ;
+     fhir:display [ fhir:v "Superseded" ] ;
+     fhir:definition [ fhir:v "The relationship status changed because the association was replaced by a newer association record." ]
+  ] [
+     fhir:code [ fhir:v "duplicate" ] ;
+     fhir:display [ fhir:v "Duplicate" ] ;
+     fhir:definition [ fhir:v "The relationship status changed because the association record was identified as a duplicate." ]
+  ] [
+     fhir:code [ fhir:v "patient-deceased" ] ;
+     fhir:display [ fhir:v "Patient Deceased" ] ;
+     fhir:definition [ fhir:v "The relationship status changed because the patient associated with the device is deceased." ]
+  ] [
+     fhir:code [ fhir:v "device-retired" ] ;
+     fhir:display [ fhir:v "Device Retired" ] ;
+     fhir:definition [ fhir:v "The relationship status changed because the device was retired from service." ]
+  ] [
+     fhir:code [ fhir:v "association-ended" ] ;
+     fhir:display [ fhir:v "Association Ended" ] ;
+     fhir:definition [ fhir:v "The relationship status changed because the association ended." ]
+  ] [
+     fhir:code [ fhir:v "unknown" ] ;
+     fhir:display [ fhir:v "Unknown" ] ;
+     fhir:definition [ fhir:v "The reason for the relationship status is not known." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

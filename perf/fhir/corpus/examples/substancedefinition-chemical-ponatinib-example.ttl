@@ -1,0 +1,205 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# Example: Ponatinib hydrochloride — a tyrosine kinase inhibitor used for
+#     chronic myeloid leukemia. Chemical substance from ISO 11238 IG examples.
+#     Demonstrates SubstanceDefinition for a small-molecule chemical with
+#     moiety (the salt: HCl) and target relationship (BCR-ABL kinase).
+
+<http://hl7.org/fhir/SubstanceDefinition/ponatinib-hcl> a fhir:SubstanceDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "ponatinib-hcl"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://example.europa.eu/fhir/SMSId"^^xsd:anyURI ;
+       fhir:l <http://example.europa.eu/fhir/SMSId>
+     ] ;
+     fhir:value [ fhir:v "PONA4321C" ]
+  ] ) ; # 
+  fhir:status [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/publication-status"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/publication-status>
+       ] ;
+       fhir:code [ fhir:v "active" ] ;
+       fhir:display [ fhir:v "Active" ]
+     ] )
+  ] ; # 
+  fhir:classification ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.europa.eu/fhir/SubstanceType"^^xsd:anyURI ;
+         fhir:l <http://example.europa.eu/fhir/SubstanceType>
+       ] ;
+       fhir:code [ fhir:v "chemical" ] ;
+       fhir:display [ fhir:v "Chemical" ]
+     ] )
+  ] ) ; # 
+  fhir:domain [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.europa.eu/fhir/Domain"^^xsd:anyURI ;
+         fhir:l <http://example.europa.eu/fhir/Domain>
+       ] ;
+       fhir:code [ fhir:v "human" ] ;
+       fhir:display [ fhir:v "Human use" ]
+     ] )
+  ] ; # 
+  fhir:description [ fhir:v "Ponatinib hydrochloride — a small-molecule tyrosine kinase inhibitor (TKI) used in the treatment of chronic myeloid leukemia (CML) and Philadelphia chromosome-positive acute lymphoblastic leukemia (Ph+ ALL). Hydrochloride salt of ponatinib."] ; # 
+  fhir:code ( [
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.europa.eu/fhir/Substance"^^xsd:anyURI ;
+           fhir:l <http://example.europa.eu/fhir/Substance>
+         ] ;
+         fhir:code [ fhir:v "PONA4321C" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:name [ fhir:v "Ponatinib Hydrochloride" ] ;
+     fhir:preferred [ fhir:v true ] ;
+     fhir:language ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:ietf:bcp:47"^^xsd:anyURI ;
+           fhir:l <urn:ietf:bcp:47>
+         ] ;
+         fhir:code [ fhir:v "en" ] ;
+         fhir:display [ fhir:v "English" ]
+       ] )
+     ] ) ;
+     fhir:official ( [
+       fhir:authority [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/substance-name-authority"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/substance-name-authority>
+           ] ;
+           fhir:code [ fhir:v "USAN" ] ;
+           fhir:display [ fhir:v "USAN" ]
+         ] )
+       ] ;
+       fhir:status [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/publication-status"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/publication-status>
+           ] ;
+           fhir:code [ fhir:v "active" ] ;
+           fhir:display [ fhir:v "Active" ]
+         ] )
+       ]
+     ] )
+  ] ) ; # 
+  fhir:molecularWeight ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.europa.eu/fhir/WeightType"^^xsd:anyURI ;
+           fhir:l <http://example.europa.eu/fhir/WeightType>
+         ] ;
+         fhir:code [ fhir:v "exact" ] ;
+         fhir:display [ fhir:v "Exact" ]
+       ] )
+     ] ;
+     fhir:amount [
+       fhir:value [ fhir:v 569.04 ] ;
+       fhir:unit [ fhir:v "g/mol" ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "g/mol" ]
+     ]
+  ] ) ; # 
+  fhir:moiety ( [
+     fhir:role [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.europa.eu/fhir/MoietyRole"^^xsd:anyURI ;
+           fhir:l <http://example.europa.eu/fhir/MoietyRole>
+         ] ;
+         fhir:code [ fhir:v "active-moiety" ] ;
+         fhir:display [ fhir:v "Active moiety" ]
+       ] )
+     ] ;
+     fhir:name [ fhir:v "Ponatinib" ] ;
+     fhir:molecularFormula [ fhir:v "C29H27F3N6O" ]
+  ] [
+     fhir:role [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.europa.eu/fhir/MoietyRole"^^xsd:anyURI ;
+           fhir:l <http://example.europa.eu/fhir/MoietyRole>
+         ] ;
+         fhir:code [ fhir:v "counter-ion" ] ;
+         fhir:display [ fhir:v "Counter-ion (salt)" ]
+       ] )
+     ] ;
+     fhir:name [ fhir:v "Hydrochloride" ] ;
+     fhir:molecularFormula [ fhir:v "HCl" ]
+  ] ) ; # 
+  fhir:relationship ( [
+     fhir:substanceDefinition [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://www.uniprot.org"^^xsd:anyURI ;
+           fhir:l <https://www.uniprot.org>
+         ] ;
+         fhir:code [ fhir:v "A9UF07" ] ;
+         fhir:display [ fhir:v "BCR-ABL1 fusion kinase" ]
+       ] )
+     ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/substance-relationship-type"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/substance-relationship-type>
+         ] ;
+         fhir:code [ fhir:v "TherapeuticTarget" ] ;
+         fhir:display [ fhir:v "Therapeutic target" ]
+       ] )
+     ] ;
+     fhir:interaction [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/substance-interaction-type"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/substance-interaction-type>
+         ] ;
+         fhir:code [ fhir:v "inhibition" ] ;
+         fhir:display [ fhir:v "Inhibition" ]
+       ] )
+     ] ;
+     fhir:measurementType [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/substance-measurement-type"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/substance-measurement-type>
+         ] ;
+         fhir:code [ fhir:v "ic50" ] ;
+         fhir:display [ fhir:v "IC50" ]
+       ] )
+     ] ;
+     fhir:amount [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v 0.37 ] ;
+       fhir:unit [ fhir:v "nM" ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "nmol/L" ]
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

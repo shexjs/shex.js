@@ -1,0 +1,222 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ValueSet/doc-section-codes> a fhir:ValueSet ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "doc-section-codes"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: ValueSet doc-section-codes</b></p><a name=\"doc-section-codes\"> </a><a name=\"hcdoc-section-codes\"> </a><ul><li>Include these codes as defined in <a href=\"http://loinc.org\"><code>http://loinc.org</code></a><span title=\"Version is not explicitly stated. No matching Code System found\"> version Not Stated (use latest from terminology server)</span><table class=\"none\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td></tr><tr><td><a href=\"https://loinc.org/10154-3/\">10154-3</a></td><td style=\"color: #cccccc\">Chief complaint Narrative - Reported</td></tr><tr><td><a href=\"https://loinc.org/10157-6/\">10157-6</a></td><td style=\"color: #cccccc\">History of family member diseases note</td></tr><tr><td><a href=\"https://loinc.org/10160-0/\">10160-0</a></td><td style=\"color: #cccccc\">History of Medication use Narrative</td></tr><tr><td><a href=\"https://loinc.org/10164-2/\">10164-2</a></td><td style=\"color: #cccccc\">History of Present illness Narrative</td></tr><tr><td><a href=\"https://loinc.org/10183-2/\">10183-2</a></td><td style=\"color: #cccccc\">Hospital discharge medications Narrative</td></tr><tr><td><a href=\"https://loinc.org/10184-0/\">10184-0</a></td><td style=\"color: #cccccc\">Hospital discharge physical findings Narrative</td></tr><tr><td><a href=\"https://loinc.org/10187-3/\">10187-3</a></td><td style=\"color: #cccccc\">Review of systems Narrative - Reported</td></tr><tr><td><a href=\"https://loinc.org/10210-3/\">10210-3</a></td><td style=\"color: #cccccc\">Physical findings of General status Narrative</td></tr><tr><td><a href=\"https://loinc.org/10216-0/\">10216-0</a></td><td style=\"color: #cccccc\">Surgical operation note fluids Narrative</td></tr><tr><td><a href=\"https://loinc.org/10218-6/\">10218-6</a></td><td style=\"color: #cccccc\">Surgical operation note postoperative diagnosis Narrative</td></tr><tr><td><a href=\"https://loinc.org/10218-6/\">10218-6</a></td><td style=\"color: #cccccc\">Surgical operation note postoperative diagnosis Narrative</td></tr><tr><td><a href=\"https://loinc.org/10223-6/\">10223-6</a></td><td style=\"color: #cccccc\">Surgical operation note surgical procedure Narrative</td></tr><tr><td><a href=\"https://loinc.org/10222-8/\">10222-8</a></td><td style=\"color: #cccccc\">Surgical operation note surgical complications [Interpretation] Narrative</td></tr><tr><td><a href=\"https://loinc.org/11329-0/\">11329-0</a></td><td style=\"color: #cccccc\">History general Narrative - Reported</td></tr><tr><td><a href=\"https://loinc.org/11348-0/\">11348-0</a></td><td style=\"color: #cccccc\">History of Past illness note</td></tr><tr><td><a href=\"https://loinc.org/11369-6/\">11369-6</a></td><td style=\"color: #cccccc\">History of Immunization note</td></tr><tr><td><a href=\"https://loinc.org/57852-6/\">57852-6</a></td><td style=\"color: #cccccc\">Problem list Narrative - Reported</td></tr><tr><td><a href=\"https://loinc.org/11493-4/\">11493-4</a></td><td style=\"color: #cccccc\">Hospital discharge studies summary Narrative</td></tr><tr><td><a href=\"https://loinc.org/11535-2/\">11535-2</a></td><td style=\"color: #cccccc\">Hospital discharge diagnosis note</td></tr><tr><td><a href=\"https://loinc.org/11537-8/\">11537-8</a></td><td style=\"color: #cccccc\">Surgical drains Narrative</td></tr><tr><td><a href=\"https://loinc.org/18776-5/\">18776-5</a></td><td style=\"color: #cccccc\">Plan of care note</td></tr><tr><td><a href=\"https://loinc.org/18841-7/\">18841-7</a></td><td style=\"color: #cccccc\">Hospital consultations Document</td></tr><tr><td><a href=\"https://loinc.org/29299-5/\">29299-5</a></td><td style=\"color: #cccccc\">Reason for visit Narrative</td></tr><tr><td><a href=\"https://loinc.org/29545-1/\">29545-1</a></td><td style=\"color: #cccccc\">Physical findings note</td></tr><tr><td><a href=\"https://loinc.org/29549-3/\">29549-3</a></td><td style=\"color: #cccccc\">Medication administered Narrative</td></tr><tr><td><a href=\"https://loinc.org/29554-3/\">29554-3</a></td><td style=\"color: #cccccc\">Procedure Narrative</td></tr><tr><td><a href=\"https://loinc.org/29762-2/\">29762-2</a></td><td style=\"color: #cccccc\">Social history note</td></tr><tr><td><a href=\"https://loinc.org/30954-2/\">30954-2</a></td><td style=\"color: #cccccc\">Relevant diagnostic tests/laboratory data note</td></tr><tr><td><a href=\"https://loinc.org/42344-2/\">42344-2</a></td><td style=\"color: #cccccc\">Discharge diet (narrative)</td></tr><tr><td><a href=\"https://loinc.org/42346-7/\">42346-7</a></td><td style=\"color: #cccccc\">Medications on admission (narrative)</td></tr><tr><td><a href=\"https://loinc.org/42348-3/\">42348-3</a></td><td style=\"color: #cccccc\">Advance healthcare directives</td></tr><tr><td><a href=\"https://loinc.org/42349-1/\">42349-1</a></td><td style=\"color: #cccccc\">Reason for referral (narrative)</td></tr><tr><td><a href=\"https://loinc.org/46240-8/\">46240-8</a></td><td style=\"color: #cccccc\">History of Hospitalizations+Outpatient visits Narrative</td></tr><tr><td><a href=\"https://loinc.org/46241-6/\">46241-6</a></td><td style=\"color: #cccccc\">Hospital admission diagnosis Narrative - Reported</td></tr><tr><td><a href=\"https://loinc.org/46264-8/\">46264-8</a></td><td style=\"color: #cccccc\">History of medical device use</td></tr><tr><td><a href=\"https://loinc.org/47420-5/\">47420-5</a></td><td style=\"color: #cccccc\">Functional status assessment note</td></tr><tr><td><a href=\"https://loinc.org/47519-4/\">47519-4</a></td><td style=\"color: #cccccc\">History of Procedures Document</td></tr><tr><td><a href=\"https://loinc.org/48765-2/\">48765-2</a></td><td style=\"color: #cccccc\">Allergies and adverse reactions Document</td></tr><tr><td><a href=\"https://loinc.org/48768-6/\">48768-6</a></td><td style=\"color: #cccccc\">Payment sources Document</td></tr><tr><td><a href=\"https://loinc.org/51848-0/\">51848-0</a></td><td style=\"color: #cccccc\">Evaluation note</td></tr><tr><td><a href=\"https://loinc.org/55109-3/\">55109-3</a></td><td style=\"color: #cccccc\">Complications Document</td></tr><tr><td><a href=\"https://loinc.org/55122-6/\">55122-6</a></td><td style=\"color: #cccccc\">Surgical operation note implants Narrative</td></tr><tr><td><a href=\"https://loinc.org/59768-2/\">59768-2</a></td><td style=\"color: #cccccc\">Procedure indications [Interpretation] Narrative</td></tr><tr><td><a href=\"https://loinc.org/59769-0/\">59769-0</a></td><td style=\"color: #cccccc\">Postprocedure diagnosis Narrative</td></tr><tr><td><a href=\"https://loinc.org/59770-8/\">59770-8</a></td><td style=\"color: #cccccc\">Procedure estimated blood loss Narrative</td></tr><tr><td><a href=\"https://loinc.org/59771-6/\">59771-6</a></td><td style=\"color: #cccccc\">Procedure implants Narrative</td></tr><tr><td><a href=\"https://loinc.org/59772-4/\">59772-4</a></td><td style=\"color: #cccccc\">Planned procedure Narrative</td></tr><tr><td><a href=\"https://loinc.org/59773-2/\">59773-2</a></td><td style=\"color: #cccccc\">Procedure specimens taken Narrative</td></tr><tr><td><a href=\"https://loinc.org/59775-7/\">59775-7</a></td><td style=\"color: #cccccc\">Procedure disposition Narrative</td></tr><tr><td><a href=\"https://loinc.org/59776-5/\">59776-5</a></td><td style=\"color: #cccccc\">Procedure findings Narrative</td></tr><tr><td><a href=\"https://loinc.org/61149-1/\">61149-1</a></td><td style=\"color: #cccccc\">Objective Narrative</td></tr><tr><td><a href=\"https://loinc.org/61150-9/\">61150-9</a></td><td style=\"color: #cccccc\">Subjective Narrative</td></tr><tr><td><a href=\"https://loinc.org/61150-9/\">61150-9</a></td><td style=\"color: #cccccc\">Subjective Narrative</td></tr><tr><td><a href=\"https://loinc.org/69730-0/\">69730-0</a></td><td style=\"color: #cccccc\">Instructions</td></tr><tr><td><a href=\"https://loinc.org/8648-8/\">8648-8</a></td><td style=\"color: #cccccc\">Hospital course note</td></tr><tr><td><a href=\"https://loinc.org/8653-8/\">8653-8</a></td><td style=\"color: #cccccc\">Hospital Discharge instructions</td></tr><tr><td><a href=\"https://loinc.org/8716-3/\">8716-3</a></td><td style=\"color: #cccccc\">Vital signs note</td></tr></table></li></ul></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "sd"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ValueSet/doc-section-codes"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/doc-section-codes>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.3.237" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.3.232" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.2.119" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "DocumentSectionCodes"] ; # 
+  fhir:title [ fhir:v "Document Section Codes"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Document section codes (LOINC codes used in CCDA sections)."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:copyright [ fhir:v "This content from LOINC® is copyright © 1995 Regenstrief Institute, Inc. and the LOINC Committee, and available at no cost under the license at http://loinc.org/terms-of-use."] ; # 
+  fhir:compose [
+     fhir:include ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:concept ( [
+         fhir:code [ fhir:v "10154-3" ]
+       ] [
+         fhir:code [ fhir:v "10157-6" ]
+       ] [
+         fhir:code [ fhir:v "10160-0" ]
+       ] [
+         fhir:code [ fhir:v "10164-2" ]
+       ] [
+         fhir:code [ fhir:v "10183-2" ]
+       ] [
+         fhir:code [ fhir:v "10184-0" ]
+       ] [
+         fhir:code [ fhir:v "10187-3" ]
+       ] [
+         fhir:code [ fhir:v "10210-3" ]
+       ] [
+         fhir:code [ fhir:v "10216-0" ]
+       ] [
+         fhir:code [ fhir:v "10218-6" ]
+       ] [
+         fhir:code [ fhir:v "10218-6" ]
+       ] [
+         fhir:code [ fhir:v "10223-6" ]
+       ] [
+         fhir:code [ fhir:v "10222-8" ]
+       ] [
+         fhir:code [ fhir:v "11329-0" ]
+       ] [
+         fhir:code [ fhir:v "11348-0" ]
+       ] [
+         fhir:code [ fhir:v "11369-6" ]
+       ] [
+         fhir:code [ fhir:v "57852-6" ]
+       ] [
+         fhir:code [ fhir:v "11493-4" ]
+       ] [
+         fhir:code [ fhir:v "11535-2" ]
+       ] [
+         fhir:code [ fhir:v "11537-8" ]
+       ] [
+         fhir:code [ fhir:v "18776-5" ]
+       ] [
+         fhir:code [ fhir:v "18841-7" ]
+       ] [
+         fhir:code [ fhir:v "29299-5" ]
+       ] [
+         fhir:code [ fhir:v "29545-1" ]
+       ] [
+         fhir:code [ fhir:v "29549-3" ]
+       ] [
+         fhir:code [ fhir:v "29554-3" ]
+       ] [
+         fhir:code [ fhir:v "29762-2" ]
+       ] [
+         fhir:code [ fhir:v "30954-2" ]
+       ] [
+         fhir:code [ fhir:v "42344-2" ]
+       ] [
+         fhir:code [ fhir:v "42346-7" ]
+       ] [
+         fhir:code [ fhir:v "42348-3" ]
+       ] [
+         fhir:code [ fhir:v "42349-1" ]
+       ] [
+         fhir:code [ fhir:v "46240-8" ]
+       ] [
+         fhir:code [ fhir:v "46241-6" ]
+       ] [
+         fhir:code [ fhir:v "46264-8" ]
+       ] [
+         fhir:code [ fhir:v "47420-5" ]
+       ] [
+         fhir:code [ fhir:v "47519-4" ]
+       ] [
+         fhir:code [ fhir:v "48765-2" ]
+       ] [
+         fhir:code [ fhir:v "48768-6" ]
+       ] [
+         fhir:code [ fhir:v "51848-0" ]
+       ] [
+         fhir:code [ fhir:v "55109-3" ]
+       ] [
+         fhir:code [ fhir:v "55122-6" ]
+       ] [
+         fhir:code [ fhir:v "59768-2" ]
+       ] [
+         fhir:code [ fhir:v "59769-0" ]
+       ] [
+         fhir:code [ fhir:v "59770-8" ]
+       ] [
+         fhir:code [ fhir:v "59771-6" ]
+       ] [
+         fhir:code [ fhir:v "59772-4" ]
+       ] [
+         fhir:code [ fhir:v "59773-2" ]
+       ] [
+         fhir:code [ fhir:v "59775-7" ]
+       ] [
+         fhir:code [ fhir:v "59776-5" ]
+       ] [
+         fhir:code [ fhir:v "61149-1" ]
+       ] [
+         fhir:code [ fhir:v "61150-9" ]
+       ] [
+         fhir:code [ fhir:v "61150-9" ]
+       ] [
+         fhir:code [ fhir:v "69730-0" ]
+       ] [
+         fhir:code [ fhir:v "8648-8" ]
+       ] [
+         fhir:code [ fhir:v "8653-8" ]
+       ] [
+         fhir:code [ fhir:v "8716-3" ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:expansion [] . # 
+
+# -------------------------------------------------------------------------------------
+

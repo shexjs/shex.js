@@ -1,0 +1,66 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# Authored by Joginder Madra
+
+<http://hl7.org/fhir/Immunization/historical> a fhir:Immunization ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "historical"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:1.3.6.1.4.1.21367.2005.3.7.1234" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:vaccineCode [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "urn:oid:1.2.36.1.2001.1005.17"^^xsd:anyURI ;
+         fhir:l <urn:oid:1.2.36.1.2001.1005.17>
+       ] ;
+       fhir:code [ fhir:v "GNFLU" ]
+     ] ) ;
+     fhir:text [ fhir:v "Influenza" ]
+  ] ; # 
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:occurrence [
+     a fhir:String ;
+     fhir:v "January 2012"
+  ] ; # 
+  fhir:primarySource [ fhir:v false] ; # 
+  fhir:informationSource [
+     fhir:concept [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/immunization-origin"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/immunization-origin>
+         ] ;
+         fhir:code [ fhir:v "record" ]
+       ] ) ;
+       fhir:text [ fhir:v "Written Record" ]
+     ]
+  ] ; # 
+  fhir:location [
+     fhir:l <http://hl7.org/fhir/Location/1> ;
+     fhir:reference [ fhir:v "Location/1" ]
+  ] ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "Notes on adminstration of a historical vaccine" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Location/1> a fhir:Location .
+
+# -------------------------------------------------------------------------------------
+

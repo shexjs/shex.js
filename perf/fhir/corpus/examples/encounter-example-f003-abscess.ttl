@@ -1,0 +1,134 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Encounter/f003> a fhir:Encounter ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f003"] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:system [
+       fhir:v "http://www.bmc.nl/zorgportal/identifiers/encounters"^^xsd:anyURI ;
+       fhir:l <http://www.bmc.nl/zorgportal/identifiers/encounters>
+     ] ;
+     fhir:value [ fhir:v "v6751" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:class ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+       ] ;
+       fhir:code [ fhir:v "AMB" ] ;
+       fhir:display [ fhir:v "ambulatory" ] # outpatient
+     ] )
+  ] ) ; # 
+  fhir:priority [
+     a sct:183496005 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "183496005" ] ;
+       fhir:display [ fhir:v "Non-urgent ear, nose and throat admission" ]
+     ] )
+  ] ; # 
+  fhir:type ( [
+     a sct:270427003 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "270427003" ] ;
+       fhir:display [ fhir:v "Patient-initiated encounter" ]
+     ] )
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/f001> ;
+     fhir:reference [ fhir:v "Patient/f001" ] ;
+     fhir:display [ fhir:v "P. van de Heuvel" ]
+  ] ; # 
+  fhir:serviceProvider [
+     fhir:l <http://hl7.org/fhir/Organization/f001> ;
+     fhir:reference [ fhir:v "Organization/f001" ]
+  ] ; # 
+  fhir:participant ( [
+     fhir:actor [
+       fhir:l <http://hl7.org/fhir/Practitioner/f001> ;
+       fhir:reference [ fhir:v "Practitioner/f001" ] ;
+       fhir:display [ fhir:v "E.M. van den Broek" ]
+     ]
+  ] ) ; # 
+  fhir:length [
+     fhir:value [ fhir:v "90"^^xsd:decimal ] ;
+     fhir:unit [ fhir:v "min" ] ;
+     fhir:system [
+       fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+       fhir:l <http://unitsofmeasure.org>
+     ] ;
+     fhir:code [ fhir:v "min" ]
+  ] ; # 
+  fhir:reason ( [
+     fhir:value ( [
+       fhir:concept [
+         a sct:18099001 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "18099001" ] ;
+           fhir:display [ fhir:v "Retropharyngeal abscess" ]
+         ] )
+       ]
+     ] )
+  ] ) ; # 
+  fhir:admission [
+     fhir:preAdmissionIdentifier [
+       fhir:use [ fhir:v "official" ] ;
+       fhir:system [
+         fhir:v "http://www.bmc.nl/zorgportal/identifiers/pre-admissions"^^xsd:anyURI ;
+         fhir:l <http://www.bmc.nl/zorgportal/identifiers/pre-admissions>
+       ] ;
+       fhir:value [ fhir:v "93042" ]
+     ] ;
+     fhir:admitSource [
+       a sct:305956004 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "305956004" ] ;
+         fhir:display [ fhir:v "Referral by physician" ]
+       ] )
+     ] ; # <preAdmissionTest>\n            <coding>\n                <system value=\"http:\/\/snomed.info\/sct\"\/>\n                <code value=\"168719007\"\/>\n                <display value=\"Neck soft tissue X-ray\"\/>\n            <\/coding>\n            <coding>\n                <system value=\"http:\/\/snomed.info\/sct\"\/>\n                <code value=\"396550006\"\/>\n                <display value=\"Blood test\"\/>\n            <\/coding>\n        <\/preAdmissionTest>
+     fhir:dischargeDisposition [
+       a sct:306689006 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "306689006" ] ;
+         fhir:display [ fhir:v "Discharge to home" ]
+       ] )
+     ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/f001> a fhir:Patient .
+
+<http://hl7.org/fhir/Organization/f001> a fhir:Organization .
+
+<http://hl7.org/fhir/Practitioner/f001> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

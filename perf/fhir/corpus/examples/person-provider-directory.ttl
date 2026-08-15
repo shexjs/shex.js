@@ -1,0 +1,74 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Person/pd> a fhir:Person ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "pd"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <table>\n        <tbody>\n          <tr>\n            <td>Name</td>\n            <td>\n              Harold <b>Hippocrates</b>\n            </td>\n          </tr>\n          <tr>\n            <td>Address</td>\n            <td>1003 Healthcare Drive, Northfield, MN</td>\n          </tr>\n        </tbody>\n      </table>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "444444444" ]
+  ] ) ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Hippocrates" ] ;
+     fhir:given ( [ fhir:v "Harold" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1003" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:birthDate [ fhir:v "1959-04-22"^^xsd:date] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1003 Healthcare Drive" ] ) ;
+     fhir:city [ fhir:v "Northfield" ] ;
+     fhir:state [ fhir:v "MN" ]
+  ] ) ; # 
+  fhir:managingOrganization [
+     fhir:l <http://www.northfield-regional.com/Organization/2> ;
+     fhir:reference [ fhir:v "http://www.northfield-regional.com/Organization/2" ] ;
+     fhir:display [ fhir:v "Northfield Regional Physician Directory" ]
+  ] ; # 
+  fhir:link ( [
+     fhir:target [
+       fhir:l <http://www.goodhealth.com/Practitioner/98574> ;
+       fhir:reference [ fhir:v "http://www.goodhealth.com/Practitioner/98574" ] ;
+       fhir:display [ fhir:v "Dr. Harold Hippocrates" ]
+     ] ;
+     fhir:assurance [ fhir:v "level2" ]
+  ] [
+     fhir:target [
+       fhir:l <http://www.acme-medical.com/Practitioner/ab34d> ;
+       fhir:reference [ fhir:v "http://www.acme-medical.com/Practitioner/ab34d" ] ;
+       fhir:display [ fhir:v "Harold Hippocrates, MD" ]
+     ] ;
+     fhir:assurance [ fhir:v "level2" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

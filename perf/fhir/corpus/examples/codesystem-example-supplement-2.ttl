@@ -1,0 +1,177 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/example-supplement-2> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-supplement-2"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p class=\"res-header-id\">\n        <b>Generated Narrative: CodeSystem example-supplement-2</b>\n      </p>\n      <a name=\"example-supplement-2\"> </a>\n      <a name=\"hcexample-supplement-2\"> </a>\n      <p>This code system supplement \n        <code>http://hl7.org/fhir/bundle-type-de</code> defines displays on the following codes:\n      </p>\n      <table class=\"codes\">\n        <tr>\n          <td style=\"white-space:nowrap\">\n            <b>Code</b>\n          </td>\n          <td>\n            <b>Deutsch (German, de)</b>\n          </td>\n        </tr>\n        <tr>\n          <td>\n            <a style=\"white-space:nowrap\" href=\"codesystem-bundle-type.html#bundle-type-document\">document</a>\n            <a name=\"example-supplement-2-document\"> </a>\n          </td>\n          <td>Dokument</td>\n        </tr>\n        <tr>\n          <td>\n            <a style=\"white-space:nowrap\" href=\"codesystem-bundle-type.html#bundle-type-message\">message</a>\n            <a name=\"example-supplement-2-message\"> </a>\n          </td>\n          <td>Nachricht</td>\n        </tr>\n        <tr>\n          <td>\n            <a style=\"white-space:nowrap\" href=\"codesystem-bundle-type.html#bundle-type-transaction\">transaction</a>\n            <a name=\"example-supplement-2-transaction\"> </a>\n          </td>\n          <td>Transaktion</td>\n        </tr>\n        <tr>\n          <td>\n            <a style=\"white-space:nowrap\" href=\"codesystem-bundle-type.html#bundle-type-transaction-response\">transaction-response</a>\n            <a name=\"example-supplement-2-transaction-response\"> </a>\n          </td>\n          <td>Transaktionsantwort</td>\n        </tr>\n        <tr>\n          <td>\n            <a style=\"white-space:nowrap\" href=\"codesystem-bundle-type.html#bundle-type-batch\">batch</a>\n            <a name=\"example-supplement-2-batch\"> </a>\n          </td>\n          <td>Stapel</td>\n        </tr>\n        <tr>\n          <td>\n            <a style=\"white-space:nowrap\" href=\"codesystem-bundle-type.html#bundle-type-batch-response\">batch-response</a>\n            <a name=\"example-supplement-2-batch-response\"> </a>\n          </td>\n          <td>Batch-Antwort</td>\n        </tr>\n        <tr>\n          <td>\n            <a style=\"white-space:nowrap\" href=\"codesystem-bundle-type.html#bundle-type-history\">history</a>\n            <a name=\"example-supplement-2-history\"> </a>\n          </td>\n          <td>Verlaufsliste</td>\n        </tr>\n        <tr>\n          <td>\n            <a style=\"white-space:nowrap\" href=\"codesystem-bundle-type.html#bundle-type-searchset\">searchset</a>\n            <a name=\"example-supplement-2-searchset\"> </a>\n          </td>\n          <td>Suchergebnisse</td>\n        </tr>\n        <tr>\n          <td>\n            <a style=\"white-space:nowrap\" href=\"codesystem-bundle-type.html#bundle-type-collection\">collection</a>\n            <a name=\"example-supplement-2-collection\"> </a>\n          </td>\n          <td>Sammlung</td>\n        </tr>\n      </table>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "vocab"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/bundle-type-de"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/bundle-type-de>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1822" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "BundleTypeGerman"] ; # 
+  fhir:title [ fhir:v "Bundle Type German"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2017-12-21T16:40:38+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Terminology Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/Vocab" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "German Translations for Bundle Type"] ; # 
+  fhir:copyright [ fhir:v "Creative Commons 0"] ; # 
+  fhir:content [ fhir:v "supplement"] ; # 
+  fhir:supplements [
+     fhir:v "http://hl7.org/fhir/bundle-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/bundle-type>
+  ] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "document" ] ;
+     fhir:designation ( [
+       fhir:language [ fhir:v "de" ] ;
+       fhir:use [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra>
+         ] ;
+         fhir:code [ fhir:v "preferredForLanguage" ]
+       ] ;
+       fhir:value [ fhir:v "Dokument" ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "message" ] ;
+     fhir:designation ( [
+       fhir:language [ fhir:v "de" ] ;
+       fhir:use [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra>
+         ] ;
+         fhir:code [ fhir:v "preferredForLanguage" ]
+       ] ;
+       fhir:value [ fhir:v "Nachricht" ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "transaction" ] ;
+     fhir:designation ( [
+       fhir:language [ fhir:v "de" ] ;
+       fhir:use [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra>
+         ] ;
+         fhir:code [ fhir:v "preferredForLanguage" ]
+       ] ;
+       fhir:value [ fhir:v "Transaktion" ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "transaction-response" ] ;
+     fhir:designation ( [
+       fhir:language [ fhir:v "de" ] ;
+       fhir:use [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra>
+         ] ;
+         fhir:code [ fhir:v "preferredForLanguage" ]
+       ] ;
+       fhir:value [ fhir:v "Transaktionsantwort" ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "batch" ] ;
+     fhir:designation ( [
+       fhir:language [ fhir:v "de" ] ;
+       fhir:use [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra>
+         ] ;
+         fhir:code [ fhir:v "preferredForLanguage" ]
+       ] ;
+       fhir:value [ fhir:v "Stapel" ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "batch-response" ] ;
+     fhir:designation ( [
+       fhir:language [ fhir:v "de" ] ;
+       fhir:use [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra>
+         ] ;
+         fhir:code [ fhir:v "preferredForLanguage" ]
+       ] ;
+       fhir:value [ fhir:v "Batch-Antwort" ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "history" ] ;
+     fhir:designation ( [
+       fhir:language [ fhir:v "de" ] ;
+       fhir:use [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra>
+         ] ;
+         fhir:code [ fhir:v "preferredForLanguage" ]
+       ] ;
+       fhir:value [ fhir:v "Verlaufsliste" ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "searchset" ] ;
+     fhir:designation ( [
+       fhir:language [ fhir:v "de" ] ;
+       fhir:use [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra>
+         ] ;
+         fhir:code [ fhir:v "preferredForLanguage" ]
+       ] ;
+       fhir:value [ fhir:v "Suchergebnisse" ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "collection" ] ;
+     fhir:designation ( [
+       fhir:language [ fhir:v "de" ] ;
+       fhir:use [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/hl7TermMaintInfra>
+         ] ;
+         fhir:code [ fhir:v "preferredForLanguage" ]
+       ] ;
+       fhir:value [ fhir:v "Sammlung" ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

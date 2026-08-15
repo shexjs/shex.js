@@ -1,0 +1,53 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/bundle-request-simplesummary> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "bundle-request-simplesummary"] ; # 
+  fhir:type [ fhir:v "batch"] ; # This bundle is a batch of reqests to the FHIR RESTful API
+#       This particuar batch requests a simple summary for a patient
+#       It includes the patient's basic demographics (via the Patient resource),
+#       conditions, medication statements and blood pressure readings since
+#       January 1, 2015
+  fhir:entry ( [
+     fhir:request [
+       fhir:method [ fhir:v "GET" ] ;
+       fhir:url [
+         fhir:v "/Patient/example"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir//Patient/example>
+       ]
+     ]
+  ] [
+     fhir:request [
+       fhir:method [ fhir:v "GET" ] ;
+       fhir:url [
+         fhir:v "/Condition?patient=example"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir//Condition?patient=example>
+       ]
+     ]
+  ] [
+     fhir:request [
+       fhir:method [ fhir:v "GET" ] ;
+       fhir:url [
+         fhir:v "/MedicationStatement?patient=example"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir//MedicationStatement?patient=example>
+       ]
+     ]
+  ] [
+     fhir:request [
+       fhir:method [ fhir:v "GET" ] ;
+       fhir:url [
+         fhir:v "/Observation?patient=example&code=http://loinc.org|55284-4&date=ge2015-01-01"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir//Observation?patient=example&code=http://loinc.org&version=55284-4&date=ge2015-01-01>
+       ]
+     ]
+  ] ) . # Each entry is used to represent a RESTful API request
+#       This request retrieves a single Patient resource
+
+# -------------------------------------------------------------------------------------
+

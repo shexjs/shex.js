@@ -1,0 +1,95 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# Insulin pump request
+
+<http://hl7.org/fhir/DeviceRequest/insulinpump> a fhir:DeviceRequest ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "insulinpump"] ; # 
+  fhir:identifier ( [
+     fhir:value [ fhir:v "ip_request1.1" ]
+  ] ) ; # <extension url="http://hl7.org/fhir/StructureDefinition/bodysitecode">
+#  <valueCodeableConcept>
+#    <coding>
+#      <system value="http://snomed.info/sct"/>
+#      <code value="51185008"/>
+#      <display value="Thoracic structure"/>
+#    </coding>
+#  </valueCodeableConcept>
+#</extension>
+  fhir:basedOn ( [
+     fhir:display [ fhir:v "Homecare - DM follow-up" ]
+  ] ) ; # 
+  fhir:replaces ( [
+     fhir:display [ fhir:v "CGM ambulatory" ]
+  ] ) ; # 
+  fhir:groupIdentifier [
+     fhir:value [ fhir:v "ip_request1" ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "instance-order"] ; # 
+  fhir:priority [ fhir:v "routine"] ; # 
+  fhir:product [
+     a fhir:CodeableConcept, loinc:43148-6 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "43148-6" ]
+     ] ) ;
+     fhir:text [ fhir:v "Insulin delivery device panel" ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/dicom> ;
+     fhir:reference [ fhir:v "Patient/dicom" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:display [ fhir:v "Encounter 1" ]
+  ] ; # 
+  fhir:occurrence [
+     a fhir:DateTime ;
+     fhir:v "2013-05-08T09:33:27+07:00"^^xsd:dateTime
+  ] ; # 
+  fhir:authoredOn [ fhir:v "2013-05-08T09:33:27+07:00"^^xsd:dateTime] ; # 
+  fhir:requester [
+     fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+     fhir:reference [ fhir:v "Practitioner/example" ] ;
+     fhir:display [ fhir:v "Dr. Adam Careful" ]
+  ] ; # 
+  fhir:performer [
+     fhir:reference [
+       fhir:display [ fhir:v "Nurse Rossignol" ]
+     ]
+  ] ; # 
+  fhir:reason ( [
+     fhir:concept [
+       fhir:text [ fhir:v "gastroparesis" ]
+     ]
+  ] [
+     fhir:reference [
+       fhir:display [ fhir:v "Gastroparesis" ]
+     ]
+  ] ) ; # 
+  fhir:supportingInfo ( [
+     fhir:display [ fhir:v "Previous results" ]
+  ] ) ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "this is the right device brand and model" ]
+  ] ) ; # 
+  fhir:relevantHistory ( [
+     fhir:display [ fhir:v "Request for unspecified device" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/dicom> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

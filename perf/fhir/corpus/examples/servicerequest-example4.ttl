@@ -1,0 +1,52 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ServiceRequest/benchpress> a fhir:ServiceRequest ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "benchpress"] ; # 
+  fhir:status [ fhir:v "active"] ; # Showing part of an excercise plan
+  fhir:intent [ fhir:v "plan"] ; # 
+  fhir:code [
+     fhir:concept [
+       a sct:229115003 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "229115003" ] ;
+         fhir:display [ fhir:v "Bench Press (regime/therapy)" ]
+       ] )
+     ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:occurrence [
+     a fhir:Timing ;
+     fhir:repeat [
+       fhir:count [ fhir:v "20"^^xsd:positiveInteger ] ;
+       fhir:countMax [ fhir:v "30"^^xsd:positiveInteger ] ;
+       fhir:frequency [ fhir:v "3"^^xsd:positiveInteger ] ;
+       fhir:period [ fhir:v "1"^^xsd:decimal ] ;
+       fhir:periodUnit [ fhir:v "wk" ]
+     ]
+  ] ; # 
+  fhir:patientInstruction ( [
+     fhir:instruction [
+       a fhir:Markdown ;
+       fhir:v "Start with 30kg 10-15 repetitions for three sets and increase in increments of 5kg when you feel ready"
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

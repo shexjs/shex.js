@@ -1,0 +1,113 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ValueSet/group-characteristic-combination> a fhir:ValueSet ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "group-characteristic-combination"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "extensions" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: ValueSet group-characteristic-combination</b></p><a name=\"group-characteristic-combination\"> </a><a name=\"hcgroup-characteristic-combination\"> </a><ul><li>Include these codes as defined in <a href=\"codesystem-group-characteristic-combination.html\"><code>http://hl7.org/fhir/group-characteristic-combination</code></a><span title=\"Version is not explicitly stated, which means it is fixed to the version provided in this specification\"> version ?6.0.0-ballot4</span><table class=\"none\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td><a href=\"codesystem-group-characteristic-combination.html#group-characteristic-combination-all-of\">all-of</a></td><td>All of</td><td>Combine characteristics with AND.</td></tr><tr><td><a href=\"codesystem-group-characteristic-combination.html#group-characteristic-combination-any-of\">any-of</a></td><td>Any of</td><td>Combine characteristics with OR.</td></tr><tr><td><a href=\"codesystem-group-characteristic-combination.html#group-characteristic-combination-at-least\">at-least</a></td><td>At least</td><td>Meet at least the threshold number of characteristics for definition.</td></tr><tr><td><a href=\"codesystem-group-characteristic-combination.html#group-characteristic-combination-at-most\">at-most</a></td><td>At most</td><td>Meet at most the threshold number of characteristics for definition.</td></tr><tr><td><a href=\"codesystem-group-characteristic-combination.html#group-characteristic-combination-except-subset\">except-subset</a></td><td>Except subset</td><td>Meet the inclusion criteria under the condition that the basis does not match the exclusion criteria.</td></tr></table></li></ul></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 3
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ValueSet/group-characteristic-combination"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/group-characteristic-combination>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.3.1344" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "GroupCharacteristicCombination"] ; # 
+  fhir:title [ fhir:v "Group Characteristic Combination"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2023-10-02T17:55:11+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Logical grouping of characteristics for the Group Resource."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:immutable [ fhir:v true] ; # 
+  fhir:compose [
+     fhir:include ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/group-characteristic-combination"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/group-characteristic-combination>
+       ] ;
+       fhir:concept ( [
+         fhir:code [ fhir:v "all-of" ] ;
+         fhir:display [ fhir:v "All of" ]
+       ] [
+         fhir:code [ fhir:v "any-of" ] ;
+         fhir:display [ fhir:v "Any of" ]
+       ] [
+         fhir:code [ fhir:v "at-least" ] ;
+         fhir:display [ fhir:v "At least" ]
+       ] [
+         fhir:code [ fhir:v "at-most" ] ;
+         fhir:display [ fhir:v "At most" ]
+       ] [
+         fhir:code [ fhir:v "except-subset" ] ;
+         fhir:display [ fhir:v "Except subset" ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:expansion [] . # 
+
+# -------------------------------------------------------------------------------------
+

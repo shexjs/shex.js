@@ -1,0 +1,77 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/MedicinalProductDefinition/equilidem-basics> a fhir:MedicinalProductDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "equilidem-basics"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n			<p>\n				<b>\n					Generated Narrative\n				</b>\n			</p>\n			<p>\n				<b>\n					Id\n				</b>\n				: equilidem-basics\n			</p>\n			<p>\n				<b>\n					Identifier\n				</b>\n				: Equilidem25\n			</p>\n			<p>\n				<b>\n					Combined Pharmaceutical Dose Form\n				</b>\n				:\n				<span title=\"Codes: {http://example.org.uk/fhir/dosefom tablet}\">\n					tablet\n				</span>\n			</p>\n			<p>\n				<b>\n					Indication\n				</b>\n				: Prevention of venous thromboembolic events (VTE) in adult patients who have undergone elective hip or knee replacement surgery. Prevention of stroke and systemic embolism in adult patients with non-valvular atrial fibrillation (NVAF), with one or more risk factors, such as prior stroke or transient ischaemic attack (TIA); age ≥ 75 years; hypertension; diabetes mellitus; symptomatic heart failure (NYHA Class &gt;= II). Treatment of deep vein thrombosis (DVT) and pulmonary embolism (PE), and prevention of recurrent DVT and PE in adults.\n			</p>\n			<p>\n				<b>\n					Legal Status Of Supply\n				</b>\n				:\n				<span title=\"Codes: {http://example.org.uk/fhir/legalstatusofsupply POM}\">\n					Prescription only medicine\n				</span>\n			</p>\n			<p>\n				<b>\n					Classification\n				</b>\n				:\n				<span title=\"Codes: {http://www.whocc.no/atc/example B01A}\">\n					ATC: B01A\n				</span>\n			</p>\n			<p>\n				<b>\n					Ingredient\n				</b>\n				:\n			</p>\n			<ul>\n				<li>\n					<span>\n						Equilidonium Phosphate\n					</span>\n				</li>\n				<li>\n					<span>\n						Calcium Carbonate\n					</span>\n				</li>\n			</ul>\n			<h3>\n				Names\n			</h3>\n			<table class=\"grid\">\n				<tr>\n					<td>\n						-\n					</td>\n					<td>\n						<b>\n							Product Name\n						</b>\n					</td>\n				</tr>\n				<tr>\n					<td>\n						*\n					</td>\n					<td>\n						Equilidem 2.5 mg film-coated tablets\n					</td>\n				</tr>\n			</table>\n			<h3>\n				Cross References\n			</h3>\n			<table class=\"grid\">\n				<tr>\n					<td>\n						-\n					</td>\n					<td>\n						<b>\n							Product\n						</b>\n					</td>\n				</tr>\n				<tr>\n					<td>\n						*\n					</td>\n					<td>\n						Link to generic equivalent\n					</td>\n				</tr>\n			</table>\n			<h3>\n				Manufacturing/Business Operations\n			</h3>\n			<table class=\"grid\">\n				<tr>\n					<td>\n						-\n					</td>\n					<td>\n						<b>\n							Manufacturer\n						</b>\n					</td>\n				</tr>\n				<tr>\n					<td>\n						*\n					</td>\n					<td>\n						<span>\n							EquiliDrugCo Inc.\n						</span>\n					</td>\n				</tr>\n			</table>\n		</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://example.org.uk/fhir/product"^^xsd:anyURI ;
+       fhir:l <http://example.org.uk/fhir/product>
+     ] ;
+     fhir:value [ fhir:v "Equilidem25" ]
+  ] ) ; # 
+  fhir:combinedPharmaceuticalDoseForm [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.org.uk/fhir/dosefom"^^xsd:anyURI ;
+         fhir:l <http://example.org.uk/fhir/dosefom>
+       ] ;
+       fhir:code [ fhir:v "tablet" ]
+     ] )
+  ] ; # 
+  fhir:indication [ fhir:v "Prevention of venous thromboembolic events (VTE) in adult patients who have undergone elective hip or knee replacement surgery. Prevention of stroke and systemic embolism in adult patients with non-valvular atrial fibrillation (NVAF), with one or more risk factors, such as prior stroke or transient ischaemic attack (TIA); age ≥ 75 years; hypertension; diabetes mellitus; symptomatic heart failure (NYHA Class >= II). Treatment of deep vein thrombosis (DVT) and pulmonary embolism (PE), and prevention of recurrent DVT and PE in adults."] ; # 
+  fhir:legalStatusOfSupply [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.org.uk/fhir/legalstatusofsupply"^^xsd:anyURI ;
+         fhir:l <http://example.org.uk/fhir/legalstatusofsupply>
+       ] ;
+       fhir:code [ fhir:v "POM" ] ;
+       fhir:display [ fhir:v "Prescription only medicine" ]
+     ] )
+  ] ; # 
+  fhir:classification ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://www.whocc.no/atc/example"^^xsd:anyURI ;
+         fhir:l <http://www.whocc.no/atc/example>
+       ] ;
+       fhir:code [ fhir:v "B01A" ]
+     ] )
+  ] ) ; # 
+  fhir:ingredient ( [
+     fhir:text [ fhir:v "Equilidonium Phosphate" ]
+  ] [
+     fhir:text [ fhir:v "Calcium Carbonate" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:productName [ fhir:v "Equilidem 2.5 mg film-coated tablets" ]
+  ] ) ; # 
+  fhir:crossReference ( [
+     fhir:product [
+       fhir:reference [
+         fhir:l <http://hl7.org/fhir/MedicinalProductDefinition/genericEquilidonium> ;
+         fhir:reference [ fhir:v "MedicinalProductDefinition/genericEquilidonium" ]
+       ]
+     ]
+  ] ) ; # 
+  fhir:operation ( [
+     fhir:organization ( [
+       fhir:display [ fhir:v "EquiliDrugCo Inc." ]
+     ] ) # licence holder would use RegulatedAuthorization
+  ] ) . # 
+
+<http://hl7.org/fhir/MedicinalProductDefinition/genericEquilidonium> a fhir:MedicinalProductDefinition .
+
+# -------------------------------------------------------------------------------------
+

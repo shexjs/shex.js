@@ -1,0 +1,39 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Patient/merge-subsumed> a fhir:Patient ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "merge-subsumed"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://example.org/mrn"^^xsd:anyURI ;
+       fhir:l <http://example.org/mrn>
+     ] ;
+     fhir:value [ fhir:v "MRN-002" ]
+  ] [
+     fhir:system [
+       fhir:v "http://example.org/ssn"^^xsd:anyURI ;
+       fhir:l <http://example.org/ssn>
+     ] ;
+     fhir:value [ fhir:v "666-99-9999" ]
+  ] ) ; # 
+  fhir:active [ fhir:v false] ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:family [ fhir:v "Smith" ] ;
+     fhir:given ( [ fhir:v "Janie" ] )
+  ] ) ; # 
+  fhir:address ( [
+     fhir:line ( [ fhir:v "123 Main St" ] ) ;
+     fhir:city [ fhir:v "Anytown" ] ;
+     fhir:state [ fhir:v "NY" ] ;
+     fhir:postalCode [ fhir:v "12345" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

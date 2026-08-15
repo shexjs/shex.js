@@ -1,0 +1,102 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Library/composition-example> a fhir:Library ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "composition-example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Example of a library used as a composition of other artifacts.\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:system [
+       fhir:v "http://example.org"^^xsd:anyURI ;
+       fhir:l <http://example.org>
+     ] ;
+     fhir:value [ fhir:v "Zika Artifacts" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "1.0.0"] ; # 
+  fhir:name [ fhir:v "ZikaArtifacts"] ; # 
+  fhir:title [ fhir:v "Zika Artifacts"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:code [ fhir:v "asset-collection" ]
+     ] )
+  ] ; # 
+  fhir:date [ fhir:v "2017-03-10"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Decision Support"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/dss" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Artifacts required for implementation of Zika Virus Management"] ; # 
+  fhir:topic ( [
+     fhir:text [ fhir:v "Zika Virus Management" ]
+  ] ) ; # 
+  fhir:relatedArtifact ( [
+     fhir:type [ fhir:v "composed-of" ] ;
+     fhir:resource [
+       fhir:v "http://example.org/fhir/ActivityDefinition/administer-zika-virus-exposure-assessment"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/ActivityDefinition/administer-zika-virus-exposure-assessment>
+     ]
+  ] [
+     fhir:type [ fhir:v "composed-of" ] ;
+     fhir:resource [
+       fhir:v "http://example.org/fhir/ActivityDefinition/order-serum-zika-dengue-virus-igm"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/ActivityDefinition/order-serum-zika-dengue-virus-igm>
+     ]
+  ] [
+     fhir:type [ fhir:v "composed-of" ] ;
+     fhir:resource [
+       fhir:v "http://example.org/fhir/ActivityDefinition/provide-mosquito-prevention-advice"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/ActivityDefinition/provide-mosquito-prevention-advice>
+     ]
+  ] [
+     fhir:type [ fhir:v "composed-of" ] ;
+     fhir:resource [
+       fhir:v "http://example.org/fhir/Library/zika-virus-intervention-logic"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Library/zika-virus-intervention-logic>
+     ]
+  ] [
+     fhir:type [ fhir:v "composed-of" ] ;
+     fhir:resource [
+       fhir:v "http://example.org/fhir/PlanDefinition/zika-virus-intervention"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/PlanDefinition/zika-virus-intervention>
+     ]
+  ] [
+     fhir:type [ fhir:v "composed-of" ] ;
+     fhir:resource [
+       fhir:v "http://hl7.org/fhir/Questionnaire/zika-virus-exposure-assessment"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Questionnaire/zika-virus-exposure-assessment>
+     ]
+  ] [
+     fhir:type [ fhir:v "derived-from" ] ;
+     fhir:document [
+       fhir:url [
+         fhir:v "https://www.cdc.gov/mmwr/volumes/65/wr/mm6539e1.htm?s_cid=mm6539e1_w"^^xsd:anyURI ;
+         fhir:l <https://www.cdc.gov/mmwr/volumes/65/wr/mm6539e1.htm?s_cid=mm6539e1_w>
+       ]
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

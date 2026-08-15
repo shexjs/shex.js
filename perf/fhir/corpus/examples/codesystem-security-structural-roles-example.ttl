@@ -1,0 +1,146 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/security-structural-roles-example> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "security-structural-roles-example"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem security-structural-roles-example</b></p><a name=\"security-structural-roles-example\"> </a><a name=\"hcsecurity-structural-roles-example\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/security-structural-roles-example</code> defines the following codes in a Is-A hierarchy:</p><table class=\"codes\"><tr><td><b>Lvl</b></td><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td>1</td><td style=\"white-space:nowrap\">regulated-health-professionals<a name=\"security-structural-roles-example-regulated-health-professionals\"> </a></td><td>Regulated Health Professionals</td><td>A person who is authorized by a national recognized body to be qualified to perform health services</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  general-medicine<a name=\"security-structural-roles-example-general-medicine\"> </a></td><td>General Medicine</td><td>The branch of medicine involving the study and treatment of general diseases or those affecting the internal parts of the body, especially those not usually requiring surgical intervention</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  general-nursing<a name=\"security-structural-roles-example-general-nursing\"> </a></td><td>General Nursing</td><td>The branch of healthcare concerned with caring for the sick or injured in any environment.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  dentist<a name=\"security-structural-roles-example-dentist\"> </a></td><td>Dentist</td><td>The specialty relating to the function and diseases of the teeth, mouth, and gums.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  veterinarian<a name=\"security-structural-roles-example-veterinarian\"> </a></td><td>Veterinarian</td><td>The specialty relating to non-human subjects.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  pharmacy<a name=\"security-structural-roles-example-pharmacy\"> </a></td><td>Pharmacy</td><td>The branch of medical science that deals with drugs and their uses.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  dietician<a name=\"security-structural-roles-example-dietician\"> </a></td><td>Dietician</td><td>The health profession concerned with the practical application of diet in the prophylaxis and treatment of disease.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  pediatrics<a name=\"security-structural-roles-example-pediatrics\"> </a></td><td>Pediatrics</td><td>The medical specialty concerned with the study of treatment of children in health and disease during development from birth through adolescence.</td></tr><tr><td>1</td><td style=\"white-space:nowrap\">non-regulated-health-professionals<a name=\"security-structural-roles-example-non-regulated-health-professionals\"> </a></td><td>Non-Regulated health Professionals</td><td>person employed by a healthcare organization who is not a health professional</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  receptionist<a name=\"security-structural-roles-example-receptionist\"> </a></td><td>Receptionist</td><td>Medical receptionists are professionals who are responsible for coordinating the daily administration of doctors, staff, visitors, and patinets at a healthcare facility.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  business-manager<a name=\"security-structural-roles-example-business-manager\"> </a></td><td>Business Manager</td><td>Medical and health services managers plan, direct, and coordinate the business activities of healthcare providers.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  transcriptionist<a name=\"security-structural-roles-example-transcriptionist\"> </a></td><td>Transcriptionist</td><td>A medical transcriptionist listens to medical notes from health care professionals and accurately transcribes those audio recordings into written medical documents used for a variety of purposes.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  claims-adjudicator<a name=\"security-structural-roles-example-claims-adjudicator\"> </a></td><td>Claims Adjudicator</td><td>A medical Claims Adjudicator executes the process by which insurance companies review healthcare claims and decide whether they will pay the claim in full, pay a partial amount, or deny the claim altogether.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "sec"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 6
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/security-structural-roles-example"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/security-structural-roles-example>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1800" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "SecurityStructuralRolesExamples"] ; # 
+  fhir:title [ fhir:v "Example Codes for Security Structural Role"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2025-11-01"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Security"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/secure" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "This codeSystem contains example structural roles. In general, two types of roles can be distinguished: structural roles and functional roles. Structural Roles reflect human or organizational categories (hierarchies), and describe prerequisites, feasibilities, or competences for actions. Functional roles are bound to the realization or performance of actions.."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:copyright [ fhir:v "This is an example set."] ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:hierarchyMeaning [ fhir:v "is-a"] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "regulated-health-professionals" ] ;
+     fhir:display [ fhir:v "Regulated Health Professionals" ] ;
+     fhir:definition [ fhir:v "A person who is authorized by a national recognized body to be qualified to perform health services" ] ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "general-medicine" ] ;
+       fhir:display [ fhir:v "General Medicine" ] ;
+       fhir:definition [ fhir:v "The branch of medicine involving the study and treatment of general diseases or those affecting the internal parts of the body, especially those not usually requiring surgical intervention" ]
+     ] [
+       fhir:code [ fhir:v "general-nursing" ] ;
+       fhir:display [ fhir:v "General Nursing" ] ;
+       fhir:definition [ fhir:v "The branch of healthcare concerned with caring for the sick or injured in any environment." ]
+     ] [
+       fhir:code [ fhir:v "dentist" ] ;
+       fhir:display [ fhir:v "Dentist" ] ;
+       fhir:definition [ fhir:v "The specialty relating to the function and diseases of the teeth, mouth, and gums." ]
+     ] [
+       fhir:code [ fhir:v "veterinarian" ] ;
+       fhir:display [ fhir:v "Veterinarian" ] ;
+       fhir:definition [ fhir:v "The specialty relating to non-human subjects." ]
+     ] [
+       fhir:code [ fhir:v "pharmacy" ] ;
+       fhir:display [ fhir:v "Pharmacy" ] ;
+       fhir:definition [ fhir:v "The branch of medical science that deals with drugs and their uses." ]
+     ] [
+       fhir:code [ fhir:v "dietician" ] ;
+       fhir:display [ fhir:v "Dietician" ] ;
+       fhir:definition [ fhir:v "The health profession concerned with the practical application of diet in the prophylaxis and treatment of disease." ]
+     ] [
+       fhir:code [ fhir:v "pediatrics" ] ;
+       fhir:display [ fhir:v "Pediatrics" ] ;
+       fhir:definition [ fhir:v "The medical specialty concerned with the study of treatment of children in health and disease during development from birth through adolescence." ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "non-regulated-health-professionals" ] ;
+     fhir:display [ fhir:v "Non-Regulated health Professionals" ] ;
+     fhir:definition [ fhir:v "person employed by a healthcare organization who is not a health professional" ] ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "receptionist" ] ;
+       fhir:display [ fhir:v "Receptionist" ] ;
+       fhir:definition [ fhir:v "Medical receptionists are professionals who are responsible for coordinating the daily administration of doctors, staff, visitors, and patinets at a healthcare facility." ]
+     ] [
+       fhir:code [ fhir:v "business-manager" ] ;
+       fhir:display [ fhir:v "Business Manager" ] ;
+       fhir:definition [ fhir:v "Medical and health services managers plan, direct, and coordinate the business activities of healthcare providers." ]
+     ] [
+       fhir:code [ fhir:v "transcriptionist" ] ;
+       fhir:display [ fhir:v "Transcriptionist" ] ;
+       fhir:definition [ fhir:v "A medical transcriptionist listens to medical notes from health care professionals and accurately transcribes those audio recordings into written medical documents used for a variety of purposes." ]
+     ] [
+       fhir:code [ fhir:v "claims-adjudicator" ] ;
+       fhir:display [ fhir:v "Claims Adjudicator" ] ;
+       fhir:definition [ fhir:v "A medical Claims Adjudicator executes the process by which insurance companies review healthcare claims and decide whether they will pay the claim in full, pay a partial amount, or deny the claim altogether." ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

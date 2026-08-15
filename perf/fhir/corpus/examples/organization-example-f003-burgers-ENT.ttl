@@ -1,0 +1,59 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Organization/f003> a fhir:Organization ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f003"] ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:type ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/organization-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/organization-type>
+       ] ;
+       fhir:code [ fhir:v "dept" ] ;
+       fhir:display [ fhir:v "Hospital Department" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "Burgers UMC Ear,Nose,Throat unit"] ; # 
+  fhir:contact ( [
+     fhir:purpose [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/contactentity-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/contactentity-type>
+         ] ;
+         fhir:code [ fhir:v "ADMIN" ]
+       ] )
+     ] ;
+     fhir:name ( [
+       fhir:text [ fhir:v "mr. F. de Hond" ]
+     ] ) ;
+     fhir:telecom ( [
+       fhir:system [ fhir:v "phone" ] ;
+       fhir:value [ fhir:v "022-655 7654" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "KNO@burgersumc.nl" ]
+     ] [
+       fhir:system [ fhir:v "fax" ] ;
+       fhir:value [ fhir:v "022-655 0998" ]
+     ] ) ;
+     fhir:address [
+       fhir:line ( [ fhir:v "West Wing, floor 5" ] )
+     ]
+  ] ) ; # 
+  fhir:partOf [
+     fhir:l <http://hl7.org/fhir/Organization/f001> ;
+     fhir:reference [ fhir:v "Organization/f001" ]
+  ] . # 
+
+<http://hl7.org/fhir/Organization/f001> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,198 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ServiceRequest/physiotherapy> a fhir:ServiceRequest ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "physiotherapy"] ; # 
+  fhir:contained ( [
+     a fhir:Provenance ;
+     fhir:id [ fhir:v "signature" ] ;
+     fhir:target ( [
+       fhir:l <http://hl7.org/fhir/ServiceRequest/physiotherapy/_history/1> ;
+       fhir:reference [ fhir:v "ServiceRequest/physiotherapy/_history/1" ]
+     ] ) ;
+     fhir:recorded [ fhir:v "2017-02-01T17:23:07Z"^^xsd:dateTime ] ;
+     fhir:agent ( [
+       fhir:role ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationType"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationType>
+           ] ;
+           fhir:code [ fhir:v "AUT" ]
+         ] )
+       ] ) ;
+       fhir:who [
+         fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+         fhir:reference [ fhir:v "Practitioner/example" ] ;
+         fhir:display [ fhir:v "Dr Adam Careful" ]
+       ]
+     ] ) ;
+     fhir:signature ( [
+       fhir:type ( [
+         fhir:system [
+           fhir:v "urn:iso-astm:E1762-95:2013"^^xsd:anyURI ;
+           fhir:l <urn:iso-astm:E1762-95:2013>
+         ] ;
+         fhir:code [ fhir:v "1.2.840.10065.1.12.1.1" ] ;
+         fhir:display [ fhir:v "Author's Signature" ]
+       ] ) ;
+       fhir:when [ fhir:v "2017-02-01T17:23:07Z"^^xsd:dateTime ] ;
+       fhir:who [
+         fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+         fhir:reference [ fhir:v "Practitioner/example" ] ;
+         fhir:display [ fhir:v "Dr Adam Careful" ]
+       ] ;
+       fhir:targetFormat [ fhir:v "application/fhir+xml" ] ;
+       fhir:sigFormat [ fhir:v "application/signature+xml" ] ;
+       fhir:data [ fhir:v "dGhpcyBibG9iIGlzIHNuaXBwZWQ="^^xsd:base64Binary ]
+     ] )
+  ] [
+     a fhir:Condition ;
+     fhir:id [ fhir:v "cystic-fibrosis" ] ;
+     fhir:clinicalStatus [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/condition-clinical"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/condition-clinical>
+         ] ;
+         fhir:code [ fhir:v "active" ]
+       ] )
+     ] ;
+     fhir:verificationStatus [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/condition-ver-status"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/condition-ver-status>
+         ] ;
+         fhir:code [ fhir:v "confirmed" ]
+       ] )
+     ] ;
+     fhir:category ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/condition-category"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/condition-category>
+         ] ;
+         fhir:code [ fhir:v "problem-list-item" ] ;
+         fhir:display [ fhir:v "Problem List Item" ]
+       ] )
+     ] ) ;
+     fhir:severity [
+       a sct:255604002 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "255604002" ] ;
+         fhir:display [ fhir:v "Mild" ]
+       ] )
+     ] ;
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/sid/icd-10-cm"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/sid/icd-10-cm>
+         ] ;
+         fhir:code [ fhir:v "E84.0" ] ;
+         fhir:display [ fhir:v "Cystic fibrosis with pulmonary manifestations" ]
+       ] ) ;
+       fhir:text [ fhir:v "Cystic Fibrosis" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/example> ;
+       fhir:reference [ fhir:v "Patient/example" ]
+     ] ;
+     fhir:onset [
+       a fhir:DateTime ;
+       fhir:v "2012-11-12"^^xsd:date
+     ]
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "PLAC" ] ;
+         fhir:display [ fhir:v "Placer Identifier" ]
+       ] ) ;
+       fhir:text [ fhir:v "Placer" ]
+     ] ;
+     fhir:system [
+       fhir:v "http://goodhealth.org/placer-ids"^^xsd:anyURI ;
+       fhir:l <http://goodhealth.org/placer-ids>
+     ] ;
+     fhir:value [ fhir:v "20170201-0001" ]
+  ] ) ; # 
+  fhir:basedOn ( [
+     fhir:l <http://hl7.org/fhir/CarePlan/gpvisit> ;
+     fhir:reference [ fhir:v "CarePlan/gpvisit" ]
+  ] ) ; # example to show how a CarePlan can be referenced from a request
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:code [
+     fhir:concept [
+       a sct:34431008 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "34431008" ] ;
+         fhir:display [ fhir:v "Physiotherapy of chest (regime/therapy)" ]
+       ] )
+     ]
+  ] ; # Physiotherapy or home excercises would be a common use case for as needed. E.g. exercises for cystic fibrosis - "Chest therapy 1-4 times per day as needed to clear mucus"
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:occurrence [
+     a fhir:Timing ;
+     fhir:repeat [
+       fhir:duration [ fhir:v "15"^^xsd:decimal ] ;
+       fhir:durationMax [ fhir:v "25"^^xsd:decimal ] ;
+       fhir:durationUnit [ fhir:v "min" ] ;
+       fhir:frequency [ fhir:v "1"^^xsd:positiveInteger ] ;
+       fhir:frequencyMax [ fhir:v "4"^^xsd:positiveInteger ] ;
+       fhir:period [ fhir:v "1"^^xsd:decimal ] ;
+       fhir:periodUnit [ fhir:v "d" ]
+     ]
+  ] ; # 
+  fhir:authoredOn [ fhir:v "2017-02-01T17:23:07Z"^^xsd:dateTime] ; # TimeStamp when order authorized
+  fhir:requester [
+     fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+     fhir:reference [ fhir:v "Practitioner/example" ] ;
+     fhir:display [ fhir:v "Dr Adam Careful" ]
+  ] ; # 
+  fhir:reason ( [
+     fhir:reference [
+       fhir:l <#cystic-fibrosis> ;
+       fhir:reference [ fhir:v "#cystic-fibrosis" ]
+     ]
+  ] ) ; # demonstrating in this example the reason reference element using a contained resource for the purpose of this example only typically would reference an external resource
+  fhir:relevantHistory ( [
+     fhir:l <#signature> ;
+     fhir:reference [ fhir:v "#signature" ] ;
+     fhir:display [ fhir:v "Author's Signature" ]
+  ] ) . # demonstrating in this example the relevant history element using a contained resource for the purpose of this example only typically would reference an external resource
+
+<http://hl7.org/fhir/ServiceRequest/physiotherapy/_history/1> a fhir:ServiceRequest .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/CarePlan/gpvisit> a fhir:CarePlan .
+
+# -------------------------------------------------------------------------------------
+

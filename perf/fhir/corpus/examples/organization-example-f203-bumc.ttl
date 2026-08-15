@@ -1,0 +1,70 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Organization/f203> a fhir:Organization ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f203"] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ; # Identifier for the BMC
+     fhir:type [
+       fhir:text [ fhir:v "Zorginstelling naam" ]
+     ] ;
+     fhir:system [
+       fhir:v "http://www.zorgkaartnederland.nl/"^^xsd:anyURI ;
+       fhir:l <http://www.zorgkaartnederland.nl/>
+     ] ;
+     fhir:value [ fhir:v "Blijdorp MC" ]
+  ] ) ; # 
+  fhir:active [ fhir:v true] ; # <accreditation>
+#      <!-\-NIAZ Accreditatie-\->
+#      <identifier>
+#         <!-\-Identifier for the accreditation -\->
+#         <system value="http://www.niaz.nl/"/>
+#         <value value="NIAZ accreditation"/>
+#      </identifier>
+#      <period>
+#         <start value="2008-11-07"/>
+#         <end value="2013-11-07"/>
+#      </period>
+#   </accreditation>, The BMC is in active use
+  fhir:type ( [
+     a sct:405608006 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "405608006" ] ;
+       fhir:display [ fhir:v "Academic Medical Center" ]
+     ] [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/organization-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/organization-type>
+       ] ;
+       fhir:code [ fhir:v "prov" ]
+     ] ) # BMC is an Academic Medical Center
+  ] ) ; # 
+  fhir:name [ fhir:v "Blijdorp Medisch Centrum (BUMC)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "phone" ] ; # BMC's contact detail
+       fhir:value [ fhir:v "+31107040704" ] ;
+       fhir:use [ fhir:v "work" ]
+     ] ) ;
+     fhir:address [
+       fhir:use [ fhir:v "work" ] ; # BMC's address
+       fhir:line ( [ fhir:v "apenrots 230" ] ) ;
+       fhir:city [ fhir:v "Blijdorp" ] ;
+       fhir:postalCode [ fhir:v "3056BE" ] ;
+       fhir:country [ fhir:v "NLD" ]
+     ] # ISO 3166 3 letter code
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

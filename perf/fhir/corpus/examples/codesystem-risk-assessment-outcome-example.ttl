@@ -1,0 +1,103 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/risk-assessment-outcome-example> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "risk-assessment-outcome-example"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T11:01:55.562+11:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem risk-assessment-outcome-example</b></p><a name=\"risk-assessment-outcome-example\"> </a><a name=\"hcrisk-assessment-outcome-example\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">Last updated: 2021-01-05T10:01:24.148+11:00</p></div><p>This case-sensitive code system <code>http://hl7.org/fhir/risk-assessment-outcome-example</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">death<a name=\"risk-assessment-outcome-example-death\"> </a></td><td>Death</td><td>Death</td></tr><tr><td style=\"white-space:nowrap\">remission<a name=\"risk-assessment-outcome-example-remission\"> </a></td><td>Remission</td><td>Remission</td></tr><tr><td style=\"white-space:nowrap\">amputation<a name=\"risk-assessment-outcome-example-amputation\"> </a></td><td>Amputation</td><td>Amputation</td></tr><tr><td style=\"white-space:nowrap\">infection<a name=\"risk-assessment-outcome-example-infection\"> </a></td><td>Infection</td><td>Infection</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/risk-assessment-outcome-example"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/risk-assessment-outcome-example>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "RiskAssessmentOutcomeExample"] ; # 
+  fhir:title [ fhir:v "Risk Assessment Outcome Example"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Example code system illustrating possible codes for identifying the condition or other outcome; e.g. death, remission, amputation, infection, etc."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/risk-assessment-outcome-example"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/risk-assessment-outcome-example>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "death" ] ;
+     fhir:display [ fhir:v "Death" ] ;
+     fhir:definition [ fhir:v "Death" ]
+  ] [
+     fhir:code [ fhir:v "remission" ] ;
+     fhir:display [ fhir:v "Remission" ] ;
+     fhir:definition [ fhir:v "Remission" ]
+  ] [
+     fhir:code [ fhir:v "amputation" ] ;
+     fhir:display [ fhir:v "Amputation" ] ;
+     fhir:definition [ fhir:v "Amputation" ]
+  ] [
+     fhir:code [ fhir:v "infection" ] ;
+     fhir:display [ fhir:v "Infection" ] ;
+     fhir:definition [ fhir:v "Infection" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

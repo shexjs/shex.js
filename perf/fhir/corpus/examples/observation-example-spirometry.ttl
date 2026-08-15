@@ -1,0 +1,64 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# -
+#Removed the .related type qualified-by  - if needed would be an extension 
+#
+#	<related>
+#		<type value="qualified-by"/>
+#		<target>
+#			<identifier>
+#				<value value="3.14159.20170619185932"/>
+#			</identifier>
+#		</target>
+#	</related>
+
+<http://hl7.org/fhir/Observation/656> a fhir:Observation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "656"] ; # 
+  fhir:identifier ( [
+     fhir:value [ fhir:v "patientId-urn:oid:1.2.4~0000000000000000~152584~20170503155426~820" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "final"] ; # 
+  fhir:code [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+         fhir:l <urn:iso:std:iso:11073:10101>
+       ] ;
+       fhir:code [ fhir:v "152584" ] ;
+       fhir:display [ fhir:v "MDC_FLOW_AWAY_EXP_FORCED_PEAK" ]
+     ] )
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/PatientId-patientId> ;
+     fhir:reference [ fhir:v "Patient/PatientId-patientId" ]
+  ] ; # 
+  fhir:effective [
+     a fhir:DateTime ;
+     fhir:v "2017-05-03T15:54:26-04:00"^^xsd:dateTime
+  ] ; # 
+  fhir:performer ( [
+     fhir:l <http://hl7.org/fhir/Patient/PatientId-patientId> ;
+     fhir:reference [ fhir:v "Patient/PatientId-patientId" ]
+  ] ) ; # 
+  fhir:value [
+     a fhir:Quantity ;
+     fhir:value [ fhir:v "820"^^xsd:decimal ] ;
+     fhir:unit [ fhir:v "cL/s" ] ;
+     fhir:system [
+       fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+       fhir:l <urn:iso:std:iso:11073:10101>
+     ] ;
+     fhir:code [ fhir:v "265201" ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/PatientId-patientId> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

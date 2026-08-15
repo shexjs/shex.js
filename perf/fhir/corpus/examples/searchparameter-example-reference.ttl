@@ -1,0 +1,56 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/SearchParameter/example-reference> a fhir:SearchParameter ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-reference"] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/SearchParameter/example-reference"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/SearchParameter/example-reference>
+  ] ; # 
+  fhir:name [ fhir:v "ExampleSearchParameter"] ; # 
+  fhir:title [ fhir:v "Example Search Parameter"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2013-10-23"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Search by condition subject"] ; # 
+  fhir:purpose [ fhir:v "Need to search Condition by subject"] ; # 
+  fhir:code [ fhir:v "subject"] ; # 
+  fhir:base ( [
+     fhir:v "Condition"^^xsd:anyURI ;
+     fhir:l fhir:Condition
+  ] ) ; # 
+  fhir:type [ fhir:v "reference"] ; # 
+  fhir:expression [ fhir:v "Condition.subject"] ; # 
+  fhir:processingMode [ fhir:v "normal"] ; # 
+  fhir:target ( [
+     fhir:v "Organization"^^xsd:anyURI ;
+     fhir:l fhir:Organization
+  ] ) ; # 
+  fhir:modifier ( [ fhir:v "missing"] ) ; # 
+  fhir:chain ( [ fhir:v "name"] [ fhir:v "identifier"] ) . # 
+
+# -------------------------------------------------------------------------------------
+

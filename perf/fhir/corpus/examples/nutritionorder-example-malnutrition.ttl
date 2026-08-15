@@ -1,0 +1,75 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/NutritionOrder/malnutritionlongtermcare> a fhir:NutritionOrder ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "malnutritionlongtermcare"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Malnutrition Patient" ]
+  ] ; # 
+  fhir:dateTime [ fhir:v "2024-10-23T00:00:00Z"^^xsd:dateTime] ; # 
+  fhir:oralDiet [
+     fhir:type ( [
+       a sct:435771000124106 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "435771000124106" ] ;
+         fhir:display [ fhir:v "General healthful diet" ]
+       ] )
+     ] [
+       a sct:436721000124103 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "436721000124103" ] ;
+         fhir:display [ fhir:v "Increased energy diet" ]
+       ] )
+     ] [
+       a sct:1055200005 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "1055200005" ] ;
+         fhir:display [ fhir:v "Increased protein diet" ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:supplement ( [
+     fhir:type [ ] ;
+     fhir:schedule [
+       fhir:timing ( [
+         fhir:repeat [
+           fhir:frequency [ fhir:v "3"^^xsd:positiveInteger ] ;
+           fhir:period [ fhir:v "1"^^xsd:decimal ] ;
+           fhir:periodUnit [ fhir:v "d" ]
+         ]
+       ] )
+     ] ;
+     fhir:quantity [
+       fhir:value [ fhir:v "1"^^xsd:decimal ] ;
+       fhir:unit [ fhir:v "serving" ]
+     ] ;
+     fhir:instruction [ fhir:v "Ensure pudding 4oz cup, 1 serving 3 times per day with meals." ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+
