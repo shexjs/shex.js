@@ -1383,12 +1383,21 @@ export class ShExValidator {
       extendsTcOrRefsz.map((tcOrRefs, ord) => flattenExtends(tcOrRefs, ord));
       return { extendsTCs: tcs, tc2exts, localTCs };
 
-      function flattenExtends (tcOrRefs: RefsAndTCsForOneExtension, ord: number) {
+      // `walked` is per top-level extension (per ord): a ref reached twice
+      // contributes the triple constraints it contributed the first time --
+      // add() dedupes them by identity anyway -- and where the refs form a
+      // cycle, following it again never returns.  Fresh per call, so two
+      // extensions don't hide each other's references from one another.
+      function flattenExtends (tcOrRefs: RefsAndTCsForOneExtension, ord: number,
+                               walked: Set<string> = new Set()) {
         return tcOrRefs.forEach(tcOrRef => {
           if (tcOrRef.type === "TripleConstraint") {
             add(tcOrRef); // as TC
-          } else {
-            flattenExtends(labelToTcs[tcOrRef.ref], ord);
+          } else if (!walked.has(tcOrRef.ref)) {
+            walked.add(tcOrRef.ref);
+            const referent = labelToTcs[tcOrRef.ref];
+            if (referent !== undefined)   // a label the walk hasn't reached
+              flattenExtends(referent, ord, walked);
           }
         });
         function add (tc: TripleConstraint) {
