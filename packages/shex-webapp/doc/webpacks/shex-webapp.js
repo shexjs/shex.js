@@ -20463,7 +20463,28 @@ class EvalSimple1ErrRegexEngine {
             if (nlist.length === 0 && chosen === null)
                 return reportError(localExpect(clist, thisEvalSimple1ErrRegexEngine.states));
             const t = clist;
-            clist = nlist;
+            // One thread per distinct future rather than per distinct past: two
+            // threads in the same state, the same way through the repeats, with
+            // the same triples left, will match the rest of the expression the
+            // same way.  They differ only in which iteration took which triple --
+            // the witness -- so the frontier needs one of each, and the ways to
+            // split N triples across iterations collapse to the counts they can
+            // leave behind.  Sound because the validator has already given each
+            // triple to exactly one TripleConstraint (t2tc), so the triples in a
+            // pool are interchangeable and wanted nowhere else.  `avail` is
+            // filled in lazily, so a thread that hasn't reached a constraint
+            // still has all of its triples.
+            const seenFrontier = new Set();
+            clist = nlist.filter(thread => {
+                const counts = [];
+                constraintToTripleMapping.data.forEach((pairs, constraint) => counts.push(thread.avail.has(constraint) ? thread.avail.get(constraint).length : pairs.length));
+                const key = thread.state + "|" + JSON.stringify(thread.repeats)
+                    + "|" + thread.errors.length + "|" + counts.join(",");
+                if (seenFrontier.has(key))
+                    return false;
+                seenFrontier.add(key);
+                return true;
+            });
             nlist = t;
             ++generation;
             const longerChosen = clist.reduce((ret, elt) => {
@@ -21157,6 +21178,34 @@ class EvalThreadedNErrRegexEngine {
     /*
        * returns: list of all passing or all failing threads (no heterogeneous lists)
        */
+    /**
+     * One thread per distinct future, rather than one per distinct past.
+     *
+     * Two threads at the same point in a repeated group with the same triples
+     * left will match the rest of the expression the same way; they differ
+     * only in *which* triples each iteration took, i.e. in the witness.  So
+     * the frontier only needs one of each, and the ways to split N triples
+     * across iterations -- the compositions of N, which is what made this
+     * exponential -- collapse to the N+1 counts they can leave behind.
+     *
+     * Counts alone identify the future because the validator has already
+     * assigned each triple to exactly one TripleConstraint (see t2tc): the
+     * triples in a pool are interchangeable, and none of them is wanted
+     * anywhere else.
+     */
+    static mergeEquivalent(threads) {
+        if (threads.length < 2)
+            return threads;
+        const byRemaining = new Map();
+        for (const thread of threads) {
+            const counts = [];
+            thread.avail.forEach(triples => counts.push(triples.length));
+            const key = counts.join(",");
+            if (!byRemaining.has(key))
+                byRemaining.set(key, thread);
+        }
+        return Array.from(byRemaining.values());
+    }
     static matchRepeat(groupTE, min, max, thread, type, evalGroup, semActHandler) {
         let repeated = 0, errOut = false;
         let newThreads = [thread];
@@ -21203,7 +21252,7 @@ class EvalThreadedNErrRegexEngine {
                 // none of them could: short of the minimum that is the failure,
                 // and past it the iterations already made stand
                 return repeated < min ? stumbled : newThreads;
-            newThreads = inner;
+            newThreads = EvalThreadedNErrRegexEngine.mergeEquivalent(inner);
         }
         if (newThreads.length > 0 && newThreads[0].errors.length === 0 && groupTE.semActs !== undefined) {
             const passes = [];

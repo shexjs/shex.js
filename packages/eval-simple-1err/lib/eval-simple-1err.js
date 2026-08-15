@@ -346,7 +346,28 @@ class EvalSimple1ErrRegexEngine {
             if (nlist.length === 0 && chosen === null)
                 return reportError(localExpect(clist, thisEvalSimple1ErrRegexEngine.states));
             const t = clist;
-            clist = nlist;
+            // One thread per distinct future rather than per distinct past: two
+            // threads in the same state, the same way through the repeats, with
+            // the same triples left, will match the rest of the expression the
+            // same way.  They differ only in which iteration took which triple --
+            // the witness -- so the frontier needs one of each, and the ways to
+            // split N triples across iterations collapse to the counts they can
+            // leave behind.  Sound because the validator has already given each
+            // triple to exactly one TripleConstraint (t2tc), so the triples in a
+            // pool are interchangeable and wanted nowhere else.  `avail` is
+            // filled in lazily, so a thread that hasn't reached a constraint
+            // still has all of its triples.
+            const seenFrontier = new Set();
+            clist = nlist.filter(thread => {
+                const counts = [];
+                constraintToTripleMapping.data.forEach((pairs, constraint) => counts.push(thread.avail.has(constraint) ? thread.avail.get(constraint).length : pairs.length));
+                const key = thread.state + "|" + JSON.stringify(thread.repeats)
+                    + "|" + thread.errors.length + "|" + counts.join(",");
+                if (seenFrontier.has(key))
+                    return false;
+                seenFrontier.add(key);
+                return true;
+            });
             nlist = t;
             ++generation;
             const longerChosen = clist.reduce((ret, elt) => {

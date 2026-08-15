@@ -421,6 +421,35 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
   /*
      * returns: list of all passing or all failing threads (no heterogeneous lists)
      */
+  /**
+   * One thread per distinct future, rather than one per distinct past.
+   *
+   * Two threads at the same point in a repeated group with the same triples
+   * left will match the rest of the expression the same way; they differ
+   * only in *which* triples each iteration took, i.e. in the witness.  So
+   * the frontier only needs one of each, and the ways to split N triples
+   * across iterations -- the compositions of N, which is what made this
+   * exponential -- collapse to the N+1 counts they can leave behind.
+   *
+   * Counts alone identify the future because the validator has already
+   * assigned each triple to exactly one TripleConstraint (see t2tc): the
+   * triples in a pool are interchangeable, and none of them is wanted
+   * anywhere else.
+   */
+  static mergeEquivalent (threads: RegexpThread[]): RegexpThread[] {
+    if (threads.length < 2)
+      return threads;
+    const byRemaining = new Map<string, RegexpThread>();
+    for (const thread of threads) {
+      const counts: number[] = [];
+      thread.avail.forEach(triples => counts.push(triples.length));
+      const key = counts.join(",");
+      if (!byRemaining.has(key))
+        byRemaining.set(key, thread);
+    }
+    return Array.from(byRemaining.values());
+  }
+
   static matchRepeat (groupTE: ShExJ.EachOf | ShExJ.OneOf, min: number, max: number, thread: RegexpThread,
                       type: "EachOfSolutions" | "OneOfSolutions", evalGroup: (th: RegexpThread) => RegexpThread[],
                       semActHandler: SemActDispatcher): RegexpThread[] {
@@ -469,7 +498,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
         // none of them could: short of the minimum that is the failure,
         // and past it the iterations already made stand
         return repeated < min ? stumbled : newThreads;
-      newThreads = inner;
+      newThreads = EvalThreadedNErrRegexEngine.mergeEquivalent(inner);
     }
     if (newThreads.length > 0 && newThreads[0].errors.length === 0 && groupTE.semActs !== undefined) {
       const passes: RegexpThread[] = [];
