@@ -432,8 +432,19 @@ class ShExValidator {
                     if (shape.extends !== undefined) {
                         shape.extends.forEach(ext => {
                             const extendsVisitor = new visitor_1.ShExVisitor();
+                            // A reference reached twice is the same reference: walking it
+                            // again adds nothing, and where the references form a cycle --
+                            // FHIR's <Resource> is an OR over every shape, and those shapes
+                            // EXTEND <DomainResource>, which leads back to <Resource> --
+                            // walking it again never stops.  `extensions` is a MapArray,
+                            // which rejects a repeated pair outright, so this guards the
+                            // bookkeeping as much as the recursion.
+                            const walked = new Set();
                             extendsVisitor.visitExpression = function (_expr, ..._args) { return "null"; };
                             extendsVisitor.visitShapeRef = function (reference, ..._args) {
+                                if (walked.has(reference))
+                                    return "null";
+                                walked.add(reference);
                                 extensions.add(reference, curLabel);
                                 extendsVisitor.visitShapeDecl(_ShExValidator.lookupShape(reference));
                                 // makeSchemaVisitor().visitSchema(schema);
@@ -1059,8 +1070,18 @@ class ShExValidator {
         const visitor = new visitor_1.ShExVisitor(labelToTcs);
         function emptyShapeExpr() { return []; }
         visitor.visitShapeDecl = function (decl, _min, _max) {
-            // if (labelToTcs.has(decl.id)) !! uncomment cache for production
-            //   return labelToTcs[decl.id];
+            // A decl already walked is answered with the same Ref this returns
+            // below, and not walked again.  It is the memo the old comment here
+            // asked for ("uncomment cache for production"), but it is first a
+            // termination condition: references can lead back to where they
+            // started -- FHIR's <Resource> is an OR over every shape, and those
+            // shapes EXTEND <DomainResource>, which leads back to <Resource> --
+            // and without this the walk recurses until the stack gives out.
+            // The entry goes in *before* the walk so a cycle meets it on the way
+            // round rather than after.
+            if (decl.id in labelToTcs)
+                return [{ type: "Ref", ref: decl.id }];
+            labelToTcs[decl.id] = emptyShapeExpr();
             labelToTcs[decl.id] = decl.shapeExpr
                 ? visitor.visitShapeExpr(decl.shapeExpr, 1, 1)
                 : emptyShapeExpr();
