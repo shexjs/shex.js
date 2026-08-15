@@ -50,21 +50,20 @@ const SLOW = parseInt(opt("slow", "10"), 10);
 /** Every change this makes to what FHIR publishes, with why. */
 const schemaFixups = [
   {
-    what: "<Resource> declared twice, for two different jobs: dropping the "
-      + "'any resource' union and keeping the structural base",
-    // fhir.shex declares <Resource> twice:
+    what: "delete the 'any resource' <Resource> union (redundant once "
+      + "<Resource> is ABSTRACT, and it closes a cycle in EXTENDS)",
+    // fhir.shex declares <Resource> twice, for two different jobs:
     //   ~4246  <Resource> CLOSED {}          the structural base, which
     //                                        <DomainResource> EXTENDS
-    //   ~13184 <Resource> @<Account> OR ...  the "any resource" union, for
-    //                                        reference targets
-    // The parser rejects the schema outright ("Resource already defined"),
-    // so one has to go, and which one is not a free choice: keeping the
-    // union closes a cycle in EXTENDS -- <Account> EXTENDS <DomainResource>
-    // EXTENDS <Resource>, and the union names <Account> again -- which
-    // ShEx.js follows until the stack gives out.  Keeping the base leaves
-    // reference targets pointing at an empty CLOSED shape, which is wrong
-    // but bounded.  The real fix is upstream: these are two ideas sharing
-    // one name.
+    //   ~13184 <Resource> @<Account> OR ...  194 alternatives: "any resource"
+    // The parser rejects the schema outright ("Resource already defined").
+    // The union is a pre-EXTENDS idiom -- a hand-rolled way to say "anything
+    // derived from Resource" -- and with EXTENDS it is not merely redundant
+    // but illegal: <Account> EXTENDS <DomainResource> EXTENDS <Resource>,
+    // and the union names <Account>, closing a cycle in the extension
+    // hierarchy, which the spec says MUST be acyclic.  Making <Resource>
+    // ABSTRACT (below) gives value-position @<Resource> the same meaning by
+    // dispatching to non-abstract descendants.
     apply: text => {
       const lines = text.split("\n");
       const start = lines.findIndex(l => /^<Resource>\s+@</.test(l));
@@ -72,6 +71,35 @@ const schemaFixups = [
       const end = lines.findIndex((l, i) => i > start && /^<[A-Za-z]/.test(l));
       return lines.slice(0, start).concat(lines.slice(end === -1 ? start + 1 : end)).join("\n");
     },
+  },
+  {
+    what: "<Resource> is emitted as an empty CLOSED {}: give it ABSTRACT, "
+      + "EXTENDS @<Base>, and its four elements",
+    // Per its own StructureDefinition, Resource is abstract, based on Base,
+    // and has id, meta, implicitRules and language.  What is emitted has
+    // none of them -- not even the `a [fhir:Resource]?; fhir:nodeRole ...`
+    // preamble every other shape carries -- so every resource carrying a
+    // fhir:id fails against the CLOSED shapes that extend it.
+    apply: text => text.replace(/<Resource> CLOSED \{\s*\n\}/,
+`ABSTRACT <Resource> EXTENDS @<Base> CLOSED {
+    a [fhir:Resource]?;fhir:nodeRole [fhir:treeRoot]?;
+
+    fhir:id @<Id>?;
+    fhir:meta @<Meta>?;
+    fhir:implicitRules @<Uri>?;
+    fhir:language @<Code>?;
+}`),
+  },
+  {
+    what: "<All> joins its per-type guards with OR; they have to be AND",
+    // <All> is (NOT {is a T treeRoot} OR @<T>) for each of 194 types.  Each
+    // term is right, but joined with OR any one satisfies the whole: a node
+    // is at most one type, so ~193 terms hold vacuously through their NOT
+    // branch and <All> accepts anything at all.  Joined with AND it says
+    // what it means -- whichever type you are, conform to it.  Without this
+    // the suite reports every document conformant, including ones with
+    // invented properties and out-of-value-set codes.
+    apply: text => text.replace(/\) OR\n(\t\(NOT \{ fhir:nodeRole)/g, ") AND\n$1"),
   },
   {
     what: "<Xhtml> is referenced (fhir:div @<Xhtml>) but never declared",
@@ -82,6 +110,9 @@ const schemaFixups = [
       : text + "\n# stand-in for the dangling reference at fhir:div @<Xhtml>\n<Xhtml> .\n",
   },
 ];
+
+/** Examples that aren't examples: the ontologies, which carry no treeRoot. */
+const NOT_EXAMPLES = ["fhir.ttl", "rim.ttl", "w5.ttl"];
 
 function loadSchema () {
   const at = Path.join(CORPUS, "fhir.shex");
@@ -112,7 +143,8 @@ function main () {
     options.regexModule = require("@shexjs/eval-simple-1err").RegexpModule;
 
   const files = fs.readdirSync(Path.join(CORPUS, "examples"))
-        .filter(f => f.endsWith(".ttl")).sort().slice(0, LIMIT);
+        .filter(f => f.endsWith(".ttl") && NOT_EXAMPLES.indexOf(f) === -1)
+        .sort().slice(0, LIMIT);
 
   console.log("engine=" + ENGINE + "  repairs=" + REPAIRS
               + "  shapes=" + shapeCount + "  examples=" + files.length);
