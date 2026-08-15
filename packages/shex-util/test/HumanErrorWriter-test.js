@@ -20,8 +20,8 @@ describe("errsToSimple", function () {
     const text = ShExUtil.errsToSimple(failure([missing("a"), missing("b")])).join("\n");
     expect(text).to.include("AND");
     expect(text).to.not.include("OR");
-    expect(text).to.include("Missing property: " + P + "a");
-    expect(text).to.include("Missing property: " + P + "b");
+    expect(text).to.include("missing property <" + P + "a>");
+    expect(text).to.include("missing property <" + P + "b>");
   });
 
   it("should join alternative readings with OR", function () {
@@ -43,7 +43,7 @@ describe("errsToSimple", function () {
       errors: failure([missing("a")]),          // one error, not a list of them
     }).join("\n");
     expect(text).to.not.include(",");
-    expect(text).to.include("Missing property: " + P + "a");
+    expect(text).to.include("missing property <" + P + "a>");
   });
 
   /* A failure the validator was asked to repair ends with the recipe. */
@@ -71,15 +71,15 @@ describe("errsToSimple", function () {
     });
     const add = (...properties) => ({type: "AddArcs", arcs: properties.map(p => ({property: P + p}))});
     expect(ShExUtil.errsToSimple(violation([add("code")])).join(""))
-      .to.include("either add " + P + "code, or remove it.");
+      .to.include("either add " + P + "code, or remove it");
     // three ways out, any one of them
     expect(ShExUtil.errsToSimple(violation([add("code"), add("unit"), add("system")])).join(""))
-      .to.include("either add " + P + "code or " + P + "unit or " + P + "system, or remove it.");
+      .to.include("either add " + P + "code or " + P + "unit or " + P + "system, or remove it");
     // one way out, and it takes two arcs
     expect(ShExUtil.errsToSimple(violation([add("code", "unit")])).join(""))
-      .to.include("either add " + P + "code and " + P + "unit, or remove it.");
+      .to.include("either add " + P + "code and " + P + "unit, or remove it");
     // nothing would seat it: don't pretend there is a choice
-    expect(ShExUtil.errsToSimple(violation([])).join("")).to.include("remove it.");
+    expect(ShExUtil.errsToSimple(violation([])).join("")).to.include("remove it");
     expect(ShExUtil.errsToSimple(violation([])).join("")).to.not.include("either");
   });
 });

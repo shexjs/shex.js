@@ -662,7 +662,10 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions, cmd
               // a query map extension, or a triple pattern, yields a node
               // per match rather than the one node -n names
               ? (res.solutions || [res]).map(s => `${s.node}@${s.shape}`).join("\n")
-              : ShExUtil.errsToSimple(res).join("\n")   // lines, not an array literal
+              // lines, not an array literal; the schema's own prefixes so a
+              // quoted fragment reads as the schema spells it
+              : ShExUtil.errsToSimple(
+                res, (schemaAndData.schemaMeta[0] || {}).prefixes).join("\n")
               : JSON.stringify(res, null, "  ")
           );
           return passed ? ExitCode.shape_test_pass : ExitCode.shape_test_fail;

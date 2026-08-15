@@ -57,6 +57,7 @@ exports.stringifyWithOffsets = stringifyWithOffsets;
 const ShExParser = __importStar(require("@shexjs/parser"));
 const emit_1 = require("lezer-turtle/emit");
 const RdfJs = __importStar(require("n3"));
+const { describeError } = require("@shexjs/util/lib/error-messages");
 const XSD_STRING = "http://www.w3.org/2001/XMLSchema#string";
 const RDF_LANGSTRING = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
 // ---------------------------------------------------------------------------
@@ -458,52 +459,41 @@ function rangeOfNode(parsed, node, bnodes) {
 }
 // error types that anchor a diagnostic (as opposed to containers to recurse
 // through); each entry renders a message and picks its anchors
-const ErrorLeaves = {
-    // Note each leaf also carries `predicate` where known: object identity
-    // doesn't survive a structured clone (worker-app results), so the
-    // (shape, predicate) lookup is the anchor that always works.
-    TypeMismatch: (err, _ctx) => ({
-        message: `${termStr(err.triple.object)} doesn't satisfy ${err.constraint ? constraintStr(err.constraint) : "the constraint"}`,
-        schemaObj: err.constraint,
-        predicate: err.constraint ? err.constraint.predicate : err.triple.predicate,
-        triple: err.triple,
-    }),
-    MissingProperty: (err, ctx) => ({
-        message: `missing expected property ${termStr(err.property)}`,
-        predicate: err.property,
-        node: ctx.node,
-    }),
-    ExcessTripleViolation: (err, ctx) => ({
-        message: `too many occurrences of ${termStr(err.property)}`,
-        predicate: err.property,
-        node: ctx.node,
-    }),
-    ClosedShapeViolation: (err, ctx) => ({
-        message: `unexpected properties in closed shape: ${(err.unexpectedTriples || []).map((t) => termStr(t.predicate)).join(", ")}`,
-        triples: err.unexpectedTriples,
-        node: ctx.node,
-    }),
-    NodeConstraintViolation: (err, ctx) => {
-        var _a;
-        return ({
-            message: firstLine((err.errors || [])[0] || "node constraint violation"),
-            schemaObj: ctx.constraint, // usually nested in a TypeMismatch
-            predicate: ((_a = ctx.constraint) === null || _a === void 0 ? void 0 : _a.predicate) || (ctx.triple && ctx.triple.predicate),
+/**
+ * What each error type says, and what to point at when saying it.
+ *
+ * The sentence comes from @shexjs/util's describeError, which the human
+ * writer uses too -- these two used to write the same sentences differently
+ * and drift.  What is this module's own is the *anchoring*: which schema
+ * object and which triple a range can be found for.  See
+ * doc/error-reporting.md (F1).
+ */
+const ErrorLeaves = {};
+["TypeMismatch", "MissingProperty", "ExcessTripleViolation", "ClosedShapeViolation",
+    "NodeConstraintViolation", "NegatedProperty", "AbstractShapeFailure", "SemActFailure",
+    "SemActViolation", "FeasibilityViolation"].forEach(type => {
+    ErrorLeaves[type] = (err, ctx) => {
+        const said = describeError(err, {
+            constraint: ctx.constraint,
             triple: ctx.triple,
             node: ctx.node,
-        });
-    },
-    SemActFailure: (_err, ctx) => {
-        var _a;
-        return ({
-            message: "semantic action failure",
-            schemaObj: ctx.constraint,
-            predicate: ((_a = ctx.constraint) === null || _a === void 0 ? void 0 : _a.predicate) || (ctx.triple && ctx.triple.predicate),
-            triple: ctx.triple,
-            node: ctx.node,
-        });
-    },
-};
+            prefixes: schemaPrefixes,
+        }) || { text: type };
+        return {
+            message: said.text,
+            // object identity doesn't survive a structured clone (worker-app
+            // results), so the (shape, predicate) lookup is the anchor that
+            // always works
+            schemaObj: said.schemaObj || ctx.constraint,
+            predicate: said.predicate,
+            triple: said.triple || ctx.triple,
+            triples: said.triples,
+            node: said.node !== undefined ? said.node : ctx.node,
+        };
+    };
+});
+/** the prefixes a quoted fragment is written with; set per mapping run */
+let schemaPrefixes = {};
 function termStr(t) {
     return typeof t === "object" ? JSON.stringify(t.value) : "<" + t + ">";
 }

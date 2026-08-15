@@ -1696,8 +1696,10 @@ const ShExUtil = {
             });
         });
     },
-    errsToSimple: function (val) {
-        return new ShExHumanErrorWriter().write(val);
+    /** A failure as indented lines.  Give it the schema's prefixes and the
+     * fragments it quotes read as the schema spells them. */
+    errsToSimple: function (val, prefixes) {
+        return new ShExHumanErrorWriter().write(val, prefixes || {});
     },
     // static
     resolvePrefixedIRI: function (prefixedIri, prefixes) {

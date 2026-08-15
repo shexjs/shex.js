@@ -94,7 +94,7 @@ describe("feasibility refutations", function () {
     expect(violation, "a homeless triple").to.exist;
     expect(violation.repairs.map(r => r.arcs.map(a => a.property.replace(base, ":")).join(" and ")))
       .to.deep.equal([":b"]);
-    expect(human).to.include("either add " + base + "b, or remove it.");
+    expect(human).to.include("either add " + base + "b, or remove it");
   });
 
   /* Where nothing would seat it -- a closed-off constraint with no room --
@@ -105,7 +105,7 @@ describe("feasibility refutations", function () {
     const [violation] = homeless(appinfo);
     if (violation) {
       expect(violation.repairs).to.deep.equal([]);
-      expect(human).to.include("remove it.");
+      expect(human).to.include("remove it");
       expect(human).to.not.include("either add");
     }
   });
@@ -119,7 +119,7 @@ describe("feasibility refutations", function () {
     const [violation] = homeless(appinfo);
     expect(violation.repairs.map(r => r.arcs.map(a => a.property.replace(base, ":")).join(" and ")))
       .to.have.members([":a", ":b", ":c"]);
-    expect(human).to.include("either add " + base + "a or " + base + "b or " + base + "c, or remove it.");
+    expect(human).to.include("either add " + base + "a or " + base + "b or " + base + "c, or remove it");
   });
 
   /* Where no single arc seats it, the arcs that do so together. */
@@ -130,7 +130,7 @@ describe("feasibility refutations", function () {
     expect(violation.repairs.length, "one way out, not none").to.equal(1);
     expect(violation.repairs[0].arcs.map(a => a.property.replace(base, ":")))
       .to.have.members([":a", ":b"]);
-    expect(human).to.match(/either add http:\/\/a\.example\/[ab] and http:\/\/a\.example\/[ab], or remove it\./);
+    expect(human).to.match(/either add http:\/\/a\.example\/[ab] and http:\/\/a\.example\/[ab], or remove it/);
   });
 
   /* Short of a constraint's minimum is as unsatisfiable as absent, and says

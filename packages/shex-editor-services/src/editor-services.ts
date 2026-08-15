@@ -15,6 +15,7 @@
 import * as ShExParser from "@shexjs/parser";
 import {parseTurtle as lezerTurtle} from "lezer-turtle/emit";
 import * as RdfJs from "n3";
+const {describeError} = require("@shexjs/util/lib/error-messages");
 
 const XSD_STRING = "http://www.w3.org/2001/XMLSchema#string";
 const RDF_LANGSTRING = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
@@ -649,47 +650,42 @@ interface WalkContext {
 
 // error types that anchor a diagnostic (as opposed to containers to recurse
 // through); each entry renders a message and picks its anchors
-const ErrorLeaves: {[type: string]: (err: any, ctx: WalkContext) => ErrorLeaf} = {
-  // Note each leaf also carries `predicate` where known: object identity
-  // doesn't survive a structured clone (worker-app results), so the
-  // (shape, predicate) lookup is the anchor that always works.
-  TypeMismatch: (err, _ctx) => ({
-    message: `${termStr(err.triple.object)} doesn't satisfy ${err.constraint ? constraintStr(err.constraint) : "the constraint"}`,
-    schemaObj: err.constraint,
-    predicate: err.constraint ? err.constraint.predicate : err.triple.predicate,
-    triple: err.triple,
-  }),
-  MissingProperty: (err, ctx) => ({
-    message: `missing expected property ${termStr(err.property)}`,
-    predicate: err.property,
-    node: ctx.node,
-  }),
-  ExcessTripleViolation: (err, ctx) => ({
-    message: `too many occurrences of ${termStr(err.property)}`,
-    predicate: err.property,
-    node: ctx.node,
-  }),
-  ClosedShapeViolation: (err, ctx) => ({
-    message: `unexpected properties in closed shape: ${
-      (err.unexpectedTriples || []).map((t: TestedTriple) => termStr(t.predicate)).join(", ")}`,
-    triples: err.unexpectedTriples,
-    node: ctx.node,
-  }),
-  NodeConstraintViolation: (err, ctx) => ({
-    message: firstLine((err.errors || [])[0] || "node constraint violation"),
-    schemaObj: ctx.constraint, // usually nested in a TypeMismatch
-    predicate: (ctx.constraint as any)?.predicate || (ctx.triple && ctx.triple.predicate),
-    triple: ctx.triple,
-    node: ctx.node,
-  }),
-  SemActFailure: (_err, ctx) => ({
-    message: "semantic action failure",
-    schemaObj: ctx.constraint,
-    predicate: (ctx.constraint as any)?.predicate || (ctx.triple && ctx.triple.predicate),
-    triple: ctx.triple,
-    node: ctx.node,
-  }),
-};
+/**
+ * What each error type says, and what to point at when saying it.
+ *
+ * The sentence comes from @shexjs/util's describeError, which the human
+ * writer uses too -- these two used to write the same sentences differently
+ * and drift.  What is this module's own is the *anchoring*: which schema
+ * object and which triple a range can be found for.  See
+ * doc/error-reporting.md (F1).
+ */
+const ErrorLeaves: {[type: string]: (err: any, ctx: WalkContext) => ErrorLeaf} = {};
+["TypeMismatch", "MissingProperty", "ExcessTripleViolation", "ClosedShapeViolation",
+ "NodeConstraintViolation", "NegatedProperty", "AbstractShapeFailure", "SemActFailure",
+ "SemActViolation", "FeasibilityViolation"].forEach(type => {
+  ErrorLeaves[type] = (err: any, ctx: WalkContext): ErrorLeaf => {
+    const said = describeError(err, {
+      constraint: ctx.constraint as any,
+      triple: ctx.triple,
+      node: ctx.node,
+      prefixes: schemaPrefixes,
+    }) || {text: type};
+    return {
+      message: said.text,
+      // object identity doesn't survive a structured clone (worker-app
+      // results), so the (shape, predicate) lookup is the anchor that
+      // always works
+      schemaObj: said.schemaObj || (ctx.constraint as any),
+      predicate: said.predicate,
+      triple: said.triple || ctx.triple,
+      triples: said.triples,
+      node: said.node !== undefined ? said.node : ctx.node,
+    } as ErrorLeaf;
+  };
+});
+
+/** the prefixes a quoted fragment is written with; set per mapping run */
+let schemaPrefixes: {[prefix: string]: string} = {};
 
 function termStr (t: LdTerm): string {
   return typeof t === "object" ? JSON.stringify(t.value) : "<" + t + ">";
