@@ -109,19 +109,64 @@ describe("nearest-bag repairs", function () {
     expect(ways).to.deep.equal([]);
   });
 
-  it("should be asked for, not assumed", function () {
+  it("should be given without asking, and refusable", function () {
     const schema = ShExParser.construct(base, {}, {index: true})
           .parse(PRE + "start = @<S>\n<S> { :a . }");
     const graph = new N3.Store();
     graph.addQuads(new N3.Parser({baseIRI: base, format: "text/turtle"})
       .parse(PRE + ":x :b 1 ."));
-    const off = new ShExValidator(schema, RdfJsDb(graph), {})
+    const on = new ShExValidator(schema, RdfJsDb(graph), {})
           .validateShapeMap([{node: base + "x", shape: ShExValidator.Start}])[0];
-    expect(off.status).to.equal("nonconformant");
-    expect(off.appinfo, "not unless asked").to.not.have.property("repairs");
-    const on = new ShExValidator(schema, RdfJsDb(graph), {repairs: true})
+    expect(on.status).to.equal("nonconformant");
+    expect(on.appinfo, "by default").to.have.property("repairs");
+    const off = new ShExValidator(schema, RdfJsDb(graph), {repairs: false})
           .validateShapeMap([{node: base + "x", shape: ShExValidator.Start}])[0];
-    expect(on.appinfo, "and there when asked").to.have.property("repairs");
+    expect(off.appinfo, "unless refused").to.not.have.property("repairs");
+  });
+
+  /* A repair of cost 0 says "the arcs you have are already a bag this shape
+   * accepts", so whatever it failed on isn't something a bag can speak to.
+   * "To conform: change nothing" is worse than saying nothing at all.
+   *
+   * A closed shape is the case in hand, and it is also a gap: the honest
+   * repair is "remove 1 :b", but the arcs a ClosedShapeViolation complains
+   * about belong to no triple constraint, so the bag search never sees
+   * them.  Saying nothing is the right answer until it can. */
+  it("should say nothing where the arcs were never the problem", function () {
+    const schema = ShExParser.construct(base, {}, {index: true})
+          .parse(PRE + "start = @<S>\n<S> CLOSED { :a . }");
+    const graph = new N3.Store();
+    graph.addQuads(new N3.Parser({baseIRI: base, format: "text/turtle"})
+      .parse(PRE + ":x :a 1 ; :b 2 ."));
+    const result = new ShExValidator(schema, RdfJsDb(graph), {})
+          .validateShapeMap([{node: base + "x", shape: ShExValidator.Start}])[0];
+    expect(result.status).to.equal("nonconformant");
+    expect(result.appinfo, "the bag is already one the shape accepts")
+      .to.not.have.property("repairs");
+  });
+
+  /* Where a value is wrong the bag *is* short -- the triple matched no
+   * constraint, so nothing was counted for it -- and the repair carries the
+   * value the missing arc would have to have. */
+  it("should ask for the arc a bad value failed to supply", function () {
+    const {ways} = repairs("<S> { :a <http://www.w3.org/2001/XMLSchema#integer> }",
+                           ':x :a "not a number" .');
+    expect(ways).to.deep.equal(["add 1 :a"]);
+  });
+
+  /* Inside a satisfied NOT the failure is the reason for success, so a
+   * repair there is a recipe for breaking what just worked. */
+  it("should not tell a satisfied NOT how to fail", function () {
+    const schema = ShExParser.construct(base, {}, {index: true})
+          .parse(PRE + "start = @<S>\n<S> NOT { :a . }");
+    const graph = new N3.Store();
+    graph.addQuads(new N3.Parser({baseIRI: base, format: "text/turtle"})
+      .parse(PRE + ":x :b 1 ."));
+    const result = new ShExValidator(schema, RdfJsDb(graph), {})
+          .validateShapeMap([{node: base + "x", shape: ShExValidator.Start}])[0];
+    expect(result.status).to.equal("conformant");
+    expect(JSON.stringify(result.appinfo), "no repairs recorded under the NOT")
+      .to.not.include("repairs");
   });
 
   it("should read as a recipe", function () {

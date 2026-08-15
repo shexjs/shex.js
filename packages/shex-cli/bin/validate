@@ -121,7 +121,8 @@ const CommandLineOptions = [
   { name: "diagnose",              type: Boolean, description: "parse and diagnose schema, the exit" },
   { name: "skipCycleCheck",        type: Boolean, description: "don't look for cycles in schema" },
   { name: "coverage",              type: String, typeLabel: covgChoices, multiple: false, defaultValue: undefined, description: "whether to collect all errors or stop on the first one" },
-  { name: "repairs",               type: Boolean, description: "say what would make a failing node conform: arcs to add, arcs to take away" },
+  { name: "repairs",               type: Boolean, description: "say what would make a failing node conform: arcs to add, arcs to take away (the default)" },
+  { name: "no-repairs",            type: Boolean, description: "leave out what would make a failing node conform" },
   { name: "yaml-manifest",         type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON manifest" },
   { name: "json-manifest",         type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON manifest" },
   { name: "turtle-manifest",       type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle manifest" },
@@ -202,9 +203,11 @@ async function main () {
   if ("duplicate-shape" in cmds)
     SchemaOptions.duplicateShape = cmds["duplicate-shape"];
 
-  // what would make a failing node conform (doc/error-normalization.md §4)
-  if (cmds.repairs)
-    ValidatorOptions.repairs = true;
+  // what would make a failing node conform (doc/error-normalization.md §4).
+  // On by default, so --repairs is a no-op kept for the scripts that pass
+  // it; --no-repairs is how a caller declines the search.
+  if (cmds["no-repairs"])
+    ValidatorOptions.repairs = false;
 
   if (cmds.coverage) {
     if (!(cmds.coverage in ShExValidator.InterfaceOptions.coverage))

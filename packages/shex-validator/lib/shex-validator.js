@@ -495,7 +495,10 @@ class ShExValidator {
             case "ShapeNot":
                 const sub = this.validateShapeExpr(focus, shapeExpr.shapeExpr, ctx);
                 return ("errors" in sub)
-                    ? { type: "ShapeNotResults", solution: sub }
+                    // The negation is satisfied *because* this failed, so the failure
+                    // is recorded as a reason for success.  Repairs answer "what would
+                    // make this conform", which here is advice to break the data.
+                    ? { type: "ShapeNotResults", solution: stripRepairs(sub) }
                     : { type: "ShapeNotFailure", errors: sub };
             case "ShapeAnd":
                 const andPasses = [];
@@ -607,9 +610,12 @@ class ShExValidator {
         // What would make the node conform, said as the difference between the
         // bag of arcs it has and the nearest bag this shape accepts.  Unlike the
         // errors above it doesn't depend on how the expression was written.
-        if (this.options.repairs && ret !== null && ret.type === "Failure"
-            && shape.expression !== undefined)
-            ret.repairs = this.nearestBagRepairs(shape.expression, observedBag);
+        if (this.options.repairs !== false && ret !== null && ret.type === "Failure"
+            && shape.expression !== undefined) {
+            const repairs = this.nearestBagRepairs(shape.expression, observedBag);
+            if (repairs.length > 0) // nothing to say beats an empty list to read
+                ret.repairs = repairs;
+        }
         // A reported result may contain ResultReferences whose named referents appeared
         // only in partitions that are not part of the report: attach those referents in
         // a "shared" side table so every reference is resolvable within the document.
@@ -753,13 +759,21 @@ class ShExValidator {
     /**
      * The repairs for a failed shape: the arcs to add or drop to reach the
      * nearest bag the expression accepts (see ./repairs.ts).
+     *
+     * A repair of cost 0 is dropped, and with it the whole answer.  Cost 0
+     * means the arcs this node has are already a bag the expression accepts,
+     * so whatever it failed on -- a value, a semantic action, a NOT it fell
+     * inside of -- is not something a bag can speak to, and "to conform:
+     * change nothing" is worse than saying nothing.  The classic errors
+     * carry that failure; this only ever answers the counting question.
      */
     nearestBagRepairs(expression, observed) {
         try {
             let nearest = this.nearestBags.get(expression);
             if (nearest === undefined)
                 this.nearestBags.set(expression, nearest = new repairs_1.NearestAcceptedBag(expression, label => this.index.tripleExprs[label]));
-            return nearest.repairs(observed);
+            const repairs = nearest.repairs(observed);
+            return repairs.some(repair => repair.cost === 0) ? [] : repairs;
         }
         catch (e) {
             return []; // e.g. a recursive triple expression
@@ -1533,6 +1547,28 @@ function indexNeighborhood(triples) {
  */
 function _seq(n) {
     return Array.from(Array(n)); // ha ha ha, javascript, you suck.
+}
+/**
+ * The same result with every `repairs` taken out of it, at any depth.
+ *
+ * Used where a failure is recorded as the reason something *succeeded* (a
+ * satisfied ShapeNot), so the reader isn't handed instructions for undoing
+ * the thing that just worked.  Both spellings go: a shape's nearest bag and
+ * a homeless triple's `FeasibilityViolation.repairs`.
+ */
+function stripRepairs(result) {
+    if (Array.isArray(result))
+        return result.map(stripRepairs);
+    if (result === null || typeof result !== "object")
+        return result;
+    const proto = Object.getPrototypeOf(result);
+    if (proto !== Object.prototype && proto !== null)
+        return result; // an RDF term or the like: leave it whole
+    const out = {};
+    for (const [key, value] of Object.entries(result))
+        if (key !== "repairs")
+            out[key] = stripRepairs(value);
+    return out;
 }
 function runtimeError(...args) {
     const errorStr = args.join("");

@@ -8,9 +8,11 @@ It is a companion to [error-normalization.md](error-normalization.md), which
 is about *what* to report (the nearest bag the schema accepts). This one is
 about *how a report is shaped and said*.
 
-All of F0–F4 is done on the `error-repair` branch, and F5 by halves; each
-section below says what landed.  [error-reporting-comparison.md](error-reporting-comparison.md)
-shows the same three failures as `main` and as this branch render them.
+F0–F5 are done; each section below says what landed.  F0 was a matcher
+fix rather than a reporting one, so it sits on `main` with the
+eval-simple-1err fix that followed it; F1–F5 are the `error-repair`
+branch.  [error-reporting-comparison.md](error-reporting-comparison.md)
+shows what the structures and the sentences look like either side of it.
 
 ## What was wrong
 
@@ -28,13 +30,13 @@ decides whether a failure carries one account or several), and now
 `repairs: true`. So a renderer is a pure function of the structure it is
 given — and how much structure it is given is a validation-time choice.
 
-`repairs` is opt-in because the search needs what only the validator has:
-the schema with its index, and the node's bag as it stood before the
-matching search pruned it (§5 of the companion note). A renderer holds
-neither, so it cannot compute repairs from a result alone. The alternative —
-always computing them — would charge every caller for an answer most don't
-want. Hence a flag: **off in the library, on in the apps and behind
-`validate --repairs`.**
+`repairs` has to be computed by the validator, not by a renderer: the
+search needs the schema with its index, and the node's bag as it stood
+before the matching search pruned it (§5 of the companion note). A
+renderer holds neither. It is now **on unless refused** — a failure that
+says only what is wrong leaves the reader to work out what would be right,
+and that is the whole of what this answers. `{repairs: false}` and
+`validate --no-repairs` decline it.
 
 ### Two renderers, disagreeing — fixed (F1)
 
@@ -138,10 +140,10 @@ Give the disjunction a name, matching how `repairs` already reads.  Watch
 that `errors` is load-bearing: it is the failure marker the validator tests
 for, so the *type* carries the meaning and the field name stays.
 
-### F5. Then the companion note's step 4 (M) — half done
+### F5. Then the companion note's step 4 (M) — done
 
-The presentation half is in: where a failure carries repairs, the report
-**leads** with them and the classic errors are the detail underneath.
+Where a failure carries repairs, the report **leads** with them and the
+classic errors are the detail underneath.
 
 ```
 validating :x as :S:
@@ -149,13 +151,26 @@ validating :x as :S:
     missing property <foaf:mbox>
 ```
 
-The other half — making them the *default*, so every consumer gets them —
-is left for review.  Turning it on measured fine (13 ms at its worst over
-shexTest, and no verdict moves) but it puts a `repairs` key in every failure
-anyone has ever compared against a fixture: 36 tests here, and whatever else
-downstream.  That is a decision for someone ready to rewrite those fixtures
-in one go, which is what this step was always about.  `{repairs: true}`,
-`validate --repairs`, and the apps ask for it today.
+And they are now the default, so every consumer gets them.  Turning it on
+was expected to cost 36 fixtures; it cost **three**, because most of what
+it would have written turned out to be output nobody wanted, and two rules
+fell out of looking at it:
+
+- **A repair of cost 0 is no repair.**  Cost 0 says the arcs this node has
+  are already a bag the shape accepts, so it failed on something a bag
+  can't speak to — a value, a semantic action — and "to conform: change
+  nothing" is worse than silence.  A closed shape lands here too, and that
+  one is a gap rather than a nuisance: the honest answer is "remove 1 :b",
+  but the arcs a `ClosedShapeViolation` complains about belong to no
+  triple constraint, so the bag search never sees them.
+- **A satisfied `NOT` is not repaired.**  It succeeded *because* the shape
+  inside it failed, and that failure is recorded as the reason.  Repairs
+  there are instructions for breaking what just worked, so they are
+  stripped from what a `ShapeNotResults` carries.  This alone accounted
+  for 24 of the fixtures.
+
+`validate --no-repairs` and `{repairs: false}` decline the search;
+`--repairs` is still accepted, and now says what is already true.
 
 ### F0. Before trusting any of it: the matcher (M/L) — done for the default engine
 
@@ -172,9 +187,18 @@ two places where threads shared what they should own.
 - `matchRepeat` gave up on the first thread that couldn't take another
   iteration, discarding the ones that could.
 
-eval-threaded-nerr — the default — now handles it.  eval-simple-1err still
-doesn't: it takes as many triples as a maximum allows and never gives any
-back, so the first iteration eats both `:p`s.  Backtracking across
-iterations there is a change to an NFA simulation rather than a bug fix, and
-a test in `packages/eval-threaded-nerr/test/` records the difference rather
-than leaving it to be rediscovered.
+eval-simple-1err failed the same case for a third reason, of its own kind,
+and it also turned out to want no new search: its `do…while` was already
+written to offer each larger take as its own thread, but it started at the
+*maximum*, so the loop never went round twice and the first iteration ate
+both `:p`s.  Starting at the minimum is the fix; `addStates` keeps `taken`
+by reference and appends to `thread.matched` in place, so each turn needs
+its own of both.
+
+Both fixes are on `main` (`c018dc49`, `e526b191`) — they are matcher
+corrections, useful whether or not any of the rest of this lands.  The
+shape stays exponential on both engines: the ways to split N triples
+across iterations are the compositions of N.  Bag reasoning is what sheds
+that (SORBE, Staworko et al. ICDT 2015), but an interval answers yes or no
+where ShEx has to report which triple matched which constraint — which is
+why `feasibility.ts` refutes rather than matches.
