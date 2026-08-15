@@ -8,7 +8,11 @@ It is a companion to [error-normalization.md](error-normalization.md), which
 is about *what* to report (the nearest bag the schema accepts). This one is
 about *how a report is shaped and said*.
 
-## Where things stand
+All of F0–F4 is done on the `error-repair` branch, and F5 by halves; each
+section below says what landed.  [error-reporting-comparison.md](error-reporting-comparison.md)
+shows the same three failures as `main` and as this branch render them.
+
+## What was wrong
 
 ### The verdict is independent of the presentation; the structure is not fully
 
@@ -32,9 +36,9 @@ always computing them — would charge every caller for an answer most don't
 want. Hence a flag: **off in the library, on in the apps and behind
 `validate --repairs`.**
 
-### Two renderers, disagreeing
+### Two renderers, disagreeing — fixed (F1)
 
-There are two independent bodies of code turning errors into English:
+There were two independent bodies of code turning errors into English:
 
 | | `ShExHumanErrorWriter` (`@shexjs/util`) | `ErrorLeaves` (`@shexjs/editor-services`) |
 | --- | --- | --- |
@@ -44,12 +48,14 @@ There are two independent bodies of code turning errors into English:
 | TypeMismatch | `validating <o>:` then the nested cause | `<o> doesn't satisfy <constraint>` |
 | NodeConstraint | reads `shapeExpr` **structurally** | takes the pre-stringified `errors[0]` |
 
-They were written for different jobs, but the *sentences* are the same job
-done twice, and they have drifted.
+They were written for different jobs, but the *sentences* were the same job
+done twice, and they had drifted.  The leaf sentence is now
+`describeError` in `@shexjs/util`, called by both; the tree writer keeps
+composition, editor-services keeps anchoring.
 
-### Strings where structure belongs
+### Strings where structure belongs — fixed (F2, F3)
 
-A datatype mismatch carries this today:
+A datatype mismatch used to carry this:
 
 ```json
 {"type": "NodeConstraintViolation",
@@ -63,13 +69,14 @@ with a JSON blob embedded in it**, and that the two renderers disagree about
 which to trust: the human writer uses the structure and reads tolerably, the
 editors use the string, so a red dot's hover shows a reader raw ShExJ.
 
-Where a fragment of schema has to appear in a sentence, ShExC is the reader's
-language, and the writer can already produce it for a fragment:
-`_writeShapeExpr` renders that constraint as `xsd:integer mininclusive 3`.
+It now carries `{type: "DatatypeMismatch", expected, actual, message}`, and
+the sentence is rendered from it — `has type xsd:string, not xsd:integer`.
+Where a fragment of schema appears in a sentence it appears as ShExC, via
+the writer's new public `writeShapeExpr`, in the schema's own prefixes.
 
-### Two ways to say "or"
+### Two ways to say "or" — fixed (F4)
 
-Alternatives are expressed twice over, in two idioms:
+Alternatives were expressed twice over, in two idioms:
 
 - **implicitly**, as `PossibleErrors.errors: error[][]` — an array of arrays,
   where the outer nesting *means* disjunction and nothing says so. Every
@@ -79,14 +86,22 @@ Alternatives are expressed twice over, in two idioms:
   together) and `FeasibilityViolation.repairs` — added with the repair work,
   and self-describing.
 
-One vocabulary should have one way.
+One vocabulary should have one way, and now does: `{type: "Alternatives",
+errors: [{type: "AllOf", errors: [...]}, ...]}`.  The field keeps the name
+`errors` on purpose — `"errors" in x` is how a failure is recognised
+throughout the validator — but both levels say what they are.
+
+That fixed a bug hiding behind the ambiguity: the validator spread the
+engine's alternatives into the failure's error list, so `:a . | :b .` over
+a node with neither reported *missing :a AND missing :b* — a choice read as
+a requirement to do both.
 
 ## The plan
 
 Sized as in [sonnet-task-list.md](sonnet-task-list.md): **S** ≈ an hour,
 **M** ≈ a day, **L** = needs design review first.
 
-### F1. One renderer (S)
+### F1. One renderer (S) — done
 
 Move sentence construction into one place — `describeError(err, ctx)` in
 `@shexjs/util` — returning the text *and* the anchors an editor needs
@@ -96,7 +111,7 @@ diagnostics and hovers, keeping only its *anchor* extraction, which is
 genuinely its own job. Golden tests over one table of errors, asserted by
 both callers, so the two can't drift again.
 
-### F2. ShExC in sentences, not JSON (S)
+### F2. ShExC in sentences, not JSON (S) — done
 
 Give `@shexjs/writer` a public fragment entry point (`writeShapeExpr(expr,
 {prefixes})`, wrapping what `_writeShapeExpr` already does) and use it from
@@ -104,21 +119,24 @@ the single renderer, so a message reads `…doesn't satisfy xsd:integer
 mininclusive 3`. Prefixes come from the schema's own, so the sentence uses
 the reader's spelling.
 
-### F3. Structured leaves for node-constraint failures (M)
+### F3. Structured leaves for node-constraint failures (M) — done
 
 Replace `NodeConstraintViolation.errors: string[]` with typed leaves —
 `{type: "DatatypeMismatch", expected, actual}`, `{type: "FacetViolation",
 facet, expected, actual}`, `{type: "ValueSetMismatch", …}`, `{type:
 "NodeKindMismatch", …}` — so no consumer parses English, and F1's renderer
-has something to render. This changes the result structure, so it lands with
-the one test rewrite (F5).
+has something to render.  Landed with `PatternMismatch` too, each leaf
+keeping its old English as `message` for consumers that haven't learned the
+types.  The reference results this moved were regenerated, but only the 39
+whose content actually changed: `REGEN=1` also rewrites 201 files whose diff
+is key order alone, which deep-equal ignores and a reviewer shouldn't have
+to read.
 
-### F4. Say "or" once (S, with F3)
+### F4. Say "or" once (S, with F3) — done
 
-Give the disjunction a name: `{type: "Alternatives", of: [...]}` in place of
-the bare `error[][]`, matching how `repairs` already reads. Then
-`errorList()`'s flattening — which exists only to cope with the unnamed
-nesting — goes away.
+Give the disjunction a name, matching how `repairs` already reads.  Watch
+that `errors` is load-bearing: it is the failure marker the validator tests
+for, so the *type* carries the meaning and the field name stays.
 
 ### F5. Then the companion note's step 4 (M) — half done
 
@@ -139,13 +157,24 @@ downstream.  That is a decision for someone ready to rewrite those fixtures
 in one go, which is what this step was always about.  `{repairs: true}`,
 `validate --repairs`, and the apps ask for it today.
 
-### F0. Before trusting any of it: the matcher (M/L)
+### F0. Before trusting any of it: the matcher (M/L) — done for the default engine
 
 `( :p . + ; :q . ){2}` over two `:p` and two `:q` should conform and every
-engine reports `MissingProperty :p` — a repeated group with an unbounded
-cardinality inside it needs a partition across its iterations, which neither
-engine searches. shexTest repeats groups only over fixed inner cardinalities
-(`open3Eachdotclosecard23`), so nothing catches it. A skipped test in
-`packages/eval-threaded-nerr/test/EvalThreadedNErr-test.js` states the
-expectation; un-skip it to work on this. A repair is only as good as the
-matching it is computed from, so this gates F5 as much as F1–F4 do.
+engine reported `MissingProperty :p`.  It wanted no new search after all:
+two places where threads shared what they should own.
+
+- The pool a constraint's triples come from was copied by reference when a
+  thread forked — the Map cloned, the arrays inside it not — and threads
+  take their triples by splicing them out.  The two prefix-length threads of
+  the first iteration drained `:p` between them.  (`eval-simple-1err` had
+  the same sharing, with a comment saying reuse was "safe… but I've not
+  thought about it".)
+- `matchRepeat` gave up on the first thread that couldn't take another
+  iteration, discarding the ones that could.
+
+eval-threaded-nerr — the default — now handles it.  eval-simple-1err still
+doesn't: it takes as many triples as a maximum allows and never gives any
+back, so the first iteration eats both `:p`s.  Backtracking across
+iterations there is a change to an NFA simulation rather than a bug fix, and
+a test in `packages/eval-threaded-nerr/test/` records the difference rather
+than leaving it to be rediscovered.
