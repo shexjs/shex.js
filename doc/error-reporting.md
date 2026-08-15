@@ -198,19 +198,33 @@ its own of both.
 Both fixes are on `main` (`c018dc49`, `e526b191`) — they are matcher
 corrections, useful whether or not any of the rest of this lands.
 
-What neither fixes is the cost.  The ways to split N triples across
-iterations are the compositions of N, and both engines search them.  On
-`( :p . + ; :q . )*` over N of each, the default engine measures:
+Neither fixed the cost, and the cost was the bigger problem.  The ways to
+split N triples across iterations are the compositions of N, and both
+engines searched them all.  On `( :p . + ; :q . )*` over N of each:
 
-| N | 18 | 19 | 20 | 21 | 22 |
-| --- | --- | --- | --- | --- | --- |
-| | 7.3 s | 17.9 s | 69.5 s | 293 s | out of heap at 4 GB |
+| N | 18 | 19 | 20 | 21 | 22 | 30 | 50 | 100 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| before | 7.3 s | 17.9 s | 69.5 s | 293 s | out of heap at 4 GB | | | |
+| after | 4.9 ms | | 9.1 ms | | 7.5 ms | 18.3 ms | 111 ms | 1.56 s |
 
-So a repeated group with an unbounded cardinality inside it is usable on
-small neighbourhoods and falls over on a page of data.  Bag reasoning is
-what sheds that (SORBE, Staworko et al. ICDT 2015): counts compose, so
-nothing ever asks which `:p` belongs to which iteration.  The catch is
-that an interval answers yes or no where ShEx has to report which triple
-matched which constraint — which is why `feasibility.ts` refutes rather
-than matches.  Using it to *decide*, and searching only to build the
-witness for a decision already made, is the shape of the fix.
+That is `c1ea5d18` on `main`, and it wanted no interval arithmetic after
+all — only the observation that the search was enumerating *pasts* when
+what it needed was *futures*.  Two threads at the same point in a repeated
+group with the same triples left match the rest of the expression the same
+way; they differ in which iteration took which triple, which is the
+witness, and any one witness will do.  So the frontier keeps one thread
+per distinct remaining count and the compositions of N collapse to the N+1
+counts they can leave behind.
+
+It is sound because of t2tc: the validator has already given each triple
+to exactly one triple constraint, so the triples in a pool are
+interchangeable and none is wanted anywhere else, and counts therefore
+identify the future exactly.  If an engine were ever handed triples that
+several constraints could claim, the key would have to say *which* triples
+remain rather than how many.
+
+This is the same insight the SORBE literature reaches by another road
+(Staworko et al. ICDT 2015): counts compose, so nothing need ever ask
+which `:p` belongs to which iteration.  What ShEx adds is that a report
+names which triple matched which constraint, so the witness can't be
+discarded outright — only deduplicated down to one.
