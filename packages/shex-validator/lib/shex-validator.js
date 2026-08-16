@@ -344,15 +344,28 @@ class ShExValidator {
     }
     /** the same, as a validation that can stop for data: see Resumable */
     *resumeShapeMap(shapeMap, tracker = new EmptyTracker(), seen = {}) {
+        const entry = (pair, res) => ({
+            node: pair.node,
+            shape: pair.shape,
+            status: ("errors" in res ? "nonconformant" : "conformant"),
+            appinfo: res,
+        });
+        // The pairs of a shape map are as independent of each other as the
+        // triples of a repeated constraint are, and over a db that fetches they
+        // are where the waiting is: ten nodes named by a query used to be ten
+        // walks end to end, each starting only once the one before it had
+        // finished going to the network.  Hand them over as a fork and a driver
+        // can run them together -- the same gate (no handled semantic action)
+        // and the same reason as forkTripleConstraint, which says why a branch
+        // needs its own `seen`.
+        if (this.canFork() && shapeMap.length > 1) {
+            const subs = (yield { fork: shapeMap.map(pair => this.resumeNodeShapePair(ShExTerm.ld2RdfJsTerm(pair.node), pair.shape, tracker, Object.assign({}, seen))) });
+            return shapeMap.map((pair, i) => entry(pair, subs[i]));
+        }
         const acc = [];
         for (const pair of shapeMap) {
             const res = yield* this.resumeNodeShapePair(ShExTerm.ld2RdfJsTerm(pair.node), pair.shape, tracker, seen);
-            acc.push({
-                node: pair.node,
-                shape: pair.shape,
-                status: "errors" in res ? "nonconformant" : "conformant",
-                appinfo: res,
-            });
+            acc.push(entry(pair, res));
         }
         return acc;
     }
@@ -803,7 +816,7 @@ class ShExValidator {
         // that left a triple unassigned reports the constraint it was assigned
         // to as missing -- an artifact of the reading, not a fault of the node.
         const bestErrors = partitionErrors.reduce((best, errs) => best === null || errs.length < best.length ? errs : best, null) || [];
-        let errors = missErrors.concat(feasibilityErrors, bestErrors.length === 1 ? bestErrors[0] : bestErrors);
+        let errors = dropContradictedMisses(missErrors.concat(feasibilityErrors, bestErrors.length === 1 ? bestErrors[0] : bestErrors));
         if (errors.length > 0)
             ret = {
                 type: "Failure",
@@ -1851,6 +1864,44 @@ function stripRepairs(result) {
         if (key !== "repairs")
             out[key] = stripRepairs(result[key]);
     return out;
+}
+/**
+ * A property is either absent or present and wrong; a failure that says both
+ * is asking the reader to resolve a contradiction.
+ *
+ * A `TripleConstraint` whose value expression rejects the one arc the node has
+ * produces exactly that.  The arc is refuted on its value, so the matcher is
+ * offered nothing to take and reports the property missing -- while the value
+ * test's own complaint travels beside it, quoting the arc it just read:
+ *
+ *     <Patient2> doesn't satisfy <.../subject> @<PatientShape>: ...
+ *     AND
+ *     missing property <.../subject>
+ *
+ * The second sentence is false as it reads: `:subject` is right there in the
+ * document, and a reader who trusts it goes looking for a triple to add.
+ * What is true -- that no *conforming* `:subject` was found, and that the node
+ * is one short -- is what the first sentence and `repairs` already say
+ * ("to conform: add 1 <.../subject>"), so nothing is lost by dropping it.
+ *
+ * Only within one shape's own error list, and only for a predicate some
+ * `TypeMismatch` beside it names: with no arc on that predicate at all there
+ * is no mismatch to contradict it, and "missing" is then the whole story.
+ */
+function dropContradictedMisses(errors) {
+    const refuted = new Set();
+    for (const err of errors) {
+        const e = err;
+        if (e.type === "TypeMismatch" && e.constraint && typeof e.constraint.predicate === "string")
+            refuted.add(e.constraint.predicate);
+    }
+    if (refuted.size === 0)
+        return errors;
+    return errors.filter(err => {
+        const e = err;
+        return !(e.type === "MissingProperty" && typeof e.property === "string"
+            && refuted.has(e.property));
+    });
 }
 function runtimeError(...args) {
     const errorStr = args.join("");
