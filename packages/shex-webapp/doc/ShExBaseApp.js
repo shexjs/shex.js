@@ -328,6 +328,17 @@ class NeighborhoodConfig {
     this.render();
   }
 
+  /** Throw away every source's documents, back to the empty panes a source
+   * insists on (`pane.min`).  Every source's, not just the selected one:
+   * this is what "there is no data now" means, and a stash left under a
+   * source nobody is looking at reappears the moment they choose it. */
+  forgetDocuments () {
+    this.panesByModule = {};
+    this.showing = 0;
+    this.textarea.val("");
+    this.render();
+  }
+
   select (moduleId) {
     if (this.moduleId === moduleId)
       return;
@@ -1274,6 +1285,14 @@ class ManifestCache extends InterfaceCache {
     await this.caches.inputData.set("", DefaultBase);
     $("#inputData .status").text(" ");
     delete this.caches.inputData.endpoint;
+    // ...and the documents beside it.  The textarea holds one document of
+    // however many the source has, so emptying it used to leave the rest
+    // standing: pick the example with an observation and a patient, then
+    // pick any other example, and its two tabs were still there with none
+    // of the new example's data in either of them.
+    const neighborhoods = this.caches.inputData.neighborhoods;
+    if (neighborhoods)
+      neighborhoods.forgetDocuments();
 
     // Clear out every form of ShapeMap.
     $("#queryMap").val("").removeClass("error");
@@ -2537,7 +2556,20 @@ class EditorSupport {
                               parsed: locate(inputData.selection.val())}].concat(
         documents.map((d, at) => ({at, parsed: at === showing ? null : locate(d.text)})))
             .filter(d => d.parsed);
-      const merged = {schema: [], data: [], pairs: []};
+      // A source can have no document to locate anything in -- an endpoint
+      // answers from a store nobody typed -- and the schema-side diagnostics
+      // are still worth drawing.  Map against nothing rather than against
+      // an empty list, which has no [0] to read.
+      if (dataDocuments.length === 0)
+        dataDocuments.push({at: -1, parsed: null});
+      // data ranges are offsets into one document, so they are kept per
+      // document: whichever is showing gets its own (see reaimAtShowingDocument)
+      const merged = {schema: [], data: [], pairs: [], dataByDoc: new Map()};
+      const dataOf = at => {
+        if (!merged.dataByDoc.has(at))
+          merged.dataByDoc.set(at, []);
+        return merged.dataByDoc.get(at);
+      };
       entries.forEach(entry => {
         // one mapping per document; a pair takes the anchors of whichever
         // document turns out to have said its triple
@@ -2563,7 +2595,12 @@ class EditorSupport {
         const actualFail = entry.status === "nonconformant";
         if (!this.expectsNonconformant(entry)) {
           merged.schema.push.apply(merged.schema, mapped.schema);
-          merged.data.push.apply(merged.data, mapped.data);
+          // Every document, not only the one on screen.  A validation walks
+          // wherever the data leads it -- the observation names a patient the
+          // next document describes -- and the reader who goes looking for
+          // the bad triple is looking in *that* document, where the dot
+          // belongs.
+          perDocument.forEach(d => dataOf(d.at).push.apply(dataOf(d.at), d.mapped.data));
         } else if (!actualFail) {
           // unexpected conformance: flag the shape declaration and the node
           const message = entry.node + " matched " + entry.shape
@@ -2571,11 +2608,14 @@ class EditorSupport {
           const shapeRange = typeof entry.shape === "string" ? located.locate.shape(entry.shape) : null;
           if (shapeRange)
             merged.schema.push(Object.assign({severity: "error", message}, shapeRange));
-          const anchored = mapped.pairs.find(p => p.anchors.subject);
-          if (anchored)
-            merged.data.push(Object.assign({severity: "error", message}, anchored.anchors.subject));
+          perDocument.forEach(d => {
+            const anchored = d.mapped.pairs.find(p => p.anchors && p.anchors.subject);
+            if (anchored)
+              dataOf(d.at).push(Object.assign({severity: "error", message}, anchored.anchors.subject));
+          });
         } // else: expected failure -- no error marks
       });
+      merged.data = merged.dataByDoc.get(showing) || [];
       this.lastMapped = merged; // introspection for tests/debugging
       this.mappedDoc = showing;  // the document these data ranges are offsets into
       this.panes.inputSchema.setDiagnostics(merged.schema);
@@ -2587,15 +2627,20 @@ class EditorSupport {
     }
   }
 
-  /** Another document is showing: the data-side ranges were offsets into
-   * the one before it, so aim them again -- and take away the marks that
-   * belong to a document nobody is looking at. */
+  /** Another document is showing: the data-side ranges are offsets into one
+   * document, so hand the pane the ones belonging to the document it is now
+   * holding.  It used to have only the mapping for whichever document the
+   * validation ran under, so moving off that one took the marks away and
+   * the document that actually contained the bad triple never showed one. */
   reaimAtShowingDocument () {
     if (!this.lastMapped)
       return;
     const showing = this.app.neighborhoods ? this.app.neighborhoods.showing : -1;
+    const byDoc = this.lastMapped.dataByDoc;
     if (this.panes.inputData)
-      this.panes.inputData.setDiagnostics(showing === this.mappedDoc ? this.lastMapped.data : []);
+      this.panes.inputData.setDiagnostics(
+        byDoc ? (byDoc.get(showing) || [])
+          : showing === this.mappedDoc ? this.lastMapped.data : []);
     this.setPairHovers(this.lastMapped.pairs);
   }
 
