@@ -141,8 +141,33 @@ describe("nearest-bag repairs", function () {
     const result = new ShExValidator(schema, RdfJsDb(graph), {})
           .validateShapeMap([{node: base + "x", shape: ShExValidator.Start}])[0];
     expect(result.status).to.equal("nonconformant");
-    expect(result.appinfo, "the bag is already one the shape accepts")
-      .to.not.have.property("repairs");
+    // `repairs` is answered on read, so the property is there to be asked;
+    // what it says is that there is nothing to say, and JSON leaves it out.
+    expect(result.appinfo.repairs, "the bag is already one the shape accepts")
+      .to.equal(undefined);
+    expect(JSON.stringify(result.appinfo)).to.not.include("repairs");
+  });
+
+  /* The search is the expensive part, and a failure that gets discarded
+   * mid-search is never asked.  Reading is what costs. */
+  it("should not go looking until someone asks", function () {
+    const schema = ShExParser.construct(base, {}, {index: true})
+          .parse(PRE + "start = @<S>\n<S> { :a . ; :b . }");
+    const graph = new N3.Store();
+    graph.addQuads(new N3.Parser({baseIRI: base, format: "text/turtle"})
+      .parse(PRE + ":x :c 1 ."));
+    const validator = new ShExValidator(schema, RdfJsDb(graph), {});
+    let searches = 0;
+    const wrapped = validator.nearestBagRepairs.bind(validator);
+    validator.nearestBagRepairs = function (...args) { ++searches; return wrapped(...args); };
+    const result = validator.validateShapeMap(
+      [{node: base + "x", shape: ShExValidator.Start}])[0];
+    expect(result.status).to.equal("nonconformant");
+    expect(searches, "not until read").to.equal(0);
+    expect(result.appinfo.repairs, "and then it answers").to.not.equal(undefined);
+    expect(searches, "exactly once").to.equal(1);
+    result.appinfo.repairs;                 // the accessor replaced itself
+    expect(searches, "and not again").to.equal(1);
   });
 
   /* Where a value is wrong the bag *is* short -- the triple matched no

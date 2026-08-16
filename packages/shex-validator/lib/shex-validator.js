@@ -632,11 +632,31 @@ class ShExValidator {
         // What would make the node conform, said as the difference between the
         // bag of arcs it has and the nearest bag this shape accepts.  Unlike the
         // errors above it doesn't depend on how the expression was written.
+        //
+        // Answered on demand rather than in advance.  A search that ultimately
+        // succeeds still fails branches on the way, and this is reached for each
+        // of them: over shexTest's parser round-trip, where every test passes
+        // and no failure reaches a caller at all, it was reached 5485 times.
+        // Failures that get thrown away never ask, so they now cost nothing.
+        //
+        // It stays an ordinary enumerable property: JSON.stringify, deep-equal
+        // against a fixture and `for...in` all read it exactly as they read an
+        // eager one, and a bag with nothing to repair yields undefined, which
+        // JSON.stringify omits.  The first read replaces the accessor with the
+        // value, so nothing recomputes.
         if (this.options.repairs !== false && ret !== null && ret.type === "Failure"
             && shape.expression !== undefined) {
-            const repairs = this.nearestBagRepairs(shape.expression, observedBag);
-            if (repairs.length > 0) // nothing to say beats an empty list to read
-                ret.repairs = repairs;
+            const expression = shape.expression, bag = observedBag, validator = this;
+            Object.defineProperty(ret, "repairs", {
+                enumerable: true, configurable: true,
+                get() {
+                    const repairs = validator.nearestBagRepairs(expression, bag);
+                    // nothing to say beats an empty list to read
+                    const value = repairs.length > 0 ? repairs : undefined;
+                    Object.defineProperty(this, "repairs", { value, enumerable: true, configurable: true, writable: true });
+                    return value;
+                },
+            });
         }
         // A reported result may contain ResultReferences whose named referents appeared
         // only in partitions that are not part of the report: attach those referents in
@@ -1605,9 +1625,12 @@ function stripRepairs(result) {
     if (proto !== Object.prototype && proto !== null)
         return result; // an RDF term or the like: leave it whole
     const out = {};
-    for (const [key, value] of Object.entries(result))
+    // by key, not by entry: `repairs` is an accessor that computes on read, and
+    // Object.entries would run it for every failure here only to throw the
+    // answer away -- which is the whole thing this is trying not to do.
+    for (const key of Object.keys(result))
         if (key !== "repairs")
-            out[key] = stripRepairs(value);
+            out[key] = stripRepairs(result[key]);
     return out;
 }
 function runtimeError(...args) {

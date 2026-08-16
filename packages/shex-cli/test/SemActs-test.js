@@ -81,7 +81,12 @@ describe('Invoking SemActs', function () {
          if (VERBOSE) console.log("schema: ", schemaBase)
          if (VERBOSE) console.log("data: ", dataBase)
          if (VERBOSE) console.log("expect: ", expectURL)
-         expect(res).to.deep.equal(expected)
+         // Through JSON, because the expectation *is* JSON: a result carries
+         // `repairs` as a property answered on read, and where a node's arcs
+         // were never the problem it answers undefined -- a key JSON drops
+         // and a fixture therefore never had.  Comparing the serialized form
+         // compares what a consumer sees.
+         expect(JSON.parse(JSON.stringify(res))).to.deep.equal(expected)
        })
   })
 })

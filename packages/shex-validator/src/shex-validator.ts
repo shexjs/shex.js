@@ -108,9 +108,16 @@ interface ValidatorOptions {
    * and what to take away (doc/error-normalization.md §4), beside the
    * classic errors.  On unless refused: a failure that says only what is
    * wrong leaves the reader to work out what would be right, and that is
-   * the whole of what this answers.  The search costs 13ms at its worst
-   * over the shexTest suite.  Pass `false` where a caller compares results
-   * against a fixture written before this existed
+   * the whole of what this answers.
+   *
+   * A failure carries `repairs` as a property answered on read, so a
+   * failure nobody reads costs nothing -- which matters because a search
+   * that succeeds still fails branches on the way, and each of those is a
+   * failure.  Reading it is an ordinary property access; it serializes,
+   * deep-equals and enumerates like any other.  Where a node's arcs were
+   * never the problem it answers `undefined`, which JSON omits.
+   *
+   * Pass `false` to leave the property off entirely
    * (doc/error-reporting.md F5). */
   repairs?: boolean;
 }
@@ -828,11 +835,32 @@ export class ShExValidator {
     // What would make the node conform, said as the difference between the
     // bag of arcs it has and the nearest bag this shape accepts.  Unlike the
     // errors above it doesn't depend on how the expression was written.
+    //
+    // Answered on demand rather than in advance.  A search that ultimately
+    // succeeds still fails branches on the way, and this is reached for each
+    // of them: over shexTest's parser round-trip, where every test passes
+    // and no failure reaches a caller at all, it was reached 5485 times.
+    // Failures that get thrown away never ask, so they now cost nothing.
+    //
+    // It stays an ordinary enumerable property: JSON.stringify, deep-equal
+    // against a fixture and `for...in` all read it exactly as they read an
+    // eager one, and a bag with nothing to repair yields undefined, which
+    // JSON.stringify omits.  The first read replaces the accessor with the
+    // value, so nothing recomputes.
     if (this.options.repairs !== false && ret !== null && (ret as any).type === "Failure"
         && shape.expression !== undefined) {
-      const repairs = this.nearestBagRepairs(shape.expression, observedBag);
-      if (repairs.length > 0)  // nothing to say beats an empty list to read
-        (ret as any).repairs = repairs;
+      const expression = shape.expression, bag = observedBag, validator = this;
+      Object.defineProperty(ret, "repairs", {
+        enumerable: true, configurable: true,
+        get () {
+          const repairs = validator.nearestBagRepairs(expression, bag);
+          // nothing to say beats an empty list to read
+          const value = repairs.length > 0 ? repairs : undefined;
+          Object.defineProperty(this, "repairs",
+                                {value, enumerable: true, configurable: true, writable: true});
+          return value;
+        },
+      });
     }
 
     // A reported result may contain ResultReferences whose named referents appeared
@@ -1877,9 +1905,12 @@ function stripRepairs<T> (result: T): T {
   if (proto !== Object.prototype && proto !== null)
     return result;             // an RDF term or the like: leave it whole
   const out: {[key: string]: any} = {};
-  for (const [key, value] of Object.entries(result))
+  // by key, not by entry: `repairs` is an accessor that computes on read, and
+  // Object.entries would run it for every failure here only to throw the
+  // answer away -- which is the whole thing this is trying not to do.
+  for (const key of Object.keys(result))
     if (key !== "repairs")
-      out[key] = stripRepairs(value);
+      out[key] = stripRepairs((result as {[key: string]: any})[key]);
   return out as T;
 }
 

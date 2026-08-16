@@ -186,13 +186,7 @@ describe("Parser-Writer-test", function () {
              const graphParser = new ShExValidator(
                GraphSchema,
                schemaDriver,
-               // repairs: this only ever uses a *passing* result -- it throws
-               // on failure -- so the repair search would be pure overhead.
-               // It isn't free: a search that succeeds still fails branches on
-               // the way, and each failed branch is asked what would repair
-               // it.  Over this file that was 5485 repair searches in a run
-               // where all 2325 tests pass.
-               { repairs: false } // regexModule: require("@shexjs/eval-simple-1err") is no faster
+               {  } // regexModule: require("@shexjs/eval-simple-1err") is no faster
              );
              const val = graphParser.validateNodeShapePair(schemaRoot, ShExValidator.Start); // start shape
              if ("errors" in val)

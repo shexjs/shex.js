@@ -172,6 +172,26 @@ fell out of looking at it:
 `validate --no-repairs` and `{repairs: false}` decline the search;
 `--repairs` is still accepted, and now says what is already true.
 
+**Answered on read.**  A failure carries `repairs` as a property computed
+when something asks for it, not when the failure is made.  That matters
+more than it sounds: a search that ultimately *succeeds* still fails
+branches on the way, and every failed branch used to be asked what would
+repair it.  Over shexTest's parser round-trip -- where all 2325 tests pass
+and no failure reaches a caller at all -- that was 5485 repair searches,
+and it took the file from 1.7s to 14.4s, most of the whole suite's
+slowdown.  Now it is 0 searches and 1.3s.
+
+It stays an ordinary enumerable property: it serializes, deep-equals and
+enumerates as an eagerly-computed one would, and the first read replaces
+the accessor with the value so nothing recomputes.  The one visible
+difference is that a failure whose arcs were never the problem now *has*
+the property and answers `undefined`, where before the key was absent --
+`JSON.stringify` omits it either way, so only an in-memory `deep.equal`
+against a hand-built object can tell.  Two things fell out of that:
+`stripRepairs` reads by key rather than by entry (`Object.entries` would
+run every accessor it is trying to avoid), and SemActs-test compares
+through JSON, which is what its fixture is.
+
 ### F0. Before trusting any of it: the matcher (M/L) — done for the default engine
 
 `( :p . + ; :q . ){2}` over two `:p` and two `:q` should conform and every
