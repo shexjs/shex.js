@@ -767,7 +767,8 @@ class TurtleCache extends InterfaceCache {
     if (!resolver)
       throw Error("the QueryMap extension " + extensionName(language) +
                   " is not supported by the neighborhood " + moduleId(module));
-    return resolver.resolve(lexical, await this.refresh());
+    // await: a resolver over an endpoint answers with a promise
+    return await resolver.resolve(lexical, await this.refresh());
   }
 
   /** how a query map extension is written back out: by the name the source
@@ -796,9 +797,11 @@ class TurtleCache extends InterfaceCache {
       const q = "SELECT DISTINCT ?s { ?s ?p ?o } LIMIT " + SPARQL_get_items_limit;
       // (this read ShEx.Util, which is not a thing in this file: the menu
       // has been quietly falling back to "no choices found" over endpoints)
-      return [MENU_ITEM_materialize]
-        .concat(ShExWebApp.Util.executeQuery(q, this.endpoint, RdfJs.DataFactory)
-                .map(row => this.lexifyFirstColumn(row)));
+      // ...Promise: a blocking request here freezes the tab while someone is
+      // typing into the menu it fills, which is the worst possible moment
+      const rows = await ShExWebApp.Util.executeQueryPromise(
+        q, this.endpoint, RdfJs.DataFactory);
+      return [MENU_ITEM_materialize].concat(rows.map(row => this.lexifyFirstColumn(row)));
     }
     return data.getQuads().map(t => this.meta.termToLex(t.subject));
   }

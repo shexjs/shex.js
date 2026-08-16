@@ -86,6 +86,8 @@ export interface SparqlNeighborhoodDb extends NeighborhoodDb {
   /** rows of a SELECT against this DB's endpoint -- what a shape map's
    * SPARQL extension is asking for, run where this DB is pointed */
   executeSelect (query: string): RdfJs.Term[][];
+  /** the same over fetch() -- what a browser should use */
+  executeSelectAsync (query: string): Promise<RdfJs.Term[][]>;
   /** a neighborhood over fetch() rather than a blocking request.  Use it
    * through asAsyncDb(); see that for why. */
   getNeighborhoodAsync (point: RdfJs.Term, shapeLabel: string | typeof Start,
@@ -859,6 +861,7 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
     get size(): number { return undefined as unknown as number; },
     setSchema: function (schema: InternalSchema) { schemaIndex = schema._index || ShExIndexVisitor.index(schema) },
     executeSelect: (query: string) => driveSync(runQuery(query)),
+    executeSelectAsync: (query: string) => driveAsync(runQuery(query)),
   };
 }
 
@@ -872,8 +875,15 @@ export const queryMapResolvers = [{
   language: "http://www.w3.org/ns/shex#Extensions-sparql",
   name: "SPARQL",
   description: "the focus nodes are the first column of this SELECT, run on this endpoint",
-  resolve: (lexical: string, db: NeighborhoodDb) =>
-    (db as SparqlNeighborhoodDb).executeSelect(lexical).map(row => row[0]),
+  // A shape map's `SPARQL "SELECT ..."` is a question for the endpoint, so
+  // it is a network round trip like any other: ask with fetch() where the db
+  // can, rather than freezing the tab of whoever typed it.
+  resolve: (lexical: string, db: NeighborhoodDb) => {
+    const sparql = db as SparqlNeighborhoodDb;
+    return typeof sparql.executeSelectAsync === "function"
+      ? sparql.executeSelectAsync(lexical).then(rows => rows.map(row => row[0]))
+      : sparql.executeSelect(lexical).map(row => row[0]);
+  },
 }];
 export const ctor = sparqlDB;
 

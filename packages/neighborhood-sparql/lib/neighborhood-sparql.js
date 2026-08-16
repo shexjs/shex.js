@@ -709,6 +709,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         get size() { return undefined; },
         setSchema: function (schema) { schemaIndex = schema._index || visitor_1.ShExIndexVisitor.index(schema); },
         executeSelect: (query) => driveSync(runQuery(query)),
+        executeSelectAsync: (query) => driveAsync(runQuery(query)),
     };
 }
 exports.name = "neighborhood-sparql";
@@ -720,7 +721,15 @@ exports.queryMapResolvers = [{
         language: "http://www.w3.org/ns/shex#Extensions-sparql",
         name: "SPARQL",
         description: "the focus nodes are the first column of this SELECT, run on this endpoint",
-        resolve: (lexical, db) => db.executeSelect(lexical).map(row => row[0]),
+        // A shape map's `SPARQL "SELECT ..."` is a question for the endpoint, so
+        // it is a network round trip like any other: ask with fetch() where the db
+        // can, rather than freezing the tab of whoever typed it.
+        resolve: (lexical, db) => {
+            const sparql = db;
+            return typeof sparql.executeSelectAsync === "function"
+                ? sparql.executeSelectAsync(lexical).then(rows => rows.map(row => row[0]))
+                : sparql.executeSelect(lexical).map(row => row[0]);
+        },
     }];
 exports.ctor = sparqlDB;
 /** What it takes to construct this DB, declared for hosts (the CLI, the

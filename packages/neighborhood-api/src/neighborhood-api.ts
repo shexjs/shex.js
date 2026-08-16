@@ -260,9 +260,13 @@ export interface QueryMapResolver {
   /** how it is written in a shape map, the bare word before the string */
   name: string;
   description?: string;
-  /** the focus nodes this extension's text picks out.  Synchronous, like
-   * the rest of this API: the db it is handed answers synchronously too. */
-  resolve (lexical: string, db: NeighborhoodDb): RdfJsTerm[];
+  /** the focus nodes this extension's text picks out.
+   *
+   * May answer with a promise: a db that reaches the network to work this
+   * out should do it with fetch() rather than with a blocking request, and
+   * the only caller (a WebApp resolving what someone typed) is async.  A
+   * resolver over data already in hand still answers outright. */
+  resolve (lexical: string, db: NeighborhoodDb): RdfJsTerm[] | Promise<RdfJsTerm[]>;
 }
 
 /** the selected source's resolver for an extension, or null if it has none */
