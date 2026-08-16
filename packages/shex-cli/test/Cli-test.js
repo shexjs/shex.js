@@ -218,6 +218,33 @@ if (!TEST_cli) {
     /* What would make a failing node conform, on the command line
      * (doc/error-normalization.md §4).  Given without asking; --no-repairs
      * declines it. */
+    /* Output a script reads must not depend on the terminal it ran in.
+     * `console.log(match)` handed a boolean to util.inspect, which paints it
+     * yellow wherever the environment asks for colour -- npm sets
+     * FORCE_COLOR, so `npm test` got "\u001b[33mtrue\u001b[39m" and a bare
+     * run got "true".  The manifest tests compare the text exactly, so they
+     * passed or failed by how they were launched. */
+    describe("a verdict on stdout", function () {
+      const manifest = Path.resolve(__dirname, "cli/manifest-results.json");
+      it("should be plain text however the environment feels about colour", async function () {
+        const {stdout} = await new Promise((resolve, reject) => {
+          const program = child_process.spawn("../bin/validate",
+                                              ["--json-manifest", manifest],
+                                              {cwd: __dirname,
+                                               env: Object.assign({}, process.env, {FORCE_COLOR: "3"})});
+          let stdout = "", stderr = "";
+          program.stdout.on("data", d => stdout += d);
+          program.stderr.on("data", d => stderr += d);
+          program.on("close", exitCode => resolve({stdout, stderr, exitCode}));
+          program.on("error", reject);
+        });
+        // eslint-disable-next-line no-control-regex
+        expect(stdout, "no escape codes in it").to.not.match(/\u001b\[/);
+        expect(stdout.split("\n").filter(l => l !== "")).to.deep.equal(
+          ["true", "true", "true", "true", "true", "true", "true"]);
+      });
+    });
+
     describe("--repairs", function () {
       const shape = "<http://a.example/S>";
       function inTmp (name, text) {

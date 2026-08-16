@@ -636,7 +636,10 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions, cmd
               typeof expectedResults === "boolean" && expectedResults !== !passed ||
               JSON.stringify(expectedResults) == JSON.stringify(res);
         if (!valParms.quiet)
-          console.log(match);
+          // as a string: console.log hands a boolean to util.inspect, which
+          // paints it yellow wherever the environment says colour is wanted
+          // (npm sets FORCE_COLOR), and this line is read by whatever ran us
+          console.log(String(match));
         return match ? ExitCode.val_match_pass : ExitCode.val_match_fail;
       } else {
         if (res.graph) {
