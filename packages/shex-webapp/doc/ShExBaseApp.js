@@ -743,8 +743,15 @@ class TurtleCache extends InterfaceCache {
         params[turtlePane.name] || [], this.meta, base);
 
     const res = module.fromParams(params, this.queryTrackerController.queryTracker);
+    // A db that can go to the network offers a second face which asks with
+    // fetch() rather than with a synchronous XMLHttpRequest.  Take it: a
+    // blocking request freezes the tab -- every editor, every button -- for
+    // as long as the endpoint takes to answer, and a wikidata walk makes one
+    // per entity it reaches.  Validation awaits it (see invoke).
     this.callOnLoad();
-    return res;
+    return module.asAsyncDb && typeof res.getNeighborhoodAsync === "function"
+      ? module.asAsyncDb(res)
+      : res;
   }
 
   /** Resolve a query map extension -- SPARQL "SELECT ...", QENTITIES "42"
@@ -2102,7 +2109,11 @@ class DirectShExValidator {
     this.renderer = renderer;
   }
   async invoke (fixedMap, validationTracker, time, _done, _currentAction) {
-    const ret = this.validator.validateShapeMap(fixedMap, validationTracker);
+    // ...async: a db that fetches answers with a promise, and the search
+    // stops at the fetch rather than blocking on it.  Given a db that
+    // doesn't, this is one traversal and one await, so it is right either
+    // way and the caller doesn't have to know which it has.
+    const ret = await this.validator.validateShapeMapAsync(fixedMap, validationTracker);
     time = new Date() - time;
     $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms");
     $("#results .status").text("rendering results...").show();
