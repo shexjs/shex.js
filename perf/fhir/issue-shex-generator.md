@@ -193,18 +193,44 @@ Worth 38 → 60 of the first 118 examples when reference targets are relaxed to
 plain IRIs. I don't think "relax them" is the answer — it's a question of what
 a resource's shape should assert about things it merely points at.
 
-### 7. `<Xhtml>` is referenced but never declared
+### 7. Two shapes are referenced but never declared
+
+Collecting every shape reference in the schema and subtracting the declared
+labels gives a complete list — 2878 declared, 1398 distinct references, and
+exactly two of them go nowhere:
+
+| reference | uses |
+| --- | --- |
+| `@<SimpleQuantity>` | 11 |
+| `@<Xhtml>` | 1 |
 
 ```diff
  # line 3292
      fhir:div @<Xhtml>;
 
-+# nothing anywhere declares <Xhtml>
+ # e.g. line 6459
+     fhir:value @<SimpleQuantity>  OR
+
++# nothing anywhere declares either one
 ```
 
-One reference, no declaration, so every document with a Narrative fails with
-`shape http://hl7.org/fhir/Xhtml not found`. Either declare it or point
-`fhir:div` at an existing shape.
+An undeclared reference doesn't make a document fail, it makes validation
+**abort**: `shape http://hl7.org/fhir/SimpleQuantity not found`, which takes
+out 26 files corpus-wide, and `<Xhtml>` catches every document with a
+Narrative.
+
+`SimpleQuantity` is FHIR's `Quantity` with `comparator` prohibited, so
+something like:
+
+```
+<SimpleQuantity> EXTENDS @<Quantity> CLOSED {
+    a [fhir:SimpleQuantity]?;
+}
+```
+
+though a faithful version also has to forbid `fhir:comparator`, which
+`EXTENDS` makes awkward — `<Quantity>` already permits it and `EXTENDS`
+conjoins. Worth deciding deliberately rather than by omission.
 
 ### 8. (minor) `ABSTRACT` is never emitted
 

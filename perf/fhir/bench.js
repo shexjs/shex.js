@@ -159,12 +159,23 @@ const schemaFixups = [
                                 "fhir:resource (@<OneOrMore_Resource> OR @<Resource>)?;"),
   },
   {
-    what: "<Xhtml> is referenced (fhir:div @<Xhtml>) but never declared",
-    // One reference, no declaration, so any document with a Narrative --
-    // most of them -- fails to validate with "shape ... Xhtml not found".
-    // A permissive stand-in keeps the rest of the run meaningful.
-    apply: text => /^<Xhtml>/m.test(text) ? text
-      : text + "\n# stand-in for the dangling reference at fhir:div @<Xhtml>\n<Xhtml> .\n",
+    what: "<Xhtml> and <SimpleQuantity> are referenced but never declared",
+    // These are the only two dangling references in the schema -- checked by
+    // collecting every shape reference and subtracting the declared labels,
+    // so it is a complete list rather than what happened to be hit:
+    //     11x @<SimpleQuantity>     1x @<Xhtml>
+    // Undeclared, they don't fail a document, they abort it: "shape
+    // http://hl7.org/fhir/SimpleQuantity not found", 26 files corpus-wide.
+    // SimpleQuantity is FHIR's Quantity with comparator prohibited; a
+    // stand-in that extends Quantity is close enough to judge the rest.
+    apply: text => {
+      if (!/^<Xhtml>/m.test(text))
+        text += "\n# stand-in for the dangling reference at fhir:div @<Xhtml>\n<Xhtml> .\n";
+      if (!/^<SimpleQuantity>/m.test(text))
+        text += "\n# stand-in: FHIR's SimpleQuantity is a Quantity forbidding comparator\n"
+          + "<SimpleQuantity> EXTENDS @<Quantity> CLOSED {\n    a [fhir:SimpleQuantity]?;\n}\n";
+      return text;
+    },
   },
 ];
 
