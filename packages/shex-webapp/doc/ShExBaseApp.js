@@ -37,6 +37,44 @@ function ldToTurtle (ld, termToLex) {
   }
 }
 
+/** Which spelling the messages use: see the `spelling` control. */
+function termSpelling () {
+  return $("#spelling").val() === "explicit" ? "explicit" : "document";
+}
+
+/**
+ * How to spell a term in a report that isn't tied to a document range: the
+ * human interface's indented tree, which is a block of text about a result
+ * rather than a mark on a line.
+ *
+ * The editors do better than this -- they have the range the term was
+ * written in, so they can quote it (see mapValidationErrors) -- but a block
+ * of text has only the document's prefixes and base to go on, which is what
+ * a data cache's meta is.  Shapes are named by the schema and left to it.
+ */
+function termLexerFor (dataCache) {
+  if (termSpelling() !== "document")
+    return undefined;
+  const meta = dataCache && dataCache.meta;
+  if (!meta || typeof meta.termToLex !== "function")
+    return undefined;
+  return (term, role) => {
+    if (role === "shape")
+      return null;
+    try {
+      const said = meta.termToLex(
+        typeof term === "string"
+          ? (term.startsWith("_:")
+             ? RdfJs.DataFactory.blankNode(term.substr(2))
+             : RdfJs.DataFactory.namedNode(term))
+          : term);
+      return typeof said === "string" && said !== "" ? said : null;
+    } catch (e) {
+      return null;   // a term this document has no better name for
+    }
+  };
+}
+
 class InterfaceCache {
   // caches for textarea parsers
   constructor (selection, onLoad) {
@@ -2315,13 +2353,17 @@ class ShExResultsRenderer {
           )).addClass(klass);
         if (fails)
           elt.append($("<pre>").text(ShExWebApp.Util.errsToSimple(
-            entry.appinfo, this.caches.inputSchema.meta.prefixes).join("\n")));
+            entry.appinfo, this.caches.inputSchema.meta.prefixes,
+            {lex: termLexerFor(this.caches.inputData),
+             base: this.caches.inputSchema.meta.base}).join("\n")));
         break;
 
       case "minimal":
         if (fails)
           entry.reason = ShExWebApp.Util.errsToSimple(
-            entry.appinfo, this.caches.inputSchema.meta.prefixes).join("\n");
+            entry.appinfo, this.caches.inputSchema.meta.prefixes,
+            {lex: termLexerFor(this.caches.inputData),
+             base: this.caches.inputSchema.meta.base}).join("\n");
         renderMe = Object.keys(entry).reduce((acc, key) => {
           if (key !== "appinfo")
             acc[key] = entry[key];
@@ -2575,7 +2617,11 @@ class EditorSupport {
         // document turns out to have said its triple
         const perDocument = dataDocuments.map(d => ({
           at: d.at,
-          mapped: ShExWebApp.EditorServices.mapValidationErrors(entry.appinfo, located, d.parsed),
+          // each document spells the message for itself: the same failure
+          // read from the observation says <Patient2> and read from the
+          // patient says :gender, because that is what each one says
+          mapped: ShExWebApp.EditorServices.mapValidationErrors(
+            entry.appinfo, located, d.parsed, {spelling: termSpelling()}),
         }));
         const mapped = perDocument[0].mapped;
         mapped.pairs.forEach((pair, i) => {
@@ -2863,6 +2909,9 @@ class ShExBaseApp {
     this.QueryParams = this.Getables.concat([
       {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
       {queryStringParm: "success",      location: $("#success"),         deflt: "proof"     },
+      // how a term is written in a message: as the document the reader is
+      // being pointed at writes it, or in full (see mapValidationErrors)
+      {queryStringParm: "spelling",     location: $("#spelling"),        deflt: "document"  },
       // an entry may ask for an engine: the thorough one enumerates every
       // way a shape could match, which some real data makes impractical
       {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr",

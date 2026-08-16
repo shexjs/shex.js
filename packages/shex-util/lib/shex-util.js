@@ -1706,9 +1706,15 @@ const ShExUtil = {
         });
     },
     /** A failure as indented lines.  Give it the schema's prefixes and the
-     * fragments it quotes read as the schema spells them. */
-    errsToSimple: function (val, prefixes) {
-        return new ShExHumanErrorWriter().write(val, prefixes || {});
+     * fragments it quotes read as the schema spells them; give it a `lex` as
+     * well and the terms read as the reader's document writes them. */
+    errsToSimple: function (val, prefixes, opts = {}) {
+        const ctx = {};
+        if (opts.lex)
+            ctx.lex = opts.lex;
+        if (opts.base !== undefined)
+            ctx.base = opts.base;
+        return new ShExHumanErrorWriter().write(val, prefixes || {}, ctx);
     },
     // static
     resolvePrefixedIRI: function (prefixedIri, prefixes) {

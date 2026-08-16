@@ -5,6 +5,7 @@ import {ShExVisitor, ShExIndexVisitor} from '@shexjs/visitor';
 import * as ShExJ from 'shexj';
 const Hierarchy = require('hierarchy-closure')
 import ShExHumanErrorWriter = require('./shex-human-error-writer');
+import type {TermLexer} from './error-messages';
 
 // runs in browsers (bundled) as well as node; not typed in the node-only lib
 declare const XMLHttpRequest: any;
@@ -1702,9 +1703,14 @@ const ShExUtil = {
   },
 
   /** A failure as indented lines.  Give it the schema's prefixes and the
-   * fragments it quotes read as the schema spells them. */
-  errsToSimple: function (val: any, prefixes?: { [prefix: string]: string }): string[] {
-    return new ShExHumanErrorWriter().write(val, prefixes || {});
+   * fragments it quotes read as the schema spells them; give it a `lex` as
+   * well and the terms read as the reader's document writes them. */
+  errsToSimple: function (val: any, prefixes?: { [prefix: string]: string },
+                          opts: {lex?: TermLexer, base?: string} = {}): string[] {
+    const ctx: {lex?: TermLexer, base?: string} = {};
+    if (opts.lex) ctx.lex = opts.lex;
+    if (opts.base !== undefined) ctx.base = opts.base;
+    return new ShExHumanErrorWriter().write(val, prefixes || {}, ctx);
   },
 
   // static

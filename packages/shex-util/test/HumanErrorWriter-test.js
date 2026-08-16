@@ -87,8 +87,10 @@ describe("errsToSimple", function () {
                  {type: "NearestBag", cost: 1, arcs: [{property: P + "name", delta: -1},
                                                       {property: P + "nick", delta: 1}]}]},
     )).join("\n");
-    expect(text).to.include("to conform: add 1 " + P + "mbox, or remove 1 " + P
-                            + "name and add 1 " + P + "nick");
+    // the arcs read as IRIs like every other term in the report, and as
+    // prefixed names where the caller supplied a table for them
+    expect(text).to.include("to conform: add 1 <" + P + "mbox>, or remove 1 <" + P
+                            + "name> and add 1 <" + P + "nick>");
     // a failure nobody asked to repair says nothing about conforming
     expect(ShExUtil.errsToSimple(failure([missing("mbox")])).join("\n"))
       .to.not.include("to conform");

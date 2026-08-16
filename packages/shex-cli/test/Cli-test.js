@@ -242,7 +242,8 @@ if (!TEST_cli) {
 
       it("should say it in words for a reader", async function () {
         const {stdout} = await validate(args.concat(["--human"]));
-        expect(stdout).to.include("to conform: add 1 http://a.example/mbox");
+        // the schema writes it ":mbox", so the report does too
+        expect(stdout).to.include("to conform: add 1 :mbox");
         // and the human output is lines, not an array literal
         expect(stdout).to.not.include("[ '");
       });

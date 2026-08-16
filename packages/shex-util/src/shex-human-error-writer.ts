@@ -5,7 +5,8 @@
  * too; what is left here is the *shape* of a report -- what nests under
  * what, and where the connectives go.  See doc/error-reporting.md.
  */
-import {describeError, isLeafError, repairText, ErrorContext} from "./error-messages";
+import {describeError, isLeafError, repairText, dataTerm, schemaIri,
+        ErrorContext} from "./error-messages";
 const XSD: { [key: string]: string } = {}
 XSD._namespace = "http://www.w3.org/2001/XMLSchema#";
 ["anyURI", "string"].forEach(p => {
@@ -14,6 +15,8 @@ XSD._namespace = "http://www.w3.org/2001/XMLSchema#";
 
 class ShExHumanErrorWriter {
   private prefixes: { [prefix: string]: string } = {};
+  /** the schema's BASE, so a shape it declares reads as it is written */
+  private base: string | undefined = undefined;
 
   /** nested errors, each indented under what they explain */
   nest (errors: any, ctx: ErrorContext = {}): string[] {
@@ -38,7 +41,9 @@ class ShExHumanErrorWriter {
   write (val: any, prefixes?: { [prefix: string]: string }, ctx: ErrorContext = {}): string[] {
     if (prefixes !== undefined)
       this.prefixes = prefixes;
-    const said: ErrorContext = Object.assign({prefixes: this.prefixes}, ctx);
+    if (ctx.base !== undefined)
+      this.base = ctx.base;
+    const said: ErrorContext = Object.assign({prefixes: this.prefixes, base: this.base}, ctx);
 
     if (Array.isArray(val))
       return val.reduce((ret: string[], e) => {
@@ -60,9 +65,10 @@ class ShExHumanErrorWriter {
       // What would make the node conform leads, where the validator worked
       // it out: it is the part of a report a reader can act on.  The errors
       // are the detail under it -- why it doesn't, arc by arc.
-      const ways = repairText(val.repairs);
+      const ways = repairText(val.repairs, said);
       const detail = this.joined(errorList(val.errors), "AND", said).map(s => "  " + s);
-      return ["validating " + val.node + " as " + val.shape + ":"]
+      return ["validating " + dataTerm(val.node, said, "node")
+              + " as " + schemaIri(val.shape, said, "shape") + ":"]
         .concat(ways.length === 0 ? [] : ["  to conform: " + ways.join(", or ")])
         .concat(detail);
     }
@@ -82,7 +88,8 @@ class ShExHumanErrorWriter {
     case "TypeMismatch": {
       // the header names the triple and the constraint; a cause that says no
       // more than the header does isn't worth a line of its own
-      const header = leaf !== null ? leaf.text : "validating " + n3ify(val.triple.object);
+      const header = leaf !== null ? leaf.text
+            : "validating " + dataTerm(val.triple.object, said, "object");
       // the causes say only *why*: the header has named the node already
       const causes = this.nest(val.errors, Object.assign({}, said, {
         constraint: val.constraint || said.constraint, triple: val.triple, terse: true,
@@ -90,13 +97,14 @@ class ShExHumanErrorWriter {
       return [header + (causes.length ? ":" : "")].concat(causes);
     }
     case "RestrictionError":
-      return ["validating restrictions on " + n3ify(val.focus) + ":"].concat(this.nest(val.errors, said));
+      return ["validating restrictions on " + dataTerm(val.focus, said, "node") + ":"].concat(this.nest(val.errors, said));
     case "ShapeAndFailure":
       return this.nest(val.errors, said);
     case "ShapeOrFailure":
       return this.joined(Array.isArray(val.errors) ? val.errors : [val.errors], "OR", said);
     case "ShapeNotFailure":
-      return ["Node " + val.errors.node + " expected to NOT pass " + val.errors.shape];
+      return ["Node " + dataTerm(val.errors.node, said, "node")
+              + " expected to NOT pass " + schemaIri(val.errors.shape, said, "shape")];
     case "SemActFailure":
       return ["rejected by semantic action:"].concat(this.nest(val.errors, said));
     case "ResultReference":

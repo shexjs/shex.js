@@ -1016,6 +1016,55 @@ if (!TEST_browser) {
           .to.equal(inPatient.length);
       });
 
+      /* The `spelling` control (doc/error-reporting.md F6): a term is written
+       * the way the document the reader is being sent to writes it, or in
+       * full.  The editors quote the range the term was written in; the
+       * human report has only the prefixes and base to go on. */
+      it("should spell terms as the documents do, or in full", async function () {
+        this.timeout(60000);
+        const examples = Path.join(__dirname, "../examples");
+        const read = f => Fs.readFileSync(Path.join(examples, f), "utf8");
+        const entry = JSON.parse(Fs.readFileSync(Path.join(examples, "manifest.json"), "utf8"))
+              .find(e => e.dataLabel === "two documents, and the mistake is in the second");
+        await shared.Caches.manifest.set([{
+          schemaLabel: "FHIR-ish", schema: read("ClinObs.shex"),
+          dataLabel: "the mistake is in the second", neighborhood: "rdfjs",
+          data: entry.data, queryMap: entry.queryMap,
+        }], "http://localhost/manifest.json");
+        $("#inputSchema .manifest li").last().trigger("click");
+        await shared.promise;
+        $("#inputData .indeterminant li, #inputData .fails li").last().trigger("click");
+        await shared.promise;
+
+        const wasSpelling = $("#spelling").val(), wasInterface = $("#interface").val();
+        const es = shared.Caches.editorSupport;
+        const say = async mode => {
+          $("#spelling").val(mode);
+          $("#interface").val("human");
+          $("#validate").trigger("click");
+          await shared.promise;
+          return {marks: [...es.lastMapped.dataByDoc.values()].flat().map(d => d.message).join(" "),
+                  human: $("#results .human pre").text()};
+        };
+        try {
+          const friendly = await say("document");
+          // <http://hl7.example/Patient2> is what the result carries; the
+          // document says <Patient2>, and so does the sentence about it
+          expect(friendly.marks).to.include("<Patient2>");
+          expect(friendly.marks).to.not.include("http://hl7.example/");
+          expect(friendly.human).to.include("validating <Obs1> as <ObservationShape>");
+          expect(friendly.human, "the repair names the arc as the schema does")
+            .to.include("to conform: add 1 :subject");
+
+          const explicit = await say("explicit");
+          expect(explicit.marks).to.include("<http://hl7.example/Patient2>");
+          expect(explicit.human).to.include("validating <http://hl7.example/Obs1>");
+        } finally {
+          $("#spelling").val(wasSpelling);
+          $("#interface").val(wasInterface);
+        }
+      });
+
       it("should carry the source and its settings in the permalink", async function () {
         source().select("sparql");
         $("#nbhd-endpoint").val("http://ex.example/sparql").trigger("change");
