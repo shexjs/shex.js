@@ -32,8 +32,18 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.paneEditor = exports.dbParams = exports.ctor = exports.queryMapResolvers = exports.capabilities = exports.description = exports.label = exports.name = exports.BNodeIdentityError = void 0;
+exports.asAsyncDb = asAsyncDb;
 exports.sparqlDB = sparqlDB;
 exports.fromParams = fromParams;
 exports.claimPaneText = claimPaneText;
@@ -41,6 +51,21 @@ const neighborhood_api_1 = require("@shexjs/neighborhood-api");
 const ShExUtil = __importStar(require("@shexjs/util"));
 const visitor_1 = require("@shexjs/visitor");
 const N3 = __importStar(require("n3")); // TODO: set global externally
+/**
+ * The asynchronous face of one of these, for ShExValidator.validateShapeMapAsync.
+ *
+ * The same db -- same query cache, same blank node descriptions -- asking the
+ * endpoint with fetch() instead of a synchronous XMLHttpRequest.  The work
+ * either way is the same generator; only the waiting differs.
+ */
+function asAsyncDb(db) {
+    // delegate rather than copy, so live members stay live
+    return Object.create(db, {
+        getNeighborhood: {
+            value: db.getNeighborhoodAsync.bind(db), enumerable: true, configurable: true,
+        },
+    });
+}
 /** Thrown when a blank node can't be pinned down by an anchored description. */
 class BNodeIdentityError extends Error {
     constructor(message, query) {
@@ -60,17 +85,42 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
     const verify = options.verifyBnodeDescriptions !== false;
     const execute = options.executeQuery ||
         ((q, ep, df) => ShExUtil.executeQuery(q, ep, df));
+    const executeAsync = options.executeQueryAsync ||
+        ((q, ep, df) => ShExUtil.executeQueryPromise(q, ep, df));
     const queryCache = options.cacheQueries === false ? null : new Map();
-    const runQuery = (query) => {
+    /**
+     * Ask the endpoint, without saying how to wait for it.
+     *
+     * The db's work is the same whether the rows arrive from a blocking
+     * request or from a promise, so it is written once as a generator that
+     * *yields the query* and is resumed with the rows.  driveSync answers with
+     * the synchronous transport, driveAsync awaits fetch() -- and the cache
+     * means neither is asked twice for the same query.
+     */
+    function* runQuery(query) {
         if (queryCache === null)
-            return execute(query, endpoint, DataFactory);
+            return yield query;
         let rows = queryCache.get(query);
         if (rows === undefined) {
-            rows = execute(query, endpoint, DataFactory);
+            rows = yield query;
             queryCache.set(query, rows);
         }
         return rows;
-    };
+    }
+    function driveSync(task) {
+        let step = task.next(undefined);
+        while (!step.done)
+            step = task.next(execute(step.value, endpoint, DataFactory));
+        return step.value;
+    }
+    function driveAsync(task) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let step = task.next(undefined);
+            while (!step.done)
+                step = task.next(yield executeAsync(step.value, endpoint, DataFactory));
+            return step.value;
+        });
+    }
     /** Every blank node this DB has handed out, by its internal label. */
     const described = new Map();
     let nextLabel = 0;
@@ -427,7 +477,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
      * This is the difference between a subtly wrong description showing up as an
      * error and showing up as a wrong validation result.
      */
-    function verifyDescriptions(fresh) {
+    function* verifyDescriptions(fresh) {
         if (!verify || fresh.length === 0)
             return;
         const branches = fresh.map((d, i) => `  {\n${instantiate(d.text, `v${i}_`)}` +
@@ -435,7 +485,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         const query = `SELECT ?i (COUNT(DISTINCT ?v) AS ?n) WHERE {\n` +
             branches.join("\n  UNION\n") + `\n} GROUP BY ?i`;
         const counts = new Map();
-        for (const row of runQuery(query))
+        for (const row of yield* runQuery(query))
             counts.set(parseInt(row[0].value, 10), parseInt(row[1].value, 10));
         for (let i = 0; i < fresh.length; ++i) {
             const got = counts.get(i) || 0;
@@ -479,11 +529,11 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
      * chains -- and only walks the blank-node component when the probe shows
      * blank nodes (the truncation retry below escalates the same way when a
      * description bottoms out). */
-    function fetch(point, preds, inverse) {
+    function* fetch(point, preds, inverse) {
         for (let depth = options.expectBnodes ? (startDepth || 4) : 0;; depth = depth === 0 ? (startDepth || 4) : Math.min(depth * 2, maxDepth)) {
             const anchor = descriptionOf(point);
             const query = componentQuery(anchor, preds, depth, inverse);
-            const rows = runQuery(query);
+            const rows = yield* runQuery(query);
             if (rows.length === 0)
                 return [];
             // Rows are [lvl, s, p, o, a0, a1, ...]; the anchor columns repeat.
@@ -567,7 +617,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
                 fresh.push(describe(internalOf.get(c.key), c.b, c.v, matches, text));
                 fresh.push(...mintNested(c.b, matches, internalOf));
             }
-            verifyDescriptions(fresh);
+            yield* verifyDescriptions(fresh);
             // Describing a blank node walked all its arcs; remember them so stepping
             // into it needs no further query.
             const byInternal = new Map([...internalOf].map(([k, l]) => [l, k]));
@@ -602,7 +652,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         return DataFactory.blankNode(label);
     }
     // ── NeighborhoodDb ────────────────────────────────────────────────────────
-    function getNeighborhood(point, shapeLabel, shape) {
+    function* getNeighborhood(point, shapeLabel, shape) {
         const arcs = requiredArcs(shape);
         const wantEverything = !!shape.closed || !!options.allOutgoing;
         const outPreds = wantEverything ? null : arcs.out;
@@ -611,7 +661,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
             queryTracker.start(false, point, shapeLabel);
         const cached = cachedOutgoing(point, outPreds);
         const outgoing = (wantEverything || outPreds.length > 0)
-            ? (cached !== null ? cached : fetch(point, outPreds, false))
+            ? (cached !== null ? cached : yield* fetch(point, outPreds, false))
             : [];
         if (queryTracker) {
             const now = Date.now();
@@ -622,7 +672,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         if (arcs.anyInverse) {
             if (queryTracker)
                 queryTracker.start(true, point, shapeLabel);
-            incoming = fetch(point, null, true);
+            incoming = yield* fetch(point, null, true);
             if (queryTracker)
                 queryTracker.end(incoming, Date.now() - startTime);
         }
@@ -639,23 +689,26 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
             ? known.outgoing
             : known.outgoing.filter(q => preds.indexOf(q.predicate.value) !== -1);
     }
-    function getQuads(s, p, o) {
+    function* getQuads(s, p, o) {
         const spo = [["?s", s], ["?p", p], ["?o", o]];
         const selected = spo.filter(([, t]) => !t).map(([v]) => v);
         const where = spo.map(([v, t]) => t ? turtlifyRdfJs(t) : v).join(" ");
-        const rows = runQuery(`SELECT ${selected.join(" ") || "*"} WHERE { ${where} }`);
+        const rows = yield* runQuery(`SELECT ${selected.join(" ") || "*"} WHERE { ${where} }`);
         const pick = (v, given, row) => given ? given : row[selected.indexOf(v)];
         return rows.map(row => DataFactory.quad(asN3Term(pick("?s", s, row)), asN3Term(pick("?p", p, row)), asN3Term(pick("?o", o, row))));
     }
     return {
-        getNeighborhood,
-        getQuads,
+        // the synchronous face: the generators above, driven with the blocking
+        // transport.  Same code the asynchronous face runs.
+        getNeighborhood: (point, shapeLabel, shape) => driveSync(getNeighborhood(point, shapeLabel, shape)),
+        getNeighborhoodAsync: (point, shapeLabel, shape) => driveAsync(getNeighborhood(point, shapeLabel, shape)),
+        getQuads: (s, p, o) => driveSync(getQuads(s, p, o)),
         getSubjects: function () { return ["!Query DB can't index subjects"]; },
         getPredicates: function () { return ["!Query DB can't index predicates"]; },
         getObjects: function () { return ["!Query DB can't index objects"]; },
         get size() { return undefined; },
         setSchema: function (schema) { schemaIndex = schema._index || visitor_1.ShExIndexVisitor.index(schema); },
-        executeSelect: (query) => runQuery(query),
+        executeSelect: (query) => driveSync(runQuery(query)),
     };
 }
 exports.name = "neighborhood-sparql";
