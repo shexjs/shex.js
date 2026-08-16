@@ -193,7 +193,35 @@ Worth 38 → 60 of the first 118 examples when reference targets are relaxed to
 plain IRIs. I don't think "relax them" is the answer — it's a question of what
 a resource's shape should assert about things it merely points at.
 
-### 7. Two shapes are referenced but never declared
+### 7. A repeating coded element binds its value set to the list, not the members
+
+Single-valued, the generator gets this right — the `Code` node is what
+carries `fhir:v`:
+
+```
+fhir:status @<Code> AND {fhir:v @fhirvs:account-status};
+```
+
+Repeating, the binding lands on the RDF **list**, which has `rdf:first` and
+`rdf:rest` and no `fhir:v` at all, so the element can never match:
+
+```diff
+-    fhir:format @<OneOrMore_Code> AND
+-    	{fhir:v @fhirvs:supplemented-mimetypes};
++    fhir:format @<OneOrMore_Code_supplemented-mimetypes>;
++
++# ...with the binding on the members:
++<OneOrMore_Code_supplemented-mimetypes> CLOSED {
++    rdf:first @<Code> AND {fhir:v @fhirvs:supplemented-mimetypes} ;
++    rdf:rest [rdf:nil] OR @<OneOrMore_Code_supplemented-mimetypes>
++}
+```
+
+30 occurrences, against 297 of the correct single-valued form. Dropping the
+mis-scoped binding (so the structure is at least checkable) takes the first
+197 examples from 113 conformant to 134.
+
+### 8. Two shapes are referenced but never declared
 
 Collecting every shape reference in the schema and subtracting the declared
 labels gives a complete list — 2878 declared, 1398 distinct references, and
@@ -232,14 +260,14 @@ though a faithful version also has to forbid `fhir:comparator`, which
 `EXTENDS` makes awkward — `<Quantity>` already permits it and `EXTENDS`
 conjoins. Worth deciding deliberately rather than by omission.
 
-### 8. (minor) `ABSTRACT` is never emitted
+### 9. (minor) `ABSTRACT` is never emitted
 
 `grep -c '^ABSTRACT' fhir.shex` → `0`, though `Base`, `Resource`,
 `DomainResource` and `Element` are all `abstract=true` upstream. Worth an
 audit beyond `<Resource>`: without it, an abstract type can be matched
 directly, and value-position references to it don't dispatch to descendants.
 
-### 9. (cosmetic) a comment is glued to a closing brace
+### 10. (cosmetic) a comment is glued to a closing brace
 
 ```diff
 -}# Potential outcomes for a subject with likelihood
@@ -252,23 +280,15 @@ emission slip.
 
 ---
 
-With 1–5 applied the schema parses and validates, and 66 of the first 300
-examples conform (against 4 before #4, and 0 before any of this, when the
-schema did not parse).
+With the schema fixups above and the data ones raised as
+w3c-cg/hcls-fhir-rdf#245, **232 of the first 247 examples conform** — against
+0 at the start, when the schema did not parse at all.
 
-The other 227 I can't yet attribute, and I'd rather say so than guess. What
-is known:
+The remainder is getting close to the floor. It now includes genuine example
+errors rather than systematic mismatches: `clinicalusedefinition-example.ttl`
+omits `fhir:subject`, which FHIR's own StructureDefinition puts at `1..*`.
 
-* About 28% of them are **reference scope**, not schema errors. The schema
-  requires a referenced resource to be present *and conformant in the same
-  graph* — `fhir:coverage @<Reference> AND {fhir:l @<Coverage>?}` — and a
-  single example document doesn't contain the resources it points at.
-  Relaxing reference targets to plain IRIs moves 39/118 to 61/118. Loading
-  all 2165 example documents into one store instead makes references resolve
-  but is *stricter*, since the referents then get validated too.
-* The rest is still open. Clustering the failures is confounded by ShEx
-  reporting every failed branch of a large disjunction, so the common leaves
-  (`ShapeNotFailure`, `ValueSetMismatch` against `[rdf:nil]`) are artifacts of
-  `<All>`'s guards and of `rdf:rest [rdf:nil] OR @<OneOrMore_X>`, not causes.
-
-Happy to dig further on any of these if it's useful.
+Everything here is applied mechanically in
+[`perf/fhir/bench.js`](https://github.com/shexjs/shex.js/blob/main/perf/fhir/bench.js),
+and [`perf/fhir/why.js`](https://github.com/shexjs/shex.js/blob/main/perf/fhir/why.js)
+explains any single example's failure against the same schema.

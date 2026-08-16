@@ -148,3 +148,47 @@ side that should change, this is where it changes:
 
 Accepting the union of all four in the schema takes the first 118 examples
 from 60 to 83 conformant, so this is one of the larger single causes.
+
+
+### 7. Elements written with no value at all
+
+**1115 occurrences across 1115 files** — half the published corpus.
+
+```turtle
+  fhir:hierarchyMeaning [] ; #
+```
+
+| predicate | occurrences |
+| --- | --- |
+| `fhir:expansion []` | 682 |
+| `fhir:hierarchyMeaning []` | 343 |
+| `fhir:dosageInstruction []` | 68 |
+| `fhir:handling []` | 11 |
+| `fhir:dosage`, `fhir:meta`, `fhir:version`, `fhir:network`, `fhir:definition`, `fhir:biologicalSourceEvent`, `fhir:baseDefinition` | 1 each |
+
+The Turtle asserts that the element is present and then gives it no value.
+Nothing can match it: the object needs a `fhir:v` (or whatever that element's
+shape wants), and if there is nothing to say, the element should be absent.
+
+```diff
+-  fhir:hierarchyMeaning [] ;
+```
+
+Repeating elements have the same thing one level in — a list whose only member
+is valueless:
+
+```diff
+-  fhir:asNeededFor ( [] ) ;
+```
+
+Dropping these takes the first 247 examples from 134 conformant to 232, which
+makes it the single largest cause of nonconformance in the corpus.
+
+### 8. An example missing a required element
+
+`clinicalusedefinition-example.ttl` has no `fhir:subject`, but
+[`ClinicalUseDefinition.subject`](http://build.fhir.org/clinicalusedefinition.profile.json)
+is `1..*`. Unlike everything above, this looks like an ordinary mistake in one
+example rather than a systematic writer issue — noting it because it's the
+kind of thing validation is *supposed* to find, and it only became visible
+once the systematic problems were out of the way.

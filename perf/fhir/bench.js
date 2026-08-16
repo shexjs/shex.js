@@ -310,8 +310,13 @@ function main () {
       const took = Date.now() - t;
       validateMs += took;
       timings.push({f, ms: took, quads: graph.size});
+      // Keep the failure *tree* only when something will print it: with
+      // <All> every failure carries 194 branches, each with its own repairs,
+      // and holding thousands of those turned a 13ms median into a run that
+      // spent 42 minutes in GC -- one 83-quad document was billed 16 minutes
+      // for work that takes 15ms on its own.
       results.forEach(r => r.status === "conformant" ? ++conformant
-                      : nonconformant.push({f, appinfo: r.appinfo}));
+                      : nonconformant.push(SHOW_FAILURES ? {f, appinfo: r.appinfo} : {f}));
     } catch (e) {
       record(broken, "validator: " + short(e), f);
     }
