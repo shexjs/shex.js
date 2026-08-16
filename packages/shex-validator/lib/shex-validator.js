@@ -34,9 +34,19 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ShExValidator = exports.ShapeExprValidationContext = exports.InterfaceOptions = void 0;
 exports.resultMapToShapeExprTest = resultMapToShapeExprTest;
+exports.isFork = isFork;
 // interface constants
 const ShExTerm = __importStar(require("@shexjs/term"));
 const term_1 = require("@shexjs/term");
@@ -148,6 +158,19 @@ class ShapeExprValidationContext {
     followTripleConstraint() {
         return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, null, false);
     }
+    /**
+     * The same, for a branch that will run beside its siblings.
+     *
+     * `seen` is the (node, shape) pairs being validated *on the way here*, and
+     * the sync search keeps it honest by deleting each on the way back out --
+     * so a sibling reached later never sees an earlier sibling's marks.  Run
+     * two branches at once and that stops being true: the second finds the
+     * first's in-progress mark and calls it recursion, which is a different
+     * answer.  Siblings are different paths, so each takes its own copy.
+     */
+    forkTripleConstraint() {
+        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, Object.assign({}, this.seen), this.matchTarget, null, false);
+    }
     checkExtendsPartition(subGraph, partitionClosed) {
         return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, subGraph, partitionClosed);
     }
@@ -245,6 +268,42 @@ class TrivialNeighborhood {
     addIncomingTriples(tz) { Array.prototype.push.apply(this.incoming, tz); }
     addOutgoingTriples(tz) { Array.prototype.push.apply(this.outgoing, tz); }
 }
+function isFork(r) {
+    return r.fork !== undefined;
+}
+/** every semantic action named anywhere in a schema */
+function collectSemActNames(v, into) {
+    if (Array.isArray(v)) {
+        v.forEach(x => collectSemActNames(x, into));
+        return;
+    }
+    if (v === null || typeof v !== "object")
+        return;
+    const o = v;
+    if (Array.isArray(o.semActs))
+        o.semActs.forEach(sa => into.add(sa.name));
+    for (const key of Object.keys(o))
+        if (key !== "_index" && key !== "_prefixes")
+            collectSemActNames(o[key], into);
+}
+/** is this a validation that may stop, rather than a finished answer? */
+function isResumable(x) {
+    return x !== null && typeof x === "object"
+        && typeof x.next === "function"
+        && typeof x[Symbol.iterator] === "function";
+}
+/** run one to completion against data that is already there */
+function driveSync(task, db) {
+    let step = task.next(undefined);
+    while (!step.done) {
+        const request = step.value;
+        step = task.next(isFork(request)
+            // nothing to overlap when the data is already here: run them in order
+            ? request.fork.map(sub => driveSync(sub, db))
+            : db.getNeighborhood(request.point, request.shapeLabel, request.shape));
+    }
+    return step.value;
+}
 class ShExValidator {
     /* ShExValidator - construct an object for validating a schema.
      *
@@ -256,6 +315,10 @@ class ShExValidator {
     constructor(schema, db, options = {}) {
         /** one repair search per triple expression, reused across nodes */
         this.nearestBags = new Map();
+        /** whether independent branches may be interleaved: see canFork */
+        this.forkable = undefined;
+        /** what the last validateShapeMapAsync did, for anyone measuring */
+        this.asyncStats = null;
         const index = schema._index || visitor_1.ShExIndexVisitor.index(schema);
         if (index.labelToTcs === undefined) // make sure there's a labelToTcs in the index
             index.labelToTcs = {};
@@ -277,18 +340,93 @@ class ShExValidator {
      * @param seen - optional (and discouraged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
      */
     validateShapeMap(shapeMap, tracker = new EmptyTracker(), seen = {}) {
-        return shapeMap.reduce((acc, pair) => {
-            // let time = +new Date();
-            const res = this.validateNodeShapePair(ShExTerm.ld2RdfJsTerm(pair.node), pair.shape, tracker, seen);
-            // time = +new Date() - time;
-            return acc.concat([{
-                    node: pair.node,
-                    shape: pair.shape,
-                    status: "errors" in res ? "nonconformant" : "conformant",
-                    appinfo: res,
-                    // elapsed: time
-                }]);
-        }, []);
+        return driveSync(this.resumeShapeMap(shapeMap, tracker, seen), this.db);
+    }
+    /** the same, as a validation that can stop for data: see Resumable */
+    *resumeShapeMap(shapeMap, tracker = new EmptyTracker(), seen = {}) {
+        const acc = [];
+        for (const pair of shapeMap) {
+            const res = yield* this.resumeNodeShapePair(ShExTerm.ld2RdfJsTerm(pair.node), pair.shape, tracker, seen);
+            acc.push({
+                node: pair.node,
+                shape: pair.shape,
+                status: "errors" in res ? "nonconformant" : "conformant",
+                appinfo: res,
+            });
+        }
+        return acc;
+    }
+    /**
+     * Validate over a db that has to go and get what it answers with.
+     *
+     * One traversal.  The search stops at a fetch and goes on from there, so
+     * nothing is validated twice -- which is the whole point of the search
+     * being resumable.  Three things fall out of that:
+     *
+     *  - a fork's branches run concurrently, so a level's fetches are in
+     *    flight together rather than one after another;
+     *  - two branches wanting the same neighborhood *share* the fetch: the
+     *    second finds it already in flight and waits on the same promise;
+     *  - a neighborhood is fetched once per validation and then cached.
+     *
+     * `asyncStats` records fetches, shares and the deepest fork nesting, for
+     * anyone who wants to see the shape of the traffic.
+     */
+    validateShapeMapAsync(shapeMap_1) {
+        return __awaiter(this, arguments, void 0, function* (shapeMap, tracker = new EmptyTracker()) {
+            // either kind of db: an AsyncNeighborhoodDb answers with a promise, a
+            // NeighborhoodDb answers outright, and Promise.resolve takes both
+            const db = this.db;
+            const cache = new Map();
+            const inFlight = new Map();
+            const stats = { fetched: 0, shared: 0, cached: 0, forks: 0, branches: 0 };
+            this.asyncStats = stats;
+            const keyOf = (r) => r.point.termType + " " + r.point.value + " @ "
+                + (typeof r.shapeLabel === "string" ? r.shapeLabel : "START");
+            const demand = (r) => {
+                const key = keyOf(r);
+                const have = cache.get(key);
+                if (have !== undefined) {
+                    ++stats.cached;
+                    return have;
+                }
+                const flying = inFlight.get(key);
+                if (flying !== undefined) {
+                    // another branch asked first and is still waiting: wait with it
+                    ++stats.shared;
+                    return flying;
+                }
+                ++stats.fetched;
+                const promise = Promise.resolve(db.getNeighborhood(r.point, r.shapeLabel, r.shape))
+                    .then(neighborhood => {
+                    cache.set(key, neighborhood);
+                    inFlight.delete(key);
+                    return neighborhood;
+                });
+                inFlight.set(key, promise);
+                return promise;
+            };
+            const run = (task) => __awaiter(this, void 0, void 0, function* () {
+                let step = task.next(undefined);
+                while (!step.done) {
+                    const request = step.value;
+                    let answer;
+                    if (isFork(request)) {
+                        ++stats.forks;
+                        stats.branches += request.fork.length;
+                        // every branch starts before any of them waits, so their fetches
+                        // overlap and duplicates meet each other in `inFlight`
+                        answer = yield Promise.all(request.fork.map(sub => run(sub)));
+                    }
+                    else {
+                        answer = yield demand(request);
+                    }
+                    step = task.next(answer);
+                }
+                return step.value;
+            });
+            return run(this.resumeShapeMap(shapeMap, tracker, {}));
+        });
     }
     /**
      * Validate a single node as a labeled shape expression or as the Start shape
@@ -299,6 +437,9 @@ class ShExValidator {
      * @param seen - optional (and discouraged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
      */
     validateNodeShapePair(focus, labelOrStart, tracker = new EmptyTracker(), seen = {}) {
+        return driveSync(this.resumeNodeShapePair(focus, labelOrStart, tracker, seen), this.db);
+    }
+    *resumeNodeShapePair(focus, labelOrStart, tracker = new EmptyTracker(), seen = {}) {
         const ctx = new ShapeExprValidationContext(null, labelOrStart, 0, tracker, seen, null, null);
         if ("startActs" in this.schema) {
             const startActionStorage = {}; // !!! need test to see this write to results structure.
@@ -311,19 +452,19 @@ class ShExValidator {
                     errors: semActErrors
                 }; // some semAct aborted !! return a better error
         }
-        const ret = this.validateShapeLabel(focus, ctx);
+        const ret = yield* this.validateShapeLabel(focus, ctx);
         if ("startActs" in this.schema) {
             ret.startActs = this.schema.startActs;
         }
         return ret;
     }
-    validateShapeLabel(focus, ctx) {
+    *validateShapeLabel(focus, ctx) {
         if (typeof ctx.label !== "string") {
             if (ctx.label !== ShExValidator.Start)
                 runtimeError(`unknown shape ctx.label ${JSON.stringify(ctx.label)}`);
             if (!this.schema.start)
                 runtimeError("start production not defined");
-            return this.validateShapeExpr(focus, this.schema.start, ctx);
+            return yield* this.resumeShapeExpr(focus, this.schema.start, ctx);
         }
         const seenKey = ShExTerm.rdfJsTerm2Turtle(focus) + "@" + ctx.label;
         if (!ctx.subGraph) { // Don't cache base shape validations as they aren't testing the full neighborhood.
@@ -344,7 +485,7 @@ class ShExValidator {
             ctx.seen[seenKey] = { node: focus, shape: ctx.label };
             ctx.tracker.enter(focus, ctx.label);
         }
-        const ret = this.validateDescendants(focus, ctx.label, ctx, false);
+        const ret = yield* this.validateDescendants(focus, ctx.label, ctx, false);
         if (!ctx.subGraph) {
             ctx.tracker.exit(focus, ctx.label, ret);
             delete ctx.seen[seenKey];
@@ -361,12 +502,12 @@ class ShExValidator {
      * @param ctx - validation context
      * @param includeAbstractShapes - if true, don't strip out abstract classes (needed for validating abstract base shapes)
      */
-    validateDescendants(focus, shapeLabel, ctx, includeAbstractShapes = false) {
+    *validateDescendants(focus, shapeLabel, ctx, includeAbstractShapes = false) {
         const _ShExValidator = this;
         if (ctx.subGraph) { // !! matchTarget?
             // matchTarget indicates that shape substitution has already been applied.
             // Now we're testing a subgraph against the base shapes.
-            const res = this.validateShapeDecl(focus, this.lookupShape(shapeLabel), ctx);
+            const res = yield* this.resumeShapeDecl(focus, this.lookupShape(shapeLabel), ctx);
             if (ctx.matchTarget && shapeLabel === ctx.matchTarget.label && !("errors" in res))
                 ctx.matchTarget.count++;
             return res;
@@ -390,15 +531,19 @@ class ShExValidator {
         if (!includeAbstractShapes)
             candidates = candidates.filter(l => !this.lookupShape(l).abstract);
         // Aggregate results in a SolutionList or FailureList.
-        const results = candidates.reduce((ret, candidateShapeLabel) => {
+        // a loop rather than a reduce: `yield*` can't cross a callback, and this
+        // is on the path that stops for data
+        const results = { passes: [], failures: [] };
+        for (const candidateShapeLabel of candidates) {
             const shapeExpr = this.lookupShape(candidateShapeLabel);
             const matchTarget = candidateShapeLabel === shapeLabel ? null : { label: shapeLabel, count: 0 };
             ctx = ctx.checkExtendingClass(candidateShapeLabel, matchTarget);
-            const res = this.validateShapeDecl(focus, shapeExpr, ctx);
-            return "errors" in res || matchTarget && matchTarget.count === 0 ?
-                { passes: ret.passes, failures: ret.failures.concat(res) } :
-                { passes: ret.passes.concat(res), failures: ret.failures };
-        }, { passes: [], failures: [] });
+            const res = yield* this.resumeShapeDecl(focus, shapeExpr, ctx);
+            if ("errors" in res || matchTarget && matchTarget.count === 0)
+                results.failures.push(res);
+            else
+                results.passes.push(res);
+        }
         let ret;
         if (results.passes.length > 0) {
             ret = results.passes.length !== 1 ?
@@ -474,11 +619,34 @@ class ShExValidator {
      * @param ctx - validation context
      */
     validateShapeDecl(focus, shapeDecl, ctx) {
+        return driveSync(this.resumeShapeDecl(focus, shapeDecl, ctx), this.db);
+    }
+    /**
+     * May independent branches be run in any order, or interleaved?
+     *
+     * Only with no *handled* semantic action.  An unhandled one is never
+     * dispatched, so it cannot observe anything (see
+     * SemActDispatcher.isRegistered); a handled one is handed the triples it
+     * fired on, writes into shared results, and is rolled back per triple by
+     * triplesMatchingShapeExpr -- which is an order, and forking would lose it.
+     */
+    canFork() {
+        if (this.forkable === undefined) {
+            const handler = this.semActHandler;
+            const names = new Set();
+            collectSemActNames(this.schema, names);
+            this.forkable = names.size === 0 ? true
+                : handler.isRegistered === undefined ? false
+                    : ![...names].some(name => handler.isRegistered(name));
+        }
+        return this.forkable;
+    }
+    *resumeShapeDecl(focus, shapeDecl, ctx) {
         const conjuncts = (shapeDecl.restricts || []).concat([shapeDecl.shapeExpr]);
         const expr = conjuncts.length === 1
             ? conjuncts[0]
             : { type: "ShapeAnd", shapeExprs: conjuncts };
-        return this.validateShapeExpr(focus, expr, ctx);
+        return yield* this.resumeShapeExpr(focus, expr, ctx);
     }
     lookupShape(label) {
         const shapes = this.schema.shapes;
@@ -491,23 +659,32 @@ class ShExValidator {
         runtimeError("shape " + label + " not found in:\n" + Object.keys(this.index.shapeExprs || []).map(s => "  " + s).join("\n"));
     }
     validateShapeExpr(focus, shapeExpr, ctx) {
+        return driveSync(this.resumeShapeExpr(focus, shapeExpr, ctx), this.db);
+    }
+    *resumeShapeExpr(focus, shapeExpr, ctx) {
         if (typeof shapeExpr === "string") { // ShapeRef
-            return this.validateShapeLabel(focus, ctx.checkShapeLabel(shapeExpr));
+            return yield* this.validateShapeLabel(focus, ctx.checkShapeLabel(shapeExpr));
         }
         switch (shapeExpr.type) {
             case "NodeConstraint":
                 return this.validateNodeConstraint(focus, shapeExpr, ctx);
             case "Shape":
-                return this.validateShape(focus, shapeExpr, ctx);
+                return yield* this.validateShape(focus, shapeExpr, ctx);
             case "ShapeExternal":
                 if (typeof this.options.validateExtern !== "function")
                     throw runtimeError(`validating ${ShExTerm.shExJsTerm2Turtle(focus)} as EXTERNAL shapeExpr ${ctx.label} requires a 'validateExtern' option`);
-                return this.options.validateExtern(focus, ctx.label, ctx.checkShapeLabel(ctx.label));
+                // Either an answer or a validation that may itself stop for data:
+                // an external validator over a remote db should be able to say "I
+                // need this" too, rather than being forced to fetch synchronously.
+                const extern = this.options.validateExtern(focus, ctx.label, ctx.checkShapeLabel(ctx.label));
+                return isResumable(extern)
+                    ? yield* extern
+                    : extern;
             case "ShapeOr":
                 const orErrors = [];
                 for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
                     const nested = shapeExpr.shapeExprs[i];
-                    const sub = this.validateShapeExpr(focus, nested, ctx);
+                    const sub = yield* this.resumeShapeExpr(focus, nested, ctx);
                     if ("errors" in sub)
                         orErrors.push(sub);
                     else if (!ctx.matchTarget || ctx.matchTarget.count > 0)
@@ -515,7 +692,7 @@ class ShExValidator {
                 }
                 return { type: "ShapeOrFailure", errors: orErrors };
             case "ShapeNot":
-                const sub = this.validateShapeExpr(focus, shapeExpr.shapeExpr, ctx);
+                const sub = yield* this.resumeShapeExpr(focus, shapeExpr.shapeExpr, ctx);
                 return ("errors" in sub)
                     // The negation is satisfied *because* this failed, so the failure
                     // is recorded as a reason for success.  Repairs answer "what would
@@ -527,7 +704,7 @@ class ShExValidator {
                 const andErrors = [];
                 for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
                     const nested = shapeExpr.shapeExprs[i];
-                    const sub = this.validateShapeExpr(focus, nested, ctx);
+                    const sub = yield* this.resumeShapeExpr(focus, nested, ctx);
                     if ("errors" in sub)
                         andErrors.push(sub);
                     else
@@ -550,14 +727,19 @@ class ShExValidator {
         }
         return ret;
     }
-    validateShape(focus, shape, ctx) {
+    *validateShape(focus, shape, ctx) {
         let ret = null;
-        const fromDB = (ctx.subGraph || this.db).getNeighborhood(focus, ctx.label, shape);
+        // The one place a validation stops.  A partition's subgraph is triples
+        // already read, so it answers here and now; only the real db can be a
+        // question, and asking it is a yield rather than a call.
+        const fromDB = ctx.subGraph
+            ? ctx.subGraph.getNeighborhood(focus, ctx.label, shape)
+            : yield { point: focus, shapeLabel: ctx.label, shape };
         const neighborhood = fromDB.outgoing.concat(fromDB.incoming);
         const { extendsTCs, tc2exts, localTCs } = this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
         const tripleConstraints = extendsTCs.concat(localTCs);
         // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
-        const { t2tcs, t2tcErrors, tc2TResults } = this.matchByPredicate(tripleConstraints, fromDB, ctx);
+        const { t2tcs, t2tcErrors, tc2TResults } = yield* this.matchByPredicate(tripleConstraints, fromDB, ctx);
         // The bag the node has, counted before the feasibility layer prunes
         // candidates out of t2tcs -- it is what the node holds, not what is left
         // of the search.  One count per triple, against the first constraint
@@ -596,7 +778,7 @@ class ShExValidator {
                 continue;
             }
             triedSome = true;
-            const { errors, triples, results } = this.tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine, extendsResultCache);
+            const { errors, triples, results } = yield* this.tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine, extendsResultCache);
             const possibleRet = { type: "ShapeTest", node: (0, term_1.rdfJsTerm2Ld)(focus), shape: ctx.label };
             if (errors.length === 0 && results !== null) // only include .solution for non-empty pattern
                 // @ts-ignore TODO
@@ -613,7 +795,7 @@ class ShExValidator {
         }
         // Every partition was pruned: run the first one for a classic error report.
         if (ret === null && !triedSome && firstPruned !== null && feasibilityErrors.length === 0) {
-            const { errors } = this.tryPartition(firstPruned, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine, extendsResultCache);
+            const { errors } = yield* this.tryPartition(firstPruned, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine, extendsResultCache);
             partitionErrors.push(errors);
         }
         // Of the partitions tried, report the one that found least wrong: the
@@ -677,7 +859,13 @@ class ShExValidator {
                 }
                 if (typeof v.resultName === "string")
                     embedded.add(v.resultName);
-                Object.values(v).forEach(walk);
+                // by key, skipping `repairs`: it is an accessor that computes on
+                // read (see validateShape), and Object.values would run it for every
+                // failure this passes over -- 23% of a FHIR run, spent answering a
+                // question nobody asked.  Repairs contain no ResultReferences.
+                for (const key of Object.keys(v))
+                    if (key !== "repairs")
+                        walk(v[key]);
             })(ret);
             const shared = {};
             let anyShared = false;
@@ -904,7 +1092,7 @@ class ShExValidator {
      * @param regexEngine engine to use to test regular triple expression
      * @private
      */
-    tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, t2tcErrors, outgoing, regexEngine, extendsResultCache = new Map()) {
+    *tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, t2tcErrors, outgoing, regexEngine, extendsResultCache = new Map()) {
         const tc2ts = new eval_validator_api_1.MapArray();
         tripleConstraints.forEach(tc => tc2ts.empty(tc));
         const usedTriples = [];
@@ -949,7 +1137,7 @@ class ShExValidator {
                 })
             });
         }
-        let results = this.testExtends(shape, focus, extendsToTriples, ctx, extendsResultCache);
+        let results = yield* this.testExtends(shape, focus, extendsToTriples, ctx, extendsResultCache);
         if (results === null || !("errors" in results)) {
             if (regexEngine !== null /* i.e. shape.expression !== undefined */) {
                 const sub = regexEngine.match(focus, tc2ts, this.semActHandler, null);
@@ -982,20 +1170,24 @@ class ShExValidator {
      * @param neighborhood - list of Quad
      * @param ctx - evaluation context
      */
-    matchByPredicate(constraintList, neighborhood, ctx) {
+    *matchByPredicate(constraintList, neighborhood, ctx) {
         const _ShExValidator = this;
         const outgoing = indexNeighborhood(neighborhood.outgoing);
         const incoming = indexNeighborhood(neighborhood.incoming);
         const init = { t2tcErrors: new Map(), tc2TResults: new MapMap(), t2tcs: new eval_validator_api_1.MapArray() };
         [neighborhood.outgoing, neighborhood.incoming].forEach(quads => quads.forEach(triple => init.t2tcs.data.set(triple, [])));
-        return constraintList.reduce(function (ret, constraint) {
+        // a loop rather than a reduce: this is where the value expressions are
+        // checked, so it is where a validation reaches the *next* nodes -- and
+        // `yield*` can't cross a callback
+        const ret = init;
+        for (const constraint of constraintList) {
             // subject and object depend on direction of constraint.
             const index = constraint.inverse ? incoming : outgoing;
             // get triples matching predicate
             const matchPredicate = index.byPredicate.get(constraint.predicate) ||
                 []; // empty list when no triple matches that constraint
             // strip to triples matching value constraints (apart from @<someShape>)
-            const matchConstraints = _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
+            const matchConstraints = yield* _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
             matchConstraints.hits.forEach(function (evidence) {
                 ret.t2tcs.add(evidence.triple, constraint);
                 ret.tc2TResults.set(constraint, evidence.triple, evidence.sub);
@@ -1003,8 +1195,8 @@ class ShExValidator {
             matchConstraints.misses.forEach(function (evidence) {
                 ret.t2tcErrors.set(evidence.triple, { constraint: constraint, errors: evidence.sub });
             });
-            return ret;
-        }, init);
+        }
+        return ret;
     }
     whatsMissing(t2tcs, misses, extras) {
         const matchedExtras = []; // triples accounted for by EXTRA
@@ -1033,7 +1225,7 @@ class ShExValidator {
         }
         return ret;
     }
-    testExtends(expr, focus, extendsToTriples, ctx, extendsResultCache = new Map()) {
+    *testExtends(expr, focus, extendsToTriples, ctx, extendsResultCache = new Map()) {
         if (expr.extends === undefined)
             return null;
         const passes = [];
@@ -1059,7 +1251,7 @@ class ShExValidator {
             // new context with subgraph; closedness propagates through the inheritance
             // chain so an ancestor's ancestors must consume their allocations too
             ctx = ctx.checkExtendsPartition(subgraph, expr.closed === true || ctx.partitionClosed);
-            const sub = this.validateShapeExpr(focus, extend, ctx);
+            const sub = yield* this.resumeShapeExpr(focus, extend, ctx);
             // Name the result <focus node><ShExPath>: the part after the focus is a ShExPath
             // (shape-path-core) expression addressing the extension — a labeled extension by
             // its shape-declaration selector "@<label>", an inline shapeExpr by a child step
@@ -1236,10 +1428,29 @@ class ShExValidator {
         };
         return { getAllTripleConstraints };
     }
-    triplesMatchingShapeExpr(triples, constraint, ctx) {
+    *triplesMatchingShapeExpr(triples, constraint, ctx) {
         const _ShExValidator = this;
         const misses = [];
         const hits = [];
+        // Every triple here is checked against the same value expression, and
+        // nothing one of them does is visible to another -- *unless* a semantic
+        // action is handled, in which case each iteration snapshots and rolls
+        // back shared results below, and the order is part of the meaning.
+        // Where they are independent, hand them over as a fork so a driver can
+        // run them together and fetch what they all want in one go.  This is
+        // the only place a validation reaches sideways rather than downwards,
+        // so it is the only place worth forking.
+        if (this.canFork() && triples.length > 1 && constraint.valueExpr !== undefined
+            && !(typeof constraint.valueExpr === "object" && constraint.valueExpr.type === "NodeConstraint")) {
+            const subs = (yield { fork: triples.map(triple => this.resumeShapeExpr(constraint.inverse ? triple.subject : triple.object, constraint.valueExpr, ctx.forkTripleConstraint())) });
+            subs.forEach((sub, i) => {
+                if (sub.errors === undefined)
+                    hits.push(new TriplesMatchingHit(triples[i], sub));
+                else
+                    misses.push(new TriplesMatchingMiss(triples[i], sub));
+            });
+            return new TriplesMatching(hits, misses);
+        }
         for (const triple of triples) {
             const value = constraint.inverse ? triple.subject : triple.object;
             const oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
@@ -1247,7 +1458,15 @@ class ShExValidator {
                 hits.push(new TriplesMatchingNoValueConstraint(triple));
             else {
                 ctx = ctx.followTripleConstraint();
-                const sub = _ShExValidator.validateShapeExpr(value, constraint.valueExpr, ctx);
+                // A NodeConstraint is a leaf: it looks at the value and nothing else,
+                // so it can never reach a fetch and needs no generator.  This is the
+                // innermost, most frequent call in a validation -- once per triple per
+                // constraint -- and in FHIR most of them are exactly this, a datatype
+                // or a value set on fhir:v.
+                const sub = typeof constraint.valueExpr === "object"
+                    && constraint.valueExpr.type === "NodeConstraint"
+                    ? _ShExValidator.validateNodeConstraint(value, constraint.valueExpr, ctx)
+                    : yield* _ShExValidator.resumeShapeExpr(value, constraint.valueExpr, ctx);
                 if (sub.errors === undefined) { // TODO: improve typing to cast isn't necessary
                     hits.push(new TriplesMatchingHit(triple, sub));
                 }

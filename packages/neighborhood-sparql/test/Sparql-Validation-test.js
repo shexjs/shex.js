@@ -94,26 +94,28 @@ describe("A ShEx validator over SPARQL", function () {
 
   after(async () => { if (endpoint) await endpoint.close(); });
 
-  /* The boundary this guards is "no test with a blank node focus reaches the
-   * endpoint", because such a node cannot be named over SPARQL.  Two traits
-   * put a test outside it and the filter below honours both, so either one
-   * satisfies this: `ToldBNode` for a focus that is a blank node, and
-   * `LexicalBNode` where the verdict measures the label as well -- which is
-   * a told blank node too, and is how shexTest tags e.g.
-   * 1focusMaxLength-dot's bnode cases, whose focus is `_:abcd` and whose
-   * question is how long that label is.  Requiring ToldBNode specifically
-   * failed those three for being tagged with the more specific of two
-   * out-of-scope markers. */
-  it(`should keep every told-blank-node focus out of the SPARQL run`, () => {
-    const declines = trait => trait === "ToldBNode" || trait === "LexicalBNode";
-    const filtered = new Set(tests.filter(t => (t.trait || []).some(declines)).map(t => t["@id"]));
-    const told = new Set(tests.filter(t => typeof t.action.focus === "string" && t.action.focus.startsWith("_:")).map(t => t["@id"]));
+  /* `ToldBNode` means exactly "the focus is a blank node", so the tagging and
+   * the manifest have to agree in both directions or the filter below is
+   * guessing.  A test can be `LexicalBNode` as well, where the verdict
+   * measures the label too -- 1focusMaxLength-dot's bnode cases are both,
+   * with focus `_:abcd` and a question about how long that label is -- but
+   * the more specific tag doesn't excuse the general one, and shexTest
+   * 8d56ad9 tags them accordingly.
+   *
+   * The boundary the suite actually needs is "no blank node focus reaches
+   * the endpoint", which this implies and the third assertion states. */
+  it(`should mark all tests whose focus is a told blank node with the ToldBNode trait`, () => {
+    const marked = new Set(tests.filter(t => (t.trait || []).includes("ToldBNode")).map(t => t["@id"]));
+    const founds = new Set(tests.filter(t => typeof t.action.focus === "string" && t.action.focus.startsWith("_:")).map(t => t["@id"]));
     // (Set.prototype.difference needs Node >= 22; CI's oldest lane runs 20)
-    const wouldRun = [...told].filter(id => !filtered.has(id));
-    const overTagged = new Set(tests.filter(t => (t.trait || []).includes("ToldBNode")).map(t => t["@id"]));
-    const notTold = [...overTagged].filter(id => !told.has(id));
-    assert.deepEqual(wouldRun, [], `${wouldRun.length} test(s): [${wouldRun.join(', ')}] have a blank node focus and no trait keeping them out of the SPARQL run`);
-    assert.deepEqual(notTold, [], `${notTold.length} test(s): [${notTold.join(', ')}] carry "ToldBNode" without a blank node focus`);
+    const missedTraits = [...founds].filter(id => !marked.has(id));
+    const extraTraits = [...marked].filter(id => !founds.has(id));
+    const declines = trait => trait === "ToldBNode" || trait === "LexicalBNode";
+    const wouldRun = [...founds].filter(id =>
+      !tests.find(t => t["@id"] === id && (t.trait || []).some(declines)));
+    assert.deepEqual(missedTraits, [], `${missedTraits.length} test(s): [${missedTraits.join(', ')}] should have a "ToldBNode" trait`);
+    assert.deepEqual(extraTraits, [], `${extraTraits.length} test(s): [${extraTraits.join(', ')}] should NOT have a "ToldBNode" trait`);
+    assert.deepEqual(wouldRun, [], `${wouldRun.length} test(s): [${wouldRun.join(', ')}] would reach the endpoint with a blank node focus`);
   });
 
   tests.filter(test =>
