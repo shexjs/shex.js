@@ -1,0 +1,189 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/f001> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f001"] ; # 
+  fhir:type [ fhir:v "collection"] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "https://example.com/base/DiagnosticReport/f001"^^xsd:anyURI ;
+       fhir:l <https://example.com/base/DiagnosticReport/f001>
+     ] ;
+     fhir:resource ( <https://example.com/base/DiagnosticReport/f001> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "https://example.com/base/ServiceRequest/req"^^xsd:anyURI ;
+       fhir:l <https://example.com/base/ServiceRequest/req>
+     ] ;
+     fhir:resource ( <https://example.com/base/ServiceRequest/req> )
+  ] ) . # 
+
+<https://example.com/base/DiagnosticReport/f001> a fhir:DiagnosticReport ;
+  fhir:id [ fhir:v "f001"] ; # ISO 8601, OID: 2.16.840.1.113883.4.642.1.7
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: DiagnosticReport f001</b></p><a name=\"f001\"> </a><a name=\"hcf001\"> </a><h2><span title=\"Codes:{http://loinc.org 58410-2}\">CBC panel - Blood by Automated count</span> (<span title=\"Codes:{http://snomed.info/sct 252275004}, {http://terminology.hl7.org/CodeSystem/v2-0074 HM}\">Haematology test</span>) </h2><table class=\"grid\"><tr><td>Subject</td><td>Pieter van de Heuvel  Male, DoB: 1944-11-17 ( urn:oid:2.16.840.1.113883.2.4.6.3#?ngen-9? (use: usual, ))</td></tr><tr><td>Reported</td><td>2013-05-15T19:32:52+01:00</td></tr><tr><td>Performer</td><td> <a href=\"organization-example-f001-burgers.html\">Burgers University Medical Centre</a></td></tr><tr><td>Identifier</td><td> <code>http://www.bmc.nl/zorgportal/identifiers/reports</code>/nr1239044 (use: official, )</td></tr></table><p><b>Report Details</b></p><table class=\"grid\"><tr><td><b>Code</b></td><td><b>Value</b></td><td><b>Reference Range</b></td><td><b>Flags</b></td><td><b>Relevant Time</b></td><td><b>Reported</b></td></tr><tr><td><a href=\"observation-example-f001-glucose.html\"><span title=\"Codes:{http://loinc.org 15074-8}\">Glucose [Moles/volume] in Blood</span></a></td><td>6.3 mmol/l<span style=\"background: LightGoldenRodYellow\"> (Details: UCUM  codemmol/L = 'mmol/L')</span></td><td>3.1 mmol/l<span style=\"background: LightGoldenRodYellow\"> (Details: UCUM  codemmol/L = 'mmol/L')</span> - 6.2 mmol/l<span style=\"background: LightGoldenRodYellow\"> (Details: UCUM  codemmol/L = 'mmol/L')</span></td><td>Final, <span title=\"Codes:{http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation H}\">High</span></td><td>2013-04-02T09:30:10+01:00</td><td>2013-04-03T15:30:10+01:00</td></tr><tr><td><a href=\"observation-example-f002-excess.html\"><span title=\"Codes:{http://loinc.org 11555-0}\">Base excess in Blood by calculation</span></a></td><td>12.6 mmol/l<span style=\"background: LightGoldenRodYellow\"> (Details: UCUM  codemmol/L = 'mmol/L')</span></td><td>7.1 mmol/l<span style=\"background: LightGoldenRodYellow\"> (Details: UCUM  codemmol/L = 'mmol/L')</span> - 11.2 mmol/l<span style=\"background: LightGoldenRodYellow\"> (Details: UCUM  codemmol/L = 'mmol/L')</span></td><td>Final, <span title=\"Codes:{http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation H}\">High</span></td><td>2013-04-02T10:30:10+01:00</td><td>2013-04-03T15:30:10+01:00</td></tr><tr><td><a href=\"observation-example-f003-co2.html\"><span title=\"Codes:{http://loinc.org 11557-6}\">Carbon dioxide [Partial pressure] in Blood</span></a></td><td>6.2 kPa<span style=\"background: LightGoldenRodYellow\"> (Details: UCUM  codekPa = 'kPa')</span></td><td>4.8 kPa<span style=\"background: LightGoldenRodYellow\"> (Details: UCUM  codekPa = 'kPa')</span> - 6.0 kPa<span style=\"background: LightGoldenRodYellow\"> (Details: UCUM  codekPa = 'kPa')</span></td><td>Final, <span title=\"Codes:{http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation H}\">High</span></td><td>2013-04-02T10:30:10+01:00</td><td>2013-04-03T15:30:10+01:00</td></tr><tr><td><a href=\"observation-example-f004-erythrocyte.html\"><span title=\"Codes:{http://loinc.org 789-8}\">Erythrocytes [#/volume] in Blood by Automated count</span></a></td><td>4.12 10^12/L<span style=\"background: LightGoldenRodYellow\"> (Details: UCUM  code10*12/L = '10*12/L')</span></td><td><div><p>12-14 y Male: 4.4 - 5.2  x  10^12/L ; 12-14 y Female: 4.2 - 4.8  x  10^12/L ; 15-17 y Male: 4.6 - 5.4  x  10^12/L ; 15-17 y Female: 4.2 - 4.8  x  10^12/L ; 18-64 y Male: 4.6 - 5.4  x  10^12/L ; 18-64 y Female: 4.0 - 4.8  x  10^12/L ; 65-74 y Male: 4.3 - 5.3  x  10^12/L ; 65-74 y Female: 4.1 - 4.9  x  10^12/L</p>\n</div></td><td>Final, <span title=\"Codes:{http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation L}\">Low</span></td><td>2013-04-02T10:30:10+01:00</td><td>2013-04-03T15:30:10+01:00</td></tr><tr><td><a href=\"observation-example-f005-hemoglobin.html\"><span title=\"Codes:{http://loinc.org 718-7}\">Hemoglobin [Mass/volume] in Blood</span></a></td><td>7.2 g/dl<span style=\"background: LightGoldenRodYellow\"> (Details: UCUM  codeg/dL = 'g/dL')</span></td><td>7.5 g/dl<span style=\"background: LightGoldenRodYellow\"> (Details: UCUM  codeg/dL = 'g/dL')</span> - 10 g/dl<span style=\"background: LightGoldenRodYellow\"> (Details: UCUM  codeg/dL = 'g/dL')</span></td><td>Final, <span title=\"Codes:{http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation L}\">Low</span></td><td>2013-04-05T10:30:10+01:00</td><td>2013-04-05T15:30:10+01:00</td></tr></table><div><p>Core lab</p>\n</div></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:system [
+       fhir:v "http://www.bmc.nl/zorgportal/identifiers/reports"^^xsd:anyURI ;
+       fhir:l <http://www.bmc.nl/zorgportal/identifiers/reports>
+     ] ;
+     fhir:value [ fhir:v "nr1239044" ]
+  ] ) ; # 
+  fhir:basedOn ( [
+     fhir:l <http://hl7.org/fhir/ServiceRequest/req> ;
+     fhir:reference [ fhir:v "ServiceRequest/req" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "final"] ; # 
+  fhir:category ( [
+     a sct:252275004 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "252275004" ] ;
+       fhir:display [ fhir:v "Haematology test" ]
+     ] [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v2-0074"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v2-0074>
+       ] ;
+       fhir:code [ fhir:v "HM" ]
+     ] )
+  ] ) ; # 
+  fhir:code [
+     a loinc:58410-2 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "58410-2" ] ;
+       fhir:display [ fhir:v "CBC panel - Blood by Automated count" ]
+     ] )
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/f001> ;
+     fhir:reference [ fhir:v "Patient/f001" ] ;
+     fhir:display [ fhir:v "P. van den Heuvel" ]
+  ] ; # 
+  fhir:issued [ fhir:v "2013-05-15T19:32:52+01:00"^^xsd:dateTime] ; # 
+  fhir:performer ( [
+     fhir:l <http://hl7.org/fhir/Organization/f001> ;
+     fhir:reference [ fhir:v "Organization/f001" ] ;
+     fhir:display [ fhir:v "Burgers University Medical Centre" ]
+  ] ) ; # 
+  fhir:result ( [
+     fhir:l <http://hl7.org/fhir/Observation/f001> ;
+     fhir:reference [ fhir:v "Observation/f001" ]
+  ] [
+     fhir:l <http://hl7.org/fhir/Observation/f002> ;
+     fhir:reference [ fhir:v "Observation/f002" ]
+  ] [
+     fhir:l <http://hl7.org/fhir/Observation/f003> ;
+     fhir:reference [ fhir:v "Observation/f003" ]
+  ] [
+     fhir:l <http://hl7.org/fhir/Observation/f004> ;
+     fhir:reference [ fhir:v "Observation/f004" ]
+  ] [
+     fhir:l <http://hl7.org/fhir/Observation/f005> ;
+     fhir:reference [ fhir:v "Observation/f005" ]
+  ] ) ; # 
+  fhir:conclusion [ fhir:v "Core lab"] . # 
+
+<http://hl7.org/fhir/ServiceRequest/req> a fhir:ServiceRequest .
+
+<http://hl7.org/fhir/Patient/f001> a fhir:Patient .
+
+<http://hl7.org/fhir/Organization/f001> a fhir:Organization .
+
+<http://hl7.org/fhir/Observation/f001> a fhir:Observation .
+
+<http://hl7.org/fhir/Observation/f002> a fhir:Observation .
+
+<http://hl7.org/fhir/Observation/f003> a fhir:Observation .
+
+<http://hl7.org/fhir/Observation/f004> a fhir:Observation .
+
+<http://hl7.org/fhir/Observation/f005> a fhir:Observation .
+
+<https://example.com/base/ServiceRequest/req> a fhir:ServiceRequest ;
+  fhir:id [ fhir:v "req"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "extensions" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: ServiceRequest req</b></p><a name=\"req\"> </a><a name=\"hcreq\"> </a><p><b>org/bodysitecode</b>: <span title=\"Codes:{http://snomed.info/sct 14975008}\">Forearm structure</span></p><p><b>identifier</b>: <code>http://www.bmc.nl/zorgportal/identifiers/labresults</code>/L2381</p><p><b>status</b>: Active</p><p><b>intent</b>: Original Order</p><h3>Codes</h3><table class=\"grid\"><tr><td style=\"display: none\">-</td><td><b>Concept</b></td></tr><tr><td style=\"display: none\">*</td><td><span title=\"Codes:{http://loinc.org 58410-2}\">CBC panel - Blood by Automated count</span></td></tr></table><p><b>subject</b>: <a href=\"patient-example-f001-pieter.html\">P. van den Heuvel</a></p><p><b>encounter</b>: <a href=\"encounter-example-f001-heart.html\">Encounter: identifier = http://www.amc.nl/zorgportal/identifiers/visits#v1451 (use: official, ); status = completed; class = ambulatory; priority = Non-urgent cardiological admission; type = Patient-initiated encounter</a></p><p><b>requester</b>: <a href=\"practitioner-example-f001-evdb.html\">E.van den Broek</a></p><p><b>note</b>: </p><blockquote><div><p>patient almost fainted during procedure</p>\n</div></blockquote></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://example.org/bodysitecode"^^xsd:anyURI ;
+       fhir:l <http://example.org/bodysitecode>
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept, sct:14975008 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "14975008" ] ;
+         fhir:display [ fhir:v "Forearm structure" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://www.bmc.nl/zorgportal/identifiers/labresults"^^xsd:anyURI ;
+       fhir:l <http://www.bmc.nl/zorgportal/identifiers/labresults>
+     ] ;
+     fhir:value [ fhir:v "L2381" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "original-order"] ; # 
+  fhir:code [
+     fhir:concept [
+       a loinc:58410-2 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:code [ fhir:v "58410-2" ] ;
+         fhir:display [ fhir:v "CBC panel - Blood by Automated count" ]
+       ] )
+     ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/f001> ;
+     fhir:reference [ fhir:v "Patient/f001" ] ;
+     fhir:display [ fhir:v "P. van den Heuvel" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/f001> ;
+     fhir:reference [ fhir:v "Encounter/f001" ]
+  ] ; # 
+  fhir:requester [
+     fhir:l <http://hl7.org/fhir/Practitioner/f001> ;
+     fhir:reference [ fhir:v "Practitioner/f001" ] ;
+     fhir:display [ fhir:v "E.van den Broek" ]
+  ] ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "patient almost fainted during procedure" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Encounter/f001> a fhir:Encounter .
+
+<http://hl7.org/fhir/Practitioner/f001> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

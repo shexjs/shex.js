@@ -1,0 +1,111 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/biologicallyderived-product-property-type-codes> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "biologicallyderived-product-property-type-codes"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem biologicallyderived-product-property-type-codes</b></p><a name=\"biologicallyderived-product-property-type-codes\"> </a><a name=\"hcbiologicallyderived-product-property-type-codes\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/biologicallyderived-product-property-type-codes</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">collectiontype<a name=\"biologicallyderived-product-property-type-codes-collectiontype\"> </a></td><td>Collection Type</td><td>See https://www.isbt128.org/uri/CollectionType</td></tr><tr><td style=\"white-space:nowrap\">aborhd<a name=\"biologicallyderived-product-property-type-codes-aborhd\"> </a></td><td>ABORhD</td><td>See https://www.isbt128.org/uri/ABORhD</td></tr><tr><td style=\"white-space:nowrap\">singleeuropeancode<a name=\"biologicallyderived-product-property-type-codes-singleeuropeancode\"> </a></td><td>Single European Code</td><td>See https://www.isbt128.org/uri/SingleEuropeanCode</td></tr><tr><td style=\"white-space:nowrap\">redcellantigen<a name=\"biologicallyderived-product-property-type-codes-redcellantigen\"> </a></td><td>Red Cell Antigen</td><td>See https://www.isbt128.org/uri/RedCellAntigen</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "oo"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/biologicallyderived-product-property-type-codes"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/biologicallyderived-product-property-type-codes>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1818" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "BiologicallyDerivedProductPropertyTypeCodes"] ; # 
+  fhir:title [ fhir:v "Biologically Derived Product Property Type Codes"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Biologically Derived Product Property Type Code.  This code system http://hl7.org/fhir/biologicallyderived-product-property-type-codes is a subset of the codes defined in http://terminology.hl7.org/CodeSystem/ib"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/biologicallyderived-product-property-type-codes"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/biologicallyderived-product-property-type-codes>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "collectiontype" ] ;
+     fhir:display [ fhir:v "Collection Type" ] ;
+     fhir:definition [ fhir:v "See https://www.isbt128.org/uri/CollectionType" ]
+  ] [
+     fhir:code [ fhir:v "aborhd" ] ;
+     fhir:display [ fhir:v "ABORhD" ] ;
+     fhir:definition [ fhir:v "See https://www.isbt128.org/uri/ABORhD" ]
+  ] [
+     fhir:code [ fhir:v "singleeuropeancode" ] ;
+     fhir:display [ fhir:v "Single European Code" ] ;
+     fhir:definition [ fhir:v "See https://www.isbt128.org/uri/SingleEuropeanCode" ]
+  ] [
+     fhir:code [ fhir:v "redcellantigen" ] ;
+     fhir:display [ fhir:v "Red Cell Antigen" ] ;
+     fhir:definition [ fhir:v "See https://www.isbt128.org/uri/RedCellAntigen" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

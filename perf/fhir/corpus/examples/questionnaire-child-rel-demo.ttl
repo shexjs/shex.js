@@ -1,0 +1,83 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Questionnaire/child-rel-demo> a fhir:Questionnaire ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "child-rel-demo"] ; # 
+  fhir:meta [
+     fhir:versionId [ fhir:v "1" ] ;
+     fhir:lastUpdated [ fhir:v "2023-03-03T03:05:07.9531803+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://example.org/Questionnaire/child-rel-demo"^^xsd:anyURI ;
+     fhir:l <http://example.org/Questionnaire/child-rel-demo>
+  ] ; # 
+  fhir:title [ fhir:v "Demo form on R5 spec QR page"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:item ( [
+     fhir:linkId [ fhir:v "grp1" ] ;
+     fhir:text [ fhir:v "grp1" ] ;
+     fhir:type [ fhir:v "group" ] ;
+     fhir:required [ fhir:v true ] ;
+     fhir:repeats [ fhir:v true ] ;
+     fhir:item ( [
+       fhir:linkId [ fhir:v "grp2" ] ;
+       fhir:text [ fhir:v "grp2" ] ;
+       fhir:type [ fhir:v "group" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "Q1" ] ;
+         fhir:text [ fhir:v "Q1" ] ;
+         fhir:type [ fhir:v "string" ] ;
+         fhir:repeats [ fhir:v true ]
+       ] [
+         fhir:linkId [ fhir:v "Q2" ] ;
+         fhir:text [ fhir:v "Q2" ] ;
+         fhir:type [ fhir:v "string" ]
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "Q3" ] ;
+       fhir:text [ fhir:v "Q3" ] ;
+       fhir:type [ fhir:v "string" ] ;
+       fhir:required [ fhir:v true ] ;
+       fhir:repeats [ fhir:v true ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "Q4" ] ;
+         fhir:text [ fhir:v "Q4" ] ;
+         fhir:type [ fhir:v "string" ]
+       ] [
+         fhir:linkId [ fhir:v "grp3" ] ;
+         fhir:text [ fhir:v "grp3" ] ;
+         fhir:type [ fhir:v "string" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "Q5" ] ;
+           fhir:text [ fhir:v "Q5" ] ;
+           fhir:type [ fhir:v "string" ]
+         ] )
+       ] )
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

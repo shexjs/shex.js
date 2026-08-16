@@ -1,0 +1,74 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/PaymentNotice/77654> a fhir:PaymentNotice ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "77654"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">A human-readable rendering of the PaymentNotice</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://benefitsinc.com/paymentnotice"^^xsd:anyURI ;
+       fhir:l <http://benefitsinc.com/paymentnotice>
+     ] ;
+     fhir:value [ fhir:v "776543" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:request [
+     fhir:l <http://benefitsinc.com/fhir/claim/12345> ;
+     fhir:reference [ fhir:v "http://benefitsinc.com/fhir/claim/12345" ]
+  ] ; # 
+  fhir:response [
+     fhir:l <http://benefitsinc.com/fhir/claimresponse/CR12345> ;
+     fhir:reference [ fhir:v "http://benefitsinc.com/fhir/claimresponse/CR12345" ]
+  ] ; # 
+  fhir:created [ fhir:v "2014-08-16"^^xsd:date] ; # 
+  fhir:reporter [
+     fhir:l <http://hl7.org/fhir/Organization/1> ;
+     fhir:reference [ fhir:v "Organization/1" ]
+  ] ; # 
+  fhir:payment [
+     fhir:l <http://hl7.org/fhir/PaymentReconciliation/ER2500> ;
+     fhir:reference [ fhir:v "PaymentReconciliation/ER2500" ]
+  ] ; # 
+  fhir:paymentDate [ fhir:v "2014-08-15"^^xsd:date] ; # 
+  fhir:payee [
+     fhir:l <http://hl7.org/fhir/Organization/1> ;
+     fhir:reference [ fhir:v "Organization/1" ]
+  ] ; # 
+  fhir:recipient [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://regulators.gov"^^xsd:anyURI ;
+         fhir:l <http://regulators.gov>
+       ] ;
+       fhir:value [ fhir:v "AB123" ]
+     ]
+  ] ; # 
+  fhir:amount [
+     fhir:value [ fhir:v 12500.00 ] ;
+     fhir:currency [ fhir:v "USD" ]
+  ] ; # 
+  fhir:paymentStatus [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/paymentstatus"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/paymentstatus>
+       ] ;
+       fhir:code [ fhir:v "paid" ]
+     ] )
+  ] . # 
+
+<http://hl7.org/fhir/Organization/1> a fhir:Organization .
+
+<http://hl7.org/fhir/PaymentReconciliation/ER2500> a fhir:PaymentReconciliation .
+
+# -------------------------------------------------------------------------------------
+

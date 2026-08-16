@@ -1,0 +1,87 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/NutritionIntake/malnutrition-patient-reported> a fhir:NutritionIntake ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "malnutrition-patient-reported"] ; # 
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Paula Patient Chalmers" ]
+  ] ; # 
+  fhir:recorded [ fhir:v "2024-01-09T14:00:00Z"^^xsd:dateTime] ; # 
+  fhir:reported [
+     a fhir:Reference ;
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Reported by the patient" ]
+  ] ; # 
+  fhir:nutritionItem ( [
+     fhir:nutritionProduct [
+       fhir:reference [
+         fhir:l <http://hl7.org/fhir/NutritionProduct/apple-slices> ;
+         fhir:reference [ fhir:v "NutritionProduct/apple-slices" ]
+       ]
+     ] ;
+     fhir:consumedItem ( [
+       fhir:amount [
+         fhir:value [ fhir:v "100"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "g" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "g" ]
+       ]
+     ] )
+  ] [
+     fhir:nutritionProduct [
+       fhir:reference [
+         fhir:l <http://hl7.org/fhir/NutritionProduct/whole-milk> ;
+         fhir:reference [ fhir:v "NutritionProduct/whole-milk" ]
+       ]
+     ] ;
+     fhir:consumedItem ( [
+       fhir:amount [
+         fhir:value [ fhir:v "240"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "ml" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "ml" ]
+       ]
+     ] )
+  ] [
+     fhir:nutritionProduct [
+       fhir:reference [
+         fhir:l <http://hl7.org/fhir/NutritionProduct/boiled-eggs> ;
+         fhir:reference [ fhir:v "NutritionProduct/boiled-eggs" ]
+       ]
+     ] ;
+     fhir:consumedItem ( [
+       fhir:amount [
+         fhir:value [ fhir:v "2"^^xsd:decimal ]
+       ]
+     ] )
+  ] ) ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "Breakfast meal with apple slices, whole milk, and boiled eggs." ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/NutritionProduct/apple-slices> a fhir:NutritionProduct .
+
+<http://hl7.org/fhir/NutritionProduct/whole-milk> a fhir:NutritionProduct .
+
+<http://hl7.org/fhir/NutritionProduct/boiled-eggs> a fhir:NutritionProduct .
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,62 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ServiceRequest/education> a fhir:ServiceRequest ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "education"] ; # 
+  fhir:status [ fhir:v "completed"] ; # insert contents here
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:category ( [
+     a sct:311401005 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "311401005" ] ;
+       fhir:display [ fhir:v "Patient education (procedure)" ]
+     ] ) ;
+     fhir:text [ fhir:v "Education" ]
+  ] ) ; # 
+  fhir:code [
+     fhir:concept [
+       a sct:48023004 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "48023004" ] ;
+         fhir:display [ fhir:v "Breast self-examination technique education (procedure)" ]
+       ] ) ;
+       fhir:text [ fhir:v "Health education - breast examination" ]
+     ]
+  ] ; # 
+  fhir:subject [
+     fhir:display [ fhir:v "Jane Doe" ]
+  ] ; # 
+  fhir:occurrence [
+     a fhir:DateTime ;
+     fhir:v "2014-08-16"^^xsd:date
+  ] ; # 
+  fhir:authoredOn [ fhir:v "2016-08-16"^^xsd:date] ; # 
+  fhir:requester [
+     fhir:display [ fhir:v "Angela Care, MD" ]
+  ] ; # 
+  fhir:performer ( [
+     fhir:display [ fhir:v "Pamela Educator, RN" ]
+  ] ) ; # 
+  fhir:reason ( [
+     fhir:concept [
+       fhir:text [ fhir:v "early detection of breast mass" ]
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,129 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ValueSet/provenance-activity-type> a fhir:ValueSet ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "provenance-activity-type"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "extensions" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: ValueSet provenance-activity-type</b></p><a name=\"provenance-activity-type\"> </a><a name=\"hcprovenance-activity-type\"> </a><ul><li>Include these codes as defined in <a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-iso-21089-lifecycle.html\"><code>http://terminology.hl7.org/CodeSystem/iso-21089-lifecycle</code></a><span title=\"Version is not explicitly stated, which means it is fixed to 1.0.0, the version found through the package references\"> version ?1.0.0</span><table class=\"none\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-iso-21089-lifecycle.html#iso-21089-lifecycle-amend\">amend</a></td><td style=\"color: #cccccc\">Amend (Update) Record Lifecycle Event</td><td>Occurs when an agent makes any change to record entry content currently residing in storage considered permanent (persistent).</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-iso-21089-lifecycle.html#iso-21089-lifecycle-originate\">originate</a></td><td style=\"color: #cccccc\">Originate/Retain Record Lifecycle Event</td><td>Occurs when an agent causes the system to: a) initiate capture of potential record content, and b) incorporate that content into the storage considered a permanent part of the health record.</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-iso-21089-lifecycle.html#iso-21089-lifecycle-merge\">merge</a></td><td style=\"color: #cccccc\">Merge Record Lifecycle Event</td><td>Occurs when an agent causes the system to combine or join content from two or more record entries, resulting in a single logical record entry.</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-iso-21089-lifecycle.html#iso-21089-lifecycle-deidentify\">deidentify</a></td><td style=\"color: #cccccc\">De-Identify (Anononymize) Record Lifecycle Event</td><td>Occurs when an agent causes the system to scrub record entry content to reduce the association between a set of identifying data and the data subject in a way that might or might not be reversible.</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-iso-21089-lifecycle.html#iso-21089-lifecycle-destroy\">destroy</a></td><td style=\"color: #cccccc\">Destroy/Delete Record Lifecycle Event</td><td>Occurs when an agent causes the system to permanently erase record entry content from the system.</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-iso-21089-lifecycle.html#iso-21089-lifecycle-receive\">receive</a></td><td style=\"color: #cccccc\">Receive/Retain Record Lifecycle Event</td><td>Occurs when an agent causes the system to a) initiate capture of data content from elsewhere, and b) incorporate that content into the storage considered a permanent part of the health record.</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-iso-21089-lifecycle.html#iso-21089-lifecycle-transform\">transform</a></td><td style=\"color: #cccccc\">Transform/Translate Record Lifecycle Event</td><td>Occurs when an agent causes the system to change the form, language or code system used to represent record entry content.</td></tr><tr><td><a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-iso-21089-lifecycle.html#iso-21089-lifecycle-verify\">verify</a></td><td style=\"color: #cccccc\">Verify Record Lifecycle Event</td><td>Occurs when an agent causes the system to confirm compliance of data or data objects with regulations, requirements, specifications, or other imposed conditions based on organizational policy.</td></tr></table></li></ul></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "sec"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 6
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-extensible"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-extensible>
+     ] ;
+     fhir:value [
+       a fhir:Boolean ;
+       fhir:v true
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ValueSet/provenance-activity-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/provenance-activity-type>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.3.438" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.3.429" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ProvenanceActivityType"] ; # 
+  fhir:title [ fhir:v "ValueSet of representative activity type codes."] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2025-11-01"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Security"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/secure" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "This example FHIR value set is comprised of representative activity type codes from the ISO 21089 Lifecycle Code System. The codes are intended to express the activity that a Provenance is describing."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:compose [
+     fhir:include ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/iso-21089-lifecycle"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/iso-21089-lifecycle>
+       ] ;
+       fhir:concept ( [
+         fhir:code [ fhir:v "amend" ]
+       ] [
+         fhir:code [ fhir:v "originate" ]
+       ] [
+         fhir:code [ fhir:v "merge" ]
+       ] [
+         fhir:code [ fhir:v "deidentify" ]
+       ] [
+         fhir:code [ fhir:v "destroy" ]
+       ] [
+         fhir:code [ fhir:v "receive" ]
+       ] [
+         fhir:code [ fhir:v "transform" ]
+       ] [
+         fhir:code [ fhir:v "verify" ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:expansion [] . # 
+
+# -------------------------------------------------------------------------------------
+

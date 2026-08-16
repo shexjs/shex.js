@@ -1,0 +1,41 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/40464b74-fad0-4f45-ab60-e67f949c5e92> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "40464b74-fad0-4f45-ab60-e67f949c5e92"] ; # 
+  fhir:type [ fhir:v "subscription-notification"] ; # 
+  fhir:timestamp [ fhir:v "2020-04-17T10:24:13.1882432-05:00"^^xsd:dateTime] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:c2d70315-c34c-4f44-981b-6f16775477f3"^^xsd:anyURI ;
+       fhir:l <urn:uuid:c2d70315-c34c-4f44-981b-6f16775477f3>
+     ] ;
+     fhir:resource ( <urn:uuid:c2d70315-c34c-4f44-981b-6f16775477f3> )
+  ] ) . # 
+
+<urn:uuid:c2d70315-c34c-4f44-981b-6f16775477f3> a fhir:SubscriptionStatus ;
+  fhir:id [ fhir:v "c2d70315-c34c-4f44-981b-6f16775477f3"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: SubscriptionStatus c2d70315-c34c-4f44-981b-6f16775477f3</b></p><a name=\"c2d70315-c34c-4f44-981b-6f16775477f3\"> </a><a name=\"hcc2d70315-c34c-4f44-981b-6f16775477f3\"> </a><p><b>status</b>: Active</p><p><b>type</b>: Query Status</p><p><b>eventsSinceSubscriptionStart</b>: 310</p><p><b>subscription</b>: <a href=\"broken-link.html\">http://example.org/FHIR/R5/Subscription/123</a></p><p><b>topic</b>: <a href=\"broken-link.html\">http://example.org/FHIR/R5/SubscriptionTopic/admission</a></p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:type [ fhir:v "query-status"] ; # 
+  fhir:eventsSinceSubscriptionStart [ fhir:v "310"^^xsd:long] ; # 
+  fhir:subscription [
+     fhir:l <http://example.org/FHIR/R5/Subscription/123> ;
+     fhir:reference [ fhir:v "http://example.org/FHIR/R5/Subscription/123" ]
+  ] ; # 
+  fhir:topic [
+     fhir:v "http://example.org/FHIR/R5/SubscriptionTopic/admission"^^xsd:anyURI ;
+     fhir:l <http://example.org/FHIR/R5/SubscriptionTopic/admission>
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

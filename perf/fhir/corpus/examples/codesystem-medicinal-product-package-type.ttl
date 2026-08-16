@@ -1,0 +1,131 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/medicinal-product-package-type> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "medicinal-product-package-type"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T11:01:55.562+11:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem medicinal-product-package-type</b></p><a name=\"medicinal-product-package-type\"> </a><a name=\"hcmedicinal-product-package-type\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">Last updated: 2021-01-05T10:01:24.148+11:00</p></div><p>This case-sensitive code system <code>http://hl7.org/fhir/medicinal-product-package-type</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td></tr><tr><td style=\"white-space:nowrap\">100000073490<a name=\"medicinal-product-package-type-100000073490\"> </a></td><td>Ampoule</td></tr><tr><td style=\"white-space:nowrap\">100000073491<a name=\"medicinal-product-package-type-100000073491\"> </a></td><td>Applicator</td></tr><tr><td style=\"white-space:nowrap\">100000073492<a name=\"medicinal-product-package-type-100000073492\"> </a></td><td>Automatic injection device</td></tr><tr><td style=\"white-space:nowrap\">100000073493<a name=\"medicinal-product-package-type-100000073493\"> </a></td><td>Bag</td></tr><tr><td style=\"white-space:nowrap\">100000073494<a name=\"medicinal-product-package-type-100000073494\"> </a></td><td>Balling gun</td></tr><tr><td style=\"white-space:nowrap\">100000073495<a name=\"medicinal-product-package-type-100000073495\"> </a></td><td>Barrel</td></tr><tr><td style=\"white-space:nowrap\">100000073496<a name=\"medicinal-product-package-type-100000073496\"> </a></td><td>Blister</td></tr><tr><td style=\"white-space:nowrap\">100000073497<a name=\"medicinal-product-package-type-100000073497\"> </a></td><td>Bottle</td></tr><tr><td style=\"white-space:nowrap\">100000073498<a name=\"medicinal-product-package-type-100000073498\"> </a></td><td>Box</td></tr><tr><td style=\"white-space:nowrap\">100000073547<a name=\"medicinal-product-package-type-100000073547\"> </a></td><td>Sachet</td></tr><tr><td style=\"white-space:nowrap\">100000073563<a name=\"medicinal-product-package-type-100000073563\"> </a></td><td>Vial</td></tr><tr><td style=\"white-space:nowrap\">100000143555<a name=\"medicinal-product-package-type-100000143555\"> </a></td><td>Pack</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "brr"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/medicinal-product-package-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/medicinal-product-package-type>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1918" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "MedicinalProductPackageTypeExample"] ; # 
+  fhir:title [ fhir:v "Medicinal Product Package Type"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Types of medicinal product packs"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/medicinal-product-package-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/medicinal-product-package-type>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "100000073490" ] ;
+     fhir:display [ fhir:v "Ampoule" ]
+  ] [
+     fhir:code [ fhir:v "100000073491" ] ;
+     fhir:display [ fhir:v "Applicator" ]
+  ] [
+     fhir:code [ fhir:v "100000073492" ] ;
+     fhir:display [ fhir:v "Automatic injection device" ]
+  ] [
+     fhir:code [ fhir:v "100000073493" ] ;
+     fhir:display [ fhir:v "Bag" ]
+  ] [
+     fhir:code [ fhir:v "100000073494" ] ;
+     fhir:display [ fhir:v "Balling gun" ]
+  ] [
+     fhir:code [ fhir:v "100000073495" ] ;
+     fhir:display [ fhir:v "Barrel" ]
+  ] [
+     fhir:code [ fhir:v "100000073496" ] ;
+     fhir:display [ fhir:v "Blister" ]
+  ] [
+     fhir:code [ fhir:v "100000073497" ] ;
+     fhir:display [ fhir:v "Bottle" ]
+  ] [
+     fhir:code [ fhir:v "100000073498" ] ;
+     fhir:display [ fhir:v "Box" ]
+  ] [
+     fhir:code [ fhir:v "100000073547" ] ;
+     fhir:display [ fhir:v "Sachet" ]
+  ] [
+     fhir:code [ fhir:v "100000073563" ] ;
+     fhir:display [ fhir:v "Vial" ]
+  ] [
+     fhir:code [ fhir:v "100000143555" ] ;
+     fhir:display [ fhir:v "Pack" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

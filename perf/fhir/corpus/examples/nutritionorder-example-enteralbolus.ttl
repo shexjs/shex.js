@@ -1,0 +1,126 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/NutritionOrder/enteralbolus> a fhir:NutritionOrder ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "enteralbolus"] ; # id = enteralbolus  file name = nutritionorder-example-enteralbolus.xml Name= Enteral Bolus  Description = Nutrition Order Enteral Bolus Feeding  Example
+#Tube feedings are given in boluses several times a day   edited by Eric Haas Health eData Inc, EH  Show all the elements in this examples for preference, and intolerance
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://www.acme.org/nutritionorders"^^xsd:anyURI ;
+       fhir:l <http://www.acme.org/nutritionorders>
+     ] ;
+     fhir:value [ fhir:v "123" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Peter Chalmers" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/example> ;
+     fhir:reference [ fhir:v "Encounter/example" ] ;
+     fhir:display [ fhir:v "Inpatient" ]
+  ] ; # 
+  fhir:dateTime [ fhir:v "2014-09-17"^^xsd:date] ; # 
+  fhir:allergyIntolerance ( [
+     fhir:l <http://hl7.org/fhir/AllergyIntolerance/example> ;
+     fhir:reference [ fhir:v "AllergyIntolerance/example" ] ;
+     fhir:display [ fhir:v "Cashew Nuts" ]
+  ] ) ; # 
+  fhir:foodPreferenceModifier ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/diet"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/diet>
+       ] ;
+       fhir:code [ fhir:v "dairy-free" ]
+     ] )
+  ] ) ; # 
+  fhir:excludeFoodModifier ( [
+     a sct:227493005 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "227493005" ] ;
+       fhir:display [ fhir:v "Cashew Nut" ]
+     ] )
+  ] ) ; # 
+  fhir:enteralFormula [
+     fhir:type [
+       fhir:concept [
+         a sct:441541000124107 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "441541000124107" ] ;
+           fhir:display [ fhir:v "High energy enteral formula" ]
+         ] )
+       ]
+     ] ;
+     fhir:caloricDensity [
+       fhir:value [ fhir:v 1.5 ] ;
+       fhir:unit [ fhir:v "calories per milliliter" ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "cal/mL" ]
+     ] ;
+     fhir:routeOfAdministration ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-RouteOfAdministration"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-RouteOfAdministration>
+         ] ;
+         fhir:code [ fhir:v "GT" ] ;
+         fhir:display [ fhir:v "Instillation, gastrostomy tube" ]
+       ] )
+     ] ) ;
+     fhir:administration ( [
+       fhir:schedule [
+         fhir:timing ( [
+           fhir:repeat [
+             fhir:bounds [
+               a fhir:Period ;
+               fhir:start [ fhir:v "2014-09-17T16:00:00Z"^^xsd:dateTime ]
+             ] ;
+             fhir:frequency [ fhir:v "1"^^xsd:positiveInteger ] ;
+             fhir:period [ fhir:v "4"^^xsd:decimal ] ;
+             fhir:periodUnit [ fhir:v "h" ]
+           ]
+         ] )
+       ] ;
+       fhir:quantity [
+         fhir:value [ fhir:v "240"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "milliliters" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "mL" ]
+       ]
+     ] ) ;
+     fhir:administrationInstruction [ fhir:v "240 mls every 4hrs" ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/example> a fhir:Encounter .
+
+<http://hl7.org/fhir/AllergyIntolerance/example> a fhir:AllergyIntolerance .
+
+# -------------------------------------------------------------------------------------
+

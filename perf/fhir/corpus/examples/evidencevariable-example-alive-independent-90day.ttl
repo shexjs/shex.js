@@ -1,0 +1,107 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/EvidenceVariable/example-alive-independent-90day> a fhir:EvidenceVariable ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-alive-independent-90day"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      \n      <p>\n        \"Alive and not functionally dependent at 90 days\" is an outcome used in expressing what an Evidence is about.\n      </p>\n	\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:contained ( [
+     a fhir:Group ;
+     fhir:id [ fhir:v "Definition-Group" ] ;
+     fhir:title [ fhir:v "VariableDefinition: Alive and not functionally dependent at 90 days" ] ;
+     fhir:type [ fhir:v "person" ] ;
+     fhir:membership [ fhir:v "definitional" ] ;
+     fhir:combinationMethod [ fhir:v "all-of" ] ;
+     fhir:characteristic ( [
+       fhir:code [
+         a sct:260905004 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "260905004" ] ;
+           fhir:display [ fhir:v "Condition" ]
+         ] )
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept, sct:419099009 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "419099009" ] ;
+           fhir:display [ fhir:v "Dead (finding)" ]
+         ] )
+       ] ;
+       fhir:exclude [ fhir:v true ] ;
+       fhir:description [ fhir:v "alive at 90 days (excluding dead at 90 days)" ]
+     ] [
+       fhir:code [
+         a sct:260905004 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "260905004" ] ;
+           fhir:display [ fhir:v "Condition" ]
+         ] )
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept, sct:718705001 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "718705001" ] ;
+           fhir:display [ fhir:v "Functionally dependent (finding)" ]
+         ] )
+       ] ;
+       fhir:exclude [ fhir:v true ] ;
+       fhir:description [ fhir:v "not functionally dependent at 90 days (excluding functionally dependent at 90 days)" ]
+     ] )
+  ] ) ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] ) ; # 
+  fhir:name [ fhir:v "AliveAndNotFunctionallyDependentAt90Days"] ; # 
+  fhir:title [ fhir:v "Alive and not functionally dependent at 90 days"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Decision Support"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/dss" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Alive and not functionally dependent at 90 days"] ; # 
+  fhir:actual [ fhir:v false] ; # 
+  fhir:definition [
+     fhir:reference [
+       fhir:l <#Definition-Group> ;
+       fhir:reference [ fhir:v "#Definition-Group" ]
+     ]
+  ] ; # 
+  fhir:handling [] . # 
+
+# -------------------------------------------------------------------------------------
+

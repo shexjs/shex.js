@@ -442,7 +442,8 @@ describe("EditorServices", function () {
       const schemaTexts = mapped.schema.map(d => slice(schemaText, d));
       expect(schemaTexts.some(t => t.startsWith(":ref @<T>") || t.startsWith("<S>")),
              "anchors :ref constraint or <S>: " + JSON.stringify(schemaTexts)).to.equal(true);
-      expect(mapped.pairs.some(p => /missing expected property/.test(p.message))).to.equal(true);
+      // the sentence comes from @shexjs/util now, shared with errsToSimple
+      expect(mapped.pairs.some(p => /missing property/.test(p.message))).to.equal(true);
     });
   });
 

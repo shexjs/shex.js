@@ -1,0 +1,207 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ValueSet/nhin-purposeofuse> a fhir:ValueSet ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "nhin-purposeofuse"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p class=\"res-header-id\">\n        <b>Generated Narrative: ValueSet nhin-purposeofuse</b>\n      </p>\n      <a name=\"nhin-purposeofuse\"> </a>\n      <a name=\"hcnhin-purposeofuse\"> </a>\n      <ul>\n        <li>Include all codes defined in \n          <a href=\"codesystem-nhin-purposeofuse.html\">\n            <code>http://healthit.gov/nhin/purposeofuse</code>\n          </a>\n          <span title=\"Version is not explicitly stated, which means it is fixed to the version provided in this specification\"> version ?2.0</span>\n        </li>\n      </ul>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:contained ( [
+     a fhir:ConceptMap ;
+     fhir:id [ fhir:v "map" ] ;
+     fhir:name [ fhir:v "NHIN / V3 Mapping" ] ;
+     fhir:status [ fhir:v "draft" ] ;
+     fhir:group ( [
+       fhir:source [
+         fhir:v "http://healthit.gov/nhin/purposeofuse"^^xsd:anyURI ;
+         fhir:l <http://healthit.gov/nhin/purposeofuse>
+       ] ;
+       fhir:target [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActReason"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActReason>
+       ] ;
+       fhir:element ( [
+         fhir:code [ fhir:v "TREATMENT" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "TREAT" ] ;
+           fhir:relationship [ fhir:v "equivalent" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "PAYMENT" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "HPAYMT" ] ;
+           fhir:relationship [ fhir:v "equivalent" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "OPERATIONS" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "HOPERAT" ] ;
+           fhir:relationship [ fhir:v "equivalent" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "SYSADMIN" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "SYSADMN" ] ;
+           fhir:relationship [ fhir:v "equivalent" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "FRAUD" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "FRAUD" ] ;
+           fhir:relationship [ fhir:v "equivalent" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "PSYCHOTHERAPY" ] ;
+         fhir:noMap [ fhir:v true ]
+       ] [
+         fhir:code [ fhir:v "TRAINING" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "TRAIN" ] ;
+           fhir:relationship [ fhir:v "equivalent" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "LEGAL" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "HLEGAL" ] ;
+           fhir:relationship [ fhir:v "equivalent" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "MARKETING" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "HMARKT" ] ;
+           fhir:relationship [ fhir:v "source-is-broader-than-target" ] ;
+           fhir:comment [ fhir:v "Not clear how much difference there is between 'marketing' and 'healthcare marketing'" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "DIRECTORY" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "HDIRECT" ] ;
+           fhir:relationship [ fhir:v "equivalent" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "DISASTER" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "DISASTER" ] ;
+           fhir:relationship [ fhir:v "equivalent" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "PUBLICHEALTH" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "PUBHLTH" ] ;
+           fhir:relationship [ fhir:v "equivalent" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "JUDICIAL" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "HLEGAL" ] ;
+           fhir:relationship [ fhir:v "source-is-narrower-than-target" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "LAW" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "HLEGAL" ] ;
+           fhir:relationship [ fhir:v "source-is-narrower-than-target" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "DONATION" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "DONAT" ] ;
+           fhir:relationship [ fhir:v "equivalent" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "RESEARCH" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "HRESCH" ] ;
+           fhir:relationship [ fhir:v "source-is-broader-than-target" ] ;
+           fhir:comment [ fhir:v "Not clear how much difference there is between 'research' and 'healthcare research'" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "THREAT" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "THREAT" ] ;
+           fhir:relationship [ fhir:v "equivalent" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "GOVERNMENT" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "GOV" ] ;
+           fhir:relationship [ fhir:v "equivalent" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "COVERAGE" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "COVAUTH" ] ;
+           fhir:relationship [ fhir:v "equivalent" ]
+         ] )
+       ] [
+         fhir:code [ fhir:v "REQUEST" ] ;
+         fhir:target ( [
+           fhir:code [ fhir:v "PATRQT" ] ;
+           fhir:relationship [ fhir:v "equivalent" ]
+         ] )
+       ] )
+     ] )
+  ] ) ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-map"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-map>
+     ] ;
+     fhir:value [
+       a fhir:Canonical ;
+       fhir:v "#map"^^xsd:anyURI ;
+       fhir:l <#map>
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "vocab"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ValueSet/nhin-purposeofuse"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/nhin-purposeofuse>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.3.3142" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "NHINPurposeOfUse"] ; # 
+  fhir:title [ fhir:v "NHIN PurposeOfUse"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2010-01-29"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Terminology Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/Vocab" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "This value set is suitable for use with the provenance resource. It is derived from, but not compatible with, the HL7 v3 Purpose of use Code system."] ; # 
+  fhir:compose [
+     fhir:include ( [
+       fhir:system [
+         fhir:v "http://healthit.gov/nhin/purposeofuse"^^xsd:anyURI ;
+         fhir:l <http://healthit.gov/nhin/purposeofuse>
+       ]
+     ] )
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

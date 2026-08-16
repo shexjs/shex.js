@@ -1,0 +1,142 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Specimen/liver-biopsy> a fhir:Specimen ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "liver-biopsy"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://lab.acme.org/specimens/2024"^^xsd:anyURI ;
+       fhir:l <http://lab.acme.org/specimens/2024>
+     ] ;
+     fhir:value [ fhir:v "LB-2024-001" ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "ACSN" ] ;
+         fhir:display [ fhir:v "Accession ID" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://pathology.acme.org/accession"^^xsd:anyURI ;
+       fhir:l <http://pathology.acme.org/accession>
+     ] ;
+     fhir:value [ fhir:v "PB24-00789" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "available"] ; # 
+  fhir:type [
+     a sct:119376003 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "119376003" ] ;
+       fhir:display [ fhir:v "Tissue specimen" ]
+     ] )
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Peter Patient" ]
+  ] ; # 
+  fhir:receivedTime [ fhir:v "2024-03-15T10:30:00Z"^^xsd:dateTime] ; # 
+  fhir:request ( [
+     fhir:l <http://hl7.org/fhir/ServiceRequest/liver-biopsy-request> ;
+     fhir:reference [ fhir:v "ServiceRequest/liver-biopsy-request" ]
+  ] ) ; # 
+  fhir:collection [
+     fhir:collector [
+       fhir:l <http://hl7.org/fhir/Practitioner/gastroenterologist> ;
+       fhir:reference [ fhir:v "Practitioner/gastroenterologist" ]
+     ] ;
+     fhir:collected [
+       a fhir:DateTime ;
+       fhir:v "2024-03-15T09:45:00Z"^^xsd:dateTime
+     ] ;
+     fhir:quantity [
+       fhir:value [ fhir:v 1.5 ] ;
+       fhir:unit [ fhir:v "cm" ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "cm" ]
+     ] ;
+     fhir:method [
+       a sct:129314006 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "129314006" ] ;
+         fhir:display [ fhir:v "Biopsy - action" ]
+       ] )
+     ] ;
+     fhir:procedure [ ]
+  ] ; # 
+  fhir:processing ( [
+     fhir:description [ fhir:v "Fixed in 10% neutral buffered formalin" ] ;
+     fhir:additive ( [
+       fhir:type [
+         fhir:concept [
+           fhir:coding ( [
+             fhir:system [
+               fhir:v "http://terminology.hl7.org/CodeSystem/v2-0371"^^xsd:anyURI ;
+               fhir:l <http://terminology.hl7.org/CodeSystem/v2-0371>
+             ] ;
+             fhir:code [ fhir:v "F10" ] ;
+             fhir:display [ fhir:v "10% Formalin" ]
+           ] )
+         ]
+       ]
+     ] ) ;
+     fhir:time [
+       a fhir:DateTime ;
+       fhir:v "2024-03-15T10:45:00Z"^^xsd:dateTime
+     ]
+  ] ) ; # 
+  fhir:container ( [
+     fhir:device [
+       fhir:concept [
+         fhir:text [ fhir:v "Formalin specimen container" ]
+       ]
+     ] ;
+     fhir:specimenQuantity [
+       fhir:value [ fhir:v "1"^^xsd:decimal ] ;
+       fhir:unit [ fhir:v "specimen" ]
+     ]
+  ] ) ; # 
+  fhir:condition ( [
+     a sct:48883003 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "48883003" ]
+     ] )
+  ] ) ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "Core biopsy specimen obtained for evaluation of hepatic steatosis and fibrosis. Adequate tissue for histopathological assessment." ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/ServiceRequest/liver-biopsy-request> a fhir:ServiceRequest .
+
+<http://hl7.org/fhir/Practitioner/gastroenterologist> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

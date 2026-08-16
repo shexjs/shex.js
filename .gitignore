@@ -49,3 +49,6 @@ packages/extension-map/doc/webpacks/
 .coveralls.yml
 .nyc_output/
 
+
+# perf corpora: fetched with perf/fhir/fetch.sh, never committed
+perf/*/corpus/

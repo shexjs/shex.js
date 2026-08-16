@@ -1,0 +1,49 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/MedicationStatement/example003> a fhir:MedicationStatement ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example003"] ; # 
+  fhir:status [ fhir:v "recorded"] ; # 
+  fhir:medication [
+     fhir:concept [
+       fhir:text [ fhir:v "Little Pink Pill for water retention" ]
+     ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/pat1> ;
+     fhir:reference [ fhir:v "Patient/pat1" ] ;
+     fhir:display [ fhir:v "Donald Duck" ]
+  ] ; # 
+  fhir:effective [
+     a fhir:DateTime ;
+     fhir:v "2014-02-01"^^xsd:date
+  ] ; # 
+  fhir:dateAsserted [ fhir:v "2014-02-22"^^xsd:date] ; # 
+  fhir:informationSource ( [
+     fhir:l <http://hl7.org/fhir/Patient/pat1> ;
+     fhir:reference [ fhir:v "Patient/pat1" ] ;
+     fhir:display [ fhir:v "Donald Duck" ]
+  ] ) ; # 
+  fhir:reason ( [
+     fhir:reference [
+       fhir:l <http://hl7.org/fhir/Observation/blood-pressure> ;
+       fhir:reference [ fhir:v "Observation/blood-pressure" ]
+     ]
+  ] ) ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "Patient cannot remember the name of the tablet, but takes it every day in the morning for water retention" ]
+  ] ) ; # 
+  fhir:dosage [] . # 
+
+<http://hl7.org/fhir/Patient/pat1> a fhir:Patient .
+
+<http://hl7.org/fhir/Observation/blood-pressure> a fhir:Observation .
+
+# -------------------------------------------------------------------------------------
+

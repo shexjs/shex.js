@@ -1,0 +1,230 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ValueSet/example-expansion> a fhir:ValueSet ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-expansion"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "additional" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n			\n      <table class=\"grid\">\n				\n        <tr>\n					\n          <td>http://loinc.org</td>\n					\n          <td>14647-2</td>\n					\n          <td>Cholesterol [Moles/volume] in Serum or Plasma</td>\n				\n        </tr>\n				\n        <tr>\n					\n          <td colspan=\"3\">\n						\n            <b>Additional Cholesterol codes</b>\n					\n          </td>\n				\n        </tr>\n				\n        <tr>\n					\n          <td>http://loinc.org</td>\n					\n          <td>2093-3</td>\n					\n          <td>Cholesterol [Mass/volume] in Serum or Plasma</td>\n				\n        </tr>\n				\n        <tr>\n					\n          <td>http://loinc.org</td>\n					\n          <td>48620-9</td>\n					\n          <td>Cholesterol [Mass/volume] in Serum or Plasma ultracentrifugate</td>\n				\n        </tr>\n				\n        <tr>\n					\n          <td>http://loinc.org</td>\n					\n          <td>9342-7</td>\n					\n          <td>Cholesterol [Percentile]</td>\n				\n        </tr>\n				\n        <tr>\n					\n          <td colspan=\"3\">\n						\n            <b>Cholesterol Ratios</b>\n					\n          </td>\n				\n        </tr>\n				\n        <tr>\n					\n          <td>http://loinc.org</td>\n					\n          <td>2096-6</td>\n					\n          <td>Cholesterol/Triglyceride [Mass Ratio] in Serum or Plasma</td>\n				\n        </tr>\n				\n        <tr>\n					\n          <td>http://loinc.org</td>\n					\n          <td>35200-5</td>\n					\n          <td>Cholesterol/Triglyceride [Mass Ratio] in Serum or Plasma</td>\n				\n        </tr>\n				\n        <tr>\n					\n          <td>http://loinc.org</td>\n					\n          <td>48089-7</td>\n					\n          <td>Cholesterol/Apolipoprotein B [Molar ratio] in Serum or Plasma</td>\n				\n        </tr>\n				\n        <tr>\n					\n          <td>http://loinc.org</td>\n					\n          <td>55838-7</td>\n					\n          <td>Cholesterol/Phospholipid [Molar ratio] in Serum or Plasma</td>\n				\n        </tr>\n			\n      </table>\n		\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "vocab"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ValueSet/example-expansion"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/example-expansion>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.3.3141" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "LOINCCodesForCholesterolInSerumPlasma"] ; # 
+  fhir:title [ fhir:v "LOINC Codes for Cholesterol in Serum/Plasma"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2015-06-22"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Terminology Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/Vocab" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "This is an example value set that includes all the LOINC codes for serum/plasma cholesterol from v2.36."] ; # 
+  fhir:copyright [ fhir:v "This content from LOINC® is copyright © 1995 Regenstrief Institute, Inc. and the LOINC Committee, and available at no cost under the license at http://loinc.org/terms-of-use."] ; # 
+  fhir:compose [
+     fhir:include ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:filter ( [
+         fhir:property [ fhir:v "parent" ] ;
+         fhir:op [ fhir:v "=" ] ;
+         fhir:value [ fhir:v "LP382412-7" ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:expansion [
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-expansionSource"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-expansionSource>
+       ] ;
+       fhir:value [
+         a fhir:Uri ;
+         fhir:v "http://hl7.org/fhir/ValueSet/example"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/ValueSet/example>
+       ]
+     ] ) ;
+     fhir:identifier [
+       fhir:v "urn:uuid:42316ff8-2714-4680-9980-f37a6d1a71bc"^^xsd:anyURI ;
+       fhir:l <urn:uuid:42316ff8-2714-4680-9980-f37a6d1a71bc>
+     ] ;
+     fhir:timestamp [ fhir:v "2015-06-22T13:56:07Z"^^xsd:dateTime ] ;
+     fhir:total [ fhir:v 8 ] ;
+     fhir:offset [ fhir:v 0 ] ;
+     fhir:parameter ( [
+       fhir:name [ fhir:v "version" ] ;
+       fhir:value [
+         a fhir:String ;
+         fhir:v "2.50"
+       ]
+     ] ) ;
+     fhir:property ( [
+       fhir:code [ fhir:v "PROPERTY" ] ;
+       fhir:uri [
+         fhir:v "http://loinc.org/property/PROPERTY"^^xsd:anyURI ;
+         fhir:l <http://loinc.org/property/PROPERTY>
+       ]
+     ] ) ;
+     fhir:contains ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:version [ fhir:v "2.50" ] ;
+       fhir:code [ fhir:v "14647-2" ] ;
+       fhir:display [ fhir:v "Cholesterol [Moles/volume] in Serum or Plasma" ] ;
+       fhir:property ( [
+         fhir:code [ fhir:v "PROPERTY" ] ;
+         fhir:value [
+           a fhir:Code ;
+           fhir:v "SCnc"
+         ]
+       ] )
+     ] [
+       fhir:abstract [ fhir:v true ] ;
+       fhir:display [ fhir:v "Cholesterol codes" ] ;
+       fhir:contains ( [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:version [ fhir:v "2.50" ] ;
+         fhir:code [ fhir:v "2093-3" ] ;
+         fhir:display [ fhir:v "Cholesterol [Mass/volume] in Serum or Plasma" ] ;
+         fhir:property ( [
+           fhir:code [ fhir:v "PROPERTY" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "SCnc"
+           ]
+         ] )
+       ] [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:version [ fhir:v "2.50" ] ;
+         fhir:code [ fhir:v "48620-9" ] ;
+         fhir:display [ fhir:v "Cholesterol [Mass/volume] in Serum or Plasma ultracentrifugate" ] ;
+         fhir:property ( [
+           fhir:code [ fhir:v "PROPERTY" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "MCnc"
+           ]
+         ] )
+       ] [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:version [ fhir:v "2.50" ] ;
+         fhir:code [ fhir:v "9342-7" ] ;
+         fhir:display [ fhir:v "Cholesterol [Percentile]" ] ;
+         fhir:property ( [
+           fhir:code [ fhir:v "PROPERTY" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "Prctl"
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:abstract [ fhir:v true ] ;
+       fhir:display [ fhir:v "Cholesterol Ratios" ] ;
+       fhir:contains ( [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:version [ fhir:v "2.50" ] ;
+         fhir:code [ fhir:v "2096-6" ] ;
+         fhir:display [ fhir:v "Cholesterol/Triglyceride [Mass Ratio] in Serum or Plasma" ] ;
+         fhir:property ( [
+           fhir:code [ fhir:v "PROPERTY" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "SCnc"
+           ]
+         ] )
+       ] [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:version [ fhir:v "2.50" ] ;
+         fhir:code [ fhir:v "35200-5" ] ;
+         fhir:display [ fhir:v "Cholesterol/Triglyceride [Mass Ratio] in Serum or Plasma" ] ;
+         fhir:property ( [
+           fhir:code [ fhir:v "PROPERTY" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "SCnc"
+           ]
+         ] )
+       ] [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:version [ fhir:v "2.50" ] ;
+         fhir:code [ fhir:v "48089-7" ] ;
+         fhir:display [ fhir:v "Cholesterol/Apolipoprotein B [Molar ratio] in Serum or Plasma" ] ;
+         fhir:property ( [
+           fhir:code [ fhir:v "PROPERTY" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "SCnc"
+           ]
+         ] )
+       ] [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:version [ fhir:v "2.50" ] ;
+         fhir:code [ fhir:v "55838-7" ] ;
+         fhir:display [ fhir:v "Cholesterol/Phospholipid [Molar ratio] in Serum or Plasma" ] ;
+         fhir:property ( [
+           fhir:code [ fhir:v "PROPERTY" ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "SCnc"
+           ]
+         ] )
+       ] )
+     ] )
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

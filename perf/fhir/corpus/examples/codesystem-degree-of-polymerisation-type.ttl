@@ -1,0 +1,104 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/degree-of-polymerisation-type> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "degree-of-polymerisation-type"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem degree-of-polymerisation-type</b></p><a name=\"degree-of-polymerisation-type\"> </a><a name=\"hcdegree-of-polymerisation-type\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/degree-of-polymerisation-type</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">number-average<a name=\"degree-of-polymerisation-type-number-average\"> </a></td><td>Number average</td><td>Number-average degree of polymerisation (Mn).</td></tr><tr><td style=\"white-space:nowrap\">weight-average<a name=\"degree-of-polymerisation-type-weight-average\"> </a></td><td>Weight average</td><td>Weight-average degree of polymerisation (Mw).</td></tr><tr><td style=\"white-space:nowrap\">viscosity-average<a name=\"degree-of-polymerisation-type-viscosity-average\"> </a></td><td>Viscosity average</td><td>Viscosity-average degree of polymerisation (Mv).</td></tr><tr><td style=\"white-space:nowrap\">z-average<a name=\"degree-of-polymerisation-type-z-average\"> </a></td><td>Z-average</td><td>Z-average degree of polymerisation (Mz).</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "brr"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/degree-of-polymerisation-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/degree-of-polymerisation-type>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "DegreeOfPolymerisationTypeExample"] ; # 
+  fhir:title [ fhir:v "Degree of Polymerisation Type"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2026-06-19"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "The type of degree of polymerisation, e.g. number-average, weight-average."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/degree-of-polymerisation-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/degree-of-polymerisation-type>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "number-average" ] ;
+     fhir:display [ fhir:v "Number average" ] ;
+     fhir:definition [ fhir:v "Number-average degree of polymerisation (Mn)." ]
+  ] [
+     fhir:code [ fhir:v "weight-average" ] ;
+     fhir:display [ fhir:v "Weight average" ] ;
+     fhir:definition [ fhir:v "Weight-average degree of polymerisation (Mw)." ]
+  ] [
+     fhir:code [ fhir:v "viscosity-average" ] ;
+     fhir:display [ fhir:v "Viscosity average" ] ;
+     fhir:definition [ fhir:v "Viscosity-average degree of polymerisation (Mv)." ]
+  ] [
+     fhir:code [ fhir:v "z-average" ] ;
+     fhir:display [ fhir:v "Z-average" ] ;
+     fhir:definition [ fhir:v "Z-average degree of polymerisation (Mz)." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

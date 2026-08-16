@@ -1,0 +1,75 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CoverageEligibilityResponse/E2503> a fhir:CoverageEligibilityResponse ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "E2503"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">A human-readable rendering of the CoverageEligibilityResponse.</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://www.BenefitsInc.com/fhir/coverageeligibilityresponse"^^xsd:anyURI ;
+       fhir:l <http://www.BenefitsInc.com/fhir/coverageeligibilityresponse>
+     ] ;
+     fhir:value [ fhir:v "8812343" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:purpose ( [ fhir:v "validation"] ) ; # 
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/f201> ;
+     fhir:reference [ fhir:v "Patient/f201" ]
+  ] ; # 
+  fhir:created [ fhir:v "2014-09-16"^^xsd:date] ; # 
+  fhir:requestor [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://national.org/clinic"^^xsd:anyURI ;
+         fhir:l <http://national.org/clinic>
+       ] ;
+       fhir:value [ fhir:v "OR1234" ]
+     ]
+  ] ; # 
+  fhir:request [
+     fhir:l <http://www.BenefitsInc.com/fhir/coverageeligibilityresponse/225476332406> ;
+     fhir:reference [ fhir:v "http://www.BenefitsInc.com/fhir/coverageeligibilityresponse/225476332406" ]
+  ] ; # 
+  fhir:outcome [ fhir:v "error"] ; # 
+  fhir:disposition [ fhir:v "Eligibiliy request could not be processed, please address errors before submitting."] ; # 
+  fhir:insurer [
+     fhir:l <http://hl7.org/fhir/Organization/2> ;
+     fhir:reference [ fhir:v "Organization/2" ]
+  ] ; # 
+  fhir:form [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://national.org/form"^^xsd:anyURI ;
+         fhir:l <http://national.org/form>
+       ] ;
+       fhir:code [ fhir:v "ELRSP/2017/01" ]
+     ] )
+  ] ; # 
+  fhir:error ( [
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/adjudication-error"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/adjudication-error>
+         ] ;
+         fhir:code [ fhir:v "a001" ]
+       ] )
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/f201> a fhir:Patient .
+
+<http://hl7.org/fhir/Organization/2> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

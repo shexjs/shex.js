@@ -1,0 +1,535 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/NutritionProduct/example-shake> a fhir:NutritionProduct ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-shake"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:code [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+         fhir:l <https://fdc.nal.usda.gov/>
+       ] ;
+       fhir:code [ fhir:v "1838384" ] ;
+       fhir:display [ fhir:v "FRENCH VANILLA MAX PROTEIN NUTRITION SHAKE, FRENCH VANILLA" ]
+     ] ) ;
+     fhir:text [ fhir:v "FRENCH VANILLA MAX PROTEIN NUTRITION SHAKE, FRENCH VANILLA" ]
+  ] ; # 
+  fhir:category ( [
+     fhir:text [ fhir:v "Energy, Protein & Muscle Recovery Drinks" ]
+  ] ) ; # 
+  fhir:nutrient ( [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1005" ] ;
+           fhir:display [ fhir:v "Carbohydrate, by difference" ]
+         ] ) ;
+         fhir:text [ fhir:v "Carbohydrate, by difference" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1003" ] ;
+           fhir:display [ fhir:v "Protein" ]
+         ] ) ;
+         fhir:text [ fhir:v "Protein" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1100" ] ;
+           fhir:display [ fhir:v "Iodine, I" ]
+         ] ) ;
+         fhir:text [ fhir:v "Iodine, I" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1165" ] ;
+           fhir:display [ fhir:v "Thiamin" ]
+         ] ) ;
+         fhir:text [ fhir:v "Thiamin" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1166" ] ;
+           fhir:display [ fhir:v "Riboflavin" ]
+         ] ) ;
+         fhir:text [ fhir:v "Riboflavin" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1175" ] ;
+           fhir:display [ fhir:v "Vitamin B-6" ]
+         ] ) ;
+         fhir:text [ fhir:v "Vitamin B-6" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1170" ] ;
+           fhir:display [ fhir:v "Pantothenic acid" ]
+         ] ) ;
+         fhir:text [ fhir:v "Pantothenic acid" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1253" ] ;
+           fhir:display [ fhir:v "Cholesterol" ]
+         ] ) ;
+         fhir:text [ fhir:v "Cholesterol" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1104" ] ;
+           fhir:display [ fhir:v "Vitamin A, IU" ]
+         ] ) ;
+         fhir:text [ fhir:v "Vitamin A, IU" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1258" ] ;
+           fhir:display [ fhir:v "Fatty acids, total saturated" ]
+         ] ) ;
+         fhir:text [ fhir:v "Fatty acids, total saturated" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1090" ] ;
+           fhir:display [ fhir:v "Magnesium, Mg" ]
+         ] ) ;
+         fhir:text [ fhir:v "Magnesium, Mg" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1101" ] ;
+           fhir:display [ fhir:v "Manganese, Mn" ]
+         ] ) ;
+         fhir:text [ fhir:v "Manganese, Mn" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1092" ] ;
+           fhir:display [ fhir:v "Potassium, K" ]
+         ] ) ;
+         fhir:text [ fhir:v "Potassium, K" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1093" ] ;
+           fhir:display [ fhir:v "Sodium, Na" ]
+         ] ) ;
+         fhir:text [ fhir:v "Sodium, Na" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1079" ] ;
+           fhir:display [ fhir:v "Fiber, total dietary" ]
+         ] ) ;
+         fhir:text [ fhir:v "Fiber, total dietary" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1167" ] ;
+           fhir:display [ fhir:v "Niacin" ]
+         ] ) ;
+         fhir:text [ fhir:v "Niacin" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1257" ] ;
+           fhir:display [ fhir:v "Fatty acids, total trans" ]
+         ] ) ;
+         fhir:text [ fhir:v "Fatty acids, total trans" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1103" ] ;
+           fhir:display [ fhir:v "Selenium, Se" ]
+         ] ) ;
+         fhir:text [ fhir:v "Selenium, Se" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1162" ] ;
+           fhir:display [ fhir:v "Vitamin C, total ascorbic acid" ]
+         ] ) ;
+         fhir:text [ fhir:v "Vitamin C, total ascorbic acid" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1091" ] ;
+           fhir:display [ fhir:v "Phosphorus, P" ]
+         ] ) ;
+         fhir:text [ fhir:v "Phosphorus, P" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1098" ] ;
+           fhir:display [ fhir:v "Copper, Cu" ]
+         ] ) ;
+         fhir:text [ fhir:v "Copper, Cu" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1095" ] ;
+           fhir:display [ fhir:v "Zinc, Zn" ]
+         ] ) ;
+         fhir:text [ fhir:v "Zinc, Zn" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1178" ] ;
+           fhir:display [ fhir:v "Vitamin B-12" ]
+         ] ) ;
+         fhir:text [ fhir:v "Vitamin B-12" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1004" ] ;
+           fhir:display [ fhir:v "Total lipid (fat)" ]
+         ] ) ;
+         fhir:text [ fhir:v "Total lipid (fat)" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "2000" ] ;
+           fhir:display [ fhir:v "Sugars, total including NLEA" ]
+         ] ) ;
+         fhir:text [ fhir:v "Sugars, total including NLEA" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1087" ] ;
+           fhir:display [ fhir:v "Calcium, Ca" ]
+         ] ) ;
+         fhir:text [ fhir:v "Calcium, Ca" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1177" ] ;
+           fhir:display [ fhir:v "Folate, total" ]
+         ] ) ;
+         fhir:text [ fhir:v "Folate, total" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1185" ] ;
+           fhir:display [ fhir:v "Vitamin K (phylloquinone)" ]
+         ] ) ;
+         fhir:text [ fhir:v "Vitamin K (phylloquinone)" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1089" ] ;
+           fhir:display [ fhir:v "Iron, Fe" ]
+         ] ) ;
+         fhir:text [ fhir:v "Iron, Fe" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1008" ] ;
+           fhir:display [ fhir:v "Energy" ]
+         ] ) ;
+         fhir:text [ fhir:v "Energy" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fdc.nal.usda.gov/"^^xsd:anyURI ;
+             fhir:l <https://fdc.nal.usda.gov/>
+           ] ;
+           fhir:code [ fhir:v "1186" ] ;
+           fhir:display [ fhir:v "Folic acid" ]
+         ] ) ;
+         fhir:text [ fhir:v "Folic acid" ]
+       ]
+     ]
+  ] ) ; # 
+  fhir:ingredient ( [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://uts.nlm.nih.gov/uts/"^^xsd:anyURI ;
+             fhir:l <https://uts.nlm.nih.gov/uts/>
+           ] ;
+           fhir:code [ fhir:v "C0301465" ] ;
+           fhir:display [ fhir:v "calcium caseinate" ]
+         ] ) ;
+         fhir:text [ fhir:v "calcium caseinate" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://uts.nlm.nih.gov/uts/"^^xsd:anyURI ;
+             fhir:l <https://uts.nlm.nih.gov/uts/>
+           ] ;
+           fhir:code [ fhir:v "C0021936" ] ;
+           fhir:display [ fhir:v "inulin" ]
+         ] ) ;
+         fhir:text [ fhir:v "inulin" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://uts.nlm.nih.gov/uts/"^^xsd:anyURI ;
+             fhir:l <https://uts.nlm.nih.gov/uts/>
+           ] ;
+           fhir:code [ fhir:v "C0026138" ] ;
+           fhir:display [ fhir:v "milk protein" ]
+         ] ) ;
+         fhir:text [ fhir:v "milk protein" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://uts.nlm.nih.gov/uts/"^^xsd:anyURI ;
+             fhir:l <https://uts.nlm.nih.gov/uts/>
+           ] ;
+           fhir:code [ fhir:v "C0043047" ] ;
+           fhir:display [ fhir:v "water" ]
+         ] ) ;
+         fhir:text [ fhir:v "water" ]
+       ]
+     ]
+  ] [
+     fhir:item [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://uts.nlm.nih.gov/uts/"^^xsd:anyURI ;
+             fhir:l <https://uts.nlm.nih.gov/uts/>
+           ] ;
+           fhir:code [ fhir:v "C0012173" ] ;
+           fhir:display [ fhir:v "fiber" ]
+         ] ) ;
+         fhir:text [ fhir:v "fiber" ]
+       ]
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

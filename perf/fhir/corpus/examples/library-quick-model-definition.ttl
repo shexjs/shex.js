@@ -1,0 +1,60 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Library/library-quick-model-definition> a fhir:Library ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "library-quick-model-definition"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Id: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">Library/library-quick-model-definition</td>\n            \n        </tr>\n         \n      </table>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Identifier: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  \n            <b>value: </b>\n                  \n            <span>QUICK</span>\n               \n          </td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Version: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">1.0.0</td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Title: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">QUICK Model Definition</td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Type: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-right: 25px;\">\n                  \n            <span>\n                     \n              <span>\n                        \n                <span style=\"padding-left: 25px;\">\n                           \n                  <b>code: </b>\n                           \n                  <span>model-definition</span>\n                        \n                </span>\n                     \n              </span>\n                  \n            </span>\n               \n          </td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Status: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">draft</td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Description: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">Model definition for the QUICK Logical Model</td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Topic: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-right: 25px;\">\n                  \n            <span style=\"padding-left: 25px;\">\n                     \n              <b>text: </b>\n                     \n              <span>QUICK</span>\n                  \n            </span>\n               \n          </td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Content: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  \n            <p style=\"margin-bottom: 5px;\">\n                     \n              <b>type: </b>\n                     \n              <span>application/xml</span>\n                  \n            </p>\n                  \n            <p style=\"margin-bottom: 5px;\">\n                     \n              <b>url: </b>\n                     \n              <span>http://cqlrepository.org/quick-modelinfo.xml</span>\n                  \n            </p>\n               \n          </td>\n            \n        </tr>\n         \n      </table>\n      \n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:value [ fhir:v "QUICK" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "1.0.0"] ; # 
+  fhir:name [ fhir:v "QUICKModelDefinition"] ; # 
+  fhir:title [ fhir:v "QUICK Model Definition"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:code [ fhir:v "model-definition" ]
+     ] )
+  ] ; # 
+  fhir:date [ fhir:v "2016-07-08"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Decision Support"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/dss" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Model definition for the QUICK Logical Model"] ; # 
+  fhir:topic ( [
+     fhir:text [ fhir:v "QUICK" ]
+  ] ) ; # 
+  fhir:content ( [
+     fhir:contentType [ fhir:v "application/xml" ] ;
+     fhir:url [
+       fhir:v "http://cqlrepository.org/quick-modelinfo.xml"^^xsd:anyURI ;
+       fhir:l <http://cqlrepository.org/quick-modelinfo.xml>
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

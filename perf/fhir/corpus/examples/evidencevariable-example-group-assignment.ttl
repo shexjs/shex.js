@@ -1,0 +1,126 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/EvidenceVariable/example-group-assignment> a fhir:EvidenceVariable ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-group-assignment"] ; # 
+  fhir:meta [
+     fhir:versionId [ fhir:v "1" ] ;
+     fhir:lastUpdated [ fhir:v "2024-12-17T19:40:19.291Z"^^xsd:dateTime ] ;
+     fhir:profile ( [
+       fhir:v "http://hl7.org/fhir/uv/ebm/StructureDefinition/group-assignment"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/uv/ebm/StructureDefinition/group-assignment>
+     ] )
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/EvidenceVariable/example-group-assignment"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/EvidenceVariable/example-group-assignment>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:text [ fhir:v "FEvIR Object Identifier" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "https://fevir.net/FOI/297490" ] ;
+     fhir:assigner [
+       fhir:display [ fhir:v "Computable Publishing LLC" ]
+     ]
+  ] ) ; # 
+  fhir:title [ fhir:v "GroupAssignment: Jumping from aircraft with parachute vs. Jumping from aircraft with empty backpack"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:author ( [
+     fhir:name [ fhir:v "Joanne Dehnbostel" ]
+  ] ) ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Decision Support"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/dss" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "This EvidenceVariable Resource (GroupAssignment Profile) describes a 2-group study (so handling='dichotomous') and lists the 2 study arms in category.name elements. Because the definition of this EvidenceVariable Resource is fully expressed in the handling and category elements, the defintion.concept element uses a CodeableConcept for 'Defined in handling and category elements'."] ; # 
+  fhir:useContext ( [
+     fhir:code [
+       fhir:system [
+         fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+         fhir:l <https://fevir.net/resources/CodeSystem/179423>
+       ] ;
+       fhir:code [ fhir:v "evidence-communication" ] ;
+       fhir:display [ fhir:v "Evidence Communication" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+           fhir:l <https://fevir.net/resources/CodeSystem/179423>
+         ] ;
+         fhir:code [ fhir:v "GroupAssignment" ] ;
+         fhir:display [ fhir:v "GroupAssignment" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:copyright [ fhir:v "https://creativecommons.org/licenses/by-nc-sa/4.0/"] ; # 
+  fhir:definition [
+     fhir:concept [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+           fhir:l <https://fevir.net/resources/CodeSystem/179423>
+         ] ;
+         fhir:code [ fhir:v "defined-in-handling-and-category" ] ;
+         fhir:display [ fhir:v "Defined in handling and category elements" ]
+       ] )
+     ]
+  ] ; # 
+  fhir:handling [] ; # 
+  fhir:category ( [
+     fhir:name [ fhir:v "Jumping from aircraft with parachute" ] ;
+     fhir:value [
+       a fhir:Reference ;
+       fhir:l <http://hl7.org/fhir/Group/297486> ;
+       fhir:reference [ fhir:v "Group/297486" ] ;
+       fhir:type [
+         fhir:v "Group"^^xsd:anyURI ;
+         fhir:l fhir:Group
+       ] ;
+       fhir:display [ fhir:v "Jumping from aircraft with parachute" ]
+     ]
+  ] [
+     fhir:name [ fhir:v "Jumping from aircraft with empty backpack" ] ;
+     fhir:value [
+       a fhir:Reference ;
+       fhir:l <http://hl7.org/fhir/Group/297488> ;
+       fhir:reference [ fhir:v "Group/297488" ] ;
+       fhir:type [
+         fhir:v "Group"^^xsd:anyURI ;
+         fhir:l fhir:Group
+       ] ;
+       fhir:display [ fhir:v "Jumping from aircraft with empty backpack" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Group/297486> a fhir:Group .
+
+<http://hl7.org/fhir/Group/297488> a fhir:Group .
+
+# -------------------------------------------------------------------------------------
+

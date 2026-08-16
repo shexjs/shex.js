@@ -1,0 +1,235 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# Example: Polyethylene Glycol 3350 (PEG 3350) — a homopolymer of ethylene
+#     oxide with number-average molecular weight ~3350 Da. Demonstrates the new
+#     SubstanceDefinition polymer backbones added for FHIR-57660: .polymer.class,
+#     .geometry, .monomerSet.startingMaterial, .repeat.repeatUnit with degree
+#     of polymerisation. Adapted from ISO 11238 Implementation Guide polymer
+#     example for PEG 3350.
+
+<http://hl7.org/fhir/SubstanceDefinition/peg3350> a fhir:SubstanceDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "peg3350"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://example.europa.eu/fhir/SMSId"^^xsd:anyURI ;
+       fhir:l <http://example.europa.eu/fhir/SMSId>
+     ] ;
+     fhir:value [ fhir:v "PEG3350P" ]
+  ] ) ; # 
+  fhir:status [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/publication-status"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/publication-status>
+       ] ;
+       fhir:code [ fhir:v "active" ] ;
+       fhir:display [ fhir:v "Active" ]
+     ] )
+  ] ; # 
+  fhir:classification ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.europa.eu/fhir/SubstanceType"^^xsd:anyURI ;
+         fhir:l <http://example.europa.eu/fhir/SubstanceType>
+       ] ;
+       fhir:code [ fhir:v "polymer" ] ;
+       fhir:display [ fhir:v "Polymer" ]
+     ] )
+  ] ) ; # 
+  fhir:domain [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.europa.eu/fhir/Domain"^^xsd:anyURI ;
+         fhir:l <http://example.europa.eu/fhir/Domain>
+       ] ;
+       fhir:code [ fhir:v "human" ] ;
+       fhir:display [ fhir:v "Human use" ]
+     ] )
+  ] ; # 
+  fhir:description [ fhir:v "Polyethylene Glycol 3350 (PEG 3350, Macrogol 3350) — a synthetic polyether of ethylene oxide with number-average molecular weight approximately 3350 Da. Linear homopolymer used as an osmotic laxative and a pharmaceutical excipient."] ; # 
+  fhir:code ( [
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.europa.eu/fhir/Substance"^^xsd:anyURI ;
+           fhir:l <http://example.europa.eu/fhir/Substance>
+         ] ;
+         fhir:code [ fhir:v "PEG3350P" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:name [ fhir:v "Polyethylene Glycol 3350" ] ;
+     fhir:preferred [ fhir:v true ] ;
+     fhir:language ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:ietf:bcp:47"^^xsd:anyURI ;
+           fhir:l <urn:ietf:bcp:47>
+         ] ;
+         fhir:code [ fhir:v "en" ] ;
+         fhir:display [ fhir:v "English" ]
+       ] )
+     ] ) ;
+     fhir:official ( [
+       fhir:authority [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/substance-name-authority"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/substance-name-authority>
+           ] ;
+           fhir:code [ fhir:v "USAN" ] ;
+           fhir:display [ fhir:v "USAN" ]
+         ] )
+       ] ;
+       fhir:status [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/publication-status"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/publication-status>
+           ] ;
+           fhir:code [ fhir:v "active" ] ;
+           fhir:display [ fhir:v "Active" ]
+         ] )
+       ]
+     ] )
+  ] [
+     fhir:name [ fhir:v "Macrogol 3350" ] ;
+     fhir:preferred [ fhir:v false ]
+  ] ) ; # 
+  fhir:molecularWeight ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.europa.eu/fhir/WeightType"^^xsd:anyURI ;
+           fhir:l <http://example.europa.eu/fhir/WeightType>
+         ] ;
+         fhir:code [ fhir:v "number-average" ] ;
+         fhir:display [ fhir:v "Number average (Mn)" ]
+       ] )
+     ] ;
+     fhir:amount [
+       fhir:value [ fhir:v "3350"^^xsd:decimal ] ;
+       fhir:unit [ fhir:v "g/mol" ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "g/mol" ]
+     ]
+  ] ) ; # 
+  fhir:polymer [
+     fhir:class [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/polymer-class"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/polymer-class>
+         ] ;
+         fhir:code [ fhir:v "homopolymer" ] ;
+         fhir:display [ fhir:v "Homopolymer" ]
+       ] )
+     ] ;
+     fhir:geometry [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/polymer-geometry"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/polymer-geometry>
+         ] ;
+         fhir:code [ fhir:v "linear" ] ;
+         fhir:display [ fhir:v "Linear" ]
+       ] )
+     ] ;
+     fhir:monomerSet ( [
+       fhir:ratioType [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/polymer-monomer-ratio-type"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/polymer-monomer-ratio-type>
+           ] ;
+           fhir:code [ fhir:v "monomer-polymer-ratio" ] ;
+           fhir:display [ fhir:v "Monomer/Polymer ratio" ]
+         ] )
+       ] ;
+       fhir:startingMaterial ( [
+         fhir:code [
+           fhir:concept [
+             fhir:coding ( [
+               fhir:system [
+                 fhir:v "http://example.europa.eu/fhir/Substance"^^xsd:anyURI ;
+                 fhir:l <http://example.europa.eu/fhir/Substance>
+               ] ;
+               fhir:code [ fhir:v "ethylene-oxide" ] ;
+               fhir:display [ fhir:v "Ethylene oxide" ]
+             ] )
+           ]
+         ] ;
+         fhir:category [
+           fhir:coding ( [
+             fhir:system [
+               fhir:v "http://hl7.org/fhir/polymer-starting-material-category"^^xsd:anyURI ;
+               fhir:l <http://hl7.org/fhir/polymer-starting-material-category>
+             ] ;
+             fhir:code [ fhir:v "chemical-substance" ] ;
+             fhir:display [ fhir:v "Chemical substance" ]
+           ] )
+         ] ;
+         fhir:isDefining [ fhir:v true ] ;
+         fhir:amount [
+           fhir:value [ fhir:v "76"^^xsd:decimal ] ;
+           fhir:unit [ fhir:v "monomers per polymer" ]
+         ]
+       ] )
+     ] ) ;
+     fhir:repeat ( [
+       fhir:averageMolecularFormula [ fhir:v "(C2H4O)76" ] ;
+       fhir:repeatUnitAmountType [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/polymer-monomer-ratio-type"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/polymer-monomer-ratio-type>
+           ] ;
+           fhir:code [ fhir:v "sru-polymer-ratio" ] ;
+           fhir:display [ fhir:v "SRU/Polymer ratio" ]
+         ] )
+       ] ;
+       fhir:repeatUnit ( [
+         fhir:unit [ fhir:v "-CH2-CH2-O-" ] ;
+         fhir:orientation [
+           fhir:coding ( [
+             fhir:system [
+               fhir:v "http://hl7.org/fhir/polymerisation-orientation"^^xsd:anyURI ;
+               fhir:l <http://hl7.org/fhir/polymerisation-orientation>
+             ] ;
+             fhir:code [ fhir:v "head-tail" ] ;
+             fhir:display [ fhir:v "Head-to-tail" ]
+           ] )
+         ] ;
+         fhir:amount [ fhir:v 76 ] ;
+         fhir:degreeOfPolymerisation ( [
+           fhir:type [
+             fhir:coding ( [
+               fhir:system [
+                 fhir:v "http://hl7.org/fhir/degree-of-polymerisation-type"^^xsd:anyURI ;
+                 fhir:l <http://hl7.org/fhir/degree-of-polymerisation-type>
+               ] ;
+               fhir:code [ fhir:v "number-average" ] ;
+               fhir:display [ fhir:v "Number average" ]
+             ] )
+           ] ;
+           fhir:average [ fhir:v 76 ] ;
+           fhir:low [ fhir:v 70 ] ;
+           fhir:high [ fhir:v 82 ]
+         ] )
+       ] )
+     ] )
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -44,7 +44,12 @@
                   "nodeKind": "literal"
                 },
                 "errors": [
-                  "Error validating <http://a.example/o1> as {\"type\":\"NodeConstraint\",\"nodeKind\":\"literal\"}: iri found when literal expected"
+                  {
+                    "type": "NodeKindMismatch",
+                    "expected": "literal",
+                    "actual": "iri",
+                    "message": "iri found when literal expected"
+                  }
                 ]
               },
               {
@@ -59,7 +64,15 @@
                   ]
                 },
                 "errors": [
-                  "Error validating <http://a.example/o1> as {\"type\":\"NodeConstraint\",\"values\":[\"http://a.example/v1\",\"http://a.example/v2\"]}: value http://a.example/o1 not found in set [\"http://a.example/v1\",\"http://a.example/v2\"]"
+                  {
+                    "type": "ValueSetMismatch",
+                    "values": [
+                      "http://a.example/v1",
+                      "http://a.example/v2"
+                    ],
+                    "actual": "http://a.example/o1",
+                    "message": "value http://a.example/o1 not found in set [\"http://a.example/v1\",\"http://a.example/v2\"]"
+                  }
                 ]
               }
             ]

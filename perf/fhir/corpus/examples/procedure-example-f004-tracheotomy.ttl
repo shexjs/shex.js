@@ -1,0 +1,87 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Procedure/f004> a fhir:Procedure ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f004"] ; # 
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:code [
+     a sct:48387007 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "48387007" ] ;
+       fhir:display [ fhir:v "Tracheotomy" ]
+     ] )
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/f001> ;
+     fhir:reference [ fhir:v "Patient/f001" ] ;
+     fhir:display [ fhir:v "P. van de Heuvel" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/f003> ;
+     fhir:reference [ fhir:v "Encounter/f003" ]
+  ] ; # 
+  fhir:occurrence [
+     a fhir:Period ;
+     fhir:start [ fhir:v "2013-03-22T09:30:10+01:00"^^xsd:dateTime ] ;
+     fhir:end [ fhir:v "2013-03-22T10:30:10+01:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:performer ( [
+     fhir:function [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:oid:2.16.840.1.113883.2.4.15.111"^^xsd:anyURI ;
+           fhir:l <urn:oid:2.16.840.1.113883.2.4.15.111>
+         ] ;
+         fhir:code [ fhir:v "01.000" ] ; # \"AssignedRoleType\" coding system
+         fhir:display [ fhir:v "Arts" ]
+       ] ) ;
+       fhir:text [ fhir:v "Care role" ]
+     ] ;
+     fhir:actor [
+       fhir:l <http://hl7.org/fhir/Practitioner/f005> ;
+       fhir:reference [ fhir:v "Practitioner/f005" ] ;
+       fhir:display [ fhir:v "A. Langeveld" ]
+     ]
+  ] ) ; # 
+  fhir:reason ( [
+     fhir:concept [
+       fhir:text [ fhir:v "ensure breathing during surgery" ]
+     ]
+  ] ) ; # 
+  fhir:outcome ( [
+     fhir:concept [
+       fhir:text [ fhir:v "removal of the retropharyngeal abscess" ]
+     ]
+  ] ) ; # 
+  fhir:report ( [
+     fhir:l <http://hl7.org/fhir/DiagnosticReport/f001> ;
+     fhir:reference [ fhir:v "DiagnosticReport/f001" ] ;
+     fhir:display [ fhir:v "???????????" ]
+  ] ) ; # 
+  fhir:followUp ( [
+     fhir:concept [
+       fhir:text [ fhir:v "described in care plan" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/f001> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/f003> a fhir:Encounter .
+
+<http://hl7.org/fhir/Practitioner/f005> a fhir:Practitioner .
+
+<http://hl7.org/fhir/DiagnosticReport/f001> a fhir:DiagnosticReport .
+
+# -------------------------------------------------------------------------------------
+

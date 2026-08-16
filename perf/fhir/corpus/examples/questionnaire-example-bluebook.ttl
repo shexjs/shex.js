@@ -1,0 +1,157 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Questionnaire/bb> a fhir:Questionnaire ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "bb"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      \n      <pre>\n        \n        <b>Birth details - To be completed by health professional</b>\n  Name of child: ____________________________________\n            Sex: __\n            \n  Neonatal Information\n    Birth Weight (kg): ___________\n    Birth Length (cm): ___________\n    Vitamin K given  : __\n             1st dose: ___________\n             2nd dose: ___________\n    Hep B given      : __\n      Date given     : ___________\n    Abnormalities noted at birth:\n      _______________________________________________\n      \n      </pre>\n    \n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/Questionnaire/bb"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/Questionnaire/bb>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.20.4" ]
+  ] ) ; # 
+  fhir:name [ fhir:v "NSWGovernmentMyPersonalHealthRecord"] ; # 
+  fhir:title [ fhir:v "NSW Government My Personal Health Record"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:subjectType ( [ fhir:v "Patient"] ) ; # 
+  fhir:date [ fhir:v "2013-02-19"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "NSW Government My Personal Health Record"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "urn:iso:std:iso:3166"^^xsd:anyURI ;
+         fhir:l <urn:iso:std:iso:3166>
+       ] ;
+       fhir:code [ fhir:v "AU" ]
+     ] )
+  ] ) ; # 
+  fhir:item ( [
+     fhir:linkId [ fhir:v "birthDetails" ] ;
+     fhir:text [ fhir:v "Birth details - To be completed by health professional" ] ;
+     fhir:type [ fhir:v "group" ] ;
+     fhir:item ( [
+       fhir:linkId [ fhir:v "group" ] ;
+       fhir:type [ fhir:v "group" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "nameOfChild" ] ;
+         fhir:text [ fhir:v "Name of child" ] ;
+         fhir:type [ fhir:v "string" ]
+       ] [
+         fhir:linkId [ fhir:v "sex" ] ;
+         fhir:text [ fhir:v "Sex" ] ;
+         fhir:type [ fhir:v "coding" ] ;
+         fhir:answerOption ( [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:code [ fhir:v "F" ]
+           ]
+         ] [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:code [ fhir:v "M" ]
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "neonatalInformation" ] ;
+       fhir:text [ fhir:v "Neonatal Information" ] ;
+       fhir:type [ fhir:v "group" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "birthWeight" ] ;
+         fhir:text [ fhir:v "Birth weight (kg)" ] ;
+         fhir:type [ fhir:v "decimal" ]
+       ] [
+         fhir:linkId [ fhir:v "birthLength" ] ;
+         fhir:text [ fhir:v "Birth length (cm)" ] ;
+         fhir:type [ fhir:v "decimal" ]
+       ] [
+         fhir:linkId [ fhir:v "vitaminKgiven" ] ;
+         fhir:text [ fhir:v "Vitamin K given" ] ;
+         fhir:type [ fhir:v "coding" ] ;
+         fhir:answerOption ( [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:code [ fhir:v "INJECTION" ]
+           ]
+         ] [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:code [ fhir:v "INTRAVENOUS" ]
+           ]
+         ] [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:code [ fhir:v "ORAL" ]
+           ]
+         ] ) ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "vitaminKgivenDoses" ] ;
+           fhir:type [ fhir:v "group" ] ;
+           fhir:enableWhen ( [
+             fhir:question [ fhir:v "vitaminKgiven" ] ;
+             fhir:operator [ fhir:v "exists" ] ;
+             fhir:answer [
+               a fhir:Boolean ;
+               fhir:v true
+             ]
+           ] ) ;
+           fhir:item ( [
+             fhir:linkId [ fhir:v "vitaminKDose1" ] ;
+             fhir:text [ fhir:v "1st dose" ] ;
+             fhir:type [ fhir:v "dateTime" ]
+           ] [
+             fhir:linkId [ fhir:v "vitaminKDose2" ] ;
+             fhir:text [ fhir:v "2nd dose" ] ;
+             fhir:type [ fhir:v "dateTime" ]
+           ] )
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "hepBgiven" ] ;
+         fhir:text [ fhir:v "Hep B given y / n" ] ;
+         fhir:type [ fhir:v "boolean" ] ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "hepBgivenDate" ] ;
+           fhir:text [ fhir:v "Date given" ] ;
+           fhir:type [ fhir:v "date" ]
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "abnormalitiesAtBirth" ] ;
+         fhir:text [ fhir:v "Abnormalities noted at birth" ] ;
+         fhir:type [ fhir:v "string" ]
+       ] )
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

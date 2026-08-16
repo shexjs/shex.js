@@ -1,0 +1,99 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Appointment/2docs> a fhir:Appointment ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "2docs"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Discussion of Peter's ultrasound results to plan ongoing treatment options</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "booked"] ; # 
+  fhir:serviceCategory ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.org/service-category"^^xsd:anyURI ;
+         fhir:l <http://example.org/service-category>
+       ] ;
+       fhir:code [ fhir:v "gp" ] ;
+       fhir:display [ fhir:v "General Practice" ]
+     ] )
+  ] ) ; # 
+  fhir:serviceType ( [
+     fhir:concept [
+       fhir:coding ( [
+         fhir:code [ fhir:v "52" ] ;
+         fhir:display [ fhir:v "General Discussion" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:specialty ( [
+     a sct:394814009 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "394814009" ] ;
+       fhir:display [ fhir:v "General practice (specialty)" ]
+     ] )
+  ] ) ; # 
+  fhir:appointmentType [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v2-0276"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v2-0276>
+       ] ;
+       fhir:code [ fhir:v "FOLLOWUP" ] ;
+       fhir:display [ fhir:v "A follow up visit from a previous appointment" ]
+     ] )
+  ] ; # 
+  fhir:description [ fhir:v "Discussion about Peter Chalmers ultrasound results"] ; # 
+  fhir:supportingInformation ( [
+     fhir:l <http://hl7.org/fhir/DiagnosticReport/ultrasound> ;
+     fhir:reference [ fhir:v "DiagnosticReport/ultrasound" ]
+  ] ) ; # 
+  fhir:start [ fhir:v "2013-12-09T09:00:00Z"^^xsd:dateTime] ; # 
+  fhir:end [ fhir:v "2013-12-09T11:00:00Z"^^xsd:dateTime] ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "Clarify the results of the ultrasound to ensure context of test was correct" ]
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Peter James Chalmers" ]
+  ] ; # 
+  fhir:participant ( [
+     fhir:actor [
+       fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+       fhir:reference [ fhir:v "Practitioner/example" ] ;
+       fhir:display [ fhir:v "Dr Adam Careful" ]
+     ] ;
+     fhir:required [ fhir:v true ] ;
+     fhir:status [ fhir:v "accepted" ]
+  ] [
+     fhir:actor [
+       fhir:l <http://hl7.org/fhir/Practitioner/f202> ;
+       fhir:reference [ fhir:v "Practitioner/f202" ] ;
+       fhir:display [ fhir:v "Luigi Maas" ]
+     ] ;
+     fhir:required [ fhir:v true ] ;
+     fhir:status [ fhir:v "accepted" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/DiagnosticReport/ultrasound> a fhir:DiagnosticReport .
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Practitioner/f202> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

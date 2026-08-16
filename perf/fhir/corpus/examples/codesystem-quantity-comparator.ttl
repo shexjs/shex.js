@@ -1,0 +1,115 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/quantity-comparator> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "quantity-comparator"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem quantity-comparator</b></p><a name=\"quantity-comparator\"> </a><a name=\"hcquantity-comparator\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/quantity-comparator</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">&lt;<a name=\"quantity-comparator-.60\"> </a></td><td>Less than</td><td>The actual value is less than the given value.</td></tr><tr><td style=\"white-space:nowrap\">&lt;=<a name=\"quantity-comparator-.60.61\"> </a></td><td>Less or Equal to</td><td>The actual value is less than or equal to the given value.</td></tr><tr><td style=\"white-space:nowrap\">&gt;=<a name=\"quantity-comparator-.62.61\"> </a></td><td>Greater or Equal to</td><td>The actual value is greater than or equal to the given value.</td></tr><tr><td style=\"white-space:nowrap\">&gt;<a name=\"quantity-comparator-.62\"> </a></td><td>Greater than</td><td>The actual value is greater than the given value.</td></tr><tr><td style=\"white-space:nowrap\">~<a name=\"quantity-comparator-.126\"> </a></td><td>Approximately</td><td>The actual value is approximately equal to the given value. A recommended value for the approximation is 10% of the stated value (or for a date, 10% of the gap between now and the date), but systems may choose other values where appropriate. Systems SHOULD use the Quantity Confidence Interval extension (http://hl7.org/fhir/StructureDefinition/quantity-confidenceInterval) to provide more detail when possible.</td></tr><tr><td style=\"white-space:nowrap\">ad<a name=\"quantity-comparator-ad\"> </a></td><td>Sufficient to achieve this total quantity</td><td>The actual value is sufficient for the total quantity to equal the given value.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/quantity-comparator"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/quantity-comparator>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.60" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "QuantityComparator"] ; # 
+  fhir:title [ fhir:v "QuantityComparator"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "How the Quantity should be understood and represented."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/quantity-comparator"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/quantity-comparator>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "<" ] ;
+     fhir:display [ fhir:v "Less than" ] ;
+     fhir:definition [ fhir:v "The actual value is less than the given value." ]
+  ] [
+     fhir:code [ fhir:v "<=" ] ;
+     fhir:display [ fhir:v "Less or Equal to" ] ;
+     fhir:definition [ fhir:v "The actual value is less than or equal to the given value." ]
+  ] [
+     fhir:code [ fhir:v ">=" ] ;
+     fhir:display [ fhir:v "Greater or Equal to" ] ;
+     fhir:definition [ fhir:v "The actual value is greater than or equal to the given value." ]
+  ] [
+     fhir:code [ fhir:v ">" ] ;
+     fhir:display [ fhir:v "Greater than" ] ;
+     fhir:definition [ fhir:v "The actual value is greater than the given value." ]
+  ] [
+     fhir:code [ fhir:v "~" ] ;
+     fhir:display [ fhir:v "Approximately" ] ;
+     fhir:definition [ fhir:v "The actual value is approximately equal to the given value. A recommended value for the approximation is 10% of the stated value (or for a date, 10% of the gap between now and the date), but systems may choose other values where appropriate. Systems SHOULD use the Quantity Confidence Interval extension (http://hl7.org/fhir/StructureDefinition/quantity-confidenceInterval) to provide more detail when possible." ]
+  ] [
+     fhir:code [ fhir:v "ad" ] ;
+     fhir:display [ fhir:v "Sufficient to achieve this total quantity" ] ;
+     fhir:definition [ fhir:v "The actual value is sufficient for the total quantity to equal the given value." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

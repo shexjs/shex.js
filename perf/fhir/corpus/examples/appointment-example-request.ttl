@@ -1,0 +1,125 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Appointment/examplereq> a fhir:Appointment ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "examplereq"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Brian MRI results discussion</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://example.org/sampleappointment-identifier"^^xsd:anyURI ;
+       fhir:l <http://example.org/sampleappointment-identifier>
+     ] ;
+     fhir:value [ fhir:v "123" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "proposed"] ; # 
+  fhir:serviceCategory ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.org/service-category"^^xsd:anyURI ;
+         fhir:l <http://example.org/service-category>
+       ] ;
+       fhir:code [ fhir:v "gp" ] ;
+       fhir:display [ fhir:v "General Practice" ]
+     ] )
+  ] ) ; # 
+  fhir:specialty ( [
+     a sct:394814009 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "394814009" ] ;
+       fhir:display [ fhir:v "General practice (specialty)" ]
+     ] )
+  ] ) ; # 
+  fhir:appointmentType [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v2-0276"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v2-0276>
+       ] ;
+       fhir:code [ fhir:v "WALKIN" ] ;
+       fhir:display [ fhir:v "A previously unscheduled walk-in visit" ]
+     ] )
+  ] ; # 
+  fhir:reason ( [
+     fhir:concept [
+       a sct:413095006 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "413095006" ]
+       ] ) ;
+       fhir:text [ fhir:v "Clinical Review" ]
+     ]
+  ] ) ; # 
+  fhir:description [ fhir:v "Discussion on the results of your recent MRI"] ; # <priority value="5" />
+  fhir:minutesDuration [ fhir:v "15"^^xsd:positiveInteger] ; # 
+  fhir:requestedPeriod ( [
+     fhir:start [ fhir:v "2016-06-02"^^xsd:date ] ;
+     fhir:end [ fhir:v "2016-06-09"^^xsd:date ]
+  ] ) ; # 
+  fhir:slot ( [
+     fhir:l <http://hl7.org/fhir/Slot/example> ;
+     fhir:reference [ fhir:v "Slot/example" ]
+  ] ) ; # 
+  fhir:created [ fhir:v "2015-12-02"^^xsd:date] ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "Further expand on the results of the MRI and determine the next actions that may be appropriate." ]
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Peter James Chalmers" ]
+  ] ; # 
+  fhir:participant ( [
+     fhir:actor [
+       fhir:l <http://hl7.org/fhir/Patient/example> ;
+       fhir:reference [ fhir:v "Patient/example" ] ;
+       fhir:display [ fhir:v "Peter James Chalmers" ]
+     ] ;
+     fhir:required [ fhir:v true ] ;
+     fhir:status [ fhir:v "needs-action" ]
+  ] [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationType"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationType>
+         ] ;
+         fhir:code [ fhir:v "ATND" ]
+       ] )
+     ] ) ;
+     fhir:required [ fhir:v true ] ;
+     fhir:status [ fhir:v "needs-action" ]
+  ] [
+     fhir:actor [
+       fhir:l <http://hl7.org/fhir/Location/1> ;
+       fhir:reference [ fhir:v "Location/1" ] ;
+       fhir:display [ fhir:v "South Wing, second floor" ]
+     ] ;
+     fhir:required [ fhir:v true ] ; # This resource auto accepts, so doesn't need negotiation
+     fhir:status [ fhir:v "accepted" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Slot/example> a fhir:Slot .
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Location/1> a fhir:Location .
+
+# -------------------------------------------------------------------------------------
+

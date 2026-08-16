@@ -1,0 +1,84 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Medication/med0304> a fhir:Medication ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "med0304"] ; # 
+  fhir:contained ( [
+     a fhir:Organization ;
+     fhir:id [ fhir:v "mmanu" ] ;
+     fhir:name [ fhir:v "Medication Manufacturer" ]
+  ] ) ; # 
+  fhir:code [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/sid/ndc"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/sid/ndc>
+       ] ;
+       fhir:code [ fhir:v "76388-713-25" ] ;
+       fhir:display [ fhir:v "MYLERAN, 25 TABLET, FILM COATED in 1 BOTTLE (76388-713-25) (package)" ]
+     ] ) ;
+     fhir:text [ fhir:v "Myleran 2mg tablet, film coated" ]
+  ] ; # 
+  fhir:marketingAuthorizationHolder [
+     fhir:l <#mmanu> ;
+     fhir:reference [ fhir:v "#mmanu" ]
+  ] ; # 
+  fhir:doseForm [
+     a sct:385057009 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "385057009" ] ;
+       fhir:display [ fhir:v "Film-coated tablet (basic dose form)" ]
+     ] )
+  ] ; # 
+  fhir:ingredient ( [
+     fhir:item [
+       fhir:concept [
+         a sct:387138002 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "387138002" ] ;
+           fhir:display [ fhir:v "Busulfan (substance)" ]
+         ] )
+       ]
+     ] ;
+     fhir:strength [
+       a fhir:Ratio ;
+       fhir:numerator [
+         fhir:value [ fhir:v "2"^^xsd:decimal ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "mg" ]
+       ] ;
+       fhir:denominator [
+         fhir:value [ fhir:v "1"^^xsd:decimal ] ;
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm>
+         ] ;
+         fhir:code [ fhir:v "TAB" ]
+       ]
+     ]
+  ] ) ; # 
+  fhir:instance [
+     fhir:lotNumber [ fhir:v "9494788" ] ;
+     fhir:expirationDate [ fhir:v "2017-05-22"^^xsd:date ]
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

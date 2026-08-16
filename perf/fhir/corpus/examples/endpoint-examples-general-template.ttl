@@ -1,0 +1,523 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/b5711af0a-d678-46d1-86e9-66e454cf1522> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "b5711af0a-d678-46d1-86e9-66e454cf1522"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:type [ fhir:v "collection"] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Endpoint/71"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Endpoint/71>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Endpoint/71> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Endpoint/72"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Endpoint/72>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Endpoint/72> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Endpoint/73"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Endpoint/73>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Endpoint/73> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Endpoint/74"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Endpoint/74>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Endpoint/74> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Endpoint/75"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Endpoint/75>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Endpoint/75> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Endpoint/76"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Endpoint/76>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Endpoint/76> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Endpoint/77"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Endpoint/77>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Endpoint/77> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Endpoint/78"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Endpoint/78>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Endpoint/78> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Endpoint/79"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Endpoint/79>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Endpoint/79> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Endpoint/80"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Endpoint/80>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Endpoint/80> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Endpoint/81"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Endpoint/81>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Endpoint/81> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Endpoint/82"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Endpoint/82>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Endpoint/82> )
+  ] ) . # 
+
+<http://hl7.org/fhir/Endpoint/71> a fhir:Endpoint ;
+  fhir:id [ fhir:v "71"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n              CarePlan repository, CarePlan<br/>\n              Address: https://sqlonfhir-dstu2.azurewebsites.net/fhir</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:connectionType ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/endpoint-connection-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/endpoint-connection-type>
+       ] ;
+       fhir:code [ fhir:v "hl7-fhir-rest" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "CarePlan repository"] ; # 
+  fhir:managingOrganization [
+     fhir:display [ fhir:v "Telstra Health" ]
+  ] ; # 
+  fhir:payload ( [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:code [ fhir:v "CarePlan" ] # <system value=\"http:\/\/hl7.org\/fhir\/fhir-types\" \/>
+       ] )
+     ] ) ;
+     fhir:mimeType ( [ fhir:v "application/fhir+xml" ] )
+  ] ) ; # <method>
+#          <system value="http://hl7.org/fhir/http-verb" />
+#          <code value="POST" />
+#        </method>
+  fhir:address [
+     fhir:v "https://sqlonfhir-dstu2.azurewebsites.net/fhir"^^xsd:anyURI ;
+     fhir:l <https://sqlonfhir-dstu2.azurewebsites.net/fhir>
+  ] . # 
+
+<http://hl7.org/fhir/Endpoint/72> a fhir:Endpoint ;
+  fhir:id [ fhir:v "72"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n              Questionnaire Destination, QuestionnaireResponse<br/>\n              Address: https://sqlonfhir-dstu2.azurewebsites.net/fhir</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:connectionType ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/endpoint-connection-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/endpoint-connection-type>
+       ] ;
+       fhir:code [ fhir:v "hl7-fhir-rest" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "Questionnaire Destination"] ; # 
+  fhir:managingOrganization [
+     fhir:display [ fhir:v "Telstra Health" ]
+  ] ; # 
+  fhir:payload ( [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:code [ fhir:v "QuestionnaireResponse" ] # <system value=\"http:\/\/hl7.org\/fhir\/fhir-types\" \/>
+       ] )
+     ] ) ;
+     fhir:mimeType ( [ fhir:v "application/fhir+xml" ] )
+  ] ) ; # <method>
+#          <system value="http://hl7.org/fhir/http-verb" />
+#          <code value="POST" />
+#        </method>
+  fhir:address [
+     fhir:v "https://sqlonfhir-dstu2.azurewebsites.net/fhir"^^xsd:anyURI ;
+     fhir:l <https://sqlonfhir-dstu2.azurewebsites.net/fhir>
+  ] . # 
+
+<http://hl7.org/fhir/Endpoint/73> a fhir:Endpoint ;
+  fhir:id [ fhir:v "73"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n              Referral Requests, ServiceRequest<br/>\n              Address: https://sqlonfhir-dstu2.azurewebsites.net/fhir</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:connectionType ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/endpoint-connection-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/endpoint-connection-type>
+       ] ;
+       fhir:code [ fhir:v "hl7-fhir-rest" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "Referral Requests"] ; # 
+  fhir:managingOrganization [
+     fhir:display [ fhir:v "Telstra Health" ]
+  ] ; # 
+  fhir:payload ( [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:code [ fhir:v "ServiceRequest" ] # <system value=\"http:\/\/hl7.org\/fhir\/fhir-types\" \/>
+       ] )
+     ] ) ;
+     fhir:mimeType ( [ fhir:v "application/fhir+xml" ] )
+  ] ) ; # <method>
+#          <system value="http://hl7.org/fhir/http-verb" />
+#          <code value="POST" />
+#        </method>
+  fhir:address [
+     fhir:v "https://sqlonfhir-dstu2.azurewebsites.net/fhir"^^xsd:anyURI ;
+     fhir:l <https://sqlonfhir-dstu2.azurewebsites.net/fhir>
+  ] . # 
+
+<http://hl7.org/fhir/Endpoint/74> a fhir:Endpoint ;
+  fhir:id [ fhir:v "74"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n              Referral Requests, ServiceRequest QuestionnaireResponse<br/>\n              Address: https://open.epic.com/Interface/FHIR</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:connectionType ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/endpoint-connection-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/endpoint-connection-type>
+       ] ;
+       fhir:code [ fhir:v "hl7-fhir-rest" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "Referral Requests"] ; # 
+  fhir:managingOrganization [
+     fhir:display [ fhir:v "Epic demo organization" ]
+  ] ; # 
+  fhir:payload ( [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:code [ fhir:v "ServiceRequest QuestionnaireResponse" ] # <system value=\"http:\/\/hl7.org\/fhir\/fhir-types\" \/>
+       ] )
+     ] ) ;
+     fhir:mimeType ( [ fhir:v "application/fhir+json" ] )
+  ] ) ; # <method>
+#          <system value="http://hl7.org/fhir/http-verb" />
+#          <code value="POST" />
+#        </method>
+  fhir:address [
+     fhir:v "https://open.epic.com/Interface/FHIR"^^xsd:anyURI ;
+     fhir:l <https://open.epic.com/Interface/FHIR>
+  ] . # 
+
+<http://hl7.org/fhir/Endpoint/75> a fhir:Endpoint ;
+  fhir:id [ fhir:v "75"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n              Subscription receiver, ServiceRequest<br/>\n              Address: mailto:subscriptions@example.org</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:connectionType ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/endpoint-connection-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/endpoint-connection-type>
+       ] ;
+       fhir:code [ fhir:v "secure-email" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "Subscription receiver"] ; # 
+  fhir:managingOrganization [
+     fhir:display [ fhir:v "Telstra Health" ]
+  ] ; # 
+  fhir:payload ( [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:code [ fhir:v "ServiceRequest" ] # <system value=\"http:\/\/hl7.org\/fhir\/fhir-types\" \/>
+       ] )
+     ] ) ;
+     fhir:mimeType ( [ fhir:v "application/fhir+xml" ] )
+  ] ) ; # <method>
+#          <system value="http://hl7.org/fhir/http-verb" />
+#          <code value="POST PUT DELETE" />
+#        </method>
+  fhir:address [
+     fhir:v "mailto:subscriptions@example.org"^^xsd:anyURI ;
+     fhir:l fhir:mailto:subscriptions@example.org
+  ] . # 
+
+<http://hl7.org/fhir/Endpoint/76> a fhir:Endpoint ;
+  fhir:id [ fhir:v "76"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n              valid usecase?, CDA-EventSummary<br/>\n              Address: https://sqlonfhir-dstu2.azurewebsites.net/fhir</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:connectionType ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/endpoint-connection-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/endpoint-connection-type>
+       ] ;
+       fhir:code [ fhir:v "hl7-fhir-msg" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "valid usecase?"] ; # 
+  fhir:managingOrganization [
+     fhir:display [ fhir:v "Telstra Health" ]
+  ] ; # 
+  fhir:payload ( [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:code [ fhir:v "CDA-EventSummary" ] # <system value=\"http:\/\/hl7.org\/fhir\/fhir-types\" \/>
+       ] )
+     ] ) ;
+     fhir:mimeType ( [ fhir:v "application/pdf" ] )
+  ] ) ; # <method>
+#          <system value="http://hl7.org/fhir/http-verb" />
+#          <code value="POST" />
+#        </method>
+  fhir:address [
+     fhir:v "https://sqlonfhir-dstu2.azurewebsites.net/fhir"^^xsd:anyURI ;
+     fhir:l <https://sqlonfhir-dstu2.azurewebsites.net/fhir>
+  ] . # 
+
+<http://hl7.org/fhir/Endpoint/77> a fhir:Endpoint ;
+  fhir:id [ fhir:v "77"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n              v2 referral Requests, REF-I12<br/>\n              Address: mllp://127.0.0.1:4001</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:connectionType ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/endpoint-connection-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/endpoint-connection-type>
+       ] ;
+       fhir:code [ fhir:v "hl7v2-mllp" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "v2 referral Requests"] ; # 
+  fhir:managingOrganization [
+     fhir:display [ fhir:v "Epic demo organization" ]
+  ] ; # 
+  fhir:payload ( [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:code [ fhir:v "REF-I12" ] # <system value=\"http:\/\/hl7.org\/fhir\/fhir-types\" \/>
+       ] )
+     ] ) ;
+     fhir:mimeType ( [ fhir:v "x-application/hl7-v2+er7" ] )
+  ] ) ; # <method>
+#          <system value="http://hl7.org/fhir/http-verb" />
+#          <code value="POST" />
+#        </method>
+  fhir:address [
+     fhir:v "mllp://127.0.0.1:4001"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/mllp://127.0.0.1:4001>
+  ] . # 
+
+<http://hl7.org/fhir/Endpoint/78> a fhir:Endpoint ;
+  fhir:id [ fhir:v "78"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n              Enterprise Image Archive, varies (application/dicom, application/dicom+xml, image/jpeg, and many more)<br/>\n              Address: https://pacs.hospital.org/dicomweb</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:connectionType ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/endpoint-connection-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/endpoint-connection-type>
+       ] ;
+       fhir:code [ fhir:v "dicom-wado-rs" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "Enterprise Image Archive"] ; # 
+  fhir:managingOrganization [
+     fhir:display [ fhir:v "Multi-site Co." ]
+  ] ; # 
+  fhir:payload ( [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:code [ fhir:v "varies (application/dicom, application/dicom+xml, image/jpeg, and many more)" ] # <system value=\"http:\/\/hl7.org\/fhir\/fhir-types\" \/>
+       ] )
+     ] ) ;
+     fhir:mimeType ( [ fhir:v "application/dicom; variant=DICOM WADO-RS" ] )
+  ] ) ; # <method>
+#          <system value="http://hl7.org/fhir/http-verb" />
+#          <code value="GET OPTIONS" />
+#        </method>
+  fhir:address [
+     fhir:v "https://pacs.hospital.org/dicomweb"^^xsd:anyURI ;
+     fhir:l <https://pacs.hospital.org/dicomweb>
+  ] . # 
+
+<http://hl7.org/fhir/Endpoint/79> a fhir:Endpoint ;
+  fhir:id [ fhir:v "79"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n              Enterprise Image Archive, varies (application/dicom, application/dicom+xml, image/jpeg, and many more)<br/>\n              Address: https://pacs.hospital.org/dicomweb</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:connectionType ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/endpoint-connection-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/endpoint-connection-type>
+       ] ;
+       fhir:code [ fhir:v "dicom-qido-rs" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "Enterprise Image Archive"] ; # 
+  fhir:managingOrganization [
+     fhir:display [ fhir:v "Multi-site Co." ]
+  ] ; # 
+  fhir:payload ( [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:code [ fhir:v "varies (application/dicom, application/dicom+xml, image/jpeg, and many more)" ] # <system value=\"http:\/\/hl7.org\/fhir\/fhir-types\" \/>
+       ] )
+     ] ) ;
+     fhir:mimeType ( [ fhir:v "application/dicom; variant=DICOM QIDO-RS" ] )
+  ] ) ; # <method>
+#          <system value="http://hl7.org/fhir/http-verb" />
+#          <code value="GET OPTIONS" />
+#        </method>
+  fhir:address [
+     fhir:v "https://pacs.hospital.org/dicomweb"^^xsd:anyURI ;
+     fhir:l <https://pacs.hospital.org/dicomweb>
+  ] . # 
+
+<http://hl7.org/fhir/Endpoint/80> a fhir:Endpoint ;
+  fhir:id [ fhir:v "80"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n              Enterprise Image Archive, varies (application/dicom, application/dicom+xml, image/jpeg, and many more)<br/>\n              Address: https://pacs.hospital.org/dicomweb</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:connectionType ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/endpoint-connection-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/endpoint-connection-type>
+       ] ;
+       fhir:code [ fhir:v "dicom-stow-rs" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "Enterprise Image Archive"] ; # 
+  fhir:managingOrganization [
+     fhir:display [ fhir:v "Multi-site Co." ]
+  ] ; # 
+  fhir:payload ( [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:code [ fhir:v "varies (application/dicom, application/dicom+xml, image/jpeg, and many more)" ] # <system value=\"http:\/\/hl7.org\/fhir\/fhir-types\" \/>
+       ] )
+     ] ) ;
+     fhir:mimeType ( [ fhir:v "application/dicom; variant=DICOM STOW-RS" ] )
+  ] ) ; # <method>
+#          <system value="http://hl7.org/fhir/http-verb" />
+#          <code value="POST OPTIONS" />
+#        </method>
+  fhir:address [
+     fhir:v "https://pacs.hospital.org/dicomweb"^^xsd:anyURI ;
+     fhir:l <https://pacs.hospital.org/dicomweb>
+  ] . # 
+
+<http://hl7.org/fhir/Endpoint/81> a fhir:Endpoint ;
+  fhir:id [ fhir:v "81"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n              Enterprise Image Archive, varies (application/dicom, application/dicom+xml, image/jpeg, and many more)<br/>\n              Address: https://pacs.hospital.org/dicomweb</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:connectionType ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/endpoint-connection-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/endpoint-connection-type>
+       ] ;
+       fhir:code [ fhir:v "dicom-stow-rs" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "Enterprise Image Archive"] ; # 
+  fhir:managingOrganization [
+     fhir:display [ fhir:v "Multi-site Co." ]
+  ] ; # 
+  fhir:payload ( [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:code [ fhir:v "varies (application/dicom, application/dicom+xml, image/jpeg, and many more)" ] # <system value=\"http:\/\/hl7.org\/fhir\/fhir-types\" \/>
+       ] )
+     ] ) ;
+     fhir:mimeType ( [ fhir:v "application/dicom; variant=DICOM STOW-RS" ] )
+  ] ) ; # <method>
+#          <system value="http://hl7.org/fhir/http-verb" />
+#          <code value="GET PUT POST DELETE OPTIONS" />
+#        </method>
+  fhir:address [
+     fhir:v "https://pacs.hospital.org/dicomweb"^^xsd:anyURI ;
+     fhir:l <https://pacs.hospital.org/dicomweb>
+  ] . # 
+
+<http://hl7.org/fhir/Endpoint/82> a fhir:Endpoint ;
+  fhir:id [ fhir:v "82"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n              Enterprise Image Archive, varies (application/dicom, application/dicom+xml, image/jpeg, and many more)<br/>\n              Address: https://pacs.hospital.org/wadoUri</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:connectionType ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/endpoint-connection-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/endpoint-connection-type>
+       ] ;
+       fhir:code [ fhir:v "dicom-wado-uri" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "Enterprise Image Archive"] ; # 
+  fhir:managingOrganization [
+     fhir:display [ fhir:v "Multi-site Co." ]
+  ] ; # 
+  fhir:payload ( [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:code [ fhir:v "varies (application/dicom, application/dicom+xml, image/jpeg, and many more)" ] # <system value=\"http:\/\/hl7.org\/fhir\/fhir-types\" \/>
+       ] )
+     ] ) ;
+     fhir:mimeType ( [ fhir:v "application/dicom; variant=DICOM WADO-URI" ] )
+  ] ) ; # <method>
+#          <system value="http://hl7.org/fhir/http-verb" />
+#          <code value="GET" />
+#        </method>
+  fhir:address [
+     fhir:v "https://pacs.hospital.org/wadoUri"^^xsd:anyURI ;
+     fhir:l <https://pacs.hospital.org/wadoUri>
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

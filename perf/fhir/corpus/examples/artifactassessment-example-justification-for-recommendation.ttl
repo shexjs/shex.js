@@ -1,0 +1,576 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ArtifactAssessment/example-justification-for-recommendation> a fhir:ArtifactAssessment ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-justification-for-recommendation"] ; # 
+  fhir:meta [
+     fhir:versionId [ fhir:v "22" ] ;
+     fhir:lastUpdated [ fhir:v "2025-03-17T22:12:11.071Z"^^xsd:dateTime ] ;
+     fhir:profile ( [
+       fhir:v "http://hl7.org/fhir/uv/ebm/StructureDefinition/recommendation-justification"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/uv/ebm/StructureDefinition/recommendation-justification>
+     ] )
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p><b>Title: </b>Justification for Recommendation: ADA Obesity Management Recommendation 8.16</p><br/><p><b>Justification for Recommendation: </b>Recommendation: ADA Obesity Management Recommendation 8.16</p><br/><table><tr><th>Concept</th><th>Summary</th><th>Rating</th></tr><tr><td>Recommendation Specification (coded as: RJCS-content0 from https://fevir.net/resources/CodeSystem/27834); Recommendation Rating (coded as: recommendation-rating from https://fevir.net/resources/CodeSystem/179423)</td><td>8.16 Metabolic surgery should be a recommended option to treat type 2 diabetes in screened surgical candidates with BMI ≥40 kg/m2 (BMI ≥37.5 kg/m2 in Asian Americans) and in adults with BMI 35.0–39.9 kg/m2 (32.5–37.4 kg/m2 in Asian Americans) who do not achieve durable weight loss and improvement in comorbidities (including hyperglycemia) with nonsurgical methods. A</td><td>undefined</td></tr><tr><td>Rating System (coded as: rating-system from https://fevir.net/resources/CodeSystem/179423)</td><td>undefined</td><td>ADA Level of Evidence</td></tr><tr><td>Strength of Recommendation (coded as: RJCS-1000 from https://fevir.net/resources/CodeSystem/27834); Strength of Recommendation (coded as: strength-of-recommendation from https://fevir.net/resources/CodeSystem/179423)</td><td>undefined</td><td>undefined</td></tr><tr><td>Direction of Recommendation (coded as: RJCS-1014 from https://fevir.net/resources/CodeSystem/27834); Direction of Recommendation (coded as: direction-of-recommendation from https://fevir.net/resources/CodeSystem/179423)</td><td>undefined</td><td>Favors intervention (coded as: RJCS-2021 from https://fevir.net/resources/CodeSystem/27834)</td></tr><tr><td>Ratings (coded as: ratings from https://fevir.net/resources/CodeSystem/179423)</td><td>undefined</td><td>A</td></tr><tr><td>Evidence (coded as: RJCS-content1 from https://fevir.net/resources/CodeSystem/27834); Evidence (coded as: evidence from https://fevir.net/resources/CodeSystem/179423)</td><td>ADA Level of Evidence A. A substantial body of evidence has now been accumulated, including data from numerous randomized controlled (nonblinded) clinical trials, demonstrating that metabolic surgery achieves superior glycemic control and reduction of cardiovascular risk factors in patients with type 2 diabetes and obesity compared with various lifestyle/medical interventions.</td><td>undefined</td></tr><tr><td>Summary of Findings (coded as: summary-of-findings from https://fevir.net/resources/CodeSystem/179423)</td><td>ADA Level of Evidence A. A substantial body of evidence has now been accumulated, including data from numerous randomized controlled (nonblinded) clinical trials, demonstrating that metabolic surgery achieves superior glycemic control and reduction of cardiovascular risk factors in patients with type 2 diabetes and obesity compared with various lifestyle/medical interventions.</td><td>undefined</td></tr><tr><td>Desirable Effects (coded as: RJCS-1004 from https://fevir.net/resources/CodeSystem/27834); Desirable Effects (coded as: desirable-effects from https://fevir.net/resources/CodeSystem/179423)</td><td>undefined</td><td>undefined</td></tr><tr><td>Undesirable Effects (coded as: RJCS-1005 from https://fevir.net/resources/CodeSystem/27834); Undesirable Effects (coded as: undesirable-effects from https://fevir.net/resources/CodeSystem/179423)</td><td>undefined</td><td>undefined</td></tr><tr><td>Discussion (coded as: discussion from https://fevir.net/resources/CodeSystem/179423)</td><td>A substantial body of evidence has now been accumulated, including data from numerous randomized controlled (nonblinded) clinical trials, demonstrating that metabolic surgery achieves superior glycemic control and reduction of cardiovascular risk factors in patients with type 2 diabetes and obesity compared with various lifestyle/medical interventions.<br/>In extended follow-up of obese adults with type 2 diabetes randomized to adding gastric bypass compared with lifestyle and intensive medical management alone, there remained a significantly better composite triple end point in the surgical group at 5 years. However, because the effect size diminished over 5 years, further follow-up is needed to understand the durability of the improvement.</td><td>undefined</td></tr><tr><td>Net Effect (coded as: RJCS-1007 from https://fevir.net/resources/CodeSystem/27834); Net Effect (coded as: net-effect from https://fevir.net/resources/CodeSystem/179423)</td><td>undefined</td><td>undefined</td></tr><tr><td>Values/Preferences (coded as: RJCS-1006 from https://fevir.net/resources/CodeSystem/27834); Preferences (coded as: preferences from https://fevir.net/resources/CodeSystem/179423)</td><td>undefined</td><td>undefined</td></tr><tr><td>Discussion (coded as: discussion from https://fevir.net/resources/CodeSystem/179423)</td><td>undefined</td><td>undefined</td></tr><tr><td>Judgments (coded as: RJCS-content2 from https://fevir.net/resources/CodeSystem/27834); Judgments (coded as: judgments from https://fevir.net/resources/CodeSystem/179423)</td><td>undefined</td><td>undefined</td></tr><tr><td>Justification (coded as: justification from https://fevir.net/resources/CodeSystem/179423)</td><td>undefined</td><td>undefined</td></tr><tr><td>Problem Importance (coded as: RJCS-1003 from https://fevir.net/resources/CodeSystem/27834); Problem Importance (coded as: problem-importance from https://fevir.net/resources/CodeSystem/179423)</td><td>undefined</td><td>undefined</td></tr><tr><td>Resources/Costs (coded as: RJCS-1008 from https://fevir.net/resources/CodeSystem/27834); Costs (coded as: costs from https://fevir.net/resources/CodeSystem/179423)</td><td>undefined</td><td>undefined</td></tr><tr><td>Cost-effectiveness (coded as: RJCS-1009 from https://fevir.net/resources/CodeSystem/27834); Cost-effectiveness (coded as: cost-effectiveness from https://fevir.net/resources/CodeSystem/179423)</td><td>undefined</td><td>undefined</td></tr><tr><td>Equity (coded as: RJCS-1010 from https://fevir.net/resources/CodeSystem/27834); Equity (coded as: equity from https://fevir.net/resources/CodeSystem/179423)</td><td>undefined</td><td>undefined</td></tr><tr><td>Acceptability (coded as: RJCS-1011 from https://fevir.net/resources/CodeSystem/27834); Acceptability (coded as: acceptability from https://fevir.net/resources/CodeSystem/179423)</td><td>undefined</td><td>undefined</td></tr><tr><td>Feasibility (coded as: RJCS-1012 from https://fevir.net/resources/CodeSystem/27834); Feasibility (coded as: feasibility from https://fevir.net/resources/CodeSystem/179423)</td><td>undefined</td><td>undefined</td></tr><tr><td>Competing Interests (coded as: RJCS-1002 from https://fevir.net/resources/CodeSystem/27834); Competing Interests (coded as: competing-interests from https://fevir.net/resources/CodeSystem/179423)</td><td>All members of the PPC are required to disclose potential conflicts of interest with industry and other relevant organizations. These disclosures are discussed at the outset of each Standards of Care revision meeting. Members of the committee, their employers, and their disclosed conflicts of interest are listed in 'Disclosures: Standards of Medical Care in Diabetes—2021' (https://doi.org/10.2337/dc21-SPPC). The ADA funds development of the Standards of Care out of its general revenues and does not use industry support for this purpose. NOTE: The disclosed conflicts of interest was not found at the suggested URL</td><td>undefined</td></tr></table><br/></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "ACSN" ] ;
+         fhir:display [ fhir:v "Accession ID" ]
+       ] ) ;
+       fhir:text [ fhir:v "FEvIR Object Identifier" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "https://fevir.net/FOI/179469" ] ;
+     fhir:assigner [
+       fhir:display [ fhir:v "Computable Publishing LLC" ]
+     ]
+  ] ) ; # artifact-url is not allowed on ArtifactAssessment. Should it be?, <extension url="http://hl7.org/fhir/StructureDefinition/artifact-url">
+#    <valueUri value="https://fevir.net/resources/ArtifactAssessment/179469"/>
+#  </extension>, artifact-description is not allowed on ArtifactAsssessment. Should it be?, <extension url="http://hl7.org/fhir/StructureDefinition/artifact-description">
+#    <valueMarkdown value="An example using the ArtifactAssessment Resource for representation of the many judgments and concepts used to justify a recommendation."/>
+#  </extension>
+  fhir:title [ fhir:v "Justification for Recommendation: ADA Obesity Management Recommendation 8.16"] ; # 
+  fhir:artifact [
+     a fhir:Reference ;
+     fhir:l <http://hl7.org/fhir/Composition/179466> ;
+     fhir:reference [ fhir:v "Composition/179466" ] ;
+     fhir:type [
+       fhir:v "Composition"^^xsd:anyURI ;
+       fhir:l fhir:Composition
+     ] ;
+     fhir:display [ fhir:v "Recommendation: ADA Obesity Management Recommendation 8.16" ]
+  ] ; # 
+  fhir:content ( [
+     fhir:summary [ fhir:v "8.16 Metabolic surgery should be a recommended option to treat type 2 diabetes in screened surgical candidates with BMI ≥40 kg/m2 (BMI ≥37.5 kg/m2 in Asian Americans) and in adults with BMI 35.0–39.9 kg/m2 (32.5–37.4 kg/m2 in Asian Americans) who do not achieve durable weight loss and improvement in comorbidities (including hyperglycemia) with nonsurgical methods. A" ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://fevir.net/resources/CodeSystem/27834"^^xsd:anyURI ;
+           fhir:l <https://fevir.net/resources/CodeSystem/27834>
+         ] ;
+         fhir:code [ fhir:v "RJCS-content0" ] ;
+         fhir:display [ fhir:v "Recommendation Specification" ]
+       ] [
+         fhir:system [
+           fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+           fhir:l <https://fevir.net/resources/CodeSystem/179423>
+         ] ;
+         fhir:code [ fhir:v "recommendation-rating" ] ;
+         fhir:display [ fhir:v "Recommendation Rating" ]
+       ] )
+     ] ;
+     fhir:relatesTo ( [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/artifact-relationship-type"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/artifact-relationship-type>
+           ] ;
+           fhir:code [ fhir:v "derived-from" ] ;
+           fhir:display [ fhir:v "Derived From" ]
+         ] )
+       ] ;
+       fhir:target [
+         a fhir:Reference ;
+         fhir:l <http://hl7.org/fhir/DocumentReference/32137> ;
+         fhir:reference [ fhir:v "DocumentReference/32137" ] ; # This was as citation; should become so once Additional Resources are fully figured out\n          <reference value=\"Citation\/32137\"\/>\n          <type value=\"Citation\"\/>
+         fhir:type [
+           fhir:v "DocumentReference"^^xsd:anyURI ;
+           fhir:l fhir:DocumentReference
+         ] ;
+         fhir:display [ fhir:v "JournalArticleCitation: ADA 2021 Standards of Medical Care 8. Obesity Management for the Treatment of Type 2 Diabetes" ]
+       ]
+     ] ) ;
+     fhir:freeToShare [ fhir:v true ] ;
+     fhir:component ( [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/179423>
+           ] ;
+           fhir:code [ fhir:v "rating-system" ] ;
+           fhir:display [ fhir:v "Rating System" ]
+         ] )
+       ] ;
+       fhir:classifier ( [
+         fhir:text [ fhir:v "ADA Level of Evidence" ]
+       ] ) ;
+       fhir:freeToShare [ fhir:v true ]
+     ] [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27834"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27834>
+           ] ;
+           fhir:code [ fhir:v "RJCS-1000" ] ;
+           fhir:display [ fhir:v "Strength of Recommendation" ]
+         ] [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/179423>
+           ] ;
+           fhir:code [ fhir:v "strength-of-recommendation" ] ;
+           fhir:display [ fhir:v "Strength of Recommendation" ]
+         ] )
+       ] ;
+       fhir:freeToShare [ fhir:v true ]
+     ] [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27834"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27834>
+           ] ;
+           fhir:code [ fhir:v "RJCS-1014" ] ;
+           fhir:display [ fhir:v "Direction of Recommendation" ]
+         ] [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/179423>
+           ] ;
+           fhir:code [ fhir:v "direction-of-recommendation" ] ;
+           fhir:display [ fhir:v "Direction of Recommendation" ]
+         ] )
+       ] ;
+       fhir:classifier ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27834"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27834>
+           ] ;
+           fhir:code [ fhir:v "RJCS-2021" ] ;
+           fhir:display [ fhir:v "Favors intervention" ]
+         ] )
+       ] ) ;
+       fhir:freeToShare [ fhir:v true ]
+     ] [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/179423>
+           ] ;
+           fhir:code [ fhir:v "ratings" ] ;
+           fhir:display [ fhir:v "Ratings" ]
+         ] )
+       ] ;
+       fhir:classifier ( [
+         fhir:text [ fhir:v "A" ]
+       ] ) ;
+       fhir:freeToShare [ fhir:v true ]
+     ] )
+  ] [
+     fhir:summary [ fhir:v "ADA Level of Evidence A. A substantial body of evidence has now been accumulated, including data from numerous randomized controlled (nonblinded) clinical trials, demonstrating that metabolic surgery achieves superior glycemic control and reduction of cardiovascular risk factors in patients with type 2 diabetes and obesity compared with various lifestyle/medical interventions." ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://fevir.net/resources/CodeSystem/27834"^^xsd:anyURI ;
+           fhir:l <https://fevir.net/resources/CodeSystem/27834>
+         ] ;
+         fhir:code [ fhir:v "RJCS-content1" ] ;
+         fhir:display [ fhir:v "Evidence" ]
+       ] [
+         fhir:system [
+           fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+           fhir:l <https://fevir.net/resources/CodeSystem/179423>
+         ] ;
+         fhir:code [ fhir:v "evidence" ] ;
+         fhir:display [ fhir:v "Evidence" ]
+       ] )
+     ] ;
+     fhir:relatesTo ( [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/artifact-relationship-type"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/artifact-relationship-type>
+           ] ;
+           fhir:code [ fhir:v "justification" ] ;
+           fhir:display [ fhir:v "Justification" ]
+         ] )
+       ] ;
+       fhir:target [
+         a fhir:Reference ;
+         fhir:l <http://hl7.org/fhir/DocumentReference/33089> ;
+         fhir:reference [ fhir:v "DocumentReference/33089" ] ; # was a citation\n          <reference value=\"Citation\/33089\"\/>\n          <type value=\"Citation\"\/>
+         fhir:type [
+           fhir:v "DocumentReference"^^xsd:anyURI ;
+           fhir:l fhir:DocumentReference
+         ] ;
+         fhir:display [ fhir:v "JournalArticleCitation: Metabolic Surgery in the Treatment Algorithm for Type 2 Diabetes: A Joint Statement by International Diabetes Organizations" ]
+       ]
+     ] [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/artifact-relationship-type"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/artifact-relationship-type>
+           ] ;
+           fhir:code [ fhir:v "justification" ] ;
+           fhir:display [ fhir:v "Justification" ]
+         ] )
+       ] ;
+       fhir:target [
+         a fhir:Reference ;
+         fhir:l <http://hl7.org/fhir/Evidence/33244> ;
+         fhir:reference [ fhir:v "Evidence/33244" ] ;
+         fhir:type [
+           fhir:v "Evidence"^^xsd:anyURI ;
+           fhir:l fhir:Evidence
+         ] ;
+         fhir:display [ fhir:v "ComparativeEvidence: Mean difference in HbA1c effect of bariatric surgery in 2016 meta-analysis" ]
+       ]
+     ] ) ;
+     fhir:freeToShare [ fhir:v true ] ;
+     fhir:component ( [
+       fhir:summary [ fhir:v "ADA Level of Evidence A. A substantial body of evidence has now been accumulated, including data from numerous randomized controlled (nonblinded) clinical trials, demonstrating that metabolic surgery achieves superior glycemic control and reduction of cardiovascular risk factors in patients with type 2 diabetes and obesity compared with various lifestyle/medical interventions." ] ;
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/179423>
+           ] ;
+           fhir:code [ fhir:v "summary-of-findings" ] ;
+           fhir:display [ fhir:v "Summary of Findings" ]
+         ] )
+       ] ;
+       fhir:freeToShare [ fhir:v true ]
+     ] [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27834"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27834>
+           ] ;
+           fhir:code [ fhir:v "RJCS-1004" ] ;
+           fhir:display [ fhir:v "Desirable Effects" ]
+         ] [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/179423>
+           ] ;
+           fhir:code [ fhir:v "desirable-effects" ] ;
+           fhir:display [ fhir:v "Desirable Effects" ]
+         ] )
+       ] ;
+       fhir:freeToShare [ fhir:v true ]
+     ] [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27834"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27834>
+           ] ;
+           fhir:code [ fhir:v "RJCS-1005" ] ;
+           fhir:display [ fhir:v "Undesirable Effects" ]
+         ] [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/179423>
+           ] ;
+           fhir:code [ fhir:v "undesirable-effects" ] ;
+           fhir:display [ fhir:v "Undesirable Effects" ]
+         ] )
+       ] ;
+       fhir:freeToShare [ fhir:v true ]
+     ] [
+       fhir:summary [ fhir:v "A substantial body of evidence has now been accumulated, including data from numerous randomized controlled (nonblinded) clinical trials, demonstrating that metabolic surgery achieves superior glycemic control and reduction of cardiovascular risk factors in patients with type 2 diabetes and obesity compared with various lifestyle/medical interventions.<br/>In extended follow-up of obese adults with type 2 diabetes randomized to adding gastric bypass compared with lifestyle and intensive medical management alone, there remained a significantly better composite triple end point in the surgical group at 5 years. However, because the effect size diminished over 5 years, further follow-up is needed to understand the durability of the improvement." ] ;
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/179423>
+           ] ;
+           fhir:code [ fhir:v "discussion" ] ;
+           fhir:display [ fhir:v "Discussion" ]
+         ] )
+       ] ;
+       fhir:relatesTo ( [
+         fhir:type [
+           fhir:coding ( [
+             fhir:system [
+               fhir:v "http://terminology.hl7.org/CodeSystem/artifact-relationship-type"^^xsd:anyURI ;
+               fhir:l <http://terminology.hl7.org/CodeSystem/artifact-relationship-type>
+             ] ;
+             fhir:code [ fhir:v "justification" ] ;
+             fhir:display [ fhir:v "Justification" ]
+           ] )
+         ] ;
+         fhir:target [
+           a fhir:Markdown ;
+           fhir:v "Sjöström L, Peltonen M, Jacobson P, et al. Association of bariatric surgery with long-term remission of type 2 diabetes and with microvascular and macrovascular complications. JAMA 2014;311:2297–2304"
+         ]
+       ] [
+         fhir:type [
+           fhir:coding ( [
+             fhir:system [
+               fhir:v "http://terminology.hl7.org/CodeSystem/artifact-relationship-type"^^xsd:anyURI ;
+               fhir:l <http://terminology.hl7.org/CodeSystem/artifact-relationship-type>
+             ] ;
+             fhir:code [ fhir:v "justification" ] ;
+             fhir:display [ fhir:v "Justification" ]
+           ] )
+         ] ;
+         fhir:target [
+           a fhir:Reference ;
+           fhir:l <http://hl7.org/fhir/Evidence/32144> ;
+           fhir:reference [ fhir:v "Evidence/32144" ] ;
+           fhir:type [
+             fhir:v "Evidence"^^xsd:anyURI ;
+             fhir:l fhir:Evidence
+           ] ;
+           fhir:display [ fhir:v "ComparativeEvidence: Bariatric Surgery effect for ADA triple outcome at 5 years (Diabetes Surgery Study)" ]
+         ]
+       ] ) ;
+       fhir:freeToShare [ fhir:v true ]
+     ] )
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://fevir.net/resources/CodeSystem/27834"^^xsd:anyURI ;
+           fhir:l <https://fevir.net/resources/CodeSystem/27834>
+         ] ;
+         fhir:code [ fhir:v "RJCS-1007" ] ;
+         fhir:display [ fhir:v "Net Effect" ]
+       ] [
+         fhir:system [
+           fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+           fhir:l <https://fevir.net/resources/CodeSystem/179423>
+         ] ;
+         fhir:code [ fhir:v "net-effect" ] ;
+         fhir:display [ fhir:v "Net Effect" ]
+       ] )
+     ] ;
+     fhir:freeToShare [ fhir:v true ] ;
+     fhir:component ( [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27834"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27834>
+           ] ;
+           fhir:code [ fhir:v "RJCS-1006" ] ;
+           fhir:display [ fhir:v "Values/Preferences" ]
+         ] [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/179423>
+           ] ;
+           fhir:code [ fhir:v "preferences" ] ;
+           fhir:display [ fhir:v "Preferences" ]
+         ] )
+       ] ;
+       fhir:freeToShare [ fhir:v true ]
+     ] [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/179423>
+           ] ;
+           fhir:code [ fhir:v "discussion" ] ;
+           fhir:display [ fhir:v "Discussion" ]
+         ] )
+       ] ;
+       fhir:freeToShare [ fhir:v true ]
+     ] )
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://fevir.net/resources/CodeSystem/27834"^^xsd:anyURI ;
+           fhir:l <https://fevir.net/resources/CodeSystem/27834>
+         ] ;
+         fhir:code [ fhir:v "RJCS-content2" ] ;
+         fhir:display [ fhir:v "Judgments" ]
+       ] [
+         fhir:system [
+           fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+           fhir:l <https://fevir.net/resources/CodeSystem/179423>
+         ] ;
+         fhir:code [ fhir:v "judgments" ] ;
+         fhir:display [ fhir:v "Judgments" ]
+       ] )
+     ] ;
+     fhir:freeToShare [ fhir:v true ] ;
+     fhir:component ( [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/179423>
+           ] ;
+           fhir:code [ fhir:v "justification" ] ;
+           fhir:display [ fhir:v "Justification" ]
+         ] )
+       ] ;
+       fhir:freeToShare [ fhir:v true ]
+     ] [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27834"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27834>
+           ] ;
+           fhir:code [ fhir:v "RJCS-1003" ] ;
+           fhir:display [ fhir:v "Problem Importance" ]
+         ] [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/179423>
+           ] ;
+           fhir:code [ fhir:v "problem-importance" ] ;
+           fhir:display [ fhir:v "Problem Importance" ]
+         ] )
+       ] ;
+       fhir:freeToShare [ fhir:v true ]
+     ] [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27834"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27834>
+           ] ;
+           fhir:code [ fhir:v "RJCS-1008" ] ;
+           fhir:display [ fhir:v "Resources/Costs" ]
+         ] [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/179423>
+           ] ;
+           fhir:code [ fhir:v "costs" ] ;
+           fhir:display [ fhir:v "Costs" ]
+         ] )
+       ] ;
+       fhir:freeToShare [ fhir:v true ]
+     ] [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27834"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27834>
+           ] ;
+           fhir:code [ fhir:v "RJCS-1009" ] ;
+           fhir:display [ fhir:v "Cost-effectiveness" ]
+         ] [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/179423>
+           ] ;
+           fhir:code [ fhir:v "cost-effectiveness" ] ;
+           fhir:display [ fhir:v "Cost-effectiveness" ]
+         ] )
+       ] ;
+       fhir:freeToShare [ fhir:v true ]
+     ] [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27834"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27834>
+           ] ;
+           fhir:code [ fhir:v "RJCS-1010" ] ;
+           fhir:display [ fhir:v "Equity" ]
+         ] [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/179423>
+           ] ;
+           fhir:code [ fhir:v "equity" ] ;
+           fhir:display [ fhir:v "Equity" ]
+         ] )
+       ] ;
+       fhir:freeToShare [ fhir:v true ]
+     ] [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27834"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27834>
+           ] ;
+           fhir:code [ fhir:v "RJCS-1011" ] ;
+           fhir:display [ fhir:v "Acceptability" ]
+         ] [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/179423>
+           ] ;
+           fhir:code [ fhir:v "acceptability" ] ;
+           fhir:display [ fhir:v "Acceptability" ]
+         ] )
+       ] ;
+       fhir:freeToShare [ fhir:v true ]
+     ] [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27834"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27834>
+           ] ;
+           fhir:code [ fhir:v "RJCS-1012" ] ;
+           fhir:display [ fhir:v "Feasibility" ]
+         ] [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/179423>
+           ] ;
+           fhir:code [ fhir:v "feasibility" ] ;
+           fhir:display [ fhir:v "Feasibility" ]
+         ] )
+       ] ;
+       fhir:freeToShare [ fhir:v true ]
+     ] )
+  ] [
+     fhir:summary [ fhir:v "All members of the PPC are required to disclose potential conflicts of interest with industry and other relevant organizations. These disclosures are discussed at the outset of each Standards of Care revision meeting. Members of the committee, their employers, and their disclosed conflicts of interest are listed in 'Disclosures: Standards of Medical Care in Diabetes—2021' (https://doi.org/10.2337/dc21-SPPC). The ADA funds development of the Standards of Care out of its general revenues and does not use industry support for this purpose. NOTE: The disclosed conflicts of interest was not found at the suggested URL" ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://fevir.net/resources/CodeSystem/27834"^^xsd:anyURI ;
+           fhir:l <https://fevir.net/resources/CodeSystem/27834>
+         ] ;
+         fhir:code [ fhir:v "RJCS-1002" ] ;
+         fhir:display [ fhir:v "Competing Interests" ]
+       ] [
+         fhir:system [
+           fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+           fhir:l <https://fevir.net/resources/CodeSystem/179423>
+         ] ;
+         fhir:code [ fhir:v "competing-interests" ] ;
+         fhir:display [ fhir:v "Competing Interests" ]
+       ] )
+     ] ;
+     fhir:freeToShare [ fhir:v true ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Composition/179466> a fhir:Composition .
+
+<http://hl7.org/fhir/DocumentReference/32137> a fhir:DocumentReference .
+
+<http://hl7.org/fhir/DocumentReference/33089> a fhir:DocumentReference .
+
+<http://hl7.org/fhir/Evidence/33244> a fhir:Evidence .
+
+<http://hl7.org/fhir/Evidence/32144> a fhir:Evidence .
+
+# -------------------------------------------------------------------------------------
+

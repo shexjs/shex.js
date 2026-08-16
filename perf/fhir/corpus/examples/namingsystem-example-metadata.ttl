@@ -1,0 +1,110 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/NamingSystem/example-metadata> a fhir:NamingSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-metadata"] ; # 
+  fhir:meta [] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "vocab"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/NamingSystem/example-metadata"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/NamingSystem/example-metadata>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.22.5" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "20210721"] ; # 
+  fhir:name [ fhir:v "ExampleMetadata"] ; # 
+  fhir:title [ fhir:v "Metadata Example"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:kind [ fhir:v "identifier"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2021-07-21"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Terminology Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/Vocab" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "This is an example naming system that illustrates usage of the metadata resource elements introduced in R5"] ; # 
+  fhir:approvalDate [ fhir:v "2021-07-21"^^xsd:date] ; # 
+  fhir:lastReviewDate [ fhir:v "2022-07-21"^^xsd:date] ; # 
+  fhir:effectivePeriod [
+     fhir:start [ fhir:v "2021-08-01"^^xsd:date ] ;
+     fhir:end [ fhir:v "2022-07-31"^^xsd:date ]
+  ] ; # 
+  fhir:topic ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/definition-topic"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/definition-topic>
+       ] ;
+       fhir:code [ fhir:v "treatment" ] ;
+       fhir:display [ fhir:v "Treatment" ]
+     ] )
+  ] ) ; # 
+  fhir:author ( [
+     fhir:name [ fhir:v "ACME NamingSystem Development" ] ;
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://acme.org/development" ]
+     ] )
+  ] ) ; # 
+  fhir:editor ( [
+     fhir:name [ fhir:v "ACME NamingSystem Management" ] ;
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://acme.org/management" ]
+     ] )
+  ] ) ; # 
+  fhir:reviewer ( [
+     fhir:name [ fhir:v "Society for Creative NamingSystem Review" ] ;
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://example.org/scnr" ]
+     ] )
+  ] ) ; # 
+  fhir:endorser ( [
+     fhir:name [ fhir:v "National Foundation for NamingSystem Quality" ] ;
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://example.org/nfnq" ]
+     ] )
+  ] ) ; # 
+  fhir:relatedArtifact ( [
+     fhir:type [ fhir:v "derived-from" ] ;
+     fhir:resource [
+       fhir:v "http://hl7.org/fhir/NamingSystem/example"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/NamingSystem/example>
+     ]
+  ] ) ; # 
+  fhir:uniqueId ( [
+     fhir:type [ fhir:v "oid" ] ;
+     fhir:value [ fhir:v "1.2.3.4.5.6.7" ]
+  ] [
+     fhir:type [ fhir:v "uri" ] ;
+     fhir:value [ fhir:v "http://example.com/identifiers" ] ;
+     fhir:preferred [ fhir:v true ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

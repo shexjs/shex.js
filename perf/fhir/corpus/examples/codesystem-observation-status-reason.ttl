@@ -1,0 +1,105 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/observation-status-reason> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "observation-status-reason"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem observation-status-reason</b></p><a name=\"observation-status-reason\"> </a><a name=\"hcobservation-status-reason\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/CodeSystem/observation-status-reason</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">patient-mismatch<a name=\"observation-status-reason-patient-mismatch\"> </a></td><td>Patient Mismatch</td><td>The patient identity or subject context did not match the expected patient or subject.</td></tr><tr><td style=\"white-space:nowrap\">sample-mismatch<a name=\"observation-status-reason-sample-mismatch\"> </a></td><td>Sample Mismatch</td><td>The specimen, sample, or referenced result did not match the expected subject, order, container, or report.</td></tr><tr><td style=\"white-space:nowrap\">invalid-calibration<a name=\"observation-status-reason-invalid-calibration\"> </a></td><td>Invalid Calibration</td><td>The device, instrument, or analyzer calibration used for referenced results was invalid, expired, or otherwise unreliable.</td></tr><tr><td style=\"white-space:nowrap\">reagent-issue<a name=\"observation-status-reason-reagent-issue\"> </a></td><td>Reagent issue</td><td>An incorrect, invalid, expired, recalled, or otherwise unsuitable reagent or reagent lot was used or identified for referenced results.</td></tr><tr><td style=\"white-space:nowrap\">duplicate<a name=\"observation-status-reason-duplicate\"> </a></td><td>Duplicate</td><td>The observation duplicates another observation.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "oo"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/CodeSystem/observation-status-reason"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/CodeSystem/observation-status-reason>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ObservationStatusReasonCodes"] ; # 
+  fhir:title [ fhir:v "Observation Status Reason Codes"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:publisher [ fhir:v "HL7 International - Orders and Observations"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/orders/index.cfm" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Codes indicating why an observation is in its current status."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:copyright [ fhir:v "Copyright HL7. Licensed under creative commons public domain"] ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/observation-status-reason"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/observation-status-reason>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "patient-mismatch" ] ;
+     fhir:display [ fhir:v "Patient Mismatch" ] ;
+     fhir:definition [ fhir:v "The patient identity or subject context did not match the expected patient or subject." ]
+  ] [
+     fhir:code [ fhir:v "sample-mismatch" ] ;
+     fhir:display [ fhir:v "Sample Mismatch" ] ;
+     fhir:definition [ fhir:v "The specimen, sample, or referenced result did not match the expected subject, order, container, or report." ]
+  ] [
+     fhir:code [ fhir:v "invalid-calibration" ] ;
+     fhir:display [ fhir:v "Invalid Calibration" ] ;
+     fhir:definition [ fhir:v "The device, instrument, or analyzer calibration used for referenced results was invalid, expired, or otherwise unreliable." ]
+  ] [
+     fhir:code [ fhir:v "reagent-issue" ] ;
+     fhir:display [ fhir:v "Reagent issue" ] ;
+     fhir:definition [ fhir:v "An incorrect, invalid, expired, recalled, or otherwise unsuitable reagent or reagent lot was used or identified for referenced results." ]
+  ] [
+     fhir:code [ fhir:v "duplicate" ] ;
+     fhir:display [ fhir:v "Duplicate" ] ;
+     fhir:definition [ fhir:v "The observation duplicates another observation." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

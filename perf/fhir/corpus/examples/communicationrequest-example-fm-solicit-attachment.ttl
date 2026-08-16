@@ -1,0 +1,113 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CommunicationRequest/fm-solicit> a fhir:CommunicationRequest ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "fm-solicit"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Request for Accident Report</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:contained ( [
+     a fhir:Organization ;
+     fhir:id [ fhir:v "provider" ] ;
+     fhir:identifier ( [
+       fhir:system [
+         fhir:v "http://www.jurisdiction.com/provideroffices"^^xsd:anyURI ;
+         fhir:l <http://www.jurisdiction.com/provideroffices>
+       ] ;
+       fhir:value [ fhir:v "3456" ]
+     ] )
+  ] [
+     a fhir:Organization ;
+     fhir:id [ fhir:v "payor" ] ;
+     fhir:identifier ( [
+       fhir:system [
+         fhir:v "http://www.jurisdiction.com/insurer"^^xsd:anyURI ;
+         fhir:l <http://www.jurisdiction.com/insurer>
+       ] ;
+       fhir:value [ fhir:v "123456" ]
+     ] )
+  ] [
+     a fhir:Practitioner ;
+     fhir:id [ fhir:v "requester" ] ;
+     fhir:identifier ( [
+       fhir:value [ fhir:v "6789" ]
+     ] )
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://www.jurisdiction.com/insurer/123456"^^xsd:anyURI ;
+       fhir:l <http://www.jurisdiction.com/insurer/123456>
+     ] ;
+     fhir:value [ fhir:v "ABC123" ]
+  ] ) ; # body of the resource, this is the value to which the response will refer
+  fhir:basedOn ( [
+     fhir:display [ fhir:v "EligibilityRequest" ]
+  ] ) ; # 
+  fhir:replaces ( [
+     fhir:display [ fhir:v "prior CommunicationRequest" ]
+  ] ) ; # 
+  fhir:groupIdentifier [
+     fhir:value [ fhir:v "12345" ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "proposal"] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://acme.org/messagetypes"^^xsd:anyURI ;
+         fhir:l <http://acme.org/messagetypes>
+       ] ;
+       fhir:code [ fhir:v "SolicitedAttachmentRequest" ]
+     ] )
+  ] ) ; # 
+  fhir:priority [ fhir:v "routine"] ; # 
+  fhir:medium ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationMode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationMode>
+       ] ;
+       fhir:code [ fhir:v "WRITTEN" ] ;
+       fhir:display [ fhir:v "written" ]
+     ] ) ;
+     fhir:text [ fhir:v "written" ]
+  ] ) ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/example> ;
+     fhir:reference [ fhir:v "Encounter/example" ]
+  ] ; # 
+  fhir:payload ( [
+     fhir:content [
+       a fhir:CodeableConcept ;
+       fhir:text [ fhir:v "Please provide the accident report and any associated pictures to support your Claim# DEF5647." ]
+     ]
+  ] ) ; # 
+  fhir:occurrence [
+     a fhir:DateTime ;
+     fhir:v "2016-06-10T11:01:10-08:00"^^xsd:dateTime
+  ] ; # 
+  fhir:authoredOn [ fhir:v "2016-06-10T11:01:10-08:00"^^xsd:dateTime] ; # 
+  fhir:requester [
+     fhir:l <#requester> ;
+     fhir:reference [ fhir:v "#requester" ]
+  ] ; # 
+  fhir:recipient ( [
+     fhir:l <#provider> ;
+     fhir:reference [ fhir:v "#provider" ]
+  ] ) ; # 
+  fhir:informationProvider ( [
+     fhir:l <#payor> ;
+     fhir:reference [ fhir:v "#payor" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Encounter/example> a fhir:Encounter .
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,52 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# This example demonstrates using the bodystructure resource to identify a specific tumor or lesion that will have multiple observations and/or procedures performed on it over time
+
+<http://hl7.org/fhir/BodyStructure/tumor> a fhir:BodyStructure ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "tumor"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://goodhealth.org/bodystructure/identifiers"^^xsd:anyURI ;
+       fhir:l <http://goodhealth.org/bodystructure/identifiers>
+     ] ;
+     fhir:value [ fhir:v "12345" ]
+  ] ) ; # 
+  fhir:includedStructure ( [
+     fhir:structure [
+       a sct:78961009 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "78961009" ] ;
+         fhir:display [ fhir:v "Splenic structure (body structure)" ]
+       ] ) ;
+       fhir:text [ fhir:v "Spleen" ]
+     ]
+  ] ) ; # 
+  fhir:description [ fhir:v "7 cm maximum diameter"] ; # 
+  fhir:image ( [
+     fhir:contentType [ fhir:v "application/dicom" ] ; # The actual image could be anywhere. This is a WADO example using a ficitious url
+     fhir:url [
+       fhir:v "http://imaging.acme.com/wado/server?requestType=WADO&amp;wado_details"^^xsd:anyURI ;
+       fhir:l <http://imaging.acme.com/wado/server?requestType=WADO&amp;wado_details>
+     ]
+  ] ) ; # 
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

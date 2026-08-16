@@ -1,0 +1,92 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/BodyStructure/breast-mass> a fhir:BodyStructure ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "breast-mass"] ; # 
+  fhir:includedStructure ( [
+     fhir:structure [
+       a sct:76752008 ;
+       fhir:coding ( [
+         fhir:code [ fhir:v "76752008" ] ;
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:display [ fhir:v "Breast" ]
+       ] )
+     ] ;
+     fhir:laterality [
+       a sct:7771000 ;
+       fhir:coding ( [
+         fhir:code [ fhir:v "7771000" ] ;
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:display [ fhir:v "Left" ]
+       ] )
+     ] ;
+     fhir:bodyLandmarkOrientation ( [
+       fhir:clockFacePosition ( [
+         a sct:260328008 ;
+         fhir:coding ( [
+           fhir:code [ fhir:v "260328008" ] ;
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:display [ fhir:v "2 o'clock position" ]
+         ] )
+       ] )
+     ] [
+       fhir:landmarkDescription ( [
+         a sct:24142002 ;
+         fhir:coding ( [
+           fhir:code [ fhir:v "24142002" ] ;
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:display [ fhir:v "Nipple" ]
+         ] )
+       ] ) ;
+       fhir:distanceFromLandmark ( [
+         fhir:value ( [
+           fhir:value [ fhir:v "3"^^xsd:decimal ] ;
+           fhir:code [ fhir:v "cm" ] ;
+           fhir:unit [ fhir:v "cm" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ]
+         ] )
+       ] )
+     ] ) ;
+     fhir:morphology ( [
+       a sct:89164003 ;
+       fhir:coding ( [
+         fhir:code [ fhir:v "89164003" ] ;
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:display [ fhir:v "Breast mass" ]
+       ] )
+     ] )
+  ] ) ; # 
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/genetics-example1> ;
+     fhir:reference [ fhir:v "Patient/genetics-example1" ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/genetics-example1> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

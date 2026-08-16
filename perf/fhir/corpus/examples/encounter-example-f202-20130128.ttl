@@ -1,0 +1,124 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# No admission was deemed necessary
+
+<http://hl7.org/fhir/Encounter/f202> a fhir:Encounter ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f202"] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "temp" ] ;
+     fhir:value [ fhir:v "Encounter_Roel_20130128" ] # 0..1 The use of this identifier
+  ] ) ; # 
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:class ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+       ] ;
+       fhir:code [ fhir:v "AMB" ] ;
+       fhir:display [ fhir:v "ambulatory" ] # outpatient encounter for chemotherapy
+     ] )
+  ] ) ; # Encounter has finished
+  fhir:priority [
+     a sct:103391001 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "103391001" ] ;
+       fhir:display [ fhir:v "Urgent" ]
+     ] ) # Urgent priority, because of complications
+  ] ; # 
+  fhir:type ( [
+     a sct:367336001 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "367336001" ] ;
+       fhir:display [ fhir:v "Chemotherapy" ]
+     ] )
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/f201> ;
+     fhir:reference [ fhir:v "Patient/f201" ] ;
+     fhir:display [ fhir:v "Roel" ]
+  ] ; # 
+  fhir:serviceProvider [
+     fhir:l <http://hl7.org/fhir/Organization/f201> ;
+     fhir:reference [ fhir:v "Organization/f201" ]
+  ] ; # 
+  fhir:participant ( [
+     fhir:actor [
+       fhir:l <http://hl7.org/fhir/Practitioner/f201> ;
+       fhir:reference [ fhir:v "Practitioner/f201" ]
+     ]
+  ] ) ; # 
+  fhir:length [
+     fhir:value [ fhir:v "56"^^xsd:decimal ] ;
+     fhir:unit [ fhir:v "minutes" ] ;
+     fhir:system [
+       fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+       fhir:l <http://unitsofmeasure.org>
+     ] ;
+     fhir:code [ fhir:v "min" ]
+  ] ; # 
+  fhir:reason ( [
+     fhir:value ( [
+       fhir:concept [
+         fhir:text [ fhir:v "The patient is treated for a tumor." ]
+       ]
+     ] )
+  ] ) ; # 
+  fhir:diagnosis ( [
+     fhir:condition ( [
+       fhir:concept [
+         fhir:text [ fhir:v "Complications from Roel's TPF chemotherapy on January 28th, 2013" ]
+       ]
+     ] ) ;
+     fhir:use ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/diagnosis-role"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/diagnosis-role>
+         ] ;
+         fhir:code [ fhir:v "AD" ] ;
+         fhir:display [ fhir:v "Admission diagnosis" ]
+       ] )
+     ] )
+  ] [
+     fhir:condition ( [
+       fhir:concept [
+         fhir:text [ fhir:v "The patient is treated for a tumor" ]
+       ]
+     ] ) ;
+     fhir:use ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/diagnosis-role"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/diagnosis-role>
+         ] ;
+         fhir:code [ fhir:v "CC" ] ;
+         fhir:display [ fhir:v "Chief complaint" ]
+       ] )
+     ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/f201> a fhir:Patient .
+
+<http://hl7.org/fhir/Organization/f201> a fhir:Organization .
+
+<http://hl7.org/fhir/Practitioner/f201> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

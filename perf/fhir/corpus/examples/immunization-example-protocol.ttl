@@ -1,0 +1,179 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# Authored by Joginder Madra
+
+<http://hl7.org/fhir/Immunization/protocol> a fhir:Immunization ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "protocol"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:1.3.6.1.4.1.21367.2005.3.7.1234" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:vaccineCode [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/sid/cvx"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/sid/cvx>
+       ] ;
+       fhir:code [ fhir:v "104" ]
+     ] ) ;
+     fhir:text [ fhir:v "Twinrix (HepA/HepB)" ]
+  ] ; # 
+  fhir:manufacturer [
+     fhir:reference [
+       fhir:l <http://hl7.org/fhir/Organization/hl7> ;
+       fhir:reference [ fhir:v "Organization/hl7" ]
+     ]
+  ] ; # 
+  fhir:lotNumber [ fhir:v "PT123F"] ; # 
+  fhir:expirationDate [ fhir:v "2018-12-15"^^xsd:date] ; # 
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/example> ;
+     fhir:reference [ fhir:v "Encounter/example" ]
+  ] ; # 
+  fhir:occurrence [
+     a fhir:DateTime ;
+     fhir:v "2018-06-18"^^xsd:date
+  ] ; # 
+  fhir:primarySource [ fhir:v true] ; # 
+  fhir:location [
+     fhir:l <http://hl7.org/fhir/Location/1> ;
+     fhir:reference [ fhir:v "Location/1" ]
+  ] ; # 
+  fhir:site [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActSite"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActSite>
+       ] ;
+       fhir:code [ fhir:v "LA" ] ;
+       fhir:display [ fhir:v "left arm" ]
+     ] )
+  ] ; # 
+  fhir:route [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-RouteOfAdministration"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-RouteOfAdministration>
+       ] ;
+       fhir:code [ fhir:v "IM" ] ;
+       fhir:display [ fhir:v "Injection, intramuscular" ]
+     ] )
+  ] ; # 
+  fhir:doseQuantity [
+     fhir:value [ fhir:v "5"^^xsd:decimal ] ;
+     fhir:system [
+       fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+       fhir:l <http://unitsofmeasure.org>
+     ] ;
+     fhir:code [ fhir:v "mg" ]
+  ] ; # 
+  fhir:performer ( [
+     fhir:function [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0443"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0443>
+         ] ;
+         fhir:code [ fhir:v "OP" ]
+       ] )
+     ] ;
+     fhir:actor [
+       fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+       fhir:reference [ fhir:v "Practitioner/example" ]
+     ]
+  ] [
+     fhir:function [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0443"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0443>
+         ] ;
+         fhir:code [ fhir:v "AP" ]
+       ] )
+     ] ;
+     fhir:actor [
+       fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+       fhir:reference [ fhir:v "Practitioner/example" ]
+     ]
+  ] ) ; # 
+  fhir:isSubpotent [ fhir:v false] ; # 
+  fhir:programEligibility ( [
+     fhir:program [
+       fhir:text [ fhir:v "VFC" ]
+     ] ;
+     fhir:programStatus [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/immunization-program-eligibility"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/immunization-program-eligibility>
+         ] ;
+         fhir:code [ fhir:v "ineligible" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:fundingSource [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/immunization-funding-source"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/immunization-funding-source>
+       ] ;
+       fhir:code [ fhir:v "private" ]
+     ] )
+  ] ; # 
+  fhir:protocolApplied ( [
+     fhir:series [ fhir:v "2-dose" ] ;
+     fhir:targetDisease ( [
+       a sct:40468003 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "40468003" ]
+       ] )
+     ] ) ;
+     fhir:doseNumber [ ]
+  ] [
+     fhir:series [ fhir:v "3-dose" ] ;
+     fhir:targetDisease ( [
+       a sct:66071002 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "66071002" ]
+       ] )
+     ] ) ;
+     fhir:doseNumber [ ] ;
+     fhir:seriesDoses [ ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Organization/hl7> a fhir:Organization .
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/example> a fhir:Encounter .
+
+<http://hl7.org/fhir/Location/1> a fhir:Location .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

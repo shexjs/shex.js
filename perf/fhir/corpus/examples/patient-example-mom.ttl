@@ -1,0 +1,65 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Patient/mom> a fhir:Patient ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "mom"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "444222222" ]
+  ] ) ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Everywoman" ] ;
+     fhir:given ( [ fhir:v "Eve" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-2003" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:birthDate [ fhir:v "1973-05-31"^^xsd:date] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "2222 Home Street" ] )
+  ] ) ; # 
+  fhir:managingOrganization [
+     fhir:l <http://hl7.org/fhir/Organization/hl7> ;
+     fhir:reference [ fhir:v "Organization/hl7" ]
+  ] ; # 
+  fhir:link ( [
+     fhir:other [
+       fhir:l <http://hl7.org/fhir/RelatedPerson/newborn-mom> ;
+       fhir:reference [ fhir:v "RelatedPerson/newborn-mom" ]
+     ] ;
+     fhir:type [ fhir:v "seealso" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Organization/hl7> a fhir:Organization .
+
+<http://hl7.org/fhir/RelatedPerson/newborn-mom> a fhir:RelatedPerson .
+
+# -------------------------------------------------------------------------------------
+

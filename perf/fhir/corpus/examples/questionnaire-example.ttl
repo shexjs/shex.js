@@ -1,0 +1,206 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Questionnaire/3141> a fhir:Questionnaire ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "3141"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      \n      <pre>\n            1.Comorbidity?\n              1.1 Cardial Comorbidity\n                1.1.1 Angina?\n                1.1.2 MI?\n              1.2 Vascular Comorbidity?\n              ...\n            Histopathology\n              Abdominal\n                pT category?\n              ...\n          </pre>\n    \n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/Questionnaire/3141"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/Questionnaire/3141>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.20.2" ]
+  ] ) ; # 
+  fhir:name [ fhir:v "CancerQualityForumQuestionnaire2012"] ; # 
+  fhir:title [ fhir:v "Cancer Quality Forum Questionnaire 2012"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:subjectType ( [ fhir:v "Patient"] ) ; # 
+  fhir:date [ fhir:v "2012-01"^^xsd:gYearMonth] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Cancer Quality Forum Questionnaire 2012"] ; # 
+  fhir:item ( [
+     fhir:linkId [ fhir:v "1" ] ;
+     fhir:code ( [
+       fhir:system [
+         fhir:v "http://example.org/system/code/sections"^^xsd:anyURI ;
+         fhir:l <http://example.org/system/code/sections>
+       ] ;
+       fhir:code [ fhir:v "COMORBIDITY" ]
+     ] ) ;
+     fhir:type [ fhir:v "group" ] ;
+     fhir:item ( [
+       fhir:linkId [ fhir:v "1.1" ] ;
+       fhir:code ( [
+         fhir:system [
+           fhir:v "http://example.org/system/code/questions"^^xsd:anyURI ;
+           fhir:l <http://example.org/system/code/questions>
+         ] ;
+         fhir:code [ fhir:v "COMORB" ]
+       ] ) ;
+       fhir:prefix [ fhir:v "1" ] ;
+       fhir:type [ fhir:v "coding" ] ;
+       fhir:answerValueSet [
+         fhir:v "http://hl7.org/fhir/ValueSet/yesnodontknow"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/ValueSet/yesnodontknow>
+       ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "1.1.1" ] ;
+         fhir:code ( [
+           fhir:system [
+             fhir:v "http://example.org/system/code/sections"^^xsd:anyURI ;
+             fhir:l <http://example.org/system/code/sections>
+           ] ;
+           fhir:code [ fhir:v "CARDIAL" ]
+         ] ) ;
+         fhir:type [ fhir:v "group" ] ;
+         fhir:enableWhen ( [
+           fhir:question [ fhir:v "1.1" ] ;
+           fhir:operator [ fhir:v "=" ] ;
+           fhir:answer [
+             a fhir:Coding ;
+             fhir:system [
+               fhir:v "http://terminology.hl7.org/CodeSystem/v2-0136"^^xsd:anyURI ;
+               fhir:l <http://terminology.hl7.org/CodeSystem/v2-0136>
+             ] ;
+             fhir:code [ fhir:v "Y" ]
+           ]
+         ] ) ;
+         fhir:item ( [
+           fhir:linkId [ fhir:v "1.1.1.1" ] ;
+           fhir:code ( [
+             fhir:system [
+               fhir:v "http://example.org/system/code/questions"^^xsd:anyURI ;
+               fhir:l <http://example.org/system/code/questions>
+             ] ;
+             fhir:code [ fhir:v "COMORBCAR" ]
+           ] ) ;
+           fhir:prefix [ fhir:v "1.1" ] ;
+           fhir:type [ fhir:v "coding" ] ;
+           fhir:answerValueSet [
+             fhir:v "http://hl7.org/fhir/ValueSet/yesnodontknow"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/ValueSet/yesnodontknow>
+           ] ;
+           fhir:item ( [
+             fhir:linkId [ fhir:v "1.1.1.1.1" ] ;
+             fhir:code ( [
+               fhir:system [
+                 fhir:v "http://example.org/system/code/questions"^^xsd:anyURI ;
+                 fhir:l <http://example.org/system/code/questions>
+               ] ;
+               fhir:code [ fhir:v "COMCAR00" ] ;
+               fhir:display [ fhir:v "Angina Pectoris" ]
+             ] [
+               fhir:system [
+                 fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+                 fhir:l <http://snomed.info/sct>
+               ] ;
+               fhir:code [ fhir:v "194828000" ] ;
+               fhir:display [ fhir:v "Angina (disorder)" ]
+             ] ) ;
+             fhir:prefix [ fhir:v "1.1.1" ] ;
+             fhir:type [ fhir:v "coding" ] ;
+             fhir:answerValueSet [
+               fhir:v "http://hl7.org/fhir/ValueSet/yesnodontknow"^^xsd:anyURI ;
+               fhir:l <http://hl7.org/fhir/ValueSet/yesnodontknow>
+             ]
+           ] [
+             fhir:linkId [ fhir:v "1.1.1.1.2" ] ;
+             fhir:code ( [
+               fhir:system [
+                 fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+                 fhir:l <http://snomed.info/sct>
+               ] ;
+               fhir:code [ fhir:v "22298006" ] ;
+               fhir:display [ fhir:v "Myocardial infarction (disorder)" ]
+             ] ) ;
+             fhir:prefix [ fhir:v "1.1.2" ] ;
+             fhir:type [ fhir:v "coding" ] ;
+             fhir:answerValueSet [
+               fhir:v "http://hl7.org/fhir/ValueSet/yesnodontknow"^^xsd:anyURI ;
+               fhir:l <http://hl7.org/fhir/ValueSet/yesnodontknow>
+             ]
+           ] )
+         ] [
+           fhir:linkId [ fhir:v "1.1.1.2" ] ;
+           fhir:code ( [
+             fhir:system [
+               fhir:v "http://example.org/system/code/questions"^^xsd:anyURI ;
+               fhir:l <http://example.org/system/code/questions>
+             ] ;
+             fhir:code [ fhir:v "COMORBVAS" ]
+           ] ) ;
+           fhir:prefix [ fhir:v "1.2" ] ;
+           fhir:type [ fhir:v "coding" ] ;
+           fhir:answerValueSet [
+             fhir:v "http://hl7.org/fhir/ValueSet/yesnodontknow"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/ValueSet/yesnodontknow>
+           ]
+         ] )
+       ] )
+     ] )
+  ] [
+     fhir:linkId [ fhir:v "2" ] ;
+     fhir:code ( [
+       fhir:system [
+         fhir:v "http://example.org/system/code/sections"^^xsd:anyURI ;
+         fhir:l <http://example.org/system/code/sections>
+       ] ;
+       fhir:code [ fhir:v "HISTOPATHOLOGY" ]
+     ] ) ;
+     fhir:type [ fhir:v "group" ] ;
+     fhir:item ( [
+       fhir:linkId [ fhir:v "2.1" ] ;
+       fhir:code ( [
+         fhir:system [
+           fhir:v "http://example.org/system/code/sections"^^xsd:anyURI ;
+           fhir:l <http://example.org/system/code/sections>
+         ] ;
+         fhir:code [ fhir:v "ABDOMINAL" ]
+       ] ) ;
+       fhir:type [ fhir:v "group" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "2.1.2" ] ;
+         fhir:code ( [
+           fhir:system [
+             fhir:v "http://example.org/system/code/questions"^^xsd:anyURI ;
+             fhir:l <http://example.org/system/code/questions>
+           ] ;
+           fhir:code [ fhir:v "STADPT" ] ;
+           fhir:display [ fhir:v "pT category" ]
+         ] ) ;
+         fhir:type [ fhir:v "coding" ]
+       ] )
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

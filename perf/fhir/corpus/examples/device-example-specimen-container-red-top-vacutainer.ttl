@@ -1,0 +1,84 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Device/device-example-specimen-container-red-top-vacutainer> a fhir:Device ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "device-example-specimen-container-red-top-vacutainer"] ; # text>
+#    <status value="generated"/>
+#    <div xmlns="http://www.w3.org/1999/xhtml">
+#      <p>example</p>
+#    </div>
+#  </text
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://acme.com/containers/id"^^xsd:anyURI ;
+       fhir:l <http://acme.com/containers/id>
+     ] ;
+     fhir:value [ fhir:v "345676" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:value [ fhir:v "Red Top Tube" ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/device-nametype"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/device-nametype>
+         ] ;
+         fhir:code [ fhir:v "registered-name" ] ;
+         fhir:display [ fhir:v "Registered Name" ]
+       ] )
+     ]
+  ] ) ; # <displayName value="Red Top Tube" />
+  fhir:property ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://acme.com/containers/codes"^^xsd:anyURI ;
+           fhir:l <http://acme.com/containers/codes>
+         ] ;
+         fhir:code [ fhir:v "tube-type" ] ;
+         fhir:display [ fhir:v "Tube Type" ]
+       ] )
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://acme.com/containers/types"^^xsd:anyURI ;
+           fhir:l <http://acme.com/containers/types>
+         ] ;
+         fhir:code [ fhir:v "RedTop" ] ;
+         fhir:display [ fhir:v "Red Top Tube" ]
+       ] )
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://acme.com/containers/codes"^^xsd:anyURI ;
+           fhir:l <http://acme.com/containers/codes>
+         ] ;
+         fhir:code [ fhir:v "amount" ] ;
+         fhir:display [ fhir:v "Amount" ]
+       ] )
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://acme.com/containers/capacities"^^xsd:anyURI ;
+           fhir:l <http://acme.com/containers/capacities>
+         ] ;
+         fhir:code [ fhir:v "4.5mL" ] ;
+         fhir:display [ fhir:v "4.5 mL" ]
+       ] )
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

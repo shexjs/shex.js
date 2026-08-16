@@ -1,0 +1,126 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Group/example-Stroke-Thrombolysis-Trialists-2014-2016-IPD-MA-Cohort> a fhir:Group ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-Stroke-Thrombolysis-Trialists-2014-2016-IPD-MA-Cohort"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n		  \n      <p>\n			Stroke Thrombolysis Trialists’ Collaborators Group collection used for individual patient data meta-analysis\n	  </p>\n		\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:name [ fhir:v "StrokeThrombolysisTrialists20142016IPDMACohort"] ; # 
+  fhir:title [ fhir:v "Stroke Thrombolysis Trialists’ Collaborators Group collection used for individual patient data meta-analysis"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Stroke Thrombolysis Trialists’ Collaborators Group collection used for individual patient data meta-analysis"] ; # 
+  fhir:type [ fhir:v "person"] ; # 
+  fhir:membership [ fhir:v "enumerated"] ; # 
+  fhir:member ( [
+     fhir:entity [
+       fhir:l <http://hl7.org/fhir/Group/ECASSIII-Trial-Cohort> ;
+       fhir:reference [ fhir:v "Group/ECASSIII-Trial-Cohort" ] ;
+       fhir:type [
+         fhir:v "Group"^^xsd:anyURI ;
+         fhir:l fhir:Group
+       ] ;
+       fhir:display [ fhir:v "ECASS III Trial Cohort" ]
+     ]
+  ] [
+     fhir:entity [
+       fhir:l <http://hl7.org/fhir/Group/IST3-Trial-Cohort> ;
+       fhir:reference [ fhir:v "Group/IST3-Trial-Cohort" ] ;
+       fhir:type [
+         fhir:v "Group"^^xsd:anyURI ;
+         fhir:l fhir:Group
+       ] ;
+       fhir:display [ fhir:v "IST3 Trial Cohort" ]
+     ]
+  ] [
+     fhir:entity [
+       fhir:l <http://hl7.org/fhir/Group/ECASS-Trial-Cohort> ;
+       fhir:reference [ fhir:v "Group/ECASS-Trial-Cohort" ] ;
+       fhir:type [
+         fhir:v "Group"^^xsd:anyURI ;
+         fhir:l fhir:Group
+       ] ;
+       fhir:display [ fhir:v "ECASS Trial Cohort" ]
+     ]
+  ] [
+     fhir:entity [
+       fhir:l <http://hl7.org/fhir/Group/ECASSII-Trial-Cohort> ;
+       fhir:reference [ fhir:v "Group/ECASSII-Trial-Cohort" ] ;
+       fhir:type [
+         fhir:v "Group"^^xsd:anyURI ;
+         fhir:l fhir:Group
+       ] ;
+       fhir:display [ fhir:v "ECASSII Trial Cohort" ]
+     ]
+  ] [
+     fhir:entity [
+       fhir:l <http://hl7.org/fhir/Group/EPITHET-Trial-Cohort> ;
+       fhir:reference [ fhir:v "Group/EPITHET-Trial-Cohort" ] ;
+       fhir:type [
+         fhir:v "Group"^^xsd:anyURI ;
+         fhir:l fhir:Group
+       ] ;
+       fhir:display [ fhir:v "EPITHET Trial Cohort" ]
+     ]
+  ] [
+     fhir:entity [
+       fhir:l <http://hl7.org/fhir/Group/ATLANTIS-Trial-Cohort> ;
+       fhir:reference [ fhir:v "Group/ATLANTIS-Trial-Cohort" ] ;
+       fhir:type [
+         fhir:v "Group"^^xsd:anyURI ;
+         fhir:l fhir:Group
+       ] ;
+       fhir:display [ fhir:v "ATLANTIS Trial Cohort" ]
+     ]
+  ] [
+     fhir:entity [
+       fhir:l <http://hl7.org/fhir/Group/NINDS-Trial-Cohort> ;
+       fhir:reference [ fhir:v "Group/NINDS-Trial-Cohort" ] ;
+       fhir:type [
+         fhir:v "Group"^^xsd:anyURI ;
+         fhir:l fhir:Group
+       ] ;
+       fhir:display [ fhir:v "NINDS Trial Cohort" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Group/ECASSIII-Trial-Cohort> a fhir:Group .
+
+<http://hl7.org/fhir/Group/IST3-Trial-Cohort> a fhir:Group .
+
+<http://hl7.org/fhir/Group/ECASS-Trial-Cohort> a fhir:Group .
+
+<http://hl7.org/fhir/Group/ECASSII-Trial-Cohort> a fhir:Group .
+
+<http://hl7.org/fhir/Group/EPITHET-Trial-Cohort> a fhir:Group .
+
+<http://hl7.org/fhir/Group/ATLANTIS-Trial-Cohort> a fhir:Group .
+
+<http://hl7.org/fhir/Group/NINDS-Trial-Cohort> a fhir:Group .
+
+# -------------------------------------------------------------------------------------
+

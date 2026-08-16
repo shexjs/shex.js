@@ -1,0 +1,65 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ServiceRequest/physical-therapy> a fhir:ServiceRequest ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "physical-therapy"] ; # 
+  fhir:status [ fhir:v "completed"] ; # insert contents here
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:category ( [
+     a sct:386053000 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "386053000" ] ;
+       fhir:display [ fhir:v "Evaluation procedure (procedure)" ]
+     ] ) ;
+     fhir:text [ fhir:v "Evaluation" ]
+  ] ) ; # 
+  fhir:code [
+     fhir:concept [
+       a sct:710830005 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "710830005" ] ;
+         fhir:display [ fhir:v "Assessment of passive range of motion (procedure)" ]
+       ] ) ;
+       fhir:text [ fhir:v "Assessment of passive range of motion" ]
+     ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:occurrence [
+     a fhir:DateTime ;
+     fhir:v "2016-09-27"^^xsd:date
+  ] ; # 
+  fhir:authoredOn [ fhir:v "2016-09-20"^^xsd:date] ; # 
+  fhir:requester [
+     fhir:display [ fhir:v "Ollie Ortho, MD" ]
+  ] ; # 
+  fhir:performer ( [
+     fhir:display [ fhir:v "Paul Therapist, PT" ]
+  ] ) ; # 
+  fhir:reason ( [
+     fhir:concept [
+       fhir:text [ fhir:v "assessment of mobility limitations due to osteoarthritis" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

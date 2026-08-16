@@ -1,0 +1,208 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ImagingStudy/example-xr> a fhir:ImagingStudy ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-xr"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">XR Wrist 3+ Views. John Smith (MRN: 09236). Accession: W12342398. Performed: 2017-01-01.\n       1 series, 2 images.</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:system [
+       fhir:v "urn:dicom:uid"^^xsd:anyURI ;
+       fhir:l <urn:dicom:uid>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.124.113543.6003.1154777499.30246.19789.3503430046" ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://dicom.nema.org/resources/ontology/DCM"^^xsd:anyURI ;
+           fhir:l <http://dicom.nema.org/resources/ontology/DCM>
+         ] ;
+         fhir:code [ fhir:v "110180" ]
+       ] )
+     ]
+  ] [
+     fhir:use [ fhir:v "secondary" ] ;
+     fhir:value [ fhir:v "55551234" ] ;
+     fhir:assigner [
+       fhir:l <http://hl7.org/fhir/Organization/dicom-organization> ;
+       fhir:reference [ fhir:v "Organization/dicom-organization" ]
+     ]
+  ] ) ; # 
+  fhir:status [ fhir:v "available"] ; # 
+  fhir:modality ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://dicom.nema.org/resources/ontology/DCM"^^xsd:anyURI ;
+         fhir:l <http://dicom.nema.org/resources/ontology/DCM>
+       ] ;
+       fhir:code [ fhir:v "DX" ]
+     ] )
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/dicom> ;
+     fhir:reference [ fhir:v "Patient/dicom" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/example> ;
+     fhir:reference [ fhir:v "Encounter/example" ]
+  ] ; # 
+  fhir:started [ fhir:v "2017-01-01T11:01:20+03:00"^^xsd:dateTime] ; # 
+  fhir:basedOn ( [
+     fhir:type [
+       fhir:v "ServiceRequest"^^xsd:anyURI ;
+       fhir:l fhir:ServiceRequest
+     ] ;
+     fhir:identifier [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+           ] ;
+           fhir:code [ fhir:v "ACSN" ]
+         ] )
+       ] ;
+       fhir:value [ fhir:v "W12342398" ] ;
+       fhir:assigner [
+         fhir:l <http://hl7.org/fhir/Organization/dicom-organization> ;
+         fhir:reference [ fhir:v "Organization/dicom-organization" ]
+       ]
+     ]
+  ] [
+     fhir:l <http://hl7.org/fhir/ServiceRequest/example> ;
+     fhir:reference [ fhir:v "ServiceRequest/example" ]
+  ] ) ; # 
+  fhir:referrer [
+     fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+     fhir:reference [ fhir:v "Practitioner/example" ]
+  ] ; # 
+  fhir:endpoint ( [
+     fhir:l <http://hl7.org/fhir/Endpoint/example-wadors> ;
+     fhir:reference [ fhir:v "Endpoint/example-wadors" ]
+  ] ) ; # 
+  fhir:procedure ( [
+     fhir:l <http://hl7.org/fhir/Procedure/example> ;
+     fhir:reference [ fhir:v "Procedure/example" ]
+  ] ) ; # 
+  fhir:reason ( [
+     fhir:concept [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://www.radlex.org"^^xsd:anyURI ;
+           fhir:l <http://www.radlex.org>
+         ] ;
+         fhir:code [ fhir:v "RPID2589" ] ;
+         fhir:display [ fhir:v "XR Wrist 3+ Views" ]
+       ] ) ;
+       fhir:text [ fhir:v "XR Wrist 3+ Views" ]
+     ]
+  ] [
+     fhir:concept [
+       a sct:357009 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "357009" ] ;
+         fhir:display [ fhir:v "Closed fracture of trapezoidal bone of wrist" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "XR Wrist 3+ Views" ]
+  ] ) ; # 
+  fhir:numberOfSeries [ fhir:v "1"^^xsd:nonNegativeInteger] ; # 
+  fhir:numberOfInstances [ fhir:v "2"^^xsd:nonNegativeInteger] ; # 
+  fhir:series ( [
+     fhir:uid [ fhir:v "2.16.124.113543.6003.1154777499.30246.19789.3503430045.1" ] ;
+     fhir:number [ fhir:v "3"^^xsd:nonNegativeInteger ] ;
+     fhir:modality [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://dicom.nema.org/resources/ontology/DCM"^^xsd:anyURI ;
+           fhir:l <http://dicom.nema.org/resources/ontology/DCM>
+         ] ;
+         fhir:code [ fhir:v "DX" ]
+       ] )
+     ] ;
+     fhir:description [ fhir:v "XR Wrist 3+ Views" ] ;
+     fhir:numberOfInstances [ fhir:v "2"^^xsd:nonNegativeInteger ] ;
+     fhir:endpoint ( [
+       fhir:l <http://hl7.org/fhir/Endpoint/example-wadors> ;
+       fhir:reference [ fhir:v "Endpoint/example-wadors" ]
+     ] ) ;
+     fhir:bodySite ( [
+       fhir:concept [
+         a sct:74670003 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ; # Added body site to support duplicate checking example
+           fhir:code [ fhir:v "74670003" ] ;
+           fhir:display [ fhir:v "Wrist Joint" ]
+         ] )
+       ]
+     ] ) ;
+     fhir:started [ fhir:v "2017-01-01T11:11:23+03:00"^^xsd:dateTime ] ;
+     fhir:performer ( [
+       fhir:function [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationType"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationType>
+           ] ;
+           fhir:code [ fhir:v "PRF" ]
+         ] )
+       ] ;
+       fhir:actor [
+         fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+         fhir:reference [ fhir:v "Practitioner/example" ]
+       ]
+     ] ) ;
+     fhir:instance ( [
+       fhir:uid [ fhir:v "2.16.124.113543.6003.1154777499.30246.19789.3503430045.1.1" ] ;
+       fhir:sopClass [
+         fhir:v "urn:oid:1.2.840.10008.5.1.4.1.1.2"^^xsd:anyURI ;
+         fhir:l <urn:oid:1.2.840.10008.5.1.4.1.1.2>
+       ] ;
+       fhir:number [ fhir:v "1"^^xsd:nonNegativeInteger ] ;
+       fhir:title [ fhir:v "PA VIEW" ]
+     ] [
+       fhir:uid [ fhir:v "2.16.124.113543.6003.1154777499.30246.19789.3503430045.1.2" ] ;
+       fhir:sopClass [
+         fhir:v "urn:oid:1.2.840.10008.5.1.4.1.1.2"^^xsd:anyURI ;
+         fhir:l <urn:oid:1.2.840.10008.5.1.4.1.1.2>
+       ] ;
+       fhir:number [ fhir:v "2"^^xsd:nonNegativeInteger ] ;
+       fhir:title [ fhir:v "LL VIEW" ]
+     ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Organization/dicom-organization> a fhir:Organization .
+
+<http://hl7.org/fhir/Patient/dicom> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/example> a fhir:Encounter .
+
+<http://hl7.org/fhir/ServiceRequest/example> a fhir:ServiceRequest .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Endpoint/example-wadors> a fhir:Endpoint .
+
+<http://hl7.org/fhir/Procedure/example> a fhir:Procedure .
+
+# -------------------------------------------------------------------------------------
+

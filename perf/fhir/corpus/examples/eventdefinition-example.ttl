@@ -1,0 +1,71 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/EventDefinition/example> a fhir:EventDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 6
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/EventDefinition/example"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/EventDefinition/example>
+  ] ; # 
+  fhir:name [ fhir:v "EventDefinitionExample"] ; # 
+  fhir:title [ fhir:v "EventDefinition Example"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Decision Support"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/dss" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Example of an EventDefinition for monitoring emergency department admissions."] ; # 
+  fhir:purpose [ fhir:v "Monitor all admissions to Emergency"] ; # 
+  fhir:trigger ( [
+     fhir:type [ fhir:v "data-changed" ] ;
+     fhir:name [ fhir:v "monitor-emergency-admissions" ] ;
+     fhir:data ( [
+       fhir:type [ fhir:v "Encounter" ]
+     ] ) ;
+     fhir:condition [
+       fhir:description [ fhir:v "Encounter Location = emergency (active/completed encounters, current or previous)" ] ;
+       fhir:language [ fhir:v "text/fhirpath" ] ;
+       fhir:expression [ fhir:v "(%current | %previous).location.where(location = 'Location/emergency' and status in {'active', 'completed'}).exists()" ]
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

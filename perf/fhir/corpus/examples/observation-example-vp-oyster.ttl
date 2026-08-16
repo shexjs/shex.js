@@ -1,0 +1,130 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# This is an example of Observations made about something other than a patient - namely a location
+
+<http://hl7.org/fhir/Observation/vp-oyster> a fhir:Observation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "vp-oyster"] ; # 
+  fhir:contained ( [
+     a fhir:Specimen ;
+     fhir:id [ fhir:v "bed1" ] ;
+     fhir:note ( [
+       fhir:text [ fhir:v "Live Oysters Acc#20171014-1234 from Bed 1" ]
+     ] )
+  ] [
+     a fhir:Specimen ;
+     fhir:id [ fhir:v "bed2" ] ;
+     fhir:note ( [
+       fhir:text [ fhir:v "Live Oysters Acc#20171014-1234 from Bed 2" ]
+     ] )
+  ] [
+     a fhir:Group ;
+     fhir:id [ fhir:v "group1" ] ;
+     fhir:type [ fhir:v "animal" ] ;
+     fhir:membership [ fhir:v "enumerated" ] ;
+     fhir:member ( [
+       fhir:entity [
+         fhir:l <#bed1> ;
+         fhir:reference [ fhir:v "#bed1" ]
+       ]
+     ] [
+       fhir:entity [
+         fhir:l <#bed2> ;
+         fhir:reference [ fhir:v "#bed2" ]
+       ]
+     ] )
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:system [
+       fhir:v "http://sonomacounty.ca.gov/Health/Public-Health/Laboratory"^^xsd:anyURI ;
+       fhir:l <http://sonomacounty.ca.gov/Health/Public-Health/Laboratory>
+     ] ;
+     fhir:value [ fhir:v "20171014-1234" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "preliminary"] ; # 
+  fhir:code [
+     a loinc:41857-4 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "41857-4" ] ;
+       fhir:display [ fhir:v "Vibrio parahaemolyticus DNA [Presence] in Specimen by NAA with probe detection" ]
+     ] [
+       fhir:system [
+         fhir:v "http://sonomacounty.ca.gov/Health/Public-Health/Laboratory/test-codes"^^xsd:anyURI ;
+         fhir:l <http://sonomacounty.ca.gov/Health/Public-Health/Laboratory/test-codes>
+       ] ;
+       fhir:code [ fhir:v "VP MULTI PCR" ] ;
+       fhir:display [ fhir:v "VP MULTI PCR" ]
+     ] ) ; # Should use a  proper LOINC code
+     fhir:text [ fhir:v "OYSTER TESTING" ]
+  ] ; # Observations are often coded in multiple code systems.
+#      - LOINC
+#		- or SNOMED
+#      -and/or the source system may provides its own "local" code, which may be less or more granular than LOINC.
+#	In this example there is only local codes
+  fhir:subject [
+     fhir:display [ fhir:v "Sonoma oyster farm" ] # reference value=\"Location\/oyster-farm\"\/
+  ] ; # 
+  fhir:effective [
+     a fhir:DateTime ;
+     fhir:v "2017-10-12"^^xsd:date
+  ] ; # 
+  fhir:issued [ fhir:v "2017-10-14T23:11:24Z"^^xsd:dateTime] ; # 
+  fhir:performer ( [
+     fhir:l <http://hl7.org/fhir/Practitioner/f005> ;
+     fhir:reference [ fhir:v "Practitioner/f005" ] ;
+     fhir:display [ fhir:v "A. Langeveld" ]
+  ] ) ; # 
+  fhir:value [
+     a fhir:CodeableConcept, sct:10828004 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "10828004" ] ;
+       fhir:display [ fhir:v "Positive (qualifier value)" ]
+     ] [
+       fhir:system [
+         fhir:v "http://sonomacounty.ca.gov/Health/Public-Health/Laboratory/result-codes"^^xsd:anyURI ;
+         fhir:l <http://sonomacounty.ca.gov/Health/Public-Health/Laboratory/result-codes>
+       ] ;
+       fhir:code [ fhir:v "POSITIVE" ] ;
+       fhir:display [ fhir:v "POSITIVE" ]
+     ] ) ; # SNOMED CT codes
+     fhir:text [ fhir:v "POSITIVE" ]
+  ] ; # results of this Qualtiattive PCR is a choice of Positive/Negative and Inconclusive
+  fhir:interpretation ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation>
+       ] ;
+       fhir:code [ fhir:v "A" ] ;
+       fhir:display [ fhir:v "Abnormal" ]
+     ] )
+  ] ) ; # 
+  fhir:specimen [
+     fhir:l <#group1> ;
+     fhir:reference [ fhir:v "#group1" ]
+  ] ; # 
+  fhir:referenceRange ( [
+     fhir:text [ fhir:v "NEGATIVE" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/f005> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

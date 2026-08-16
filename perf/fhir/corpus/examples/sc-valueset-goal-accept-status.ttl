@@ -1,0 +1,84 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ConceptMap/sc-goal-accept-status> a fhir:ConceptMap ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "sc-goal-accept-status"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: ConceptMap sc-goal-accept-status</b></p><a name=\"sc-goal-accept-status\"> </a><a name=\"hcsc-goal-accept-status\"> </a><p>Mapping from <a href=\"valueset-goal-accept-status.html\">Goal acceptance status value set</a> to <a href=\"valueset-resource-status.html\">Canonical Status Codes for FHIR Resources</a></p><br/><p>Mapping from <a href=\"codesystem-goal-accept-status.html\">Goal acceptance status code system</a> to <a href=\"codesystem-resource-status.html\">Canonical Status Codes for FHIR Resources</a></p><table class=\"grid\"><tr><td><b>Source Code</b></td><td><b>Relationship</b></td><td><b>Target Code</b></td></tr><tr><td>disagree</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>declined</td></tr><tr><td>agree</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>accepted</td></tr><tr><td>pending</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>unconfirmed</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ConceptMap/sc-goal-accept-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ConceptMap/sc-goal-accept-status>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "GoalAcceptStatusCanonicalMap"] ; # 
+  fhir:title [ fhir:v "Canonical Mapping for \"Goal acceptance status value set\""] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Patient Care"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/patientcare" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Canonical Mapping for \"Codes that identify whether the goal has been accepted or not.\""] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:sourceScope [
+     a fhir:Canonical ;
+     fhir:v "http://hl7.org/fhir/ValueSet/goal-accept-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/goal-accept-status>
+  ] ; # 
+  fhir:targetScope [
+     a fhir:Canonical ;
+     fhir:v "http://hl7.org/fhir/ValueSet/resource-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/resource-status>
+  ] ; # 
+  fhir:group ( [
+     fhir:source [
+       fhir:v "http://hl7.org/fhir/goal-accept-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/goal-accept-status>
+     ] ;
+     fhir:target [
+       fhir:v "http://hl7.org/fhir/resource-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/resource-status>
+     ] ;
+     fhir:element ( [
+       fhir:code [ fhir:v "disagree" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "declined" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "agree" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "accepted" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "pending" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "unconfirmed" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

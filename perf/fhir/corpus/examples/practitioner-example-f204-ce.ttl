@@ -1,0 +1,48 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# <photo>    
+#        <reference value="Media/CE-204.bmp"/>
+#        <display value="Picture_Carla_Espinosa"/>
+#    </photo>
+
+<http://hl7.org/fhir/Practitioner/f204> a fhir:Practitioner ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f204"] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ; # The (fictive) identifier for this individual
+     fhir:type [
+       fhir:text [ fhir:v "UZI-nummer" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:oid:2.16.528.1.1007.3.1"^^xsd:anyURI ;
+       fhir:l <urn:oid:2.16.528.1.1007.3.1>
+     ] ;
+     fhir:value [ fhir:v "12345678904" ]
+  ] ) ; # Practitioner's personal demographics
+  fhir:name ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:text [ fhir:v "Carla Espinosa" ]
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "+31715262169" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:birthDate [ fhir:v "1967-11-05"^^xsd:date] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "work" ] ;
+     fhir:line ( [ fhir:v "Walvisbaai 3" ] ) ;
+     fhir:city [ fhir:v "Den helder" ] ;
+     fhir:postalCode [ fhir:v "2333ZA" ] ;
+     fhir:country [ fhir:v "NLD" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

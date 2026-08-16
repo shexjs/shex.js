@@ -1,0 +1,57 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Practitioner/f002> a fhir:Practitioner ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f002"] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:system [
+       fhir:v "urn:oid:2.16.528.1.1007.3.1"^^xsd:anyURI ;
+       fhir:l <urn:oid:2.16.528.1.1007.3.1>
+     ] ;
+     fhir:value [ fhir:v "730291637" ] # Identificatiesysteem Zorgverlener UZI
+  ] [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:system [
+       fhir:v "urn:oid:2.16.840.1.113883.2.4.6.3"^^xsd:anyURI ;
+       fhir:l <urn:oid:2.16.840.1.113883.2.4.6.3>
+     ] ;
+     fhir:value [ fhir:v "174BIP3JH438" ] # BSN identification system
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Voigt" ] ;
+     fhir:given ( [ fhir:v "Pieter" ] ) ;
+     fhir:suffix ( [ fhir:v "MD" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "0205569336" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] [
+     fhir:system [ fhir:v "email" ] ;
+     fhir:value [ fhir:v "p.voigt@bmc.nl" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] [
+     fhir:system [ fhir:v "fax" ] ;
+     fhir:value [ fhir:v "0205669382" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:birthDate [ fhir:v "1979-04-29"^^xsd:date] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "work" ] ;
+     fhir:line ( [ fhir:v "Galapagosweg 91" ] ) ;
+     fhir:city [ fhir:v "Den Burg" ] ;
+     fhir:postalCode [ fhir:v "9105 PZ" ] ;
+     fhir:country [ fhir:v "NLD" ]
+  ] ) . # ISO 3166 Codes (Countries)
+
+# -------------------------------------------------------------------------------------
+

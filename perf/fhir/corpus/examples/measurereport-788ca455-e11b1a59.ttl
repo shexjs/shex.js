@@ -1,0 +1,70 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/MeasureReport/788ca455-e11b1a59> a fhir:MeasureReport ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "788ca455-e11b1a59"] ; # 
+  fhir:contained ( [
+     a fhir:List ;
+     fhir:id [ fhir:v "1" ] ;
+     fhir:status [ fhir:v "current" ] ;
+     fhir:mode [ fhir:v "snapshot" ] ;
+     fhir:entry ( [
+       fhir:item [
+         fhir:l <http://hl7.org/fhir/MeasureReport/788ca455-e11b1a59-838c24b5> ;
+         fhir:reference [ fhir:v "MeasureReport/788ca455-e11b1a59-838c24b5" ]
+       ]
+     ] [
+       fhir:item [
+         fhir:l <http://hl7.org/fhir/MeasureReport/788ca455-e11b1a59-2ad816ff> ;
+         fhir:reference [ fhir:v "MeasureReport/788ca455-e11b1a59-2ad816ff" ]
+       ]
+     ] )
+  ] ) ; # 
+  fhir:status [ fhir:v "complete"] ; # 
+  fhir:type [ fhir:v "subject-list"] ; # 
+  fhir:measure [
+     fhir:v "http://lantanagroup.com/fhir/nhsn-measures/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation"^^xsd:anyURI ;
+     fhir:l <http://lantanagroup.com/fhir/nhsn-measures/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation>
+  ] ; # 
+  fhir:reporter [
+     fhir:l <http://hl7.org/fhir/Organization/aa389ad5-e6fe-4030-88ce-010ab96e4ac4> ;
+     fhir:reference [ fhir:v "Organization/aa389ad5-e6fe-4030-88ce-010ab96e4ac4" ]
+  ] ; # 
+  fhir:period [
+     fhir:start [ fhir:v "2022-08-01T00:00:00+00:00"^^xsd:dateTime ] ;
+     fhir:end [ fhir:v "2022-08-31T23:59:59+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:group ( [
+     fhir:population ( [
+       fhir:code [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/measure-population"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/measure-population>
+           ] ;
+           fhir:code [ fhir:v "initial-population" ] ;
+           fhir:display [ fhir:v "Initial Population" ]
+         ] )
+       ] ;
+       fhir:count [ fhir:v 2 ] ;
+       fhir:subjectResults [
+         fhir:l <#1> ;
+         fhir:reference [ fhir:v "#1" ]
+       ]
+     ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/MeasureReport/788ca455-e11b1a59-838c24b5> a fhir:MeasureReport .
+
+<http://hl7.org/fhir/MeasureReport/788ca455-e11b1a59-2ad816ff> a fhir:MeasureReport .
+
+<http://hl7.org/fhir/Organization/aa389ad5-e6fe-4030-88ce-010ab96e4ac4> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

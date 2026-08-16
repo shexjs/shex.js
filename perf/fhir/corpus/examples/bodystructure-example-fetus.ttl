@@ -1,0 +1,45 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# This example demonstrates using the bodystructure resource to identify of fetus within systems that choose not to treat a fetus as a Patient
+
+<http://hl7.org/fhir/BodyStructure/fetus> a fhir:BodyStructure ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "fetus"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://goodhealth.org/bodystructure/identifiers"^^xsd:anyURI ;
+       fhir:l <http://goodhealth.org/bodystructure/identifiers>
+     ] ;
+     fhir:value [ fhir:v "12345" ]
+  ] ) ; # 
+  fhir:includedStructure ( [
+     fhir:structure [
+       a sct:83418008 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "83418008" ] ;
+         fhir:display [ fhir:v "Entire fetus (body structure)" ]
+       ] ) ;
+       fhir:text [ fhir:v "Fetus" ]
+     ]
+  ] ) ; # 
+  fhir:description [ fhir:v "EDD 1/1/2017 confirmation by LMP"] ; # 
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

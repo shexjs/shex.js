@@ -1,0 +1,68 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Endpoint/example-ccda-xca> a fhir:Endpoint ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-ccda-xca"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n			Example of an XCA CCDA Referral Exchange Endpoint\n		</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:connectionType ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "https://profiles.ihe.net/ITI/mCSD/CodeSystem/MCSDEndpointTypes"^^xsd:anyURI ;
+         fhir:l <https://profiles.ihe.net/ITI/mCSD/CodeSystem/MCSDEndpointTypes>
+       ] ;
+       fhir:code [ fhir:v "ihe-xca" ]
+     ] )
+  ] [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "https://profiles.ihe.net/ITI/mCSD/CodeSystem/MCSDEndpointTypes"^^xsd:anyURI ;
+         fhir:l <https://profiles.ihe.net/ITI/mCSD/CodeSystem/MCSDEndpointTypes>
+       ] ;
+       fhir:code [ fhir:v "XCA-RespGateway-Query" ]
+     ] )
+  ] [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "https://profiles.ihe.net/ITI/mCSD/CodeSystem/MCSDEndpointTypes"^^xsd:anyURI ;
+         fhir:l <https://profiles.ihe.net/ITI/mCSD/CodeSystem/MCSDEndpointTypes>
+       ] ;
+       fhir:code [ fhir:v "XCA-RespGateway-Retrieve" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "XCA CCDA Referral Exchange Endpoint"] ; # 
+  fhir:payload ( [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-HL7DocumentFormatCodes"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-HL7DocumentFormatCodes>
+         ] ;
+         fhir:code [ fhir:v "urn:hl7-org:sdwg:ccda-structuredBody:2.1" ]
+       ] )
+     ] ) ;
+     fhir:mimeType ( [ fhir:v "application/pdf" ] [ fhir:v "application/xml" ] [ fhir:v "application/jpg" ] ) ;
+     fhir:profileUri ( [
+       fhir:v "urn:hl7ii:2.16.840.1.113883.10.20.22.1.8:2015-08-01"^^xsd:anyURI ;
+       fhir:l <urn:hl7ii:2.16.840.1.113883.10.20.22.1.8:2015-08-01>
+     ] [
+       fhir:v "urn:hl7ii:2.16.840.1.113883.10.20.22.1.14:2015-08-01"^^xsd:anyURI ;
+       fhir:l <urn:hl7ii:2.16.840.1.113883.10.20.22.1.14:2015-08-01>
+     ] )
+  ] ) ; # 
+  fhir:address [
+     fhir:v "https://acme.org/interfaces/services/ihe/IHEXCARespondingGateway"^^xsd:anyURI ;
+     fhir:l <https://acme.org/interfaces/services/ihe/IHEXCARespondingGateway>
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

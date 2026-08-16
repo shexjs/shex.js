@@ -1,0 +1,43 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Patient/proband> a fhir:Patient ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "proband"] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:type [
+       fhir:text [ fhir:v "Computer-Stored Abulatory Records (COSTAR)" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:oid:2.16.840.1.113883.6.117"^^xsd:anyURI ;
+       fhir:l <urn:oid:2.16.840.1.113883.6.117>
+     ] ; # This OID has been used below for illustration purposes only
+     fhir:value [ fhir:v "999999999" ] ;
+     fhir:assigner [
+       fhir:display [ fhir:v "Boston Massachesetts General Hospital" ]
+     ]
+  ] ) ; # <extension url="http://hl7.org/fhir/StructureDefinition/us-core-race">
+#  <extension url="ombCategory">
+#    <valueCoding>
+#        <system value="http://terminology.hl7.org/CodeSystem/v3-Race"/>
+#        <code value="2106-3"/>
+#        <display value="White"/>
+#    </valueCoding>
+#    </extension>
+#  </extension>
+  fhir:active [ fhir:v true] ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:birthDate [ fhir:v "1966-04-04"^^xsd:date] ; # 
+  fhir:deceased [
+     a fhir:Boolean ;
+     fhir:v false
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

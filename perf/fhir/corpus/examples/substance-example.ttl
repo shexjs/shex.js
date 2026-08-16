@@ -1,0 +1,40 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Substance/example> a fhir:Substance ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://acme.org/identifiers/substances"^^xsd:anyURI ;
+       fhir:l <http://acme.org/identifiers/substances>
+     ] ;
+     fhir:value [ fhir:v "1463" ]
+  ] ) ; # <text>
+#    <status value="generated"/>
+#    <div xmlns="http://www.w3.org/1999/xhtml">Apitoxin (known as Honey Bee Venom)</div>
+#  </text>
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/substance-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/substance-category>
+       ] ;
+       fhir:code [ fhir:v "allergen" ] ;
+       fhir:display [ fhir:v "Allergen" ]
+     ] )
+  ] ) ; # 
+  fhir:code [
+     fhir:concept [
+       fhir:text [ fhir:v "apitoxin (Honey Bee Venom)" ]
+     ]
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

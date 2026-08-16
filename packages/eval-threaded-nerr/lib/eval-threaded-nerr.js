@@ -53,8 +53,58 @@ class EvalThreadedNErrRegexEngine {
         this.index = index;
         this.debugHooks = debugHooks;
         this.node = null; // the focus node while match() runs
+        /** Set per match(): whether the frontier may be deduplicated. */
+        this.mayMerge = true;
         this.outerExpression = shape.expression;
         this.greedy = this.takesAllItCan(this.outerExpression);
+        this.semActNames = new Set();
+        (this.shape.semActs || []).forEach(sa => this.semActNames.add(sa.name));
+        this.collectSemActs(this.outerExpression, new Set());
+    }
+    /**
+     * The semantic actions written anywhere in this shape, by name.
+     *
+     * Without any, ShEx asks only how many triples a constraint took: two
+     * ways of matching the same bag are the same answer, which is what lets
+     * mergeEquivalent drop all but one of them.  An action is handed the
+     * triples it fired on and does something opaque with them, so where one
+     * is watching the specific assignment is part of the answer -- both which
+     * triples it sees and, for a group's actions, how many threads it is
+     * dispatched over.
+     *
+     * Names rather than a flag, because an action nobody handles is never
+     * dispatched (SemActDispatcher.dispatchAll skips it) and so cannot
+     * observe anything.  Which handlers are registered isn't known until
+     * match() is called, so the question is asked there.
+     */
+    collectSemActs(exprOrRef, seen) {
+        if (typeof exprOrRef === "string") {
+            if (seen.has(exprOrRef))
+                return; // an Inclusion cycle
+            seen.add(exprOrRef);
+            const included = this.index.tripleExprs[exprOrRef];
+            if (included !== undefined)
+                this.collectSemActs(included, seen);
+            return;
+        }
+        (exprOrRef.semActs || []).forEach(sa => this.semActNames.add(sa.name));
+        switch (exprOrRef.type) {
+            case "EachOf":
+            case "OneOf":
+                exprOrRef.expressions.forEach(nested => this.collectSemActs(nested, seen));
+                return;
+        }
+    }
+    /** May the frontier be deduplicated, given who is listening? */
+    merging(semActHandler) {
+        if (this.semActNames.size === 0)
+            return true;
+        if (semActHandler.isRegistered === undefined)
+            return false; // can\'t ask: assume it is live
+        for (const name of this.semActNames)
+            if (semActHandler.isRegistered(name))
+                return false;
+        return true; // written, but nobody is handling them
     }
     /**
      * Which constraints can take every triple assigned to them at once.
@@ -109,6 +159,7 @@ class EvalThreadedNErrRegexEngine {
     }
     match(node, constraintToTripleMapping, semActHandler, _trace) {
         this.node = node;
+        this.mayMerge = this.merging(semActHandler);
         const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
             tripleResult.forEach(res => allTriples.add(res.triple));
             return allTriples;
@@ -146,9 +197,11 @@ class EvalThreadedNErrRegexEngine {
         }
         else {
             return ret.length > 1 ? {
-                type: "PossibleErrors",
+                // more than one way to read this neighborhood, and each of them
+                // failed: say so as a disjunction rather than as a nested array
+                type: "Alternatives",
                 errors: ret.reduce((all, e) => {
-                    return all.concat([e.errors]);
+                    return all.concat([{ type: "AllOf", errors: e.errors }]);
                 }, [])
             } : {
                 type: "Failure",
@@ -201,7 +254,7 @@ class EvalThreadedNErrRegexEngine {
                     Array.prototype.push.apply(failed, sub);
             }
             return matched.length > 0 ? matched : failed;
-        }, semActHandler);
+        }, semActHandler, this.mayMerge);
     }
     matchEachOf(expr, min, max, thread, constraintToTripleMapping, semActHandler) {
         return EvalThreadedNErrRegexEngine.homogenize(EvalThreadedNErrRegexEngine.matchRepeat(expr, min, max, thread, "EachOfSolutions", (th) => {
@@ -229,7 +282,7 @@ class EvalThreadedNErrRegexEngine {
                     return nextThreads.concat(sub);
                 }, []));
             }, [th]);
-        }, semActHandler));
+        }, semActHandler, this.mayMerge));
     }
     // Early return in case of insufficient matching triples
     matchTripleConstraint(constraint, min, max, thread, constraintToTripleMapping, semActHandler) {
@@ -332,7 +385,7 @@ class EvalThreadedNErrRegexEngine {
         }
         return Array.from(byRemaining.values());
     }
-    static matchRepeat(groupTE, min, max, thread, type, evalGroup, semActHandler) {
+    static matchRepeat(groupTE, min, max, thread, type, evalGroup, semActHandler, mayMerge) {
         let repeated = 0, errOut = false;
         let newThreads = [thread];
         const minmax = {};
@@ -378,7 +431,7 @@ class EvalThreadedNErrRegexEngine {
                 // none of them could: short of the minimum that is the failure,
                 // and past it the iterations already made stand
                 return repeated < min ? stumbled : newThreads;
-            newThreads = EvalThreadedNErrRegexEngine.mergeEquivalent(inner);
+            newThreads = mayMerge ? EvalThreadedNErrRegexEngine.mergeEquivalent(inner) : inner;
         }
         if (newThreads.length > 0 && newThreads[0].errors.length === 0 && groupTE.semActs !== undefined) {
             const passes = [];

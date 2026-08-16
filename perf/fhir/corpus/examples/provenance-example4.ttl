@@ -1,0 +1,53 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Provenance/example4> a fhir:Provenance ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example4"] ; # 
+  fhir:target ( [
+     fhir:l <http://hl7.org/fhir/Patient/pat3/_history/1> ;
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "http://hl7.org/fhir/StructureDefinition/targetPath"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/StructureDefinition/targetPath>
+       ] ;
+       fhir:value [
+         a fhir:String ;
+         fhir:v "Patient.extension('http://hl7.org/fhir/us/core/StructureDefinition/us-core-race')"
+       ]
+     ] ) ;
+     fhir:reference [ fhir:v "Patient/pat3/_history/1" ]
+  ] ) ; # Use path when the target resource doesn't have an id to point to
+#    Note that the path is constrained to simple FHIRPath - see 
+#    https://hl7.org/fhir/fhirpath.html#simple
+#    
+#    This asserts that the race came from admitting clinician (example provided 
+#		to show how to point to an extension)
+  fhir:recorded [ fhir:v "2021-12-08T16:54:24+11:00"^^xsd:dateTime] ; # 
+  fhir:agent ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationType"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationType>
+         ] ;
+         fhir:code [ fhir:v "ADM" ]
+       ] )
+     ] ;
+     fhir:who [
+       fhir:l <http://hl7.org/fhir/Practitioner/f007> ;
+       fhir:reference [ fhir:v "Practitioner/f007" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/pat3/_history/1> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/f007> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

@@ -15,15 +15,15 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": "_:abcd",
+        "object": "_:b0",
         "referenced": {
           "type": "NodeConstraintTest",
-          "node": "_:abcd",
+          "node": "_:b0",
           "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
-            "maxlength": 5,
-            "nodeKind": "bnode"
+            "nodeKind": "bnode",
+            "maxlength": 5
           }
         }
       }

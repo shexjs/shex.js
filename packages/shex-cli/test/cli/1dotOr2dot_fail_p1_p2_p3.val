@@ -3,21 +3,44 @@
   "node": "x999",
   "shape": "http://a.example/S1",
   "errors": [
-    [
-      {
-        "type": "MissingProperty",
-        "property": "http://a.example/p1"
-      }
-    ],
-    [
-      {
-        "type": "MissingProperty",
-        "property": "http://a.example/p2"
-      },
-      {
-        "type": "MissingProperty",
-        "property": "http://a.example/p3"
-      }
-    ]
+    {
+      "type": "Alternatives",
+      "errors": [
+        {
+          "type": "AllOf",
+          "errors": [
+            {
+              "type": "MissingProperty",
+              "property": "http://a.example/p1"
+            }
+          ]
+        },
+        {
+          "type": "AllOf",
+          "errors": [
+            {
+              "type": "MissingProperty",
+              "property": "http://a.example/p2"
+            },
+            {
+              "type": "MissingProperty",
+              "property": "http://a.example/p3"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "repairs": [
+    {
+      "type": "NearestBag",
+      "cost": 1,
+      "arcs": [
+        {
+          "property": "http://a.example/p1",
+          "delta": 1
+        }
+      ]
+    }
   ]
 }

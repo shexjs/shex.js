@@ -1,0 +1,662 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/animal-tissue-type> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "animal-tissue-type"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T11:01:55.562+11:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem animal-tissue-type</b></p><a name=\"animal-tissue-type\"> </a><a name=\"hcanimal-tissue-type\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">Last updated: 2021-01-05T10:01:24.148+11:00</p></div><p>This case-sensitive code system <code>http://hl7.org/fhir/animal-tissue-type</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td></tr><tr><td style=\"white-space:nowrap\">100000072091<a name=\"animal-tissue-type-100000072091\"> </a></td><td>All relevant tissues</td></tr><tr><td style=\"white-space:nowrap\">100000072092<a name=\"animal-tissue-type-100000072092\"> </a></td><td>Fat</td></tr><tr><td style=\"white-space:nowrap\">100000072093<a name=\"animal-tissue-type-100000072093\"> </a></td><td>Honey</td></tr><tr><td style=\"white-space:nowrap\">100000072094<a name=\"animal-tissue-type-100000072094\"> </a></td><td>Liver</td></tr><tr><td style=\"white-space:nowrap\">100000072095<a name=\"animal-tissue-type-100000072095\"> </a></td><td>Fresh Milk</td></tr><tr><td style=\"white-space:nowrap\">100000072096<a name=\"animal-tissue-type-100000072096\"> </a></td><td>Muscle and skin in natural proportions</td></tr><tr><td style=\"white-space:nowrap\">100000072104<a name=\"animal-tissue-type-100000072104\"> </a></td><td>Eggs</td></tr><tr><td style=\"white-space:nowrap\">100000072105<a name=\"animal-tissue-type-100000072105\"> </a></td><td>Skin and fat</td></tr><tr><td style=\"white-space:nowrap\">100000072106<a name=\"animal-tissue-type-100000072106\"> </a></td><td>Kidney</td></tr><tr><td style=\"white-space:nowrap\">100000072107<a name=\"animal-tissue-type-100000072107\"> </a></td><td>Meat and offal</td></tr><tr><td style=\"white-space:nowrap\">100000072108<a name=\"animal-tissue-type-100000072108\"> </a></td><td>Muscle</td></tr><tr><td style=\"white-space:nowrap\">100000072109<a name=\"animal-tissue-type-100000072109\"> </a></td><td>Unspecified</td></tr><tr><td style=\"white-space:nowrap\">100000111053<a name=\"animal-tissue-type-100000111053\"> </a></td><td>Adipose tissue</td></tr><tr><td style=\"white-space:nowrap\">100000111054<a name=\"animal-tissue-type-100000111054\"> </a></td><td>Adrenal</td></tr><tr><td style=\"white-space:nowrap\">100000111055<a name=\"animal-tissue-type-100000111055\"> </a></td><td>Blood vessels</td></tr><tr><td style=\"white-space:nowrap\">100000111056<a name=\"animal-tissue-type-100000111056\"> </a></td><td>Bone</td></tr><tr><td style=\"white-space:nowrap\">100000111057<a name=\"animal-tissue-type-100000111057\"> </a></td><td>Bone marrow</td></tr><tr><td style=\"white-space:nowrap\">100000111058<a name=\"animal-tissue-type-100000111058\"> </a></td><td>Brain</td></tr><tr><td style=\"white-space:nowrap\">100000111059<a name=\"animal-tissue-type-100000111059\"> </a></td><td>Connective tissue</td></tr><tr><td style=\"white-space:nowrap\">100000111060<a name=\"animal-tissue-type-100000111060\"> </a></td><td>Cornea</td></tr><tr><td style=\"white-space:nowrap\">100000111061<a name=\"animal-tissue-type-100000111061\"> </a></td><td>Dental pulp</td></tr><tr><td style=\"white-space:nowrap\">100000111062<a name=\"animal-tissue-type-100000111062\"> </a></td><td>Duodenum</td></tr><tr><td style=\"white-space:nowrap\">100000111063<a name=\"animal-tissue-type-100000111063\"> </a></td><td>Dura mater</td></tr><tr><td style=\"white-space:nowrap\">100000111064<a name=\"animal-tissue-type-100000111064\"> </a></td><td>Egg, embryonated</td></tr><tr><td style=\"white-space:nowrap\">100000111065<a name=\"animal-tissue-type-100000111065\"> </a></td><td>Egg</td></tr><tr><td style=\"white-space:nowrap\">100000111066<a name=\"animal-tissue-type-100000111066\"> </a></td><td>Egg white</td></tr><tr><td style=\"white-space:nowrap\">100000111067<a name=\"animal-tissue-type-100000111067\"> </a></td><td>Egg yolk</td></tr><tr><td style=\"white-space:nowrap\">100000111068<a name=\"animal-tissue-type-100000111068\"> </a></td><td>Embryos</td></tr><tr><td style=\"white-space:nowrap\">100000111069<a name=\"animal-tissue-type-100000111069\"> </a></td><td>Enteric plexuses</td></tr><tr><td style=\"white-space:nowrap\">100000111070<a name=\"animal-tissue-type-100000111070\"> </a></td><td>Esophagus</td></tr><tr><td style=\"white-space:nowrap\">100000111071<a name=\"animal-tissue-type-100000111071\"> </a></td><td>Feathers</td></tr><tr><td style=\"white-space:nowrap\">100000111072<a name=\"animal-tissue-type-100000111072\"> </a></td><td>Foetus</td></tr><tr><td style=\"white-space:nowrap\">100000111073<a name=\"animal-tissue-type-100000111073\"> </a></td><td>Fore-stomach (ruminants only)</td></tr><tr><td style=\"white-space:nowrap\">100000111074<a name=\"animal-tissue-type-100000111074\"> </a></td><td>Gingival tissue</td></tr><tr><td style=\"white-space:nowrap\">100000111075<a name=\"animal-tissue-type-100000111075\"> </a></td><td>Hair</td></tr><tr><td style=\"white-space:nowrap\">100000111076<a name=\"animal-tissue-type-100000111076\"> </a></td><td>Heart/pericardium</td></tr><tr><td style=\"white-space:nowrap\">100000111077<a name=\"animal-tissue-type-100000111077\"> </a></td><td>Hide</td></tr><tr><td style=\"white-space:nowrap\">100000111078<a name=\"animal-tissue-type-100000111078\"> </a></td><td>Hooves</td></tr><tr><td style=\"white-space:nowrap\">100000111079<a name=\"animal-tissue-type-100000111079\"> </a></td><td>Ileum</td></tr><tr><td style=\"white-space:nowrap\">100000111080<a name=\"animal-tissue-type-100000111080\"> </a></td><td>Jejunum</td></tr><tr><td style=\"white-space:nowrap\">100000111081<a name=\"animal-tissue-type-100000111081\"> </a></td><td>Kidney</td></tr><tr><td style=\"white-space:nowrap\">100000111082<a name=\"animal-tissue-type-100000111082\"> </a></td><td>Lard/lard oil</td></tr><tr><td style=\"white-space:nowrap\">100000111083<a name=\"animal-tissue-type-100000111083\"> </a></td><td>Large intestine</td></tr><tr><td style=\"white-space:nowrap\">100000111084<a name=\"animal-tissue-type-100000111084\"> </a></td><td>Liver</td></tr><tr><td style=\"white-space:nowrap\">100000111085<a name=\"animal-tissue-type-100000111085\"> </a></td><td>Lung</td></tr><tr><td style=\"white-space:nowrap\">100000111086<a name=\"animal-tissue-type-100000111086\"> </a></td><td>Lymph nodes</td></tr><tr><td style=\"white-space:nowrap\">100000111087<a name=\"animal-tissue-type-100000111087\"> </a></td><td>Mammary gland</td></tr><tr><td style=\"white-space:nowrap\">100000111088<a name=\"animal-tissue-type-100000111088\"> </a></td><td>Udder</td></tr><tr><td style=\"white-space:nowrap\">100000111089<a name=\"animal-tissue-type-100000111089\"> </a></td><td>Mammary tumour</td></tr><tr><td style=\"white-space:nowrap\">100000111090<a name=\"animal-tissue-type-100000111090\"> </a></td><td>Meat extract</td></tr><tr><td style=\"white-space:nowrap\">100000111091<a name=\"animal-tissue-type-100000111091\"> </a></td><td>Nasopharyngeal</td></tr><tr><td style=\"white-space:nowrap\">100000111092<a name=\"animal-tissue-type-100000111092\"> </a></td><td>Nictitating membrane</td></tr><tr><td style=\"white-space:nowrap\">100000111093<a name=\"animal-tissue-type-100000111093\"> </a></td><td>Nasal mucosa</td></tr><tr><td style=\"white-space:nowrap\">100000111094<a name=\"animal-tissue-type-100000111094\"> </a></td><td>Ovary</td></tr><tr><td style=\"white-space:nowrap\">100000111095<a name=\"animal-tissue-type-100000111095\"> </a></td><td>Pancreas</td></tr><tr><td style=\"white-space:nowrap\">100000111096<a name=\"animal-tissue-type-100000111096\"> </a></td><td>Peripheral nerves</td></tr><tr><td style=\"white-space:nowrap\">100000111097<a name=\"animal-tissue-type-100000111097\"> </a></td><td>Pituitary gland</td></tr><tr><td style=\"white-space:nowrap\">100000111098<a name=\"animal-tissue-type-100000111098\"> </a></td><td>Placenta</td></tr><tr><td style=\"white-space:nowrap\">100000111099<a name=\"animal-tissue-type-100000111099\"> </a></td><td>Prostate</td></tr><tr><td style=\"white-space:nowrap\">100000111100<a name=\"animal-tissue-type-100000111100\"> </a></td><td>Epididymis</td></tr><tr><td style=\"white-space:nowrap\">100000111101<a name=\"animal-tissue-type-100000111101\"> </a></td><td>Seminal vesicle</td></tr><tr><td style=\"white-space:nowrap\">100000111102<a name=\"animal-tissue-type-100000111102\"> </a></td><td>Rennet, calf</td></tr><tr><td style=\"white-space:nowrap\">100000111103<a name=\"animal-tissue-type-100000111103\"> </a></td><td>Retina</td></tr><tr><td style=\"white-space:nowrap\">100000111104<a name=\"animal-tissue-type-100000111104\"> </a></td><td>Optic nerve</td></tr><tr><td style=\"white-space:nowrap\">100000111105<a name=\"animal-tissue-type-100000111105\"> </a></td><td>Salivary gland</td></tr><tr><td style=\"white-space:nowrap\">100000111106<a name=\"animal-tissue-type-100000111106\"> </a></td><td>Shank</td></tr><tr><td style=\"white-space:nowrap\">100000111107<a name=\"animal-tissue-type-100000111107\"> </a></td><td>Skeletal muscle</td></tr><tr><td style=\"white-space:nowrap\">100000111108<a name=\"animal-tissue-type-100000111108\"> </a></td><td>Skin</td></tr><tr><td style=\"white-space:nowrap\">100000111109<a name=\"animal-tissue-type-100000111109\"> </a></td><td>Spinal ganglia</td></tr><tr><td style=\"white-space:nowrap\">100000111110<a name=\"animal-tissue-type-100000111110\"> </a></td><td>Spinal cord</td></tr><tr><td style=\"white-space:nowrap\">100000111111<a name=\"animal-tissue-type-100000111111\"> </a></td><td>Spleen</td></tr><tr><td style=\"white-space:nowrap\">100000111112<a name=\"animal-tissue-type-100000111112\"> </a></td><td>Stomach</td></tr><tr><td style=\"white-space:nowrap\">100000111113<a name=\"animal-tissue-type-100000111113\"> </a></td><td>Abomasum</td></tr><tr><td style=\"white-space:nowrap\">100000111114<a name=\"animal-tissue-type-100000111114\"> </a></td><td>Submaxillary glands</td></tr><tr><td style=\"white-space:nowrap\">100000111115<a name=\"animal-tissue-type-100000111115\"> </a></td><td>Tallow</td></tr><tr><td style=\"white-space:nowrap\">100000111116<a name=\"animal-tissue-type-100000111116\"> </a></td><td>Tendon</td></tr><tr><td style=\"white-space:nowrap\">100000111117<a name=\"animal-tissue-type-100000111117\"> </a></td><td>Testis</td></tr><tr><td style=\"white-space:nowrap\">100000111118<a name=\"animal-tissue-type-100000111118\"> </a></td><td>Thymus</td></tr><tr><td style=\"white-space:nowrap\">100000111119<a name=\"animal-tissue-type-100000111119\"> </a></td><td>Thyroid gland</td></tr><tr><td style=\"white-space:nowrap\">100000111120<a name=\"animal-tissue-type-100000111120\"> </a></td><td>Tongue</td></tr><tr><td style=\"white-space:nowrap\">100000111121<a name=\"animal-tissue-type-100000111121\"> </a></td><td>Tonsil</td></tr><tr><td style=\"white-space:nowrap\">100000111122<a name=\"animal-tissue-type-100000111122\"> </a></td><td>Trachea</td></tr><tr><td style=\"white-space:nowrap\">100000111123<a name=\"animal-tissue-type-100000111123\"> </a></td><td>Trigeminal ganglia</td></tr><tr><td style=\"white-space:nowrap\">100000111124<a name=\"animal-tissue-type-100000111124\"> </a></td><td>Tripe</td></tr><tr><td style=\"white-space:nowrap\">100000111125<a name=\"animal-tissue-type-100000111125\"> </a></td><td>Uterus (Non-gravid)</td></tr><tr><td style=\"white-space:nowrap\">100000111126<a name=\"animal-tissue-type-100000111126\"> </a></td><td>Wool</td></tr><tr><td style=\"white-space:nowrap\">100000111127<a name=\"animal-tissue-type-100000111127\"> </a></td><td>Ascites fluid</td></tr><tr><td style=\"white-space:nowrap\">100000111128<a name=\"animal-tissue-type-100000111128\"> </a></td><td>Bile</td></tr><tr><td style=\"white-space:nowrap\">100000111129<a name=\"animal-tissue-type-100000111129\"> </a></td><td>Blood1</td></tr><tr><td style=\"white-space:nowrap\">100000111130<a name=\"animal-tissue-type-100000111130\"> </a></td><td>Blood, foetal</td></tr><tr><td style=\"white-space:nowrap\">100000111131<a name=\"animal-tissue-type-100000111131\"> </a></td><td>Colostrum</td></tr><tr><td style=\"white-space:nowrap\">100000111132<a name=\"animal-tissue-type-100000111132\"> </a></td><td>Cord blood</td></tr><tr><td style=\"white-space:nowrap\">100000111133<a name=\"animal-tissue-type-100000111133\"> </a></td><td>CSF</td></tr><tr><td style=\"white-space:nowrap\">100000111134<a name=\"animal-tissue-type-100000111134\"> </a></td><td>Faeces</td></tr><tr><td style=\"white-space:nowrap\">100000111135<a name=\"animal-tissue-type-100000111135\"> </a></td><td>Milk</td></tr><tr><td style=\"white-space:nowrap\">100000111136<a name=\"animal-tissue-type-100000111136\"> </a></td><td>Nasal mucus</td></tr><tr><td style=\"white-space:nowrap\">100000111137<a name=\"animal-tissue-type-100000111137\"> </a></td><td>Placenta fluids</td></tr><tr><td style=\"white-space:nowrap\">100000111138<a name=\"animal-tissue-type-100000111138\"> </a></td><td>Plasma</td></tr><tr><td style=\"white-space:nowrap\">100000111139<a name=\"animal-tissue-type-100000111139\"> </a></td><td>Saliva</td></tr><tr><td style=\"white-space:nowrap\">100000111140<a name=\"animal-tissue-type-100000111140\"> </a></td><td>Secretion from bees</td></tr><tr><td style=\"white-space:nowrap\">100000111141<a name=\"animal-tissue-type-100000111141\"> </a></td><td>Semen</td></tr><tr><td style=\"white-space:nowrap\">100000111142<a name=\"animal-tissue-type-100000111142\"> </a></td><td>Serum, calf</td></tr><tr><td style=\"white-space:nowrap\">100000111143<a name=\"animal-tissue-type-100000111143\"> </a></td><td>Serum, donor adult bovine</td></tr><tr><td style=\"white-space:nowrap\">100000111144<a name=\"animal-tissue-type-100000111144\"> </a></td><td>Serum, donor calf</td></tr><tr><td style=\"white-space:nowrap\">100000111145<a name=\"animal-tissue-type-100000111145\"> </a></td><td>Serum, foetal bovine</td></tr><tr><td style=\"white-space:nowrap\">100000111146<a name=\"animal-tissue-type-100000111146\"> </a></td><td>Serum, newborn calf</td></tr><tr><td style=\"white-space:nowrap\">100000111147<a name=\"animal-tissue-type-100000111147\"> </a></td><td>Serum/plasma derivate, adult bovine</td></tr><tr><td style=\"white-space:nowrap\">100000111148<a name=\"animal-tissue-type-100000111148\"> </a></td><td>Serum/plasma, adult bovine</td></tr><tr><td style=\"white-space:nowrap\">100000111149<a name=\"animal-tissue-type-100000111149\"> </a></td><td>Sweat</td></tr><tr><td style=\"white-space:nowrap\">100000111150<a name=\"animal-tissue-type-100000111150\"> </a></td><td>Tears</td></tr><tr><td style=\"white-space:nowrap\">100000111151<a name=\"animal-tissue-type-100000111151\"> </a></td><td>Urine</td></tr><tr><td style=\"white-space:nowrap\">100000111152<a name=\"animal-tissue-type-100000111152\"> </a></td><td>Venom</td></tr><tr><td style=\"white-space:nowrap\">100000111153<a name=\"animal-tissue-type-100000111153\"> </a></td><td>Whey</td></tr><tr><td style=\"white-space:nowrap\">100000111154<a name=\"animal-tissue-type-100000111154\"> </a></td><td>Casein</td></tr><tr><td style=\"white-space:nowrap\">100000111155<a name=\"animal-tissue-type-100000111155\"> </a></td><td>Fermentation products</td></tr><tr><td style=\"white-space:nowrap\">100000111156<a name=\"animal-tissue-type-100000111156\"> </a></td><td>Gelatin</td></tr><tr><td style=\"white-space:nowrap\">100000111157<a name=\"animal-tissue-type-100000111157\"> </a></td><td>Lactose</td></tr><tr><td style=\"white-space:nowrap\">100000111158<a name=\"animal-tissue-type-100000111158\"> </a></td><td>Protein</td></tr><tr><td style=\"white-space:nowrap\">100000111159<a name=\"animal-tissue-type-100000111159\"> </a></td><td>Insulin</td></tr><tr><td style=\"white-space:nowrap\">100000111160<a name=\"animal-tissue-type-100000111160\"> </a></td><td>Collagen</td></tr><tr><td style=\"white-space:nowrap\">100000111161<a name=\"animal-tissue-type-100000111161\"> </a></td><td>Animal Charcoal</td></tr><tr><td style=\"white-space:nowrap\">100000111162<a name=\"animal-tissue-type-100000111162\"> </a></td><td>Peptones</td></tr><tr><td style=\"white-space:nowrap\">100000111163<a name=\"animal-tissue-type-100000111163\"> </a></td><td>Fatty acids</td></tr><tr><td style=\"white-space:nowrap\">100000111164<a name=\"animal-tissue-type-100000111164\"> </a></td><td>Glycerol</td></tr><tr><td style=\"white-space:nowrap\">100000125717<a name=\"animal-tissue-type-100000125717\"> </a></td><td>Not applicable</td></tr><tr><td style=\"white-space:nowrap\">100000136180<a name=\"animal-tissue-type-100000136180\"> </a></td><td>Meat and offal, milk</td></tr><tr><td style=\"white-space:nowrap\">100000136181<a name=\"animal-tissue-type-100000136181\"> </a></td><td>Agar blood</td></tr><tr><td style=\"white-space:nowrap\">100000136182<a name=\"animal-tissue-type-100000136182\"> </a></td><td>Casamino acid</td></tr><tr><td style=\"white-space:nowrap\">100000136183<a name=\"animal-tissue-type-100000136183\"> </a></td><td>Casein, hydrolysate</td></tr><tr><td style=\"white-space:nowrap\">100000136184<a name=\"animal-tissue-type-100000136184\"> </a></td><td>Casein, pancreatic digest</td></tr><tr><td style=\"white-space:nowrap\">100000136185<a name=\"animal-tissue-type-100000136185\"> </a></td><td>Casein, peptides N3</td></tr><tr><td style=\"white-space:nowrap\">100000136186<a name=\"animal-tissue-type-100000136186\"> </a></td><td>Cells</td></tr><tr><td style=\"white-space:nowrap\">100000136187<a name=\"animal-tissue-type-100000136187\"> </a></td><td>Cells, BHK21</td></tr><tr><td style=\"white-space:nowrap\">100000136188<a name=\"animal-tissue-type-100000136188\"> </a></td><td>Cells, CHO</td></tr><tr><td style=\"white-space:nowrap\">100000136189<a name=\"animal-tissue-type-100000136189\"> </a></td><td>Cells, CRFK</td></tr><tr><td style=\"white-space:nowrap\">100000136190<a name=\"animal-tissue-type-100000136190\"> </a></td><td>Cells, embryo SPF</td></tr><tr><td style=\"white-space:nowrap\">100000136191<a name=\"animal-tissue-type-100000136191\"> </a></td><td>Cells, IRC5</td></tr><tr><td style=\"white-space:nowrap\">100000136192<a name=\"animal-tissue-type-100000136192\"> </a></td><td>Cells, kidney</td></tr><tr><td style=\"white-space:nowrap\">100000136193<a name=\"animal-tissue-type-100000136193\"> </a></td><td>Cells, MDCK</td></tr><tr><td style=\"white-space:nowrap\">100000136194<a name=\"animal-tissue-type-100000136194\"> </a></td><td>Cells, red blood</td></tr><tr><td style=\"white-space:nowrap\">100000136195<a name=\"animal-tissue-type-100000136195\"> </a></td><td>Collagen, hydrolysate</td></tr><tr><td style=\"white-space:nowrap\">100000136196<a name=\"animal-tissue-type-100000136196\"> </a></td><td>Cholesterol</td></tr><tr><td style=\"white-space:nowrap\">100000136197<a name=\"animal-tissue-type-100000136197\"> </a></td><td>Egg, SPF embryonated</td></tr><tr><td style=\"white-space:nowrap\">100000136198<a name=\"animal-tissue-type-100000136198\"> </a></td><td>Enzyme</td></tr><tr><td style=\"white-space:nowrap\">100000136199<a name=\"animal-tissue-type-100000136199\"> </a></td><td>Enzyme, pancreatic enzymes</td></tr><tr><td style=\"white-space:nowrap\">100000136200<a name=\"animal-tissue-type-100000136200\"> </a></td><td>Enzyme, pancreatin 6NF</td></tr><tr><td style=\"white-space:nowrap\">100000136201<a name=\"animal-tissue-type-100000136201\"> </a></td><td>Enzyme, pepsin</td></tr><tr><td style=\"white-space:nowrap\">100000136202<a name=\"animal-tissue-type-100000136202\"> </a></td><td>Enzyme, pronase</td></tr><tr><td style=\"white-space:nowrap\">100000136203<a name=\"animal-tissue-type-100000136203\"> </a></td><td>Enzyme, trypsin</td></tr><tr><td style=\"white-space:nowrap\">100000136204<a name=\"animal-tissue-type-100000136204\"> </a></td><td>Heart, digest</td></tr><tr><td style=\"white-space:nowrap\">100000136205<a name=\"animal-tissue-type-100000136205\"> </a></td><td>Heart, extract</td></tr><tr><td style=\"white-space:nowrap\">100000136206<a name=\"animal-tissue-type-100000136206\"> </a></td><td>Intestinal mucosae</td></tr><tr><td style=\"white-space:nowrap\">100000136207<a name=\"animal-tissue-type-100000136207\"> </a></td><td>Lactalbumin hydrolysate</td></tr><tr><td style=\"white-space:nowrap\">100000136208<a name=\"animal-tissue-type-100000136208\"> </a></td><td>Liver, digest</td></tr><tr><td style=\"white-space:nowrap\">100000136209<a name=\"animal-tissue-type-100000136209\"> </a></td><td>Lymphocytes</td></tr><tr><td style=\"white-space:nowrap\">100000136210<a name=\"animal-tissue-type-100000136210\"> </a></td><td>Meat</td></tr><tr><td style=\"white-space:nowrap\">100000136211<a name=\"animal-tissue-type-100000136211\"> </a></td><td>Meat, enzymic hydrolysate</td></tr><tr><td style=\"white-space:nowrap\">100000136212<a name=\"animal-tissue-type-100000136212\"> </a></td><td>Medium, cooked meat</td></tr><tr><td style=\"white-space:nowrap\">100000136213<a name=\"animal-tissue-type-100000136213\"> </a></td><td>Medium, F10-199 medium</td></tr><tr><td style=\"white-space:nowrap\">100000136214<a name=\"animal-tissue-type-100000136214\"> </a></td><td>Medium, FMD culture medium</td></tr><tr><td style=\"white-space:nowrap\">100000136215<a name=\"animal-tissue-type-100000136215\"> </a></td><td>Medium, Glasgow MEM culture</td></tr><tr><td style=\"white-space:nowrap\">100000136216<a name=\"animal-tissue-type-100000136216\"> </a></td><td>Medium, LB Agar Lennox</td></tr><tr><td style=\"white-space:nowrap\">100000136217<a name=\"animal-tissue-type-100000136217\"> </a></td><td>Medium, LB Broth Lennox</td></tr><tr><td style=\"white-space:nowrap\">100000136218<a name=\"animal-tissue-type-100000136218\"> </a></td><td>Medium, modified thioglycolate medium</td></tr><tr><td style=\"white-space:nowrap\">100000136219<a name=\"animal-tissue-type-100000136219\"> </a></td><td>Medium, trypticase soy broth</td></tr><tr><td style=\"white-space:nowrap\">100000136220<a name=\"animal-tissue-type-100000136220\"> </a></td><td>Medium, tryptose phosphate broth</td></tr><tr><td style=\"white-space:nowrap\">100000136221<a name=\"animal-tissue-type-100000136221\"> </a></td><td>Milk, skimmed</td></tr><tr><td style=\"white-space:nowrap\">100000136222<a name=\"animal-tissue-type-100000136222\"> </a></td><td>Pancreas, extract</td></tr><tr><td style=\"white-space:nowrap\">100000136223<a name=\"animal-tissue-type-100000136223\"> </a></td><td>Peptones, casein hydrochloric peptone</td></tr><tr><td style=\"white-space:nowrap\">100000136224<a name=\"animal-tissue-type-100000136224\"> </a></td><td>Peptones, casein tryptic peptone</td></tr><tr><td style=\"white-space:nowrap\">100000136225<a name=\"animal-tissue-type-100000136225\"> </a></td><td>Pituitary extract</td></tr><tr><td style=\"white-space:nowrap\">100000136226<a name=\"animal-tissue-type-100000136226\"> </a></td><td>Rennet</td></tr><tr><td style=\"white-space:nowrap\">100000136227<a name=\"animal-tissue-type-100000136227\"> </a></td><td>Medium, nutrient broth</td></tr><tr><td style=\"white-space:nowrap\">100000136228<a name=\"animal-tissue-type-100000136228\"> </a></td><td>Medium, NZ-Amine</td></tr><tr><td style=\"white-space:nowrap\">100000136229<a name=\"animal-tissue-type-100000136229\"> </a></td><td>Medium, thioglycolate medium</td></tr><tr><td style=\"white-space:nowrap\">100000136230<a name=\"animal-tissue-type-100000136230\"> </a></td><td>Peptones, proteose peptone</td></tr><tr><td style=\"white-space:nowrap\">100000136231<a name=\"animal-tissue-type-100000136231\"> </a></td><td>Serum</td></tr><tr><td style=\"white-space:nowrap\">100000136232<a name=\"animal-tissue-type-100000136232\"> </a></td><td>Serum, albumin</td></tr><tr><td style=\"white-space:nowrap\">100000136233<a name=\"animal-tissue-type-100000136233\"> </a></td><td>Serum, Iron fortified calf</td></tr><tr><td style=\"white-space:nowrap\">100000136234<a name=\"animal-tissue-type-100000136234\"> </a></td><td>Skin, connective tissue and bone</td></tr><tr><td style=\"white-space:nowrap\">100000136235<a name=\"animal-tissue-type-100000136235\"> </a></td><td>Sperm</td></tr><tr><td style=\"white-space:nowrap\">100000136236<a name=\"animal-tissue-type-100000136236\"> </a></td><td>Tryptone</td></tr><tr><td style=\"white-space:nowrap\">100000136237<a name=\"animal-tissue-type-100000136237\"> </a></td><td>Meat, extract desiccated</td></tr><tr><td style=\"white-space:nowrap\">100000136247<a name=\"animal-tissue-type-100000136247\"> </a></td><td>Stomach mucosa</td></tr><tr><td style=\"white-space:nowrap\">100000136248<a name=\"animal-tissue-type-100000136248\"> </a></td><td>Transferin</td></tr><tr><td style=\"white-space:nowrap\">100000136554<a name=\"animal-tissue-type-100000136554\"> </a></td><td>Non-neural</td></tr><tr><td style=\"white-space:nowrap\">100000136555<a name=\"animal-tissue-type-100000136555\"> </a></td><td>Not specified</td></tr><tr><td style=\"white-space:nowrap\">100000136556<a name=\"animal-tissue-type-100000136556\"> </a></td><td>Organ tissue</td></tr><tr><td style=\"white-space:nowrap\">100000142485<a name=\"animal-tissue-type-100000142485\"> </a></td><td>Skin and fat in natural proportions</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "brr"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/animal-tissue-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/animal-tissue-type>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.2033" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "AnimalTissueTypeExample"] ; # 
+  fhir:title [ fhir:v "Animal Tissue Type"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "A tissue type of an animal."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/animal-tissue-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/animal-tissue-type>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "100000072091" ] ;
+     fhir:display [ fhir:v "All relevant tissues" ]
+  ] [
+     fhir:code [ fhir:v "100000072092" ] ;
+     fhir:display [ fhir:v "Fat" ]
+  ] [
+     fhir:code [ fhir:v "100000072093" ] ;
+     fhir:display [ fhir:v "Honey" ]
+  ] [
+     fhir:code [ fhir:v "100000072094" ] ;
+     fhir:display [ fhir:v "Liver" ]
+  ] [
+     fhir:code [ fhir:v "100000072095" ] ;
+     fhir:display [ fhir:v "Fresh Milk" ]
+  ] [
+     fhir:code [ fhir:v "100000072096" ] ;
+     fhir:display [ fhir:v "Muscle and skin in natural proportions" ]
+  ] [
+     fhir:code [ fhir:v "100000072104" ] ;
+     fhir:display [ fhir:v "Eggs" ]
+  ] [
+     fhir:code [ fhir:v "100000072105" ] ;
+     fhir:display [ fhir:v "Skin and fat" ]
+  ] [
+     fhir:code [ fhir:v "100000072106" ] ;
+     fhir:display [ fhir:v "Kidney" ]
+  ] [
+     fhir:code [ fhir:v "100000072107" ] ;
+     fhir:display [ fhir:v "Meat and offal" ]
+  ] [
+     fhir:code [ fhir:v "100000072108" ] ;
+     fhir:display [ fhir:v "Muscle" ]
+  ] [
+     fhir:code [ fhir:v "100000072109" ] ;
+     fhir:display [ fhir:v "Unspecified" ]
+  ] [
+     fhir:code [ fhir:v "100000111053" ] ;
+     fhir:display [ fhir:v "Adipose tissue" ]
+  ] [
+     fhir:code [ fhir:v "100000111054" ] ;
+     fhir:display [ fhir:v "Adrenal" ]
+  ] [
+     fhir:code [ fhir:v "100000111055" ] ;
+     fhir:display [ fhir:v "Blood vessels" ]
+  ] [
+     fhir:code [ fhir:v "100000111056" ] ;
+     fhir:display [ fhir:v "Bone" ]
+  ] [
+     fhir:code [ fhir:v "100000111057" ] ;
+     fhir:display [ fhir:v "Bone marrow" ]
+  ] [
+     fhir:code [ fhir:v "100000111058" ] ;
+     fhir:display [ fhir:v "Brain" ]
+  ] [
+     fhir:code [ fhir:v "100000111059" ] ;
+     fhir:display [ fhir:v "Connective tissue" ]
+  ] [
+     fhir:code [ fhir:v "100000111060" ] ;
+     fhir:display [ fhir:v "Cornea" ]
+  ] [
+     fhir:code [ fhir:v "100000111061" ] ;
+     fhir:display [ fhir:v "Dental pulp" ]
+  ] [
+     fhir:code [ fhir:v "100000111062" ] ;
+     fhir:display [ fhir:v "Duodenum" ]
+  ] [
+     fhir:code [ fhir:v "100000111063" ] ;
+     fhir:display [ fhir:v "Dura mater" ]
+  ] [
+     fhir:code [ fhir:v "100000111064" ] ;
+     fhir:display [ fhir:v "Egg, embryonated" ]
+  ] [
+     fhir:code [ fhir:v "100000111065" ] ;
+     fhir:display [ fhir:v "Egg" ]
+  ] [
+     fhir:code [ fhir:v "100000111066" ] ;
+     fhir:display [ fhir:v "Egg white" ]
+  ] [
+     fhir:code [ fhir:v "100000111067" ] ;
+     fhir:display [ fhir:v "Egg yolk" ]
+  ] [
+     fhir:code [ fhir:v "100000111068" ] ;
+     fhir:display [ fhir:v "Embryos" ]
+  ] [
+     fhir:code [ fhir:v "100000111069" ] ;
+     fhir:display [ fhir:v "Enteric plexuses" ]
+  ] [
+     fhir:code [ fhir:v "100000111070" ] ;
+     fhir:display [ fhir:v "Esophagus" ]
+  ] [
+     fhir:code [ fhir:v "100000111071" ] ;
+     fhir:display [ fhir:v "Feathers" ]
+  ] [
+     fhir:code [ fhir:v "100000111072" ] ;
+     fhir:display [ fhir:v "Foetus" ]
+  ] [
+     fhir:code [ fhir:v "100000111073" ] ;
+     fhir:display [ fhir:v "Fore-stomach (ruminants only)" ]
+  ] [
+     fhir:code [ fhir:v "100000111074" ] ;
+     fhir:display [ fhir:v "Gingival tissue" ]
+  ] [
+     fhir:code [ fhir:v "100000111075" ] ;
+     fhir:display [ fhir:v "Hair" ]
+  ] [
+     fhir:code [ fhir:v "100000111076" ] ;
+     fhir:display [ fhir:v "Heart/pericardium" ]
+  ] [
+     fhir:code [ fhir:v "100000111077" ] ;
+     fhir:display [ fhir:v "Hide" ]
+  ] [
+     fhir:code [ fhir:v "100000111078" ] ;
+     fhir:display [ fhir:v "Hooves" ]
+  ] [
+     fhir:code [ fhir:v "100000111079" ] ;
+     fhir:display [ fhir:v "Ileum" ]
+  ] [
+     fhir:code [ fhir:v "100000111080" ] ;
+     fhir:display [ fhir:v "Jejunum" ]
+  ] [
+     fhir:code [ fhir:v "100000111081" ] ;
+     fhir:display [ fhir:v "Kidney" ]
+  ] [
+     fhir:code [ fhir:v "100000111082" ] ;
+     fhir:display [ fhir:v "Lard/lard oil" ]
+  ] [
+     fhir:code [ fhir:v "100000111083" ] ;
+     fhir:display [ fhir:v "Large intestine" ]
+  ] [
+     fhir:code [ fhir:v "100000111084" ] ;
+     fhir:display [ fhir:v "Liver" ]
+  ] [
+     fhir:code [ fhir:v "100000111085" ] ;
+     fhir:display [ fhir:v "Lung" ]
+  ] [
+     fhir:code [ fhir:v "100000111086" ] ;
+     fhir:display [ fhir:v "Lymph nodes" ]
+  ] [
+     fhir:code [ fhir:v "100000111087" ] ;
+     fhir:display [ fhir:v "Mammary gland" ]
+  ] [
+     fhir:code [ fhir:v "100000111088" ] ;
+     fhir:display [ fhir:v "Udder" ]
+  ] [
+     fhir:code [ fhir:v "100000111089" ] ;
+     fhir:display [ fhir:v "Mammary tumour" ]
+  ] [
+     fhir:code [ fhir:v "100000111090" ] ;
+     fhir:display [ fhir:v "Meat extract" ]
+  ] [
+     fhir:code [ fhir:v "100000111091" ] ;
+     fhir:display [ fhir:v "Nasopharyngeal" ]
+  ] [
+     fhir:code [ fhir:v "100000111092" ] ;
+     fhir:display [ fhir:v "Nictitating membrane" ]
+  ] [
+     fhir:code [ fhir:v "100000111093" ] ;
+     fhir:display [ fhir:v "Nasal mucosa" ]
+  ] [
+     fhir:code [ fhir:v "100000111094" ] ;
+     fhir:display [ fhir:v "Ovary" ]
+  ] [
+     fhir:code [ fhir:v "100000111095" ] ;
+     fhir:display [ fhir:v "Pancreas" ]
+  ] [
+     fhir:code [ fhir:v "100000111096" ] ;
+     fhir:display [ fhir:v "Peripheral nerves" ]
+  ] [
+     fhir:code [ fhir:v "100000111097" ] ;
+     fhir:display [ fhir:v "Pituitary gland" ]
+  ] [
+     fhir:code [ fhir:v "100000111098" ] ;
+     fhir:display [ fhir:v "Placenta" ]
+  ] [
+     fhir:code [ fhir:v "100000111099" ] ;
+     fhir:display [ fhir:v "Prostate" ]
+  ] [
+     fhir:code [ fhir:v "100000111100" ] ;
+     fhir:display [ fhir:v "Epididymis" ]
+  ] [
+     fhir:code [ fhir:v "100000111101" ] ;
+     fhir:display [ fhir:v "Seminal vesicle" ]
+  ] [
+     fhir:code [ fhir:v "100000111102" ] ;
+     fhir:display [ fhir:v "Rennet, calf" ]
+  ] [
+     fhir:code [ fhir:v "100000111103" ] ;
+     fhir:display [ fhir:v "Retina" ]
+  ] [
+     fhir:code [ fhir:v "100000111104" ] ;
+     fhir:display [ fhir:v "Optic nerve" ]
+  ] [
+     fhir:code [ fhir:v "100000111105" ] ;
+     fhir:display [ fhir:v "Salivary gland" ]
+  ] [
+     fhir:code [ fhir:v "100000111106" ] ;
+     fhir:display [ fhir:v "Shank" ]
+  ] [
+     fhir:code [ fhir:v "100000111107" ] ;
+     fhir:display [ fhir:v "Skeletal muscle" ]
+  ] [
+     fhir:code [ fhir:v "100000111108" ] ;
+     fhir:display [ fhir:v "Skin" ]
+  ] [
+     fhir:code [ fhir:v "100000111109" ] ;
+     fhir:display [ fhir:v "Spinal ganglia" ]
+  ] [
+     fhir:code [ fhir:v "100000111110" ] ;
+     fhir:display [ fhir:v "Spinal cord" ]
+  ] [
+     fhir:code [ fhir:v "100000111111" ] ;
+     fhir:display [ fhir:v "Spleen" ]
+  ] [
+     fhir:code [ fhir:v "100000111112" ] ;
+     fhir:display [ fhir:v "Stomach" ]
+  ] [
+     fhir:code [ fhir:v "100000111113" ] ;
+     fhir:display [ fhir:v "Abomasum" ]
+  ] [
+     fhir:code [ fhir:v "100000111114" ] ;
+     fhir:display [ fhir:v "Submaxillary glands" ]
+  ] [
+     fhir:code [ fhir:v "100000111115" ] ;
+     fhir:display [ fhir:v "Tallow" ]
+  ] [
+     fhir:code [ fhir:v "100000111116" ] ;
+     fhir:display [ fhir:v "Tendon" ]
+  ] [
+     fhir:code [ fhir:v "100000111117" ] ;
+     fhir:display [ fhir:v "Testis" ]
+  ] [
+     fhir:code [ fhir:v "100000111118" ] ;
+     fhir:display [ fhir:v "Thymus" ]
+  ] [
+     fhir:code [ fhir:v "100000111119" ] ;
+     fhir:display [ fhir:v "Thyroid gland" ]
+  ] [
+     fhir:code [ fhir:v "100000111120" ] ;
+     fhir:display [ fhir:v "Tongue" ]
+  ] [
+     fhir:code [ fhir:v "100000111121" ] ;
+     fhir:display [ fhir:v "Tonsil" ]
+  ] [
+     fhir:code [ fhir:v "100000111122" ] ;
+     fhir:display [ fhir:v "Trachea" ]
+  ] [
+     fhir:code [ fhir:v "100000111123" ] ;
+     fhir:display [ fhir:v "Trigeminal ganglia" ]
+  ] [
+     fhir:code [ fhir:v "100000111124" ] ;
+     fhir:display [ fhir:v "Tripe" ]
+  ] [
+     fhir:code [ fhir:v "100000111125" ] ;
+     fhir:display [ fhir:v "Uterus (Non-gravid)" ]
+  ] [
+     fhir:code [ fhir:v "100000111126" ] ;
+     fhir:display [ fhir:v "Wool" ]
+  ] [
+     fhir:code [ fhir:v "100000111127" ] ;
+     fhir:display [ fhir:v "Ascites fluid" ]
+  ] [
+     fhir:code [ fhir:v "100000111128" ] ;
+     fhir:display [ fhir:v "Bile" ]
+  ] [
+     fhir:code [ fhir:v "100000111129" ] ;
+     fhir:display [ fhir:v "Blood1" ]
+  ] [
+     fhir:code [ fhir:v "100000111130" ] ;
+     fhir:display [ fhir:v "Blood, foetal" ]
+  ] [
+     fhir:code [ fhir:v "100000111131" ] ;
+     fhir:display [ fhir:v "Colostrum" ]
+  ] [
+     fhir:code [ fhir:v "100000111132" ] ;
+     fhir:display [ fhir:v "Cord blood" ]
+  ] [
+     fhir:code [ fhir:v "100000111133" ] ;
+     fhir:display [ fhir:v "CSF" ]
+  ] [
+     fhir:code [ fhir:v "100000111134" ] ;
+     fhir:display [ fhir:v "Faeces" ]
+  ] [
+     fhir:code [ fhir:v "100000111135" ] ;
+     fhir:display [ fhir:v "Milk" ]
+  ] [
+     fhir:code [ fhir:v "100000111136" ] ;
+     fhir:display [ fhir:v "Nasal mucus" ]
+  ] [
+     fhir:code [ fhir:v "100000111137" ] ;
+     fhir:display [ fhir:v "Placenta fluids" ]
+  ] [
+     fhir:code [ fhir:v "100000111138" ] ;
+     fhir:display [ fhir:v "Plasma" ]
+  ] [
+     fhir:code [ fhir:v "100000111139" ] ;
+     fhir:display [ fhir:v "Saliva" ]
+  ] [
+     fhir:code [ fhir:v "100000111140" ] ;
+     fhir:display [ fhir:v "Secretion from bees" ]
+  ] [
+     fhir:code [ fhir:v "100000111141" ] ;
+     fhir:display [ fhir:v "Semen" ]
+  ] [
+     fhir:code [ fhir:v "100000111142" ] ;
+     fhir:display [ fhir:v "Serum, calf" ]
+  ] [
+     fhir:code [ fhir:v "100000111143" ] ;
+     fhir:display [ fhir:v "Serum, donor adult bovine" ]
+  ] [
+     fhir:code [ fhir:v "100000111144" ] ;
+     fhir:display [ fhir:v "Serum, donor calf" ]
+  ] [
+     fhir:code [ fhir:v "100000111145" ] ;
+     fhir:display [ fhir:v "Serum, foetal bovine" ]
+  ] [
+     fhir:code [ fhir:v "100000111146" ] ;
+     fhir:display [ fhir:v "Serum, newborn calf" ]
+  ] [
+     fhir:code [ fhir:v "100000111147" ] ;
+     fhir:display [ fhir:v "Serum/plasma derivate, adult bovine" ]
+  ] [
+     fhir:code [ fhir:v "100000111148" ] ;
+     fhir:display [ fhir:v "Serum/plasma, adult bovine" ]
+  ] [
+     fhir:code [ fhir:v "100000111149" ] ;
+     fhir:display [ fhir:v "Sweat" ]
+  ] [
+     fhir:code [ fhir:v "100000111150" ] ;
+     fhir:display [ fhir:v "Tears" ]
+  ] [
+     fhir:code [ fhir:v "100000111151" ] ;
+     fhir:display [ fhir:v "Urine" ]
+  ] [
+     fhir:code [ fhir:v "100000111152" ] ;
+     fhir:display [ fhir:v "Venom" ]
+  ] [
+     fhir:code [ fhir:v "100000111153" ] ;
+     fhir:display [ fhir:v "Whey" ]
+  ] [
+     fhir:code [ fhir:v "100000111154" ] ;
+     fhir:display [ fhir:v "Casein" ]
+  ] [
+     fhir:code [ fhir:v "100000111155" ] ;
+     fhir:display [ fhir:v "Fermentation products" ]
+  ] [
+     fhir:code [ fhir:v "100000111156" ] ;
+     fhir:display [ fhir:v "Gelatin" ]
+  ] [
+     fhir:code [ fhir:v "100000111157" ] ;
+     fhir:display [ fhir:v "Lactose" ]
+  ] [
+     fhir:code [ fhir:v "100000111158" ] ;
+     fhir:display [ fhir:v "Protein" ]
+  ] [
+     fhir:code [ fhir:v "100000111159" ] ;
+     fhir:display [ fhir:v "Insulin" ]
+  ] [
+     fhir:code [ fhir:v "100000111160" ] ;
+     fhir:display [ fhir:v "Collagen" ]
+  ] [
+     fhir:code [ fhir:v "100000111161" ] ;
+     fhir:display [ fhir:v "Animal Charcoal" ]
+  ] [
+     fhir:code [ fhir:v "100000111162" ] ;
+     fhir:display [ fhir:v "Peptones" ]
+  ] [
+     fhir:code [ fhir:v "100000111163" ] ;
+     fhir:display [ fhir:v "Fatty acids" ]
+  ] [
+     fhir:code [ fhir:v "100000111164" ] ;
+     fhir:display [ fhir:v "Glycerol" ]
+  ] [
+     fhir:code [ fhir:v "100000125717" ] ;
+     fhir:display [ fhir:v "Not applicable" ]
+  ] [
+     fhir:code [ fhir:v "100000136180" ] ;
+     fhir:display [ fhir:v "Meat and offal, milk" ]
+  ] [
+     fhir:code [ fhir:v "100000136181" ] ;
+     fhir:display [ fhir:v "Agar blood" ]
+  ] [
+     fhir:code [ fhir:v "100000136182" ] ;
+     fhir:display [ fhir:v "Casamino acid" ]
+  ] [
+     fhir:code [ fhir:v "100000136183" ] ;
+     fhir:display [ fhir:v "Casein, hydrolysate" ]
+  ] [
+     fhir:code [ fhir:v "100000136184" ] ;
+     fhir:display [ fhir:v "Casein, pancreatic digest" ]
+  ] [
+     fhir:code [ fhir:v "100000136185" ] ;
+     fhir:display [ fhir:v "Casein, peptides N3" ]
+  ] [
+     fhir:code [ fhir:v "100000136186" ] ;
+     fhir:display [ fhir:v "Cells" ]
+  ] [
+     fhir:code [ fhir:v "100000136187" ] ;
+     fhir:display [ fhir:v "Cells, BHK21" ]
+  ] [
+     fhir:code [ fhir:v "100000136188" ] ;
+     fhir:display [ fhir:v "Cells, CHO" ]
+  ] [
+     fhir:code [ fhir:v "100000136189" ] ;
+     fhir:display [ fhir:v "Cells, CRFK" ]
+  ] [
+     fhir:code [ fhir:v "100000136190" ] ;
+     fhir:display [ fhir:v "Cells, embryo SPF" ]
+  ] [
+     fhir:code [ fhir:v "100000136191" ] ;
+     fhir:display [ fhir:v "Cells, IRC5" ]
+  ] [
+     fhir:code [ fhir:v "100000136192" ] ;
+     fhir:display [ fhir:v "Cells, kidney" ]
+  ] [
+     fhir:code [ fhir:v "100000136193" ] ;
+     fhir:display [ fhir:v "Cells, MDCK" ]
+  ] [
+     fhir:code [ fhir:v "100000136194" ] ;
+     fhir:display [ fhir:v "Cells, red blood" ]
+  ] [
+     fhir:code [ fhir:v "100000136195" ] ;
+     fhir:display [ fhir:v "Collagen, hydrolysate" ]
+  ] [
+     fhir:code [ fhir:v "100000136196" ] ;
+     fhir:display [ fhir:v "Cholesterol" ]
+  ] [
+     fhir:code [ fhir:v "100000136197" ] ;
+     fhir:display [ fhir:v "Egg, SPF embryonated" ]
+  ] [
+     fhir:code [ fhir:v "100000136198" ] ;
+     fhir:display [ fhir:v "Enzyme" ]
+  ] [
+     fhir:code [ fhir:v "100000136199" ] ;
+     fhir:display [ fhir:v "Enzyme, pancreatic enzymes" ]
+  ] [
+     fhir:code [ fhir:v "100000136200" ] ;
+     fhir:display [ fhir:v "Enzyme, pancreatin 6NF" ]
+  ] [
+     fhir:code [ fhir:v "100000136201" ] ;
+     fhir:display [ fhir:v "Enzyme, pepsin" ]
+  ] [
+     fhir:code [ fhir:v "100000136202" ] ;
+     fhir:display [ fhir:v "Enzyme, pronase" ]
+  ] [
+     fhir:code [ fhir:v "100000136203" ] ;
+     fhir:display [ fhir:v "Enzyme, trypsin" ]
+  ] [
+     fhir:code [ fhir:v "100000136204" ] ;
+     fhir:display [ fhir:v "Heart, digest" ]
+  ] [
+     fhir:code [ fhir:v "100000136205" ] ;
+     fhir:display [ fhir:v "Heart, extract" ]
+  ] [
+     fhir:code [ fhir:v "100000136206" ] ;
+     fhir:display [ fhir:v "Intestinal mucosae" ]
+  ] [
+     fhir:code [ fhir:v "100000136207" ] ;
+     fhir:display [ fhir:v "Lactalbumin hydrolysate" ]
+  ] [
+     fhir:code [ fhir:v "100000136208" ] ;
+     fhir:display [ fhir:v "Liver, digest" ]
+  ] [
+     fhir:code [ fhir:v "100000136209" ] ;
+     fhir:display [ fhir:v "Lymphocytes" ]
+  ] [
+     fhir:code [ fhir:v "100000136210" ] ;
+     fhir:display [ fhir:v "Meat" ]
+  ] [
+     fhir:code [ fhir:v "100000136211" ] ;
+     fhir:display [ fhir:v "Meat, enzymic hydrolysate" ]
+  ] [
+     fhir:code [ fhir:v "100000136212" ] ;
+     fhir:display [ fhir:v "Medium, cooked meat" ]
+  ] [
+     fhir:code [ fhir:v "100000136213" ] ;
+     fhir:display [ fhir:v "Medium, F10-199 medium" ]
+  ] [
+     fhir:code [ fhir:v "100000136214" ] ;
+     fhir:display [ fhir:v "Medium, FMD culture medium" ]
+  ] [
+     fhir:code [ fhir:v "100000136215" ] ;
+     fhir:display [ fhir:v "Medium, Glasgow MEM culture" ]
+  ] [
+     fhir:code [ fhir:v "100000136216" ] ;
+     fhir:display [ fhir:v "Medium, LB Agar Lennox" ]
+  ] [
+     fhir:code [ fhir:v "100000136217" ] ;
+     fhir:display [ fhir:v "Medium, LB Broth Lennox" ]
+  ] [
+     fhir:code [ fhir:v "100000136218" ] ;
+     fhir:display [ fhir:v "Medium, modified thioglycolate medium" ]
+  ] [
+     fhir:code [ fhir:v "100000136219" ] ;
+     fhir:display [ fhir:v "Medium, trypticase soy broth" ]
+  ] [
+     fhir:code [ fhir:v "100000136220" ] ;
+     fhir:display [ fhir:v "Medium, tryptose phosphate broth" ]
+  ] [
+     fhir:code [ fhir:v "100000136221" ] ;
+     fhir:display [ fhir:v "Milk, skimmed" ]
+  ] [
+     fhir:code [ fhir:v "100000136222" ] ;
+     fhir:display [ fhir:v "Pancreas, extract" ]
+  ] [
+     fhir:code [ fhir:v "100000136223" ] ;
+     fhir:display [ fhir:v "Peptones, casein hydrochloric peptone" ]
+  ] [
+     fhir:code [ fhir:v "100000136224" ] ;
+     fhir:display [ fhir:v "Peptones, casein tryptic peptone" ]
+  ] [
+     fhir:code [ fhir:v "100000136225" ] ;
+     fhir:display [ fhir:v "Pituitary extract" ]
+  ] [
+     fhir:code [ fhir:v "100000136226" ] ;
+     fhir:display [ fhir:v "Rennet" ]
+  ] [
+     fhir:code [ fhir:v "100000136227" ] ;
+     fhir:display [ fhir:v "Medium, nutrient broth" ]
+  ] [
+     fhir:code [ fhir:v "100000136228" ] ;
+     fhir:display [ fhir:v "Medium, NZ-Amine" ]
+  ] [
+     fhir:code [ fhir:v "100000136229" ] ;
+     fhir:display [ fhir:v "Medium, thioglycolate medium" ]
+  ] [
+     fhir:code [ fhir:v "100000136230" ] ;
+     fhir:display [ fhir:v "Peptones, proteose peptone" ]
+  ] [
+     fhir:code [ fhir:v "100000136231" ] ;
+     fhir:display [ fhir:v "Serum" ]
+  ] [
+     fhir:code [ fhir:v "100000136232" ] ;
+     fhir:display [ fhir:v "Serum, albumin" ]
+  ] [
+     fhir:code [ fhir:v "100000136233" ] ;
+     fhir:display [ fhir:v "Serum, Iron fortified calf" ]
+  ] [
+     fhir:code [ fhir:v "100000136234" ] ;
+     fhir:display [ fhir:v "Skin, connective tissue and bone" ]
+  ] [
+     fhir:code [ fhir:v "100000136235" ] ;
+     fhir:display [ fhir:v "Sperm" ]
+  ] [
+     fhir:code [ fhir:v "100000136236" ] ;
+     fhir:display [ fhir:v "Tryptone" ]
+  ] [
+     fhir:code [ fhir:v "100000136237" ] ;
+     fhir:display [ fhir:v "Meat, extract desiccated" ]
+  ] [
+     fhir:code [ fhir:v "100000136247" ] ;
+     fhir:display [ fhir:v "Stomach mucosa" ]
+  ] [
+     fhir:code [ fhir:v "100000136248" ] ;
+     fhir:display [ fhir:v "Transferin" ]
+  ] [
+     fhir:code [ fhir:v "100000136554" ] ;
+     fhir:display [ fhir:v "Non-neural" ]
+  ] [
+     fhir:code [ fhir:v "100000136555" ] ;
+     fhir:display [ fhir:v "Not specified" ]
+  ] [
+     fhir:code [ fhir:v "100000136556" ] ;
+     fhir:display [ fhir:v "Organ tissue" ]
+  ] [
+     fhir:code [ fhir:v "100000142485" ] ;
+     fhir:display [ fhir:v "Skin and fat in natural proportions" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

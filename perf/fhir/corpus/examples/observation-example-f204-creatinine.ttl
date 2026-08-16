@@ -1,0 +1,93 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Observation/f204> a fhir:Observation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f204"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "https://intranet.aumc.nl/labvalues"^^xsd:anyURI ;
+       fhir:l <https://intranet.aumc.nl/labvalues>
+     ] ;
+     fhir:value [ fhir:v "1304-03720-Creatinine" ] # Does not exist
+  ] ) ; # The observation is complete, No reliability concerns
+  fhir:status [ fhir:v "final"] ; # Creatinine was measured on April fourth
+  fhir:code [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "https://intranet.aumc.nl/labtestcodes"^^xsd:anyURI ;
+         fhir:l <https://intranet.aumc.nl/labtestcodes>
+       ] ;
+       fhir:code [ fhir:v "20005" ] ; # Does not exist
+       fhir:display [ fhir:v "Creatinine(Serum)" ]
+     ] ) # Kind of observation = Serum Creatinine, Using only a local code in this example
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/f201> ;
+     fhir:reference [ fhir:v "Patient/f201" ] ;
+     fhir:display [ fhir:v "Roel" ]
+  ] ; # 
+  fhir:issued [ fhir:v "2013-04-04T14:34:00+01:00"^^xsd:dateTime] ; # 
+  fhir:performer ( [
+     fhir:l <http://hl7.org/fhir/Practitioner/f202> ;
+     fhir:reference [ fhir:v "Practitioner/f202" ] ;
+     fhir:display [ fhir:v "Luigi Maas" ]
+  ] ) ; # 
+  fhir:value [
+     a fhir:Quantity ;
+     fhir:value [ fhir:v "122"^^xsd:decimal ] ; # Creatinine=122mmol\/L
+     fhir:unit [ fhir:v "umol/L" ] ;
+     fhir:system [
+       fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+       fhir:l <http://snomed.info/sct>
+     ] ;
+     fhir:code [ fhir:v "258814008" ]
+  ] ; # 
+  fhir:interpretation ( [
+     a sct:166717003 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "166717003" ] ;
+       fhir:display [ fhir:v "Serum creatinine raised" ]
+     ] [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation>
+       ] ;
+       fhir:code [ fhir:v "H" ]
+     ] )
+  ] ) ; # 
+  fhir:referenceRange ( [
+     fhir:low [
+       fhir:value [ fhir:v "64"^^xsd:decimal ]
+     ] ; # Healthy creatinine level ranges from 64umol\/L to 104umol\/L
+     fhir:high [
+       fhir:value [ fhir:v "104"^^xsd:decimal ]
+     ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/referencerange-meaning"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/referencerange-meaning>
+         ] ;
+         fhir:code [ fhir:v "normal" ] ;
+         fhir:display [ fhir:v "Normal Range" ]
+       ] )
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/f201> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/f202> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

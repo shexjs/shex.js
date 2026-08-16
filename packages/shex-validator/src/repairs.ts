@@ -73,8 +73,30 @@ const min = (expr: {min?: number}) => expr.min === undefined ? 1 : expr.min;
 const max = (expr: {max?: number}) =>
   expr.max === undefined ? 1 : expr.max === UNBOUNDED ? Infinity : expr.max;
 
-const key = (bag: TcCounts, order: TripleConstraint[]) =>
-  order.map(tc => bag.get(tc) || 0).join(",");
+/**
+ * A bag's identity, for the dedup in together() and better().
+ *
+ * Spelling it as one count per *known* constraint -- `order.map(tc =>
+ * bag.get(tc) || 0).join(",")` -- costs a walk over every constraint the
+ * expression reaches, plus an array and a string, for every combination
+ * considered.  The bags are sparse, so nearly all of that emitted zeroes:
+ * over shexTest this was the single hottest thing in the validator once
+ * repairs became the default, at 34% of one test file's whole run.
+ *
+ * Keying on the non-zero entries alone is the same identity -- a missing
+ * count and a zero count already meant the same thing -- and is
+ * proportional to what the bag actually holds.
+ */
+function key (bag: TcCounts, index: Map<TripleConstraint, number>): string {
+  const parts: number[] = [];
+  let unknown = 0;
+  bag.forEach((n, tc) => {
+    if (n === 0) return;
+    const at = index.get(tc);
+    parts.push((at === undefined ? -(++unknown) : at) * 1e6 + n);
+  });
+  return parts.sort((a, b) => a - b).join(",");
+}
 
 export class NearestAcceptedBag {
   /** every TripleConstraint the expression reaches, in the order it does */
@@ -83,12 +105,26 @@ export class NearestAcceptedBag {
   private memo = new Map<string, Priced>();
   private ids = new Map<tripleExpr, number>();
   private slots = new Map<tripleExpr, TripleConstraint[]>();
+  /** each constraint's position, so a bag can be keyed by what it holds */
+  private tcIndex = new Map<TripleConstraint, number>();
+  /**
+   * The answer for a bag this has already been asked about.
+   *
+   * The validator asks once per failing shape test, and a search that
+   * ultimately succeeds still fails plenty of branches on the way: over
+   * shexTest's parser round-trip -- where every test passes -- this was
+   * asked 5485 times about 40 distinct bags.  The question is a pure
+   * function of (expression, bag), and the expression is fixed per
+   * instance, so the bag is the whole key.
+   */
+  private answered = new Map<string, Repair[]>();
 
   constructor(
       private expr: tripleExprOrRef,
       private lookupInclusion: (label: string) => tripleExpr,
   ) {
     this.collect(this.resolve(expr, new Set()), new Set());
+    this.tripleConstraints.forEach((tc, i) => this.tcIndex.set(tc, i));
   }
 
   private resolve(expr: tripleExprOrRef, seen: Set<string>): tripleExpr {
@@ -149,6 +185,16 @@ export class NearestAcceptedBag {
    * one-`:mbox` spelling does.
    */
   repairs(observed: TcCounts): Repair[] {
+    const asked = key(observed, this.tcIndex);
+    const already = this.answered.get(asked);
+    if (already !== undefined)
+      return already;
+    const answer = this.computeRepairs(observed);
+    this.answered.set(asked, answer);
+    return answer;
+  }
+
+  private computeRepairs(observed: TcCounts): Repair[] {
     let best: Repair[] = [];
     let bestCost = Infinity;
     for (const dealt of this.deals(observed)) {
@@ -298,7 +344,7 @@ export class NearestAcceptedBag {
       for (const other of b.bags) {
         const merged = new Map(one);
         other.forEach((n, tc) => merged.set(tc, n));
-        const k = key(merged, this.tripleConstraints);
+        const k = key(merged, this.tcIndex);
         if (!seen.has(k)) {
           seen.add(k);
           if (bags.length < KEEP)
@@ -315,9 +361,9 @@ export class NearestAcceptedBag {
     if (b.cost < a.cost)
       return b;
     const bags = a.bags.slice();
-    const seen = new Set(bags.map(bag => key(bag, this.tripleConstraints)));
+    const seen = new Set(bags.map(bag => key(bag, this.tcIndex)));
     for (const bag of b.bags) {
-      const k = key(bag, this.tripleConstraints);
+      const k = key(bag, this.tcIndex);
       if (!seen.has(k)) {
         seen.add(k);
         if (bags.length < KEEP)

@@ -1,0 +1,244 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CarePlan/gpvisit> a fhir:CarePlan ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "gpvisit"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "additional" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p>  Represents the flow of a patient within a practice. The plan is created when\n        they arrive and represents the 'care' of the patient over the course of that encounter.\n        They first see the nurse for basic observations (BP, pulse, temp) then the doctor for\n        the consultation and finally the nurse again for a tetanus immunization. As the plan is\n        updated (e.g. a new activity added), different versions of the plan exist, and workflow timings\n        for reporting can be gained by examining the plan history. This example is the version after\n        seeing the doctor, and waiting for the nurse.The plan can either be created 'ad hoc' and modified as\n        the parient progresses, or start with a standard template (which can, of course, be altered to suit the patient.</p>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:contained ( [
+     a fhir:Condition ;
+     fhir:id [ fhir:v "p1" ] ;
+     fhir:clinicalStatus [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/condition-clinical"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/condition-clinical>
+         ] ;
+         fhir:code [ fhir:v "active" ]
+       ] )
+     ] ;
+     fhir:verificationStatus [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/condition-ver-status"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/condition-ver-status>
+         ] ;
+         fhir:code [ fhir:v "confirmed" ]
+       ] )
+     ] ;
+     fhir:code [
+       fhir:text [ fhir:v "Overseas encounter" ] # Could coded if we wanted to...
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/100> ;
+       fhir:reference [ fhir:v "Patient/100" ] ;
+       fhir:display [ fhir:v "Peter James Chalmers" ]
+     ]
+  ] [
+     a fhir:CareTeam ;
+     fhir:id [ fhir:v "careteam" ] ;
+     fhir:participant ( [
+       fhir:id [ fhir:v "part1" ] ;
+       fhir:role [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://example.org/local"^^xsd:anyURI ;
+             fhir:l <http://example.org/local>
+           ] ;
+           fhir:code [ fhir:v "nur" ]
+         ] ) ;
+         fhir:text [ fhir:v "nurse" ]
+       ] ;
+       fhir:member [
+         fhir:l <http://hl7.org/fhir/Practitioner/13> ;
+         fhir:reference [ fhir:v "Practitioner/13" ] ;
+         fhir:display [ fhir:v "Nurse Nancy" ]
+       ]
+     ] [
+       fhir:id [ fhir:v "part2" ] ;
+       fhir:role [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://example.org/local"^^xsd:anyURI ;
+             fhir:l <http://example.org/local>
+           ] ;
+           fhir:code [ fhir:v "doc" ]
+         ] ) ;
+         fhir:text [ fhir:v "doctor" ]
+       ] ;
+       fhir:member [
+         fhir:l <http://hl7.org/fhir/Practitioner/14> ;
+         fhir:reference [ fhir:v "Practitioner/14" ] ;
+         fhir:display [ fhir:v "Doctor Dave" ]
+       ]
+     ] )
+  ] [
+     a fhir:Goal ;
+     fhir:id [ fhir:v "goal" ] ;
+     fhir:lifecycleStatus [ fhir:v "planned" ] ;
+     fhir:description [
+       fhir:text [ fhir:v "Complete consultation" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/100> ;
+       fhir:reference [ fhir:v "Patient/100" ] ;
+       fhir:display [ fhir:v "Peter James Chalmers" ]
+     ]
+  ] [
+     a fhir:Appointment ;
+     fhir:id [ fhir:v "activity-1" ] ;
+     fhir:status [ fhir:v "fulfilled" ] ;
+     fhir:description [ fhir:v "Nurse consultation" ] ;
+     fhir:start [ fhir:v "2013-01-01T10:38:00+00:00"^^xsd:dateTime ] ;
+     fhir:end [ fhir:v "2013-01-01T10:50:00+00:00"^^xsd:dateTime ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/100> ;
+       fhir:reference [ fhir:v "Patient/100" ] ;
+       fhir:display [ fhir:v "Peter James Chalmers" ]
+     ] ;
+     fhir:participant ( [
+       fhir:actor [
+         fhir:l <http://hl7.org/fhir/Patient/100> ;
+         fhir:reference [ fhir:v "Patient/100" ] ;
+         fhir:display [ fhir:v "Peter James Chalmers" ]
+       ] ;
+       fhir:required [ fhir:v true ] ;
+       fhir:status [ fhir:v "accepted" ]
+     ] [
+       fhir:type ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationType"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationType>
+           ] ;
+           fhir:code [ fhir:v "ATND" ]
+         ] )
+       ] ) ;
+       fhir:actor [
+         fhir:l <http://hl7.org/fhir/Practitioner/13> ;
+         fhir:reference [ fhir:v "Practitioner/13" ] ;
+         fhir:display [ fhir:v "Nurse Nancy" ]
+       ] ;
+       fhir:required [ fhir:v true ] ;
+       fhir:status [ fhir:v "accepted" ]
+     ] )
+  ] [
+     a fhir:Appointment ;
+     fhir:id [ fhir:v "activity-2" ] ;
+     fhir:status [ fhir:v "proposed" ] ;
+     fhir:description [ fhir:v "Doctor Consultation" ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/100> ;
+       fhir:reference [ fhir:v "Patient/100" ] ;
+       fhir:display [ fhir:v "Peter James Chalmers" ]
+     ] ;
+     fhir:participant ( [
+       fhir:actor [
+         fhir:l <http://hl7.org/fhir/Patient/100> ;
+         fhir:reference [ fhir:v "Patient/100" ] ;
+         fhir:display [ fhir:v "Peter James Chalmers" ]
+       ] ;
+       fhir:required [ fhir:v true ] ;
+       fhir:status [ fhir:v "accepted" ]
+     ] [
+       fhir:type ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationType"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationType>
+           ] ;
+           fhir:code [ fhir:v "ATND" ]
+         ] )
+       ] ) ;
+       fhir:actor [
+         fhir:l <http://hl7.org/fhir/Practitioner/14> ;
+         fhir:reference [ fhir:v "Practitioner/14" ] ;
+         fhir:display [ fhir:v "Doctor Dave" ]
+       ] ;
+       fhir:required [ fhir:v true ] ;
+       fhir:status [ fhir:v "accepted" ]
+     ] )
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "plan"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/100> ;
+     fhir:reference [ fhir:v "Patient/100" ] ;
+     fhir:display [ fhir:v "Peter James Chalmers" ]
+  ] ; # 
+  fhir:period [
+     fhir:start [ fhir:v "2013-01-01T10:30:00+00:00"^^xsd:dateTime ] # This is the time the plan started - i.e. when they arrived
+  ] ; # No end yet as the encounter is still in progress.
+  fhir:careTeam ( [
+     fhir:l <#careteam> ;
+     fhir:reference [ fhir:v "#careteam" ]
+  ] ) ; # 
+  fhir:addresses ( [
+     fhir:reference [
+       fhir:l <#p1> ;
+       fhir:reference [ fhir:v "#p1" ] ;
+       fhir:display [ fhir:v "obesity" ]
+     ]
+  ] ) ; # 
+  fhir:goal ( [
+     fhir:l <#goal> ;
+     fhir:reference [ fhir:v "#goal" ]
+  ] ) ; # 
+  fhir:activity ( [
+     fhir:performedActivity ( [
+       fhir:reference [
+         fhir:l <http://hl7.org/fhir/Encounter/example> ;
+         fhir:reference [ fhir:v "Encounter/example" ] # This is a link to the nurse encounter. The assumption is that all contacts with practitioners\n        are modelled as separate encounters. Ideally, there will be  a 'master\/parent' encounter that ties them together.\n        If there is a single encounter, then all participants will be linked to that encounter.
+       ]
+     ] ) ;
+     fhir:plannedActivityReference [
+       fhir:l <#activity-1> ;
+       fhir:reference [ fhir:v "#activity-1" ]
+     ] # This activity is for the initial nurse encounter where vitals are taken. It has been completed.
+  ] [
+     fhir:plannedActivityReference [
+       fhir:l <#activity-2> ;
+       fhir:reference [ fhir:v "#activity-2" ]
+     ] # This activity is for the encounter with the doctor
+  ] ) . # moved to contained
+#	<plannedActivityDetail>
+#      <kind value="Appointment"/>
+#      <code>
+#        <coding>
+#          <system value="http://example.org/local"/>
+#          <code value="nursecon"/>
+#        </coding>
+#        <text value="Nurse Consultation"/>
+#      </code>
+#      <status value="completed"/>
+#      <doNotPerform value="false"/>
+#      <scheduledPeriod>
+#        the nurse saw the patient between 10:38 and 10:50
+#        <start value="2013-01-01T10:38:00+00:00"/>
+#        <end value="2013-01-01T10:50:00+00:00"/>
+#      </scheduledPeriod>
+#      <performer>
+#        refer to the participant (the nurse) in this resource
+#        <reference value="Practitioner/13"/>
+#        <display value="Nurse Nancy"/>
+#      </performer>
+#    </plannedActivityDetail>
+
+<http://hl7.org/fhir/Patient/100> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/13> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Practitioner/14> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Encounter/example> a fhir:Encounter .
+
+# -------------------------------------------------------------------------------------
+

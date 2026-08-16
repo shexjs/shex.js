@@ -1,0 +1,79 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Patient/pat3> a fhir:Patient ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "pat3"] ; # 
+  fhir:meta [
+     fhir:versionId [ fhir:v "1" ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/us/core/StructureDefinition/us-core-race>
+     ] ;
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "detailed"^^xsd:anyURI ;
+         fhir:l fhir:detailed
+       ] ;
+       fhir:value [
+         a fhir:Coding ;
+         fhir:system [
+           fhir:v "urn:oid:2.16.840.1.113883.6.238"^^xsd:anyURI ;
+           fhir:l <urn:oid:2.16.840.1.113883.6.238>
+         ] ;
+         fhir:code [ fhir:v "2036-2" ] ;
+         fhir:display [ fhir:v "Filipino" ]
+       ]
+     ] )
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "MR" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "urn:oid:0.1.2.3.4.5.6.7"^^xsd:anyURI ;
+       fhir:l <urn:oid:0.1.2.3.4.5.6.7>
+     ] ;
+     fhir:value [ fhir:v "123457" ]
+  ] ) ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:name ( [
+     fhir:id [ fhir:v "n1" ] ;
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Notsowell" ] ;
+     fhir:given ( [ fhir:v "Simon" ] )
+  ] [
+     fhir:id [ fhir:v "n2" ] ;
+     fhir:use [ fhir:v "nickname" ] ;
+     fhir:given ( [ fhir:v "Jock" ] )
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:birthDate [ fhir:v "1982-01-23"^^xsd:date] ; # 
+  fhir:deceased [
+     a fhir:DateTime ;
+     fhir:v "2015-02-14T13:42:00+10:00"^^xsd:dateTime
+  ] ; # 
+  fhir:managingOrganization [
+     fhir:l <http://hl7.org/fhir/Organization/1> ;
+     fhir:reference [ fhir:v "Organization/1" ] ;
+     fhir:display [ fhir:v "ACME Healthcare, Inc" ]
+  ] . # 
+
+<http://hl7.org/fhir/Organization/1> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

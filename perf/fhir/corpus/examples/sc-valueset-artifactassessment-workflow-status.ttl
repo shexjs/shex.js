@@ -1,0 +1,130 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ConceptMap/sc-artifactassessment-workflow-status> a fhir:ConceptMap ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "sc-artifactassessment-workflow-status"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: ConceptMap sc-artifactassessment-workflow-status</b></p><a name=\"sc-artifactassessment-workflow-status\"> </a><a name=\"hcsc-artifactassessment-workflow-status\"> </a><p>Mapping from <a href=\"valueset-artifactassessment-workflow-status.html\">Artifact Assessment Workflow Status</a> to <a href=\"valueset-resource-status.html\">Canonical Status Codes for FHIR Resources</a></p><br/><p>Mapping from <a href=\"codesystem-artifactassessment-workflow-status.html\">Artifact Assessment Workflow Status</a> to <a href=\"codesystem-resource-status.html\">Canonical Status Codes for FHIR Resources</a></p><table class=\"grid\"><tr><td><b>Source Code</b></td><td><b>Relationship</b></td><td><b>Target Code</b></td></tr><tr><td>entered-in-error</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>error</td></tr><tr><td>submitted</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>proposed</td></tr><tr><td>triaged</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>planned</td></tr><tr><td>resolved-no-change</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>declined</td></tr><tr><td>resolved-change-required</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>accepted</td></tr><tr><td>applied</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>active</td></tr><tr><td>waiting-for-input</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>suspended</td></tr><tr><td>deferred</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>suspended</td></tr><tr><td>published</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>complete</td></tr><tr><td>duplicate</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>complete</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ConceptMap/sc-artifactassessment-workflow-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ConceptMap/sc-artifactassessment-workflow-status>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ArtifactAssessmentWorkflowStatusCanonicalMap"] ; # 
+  fhir:title [ fhir:v "Canonical Mapping for \"Artifact Assessment Workflow Status\""] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2020-12-28T05:55:11+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Canonical Mapping for \"Possible values for the workflow status of the comment or assessment, typically used to coordinate workflow around the process of accepting and rejecting changes and comments on the artifact.\""] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:sourceScope [
+     a fhir:Canonical ;
+     fhir:v "http://hl7.org/fhir/ValueSet/artifactassessment-workflow-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/artifactassessment-workflow-status>
+  ] ; # 
+  fhir:targetScope [
+     a fhir:Canonical ;
+     fhir:v "http://hl7.org/fhir/ValueSet/resource-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/resource-status>
+  ] ; # 
+  fhir:group ( [
+     fhir:source [
+       fhir:v "http://hl7.org/fhir/artifactassessment-workflow-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/artifactassessment-workflow-status>
+     ] ;
+     fhir:target [
+       fhir:v "http://hl7.org/fhir/resource-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/resource-status>
+     ] ;
+     fhir:element ( [
+       fhir:code [ fhir:v "entered-in-error" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "error" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "submitted" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "proposed" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "triaged" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "planned" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "resolved-no-change" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "declined" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "resolved-change-required" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "accepted" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "applied" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "active" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "waiting-for-input" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "suspended" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "deferred" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "suspended" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "published" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "complete" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "duplicate" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "complete" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

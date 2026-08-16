@@ -1,0 +1,239 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Claim/960151> a fhir:Claim ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "960151"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">A human-readable rendering of the Claim</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://happyhospital.com/claim"^^xsd:anyURI ;
+       fhir:l <http://happyhospital.com/claim>
+     ] ;
+     fhir:value [ fhir:v "96123451" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/claim-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/claim-type>
+       ] ;
+       fhir:code [ fhir:v "institutional" ]
+     ] )
+  ] ; # 
+  fhir:use [ fhir:v "claim"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/1> ;
+     fhir:reference [ fhir:v "Patient/1" ]
+  ] ; # 
+  fhir:billablePeriod [
+     fhir:start [ fhir:v "2014-08-15"^^xsd:date ] ;
+     fhir:end [ fhir:v "2014-08-16"^^xsd:date ]
+  ] ; # 
+  fhir:created [ fhir:v "2014-08-16"^^xsd:date] ; # 
+  fhir:enterer [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://jurisdiction.org/facilities/HOSP1234/users"^^xsd:anyURI ;
+         fhir:l <http://jurisdiction.org/facilities/HOSP1234/users>
+       ] ;
+       fhir:value [ fhir:v "UC1234" ]
+     ]
+  ] ; # 
+  fhir:insurer [
+     fhir:l <http://hl7.org/fhir/Organization/2> ;
+     fhir:reference [ fhir:v "Organization/2" ]
+  ] ; # 
+  fhir:provider [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://npid.org/providerid"^^xsd:anyURI ;
+         fhir:l <http://npid.org/providerid>
+       ] ;
+       fhir:value [ fhir:v "NJ12345" ]
+     ]
+  ] ; # 
+  fhir:priority [
+     fhir:coding ( [
+       fhir:code [ fhir:v "normal" ]
+     ] )
+  ] ; # 
+  fhir:payee [
+     fhir:type [
+       fhir:coding ( [
+         fhir:code [ fhir:v "provider" ]
+       ] )
+     ]
+  ] ; # 
+  fhir:facility [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://jurisdiction.org/facilities"^^xsd:anyURI ;
+         fhir:l <http://jurisdiction.org/facilities>
+       ] ;
+       fhir:value [ fhir:v "HOSP1234" ]
+     ]
+  ] ; # 
+  fhir:diagnosisRelatedGroup [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/ex-diagnosisrelatedgroup"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/ex-diagnosisrelatedgroup>
+       ] ;
+       fhir:code [ fhir:v "400" ] ;
+       fhir:display [ fhir:v "Head trauma - concussion" ]
+     ] )
+  ] ; # 
+  fhir:careTeam ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:provider [
+       fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+       fhir:reference [ fhir:v "Practitioner/example" ]
+     ] ;
+     fhir:role [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.org/fhir/CodeSystem/claim-careteamrole"^^xsd:anyURI ;
+           fhir:l <http://example.org/fhir/CodeSystem/claim-careteamrole>
+         ] ;
+         fhir:code [ fhir:v "primary" ]
+       ] )
+     ] ;
+     fhir:specialty [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.org/fhir/CodeSystem/provider-qualification"^^xsd:anyURI ;
+           fhir:l <http://example.org/fhir/CodeSystem/provider-qualification>
+         ] ;
+         fhir:code [ fhir:v "physician" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:supportingInfo ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:category [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/claiminformationcategory"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/claiminformationcategory>
+         ] ;
+         fhir:code [ fhir:v "employmentimpacted" ]
+       ] )
+     ] ;
+     fhir:timing [
+       a fhir:Period ;
+       fhir:start [ fhir:v "2014-08-16"^^xsd:date ] ;
+       fhir:end [ fhir:v "2014-08-16"^^xsd:date ]
+     ]
+  ] [
+     fhir:sequence [ fhir:v "2"^^xsd:positiveInteger ] ;
+     fhir:category [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/claiminformationcategory"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/claiminformationcategory>
+         ] ;
+         fhir:code [ fhir:v "hospitalized" ]
+       ] )
+     ] ;
+     fhir:timing [
+       a fhir:Period ;
+       fhir:start [ fhir:v "2014-08-15"^^xsd:date ] ;
+       fhir:end [ fhir:v "2014-08-16"^^xsd:date ]
+     ]
+  ] ) ; # 
+  fhir:diagnosis ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:diagnosis [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:code [ fhir:v "654456" ]
+         ] )
+       ]
+     ] ;
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ex-diagnosistype"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ex-diagnosistype>
+         ] ;
+         fhir:code [ fhir:v "admitting" ]
+       ] )
+     ] )
+  ] ) ; # 
+  fhir:insurance ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:focal [ fhir:v true ] ;
+     fhir:coverage [
+       fhir:l <http://hl7.org/fhir/Coverage/9876B1> ;
+       fhir:reference [ fhir:v "Coverage/9876B1" ]
+     ] ;
+     fhir:businessArrangement [ fhir:v "BA987123" ] ;
+     fhir:preAuthRef ( [ fhir:v "PA2014G56473" ] )
+  ] ) ; # 
+  fhir:accident [
+     fhir:date [ fhir:v "2014-07-09"^^xsd:date ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActIncidentCode"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActIncidentCode>
+         ] ;
+         fhir:code [ fhir:v "SPT" ] ;
+         fhir:display [ fhir:v "Sporting Accident" ]
+       ] )
+     ] ;
+     fhir:location [
+       a fhir:Address ;
+       fhir:text [ fhir:v "Grouse Mountain Ski Hill" ]
+     ]
+  ] ; # 
+  fhir:item ( [
+     fhir:sequence [ fhir:v "1"^^xsd:positiveInteger ] ;
+     fhir:careTeamSequence ( [ fhir:v "1"^^xsd:positiveInteger ] ) ;
+     fhir:productOrService [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/ex-serviceproduct"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/ex-serviceproduct>
+         ] ;
+         fhir:code [ fhir:v "exam" ]
+       ] )
+     ] ;
+     fhir:serviced [
+       a fhir:Date ;
+       fhir:v "2014-08-16"^^xsd:date
+     ] ;
+     fhir:unitPrice [
+       fhir:value [ fhir:v 125.00 ] ;
+       fhir:currency [ fhir:v "USD" ]
+     ] ;
+     fhir:net [
+       fhir:value [ fhir:v 125.00 ] ;
+       fhir:currency [ fhir:v "USD" ]
+     ]
+  ] ) ; # 
+  fhir:total [
+     fhir:value [ fhir:v 125.00 ] ;
+     fhir:currency [ fhir:v "USD" ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/1> a fhir:Patient .
+
+<http://hl7.org/fhir/Organization/2> a fhir:Organization .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Coverage/9876B1> a fhir:Coverage .
+
+# -------------------------------------------------------------------------------------
+

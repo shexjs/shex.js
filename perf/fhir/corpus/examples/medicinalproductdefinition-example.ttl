@@ -1,0 +1,114 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/MedicinalProductDefinition/example> a fhir:MedicinalProductDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n			<p><b>Generated Narrative</b></p>\n			<p><b>Id</b>: example</p>\n			<p><b>Identifier</b>: {mpid}</p>\n			<p><b>Classification</b>: <span title=\"Codes: {http://ema.europa.eu/example/WHOAnatomicalTherapeuticChemicalATCClassificationSystem B01AF02}\">ATC: B01AF02</span></p>\n			<p><b>Attached Document</b>: (SmPC)</p>\n			<p><b>Master File</b>: (Pharmacovigilence Master File)</p>\n			<p><b>Product Name</b>: Equilidem 2.5 mg film-coated tablets</p>\n			<blockquote>\n				<p><b>Name Part</b></p><p><b>part</b>:Equilidem</p>\n				<p><b>type</b>: <span title=\"Codes: \">Invented</span></p>\n			</blockquote>\n			<blockquote>\n				<p><b>Name Part</b></p><p><b>part</b>:2.5 mg</p>\n				<p><b>type</b>: <span title=\"Codes: \">Strength</span></p>\n			</blockquote>\n			<blockquote>\n				<p><b>Name Part</b></p>\n				<p><b>part</b>:film-coated tablets</p>\n				<p><b>type</b>: <span title=\"Codes: \">Form</span></p>\n				<p><b>Country &amp; Languages</b></p>\n				<table class=\"grid\">\n					<tr>\n						<td>-</td>\n						<td><b>Country</b></td>\n						<td><b>Jurisdiction</b></td>\n						<td><b>Language</b></td>\n					</tr>\n					<tr>\n						<td>*</td>\n						<td><span title=\"Codes: {http://ema.europa.eu/example/countryCode EU}\">EU</span></td>\n						<td><span title=\"Codes: {http://ema.europa.eu/example/jurisdictionCode EU}\">EU</span></td>\n						<td><span title=\"Codes: {urn:ietf:bcp:47}\">EN</span></td>\n					</tr>\n				</table>\n			</blockquote>\n			<p><b>Manufacturing &amp; Business Operations</b></p>\n			<table class=\"grid\">\n				<tr>\n					<td>-</td>\n					<td><b>Type</b></td>\n					<td><b>EffectiveDate</b></td>\n					<td><b>Authorization</b></td>\n				</tr>\n				<tr>\n					<td>*</td>\n					<td>Batch Release</td>\n					<td>2013-03-15 --&gt; (ongoing)</td>\n					<td><span>1324TZ</span></td>\n				</tr>\n			</table>\n		</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://ema.europa.eu/example/MPID"^^xsd:anyURI ;
+       fhir:l <http://ema.europa.eu/example/MPID>
+     ] ;
+     fhir:value [ fhir:v "{mpid}" ]
+  ] ) ; # 
+  fhir:classification ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://ema.europa.eu/example/WHOAnatomicalTherapeuticChemicalATCClassificationSystem"^^xsd:anyURI ;
+         fhir:l <http://ema.europa.eu/example/WHOAnatomicalTherapeuticChemicalATCClassificationSystem>
+       ] ;
+       fhir:code [ fhir:v "B01AF02" ]
+     ] )
+  ] ) ; # 
+  fhir:attachedDocument ( [
+     fhir:l <http://hl7.org/fhir/DocumentReference/example> ;
+     fhir:reference [ fhir:v "DocumentReference/example" ]
+  ] ) ; # 
+  fhir:masterFile ( [
+     fhir:l <http://hl7.org/fhir/DocumentReference/example> ;
+     fhir:reference [ fhir:v "DocumentReference/example" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:productName [ fhir:v "Equilidem 2.5 mg film-coated tablets" ] ;
+     fhir:part ( [
+       fhir:part [ fhir:v "Equilidem" ] ;
+       fhir:type [
+         fhir:coding ( [
+           fhir:code [ fhir:v "INV" ]
+         ] )
+       ]
+     ] [
+       fhir:part [ fhir:v "2.5 mg" ] ;
+       fhir:type [
+         fhir:coding ( [
+           fhir:code [ fhir:v "STR" ]
+         ] )
+       ]
+     ] [
+       fhir:part [ fhir:v "film-coated tablets" ] ;
+       fhir:type [
+         fhir:coding ( [
+           fhir:code [ fhir:v "FRM" ]
+         ] )
+       ]
+     ] ) ;
+     fhir:usage ( [
+       fhir:country [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://ema.europa.eu/example/countryCode"^^xsd:anyURI ;
+             fhir:l <http://ema.europa.eu/example/countryCode>
+           ] ;
+           fhir:code [ fhir:v "EU" ]
+         ] )
+       ] ;
+       fhir:jurisdiction [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://ema.europa.eu/example/jurisdictionCode"^^xsd:anyURI ;
+             fhir:l <http://ema.europa.eu/example/jurisdictionCode>
+           ] ;
+           fhir:code [ fhir:v "EU" ]
+         ] )
+       ] ;
+       fhir:language [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "urn:ietf:bcp:47"^^xsd:anyURI ;
+             fhir:l <urn:ietf:bcp:47>
+           ] ;
+           fhir:code [ fhir:v "en" ]
+         ] )
+       ]
+     ] )
+  ] ) ; # 
+  fhir:operation ( [
+     fhir:type [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://ema.europa.eu/example/manufacturingOperationType"^^xsd:anyURI ;
+             fhir:l <http://ema.europa.eu/example/manufacturingOperationType>
+           ] ;
+           fhir:code [ fhir:v "Batchrelease" ]
+         ] )
+       ]
+     ] ;
+     fhir:effectiveDate [
+       fhir:start [ fhir:v "2013-03-15"^^xsd:date ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/DocumentReference/example> a fhir:DocumentReference .
+
+# -------------------------------------------------------------------------------------
+

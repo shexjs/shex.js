@@ -1,0 +1,371 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CapabilityStatement/example-terminology-server> a fhir:CapabilityStatement ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-terminology-server"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "extensions" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p class=\"res-header-id\">\n        <b>Generated Narrative: CapabilityStatement example-terminology-server</b>\n      </p>\n      <a name=\"example-terminology-server\"> </a>\n      <a name=\"hcexample-terminology-server\"> </a>\n      <h2 id=\"title\">ACME Terminology Service — Capability Statement</h2>\n      <ul>\n        <li>Implementation Guide Version: 6.0.0-ballot4 </li>\n        <li>FHIR Version: 6.0.0-ballot4 </li>\n        <li>Supported Formats: \n          <code>json</code>, \n          <code>xml</code>\n        </li>\n        <li>Published on: 2022-09-01 </li>\n        <li>Published by: HL7 International / FHIR Infrastructure </li>\n      </ul>\n      <blockquote class=\"impl-note\">\n        <p>\n          <strong>Note to Implementers: FHIR Capabilities</strong>\n        </p>\n        <p>Any FHIR capability may be 'allowed' by the system unless explicitly marked as 'SHALL NOT'. A few items are marked as MAY in the Implementation Guide to highlight their potential relevance to the use case.</p>\n      </blockquote>\n      <h2 id=\"rest\">FHIR RESTful Capabilities</h2>\n      <div class=\"panel panel-default\">\n        <div class=\"panel-heading\">\n          <h3 id=\"mode1\" class=\"panel-title\">Mode: \n            <code>server</code>\n          </h3>\n        </div>\n        <div class=\"panel-body\"/>\n      </div>\n      <h3 id=\"resourcesCap1\">Capabilities by Resource/Profile</h3>\n      <h4 id=\"resourcesSummary1\">Summary</h4>\n      <p>The summary table lists the resources that are part of this configuration, and for each resource it lists:</p>\n      <ul>\n        <li>The relevant profiles (if any)</li>\n        <li>The interactions supported by each resource (\n          <b>\n            <span class=\"bg-info\">R</span>\n          </b>ead, \n          <b>\n            <span class=\"bg-info\">S</span>\n          </b>earch, \n          <b>\n            <span class=\"bg-info\">U</span>\n          </b>pdate, and \n          <b>\n            <span class=\"bg-info\">C</span>\n          </b>reate, are always shown, while \n          <b>\n            <span class=\"bg-info\">VR</span>\n          </b>ead, \n          <b>\n            <span class=\"bg-info\">P</span>\n          </b>atch, \n          <b>\n            <span class=\"bg-info\">D</span>\n          </b>elete, \n          <b>\n            <span class=\"bg-info\">H</span>\n          </b>istory on \n          <b>\n            <span class=\"bg-info\">I</span>\n          </b>nstance, or \n          <b>\n            <span class=\"bg-info\">H</span>\n          </b>istory on \n          <b>\n            <span class=\"bg-info\">T</span>\n          </b>ype are only present if at least one of the resources has support for them.\n        </li>\n        <li>\n          <span>The required, recommended, and some optional search parameters (if any). </span>\n        </li>\n        <li>The linked resources enabled for \n          <code>_include</code>\n        </li>\n        <li>The other resources enabled for \n          <code>_revinclude</code>\n        </li>\n        <li>The operations on the resource (if any)</li>\n      </ul>\n      <div class=\"table-responsive\">\n        <table class=\"table table-condensed table-hover\">\n          <thead>\n            <tr>\n              <th>\n                <b>Resource Type</b>\n              </th>\n              <th>\n                <b>Profile</b>\n              </th>\n              <th class=\"text-center\">\n                <b title=\"GET a resource (read interaction)\">R</b>\n              </th>\n              <th class=\"text-center\">\n                <b title=\"GET all set of resources of the type (search interaction)\">S</b>\n              </th>\n              <th class=\"text-center\">\n                <b title=\"PUT a new resource version (update interaction)\">U</b>\n              </th>\n              <th class=\"text-center\">\n                <b title=\"POST a new resource (create interaction)\">C</b>\n              </th>\n              <th>\n                <b title=\"Required and recommended search parameters\">Searches</b>\n              </th>\n              <th>\n                <code>\n                  <b>_include</b>\n                </code>\n              </th>\n              <th>\n                <code>\n                  <b>_revinclude</b>\n                </code>\n              </th>\n              <th>\n                <b>Operations</b>\n              </th>\n            </tr>\n          </thead>\n          <tbody>\n            <tr>\n              <td>\n                <a href=\"#CodeSystem1-1\">CodeSystem</a>\n              </td>\n              <td>\n                <a href=\"codesystem.html\">http://hl7.org/fhir/StructureDefinition/CodeSystem</a>\n              </td>\n              <td class=\"text-center\">\n                <span title=\"SHALL\">\n                  <b>Y</b>\n                </span>\n              </td>\n              <td class=\"text-center\">\n                <span title=\"SHALL\">\n                  <b>Y</b>\n                </span>\n              </td>\n              <td class=\"text-center\"/>\n              <td class=\"text-center\"/>\n              <td>url, version, name, title, status</td>\n              <td/>\n              <td/>\n              <td>\n                <code>$expand</code>, \n                <code>$expand</code>, \n                <code>$expand</code>\n              </td>\n            </tr>\n            <tr>\n              <td>\n                <a href=\"#ValueSet1-2\">ValueSet</a>\n              </td>\n              <td>\n                <a href=\"valueset.html\">http://hl7.org/fhir/StructureDefinition/ValueSet</a>\n              </td>\n              <td class=\"text-center\">\n                <span title=\"SHALL\">\n                  <b>Y</b>\n                </span>\n              </td>\n              <td class=\"text-center\">\n                <span title=\"SHALL\">\n                  <b>Y</b>\n                </span>\n              </td>\n              <td class=\"text-center\"/>\n              <td class=\"text-center\"/>\n              <td>url, version, name, title, status</td>\n              <td/>\n              <td/>\n              <td>\n                <code>$expand</code>, \n                <code>$expand</code>\n              </td>\n            </tr>\n            <tr>\n              <td>\n                <a href=\"#ConceptMap1-3\">ConceptMap</a>\n              </td>\n              <td>\n                <a href=\"conceptmap.html\">http://hl7.org/fhir/StructureDefinition/ConceptMap</a>\n              </td>\n              <td class=\"text-center\">\n                <span title=\"SHALL\">\n                  <b>Y</b>\n                </span>\n              </td>\n              <td class=\"text-center\">\n                <span title=\"SHALL\">\n                  <b>Y</b>\n                </span>\n              </td>\n              <td class=\"text-center\"/>\n              <td class=\"text-center\"/>\n              <td>url, version, name, title, status</td>\n              <td/>\n              <td/>\n              <td>\n                <code>$expand</code>\n              </td>\n            </tr>\n          </tbody>\n        </table>\n      </div>\n      <hr/>\n      <div class=\"panel panel-default\">\n        <div class=\"panel-heading\">\n          <h4 id=\"CodeSystem1-1\" class=\"panel-title\">\n            <span style=\"float: right;\">Resource Conformance: unspecified </span>CodeSystem\n          </h4>\n        </div>\n        <div class=\"panel-body\">\n          <div class=\"container\">\n            <div class=\"row\">\n              <div class=\"col-lg-6\">\n                <span class=\"lead\">Base System Profile</span>\n                <br/>\n                <a href=\"codesystem.html\">CodeSystem</a>\n              </div>\n              <div class=\"col-lg-3\">\n                <span class=\"lead\">Profile Conformance</span>\n                <br/>\n                <b>SHALL</b>\n              </div>\n              <div class=\"col-lg-3\">\n                <span class=\"lead\">Reference Policy</span>\n                <br/>\n              </div>\n            </div>\n            <p/>\n            <div class=\"row\">\n              <div class=\"col-lg-6\">\n                <span class=\"lead\">Interaction summary</span>\n                <br/>\n                <ul>\n                  <li>\n                    <strong>SHALL</strong> support \n                    <code>read</code>, \n                    <code>search-type</code>.\n                  </li>\n                </ul>\n              </div>\n            </div>\n            <p/>\n            <div class=\"row\">\n              <div class=\"col-lg-7\">\n                <span class=\"lead\">Search Parameters</span>\n                <table class=\"table table-condensed table-hover\">\n                  <thead>\n                    <tr>\n                      <th>Conformance</th>\n                      <th>Parameter</th>\n                      <th>Type</th>\n                      <th>Documentation</th>\n                    </tr>\n                  </thead>\n                  <tbody>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>url</td>\n                      <td>\n                        <code>uri</code>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>version</td>\n                      <td>\n                        <code>token</code>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>name</td>\n                      <td>\n                        <code>string</code>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>title</td>\n                      <td>\n                        <code>string</code>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>status</td>\n                      <td>\n                        <code>token</code>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                  </tbody>\n                </table>\n              </div>\n              <div class=\"col-lg-5\"> </div>\n            </div>\n            <div class=\"row\">\n              <div class=\"col-12\">\n                <span class=\"lead\">Extended Operations</span>\n                <table class=\"table table-condensed table-hover\">\n                  <thead>\n                    <tr>\n                      <th>Conformance</th>\n                      <th>Operation</th>\n                      <th>Documentation</th>\n                    </tr>\n                  </thead>\n                  <tbody>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>\n                        <a href=\"codesystem-operation-lookup.html\">$expand</a>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>\n                        <a href=\"codesystem-operation-validate-code.html\">$expand</a>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>\n                        <a href=\"codesystem-operation-subsumes.html\">$expand</a>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                  </tbody>\n                </table>\n              </div>\n            </div>\n          </div>\n        </div>\n      </div>\n      <div class=\"panel panel-default\">\n        <div class=\"panel-heading\">\n          <h4 id=\"ValueSet1-2\" class=\"panel-title\">\n            <span style=\"float: right;\">Resource Conformance: unspecified </span>ValueSet\n          </h4>\n        </div>\n        <div class=\"panel-body\">\n          <div class=\"container\">\n            <div class=\"row\">\n              <div class=\"col-lg-6\">\n                <span class=\"lead\">Base System Profile</span>\n                <br/>\n                <a href=\"valueset.html\">ValueSet</a>\n              </div>\n              <div class=\"col-lg-3\">\n                <span class=\"lead\">Profile Conformance</span>\n                <br/>\n                <b>SHALL</b>\n              </div>\n              <div class=\"col-lg-3\">\n                <span class=\"lead\">Reference Policy</span>\n                <br/>\n              </div>\n            </div>\n            <p/>\n            <div class=\"row\">\n              <div class=\"col-lg-6\">\n                <span class=\"lead\">Interaction summary</span>\n                <br/>\n                <ul>\n                  <li>\n                    <strong>SHALL</strong> support \n                    <code>read</code>, \n                    <code>search-type</code>.\n                  </li>\n                </ul>\n              </div>\n            </div>\n            <p/>\n            <div class=\"row\">\n              <div class=\"col-lg-7\">\n                <span class=\"lead\">Search Parameters</span>\n                <table class=\"table table-condensed table-hover\">\n                  <thead>\n                    <tr>\n                      <th>Conformance</th>\n                      <th>Parameter</th>\n                      <th>Type</th>\n                      <th>Documentation</th>\n                    </tr>\n                  </thead>\n                  <tbody>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>url</td>\n                      <td>\n                        <code>uri</code>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>version</td>\n                      <td>\n                        <code>token</code>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>name</td>\n                      <td>\n                        <code>string</code>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>title</td>\n                      <td>\n                        <code>string</code>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>status</td>\n                      <td>\n                        <code>token</code>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                  </tbody>\n                </table>\n              </div>\n              <div class=\"col-lg-5\"> </div>\n            </div>\n            <div class=\"row\">\n              <div class=\"col-12\">\n                <span class=\"lead\">Extended Operations</span>\n                <table class=\"table table-condensed table-hover\">\n                  <thead>\n                    <tr>\n                      <th>Conformance</th>\n                      <th>Operation</th>\n                      <th>Documentation</th>\n                    </tr>\n                  </thead>\n                  <tbody>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>\n                        <a href=\"valueset-operation-expand.html\">$expand</a>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>\n                        <a href=\"valueset-operation-validate-code.html\">$expand</a>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                  </tbody>\n                </table>\n              </div>\n            </div>\n          </div>\n        </div>\n      </div>\n      <div class=\"panel panel-default\">\n        <div class=\"panel-heading\">\n          <h4 id=\"ConceptMap1-3\" class=\"panel-title\">\n            <span style=\"float: right;\">Resource Conformance: unspecified </span>ConceptMap\n          </h4>\n        </div>\n        <div class=\"panel-body\">\n          <div class=\"container\">\n            <div class=\"row\">\n              <div class=\"col-lg-6\">\n                <span class=\"lead\">Base System Profile</span>\n                <br/>\n                <a href=\"conceptmap.html\">ConceptMap</a>\n              </div>\n              <div class=\"col-lg-3\">\n                <span class=\"lead\">Profile Conformance</span>\n                <br/>\n                <b>SHALL</b>\n              </div>\n              <div class=\"col-lg-3\">\n                <span class=\"lead\">Reference Policy</span>\n                <br/>\n              </div>\n            </div>\n            <p/>\n            <div class=\"row\">\n              <div class=\"col-lg-6\">\n                <span class=\"lead\">Interaction summary</span>\n                <br/>\n                <ul>\n                  <li>\n                    <strong>SHALL</strong> support \n                    <code>read</code>, \n                    <code>search-type</code>.\n                  </li>\n                </ul>\n              </div>\n            </div>\n            <p/>\n            <div class=\"row\">\n              <div class=\"col-lg-7\">\n                <span class=\"lead\">Search Parameters</span>\n                <table class=\"table table-condensed table-hover\">\n                  <thead>\n                    <tr>\n                      <th>Conformance</th>\n                      <th>Parameter</th>\n                      <th>Type</th>\n                      <th>Documentation</th>\n                    </tr>\n                  </thead>\n                  <tbody>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>url</td>\n                      <td>\n                        <code>uri</code>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>version</td>\n                      <td>\n                        <code>token</code>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>name</td>\n                      <td>\n                        <code>string</code>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>title</td>\n                      <td>\n                        <code>string</code>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>status</td>\n                      <td>\n                        <code>token</code>\n                      </td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                  </tbody>\n                </table>\n              </div>\n              <div class=\"col-lg-5\"> </div>\n            </div>\n            <div class=\"row\">\n              <div class=\"col-12\">\n                <span class=\"lead\">Extended Operations</span>\n                <table class=\"table table-condensed table-hover\">\n                  <thead>\n                    <tr>\n                      <th>Conformance</th>\n                      <th>Operation</th>\n                      <th>Documentation</th>\n                    </tr>\n                  </thead>\n                  <tbody>\n                    <tr>\n                      <td>\n                        <b>SHALL</b>\n                      </td>\n                      <td>$expand</td>\n                      <td>\n                        <div/>\n                      </td>\n                    </tr>\n                  </tbody>\n                </table>\n              </div>\n            </div>\n          </div>\n        </div>\n      </div>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/CapabilityStatement/terminology-server"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/CapabilityStatement/terminology-server>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.34.6" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ACMETerminologyServiceCapabilityStatement"] ; # 
+  fhir:title [ fhir:v "ACME Terminology Service — Capability Statement"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:date [ fhir:v "2022-09-01"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Example capability statement for a Terminology Server. A server can support more fucntionality than defined here, but this is the minimum amount"] ; # 
+  fhir:kind [ fhir:v "instance"] ; # 
+  fhir:implementation [
+     fhir:description [ fhir:v "The ACME FHIR Terminology Server" ]
+  ] ; # 
+  fhir:fhirVersion [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:format ( [ fhir:v "json"] [ fhir:v "xml"] ) ; # 
+  fhir:rest ( [
+     fhir:mode [ fhir:v "server" ] ;
+     fhir:resource ( [
+       fhir:type [
+         fhir:v "CodeSystem"^^xsd:anyURI ;
+         fhir:l fhir:CodeSystem
+       ] ;
+       fhir:profile [
+         fhir:v "http://hl7.org/fhir/StructureDefinition/CodeSystem"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/StructureDefinition/CodeSystem>
+       ] ;
+       fhir:interaction ( [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation>
+           ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "SHALL"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "read" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation>
+           ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "SHALL"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "search-type" ]
+       ] ) ;
+       fhir:searchParam ( [
+         fhir:name [ fhir:v "url" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/CodeSystem-url"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/CodeSystem-url>
+         ] ;
+         fhir:type [ fhir:v "uri" ]
+       ] [
+         fhir:name [ fhir:v "version" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/CodeSystem-version"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/CodeSystem-version>
+         ] ;
+         fhir:type [ fhir:v "token" ]
+       ] [
+         fhir:name [ fhir:v "name" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/CodeSystem-name"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/CodeSystem-name>
+         ] ;
+         fhir:type [ fhir:v "string" ]
+       ] [
+         fhir:name [ fhir:v "title" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/CodeSystem-title"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/CodeSystem-title>
+         ] ;
+         fhir:type [ fhir:v "string" ]
+       ] [
+         fhir:name [ fhir:v "status" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/CodeSystem-status"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/CodeSystem-status>
+         ] ;
+         fhir:type [ fhir:v "token" ]
+       ] ) ;
+       fhir:operation ( [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation>
+           ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "SHALL"
+           ]
+         ] ) ;
+         fhir:name [ fhir:v "expand" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/OperationDefinition/CodeSystem-lookup"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/OperationDefinition/CodeSystem-lookup>
+         ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation>
+           ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "SHALL"
+           ]
+         ] ) ;
+         fhir:name [ fhir:v "expand" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/OperationDefinition/CodeSystem-validate-code"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/OperationDefinition/CodeSystem-validate-code>
+         ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation>
+           ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "SHALL"
+           ]
+         ] ) ;
+         fhir:name [ fhir:v "expand" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/OperationDefinition/CodeSystem-subsumes"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/OperationDefinition/CodeSystem-subsumes>
+         ]
+       ] )
+     ] [
+       fhir:type [
+         fhir:v "ValueSet"^^xsd:anyURI ;
+         fhir:l fhir:ValueSet
+       ] ;
+       fhir:profile [
+         fhir:v "http://hl7.org/fhir/StructureDefinition/ValueSet"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/StructureDefinition/ValueSet>
+       ] ;
+       fhir:interaction ( [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation>
+           ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "SHALL"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "read" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation>
+           ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "SHALL"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "search-type" ]
+       ] ) ;
+       fhir:searchParam ( [
+         fhir:name [ fhir:v "url" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/ValueSet-url"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/ValueSet-url>
+         ] ;
+         fhir:type [ fhir:v "uri" ]
+       ] [
+         fhir:name [ fhir:v "version" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/ValueSet-version"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/ValueSet-version>
+         ] ;
+         fhir:type [ fhir:v "token" ]
+       ] [
+         fhir:name [ fhir:v "name" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/ValueSet-name"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/ValueSet-name>
+         ] ;
+         fhir:type [ fhir:v "string" ]
+       ] [
+         fhir:name [ fhir:v "title" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/ValueSet-title"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/ValueSet-title>
+         ] ;
+         fhir:type [ fhir:v "string" ]
+       ] [
+         fhir:name [ fhir:v "status" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/ValueSet-status"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/ValueSet-status>
+         ] ;
+         fhir:type [ fhir:v "token" ]
+       ] ) ;
+       fhir:operation ( [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation>
+           ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "SHALL"
+           ]
+         ] ) ;
+         fhir:name [ fhir:v "expand" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/OperationDefinition/ValueSet-expand"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/OperationDefinition/ValueSet-expand>
+         ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation>
+           ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "SHALL"
+           ]
+         ] ) ;
+         fhir:name [ fhir:v "expand" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/OperationDefinition/ValueSet-validate-code"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/OperationDefinition/ValueSet-validate-code>
+         ]
+       ] )
+     ] [
+       fhir:type [
+         fhir:v "ConceptMap"^^xsd:anyURI ;
+         fhir:l fhir:ConceptMap
+       ] ;
+       fhir:profile [
+         fhir:v "http://hl7.org/fhir/StructureDefinition/ConceptMap"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/StructureDefinition/ConceptMap>
+       ] ;
+       fhir:interaction ( [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation>
+           ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "SHALL"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "read" ]
+       ] [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation>
+           ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "SHALL"
+           ]
+         ] ) ;
+         fhir:code [ fhir:v "search-type" ]
+       ] ) ;
+       fhir:searchParam ( [
+         fhir:name [ fhir:v "url" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/ConceptMap-url"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/ConceptMap-url>
+         ] ;
+         fhir:type [ fhir:v "uri" ]
+       ] [
+         fhir:name [ fhir:v "version" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/ConceptMap-version"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/ConceptMap-version>
+         ] ;
+         fhir:type [ fhir:v "token" ]
+       ] [
+         fhir:name [ fhir:v "name" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/ConceptMap-name"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/ConceptMap-name>
+         ] ;
+         fhir:type [ fhir:v "string" ]
+       ] [
+         fhir:name [ fhir:v "title" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/ConceptMap-title"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/ConceptMap-title>
+         ] ;
+         fhir:type [ fhir:v "string" ]
+       ] [
+         fhir:name [ fhir:v "status" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/ConceptMap-status"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/ConceptMap-status>
+         ] ;
+         fhir:type [ fhir:v "token" ]
+       ] ) ;
+       fhir:operation ( [
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/capabilitystatement-expectation>
+           ] ;
+           fhir:value [
+             a fhir:Code ;
+             fhir:v "SHALL"
+           ]
+         ] ) ;
+         fhir:name [ fhir:v "expand" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/OperationDefinition/ConceptMap-translate"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/OperationDefinition/ConceptMap-translate>
+         ]
+       ] )
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

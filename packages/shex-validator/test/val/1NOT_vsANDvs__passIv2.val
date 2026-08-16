@@ -47,7 +47,14 @@
                   ]
                 },
                 "errors": [
-                  "Error validating <http://a.example/v2> as {\"type\":\"NodeConstraint\",\"values\":[\"http://a.example/v1\"]}: value http://a.example/v2 not found in set [\"http://a.example/v1\"]"
+                  {
+                    "type": "ValueSetMismatch",
+                    "values": [
+                      "http://a.example/v1"
+                    ],
+                    "actual": "http://a.example/v2",
+                    "message": "value http://a.example/v2 not found in set [\"http://a.example/v1\"]"
+                  }
                 ]
               }
             ]

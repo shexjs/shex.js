@@ -1,0 +1,193 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/AuditEvent/example-disclosure> a fhir:AuditEvent ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-disclosure"] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://dicom.nema.org/resources/ontology/DCM"^^xsd:anyURI ;
+         fhir:l <http://dicom.nema.org/resources/ontology/DCM>
+       ] ;
+       fhir:code [ fhir:v "110106" ] ;
+       fhir:display [ fhir:v "Export" ]
+     ] )
+  ] ; # 
+  fhir:subtype ( [
+     fhir:coding ( [
+       fhir:code [ fhir:v "Disclosure" ] ;
+       fhir:display [ fhir:v "HIPAA disclosure" ]
+     ] )
+  ] ) ; # 
+  fhir:action [ fhir:v "R"] ; # 
+  fhir:severity [ fhir:v "notice"] ; # 
+  fhir:recorded [ fhir:v "2013-09-22T00:08:00Z"^^xsd:dateTime] ; # 
+  fhir:outcome [
+     fhir:code [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/audit-event-outcome"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/audit-event-outcome>
+       ] ;
+       fhir:code [ fhir:v "0" ] ;
+       fhir:display [ fhir:v "Success" ]
+     ] ;
+     fhir:detail ( [
+       fhir:text [ fhir:v "Successful Disclosure" ]
+     ] )
+  ] ; # 
+  fhir:authorization ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActReason"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActReason>
+       ] ;
+       fhir:code [ fhir:v "HMARKT" ] ;
+       fhir:display [ fhir:v "healthcare marketing" ]
+     ] )
+  ] ) ; # 
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # patient whos data got disclosed
+  fhir:agent ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://dicom.nema.org/resources/ontology/DCM"^^xsd:anyURI ;
+           fhir:l <http://dicom.nema.org/resources/ontology/DCM>
+         ] ;
+         fhir:code [ fhir:v "110153" ] ;
+         fhir:display [ fhir:v "Source Role ID" ]
+       ] )
+     ] ; # who disclosed the data
+     fhir:who [
+       fhir:identifier [
+         fhir:value [ fhir:v "SomeIdiot@nowhere" ]
+       ] ;
+       fhir:display [ fhir:v "That guy everyone wishes would be caught" ]
+     ] ;
+     fhir:requestor [ fhir:v true ] ;
+     fhir:location [
+       fhir:l <http://hl7.org/fhir/Location/1> ;
+       fhir:reference [ fhir:v "Location/1" ]
+     ] ;
+     fhir:policy ( [
+       fhir:v "http://consent.com/yes"^^xsd:anyURI ;
+       fhir:l <http://consent.com/yes>
+     ] ) ;
+     fhir:network [
+       a fhir:String ;
+       fhir:v "custodian.net"
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://dicom.nema.org/resources/ontology/DCM"^^xsd:anyURI ;
+           fhir:l <http://dicom.nema.org/resources/ontology/DCM>
+         ] ;
+         fhir:code [ fhir:v "110152" ] ;
+         fhir:display [ fhir:v "Destination Role ID" ]
+       ] )
+     ] ; # who received the data
+     fhir:who [
+       fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+       fhir:reference [ fhir:v "Practitioner/example" ] ;
+       fhir:display [ fhir:v "Where" ]
+     ] ;
+     fhir:requestor [ fhir:v false ] ;
+     fhir:network [
+       a fhir:String ;
+       fhir:v "marketing.land"
+     ] ;
+     fhir:authorization ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActReason"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActReason>
+         ] ;
+         fhir:code [ fhir:v "HMARKT" ] ;
+         fhir:display [ fhir:v "healthcare marketing" ]
+       ] )
+     ] )
+  ] ) ; # 
+  fhir:source [
+     fhir:observer [
+       fhir:display [ fhir:v "Watchers Accounting of Disclosures Application" ]
+     ] ; # what system detected this disclosure
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/security-source-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/security-source-type>
+         ] ;
+         fhir:code [ fhir:v "4" ] ;
+         fhir:display [ fhir:v "Application Server" ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:entity ( [
+     fhir:what [
+       fhir:l <http://hl7.org/fhir/Patient/example/_history/1> ;
+       fhir:reference [ fhir:v "Patient/example/_history/1" ] ;
+       fhir:identifier [
+         fhir:value [ fhir:v "What.id" ]
+       ] ;
+       fhir:display [ fhir:v "data about Everthing important" ]
+     ] ; # data that got disclosed
+     fhir:role [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/object-role"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/object-role>
+         ] ;
+         fhir:code [ fhir:v "4" ] ;
+         fhir:display [ fhir:v "Domain Resource" ]
+       ] )
+     ] ;
+     fhir:securityLabel ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-Confidentiality"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-Confidentiality>
+         ] ;
+         fhir:code [ fhir:v "V" ] ;
+         fhir:display [ fhir:v "very restricted" ]
+       ] )
+     ] [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+         ] ;
+         fhir:code [ fhir:v "STD" ] ;
+         fhir:display [ fhir:v "sexually transmitted disease information sensitivity" ]
+       ] )
+     ] [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+         ] ;
+         fhir:code [ fhir:v "DELAU" ] ;
+         fhir:display [ fhir:v "delete after use" ]
+       ] )
+     ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Location/1> a fhir:Location .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Patient/example/_history/1> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

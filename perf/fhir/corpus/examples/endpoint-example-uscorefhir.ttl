@@ -1,0 +1,49 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Endpoint/example-usCore-fhir> a fhir:Endpoint ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-usCore-fhir"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n			Example of an US Core FHIR REST endpoint\n		</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:connectionType ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/endpoint-connection-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/endpoint-connection-type>
+       ] ;
+       fhir:code [ fhir:v "hl7-fhir-rest" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "US Core FHIR REST endpoint"] ; # 
+  fhir:payload ( [
+     fhir:type ( [
+       fhir:text [ fhir:v "clinical-data" ]
+     ] ) ;
+     fhir:mimeType ( [ fhir:v "application/fhir+json" ] [ fhir:v "application/fhir+xml" ] ) ;
+     fhir:profileCanonical ( [
+       fhir:v "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns>
+     ] [
+       fhir:v "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation>
+     ] [
+       fhir:v "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient>
+     ] )
+  ] ) ; # 
+  fhir:address [
+     fhir:v "https://acme.org/interfaces/fhir"^^xsd:anyURI ;
+     fhir:l <https://acme.org/interfaces/fhir>
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

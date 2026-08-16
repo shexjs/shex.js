@@ -1,0 +1,162 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ValueSet/event-resource-types> a fhir:ValueSet ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "event-resource-types"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "extensions" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: ValueSet event-resource-types</b></p><a name=\"event-resource-types\"> </a><a name=\"hcevent-resource-types\"> </a><ul><li>Include these codes as defined in <a href=\"codesystem-fhir-types.html\"><code>http://hl7.org/fhir/fhir-types</code></a><span title=\"Version is not explicitly stated, which means it is fixed to the version provided in this specification\"> version ?6.0.0-ballot4</span><table class=\"none\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-AdverseEvent\">AdverseEvent</a></td><td style=\"color: #cccccc\">AdverseEvent</td><td>An event (i.e. any change to current patient status) that may be related to unintended effects on a patient or research participant. The unintended effects may require additional monitoring, treatment, hospitalization, or may result in death. The AdverseEvent resource also extends to potential or avoided events that could have had such effects. There are two major domains where the AdverseEvent resource is expected to be used. One is in clinical care reported adverse events and the other is in reporting adverse events in clinical  research trial management.  Adverse events can be reported by healthcare providers, patients, caregivers or by medical products manufacturers.  Given the differences between these two concepts, we recommend consulting the domain specific implementation guides when implementing the AdverseEvent Resource. The implementation guides include specific extensions, value sets and constraints.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-AuditEvent\">AuditEvent</a></td><td style=\"color: #cccccc\">AuditEvent</td><td>A record of an event relevant for purposes such as operations, privacy, security, maintenance, and performance analysis.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-ClaimResponse\">ClaimResponse</a></td><td style=\"color: #cccccc\">ClaimResponse</td><td>This resource provides the adjudication details from the processing of a Claim resource.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-Communication\">Communication</a></td><td style=\"color: #cccccc\">Communication</td><td>A clinical or business level record of information being transmitted or shared; e.g. an alert that was sent to a responsible provider, a public health agency communication to a provider/reporter in response to a case report for a reportable condition.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-Composition\">Composition</a></td><td style=\"color: #cccccc\">Composition</td><td>Composition provides the structural backbone for assembling a set of healthcare-related information into a single logical package that provides a single coherent statement of meaning, establishes its own context and has traceability to the author who is making the statement.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-Consent\">Consent</a></td><td style=\"color: #cccccc\">Consent</td><td>A record of a healthcare consumer’s  choices  or choices made on their behalf by a third party, which permits or denies identified recipient(s) or recipient role(s) to perform one or more actions within a given policy context, for specific purposes and periods of time.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-Coverage\">Coverage</a></td><td style=\"color: #cccccc\">Coverage</td><td>Financial instrument which may be used to reimburse or pay for health care products and services. Includes both insurance and self-payment.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-CoverageEligibilityResponse\">CoverageEligibilityResponse</a></td><td style=\"color: #cccccc\">CoverageEligibilityResponse</td><td>This resource provides eligibility and plan details from the processing of an CoverageEligibilityRequest resource.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-DetectedIssue\">DetectedIssue</a></td><td style=\"color: #cccccc\">DetectedIssue</td><td>Indicates an actual or potential clinical issue with or between one or more active or proposed clinical actions for a patient; e.g. Drug-drug interaction, Ineffective treatment frequency, Procedure-condition conflict, gaps in care, etc.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-DeviceAlert\">DeviceAlert</a></td><td style=\"color: #cccccc\">DeviceAlert</td><td>Describes a physiological or technical alert condition report originated by a device.  The DeviceAlert resource is derived from the ISO/IEEE 11073-10201 Domain Information Model standard, but is more widely applicable. </td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-DiagnosticReport\">DiagnosticReport</a></td><td style=\"color: #cccccc\">DiagnosticReport</td><td>The findings and interpretation of diagnostic tests performed on patients, groups of patients, products, substances, devices, and locations, and/or specimens derived from these. The report includes clinical context such as requesting provider information, and some mix of atomic results, images, textual and coded interpretations, and formatted representation of diagnostic reports. The report also includes non-clinical context such as batch analysis and stability reporting of products and substances.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-DocumentReference\">DocumentReference</a></td><td style=\"color: #cccccc\">DocumentReference</td><td>A reference to a document of any kind for any purpose. While the term “document” implies a more narrow focus, for this resource this “document” encompasses *any* serialized object with a mime-type, it includes formal patient-centric documents (CDA), clinical notes, scanned paper, non-patient specific documents like policy text, as well as a photo, video, or audio recording acquired or used in healthcare.  The DocumentReference resource provides metadata about the document so that the document can be discovered and managed.  The actual content may be inline base64 encoded data or provided by direct reference.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-Encounter\">Encounter</a></td><td style=\"color: #cccccc\">Encounter</td><td>An interaction between healthcare provider(s), and/or patient(s) for the purpose of providing healthcare service(s) or assessing the health status of patient(s).</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-EpisodeOfCare\">EpisodeOfCare</a></td><td style=\"color: #cccccc\">EpisodeOfCare</td><td>An association between a patient and an organization / healthcare provider(s) during which time encounters may occur. The managing organization assumes a level of responsibility for the patient during this time.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-ExplanationOfBenefit\">ExplanationOfBenefit</a></td><td style=\"color: #cccccc\">ExplanationOfBenefit</td><td>This resource provides: the claim details; adjudication details from the processing of a Claim; and optionally account balance information, for informing the subscriber of the benefits provided.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-FamilyMemberHistory\">FamilyMemberHistory</a></td><td style=\"color: #cccccc\">FamilyMemberHistory</td><td>Significant health conditions for a person related to the patient relevant in the context of care for the patient.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-GuidanceResponse\">GuidanceResponse</a></td><td style=\"color: #cccccc\">GuidanceResponse</td><td>A guidance response is the formal response to a guidance request, including any output parameters returned by the evaluation, as well as the description of any proposed actions to be taken.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-ImagingSelection\">ImagingSelection</a></td><td style=\"color: #cccccc\">ImagingSelection</td><td>A selection of DICOM SOP instances within a single DICOM Study and Series. This might include additional specifics such as a set of frames or an image region, allowing linkage to an Observation Resource.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-ImagingStudy\">ImagingStudy</a></td><td style=\"color: #cccccc\">ImagingStudy</td><td>Representation of the content produced in a DICOM imaging study. A study comprises a set of series, each of which includes a set of images or other data objects (called Service-Object Pair Instances or SOP Instances) acquired or produced in a common context.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-Immunization\">Immunization</a></td><td style=\"color: #cccccc\">Immunization</td><td>Describes the event of a patient being administered a vaccine or a record of an immunization as reported by a patient, a clinician or another party.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-MedicationAdministration\">MedicationAdministration</a></td><td style=\"color: #cccccc\">MedicationAdministration</td><td>Describes the event of a patient consuming or otherwise being administered a medication.  This may be as simple as swallowing a tablet or it may be a long running infusion. Related resources tie this event to the authorizing prescription, and the specific encounter between patient and health care practitioner. This event can also be used to record waste using a status of not-done and the appropriate statusReason.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-MedicationDispense\">MedicationDispense</a></td><td style=\"color: #cccccc\">MedicationDispense</td><td>Indicates that a medication product is to be or has been dispensed for a named person/patient.  This includes a description of the medication product (supply) provided and the instructions for administering the medication.  The medication dispense is the result of a pharmacy system responding to a medication order.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-MedicationStatement\">MedicationStatement</a></td><td style=\"color: #cccccc\">MedicationStatement</td><td>A record of a medication consumed by a patient.  A MedicationStatement may indicate that the patient may be taking the medication now or has taken the medication in the past or will be taking the medication in the future. The source of this information can be the patient, patient representative (e.g., spouse, significant other, family member, caregiver), or a clinician. A common scenario where this information is captured is during the history taking process during a patient encounter or stay. The medication information may come from sources such as the patient's memory, from a prescription bottle, or from a list of medications the patient, clinician or other party maintains. The primary difference between a MedicationStatement and a MedicationAdministration is that the medication administration has complete administration information and is based on actual administration information from the person who administered the medication. A MedicationStatement is often, if not always, less specific. There is no required date/time when the medication was administered, in fact we only know that a source has reported the patient is taking this medication, where details such as time, quantity, or rate or even medication product may be incomplete or missing or less precise. As stated earlier, the MedicationStatement information may come from the patient's memory, from a prescription bottle or from a list of medications the patient, clinician or other party. MedicationAdministration is more formal and is not missing detailed information.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-MessageHeader\">MessageHeader</a></td><td style=\"color: #cccccc\">MessageHeader</td><td>The header for a message exchange that is either requesting or responding to an action.  The reference(s) that are the subject of the action as well as other information related to the action are typically transmitted in a bundle in which the MessageHeader resource instance is the first resource in the bundle.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-NutritionIntake\">NutritionIntake</a></td><td style=\"color: #cccccc\">NutritionIntake</td><td>A record of intake by a patient.  A NutritionIntake may indicate that the patient may be consuming the food (i.e., solid and/or liquid), breastmilk, infant formula, supplements, enteral formula now or has consumed it in the past.  The source of this information can be the patient, significant other (such as a family member or spouse), or a clinician.  A common scenario where this information is captured is during the history taking process during a patient visit or stay or through an app that tracks food (i.e., solid and/or liquid), breastmilk, infant formula, supplements, enteral formula consumed.   The consumption information may come from sources such as the patient's memory, from a nutrition label, or from a clinician documenting observed intake.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-Observation\">Observation</a></td><td style=\"color: #cccccc\">Observation</td><td>Measurements and simple assertions made about a patient, device or other subject.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-PaymentNotice\">PaymentNotice</a></td><td style=\"color: #cccccc\">PaymentNotice</td><td>This resource provides the status of the payment for goods and services rendered, and the request and response resource references.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-PaymentReconciliation\">PaymentReconciliation</a></td><td style=\"color: #cccccc\">PaymentReconciliation</td><td>This resource provides the details including amount of a payment and allocates the payment items being paid.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-Procedure\">Procedure</a></td><td style=\"color: #cccccc\">Procedure</td><td>An action that is or was performed on or for a patient, practitioner, device, organization, or location. For example, this can be a physical intervention on a patient like an operation, or less invasive like long term services, counseling, or hypnotherapy.  This can be a quality or safety inspection for a location, organization, or device.  This can be an accreditation procedure on a practitioner for licensing.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-Provenance\">Provenance</a></td><td style=\"color: #cccccc\">Provenance</td><td>Provenance of a resource is a record that describes entities and processes involved in producing and delivering or otherwise influencing that resource. Provenance provides a critical foundation for assessing authenticity, enabling trust, and allowing reproducibility. Provenance assertions are a form of contextual metadata and can themselves become important records with their own provenance. Provenance statement indicates clinical significance in terms of confidence in authenticity, reliability, and trustworthiness, integrity, and stage in lifecycle (e.g. Document Completion - has the artifact been legally authenticated), all of which MAY impact security, privacy, and trust policies.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-QuestionnaireResponse\">QuestionnaireResponse</a></td><td style=\"color: #cccccc\">QuestionnaireResponse</td><td>A structured set of questions and their answers. The questions are ordered and grouped into coherent subsets, corresponding to the structure of the grouping of the questionnaire being responded to.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-RiskAssessment\">RiskAssessment</a></td><td style=\"color: #cccccc\">RiskAssessment</td><td>An assessment of the likely outcome(s) for a patient or other subject as well as the likelihood of each outcome.</td></tr></table></li></ul></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 5
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ValueSet/event-resource-types"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/event-resource-types>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.3.1060" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "EventResourceTypes"] ; # 
+  fhir:title [ fhir:v "Event Resource Types"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "All Resource Types that represent event resources"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:immutable [ fhir:v true] ; # 
+  fhir:compose [
+     fhir:include ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/fhir-types"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/fhir-types>
+       ] ;
+       fhir:concept ( [
+         fhir:code [ fhir:v "AdverseEvent" ]
+       ] [
+         fhir:code [ fhir:v "AuditEvent" ]
+       ] [
+         fhir:code [ fhir:v "ClaimResponse" ]
+       ] [
+         fhir:code [ fhir:v "Communication" ]
+       ] [
+         fhir:code [ fhir:v "Composition" ]
+       ] [
+         fhir:code [ fhir:v "Consent" ]
+       ] [
+         fhir:code [ fhir:v "Coverage" ]
+       ] [
+         fhir:code [ fhir:v "CoverageEligibilityResponse" ]
+       ] [
+         fhir:code [ fhir:v "DetectedIssue" ]
+       ] [
+         fhir:code [ fhir:v "DeviceAlert" ]
+       ] [
+         fhir:code [ fhir:v "DiagnosticReport" ]
+       ] [
+         fhir:code [ fhir:v "DocumentReference" ]
+       ] [
+         fhir:code [ fhir:v "Encounter" ]
+       ] [
+         fhir:code [ fhir:v "EpisodeOfCare" ]
+       ] [
+         fhir:code [ fhir:v "ExplanationOfBenefit" ]
+       ] [
+         fhir:code [ fhir:v "FamilyMemberHistory" ]
+       ] [
+         fhir:code [ fhir:v "GuidanceResponse" ]
+       ] [
+         fhir:code [ fhir:v "ImagingSelection" ]
+       ] [
+         fhir:code [ fhir:v "ImagingStudy" ]
+       ] [
+         fhir:code [ fhir:v "Immunization" ]
+       ] [
+         fhir:code [ fhir:v "MedicationAdministration" ]
+       ] [
+         fhir:code [ fhir:v "MedicationDispense" ]
+       ] [
+         fhir:code [ fhir:v "MedicationStatement" ]
+       ] [
+         fhir:code [ fhir:v "MessageHeader" ]
+       ] [
+         fhir:code [ fhir:v "NutritionIntake" ]
+       ] [
+         fhir:code [ fhir:v "Observation" ]
+       ] [
+         fhir:code [ fhir:v "PaymentNotice" ]
+       ] [
+         fhir:code [ fhir:v "PaymentReconciliation" ]
+       ] [
+         fhir:code [ fhir:v "Procedure" ]
+       ] [
+         fhir:code [ fhir:v "Provenance" ]
+       ] [
+         fhir:code [ fhir:v "QuestionnaireResponse" ]
+       ] [
+         fhir:code [ fhir:v "RiskAssessment" ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:expansion [] . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,92 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/EvidenceVariable/example-participant-flow> a fhir:EvidenceVariable ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-participant-flow"] ; # 
+  fhir:meta [
+     fhir:versionId [ fhir:v "3" ] ;
+     fhir:lastUpdated [ fhir:v "2025-03-10T13:18:16.608Z"^^xsd:dateTime ] ;
+     fhir:profile ( [
+       fhir:v "http://hl7.org/fhir/uv/ebm/StructureDefinition/participant-flow-evidence-variable"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/uv/ebm/StructureDefinition/participant-flow-evidence-variable>
+     ] )
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/EvidenceVariable/example-participant-flow"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/EvidenceVariable/example-participant-flow>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:text [ fhir:v "FEvIR Object Identifier" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "https://fevir.net/FOI/346779" ] ;
+     fhir:assigner [
+       fhir:display [ fhir:v "Computable Publishing LLC" ]
+     ]
+  ] ) ; # 
+  fhir:title [ fhir:v "PARACHUTE Trial Participants that declined randomization - Example EvidenceVariable"] ; # 
+  fhir:citeAs [ fhir:v "PARACHUTE Trial Participants that declined randomization - Example EvidenceVariable [Database Entry: FHIR EvidenceVariable Resource]. Contributors: Brian S. Alper, MD, MSPH [Authors/Creators]. In: Fast Evidence Interoperability Resources (FEvIR) Platform, FOI 346779. Revised 2025-03-10. Available at: https://fevir.net/resources/EvidenceVariable/346779. Computable resource at: https://fevir.net/resources/EvidenceVariable/346779#json."] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:author ( [
+     fhir:name [ fhir:v "Brian S. Alper, MD, MSPH" ]
+  ] ) ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Decision Support"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/dss" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Example variable definition for the ParticipantFlowEvidenceVariable Profile from the EBMonFHIR IG"] ; # 
+  fhir:useContext ( [
+     fhir:code [
+       fhir:system [
+         fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+         fhir:l <https://fevir.net/resources/CodeSystem/179423>
+       ] ;
+       fhir:code [ fhir:v "evidence-communication" ] ;
+       fhir:display [ fhir:v "Evidence Communication" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://fevir.net/resources/CodeSystem/179423"^^xsd:anyURI ;
+           fhir:l <https://fevir.net/resources/CodeSystem/179423>
+         ] ;
+         fhir:code [ fhir:v "ParticipantFlowEvidenceVariable" ] ;
+         fhir:display [ fhir:v "ParticipantFlowEvidenceVariable" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:copyright [ fhir:v "https://creativecommons.org/licenses/by-nc-sa/4.0/"] ; # 
+  fhir:actual [ fhir:v true] ; # 
+  fhir:definition [
+     fhir:concept [
+       fhir:text [ fhir:v "PARACHUTE Trial Participants that declined randomization" ]
+     ]
+  ] ; # 
+  fhir:handling [] . # 
+
+# -------------------------------------------------------------------------------------
+

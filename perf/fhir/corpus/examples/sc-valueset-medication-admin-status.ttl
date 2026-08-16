@@ -1,0 +1,108 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ConceptMap/sc-medication-admin-status> a fhir:ConceptMap ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "sc-medication-admin-status"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: ConceptMap sc-medication-admin-status</b></p><a name=\"sc-medication-admin-status\"> </a><a name=\"hcsc-medication-admin-status\"> </a><p>Mapping from <a href=\"valueset-medication-admin-status.html\">MedicationAdministration Status Codes</a> to <a href=\"valueset-resource-status.html\">Canonical Status Codes for FHIR Resources</a></p><br/><p>Mapping from <a href=\"codesystem-medication-admin-status.html\">MedicationAdministration Status Codes</a> to <a href=\"codesystem-resource-status.html\">Canonical Status Codes for FHIR Resources</a></p><table class=\"grid\"><tr><td><b>Source Code</b></td><td><b>Relationship</b></td><td><b>Target Code</b></td></tr><tr><td>entered-in-error</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>error</td></tr><tr><td>in-progress</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>active</td></tr><tr><td>on-hold</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>suspended</td></tr><tr><td>stopped</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>failed</td></tr><tr><td>completed</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>complete</td></tr><tr><td>unknown</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>unknown</td></tr><tr><td>not-done</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td>not-done</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ConceptMap/sc-medication-admin-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ConceptMap/sc-medication-admin-status>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "MedicationAdministrationStatusCodesCanonicalMap"] ; # 
+  fhir:title [ fhir:v "Canonical Mapping for \"MedicationAdministration Status Codes\""] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "FHIR Project team"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Canonical Mapping for \"MedicationAdministration Status Codes\""] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:sourceScope [
+     a fhir:Canonical ;
+     fhir:v "http://hl7.org/fhir/ValueSet/medication-admin-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/medication-admin-status>
+  ] ; # 
+  fhir:targetScope [
+     a fhir:Canonical ;
+     fhir:v "http://hl7.org/fhir/ValueSet/resource-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/resource-status>
+  ] ; # 
+  fhir:group ( [
+     fhir:source [
+       fhir:v "http://hl7.org/fhir/CodeSystem/medication-admin-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/CodeSystem/medication-admin-status>
+     ] ;
+     fhir:target [
+       fhir:v "http://hl7.org/fhir/resource-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/resource-status>
+     ] ;
+     fhir:element ( [
+       fhir:code [ fhir:v "entered-in-error" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "error" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "in-progress" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "active" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "on-hold" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "suspended" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "stopped" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "failed" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "completed" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "complete" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "unknown" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "unknown" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "not-done" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "not-done" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,301 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CarePlan/preg> a fhir:CarePlan ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "preg"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "additional" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p>A maternity care plan (for a pregnant woman).</p>\n      <p>LMP is 1st Jan, 2013 (a great new years party!) The plan has activities to take prenatal vitamins, schedule first antenatal,\n            and 'placeholders' for the second antenatal and delivery (there would be lots of others of course)</p>\n      <p>Note that where is a proposed 'status' element against each activity</p>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:contained ( [
+     a fhir:Condition ;
+     fhir:id [ fhir:v "p1" ] ;
+     fhir:clinicalStatus [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/condition-clinical"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/condition-clinical>
+         ] ;
+         fhir:code [ fhir:v "active" ]
+       ] )
+     ] ;
+     fhir:verificationStatus [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/condition-ver-status"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/condition-ver-status>
+         ] ;
+         fhir:code [ fhir:v "confirmed" ]
+       ] )
+     ] ;
+     fhir:code [
+       fhir:text [ fhir:v "pregnancy" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/1> ;
+       fhir:reference [ fhir:v "Patient/1" ] ;
+       fhir:display [ fhir:v "Eve Everywoman" ]
+     ]
+  ] [
+     a fhir:Practitioner ;
+     fhir:id [ fhir:v "pr1" ] ;
+     fhir:name ( [
+       fhir:family [ fhir:v "Midwife" ] ;
+       fhir:given ( [ fhir:v "Mavis" ] )
+     ] )
+  ] [
+     a fhir:Practitioner ;
+     fhir:id [ fhir:v "pr2" ] ;
+     fhir:name ( [
+       fhir:family [ fhir:v "Obstetrician" ] ;
+       fhir:given ( [ fhir:v "Oscar" ] )
+     ] )
+  ] [
+     a fhir:CareTeam ;
+     fhir:id [ fhir:v "careteam" ] ;
+     fhir:participant ( [
+       fhir:role [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://example.org/mysys"^^xsd:anyURI ;
+             fhir:l <http://example.org/mysys>
+           ] ;
+           fhir:code [ fhir:v "lmc" ]
+         ] ) ;
+         fhir:text [ fhir:v "Midwife" ]
+       ] ; # In New Zealand, there is a Lead Maternity Carer (LMC) - often a midwife
+       fhir:member [
+         fhir:l <#pr1> ;
+         fhir:reference [ fhir:v "#pr1" ] ; # This links to the clinician resource, so we get all the stuff related to that like address, contact etc...
+         fhir:display [ fhir:v "Mavis Midwife" ]
+       ]
+     ] [
+       fhir:role [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://example.org/mysys"^^xsd:anyURI ;
+             fhir:l <http://example.org/mysys>
+           ] ;
+           fhir:code [ fhir:v "obs" ]
+         ] ) ;
+         fhir:text [ fhir:v "Obstretitian" ]
+       ] ; # To indicate that there is an obstretian consultant involved in this case.
+       fhir:member [
+         fhir:l <#pr2> ;
+         fhir:reference [ fhir:v "#pr2" ] ; # This links to the clinician resource, so we get all the stuff related to that like address, contact etc...
+         fhir:display [ fhir:v "Oscar Obstetrician" ]
+       ]
+     ] )
+  ] [
+     a fhir:Goal ;
+     fhir:id [ fhir:v "goal" ] ;
+     fhir:lifecycleStatus [ fhir:v "active" ] ;
+     fhir:description [
+       fhir:text [ fhir:v "Maintain patient's health throughout pregnancy and ensure a healthy child" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/1> ;
+       fhir:reference [ fhir:v "Patient/1" ] ;
+       fhir:display [ fhir:v "Eve Everywoman" ]
+     ]
+  ] [
+     a fhir:Appointment ;
+     fhir:id [ fhir:v "activity-1" ] ;
+     fhir:status [ fhir:v "booked" ] ;
+     fhir:description [ fhir:v "The first antenatal encounter. This is where a detailed physical examination is performed and the pregnanacy discussed with the mother-to-be." ] ;
+     fhir:start [ fhir:v "2013-02-14T10:38:00+00:00"^^xsd:dateTime ] ;
+     fhir:end [ fhir:v "2013-02-14T10:50:00+00:00"^^xsd:dateTime ] ;
+     fhir:requestedPeriod ( [
+       fhir:start [ fhir:v "2013-02-14"^^xsd:date ] ;
+       fhir:end [ fhir:v "2013-02-28"^^xsd:date ]
+     ] ) ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/1> ;
+       fhir:reference [ fhir:v "Patient/1" ] ;
+       fhir:display [ fhir:v "Eve Everywoman" ]
+     ] ;
+     fhir:participant ( [
+       fhir:actor [
+         fhir:l <http://hl7.org/fhir/Patient/1> ;
+         fhir:reference [ fhir:v "Patient/1" ] ;
+         fhir:display [ fhir:v "Eve Everywoman" ]
+       ] ;
+       fhir:required [ fhir:v true ] ;
+       fhir:status [ fhir:v "accepted" ]
+     ] [
+       fhir:type ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationType"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationType>
+           ] ;
+           fhir:code [ fhir:v "ATND" ]
+         ] )
+       ] ) ;
+       fhir:actor [
+         fhir:l <#pr1> ;
+         fhir:reference [ fhir:v "#pr1" ] ;
+         fhir:display [ fhir:v "Mavis Midwife" ]
+       ] ;
+       fhir:required [ fhir:v true ] ;
+       fhir:status [ fhir:v "accepted" ]
+     ] )
+  ] [
+     a fhir:Appointment ;
+     fhir:id [ fhir:v "activity-2" ] ;
+     fhir:status [ fhir:v "proposed" ] ;
+     fhir:description [ fhir:v "The second antenatal encounter. Discuss any issues that arose from the first antenatal encounter" ] ;
+     fhir:requestedPeriod ( [
+       fhir:start [ fhir:v "2013-03-01"^^xsd:date ] ;
+       fhir:end [ fhir:v "2013-03-14"^^xsd:date ]
+     ] ) ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/1> ;
+       fhir:reference [ fhir:v "Patient/1" ] ;
+       fhir:display [ fhir:v "Eve Everywoman" ]
+     ] ;
+     fhir:participant ( [
+       fhir:actor [
+         fhir:l <http://hl7.org/fhir/Patient/1> ;
+         fhir:reference [ fhir:v "Patient/1" ] ;
+         fhir:display [ fhir:v "Eve Everywoman" ]
+       ] ;
+       fhir:required [ fhir:v true ] ;
+       fhir:status [ fhir:v "accepted" ]
+     ] [
+       fhir:type ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationType"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationType>
+           ] ;
+           fhir:code [ fhir:v "ATND" ]
+         ] )
+       ] ) ;
+       fhir:actor [
+         fhir:l <#pr1> ;
+         fhir:reference [ fhir:v "#pr1" ] ;
+         fhir:display [ fhir:v "Mavis Midwife" ]
+       ] ;
+       fhir:required [ fhir:v true ] ;
+       fhir:status [ fhir:v "accepted" ]
+     ] )
+  ] [
+     a fhir:Appointment ;
+     fhir:id [ fhir:v "activity-3" ] ;
+     fhir:status [ fhir:v "proposed" ] ;
+     fhir:description [ fhir:v "The delivery." ] ;
+     fhir:requestedPeriod ( [
+       fhir:start [ fhir:v "2013-09-01"^^xsd:date ] ;
+       fhir:end [ fhir:v "2013-09-14"^^xsd:date ]
+     ] ) ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/1> ;
+       fhir:reference [ fhir:v "Patient/1" ] ;
+       fhir:display [ fhir:v "Eve Everywoman" ]
+     ] ;
+     fhir:participant ( [
+       fhir:actor [
+         fhir:l <http://hl7.org/fhir/Patient/1> ;
+         fhir:reference [ fhir:v "Patient/1" ] ;
+         fhir:display [ fhir:v "Eve Everywoman" ]
+       ] ;
+       fhir:required [ fhir:v true ] ;
+       fhir:status [ fhir:v "accepted" ]
+     ] [
+       fhir:type ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationType"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationType>
+           ] ;
+           fhir:code [ fhir:v "ATND" ]
+         ] )
+       ] ) ;
+       fhir:actor [
+         fhir:l <#pr1> ;
+         fhir:reference [ fhir:v "#pr1" ] ;
+         fhir:display [ fhir:v "Mavis Midwife" ]
+       ] ;
+       fhir:required [ fhir:v true ] ;
+       fhir:status [ fhir:v "accepted" ]
+     ] )
+  ] ) ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://example.org/fhir/StructureDefinition/careplan#lmp"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/StructureDefinition/careplan#lmp>
+     ] ;
+     fhir:value [
+       a fhir:DateTime ;
+       fhir:v "2013-01-01"^^xsd:date
+     ]
+  ] ) ; # an extension to record the LMP, which is required at the plan level...
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "plan"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/1> ;
+     fhir:reference [ fhir:v "Patient/1" ] ;
+     fhir:display [ fhir:v "Eve Everywoman" ]
+  ] ; # 
+  fhir:period [
+     fhir:start [ fhir:v "2013-01-01"^^xsd:date ] ; # The likely duration of the pregnancy
+     fhir:end [ fhir:v "2013-10-01"^^xsd:date ]
+  ] ; # 
+  fhir:careTeam ( [
+     fhir:l <#careteam> ;
+     fhir:reference [ fhir:v "#careteam" ]
+  ] ) ; # 
+  fhir:addresses ( [
+     fhir:reference [
+       fhir:l <#p1> ;
+       fhir:reference [ fhir:v "#p1" ] ;
+       fhir:display [ fhir:v "pregnancy" ]
+     ]
+  ] ) ; # 
+  fhir:goal ( [
+     fhir:l <#goal> ;
+     fhir:reference [ fhir:v "#goal" ]
+  ] ) ; # 
+  fhir:activity ( [
+     fhir:plannedActivityReference [
+       fhir:display [ fhir:v "Prenatal vitamin MedicationRequest" ]
+     ]
+  ] [
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "http://example.org/fhir/StructureDefinition/careplan#andetails"^^xsd:anyURI ;
+         fhir:l <http://example.org/fhir/StructureDefinition/careplan#andetails>
+       ] ;
+       fhir:value [
+         a fhir:Uri ;
+         fhir:v "http://orionhealth.com/fhir/careplan/1andetails"^^xsd:anyURI ;
+         fhir:l <http://orionhealth.com/fhir/careplan/1andetails>
+       ]
+     ] ) ; # This will be the first antenatal encounter, a link to further details about the first antenatal details
+     fhir:plannedActivityReference [
+       fhir:l <#activity-1> ;
+       fhir:reference [ fhir:v "#activity-1" ]
+     ]
+  ] [
+     fhir:plannedActivityReference [
+       fhir:l <#activity-2> ;
+       fhir:reference [ fhir:v "#activity-2" ]
+     ]
+  ] [
+     fhir:plannedActivityReference [
+       fhir:l <#activity-3> ;
+       fhir:reference [ fhir:v "#activity-3" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/1> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,84 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Library/library-exclusive-breastfeeding-cds-logic> a fhir:Library ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "library-exclusive-breastfeeding-cds-logic"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Id: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">Library/library-exclusive-breastfeeding-cds-logic</td>\n            \n        </tr>\n         \n      </table>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Identifier: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  \n            <b>value: </b>\n                  \n            <span>Exclusive_Breastfeeding_CDS_Logic</span>\n               \n          </td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Version: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">1.0.0</td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Title: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">Exclusive Breastfeeding CDS Logic</td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Type: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-right: 25px;\">\n                  \n            <span>\n                     \n              <span>\n                        \n                <span style=\"padding-left: 25px;\">\n                           \n                  <b>code: </b>\n                           \n                  <span>logic-library</span>\n                        \n                </span>\n                     \n              </span>\n                  \n            </span>\n               \n          </td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Status: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">active</td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Description: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">Decision support logic for improving outcomes for exclusive breastmilk feeding of newborns</td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Topic: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-right: 25px;\">\n                  \n            <span style=\"padding-left: 25px;\">\n                     \n              <b>text: </b>\n                     \n              <span>Exclusive Breastfeeding</span>\n                  \n            </span>\n               \n          </td>\n            \n        </tr>\n         \n      </table>\n         \n      <p/>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Related: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr style=\"vertical-align: top;\">\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  \n            <p style=\"margin-bottom: 5px;\">\n                     \n              <b>type: </b>\n                     \n              <span>depends-on</span>\n                  \n            </p>\n                  \n            <p style=\"margin-bottom: 5px;\">\n                     \n              <b>Resource: </b>\n                     \n              <br/>\n                     \n              <span>\n                        \n                <span style=\"padding-left: 25px;\">\n                           \n                  <b>reference: </b>\n                           \n                  <span>Library/library-quick-model-definition</span>\n                        \n                </span>\n                     \n              </span>\n                  \n            </p>\n               \n          </td>\n            \n        </tr>\n         \n      </table>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Data Requirements: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  \n            <div>\n                     \n              <p style=\"margin-bottom: 5px;\">\n                        \n                <b>type: </b>\n                        \n                <span>Condition</span>\n                     \n              </p>\n                     \n              <p style=\"margin-bottom: 5px;\">\n                        \n                <b>code filter:</b>\n                        \n                <br/>\n                        \n                <span style=\"padding-left: 25px;\">\n                           \n                  <b>path: </b>\n                           \n                  <span>code</span>\n                        \n                </span>\n                        \n                <br/>\n                        \n                <span style=\"padding-left: 25px;\">\n                           \n                  <b>valueset: </b>\n                           \n                  <span>Single Live Birth</span>\n                        \n                </span>\n                     \n              </p>\n                  \n            </div>\n               \n          </td>\n            \n        </tr>\n         \n      </table>\n         \n      <table class=\"grid dict\">\n            \n        <tr>\n               \n          <td>\n                  \n            <b>Content: </b>\n               \n          </td>\n            \n        </tr>\n            \n        <tr>\n               \n          <td style=\"padding-left: 25px; padding-right: 25px;\">\n                  \n            <p style=\"margin-bottom: 5px;\">\n                     \n              <b>type: </b>\n                     \n              <span>text/cql</span>\n                  \n            </p>\n                  \n            <p style=\"margin-bottom: 5px;\">\n                     \n              <b>url: </b>\n                     \n              <span>http://cqlrepository.org/CMS9v4_CDS.cql</span>\n                  \n            </p>\n               \n          </td>\n            \n        </tr>\n         \n      </table>\n      \n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:value [ fhir:v "Exclusive_Breastfeeding_CDS_Logic" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "1.0.0"] ; # 
+  fhir:name [ fhir:v "ExclusiveBreastfeedingCDSLogic"] ; # 
+  fhir:title [ fhir:v "Exclusive Breastfeeding CDS Logic"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:code [ fhir:v "logic-library" ]
+     ] )
+  ] ; # 
+  fhir:date [ fhir:v "2016-03-08"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Decision Support"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/dss" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Decision support logic for improving outcomes for exclusive breastmilk feeding of newborns"] ; # 
+  fhir:topic ( [
+     fhir:text [ fhir:v "Exclusive Breastfeeding" ]
+  ] ) ; # 
+  fhir:relatedArtifact ( [
+     fhir:type [ fhir:v "depends-on" ] ;
+     fhir:resource [
+       fhir:v "http://example.org/fhir/Library/library-quick-model-definition"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Library/library-quick-model-definition>
+     ]
+  ] [
+     fhir:type [ fhir:v "derived-from" ] ;
+     fhir:resource [
+       fhir:v "http://example.org/fhir/Measure/measure-exclusive-breastfeeding"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Measure/measure-exclusive-breastfeeding>
+     ]
+  ] ) ; # 
+  fhir:dataRequirement ( [
+     fhir:type [ fhir:v "Condition" ] ;
+     fhir:codeFilter ( [
+       fhir:path [ fhir:v "code" ] ;
+       fhir:valueSet [
+         fhir:v "urn:oid:2.16.840.1.113883.3.117.1.7.1.25"^^xsd:anyURI ;
+         fhir:l <urn:oid:2.16.840.1.113883.3.117.1.7.1.25>
+       ]
+     ] )
+  ] ) ; # 
+  fhir:content ( [
+     fhir:contentType [ fhir:v "text/cql" ] ;
+     fhir:url [
+       fhir:v "http://cqlrepository.org/CMS9v4_CDS.cql"^^xsd:anyURI ;
+       fhir:l <http://cqlrepository.org/CMS9v4_CDS.cql>
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

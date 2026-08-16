@@ -1,5 +1,11 @@
-/** ShExHumanErrorWriter - render validation failures as indented human-readable text.
+/** ShExHumanErrorWriter - render validation failures as indented
+ * human-readable text.
+ *
+ * The sentences come from ./error-messages.ts, which editor-services uses
+ * too; what is left here is the *shape* of a report -- what nests under
+ * what, and where the connectives go.  See doc/error-reporting.md.
  */
+import {describeError, isLeafError, repairText, ErrorContext} from "./error-messages";
 const XSD: { [key: string]: string } = {}
 XSD._namespace = "http://www.w3.org/2001/XMLSchema#";
 ["anyURI", "string"].forEach(p => {
@@ -7,119 +13,115 @@ XSD._namespace = "http://www.w3.org/2001/XMLSchema#";
 });
 
 class ShExHumanErrorWriter {
+  private prefixes: { [prefix: string]: string } = {};
+
   /** nested errors, each indented under what they explain */
-  nest (errors: any): string[] {
+  nest (errors: any, ctx: ErrorContext = {}): string[] {
     return (Array.isArray(errors) ? errors : [errors]).reduce((ret: string[], e: any) =>
-      ret.concat((typeof e === "string" ? [e] : this.write(e)).map(s => "  " + s)), []);
+      ret.concat(this.write(e, this.prefixes, ctx).map(s => "  " + s)), []);
   }
 
   /** a list of errors with a connector between them: AND for things that are
    * all wrong, OR for alternative accounts of one thing */
-  joined (errors: any[], connector: "AND" | "OR"): string[] {
+  joined (errors: any[], connector: "AND" | "OR", ctx: ErrorContext = {}): string[] {
+    // one thing joined to nothing is just the thing: the indent is there to
+    // show what the connector governs, and with no connector it only buries
+    // the sentence a level deeper for every wrapper it passes through
+    if (errors.length === 1)
+      return this.write(errors[0], this.prefixes, ctx);
     return errors.reduce((ret: string[], e: any) => {
-      const nested = (typeof e === "string" ? [e] : this.write(e)).map(s => "  " + s);
+      const nested = this.write(e, this.prefixes, ctx).map(s => "  " + s);
       return ret.length > 0 ? ret.concat([connector]).concat(nested) : nested;
     }, []);
   }
 
-  write (val: any): string[] {
-    const _HumanErrorWriter = this;
-    if (Array.isArray(val)) {
+  write (val: any, prefixes?: { [prefix: string]: string }, ctx: ErrorContext = {}): string[] {
+    if (prefixes !== undefined)
+      this.prefixes = prefixes;
+    const said: ErrorContext = Object.assign({prefixes: this.prefixes}, ctx);
+
+    if (Array.isArray(val))
       return val.reduce((ret: string[], e) => {
-        const nested = _HumanErrorWriter.write(e).map(s => "  " + s);
+        const nested = this.write(e, this.prefixes, ctx).map(s => "  " + s);
         return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
       }, []);
-    }
-    if (typeof val === "string")
-      return [val];
 
-    switch (val.type) {
+    // a leaf says what is wrong with one thing; everything below composes
+    const leaf = isLeafError(val) ? describeError(val, said) : null;
+    if (leaf !== null && !hasNested(val))
+      return [leaf.text];
+
+    switch (val === null || val === undefined ? "" : val.type) {
     case "FailureList":
-      return val.errors.reduce((ret: string[], e: any) => {
-        return ret.concat(_HumanErrorWriter.write(e));
-      }, []);
+      return val.errors.reduce((ret: string[], e: any) => ret.concat(this.write(e, this.prefixes, ctx)), []);
     case "Failure": {
       // everything in a Failure's list is wrong with the node at once; the
       // alternatives live in PossibleErrors below
-      const said = ["validating " + val.node + " as " + val.shape + ":"]
-            .concat(_HumanErrorWriter.joined(errorList(val.errors), "AND").map(s => "  " + s));
-      // ...and, where the validator was asked for them, what would make the
-      // node conform: the nearest bag of arcs this shape accepts
-      const ways = (val.repairs || [])
-            .map((repair: any) => (repair.arcs || []).map(
-              (arc: any) => (arc.delta > 0 ? "add " : "remove ") + Math.abs(arc.delta)
-                + " " + arc.property).join(" and "))
-            .filter((way: string) => way !== "");
-      return ways.length === 0 ? said
-        : said.concat(["  to conform: " + ways.join(", or ")]);
+      // What would make the node conform leads, where the validator worked
+      // it out: it is the part of a report a reader can act on.  The errors
+      // are the detail under it -- why it doesn't, arc by arc.
+      const ways = repairText(val.repairs);
+      const detail = this.joined(errorList(val.errors), "AND", said).map(s => "  " + s);
+      return ["validating " + val.node + " as " + val.shape + ":"]
+        .concat(ways.length === 0 ? [] : ["  to conform: " + ways.join(", or ")])
+        .concat(detail);
     }
-    case "PossibleErrors":
-      // one list per way of reading the neighborhood: any one of them, put
+    case "AllOf":
+      // one reading's errors, all true at once
+      return this.joined(errorList(val.errors), "AND", said);
+    case "Alternatives":
+    case "PossibleErrors":       // its older spelling
+      // one entry per way of reading the neighborhood: any one of them, put
       // right, would settle it
-      return val.errors.reduce((ret: string[], alternative: any) => {
+      return (val.of || val.errors).reduce((ret: string[], alternative: any) => {
         const nested = (Array.isArray(alternative)
-                        ? _HumanErrorWriter.joined(alternative, "AND")
-                        : _HumanErrorWriter.write(alternative)).map(s => "  " + s);
+                        ? this.joined(alternative, "AND", said)
+                        : this.write(alternative, this.prefixes, ctx)).map(s => "  " + s);
         return ret.length > 0 ? ret.concat(["OR"]).concat(nested) : nested;
       }, []);
-    case "TypeMismatch":
-      return ["validating " + n3ify(val.triple.object) + ":"].concat(_HumanErrorWriter.nest(val.errors));
+    case "TypeMismatch": {
+      // the header names the triple and the constraint; a cause that says no
+      // more than the header does isn't worth a line of its own
+      const header = leaf !== null ? leaf.text : "validating " + n3ify(val.triple.object);
+      // the causes say only *why*: the header has named the node already
+      const causes = this.nest(val.errors, Object.assign({}, said, {
+        constraint: val.constraint || said.constraint, triple: val.triple, terse: true,
+      })).filter(line => line.trim() !== "" && !header.endsWith(line.trim()));
+      return [header + (causes.length ? ":" : "")].concat(causes);
+    }
     case "RestrictionError":
-      return ["validating restrictions on " + n3ify(val.focus) + ":"]
-        .concat(_HumanErrorWriter.nest(val.errors));
+      return ["validating restrictions on " + n3ify(val.focus) + ":"].concat(this.nest(val.errors, said));
     case "ShapeAndFailure":
-      return _HumanErrorWriter.nest(val.errors);
+      return this.nest(val.errors, said);
     case "ShapeOrFailure":
-      return _HumanErrorWriter.joined(
-        Array.isArray(val.errors) ? val.errors : [val.errors], "OR");
+      return this.joined(Array.isArray(val.errors) ? val.errors : [val.errors], "OR", said);
     case "ShapeNotFailure":
       return ["Node " + val.errors.node + " expected to NOT pass " + val.errors.shape];
-    case "ExcessTripleViolation":
-      return ["validating " + n3ify(val.triple.object) + ": exceeds cardinality"];
-    case "ClosedShapeViolation":
-      return ["Unexpected triple(s): {"].concat(
-        val.unexpectedTriples.map((t: any) => {
-          return "  " + t.subject + " " + t.predicate + " " + n3ify(t.object) + " ."
-        })
-      ).concat(["}"]);
-    case "NodeConstraintViolation":
-      return ["NodeConstraintError: expected to " + this.nodeConstraintToSimple(val.shapeExpr).join(', ')];
-    case "MissingProperty":
-      return ["Missing property: " + val.property];
-    case "NegatedProperty":
-      return ["Unexpected property: " + val.property];
-    case "AbstractShapeFailure":
-      return ["Abstract Shape: " + val.shape];
     case "SemActFailure":
-      return ["rejected by semantic action:"].concat(_HumanErrorWriter.nest(val.errors));
-    case "SemActViolation":
-      return [val.message];
-    case "FeasibilityViolation": {
-      // Say what would settle it rather than only that nothing does: a
-      // :system inside `( :code . ; :system . ? )?` wants a :code beside it,
-      // and the two ways out are worth naming.
-      const arc = "Triple " + val.triple.subject + " " + val.triple.predicate + " "
-            + n3ify(val.triple.object);
-      // each repair is a set of arcs to add together; the repairs are the
-      // alternatives, and removing the triple is always one of them
-      const ways = (val.repairs || []).map((r: any) => (r.arcs || []).map((a: any) => a.property));
-      const every1 = ways.every((arcs: string[]) => arcs.length === 1);
-      const said = every1
-            ? "add " + ways.map((arcs: string[]) => arcs[0]).join(" or ")
-            : ways.map((arcs: string[]) => "add " + arcs.join(" and ")).join(", or ");
-      return [ways.length === 0
-              ? arc + " fits no triple constraint: remove it."
-              : arc + " fits no triple constraint: either " + said + ", or remove it."];
-    }
+      return ["rejected by semantic action:"].concat(this.nest(val.errors, said));
     case "ResultReference":
       return ["see " + val.ref];
     default:
-      debugger; // console.log(val);
-      throw Error("unknown shapeExpression type \"" + val.type + "\" in " + JSON.stringify(val));
+      if (leaf !== null)
+        return [leaf.text];
+      if (typeof val === "string")
+        return [val];
+      throw Error("unknown shapeExpression type \"" + (val && val.type) + "\" in " + JSON.stringify(val));
     }
+
+    /** does this error have causes to nest, or is its own sentence the whole account? */
+    function hasNested (e: any): boolean {
+      if (e === null || typeof e !== "object" || !("errors" in e))
+        return false;
+      if (e.type === "NodeConstraintViolation")
+        return false;             // its errors are the stringified form of itself
+      return Array.isArray(e.errors) ? e.errors.length > 0 : e.errors !== undefined;
+    }
+    /** unwrap the anonymous {errors: [...]} boxes the validator still nests;
+     * an AllOf or an Alternatives says what it is and is left alone */
     function errorList (errors: any[]): any[] {
-      return errors.reduce(function (acc, e) {
-        const attrs = Object.keys(e);
+      return (errors || []).reduce(function (acc: any[], e: any) {
+        const attrs = Object.keys(e || {});
         return acc.concat(
           (attrs.length === 1 && attrs[0] === "errors")
             ? errorList(e.errors)

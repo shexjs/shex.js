@@ -1,0 +1,87 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Account/ewg> a fhir:Account ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "ewg"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Inpatient Admission for Peter James Chalmers Account</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:oid:0.1.2.3.4.5.6.7"^^xsd:anyURI ;
+       fhir:l <urn:oid:0.1.2.3.4.5.6.7>
+     ] ;
+     fhir:value [ fhir:v "654321" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+       ] ;
+       fhir:code [ fhir:v "PBILLACCT" ] ;
+       fhir:display [ fhir:v "patient billing account" ]
+     ] ) ;
+     fhir:text [ fhir:v "patient" ]
+  ] ; # 
+  fhir:name [ fhir:v "Inpatient: Peter James Chalmers"] ; # 
+  fhir:subject ( [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Peter James Chalmers" ]
+  ] ) ; # 
+  fhir:servicePeriod [
+     fhir:start [ fhir:v "2016-01-01"^^xsd:date ] ;
+     fhir:end [ fhir:v "2016-06-30"^^xsd:date ]
+  ] ; # 
+  fhir:coverage ( [
+     fhir:coverage [
+       fhir:l <http://hl7.org/fhir/Coverage/9876B1> ;
+       fhir:reference [ fhir:v "Coverage/9876B1" ]
+     ] ;
+     fhir:priority [ fhir:v "1"^^xsd:positiveInteger ]
+  ] [
+     fhir:coverage [
+       fhir:l <http://hl7.org/fhir/Coverage/7546D> ;
+       fhir:reference [ fhir:v "Coverage/7546D" ]
+     ] ;
+     fhir:priority [ fhir:v "2"^^xsd:positiveInteger ]
+  ] ) ; # 
+  fhir:owner [
+     fhir:l <http://hl7.org/fhir/Organization/f001> ;
+     fhir:reference [ fhir:v "Organization/f001" ] ;
+     fhir:display [ fhir:v "Burgers University Medical Center" ]
+  ] ; # 
+  fhir:description [ fhir:v "Hospital charges"] ; # 
+  fhir:guarantor ( [
+     fhir:party [
+       fhir:l <http://hl7.org/fhir/RelatedPerson/benedicte> ;
+       fhir:reference [ fhir:v "RelatedPerson/benedicte" ] ;
+       fhir:display [ fhir:v "Bénédicte du Marché" ]
+     ] ;
+     fhir:onHold [ fhir:v false ] ;
+     fhir:period [
+       fhir:start [ fhir:v "2016-01-01"^^xsd:date ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Coverage/9876B1> a fhir:Coverage .
+
+<http://hl7.org/fhir/Coverage/7546D> a fhir:Coverage .
+
+<http://hl7.org/fhir/Organization/f001> a fhir:Organization .
+
+<http://hl7.org/fhir/RelatedPerson/benedicte> a fhir:RelatedPerson .
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,86 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/AllergyIntolerance/fishallergy> a fhir:AllergyIntolerance ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "fishallergy"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "additional" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p>allergy is to fresh fish. Tolerates canned fish</p>\n      <p>recordedDate:2015-08-06T00:00:00-06:00</p>\n      <p>substance:Fish - dietary (substance)</p>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://acme.com/ids/patients/risks"^^xsd:anyURI ;
+       fhir:l <http://acme.com/ids/patients/risks>
+     ] ;
+     fhir:value [ fhir:v "49476535" ]
+  ] ) ; # an identifier used for this Adverse Reaction Risk
+  fhir:clinicalStatus [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical>
+       ] ;
+       fhir:code [ fhir:v "active" ] ;
+       fhir:display [ fhir:v "Active" ]
+     ] )
+  ] ; # 
+  fhir:verificationStatus [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/allergyintolerance-verification>
+       ] ;
+       fhir:code [ fhir:v "confirmed" ] ;
+       fhir:display [ fhir:v "Confirmed" ]
+     ] )
+  ] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/allergy-intolerance-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/allergy-intolerance-category>
+       ] ;
+       fhir:code [ fhir:v "food" ] ;
+       fhir:display [ fhir:v "Food" ]
+     ] )
+  ] ) ; # this categorization is implied by "fish" and therefore basically 
+#    redundant, but many systems collect this field anyway, since it's either 
+#    useful when the substance is not coded, or it's quicker to sort/filter on
+#    than using terminology based reasoning
+  fhir:code [
+     a sct:227037002 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "227037002" ] ;
+       fhir:display [ fhir:v "Fish - dietary (substance)" ]
+     ] ) ;
+     fhir:text [ fhir:v "Allergic to fresh fish. Tolerates canned fish" ]
+  ] ; # subtance - either coded, or text. A few times, 
+#    there's a full description of a complex substance - in these caes, use the
+#    extension [url] to refer to a Substance resource
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # the patient that actually has the risk of adverse reaction
+  fhir:recordedDate [ fhir:v "2015-08-06T15:37:31-06:00"^^xsd:dateTime] ; # the date that this entry was recorded
+  fhir:recorder [
+     fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+     fhir:reference [ fhir:v "Practitioner/example" ]
+  ] . # who made the record / last updated it
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

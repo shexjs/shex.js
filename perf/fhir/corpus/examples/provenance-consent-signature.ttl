@@ -1,0 +1,76 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# This provenance example is paired with the 
+#  consent signature example.
+
+<http://hl7.org/fhir/Provenance/consent-signature> a fhir:Provenance ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "consent-signature"] ; # 
+  fhir:target ( [
+     fhir:l <http://hl7.org/fhir/Consent/consent-example-basic/_history/1> ;
+     fhir:reference [ fhir:v "Consent/consent-example-basic/_history/1" ]
+  ] ) ; # 
+  fhir:recorded [ fhir:v "2016-05-26T00:41:10-04:00"^^xsd:dateTime] ; # the provenance is recorded at the same time as 
+#    the resource - batched together
+  fhir:activity [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-DocumentCompletion"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-DocumentCompletion>
+       ] ;
+       fhir:code [ fhir:v "AU" ] ;
+       fhir:display [ fhir:v "authenticated" ]
+     ] )
+  ] ; # 
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:agent ( [
+     fhir:role ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationType"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationType>
+         ] ;
+         fhir:code [ fhir:v "AUT" ]
+       ] )
+     ] ) ;
+     fhir:who [
+       fhir:l <http://hl7.org/fhir/Patient/72> ;
+       fhir:reference [ fhir:v "Patient/72" ]
+     ]
+  ] ) ; # 
+  fhir:signature ( [
+     fhir:type ( [
+       fhir:system [
+         fhir:v "urn:iso-astm:E1762-95:2013"^^xsd:anyURI ;
+         fhir:l <urn:iso-astm:E1762-95:2013>
+       ] ;
+       fhir:code [ fhir:v "1.2.840.10065.1.12.1.1" ] ;
+       fhir:display [ fhir:v "Author's Signature" ]
+     ] ) ;
+     fhir:when [ fhir:v "2016-05-26T00:41:10-04:00"^^xsd:dateTime ] ;
+     fhir:who [
+       fhir:l <http://hl7.org/fhir/Patient/72> ;
+       fhir:reference [ fhir:v "Patient/72" ]
+     ] ;
+     fhir:targetFormat [ fhir:v "application/fhir+xml" ] ;
+     fhir:sigFormat [ fhir:v "application/signature+xml" ] ;
+     fhir:data [ fhir:v "dGhpcyBibG9iIGlzIHNuaXBwZWQ="^^xsd:base64Binary ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Consent/consent-example-basic/_history/1> a fhir:Consent .
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Patient/72> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

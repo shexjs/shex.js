@@ -1,0 +1,258 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Device/PhilipsThermometer> a fhir:Device ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "PhilipsThermometer"] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ContinuaDeviceIdentifiers"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ContinuaDeviceIdentifiers>
+         ] ;
+         fhir:code [ fhir:v "SYSID" ] ;
+         fhir:display [ fhir:v "System Identifier" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "urn:oid:1.2.840.10004.1.1.1.0.0.1.0.0.1.2680"^^xsd:anyURI ;
+       fhir:l <urn:oid:1.2.840.10004.1.1.1.0.0.1.0.0.1.2680>
+     ] ;
+     fhir:value [ fhir:v "1C-87-74-FF-FE-00-EC-20" ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ContinuaDeviceIdentifiers"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ContinuaDeviceIdentifiers>
+         ] ;
+         fhir:code [ fhir:v "BTMAC" ] ;
+         fhir:display [ fhir:v "Bluetooth Address" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/eui-48"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/eui-48>
+     ] ;
+     fhir:value [ fhir:v "1C-87-74-00-EC-20" ]
+  ] ) ; # 
+  fhir:udiCarrier ( [
+     fhir:deviceIdentifier [ fhir:v "31368092380192" ] ;
+     fhir:issuer [
+       fhir:v "http://hl7.org/fhir/NamingSystem/gs1-di"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/NamingSystem/gs1-di>
+     ] ;
+     fhir:jurisdiction [
+       fhir:v "http://hl7.org/fhir/NamingSystem/fda-udi"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/NamingSystem/fda-udi>
+     ] ;
+     fhir:carrierHRF [ fhir:v "(01)31368092380192(21)162502000528" ] ;
+     fhir:entryType [ fhir:v "unknown" ]
+  ] ) ; # 
+  fhir:manufacturer [ fhir:v "Philips"] ; # 
+  fhir:serialNumber [ fhir:v "162502000528"] ; # 
+  fhir:name ( [
+     fhir:value [ fhir:v "Philips ear thermometer" ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/device-nametype"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/device-nametype>
+         ] ;
+         fhir:code [ fhir:v "user-friendly-name" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:modelNumber [ fhir:v "DL8740"] ; # 
+  fhir:type ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+         fhir:l <urn:iso:std:iso:11073:10101>
+       ] ;
+       fhir:code [ fhir:v "65573" ] ;
+       fhir:display [ fhir:v "MDC_MOC_VMS_MDS_SIMP" ]
+     ] ) ;
+     fhir:text [ fhir:v "MDC_MOC_VMS_MDS_SIMP: Personal Health Device" ]
+  ] ) ; # 
+  fhir:deviceVersion ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "531976" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_ID_PROD_SPEC_FW: Firmware revision" ]
+     ] ;
+     fhir:value [ fhir:v "1.60" ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "531975" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_ID_PROD_SPEC_SW: Software revision" ]
+     ] ;
+     fhir:value [ fhir:v "1.50" ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "531974" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_ID_PROD_SPEC_SW: Hardware revision" ]
+     ] ;
+     fhir:value [ fhir:v "1.40" ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "532352" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_REG_CERT_DATA_CONTINUA_VERSION: Continua version" ]
+     ] ;
+     fhir:value [ fhir:v "5.1" ]
+  ] ) ; # 
+  fhir:conformsTo ( [
+     fhir:specification [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "528392" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_DEV_SPEC_PROFILE_TEMP: Thermometer" ]
+     ] ;
+     fhir:version [ fhir:v "1" ]
+  ] ) ; # 
+  fhir:property ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "532353" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_REG_CERT_DATA_CONTINUA_CERT_DEV_LIST: Continua certified device list" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ContinuaPAN"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ContinuaPAN>
+         ] ;
+         fhir:code [ fhir:v "32776" ]
+       ] )
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ASN1ToHL7"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ASN1ToHL7>
+         ] ;
+         fhir:code [ fhir:v "532354.0" ]
+       ] ) ;
+       fhir:text [ fhir:v "regulation-status" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0136"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0136>
+         ] ;
+         fhir:code [ fhir:v "N" ]
+       ] ) ;
+       fhir:text [ fhir:v "Device is Regulated" ]
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "68220" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_TIME_SYNC_PROTOCOL: Time synchronization protocol" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:iso:std:iso:11073:10101"^^xsd:anyURI ;
+           fhir:l <urn:iso:std:iso:11073:10101>
+         ] ;
+         fhir:code [ fhir:v "532224" ]
+       ] ) ;
+       fhir:text [ fhir:v "MDC_TIME_SYNC_NONE: No time synchronization" ]
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ASN1ToHL7"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ASN1ToHL7>
+         ] ;
+         fhir:code [ fhir:v "68219.0" ]
+       ] ) ;
+       fhir:text [ fhir:v "mds-time-capab-real-time-clock" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0136"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0136>
+         ] ;
+         fhir:code [ fhir:v "Y" ]
+       ] ) ;
+       fhir:text [ fhir:v "real time clock supported" ]
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ASN1ToHL7"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ASN1ToHL7>
+         ] ;
+         fhir:code [ fhir:v "68219.1" ]
+       ] ) ;
+       fhir:text [ fhir:v "mds-time-capab-set-clock" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0136"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0136>
+         ] ;
+         fhir:code [ fhir:v "Y" ]
+       ] ) ;
+       fhir:text [ fhir:v "setting the time supported" ]
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

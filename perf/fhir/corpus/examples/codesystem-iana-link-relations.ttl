@@ -1,0 +1,560 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/iana-link-relations> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "iana-link-relations"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem iana-link-relations</b></p><a name=\"iana-link-relations\"> </a><a name=\"hciana-link-relations\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/CodeSystem/iana-link-relations</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">about<a name=\"iana-link-relations-about\"> </a></td><td>Refers to a resource that is the subject of the link's context.</td><td><div><p>Refers to a resource that is the subject of the link's context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">acl<a name=\"iana-link-relations-acl\"> </a></td><td>Asserts that the link target provides an access control description for the link context.</td><td><div><p>Asserts that the link target provides an access control description for the link context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">alternate<a name=\"iana-link-relations-alternate\"> </a></td><td>Refers to a substitute for this context</td><td><div><p>Refers to a substitute for this context</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">amphtml<a name=\"iana-link-relations-amphtml\"> </a></td><td>Used to reference alternative content that uses the AMP profile of the HTML format.</td><td><div><p>Used to reference alternative content that uses the AMP profile of the HTML format.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">appendix<a name=\"iana-link-relations-appendix\"> </a></td><td>Refers to an appendix.</td><td><div><p>Refers to an appendix.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">apple-touch-icon<a name=\"iana-link-relations-apple-touch-icon\"> </a></td><td>Refers to an icon for the context. Synonym for icon.</td><td><div><p>Refers to an icon for the context. Synonym for icon.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">apple-touch-startup-image<a name=\"iana-link-relations-apple-touch-startup-image\"> </a></td><td>Refers to a launch screen for the context.</td><td><div><p>Refers to a launch screen for the context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">archives<a name=\"iana-link-relations-archives\"> </a></td><td>Refers to a collection of records, documents, or other\n      materials of historical interest.</td><td><div><p>Refers to a collection of records, documents, or other\nmaterials of historical interest.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">author<a name=\"iana-link-relations-author\"> </a></td><td>Refers to the context's author.</td><td><div><p>Refers to the context's author.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">blocked-by<a name=\"iana-link-relations-blocked-by\"> </a></td><td>Identifies the entity that blocks access to a resource\n      following receipt of a legal demand.</td><td><div><p>Identifies the entity that blocks access to a resource\nfollowing receipt of a legal demand.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">bookmark<a name=\"iana-link-relations-bookmark\"> </a></td><td>Gives a permanent link to use for bookmarking purposes.</td><td><div><p>Gives a permanent link to use for bookmarking purposes.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">canonical<a name=\"iana-link-relations-canonical\"> </a></td><td>Designates the preferred version of a resource (the IRI and its contents).</td><td><div><p>Designates the preferred version of a resource (the IRI and its contents).</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">chapter<a name=\"iana-link-relations-chapter\"> </a></td><td>Refers to a chapter in a collection of resources.</td><td><div><p>Refers to a chapter in a collection of resources.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">cite-as<a name=\"iana-link-relations-cite-as\"> </a></td><td>Indicates that the link target is preferred over the link context for the purpose of permanent citation.</td><td><div><p>Indicates that the link target is preferred over the link context for the purpose of permanent citation.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">collection<a name=\"iana-link-relations-collection\"> </a></td><td>The target IRI points to a resource which represents the collection resource for the context IRI.</td><td><div><p>The target IRI points to a resource which represents the collection resource for the context IRI.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">contents<a name=\"iana-link-relations-contents\"> </a></td><td>Refers to a table of contents.</td><td><div><p>Refers to a table of contents.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">convertedFrom<a name=\"iana-link-relations-convertedFrom\"> </a></td><td>The document linked to was later converted to the\n      document that contains this link relation.  For example, an RFC can\n      have a link to the Internet-Draft that became the RFC; in that case,\n      the link relation would be \"convertedFrom\".</td><td><div><p>The document linked to was later converted to the\ndocument that contains this link relation.  For example, an RFC can\nhave a link to the Internet-Draft that became the RFC; in that case,\nthe link relation would be \"convertedFrom\".</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">copyright<a name=\"iana-link-relations-copyright\"> </a></td><td>Refers to a copyright statement that applies to the\n    link's context.</td><td><div><p>Refers to a copyright statement that applies to the\nlink's context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">create-form<a name=\"iana-link-relations-create-form\"> </a></td><td>The target IRI points to a resource where a submission form can be obtained.</td><td><div><p>The target IRI points to a resource where a submission form can be obtained.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">current<a name=\"iana-link-relations-current\"> </a></td><td>Refers to a resource containing the most recent\n      item(s) in a collection of resources.</td><td><div><p>Refers to a resource containing the most recent\nitem(s) in a collection of resources.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">describedby<a name=\"iana-link-relations-describedby\"> </a></td><td>Refers to a resource providing information about the\n      link's context.</td><td><div><p>Refers to a resource providing information about the\nlink's context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">describes<a name=\"iana-link-relations-describes\"> </a></td><td>The relationship A 'describes' B asserts that\n      resource A provides a description of resource B. There are no\n      constraints on the format or representation of either A or B,\n      neither are there any further constraints on either resource.</td><td><div><p>The relationship A 'describes' B asserts that\nresource A provides a description of resource B. There are no\nconstraints on the format or representation of either A or B,\nneither are there any further constraints on either resource.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">disclosure<a name=\"iana-link-relations-disclosure\"> </a></td><td>Refers to a list of patent disclosures made with respect to \n      material for which 'disclosure' relation is specified.</td><td><div><p>Refers to a list of patent disclosures made with respect to\nmaterial for which 'disclosure' relation is specified.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">dns-prefetch<a name=\"iana-link-relations-dns-prefetch\"> </a></td><td>Used to indicate an origin that will be used to fetch required \n      resources for the link context, and that the user agent ought to resolve \n      as early as possible.</td><td><div><p>Used to indicate an origin that will be used to fetch required\nresources for the link context, and that the user agent ought to resolve\nas early as possible.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">duplicate<a name=\"iana-link-relations-duplicate\"> </a></td><td>Refers to a resource whose available representations\n      are byte-for-byte identical with the corresponding representations of\n      the context IRI.</td><td><div><p>Refers to a resource whose available representations\nare byte-for-byte identical with the corresponding representations of\nthe context IRI.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">edit<a name=\"iana-link-relations-edit\"> </a></td><td>Refers to a resource that can be used to edit the\n      link's context.</td><td><div><p>Refers to a resource that can be used to edit the\nlink's context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">edit-form<a name=\"iana-link-relations-edit-form\"> </a></td><td>The target IRI points to a resource where a submission form for\n      editing associated resource can be obtained.</td><td><div><p>The target IRI points to a resource where a submission form for\nediting associated resource can be obtained.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">edit-media<a name=\"iana-link-relations-edit-media\"> </a></td><td>Refers to a resource that can be used to edit media\n      associated with the link's context.</td><td><div><p>Refers to a resource that can be used to edit media\nassociated with the link's context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">enclosure<a name=\"iana-link-relations-enclosure\"> </a></td><td>Identifies a related resource that is potentially\n      large and might require special handling.</td><td><div><p>Identifies a related resource that is potentially\nlarge and might require special handling.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">external<a name=\"iana-link-relations-external\"> </a></td><td>Refers to a resource that is not part of the same site as the current context.</td><td><div><p>Refers to a resource that is not part of the same site as the current context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">first<a name=\"iana-link-relations-first\"> </a></td><td>An IRI that refers to the furthest preceding resource\n    in a series of resources.</td><td><div><p>An IRI that refers to the furthest preceding resource\nin a series of resources.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">glossary<a name=\"iana-link-relations-glossary\"> </a></td><td>Refers to a glossary of terms.</td><td><div><p>Refers to a glossary of terms.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">help<a name=\"iana-link-relations-help\"> </a></td><td>Refers to context-sensitive help.</td><td><div><p>Refers to context-sensitive help.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">hosts<a name=\"iana-link-relations-hosts\"> </a></td><td>Refers to a resource hosted by the server indicated by\n      the link context.</td><td><div><p>Refers to a resource hosted by the server indicated by\nthe link context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">hub<a name=\"iana-link-relations-hub\"> </a></td><td>Refers to a hub that enables registration for\n    notification of updates to the context.</td><td><div><p>Refers to a hub that enables registration for\nnotification of updates to the context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">icon<a name=\"iana-link-relations-icon\"> </a></td><td>Refers to an icon representing the link's context.</td><td><div><p>Refers to an icon representing the link's context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">index<a name=\"iana-link-relations-index\"> </a></td><td>Refers to an index.</td><td><div><p>Refers to an index.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">intervalAfter<a name=\"iana-link-relations-intervalAfter\"> </a></td><td>refers to a resource associated with a time interval that ends before the beginning of the time interval associated with the context resource</td><td><div><p>refers to a resource associated with a time interval that ends before the beginning of the time interval associated with the context resource</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">intervalBefore<a name=\"iana-link-relations-intervalBefore\"> </a></td><td>refers to a resource associated with a time interval that begins after the end of the time interval associated with the context resource</td><td><div><p>refers to a resource associated with a time interval that begins after the end of the time interval associated with the context resource</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">intervalContains<a name=\"iana-link-relations-intervalContains\"> </a></td><td>refers to a resource associated with a time interval that begins after the beginning of the time interval associated with the context resource, and ends before the end of the time interval associated with the context resource</td><td><div><p>refers to a resource associated with a time interval that begins after the beginning of the time interval associated with the context resource, and ends before the end of the time interval associated with the context resource</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">intervalDisjoint<a name=\"iana-link-relations-intervalDisjoint\"> </a></td><td>refers to a resource associated with a time interval that begins after the end of the time interval associated with the context resource, or ends before the beginning of the time interval associated with the context resource</td><td><div><p>refers to a resource associated with a time interval that begins after the end of the time interval associated with the context resource, or ends before the beginning of the time interval associated with the context resource</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">intervalDuring<a name=\"iana-link-relations-intervalDuring\"> </a></td><td>refers to a resource associated with a time interval that begins before the beginning of the time interval associated with the context resource, and ends after the end of the time interval associated with the context resource</td><td><div><p>refers to a resource associated with a time interval that begins before the beginning of the time interval associated with the context resource, and ends after the end of the time interval associated with the context resource</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">intervalEquals<a name=\"iana-link-relations-intervalEquals\"> </a></td><td>refers to a resource associated with a time interval whose beginning coincides with the beginning of the time interval associated with the context resource, and whose end coincides with the end of the time interval associated with the context resource</td><td><div><p>refers to a resource associated with a time interval whose beginning coincides with the beginning of the time interval associated with the context resource, and whose end coincides with the end of the time interval associated with the context resource</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">intervalFinishedBy<a name=\"iana-link-relations-intervalFinishedBy\"> </a></td><td>refers to a resource associated with a time interval that begins after the beginning of the time interval associated with the context resource, and whose end coincides with the end of the time interval associated with the context resource</td><td><div><p>refers to a resource associated with a time interval that begins after the beginning of the time interval associated with the context resource, and whose end coincides with the end of the time interval associated with the context resource</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">intervalFinishes<a name=\"iana-link-relations-intervalFinishes\"> </a></td><td>refers to a resource associated with a time interval that begins before the beginning of the time interval associated with the context resource, and whose end coincides with the end of the time interval associated with the context resource</td><td><div><p>refers to a resource associated with a time interval that begins before the beginning of the time interval associated with the context resource, and whose end coincides with the end of the time interval associated with the context resource</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">intervalIn<a name=\"iana-link-relations-intervalIn\"> </a></td><td>refers to a resource associated with a time interval that begins before or is coincident with the beginning of the time interval associated with the context resource, and ends after or is coincident with the end of the time interval associated with the context resource</td><td><div><p>refers to a resource associated with a time interval that begins before or is coincident with the beginning of the time interval associated with the context resource, and ends after or is coincident with the end of the time interval associated with the context resource</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">intervalMeets<a name=\"iana-link-relations-intervalMeets\"> </a></td><td>refers to a resource associated with a time interval whose beginning coincides with the end of the time interval associated with the context resource</td><td><div><p>refers to a resource associated with a time interval whose beginning coincides with the end of the time interval associated with the context resource</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">intervalMetBy<a name=\"iana-link-relations-intervalMetBy\"> </a></td><td>refers to a resource associated with a time interval whose end coincides with the beginning of the time interval associated with the context resource</td><td><div><p>refers to a resource associated with a time interval whose end coincides with the beginning of the time interval associated with the context resource</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">intervalOverlappedBy<a name=\"iana-link-relations-intervalOverlappedBy\"> </a></td><td>refers to a resource associated with a time interval that begins before the beginning of the time interval associated with the context resource, and ends after the beginning of the time interval associated with the context resource</td><td><div><p>refers to a resource associated with a time interval that begins before the beginning of the time interval associated with the context resource, and ends after the beginning of the time interval associated with the context resource</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">intervalOverlaps<a name=\"iana-link-relations-intervalOverlaps\"> </a></td><td>refers to a resource associated with a time interval that begins before the end of the time interval associated with the context resource, and ends after the end of the time interval associated with the context resource</td><td><div><p>refers to a resource associated with a time interval that begins before the end of the time interval associated with the context resource, and ends after the end of the time interval associated with the context resource</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">intervalStartedBy<a name=\"iana-link-relations-intervalStartedBy\"> </a></td><td>refers to a resource associated with a time interval whose beginning coincides with the beginning of the time interval associated with the context resource, and ends before the end of the time interval associated with the context resource</td><td><div><p>refers to a resource associated with a time interval whose beginning coincides with the beginning of the time interval associated with the context resource, and ends before the end of the time interval associated with the context resource</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">intervalStarts<a name=\"iana-link-relations-intervalStarts\"> </a></td><td>refers to a resource associated with a time interval whose beginning coincides with the beginning of the time interval associated with the context resource, and ends after the end of the time interval associated with the context resource</td><td><div><p>refers to a resource associated with a time interval whose beginning coincides with the beginning of the time interval associated with the context resource, and ends after the end of the time interval associated with the context resource</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">item<a name=\"iana-link-relations-item\"> </a></td><td>The target IRI points to a resource that is a member of the collection represented by the context IRI.</td><td><div><p>The target IRI points to a resource that is a member of the collection represented by the context IRI.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">last<a name=\"iana-link-relations-last\"> </a></td><td>An IRI that refers to the furthest following resource\n      in a series of resources.</td><td><div><p>An IRI that refers to the furthest following resource\nin a series of resources.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">latest-version<a name=\"iana-link-relations-latest-version\"> </a></td><td>Points to a resource containing the latest (e.g.,\n      current) version of the context.</td><td><div><p>Points to a resource containing the latest (e.g.,\ncurrent) version of the context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">license<a name=\"iana-link-relations-license\"> </a></td><td>Refers to a license associated with this context.</td><td><div><p>Refers to a license associated with this context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">linkset<a name=\"iana-link-relations-linkset\"> </a></td><td>The link target of a link with the \"linkset\" relation\n      type provides a set of links, including links in which the link\n      context of the link participates.\n    </td><td><div><p>The link target of a link with the \"linkset\" relation\ntype provides a set of links, including links in which the link\ncontext of the link participates.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">lrdd<a name=\"iana-link-relations-lrdd\"> </a></td><td>Refers to further information about the link's context,\n      expressed as a LRDD (\"Link-based Resource Descriptor Document\")\n      resource.  See  for information about\n      processing this relation type in host-meta documents. When used\n      elsewhere, it refers to additional links and other metadata.\n      Multiple instances indicate additional LRDD resources. LRDD\n      resources MUST have an \"application/xrd+xml\" representation, and\n      MAY have others.</td><td><div><p>Refers to further information about the link's context,\nexpressed as a LRDD (\"Link-based Resource Descriptor Document\")\nresource.  See  for information about\nprocessing this relation type in host-meta documents. When used\nelsewhere, it refers to additional links and other metadata.\nMultiple instances indicate additional LRDD resources. LRDD\nresources MUST have an \"application/xrd+xml\" representation, and\nMAY have others.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">manifest<a name=\"iana-link-relations-manifest\"> </a></td><td>Links to a manifest file for the context.</td><td><div><p>Links to a manifest file for the context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">mask-icon<a name=\"iana-link-relations-mask-icon\"> </a></td><td>Refers to a mask that can be applied to the icon for the context.</td><td><div><p>Refers to a mask that can be applied to the icon for the context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">media-feed<a name=\"iana-link-relations-media-feed\"> </a></td><td>Refers to a feed of personalised media recommendations relevant to the link context.</td><td><div><p>Refers to a feed of personalised media recommendations relevant to the link context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">memento<a name=\"iana-link-relations-memento\"> </a></td><td>The Target IRI points to a Memento, a fixed resource that will not change state anymore.</td><td><div><p>The Target IRI points to a Memento, a fixed resource that will not change state anymore.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">micropub<a name=\"iana-link-relations-micropub\"> </a></td><td>Links to the context's Micropub endpoint.</td><td><div><p>Links to the context's Micropub endpoint.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">modulepreload<a name=\"iana-link-relations-modulepreload\"> </a></td><td>Refers to a module that the user agent is to preemptively fetch and store for use in the current context.</td><td><div><p>Refers to a module that the user agent is to preemptively fetch and store for use in the current context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">monitor<a name=\"iana-link-relations-monitor\"> </a></td><td>Refers to a resource that can be used to monitor changes in an HTTP resource.\n    </td><td><div><p>Refers to a resource that can be used to monitor changes in an HTTP resource.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">monitor-group<a name=\"iana-link-relations-monitor-group\"> </a></td><td>Refers to a resource that can be used to monitor changes in a specified group of HTTP resources.\n    </td><td><div><p>Refers to a resource that can be used to monitor changes in a specified group of HTTP resources.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">next<a name=\"iana-link-relations-next\"> </a></td><td>Indicates that the link's context is a part of a series, and\n      that the next in the series is the link target.\n    </td><td><div><p>Indicates that the link's context is a part of a series, and\nthat the next in the series is the link target.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">next-archive<a name=\"iana-link-relations-next-archive\"> </a></td><td>Refers to the immediately following archive resource.</td><td><div><p>Refers to the immediately following archive resource.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">nofollow<a name=\"iana-link-relations-nofollow\"> </a></td><td>Indicates that the context’s original author or publisher does not endorse the link target.</td><td><div><p>Indicates that the context’s original author or publisher does not endorse the link target.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">noopener<a name=\"iana-link-relations-noopener\"> </a></td><td>Indicates that any newly created top-level browsing context which results from following the link will not be an auxiliary browsing context.</td><td><div><p>Indicates that any newly created top-level browsing context which results from following the link will not be an auxiliary browsing context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">noreferrer<a name=\"iana-link-relations-noreferrer\"> </a></td><td>Indicates that no referrer information is to be leaked when following the link.</td><td><div><p>Indicates that no referrer information is to be leaked when following the link.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">opener<a name=\"iana-link-relations-opener\"> </a></td><td>Indicates that any newly created top-level browsing context which results from following the link will be an auxiliary browsing context.</td><td><div><p>Indicates that any newly created top-level browsing context which results from following the link will be an auxiliary browsing context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">openid2.local_id<a name=\"iana-link-relations-openid2.46local_id\"> </a></td><td>Refers to an OpenID Authentication server on which the context relies for an assertion that the end user controls an Identifier.</td><td><div><p>Refers to an OpenID Authentication server on which the context relies for an assertion that the end user controls an Identifier.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">openid2.provider<a name=\"iana-link-relations-openid2.46provider\"> </a></td><td>Refers to a resource which accepts OpenID Authentication protocol messages for the context.</td><td><div><p>Refers to a resource which accepts OpenID Authentication protocol messages for the context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">original<a name=\"iana-link-relations-original\"> </a></td><td>The Target IRI points to an Original Resource.</td><td><div><p>The Target IRI points to an Original Resource.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">P3Pv1<a name=\"iana-link-relations-P3Pv1\"> </a></td><td>Refers to a P3P privacy policy for the context.</td><td><div><p>Refers to a P3P privacy policy for the context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">payment<a name=\"iana-link-relations-payment\"> </a></td><td>Indicates a resource where payment is accepted.</td><td><div><p>Indicates a resource where payment is accepted.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">pingback<a name=\"iana-link-relations-pingback\"> </a></td><td>Gives the address of the pingback resource for the link context.</td><td><div><p>Gives the address of the pingback resource for the link context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">preconnect<a name=\"iana-link-relations-preconnect\"> </a></td><td>Used to indicate an origin that will be used to fetch required \n      resources for the link context. Initiating an early connection, which \n      includes the DNS lookup, TCP handshake, and optional TLS negotiation, \n      allows the user agent to mask the high latency costs of establishing a \n      connection.</td><td><div><p>Used to indicate an origin that will be used to fetch required\nresources for the link context. Initiating an early connection, which\nincludes the DNS lookup, TCP handshake, and optional TLS negotiation,\nallows the user agent to mask the high latency costs of establishing a\nconnection.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">predecessor-version<a name=\"iana-link-relations-predecessor-version\"> </a></td><td>Points to a resource containing the predecessor\n      version in the version history.\n    </td><td><div><p>Points to a resource containing the predecessor\nversion in the version history.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">prefetch<a name=\"iana-link-relations-prefetch\"> </a></td><td>The prefetch link relation type is used to identify a resource \n      that might be required by the next navigation from the link context, and \n      that the user agent ought to fetch, such that the user agent can deliver a \n      faster response once the resource is requested in the future.</td><td><div><p>The prefetch link relation type is used to identify a resource\nthat might be required by the next navigation from the link context, and\nthat the user agent ought to fetch, such that the user agent can deliver a\nfaster response once the resource is requested in the future.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">preload<a name=\"iana-link-relations-preload\"> </a></td><td>Refers to a resource that should be loaded early in the \n      processing of the link's context, without blocking rendering.</td><td><div><p>Refers to a resource that should be loaded early in the\nprocessing of the link's context, without blocking rendering.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">prerender<a name=\"iana-link-relations-prerender\"> </a></td><td>Used to identify a resource that might be required by the next \n      navigation from the link context, and that the user agent ought to fetch \n      and execute, such that the user agent can deliver a faster response once \n      the resource is requested in the future.</td><td><div><p>Used to identify a resource that might be required by the next\nnavigation from the link context, and that the user agent ought to fetch\nand execute, such that the user agent can deliver a faster response once\nthe resource is requested in the future.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">prev<a name=\"iana-link-relations-prev\"> </a></td><td>Indicates that the link's context is a part of a series, and\n      that the previous in the series is the link target.\n    </td><td><div><p>Indicates that the link's context is a part of a series, and\nthat the previous in the series is the link target.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">preview<a name=\"iana-link-relations-preview\"> </a></td><td>Refers to a resource that provides a preview of the link's context.</td><td><div><p>Refers to a resource that provides a preview of the link's context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">previous<a name=\"iana-link-relations-previous\"> </a></td><td>Refers to the previous resource in an ordered series\n      of resources.  Synonym for \"prev\".</td><td><div><p>Refers to the previous resource in an ordered series\nof resources.  Synonym for \"prev\".</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">prev-archive<a name=\"iana-link-relations-prev-archive\"> </a></td><td>Refers to the immediately preceding archive resource.</td><td><div><p>Refers to the immediately preceding archive resource.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">privacy-policy<a name=\"iana-link-relations-privacy-policy\"> </a></td><td>Refers to a privacy policy associated with the link's context.</td><td><div><p>Refers to a privacy policy associated with the link's context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">profile<a name=\"iana-link-relations-profile\"> </a></td><td>Identifying that a resource representation conforms\nto a certain profile, without affecting the non-profile semantics\nof the resource representation.</td><td><div><p>Identifying that a resource representation conforms\nto a certain profile, without affecting the non-profile semantics\nof the resource representation.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">publication<a name=\"iana-link-relations-publication\"> </a></td><td>Links to a publication manifest. A manifest represents \n      structured information about a publication, such as informative metadata, \n      a list of resources, and a default reading order.</td><td><div><p>Links to a publication manifest. A manifest represents\nstructured information about a publication, such as informative metadata,\na list of resources, and a default reading order.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">related<a name=\"iana-link-relations-related\"> </a></td><td>Identifies a related resource.</td><td><div><p>Identifies a related resource.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">restconf<a name=\"iana-link-relations-restconf\"> </a></td><td>Identifies the root of RESTCONF API as configured on this HTTP server.\n      The \"restconf\" relation defines the root of the API defined in RFC8040.\n      Subsequent revisions of RESTCONF will use alternate relation values to support \n      protocol versioning.</td><td><div><p>Identifies the root of RESTCONF API as configured on this HTTP server.\nThe \"restconf\" relation defines the root of the API defined in RFC8040.\nSubsequent revisions of RESTCONF will use alternate relation values to support\nprotocol versioning.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">replies<a name=\"iana-link-relations-replies\"> </a></td><td>Identifies a resource that is a reply to the context\n      of the link.\n    </td><td><div><p>Identifies a resource that is a reply to the context\nof the link.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">ruleinput<a name=\"iana-link-relations-ruleinput\"> </a></td><td>The resource identified by the link target provides an input value to an \n    instance of a rule, where the resource which represents the rule instance is \n    identified by the link context.\n    </td><td><div><p>The resource identified by the link target provides an input value to an\ninstance of a rule, where the resource which represents the rule instance is\nidentified by the link context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">search<a name=\"iana-link-relations-search\"> </a></td><td>Refers to a resource that can be used to search through\n      the link's context and related resources.</td><td><div><p>Refers to a resource that can be used to search through\nthe link's context and related resources.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">section<a name=\"iana-link-relations-section\"> </a></td><td>Refers to a section in a collection of resources.</td><td><div><p>Refers to a section in a collection of resources.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">self<a name=\"iana-link-relations-self\"> </a></td><td>Conveys an identifier for the link's context.\n    </td><td><div><p>Conveys an identifier for the link's context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">service<a name=\"iana-link-relations-service\"> </a></td><td>Indicates a URI that can be used to retrieve a\n      service document.</td><td><div><p>Indicates a URI that can be used to retrieve a\nservice document.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">service-desc<a name=\"iana-link-relations-service-desc\"> </a></td><td>Identifies service description for the context that\n      is primarily intended for consumption by machines.</td><td><div><p>Identifies service description for the context that\nis primarily intended for consumption by machines.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">service-doc<a name=\"iana-link-relations-service-doc\"> </a></td><td>Identifies service documentation for the context that\n      is primarily intended for human consumption.</td><td><div><p>Identifies service documentation for the context that\nis primarily intended for human consumption.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">service-meta<a name=\"iana-link-relations-service-meta\"> </a></td><td>Identifies general metadata for the context that is\n      primarily intended for consumption by machines.</td><td><div><p>Identifies general metadata for the context that is\nprimarily intended for consumption by machines.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">sponsored<a name=\"iana-link-relations-sponsored\"> </a></td><td>Refers to a resource that is within a context that is \n		sponsored (such as advertising or another compensation agreement).</td><td><div><p>Refers to a resource that is within a context that is\nsponsored (such as advertising or another compensation agreement).</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">start<a name=\"iana-link-relations-start\"> </a></td><td>Refers to the first resource in a collection of\n      resources.</td><td><div><p>Refers to the first resource in a collection of\nresources.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">status<a name=\"iana-link-relations-status\"> </a></td><td>Identifies a resource that represents the context's\n      status.</td><td><div><p>Identifies a resource that represents the context's\nstatus.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">stylesheet<a name=\"iana-link-relations-stylesheet\"> </a></td><td>Refers to a stylesheet.</td><td><div><p>Refers to a stylesheet.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">subsection<a name=\"iana-link-relations-subsection\"> </a></td><td>Refers to a resource serving as a subsection in a\n      collection of resources.</td><td><div><p>Refers to a resource serving as a subsection in a\ncollection of resources.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">successor-version<a name=\"iana-link-relations-successor-version\"> </a></td><td>Points to a resource containing the successor version\n      in the version history.\n    </td><td><div><p>Points to a resource containing the successor version\nin the version history.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">sunset<a name=\"iana-link-relations-sunset\"> </a></td><td>Identifies a resource that provides information about\n      the context's retirement policy.\n    </td><td><div><p>Identifies a resource that provides information about\nthe context's retirement policy.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">tag<a name=\"iana-link-relations-tag\"> </a></td><td>Gives a tag (identified by the given address) that applies to\n      the current document.\n    </td><td><div><p>Gives a tag (identified by the given address) that applies to\nthe current document.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">terms-of-service<a name=\"iana-link-relations-terms-of-service\"> </a></td><td>Refers to the terms of service associated with the link's context.</td><td><div><p>Refers to the terms of service associated with the link's context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">timegate<a name=\"iana-link-relations-timegate\"> </a></td><td>The Target IRI points to a TimeGate for an Original Resource.</td><td><div><p>The Target IRI points to a TimeGate for an Original Resource.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">timemap<a name=\"iana-link-relations-timemap\"> </a></td><td>The Target IRI points to a TimeMap for an Original Resource.</td><td><div><p>The Target IRI points to a TimeMap for an Original Resource.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">type<a name=\"iana-link-relations-type\"> </a></td><td>Refers to a resource identifying the abstract semantic type of which the link's context is considered to be an instance.</td><td><div><p>Refers to a resource identifying the abstract semantic type of which the link's context is considered to be an instance.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">ugc<a name=\"iana-link-relations-ugc\"> </a></td><td>Refers to a resource that is within a context that is User Generated Content.\n    </td><td><div><p>Refers to a resource that is within a context that is User Generated Content.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">up<a name=\"iana-link-relations-up\"> </a></td><td>Refers to a parent document in a hierarchy of\n      documents.\n    </td><td><div><p>Refers to a parent document in a hierarchy of\ndocuments.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">version-history<a name=\"iana-link-relations-version-history\"> </a></td><td>Points to a resource containing the version history\n      for the context.\n    </td><td><div><p>Points to a resource containing the version history\nfor the context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">via<a name=\"iana-link-relations-via\"> </a></td><td>Identifies a resource that is the source of the\n      information in the link's context.\n    </td><td><div><p>Identifies a resource that is the source of the\ninformation in the link's context.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">webmention<a name=\"iana-link-relations-webmention\"> </a></td><td>Identifies a target URI that supports the Webmention protocol.\n    This allows clients that mention a resource in some form of publishing process\n    to contact that endpoint and inform it that this resource has been mentioned.</td><td><div><p>Identifies a target URI that supports the Webmention protocol.\nThis allows clients that mention a resource in some form of publishing process\nto contact that endpoint and inform it that this resource has been mentioned.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">working-copy<a name=\"iana-link-relations-working-copy\"> </a></td><td>Points to a working copy for this resource.</td><td><div><p>Points to a working copy for this resource.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">working-copy-of<a name=\"iana-link-relations-working-copy-of\"> </a></td><td>Points to the versioned resource from which this\n      working copy was obtained.\n    </td><td><div><p>Points to the versioned resource from which this\nworking copy was obtained.</p>\n</div></td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 5
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/CodeSystem/iana-link-relations"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/CodeSystem/iana-link-relations>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "LinkRelationTypes"] ; # 
+  fhir:title [ fhir:v "Link Relation Types"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "Internet Assigned Numbers Authority (IANA)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "https://www.iana.org/assignments/link-relations/link-relations.xhtml#link-relations-1" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Link Relation Types defined at https://www.iana.org/assignments/link-relations/link-relations.xhtml#link-relations-1"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "about" ] ;
+     fhir:display [ fhir:v "Refers to a resource that is the subject of the link's context." ] ;
+     fhir:definition [ fhir:v "Refers to a resource that is the subject of the link's context." ]
+  ] [
+     fhir:code [ fhir:v "acl" ] ;
+     fhir:display [ fhir:v "Asserts that the link target provides an access control description for the link context." ] ;
+     fhir:definition [ fhir:v "Asserts that the link target provides an access control description for the link context." ]
+  ] [
+     fhir:code [ fhir:v "alternate" ] ;
+     fhir:display [ fhir:v "Refers to a substitute for this context" ] ;
+     fhir:definition [ fhir:v "Refers to a substitute for this context" ]
+  ] [
+     fhir:code [ fhir:v "amphtml" ] ;
+     fhir:display [ fhir:v "Used to reference alternative content that uses the AMP profile of the HTML format." ] ;
+     fhir:definition [ fhir:v "Used to reference alternative content that uses the AMP profile of the HTML format." ]
+  ] [
+     fhir:code [ fhir:v "appendix" ] ;
+     fhir:display [ fhir:v "Refers to an appendix." ] ;
+     fhir:definition [ fhir:v "Refers to an appendix." ]
+  ] [
+     fhir:code [ fhir:v "apple-touch-icon" ] ;
+     fhir:display [ fhir:v "Refers to an icon for the context. Synonym for icon." ] ;
+     fhir:definition [ fhir:v "Refers to an icon for the context. Synonym for icon." ]
+  ] [
+     fhir:code [ fhir:v "apple-touch-startup-image" ] ;
+     fhir:display [ fhir:v "Refers to a launch screen for the context." ] ;
+     fhir:definition [ fhir:v "Refers to a launch screen for the context." ]
+  ] [
+     fhir:code [ fhir:v "archives" ] ;
+     fhir:display [ fhir:v "Refers to a collection of records, documents, or other\n      materials of historical interest." ] ;
+     fhir:definition [ fhir:v "Refers to a collection of records, documents, or other\n      materials of historical interest." ]
+  ] [
+     fhir:code [ fhir:v "author" ] ;
+     fhir:display [ fhir:v "Refers to the context's author." ] ;
+     fhir:definition [ fhir:v "Refers to the context's author." ]
+  ] [
+     fhir:code [ fhir:v "blocked-by" ] ;
+     fhir:display [ fhir:v "Identifies the entity that blocks access to a resource\n      following receipt of a legal demand." ] ;
+     fhir:definition [ fhir:v "Identifies the entity that blocks access to a resource\n      following receipt of a legal demand." ]
+  ] [
+     fhir:code [ fhir:v "bookmark" ] ;
+     fhir:display [ fhir:v "Gives a permanent link to use for bookmarking purposes." ] ;
+     fhir:definition [ fhir:v "Gives a permanent link to use for bookmarking purposes." ]
+  ] [
+     fhir:code [ fhir:v "canonical" ] ;
+     fhir:display [ fhir:v "Designates the preferred version of a resource (the IRI and its contents)." ] ;
+     fhir:definition [ fhir:v "Designates the preferred version of a resource (the IRI and its contents)." ]
+  ] [
+     fhir:code [ fhir:v "chapter" ] ;
+     fhir:display [ fhir:v "Refers to a chapter in a collection of resources." ] ;
+     fhir:definition [ fhir:v "Refers to a chapter in a collection of resources." ]
+  ] [
+     fhir:code [ fhir:v "cite-as" ] ;
+     fhir:display [ fhir:v "Indicates that the link target is preferred over the link context for the purpose of permanent citation." ] ;
+     fhir:definition [ fhir:v "Indicates that the link target is preferred over the link context for the purpose of permanent citation." ]
+  ] [
+     fhir:code [ fhir:v "collection" ] ;
+     fhir:display [ fhir:v "The target IRI points to a resource which represents the collection resource for the context IRI." ] ;
+     fhir:definition [ fhir:v "The target IRI points to a resource which represents the collection resource for the context IRI." ]
+  ] [
+     fhir:code [ fhir:v "contents" ] ;
+     fhir:display [ fhir:v "Refers to a table of contents." ] ;
+     fhir:definition [ fhir:v "Refers to a table of contents." ]
+  ] [
+     fhir:code [ fhir:v "convertedFrom" ] ;
+     fhir:display [ fhir:v "The document linked to was later converted to the\n      document that contains this link relation.  For example, an RFC can\n      have a link to the Internet-Draft that became the RFC; in that case,\n      the link relation would be \"convertedFrom\"." ] ;
+     fhir:definition [ fhir:v "The document linked to was later converted to the\n      document that contains this link relation.  For example, an RFC can\n      have a link to the Internet-Draft that became the RFC; in that case,\n      the link relation would be \"convertedFrom\"." ]
+  ] [
+     fhir:code [ fhir:v "copyright" ] ;
+     fhir:display [ fhir:v "Refers to a copyright statement that applies to the\n    link's context." ] ;
+     fhir:definition [ fhir:v "Refers to a copyright statement that applies to the\n    link's context." ]
+  ] [
+     fhir:code [ fhir:v "create-form" ] ;
+     fhir:display [ fhir:v "The target IRI points to a resource where a submission form can be obtained." ] ;
+     fhir:definition [ fhir:v "The target IRI points to a resource where a submission form can be obtained." ]
+  ] [
+     fhir:code [ fhir:v "current" ] ;
+     fhir:display [ fhir:v "Refers to a resource containing the most recent\n      item(s) in a collection of resources." ] ;
+     fhir:definition [ fhir:v "Refers to a resource containing the most recent\n      item(s) in a collection of resources." ]
+  ] [
+     fhir:code [ fhir:v "describedby" ] ;
+     fhir:display [ fhir:v "Refers to a resource providing information about the\n      link's context." ] ;
+     fhir:definition [ fhir:v "Refers to a resource providing information about the\n      link's context." ]
+  ] [
+     fhir:code [ fhir:v "describes" ] ;
+     fhir:display [ fhir:v "The relationship A 'describes' B asserts that\n      resource A provides a description of resource B. There are no\n      constraints on the format or representation of either A or B,\n      neither are there any further constraints on either resource." ] ;
+     fhir:definition [ fhir:v "The relationship A 'describes' B asserts that\n      resource A provides a description of resource B. There are no\n      constraints on the format or representation of either A or B,\n      neither are there any further constraints on either resource." ]
+  ] [
+     fhir:code [ fhir:v "disclosure" ] ;
+     fhir:display [ fhir:v "Refers to a list of patent disclosures made with respect to \n      material for which 'disclosure' relation is specified." ] ;
+     fhir:definition [ fhir:v "Refers to a list of patent disclosures made with respect to \n      material for which 'disclosure' relation is specified." ]
+  ] [
+     fhir:code [ fhir:v "dns-prefetch" ] ;
+     fhir:display [ fhir:v "Used to indicate an origin that will be used to fetch required \n      resources for the link context, and that the user agent ought to resolve \n      as early as possible." ] ;
+     fhir:definition [ fhir:v "Used to indicate an origin that will be used to fetch required \n      resources for the link context, and that the user agent ought to resolve \n      as early as possible." ]
+  ] [
+     fhir:code [ fhir:v "duplicate" ] ;
+     fhir:display [ fhir:v "Refers to a resource whose available representations\n      are byte-for-byte identical with the corresponding representations of\n      the context IRI." ] ;
+     fhir:definition [ fhir:v "Refers to a resource whose available representations\n      are byte-for-byte identical with the corresponding representations of\n      the context IRI." ]
+  ] [
+     fhir:code [ fhir:v "edit" ] ;
+     fhir:display [ fhir:v "Refers to a resource that can be used to edit the\n      link's context." ] ;
+     fhir:definition [ fhir:v "Refers to a resource that can be used to edit the\n      link's context." ]
+  ] [
+     fhir:code [ fhir:v "edit-form" ] ;
+     fhir:display [ fhir:v "The target IRI points to a resource where a submission form for\n      editing associated resource can be obtained." ] ;
+     fhir:definition [ fhir:v "The target IRI points to a resource where a submission form for\n      editing associated resource can be obtained." ]
+  ] [
+     fhir:code [ fhir:v "edit-media" ] ;
+     fhir:display [ fhir:v "Refers to a resource that can be used to edit media\n      associated with the link's context." ] ;
+     fhir:definition [ fhir:v "Refers to a resource that can be used to edit media\n      associated with the link's context." ]
+  ] [
+     fhir:code [ fhir:v "enclosure" ] ;
+     fhir:display [ fhir:v "Identifies a related resource that is potentially\n      large and might require special handling." ] ;
+     fhir:definition [ fhir:v "Identifies a related resource that is potentially\n      large and might require special handling." ]
+  ] [
+     fhir:code [ fhir:v "external" ] ;
+     fhir:display [ fhir:v "Refers to a resource that is not part of the same site as the current context." ] ;
+     fhir:definition [ fhir:v "Refers to a resource that is not part of the same site as the current context." ]
+  ] [
+     fhir:code [ fhir:v "first" ] ;
+     fhir:display [ fhir:v "An IRI that refers to the furthest preceding resource\n    in a series of resources." ] ;
+     fhir:definition [ fhir:v "An IRI that refers to the furthest preceding resource\n    in a series of resources." ]
+  ] [
+     fhir:code [ fhir:v "glossary" ] ;
+     fhir:display [ fhir:v "Refers to a glossary of terms." ] ;
+     fhir:definition [ fhir:v "Refers to a glossary of terms." ]
+  ] [
+     fhir:code [ fhir:v "help" ] ;
+     fhir:display [ fhir:v "Refers to context-sensitive help." ] ;
+     fhir:definition [ fhir:v "Refers to context-sensitive help." ]
+  ] [
+     fhir:code [ fhir:v "hosts" ] ;
+     fhir:display [ fhir:v "Refers to a resource hosted by the server indicated by\n      the link context." ] ;
+     fhir:definition [ fhir:v "Refers to a resource hosted by the server indicated by\n      the link context." ]
+  ] [
+     fhir:code [ fhir:v "hub" ] ;
+     fhir:display [ fhir:v "Refers to a hub that enables registration for\n    notification of updates to the context." ] ;
+     fhir:definition [ fhir:v "Refers to a hub that enables registration for\n    notification of updates to the context." ]
+  ] [
+     fhir:code [ fhir:v "icon" ] ;
+     fhir:display [ fhir:v "Refers to an icon representing the link's context." ] ;
+     fhir:definition [ fhir:v "Refers to an icon representing the link's context." ]
+  ] [
+     fhir:code [ fhir:v "index" ] ;
+     fhir:display [ fhir:v "Refers to an index." ] ;
+     fhir:definition [ fhir:v "Refers to an index." ]
+  ] [
+     fhir:code [ fhir:v "intervalAfter" ] ;
+     fhir:display [ fhir:v "refers to a resource associated with a time interval that ends before the beginning of the time interval associated with the context resource" ] ;
+     fhir:definition [ fhir:v "refers to a resource associated with a time interval that ends before the beginning of the time interval associated with the context resource" ]
+  ] [
+     fhir:code [ fhir:v "intervalBefore" ] ;
+     fhir:display [ fhir:v "refers to a resource associated with a time interval that begins after the end of the time interval associated with the context resource" ] ;
+     fhir:definition [ fhir:v "refers to a resource associated with a time interval that begins after the end of the time interval associated with the context resource" ]
+  ] [
+     fhir:code [ fhir:v "intervalContains" ] ;
+     fhir:display [ fhir:v "refers to a resource associated with a time interval that begins after the beginning of the time interval associated with the context resource, and ends before the end of the time interval associated with the context resource" ] ;
+     fhir:definition [ fhir:v "refers to a resource associated with a time interval that begins after the beginning of the time interval associated with the context resource, and ends before the end of the time interval associated with the context resource" ]
+  ] [
+     fhir:code [ fhir:v "intervalDisjoint" ] ;
+     fhir:display [ fhir:v "refers to a resource associated with a time interval that begins after the end of the time interval associated with the context resource, or ends before the beginning of the time interval associated with the context resource" ] ;
+     fhir:definition [ fhir:v "refers to a resource associated with a time interval that begins after the end of the time interval associated with the context resource, or ends before the beginning of the time interval associated with the context resource" ]
+  ] [
+     fhir:code [ fhir:v "intervalDuring" ] ;
+     fhir:display [ fhir:v "refers to a resource associated with a time interval that begins before the beginning of the time interval associated with the context resource, and ends after the end of the time interval associated with the context resource" ] ;
+     fhir:definition [ fhir:v "refers to a resource associated with a time interval that begins before the beginning of the time interval associated with the context resource, and ends after the end of the time interval associated with the context resource" ]
+  ] [
+     fhir:code [ fhir:v "intervalEquals" ] ;
+     fhir:display [ fhir:v "refers to a resource associated with a time interval whose beginning coincides with the beginning of the time interval associated with the context resource, and whose end coincides with the end of the time interval associated with the context resource" ] ;
+     fhir:definition [ fhir:v "refers to a resource associated with a time interval whose beginning coincides with the beginning of the time interval associated with the context resource, and whose end coincides with the end of the time interval associated with the context resource" ]
+  ] [
+     fhir:code [ fhir:v "intervalFinishedBy" ] ;
+     fhir:display [ fhir:v "refers to a resource associated with a time interval that begins after the beginning of the time interval associated with the context resource, and whose end coincides with the end of the time interval associated with the context resource" ] ;
+     fhir:definition [ fhir:v "refers to a resource associated with a time interval that begins after the beginning of the time interval associated with the context resource, and whose end coincides with the end of the time interval associated with the context resource" ]
+  ] [
+     fhir:code [ fhir:v "intervalFinishes" ] ;
+     fhir:display [ fhir:v "refers to a resource associated with a time interval that begins before the beginning of the time interval associated with the context resource, and whose end coincides with the end of the time interval associated with the context resource" ] ;
+     fhir:definition [ fhir:v "refers to a resource associated with a time interval that begins before the beginning of the time interval associated with the context resource, and whose end coincides with the end of the time interval associated with the context resource" ]
+  ] [
+     fhir:code [ fhir:v "intervalIn" ] ;
+     fhir:display [ fhir:v "refers to a resource associated with a time interval that begins before or is coincident with the beginning of the time interval associated with the context resource, and ends after or is coincident with the end of the time interval associated with the context resource" ] ;
+     fhir:definition [ fhir:v "refers to a resource associated with a time interval that begins before or is coincident with the beginning of the time interval associated with the context resource, and ends after or is coincident with the end of the time interval associated with the context resource" ]
+  ] [
+     fhir:code [ fhir:v "intervalMeets" ] ;
+     fhir:display [ fhir:v "refers to a resource associated with a time interval whose beginning coincides with the end of the time interval associated with the context resource" ] ;
+     fhir:definition [ fhir:v "refers to a resource associated with a time interval whose beginning coincides with the end of the time interval associated with the context resource" ]
+  ] [
+     fhir:code [ fhir:v "intervalMetBy" ] ;
+     fhir:display [ fhir:v "refers to a resource associated with a time interval whose end coincides with the beginning of the time interval associated with the context resource" ] ;
+     fhir:definition [ fhir:v "refers to a resource associated with a time interval whose end coincides with the beginning of the time interval associated with the context resource" ]
+  ] [
+     fhir:code [ fhir:v "intervalOverlappedBy" ] ;
+     fhir:display [ fhir:v "refers to a resource associated with a time interval that begins before the beginning of the time interval associated with the context resource, and ends after the beginning of the time interval associated with the context resource" ] ;
+     fhir:definition [ fhir:v "refers to a resource associated with a time interval that begins before the beginning of the time interval associated with the context resource, and ends after the beginning of the time interval associated with the context resource" ]
+  ] [
+     fhir:code [ fhir:v "intervalOverlaps" ] ;
+     fhir:display [ fhir:v "refers to a resource associated with a time interval that begins before the end of the time interval associated with the context resource, and ends after the end of the time interval associated with the context resource" ] ;
+     fhir:definition [ fhir:v "refers to a resource associated with a time interval that begins before the end of the time interval associated with the context resource, and ends after the end of the time interval associated with the context resource" ]
+  ] [
+     fhir:code [ fhir:v "intervalStartedBy" ] ;
+     fhir:display [ fhir:v "refers to a resource associated with a time interval whose beginning coincides with the beginning of the time interval associated with the context resource, and ends before the end of the time interval associated with the context resource" ] ;
+     fhir:definition [ fhir:v "refers to a resource associated with a time interval whose beginning coincides with the beginning of the time interval associated with the context resource, and ends before the end of the time interval associated with the context resource" ]
+  ] [
+     fhir:code [ fhir:v "intervalStarts" ] ;
+     fhir:display [ fhir:v "refers to a resource associated with a time interval whose beginning coincides with the beginning of the time interval associated with the context resource, and ends after the end of the time interval associated with the context resource" ] ;
+     fhir:definition [ fhir:v "refers to a resource associated with a time interval whose beginning coincides with the beginning of the time interval associated with the context resource, and ends after the end of the time interval associated with the context resource" ]
+  ] [
+     fhir:code [ fhir:v "item" ] ;
+     fhir:display [ fhir:v "The target IRI points to a resource that is a member of the collection represented by the context IRI." ] ;
+     fhir:definition [ fhir:v "The target IRI points to a resource that is a member of the collection represented by the context IRI." ]
+  ] [
+     fhir:code [ fhir:v "last" ] ;
+     fhir:display [ fhir:v "An IRI that refers to the furthest following resource\n      in a series of resources." ] ;
+     fhir:definition [ fhir:v "An IRI that refers to the furthest following resource\n      in a series of resources." ]
+  ] [
+     fhir:code [ fhir:v "latest-version" ] ;
+     fhir:display [ fhir:v "Points to a resource containing the latest (e.g.,\n      current) version of the context." ] ;
+     fhir:definition [ fhir:v "Points to a resource containing the latest (e.g.,\n      current) version of the context." ]
+  ] [
+     fhir:code [ fhir:v "license" ] ;
+     fhir:display [ fhir:v "Refers to a license associated with this context." ] ;
+     fhir:definition [ fhir:v "Refers to a license associated with this context." ]
+  ] [
+     fhir:code [ fhir:v "linkset" ] ;
+     fhir:display [ fhir:v "The link target of a link with the \"linkset\" relation\n      type provides a set of links, including links in which the link\n      context of the link participates.\n    " ] ;
+     fhir:definition [ fhir:v "The link target of a link with the \"linkset\" relation\n      type provides a set of links, including links in which the link\n      context of the link participates.\n    " ]
+  ] [
+     fhir:code [ fhir:v "lrdd" ] ;
+     fhir:display [ fhir:v "Refers to further information about the link's context,\n      expressed as a LRDD (\"Link-based Resource Descriptor Document\")\n      resource.  See  for information about\n      processing this relation type in host-meta documents. When used\n      elsewhere, it refers to additional links and other metadata.\n      Multiple instances indicate additional LRDD resources. LRDD\n      resources MUST have an \"application/xrd+xml\" representation, and\n      MAY have others." ] ;
+     fhir:definition [ fhir:v "Refers to further information about the link's context,\n      expressed as a LRDD (\"Link-based Resource Descriptor Document\")\n      resource.  See  for information about\n      processing this relation type in host-meta documents. When used\n      elsewhere, it refers to additional links and other metadata.\n      Multiple instances indicate additional LRDD resources. LRDD\n      resources MUST have an \"application/xrd+xml\" representation, and\n      MAY have others." ]
+  ] [
+     fhir:code [ fhir:v "manifest" ] ;
+     fhir:display [ fhir:v "Links to a manifest file for the context." ] ;
+     fhir:definition [ fhir:v "Links to a manifest file for the context." ]
+  ] [
+     fhir:code [ fhir:v "mask-icon" ] ;
+     fhir:display [ fhir:v "Refers to a mask that can be applied to the icon for the context." ] ;
+     fhir:definition [ fhir:v "Refers to a mask that can be applied to the icon for the context." ]
+  ] [
+     fhir:code [ fhir:v "media-feed" ] ;
+     fhir:display [ fhir:v "Refers to a feed of personalised media recommendations relevant to the link context." ] ;
+     fhir:definition [ fhir:v "Refers to a feed of personalised media recommendations relevant to the link context." ]
+  ] [
+     fhir:code [ fhir:v "memento" ] ;
+     fhir:display [ fhir:v "The Target IRI points to a Memento, a fixed resource that will not change state anymore." ] ;
+     fhir:definition [ fhir:v "The Target IRI points to a Memento, a fixed resource that will not change state anymore." ]
+  ] [
+     fhir:code [ fhir:v "micropub" ] ;
+     fhir:display [ fhir:v "Links to the context's Micropub endpoint." ] ;
+     fhir:definition [ fhir:v "Links to the context's Micropub endpoint." ]
+  ] [
+     fhir:code [ fhir:v "modulepreload" ] ;
+     fhir:display [ fhir:v "Refers to a module that the user agent is to preemptively fetch and store for use in the current context." ] ;
+     fhir:definition [ fhir:v "Refers to a module that the user agent is to preemptively fetch and store for use in the current context." ]
+  ] [
+     fhir:code [ fhir:v "monitor" ] ;
+     fhir:display [ fhir:v "Refers to a resource that can be used to monitor changes in an HTTP resource.\n    " ] ;
+     fhir:definition [ fhir:v "Refers to a resource that can be used to monitor changes in an HTTP resource.\n    " ]
+  ] [
+     fhir:code [ fhir:v "monitor-group" ] ;
+     fhir:display [ fhir:v "Refers to a resource that can be used to monitor changes in a specified group of HTTP resources.\n    " ] ;
+     fhir:definition [ fhir:v "Refers to a resource that can be used to monitor changes in a specified group of HTTP resources.\n    " ]
+  ] [
+     fhir:code [ fhir:v "next" ] ;
+     fhir:display [ fhir:v "Indicates that the link's context is a part of a series, and\n      that the next in the series is the link target.\n    " ] ;
+     fhir:definition [ fhir:v "Indicates that the link's context is a part of a series, and\n      that the next in the series is the link target.\n    " ]
+  ] [
+     fhir:code [ fhir:v "next-archive" ] ;
+     fhir:display [ fhir:v "Refers to the immediately following archive resource." ] ;
+     fhir:definition [ fhir:v "Refers to the immediately following archive resource." ]
+  ] [
+     fhir:code [ fhir:v "nofollow" ] ;
+     fhir:display [ fhir:v "Indicates that the context’s original author or publisher does not endorse the link target." ] ;
+     fhir:definition [ fhir:v "Indicates that the context’s original author or publisher does not endorse the link target." ]
+  ] [
+     fhir:code [ fhir:v "noopener" ] ;
+     fhir:display [ fhir:v "Indicates that any newly created top-level browsing context which results from following the link will not be an auxiliary browsing context." ] ;
+     fhir:definition [ fhir:v "Indicates that any newly created top-level browsing context which results from following the link will not be an auxiliary browsing context." ]
+  ] [
+     fhir:code [ fhir:v "noreferrer" ] ;
+     fhir:display [ fhir:v "Indicates that no referrer information is to be leaked when following the link." ] ;
+     fhir:definition [ fhir:v "Indicates that no referrer information is to be leaked when following the link." ]
+  ] [
+     fhir:code [ fhir:v "opener" ] ;
+     fhir:display [ fhir:v "Indicates that any newly created top-level browsing context which results from following the link will be an auxiliary browsing context." ] ;
+     fhir:definition [ fhir:v "Indicates that any newly created top-level browsing context which results from following the link will be an auxiliary browsing context." ]
+  ] [
+     fhir:code [ fhir:v "openid2.local_id" ] ;
+     fhir:display [ fhir:v "Refers to an OpenID Authentication server on which the context relies for an assertion that the end user controls an Identifier." ] ;
+     fhir:definition [ fhir:v "Refers to an OpenID Authentication server on which the context relies for an assertion that the end user controls an Identifier." ]
+  ] [
+     fhir:code [ fhir:v "openid2.provider" ] ;
+     fhir:display [ fhir:v "Refers to a resource which accepts OpenID Authentication protocol messages for the context." ] ;
+     fhir:definition [ fhir:v "Refers to a resource which accepts OpenID Authentication protocol messages for the context." ]
+  ] [
+     fhir:code [ fhir:v "original" ] ;
+     fhir:display [ fhir:v "The Target IRI points to an Original Resource." ] ;
+     fhir:definition [ fhir:v "The Target IRI points to an Original Resource." ]
+  ] [
+     fhir:code [ fhir:v "P3Pv1" ] ;
+     fhir:display [ fhir:v "Refers to a P3P privacy policy for the context." ] ;
+     fhir:definition [ fhir:v "Refers to a P3P privacy policy for the context." ]
+  ] [
+     fhir:code [ fhir:v "payment" ] ;
+     fhir:display [ fhir:v "Indicates a resource where payment is accepted." ] ;
+     fhir:definition [ fhir:v "Indicates a resource where payment is accepted." ]
+  ] [
+     fhir:code [ fhir:v "pingback" ] ;
+     fhir:display [ fhir:v "Gives the address of the pingback resource for the link context." ] ;
+     fhir:definition [ fhir:v "Gives the address of the pingback resource for the link context." ]
+  ] [
+     fhir:code [ fhir:v "preconnect" ] ;
+     fhir:display [ fhir:v "Used to indicate an origin that will be used to fetch required \n      resources for the link context. Initiating an early connection, which \n      includes the DNS lookup, TCP handshake, and optional TLS negotiation, \n      allows the user agent to mask the high latency costs of establishing a \n      connection." ] ;
+     fhir:definition [ fhir:v "Used to indicate an origin that will be used to fetch required \n      resources for the link context. Initiating an early connection, which \n      includes the DNS lookup, TCP handshake, and optional TLS negotiation, \n      allows the user agent to mask the high latency costs of establishing a \n      connection." ]
+  ] [
+     fhir:code [ fhir:v "predecessor-version" ] ;
+     fhir:display [ fhir:v "Points to a resource containing the predecessor\n      version in the version history.\n    " ] ;
+     fhir:definition [ fhir:v "Points to a resource containing the predecessor\n      version in the version history.\n    " ]
+  ] [
+     fhir:code [ fhir:v "prefetch" ] ;
+     fhir:display [ fhir:v "The prefetch link relation type is used to identify a resource \n      that might be required by the next navigation from the link context, and \n      that the user agent ought to fetch, such that the user agent can deliver a \n      faster response once the resource is requested in the future." ] ;
+     fhir:definition [ fhir:v "The prefetch link relation type is used to identify a resource \n      that might be required by the next navigation from the link context, and \n      that the user agent ought to fetch, such that the user agent can deliver a \n      faster response once the resource is requested in the future." ]
+  ] [
+     fhir:code [ fhir:v "preload" ] ;
+     fhir:display [ fhir:v "Refers to a resource that should be loaded early in the \n      processing of the link's context, without blocking rendering." ] ;
+     fhir:definition [ fhir:v "Refers to a resource that should be loaded early in the \n      processing of the link's context, without blocking rendering." ]
+  ] [
+     fhir:code [ fhir:v "prerender" ] ;
+     fhir:display [ fhir:v "Used to identify a resource that might be required by the next \n      navigation from the link context, and that the user agent ought to fetch \n      and execute, such that the user agent can deliver a faster response once \n      the resource is requested in the future." ] ;
+     fhir:definition [ fhir:v "Used to identify a resource that might be required by the next \n      navigation from the link context, and that the user agent ought to fetch \n      and execute, such that the user agent can deliver a faster response once \n      the resource is requested in the future." ]
+  ] [
+     fhir:code [ fhir:v "prev" ] ;
+     fhir:display [ fhir:v "Indicates that the link's context is a part of a series, and\n      that the previous in the series is the link target.\n    " ] ;
+     fhir:definition [ fhir:v "Indicates that the link's context is a part of a series, and\n      that the previous in the series is the link target.\n    " ]
+  ] [
+     fhir:code [ fhir:v "preview" ] ;
+     fhir:display [ fhir:v "Refers to a resource that provides a preview of the link's context." ] ;
+     fhir:definition [ fhir:v "Refers to a resource that provides a preview of the link's context." ]
+  ] [
+     fhir:code [ fhir:v "previous" ] ;
+     fhir:display [ fhir:v "Refers to the previous resource in an ordered series\n      of resources.  Synonym for \"prev\"." ] ;
+     fhir:definition [ fhir:v "Refers to the previous resource in an ordered series\n      of resources.  Synonym for \"prev\"." ]
+  ] [
+     fhir:code [ fhir:v "prev-archive" ] ;
+     fhir:display [ fhir:v "Refers to the immediately preceding archive resource." ] ;
+     fhir:definition [ fhir:v "Refers to the immediately preceding archive resource." ]
+  ] [
+     fhir:code [ fhir:v "privacy-policy" ] ;
+     fhir:display [ fhir:v "Refers to a privacy policy associated with the link's context." ] ;
+     fhir:definition [ fhir:v "Refers to a privacy policy associated with the link's context." ]
+  ] [
+     fhir:code [ fhir:v "profile" ] ;
+     fhir:display [ fhir:v "Identifying that a resource representation conforms\nto a certain profile, without affecting the non-profile semantics\nof the resource representation." ] ;
+     fhir:definition [ fhir:v "Identifying that a resource representation conforms\nto a certain profile, without affecting the non-profile semantics\nof the resource representation." ]
+  ] [
+     fhir:code [ fhir:v "publication" ] ;
+     fhir:display [ fhir:v "Links to a publication manifest. A manifest represents \n      structured information about a publication, such as informative metadata, \n      a list of resources, and a default reading order." ] ;
+     fhir:definition [ fhir:v "Links to a publication manifest. A manifest represents \n      structured information about a publication, such as informative metadata, \n      a list of resources, and a default reading order." ]
+  ] [
+     fhir:code [ fhir:v "related" ] ;
+     fhir:display [ fhir:v "Identifies a related resource." ] ;
+     fhir:definition [ fhir:v "Identifies a related resource." ]
+  ] [
+     fhir:code [ fhir:v "restconf" ] ;
+     fhir:display [ fhir:v "Identifies the root of RESTCONF API as configured on this HTTP server.\n      The \"restconf\" relation defines the root of the API defined in RFC8040.\n      Subsequent revisions of RESTCONF will use alternate relation values to support \n      protocol versioning." ] ;
+     fhir:definition [ fhir:v "Identifies the root of RESTCONF API as configured on this HTTP server.\n      The \"restconf\" relation defines the root of the API defined in RFC8040.\n      Subsequent revisions of RESTCONF will use alternate relation values to support \n      protocol versioning." ]
+  ] [
+     fhir:code [ fhir:v "replies" ] ;
+     fhir:display [ fhir:v "Identifies a resource that is a reply to the context\n      of the link.\n    " ] ;
+     fhir:definition [ fhir:v "Identifies a resource that is a reply to the context\n      of the link.\n    " ]
+  ] [
+     fhir:code [ fhir:v "ruleinput" ] ;
+     fhir:display [ fhir:v "The resource identified by the link target provides an input value to an \n    instance of a rule, where the resource which represents the rule instance is \n    identified by the link context.\n    " ] ;
+     fhir:definition [ fhir:v "The resource identified by the link target provides an input value to an \n    instance of a rule, where the resource which represents the rule instance is \n    identified by the link context.\n    " ]
+  ] [
+     fhir:code [ fhir:v "search" ] ;
+     fhir:display [ fhir:v "Refers to a resource that can be used to search through\n      the link's context and related resources." ] ;
+     fhir:definition [ fhir:v "Refers to a resource that can be used to search through\n      the link's context and related resources." ]
+  ] [
+     fhir:code [ fhir:v "section" ] ;
+     fhir:display [ fhir:v "Refers to a section in a collection of resources." ] ;
+     fhir:definition [ fhir:v "Refers to a section in a collection of resources." ]
+  ] [
+     fhir:code [ fhir:v "self" ] ;
+     fhir:display [ fhir:v "Conveys an identifier for the link's context.\n    " ] ;
+     fhir:definition [ fhir:v "Conveys an identifier for the link's context.\n    " ]
+  ] [
+     fhir:code [ fhir:v "service" ] ;
+     fhir:display [ fhir:v "Indicates a URI that can be used to retrieve a\n      service document." ] ;
+     fhir:definition [ fhir:v "Indicates a URI that can be used to retrieve a\n      service document." ]
+  ] [
+     fhir:code [ fhir:v "service-desc" ] ;
+     fhir:display [ fhir:v "Identifies service description for the context that\n      is primarily intended for consumption by machines." ] ;
+     fhir:definition [ fhir:v "Identifies service description for the context that\n      is primarily intended for consumption by machines." ]
+  ] [
+     fhir:code [ fhir:v "service-doc" ] ;
+     fhir:display [ fhir:v "Identifies service documentation for the context that\n      is primarily intended for human consumption." ] ;
+     fhir:definition [ fhir:v "Identifies service documentation for the context that\n      is primarily intended for human consumption." ]
+  ] [
+     fhir:code [ fhir:v "service-meta" ] ;
+     fhir:display [ fhir:v "Identifies general metadata for the context that is\n      primarily intended for consumption by machines." ] ;
+     fhir:definition [ fhir:v "Identifies general metadata for the context that is\n      primarily intended for consumption by machines." ]
+  ] [
+     fhir:code [ fhir:v "sponsored" ] ;
+     fhir:display [ fhir:v "Refers to a resource that is within a context that is \n		sponsored (such as advertising or another compensation agreement)." ] ;
+     fhir:definition [ fhir:v "Refers to a resource that is within a context that is \n		sponsored (such as advertising or another compensation agreement)." ]
+  ] [
+     fhir:code [ fhir:v "start" ] ;
+     fhir:display [ fhir:v "Refers to the first resource in a collection of\n      resources." ] ;
+     fhir:definition [ fhir:v "Refers to the first resource in a collection of\n      resources." ]
+  ] [
+     fhir:code [ fhir:v "status" ] ;
+     fhir:display [ fhir:v "Identifies a resource that represents the context's\n      status." ] ;
+     fhir:definition [ fhir:v "Identifies a resource that represents the context's\n      status." ]
+  ] [
+     fhir:code [ fhir:v "stylesheet" ] ;
+     fhir:display [ fhir:v "Refers to a stylesheet." ] ;
+     fhir:definition [ fhir:v "Refers to a stylesheet." ]
+  ] [
+     fhir:code [ fhir:v "subsection" ] ;
+     fhir:display [ fhir:v "Refers to a resource serving as a subsection in a\n      collection of resources." ] ;
+     fhir:definition [ fhir:v "Refers to a resource serving as a subsection in a\n      collection of resources." ]
+  ] [
+     fhir:code [ fhir:v "successor-version" ] ;
+     fhir:display [ fhir:v "Points to a resource containing the successor version\n      in the version history.\n    " ] ;
+     fhir:definition [ fhir:v "Points to a resource containing the successor version\n      in the version history.\n    " ]
+  ] [
+     fhir:code [ fhir:v "sunset" ] ;
+     fhir:display [ fhir:v "Identifies a resource that provides information about\n      the context's retirement policy.\n    " ] ;
+     fhir:definition [ fhir:v "Identifies a resource that provides information about\n      the context's retirement policy.\n    " ]
+  ] [
+     fhir:code [ fhir:v "tag" ] ;
+     fhir:display [ fhir:v "Gives a tag (identified by the given address) that applies to\n      the current document.\n    " ] ;
+     fhir:definition [ fhir:v "Gives a tag (identified by the given address) that applies to\n      the current document.\n    " ]
+  ] [
+     fhir:code [ fhir:v "terms-of-service" ] ;
+     fhir:display [ fhir:v "Refers to the terms of service associated with the link's context." ] ;
+     fhir:definition [ fhir:v "Refers to the terms of service associated with the link's context." ]
+  ] [
+     fhir:code [ fhir:v "timegate" ] ;
+     fhir:display [ fhir:v "The Target IRI points to a TimeGate for an Original Resource." ] ;
+     fhir:definition [ fhir:v "The Target IRI points to a TimeGate for an Original Resource." ]
+  ] [
+     fhir:code [ fhir:v "timemap" ] ;
+     fhir:display [ fhir:v "The Target IRI points to a TimeMap for an Original Resource." ] ;
+     fhir:definition [ fhir:v "The Target IRI points to a TimeMap for an Original Resource." ]
+  ] [
+     fhir:code [ fhir:v "type" ] ;
+     fhir:display [ fhir:v "Refers to a resource identifying the abstract semantic type of which the link's context is considered to be an instance." ] ;
+     fhir:definition [ fhir:v "Refers to a resource identifying the abstract semantic type of which the link's context is considered to be an instance." ]
+  ] [
+     fhir:code [ fhir:v "ugc" ] ;
+     fhir:display [ fhir:v "Refers to a resource that is within a context that is User Generated Content.\n    " ] ;
+     fhir:definition [ fhir:v "Refers to a resource that is within a context that is User Generated Content.\n    " ]
+  ] [
+     fhir:code [ fhir:v "up" ] ;
+     fhir:display [ fhir:v "Refers to a parent document in a hierarchy of\n      documents.\n    " ] ;
+     fhir:definition [ fhir:v "Refers to a parent document in a hierarchy of\n      documents.\n    " ]
+  ] [
+     fhir:code [ fhir:v "version-history" ] ;
+     fhir:display [ fhir:v "Points to a resource containing the version history\n      for the context.\n    " ] ;
+     fhir:definition [ fhir:v "Points to a resource containing the version history\n      for the context.\n    " ]
+  ] [
+     fhir:code [ fhir:v "via" ] ;
+     fhir:display [ fhir:v "Identifies a resource that is the source of the\n      information in the link's context.\n    " ] ;
+     fhir:definition [ fhir:v "Identifies a resource that is the source of the\n      information in the link's context.\n    " ]
+  ] [
+     fhir:code [ fhir:v "webmention" ] ;
+     fhir:display [ fhir:v "Identifies a target URI that supports the Webmention protocol.\n    This allows clients that mention a resource in some form of publishing process\n    to contact that endpoint and inform it that this resource has been mentioned." ] ;
+     fhir:definition [ fhir:v "Identifies a target URI that supports the Webmention protocol.\n    This allows clients that mention a resource in some form of publishing process\n    to contact that endpoint and inform it that this resource has been mentioned." ]
+  ] [
+     fhir:code [ fhir:v "working-copy" ] ;
+     fhir:display [ fhir:v "Points to a working copy for this resource." ] ;
+     fhir:definition [ fhir:v "Points to a working copy for this resource." ]
+  ] [
+     fhir:code [ fhir:v "working-copy-of" ] ;
+     fhir:display [ fhir:v "Points to the versioned resource from which this\n      working copy was obtained.\n    " ] ;
+     fhir:definition [ fhir:v "Points to the versioned resource from which this\n      working copy was obtained.\n    " ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

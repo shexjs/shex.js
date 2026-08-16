@@ -1,0 +1,85 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/medicationrequest-category> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "medicationrequest-category"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem medicationrequest-category</b></p><a name=\"medicationrequest-category\"> </a><a name=\"hcmedicationrequest-category\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/CodeSystem/medicationrequest-category</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">inpatient<a name=\"medicationrequest-category-inpatient\"> </a></td><td>Inpatient</td><td>Includes requests for medications to be administered or consumed in an inpatient or acute care setting.</td></tr><tr><td style=\"white-space:nowrap\">outpatient<a name=\"medicationrequest-category-outpatient\"> </a></td><td>Outpatient</td><td>Includes requests for medications to be administered or consumed in an outpatient setting (for example, Emergency Department, Outpatient Clinic, Outpatient Surgery, Doctor's office).</td></tr><tr><td style=\"white-space:nowrap\">community<a name=\"medicationrequest-category-community\"> </a></td><td>Community</td><td>Includes requests for medications to be administered or consumed by the patient in their home (this would include long term care or nursing homes, hospices, etc.).</td></tr><tr><td style=\"white-space:nowrap\">discharge<a name=\"medicationrequest-category-discharge\"> </a></td><td>Discharge</td><td>Includes requests for medications created when the patient is being released from a facility.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "phx"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/CodeSystem/medicationrequest-category"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/CodeSystem/medicationrequest-category>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "MedicationRequestCategoryCodes"] ; # 
+  fhir:title [ fhir:v "Medication Request Category Codes"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7 International"] ; # 
+  fhir:description [ fhir:v "Medication Request Category Codes \n **Note to Balloters: This code system is expected to move to [terminology.hl7.org](http://terminology.hl7.org)**"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/medicationrequest-category"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/medicationrequest-category>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "inpatient" ] ;
+     fhir:display [ fhir:v "Inpatient" ] ;
+     fhir:definition [ fhir:v "Includes requests for medications to be administered or consumed in an inpatient or acute care setting." ]
+  ] [
+     fhir:code [ fhir:v "outpatient" ] ;
+     fhir:display [ fhir:v "Outpatient" ] ;
+     fhir:definition [ fhir:v "Includes requests for medications to be administered or consumed in an outpatient setting (for example, Emergency Department, Outpatient Clinic, Outpatient Surgery, Doctor's office)." ]
+  ] [
+     fhir:code [ fhir:v "community" ] ;
+     fhir:display [ fhir:v "Community" ] ;
+     fhir:definition [ fhir:v "Includes requests for medications to be administered or consumed by the patient in their home (this would include long term care or nursing homes, hospices, etc.)." ]
+  ] [
+     fhir:code [ fhir:v "discharge" ] ;
+     fhir:display [ fhir:v "Discharge" ] ;
+     fhir:definition [ fhir:v "Includes requests for medications created when the patient is being released from a facility." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,106 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/NutritionOrder/pureeddiet-simple> a fhir:NutritionOrder ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "pureeddiet-simple"] ; # Using only instruction element in oralDiet and Supplement minimal other elements  id = pureeddiet-simple file name = nutritionorder-example-pureeddiet-simple.xml  Name= Pureed Diet Simple Description = Nutrition Order Pureed Diet with Energy/Protein Supplement Simple Example
+#edited by Eric Haas Health eData Inc, EH: use oral Diet element
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://goodhealthhospital.org/nutrition-requests"^^xsd:anyURI ;
+       fhir:l <http://goodhealthhospital.org/nutrition-requests>
+     ] ;
+     fhir:value [ fhir:v "123" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Peter Chalmers" ]
+  ] ; # 
+  fhir:dateTime [ fhir:v "2014-09-17"^^xsd:date] ; # 
+  fhir:oralDiet [
+     fhir:type ( [
+       a sct:1255825005 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "1255825005" ] ;
+         fhir:display [ fhir:v "International Dysphagia Diet Standardisation Initiative Framework - Pureed Level 4 food" ]
+       ] [
+         fhir:system [
+           fhir:v "http://goodhealthhospital.org/diet-type-codes"^^xsd:anyURI ;
+           fhir:l <http://goodhealthhospital.org/diet-type-codes>
+         ] ;
+         fhir:code [ fhir:v "1010" ] ;
+         fhir:display [ fhir:v "Pureed diet" ]
+       ] ) ;
+       fhir:text [ fhir:v "Pureed diet" ]
+     ] ) ; # EH:  list type of diet showing standard code and local codes
+     fhir:schedule [
+       fhir:timing ( [
+         fhir:repeat [
+           fhir:bounds [
+             a fhir:Period ;
+             fhir:start [ fhir:v "2015-02-10"^^xsd:date ]
+           ] ;
+           fhir:frequency [ fhir:v "3"^^xsd:positiveInteger ] ;
+           fhir:period [ fhir:v "1"^^xsd:decimal ] ;
+           fhir:periodUnit [ fhir:v "d" ]
+         ]
+       ] )
+     ] ; # EH example of three times a day starting on 2\/10
+     fhir:texture ( [
+       fhir:modifier [
+         a sct:228055009 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "228055009" ] ;
+           fhir:display [ fhir:v "Liquidized food" ]
+         ] ) ;
+         fhir:text [ fhir:v "Pureed" ]
+       ]
+     ] )
+  ] ; # 
+  fhir:supplement ( [
+     fhir:type [
+       fhir:concept [
+         a sct:442971000124100 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "442971000124100" ] ;
+           fhir:display [ fhir:v "Adult high energy formula" ]
+         ] [
+           fhir:system [
+             fhir:v "http://goodhealthhospital.org/supplement-type-codes"^^xsd:anyURI ;
+             fhir:l <http://goodhealthhospital.org/supplement-type-codes>
+           ] ;
+           fhir:code [ fhir:v "1040" ] ;
+           fhir:display [ fhir:v "Adult high energy pudding" ]
+         ] ) ;
+         fhir:text [ fhir:v "Adult high energy pudding" ]
+       ]
+     ] ;
+     fhir:productName [ fhir:v "Ensure Pudding 4 oz container" ] ;
+     fhir:instruction [ fhir:v "Ensure Pudding at breakfast, lunch, supper" ] # EH:  Instructions to supplement too
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

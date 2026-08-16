@@ -1,0 +1,84 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Observation/non-hdl> a fhir:Observation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "non-hdl"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Observation non-hdl</b></p><a name=\"non-hdl\"> </a><a name=\"hcnon-hdl\"> </a><a name=\"non-hdl-en-US\"> </a><p><b>status</b>: Final</p><p><b>category</b>: <span title=\"Codes:{http://terminology.hl7.org/CodeSystem/observation-category laboratory}\">Laboratory</span>, <span title=\"Codes:{urn:oid:1.2.840.114350.1.13.177.2.7.10.798268.30 Lab}\">Lab</span></p><p><b>code</b>: <span title=\"Codes:{http://loinc.org 43396-1}\">Non HDL Cholesterol</span></p><p><b>subject</b>: <a href=\"Patient/pat2\">Donald, Duck</a></p><p><b>effective</b>: 2015-08-16T06:40:17Z</p><p><b>issued</b>: 2015-08-16T08:40:17Z</p><p><b>value</b>: 191 mg/dL<span style=\"background: LightGoldenRodYellow\"> (Details: UCUM  code = 'mg/dL')</span></p><p><b>note</b>: Calculated non-HDL Cholesterol (non-HDL-C) indirectly measures LDL-C, Lp(a), \nIDL-C, and VLDL-C. It is a surrogate marker for Apoprotein B. Goal should be\n less than 130 mg/dL.\n</p><p><b>specimen</b>: <a href=\"Specimen/sst\">Serum sample</a></p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "final"] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/observation-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/observation-category>
+       ] ;
+       fhir:code [ fhir:v "laboratory" ] ;
+       fhir:display [ fhir:v "Laboratory" ]
+     ] ) ;
+     fhir:text [ fhir:v "Laboratory" ]
+  ] [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "urn:oid:1.2.840.114350.1.13.177.2.7.10.798268.30"^^xsd:anyURI ;
+         fhir:l <urn:oid:1.2.840.114350.1.13.177.2.7.10.798268.30>
+       ] ;
+       fhir:code [ fhir:v "Lab" ] ;
+       fhir:display [ fhir:v "Lab" ]
+     ] ) ;
+     fhir:text [ fhir:v "Lab" ]
+  ] ) ; # 
+  fhir:code [
+     a loinc:43396-1 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "43396-1" ] ;
+       fhir:display [ fhir:v "Cholesterol non HDL [Mass/volume] in Serum or Plasma" ]
+     ] ) ;
+     fhir:text [ fhir:v "Non HDL Cholesterol" ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/pat2> ;
+     fhir:reference [ fhir:v "Patient/pat2" ]
+  ] ; # 
+  fhir:effective [
+     a fhir:DateTime ;
+     fhir:v "2015-08-16T06:40:17Z"^^xsd:dateTime
+  ] ; # 
+  fhir:issued [ fhir:v "2015-08-16T08:40:17Z"^^xsd:dateTime] ; # 
+  fhir:value [
+     a fhir:Quantity ;
+     fhir:value [ fhir:v "191"^^xsd:decimal ] ;
+     fhir:unit [ fhir:v "mg/dL" ] ;
+     fhir:system [
+       fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+       fhir:l <http://unitsofmeasure.org>
+     ] ;
+     fhir:code [ fhir:v "mg/dL" ]
+  ] ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "Calculated non-HDL Cholesterol (non-HDL-C) indirectly measures LDL-C, Lp(a), \r\nIDL-C, and VLDL-C. It is a surrogate marker for Apoprotein B. Goal should be\r\n less than 130 mg/dL.\r\n" ]
+  ] ) ; # 
+  fhir:specimen [
+     fhir:l <http://hl7.org/fhir/Specimen/sst> ;
+     fhir:reference [ fhir:v "Specimen/sst" ] ;
+     fhir:display [ fhir:v "Serum sample" ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/pat2> a fhir:Patient .
+
+<http://hl7.org/fhir/Specimen/sst> a fhir:Specimen .
+
+# -------------------------------------------------------------------------------------
+

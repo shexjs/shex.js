@@ -1,0 +1,135 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/warning-type> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "warning-type"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T11:01:55.562+11:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem warning-type</b></p><a name=\"warning-type\"> </a><a name=\"hcwarning-type\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">Last updated: 2021-01-05T10:01:24.148+11:00</p></div><p>This case-sensitive code system <code>http://hl7.org/fhir/warning-type</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">P313<a name=\"warning-type-P313\"> </a></td><td>Get medical advice/attention.</td><td>Get medical advice/attention.</td></tr><tr><td style=\"white-space:nowrap\">P314<a name=\"warning-type-P314\"> </a></td><td>Get medical advice/attention if you feel unwell.</td><td>Get medical advice/attention if you feel unwell.</td></tr><tr><td style=\"white-space:nowrap\">P315<a name=\"warning-type-P315\"> </a></td><td>Get immediate medical advice/attention.</td><td>Get immediate medical advice/attention.</td></tr><tr><td style=\"white-space:nowrap\">P320<a name=\"warning-type-P320\"> </a></td><td>Specific treatment is urgent (see ... on this label).</td><td>Specific treatment is urgent (see ... on this label).</td></tr><tr><td style=\"white-space:nowrap\">P321<a name=\"warning-type-P321\"> </a></td><td>Specific treatment (see ... on this label).</td><td>Specific treatment (see ... on this label).</td></tr><tr><td style=\"white-space:nowrap\">P322<a name=\"warning-type-P322\"> </a></td><td>Specific measures (see ... on this label).</td><td>Specific measures (see ... on this label).</td></tr><tr><td style=\"white-space:nowrap\">P330<a name=\"warning-type-P330\"> </a></td><td>Rinse mouth.</td><td>Rinse mouth.</td></tr><tr><td style=\"white-space:nowrap\">P331<a name=\"warning-type-P331\"> </a></td><td>Do NOT induce vomiting.</td><td>Do NOT induce vomiting.</td></tr><tr><td style=\"white-space:nowrap\">P361<a name=\"warning-type-P361\"> </a></td><td>Remove/Take off immediately all contaminated clothing.</td><td>Remove/Take off immediately all contaminated clothing.</td></tr><tr><td style=\"white-space:nowrap\">P363<a name=\"warning-type-P363\"> </a></td><td>Wash contaminated clothing before reuse..</td><td>Wash contaminated clothing before reuse.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "brr"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/warning-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/warning-type>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1996" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "WarningTypeExample"] ; # 
+  fhir:title [ fhir:v "Warning Type"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2021-08-15T16:55:11+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Classification of warning type."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/warning-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/warning-type>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "P313" ] ;
+     fhir:display [ fhir:v "Get medical advice/attention." ] ;
+     fhir:definition [ fhir:v "Get medical advice/attention." ]
+  ] [
+     fhir:code [ fhir:v "P314" ] ;
+     fhir:display [ fhir:v "Get medical advice/attention if you feel unwell." ] ;
+     fhir:definition [ fhir:v "Get medical advice/attention if you feel unwell." ]
+  ] [
+     fhir:code [ fhir:v "P315" ] ;
+     fhir:display [ fhir:v "Get immediate medical advice/attention." ] ;
+     fhir:definition [ fhir:v "Get immediate medical advice/attention." ]
+  ] [
+     fhir:code [ fhir:v "P320" ] ;
+     fhir:display [ fhir:v "Specific treatment is urgent (see ... on this label)." ] ;
+     fhir:definition [ fhir:v "Specific treatment is urgent (see ... on this label)." ]
+  ] [
+     fhir:code [ fhir:v "P321" ] ;
+     fhir:display [ fhir:v "Specific treatment (see ... on this label)." ] ;
+     fhir:definition [ fhir:v "Specific treatment (see ... on this label)." ]
+  ] [
+     fhir:code [ fhir:v "P322" ] ;
+     fhir:display [ fhir:v "Specific measures (see ... on this label)." ] ;
+     fhir:definition [ fhir:v "Specific measures (see ... on this label)." ]
+  ] [
+     fhir:code [ fhir:v "P330" ] ;
+     fhir:display [ fhir:v "Rinse mouth." ] ;
+     fhir:definition [ fhir:v "Rinse mouth." ]
+  ] [
+     fhir:code [ fhir:v "P331" ] ;
+     fhir:display [ fhir:v "Do NOT induce vomiting." ] ;
+     fhir:definition [ fhir:v "Do NOT induce vomiting." ]
+  ] [
+     fhir:code [ fhir:v "P361" ] ;
+     fhir:display [ fhir:v "Remove/Take off immediately all contaminated clothing." ] ;
+     fhir:definition [ fhir:v "Remove/Take off immediately all contaminated clothing." ]
+  ] [
+     fhir:code [ fhir:v "P363" ] ;
+     fhir:display [ fhir:v "Wash contaminated clothing before reuse.." ] ;
+     fhir:definition [ fhir:v "Wash contaminated clothing before reuse." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,156 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Evidence/example-statistic-model-include-if> a fhir:Evidence ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-statistic-model-include-if"] ; # 
+  fhir:meta [
+     fhir:versionId [ fhir:v "9" ] ;
+     fhir:lastUpdated [ fhir:v "2025-03-10T14:59:32.227Z"^^xsd:dateTime ] ;
+     fhir:profile ( [
+       fhir:v "http://hl7.org/fhir/uv/ebm/StructureDefinition/statistic-model"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/uv/ebm/StructureDefinition/statistic-model>
+     ] )
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/Evidence/example-statistic-model-include-if"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/Evidence/example-statistic-model-include-if>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:text [ fhir:v "FEvIR Object Identifier" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "https://fevir.net/FOI/346428" ] ;
+     fhir:assigner [
+       fhir:display [ fhir:v "Computable Publishing LLC" ]
+     ]
+  ] ) ; # 
+  fhir:title [ fhir:v "Example of statistical analysis plan with different statistical test if non-normal distribution"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:author ( [
+     fhir:name [ fhir:v "Brian S. Alper, MD, MSPH" ]
+  ] ) ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Decision Support"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/dss" ]
+     ] )
+  ] ) ; # 
+  fhir:copyright [ fhir:v "https://creativecommons.org/licenses/by-nc-sa/4.0/"] ; # 
+  fhir:description [ fhir:v "This example uses the StatisticModelIncludeIf extension to represent the model characteristic of Welch's 2-sample t-test if the data is consistent with a normal distribution (based on Shapiro-Wilk test with p-value >= 0.05) and a Wilcoxon Mann-Whitney test if not."] ; # 
+  fhir:variableDefinition ( [
+     fhir:description [ fhir:v "Adults with hypertension" ] ;
+     fhir:variableRole [ fhir:v "population" ]
+  ] [
+     fhir:description [ fhir:v "Reversitol vs. Placebo" ] ;
+     fhir:variableRole [ fhir:v "exposure" ]
+  ] [
+     fhir:description [ fhir:v "Change in systolic blood pressure from baseline to 3 months" ] ;
+     fhir:variableRole [ fhir:v "outcome" ]
+  ] ) ; # 
+  fhir:studyDesign ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "https://fevir.net/sevco"^^xsd:anyURI ;
+         fhir:l <https://fevir.net/sevco>
+       ] ;
+       fhir:code [ fhir:v "SEVCO:01003" ] ;
+       fhir:display [ fhir:v "randomized assignment" ]
+     ] )
+  ] ) ; # 
+  fhir:statistic ( [
+     fhir:statisticType [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://fevir.net/sevco"^^xsd:anyURI ;
+           fhir:l <https://fevir.net/sevco>
+         ] ;
+         fhir:code [ fhir:v "STATO:0000457" ] ;
+         fhir:display [ fhir:v "difference in means" ]
+       ] )
+     ] ;
+     fhir:modelCharacteristic ( [
+       fhir:extension ( [
+         fhir:url [
+           fhir:v "http://hl7.org/fhir/StructureDefinition/statistic-model-include-if"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/StructureDefinition/statistic-model-include-if>
+         ] ;
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "attribute"^^xsd:anyURI ;
+             fhir:l fhir:attribute
+           ] ;
+           fhir:value [
+             a fhir:CodeableConcept ;
+             fhir:text [ fhir:v "data distribution" ]
+           ]
+         ] [
+           fhir:url [
+             fhir:v "value"^^xsd:anyURI ;
+             fhir:l fhir:value
+           ] ;
+           fhir:value [
+             a fhir:CodeableConcept ;
+             fhir:text [ fhir:v "normal distribution (Shapiro-Wilk test with p-value >= 0.05)" ]
+           ]
+         ] )
+       ] ) ;
+       fhir:code [
+         fhir:text [ fhir:v "Welch's 2-sample t-test" ]
+       ] ;
+       fhir:intended [ fhir:v true ]
+     ] [
+       fhir:extension ( [
+         fhir:url [
+           fhir:v "http://hl7.org/fhir/StructureDefinition/statistic-model-include-if"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/StructureDefinition/statistic-model-include-if>
+         ] ;
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "attribute"^^xsd:anyURI ;
+             fhir:l fhir:attribute
+           ] ;
+           fhir:value [
+             a fhir:CodeableConcept ;
+             fhir:text [ fhir:v "data distribution" ]
+           ]
+         ] [
+           fhir:url [
+             fhir:v "value"^^xsd:anyURI ;
+             fhir:l fhir:value
+           ] ;
+           fhir:value [
+             a fhir:CodeableConcept ;
+             fhir:text [ fhir:v "not consistent with normal distribution (Shapiro-Wilk test with p-value < 0.05)" ]
+           ]
+         ] )
+       ] ) ;
+       fhir:code [
+         fhir:text [ fhir:v "Wilcoxon Mann-Whitney test" ]
+       ] ;
+       fhir:intended [ fhir:v true ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

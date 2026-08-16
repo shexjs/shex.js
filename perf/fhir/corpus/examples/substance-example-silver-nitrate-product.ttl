@@ -1,0 +1,56 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Substance/f204> a fhir:Substance ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f204"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://acme.org/identifiers/substances/lot"^^xsd:anyURI ;
+       fhir:l <http://acme.org/identifiers/substances/lot>
+     ] ;
+     fhir:value [ fhir:v "AB94687" ]
+  ] ) ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/substance-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/substance-category>
+       ] ;
+       fhir:code [ fhir:v "chemical" ] ;
+       fhir:display [ fhir:v "Chemical" ]
+     ] )
+  ] ) ; # 
+  fhir:code [
+     fhir:concept [
+       a sct:333346007 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "333346007" ] ;
+         fhir:display [ fhir:v "Silver nitrate 200 mg/mL cutaneous solution" ]
+       ] )
+     ]
+  ] ; # 
+  fhir:description [ fhir:v "Solution for silver nitrate stain"] ; # 
+  fhir:expiry [ fhir:v "2018-01-01"^^xsd:date] ; # 
+  fhir:quantity [
+     fhir:value [ fhir:v "100"^^xsd:decimal ] ;
+     fhir:unit [ fhir:v "mL" ] ;
+     fhir:system [
+       fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+       fhir:l <http://unitsofmeasure.org>
+     ] ;
+     fhir:code [ fhir:v "mL" ]
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

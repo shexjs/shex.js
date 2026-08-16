@@ -1,0 +1,334 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ExampleScenario/example> a fhir:ExampleScenario ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "additional" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p>\n        <b> ExampleScenario - Medication administration (IHE MMA)</b>\n        <a name=\"example\"> </a>\n      </p>\n      <div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\">\n        <p style=\"margin-bottom: 0px\">Resource ExampleScenario \"example\" </p>\n      </div>\n      <p>\n        <b> status</b> : draft\n      </p>\n      <p>\n        <b> purpose</b> : Purpose: this serves to enable remote performing of medication administration, by using remote / mobile devices to a) Get the planned medication administrations and b) Record the performing of these administrations without a permanent connection to the EHR.\n      </p>\n\n      <img src=\"./examplescenario-example.png\" alt=\"ExampleScenario diagram - IHE MMA example\"/>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:purpose [ fhir:v "Purpose: this serves to demonstrate the performing of medication administration, by using remote / mobile devices to a) Get the planned medication administrations and b) Record the performing of these administrations without a permanent connection to the EHR."] ; # 
+  fhir:actor ( [
+     fhir:key [ fhir:v "Nurse" ] ;
+     fhir:type [ fhir:v "person" ] ;
+     fhir:title [ fhir:v "Nurse" ] ;
+     fhir:description [ fhir:v "The Nurse" ]
+  ] [
+     fhir:key [ fhir:v "MAP" ] ;
+     fhir:type [ fhir:v "other" ] ;
+     fhir:title [ fhir:v "Nurse's Tablet" ] ;
+     fhir:description [ fhir:v "The entity that receives the Administration Requests to show the nurse to perform them" ]
+  ] [
+     fhir:key [ fhir:v "OP" ] ;
+     fhir:type [ fhir:v "system" ] ;
+     fhir:title [ fhir:v "MAR / Scheduler" ] ;
+     fhir:description [ fhir:v "The Medication Administration Order Placer" ]
+  ] [
+     fhir:key [ fhir:v "MAC" ] ;
+     fhir:type [ fhir:v "system" ] ;
+     fhir:title [ fhir:v "MAR / EHR" ] ;
+     fhir:description [ fhir:v "The entity that receives the Medication Administration reports" ]
+  ] ) ; # 
+  fhir:instance ( [
+     fhir:key [ fhir:v "iherx001" ] ;
+     fhir:structureType [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/fhir-types"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/fhir-types>
+       ] ;
+       fhir:code [ fhir:v "MedicationRequest" ]
+     ] ;
+     fhir:title [ fhir:v "Initial Prescription" ] ;
+     fhir:description [ fhir:v "The initial prescription which describes \"medication X, 3 times per day\" - the exact scheduling is not   in the initial prescription (it is left for the care teams to decide on the schedule)." ]
+  ] [
+     fhir:key [ fhir:v "iherx001.001" ] ;
+     fhir:structureType [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/fhir-types"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/fhir-types>
+       ] ;
+       fhir:code [ fhir:v "MedicationRequest" ]
+     ] ;
+     fhir:title [ fhir:v "Request for day 1, morning" ] ;
+     fhir:description [ fhir:v "The administration request for day 1, morning" ]
+  ] [
+     fhir:key [ fhir:v "iherx001.002" ] ;
+     fhir:structureType [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/fhir-types"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/fhir-types>
+       ] ;
+       fhir:code [ fhir:v "MedicationRequest" ]
+     ] ;
+     fhir:title [ fhir:v "Request for day 1, lunch" ] ;
+     fhir:description [ fhir:v "The administration request for day 1, lunch" ]
+  ] [
+     fhir:key [ fhir:v "iherx001.003" ] ;
+     fhir:structureType [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/fhir-types"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/fhir-types>
+       ] ;
+       fhir:code [ fhir:v "MedicationRequest" ]
+     ] ;
+     fhir:title [ fhir:v "Request for day 1, evening" ] ;
+     fhir:description [ fhir:v "The administration request for day 1, evening" ]
+  ] [
+     fhir:key [ fhir:v "iherx001.004" ] ;
+     fhir:structureType [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/fhir-types"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/fhir-types>
+       ] ;
+       fhir:code [ fhir:v "MedicationRequest" ]
+     ] ;
+     fhir:title [ fhir:v "Request for day 2, morning" ] ;
+     fhir:description [ fhir:v "The administration request for day 2, morning" ]
+  ] [
+     fhir:key [ fhir:v "iherx001.005" ] ;
+     fhir:structureType [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/fhir-types"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/fhir-types>
+       ] ;
+       fhir:code [ fhir:v "MedicationRequest" ]
+     ] ;
+     fhir:title [ fhir:v "Request for day 2, lunch" ] ;
+     fhir:description [ fhir:v "The administration request for day 2, lunch" ]
+  ] [
+     fhir:key [ fhir:v "iherx001.006" ] ;
+     fhir:structureType [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/fhir-types"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/fhir-types>
+       ] ;
+       fhir:code [ fhir:v "MedicationRequest" ]
+     ] ;
+     fhir:title [ fhir:v "Request for day 2, evening" ] ;
+     fhir:description [ fhir:v "The administration request for day 2, evening" ]
+  ] [
+     fhir:key [ fhir:v "iheadm001a" ] ;
+     fhir:structureType [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/fhir-types"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/fhir-types>
+       ] ;
+       fhir:code [ fhir:v "MedicationAdministration" ]
+     ] ;
+     fhir:title [ fhir:v "Morning meds - taken" ] ;
+     fhir:description [ fhir:v "Administration report for day 1, morning: Taken" ]
+  ] [
+     fhir:key [ fhir:v "iheadm001b" ] ;
+     fhir:structureType [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/fhir-types"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/fhir-types>
+       ] ;
+       fhir:code [ fhir:v "MedicationAdministration" ]
+     ] ;
+     fhir:title [ fhir:v "Morning meds - not taken" ] ;
+     fhir:description [ fhir:v "Administration report for day 1, morning: NOT Taken" ]
+  ] [
+     fhir:key [ fhir:v "iherx001bundle" ] ;
+     fhir:structureType [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/fhir-types"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/fhir-types>
+       ] ;
+       fhir:code [ fhir:v "MedicationRequest" ]
+     ] ;
+     fhir:title [ fhir:v "Bundle of Medication Requests" ] ;
+     fhir:description [ fhir:v "All the medication Requests for Day 1" ] ;
+     fhir:containedInstance ( [
+       fhir:instanceReference [ fhir:v "iherx001.001" ]
+     ] [
+       fhir:instanceReference [ fhir:v "iherx001.002" ]
+     ] [
+       fhir:instanceReference [ fhir:v "iherx001.003" ]
+     ] [
+       fhir:instanceReference [ fhir:v "iherx001.004" ]
+     ] [
+       fhir:instanceReference [ fhir:v "iherx001.005" ]
+     ] [
+       fhir:instanceReference [ fhir:v "iherx001.006" ]
+     ] )
+  ] [
+     fhir:key [ fhir:v "iheadm002" ] ;
+     fhir:structureType [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/fhir-types"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/fhir-types>
+       ] ;
+       fhir:code [ fhir:v "MedicationAdministration" ]
+     ] ;
+     fhir:title [ fhir:v "Lunch meds - taken" ] ;
+     fhir:description [ fhir:v "Administration report for day 1, lunch: Taken" ] ;
+     fhir:version ( [
+       fhir:key [ fhir:v "iheadm002v1" ] ;
+       fhir:title [ fhir:v "Administration - v1" ] ;
+       fhir:description [ fhir:v "Medication just taken" ]
+     ] [
+       fhir:key [ fhir:v "iheadm002v2" ] ;
+       fhir:title [ fhir:v "Administration - v2" ] ;
+       fhir:description [ fhir:v "Medication rejected" ]
+     ] )
+  ] [
+     fhir:key [ fhir:v "iherxqry" ] ;
+     fhir:structureType [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/fhir-types"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/fhir-types>
+       ] ;
+       fhir:code [ fhir:v "SearchParameter" ]
+     ] ;
+     fhir:title [ fhir:v "Search query1" ] ;
+     fhir:description [ fhir:v "The search administration request for day 1, morning" ]
+  ] ) ; # 
+  fhir:process ( [
+     fhir:title [ fhir:v "Mobile Medication Administration" ] ;
+     fhir:description [ fhir:v "This scenario demonstrates the process of getting the relevant medication instructions for a patient visit and reporting the results of administration. The scenario is as follows: After the prescription is issued, the institution schedules each individual administration event in the Medication Administration Record (MAR). When preparing for a visit, the nurse queries the MAR for the scheduled administrations, obtaining a bundle of records. The nurse then performs the care activities and registers the results in the device. Upon synchronization of the device and the institution, the results of administration are uploaded to the EHR, thus updating the MAR." ] ;
+     fhir:preConditions [ fhir:v "Medication administration requests are in the EHR / MAR, scheduled for each individual intake." ] ;
+     fhir:postConditions [ fhir:v "Medication administration Reports are submitted, EHR is updated." ] ;
+     fhir:step ( [
+       fhir:number [ fhir:v "1" ] ;
+       fhir:operation [
+         fhir:title [ fhir:v "Get today's schedule" ] ;
+         fhir:initiator [ fhir:v "Nurse" ] ;
+         fhir:receiver [ fhir:v "MAP" ]
+       ]
+     ] [
+       fhir:number [ fhir:v "2" ] ;
+       fhir:operation [
+         fhir:title [ fhir:v "Query administration orders" ] ;
+         fhir:initiator [ fhir:v "MAP" ] ;
+         fhir:receiver [ fhir:v "OP" ] ;
+         fhir:description [ fhir:v "Query for medication administration orders,\\n- For today's shifts\\n- For today's patients" ] ;
+         fhir:request [
+           fhir:instanceReference [ fhir:v "iherxqry" ]
+         ] ;
+         fhir:response [
+           fhir:instanceReference [ fhir:v "iherx001bundle" ]
+         ]
+       ] ;
+       fhir:pause [ fhir:v true ]
+     ] [
+       fhir:number [ fhir:v "3" ] ;
+       fhir:operation [
+         fhir:title [ fhir:v "Notify (alert)" ] ;
+         fhir:initiator [ fhir:v "MAP" ] ;
+         fhir:receiver [ fhir:v "Nurse" ]
+       ]
+     ] [
+       fhir:number [ fhir:v "4" ] ;
+       fhir:operation [
+         fhir:title [ fhir:v "Read orders" ] ;
+         fhir:initiator [ fhir:v "Nurse" ] ;
+         fhir:receiver [ fhir:v "MAP" ]
+       ] ;
+       fhir:pause [ fhir:v true ]
+     ] [
+       fhir:number [ fhir:v "5" ] ;
+       fhir:operation [
+         fhir:title [ fhir:v "Ask if patient took meds" ] ;
+         fhir:initiator [ fhir:v "Nurse" ] ;
+         fhir:receiver [ fhir:v "Nurse" ]
+       ]
+     ] [
+       fhir:alternative ( [
+         fhir:title [ fhir:v "Patient took meds" ] ;
+         fhir:description [ fhir:v "Invoke if patient took medications" ] ;
+         fhir:step ( [
+           fhir:number [ fhir:v "6a" ] ;
+           fhir:operation [
+             fhir:title [ fhir:v "Register meds taken" ] ;
+             fhir:initiator [ fhir:v "Nurse" ] ;
+             fhir:receiver [ fhir:v "MAP" ] ;
+             fhir:initiatorActive [ fhir:v true ]
+           ]
+         ] )
+       ] [
+         fhir:title [ fhir:v "No drugs" ] ;
+         fhir:description [ fhir:v "No, patient did not take meds" ] ;
+         fhir:step ( [
+           fhir:number [ fhir:v "6b" ] ;
+           fhir:operation [
+             fhir:title [ fhir:v "Register meds NOT taken" ] ;
+             fhir:initiator [ fhir:v "Nurse" ] ;
+             fhir:receiver [ fhir:v "MAP" ] ;
+             fhir:initiatorActive [ fhir:v true ]
+           ]
+         ] )
+       ] [
+         fhir:title [ fhir:v "Not clear" ] ;
+         fhir:description [ fhir:v "Unknown whether patient took medications or not" ]
+       ] ) ;
+       fhir:pause [ fhir:v true ]
+     ] [
+       fhir:number [ fhir:v "7" ] ;
+       fhir:operation [
+         fhir:title [ fhir:v "Administer drug" ] ;
+         fhir:initiator [ fhir:v "Nurse" ] ;
+         fhir:receiver [ fhir:v "Nurse" ]
+       ]
+     ] [
+       fhir:number [ fhir:v "8" ] ;
+       fhir:operation [
+         fhir:title [ fhir:v "Record administration" ] ;
+         fhir:initiator [ fhir:v "Nurse" ] ;
+         fhir:receiver [ fhir:v "MAP" ] ;
+         fhir:initiatorActive [ fhir:v true ]
+       ] ;
+       fhir:pause [ fhir:v true ]
+     ] [
+       fhir:number [ fhir:v "9" ] ;
+       fhir:operation [
+         fhir:title [ fhir:v "Upload administration reports" ] ;
+         fhir:initiator [ fhir:v "Nurse" ] ;
+         fhir:receiver [ fhir:v "MAP" ] ;
+         fhir:initiatorActive [ fhir:v true ] ;
+         fhir:request [
+           fhir:instanceReference [ fhir:v "iheadm002" ] ;
+           fhir:versionReference [ fhir:v "iheadm002v1" ]
+         ]
+       ] ;
+       fhir:pause [ fhir:v true ]
+     ] [
+       fhir:number [ fhir:v "10" ] ;
+       fhir:operation [
+         fhir:title [ fhir:v "Upload administration reports" ] ;
+         fhir:initiator [ fhir:v "MAP" ] ;
+         fhir:receiver [ fhir:v "MAC" ] ;
+         fhir:description [ fhir:v "The nurse's system uploads the administration results to the server" ] ;
+         fhir:request [
+           fhir:instanceReference [ fhir:v "iheadm001a" ]
+         ]
+       ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

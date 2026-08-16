@@ -1,0 +1,85 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Observation/bmi-using-related> a fhir:Observation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "bmi-using-related"] ; # 
+  fhir:status [ fhir:v "final"] ; # ======== need to fix vitals to removed fixed value 'has-member' ==========
+#	<meta>
+#		<profile value="http://hl7.org/fhir/StructureDefinition/vitalsigns"/>
+#	</meta>
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/observation-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/observation-category>
+       ] ;
+       fhir:code [ fhir:v "vital-signs" ] ;
+       fhir:display [ fhir:v "Vital Signs" ]
+     ] ) ;
+     fhir:text [ fhir:v "Vital Signs" ]
+  ] [
+     a loinc:39156-5 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "39156-5" ] ;
+       fhir:display [ fhir:v "Body mass index (BMI) [Ratio]" ]
+     ] )
+  ] ) ; # 
+  fhir:code [
+     a loinc:39156-5 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "39156-5" ] ;
+       fhir:display [ fhir:v "Body mass index (BMI) [Ratio]" ]
+     ] ) ;
+     fhir:text [ fhir:v "BMI" ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:effective [
+     a fhir:DateTime ;
+     fhir:v "1999-07-02"^^xsd:date
+  ] ; # 
+  fhir:value [
+     a fhir:Quantity ;
+     fhir:value [ fhir:v 16.2 ] ;
+     fhir:unit [ fhir:v "kg/m2" ] ;
+     fhir:system [
+       fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+       fhir:l <http://unitsofmeasure.org>
+     ] ;
+     fhir:code [ fhir:v "kg/m2" ]
+  ] ; # 
+  fhir:derivedFrom ( [
+     fhir:l <http://hl7.org/fhir/Observation/bodyheight> ;
+     fhir:reference [ fhir:v "Observation/bodyheight" ] ;
+     fhir:display [ fhir:v "Body Height" ]
+  ] [
+     fhir:l <http://hl7.org/fhir/Observation/example> ;
+     fhir:reference [ fhir:v "Observation/example" ] ;
+     fhir:display [ fhir:v "Body Weight" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Observation/bodyheight> a fhir:Observation .
+
+<http://hl7.org/fhir/Observation/example> a fhir:Observation .
+
+# -------------------------------------------------------------------------------------
+

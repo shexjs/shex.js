@@ -1,0 +1,148 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/AuditEvent/example-pixQuery> a fhir:AuditEvent ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-pixQuery"] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://dicom.nema.org/resources/ontology/DCM"^^xsd:anyURI ;
+         fhir:l <http://dicom.nema.org/resources/ontology/DCM>
+       ] ;
+       fhir:code [ fhir:v "110112" ] ;
+       fhir:display [ fhir:v "Query" ]
+     ] )
+  ] ; # 
+  fhir:subtype ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "urn:oid:1.3.6.1.4.1.19376.1.2"^^xsd:anyURI ;
+         fhir:l <urn:oid:1.3.6.1.4.1.19376.1.2>
+       ] ;
+       fhir:code [ fhir:v "ITI-9" ] ;
+       fhir:display [ fhir:v "PIX Query" ]
+     ] )
+  ] ) ; # 
+  fhir:action [ fhir:v "E"] ; # 
+  fhir:recorded [ fhir:v "2015-08-26T23:42:24Z"^^xsd:dateTime] ; # 
+  fhir:outcome [
+     fhir:code [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/audit-event-outcome"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/audit-event-outcome>
+       ] ;
+       fhir:code [ fhir:v "0" ] ;
+       fhir:display [ fhir:v "Success" ]
+     ]
+  ] ; # 
+  fhir:agent ( [
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "http://hl7.org/fhir/StructureDefinition/auditevent-AlternativeUserID"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/StructureDefinition/auditevent-AlternativeUserID>
+       ] ;
+       fhir:value [
+         a fhir:Identifier ;
+         fhir:type [
+           fhir:text [ fhir:v "process ID" ]
+         ] ;
+         fhir:value [ fhir:v "6580" ]
+       ]
+     ] ) ; # Source active participant, the software making the PIX query\n  UserId - The identity of the Patient Identifier Cross-reference Consumer Actor facility and sending application from the HL7 message; \n  concatenated together, separated by the | character. \n  AlternativeUserId - Process ID
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://dicom.nema.org/resources/ontology/DCM"^^xsd:anyURI ;
+           fhir:l <http://dicom.nema.org/resources/ontology/DCM>
+         ] ;
+         fhir:code [ fhir:v "110153" ] ;
+         fhir:display [ fhir:v "Source Role ID" ]
+       ] )
+     ] ;
+     fhir:who [
+       fhir:identifier [
+         fhir:system [
+           fhir:v "urn:oid:2.16.840.1.113883.4.2"^^xsd:anyURI ;
+           fhir:l <urn:oid:2.16.840.1.113883.4.2>
+         ] ;
+         fhir:value [ fhir:v "2.16.840.1.113883.4.2" ]
+       ]
+     ] ;
+     fhir:requestor [ fhir:v false ] ;
+     fhir:network [
+       a fhir:String ;
+       fhir:v "Workstation1.ehr.familyclinic.com"
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/extra-security-role-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/extra-security-role-type>
+         ] ;
+         fhir:code [ fhir:v "humanuser" ] ;
+         fhir:display [ fhir:v "human user" ]
+       ] )
+     ] ; # The Human using the software, if known
+     fhir:who [
+       fhir:identifier [
+         fhir:value [ fhir:v "95" ]
+       ] ;
+       fhir:display [ fhir:v "Grahame Grieve" ]
+     ] ;
+     fhir:requestor [ fhir:v true ]
+  ] ) ; # 
+  fhir:source [
+     fhir:observer [
+       fhir:display [ fhir:v "hl7connect.healthintersections.com.au" ]
+     ]
+  ] ; # 
+  fhir:entity ( [
+     fhir:what [
+       fhir:identifier [
+         fhir:value [ fhir:v "e3cdfc81a0d24bd^^^&2.16.840.1.113883.4.2&ISO" ]
+       ]
+     ] ; # The Patient
+     fhir:role [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/object-role"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/object-role>
+         ] ;
+         fhir:code [ fhir:v "1" ] ;
+         fhir:display [ fhir:v "Patient" ]
+       ] )
+     ]
+  ] [
+     fhir:role [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/object-role"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/object-role>
+         ] ;
+         fhir:code [ fhir:v "24" ] ;
+         fhir:display [ fhir:v "Query" ]
+       ] )
+     ] ; # The PIX Query Parameters
+     fhir:query [ fhir:v "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPFBSUEFfSU4yMDEzMDlVVjAyIElUU1ZlcnNpb249IlhNTF8xLjAiIHhtbG5zPSJ1cm46aGw3LW9yZzp2MyI+CiAgPGlkIGV4dGVuc2lvbj0iMzU0MjMiIHJvb3Q9IjEuMi44NDAuMTE0MzUwLjEuMTMuMC4xLjcuMS4xIi8+CiAgPGNyZWF0aW9uVGltZSB2YWx1ZT0iMjAxNDA1MDgxNjQ5MjUiLz4KICA8aW50ZXJhY3Rpb25JZCBleHRlbnNpb249IlBSUEFfSU4yMDEzMDVVVjAyIiByb290PSIyLjE2Ljg0MC4xLjExMzg4My4xLjYiLz4KICA8cHJvY2Vzc2luZ0NvZGUgY29kZT0iVCIvPgogIDxwcm9jZXNzaW5nTW9kZUNvZGUgY29kZT0iVCIvPgogIDxhY2NlcHRBY2tDb2RlIGNvZGU9IkFMIi8+CiAgPHJlY2VpdmVyIHR5cGVDb2RlPSJSQ1YiPgogICAgPGRldmljZSBjbGFzc0NvZGU9IkRFViIgZGV0ZXJtaW5lckNvZGU9IklOU1RBTkNFIj4KICAgICAgPGlkIHJvb3Q9IkVIUl9NSVNZUyIvPgogICAgICA8YXNBZ2VudCBjbGFzc0NvZGU9IkFHTlQiPgogICAgICAgIDxyZXByZXNlbnRlZE9yZ2FuaXphdGlvbiBjbGFzc0NvZGU9Ik9SRyIgZGV0ZXJtaW5lckNvZGU9IklOU1RBTkNFIj4KICAgICAgICAgIDxpZCByb290PSJNSVNZUyIvPgogICAgICAgIDwvcmVwcmVzZW50ZWRPcmdhbml6YXRpb24+CiAgICAgIDwvYXNBZ2VudD4KICAgIDwvZGV2aWNlPgogIDwvcmVjZWl2ZXI+CiAgPHNlbmRlciB0eXBlQ29kZT0iU05EIj4KICAgIDxkZXZpY2UgY2xhc3NDb2RlPSJERVYiIGRldGVybWluZXJDb2RlPSJJTlNUQU5DRSI+CiAgICAgIDxpZCByb290PSIyLjE2Ljg0MC4xLjExMzg4My40LjIiLz4KICAgICAgPGFzQWdlbnQgY2xhc3NDb2RlPSJBR05UIj4KICAgICAgICA8cmVwcmVzZW50ZWRPcmdhbml6YXRpb24gY2xhc3NDb2RlPSJPUkciIGRldGVybWluZXJDb2RlPSJJTlNUQU5DRSI+CiAgICAgICAgICA8aWQgcm9vdD0iMi4xNi44NDAuMS4xMTM4ODMuNC4yIi8+CiAgICAgICAgPC9yZXByZXNlbnRlZE9yZ2FuaXphdGlvbj4KICAgICAgPC9hc0FnZW50PgogICAgPC9kZXZpY2U+CiAgPC9zZW5kZXI+CiAgPGNvbnRyb2xBY3RQcm9jZXNzIGNsYXNzQ29kZT0iQ0FDVCIgbW9vZENvZGU9IkVWTiI+CiAgICA8Y29kZSBjb2RlPSJQUlBBX1RFMjAxMzA5VVYwMiIgY29kZVN5c3RlbT0iMi4xNi44NDAuMS4xMTM4ODMuMS42Ii8+CiAgICA8cXVlcnlCeVBhcmFtZXRlcj4KICAgICAgPHF1ZXJ5SWQgZXh0ZW5zaW9uPSIxODQwOTk3MDg0IiByb290PSIxLjIuODQwLjExNDM1MC4xLjEzLjI4LjEuMTguNS45OTkiLz4KICAgICAgPHN0YXR1c0NvZGUgY29kZT0ibmV3Ii8+CiAgICAgIDxyZXNwb25zZVByaW9yaXR5Q29kZSBjb2RlPSJJIi8+CiAgICAgIDxwYXJhbWV0ZXJMaXN0PgogICAgICAgIDxwYXRpZW50SWRlbnRpZmllcj4KICAgICAgICAgIDx2YWx1ZSBleHRlbnNpb249IlN1cnlhQnJhbmQiIHJvb3Q9IjIuMTYuODQwLjEuMTEzODgzLjQuMiIvPgogICAgICAgICAgPHNlbWFudGljc1RleHQ+UGF0aWVudC5JZDwvc2VtYW50aWNzVGV4dD4KICAgICAgICA8L3BhdGllbnRJZGVudGlmaWVyPgogICAgICA8L3BhcmFtZXRlckxpc3Q+CiAgICA8L3F1ZXJ5QnlQYXJhbWV0ZXI+CiAgPC9jb250cm9sQWN0UHJvY2Vzcz4KPC9QUlBBX0lOMjAxMzA5VVYwMj4K"^^xsd:base64Binary ] ; # The complete query message (including MSH and QPD segments), base64 encoded
+     fhir:detail ( [
+       fhir:type [
+         fhir:coding ( [
+           fhir:code [ fhir:v "MSH-10" ]
+         ] )
+       ] ; # MSH-10
+       fhir:value [
+         a fhir:Base64Binary ;
+         fhir:v "MS4yLjg0MC4xMTQzNTAuMS4xMy4wLjEuNy4xLjE="^^xsd:base64Binary
+       ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,124 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/codesystem-content-mode> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "codesystem-content-mode"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem codesystem-content-mode</b></p><a name=\"codesystem-content-mode\"> </a><a name=\"hccodesystem-content-mode\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/codesystem-content-mode</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">not-present<a name=\"codesystem-content-mode-not-present\"> </a></td><td>Not Present</td><td>None of the concepts defined by the code system are included in the code system resource.</td></tr><tr><td style=\"white-space:nowrap\">example<a name=\"codesystem-content-mode-example\"> </a></td><td>Example</td><td>A subset of the valid externally defined concepts are included in the code system resource. There is no specific purpose or documented intent other than for illustrative purposes. This example content mode should not be used if the content is better represented in a fragment.</td></tr><tr><td style=\"white-space:nowrap\">fragment<a name=\"codesystem-content-mode-fragment\"> </a></td><td>Fragment</td><td>A subset of the code system concepts that are included in the code system resource. This is a curated subset released for a specific purpose.</td></tr><tr><td style=\"white-space:nowrap\">complete<a name=\"codesystem-content-mode-complete\"> </a></td><td>Complete</td><td>All the concepts defined by the code system are included in the code system resource.</td></tr><tr><td style=\"white-space:nowrap\">supplement<a name=\"codesystem-content-mode-supplement\"> </a></td><td>Supplement</td><td>The resource doesn't define any new concepts; it just provides additional designations and properties to another code system.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "vocab"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 5
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/codesystem-content-mode"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/codesystem-content-mode>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.783" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.1.766" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "CodeSystemContentMode"] ; # 
+  fhir:title [ fhir:v "Code System Content Mode"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Terminology Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/Vocab/index.cfm" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "The extent of the content of the code system (the concepts and codes it defines) are represented in a code system resource."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/codesystem-content-mode"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/codesystem-content-mode>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "not-present" ] ;
+     fhir:display [ fhir:v "Not Present" ] ;
+     fhir:definition [ fhir:v "None of the concepts defined by the code system are included in the code system resource." ]
+  ] [
+     fhir:code [ fhir:v "example" ] ;
+     fhir:display [ fhir:v "Example" ] ;
+     fhir:definition [ fhir:v "A subset of the valid externally defined concepts are included in the code system resource. There is no specific purpose or documented intent other than for illustrative purposes. This example content mode should not be used if the content is better represented in a fragment." ]
+  ] [
+     fhir:code [ fhir:v "fragment" ] ;
+     fhir:display [ fhir:v "Fragment" ] ;
+     fhir:definition [ fhir:v "A subset of the code system concepts that are included in the code system resource. This is a curated subset released for a specific purpose." ]
+  ] [
+     fhir:code [ fhir:v "complete" ] ;
+     fhir:display [ fhir:v "Complete" ] ;
+     fhir:definition [ fhir:v "All the concepts defined by the code system are included in the code system resource." ]
+  ] [
+     fhir:code [ fhir:v "supplement" ] ;
+     fhir:display [ fhir:v "Supplement" ] ;
+     fhir:definition [ fhir:v "The resource doesn't define any new concepts; it just provides additional designations and properties to another code system." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

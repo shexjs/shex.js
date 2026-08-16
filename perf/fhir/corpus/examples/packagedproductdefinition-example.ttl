@@ -1,0 +1,215 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/PackagedProductDefinition/example> a fhir:PackagedProductDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://ema.europa.eu/example/pcid"^^xsd:anyURI ;
+       fhir:l <http://ema.europa.eu/example/pcid>
+     ] ;
+     fhir:value [ fhir:v "{PCID}" ]
+  ] ) ; # 
+  fhir:description [ fhir:v "ALU-PVC/PVDC BLISTERS. CARTONS OF 10 FILM-COATED TABLETS."] ; # 
+  fhir:packaging [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://ema.europa.eu/example/packageitemcontainertype"^^xsd:anyURI ;
+           fhir:l <http://ema.europa.eu/example/packageitemcontainertype>
+         ] ;
+         fhir:code [ fhir:v "Carton" ]
+       ] )
+     ] ;
+     fhir:quantity [ fhir:v 1 ] ; # top level, so this can only ever be 1, but it is optional
+     fhir:material ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://ema.europa.eu/example/packageItemContainerMaterial"^^xsd:anyURI ;
+           fhir:l <http://ema.europa.eu/example/packageItemContainerMaterial>
+         ] ;
+         fhir:code [ fhir:v "Paperboard" ]
+       ] )
+     ] ) ;
+     fhir:manufacturer ( [
+       fhir:l <http://hl7.org/fhir/Organization/example> ;
+       fhir:reference [ fhir:v "Organization/example" ]
+     ] ) ;
+     fhir:property ( [
+       fhir:type [
+         fhir:coding ( [
+           fhir:code [ fhir:v "height" ]
+         ] )
+       ] ;
+       fhir:value [
+         a fhir:Quantity ;
+         fhir:value [ fhir:v "50"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "mm" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "mm" ]
+       ]
+     ] [
+       fhir:type [
+         fhir:coding ( [
+           fhir:code [ fhir:v "width" ]
+         ] )
+       ] ;
+       fhir:value [
+         a fhir:Quantity ;
+         fhir:value [ fhir:v "45"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "mm" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "mm" ]
+       ]
+     ] [
+       fhir:type [
+         fhir:coding ( [
+           fhir:code [ fhir:v "depth" ]
+         ] )
+       ] ;
+       fhir:value [
+         a fhir:Quantity ;
+         fhir:value [ fhir:v 23.5 ] ;
+         fhir:unit [ fhir:v "mm" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "mm" ]
+       ]
+     ] ) ;
+     fhir:packaging ( [
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://ema.europa.eu/example/packageitemcontainertype"^^xsd:anyURI ;
+             fhir:l <http://ema.europa.eu/example/packageitemcontainertype>
+           ] ;
+           fhir:code [ fhir:v "Blister" ]
+         ] )
+       ] ;
+       fhir:quantity [ fhir:v 1 ] ;
+       fhir:material ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://ema.europa.eu/example/packageItemContainerMaterial"^^xsd:anyURI ;
+             fhir:l <http://ema.europa.eu/example/packageItemContainerMaterial>
+           ] ;
+           fhir:code [ fhir:v "PVC" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://ema.europa.eu/example/packageItemContainerMaterial"^^xsd:anyURI ;
+             fhir:l <http://ema.europa.eu/example/packageItemContainerMaterial>
+           ] ;
+           fhir:code [ fhir:v "PVDC" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://ema.europa.eu/example/packageItemContainerMaterial"^^xsd:anyURI ;
+             fhir:l <http://ema.europa.eu/example/packageItemContainerMaterial>
+           ] ;
+           fhir:code [ fhir:v "alu" ]
+         ] )
+       ] ) ;
+       fhir:shelfLifeStorage ( [
+         fhir:type [
+           fhir:coding ( [
+             fhir:system [
+               fhir:v "http://ema.europa.eu/example/shelfLifeTypePlaceHolder"^^xsd:anyURI ;
+               fhir:l <http://ema.europa.eu/example/shelfLifeTypePlaceHolder>
+             ] ;
+             fhir:code [ fhir:v "ShelfLifeofPackagedMedicinalProduct" ]
+           ] )
+         ] ;
+         fhir:period [
+           a fhir:Duration ;
+           fhir:value [ fhir:v "3"^^xsd:decimal ] ;
+           fhir:unit [ fhir:v "year" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "a" ]
+         ] ;
+         fhir:specialPrecautionsForStorage ( [
+           fhir:coding ( [
+             fhir:system [
+               fhir:v "http://ema.europa.eu/example/specialprecautionsforstorage"^^xsd:anyURI ;
+               fhir:l <http://ema.europa.eu/example/specialprecautionsforstorage>
+             ] ;
+             fhir:code [ fhir:v "none" ]
+           ] )
+         ] )
+       ] ) ;
+       fhir:manufacturer ( [
+         fhir:l <http://hl7.org/fhir/Organization/example> ;
+         fhir:reference [ fhir:v "Organization/example" ]
+       ] ) ;
+       fhir:property ( [
+         fhir:type [
+           fhir:coding ( [
+             fhir:code [ fhir:v "height" ]
+           ] )
+         ] ;
+         fhir:value [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "45"^^xsd:decimal ] ;
+           fhir:unit [ fhir:v "mm" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "mm" ]
+         ]
+       ] [
+         fhir:type [
+           fhir:coding ( [
+             fhir:code [ fhir:v "width" ]
+           ] )
+         ] ;
+         fhir:value [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "35"^^xsd:decimal ] ;
+           fhir:unit [ fhir:v "mm" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "mm" ]
+         ]
+       ] ) ;
+       fhir:containedItem ( [
+         fhir:item [
+           fhir:reference [
+             fhir:l <http://hl7.org/fhir/ManufacturedItemDefinition/tablet> ;
+             fhir:reference [ fhir:v "ManufacturedItemDefinition/tablet" ]
+           ]
+         ] ;
+         fhir:amount [
+           fhir:value [ fhir:v "10"^^xsd:decimal ]
+         ] # 10 tablets in the blister pack
+       ] )
+     ] ) # inner packaging
+  ] . # outer packaging
+
+<http://hl7.org/fhir/Organization/example> a fhir:Organization .
+
+<http://hl7.org/fhir/ManufacturedItemDefinition/tablet> a fhir:ManufacturedItemDefinition .
+
+# -------------------------------------------------------------------------------------
+

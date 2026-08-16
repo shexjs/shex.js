@@ -1,0 +1,52 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Measure/composite-example> a fhir:Measure ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "composite-example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Behavioral Assessment Composite Measure\n    \n      <p>This measure example is used to illustrate how a composite measure can be constructured. This measure is a composite measure of the Screening for Alcohol Misuse and Screening for Depression measures.</p>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cqi"
+     ]
+  ] ) ; # 
+  fhir:name [ fhir:v "BehavioralAssessmentCompositeMeasure"] ; # 
+  fhir:title [ fhir:v "Behavioral Assessment Composite Measure"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Quality Information"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/cqi" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Behavioral Assessment Composite Measure"] ; # 
+  fhir:relatedArtifact ( [
+     fhir:type [ fhir:v "composed-of" ] ;
+     fhir:resource [
+       fhir:v "http://example.org/fhir/Measure/component-a-example"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Measure/component-a-example>
+     ]
+  ] [
+     fhir:type [ fhir:v "composed-of" ] ;
+     fhir:resource [
+       fhir:v "http://example.org/fhir/Measure/component-b-example"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Measure/component-b-example>
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

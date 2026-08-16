@@ -1,0 +1,111 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/research-study-classifiers> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "research-study-classifiers"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T11:01:55.562+11:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem research-study-classifiers</b></p><a name=\"research-study-classifiers\"> </a><a name=\"hcresearch-study-classifiers\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">Last updated: 2022-05-15T16:55:11.085+11:00</p></div><p>This case-sensitive code system <code>http://hl7.org/fhir/research-study-classifiers</code> defines the following codes in a Is-A hierarchy:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">fda-regulated-drug<a name=\"research-study-classifiers-fda-regulated-drug\"> </a></td><td>FDA regulated drug</td><td>A medication regulated by the U.S. Food and Drug Administration.</td></tr><tr><td style=\"white-space:nowrap\">fda-regulated-device<a name=\"research-study-classifiers-fda-regulated-device\"> </a></td><td>FDA regulated device</td><td>A medical device regulated by the U.S. Food and Drug Administration.</td></tr><tr><td style=\"white-space:nowrap\">mpg-paragraph-23b<a name=\"research-study-classifiers-mpg-paragraph-23b\"> </a></td><td>MPG Paragraph 23b</td><td>Research regulated by a specific German legal requirement (Medizinproduktegesetz MPG Paragraph 23b).</td></tr><tr><td style=\"white-space:nowrap\">irb-exempt<a name=\"research-study-classifiers-irb-exempt\"> </a></td><td>IRB-exempt</td><td>Human subjects research that is excempt from oversight and monitoring by an institutional review board (IRB).</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "brr"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 0
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/research-study-classifiers"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/research-study-classifiers>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1967" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ResearchStudyClassifiers"] ; # 
+  fhir:title [ fhir:v "ResearchStudy Classifiers Code System"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2022-05-15T16:55:11.085+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Codes for use in ResearchStudy Resource. This resource (this entire set of content) is being used for active development of a ResearchStudyClassifiers CodeSystem for use for supporting multiple value sets in the FHIR ResearchStudy StructureDefinition."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/research-study-classifiers"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/research-study-classifiers>
+  ] ; # 
+  fhir:hierarchyMeaning [ fhir:v "is-a"] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "fda-regulated-drug" ] ;
+     fhir:display [ fhir:v "FDA regulated drug" ] ;
+     fhir:definition [ fhir:v "A medication regulated by the U.S. Food and Drug Administration." ]
+  ] [
+     fhir:code [ fhir:v "fda-regulated-device" ] ;
+     fhir:display [ fhir:v "FDA regulated device" ] ;
+     fhir:definition [ fhir:v "A medical device regulated by the U.S. Food and Drug Administration." ]
+  ] [
+     fhir:code [ fhir:v "mpg-paragraph-23b" ] ;
+     fhir:display [ fhir:v "MPG Paragraph 23b" ] ;
+     fhir:definition [ fhir:v "Research regulated by a specific German legal requirement (Medizinproduktegesetz MPG Paragraph 23b)." ]
+  ] [
+     fhir:code [ fhir:v "irb-exempt" ] ;
+     fhir:display [ fhir:v "IRB-exempt" ] ;
+     fhir:definition [ fhir:v "Human subjects research that is excempt from oversight and monitoring by an institutional review board (IRB)." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

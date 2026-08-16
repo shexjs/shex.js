@@ -190,11 +190,23 @@ export function getNumericDatatype(value: RdfJsTerm): string | null {
               : null;
 }
 
-export function testKnownTypes(value: RdfJsTerm, validationError: (...s: string[]) => boolean, ldify: (term: RdfJsTerm) => objectValue, datatype: string, numeric: string | null, label: string | "") {
+/**
+ * How a node-constraint check reports a failure.
+ *
+ * A leaf object first, then the English that used to be the whole of it: a
+ * consumer that wants to know *what* failed reads the leaf, one that wants
+ * to say so reads the text (or, better, renders the leaf -- see
+ * @shexjs/util's describeError and doc/error-reporting.md F3).
+ */
+export type ValidationError = (leafOrText: object | string, ...text: string[]) => boolean;
+
+export function testKnownTypes(value: RdfJsTerm, validationError: ValidationError, ldify: (term: RdfJsTerm) => objectValue, datatype: string, numeric: string | null, label: string | "") {
   if (value.termType !== "Literal") {
-    validationError(`mismatched datatype: ${JSON.stringify(ldify(value))} is not a literal with datatype ${datatype}`);
+    validationError({type: "DatatypeMismatch", expected: datatype, actual: null},
+                    `mismatched datatype: ${JSON.stringify(ldify(value))} is not a literal with datatype ${datatype}`);
   } else if (value.datatype.value !== datatype) {
-    validationError(`mismatched datatype: ${value.datatype.value} !== ${datatype}`);
+    validationError({type: "DatatypeMismatch", expected: datatype, actual: value.datatype.value},
+                    `mismatched datatype: ${value.datatype.value} !== ${datatype}`);
   } else if (numeric) {
     testRange(numericParsers[numeric](label, validationError), datatype, validationError);
   } else if (datatype === XSD + "boolean") {
@@ -206,13 +218,14 @@ export function testKnownTypes(value: RdfJsTerm, validationError: (...s: string[
   }
 }
 
-export function testFacets(valueExpr: NodeConstraint, label: string | "", validationError: (...s: string[]) => boolean, numeric: string | null) {
+export function testFacets(valueExpr: NodeConstraint, label: string | "", validationError: ValidationError, numeric: string | null) {
   if (valueExpr.pattern !== undefined) {
     const regexp = valueExpr.flags !== undefined ?
         new RegExp(valueExpr.pattern, valueExpr.flags) :
         new RegExp(valueExpr.pattern);
     if (!(label.match(regexp)))
-      validationError(`value ${label} did not match pattern ${valueExpr.pattern}`);
+      validationError({type: "PatternMismatch", pattern: valueExpr.pattern, flags: valueExpr.flags, actual: label},
+                      `value ${label} did not match pattern ${valueExpr.pattern}`);
   }
 
   for (const [facet, testFunc] of Object.entries(stringTests)) {
@@ -229,7 +242,8 @@ export function testFacets(valueExpr: NodeConstraint, label: string | "", valida
         // @ts-ignore - TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'NodeConstraint'
         const facetParm = valueExpr[facet] as number;
         if (!testFunc(numericParsers[numeric](label, validationError), facetParm)) {
-          validationError(`facet violation: expected ${facet} of ${facetParm} but got ${label}`);
+          validationError({type: "FacetViolation", facet, expected: facetParm, actual: label},
+                          `facet violation: expected ${facet} of ${facetParm} but got ${label}`);
         }
       } else {
         validationError(`facet violation: numeric facet ${facet} can't apply to ${label}`);

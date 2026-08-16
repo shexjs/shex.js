@@ -1,0 +1,110 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/example> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "additional" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      \n      <p>CodeSystem \"ACME Codes for Cholesterol\": This is an example code system that includes \n        all the codes for serum cholesterol defined by ACME inc.</p>\n      \n      <p>Developed by: FHIR project team (example)</p>\n      \n      <p>Published for testing on 28-Jan 2016</p>\n      \n      <p>This code system defines all the ACME codes for serum cholesterol:</p>\n      \n      <table class=\"grid\">\n        \n        <tr>\n          \n          <td>\n            \n            <b>Code</b>\n          \n          </td>\n          \n          <td>\n            \n            <b>Display</b>\n          \n          </td>\n          \n          <td>\n            \n            <b>Definition</b>\n          \n          </td>\n        \n        </tr>\n        \n        <tr>\n          \n          <td>chol-mmol</td>\n          \n          <td>SChol (mmol/L)</td>\n          \n          <td>Serum Cholesterol, in mmol/L</td>\n        \n        </tr>\n        \n        <tr>\n          \n          <td>chol-mass</td>\n          \n          <td>SChol (mg/L)</td>\n          \n          <td>Serum Cholesterol, in mg/L</td>\n        \n        </tr>\n        \n        <tr>\n          \n          <td>chol</td>\n          \n          <td>SChol</td>\n          \n          <td>Serum Cholesterol</td>\n        \n        </tr>\n      \n      </table>\n    \n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "vocab"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/CodeSystem/example"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/CodeSystem/example>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1827" ]
+  ] [
+     fhir:system [
+       fhir:v "http://acme.com/identifiers/codesystems"^^xsd:anyURI ;
+       fhir:l <http://acme.com/identifiers/codesystems>
+     ] ;
+     fhir:value [ fhir:v "internal-cholesterol-inl" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ACMECholCodesBlood"] ; # 
+  fhir:title [ fhir:v "ACME Codes for Cholesterol in Serum/Plasma"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2016-01-28"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Terminology Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/Vocab" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "This is an example code system that includes all the ACME codes for serum/plasma cholesterol from v2.36."] ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:filter ( [
+     fhir:code [ fhir:v "acme-plasma" ] ;
+     fhir:description [ fhir:v "An internal filter used to select codes that are only used with plasma" ] ;
+     fhir:operator ( [ fhir:v "=" ] ) ;
+     fhir:value [ fhir:v "the value of this filter is either 'true' or 'false'" ]
+  ] ) ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "chol-mmol" ] ;
+     fhir:display [ fhir:v "SChol (mmol/L)" ] ;
+     fhir:definition [ fhir:v "Serum Cholesterol, in mmol/L" ] ;
+     fhir:designation ( [
+       fhir:use [
+         fhir:system [
+           fhir:v "http://acme.com/config/fhir/codesystems/internal"^^xsd:anyURI ;
+           fhir:l <http://acme.com/config/fhir/codesystems/internal>
+         ] ;
+         fhir:code [ fhir:v "internal-label" ]
+       ] ;
+       fhir:value [ fhir:v "From ACME POC Testing" ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "chol-mass" ] ;
+     fhir:display [ fhir:v "SChol (mg/L)" ] ;
+     fhir:definition [ fhir:v "Serum Cholesterol, in mg/L" ] ;
+     fhir:designation ( [
+       fhir:use [
+         fhir:system [
+           fhir:v "http://acme.com/config/fhir/codesystems/internal"^^xsd:anyURI ;
+           fhir:l <http://acme.com/config/fhir/codesystems/internal>
+         ] ;
+         fhir:code [ fhir:v "internal-label" ]
+       ] ;
+       fhir:value [ fhir:v "From Paragon Labs" ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "chol" ] ;
+     fhir:display [ fhir:v "SChol" ] ;
+     fhir:definition [ fhir:v "Serum Cholesterol" ] ;
+     fhir:designation ( [
+       fhir:use [
+         fhir:system [
+           fhir:v "http://acme.com/config/fhir/codesystems/internal"^^xsd:anyURI ;
+           fhir:l <http://acme.com/config/fhir/codesystems/internal>
+         ] ;
+         fhir:code [ fhir:v "internal-label" ]
+       ] ;
+       fhir:value [ fhir:v "Obdurate Labs uses this with both kinds of units..." ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

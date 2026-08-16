@@ -1,0 +1,115 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/artifactassessment-disposition> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "artifactassessment-disposition"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T11:01:55.562+11:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem artifactassessment-disposition</b></p><a name=\"artifactassessment-disposition\"> </a><a name=\"hcartifactassessment-disposition\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">Last updated: 2021-01-05T10:01:24.148+11:00</p></div><p>This case-sensitive code system <code>http://hl7.org/fhir/artifactassessment-disposition</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">unresolved<a name=\"artifactassessment-disposition-unresolved\"> </a></td><td>Unresolved</td><td>The comment is unresolved</td></tr><tr><td style=\"white-space:nowrap\">not-persuasive<a name=\"artifactassessment-disposition-not-persuasive\"> </a></td><td>Not Persuasive</td><td>The comment is not persuasive (rejected in full)</td></tr><tr><td style=\"white-space:nowrap\">persuasive<a name=\"artifactassessment-disposition-persuasive\"> </a></td><td>Persuasive</td><td>The comment is persuasive (accepted in full)</td></tr><tr><td style=\"white-space:nowrap\">persuasive-with-modification<a name=\"artifactassessment-disposition-persuasive-with-modification\"> </a></td><td>Persuasive with Modification</td><td>The comment is persuasive with modification (partially accepted)</td></tr><tr><td style=\"white-space:nowrap\">not-persuasive-with-modification<a name=\"artifactassessment-disposition-not-persuasive-with-modification\"> </a></td><td>Not Persuasive with Modification</td><td>The comment is not persuasive with modification (partially rejected)</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/artifactassessment-disposition"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/artifactassessment-disposition>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.2024" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ArtifactAssessmentDisposition"] ; # 
+  fhir:title [ fhir:v "Artifact Assessment Disposition"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Possible values for the disposition of a comment or change request, typically used for comments and change requests, to indicate the disposition of the responsible party towards the changes suggested by the comment or change request."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/artifactassessment-disposition"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/artifactassessment-disposition>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "unresolved" ] ;
+     fhir:display [ fhir:v "Unresolved" ] ;
+     fhir:definition [ fhir:v "The comment is unresolved" ]
+  ] [
+     fhir:code [ fhir:v "not-persuasive" ] ;
+     fhir:display [ fhir:v "Not Persuasive" ] ;
+     fhir:definition [ fhir:v "The comment is not persuasive (rejected in full)" ]
+  ] [
+     fhir:code [ fhir:v "persuasive" ] ;
+     fhir:display [ fhir:v "Persuasive" ] ;
+     fhir:definition [ fhir:v "The comment is persuasive (accepted in full)" ]
+  ] [
+     fhir:code [ fhir:v "persuasive-with-modification" ] ;
+     fhir:display [ fhir:v "Persuasive with Modification" ] ;
+     fhir:definition [ fhir:v "The comment is persuasive with modification (partially accepted)" ]
+  ] [
+     fhir:code [ fhir:v "not-persuasive-with-modification" ] ;
+     fhir:display [ fhir:v "Not Persuasive with Modification" ] ;
+     fhir:definition [ fhir:v "The comment is not persuasive with modification (partially rejected)" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

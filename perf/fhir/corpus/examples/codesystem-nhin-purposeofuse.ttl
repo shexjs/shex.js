@@ -1,0 +1,164 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/nhin-purposeofuse> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "nhin-purposeofuse"] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "vocab"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://healthit.gov/nhin/purposeofuse"^^xsd:anyURI ;
+     fhir:l <http://healthit.gov/nhin/purposeofuse>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1825" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "2.0"] ; # 
+  fhir:name [ fhir:v "NHINPurposeOfUse"] ; # 
+  fhir:title [ fhir:v "NHIN PurposeOfUse"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2010-01-29"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Terminology Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/Vocab" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "This value set is suitable for use with the provenance resource. It is derived from, but not compatible with, the HL7 v3 Purpose of use Code system."] ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/nhin-purposeofuse"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/nhin-purposeofuse>
+  ] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "TREATMENT" ] ;
+     fhir:display [ fhir:v "Treatment" ] ;
+     fhir:definition [ fhir:v "Treatment" ]
+  ] [
+     fhir:code [ fhir:v "PAYMENT" ] ;
+     fhir:display [ fhir:v "Payment" ] ;
+     fhir:definition [ fhir:v "Payment" ]
+  ] [
+     fhir:code [ fhir:v "OPERATIONS" ] ;
+     fhir:display [ fhir:v "Operations" ] ;
+     fhir:definition [ fhir:v "Healthcare Operations" ]
+  ] [
+     fhir:code [ fhir:v "SYSADMIN" ] ;
+     fhir:display [ fhir:v "Sysadmin" ] ;
+     fhir:definition [ fhir:v "System Administration" ]
+  ] [
+     fhir:code [ fhir:v "FRAUD" ] ;
+     fhir:display [ fhir:v "Fraud" ] ;
+     fhir:definition [ fhir:v "Fraud detection" ]
+  ] [
+     fhir:code [ fhir:v "PSYCHOTHERAPY" ] ;
+     fhir:display [ fhir:v "Psychotherapy" ] ;
+     fhir:definition [ fhir:v "Use or disclosure of Psychotherapy Notes" ]
+  ] [
+     fhir:code [ fhir:v "TRAINING" ] ;
+     fhir:display [ fhir:v "Training" ] ;
+     fhir:definition [ fhir:v "Use or disclosure by the covered entity for its own training programs" ]
+  ] [
+     fhir:code [ fhir:v "LEGAL" ] ;
+     fhir:display [ fhir:v "Legal" ] ;
+     fhir:definition [ fhir:v "Use or disclosure by the covered entity to defend itself in a legal action" ]
+  ] [
+     fhir:code [ fhir:v "MARKETING" ] ;
+     fhir:display [ fhir:v "Marketing" ] ;
+     fhir:definition [ fhir:v "Marketing" ]
+  ] [
+     fhir:code [ fhir:v "DIRECTORY" ] ;
+     fhir:display [ fhir:v "Directory" ] ;
+     fhir:definition [ fhir:v "Use and disclosure for facility directories" ]
+  ] [
+     fhir:code [ fhir:v "FAMILY" ] ;
+     fhir:display [ fhir:v "Family" ] ;
+     fhir:definition [ fhir:v "Disclose to a family member, other relative, or a close personal friend of the individual" ]
+  ] [
+     fhir:code [ fhir:v "PRESENT" ] ;
+     fhir:display [ fhir:v "Present" ] ;
+     fhir:definition [ fhir:v "Uses and disclosures with the individual present." ]
+  ] [
+     fhir:code [ fhir:v "EMERGENCY" ] ;
+     fhir:display [ fhir:v "Emergency" ] ;
+     fhir:definition [ fhir:v "Permission cannot practicably be provided because of the individual's incapacity or an emergency." ]
+  ] [
+     fhir:code [ fhir:v "DISASTER" ] ;
+     fhir:display [ fhir:v "Disaster" ] ;
+     fhir:definition [ fhir:v "Use and disclosures for disaster relief purposes." ]
+  ] [
+     fhir:code [ fhir:v "PUBLICHEALTH" ] ;
+     fhir:display [ fhir:v "Public Health" ] ;
+     fhir:definition [ fhir:v "Uses and disclosures for public health activities." ]
+  ] [
+     fhir:code [ fhir:v "ABUSE" ] ;
+     fhir:display [ fhir:v "Abuse" ] ;
+     fhir:definition [ fhir:v "Disclosures about victims of abuse, neglect or domestic violence." ]
+  ] [
+     fhir:code [ fhir:v "OVERSIGHT" ] ;
+     fhir:display [ fhir:v "Oversight" ] ;
+     fhir:definition [ fhir:v "Uses and disclosures for health oversight activities." ]
+  ] [
+     fhir:code [ fhir:v "JUDICIAL" ] ;
+     fhir:display [ fhir:v "Judicial" ] ;
+     fhir:definition [ fhir:v "Disclosures for judicial and administrative proceedings." ]
+  ] [
+     fhir:code [ fhir:v "LAW" ] ;
+     fhir:display [ fhir:v "Law Enforcement" ] ;
+     fhir:definition [ fhir:v "Disclosures for law enforcement purposes." ]
+  ] [
+     fhir:code [ fhir:v "DECEASED" ] ;
+     fhir:display [ fhir:v "Deceased" ] ;
+     fhir:definition [ fhir:v "Uses and disclosures about decedents." ]
+  ] [
+     fhir:code [ fhir:v "DONATION" ] ;
+     fhir:display [ fhir:v "Donation" ] ;
+     fhir:definition [ fhir:v "Uses and disclosures for cadaveric organ,  eye or tissue donation purposes" ]
+  ] [
+     fhir:code [ fhir:v "RESEARCH" ] ;
+     fhir:display [ fhir:v "Research" ] ;
+     fhir:definition [ fhir:v "Uses and disclosures for research purposes." ]
+  ] [
+     fhir:code [ fhir:v "THREAT" ] ;
+     fhir:display [ fhir:v "Threat" ] ;
+     fhir:definition [ fhir:v "Uses and disclosures to avert a serious threat to health or safety." ]
+  ] [
+     fhir:code [ fhir:v "GOVERNMENT" ] ;
+     fhir:display [ fhir:v "Government" ] ;
+     fhir:definition [ fhir:v "Uses and disclosures for specialized government functions." ]
+  ] [
+     fhir:code [ fhir:v "WORKERSCOMP" ] ;
+     fhir:display [ fhir:v "Worker's Comp" ] ;
+     fhir:definition [ fhir:v "Disclosures for workers' compensation." ]
+  ] [
+     fhir:code [ fhir:v "COVERAGE" ] ;
+     fhir:display [ fhir:v "Coverage" ] ;
+     fhir:definition [ fhir:v "Disclosures for insurance or disability coverage determination" ]
+  ] [
+     fhir:code [ fhir:v "REQUEST" ] ;
+     fhir:display [ fhir:v "Request" ] ;
+     fhir:definition [ fhir:v "Request of the Individual" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

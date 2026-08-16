@@ -1,0 +1,154 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/actordefinition-actor-code> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "actordefinition-actor-code"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem actordefinition-actor-code</b></p><a name=\"actordefinition-actor-code\"> </a><a name=\"hcactordefinition-actor-code\"> </a><p><b>Properties</b></p><p><b>This code system defines the following properties for its concepts</b></p><table class=\"grid\"><tr><td><b>Name</b></td><td><b>Code</b></td><td><b>URI</b></td><td><b>Type</b></td></tr><tr><td>Not Selectable</td><td>abstract</td><td>http://hl7.org/fhir/concept-properties#notSelectable</td><td>boolean</td></tr></table><p><b>Concepts</b></p><p>This case-sensitive code system <code>http://hl7.org/fhir/actordefinition-actor-code</code> defines the following codes in a Is-A hierarchy:</p><table class=\"codes\"><tr><td><b>Lvl</b></td><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td><td><b>Not Selectable</b></td></tr><tr><td>1</td><td style=\"white-space:nowrap\">non-system<a name=\"actordefinition-actor-code-non-system\"> </a></td><td>Non System</td><td>A person, animal, (non-software) device, organization or other entity</td><td/></tr><tr><td>2</td><td style=\"white-space:nowrap\">  individual<a name=\"actordefinition-actor-code-individual\"> </a></td><td>Individual</td><td>A person or animal</td><td/></tr><tr><td>3</td><td style=\"white-space:nowrap\">    patient<a name=\"actordefinition-actor-code-patient\"> </a></td><td>Patient</td><td>An individual or animal that is the subject of health-related care, services, or processes</td><td/></tr><tr><td>3</td><td style=\"white-space:nowrap\">    practitioner<a name=\"actordefinition-actor-code-practitioner\"> </a></td><td>Practitioner</td><td>A person who is directly or indirectly involved in the provisioning of healthcare or related services</td><td/></tr><tr><td>3</td><td style=\"white-space:nowrap\">    related-person<a name=\"actordefinition-actor-code-related-person\"> </a></td><td>Related Person</td><td>A person involved in a patient's health or care, but who is not the primary target of healthcare</td><td/></tr><tr><td>2</td><td style=\"white-space:nowrap\">  device<a name=\"actordefinition-actor-code-device\"> </a></td><td>Device</td><td>A physical device acting in non-software capacity</td><td/></tr><tr><td>2</td><td style=\"white-space:nowrap\">  collective<a name=\"actordefinition-actor-code-collective\"> </a></td><td>Collective</td><td>A group of people or animals</td><td>true</td></tr><tr><td>3</td><td style=\"white-space:nowrap\">    care-team<a name=\"actordefinition-actor-code-care-team\"> </a></td><td>Care Team</td><td>The people, organizations, and care teams who participate or plan to participate in the coordination and delivery of care</td><td/></tr><tr><td>3</td><td style=\"white-space:nowrap\">    group<a name=\"actordefinition-actor-code-group\"> </a></td><td>Group</td><td>A collection of entities that may be discussed or acted upon collectively, but which are not typically expected to act collectively</td><td/></tr><tr><td>3</td><td style=\"white-space:nowrap\">    healthcare-service<a name=\"actordefinition-actor-code-healthcare-service\"> </a></td><td>Healthcare Service</td><td>A healthcare service available at a location</td><td/></tr><tr><td>3</td><td style=\"white-space:nowrap\">    organization<a name=\"actordefinition-actor-code-organization\"> </a></td><td>Organization</td><td>A formally or informally recognized grouping of people or organizations formed to achieve some form of collective action</td><td/></tr><tr><td>1</td><td style=\"white-space:nowrap\">system<a name=\"actordefinition-actor-code-system\"> </a></td><td>System</td><td>Software and/or hardware involved in data exchange</td><td/></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/actordefinition-actor-code"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/actordefinition-actor-code>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ActorDefinitionActorCode"] ; # 
+  fhir:title [ fhir:v "ActorDefinition Actor Code"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Code for the type of actor - system or human."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/actordefinition-actor-code"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/actordefinition-actor-code>
+  ] ; # 
+  fhir:hierarchyMeaning [ fhir:v "is-a"] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:property ( [
+     fhir:code [ fhir:v "abstract" ] ;
+     fhir:uri [
+       fhir:v "http://hl7.org/fhir/concept-properties#notSelectable"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/concept-properties#notSelectable>
+     ] ;
+     fhir:type [ fhir:v "boolean" ]
+  ] ) ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "non-system" ] ;
+     fhir:display [ fhir:v "Non System" ] ;
+     fhir:definition [ fhir:v "A person, animal, (non-software) device, organization or other entity" ] ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "individual" ] ;
+       fhir:display [ fhir:v "Individual" ] ;
+       fhir:definition [ fhir:v "A person or animal" ] ;
+       fhir:concept ( [
+         fhir:code [ fhir:v "patient" ] ;
+         fhir:display [ fhir:v "Patient" ] ;
+         fhir:definition [ fhir:v "An individual or animal that is the subject of health-related care, services, or processes" ]
+       ] [
+         fhir:code [ fhir:v "practitioner" ] ;
+         fhir:display [ fhir:v "Practitioner" ] ;
+         fhir:definition [ fhir:v "A person who is directly or indirectly involved in the provisioning of healthcare or related services" ]
+       ] [
+         fhir:code [ fhir:v "related-person" ] ;
+         fhir:display [ fhir:v "Related Person" ] ;
+         fhir:definition [ fhir:v "A person involved in a patient's health or care, but who is not the primary target of healthcare" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "device" ] ;
+       fhir:display [ fhir:v "Device" ] ;
+       fhir:definition [ fhir:v "A physical device acting in non-software capacity" ]
+     ] [
+       fhir:code [ fhir:v "collective" ] ;
+       fhir:display [ fhir:v "Collective" ] ;
+       fhir:definition [ fhir:v "A group of people or animals" ] ;
+       fhir:property ( [
+         fhir:code [ fhir:v "abstract" ] ;
+         fhir:value [
+           a fhir:Boolean ;
+           fhir:v true
+         ]
+       ] ) ;
+       fhir:concept ( [
+         fhir:code [ fhir:v "care-team" ] ;
+         fhir:display [ fhir:v "Care Team" ] ;
+         fhir:definition [ fhir:v "The people, organizations, and care teams who participate or plan to participate in the coordination and delivery of care" ]
+       ] [
+         fhir:code [ fhir:v "group" ] ;
+         fhir:display [ fhir:v "Group" ] ;
+         fhir:definition [ fhir:v "A collection of entities that may be discussed or acted upon collectively, but which are not typically expected to act collectively" ]
+       ] [
+         fhir:code [ fhir:v "healthcare-service" ] ;
+         fhir:display [ fhir:v "Healthcare Service" ] ;
+         fhir:definition [ fhir:v "A healthcare service available at a location" ]
+       ] [
+         fhir:code [ fhir:v "organization" ] ;
+         fhir:display [ fhir:v "Organization" ] ;
+         fhir:definition [ fhir:v "A formally or informally recognized grouping of people or organizations formed to achieve some form of collective action" ]
+       ] )
+     ] )
+  ] [
+     fhir:code [ fhir:v "system" ] ;
+     fhir:display [ fhir:v "System" ] ;
+     fhir:definition [ fhir:v "Software and/or hardware involved in data exchange" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

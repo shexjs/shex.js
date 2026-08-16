@@ -1,0 +1,120 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/NutritionOrder/heart-failure> a fhir:NutritionOrder ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "heart-failure"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Heart Failure Patient" ]
+  ] ; # 
+  fhir:dateTime [ fhir:v "2024-10-23T00:00:00Z"^^xsd:dateTime] ; # 
+  fhir:allergyIntolerance ( [
+     fhir:l <http://hl7.org/fhir/AllergyIntolerance/lactose-intolerance> ;
+     fhir:reference [ fhir:v "AllergyIntolerance/lactose-intolerance" ] ;
+     fhir:display [ fhir:v "Lactose Intolerance" ]
+  ] ) ; # 
+  fhir:excludeFoodModifier ( [
+     a sct:102261002 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "102261002" ] ;
+       fhir:display [ fhir:v "strawberry" ]
+     ] )
+  ] ) ; # 
+  fhir:oralDiet [
+     fhir:type ( [
+       a sct:439111000124103 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "439111000124103" ] ;
+         fhir:display [ fhir:v "Mechanically altered diet" ]
+       ] )
+     ] [
+       a sct:1255164005 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "1255164005" ] ;
+         fhir:display [ fhir:v "Halal diet" ]
+       ] )
+     ] [
+       a sct:425458000 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "425458000" ] ;
+         fhir:display [ fhir:v "Lactose-free diet" ]
+       ] )
+     ] [
+       a sct:437421000124105 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "437421000124105" ] ;
+         fhir:display [ fhir:v "Decreased sodium diet" ]
+       ] )
+     ] [
+       a sct:439061000124104 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "439061000124104" ] ;
+         fhir:display [ fhir:v "Fluid restricted diet" ]
+       ] )
+     ] ) ;
+     fhir:schedule [ ] ;
+     fhir:nutrient ( [
+       fhir:modifier [
+         a sct:39972003 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "39972003" ] ;
+           fhir:display [ fhir:v "Sodium" ]
+         ] )
+       ] ;
+       fhir:amount [
+         fhir:value [ fhir:v "2"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "g" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "g" ]
+       ]
+     ] ) ;
+     fhir:instruction [ fhir:v "1500ml of fluid/day" ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/AllergyIntolerance/lactose-intolerance> a fhir:AllergyIntolerance .
+
+# -------------------------------------------------------------------------------------
+

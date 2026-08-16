@@ -1,0 +1,146 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/bundle-response> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "bundle-response"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2014-08-18T01:43:33Z"^^xsd:dateTime ]
+  ] ; # this example bundle is a transaction response, when the transaction response was constructed
+  fhir:type [ fhir:v "transaction-response"] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "http://example.org/fhir/Patient/12423"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Patient/12423>
+     ] ;
+     fhir:resource ( <http://example.org/fhir/Patient/12423> ) ;
+     fhir:response [
+       fhir:status [ fhir:v "201 Created" ] ; # important responses from the server
+       fhir:location [
+         fhir:v "Patient/12423/_history/1"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/Patient/12423/_history/1>
+       ] ;
+       fhir:etag [ fhir:v "W/\"1\"" ] ;
+       fhir:lastModified [ fhir:v "2014-08-18T01:43:33Z"^^xsd:dateTime ] ;
+       fhir:outcome ( [
+         a fhir:OperationOutcome ;
+         fhir:issue ( [
+           fhir:severity [ fhir:v "warning" ] ;
+           fhir:code [ fhir:v "not-found" ] ;
+           fhir:details [
+             fhir:text [ fhir:v "The Managing organization was not known and was deleted" ]
+           ] ;
+           fhir:expression ( [ fhir:v "Patient.managingOrganization" ] )
+         ] )
+       ] )
+     ] # now, details about the action to take with the resource
+  ] [
+     fhir:response [
+       fhir:status [ fhir:v "200 OK" ] # no action taken
+     ] # response to the conditional create operation, in this case, there was a match to the If-None-Exist header
+  ] [
+     fhir:response [
+       fhir:status [ fhir:v "200 OK" ] ;
+       fhir:location [
+         fhir:v "Patient/123/_history/4"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/Patient/123/_history/4>
+       ] ;
+       fhir:etag [ fhir:v "W/\"4\"" ]
+     ] # response to a simple update operation, no return resource for this example, though in a \n      real transaction, all entries would have a resource or all would not
+  ] [
+     fhir:response [
+       fhir:status [ fhir:v "201 Created" ] ; # created a new resource for this one
+       fhir:location [
+         fhir:v "Patient/12424/_history/1"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/Patient/12424/_history/1>
+       ] ;
+       fhir:etag [ fhir:v "W/\"1\"" ]
+     ] # response to the conditional update operation
+  ] [
+     fhir:response [
+       fhir:status [ fhir:v "200 ok" ] ; # created a new resource for this one
+       fhir:location [
+         fhir:v "Patient/123a/_history/3"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/Patient/123a/_history/3>
+       ] ;
+       fhir:etag [ fhir:v "W/\"3\"" ]
+     ] # response to the 2nd conditional update operation
+  ] [
+     fhir:response [
+       fhir:status [ fhir:v "202 Accepted" ] # successful deletion
+     ] # response to the simple delete operation
+  ] [
+     fhir:response [
+       fhir:status [ fhir:v "DELETE" ] # delete matching resource - but you can't find out what was deleted - an inherent limitation in a condition delete
+     ] # response to the conditional delete operation
+  ] [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:7f9724ed-ef8d-4434-aacb-41869db83233"^^xsd:anyURI ;
+       fhir:l <urn:uuid:7f9724ed-ef8d-4434-aacb-41869db83233>
+     ] ;
+     fhir:resource ( <urn:uuid:7f9724ed-ef8d-4434-aacb-41869db83233> ) ;
+     fhir:response [
+       fhir:status [ fhir:v "200 ok" ] # POST to [base]\/ValueSet\/$lookup - invoking a lookup operation (see Terminology Service)
+     ]
+  ] [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:e7bcef8e-5ef9-4d2b-87d5-b42b1eec9125"^^xsd:anyURI ;
+       fhir:l <urn:uuid:e7bcef8e-5ef9-4d2b-87d5-b42b1eec9125>
+     ] ;
+     fhir:resource ( <urn:uuid:e7bcef8e-5ef9-4d2b-87d5-b42b1eec9125> ) ;
+     fhir:response [
+       fhir:status [ fhir:v "200 OK" ]
+     ]
+  ] [
+     fhir:response [
+       fhir:status [ fhir:v "304 Not Modified" ]
+     ] # response to conditional read - no changes
+  ] ) . # one entry for each entry in the transaction, in order, with a 
+#    response
+
+<http://example.org/fhir/Patient/12423> a fhir:Patient ;
+  fhir:id [ fhir:v "12423"] ; # 
+  fhir:meta [
+     fhir:versionId [ fhir:v "1" ] ;
+     fhir:lastUpdated [ fhir:v "2014-08-18T01:43:31Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Some narrative</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Chalmers" ] ;
+     fhir:given ( [ fhir:v "Peter" ] [ fhir:v "James" ] )
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:birthDate [ fhir:v "1974-12-25"^^xsd:date] . # 
+
+<urn:uuid:7f9724ed-ef8d-4434-aacb-41869db83233> a fhir:Parameters ;
+  fhir:parameter ( [
+     fhir:name [ fhir:v "name" ] ;
+     fhir:value [
+       a fhir:String ;
+       fhir:v "LOINC"
+     ]
+  ] ) . # 
+
+<urn:uuid:e7bcef8e-5ef9-4d2b-87d5-b42b1eec9125> a fhir:Bundle ;
+  fhir:id [ fhir:v "fb6ed6cb-324e-4588-87cd-0c92c68986ca"] ; # 
+  fhir:type [ fhir:v "searchset"] ; # 
+  fhir:link ( [
+     fhir:relation [ fhir:v "self" ] ;
+     fhir:url [
+       fhir:v "http://example.org/fhir/Patient?somefilter=whatever"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Patient?somefilter=whatever>
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,88 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Requirements/example1> a fhir:Requirements ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example1"] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/Requirements/example1"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/Requirements/example1>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.18.1" ]
+  ] ) ; # 
+  fhir:name [ fhir:v "ExampleRequirements1"] ; # 
+  fhir:title [ fhir:v "Example Requirements Set 1"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:date [ fhir:v "2021-11-02T14:31:30.239Z"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Example Requirements Set 1"] ; # 
+  fhir:actor ( [
+     fhir:reference [
+       fhir:v "http://hl7.org/fhir/ActorDefinition/server"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/ActorDefinition/server>
+     ] ;
+     fhir:key [ fhir:v "a1" ]
+  ] [
+     fhir:reference [
+       fhir:v "http://hl7.org/fhir/ActorDefinition/broker"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/ActorDefinition/broker>
+     ] ;
+     fhir:key [ fhir:v "a2" ]
+  ] ) ; # 
+  fhir:statement ( [
+     fhir:key [ fhir:v "req-1" ] ;
+     fhir:conformance ( [ fhir:v "SHALL" ] ) ;
+     fhir:requirement [ fhir:v "The server SHALL support expanding value sets" ] ;
+     fhir:satisfiedBy ( [
+       fhir:v "http://hl7.org/fhir/terminology-service.html#expand"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/terminology-service.html#expand>
+     ] ) ;
+     fhir:source ( [
+       fhir:display [ fhir:v "Grahame Grieve" ]
+     ] ) ;
+     fhir:actor ( [ fhir:v "a1" ] )
+  ] [
+     fhir:key [ fhir:v "46f77dcd-d51e-4738-b61f-22506d0cb0ac" ] ;
+     fhir:label [ fhir:v "requirement-2" ] ;
+     fhir:conformance ( [ fhir:v "SHALL" ] ) ;
+     fhir:requirement [ fhir:v "Operations based on the codeSystem resource SHALL have the same result whether or not the relationships are represented explicitly as properties or implicitly using the CodeSystem resource hierarchy" ] ;
+     fhir:category ( [
+       fhir:system [
+         fhir:v "http://example.org/requirement-categories"^^xsd:anyURI ;
+         fhir:l <http://example.org/requirement-categories>
+       ] ;
+       fhir:code [ fhir:v "processing" ]
+     ] ) ;
+     fhir:source ( [
+       fhir:display [ fhir:v "Jose Costa Teixeira" ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

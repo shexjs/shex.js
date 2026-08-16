@@ -1,0 +1,80 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CapabilityStatement/messagedefinition> a fhir:CapabilityStatement ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "messagedefinition"] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.34.8" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2012-01-04"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Sample capability statement showing new MessageDefinition structure"] ; # 
+  fhir:kind [ fhir:v "instance"] ; # 
+  fhir:software [
+     fhir:name [ fhir:v "EHR" ]
+  ] ; # 
+  fhir:implementation [
+     fhir:description [ fhir:v "Acme Message endpoint" ] ;
+     fhir:url [
+       fhir:v "http://acem.com/fhir/message-drop"^^xsd:anyURI ;
+       fhir:l <http://acem.com/fhir/message-drop>
+     ]
+  ] ; # while the FHIR infrastructure is turning over prior to development, a version is  
+#    required.
+  fhir:fhirVersion [ fhir:v "6.0.0"] ; # 
+  fhir:format ( [ fhir:v "xml"] [ fhir:v "json"] ) ; # this system can do either xml or json. (Listing both implies full support for either, with interconversion)
+  fhir:messaging ( [
+     fhir:endpoint ( [
+       fhir:protocol [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/message-transport"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/message-transport>
+         ] ;
+         fhir:code [ fhir:v "mllp" ]
+       ] ;
+       fhir:address [
+         fhir:v "mllp:10.1.1.10:9234"^^xsd:anyURI ;
+         fhir:l fhir:mllp:10.1.1.10:9234
+       ] # LLP server at 10.1.1.10 on port 9234
+     ] ) ;
+     fhir:reliableCache [ fhir:v "30"^^xsd:nonNegativeInteger ] ;
+     fhir:documentation [ fhir:v "ADT A08 equivalent for external system notifications" ] ;
+     fhir:supportedMessage ( [
+       fhir:mode [ fhir:v "receiver" ] ;
+       fhir:definition [
+         fhir:v "http://hl7.org/fhir/MessageDefinition/example"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/MessageDefinition/example>
+       ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

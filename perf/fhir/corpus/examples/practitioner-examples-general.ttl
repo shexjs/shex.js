@@ -1,0 +1,2810 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/3ad0687e-f477-468c-afd5-fcc2bf897809> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "3ad0687e-f477-468c-afd5-fcc2bf897809"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:type [ fhir:v "collection"] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/1"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/1>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/1> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/13"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/13>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/13> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/14"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/14>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/14> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/15"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/15>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/15> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/16"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/16>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/16> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/17"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/17>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/17> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/18"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/18>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/18> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/19"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/19>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/19> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/20"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/20>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/20> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/21"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/21>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/21> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/22"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/22>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/22> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/23"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/23>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/23> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/24"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/24>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/24> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/25"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/25>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/25> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/26"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/26>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/26> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/27"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/27>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/27> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/28"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/28>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/28> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/29"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/29>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/29> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/30"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/30>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/30> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/31"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/31>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/31> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/32"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/32>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/32> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/33"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/33>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/33> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/34"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/34>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/34> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/35"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/35>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/35> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/36"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/36>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/36> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/37"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/37>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/37> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/38"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/38>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/38> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/39"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/39>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/39> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/40"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/40>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/40> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/41"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/41>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/41> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/42"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/42>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/42> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/43"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/43>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/43> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/44"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/44>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/44> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/45"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/45>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/45> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/46"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/46>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/46> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/47"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/47>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/47> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/48"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/48>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/48> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/49"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/49>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/49> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/50"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/50>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/50> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/51"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/51>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/51> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/52"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/52>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/52> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/53"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/53>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/53> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/54"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/54>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/54> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/55"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/55>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/55> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/56"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/56>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/56> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/57"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/57>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/57> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/58"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/58>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/58> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/59"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/59>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/59> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/60"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/60>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/60> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/61"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/61>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/61> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/62"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/62>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/62> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/63"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/63>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/63> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/64"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/64>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/64> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/65"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/65>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/65> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/66"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/66>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/66> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/67"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/67>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/67> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/68"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/68>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/68> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/69"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/69>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/69> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Practitioner/70"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Practitioner/70>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Practitioner/70> )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/1> a fhir:Practitioner ;
+  fhir:id [ fhir:v "1"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Dr. Beverly Crusher</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "333333333" ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "NPI" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-npi"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-npi>
+     ] ;
+     fhir:value [ fhir:v "1122334499" ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "DEA" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "https://www.deanumber.com/"^^xsd:anyURI ;
+       fhir:l <https://www.deanumber.com/>
+     ] ;
+     fhir:value [ fhir:v "F91234567-001AB" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:family [ fhir:v "Beverly" ] ;
+     fhir:given ( [ fhir:v "Crusher" ] ) ;
+     fhir:prefix ( [ fhir:v "Dr" ] )
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] . # 
+
+<http://hl7.org/fhir/Practitioner/13> a fhir:Practitioner ;
+  fhir:id [ fhir:v "13"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Seven, Henry. SSN:\n            333333333</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "333333333" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Seven" ] ;
+     fhir:given ( [ fhir:v "Henry" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1002" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1002 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/14> a fhir:Practitioner ;
+  fhir:id [ fhir:v "14"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Assigned, Amanda. SSN:\n            33344444</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "33344444" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Assigned" ] ;
+     fhir:given ( [ fhir:v "Amanda" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1021" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1020 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/15> a fhir:Practitioner ;
+  fhir:id [ fhir:v "15"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Hippocrates, Harold. SSN:\n            444444444</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "444444444" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Hippocrates" ] ;
+     fhir:given ( [ fhir:v "Harold" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1003" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1003 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/16> a fhir:Practitioner ;
+  fhir:id [ fhir:v "16"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Primary, Patricia. SSN:\n            555555555</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "555555555" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Primary" ] ;
+     fhir:given ( [ fhir:v "Patricia" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1004" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1004 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/17> a fhir:Practitioner ;
+  fhir:id [ fhir:v "17"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Admit, Alan. SSN:\n            666666666</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "666666666" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Admit" ] ;
+     fhir:given ( [ fhir:v "Alan" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1005" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1005 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/18> a fhir:Practitioner ;
+  fhir:id [ fhir:v "18"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Attend, Aaron. SSN:\n            777777777</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "777777777" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Attend" ] ;
+     fhir:given ( [ fhir:v "Aaron" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1006" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1006 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/19> a fhir:Practitioner ;
+  fhir:id [ fhir:v "19"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Sender, Sam. SSN:\n            888888888</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "888888888" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Sender" ] ;
+     fhir:given ( [ fhir:v "Sam" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1007" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1007 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/20> a fhir:Practitioner ;
+  fhir:id [ fhir:v "20"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Intern, Irving. SSN:\n            888222222</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "888222222" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Intern" ] ;
+     fhir:given ( [ fhir:v "Irving" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1022" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1021 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/21> a fhir:Practitioner ;
+  fhir:id [ fhir:v "21"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Resident, Rachel. SSN:\n            888333333</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "888333333" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Resident" ] ;
+     fhir:given ( [ fhir:v "Rachel" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1023" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1022 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/22> a fhir:Practitioner ;
+  fhir:id [ fhir:v "22"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Leader, Linda. SSN:\n            888444444</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "888444444" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Leader" ] ;
+     fhir:given ( [ fhir:v "Linda" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1024" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1023 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/23> a fhir:Practitioner ;
+  fhir:id [ fhir:v "23"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Verify, Virgil. SSN:\n            999999999</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "999999999" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Verify" ] ;
+     fhir:given ( [ fhir:v "Virgil" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1008" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1008 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/24> a fhir:Practitioner ;
+  fhir:id [ fhir:v "24"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Specialize, Sara. SSN:\n            222333333</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222333333" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Specialize" ] ;
+     fhir:given ( [ fhir:v "Sara" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1009" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1009 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/25> a fhir:Practitioner ;
+  fhir:id [ fhir:v "25"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Reaction, Ramsey. SSN:\n            222223333</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222223333" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Reaction" ] ;
+     fhir:given ( [ fhir:v "Ramsey" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1025" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1024 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/26> a fhir:Practitioner ;
+  fhir:id [ fhir:v "26"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Sleeper, Sally. SSN:\n            222666666</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222666666" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Sleeper" ] ;
+     fhir:given ( [ fhir:v "Sally" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1012" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1012 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/27> a fhir:Practitioner ;
+  fhir:id [ fhir:v "27"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Pump, Patrick. SSN:\n            222334444</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222334444" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Pump" ] ;
+     fhir:given ( [ fhir:v "Patrick" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1027" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1025 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/28> a fhir:Practitioner ;
+  fhir:id [ fhir:v "28"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Valve, Vera. SSN:\n            222335555</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222335555" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Valve" ] ;
+     fhir:given ( [ fhir:v "Vera" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1028" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1026 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/29> a fhir:Practitioner ;
+  fhir:id [ fhir:v "29"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Scratch, Sophie. SSN:\n            222336666</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222336666" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Scratch" ] ;
+     fhir:given ( [ fhir:v "Sophie" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1029" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1027 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/30> a fhir:Practitioner ;
+  fhir:id [ fhir:v "30"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Emergency, Eric. SSN:\n            222337777</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222337777" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Emergency" ] ;
+     fhir:given ( [ fhir:v "Eric" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1030" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1028 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/31> a fhir:Practitioner ;
+  fhir:id [ fhir:v "31"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Hormone, Horace. SSN:\n            222338888</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222338888" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Hormone" ] ;
+     fhir:given ( [ fhir:v "Horace" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1031" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1029 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/32> a fhir:Practitioner ;
+  fhir:id [ fhir:v "32"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Family, Fay. SSN:\n            222339999</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222339999" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Family" ] ;
+     fhir:given ( [ fhir:v "Fay" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1032" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1030 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/33> a fhir:Practitioner ;
+  fhir:id [ fhir:v "33"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Tum, Tony. SSN:\n            222442222</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222442222" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Tum" ] ;
+     fhir:given ( [ fhir:v "Tony" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1033" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1031 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/34> a fhir:Practitioner ;
+  fhir:id [ fhir:v "34"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Sage, Stanley. SSN:\n            222443333</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222443333" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Sage" ] ;
+     fhir:given ( [ fhir:v "Stanley" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1034" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1032 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/35> a fhir:Practitioner ;
+  fhir:id [ fhir:v "35"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Bleeder, Boris. SSN:\n            222443344</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222443344" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Bleeder" ] ;
+     fhir:given ( [ fhir:v "Boris" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1035" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1033 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/36> a fhir:Practitioner ;
+  fhir:id [ fhir:v "36"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Pasteur, Paula. SSN:\n            222445555</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222445555" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Pasteur" ] ;
+     fhir:given ( [ fhir:v "Paula" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1036" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1034 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/37> a fhir:Practitioner ;
+  fhir:id [ fhir:v "37"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Osler, Otto. SSN:\n            222446666</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222446666" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Osler" ] ;
+     fhir:given ( [ fhir:v "Otto" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1037" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1035 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/38> a fhir:Practitioner ;
+  fhir:id [ fhir:v "38"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Renal, Rory. SSN:\n            222447777</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222447777" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Renal" ] ;
+     fhir:given ( [ fhir:v "Rory" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1038" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1036 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/39> a fhir:Practitioner ;
+  fhir:id [ fhir:v "39"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Brain, Barry. SSN:\n            222448888</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222448888" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Brain" ] ;
+     fhir:given ( [ fhir:v "Barry" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1039" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1037 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/40> a fhir:Practitioner ;
+  fhir:id [ fhir:v "40"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Cranium, Carol. SSN:\n            222449999</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222449999" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Cranium" ] ;
+     fhir:given ( [ fhir:v "Carol" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1040" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1038 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/41> a fhir:Practitioner ;
+  fhir:id [ fhir:v "41"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Fem, Flora. SSN:\n            222552222</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222552222" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Fem" ] ;
+     fhir:given ( [ fhir:v "Flora" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1041" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1039 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/42> a fhir:Practitioner ;
+  fhir:id [ fhir:v "42"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Tumor, Trudy. SSN:\n            222553333</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222553333" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Tumor" ] ;
+     fhir:given ( [ fhir:v "Trudy" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-2003" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1040 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/43> a fhir:Practitioner ;
+  fhir:id [ fhir:v "43"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Vision, Victor. SSN:\n            222554444</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222554444" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Vision" ] ;
+     fhir:given ( [ fhir:v "Victor" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1043" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1041 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/44> a fhir:Practitioner ;
+  fhir:id [ fhir:v "44"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Carpenter, Calvin. SSN:\n            222555545</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222555545" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Carpenter" ] ;
+     fhir:given ( [ fhir:v "Calvin" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1044" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1042 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/45> a fhir:Practitioner ;
+  fhir:id [ fhir:v "45"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Rhino, Rick. SSN:\n            222556666</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222556666" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Rhino" ] ;
+     fhir:given ( [ fhir:v "Rick" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1045" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1043 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/46> a fhir:Practitioner ;
+  fhir:id [ fhir:v "46"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Slide, Stan. SSN:\n            222444444</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222444444" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Slide" ] ;
+     fhir:given ( [ fhir:v "Stan" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1010" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1010 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/47> a fhir:Practitioner ;
+  fhir:id [ fhir:v "47"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Kidder, Karen. SSN:\n            222557777</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222557777" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Kidder" ] ;
+     fhir:given ( [ fhir:v "Karen" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1046" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1044 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/48> a fhir:Practitioner ;
+  fhir:id [ fhir:v "48"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Hollywood, Heddie. SSN:\n            222558888</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222558888" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Hollywood" ] ;
+     fhir:given ( [ fhir:v "Heddie" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1047" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1045 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/49> a fhir:Practitioner ;
+  fhir:id [ fhir:v "49"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Shrink, Serena. SSN:\n            222559999</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222559999" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Shrink" ] ;
+     fhir:given ( [ fhir:v "Serena" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1048" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1046 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/50> a fhir:Practitioner ;
+  fhir:id [ fhir:v "50"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Puffer, Penny. SSN:\n            222662222</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222662222" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Puffer" ] ;
+     fhir:given ( [ fhir:v "Penny" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1049" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1047 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/51> a fhir:Practitioner ;
+  fhir:id [ fhir:v "51"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Curie, Christine. SSN:\n            222555555</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222555555" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Curie" ] ;
+     fhir:given ( [ fhir:v "Christine" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1011" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1011 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/52> a fhir:Practitioner ;
+  fhir:id [ fhir:v "52"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Joint, Jeffrey. SSN:\n            222663333</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222663333" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Joint" ] ;
+     fhir:given ( [ fhir:v "Jeffrey" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1050" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1048 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/53> a fhir:Practitioner ;
+  fhir:id [ fhir:v "53"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Cutter, Carl. SSN:\n            222777777</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222777777" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Cutter" ] ;
+     fhir:given ( [ fhir:v "Carl" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1013" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1013 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/54> a fhir:Practitioner ;
+  fhir:id [ fhir:v "54"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Plumber, Peter. SSN:\n            222664444</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222664444" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Plumber" ] ;
+     fhir:given ( [ fhir:v "Peter" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1051" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1049 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/55> a fhir:Practitioner ;
+  fhir:id [ fhir:v "55"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Helper, Horace. SSN:\n            222665555</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222665555" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Helper" ] ;
+     fhir:given ( [ fhir:v "Horace" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1052" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1050 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/56> a fhir:Practitioner ;
+  fhir:id [ fhir:v "56"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Nightingale, Nancy. SSN:\n            222888888</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222888888" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Nightingale" ] ;
+     fhir:given ( [ fhir:v "Nancy" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1014" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1014 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/57> a fhir:Practitioner ;
+  fhir:id [ fhir:v "57"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Barton, Clarence. SSN:\n            222999999</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222999999" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Barton" ] ;
+     fhir:given ( [ fhir:v "Clarence" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1015" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1015 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/58> a fhir:Practitioner ;
+  fhir:id [ fhir:v "58"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Bender, Bob. SSN:\n            222666666</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222666666" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Bender" ] ;
+     fhir:given ( [ fhir:v "Bob" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1053" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1051 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/59> a fhir:Practitioner ;
+  fhir:id [ fhir:v "59"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Chopper, Charlie. SSN:\n            222667777</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222667777" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Chopper" ] ;
+     fhir:given ( [ fhir:v "Charlie" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1054" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1052 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/60> a fhir:Practitioner ;
+  fhir:id [ fhir:v "60"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Brace, Ben. SSN:\n            222668888</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222668888" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Brace" ] ;
+     fhir:given ( [ fhir:v "Ben" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1055" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1053 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/61> a fhir:Practitioner ;
+  fhir:id [ fhir:v "61"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Specs, Sylvia. SSN:\n            222669999</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222669999" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Specs" ] ;
+     fhir:given ( [ fhir:v "Sylvia" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1056" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1054 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/62> a fhir:Practitioner ;
+  fhir:id [ fhir:v "62"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Script, Susan. SSN:\n            333222222</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "333222222" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Script" ] ;
+     fhir:given ( [ fhir:v "Susan" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1016" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1016 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/63> a fhir:Practitioner ;
+  fhir:id [ fhir:v "63"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Bunion, Paul. SSN:\n            222772222</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222772222" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Bunion" ] ;
+     fhir:given ( [ fhir:v "Paul" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1057" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1055 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/64> a fhir:Practitioner ;
+  fhir:id [ fhir:v "64"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Listener, Larry. SSN:\n            222773333</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222773333" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Listener" ] ;
+     fhir:given ( [ fhir:v "Larry" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1058" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1056 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/65> a fhir:Practitioner ;
+  fhir:id [ fhir:v "65"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Beaker, Bill. SSN:\n            333444444</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "333444444" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Beaker" ] ;
+     fhir:given ( [ fhir:v "Bill" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1017" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1017 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/66> a fhir:Practitioner ;
+  fhir:id [ fhir:v "66"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Chow, Connie. SSN:\n            333555555</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "333555555" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Chow" ] ;
+     fhir:given ( [ fhir:v "Connie" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1018" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1018 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/67> a fhir:Practitioner ;
+  fhir:id [ fhir:v "67"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">teHelper. SSN: 000111111</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "000111111" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Helper" ] ;
+     fhir:given ( [ fhir:v "Helen" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1019" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1019 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/68> a fhir:Practitioner ;
+  fhir:id [ fhir:v "68"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Player, Pamela. SSN:\n            222776666</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222776666" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Player" ] ;
+     fhir:given ( [ fhir:v "Pamela" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1059" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1057 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/69> a fhir:Practitioner ;
+  fhir:id [ fhir:v "69"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Stretcher, Seth. SSN:\n            222778888</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "222778888" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Stretcher" ] ;
+     fhir:given ( [ fhir:v "Seth" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1060" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1058 Healthcare Drive" ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Practitioner/70> a fhir:Practitioner ;
+  fhir:id [ fhir:v "70"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2012-05-29T23:45:32Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Enter Ellen, ElleSSN:\n            333777777</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SS" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://hl7.org/fhir/sid/us-ssn"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/sid/us-ssn>
+     ] ;
+     fhir:value [ fhir:v "333777777" ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Enter" ] ;
+     fhir:given ( [ fhir:v "Ellen" ] )
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "555-555-1020" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "1058 Healthcare Drive" ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

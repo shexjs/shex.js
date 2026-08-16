@@ -1,0 +1,95 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/NutritionOrder/ambulatory-outpatient> a fhir:NutritionOrder ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "ambulatory-outpatient"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Ambulatory/Outpatient" ]
+  ] ; # 
+  fhir:dateTime [ fhir:v "2024-10-23T00:00:00Z"^^xsd:dateTime] ; # 
+  fhir:oralDiet [
+     fhir:type ( [
+       a sct:1255823003 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "1255823003" ] ;
+         fhir:display [ fhir:v "International Dysphagia Diet Standardisation Initiative Framework - Minced and Moist Level 5 food" ]
+       ] )
+     ] [
+       a sct:1255822008 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "1255822008" ] ;
+         fhir:display [ fhir:v "International Dysphagia Diet Standardisation Initiative Framework - Mildly Thick Level 2 drinks" ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:enteralFormula [
+     fhir:type [
+       fhir:concept [
+         a sct:443111000124101 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "443111000124101" ] ;
+           fhir:display [ fhir:v "High protein formula" ]
+         ] )
+       ]
+     ] ;
+     fhir:caloricDensity [
+       fhir:value [ fhir:v "750"^^xsd:decimal ] ;
+       fhir:unit [ fhir:v "kcal" ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "kcal" ]
+     ] ;
+     fhir:routeOfAdministration ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://terminology.hl7.org/"^^xsd:anyURI ;
+           fhir:l <https://terminology.hl7.org/>
+         ] ;
+         fhir:code [ fhir:v "GT" ] ;
+         fhir:display [ fhir:v "Instillation, gastrostomy feeding" ]
+       ] )
+     ] ) ;
+     fhir:administration ( [
+       fhir:schedule [ ] ;
+       fhir:quantity [
+         fhir:value [ fhir:v "750"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "mL" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "mL" ]
+       ]
+     ] ) ;
+     fhir:administrationInstruction [ fhir:v "750 mL of high-protein formula via bolus at 7:00 pm at 100ml/hr." ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

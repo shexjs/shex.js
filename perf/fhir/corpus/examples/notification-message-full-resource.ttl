@@ -1,0 +1,128 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/0f322dbe-4f8d-4cbd-9ecb-bc8dc6f65f6a> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "0f322dbe-4f8d-4cbd-9ecb-bc8dc6f65f6a"] ; # 
+  fhir:type [ fhir:v "message"] ; # 
+  fhir:timestamp [ fhir:v "2020-04-17T10:24:13.1882432-05:00"^^xsd:dateTime] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:801728e4-75e9-42e6-b6d0-0cc3e835a70d"^^xsd:anyURI ;
+       fhir:l <urn:uuid:801728e4-75e9-42e6-b6d0-0cc3e835a70d>
+     ] ;
+     fhir:resource ( <urn:uuid:801728e4-75e9-42e6-b6d0-0cc3e835a70d> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:c13b0b59-525c-4e41-b874-b5b87538a5b7"^^xsd:anyURI ;
+       fhir:l <urn:uuid:c13b0b59-525c-4e41-b874-b5b87538a5b7>
+     ] ;
+     fhir:resource ( <urn:uuid:c13b0b59-525c-4e41-b874-b5b87538a5b7> )
+  ] ) . # 
+
+<urn:uuid:801728e4-75e9-42e6-b6d0-0cc3e835a70d> a fhir:MessageHeader ;
+  fhir:id [ fhir:v "801728e4-75e9-42e6-b6d0-0cc3e835a70d"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: MessageHeader 801728e4-75e9-42e6-b6d0-0cc3e835a70d</b></p><a name=\"801728e4-75e9-42e6-b6d0-0cc3e835a70d\"> </a><a name=\"hc801728e4-75e9-42e6-b6d0-0cc3e835a70d\"> </a><p><b>event</b>: message-events: subscription-notification (subscription-notification)</p><h3>Sources</h3><table class=\"grid\"><tr><td style=\"display: none\">-</td><td><b>Endpoint[x]</b></td></tr><tr><td style=\"display: none\">*</td><td><a href=\"broken-link.html\">http://example.org/FHIR/R5</a></td></tr></table><p><b>focus</b>: <a href=\"broken-link.html\">urn:uuid:c13b0b59-525c-4e41-b874-b5b87538a5b7</a></p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:event [
+     a fhir:Coding ;
+     fhir:system [
+       fhir:v "http://example.org/fhir/message-events"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/message-events>
+     ] ;
+     fhir:code [ fhir:v "subscription-notification" ]
+  ] ; # 
+  fhir:source [
+     fhir:endpoint [
+       a fhir:Url ;
+       fhir:v "http://example.org/FHIR/R5"^^xsd:anyURI ;
+       fhir:l <http://example.org/FHIR/R5>
+     ]
+  ] ; # 
+  fhir:focus ( [
+     fhir:l <urn:uuid:c13b0b59-525c-4e41-b874-b5b87538a5b7> ;
+     fhir:reference [ fhir:v "urn:uuid:c13b0b59-525c-4e41-b874-b5b87538a5b7" ]
+  ] ) . # 
+
+<urn:uuid:c13b0b59-525c-4e41-b874-b5b87538a5b7> a fhir:Bundle ;
+  fhir:id [ fhir:v "c13b0b59-525c-4e41-b874-b5b87538a5b7"] ; # 
+  fhir:type [ fhir:v "subscription-notification"] ; # 
+  fhir:timestamp [ fhir:v "2020-04-17T10:24:13.1882432-05:00"^^xsd:dateTime] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:bef7e5fb-b5ad-4b59-a618-1bace2bbf5c0"^^xsd:anyURI ;
+       fhir:l <urn:uuid:bef7e5fb-b5ad-4b59-a618-1bace2bbf5c0>
+     ] ;
+     fhir:resource ( <urn:uuid:bef7e5fb-b5ad-4b59-a618-1bace2bbf5c0> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "https://example.org/FHIR/R5/Encounter/2"^^xsd:anyURI ;
+       fhir:l <https://example.org/FHIR/R5/Encounter/2>
+     ] ;
+     fhir:resource ( <https://example.org/FHIR/R5/Encounter/2> ) ;
+     fhir:request [
+       fhir:method [ fhir:v "PUT" ] ;
+       fhir:url [
+         fhir:v "Encounter/2"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/Encounter/2>
+       ]
+     ] ;
+     fhir:response [
+       fhir:status [ fhir:v "201" ]
+     ]
+  ] ) . # 
+
+<urn:uuid:bef7e5fb-b5ad-4b59-a618-1bace2bbf5c0> a fhir:SubscriptionStatus ;
+  fhir:id [ fhir:v "bef7e5fb-b5ad-4b59-a618-1bace2bbf5c0"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:type [ fhir:v "event-notification"] ; # 
+  fhir:eventsSinceSubscriptionStart [ fhir:v "2"^^xsd:long] ; # 
+  fhir:notificationEvent ( [
+     fhir:eventNumber [ fhir:v "2"^^xsd:long ] ;
+     fhir:focus [
+       fhir:l <http://example.org/FHIR/R5/Encounter/2> ;
+       fhir:reference [ fhir:v "http://example.org/FHIR/R5/Encounter/2" ]
+     ]
+  ] ) ; # 
+  fhir:subscription [
+     fhir:l <http://example.org/FHIR/R5/Subscription/123> ;
+     fhir:reference [ fhir:v "http://example.org/FHIR/R5/Subscription/123" ]
+  ] ; # 
+  fhir:topic [
+     fhir:v "http://example.org/FHIR/R5/SubscriptionTopic/admission"^^xsd:anyURI ;
+     fhir:l <http://example.org/FHIR/R5/SubscriptionTopic/admission>
+  ] . # 
+
+<https://example.org/FHIR/R5/Encounter/2> a fhir:Encounter ;
+  fhir:id [ fhir:v "2"] ; # 
+  fhir:meta [
+     fhir:versionId [ fhir:v "1" ] ;
+     fhir:lastUpdated [ fhir:v "2019-08-07T10:49:22Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:status [ fhir:v "in-progress"] ; # 
+  fhir:class ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+       ] ;
+       fhir:code [ fhir:v "VR" ] ;
+       fhir:display [ fhir:v "virtual" ]
+     ] )
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/ABC> ;
+     fhir:reference [ fhir:v "Patient/ABC" ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/ABC> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

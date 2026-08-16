@@ -1,0 +1,131 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/MeasureReport/general-example-of-report> a fhir:MeasureReport ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "general-example-of-report"] ; # 
+  fhir:contained ( [
+     a fhir:Patient ;
+     fhir:id [ fhir:v "patient-new" ] ;
+     fhir:name ( [
+       fhir:use [ fhir:v "official" ] ;
+       fhir:family [ fhir:v "Donald" ] ;
+       fhir:given ( [ fhir:v "Duck" ] )
+     ] ) ;
+     fhir:gender [ fhir:v "male" ] ;
+     fhir:birthDate [ fhir:v "1976-05-17"^^xsd:date ] ;
+     fhir:address ( [
+       fhir:use [ fhir:v "home" ] ;
+       fhir:line ( [ fhir:v "1234 Main Street" ] ) ;
+       fhir:city [ fhir:v "DC" ] ;
+       fhir:postalCode [ fhir:v "20001" ] ;
+       fhir:country [ fhir:v "USA" ]
+     ] )
+  ] ) ; # 
+  fhir:status [ fhir:v "complete"] ; # 
+  fhir:type [ fhir:v "individual"] ; # 
+  fhir:measure [
+     fhir:v "http://ohie.org/Measure/hiv-indicators"^^xsd:anyURI ;
+     fhir:l <http://ohie.org/Measure/hiv-indicators>
+  ] ; # 
+  fhir:subject [
+     fhir:l <#patient-new> ;
+     fhir:reference [ fhir:v "#patient-new" ]
+  ] ; # 
+  fhir:period [
+     fhir:start [ fhir:v "2018-01-01"^^xsd:date ] ;
+     fhir:end [ fhir:v "2018-12-31"^^xsd:date ]
+  ] ; # 
+  fhir:group ( [
+     fhir:code [
+       fhir:coding ( [
+         fhir:code [ fhir:v "QRPH_ADX_ART5_N" ]
+       ] )
+     ] ;
+     fhir:measureScore [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v "1"^^xsd:decimal ]
+     ] ;
+     fhir:stratifier ( [
+       fhir:code [
+         fhir:coding ( [
+           fhir:code [ fhir:v "AGE_GROUP:SEX" ]
+         ] )
+       ] ;
+       fhir:stratum ( [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P0Y--P20Y:F" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P0Y--P20Y:M" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P20Y--P40Y:F" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P20Y--P40Y:M" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P40Y--P65Y:F" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P40Y--P65Y:M" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "1"^^xsd:decimal ]
+         ]
+       ] )
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

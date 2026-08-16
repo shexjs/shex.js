@@ -1,0 +1,173 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Measure/measure-BCSComponent> a fhir:Measure ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "measure-BCSComponent"] ; # 
+  fhir:meta [
+     fhir:profile ( [
+       fhir:v "http://hl7.org/fhir/uv/crmi/StructureDefinition/crmi-shareablemeasure"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/uv/crmi/StructureDefinition/crmi-shareablemeasure>
+     ] )
+  ] ; # 
+  fhir:language [ fhir:v "en"] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cqi"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/Measure/BCSComponent"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/Measure/BCSComponent>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:value [ fhir:v "Breast Cancer Screening" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "0.0.001"] ; # 
+  fhir:name [ fhir:v "BCSComponent"] ; # 
+  fhir:title [ fhir:v "Breast Cancer Screening"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2022-02-22T11:37:03-06:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Quality Information"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/cqi" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "This is an example only."] ; # 
+  fhir:effectivePeriod [
+     fhir:start [ fhir:v "2022-01-01"^^xsd:date ] ;
+     fhir:end [ fhir:v "2022-12-31"^^xsd:date ]
+  ] ; # 
+  fhir:library ( [
+     fhir:v "http://hl7.org/fhir/Library/BCSComponent"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/Library/BCSComponent>
+  ] ) ; # 
+  fhir:group ( [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/measure-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/measure-type>
+         ] ;
+         fhir:code [ fhir:v "process" ]
+       ] )
+     ] ) ;
+     fhir:basis [ fhir:v "boolean" ] ;
+     fhir:scoring [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/measure-scoring"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/measure-scoring>
+         ] ;
+         fhir:code [ fhir:v "proportion" ] ;
+         fhir:display [ fhir:v "Proportion" ]
+       ] )
+     ] ;
+     fhir:improvementNotation [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/measure-improvement-notation"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/measure-improvement-notation>
+         ] ;
+         fhir:code [ fhir:v "increase" ]
+       ] )
+     ] ;
+     fhir:population ( [
+       fhir:id [ fhir:v "2851A1BA-FBF8-4945-812E-6273F881CE13" ] ;
+       fhir:code [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/measure-population"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/measure-population>
+           ] ;
+           fhir:code [ fhir:v "initial-population" ] ;
+           fhir:display [ fhir:v "Initial Population" ]
+         ] )
+       ] ;
+       fhir:criteria [
+         fhir:language [ fhir:v "text/cql-identifier" ] ;
+         fhir:expression [ fhir:v "Initial Population" ]
+       ]
+     ] [
+       fhir:id [ fhir:v "349C20C9-EA7E-4311-9E2D-CF81F1EBCEEF" ] ;
+       fhir:code [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/measure-population"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/measure-population>
+           ] ;
+           fhir:code [ fhir:v "denominator" ] ;
+           fhir:display [ fhir:v "Denominator" ]
+         ] )
+       ] ;
+       fhir:criteria [
+         fhir:language [ fhir:v "text/cql-identifier" ] ;
+         fhir:expression [ fhir:v "Denominator" ]
+       ]
+     ] [
+       fhir:id [ fhir:v "369D1C75-B5D3-43EC-AEFC-2FF7F462306C" ] ;
+       fhir:code [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/measure-population"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/measure-population>
+           ] ;
+           fhir:code [ fhir:v "denominator-exclusion" ] ;
+           fhir:display [ fhir:v "Denominator Exclusion" ]
+         ] )
+       ] ;
+       fhir:criteria [
+         fhir:language [ fhir:v "text/cql-identifier" ] ;
+         fhir:expression [ fhir:v "Denominator Exclusion" ]
+       ]
+     ] [
+       fhir:id [ fhir:v "6F1617E3-99D7-47E4-8392-85107BAA5311" ] ;
+       fhir:code [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/measure-population"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/measure-population>
+           ] ;
+           fhir:code [ fhir:v "numerator" ] ;
+           fhir:display [ fhir:v "Numerator" ]
+         ] )
+       ] ;
+       fhir:criteria [
+         fhir:language [ fhir:v "text/cql-identifier" ] ;
+         fhir:expression [ fhir:v "Numerator" ]
+       ]
+     ] )
+  ] ) ; # 
+  fhir:supplementalData ( [
+     fhir:id [ fhir:v "25a16429-e866-438f-990a-3e3a5f2f8443" ] ;
+     fhir:usage ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/measure-data-usage"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/measure-data-usage>
+         ] ;
+         fhir:code [ fhir:v "supplemental-data" ]
+       ] )
+     ] ) ;
+     fhir:criteria [
+       fhir:language [ fhir:v "text/cql-identifier" ] ;
+       fhir:expression [ fhir:v "SDE Sex" ]
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

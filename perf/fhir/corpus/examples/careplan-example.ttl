@@ -1,0 +1,131 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CarePlan/example> a fhir:CarePlan ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "additional" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p> A simple care plan to indicate a patient taking their weight once a day because of obesity.</p>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:contained ( [
+     a fhir:Condition ;
+     fhir:id [ fhir:v "p1" ] ;
+     fhir:clinicalStatus [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/condition-clinical"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/condition-clinical>
+         ] ;
+         fhir:code [ fhir:v "active" ]
+       ] )
+     ] ;
+     fhir:verificationStatus [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/condition-ver-status"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/condition-ver-status>
+         ] ;
+         fhir:code [ fhir:v "confirmed" ]
+       ] )
+     ] ;
+     fhir:code [
+       fhir:text [ fhir:v "Obesity" ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/example> ;
+       fhir:reference [ fhir:v "Patient/example" ] ;
+       fhir:display [ fhir:v "Peter James Chalmers" ]
+     ]
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:value [ fhir:v "12345" ]
+  ] ) ; # 
+  fhir:basedOn ( [
+     fhir:display [ fhir:v "Management of Type 2 Diabetes" ]
+  ] ) ; # 
+  fhir:replaces ( [
+     fhir:display [ fhir:v "Plan from urgent care clinic" ]
+  ] ) ; # 
+  fhir:partOf ( [
+     fhir:display [ fhir:v "Overall wellness plan" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "plan"] ; # 
+  fhir:category ( [
+     fhir:text [ fhir:v "Weight management plan" ]
+  ] ) ; # 
+  fhir:description [ fhir:v "Manage obesity and weight loss"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Peter James Chalmers" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/home> ;
+     fhir:reference [ fhir:v "Encounter/home" ]
+  ] ; # 
+  fhir:period [
+     fhir:end [ fhir:v "2017-06-01"^^xsd:date ]
+  ] ; # 
+  fhir:created [ fhir:v "2016-01-01"^^xsd:date] ; # 
+  fhir:custodian [
+     fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+     fhir:reference [ fhir:v "Practitioner/example" ] ;
+     fhir:display [ fhir:v "Dr Adam Careful" ]
+  ] ; # 
+  fhir:careTeam ( [
+     fhir:l <http://hl7.org/fhir/CareTeam/example> ;
+     fhir:reference [ fhir:v "CareTeam/example" ]
+  ] ) ; # 
+  fhir:addresses ( [
+     fhir:reference [
+       fhir:l <#p1> ;
+       fhir:reference [ fhir:v "#p1" ] ;
+       fhir:display [ fhir:v "obesity" ]
+     ]
+  ] ) ; # 
+  fhir:goal ( [
+     fhir:l <http://hl7.org/fhir/Goal/example> ;
+     fhir:reference [ fhir:v "Goal/example" ]
+  ] ) ; # weight loss goal where the goal's outcome is the body weight observation
+  fhir:activity ( [
+     fhir:performedActivity ( [
+       fhir:concept [
+         a sct:6397004 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "6397004" ] ;
+           fhir:display [ fhir:v "Muscular strength development exercise" ]
+         ] )
+       ]
+     ] ) ; # exercise activity completed
+     fhir:plannedActivityReference [
+       fhir:l <http://hl7.org/fhir/ServiceRequest/benchpress> ;
+       fhir:reference [ fhir:v "ServiceRequest/benchpress" ]
+     ] # planned exercise plan
+  ] ) . # exercise activity
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/home> a fhir:Encounter .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+<http://hl7.org/fhir/CareTeam/example> a fhir:CareTeam .
+
+<http://hl7.org/fhir/Goal/example> a fhir:Goal .
+
+<http://hl7.org/fhir/ServiceRequest/benchpress> a fhir:ServiceRequest .
+
+# -------------------------------------------------------------------------------------
+

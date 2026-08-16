@@ -7,5 +7,17 @@
       "type": "MissingProperty",
       "property": "http://a.example/p2"
     }
+  ],
+  "repairs": [
+    {
+      "type": "NearestBag",
+      "cost": 1,
+      "arcs": [
+        {
+          "property": "http://a.example/p2",
+          "delta": 1
+        }
+      ]
+    }
   ]
 }

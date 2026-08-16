@@ -1,0 +1,57 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/bundle-request-medsallergies> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "bundle-request-medsallergies"] ; # 
+  fhir:type [ fhir:v "batch"] ; # This bundle is a batch of reqests to the FHIR RESTful API
+  fhir:entry ( [
+     fhir:request [
+       fhir:method [ fhir:v "GET" ] ;
+       fhir:url [
+         fhir:v "/Patient/example"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir//Patient/example>
+       ]
+     ]
+  ] [
+     fhir:request [
+       fhir:method [ fhir:v "GET" ] ;
+       fhir:url [
+         fhir:v "/MedicationStatement?patient=example&_list=$current-medications"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir//MedicationStatement?patient=example&_list=$current-medications>
+       ]
+     ]
+  ] [
+     fhir:request [
+       fhir:method [ fhir:v "GET" ] ;
+       fhir:url [
+         fhir:v "/AllergyIntolerance?patient=example&_list=$current-allergies"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir//AllergyIntolerance?patient=example&_list=$current-allergies>
+       ]
+     ]
+  ] [
+     fhir:request [
+       fhir:method [ fhir:v "GET" ] ;
+       fhir:url [
+         fhir:v "/Condition?patient=example&_list=$current-problems"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir//Condition?patient=example&_list=$current-problems>
+       ]
+     ]
+  ] [
+     fhir:request [
+       fhir:method [ fhir:v "GET" ] ;
+       fhir:url [
+         fhir:v "/MedicationStatement?patient=example&notgiven:not=true"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir//MedicationStatement?patient=example&notgiven:not=true>
+       ]
+     ]
+  ] ) . # Each entry is used to represent a RESTful API request
+#       This request retrieves a single Patient resource
+
+# -------------------------------------------------------------------------------------
+

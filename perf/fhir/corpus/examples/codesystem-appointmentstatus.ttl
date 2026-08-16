@@ -1,0 +1,153 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/appointmentstatus> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "appointmentstatus"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem appointmentstatus</b></p><a name=\"appointmentstatus\"> </a><a name=\"hcappointmentstatus\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/appointmentstatus</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">proposed<a name=\"appointmentstatus-proposed\"> </a></td><td>Proposed</td><td><div><p>None of the participant(s) have finalized their acceptance of the appointment request, and the start/end time might not be set yet.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">pending<a name=\"appointmentstatus-pending\"> </a></td><td>Pending</td><td><div><p>Some or all of the participant(s) have not finalized their acceptance of the appointment request.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">booked<a name=\"appointmentstatus-booked\"> </a></td><td>Booked</td><td><div><p>All participant(s) have been considered and the appointment is confirmed to go ahead at the date/times specified.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">arrived<a name=\"appointmentstatus-arrived\"> </a></td><td>Arrived</td><td><div><p>The patient/patients has/have arrived and is/are waiting to be seen.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">fulfilled<a name=\"appointmentstatus-fulfilled\"> </a></td><td>Fulfilled</td><td><div><p>The planning stages of the appointment are now complete, the encounter resource will exist and will track further status changes. Note that an encounter may exist before the appointment status is fulfilled for many reasons.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">cancelled<a name=\"appointmentstatus-cancelled\"> </a></td><td>Cancelled</td><td><div><p>The appointment has been cancelled.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">noshow<a name=\"appointmentstatus-noshow\"> </a></td><td>No Show</td><td><div><p>Some or all of the participant(s) have not/did not appear for the appointment (usually the patient).</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">entered-in-error<a name=\"appointmentstatus-entered-in-error\"> </a></td><td>Entered in error</td><td><div><p>This instance should not have been part of this patient's medical record.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">checked-in<a name=\"appointmentstatus-checked-in\"> </a></td><td>Checked In</td><td><div><p>When checked in, all pre-encounter administrative work is complete, and the encounter may begin. (where multiple patients are involved, they are all present).</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">waitlist<a name=\"appointmentstatus-waitlist\"> </a></td><td>Waitlisted</td><td><div><p>The appointment has been placed on a waitlist, to be scheduled/confirmed in the future when a slot/service is available.\nA specific time might or might not be pre-allocated.</p>\n</div></td></tr><tr><td style=\"white-space:nowrap\">unknown<a name=\"appointmentstatus-unknown\"> </a></td><td>Unknown</td><td><div><p>The appointment status is unknown.</p>\n</div></td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "pa"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 3
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/appointmentstatus"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/appointmentstatus>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.485" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.1.478" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.2.284" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "AppointmentStatus"] ; # 
+  fhir:title [ fhir:v "Appointment Status"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "The free/busy status of an appointment."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/appointmentstatus"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/appointmentstatus>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "proposed" ] ;
+     fhir:display [ fhir:v "Proposed" ] ;
+     fhir:definition [ fhir:v "None of the participant(s) have finalized their acceptance of the appointment request, and the start/end time might not be set yet." ]
+  ] [
+     fhir:code [ fhir:v "pending" ] ;
+     fhir:display [ fhir:v "Pending" ] ;
+     fhir:definition [ fhir:v "Some or all of the participant(s) have not finalized their acceptance of the appointment request." ]
+  ] [
+     fhir:code [ fhir:v "booked" ] ;
+     fhir:display [ fhir:v "Booked" ] ;
+     fhir:definition [ fhir:v "All participant(s) have been considered and the appointment is confirmed to go ahead at the date/times specified." ]
+  ] [
+     fhir:code [ fhir:v "arrived" ] ;
+     fhir:display [ fhir:v "Arrived" ] ;
+     fhir:definition [ fhir:v "The patient/patients has/have arrived and is/are waiting to be seen." ]
+  ] [
+     fhir:code [ fhir:v "fulfilled" ] ;
+     fhir:display [ fhir:v "Fulfilled" ] ;
+     fhir:definition [ fhir:v "The planning stages of the appointment are now complete, the encounter resource will exist and will track further status changes. Note that an encounter may exist before the appointment status is fulfilled for many reasons." ]
+  ] [
+     fhir:code [ fhir:v "cancelled" ] ;
+     fhir:display [ fhir:v "Cancelled" ] ;
+     fhir:definition [ fhir:v "The appointment has been cancelled." ]
+  ] [
+     fhir:code [ fhir:v "noshow" ] ;
+     fhir:display [ fhir:v "No Show" ] ;
+     fhir:definition [ fhir:v "Some or all of the participant(s) have not/did not appear for the appointment (usually the patient)." ]
+  ] [
+     fhir:code [ fhir:v "entered-in-error" ] ;
+     fhir:display [ fhir:v "Entered in error" ] ;
+     fhir:definition [ fhir:v "This instance should not have been part of this patient's medical record." ]
+  ] [
+     fhir:code [ fhir:v "checked-in" ] ;
+     fhir:display [ fhir:v "Checked In" ] ;
+     fhir:definition [ fhir:v "When checked in, all pre-encounter administrative work is complete, and the encounter may begin. (where multiple patients are involved, they are all present)." ]
+  ] [
+     fhir:code [ fhir:v "waitlist" ] ;
+     fhir:display [ fhir:v "Waitlisted" ] ;
+     fhir:definition [ fhir:v "The appointment has been placed on a waitlist, to be scheduled/confirmed in the future when a slot/service is available.\nA specific time might or might not be pre-allocated." ]
+  ] [
+     fhir:code [ fhir:v "unknown" ] ;
+     fhir:display [ fhir:v "Unknown" ] ;
+     fhir:definition [ fhir:v "The appointment status is unknown." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

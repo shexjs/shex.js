@@ -1,0 +1,73 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Provenance/example-diagnosticreport-sig> a fhir:Provenance ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-diagnosticreport-sig"] ; # 
+  fhir:target ( [
+     fhir:l <http://hl7.org/fhir/DiagnosticReport/101> ;
+     fhir:reference [ fhir:v "DiagnosticReport/101" ]
+  ] ) ; # an example Provenance of a verification without changing the content, electronic signature
+  fhir:recorded [ fhir:v "2011-03-04T08:30:00+11:00"^^xsd:dateTime] ; # 
+  fhir:policy ( [
+     fhir:v "http://example.org/policy/Reviewed"^^xsd:anyURI ;
+     fhir:l <http://example.org/policy/Reviewed>
+  ] ) ; # 
+  fhir:activity [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/iso-21089-lifecycle"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/iso-21089-lifecycle>
+       ] ;
+       fhir:code [ fhir:v "verify" ]
+     ] )
+  ] ; # 
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/pat2> ;
+     fhir:reference [ fhir:v "Patient/pat2" ]
+  ] ; # 
+  fhir:agent ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/provenance-participant-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/provenance-participant-type>
+         ] ;
+         fhir:code [ fhir:v "verifier" ] ;
+         fhir:display [ fhir:v "Verifier" ]
+       ] )
+     ] ;
+     fhir:who [
+       fhir:l <http://hl7.org/fhir/Organization/1832473e-2fe0-452d-abe9-3cdb9879522f> ;
+       fhir:reference [ fhir:v "Organization/1832473e-2fe0-452d-abe9-3cdb9879522f" ]
+     ]
+  ] ) ; # 
+  fhir:signature ( [
+     fhir:type ( [
+       fhir:system [
+         fhir:v "http://uri.etsi.org/01903/v1.2.2"^^xsd:anyURI ;
+         fhir:l <http://uri.etsi.org/01903/v1.2.2>
+       ] ;
+       fhir:code [ fhir:v "ProofOfapproval" ] ;
+       fhir:display [ fhir:v "Proof of approval" ]
+     ] ) ; # verification signature
+     fhir:when [ fhir:v "2011-03-04T08:30:00+11:00"^^xsd:dateTime ] ;
+     fhir:who [
+       fhir:l <http://hl7.org/fhir/Organization/1832473e-2fe0-452d-abe9-3cdb9879522f> ;
+       fhir:reference [ fhir:v "Organization/1832473e-2fe0-452d-abe9-3cdb9879522f" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/DiagnosticReport/101> a fhir:DiagnosticReport .
+
+<http://hl7.org/fhir/Patient/pat2> a fhir:Patient .
+
+<http://hl7.org/fhir/Organization/1832473e-2fe0-452d-abe9-3cdb9879522f> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,85 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Endpoint/example> a fhir:Endpoint ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n			Health Intersections CarePlan Hub<br/>\n			CarePlans can be uploaded to/from this loccation\n		</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://example.org/enpoint-identifier"^^xsd:anyURI ;
+       fhir:l <http://example.org/enpoint-identifier>
+     ] ;
+     fhir:value [ fhir:v "epcp12" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:connectionType ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/endpoint-connection-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/endpoint-connection-type>
+       ] ;
+       fhir:code [ fhir:v "hl7-fhir-rest" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "Health Intersections CarePlan Hub"] ; # 
+  fhir:description [ fhir:v "The CarePlan hub provides a test/dev environment for testing submissions"] ; # 
+  fhir:environmentType ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/endpoint-environment"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/endpoint-environment>
+       ] ;
+       fhir:code [ fhir:v "test" ]
+     ] )
+  ] [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/endpoint-environment"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/endpoint-environment>
+       ] ;
+       fhir:code [ fhir:v "dev" ]
+     ] )
+  ] ) ; # 
+  fhir:managingOrganization [
+     fhir:l <http://hl7.org/fhir/Organization/hl7> ;
+     fhir:reference [ fhir:v "Organization/hl7" ]
+  ] ; # 
+  fhir:contact ( [
+     fhir:system [ fhir:v "email" ] ;
+     fhir:value [ fhir:v "endpointmanager@example.org" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:period [
+     fhir:start [ fhir:v "2014-09-01"^^xsd:date ]
+  ] ; # 
+  fhir:payload ( [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/fhir-types"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/fhir-types>
+         ] ;
+         fhir:code [ fhir:v "CarePlan" ]
+       ] )
+     ] ) ;
+     fhir:mimeType ( [ fhir:v "application/fhir+xml" ] )
+  ] ) ; # 
+  fhir:address [
+     fhir:v "http://fhir3.healthintersections.com.au/open/CarePlan"^^xsd:anyURI ;
+     fhir:l <http://fhir3.healthintersections.com.au/open/CarePlan>
+  ] ; # 
+  fhir:header ( [ fhir:v "bearer-code BASGS534s4"] ) . # Not a valid bearer token, but is here for demonstration purposes
+
+<http://hl7.org/fhir/Organization/hl7> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

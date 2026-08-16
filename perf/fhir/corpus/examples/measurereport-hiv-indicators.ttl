@@ -1,0 +1,332 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/MeasureReport/hiv-indicators> a fhir:MeasureReport ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "hiv-indicators"] ; # 
+  fhir:status [ fhir:v "complete"] ; # 
+  fhir:type [ fhir:v "summary"] ; # 
+  fhir:measure [
+     fhir:v "http://ohie.org/Measure/hiv-indicators"^^xsd:anyURI ;
+     fhir:l <http://ohie.org/Measure/hiv-indicators>
+  ] ; # 
+  fhir:reporter [
+     fhir:l <http://hl7.org/fhir/Organization/hl7> ;
+     fhir:reference [ fhir:v "Organization/hl7" ]
+  ] ; # 
+  fhir:period [
+     fhir:start [ fhir:v "2018-01-01"^^xsd:date ] ;
+     fhir:end [ fhir:v "2018-01-31"^^xsd:date ]
+  ] ; # 
+  fhir:group ( [
+     fhir:code [
+       fhir:coding ( [
+         fhir:code [ fhir:v "QRPH_ADX_ART1_N" ]
+       ] )
+     ] ;
+     fhir:measureScore [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v "0"^^xsd:decimal ]
+     ] ;
+     fhir:stratifier ( [
+       fhir:code [
+         fhir:coding ( [
+           fhir:code [ fhir:v "AGE_GROUP:SEX" ]
+         ] )
+       ] ;
+       fhir:stratum ( [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P0Y--P1Y:F" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P0Y--P1Y:M" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P1Y--P5Y:F" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P1Y--P5Y:M" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P10Y--P15Y:F" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P10Y--P15Y:M" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] )
+     ] ) # ...
+  ] [
+     fhir:code [
+       fhir:coding ( [
+         fhir:code [ fhir:v "QRPH_ADX_ART1_N" ]
+       ] )
+     ] ;
+     fhir:measureScore [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v "0"^^xsd:decimal ]
+     ] ;
+     fhir:stratifier ( [
+       fhir:code [
+         fhir:coding ( [
+           fhir:code [ fhir:v "AGE_GROUP:SEX" ]
+         ] )
+       ] ;
+       fhir:stratum ( [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P0Y--P1Y:F" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P0Y--P1Y:M" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P1Y--P5Y:F" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P1Y--P5Y:M" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P10Y--P15Y:F" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:value [
+           a fhir:CodeableConcept ;
+           fhir:coding ( [
+             fhir:code [ fhir:v "P10Y--P15Y:M" ]
+           ] )
+         ] ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] )
+     ] ) # ...
+  ] [
+     fhir:code [
+       fhir:coding ( [
+         fhir:code [ fhir:v "QRPH_ADX_ART1_N" ]
+       ] )
+     ] ;
+     fhir:measureScore [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v "0"^^xsd:decimal ]
+     ] ;
+     fhir:stratifier ( [
+       fhir:stratum ( [
+         fhir:component ( [
+           fhir:code [
+             fhir:coding ( [
+               fhir:code [ fhir:v "AGE_GROUP" ]
+             ] )
+           ] ;
+           fhir:value [
+             a fhir:CodeableConcept ;
+             fhir:coding ( [
+               fhir:code [ fhir:v "P0Y--P1Y" ]
+             ] )
+           ]
+         ] [
+           fhir:code [
+             fhir:coding ( [
+               fhir:code [ fhir:v "SEX" ]
+             ] )
+           ] ;
+           fhir:value [
+             a fhir:CodeableConcept ;
+             fhir:coding ( [
+               fhir:code [ fhir:v "F" ]
+             ] )
+           ]
+         ] ) ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:component ( [
+           fhir:code [
+             fhir:coding ( [
+               fhir:code [ fhir:v "AGE_GROUP" ]
+             ] )
+           ] ;
+           fhir:value [
+             a fhir:CodeableConcept ;
+             fhir:coding ( [
+               fhir:code [ fhir:v "P0Y--P1Y" ]
+             ] )
+           ]
+         ] [
+           fhir:code [
+             fhir:coding ( [
+               fhir:code [ fhir:v "SEX" ]
+             ] )
+           ] ;
+           fhir:value [
+             a fhir:CodeableConcept ;
+             fhir:coding ( [
+               fhir:code [ fhir:v "M" ]
+             ] )
+           ]
+         ] ) ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:component ( [
+           fhir:code [
+             fhir:coding ( [
+               fhir:code [ fhir:v "AGE_GROUP" ]
+             ] )
+           ] ;
+           fhir:value [
+             a fhir:CodeableConcept ;
+             fhir:coding ( [
+               fhir:code [ fhir:v "P1Y--P5Y" ]
+             ] )
+           ]
+         ] [
+           fhir:code [
+             fhir:coding ( [
+               fhir:code [ fhir:v "SEX" ]
+             ] )
+           ] ;
+           fhir:value [
+             a fhir:CodeableConcept ;
+             fhir:coding ( [
+               fhir:code [ fhir:v "F" ]
+             ] )
+           ]
+         ] ) ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] [
+         fhir:component ( [
+           fhir:code [
+             fhir:coding ( [
+               fhir:code [ fhir:v "AGE_GROUP" ]
+             ] )
+           ] ;
+           fhir:value [
+             a fhir:CodeableConcept ;
+             fhir:coding ( [
+               fhir:code [ fhir:v "P1Y--P5Y" ]
+             ] )
+           ]
+         ] [
+           fhir:code [
+             fhir:coding ( [
+               fhir:code [ fhir:v "SEX" ]
+             ] )
+           ] ;
+           fhir:value [
+             a fhir:CodeableConcept ;
+             fhir:coding ( [
+               fhir:code [ fhir:v "F" ]
+             ] )
+           ]
+         ] ) ;
+         fhir:measureScore [
+           a fhir:Quantity ;
+           fhir:value [ fhir:v "0"^^xsd:decimal ]
+         ]
+       ] )
+     ] ) # ...
+  ] ) . # Option 1: Mashup
+
+<http://hl7.org/fhir/Organization/hl7> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

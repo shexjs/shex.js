@@ -1,0 +1,125 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CapabilityStatement/measure-processor> a fhir:CapabilityStatement ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "measure-processor"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <h2>Measure Calculation Service Conformance Statement</h2>\n      <div>\n        <p>Basic conformance statement for a Measure Processor Service. A server can support more functionality\n           than defined here, but this is the minimum amount</p>\n      </div>\n      <table>\n        <tr>\n          <td>Mode</td>\n          <td>SERVER</td>\n        </tr>\n        <tr>\n          <td>Description</td>\n          <td>RESTful Measure Processor Server</td>\n        </tr>\n        <tr>\n          <td>Transaction</td>\n          <td/>\n        </tr>\n        <tr>\n          <td>System History</td>\n          <td/>\n        </tr>\n        <tr>\n          <td>System Search</td>\n          <td/>\n        </tr>\n      </table>\n      <table>\n        <tr>\n          <th>\n            <b>Resource Type</b>\n          </th>\n          <th>\n            <b>Profile</b>\n          </th>\n          <th>\n            <b>Read</b>\n          </th>\n          <th>\n            <b>V-Read</b>\n          </th>\n          <th>\n            <b>Search</b>\n          </th>\n          <th>\n            <b>Update</b>\n          </th>\n          <th>\n            <b>Updates</b>\n          </th>\n          <th>\n            <b>Create</b>\n          </th>\n          <th>\n            <b>Delete</b>\n          </th>\n          <th>\n            <b>History</b>\n          </th>\n        </tr>\n      </table>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/measure-processor"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/measure-processor>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.34.4" ]
+  ] ) ; # 
+  fhir:name [ fhir:v "MeasureProcessorServiceConformanceStatement"] ; # 
+  fhir:title [ fhir:v "Measure Processor Service Conformance Statement"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:date [ fhir:v "2016-09-16"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Basic conformance statement for a Measure Processor Service. A server can support more functionality    than defined here, but this is the minimum amount"] ; # 
+  fhir:kind [ fhir:v "capability"] ; # 
+  fhir:software [
+     fhir:name [ fhir:v "ACME Measure Processor Service" ]
+  ] ; # 
+  fhir:fhirVersion [ fhir:v "6.0.0"] ; # 
+  fhir:format ( [ fhir:v "json"] [ fhir:v "xml"] ) ; # 
+  fhir:rest ( [
+     fhir:mode [ fhir:v "server" ] ;
+     fhir:documentation [ fhir:v "RESTful Measure Processor Service" ] ;
+     fhir:security [
+       fhir:cors [ fhir:v true ] ;
+       fhir:service ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/restful-security-service"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/restful-security-service>
+           ] ;
+           fhir:code [ fhir:v "Certificates" ]
+         ] )
+       ] )
+     ] ;
+     fhir:resource ( [
+       fhir:type [
+         fhir:v "Measure"^^xsd:anyURI ;
+         fhir:l fhir:Measure
+       ] ;
+       fhir:profile [
+         fhir:v "http://hl7.org/fhir/StructureDefinition/Measure"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/StructureDefinition/Measure>
+       ] ;
+       fhir:interaction ( [
+         fhir:code [ fhir:v "read" ] ;
+         fhir:documentation [ fhir:v "Read allows clients to get the logical definitions of the measures" ]
+       ] [
+         fhir:code [ fhir:v "search-type" ] ;
+         fhir:documentation [ fhir:v "Search allows clients to filter measures based on a provided search parameter" ]
+       ] ) ;
+       fhir:searchParam ( [
+         fhir:name [ fhir:v "identifier" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/Measure-identifier"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/Measure-identifier>
+         ] ;
+         fhir:type [ fhir:v "token" ]
+       ] [
+         fhir:name [ fhir:v "status" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/Measure-status"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/Measure-status>
+         ] ;
+         fhir:type [ fhir:v "token" ]
+       ] [
+         fhir:name [ fhir:v "version" ] ;
+         fhir:definition [
+           fhir:v "http://hl7.org/fhir/SearchParameter/Measure-version"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/SearchParameter/Measure-version>
+         ] ;
+         fhir:type [ fhir:v "token" ]
+       ] )
+     ] ) ;
+     fhir:operation ( [
+       fhir:name [ fhir:v "evaluate-measure" ] ;
+       fhir:definition [
+         fhir:v "http://hl7.org/fhir/OperationDefinition/Measure-evaluate-measure"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/OperationDefinition/Measure-evaluate-measure>
+       ]
+     ] [
+       fhir:name [ fhir:v "data-requirements" ] ;
+       fhir:definition [
+         fhir:v "http://hl7.org/fhir/OperationDefinition/Measure-data-requirements"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/OperationDefinition/Measure-data-requirements>
+       ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,108 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/patch-operation> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "patch-operation"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem patch-operation</b></p><a name=\"patch-operation\"> </a><a name=\"hcpatch-operation\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/patch-operation</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">add<a name=\"patch-operation-add\"> </a></td><td>Add</td><td>Add content at the nominated location.</td></tr><tr><td style=\"white-space:nowrap\">insert<a name=\"patch-operation-insert\"> </a></td><td>Insert</td><td>Insert content at the nominated location.</td></tr><tr><td style=\"white-space:nowrap\">delete<a name=\"patch-operation-delete\"> </a></td><td>Delete</td><td>Delete content from the nominated location.</td></tr><tr><td style=\"white-space:nowrap\">replace<a name=\"patch-operation-replace\"> </a></td><td>Replace</td><td>Replace the content with the new content at the nominated location.</td></tr><tr><td style=\"white-space:nowrap\">move<a name=\"patch-operation-move\"> </a></td><td>Move</td><td>Move content from one location to another.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 0
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/patch-operation"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/patch-operation>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "PatchOperation"] ; # 
+  fhir:title [ fhir:v "Patch Operation"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Codes identifying the valid FHIRPath patch operations."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/patch-operation"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/patch-operation>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "add" ] ;
+     fhir:display [ fhir:v "Add" ] ;
+     fhir:definition [ fhir:v "Add content at the nominated location." ]
+  ] [
+     fhir:code [ fhir:v "insert" ] ;
+     fhir:display [ fhir:v "Insert" ] ;
+     fhir:definition [ fhir:v "Insert content at the nominated location." ]
+  ] [
+     fhir:code [ fhir:v "delete" ] ;
+     fhir:display [ fhir:v "Delete" ] ;
+     fhir:definition [ fhir:v "Delete content from the nominated location." ]
+  ] [
+     fhir:code [ fhir:v "replace" ] ;
+     fhir:display [ fhir:v "Replace" ] ;
+     fhir:definition [ fhir:v "Replace the content with the new content at the nominated location." ]
+  ] [
+     fhir:code [ fhir:v "move" ] ;
+     fhir:display [ fhir:v "Move" ] ;
+     fhir:definition [ fhir:v "Move content from one location to another." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

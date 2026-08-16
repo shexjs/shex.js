@@ -1,0 +1,122 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/medicationrequest-status> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "medicationrequest-status"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem medicationrequest-status</b></p><a name=\"medicationrequest-status\"> </a><a name=\"hcmedicationrequest-status\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/CodeSystem/medicationrequest-status</code> defines the following codes in a Is-A hierarchy:</p><table class=\"codes\"><tr><td><b>Lvl</b></td><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td>1</td><td style=\"white-space:nowrap\">active<a name=\"medicationrequest-status-active\"> </a></td><td>Active</td><td>The request is 'actionable', but not all actions that are implied by it have occurred yet.</td></tr><tr><td>1</td><td style=\"white-space:nowrap\">on-hold<a name=\"medicationrequest-status-on-hold\"> </a></td><td>On Hold</td><td>Actions implied by the request are to be temporarily halted. The request might or might not be resumed. May also be called 'suspended'.</td></tr><tr><td>1</td><td style=\"white-space:nowrap\">ended<a name=\"medicationrequest-status-ended\"> </a></td><td>Ended</td><td>The request is no longer active and the subject should no longer be taking the medication.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  stopped<a name=\"medicationrequest-status-stopped\"> </a></td><td>Stopped</td><td>Actions implied by the request are to be permanently halted, before all of the administrations occurred. This should not be used if the original order was entered in error</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  completed<a name=\"medicationrequest-status-completed\"> </a></td><td>Completed</td><td>All actions that are implied by the request have occurred.</td></tr><tr><td>2</td><td style=\"white-space:nowrap\">  cancelled<a name=\"medicationrequest-status-cancelled\"> </a></td><td>Cancelled</td><td>The request has been withdrawn before any administrations have occurred</td></tr><tr><td>1</td><td style=\"white-space:nowrap\">entered-in-error<a name=\"medicationrequest-status-entered-in-error\"> </a></td><td>Entered in Error</td><td>The request was entered in error and is not valid.</td></tr><tr><td>1</td><td style=\"white-space:nowrap\">draft<a name=\"medicationrequest-status-draft\"> </a></td><td>Draft</td><td>The request is not yet 'actionable', e.g. it is a work in progress, requires sign-off, verification or needs to be run through decision support process.</td></tr><tr><td>1</td><td style=\"white-space:nowrap\">unknown<a name=\"medicationrequest-status-unknown\"> </a></td><td>Unknown</td><td>The authoring/source system does not know which of the status values currently applies for this request. Note: This concept is not to be used for 'other' - one of the listed statuses is presumed to apply, but the authoring/source system does not know which.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "phx"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 4
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/CodeSystem/medicationrequest-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/CodeSystem/medicationrequest-status>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1377" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "MedicationRequestStatusCodes"] ; # 
+  fhir:title [ fhir:v "MedicationRequest Status Codes"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7 International"] ; # 
+  fhir:description [ fhir:v "MedicationRequest Status Codes"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/medicationrequest-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/medicationrequest-status>
+  ] ; # 
+  fhir:hierarchyMeaning [ fhir:v "is-a"] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "active" ] ;
+     fhir:display [ fhir:v "Active" ] ;
+     fhir:definition [ fhir:v "The request is 'actionable', but not all actions that are implied by it have occurred yet." ]
+  ] [
+     fhir:code [ fhir:v "on-hold" ] ;
+     fhir:display [ fhir:v "On Hold" ] ;
+     fhir:definition [ fhir:v "Actions implied by the request are to be temporarily halted. The request might or might not be resumed. May also be called 'suspended'." ]
+  ] [
+     fhir:code [ fhir:v "ended" ] ;
+     fhir:display [ fhir:v "Ended" ] ;
+     fhir:definition [ fhir:v "The request is no longer active and the subject should no longer be taking the medication." ] ;
+     fhir:concept ( [
+       fhir:code [ fhir:v "stopped" ] ;
+       fhir:display [ fhir:v "Stopped" ] ;
+       fhir:definition [ fhir:v "Actions implied by the request are to be permanently halted, before all of the administrations occurred. This should not be used if the original order was entered in error" ]
+     ] [
+       fhir:code [ fhir:v "completed" ] ;
+       fhir:display [ fhir:v "Completed" ] ;
+       fhir:definition [ fhir:v "All actions that are implied by the request have occurred." ]
+     ] [
+       fhir:code [ fhir:v "cancelled" ] ;
+       fhir:display [ fhir:v "Cancelled" ] ;
+       fhir:definition [ fhir:v "The request has been withdrawn before any administrations have occurred" ]
+     ] )
+  ] [
+     fhir:code [ fhir:v "entered-in-error" ] ;
+     fhir:display [ fhir:v "Entered in Error" ] ;
+     fhir:definition [ fhir:v "The request was entered in error and is not valid." ]
+  ] [
+     fhir:code [ fhir:v "draft" ] ;
+     fhir:display [ fhir:v "Draft" ] ;
+     fhir:definition [ fhir:v "The request is not yet 'actionable', e.g. it is a work in progress, requires sign-off, verification or needs to be run through decision support process." ]
+  ] [
+     fhir:code [ fhir:v "unknown" ] ;
+     fhir:display [ fhir:v "Unknown" ] ;
+     fhir:definition [ fhir:v "The authoring/source system does not know which of the status values currently applies for this request. Note: This concept is not to be used for 'other' - one of the listed statuses is presumed to apply, but the authoring/source system does not know which." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

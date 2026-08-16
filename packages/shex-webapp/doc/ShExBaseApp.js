@@ -2275,12 +2275,14 @@ class ShExResultsRenderer {
             `${ldToTurtle(entry.node, this.caches.inputData.meta.termToLex)}@${fails ? "!" : ""}${this.caches.inputSchema.meta.termToLex(entry.shape)}`
           )).addClass(klass);
         if (fails)
-          elt.append($("<pre>").text(ShExWebApp.Util.errsToSimple(entry.appinfo).join("\n")));
+          elt.append($("<pre>").text(ShExWebApp.Util.errsToSimple(
+            entry.appinfo, this.caches.inputSchema.meta.prefixes).join("\n")));
         break;
 
       case "minimal":
         if (fails)
-          entry.reason = ShExWebApp.Util.errsToSimple(entry.appinfo).join("\n");
+          entry.reason = ShExWebApp.Util.errsToSimple(
+            entry.appinfo, this.caches.inputSchema.meta.prefixes).join("\n");
         renderMe = Object.keys(entry).reduce((acc, key) => {
           if (key !== "appinfo")
             acc[key] = entry[key];

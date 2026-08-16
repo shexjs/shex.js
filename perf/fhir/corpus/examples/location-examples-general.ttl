@@ -1,0 +1,53 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/3ad0687e-f477-468c-afd5-fcc2bf897819> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "3ad0687e-f477-468c-afd5-fcc2bf897819"] ; # 
+  fhir:type [ fhir:v "collection"] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Location/2"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Location/2>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Location/2> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://hl7.org/fhir/Location/3"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/Location/3>
+     ] ;
+     fhir:resource ( <http://hl7.org/fhir/Location/3> )
+  ] ) . # 
+
+<http://hl7.org/fhir/Location/2> a fhir:Location ;
+  fhir:id [ fhir:v "2"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">USS Enterprise</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:name [ fhir:v "USSS Enterprise-D"] ; # 
+  fhir:mode [ fhir:v "instance"] . # 
+
+<http://hl7.org/fhir/Location/3> a fhir:Location ;
+  fhir:id [ fhir:v "3"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">USSS Enterprise-D Sickbay</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:name [ fhir:v "USSS Enterprise-D Sickbay"] ; # 
+  fhir:mode [ fhir:v "instance"] ; # 
+  fhir:partOf [
+     fhir:l <http://hl7.org/fhir/Location/2> ;
+     fhir:reference [ fhir:v "Location/2" ] ;
+     fhir:display [ fhir:v "USS Enterprise" ]
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

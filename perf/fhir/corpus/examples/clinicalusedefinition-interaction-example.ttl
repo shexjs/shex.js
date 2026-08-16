@@ -1,0 +1,75 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ClinicalUseDefinition/example-interaction> a fhir:ClinicalUseDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-interaction"] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "brr"
+     ]
+  ] ) ; # 
+  fhir:type [ fhir:v "interaction"] ; # example product interacts with other drugs
+  fhir:subject ( [
+     fhir:reference [
+       fhir:l <http://hl7.org/fhir/MedicinalProductDefinition/example> ;
+       fhir:reference [ fhir:v "MedicinalProductDefinition/example" ]
+     ]
+  ] ) ; # 
+  fhir:interaction [
+     fhir:interactant ( [
+       fhir:item [
+         a fhir:CodeableConcept ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://ema.europa.eu/example/interactant"^^xsd:anyURI ;
+             fhir:l <http://ema.europa.eu/example/interactant>
+           ] ;
+           fhir:code [ fhir:v "alphaconazole" ]
+         ] )
+       ]
+     ] [
+       fhir:item [
+         a fhir:CodeableConcept ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://ema.europa.eu/example/interactant"^^xsd:anyURI ;
+             fhir:l <http://ema.europa.eu/example/interactant>
+           ] ;
+           fhir:code [ fhir:v "betaconazole" ]
+         ] )
+       ]
+     ] ) ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://ema.europa.eu/example/interactionsType"^^xsd:anyURI ;
+           fhir:l <http://ema.europa.eu/example/interactionsType>
+         ] ;
+         fhir:code [ fhir:v "Inhibitor" ]
+       ] )
+     ] ;
+     fhir:effect [
+       fhir:concept [
+         fhir:text [ fhir:v "Increased plasma concentration" ]
+       ]
+     ] ;
+     fhir:management ( [
+       fhir:text [ fhir:v "Careful monitoring of dose" ]
+     ] )
+  ] . # 
+
+<http://hl7.org/fhir/MedicinalProductDefinition/example> a fhir:MedicinalProductDefinition .
+
+# -------------------------------------------------------------------------------------
+

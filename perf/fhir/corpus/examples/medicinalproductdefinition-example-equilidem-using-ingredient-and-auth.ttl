@@ -1,0 +1,171 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/MedicinalProductDefinition/equilidem-with-ing-and-auth> a fhir:MedicinalProductDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "equilidem-with-ing-and-auth"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n			<p>\n				<b>\n					Generated Narrative\n				</b>\n			</p>\n			<p>\n				<b>\n					Id\n				</b>\n				: equilidem-with-ing-and-auth\n			</p>\n			<p>\n				<b>\n					Identifier\n				</b>\n				: Equilidem25\n			</p>\n			<p>\n				<b>\n					Combined Pharmaceutical Dose Form\n				</b>\n				:\n				<span title=\"Codes: {http://example.org.uk/fhir/dosefom tablet}\">\n					tablet\n				</span>\n			</p>\n			<p>\n				<b>\n					Indication\n				</b>\n				: Prevention of venous thromboembolic events (VTE) in adult patients who have undergone elective hip or knee replacement surgery. Prevention of stroke and systemic embolism in adult patients with non-valvular atrial fibrillation (NVAF), with one or more risk factors, such as prior stroke or transient ischaemic attack (TIA); age ≥ 75 years; hypertension; diabetes mellitus; symptomatic heart failure (NYHA Class &gt;= II). Treatment of deep vein thrombosis (DVT) and pulmonary embolism (PE), and prevention of recurrent DVT and PE in adults.\n			</p>\n			<p>\n				<b>\n					Legal Status Of Supply\n				</b>\n				:\n				<span title=\"Codes: {http://example.org.uk/fhir/legalstatusofsupply POM}\">\n					Prescription only medicine\n				</span>\n			</p>\n			<p>\n				<b>\n					classification\n				</b>\n				:\n				<span title=\"Codes: {http://www.whocc.no/atc/example B01A}\">\n					B01A\n				</span>\n			</p>\n			<p>\n				<b>\n					Ingredients\n				</b>\n				:\n			</p>\n			<blockquote>\n				<p>\n					<b>\n						Role\n					</b>\n					:\n					<span title=\"Codes: {http://example.org.uk/fhir/ingredientType active}\">\n						active\n					</span>\n				</p>\n				<blockquote>\n					<p>\n						<b>\n							substance\n						</b>\n						:\n						<span title=\"Codes: {http://example.org.uk/fhir/substances 123456}\">\n							Equilidonium Phosphate\n						</span>\n					</p>\n					<table class=\"grid\">\n						<tr>\n							<td>\n								-\n							</td>\n							<td>\n								<b>\n									Presentation\n								</b>\n							</td>\n						</tr>\n						<tr>\n							<td>\n								*\n							</td>\n							<td>\n								22 ml/1 tablet\n							</td>\n						</tr>\n					</table>\n				</blockquote>\n			</blockquote>\n			<blockquote>\n				<p>\n					<b>\n						Role\n					</b>\n					:\n					<span title=\"Codes: {http://example.org.uk/fhir/ingredientType excipient}\">\n						excipient\n					</span>\n				</p>\n				<blockquote>\n					<p>\n						<b>\n							substance\n						</b>\n						:\n						<span title=\"Codes: {http://example.org.uk/fhir/substances 456789}\">\n							Calcium Carbonate\n						</span>\n					</p>\n					<table class=\"grid\">\n						<tr>\n							<td>\n								-\n							</td>\n							<td>\n								<b>\n									Presentation\n								</b>\n							</td>\n						</tr>\n						<tr>\n							<td>\n								*\n							</td>\n							<td>\n								3 ml/tablet\n							</td>\n						</tr>\n					</table>\n				</blockquote>\n			</blockquote>\n			<h3>\n				Names\n			</h3>\n			<table class=\"grid\">\n				<tr>\n					<td>\n						-\n					</td>\n					<td>\n						<b>\n							ProductName\n						</b>\n					</td>\n				</tr>\n				<tr>\n					<td>\n						*\n					</td>\n					<td>\n						Equilidem 2.5 mg film-coated tablets\n					</td>\n				</tr>\n			</table>\n			<h3>\n				Cross References\n			</h3>\n			<table class=\"grid\">\n				<tr>\n					<td>\n						-\n					</td>\n					<td>\n						<b>\n							Product\n						</b>\n					</td>\n				</tr>\n				<tr>\n					<td>\n						*\n					</td>\n					<td>\n						Link to generic equivalent\n					</td>\n				</tr>\n			</table>\n			<h3>\n				Manufacturing Business Operations\n			</h3>\n			<table class=\"grid\">\n				<tr>\n					<td>\n						-\n					</td>\n					<td>\n						<b>\n							Manufacturer\n						</b>\n					</td>\n				</tr>\n				<tr>\n					<td>\n						*\n					</td>\n					<td>\n						<span>\n							EquiliDrugCo Processing Inc.\n						</span>\n					</td>\n				</tr>\n			</table>\n		</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:contained ( [
+     a fhir:Ingredient ;
+     fhir:id [ fhir:v "EquilidoniumPhosphate" ] ;
+     fhir:status [ fhir:v "active" ] ;
+     fhir:for ( [
+       fhir:l <#> ;
+       fhir:reference [ fhir:v "#" ]
+     ] ) ;
+     fhir:role [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.org.uk/fhir/ingredientType"^^xsd:anyURI ;
+           fhir:l <http://example.org.uk/fhir/ingredientType>
+         ] ;
+         fhir:code [ fhir:v "active" ]
+       ] )
+     ] ;
+     fhir:substance [
+       fhir:code [
+         fhir:concept [
+           fhir:coding ( [
+             fhir:system [
+               fhir:v "http://example.org.uk/fhir/substances"^^xsd:anyURI ;
+               fhir:l <http://example.org.uk/fhir/substances>
+             ] ;
+             fhir:code [ fhir:v "123456" ] ;
+             fhir:display [ fhir:v "Equilidonium Phosphate" ]
+           ] )
+         ]
+       ] ;
+       fhir:strength ( [
+         fhir:presentation [
+           a fhir:Ratio ;
+           fhir:numerator [
+             fhir:value [ fhir:v "22"^^xsd:decimal ] ;
+             fhir:unit [ fhir:v "ml" ] ;
+             fhir:system [
+               fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+               fhir:l <http://unitsofmeasure.org>
+             ] ;
+             fhir:code [ fhir:v "mL" ]
+           ] ;
+           fhir:denominator [
+             fhir:value [ fhir:v "1"^^xsd:decimal ] ;
+             fhir:unit [ fhir:v "tablet" ]
+           ]
+         ]
+       ] )
+     ]
+  ] [
+     a fhir:Ingredient ;
+     fhir:id [ fhir:v "CalciumCarbonate" ] ;
+     fhir:status [ fhir:v "active" ] ;
+     fhir:for ( [
+       fhir:l <#> ;
+       fhir:reference [ fhir:v "#" ]
+     ] ) ;
+     fhir:role [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.org.uk/fhir/ingredientType"^^xsd:anyURI ;
+           fhir:l <http://example.org.uk/fhir/ingredientType>
+         ] ;
+         fhir:code [ fhir:v "excipient" ]
+       ] )
+     ] ;
+     fhir:substance [
+       fhir:code [
+         fhir:concept [
+           fhir:coding ( [
+             fhir:system [
+               fhir:v "http://example.org.uk/fhir/substances"^^xsd:anyURI ;
+               fhir:l <http://example.org.uk/fhir/substances>
+             ] ;
+             fhir:code [ fhir:v "456789" ] ;
+             fhir:display [ fhir:v "Calcium Carbonate" ]
+           ] )
+         ]
+       ] ;
+       fhir:strength ( [
+         fhir:presentation [
+           a fhir:Ratio ;
+           fhir:numerator [
+             fhir:value [ fhir:v "3"^^xsd:decimal ] ;
+             fhir:unit [ fhir:v "ml" ] ;
+             fhir:system [
+               fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+               fhir:l <http://unitsofmeasure.org>
+             ] ;
+             fhir:code [ fhir:v "mL" ]
+           ] ;
+           fhir:denominator [
+             fhir:value [ fhir:v "1"^^xsd:decimal ] ;
+             fhir:unit [ fhir:v "tablet" ]
+           ]
+         ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://example.org.uk/fhir/product"^^xsd:anyURI ;
+       fhir:l <http://example.org.uk/fhir/product>
+     ] ;
+     fhir:value [ fhir:v "Equilidem25" ]
+  ] ) ; # 
+  fhir:combinedPharmaceuticalDoseForm [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.org.uk/fhir/dosefom"^^xsd:anyURI ;
+         fhir:l <http://example.org.uk/fhir/dosefom>
+       ] ;
+       fhir:code [ fhir:v "tablet" ]
+     ] )
+  ] ; # 
+  fhir:indication [ fhir:v "Prevention of venous thromboembolic events (VTE) in adult patients who have undergone elective hip or knee replacement surgery. Prevention of stroke and systemic embolism in adult patients with non-valvular atrial fibrillation (NVAF), with one or more risk factors, such as prior stroke or transient ischaemic attack (TIA); age ≥ 75 years; hypertension; diabetes mellitus; symptomatic heart failure (NYHA Class >= II). Treatment of deep vein thrombosis (DVT) and pulmonary embolism (PE), and prevention of recurrent DVT and PE in adults."] ; # 
+  fhir:legalStatusOfSupply [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.org.uk/fhir/legalstatusofsupply"^^xsd:anyURI ;
+         fhir:l <http://example.org.uk/fhir/legalstatusofsupply>
+       ] ;
+       fhir:code [ fhir:v "POM" ] ;
+       fhir:display [ fhir:v "Prescription only medicine" ]
+     ] )
+  ] ; # 
+  fhir:classification ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://www.whocc.no/atc/example"^^xsd:anyURI ;
+         fhir:l <http://www.whocc.no/atc/example>
+       ] ;
+       fhir:code [ fhir:v "B01A" ]
+     ] )
+  ] ) ; # 
+  fhir:name ( [
+     fhir:productName [ fhir:v "Equilidem 2.5 mg film-coated tablets" ]
+  ] ) ; # 
+  fhir:crossReference ( [
+     fhir:product [
+       fhir:reference [
+         fhir:l <http://hl7.org/fhir/MedicinalProductDefinition/genericEquilidonium> ;
+         fhir:reference [ fhir:v "MedicinalProductDefinition/genericEquilidonium" ]
+       ]
+     ]
+  ] ) ; # 
+  fhir:operation ( [
+     fhir:organization ( [
+       fhir:display [ fhir:v "EquiliDrugCo Processing Inc." ]
+     ] ) # licence holder uses RegulatedAuthorization
+  ] ) . # 
+
+<http://hl7.org/fhir/MedicinalProductDefinition/genericEquilidonium> a fhir:MedicinalProductDefinition .
+
+# -------------------------------------------------------------------------------------
+

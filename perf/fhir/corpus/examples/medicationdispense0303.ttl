@@ -1,0 +1,115 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/MedicationDispense/meddisp0303> a fhir:MedicationDispense ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "meddisp0303"] ; # 
+  fhir:contained ( [
+     a fhir:Medication ;
+     fhir:id [ fhir:v "med0310" ] ;
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://www.nlm.nih.gov/research/umls/rxnorm"^^xsd:anyURI ;
+           fhir:l <http://www.nlm.nih.gov/research/umls/rxnorm>
+         ] ;
+         fhir:code [ fhir:v "1049623" ] ;
+         fhir:display [ fhir:v "oxycodone hydrochloride 5 MG Oral Tablet [Roxicodone]" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:partOf ( [
+     fhir:l <http://hl7.org/fhir/Procedure/biopsy> ;
+     fhir:reference [ fhir:v "Procedure/biopsy" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "on-hold"] ; # 
+  fhir:notPerformedReason [
+     fhir:reference [
+       fhir:l <http://hl7.org/fhir/DetectedIssue/allergy> ;
+       fhir:reference [ fhir:v "DetectedIssue/allergy" ]
+     ]
+  ] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/fhir/CodeSystem/medicationdispense-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/fhir/CodeSystem/medicationdispense-category>
+       ] ;
+       fhir:code [ fhir:v "outpatient" ] ;
+       fhir:display [ fhir:v "Outpatient" ]
+     ] )
+  ] ) ; # 
+  fhir:medication [
+     fhir:reference [
+       fhir:l <#med0310> ;
+       fhir:reference [ fhir:v "#med0310" ]
+     ] # Linked to a RESOURCE Medication
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/pat1> ;
+     fhir:reference [ fhir:v "Patient/pat1" ] ;
+     fhir:display [ fhir:v "Donald Duck" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/f001> ;
+     fhir:reference [ fhir:v "Encounter/f001" ]
+  ] ; # 
+  fhir:performer ( [
+     fhir:actor [
+       fhir:l <http://hl7.org/fhir/Practitioner/f006> ;
+       fhir:reference [ fhir:v "Practitioner/f006" ]
+     ]
+  ] ) ; # 
+  fhir:authorizingPrescription ( [
+     fhir:l <http://hl7.org/fhir/MedicationRequest/medrx0310> ;
+     fhir:reference [ fhir:v "MedicationRequest/medrx0310" ]
+  ] ) ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+       ] ;
+       fhir:code [ fhir:v "EM" ] ;
+       fhir:display [ fhir:v "Emergency Supply" ]
+     ] )
+  ] ; # 
+  fhir:quantity [
+     fhir:value [ fhir:v "30"^^xsd:decimal ] ;
+     fhir:system [
+       fhir:v "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm"^^xsd:anyURI ;
+       fhir:l <http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm>
+     ] ;
+     fhir:code [ fhir:v "TAB" ]
+  ] ; # 
+  fhir:daysSupply [
+     fhir:value [ fhir:v "10"^^xsd:decimal ] ;
+     fhir:unit [ fhir:v "Day" ] ;
+     fhir:system [
+       fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+       fhir:l <http://unitsofmeasure.org>
+     ] ;
+     fhir:code [ fhir:v "d" ]
+  ] ; # 
+  fhir:whenPrepared [ fhir:v "2016-04-15T07:14:00+05:00"^^xsd:dateTime] ; # 
+  fhir:dosageInstruction [] . # 
+
+<http://hl7.org/fhir/Procedure/biopsy> a fhir:Procedure .
+
+<http://hl7.org/fhir/DetectedIssue/allergy> a fhir:DetectedIssue .
+
+<http://hl7.org/fhir/Patient/pat1> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/f001> a fhir:Encounter .
+
+<http://hl7.org/fhir/Practitioner/f006> a fhir:Practitioner .
+
+<http://hl7.org/fhir/MedicationRequest/medrx0310> a fhir:MedicationRequest .
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,70 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ValueSet/example-supplement> a fhir:ValueSet ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-supplement"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p class=\"res-header-id\">\n        <b>Generated Narrative: ValueSet example-supplement</b>\n      </p>\n      <a name=\"example-supplement\"> </a>\n      <a name=\"hcexample-supplement\"> </a>\n      <p>This ValueSet requires the Code system Supplement \n        <a href=\"codesystem-example-supplement.html\">Cholesterol Code Legacy Status</a>.\n      </p>\n      <ul>\n        <li>Include codes from\n          <a href=\"codesystem-example.html\">\n            <code>http://hl7.org/fhir/CodeSystem/example</code>\n          </a>\n          <span title=\"Version is not explicitly stated, which means it is fixed to the version provided in this specification\"> version ?6.0.0-ballot4</span> where legacy  = true\n        </li>\n      </ul>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/valueset-supplement"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/valueset-supplement>
+     ] ;
+     fhir:value [
+       a fhir:Canonical ;
+       fhir:v "http://hl7.org/fhir/CodeSystem/example-supplement"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/CodeSystem/example-supplement>
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "vocab"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ValueSet/example-supplement"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/example-supplement>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ACMECholCodesPlasmaSupplemented"] ; # 
+  fhir:title [ fhir:v "ACME Codes for Cholesterol: Plasma only (Supplemented)"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2018-11-01"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Terminology Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/Vocab" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "ACME Codes for Cholesterol: Plasma only - demonstrating the use of a supplement defined in a CodeSystem"] ; # 
+  fhir:compose [
+     fhir:include ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/CodeSystem/example"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/CodeSystem/example>
+       ] ;
+       fhir:filter ( [
+         fhir:property [ fhir:v "legacy" ] ;
+         fhir:op [ fhir:v "=" ] ;
+         fhir:value [ fhir:v "true" ]
+       ] )
+     ] ) ;
+     fhir:property ( [ fhir:v "status" ] )
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

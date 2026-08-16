@@ -1,0 +1,123 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Ingredient/example> a fhir:Ingredient ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:status [ fhir:v "active"] ; # note this doesn't indicate an "active ingredient" as opposed to an excipient (for which see ingredient.role)
+  fhir:role [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://ema.europa.eu/example/ingredientRole"^^xsd:anyURI ;
+         fhir:l <http://ema.europa.eu/example/ingredientRole>
+       ] ;
+       fhir:code [ fhir:v "ActiveBase" ]
+     ] )
+  ] ; # 
+  fhir:manufacturer ( [
+     fhir:manufacturer [
+       fhir:l <http://hl7.org/fhir/Organization/example> ;
+       fhir:reference [ fhir:v "Organization/example" ]
+     ]
+  ] ) ; # 
+  fhir:substance [
+     fhir:code [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://ema.europa.eu/example/substance"^^xsd:anyURI ;
+             fhir:l <http://ema.europa.eu/example/substance>
+           ] ;
+           fhir:code [ fhir:v "EQUIXABAN" ]
+         ] )
+       ]
+     ] ;
+     fhir:strength ( [
+       fhir:presentation [
+         a fhir:Ratio ;
+         fhir:numerator [
+           fhir:value [ fhir:v "50"^^xsd:decimal ] ;
+           fhir:unit [ fhir:v "mg" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "mg" ]
+         ] ;
+         fhir:denominator [
+           fhir:value [ fhir:v "1"^^xsd:decimal ] ;
+           fhir:unit [ fhir:v "tablet" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "{tablet}" ]
+         ]
+       ] ; # a single strength is commonly expressed in two ways: \n				 presentation - per item (e.g. per tablet), \n				 and concentration - per unit of measure (usually with a unitary demoninator), these are not different strengths - and have the same real value - but are different ways of expressing the same single strength, presentation is meant for humans\/consumers, concentration is meant for calculations\/experts
+       fhir:concentration [
+         a fhir:Ratio ;
+         fhir:numerator [
+           fhir:value [ fhir:v 0.5 ] ;
+           fhir:unit [ fhir:v "mg" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "mg" ]
+         ] ; # 5mg\/1mg (which means - because the presentation is 50mg\/tablet - it must be a 10mg tablet)
+         fhir:denominator [
+           fhir:value [ fhir:v "1"^^xsd:decimal ] ; # since this is for calculations, this is normally \"1\", a unitary ratio
+           fhir:unit [ fhir:v "mg" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "mg" ]
+         ]
+       ] ;
+       fhir:referenceStrength ( [
+         fhir:substance [
+           fhir:concept [
+             fhir:coding ( [
+               fhir:system [
+                 fhir:v "http://ema.europa.eu/example/substance"^^xsd:anyURI ;
+                 fhir:l <http://ema.europa.eu/example/substance>
+               ] ;
+               fhir:code [ fhir:v "EQUIXABAN-SULPHATE" ]
+             ] )
+           ]
+         ] ;
+         fhir:strength [
+           a fhir:Ratio ;
+           fhir:numerator [
+             fhir:value [ fhir:v 0.503 ] ;
+             fhir:unit [ fhir:v "mg" ] ;
+             fhir:system [
+               fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+               fhir:l <http://unitsofmeasure.org>
+             ] ;
+             fhir:code [ fhir:v "mg" ]
+           ] ;
+           fhir:denominator [
+             fhir:value [ fhir:v "1"^^xsd:decimal ] ;
+             fhir:unit [ fhir:v "mg" ] ;
+             fhir:system [
+               fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+               fhir:l <http://unitsofmeasure.org>
+             ] ;
+             fhir:code [ fhir:v "mg" ]
+           ]
+         ]
+       ] ) # A reference strength is a different strength value for the same substance, \n				 expressed in terms of a related but different substance.\n				 This other substance is usually another chemical form of the same thing e.g. the \"salt\" form of the active igredient, \n			     for example a chloride or sulfate. The salt may be the form of the substance molecule that is \n			     actually present, even though the strength is usually expressed in terms of only the active \"base\" \n			     part of the molecule.\n				 A tablet of morphine sulfate may acually have a stated active ingredient of just morphine, \n				 and may express the amount (strength) of the active ingredient as \n				 the mass of morphine - ignoring the mass of the sulfate group. \n				 Reference strength allows for additionally expressing the amount accurately in terms of the entire molecule.
+     ] )
+  ] . # 
+
+<http://hl7.org/fhir/Organization/example> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

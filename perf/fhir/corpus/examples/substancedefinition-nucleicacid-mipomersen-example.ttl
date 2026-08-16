@@ -1,0 +1,254 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# Example transcribed/adapted from ISO 11238 Implementation Guide §D.5.2.1
+#     (Table D.1 — Mipomersen sodium). Demonstrates the new SubstanceDefinition
+#     nucleic-acid backbones added for FHIR-57660. Sequence chemistry is the
+#     published Mipomersen 20-mer antisense oligonucleotide; identifiers are
+#     illustrative.
+
+<http://hl7.org/fhir/SubstanceDefinition/mipomersen> a fhir:SubstanceDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "mipomersen"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://example.europa.eu/fhir/SMSId"^^xsd:anyURI ;
+       fhir:l <http://example.europa.eu/fhir/SMSId>
+     ] ;
+     fhir:value [ fhir:v "MIPO78654S" ]
+  ] ) ; # 
+  fhir:status [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/publication-status"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/publication-status>
+       ] ;
+       fhir:code [ fhir:v "active" ]
+     ] )
+  ] ; # 
+  fhir:classification ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.europa.eu/fhir/SubstanceType"^^xsd:anyURI ;
+         fhir:l <http://example.europa.eu/fhir/SubstanceType>
+       ] ;
+       fhir:code [ fhir:v "nucleic-acid" ] ;
+       fhir:display [ fhir:v "Nucleic Acid" ]
+     ] )
+  ] ) ; # 
+  fhir:domain [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.europa.eu/fhir/Domain"^^xsd:anyURI ;
+         fhir:l <http://example.europa.eu/fhir/Domain>
+       ] ;
+       fhir:code [ fhir:v "human" ] ;
+       fhir:display [ fhir:v "Human use" ]
+     ] )
+  ] ; # 
+  fhir:description [ fhir:v "Mipomersen sodium — a synthetic second-generation 2'-methoxyethyl antisense oligonucleotide that inhibits the molecular target apolipoprotein B-100 (APOB-100). 20-mer phosphorothioate-linked sequence with 2'-MOE wing chemistry."] ; # 
+  fhir:code ( [
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://example.europa.eu/fhir/Substance"^^xsd:anyURI ;
+           fhir:l <http://example.europa.eu/fhir/Substance>
+         ] ;
+         fhir:code [ fhir:v "MIPO78654S" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:name ( [
+     fhir:name [ fhir:v "Mipomersen Sodium" ] ;
+     fhir:preferred [ fhir:v true ] ;
+     fhir:language ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:ietf:bcp:47"^^xsd:anyURI ;
+           fhir:l <urn:ietf:bcp:47>
+         ] ;
+         fhir:code [ fhir:v "en" ] ;
+         fhir:display [ fhir:v "English" ]
+       ] )
+     ] ) ;
+     fhir:official ( [
+       fhir:authority [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/substance-name-authority"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/substance-name-authority>
+           ] ;
+           fhir:code [ fhir:v "INN" ] ;
+           fhir:display [ fhir:v "INN" ]
+         ] )
+       ] ;
+       fhir:status [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/publication-status"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/publication-status>
+           ] ;
+           fhir:code [ fhir:v "active" ] ;
+           fhir:display [ fhir:v "Active" ]
+         ] )
+       ]
+     ] )
+  ] ) ; # 
+  fhir:nucleicAcid [
+     fhir:sequenceType [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/substance-sequence-type"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/substance-sequence-type>
+         ] ;
+         fhir:code [ fhir:v "complete" ] ;
+         fhir:display [ fhir:v "Complete" ]
+       ] )
+     ] ;
+     fhir:numberOfSubunits [ fhir:v 1 ] ;
+     fhir:oligoNucleotideType [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/oligo-nucleotide-type"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/oligo-nucleotide-type>
+         ] ;
+         fhir:code [ fhir:v "antisense" ] ;
+         fhir:display [ fhir:v "Antisense oligonucleotide" ]
+       ] )
+     ] ;
+     fhir:subunit ( [
+       fhir:subunit [ fhir:v 1 ] ;
+       fhir:sequence [ fhir:v "GCCUCAGTCTGCTTCGCACC" ] ;
+       fhir:length [ fhir:v 20 ] ;
+       fhir:fivePrime [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/nucleotide-terminus"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/nucleotide-terminus>
+           ] ;
+           fhir:code [ fhir:v "G" ] ;
+           fhir:display [ fhir:v "Guanosine" ]
+         ] )
+       ] ;
+       fhir:threePrime [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/nucleotide-terminus"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/nucleotide-terminus>
+           ] ;
+           fhir:code [ fhir:v "C" ] ;
+           fhir:display [ fhir:v "Cytidine" ]
+         ] )
+       ] ;
+       fhir:linkage ( [
+         fhir:connectivity [ ] ;
+         fhir:substance [
+           fhir:concept [
+             fhir:coding ( [
+               fhir:system [
+                 fhir:v "http://example.europa.eu/fhir/LinkageSubstance"^^xsd:anyURI ;
+                 fhir:l <http://example.europa.eu/fhir/LinkageSubstance>
+               ] ;
+               fhir:code [ fhir:v "phosphorothioate" ] ;
+               fhir:display [ fhir:v "Phosphorothioate linkage" ]
+             ] )
+           ]
+         ] ;
+         fhir:residueSite [ fhir:v "1-19" ]
+       ] ) ;
+       fhir:sugar ( [
+         fhir:substance [
+           fhir:concept [
+             fhir:coding ( [
+               fhir:system [
+                 fhir:v "http://example.europa.eu/fhir/SugarSubstance"^^xsd:anyURI ;
+                 fhir:l <http://example.europa.eu/fhir/SugarSubstance>
+               ] ;
+               fhir:code [ fhir:v "2-MOE" ] ;
+               fhir:display [ fhir:v "2'-O-(2-methoxyethyl) ribose" ]
+             ] )
+           ]
+         ] ;
+         fhir:residueSite [ fhir:v "1-5,16-20" ]
+       ] [
+         fhir:substance [
+           fhir:concept [
+             fhir:coding ( [
+               fhir:system [
+                 fhir:v "http://example.europa.eu/fhir/SugarSubstance"^^xsd:anyURI ;
+                 fhir:l <http://example.europa.eu/fhir/SugarSubstance>
+               ] ;
+               fhir:code [ fhir:v "deoxyribose" ] ;
+               fhir:display [ fhir:v "2'-deoxyribose" ]
+             ] )
+           ]
+         ] ;
+         fhir:residueSite [ fhir:v "6-15" ]
+       ] )
+     ] ) ;
+     fhir:gene ( [
+       fhir:sequenceOrigin [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/gene-sequence-origin"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/gene-sequence-origin>
+           ] ;
+           fhir:code [ fhir:v "human" ] ;
+           fhir:display [ fhir:v "Human" ]
+         ] )
+       ] ;
+       fhir:gene [
+         fhir:concept [
+           fhir:coding ( [
+             fhir:system [
+               fhir:v "http://www.genenames.org"^^xsd:anyURI ;
+               fhir:l <http://www.genenames.org>
+             ] ;
+             fhir:code [ fhir:v "APOB" ] ;
+             fhir:display [ fhir:v "apolipoprotein B" ]
+           ] )
+         ]
+       ]
+     ] )
+  ] ; # 
+  fhir:relationship ( [
+     fhir:substanceDefinition [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://www.uniprot.org"^^xsd:anyURI ;
+           fhir:l <https://www.uniprot.org>
+         ] ;
+         fhir:code [ fhir:v "P04114" ] ;
+         fhir:display [ fhir:v "apolipoprotein B-100" ]
+       ] )
+     ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/substance-relationship-type"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/substance-relationship-type>
+         ] ;
+         fhir:code [ fhir:v "TherapeuticTarget" ] ;
+         fhir:display [ fhir:v "Therapeutic target" ]
+       ] )
+     ] ;
+     fhir:interaction [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/substance-interaction-type"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/substance-interaction-type>
+         ] ;
+         fhir:code [ fhir:v "inhibition" ] ;
+         fhir:display [ fhir:v "Inhibition" ]
+       ] )
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

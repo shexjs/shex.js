@@ -1,0 +1,70 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/MedicationRequest/medicationrequest0349> a fhir:MedicationRequest ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "medicationrequest0349"] ; # 
+  fhir:contained ( [
+     a fhir:Medication ;
+     fhir:id [ fhir:v "med03302" ] ;
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://www.nlm.nih.gov/research/umls/rxnorm"^^xsd:anyURI ;
+           fhir:l <http://www.nlm.nih.gov/research/umls/rxnorm>
+         ] ;
+         fhir:code [ fhir:v "74169" ] ;
+         fhir:display [ fhir:v "piperacillin / tazobactam" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:system [
+       fhir:v "http://www.bmc.nl/portal/prescriptions"^^xsd:anyURI ;
+       fhir:l <http://www.bmc.nl/portal/prescriptions>
+     ] ;
+     fhir:value [ fhir:v "12345678" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:doNotPerform [ fhir:v true] ; # 
+  fhir:medication [
+     fhir:reference [
+       fhir:l <#med03302> ;
+       fhir:reference [ fhir:v "#med03302" ] ;
+       fhir:display [ fhir:v "Piperacillin/Tazobactam" ]
+     ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/pat1> ;
+     fhir:reference [ fhir:v "Patient/pat1" ] ; # Linked to the resource patient who needs the medication
+     fhir:display [ fhir:v "Donald Duck" ]
+  ] ; # 
+  fhir:authoredOn [ fhir:v "2015-01-15"^^xsd:date] ; # 
+  fhir:requester [
+     fhir:l <http://hl7.org/fhir/Practitioner/f007> ;
+     fhir:reference [ fhir:v "Practitioner/f007" ] ;
+     fhir:display [ fhir:v "Patrick Pump" ]
+  ] ; # 
+  fhir:reason ( [
+     fhir:reference [
+       fhir:l <http://hl7.org/fhir/AllergyIntolerance/medication> ;
+       fhir:reference [ fhir:v "AllergyIntolerance/medication" ] ;
+       fhir:display [ fhir:v "Allergy to penicillins (e.g., amoxicillin)" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/pat1> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/f007> a fhir:Practitioner .
+
+<http://hl7.org/fhir/AllergyIntolerance/medication> a fhir:AllergyIntolerance .
+
+# -------------------------------------------------------------------------------------
+

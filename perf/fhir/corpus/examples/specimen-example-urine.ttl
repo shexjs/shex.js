@@ -1,0 +1,114 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Specimen/vma-urine> a fhir:Specimen ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "vma-urine"] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "ACSN" ] ;
+         fhir:display [ fhir:v "Accession ID" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://lab.acme.org/specimens/2015"^^xsd:anyURI ;
+       fhir:l <http://lab.acme.org/specimens/2015>
+     ] ;
+     fhir:value [ fhir:v "X352356" ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "ACSN" ] ;
+         fhir:display [ fhir:v "Accession ID" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "http://lab.acme.org/specimens/2015"^^xsd:anyURI ;
+       fhir:l <http://lab.acme.org/specimens/2015>
+     ] ;
+     fhir:value [ fhir:v "X352356" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "available"] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v2-0487"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v2-0487>
+       ] ;
+       fhir:code [ fhir:v "RANDU" ] ;
+       fhir:display [ fhir:v "Urine, Random" ]
+     ] ) # Type is a loosely defined field because there is such a lot of variation in how it is used.\n   The principal variation is how much information that could be represented elsewhere is also\n   represented here. For instance, here's some possible types:\n     lithium heparin plasma   (+ .container.additive) (e.g. SNOMED CT 446272009)\n     transfusion bag of blood (+ container.type)\n     Peritoneal lavage        (+ collection.bodySite)\n   If the type includes other fields, it would be normal not to populate the other fields\n\n   Note that this practice is so widespread that it's pointless to try and stop it
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:receivedTime [ fhir:v "2015-08-18T07:03:00Z"^^xsd:dateTime] ; # 
+  fhir:collection [
+     fhir:collector [
+       fhir:l <http://hl7.org/fhir/Practitioner/f202> ;
+       fhir:reference [ fhir:v "Practitioner/f202" ] # in practice, collecter is almost always recorded
+     ] ;
+     fhir:collected [
+       a fhir:DateTime ;
+       fhir:v "2015-08-18T07:03:00Z"^^xsd:dateTime
+     ] # the time of collection is usually required. Usually a point in time, but can be a period \n      (collectedPeriod) if it's a timed collection (e.g. a 24 hour urine)
+  ] ; # method is usually implied by type
+  fhir:processing ( [
+     fhir:description [ fhir:v "Acidify to pH < 3.0 with 6 N HCl." ] ;
+     fhir:method [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0373"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0373>
+         ] ;
+         fhir:code [ fhir:v "ACID" ]
+       ] )
+     ] ;
+     fhir:additive ( [
+       fhir:type [
+         fhir:concept [
+           fhir:text [ fhir:v "6 N HCl" ]
+         ]
+       ]
+     ] ) ;
+     fhir:time [
+       a fhir:DateTime ;
+       fhir:v "2015-08-18T08:10:00Z"^^xsd:dateTime
+     ]
+  ] ) ; # 
+  fhir:container ( [
+     fhir:device [
+       fhir:reference [
+         fhir:l <http://hl7.org/fhir/Device/device-example-specimen-container-polycup> ;
+         fhir:reference [ fhir:v "Device/device-example-specimen-container-polycup" ]
+       ]
+     ] ;
+     fhir:specimenQuantity [
+       fhir:value [ fhir:v "10"^^xsd:decimal ] ;
+       fhir:unit [ fhir:v "mls" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/f202> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Device/device-example-specimen-container-polycup> a fhir:Device .
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,136 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/List/f201> a fhir:List ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f201"] ; # 
+  fhir:contained ( [
+     a fhir:FamilyMemberHistory ;
+     fhir:id [ fhir:v "fmh-1" ] ;
+     fhir:status [ fhir:v "completed" ] ; # ROB's Mother has a hernia
+     fhir:patient [
+       fhir:l <http://hl7.org/fhir/Patient/f201> ;
+       fhir:reference [ fhir:v "Patient/f201" ] ;
+       fhir:display [ fhir:v "Roel" ]
+     ] ;
+     fhir:relationship [
+       a sct:72705000 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "72705000" ] ;
+         fhir:display [ fhir:v "Mother" ]
+       ] )
+     ] ;
+     fhir:deceased [
+       a fhir:Boolean ;
+       fhir:v false
+     ] ;
+     fhir:condition ( [
+       fhir:code [
+         a sct:39839004 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "39839004" ] ;
+           fhir:display [ fhir:v "Diaphragmatic hernia" ]
+         ] )
+       ]
+     ] )
+  ] [
+     a fhir:FamilyMemberHistory ;
+     fhir:id [ fhir:v "fmh-2" ] ;
+     fhir:status [ fhir:v "completed" ] ; # ROB's uncle from mother's side died from cancer
+     fhir:patient [
+       fhir:l <http://hl7.org/fhir/Patient/f201> ;
+       fhir:reference [ fhir:v "Patient/f201" ] ;
+       fhir:display [ fhir:v "Roel" ]
+     ] ;
+     fhir:relationship [
+       a sct:38048003 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "38048003" ] ;
+         fhir:display [ fhir:v "Uncle" ]
+       ] )
+     ] ;
+     fhir:deceased [
+       a fhir:Boolean ;
+       fhir:v true
+     ] ;
+     fhir:condition ( [
+       fhir:code [
+         a sct:115665000 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "115665000" ] ;
+           fhir:display [ fhir:v "Atopy" ]
+         ] )
+       ] ;
+       fhir:outcome [
+         a sct:419099009 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "419099009" ] ;
+           fhir:display [ fhir:v "Died" ]
+         ] )
+       ]
+     ] )
+  ] ) ; # 
+  fhir:status [ fhir:v "current"] ; # 
+  fhir:mode [ fhir:v "snapshot"] ; # 
+  fhir:code [
+     a loinc:8670-2 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "8670-2" ] ;
+       fhir:display [ fhir:v "History of family member diseases" ]
+     ] )
+  ] ; # 
+  fhir:subject ( [
+     fhir:l <http://hl7.org/fhir/Patient/f201> ;
+     fhir:reference [ fhir:v "Patient/f201" ] ;
+     fhir:display [ fhir:v "Roel" ]
+  ] ) ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "Both parents, both brothers and both children (twin) are still alive." ]
+  ] ) ; # 
+  fhir:entry ( [
+     fhir:item [
+       fhir:l <#fmh-1> ;
+       fhir:reference [ fhir:v "#fmh-1" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:l <#fmh-2> ;
+       fhir:reference [ fhir:v "#fmh-2" ]
+     ]
+  ] ) . # Other relatives
+
+<http://hl7.org/fhir/Patient/f201> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

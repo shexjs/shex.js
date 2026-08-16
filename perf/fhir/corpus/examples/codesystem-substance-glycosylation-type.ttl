@@ -1,0 +1,132 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/substance-glycosylation-type> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "substance-glycosylation-type"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem substance-glycosylation-type</b></p><a name=\"substance-glycosylation-type\"> </a><a name=\"hcsubstance-glycosylation-type\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/substance-glycosylation-type</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">human<a name=\"substance-glycosylation-type-human\"> </a></td><td>Human</td><td>Glycosylation pattern from human cell lines (e.g. HEK293, PER.C6). No non-human glycan epitopes.</td></tr><tr><td style=\"white-space:nowrap\">mammalian<a name=\"substance-glycosylation-type-mammalian\"> </a></td><td>Mammalian (non-human)</td><td>Glycosylation pattern from non-human mammalian cell lines such as CHO, BHK or NS0. The most common pattern for therapeutic monoclonal antibodies.</td></tr><tr><td style=\"white-space:nowrap\">old-world-monkey<a name=\"substance-glycosylation-type-old-world-monkey\"> </a></td><td>Old World Monkey</td><td>Glycosylation pattern from old world monkey cell lines such as Vero or COS. Often used for vaccine production.</td></tr><tr><td style=\"white-space:nowrap\">mouse<a name=\"substance-glycosylation-type-mouse\"> </a></td><td>Murine</td><td>Glycosylation pattern from murine cell lines such as NS0 or SP2/0 hybridoma. Carries the alpha-1,3-galactose epitope which can be immunogenic in humans.</td></tr><tr><td style=\"white-space:nowrap\">mammalian-afucosylated<a name=\"substance-glycosylation-type-mammalian-afucosylated\"> </a></td><td>Mammalian, afucosylated</td><td>Glycosylation pattern from engineered mammalian cell lines lacking fucosyltransferase (e.g. Potelligent), producing antibodies with enhanced ADCC activity.</td></tr><tr><td style=\"white-space:nowrap\">avian<a name=\"substance-glycosylation-type-avian\"> </a></td><td>Avian</td><td>Glycosylation pattern from egg-derived or avian cell line production. Common for influenza vaccines.</td></tr><tr><td style=\"white-space:nowrap\">insect<a name=\"substance-glycosylation-type-insect\"> </a></td><td>Insect cell</td><td>Glycosylation pattern from insect cell expression systems such as baculovirus/Sf9. Used for some recombinant proteins and vaccines.</td></tr><tr><td style=\"white-space:nowrap\">yeast<a name=\"substance-glycosylation-type-yeast\"> </a></td><td>Yeast</td><td>Native yeast glycosylation pattern (e.g. Saccharomyces cerevisiae). Examples include insulin and hepatitis B surface antigen.</td></tr><tr><td style=\"white-space:nowrap\">yeast-humanised<a name=\"substance-glycosylation-type-yeast-humanised\"> </a></td><td>Yeast, humanised</td><td>Glycosylation pattern from glyco-engineered yeast (e.g. Pichia pastoris GlycoFi systems) that produces human-like glycan structures.</td></tr><tr><td style=\"white-space:nowrap\">plant<a name=\"substance-glycosylation-type-plant\"> </a></td><td>Plant</td><td>Glycosylation pattern from plant or plant cell culture production (e.g. taliglucerase alfa from carrot cells).</td></tr><tr><td style=\"white-space:nowrap\">bacterial<a name=\"substance-glycosylation-type-bacterial\"> </a></td><td>Bacterial</td><td>Bacterial expression (typically E. coli). Generally unglycosylated; included for completeness when the substance has been characterised as such.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "brr"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/substance-glycosylation-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/substance-glycosylation-type>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "SubstanceGlycosylationTypeExample"] ; # 
+  fhir:title [ fhir:v "Substance Glycosylation Type"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2026-06-30"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "A categorical pattern of glycosylation for a substance, typically derived from the production cell line or source organism. Applicable to proteins and structurally diverse substances (notably vaccines) per ISO 11238."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/substance-glycosylation-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/substance-glycosylation-type>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "human" ] ;
+     fhir:display [ fhir:v "Human" ] ;
+     fhir:definition [ fhir:v "Glycosylation pattern from human cell lines (e.g. HEK293, PER.C6). No non-human glycan epitopes." ]
+  ] [
+     fhir:code [ fhir:v "mammalian" ] ;
+     fhir:display [ fhir:v "Mammalian (non-human)" ] ;
+     fhir:definition [ fhir:v "Glycosylation pattern from non-human mammalian cell lines such as CHO, BHK or NS0. The most common pattern for therapeutic monoclonal antibodies." ]
+  ] [
+     fhir:code [ fhir:v "old-world-monkey" ] ;
+     fhir:display [ fhir:v "Old World Monkey" ] ;
+     fhir:definition [ fhir:v "Glycosylation pattern from old world monkey cell lines such as Vero or COS. Often used for vaccine production." ]
+  ] [
+     fhir:code [ fhir:v "mouse" ] ;
+     fhir:display [ fhir:v "Murine" ] ;
+     fhir:definition [ fhir:v "Glycosylation pattern from murine cell lines such as NS0 or SP2/0 hybridoma. Carries the alpha-1,3-galactose epitope which can be immunogenic in humans." ]
+  ] [
+     fhir:code [ fhir:v "mammalian-afucosylated" ] ;
+     fhir:display [ fhir:v "Mammalian, afucosylated" ] ;
+     fhir:definition [ fhir:v "Glycosylation pattern from engineered mammalian cell lines lacking fucosyltransferase (e.g. Potelligent), producing antibodies with enhanced ADCC activity." ]
+  ] [
+     fhir:code [ fhir:v "avian" ] ;
+     fhir:display [ fhir:v "Avian" ] ;
+     fhir:definition [ fhir:v "Glycosylation pattern from egg-derived or avian cell line production. Common for influenza vaccines." ]
+  ] [
+     fhir:code [ fhir:v "insect" ] ;
+     fhir:display [ fhir:v "Insect cell" ] ;
+     fhir:definition [ fhir:v "Glycosylation pattern from insect cell expression systems such as baculovirus/Sf9. Used for some recombinant proteins and vaccines." ]
+  ] [
+     fhir:code [ fhir:v "yeast" ] ;
+     fhir:display [ fhir:v "Yeast" ] ;
+     fhir:definition [ fhir:v "Native yeast glycosylation pattern (e.g. Saccharomyces cerevisiae). Examples include insulin and hepatitis B surface antigen." ]
+  ] [
+     fhir:code [ fhir:v "yeast-humanised" ] ;
+     fhir:display [ fhir:v "Yeast, humanised" ] ;
+     fhir:definition [ fhir:v "Glycosylation pattern from glyco-engineered yeast (e.g. Pichia pastoris GlycoFi systems) that produces human-like glycan structures." ]
+  ] [
+     fhir:code [ fhir:v "plant" ] ;
+     fhir:display [ fhir:v "Plant" ] ;
+     fhir:definition [ fhir:v "Glycosylation pattern from plant or plant cell culture production (e.g. taliglucerase alfa from carrot cells)." ]
+  ] [
+     fhir:code [ fhir:v "bacterial" ] ;
+     fhir:display [ fhir:v "Bacterial" ] ;
+     fhir:definition [ fhir:v "Bacterial expression (typically E. coli). Generally unglycosylated; included for completeness when the substance has been characterised as such." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

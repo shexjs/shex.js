@@ -1,0 +1,45 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/MedicinalProductDefinition/product-with-contained-package-and-ingredient> a fhir:MedicinalProductDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "product-with-contained-package-and-ingredient"] ; # 
+  fhir:name ( [
+     fhir:productName [ fhir:v "Exampleocillin" ]
+  ] ) . # Doesn't yet work in main build contained>
+#        <PackagedProductDefinition>
+#            <id value="containedPPD"/>
+#            <packageFor>
+#                <reference value="#"/>
+#            </packageFor>
+#            <description value="A full text description with markup can go here"/>
+#        </PackagedProductDefinition>
+#    </contained, Doesn't yet work in main build <contained>
+#        <Ingredient>
+#            <id value="containedIng"/>
+#            <status value="active"/>
+#            <for>
+#                <reference value="#"/>
+#            </for>
+#            <role>
+#                <coding>
+#                    <code value="component"/>
+#                </coding>
+#            </role>
+#            <substance>
+#                <code>
+#                    <reference>
+#                        <reference value="SubstanceDefinition/componentSubstance"/>
+#                    </reference>
+#                </code>
+#            </substance>
+#        </Ingredient>
+#    </contained, rest of the product goes here
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,174 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/RequestOrchestration/kdn5-example> a fhir:RequestOrchestration ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "kdn5-example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Administer gemcitabine and carboplatin.</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:contained ( [
+     a fhir:MedicationRequest ;
+     fhir:id [ fhir:v "1111" ] ;
+     fhir:status [ fhir:v "unknown" ] ;
+     fhir:intent [ fhir:v "proposal" ] ;
+     fhir:medication [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://www.nlm.nih.gov/research/umls/rxnorm"^^xsd:anyURI ;
+             fhir:l <http://www.nlm.nih.gov/research/umls/rxnorm>
+           ] ;
+           fhir:code [ fhir:v "12574" ] ;
+           fhir:display [ fhir:v "gemcitabine" ]
+         ] ) ;
+         fhir:text [ fhir:v "gemcitabine" ]
+       ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/example> ;
+       fhir:reference [ fhir:v "Patient/example" ]
+     ]
+  ] [
+     a fhir:MedicationRequest ;
+     fhir:id [ fhir:v "2222" ] ;
+     fhir:status [ fhir:v "unknown" ] ;
+     fhir:intent [ fhir:v "proposal" ] ;
+     fhir:medication [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://www.nlm.nih.gov/research/umls/rxnorm"^^xsd:anyURI ;
+             fhir:l <http://www.nlm.nih.gov/research/umls/rxnorm>
+           ] ;
+           fhir:code [ fhir:v "40048" ] ;
+           fhir:display [ fhir:v "Carboplatin" ]
+         ] ) ;
+         fhir:text [ fhir:v "CARBOplatin" ]
+       ]
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/example> ;
+       fhir:reference [ fhir:v "Patient/example" ]
+     ]
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:value [ fhir:v "requestorchestration-kdn5" ]
+  ] ) ; # 
+  fhir:instantiatesCanonical ( [
+     fhir:v "http://example.org/fhir/PlanDefinition/KDN5"^^xsd:anyURI ;
+     fhir:l <http://example.org/fhir/PlanDefinition/KDN5>
+  ] ) ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:intent [ fhir:v "plan"] ; # 
+  fhir:priority [ fhir:v "routine"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/example> ;
+     fhir:reference [ fhir:v "Encounter/example" ]
+  ] ; # 
+  fhir:authoredOn [ fhir:v "2017-03-06T17:31:00Z"^^xsd:dateTime] ; # 
+  fhir:author [
+     fhir:l <http://hl7.org/fhir/Practitioner/1> ;
+     fhir:reference [ fhir:v "Practitioner/1" ]
+  ] ; # 
+  fhir:action ( [
+     fhir:selectionBehavior [ fhir:v "exactly-one" ] ; # list of regimen options. in this case only one
+     fhir:action ( [
+       fhir:selectionBehavior [ fhir:v "all" ] ; # list of regimen parts. in this case only one
+       fhir:action ( [
+         fhir:groupingBehavior [ fhir:v "sentence-group" ] ; # list of cycle definitions. in this case only one
+         fhir:selectionBehavior [ fhir:v "exactly-one" ] ;
+         fhir:action ( [
+           fhir:id [ fhir:v "cycle-definition-1" ] ;
+           fhir:textEquivalent [ fhir:v "21-day cycle for 6 cycles" ] ;
+           fhir:timing [
+             a fhir:Timing ;
+             fhir:repeat [
+               fhir:count [ fhir:v "6"^^xsd:positiveInteger ] ;
+               fhir:duration [ fhir:v "21"^^xsd:decimal ] ;
+               fhir:durationUnit [ fhir:v "d" ]
+             ]
+           ] ;
+           fhir:action ( [
+             fhir:id [ fhir:v "action-1" ] ;
+             fhir:extension ( [
+               fhir:url [
+                 fhir:v "http://hl7.org/fhir/StructureDefinition/timing-daysOfCycle"^^xsd:anyURI ;
+                 fhir:l <http://hl7.org/fhir/StructureDefinition/timing-daysOfCycle>
+               ] ;
+               fhir:extension ( [
+                 fhir:url [
+                   fhir:v "day"^^xsd:anyURI ;
+                   fhir:l fhir:day
+                 ] ;
+                 fhir:value [
+                   a fhir:Integer ;
+                   fhir:v 1
+                 ]
+               ] [
+                 fhir:url [
+                   fhir:v "day"^^xsd:anyURI ;
+                   fhir:l fhir:day
+                 ] ;
+                 fhir:value [
+                   a fhir:Integer ;
+                   fhir:v 8
+                 ]
+               ] )
+             ] ) ;
+             fhir:textEquivalent [ fhir:v "Gemcitabine 1250 mg/m² IV over 30 minutes on days 1 and 8" ] ;
+             fhir:resource [
+               fhir:l <#1111> ;
+               fhir:reference [ fhir:v "#1111" ]
+             ]
+           ] [
+             fhir:id [ fhir:v "action-2" ] ;
+             fhir:extension ( [
+               fhir:url [
+                 fhir:v "http://hl7.org/fhir/StructureDefinition/timing-daysOfCycle"^^xsd:anyURI ;
+                 fhir:l <http://hl7.org/fhir/StructureDefinition/timing-daysOfCycle>
+               ] ;
+               fhir:extension ( [
+                 fhir:url [
+                   fhir:v "day"^^xsd:anyURI ;
+                   fhir:l fhir:day
+                 ] ;
+                 fhir:value [
+                   a fhir:Integer ;
+                   fhir:v 1
+                 ]
+               ] )
+             ] ) ;
+             fhir:textEquivalent [ fhir:v "CARBOplatin AUC 5 IV over 30 minutes on Day 1" ] ;
+             fhir:relatedAction ( [
+               fhir:targetId [ fhir:v "action-1" ] ;
+               fhir:relationship [ fhir:v "concurrent-with-start" ]
+             ] ) ;
+             fhir:resource [
+               fhir:l <#2222> ;
+               fhir:reference [ fhir:v "#2222" ]
+             ]
+           ] ) # list of regimen entry references for this regimen part, references would duplicated in each cycle definition option\n          (see codesystem-action-grouping-behavior.html#sentence-group)
+         ] ) # end of regimen entries
+       ] ) # end of cycle definitions
+     ] ) # end of regimen parts
+  ] ) . # end of regimen options
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/example> a fhir:Encounter .
+
+<http://hl7.org/fhir/Practitioner/1> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

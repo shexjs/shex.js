@@ -606,9 +606,14 @@ describe('shex-util:', function () {
   })
 */
   describe('utility function errsToSimple', function () {
-    it (`should parse validation failure`, function () {
-      const simple = ShExUtil.errsToSimple(Error1)
-      expect(simple.join('')).to.include('Error validating "1999-12-31T01:23:45"^^http://www.w3.org/2001/XMLSchema#dateTime')
+    it (`should say what didn't satisfy what`, function () {
+      const said = ShExUtil.errsToSimple(Error1, {xsd: "http://www.w3.org/2001/XMLSchema#"}).join("\n")
+      // the value that failed, and the constraint it failed, as ShExC
+      expect(said).to.include('"1999-12-31T01:23:45"^^<http://www.w3.org/2001/XMLSchema#dateTime> doesn\'t satisfy')
+      expect(said).to.include('<http://hl7.org/fhir/birthdate> xsd:date?')
+      expect(said).to.include('mismatched datatype')
+      // ...and no ShExJ anywhere in it
+      expect(said, "no JSON in a sentence").to.not.include('{"type"')
     })
   })
 })

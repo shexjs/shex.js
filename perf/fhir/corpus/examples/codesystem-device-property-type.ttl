@@ -1,0 +1,81 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/device-property-type> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "device-property-type"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem device-property-type</b></p><a name=\"device-property-type\"> </a><a name=\"hcdevice-property-type\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/device-property-type</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">material<a name=\"device-property-type-material\"> </a></td><td>Material</td><td>Describes the substance used in the construction of the device.</td></tr><tr><td style=\"white-space:nowrap\">size<a name=\"device-property-type-size\"> </a></td><td>Size</td><td>Describes the specific dimensions or the measurement of a device.</td></tr><tr><td style=\"white-space:nowrap\">storage<a name=\"device-property-type-storage\"> </a></td><td>Storage Condition</td><td>Describes the specific environmental factors needed for the device.</td></tr><tr><td style=\"white-space:nowrap\">color<a name=\"device-property-type-color\"> </a></td><td>Color</td><td>Describes the range of colors that may be displayed or expressed on a device.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "oo"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/device-property-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/device-property-type>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "DevicePropertyType"] ; # 
+  fhir:title [ fhir:v "Device Property Type (Example only)"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:publisher [ fhir:v "HL7 Orders and Observations Workgroup"] ; # 
+  fhir:description [ fhir:v "The fixed characteristics or conditions of the device. These codes are for example purposes only."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "material" ] ;
+     fhir:display [ fhir:v "Material" ] ;
+     fhir:definition [ fhir:v "Describes the substance used in the construction of the device." ]
+  ] [
+     fhir:code [ fhir:v "size" ] ;
+     fhir:display [ fhir:v "Size" ] ;
+     fhir:definition [ fhir:v "Describes the specific dimensions or the measurement of a device." ]
+  ] [
+     fhir:code [ fhir:v "storage" ] ;
+     fhir:display [ fhir:v "Storage Condition" ] ;
+     fhir:definition [ fhir:v "Describes the specific environmental factors needed for the device." ]
+  ] [
+     fhir:code [ fhir:v "color" ] ;
+     fhir:display [ fhir:v "Color" ] ;
+     fhir:definition [ fhir:v "Describes the range of colors that may be displayed or expressed on a device." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

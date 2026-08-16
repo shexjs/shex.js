@@ -1,0 +1,64 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Practitioner/f201> a fhir:Practitioner ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f201"] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "official" ] ; # The identifier for the person as this practitioner (fictive)
+     fhir:type [
+       fhir:text [ fhir:v "UZI-nummer" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:oid:2.16.528.1.1007.3.1"^^xsd:anyURI ;
+       fhir:l <urn:oid:2.16.528.1.1007.3.1>
+     ] ;
+     fhir:value [ fhir:v "12345678901" ]
+  ] ) ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ; # The name of the practitioner
+     fhir:text [ fhir:v "Dokter Bronsig" ] ;
+     fhir:family [ fhir:v "Bronsig" ] ;
+     fhir:given ( [ fhir:v "Arend" ] ) ;
+     fhir:prefix ( [ fhir:v "Dr." ] )
+  ] ) ; # Practitioner's personal demographics
+  fhir:telecom ( [
+     fhir:system [ fhir:v "phone" ] ; # A contact detail for the individual
+     fhir:value [ fhir:v "+31715269111" ] ;
+     fhir:use [ fhir:v "work" ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:birthDate [ fhir:v "1956-12-24"^^xsd:date] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "work" ] ; # Work address for the individual
+     fhir:line ( [ fhir:v "Walvisbaai 3" ] [ fhir:v "C4 - Automatisering" ] ) ;
+     fhir:city [ fhir:v "Den helder" ] ;
+     fhir:postalCode [ fhir:v "2333ZA" ] ;
+     fhir:country [ fhir:v "NLD" ]
+  ] ) ; # ISO 3166 3 letter code
+  fhir:qualification ( [
+     fhir:code [
+       a sct:41672002 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "41672002" ] ;
+         fhir:display [ fhir:v "Pulmonologist" ]
+       ] ) # Dr. Bronsig is not only a medical oncologist, but also a pulmonologist
+     ]
+  ] ) . # Fortunately, the doctor is still alive!, <photo>
+#        <reference value="Media/AB-201.bmp"/>
+#        <display value="Picture_Dokter_Bronsig"/>
+#    </photo>
+
+# -------------------------------------------------------------------------------------
+

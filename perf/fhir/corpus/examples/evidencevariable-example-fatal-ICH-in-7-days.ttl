@@ -1,0 +1,124 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/EvidenceVariable/example-fatal-ICH-in-7-days> a fhir:EvidenceVariable ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-fatal-ICH-in-7-days"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      \n      <p>\n        \"Fatal Intracranial Hemorrhage Within Seven Days\" is an outcome used in expressing what an Evidence is about.\n      </p>\n	\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:contained ( [
+     a fhir:Group ;
+     fhir:id [ fhir:v "Cohort-Definition" ] ;
+     fhir:title [ fhir:v "CohortDefinition: Fatal Intracranial Hemorrhage" ] ;
+     fhir:membership [ fhir:v "conceptual" ] ;
+     fhir:combinationMethod [ fhir:v "all-of" ] ;
+     fhir:characteristic ( [
+       fhir:code [
+         a sct:260905004 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "260905004" ] ;
+           fhir:display [ fhir:v "Condition" ]
+         ] )
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept, sct:1386000 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "1386000" ] ;
+           fhir:display [ fhir:v "Intracranial hemorrhage (disorder)" ]
+         ] )
+       ] ;
+       fhir:exclude [ fhir:v false ] ;
+       fhir:description [ fhir:v "intracranial hemorrhage" ]
+     ] [
+       fhir:code [
+         fhir:text [ fhir:v "resulting in" ]
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept, sct:419620001 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "419620001" ] ;
+           fhir:display [ fhir:v "Death (event)" ]
+         ] )
+       ] ;
+       fhir:exclude [ fhir:v false ] ;
+       fhir:description [ fhir:v "resulting in death" ]
+     ] )
+  ] [
+     a fhir:Group ;
+     fhir:id [ fhir:v "Definition-Group" ] ;
+     fhir:title [ fhir:v "VariableDefinition: Fatal Intracranial Hemorrhage Within Seven Days" ] ;
+     fhir:type [ fhir:v "person" ] ;
+     fhir:membership [ fhir:v "definitional" ] ;
+     fhir:characteristic ( [
+       fhir:code [
+         a sct:260905004 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "260905004" ] ;
+           fhir:display [ fhir:v "Condition" ]
+         ] )
+       ] ;
+       fhir:value [
+         a fhir:Reference ;
+         fhir:l <#Cohort-Definition> ;
+         fhir:reference [ fhir:v "#Cohort-Definition" ]
+       ] ;
+       fhir:exclude [ fhir:v false ] ;
+       fhir:description [ fhir:v "fatal intracranial hemorrhage within 7 days" ]
+     ] )
+  ] ) ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] ) ; # 
+  fhir:name [ fhir:v "FatalIntracranialHemorrhageWithinSevenDays"] ; # 
+  fhir:title [ fhir:v "Fatal Intracranial Hemorrhage Within Seven Days"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Decision Support"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/dss" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Fatal Intracranial Hemorrhage Within Seven Days"] ; # 
+  fhir:actual [ fhir:v true] ; # 
+  fhir:definition [
+     fhir:reference [
+       fhir:l <#Definition-Group> ;
+       fhir:reference [ fhir:v "#Definition-Group" ]
+     ]
+  ] ; # 
+  fhir:handling [] . # 
+
+# -------------------------------------------------------------------------------------
+

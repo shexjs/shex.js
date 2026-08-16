@@ -1,0 +1,61 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ServiceRequest/ob> a fhir:ServiceRequest ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "ob"] ; # 
+  fhir:status [ fhir:v "completed"] ; # insert contents here
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:category ( [
+     a sct:386637004 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "386637004" ] ;
+       fhir:display [ fhir:v "Obstetric procedure (procedure)" ]
+     ] ) ;
+     fhir:text [ fhir:v "OB" ]
+  ] ) ; # 
+  fhir:code [
+     fhir:concept [
+       a sct:22633006 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "22633006" ] ;
+         fhir:display [ fhir:v "Vaginal delivery, medical personnel present (procedure)" ]
+       ] ) ;
+       fhir:text [ fhir:v "Vaginal delivery" ]
+     ]
+  ] ; # 
+  fhir:subject [
+     fhir:display [ fhir:v "Jane Doe" ]
+  ] ; # 
+  fhir:occurrence [
+     a fhir:DateTime ;
+     fhir:v "2012-06-02"^^xsd:date
+  ] ; # 
+  fhir:requester [
+     fhir:display [ fhir:v "Women’s Hospital" ]
+  ] ; # 
+  fhir:performer ( [
+     fhir:display [ fhir:v "Martha Midwife, RNP" ]
+  ] ) ; # 
+  fhir:reason ( [
+     fhir:concept [
+       fhir:text [ fhir:v "term pregnancy, active labor" ]
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

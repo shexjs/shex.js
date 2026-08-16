@@ -1,0 +1,152 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/QuestionnaireResponse/bb> a fhir:QuestionnaireResponse ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "bb"] ; # Please not that in this questionnaire, the questions are mostly unnamed, that is, the questions are not identified using the <name> element. It will therefore
+#    be hard to extract useful information in an automated way from this questionnaire. This is, however, quite often the case when modeling existing questionnaires
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <pre>\n        Cathy Jones, female. Birth weight 3.25 kg at 44.3 cm. \n        Injection of Vitamin K given on 1972-11-30 (first dose) and 1972-12-11 (second dose)\n        Note: Was able to speak Chinese at birth.\n      </pre>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:questionnaire [
+     fhir:v "http://hl7.org/fhir/Questionnaire/bb"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/Questionnaire/bb>
+  ] ; # 
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/1> ;
+     fhir:reference [ fhir:v "http://hl7.org/fhir/Patient/1" ] ;
+     fhir:type [
+       fhir:v "Patient"^^xsd:anyURI ;
+       fhir:l fhir:Patient
+     ]
+  ] ; # 
+  fhir:authored [ fhir:v "2013-02-19T14:15:00+10:00"^^xsd:dateTime] ; # 
+  fhir:author [
+     fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+     fhir:reference [ fhir:v "http://hl7.org/fhir/Practitioner/example" ] ;
+     fhir:type [
+       fhir:v "Practitioner"^^xsd:anyURI ;
+       fhir:l fhir:Practitioner
+     ]
+  ] ; # 
+  fhir:item ( [
+     fhir:linkId [ fhir:v "birthDetails" ] ;
+     fhir:text [ fhir:v "Birth details - To be completed by health professional" ] ;
+     fhir:item ( [
+       fhir:linkId [ fhir:v "group" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "nameOfChild" ] ;
+         fhir:text [ fhir:v "Name of child" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Cathy Jones"
+           ]
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "sex" ] ;
+         fhir:text [ fhir:v "Sex" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:code [ fhir:v "F" ]
+           ]
+         ] )
+       ] )
+     ] [
+       fhir:linkId [ fhir:v "neonatalInformation" ] ;
+       fhir:text [ fhir:v "Neonatal Information" ] ;
+       fhir:item ( [
+         fhir:linkId [ fhir:v "birthWeight" ] ;
+         fhir:text [ fhir:v "Birth weight (kg)" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Decimal ;
+             fhir:v 3.25
+           ]
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "birthLength" ] ;
+         fhir:text [ fhir:v "Birth length (cm)" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Decimal ;
+             fhir:v 44.3
+           ]
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "vitaminKgiven" ] ;
+         fhir:text [ fhir:v "Vitamin K given" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Coding ;
+             fhir:code [ fhir:v "INJECTION" ]
+           ] ;
+           fhir:item ( [
+             fhir:linkId [ fhir:v "vitaminKgivenDoses" ] ;
+             fhir:item ( [
+               fhir:linkId [ fhir:v "vitaminKDose1" ] ;
+               fhir:text [ fhir:v "1st dose" ] ;
+               fhir:answer ( [
+                 fhir:value [
+                   a fhir:DateTime ;
+                   fhir:v "1972-11-30"^^xsd:date
+                 ]
+               ] )
+             ] [
+               fhir:linkId [ fhir:v "vitaminKDose2" ] ;
+               fhir:text [ fhir:v "2nd dose" ] ;
+               fhir:answer ( [
+                 fhir:value [
+                   a fhir:DateTime ;
+                   fhir:v "1972-12-11"^^xsd:date
+                 ]
+               ] )
+             ] )
+           ] )
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "hepBgiven" ] ;
+         fhir:text [ fhir:v "Hep B given y / n" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:Boolean ;
+             fhir:v true
+           ] ;
+           fhir:item ( [
+             fhir:linkId [ fhir:v "hepBgivenDate" ] ;
+             fhir:text [ fhir:v "Date given" ] ;
+             fhir:answer ( [
+               fhir:value [
+                 a fhir:Date ;
+                 fhir:v "1972-12-04"^^xsd:date
+               ]
+             ] )
+           ] )
+         ] )
+       ] [
+         fhir:linkId [ fhir:v "abnormalitiesAtBirth" ] ;
+         fhir:text [ fhir:v "Abnormalities noted at birth" ] ;
+         fhir:answer ( [
+           fhir:value [
+             a fhir:String ;
+             fhir:v "Already able to speak Chinese"
+           ]
+         ] )
+       ] )
+     ] )
+  ] ) . # Many groups left out of this example
+
+<http://hl7.org/fhir/Patient/1> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

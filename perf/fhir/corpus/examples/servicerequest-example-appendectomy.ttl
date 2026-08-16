@@ -1,0 +1,28 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ServiceRequest/appendectomy-narrative> a fhir:ServiceRequest ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "appendectomy-narrative"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "additional" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n			<p>Date: 2013-03-16</p>\n			<p>Patient:: Paula Patient</p>\n			<p>Ordered by: Angela Care, MD</p>\n			<p>Procedure: Routine Appendectomy</p>\n			<p>Surgeon: Dr Cecil Surgeon</p>\n		</div>"^^rdf:XMLLiteral ]
+  ] ; # Example of an appendectomy procedure that is primarily narrative
+  fhir:status [ fhir:v "completed"] ; # 
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:code [
+     fhir:concept [
+       fhir:text [ fhir:v "Appendectomy" ]
+     ]
+  ] ; # 
+  fhir:subject [
+     fhir:display [ fhir:v "Paula Patient" ]
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

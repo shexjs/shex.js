@@ -1,6 +1,6 @@
 {
   "type": "ShapeTest",
-  "node": "x",
+  "node": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
   "shape": "http://a.example.org/S",
   "solution": {
     "type": "EachOfSolutions",
@@ -13,17 +13,28 @@
             "predicate": "http://a.example/a",
             "valueExpr": {
               "type": "NodeConstraint",
-              "values": [ { "value": "1", "type": "http://www.w3.org/2001/XMLSchema#integer" } ]
+              "values": [
+                {
+                  "value": "1",
+                  "type": "http://www.w3.org/2001/XMLSchema#integer"
+                }
+              ]
             },
             "solutions": [
               {
                 "type": "TestedTriple",
-                "subject": "x",
+                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
                 "predicate": "http://a.example/a",
-                "object": { "value": "1", "type": "http://www.w3.org/2001/XMLSchema#integer" },
+                "object": {
+                  "value": "1",
+                  "type": "http://www.w3.org/2001/XMLSchema#integer"
+                },
                 "referenced": {
                   "type": "NodeConstraintTest",
-                  "node": { "value": "1", "type": "http://www.w3.org/2001/XMLSchema#integer" },
+                  "node": {
+                    "value": "1",
+                    "type": "http://www.w3.org/2001/XMLSchema#integer"
+                  },
                   "shape": "http://a.example.org/S",
                   "shapeExpr": {
                     "type": "NodeConstraint",
@@ -49,17 +60,28 @@
                     "predicate": "http://a.example/a",
                     "valueExpr": {
                       "type": "NodeConstraint",
-                      "values": [ { "value": "3", "type": "http://www.w3.org/2001/XMLSchema#integer" } ]
+                      "values": [
+                        {
+                          "value": "3",
+                          "type": "http://www.w3.org/2001/XMLSchema#integer"
+                        }
+                      ]
                     },
                     "solutions": [
                       {
                         "type": "TestedTriple",
-                        "subject": "x",
+                        "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
                         "predicate": "http://a.example/a",
-                        "object": { "value": "3", "type": "http://www.w3.org/2001/XMLSchema#integer" },
+                        "object": {
+                          "value": "3",
+                          "type": "http://www.w3.org/2001/XMLSchema#integer"
+                        },
                         "referenced": {
                           "type": "NodeConstraintTest",
-                          "node": { "value": "3", "type": "http://www.w3.org/2001/XMLSchema#integer" },
+                          "node": {
+                            "value": "3",
+                            "type": "http://www.w3.org/2001/XMLSchema#integer"
+                          },
                           "shape": "http://a.example.org/S",
                           "shapeExpr": {
                             "type": "NodeConstraint",
@@ -79,12 +101,19 @@
             ]
           },
           {
-            "type": "TripleConstraintSolutions", "predicate": "http://a.example/a",
-            "min": 0, "max": -1,
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://a.example/a",
             "valueExpr": {
               "type": "NodeConstraint",
-              "values": [ { "value": "4", "type": "http://www.w3.org/2001/XMLSchema#integer" } ]
+              "values": [
+                {
+                  "value": "4",
+                  "type": "http://www.w3.org/2001/XMLSchema#integer"
+                }
+              ]
             },
+            "min": 0,
+            "max": -1,
             "solutions": []
           }
         ]

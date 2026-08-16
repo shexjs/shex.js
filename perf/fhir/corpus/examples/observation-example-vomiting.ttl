@@ -1,0 +1,59 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Observation/vomiting> a fhir:Observation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "vomiting"] ; # 
+  fhir:status [ fhir:v "final"] ; # 
+  fhir:category ( [
+     fhir:text [ fhir:v "Signs and Symptoms" ]
+  ] ) ; # 
+  fhir:code [
+     a loinc:45708-5, sct:249497008 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "45708-5" ] ;
+       fhir:display [ fhir:v "Vomiting [Minimum Data Set]" ]
+     ] [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "249497008" ] ;
+       fhir:display [ fhir:v "Vomiting symptom (finding)" ]
+     ] )
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/infant> ;
+     fhir:reference [ fhir:v "Patient/infant" ]
+  ] ; # 
+  fhir:effective [
+     a fhir:DateTime ;
+     fhir:v "2016-05-18T22:33:22Z"^^xsd:dateTime
+  ] ; # 
+  fhir:value [
+     a fhir:CodeableConcept, sct:2667000 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "2667000" ] ;
+       fhir:display [ fhir:v "Absent (qualifier value)" ]
+     ] )
+  ] . # 
+
+<http://hl7.org/fhir/Patient/infant> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

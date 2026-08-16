@@ -1,0 +1,332 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ValueSet/c80-facilitycodes> a fhir:ValueSet ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "c80-facilitycodes"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: ValueSet c80-facilitycodes</b></p><a name=\"c80-facilitycodes\"> </a><a name=\"hcc80-facilitycodes\"> </a><ul><li>Include these codes as defined in <a href=\"http://www.snomed.org/\"><code>http://snomed.info/sct</code></a><span title=\"Version is not explicitly stated. No matching Code System found\"> version Not Stated (use latest from terminology server)</span><table class=\"none\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td></tr><tr><td><a href=\"http://snomed.info/id/82242000\">82242000</a></td><td>Hospital-children's</td></tr><tr><td><a href=\"http://snomed.info/id/225732001\">225732001</a></td><td>Hospital-community</td></tr><tr><td><a href=\"http://snomed.info/id/79993009\">79993009</a></td><td>Hospital-government</td></tr><tr><td><a href=\"http://snomed.info/id/32074000\">32074000</a></td><td>Hospital-long term care</td></tr><tr><td><a href=\"http://snomed.info/id/4322002\">4322002</a></td><td>Hospital-military field</td></tr><tr><td><a href=\"http://snomed.info/id/224687002\">224687002</a></td><td>Hospital-prison</td></tr><tr><td><a href=\"http://snomed.info/id/62480006\">62480006</a></td><td>Hospital-psychiatric</td></tr><tr><td><a href=\"http://snomed.info/id/80522000\">80522000</a></td><td>Hospital-rehabilitation</td></tr><tr><td><a href=\"http://snomed.info/id/36125001\">36125001</a></td><td>Hospital-trauma center</td></tr><tr><td><a href=\"http://snomed.info/id/48311003\">48311003</a></td><td>Hospital-Veterans' Administration</td></tr><tr><td><a href=\"http://snomed.info/id/284546000\">284546000</a></td><td>Hospice facility</td></tr><tr><td><a href=\"http://snomed.info/id/42665001\">42665001</a></td><td>Nursing home</td></tr><tr><td><a href=\"http://snomed.info/id/45618002\">45618002</a></td><td>Skilled nursing facility</td></tr><tr><td><a href=\"http://snomed.info/id/418518002\">418518002</a></td><td>Dialysis unit--hospital</td></tr><tr><td><a href=\"http://snomed.info/id/73770003\">73770003</a></td><td>Emergency department--hospital</td></tr><tr><td><a href=\"http://snomed.info/id/69362002\">69362002</a></td><td>Hospital ambulatory surgery facility</td></tr><tr><td><a href=\"http://snomed.info/id/52668009\">52668009</a></td><td>Hospital birthing center</td></tr><tr><td><a href=\"http://snomed.info/id/360957003\">360957003</a></td><td>Hospital outpatient allergy clinic</td></tr><tr><td><a href=\"http://snomed.info/id/10206005\">10206005</a></td><td>Hospital outpatient dental clinic</td></tr><tr><td><a href=\"http://snomed.info/id/37550003\">37550003</a></td><td>Hospital outpatient dermatology clinic</td></tr><tr><td><a href=\"http://snomed.info/id/73644007\">73644007</a></td><td>Hospital outpatient endocrinology clinic</td></tr><tr><td><a href=\"http://snomed.info/id/31628002\">31628002</a></td><td>Hospital outpatient family medicine clinic</td></tr><tr><td><a href=\"http://snomed.info/id/58482006\">58482006</a></td><td>Hospital outpatient gastroenterology clinic</td></tr><tr><td><a href=\"http://snomed.info/id/90484001\">90484001</a></td><td>Hospital outpatient general surgery clinic</td></tr><tr><td><a href=\"http://snomed.info/id/1814000\">1814000</a></td><td>Hospital outpatient geriatric health center</td></tr><tr><td><a href=\"http://snomed.info/id/22549003\">22549003</a></td><td>Hospital outpatient gynecology clinic</td></tr><tr><td><a href=\"http://snomed.info/id/56293002\">56293002</a></td><td>Hospital outpatient hematology clinic</td></tr><tr><td><a href=\"http://snomed.info/id/360966004\">360966004</a></td><td>Hospital outpatient immunology clinic</td></tr><tr><td><a href=\"http://snomed.info/id/2849009\">2849009</a></td><td>Hospital outpatient infectious disease clinic</td></tr><tr><td><a href=\"http://snomed.info/id/14866005\">14866005</a></td><td>Hospital outpatient mental health center</td></tr><tr><td><a href=\"http://snomed.info/id/38238005\">38238005</a></td><td>Hospital outpatient neurology clinic</td></tr><tr><td><a href=\"http://snomed.info/id/56189001\">56189001</a></td><td>Hospital outpatient obstetrical clinic</td></tr><tr><td><a href=\"http://snomed.info/id/89972002\">89972002</a></td><td>Hospital outpatient oncology clinic</td></tr><tr><td><a href=\"http://snomed.info/id/78088001\">78088001</a></td><td>Hospital outpatient ophthalmology clinic</td></tr><tr><td><a href=\"http://snomed.info/id/78001009\">78001009</a></td><td>Hospital outpatient orthopedics clinic</td></tr><tr><td><a href=\"http://snomed.info/id/23392004\">23392004</a></td><td>Hospital outpatient otorhinolaryngology clinic</td></tr><tr><td><a href=\"http://snomed.info/id/36293008\">36293008</a></td><td>Hospital outpatient pain clinic</td></tr><tr><td><a href=\"http://snomed.info/id/3729002\">3729002</a></td><td>Hospital outpatient pediatric clinic</td></tr><tr><td><a href=\"http://snomed.info/id/5584006\">5584006</a></td><td>Hospital outpatient peripheral vascular clinic</td></tr><tr><td><a href=\"http://snomed.info/id/37546005\">37546005</a></td><td>Hospital outpatient rehabilitation clinic</td></tr><tr><td><a href=\"http://snomed.info/id/57159002\">57159002</a></td><td>Hospital outpatient respiratory disease clinic</td></tr><tr><td><a href=\"http://snomed.info/id/331006\">331006</a></td><td>Hospital outpatient rheumatology clinic</td></tr><tr><td><a href=\"http://snomed.info/id/50569004\">50569004</a></td><td>Hospital outpatient urology clinic</td></tr><tr><td><a href=\"http://snomed.info/id/79491001\">79491001</a></td><td>Hospital radiology facility</td></tr><tr><td><a href=\"http://snomed.info/id/33022008\">33022008</a></td><td>Hospital-based outpatient clinic or department--OTHER-NOT LISTED</td></tr><tr><td><a href=\"http://snomed.info/id/19602009\">19602009</a></td><td>Fee-for-service private physicians' group office</td></tr><tr><td><a href=\"http://snomed.info/id/39350007\">39350007</a></td><td>Private physicians' group office</td></tr><tr><td><a href=\"http://snomed.info/id/83891005\">83891005</a></td><td>Solo practice private office</td></tr><tr><td><a href=\"http://snomed.info/id/394759007\">394759007</a></td><td>Independent ambulatory care provider site--OTHER--NOT LISTED</td></tr><tr><td><a href=\"http://snomed.info/id/405607001\">405607001</a></td><td>Ambulatory surgery center</td></tr><tr><td><a href=\"http://snomed.info/id/309900005\">309900005</a></td><td>Care of the elderly day hospital</td></tr><tr><td><a href=\"http://snomed.info/id/275576008\">275576008</a></td><td>Elderly assessment clinic</td></tr><tr><td><a href=\"http://snomed.info/id/10531005\">10531005</a></td><td>Free-standing ambulatory surgery facility</td></tr><tr><td><a href=\"http://snomed.info/id/91154008\">91154008</a></td><td>Free-standing birthing center</td></tr><tr><td><a href=\"http://snomed.info/id/41844007\">41844007</a></td><td>Free-standing geriatric health center</td></tr><tr><td><a href=\"http://snomed.info/id/45899008\">45899008</a></td><td>Free-standing laboratory facility</td></tr><tr><td><a href=\"http://snomed.info/id/51563005\">51563005</a></td><td>Free-standing mental health center</td></tr><tr><td><a href=\"http://snomed.info/id/1773006\">1773006</a></td><td>Free-standing radiology facility</td></tr><tr><td><a href=\"http://snomed.info/id/72311000\">72311000</a></td><td>Health maintenance organization</td></tr><tr><td><a href=\"http://snomed.info/id/6827000\">6827000</a></td><td>Local community health center</td></tr><tr><td><a href=\"http://snomed.info/id/309898008\">309898008</a></td><td>Psychogeriatric day hospital</td></tr><tr><td><a href=\"http://snomed.info/id/39913001\">39913001</a></td><td>Residential school infirmary</td></tr><tr><td><a href=\"http://snomed.info/id/77931003\">77931003</a></td><td>Rural health center</td></tr><tr><td><a href=\"http://snomed.info/id/25681007\">25681007</a></td><td>Sexually transmitted disease health center</td></tr><tr><td><a href=\"http://snomed.info/id/20078004\">20078004</a></td><td>Substance abuse treatment center</td></tr><tr><td><a href=\"http://snomed.info/id/46224007\">46224007</a></td><td>Vaccination clinic</td></tr><tr><td><a href=\"http://snomed.info/id/81234003\">81234003</a></td><td>Walk-in clinic</td></tr><tr><td><a href=\"http://snomed.info/id/35971002\">35971002</a></td><td>Ambulatory care site--OTHER--NOT LISTED</td></tr><tr><td><a href=\"http://snomed.info/id/11424001\">11424001</a></td><td>Ambulance-based care</td></tr><tr><td><a href=\"http://snomed.info/id/409519008\">409519008</a></td><td>Contained casualty setting</td></tr><tr><td><a href=\"http://snomed.info/id/901005\">901005</a></td><td>Helicopter-based care</td></tr><tr><td><a href=\"http://snomed.info/id/2081004\">2081004</a></td><td>Hospital ship</td></tr><tr><td><a href=\"http://snomed.info/id/59374000\">59374000</a></td><td>Traveler's aid clinic</td></tr><tr><td><a href=\"http://snomed.info/id/413456002\">413456002</a></td><td>Adult day care center</td></tr><tr><td><a href=\"http://snomed.info/id/413817003\">413817003</a></td><td>Child day care center</td></tr><tr><td><a href=\"http://snomed.info/id/310205006\">310205006</a></td><td>Private residential home</td></tr><tr><td><a href=\"http://snomed.info/id/419955002\">419955002</a></td><td>Residential institution</td></tr><tr><td><a href=\"http://snomed.info/id/272501009\">272501009</a></td><td>Sports facility</td></tr><tr><td><a href=\"http://snomed.info/id/394777002\">394777002</a></td><td>Health encounter site--NOT LISTED</td></tr></table></li></ul></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "oo"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ValueSet/c80-facilitycodes"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/c80-facilitycodes>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.3.88.12.80.67" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.2.131" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "FacilityTypeCodeValueSet"] ; # 
+  fhir:title [ fhir:v "Facility Type Code Value Set"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HITSP"] ; # 
+  fhir:description [ fhir:v "This is the code representing the type of organizational setting where the clinical encounter,    service, interaction, or treatment occurred. The value set used for Healthcare Facility    Type has been defined by HITSP to be the value set reproduced from HITSP C80 Table 2-147."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:copyright [ fhir:v "This resource includes content from SNOMED Clinical Terms® (SNOMED CT®) which is copyright    of the International Health Terminology Standards Development Organisation (IHTSDO). Implementers    of these specifications must have the appropriate SNOMED CT Affiliate license - for more    information contact http://www.snomed.org/snomed-ct/get-snomed-ct or info@snomed.org"] ; # 
+  fhir:compose [
+     fhir:include ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:concept ( [
+         fhir:code [ fhir:v "82242000" ] ;
+         fhir:display [ fhir:v "Hospital-children's" ]
+       ] [
+         fhir:code [ fhir:v "225732001" ] ;
+         fhir:display [ fhir:v "Hospital-community" ]
+       ] [
+         fhir:code [ fhir:v "79993009" ] ;
+         fhir:display [ fhir:v "Hospital-government" ]
+       ] [
+         fhir:code [ fhir:v "32074000" ] ;
+         fhir:display [ fhir:v "Hospital-long term care" ]
+       ] [
+         fhir:code [ fhir:v "4322002" ] ;
+         fhir:display [ fhir:v "Hospital-military field" ]
+       ] [
+         fhir:code [ fhir:v "224687002" ] ;
+         fhir:display [ fhir:v "Hospital-prison" ]
+       ] [
+         fhir:code [ fhir:v "62480006" ] ;
+         fhir:display [ fhir:v "Hospital-psychiatric" ]
+       ] [
+         fhir:code [ fhir:v "80522000" ] ;
+         fhir:display [ fhir:v "Hospital-rehabilitation" ]
+       ] [
+         fhir:code [ fhir:v "36125001" ] ;
+         fhir:display [ fhir:v "Hospital-trauma center" ]
+       ] [
+         fhir:code [ fhir:v "48311003" ] ;
+         fhir:display [ fhir:v "Hospital-Veterans' Administration" ]
+       ] [
+         fhir:code [ fhir:v "284546000" ] ;
+         fhir:display [ fhir:v "Hospice facility" ]
+       ] [
+         fhir:code [ fhir:v "42665001" ] ;
+         fhir:display [ fhir:v "Nursing home" ]
+       ] [
+         fhir:code [ fhir:v "45618002" ] ;
+         fhir:display [ fhir:v "Skilled nursing facility" ]
+       ] [
+         fhir:code [ fhir:v "418518002" ] ;
+         fhir:display [ fhir:v "Dialysis unit--hospital" ]
+       ] [
+         fhir:code [ fhir:v "73770003" ] ;
+         fhir:display [ fhir:v "Emergency department--hospital" ]
+       ] [
+         fhir:code [ fhir:v "69362002" ] ;
+         fhir:display [ fhir:v "Hospital ambulatory surgery facility" ]
+       ] [
+         fhir:code [ fhir:v "52668009" ] ;
+         fhir:display [ fhir:v "Hospital birthing center" ]
+       ] [
+         fhir:code [ fhir:v "360957003" ] ;
+         fhir:display [ fhir:v "Hospital outpatient allergy clinic" ]
+       ] [
+         fhir:code [ fhir:v "10206005" ] ;
+         fhir:display [ fhir:v "Hospital outpatient dental clinic" ]
+       ] [
+         fhir:code [ fhir:v "37550003" ] ;
+         fhir:display [ fhir:v "Hospital outpatient dermatology clinic" ]
+       ] [
+         fhir:code [ fhir:v "73644007" ] ;
+         fhir:display [ fhir:v "Hospital outpatient endocrinology clinic" ]
+       ] [
+         fhir:code [ fhir:v "31628002" ] ;
+         fhir:display [ fhir:v "Hospital outpatient family medicine clinic" ]
+       ] [
+         fhir:code [ fhir:v "58482006" ] ;
+         fhir:display [ fhir:v "Hospital outpatient gastroenterology clinic" ]
+       ] [
+         fhir:code [ fhir:v "90484001" ] ;
+         fhir:display [ fhir:v "Hospital outpatient general surgery clinic" ]
+       ] [
+         fhir:code [ fhir:v "1814000" ] ;
+         fhir:display [ fhir:v "Hospital outpatient geriatric health center" ]
+       ] [
+         fhir:code [ fhir:v "22549003" ] ;
+         fhir:display [ fhir:v "Hospital outpatient gynecology clinic" ]
+       ] [
+         fhir:code [ fhir:v "56293002" ] ;
+         fhir:display [ fhir:v "Hospital outpatient hematology clinic" ]
+       ] [
+         fhir:code [ fhir:v "360966004" ] ;
+         fhir:display [ fhir:v "Hospital outpatient immunology clinic" ]
+       ] [
+         fhir:code [ fhir:v "2849009" ] ;
+         fhir:display [ fhir:v "Hospital outpatient infectious disease clinic" ]
+       ] [
+         fhir:code [ fhir:v "14866005" ] ;
+         fhir:display [ fhir:v "Hospital outpatient mental health center" ]
+       ] [
+         fhir:code [ fhir:v "38238005" ] ;
+         fhir:display [ fhir:v "Hospital outpatient neurology clinic" ]
+       ] [
+         fhir:code [ fhir:v "56189001" ] ;
+         fhir:display [ fhir:v "Hospital outpatient obstetrical clinic" ]
+       ] [
+         fhir:code [ fhir:v "89972002" ] ;
+         fhir:display [ fhir:v "Hospital outpatient oncology clinic" ]
+       ] [
+         fhir:code [ fhir:v "78088001" ] ;
+         fhir:display [ fhir:v "Hospital outpatient ophthalmology clinic" ]
+       ] [
+         fhir:code [ fhir:v "78001009" ] ;
+         fhir:display [ fhir:v "Hospital outpatient orthopedics clinic" ]
+       ] [
+         fhir:code [ fhir:v "23392004" ] ;
+         fhir:display [ fhir:v "Hospital outpatient otorhinolaryngology clinic" ]
+       ] [
+         fhir:code [ fhir:v "36293008" ] ;
+         fhir:display [ fhir:v "Hospital outpatient pain clinic" ]
+       ] [
+         fhir:code [ fhir:v "3729002" ] ;
+         fhir:display [ fhir:v "Hospital outpatient pediatric clinic" ]
+       ] [
+         fhir:code [ fhir:v "5584006" ] ;
+         fhir:display [ fhir:v "Hospital outpatient peripheral vascular clinic" ]
+       ] [
+         fhir:code [ fhir:v "37546005" ] ;
+         fhir:display [ fhir:v "Hospital outpatient rehabilitation clinic" ]
+       ] [
+         fhir:code [ fhir:v "57159002" ] ;
+         fhir:display [ fhir:v "Hospital outpatient respiratory disease clinic" ]
+       ] [
+         fhir:code [ fhir:v "331006" ] ;
+         fhir:display [ fhir:v "Hospital outpatient rheumatology clinic" ]
+       ] [
+         fhir:code [ fhir:v "50569004" ] ;
+         fhir:display [ fhir:v "Hospital outpatient urology clinic" ]
+       ] [
+         fhir:code [ fhir:v "79491001" ] ;
+         fhir:display [ fhir:v "Hospital radiology facility" ]
+       ] [
+         fhir:code [ fhir:v "33022008" ] ;
+         fhir:display [ fhir:v "Hospital-based outpatient clinic or department--OTHER-NOT LISTED" ]
+       ] [
+         fhir:code [ fhir:v "19602009" ] ;
+         fhir:display [ fhir:v "Fee-for-service private physicians' group office" ]
+       ] [
+         fhir:code [ fhir:v "39350007" ] ;
+         fhir:display [ fhir:v "Private physicians' group office" ]
+       ] [
+         fhir:code [ fhir:v "83891005" ] ;
+         fhir:display [ fhir:v "Solo practice private office" ]
+       ] [
+         fhir:code [ fhir:v "394759007" ] ;
+         fhir:display [ fhir:v "Independent ambulatory care provider site--OTHER--NOT LISTED" ]
+       ] [
+         fhir:code [ fhir:v "405607001" ] ;
+         fhir:display [ fhir:v "Ambulatory surgery center" ]
+       ] [
+         fhir:code [ fhir:v "309900005" ] ;
+         fhir:display [ fhir:v "Care of the elderly day hospital" ]
+       ] [
+         fhir:code [ fhir:v "275576008" ] ;
+         fhir:display [ fhir:v "Elderly assessment clinic" ]
+       ] [
+         fhir:code [ fhir:v "10531005" ] ;
+         fhir:display [ fhir:v "Free-standing ambulatory surgery facility" ]
+       ] [
+         fhir:code [ fhir:v "91154008" ] ;
+         fhir:display [ fhir:v "Free-standing birthing center" ]
+       ] [
+         fhir:code [ fhir:v "41844007" ] ;
+         fhir:display [ fhir:v "Free-standing geriatric health center" ]
+       ] [
+         fhir:code [ fhir:v "45899008" ] ;
+         fhir:display [ fhir:v "Free-standing laboratory facility" ]
+       ] [
+         fhir:code [ fhir:v "51563005" ] ;
+         fhir:display [ fhir:v "Free-standing mental health center" ]
+       ] [
+         fhir:code [ fhir:v "1773006" ] ;
+         fhir:display [ fhir:v "Free-standing radiology facility" ]
+       ] [
+         fhir:code [ fhir:v "72311000" ] ;
+         fhir:display [ fhir:v "Health maintenance organization" ]
+       ] [
+         fhir:code [ fhir:v "6827000" ] ;
+         fhir:display [ fhir:v "Local community health center" ]
+       ] [
+         fhir:code [ fhir:v "309898008" ] ;
+         fhir:display [ fhir:v "Psychogeriatric day hospital" ]
+       ] [
+         fhir:code [ fhir:v "39913001" ] ;
+         fhir:display [ fhir:v "Residential school infirmary" ]
+       ] [
+         fhir:code [ fhir:v "77931003" ] ;
+         fhir:display [ fhir:v "Rural health center" ]
+       ] [
+         fhir:code [ fhir:v "25681007" ] ;
+         fhir:display [ fhir:v "Sexually transmitted disease health center" ]
+       ] [
+         fhir:code [ fhir:v "20078004" ] ;
+         fhir:display [ fhir:v "Substance abuse treatment center" ]
+       ] [
+         fhir:code [ fhir:v "46224007" ] ;
+         fhir:display [ fhir:v "Vaccination clinic" ]
+       ] [
+         fhir:code [ fhir:v "81234003" ] ;
+         fhir:display [ fhir:v "Walk-in clinic" ]
+       ] [
+         fhir:code [ fhir:v "35971002" ] ;
+         fhir:display [ fhir:v "Ambulatory care site--OTHER--NOT LISTED" ]
+       ] [
+         fhir:code [ fhir:v "11424001" ] ;
+         fhir:display [ fhir:v "Ambulance-based care" ]
+       ] [
+         fhir:code [ fhir:v "409519008" ] ;
+         fhir:display [ fhir:v "Contained casualty setting" ]
+       ] [
+         fhir:code [ fhir:v "901005" ] ;
+         fhir:display [ fhir:v "Helicopter-based care" ]
+       ] [
+         fhir:code [ fhir:v "2081004" ] ;
+         fhir:display [ fhir:v "Hospital ship" ]
+       ] [
+         fhir:code [ fhir:v "59374000" ] ;
+         fhir:display [ fhir:v "Traveler's aid clinic" ]
+       ] [
+         fhir:code [ fhir:v "413456002" ] ;
+         fhir:display [ fhir:v "Adult day care center" ]
+       ] [
+         fhir:code [ fhir:v "413817003" ] ;
+         fhir:display [ fhir:v "Child day care center" ]
+       ] [
+         fhir:code [ fhir:v "310205006" ] ;
+         fhir:display [ fhir:v "Private residential home" ]
+       ] [
+         fhir:code [ fhir:v "419955002" ] ;
+         fhir:display [ fhir:v "Residential institution" ]
+       ] [
+         fhir:code [ fhir:v "272501009" ] ;
+         fhir:display [ fhir:v "Sports facility" ]
+       ] [
+         fhir:code [ fhir:v "394777002" ] ;
+         fhir:display [ fhir:v "Health encounter site--NOT LISTED" ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:expansion [] . # 
+
+# -------------------------------------------------------------------------------------
+

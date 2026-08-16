@@ -1,0 +1,126 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/compartment-type> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "compartment-type"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem compartment-type</b></p><a name=\"compartment-type\"> </a><a name=\"hccompartment-type\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/compartment-type</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">Patient<a name=\"compartment-type-Patient\"> </a></td><td>The compartment definition is for the patient compartment.</td></tr><tr><td style=\"white-space:nowrap\">Encounter<a name=\"compartment-type-Encounter\"> </a></td><td>The compartment definition is for the encounter compartment.</td></tr><tr><td style=\"white-space:nowrap\">RelatedPerson<a name=\"compartment-type-RelatedPerson\"> </a></td><td>The compartment definition is for the related-person compartment.</td></tr><tr><td style=\"white-space:nowrap\">Practitioner<a name=\"compartment-type-Practitioner\"> </a></td><td>The compartment definition is for the practitioner compartment.</td></tr><tr><td style=\"white-space:nowrap\">Device<a name=\"compartment-type-Device\"> </a></td><td>The compartment definition is for the device compartment.</td></tr><tr><td style=\"white-space:nowrap\">EpisodeOfCare<a name=\"compartment-type-EpisodeOfCare\"> </a></td><td>The compartment definition is for the episodeofcare compartment.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 3
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/compartment-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/compartment-type>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.787" ]
+  ] [
+     fhir:use [ fhir:v "old" ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.1.770" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "CompartmentType"] ; # 
+  fhir:title [ fhir:v "Compartment Type"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Which type a compartment definition describes."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/compartment-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/compartment-type>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "Patient" ] ;
+     fhir:display [ fhir:v "Patient" ] ;
+     fhir:definition [ fhir:v "The compartment definition is for the patient compartment." ]
+  ] [
+     fhir:code [ fhir:v "Encounter" ] ;
+     fhir:display [ fhir:v "Encounter" ] ;
+     fhir:definition [ fhir:v "The compartment definition is for the encounter compartment." ]
+  ] [
+     fhir:code [ fhir:v "RelatedPerson" ] ;
+     fhir:display [ fhir:v "RelatedPerson" ] ;
+     fhir:definition [ fhir:v "The compartment definition is for the related-person compartment." ]
+  ] [
+     fhir:code [ fhir:v "Practitioner" ] ;
+     fhir:display [ fhir:v "Practitioner" ] ;
+     fhir:definition [ fhir:v "The compartment definition is for the practitioner compartment." ]
+  ] [
+     fhir:code [ fhir:v "Device" ] ;
+     fhir:display [ fhir:v "Device" ] ;
+     fhir:definition [ fhir:v "The compartment definition is for the device compartment." ]
+  ] [
+     fhir:code [ fhir:v "EpisodeOfCare" ] ;
+     fhir:display [ fhir:v "EpisodeOfCare" ] ;
+     fhir:definition [ fhir:v "The compartment definition is for the episodeofcare compartment." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

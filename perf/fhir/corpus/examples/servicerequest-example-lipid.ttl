@@ -1,0 +1,127 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ServiceRequest/lipid> a fhir:ServiceRequest ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "lipid"] ; # 
+  fhir:contained ( [
+     a fhir:Observation ;
+     fhir:id [ fhir:v "fasting" ] ;
+     fhir:status [ fhir:v "final" ] ; # the mandatory quality flag:
+     fhir:code [
+       a loinc:49541-6 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:code [ fhir:v "49541-6" ] ;
+         fhir:display [ fhir:v "Fasting status - Reported" ]
+       ] )
+     ] ;
+     fhir:subject [
+       fhir:l <http://hl7.org/fhir/Patient/example> ;
+       fhir:reference [ fhir:v "Patient/example" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0136"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0136>
+         ] ;
+         fhir:code [ fhir:v "Y" ] ;
+         fhir:display [ fhir:v "Yes" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "PLAC" ]
+       ] ) ;
+       fhir:text [ fhir:v "Placer" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:oid:1.3.4.5.6.7"^^xsd:anyURI ;
+       fhir:l <urn:oid:1.3.4.5.6.7>
+     ] ;
+     fhir:value [ fhir:v "2345234234234" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "original-order"] ; # 
+  fhir:code [
+     fhir:concept [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://acme.org/tests"^^xsd:anyURI ;
+           fhir:l <http://acme.org/tests>
+         ] ;
+         fhir:code [ fhir:v "LIPID" ]
+       ] ) ;
+       fhir:text [ fhir:v "Lipid Panel" ]
+     ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/example> ;
+     fhir:reference [ fhir:v "Encounter/example" ]
+  ] ; # 
+  fhir:occurrence [
+     a fhir:DateTime ;
+     fhir:v "2013-05-02T16:16:00-07:00"^^xsd:dateTime
+  ] ; # 
+  fhir:requester [
+     fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+     fhir:reference [ fhir:v "Practitioner/example" ]
+  ] ; # 
+  fhir:performer ( [
+     fhir:l <http://hl7.org/fhir/Practitioner/f202> ;
+     fhir:reference [ fhir:v "Practitioner/f202" ]
+  ] ) ; # 
+  fhir:reason ( [
+     fhir:concept [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/sid/icd-9"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/sid/icd-9>
+         ] ;
+         fhir:code [ fhir:v "V173" ] ;
+         fhir:display [ fhir:v "Fam hx-ischem heart dis" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:supportingInfo ( [
+     fhir:reference [
+       fhir:l <#fasting> ;
+       fhir:reference [ fhir:v "#fasting" ] ;
+       fhir:display [ fhir:v "Fasting status" ]
+     ]
+  ] ) ; # 
+  fhir:note ( [
+     fhir:text [ fhir:v "patient is afraid of needles" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/example> a fhir:Encounter .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+<http://hl7.org/fhir/Practitioner/f202> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

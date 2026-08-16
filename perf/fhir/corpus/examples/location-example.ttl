@@ -1,0 +1,90 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Location/1> a fhir:Location ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "1"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Burgers UMC, South Wing, second floor</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:value [ fhir:v "B1-S.F2" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:name [ fhir:v "South Wing, second floor"] ; # 
+  fhir:alias ( [ fhir:v "BU MC, SW, F2"] [ fhir:v "Burgers University Medical Center, South Wing, second floor"] ) ; # 
+  fhir:description [ fhir:v "Second floor of the Old South Wing, formerly in use by Psychiatry"] ; # 
+  fhir:mode [ fhir:v "instance"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "phone" ] ;
+       fhir:value [ fhir:v "2328" ] ;
+       fhir:use [ fhir:v "work" ]
+     ] [
+       fhir:system [ fhir:v "fax" ] ;
+       fhir:value [ fhir:v "2329" ] ;
+       fhir:use [ fhir:v "work" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "second wing admissions" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://sampleorg.com/southwing" ] ;
+       fhir:use [ fhir:v "work" ]
+     ] )
+  ] ) ; # 
+  fhir:address [
+     fhir:use [ fhir:v "work" ] ;
+     fhir:line ( [ fhir:v "Galapagosweg 91, Building A" ] ) ;
+     fhir:city [ fhir:v "Den Burg" ] ;
+     fhir:postalCode [ fhir:v "9105 PZ" ] ;
+     fhir:country [ fhir:v "NLD" ]
+  ] ; # 
+  fhir:form [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/location-physical-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/location-physical-type>
+       ] ;
+       fhir:code [ fhir:v "wi" ] ;
+       fhir:display [ fhir:v "Wing" ]
+     ] )
+  ] ; # 
+  fhir:position [
+     fhir:longitude [ fhir:v -83.6945691 ] ;
+     fhir:latitude [ fhir:v 42.25475478 ] ;
+     fhir:altitude [ fhir:v "0"^^xsd:decimal ]
+  ] ; # 
+  fhir:managingOrganization [
+     fhir:l <http://hl7.org/fhir/Organization/f001> ;
+     fhir:reference [ fhir:v "Organization/f001" ]
+  ] ; # 
+  fhir:characteristic ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/location-characteristic"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/location-characteristic>
+       ] ;
+       fhir:code [ fhir:v "wheelchair" ] ;
+       fhir:display [ fhir:v "Wheelchair accessible" ]
+     ] )
+  ] ) ; # 
+  fhir:endpoint ( [
+     fhir:l <http://hl7.org/fhir/Endpoint/example> ;
+     fhir:reference [ fhir:v "Endpoint/example" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Organization/f001> a fhir:Organization .
+
+<http://hl7.org/fhir/Endpoint/example> a fhir:Endpoint .
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,122 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# This is an example of a multi-select values/answers as a single observatio using components to group  the multiple answers
+
+<http://hl7.org/fhir/Observation/alcohol-type> a fhir:Observation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "alcohol-type"] ; # 
+  fhir:status [ fhir:v "final"] ; # the mandatory quality flags:
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/observation-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/observation-category>
+       ] ;
+       fhir:code [ fhir:v "social-history" ] ;
+       fhir:display [ fhir:v "Social History" ]
+     ] ) ;
+     fhir:text [ fhir:v "Social History" ]
+  ] ) ; # Observations are often coded in multiple code systems.
+#      - LOINC
+#		- or SNOMED
+#      -and/or the source system may provides its own "local" code, which may be less or more granular than LOINC.
+#	In this example there is only local codes
+  fhir:code [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://acme-rehab.org"^^xsd:anyURI ;
+         fhir:l <http://acme-rehab.org>
+       ] ;
+       fhir:code [ fhir:v "alcohol-type" ] ;
+       fhir:display [ fhir:v "Type of alcohol consumed" ]
+     ] ) ; # Local - unable to identify a proper LOINC code
+     fhir:text [ fhir:v "Type of alcohol consumed" ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Peter James Chalmers" ]
+  ] ; # 
+  fhir:effective [
+     a fhir:DateTime ;
+     fhir:v "2014-12-11T04:44:16Z"^^xsd:dateTime
+  ] ; # 
+  fhir:component ( [
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://acme-rehab.org"^^xsd:anyURI ;
+           fhir:l <http://acme-rehab.org>
+         ] ;
+         fhir:code [ fhir:v "alcohol-type" ]
+       ] ) # Local - unable to identify a proper LOINC code
+     ] ; # component.code is same as code
+     fhir:value [
+       a fhir:CodeableConcept, sct:35748005 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "35748005" ] ;
+         fhir:display [ fhir:v "Wine (substance)" ]
+       ] ) ;
+       fhir:text [ fhir:v "Wine" ]
+     ] # coded value using SNONED-CT, could also use a local code here or only text
+  ] [
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://acme-rehab.org"^^xsd:anyURI ;
+           fhir:l <http://acme-rehab.org>
+         ] ;
+         fhir:code [ fhir:v "alcohol-type" ]
+       ] ) # Local - unable to identify a proper LOINC code
+     ] ; # component.code is same as code
+     fhir:value [
+       a fhir:CodeableConcept, sct:53410008 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "53410008" ] ;
+         fhir:display [ fhir:v "Beer (substance)" ]
+       ] ) ;
+       fhir:text [ fhir:v "Beer" ]
+     ] # coded value using SNONED-CT, could also use a local code here or only text
+  ] [
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://acme-rehab.org"^^xsd:anyURI ;
+           fhir:l <http://acme-rehab.org>
+         ] ;
+         fhir:code [ fhir:v "alcohol-type" ]
+       ] ) # Local - unable to identify a proper LOINC code
+     ] ; # component.code is same as code
+     fhir:value [
+       a fhir:CodeableConcept, sct:6524003 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "6524003" ] ;
+         fhir:display [ fhir:v "Distilled spirits (substance)" ]
+       ] ) ;
+       fhir:text [ fhir:v "Liquor" ]
+     ] # coded value using SNONED-CT, could also use a local code here or only text
+  ] ) . # When the code is the same as component.code the value element must be empty per invariant obs-7, Using components since multi-select values/answers share the same attributes (such as id, performer, effective date, status, comment.., answer 1
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

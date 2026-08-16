@@ -1,0 +1,104 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/qualification-status> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "qualification-status"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem qualification-status</b></p><a name=\"qualification-status\"> </a><a name=\"hcqualification-status\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/qualification-status</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">active<a name=\"qualification-status-active\"> </a></td><td>Active</td><td>The qualification is available to use - The qualification period may be included to indicate a time interval if required.</td></tr><tr><td style=\"white-space:nowrap\">inactive<a name=\"qualification-status-inactive\"> </a></td><td>Inactive</td><td>This qualification is not available to use. This can be used without a period, and the expectation will not resume use.</td></tr><tr><td style=\"white-space:nowrap\">in-progress<a name=\"qualification-status-in-progress\"> </a></td><td>In-progress</td><td>The practitioner is in the process of aquiring for this qualification/certification </td></tr><tr><td style=\"white-space:nowrap\">pending<a name=\"qualification-status-pending\"> </a></td><td>Pending</td><td>The qualification is complete, however final issue/award is pending </td></tr><tr><td style=\"white-space:nowrap\">temporary<a name=\"qualification-status-temporary\"> </a></td><td>Temporary</td><td>This qualification has been allocated to the practitioner on a temporary basis, the period may indicate a time interval. This could cover cases such as the recognition of an external qualificiaiton that is still being verified, but can be used during the process.</td></tr><tr><td style=\"white-space:nowrap\">conditional<a name=\"qualification-status-conditional\"> </a></td><td>Conditional</td><td>This qualification may be used, however there are conditions that may apply</td></tr><tr><td style=\"white-space:nowrap\">suspended<a name=\"qualification-status-suspended\"> </a></td><td>Suspended</td><td>This qualification should not be used, but may resume use in the future - the period, if included, may indicate when this started (via the end date, start date indicates when the qualification was available from).</td></tr><tr><td style=\"white-space:nowrap\">revoked<a name=\"qualification-status-revoked\"> </a></td><td>Revoked</td><td>This qualification should not be used, and is not expected to resume in the future</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "pa"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/qualification-status"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/qualification-status>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.2137" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "QualificationStatus"] ; # 
+  fhir:title [ fhir:v "Qualification Status"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:publisher [ fhir:v "HL7 International"] ; # 
+  fhir:description [ fhir:v "Set of statuses that apply to qualifications of practitioners and organizations"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "active" ] ;
+     fhir:display [ fhir:v "Active" ] ;
+     fhir:definition [ fhir:v "The qualification is available to use - The qualification period may be included to indicate a time interval if required." ]
+  ] [
+     fhir:code [ fhir:v "inactive" ] ;
+     fhir:display [ fhir:v "Inactive" ] ;
+     fhir:definition [ fhir:v "This qualification is not available to use. This can be used without a period, and the expectation will not resume use." ]
+  ] [
+     fhir:code [ fhir:v "in-progress" ] ;
+     fhir:display [ fhir:v "In-progress" ] ;
+     fhir:definition [ fhir:v "The practitioner is in the process of aquiring for this qualification/certification " ]
+  ] [
+     fhir:code [ fhir:v "pending" ] ;
+     fhir:display [ fhir:v "Pending" ] ;
+     fhir:definition [ fhir:v "The qualification is complete, however final issue/award is pending " ]
+  ] [
+     fhir:code [ fhir:v "temporary" ] ;
+     fhir:display [ fhir:v "Temporary" ] ;
+     fhir:definition [ fhir:v "This qualification has been allocated to the practitioner on a temporary basis, the period may indicate a time interval. This could cover cases such as the recognition of an external qualificiaiton that is still being verified, but can be used during the process." ]
+  ] [
+     fhir:code [ fhir:v "conditional" ] ;
+     fhir:display [ fhir:v "Conditional" ] ;
+     fhir:definition [ fhir:v "This qualification may be used, however there are conditions that may apply" ]
+  ] [
+     fhir:code [ fhir:v "suspended" ] ;
+     fhir:display [ fhir:v "Suspended" ] ;
+     fhir:definition [ fhir:v "This qualification should not be used, but may resume use in the future - the period, if included, may indicate when this started (via the end date, start date indicates when the qualification was available from)." ]
+  ] [
+     fhir:code [ fhir:v "revoked" ] ;
+     fhir:display [ fhir:v "Revoked" ] ;
+     fhir:definition [ fhir:v "This qualification should not be used, and is not expected to resume in the future" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,182 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/OperationDefinition/CodeSystem-subsumes> a fhir:OperationDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "CodeSystem-subsumes"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: OperationDefinition CodeSystem-subsumes</b></p><a name=\"CodeSystem-subsumes\"> </a><a name=\"hcCodeSystem-subsumes\"> </a><p>URL: [base]/CodeSystem/$subsumes</p><p>URL: [base]/CodeSystem/[id]/$subsumes</p><h3>Parameters</h3><table class=\"grid\"><tr><td><b>Use</b></td><td><b>Name</b></td><td><b>Scope</b></td><td><b>Cardinality</b></td><td><b>Type</b></td><td><b>Binding</b></td><td><b>Documentation</b></td></tr><tr><td>IN</td><td>codeA</td><td/><td>0..1</td><td><a href=\"datatypes.html#code\">code</a></td><td/><td><div><p>The \"A\" code that is to be tested. If a code is provided, a system must be provided</p>\n</div></td></tr><tr><td>IN</td><td>codeB</td><td/><td>0..1</td><td><a href=\"datatypes.html#code\">code</a></td><td/><td><div><p>The \"B\" code that is to be tested. If a code is provided, a system must be provided</p>\n</div></td></tr><tr><td>IN</td><td>system</td><td>type</td><td>0..1</td><td><a href=\"datatypes.html#uri\">uri</a></td><td/><td><div><p>The code system in which subsumption testing is to be performed. This must be provided unless the operation is invoked on a code system instance</p>\n</div></td></tr><tr><td>IN</td><td>version</td><td>type</td><td>0..1</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>The version of the code system, if one was provided in the source data</p>\n</div></td></tr><tr><td>IN</td><td>codingA</td><td/><td>0..1</td><td><a href=\"datatypes.html#Coding\">Coding</a></td><td/><td><div><p>The \"A\" Coding that is to be tested. The code system does not have to match the specified subsumption code system, but the relationships between the code systems must be well established</p>\n</div></td></tr><tr><td>IN</td><td>codingB</td><td/><td>0..1</td><td><a href=\"datatypes.html#Coding\">Coding</a></td><td/><td><div><p>The \"B\" Coding that is to be tested. The code system does not have to match the specified subsumption code system, but the relationships between the code systems must be well established</p>\n</div></td></tr><tr><td>OUT</td><td>outcome</td><td/><td>1..1</td><td><a href=\"datatypes.html#code\">code</a></td><td><a href=\"valueset-concept-subsumption-outcome.html\">Concept Subsumption Outcome</a> (Required)</td><td><div><p>The subsumption relationship between code/Coding \"A\" and code/Coding \"B\". There are 4 possible codes to be returned (equivalent, subsumes, subsumed-by, and not-subsumed) as defined in the concept-subsumption-outcome value set.  If the server is unable to determine the relationship between the codes/Codings, then it returns an error response with an OperationOutcome.</p>\n</div></td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 5
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "vocab"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/OperationDefinition/CodeSystem-subsumes"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/OperationDefinition/CodeSystem-subsumes>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "Subsumes"] ; # 
+  fhir:title [ fhir:v "Subsumption Testing"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:kind [ fhir:v "operation"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Terminology Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/Vocab" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Test the subsumption relationship between code/Coding A and code/Coding B given the semantics of subsumption in the underlying code system (see [hierarchyMeaning](codesystem-definitions.html#CodeSystem.hierarchyMeaning)).\n\nWhen invoking this operation, a client SHALL provide both A and B codes, either as code or Coding parameters. The system parameter is required unless the operation is invoked on an instance of a code system resource. Other parameters are optional"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:affectsState [ fhir:v false] ; # 
+  fhir:code [ fhir:v "subsumes"] ; # 
+  fhir:resource ( [
+     fhir:v "CodeSystem"^^xsd:anyURI ;
+     fhir:l fhir:CodeSystem
+  ] ) ; # 
+  fhir:system [ fhir:v false] ; # 
+  fhir:type [ fhir:v true] ; # 
+  fhir:instance [ fhir:v true] ; # 
+  fhir:parameter ( [
+     fhir:name [ fhir:v "codeA" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The \"A\" code that is to be tested. If a code is provided, a system must be provided" ] ;
+     fhir:type [
+       fhir:v "code"^^xsd:anyURI ;
+       fhir:l fhir:code
+     ]
+  ] [
+     fhir:name [ fhir:v "codeB" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The \"B\" code that is to be tested. If a code is provided, a system must be provided" ] ;
+     fhir:type [
+       fhir:v "code"^^xsd:anyURI ;
+       fhir:l fhir:code
+     ]
+  ] [
+     fhir:name [ fhir:v "system" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:scope ( [ fhir:v "type" ] ) ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The code system in which subsumption testing is to be performed. This must be provided unless the operation is invoked on a code system instance" ] ;
+     fhir:type [
+       fhir:v "uri"^^xsd:anyURI ;
+       fhir:l fhir:uri
+     ]
+  ] [
+     fhir:name [ fhir:v "version" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:scope ( [ fhir:v "type" ] ) ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The version of the code system, if one was provided in the source data" ] ;
+     fhir:type [
+       fhir:v "string"^^xsd:anyURI ;
+       fhir:l fhir:string
+     ]
+  ] [
+     fhir:name [ fhir:v "codingA" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The \"A\" Coding that is to be tested. The code system does not have to match the specified subsumption code system, but the relationships between the code systems must be well established" ] ;
+     fhir:type [
+       fhir:v "Coding"^^xsd:anyURI ;
+       fhir:l fhir:Coding
+     ]
+  ] [
+     fhir:name [ fhir:v "codingB" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The \"B\" Coding that is to be tested. The code system does not have to match the specified subsumption code system, but the relationships between the code systems must be well established" ] ;
+     fhir:type [
+       fhir:v "Coding"^^xsd:anyURI ;
+       fhir:l fhir:Coding
+     ]
+  ] [
+     fhir:name [ fhir:v "outcome" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "1"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The subsumption relationship between code/Coding \"A\" and code/Coding \"B\". There are 4 possible codes to be returned (equivalent, subsumes, subsumed-by, and not-subsumed) as defined in the concept-subsumption-outcome value set.  If the server is unable to determine the relationship between the codes/Codings, then it returns an error response with an OperationOutcome." ] ;
+     fhir:type [
+       fhir:v "code"^^xsd:anyURI ;
+       fhir:l fhir:code
+     ] ;
+     fhir:binding [
+       fhir:extension ( [
+         fhir:url [
+           fhir:v "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName>
+         ] ;
+         fhir:value [
+           a fhir:String ;
+           fhir:v "ConceptSubsumptionOutcome"
+         ]
+       ] ) ;
+       fhir:strength [ fhir:v "required" ] ;
+       fhir:valueSet [
+         fhir:v "http://hl7.org/fhir/ValueSet/concept-subsumption-outcome|6.0.0-ballot4"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/ValueSet/concept-subsumption-outcome?version=6.0.0-ballot4>
+       ]
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

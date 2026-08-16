@@ -1,0 +1,81 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/catalog-type> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "catalog-type"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem catalog-type</b></p><a name=\"catalog-type\"> </a><a name=\"hccatalog-type\"> </a><p>This case-sensitive code system <code>http://hl7.org/fhir/catalog-type</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">medication<a name=\"catalog-type-medication\"> </a></td><td>Medication Catalog</td><td>Medication Catalog.</td></tr><tr><td style=\"white-space:nowrap\">device<a name=\"catalog-type-device\"> </a></td><td>Device Catalog</td><td>Device Catalog.</td></tr><tr><td style=\"white-space:nowrap\">protocol<a name=\"catalog-type-protocol\"> </a></td><td>Protocol List</td><td>Protocol List.</td></tr><tr><td style=\"white-space:nowrap\">status<a name=\"catalog-type-status\"> </a></td><td>Status</td><td>Status.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "oo"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "informative"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/catalog-type"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/catalog-type>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "CatalogType"] ; # 
+  fhir:title [ fhir:v "Catalog Type"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:publisher [ fhir:v "HL7 International"] ; # 
+  fhir:description [ fhir:v "CatalogType"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "medication" ] ;
+     fhir:display [ fhir:v "Medication Catalog" ] ;
+     fhir:definition [ fhir:v "Medication Catalog." ]
+  ] [
+     fhir:code [ fhir:v "device" ] ;
+     fhir:display [ fhir:v "Device Catalog" ] ;
+     fhir:definition [ fhir:v "Device Catalog." ]
+  ] [
+     fhir:code [ fhir:v "protocol" ] ;
+     fhir:display [ fhir:v "Protocol List" ] ;
+     fhir:definition [ fhir:v "Protocol List." ]
+  ] [
+     fhir:code [ fhir:v "status" ] ;
+     fhir:display [ fhir:v "Status" ] ;
+     fhir:definition [ fhir:v "Status." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,180 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/PaymentReconciliation/ER2500> a fhir:PaymentReconciliation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "ER2500"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">A human-readable rendering of the PaymentReconciliation</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://www.BenefitsInc.com/fhir/enrollmentresponse"^^xsd:anyURI ;
+       fhir:l <http://www.BenefitsInc.com/fhir/enrollmentresponse>
+     ] ;
+     fhir:value [ fhir:v "781234" ]
+  ] ) ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/payment-type"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/payment-type>
+       ] ;
+       fhir:code [ fhir:v "payment" ]
+     ] )
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:period [
+     fhir:start [ fhir:v "2014-08-16"^^xsd:date ] ;
+     fhir:end [ fhir:v "2014-08-31"^^xsd:date ]
+  ] ; # 
+  fhir:created [ fhir:v "2014-08-16"^^xsd:date] ; # 
+  fhir:paymentIssuer [
+     fhir:l <http://hl7.org/fhir/Organization/2> ;
+     fhir:reference [ fhir:v "Organization/2" ]
+  ] ; # 
+  fhir:request [
+     fhir:l <http://www.BenefitsInc.com/fhir/eligibility/225476332402> ;
+     fhir:reference [ fhir:v "http://www.BenefitsInc.com/fhir/eligibility/225476332402" ]
+  ] ; # 
+  fhir:requestor [
+     fhir:l <http://hl7.org/fhir/Organization/1> ;
+     fhir:reference [ fhir:v "Organization/1" ]
+  ] ; # 
+  fhir:outcome [ fhir:v "complete"] ; # 
+  fhir:disposition [ fhir:v "2014 August mid-month settlement."] ; # 
+  fhir:date [ fhir:v "2014-08-01"^^xsd:date] ; # 
+  fhir:amount [
+     fhir:value [ fhir:v 7000.00 ] ;
+     fhir:currency [ fhir:v "USD" ]
+  ] ; # 
+  fhir:paymentIdentifier [
+     fhir:system [
+       fhir:v "http://www.BenefitsInc.com/payment/2018"^^xsd:anyURI ;
+       fhir:l <http://www.BenefitsInc.com/payment/2018>
+     ] ;
+     fhir:value [ fhir:v "10-12345" ]
+  ] ; # 
+  fhir:allocation ( [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://www.BenefitsInc.com/payment/2018/detail"^^xsd:anyURI ;
+         fhir:l <http://www.BenefitsInc.com/payment/2018/detail>
+       ] ;
+       fhir:value [ fhir:v "10-12345-001" ]
+     ] ;
+     fhir:target [
+       fhir:identifier [
+         fhir:system [
+           fhir:v "http://happyvalleyclinic.com/claim"^^xsd:anyURI ;
+           fhir:l <http://happyvalleyclinic.com/claim>
+         ] ;
+         fhir:value [ fhir:v "AB12345" ]
+       ]
+     ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/payment-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/payment-type>
+         ] ;
+         fhir:code [ fhir:v "payment" ]
+       ] )
+     ] ;
+     fhir:submitter [
+       fhir:l <http://hl7.org/fhir/Organization/1> ;
+       fhir:reference [ fhir:v "Organization/1" ]
+     ] ;
+     fhir:response [
+       fhir:identifier [
+         fhir:system [
+           fhir:v "http://www.BenefitsInc.com/fhir/claimresponse"^^xsd:anyURI ;
+           fhir:l <http://www.BenefitsInc.com/fhir/claimresponse>
+         ] ;
+         fhir:value [ fhir:v "CR20140815-AB12345" ]
+       ]
+     ] ;
+     fhir:date [ fhir:v "2014-08-16"^^xsd:date ] ;
+     fhir:payee [
+       fhir:l <http://hl7.org/fhir/Organization/1> ;
+       fhir:reference [ fhir:v "Organization/1" ]
+     ] ;
+     fhir:amount [
+       fhir:value [ fhir:v 3500.00 ] ;
+       fhir:currency [ fhir:v "USD" ]
+     ]
+  ] [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://www.BenefitsInc.com/payment/2018/detail"^^xsd:anyURI ;
+         fhir:l <http://www.BenefitsInc.com/payment/2018/detail>
+       ] ;
+       fhir:value [ fhir:v "10-12345-002" ]
+     ] ;
+     fhir:target [
+       fhir:l <http://www.BenefitsInc.com/fhir/oralhealthclaim/225476332699> ;
+       fhir:reference [ fhir:v "http://www.BenefitsInc.com/fhir/oralhealthclaim/225476332699" ]
+     ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/payment-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/payment-type>
+         ] ;
+         fhir:code [ fhir:v "payment" ]
+       ] )
+     ] ;
+     fhir:date [ fhir:v "2014-08-12"^^xsd:date ] ;
+     fhir:amount [
+       fhir:value [ fhir:v 4000.00 ] ;
+       fhir:currency [ fhir:v "USD" ]
+     ]
+  ] [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://www.BenefitsInc.com/payment/2018/detail"^^xsd:anyURI ;
+         fhir:l <http://www.BenefitsInc.com/payment/2018/detail>
+       ] ;
+       fhir:value [ fhir:v "10-12345-003" ]
+     ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/payment-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/payment-type>
+         ] ;
+         fhir:code [ fhir:v "advance" ]
+       ] )
+     ] ;
+     fhir:date [ fhir:v "2014-08-16"^^xsd:date ] ;
+     fhir:amount [
+       fhir:value [ fhir:v -1500.00 ] ;
+       fhir:currency [ fhir:v "USD" ]
+     ]
+  ] ) ; # 
+  fhir:formCode [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://ncforms.org/formid"^^xsd:anyURI ;
+         fhir:l <http://ncforms.org/formid>
+       ] ;
+       fhir:code [ fhir:v "PAYREC/2016/01B" ]
+     ] )
+  ] ; # 
+  fhir:processNote ( [
+     fhir:type [ fhir:v "display" ] ;
+     fhir:text [ fhir:v "Due to the year end holiday the cutoff for submissions for December will be the 28th." ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Organization/2> a fhir:Organization .
+
+<http://hl7.org/fhir/Organization/1> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

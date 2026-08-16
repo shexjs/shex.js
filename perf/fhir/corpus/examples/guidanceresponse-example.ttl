@@ -1,0 +1,100 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/GuidanceResponse/example> a fhir:GuidanceResponse ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:contained ( [
+     a fhir:Parameters ;
+     fhir:id [ fhir:v "outputParameters1" ] ;
+     fhir:parameter ( [
+       fhir:name [ fhir:v "score" ] ;
+       fhir:value [
+         a fhir:Decimal ;
+         fhir:v "7"^^xsd:decimal
+       ]
+     ] [
+       fhir:name [ fhir:v "item-assessed" ] ;
+       fhir:value [
+         a fhir:CodeableConcept ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://www.ama-assn.org/go/cpt"^^xsd:anyURI ;
+             fhir:l <http://www.ama-assn.org/go/cpt>
+           ] ;
+           fhir:code [ fhir:v "70450" ] ;
+           fhir:display [ fhir:v "Computed tomography, head or brain; without contrast material" ]
+         ] )
+       ]
+     ] [
+       fhir:name [ fhir:v "device" ] ;
+       fhir:value [
+         a fhir:Reference ;
+         fhir:l <http://hl7.org/fhir/Device/software> ;
+         fhir:reference [ fhir:v "Device/software" ]
+       ]
+     ] [
+       fhir:name [ fhir:v "guideline-followed" ] ;
+       fhir:value [
+         a fhir:Uri ;
+         fhir:v "http://someguidelineprovider.org/radiology-appropriateness-guidelines.html"^^xsd:anyURI ;
+         fhir:l <http://someguidelineprovider.org/radiology-appropriateness-guidelines.html>
+       ]
+     ] )
+  ] ) ; # 
+  fhir:requestIdentifier [
+     fhir:system [
+       fhir:v "http://example.org"^^xsd:anyURI ;
+       fhir:l <http://example.org>
+     ] ;
+     fhir:value [ fhir:v "guidanceRequest1" ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://example.org"^^xsd:anyURI ;
+       fhir:l <http://example.org>
+     ] ;
+     fhir:value [ fhir:v "guidanceResponse1" ]
+  ] ) ; # 
+  fhir:module [
+     a fhir:Uri ;
+     fhir:v "http://someguidelineprovider.org/radiology-appropriateness-guidelines.html"^^xsd:anyURI ;
+     fhir:l <http://someguidelineprovider.org/radiology-appropriateness-guidelines.html>
+  ] ; # 
+  fhir:status [ fhir:v "success"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/example> ;
+     fhir:reference [ fhir:v "Encounter/example" ]
+  ] ; # 
+  fhir:occurrenceDateTime [ fhir:v "2017-03-10T16:02:00Z"^^xsd:dateTime] ; # 
+  fhir:performer [
+     fhir:l <http://hl7.org/fhir/Device/software> ;
+     fhir:reference [ fhir:v "Device/software" ]
+  ] ; # 
+  fhir:reason ( [
+     fhir:concept [
+       fhir:text [ fhir:v "Guideline Appropriate Ordering Assessment" ]
+     ]
+  ] ) ; # 
+  fhir:outputParameters [
+     fhir:l <#outputParameters1> ;
+     fhir:reference [ fhir:v "#outputParameters1" ]
+  ] . # 
+
+<http://hl7.org/fhir/Device/software> a fhir:Device .
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/example> a fhir:Encounter .
+
+# -------------------------------------------------------------------------------------
+

@@ -77,6 +77,10 @@ class SemActDispatcherImpl {
     register(name, handler) {
         this.handlers[name] = handler;
     }
+    /** Is there a handler for this action?  If not, dispatchAll skips it. */
+    isRegistered(name) {
+        return name in this.handlers;
+    }
     /**
      * Calls all semantic actions, allowing each to write to resultsArtifact.
      *
@@ -369,7 +373,14 @@ class ShExValidator {
         }
         // Find all non-abstract shapeExprs extended with label.
         let candidates = [shapeLabel];
-        candidates = candidates.concat(indexExtensions(this.schema)[shapeLabel] || []);
+        // Built once per schema, not once per validation: it walks every shape
+        // there is, which for FHIR's ~1400 was 650ms of an 810ms validation --
+        // 80% of the time, spent re-deriving something the schema had already
+        // determined.  It lives on the index for the same reason labelToTcs
+        // does, so a second validator over the same schema doesn't pay again.
+        if (this.index.extensions === undefined)
+            this.index.extensions = indexExtensions(this.schema);
+        candidates = candidates.concat(this.index.extensions[shapeLabel] || []);
         // Uniquify list.
         for (let i = candidates.length - 1; i >= 0; --i) {
             if (candidates.indexOf(candidates[i]) < i)
@@ -428,8 +439,19 @@ class ShExValidator {
                     if (shape.extends !== undefined) {
                         shape.extends.forEach(ext => {
                             const extendsVisitor = new visitor_1.ShExVisitor();
+                            // A reference reached twice is the same reference: walking it
+                            // again adds nothing, and where the references form a cycle --
+                            // FHIR's <Resource> is an OR over every shape, and those shapes
+                            // EXTEND <DomainResource>, which leads back to <Resource> --
+                            // walking it again never stops.  `extensions` is a MapArray,
+                            // which rejects a repeated pair outright, so this guards the
+                            // bookkeeping as much as the recursion.
+                            const walked = new Set();
                             extendsVisitor.visitExpression = function (_expr, ..._args) { return "null"; };
                             extendsVisitor.visitShapeRef = function (reference, ..._args) {
+                                if (walked.has(reference))
+                                    return "null";
+                                walked.add(reference);
                                 extensions.add(reference, curLabel);
                                 extendsVisitor.visitShapeDecl(_ShExValidator.lookupShape(reference));
                                 // makeSchemaVisitor().visitSchema(schema);
@@ -495,7 +517,10 @@ class ShExValidator {
             case "ShapeNot":
                 const sub = this.validateShapeExpr(focus, shapeExpr.shapeExpr, ctx);
                 return ("errors" in sub)
-                    ? { type: "ShapeNotResults", solution: sub }
+                    // The negation is satisfied *because* this failed, so the failure
+                    // is recorded as a reason for success.  Repairs answer "what would
+                    // make this conform", which here is advice to break the data.
+                    ? { type: "ShapeNotResults", solution: stripRepairs(sub) }
                     : { type: "ShapeNotFailure", errors: sub };
             case "ShapeAnd":
                 const andPasses = [];
@@ -607,9 +632,32 @@ class ShExValidator {
         // What would make the node conform, said as the difference between the
         // bag of arcs it has and the nearest bag this shape accepts.  Unlike the
         // errors above it doesn't depend on how the expression was written.
-        if (this.options.repairs && ret !== null && ret.type === "Failure"
-            && shape.expression !== undefined)
-            ret.repairs = this.nearestBagRepairs(shape.expression, observedBag);
+        //
+        // Answered on demand rather than in advance.  A search that ultimately
+        // succeeds still fails branches on the way, and this is reached for each
+        // of them: over shexTest's parser round-trip, where every test passes
+        // and no failure reaches a caller at all, it was reached 5485 times.
+        // Failures that get thrown away never ask, so they now cost nothing.
+        //
+        // It stays an ordinary enumerable property: JSON.stringify, deep-equal
+        // against a fixture and `for...in` all read it exactly as they read an
+        // eager one, and a bag with nothing to repair yields undefined, which
+        // JSON.stringify omits.  The first read replaces the accessor with the
+        // value, so nothing recomputes.
+        if (this.options.repairs !== false && ret !== null && ret.type === "Failure"
+            && shape.expression !== undefined) {
+            const expression = shape.expression, bag = observedBag, validator = this;
+            Object.defineProperty(ret, "repairs", {
+                enumerable: true, configurable: true,
+                get() {
+                    const repairs = validator.nearestBagRepairs(expression, bag);
+                    // nothing to say beats an empty list to read
+                    const value = repairs.length > 0 ? repairs : undefined;
+                    Object.defineProperty(this, "repairs", { value, enumerable: true, configurable: true, writable: true });
+                    return value;
+                },
+            });
+        }
         // A reported result may contain ResultReferences whose named referents appeared
         // only in partitions that are not part of the report: attach those referents in
         // a "shared" side table so every reference is resolvable within the document.
@@ -753,13 +801,21 @@ class ShExValidator {
     /**
      * The repairs for a failed shape: the arcs to add or drop to reach the
      * nearest bag the expression accepts (see ./repairs.ts).
+     *
+     * A repair of cost 0 is dropped, and with it the whole answer.  Cost 0
+     * means the arcs this node has are already a bag the expression accepts,
+     * so whatever it failed on -- a value, a semantic action, a NOT it fell
+     * inside of -- is not something a bag can speak to, and "to conform:
+     * change nothing" is worse than saying nothing.  The classic errors
+     * carry that failure; this only ever answers the counting question.
      */
     nearestBagRepairs(expression, observed) {
         try {
             let nearest = this.nearestBags.get(expression);
             if (nearest === undefined)
                 this.nearestBags.set(expression, nearest = new repairs_1.NearestAcceptedBag(expression, label => this.index.tripleExprs[label]));
-            return nearest.repairs(observed);
+            const repairs = nearest.repairs(observed);
+            return repairs.some(repair => repair.cost === 0) ? [] : repairs;
         }
         catch (e) {
             return []; // e.g. a recursive triple expression
@@ -909,8 +965,15 @@ class ShExValidator {
             }
         }
         // TODO: what if results is a TypedError (i.e. not a container of further errors)?
-        if (results !== null && results.errors !== undefined)
-            Array.prototype.push.apply(errors, results.errors);
+        if (results !== null && results.errors !== undefined) {
+            // An Alternatives is one error saying "any of these": spreading its
+            // children into this list would turn a choice into a conjunction,
+            // which is how "either an :a or a :b" came to be read as needing both.
+            if (results.type === "Alternatives")
+                errors.push(results);
+            else
+                Array.prototype.push.apply(errors, results.errors);
+        }
         return { errors, triples: usedTriples, results };
     }
     /**
@@ -1034,8 +1097,18 @@ class ShExValidator {
         const visitor = new visitor_1.ShExVisitor(labelToTcs);
         function emptyShapeExpr() { return []; }
         visitor.visitShapeDecl = function (decl, _min, _max) {
-            // if (labelToTcs.has(decl.id)) !! uncomment cache for production
-            //   return labelToTcs[decl.id];
+            // A decl already walked is answered with the same Ref this returns
+            // below, and not walked again.  It is the memo the old comment here
+            // asked for ("uncomment cache for production"), but it is first a
+            // termination condition: references can lead back to where they
+            // started -- FHIR's <Resource> is an OR over every shape, and those
+            // shapes EXTEND <DomainResource>, which leads back to <Resource> --
+            // and without this the walk recurses until the stack gives out.
+            // The entry goes in *before* the walk so a cycle meets it on the way
+            // round rather than after.
+            if (decl.id in labelToTcs)
+                return [{ type: "Ref", ref: decl.id }];
+            labelToTcs[decl.id] = emptyShapeExpr();
             labelToTcs[decl.id] = decl.shapeExpr
                 ? visitor.visitShapeExpr(decl.shapeExpr, 1, 1)
                 : emptyShapeExpr();
@@ -1091,13 +1164,21 @@ class ShExValidator {
             const tc2exts = new Map();
             extendsTcOrRefsz.map((tcOrRefs, ord) => flattenExtends(tcOrRefs, ord));
             return { extendsTCs: tcs, tc2exts, localTCs };
-            function flattenExtends(tcOrRefs, ord) {
+            // `walked` is per top-level extension (per ord): a ref reached twice
+            // contributes the triple constraints it contributed the first time --
+            // add() dedupes them by identity anyway -- and where the refs form a
+            // cycle, following it again never returns.  Fresh per call, so two
+            // extensions don't hide each other's references from one another.
+            function flattenExtends(tcOrRefs, ord, walked = new Set()) {
                 return tcOrRefs.forEach(tcOrRef => {
                     if (tcOrRef.type === "TripleConstraint") {
                         add(tcOrRef); // as TC
                     }
-                    else {
-                        flattenExtends(labelToTcs[tcOrRef.ref], ord);
+                    else if (!walked.has(tcOrRef.ref)) {
+                        walked.add(tcOrRef.ref);
+                        const referent = labelToTcs[tcOrRef.ref];
+                        if (referent !== undefined) // a label the walk hasn't reached
+                            flattenExtends(referent, ord, walked);
                     }
                 });
                 function add(tc) {
@@ -1183,9 +1264,17 @@ class ShExValidator {
      */
     validateNodeConstraint(focus, nc, ctx) {
         const errors = [];
-        function validationError(...s) {
-            const errorStr = Array.prototype.join.call(s, "");
-            errors.push("Error validating " + ShExTerm.rdfJsTerm2Turtle(focus) + " as " + JSON.stringify(nc) + ": " + errorStr);
+        /**
+         * Why a node didn't satisfy this constraint: a leaf saying what failed,
+         * and the English that used to be all of it.  Called either way --
+         * `validationError("...")` for the cases with nothing worth typing, or
+         * with a leaf first (see shex-xsd's ValidationError, and
+         * doc/error-reporting.md F3).
+         */
+        function validationError(leafOrText, ...s) {
+            const leaf = typeof leafOrText === "string" ? {} : leafOrText;
+            const said = (typeof leafOrText === "string" ? [leafOrText] : []).concat(s).join("");
+            errors.push(Object.assign({ type: "NodeConstraintDetail" }, leaf, { message: said }));
             return false;
         }
         if (nc.nodeKind !== undefined) {
@@ -1194,23 +1283,23 @@ class ShExValidator {
             }
             if (focus.termType === "BlankNode") {
                 if (nc.nodeKind === "iri" || nc.nodeKind === "literal") {
-                    validationError(`blank node found when ${nc.nodeKind} expected`);
+                    validationError({ type: "NodeKindMismatch", expected: nc.nodeKind, actual: "bnode" }, `blank node found when ${nc.nodeKind} expected`);
                 }
             }
             else if (focus.termType === "Literal") {
                 if (nc.nodeKind !== "literal") {
-                    validationError(`literal found when ${nc.nodeKind} expected`);
+                    validationError({ type: "NodeKindMismatch", expected: nc.nodeKind, actual: "literal" }, `literal found when ${nc.nodeKind} expected`);
                 }
             }
             else if (nc.nodeKind === "bnode" || nc.nodeKind === "literal") {
-                validationError(`iri found when ${nc.nodeKind} expected`);
+                validationError({ type: "NodeKindMismatch", expected: nc.nodeKind, actual: "iri" }, `iri found when ${nc.nodeKind} expected`);
             }
         }
         if (nc.datatype && nc.values)
             validationError("found both datatype and values in " + nc);
         if (nc.values !== undefined) {
             if (!nc.values.some(valueSetValue => testValueSetValue(valueSetValue, focus))) {
-                validationError(`value ${(focus.value)} not found in set ${JSON.stringify(nc.values)}`);
+                validationError({ type: "ValueSetMismatch", values: nc.values, actual: (0, term_1.rdfJsTerm2Ld)(focus) }, `value ${(focus.value)} not found in set ${JSON.stringify(nc.values)}`);
             }
         }
         const numeric = (0, shex_xsd_1.getNumericDatatype)(focus);
@@ -1518,6 +1607,31 @@ function indexNeighborhood(triples) {
  */
 function _seq(n) {
     return Array.from(Array(n)); // ha ha ha, javascript, you suck.
+}
+/**
+ * The same result with every `repairs` taken out of it, at any depth.
+ *
+ * Used where a failure is recorded as the reason something *succeeded* (a
+ * satisfied ShapeNot), so the reader isn't handed instructions for undoing
+ * the thing that just worked.  Both spellings go: a shape's nearest bag and
+ * a homeless triple's `FeasibilityViolation.repairs`.
+ */
+function stripRepairs(result) {
+    if (Array.isArray(result))
+        return result.map(stripRepairs);
+    if (result === null || typeof result !== "object")
+        return result;
+    const proto = Object.getPrototypeOf(result);
+    if (proto !== Object.prototype && proto !== null)
+        return result; // an RDF term or the like: leave it whole
+    const out = {};
+    // by key, not by entry: `repairs` is an accessor that computes on read, and
+    // Object.entries would run it for every failure here only to throw the
+    // answer away -- which is the whole thing this is trying not to do.
+    for (const key of Object.keys(result))
+        if (key !== "repairs")
+            out[key] = stripRepairs(result[key]);
+    return out;
 }
 function runtimeError(...args) {
     const errorStr = args.join("");

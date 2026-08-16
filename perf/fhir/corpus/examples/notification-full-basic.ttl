@@ -1,0 +1,119 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/fdd386f3-b4b5-426e-bd96-495eebda96d9> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "fdd386f3-b4b5-426e-bd96-495eebda96d9"] ; # 
+  fhir:type [ fhir:v "subscription-notification"] ; # 
+  fhir:timestamp [ fhir:v "2020-04-17T10:24:13.1882432-05:00"^^xsd:dateTime] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:ce762452-8aed-43eb-bc03-2a024c49248f"^^xsd:anyURI ;
+       fhir:l <urn:uuid:ce762452-8aed-43eb-bc03-2a024c49248f>
+     ] ;
+     fhir:resource ( <urn:uuid:ce762452-8aed-43eb-bc03-2a024c49248f> )
+  ] [
+     fhir:fullUrl [
+       fhir:v "http://example.org/FHIR/Basic/AD-11220"^^xsd:anyURI ;
+       fhir:l <http://example.org/FHIR/Basic/AD-11220>
+     ] ;
+     fhir:resource ( <http://example.org/FHIR/Basic/AD-11220> )
+  ] ) . # 
+
+<urn:uuid:ce762452-8aed-43eb-bc03-2a024c49248f> a fhir:SubscriptionStatus ;
+  fhir:id [ fhir:v "ce762452-8aed-43eb-bc03-2a024c49248f"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: SubscriptionStatus ce762452-8aed-43eb-bc03-2a024c49248f</b></p><a name=\"ce762452-8aed-43eb-bc03-2a024c49248f\"> </a><a name=\"hcce762452-8aed-43eb-bc03-2a024c49248f\"> </a><p><b>status</b>: Active</p><p><b>type</b>: Event Notification</p><p><b>eventsSinceSubscriptionStart</b>: 20</p><h3>NotificationEvents</h3><table class=\"grid\"><tr><td style=\"display: none\">-</td><td><b>EventNumber</b></td><td><b>Focus</b></td></tr><tr><td style=\"display: none\">*</td><td>20</td><td><a href=\"broken-link.html\">http://example.org/FHIR/Basic/AD-11220</a></td></tr></table><p><b>subscription</b>: <a href=\"broken-link.html\">http://example.org/FHIR/Subscription/BASIC-123</a></p><p><b>topic</b>: <a href=\"subscriptiontopic-example-admission-basic.html\">SubscriptionTopic admission-basic</a></p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:type [ fhir:v "event-notification"] ; # 
+  fhir:eventsSinceSubscriptionStart [ fhir:v "20"^^xsd:long] ; # 
+  fhir:notificationEvent ( [
+     fhir:eventNumber [ fhir:v "20"^^xsd:long ] ;
+     fhir:focus [
+       fhir:l <http://example.org/FHIR/Basic/AD-11220> ;
+       fhir:reference [ fhir:v "http://example.org/FHIR/Basic/AD-11220" ]
+     ]
+  ] ) ; # 
+  fhir:subscription [
+     fhir:l <http://example.org/FHIR/Subscription/BASIC-123> ;
+     fhir:reference [ fhir:v "http://example.org/FHIR/Subscription/BASIC-123" ]
+  ] ; # 
+  fhir:topic [
+     fhir:v "http://example.org/FHIR/SubscriptionTopic/admission-basic"^^xsd:anyURI ;
+     fhir:l <http://example.org/FHIR/SubscriptionTopic/admission-basic>
+  ] . # 
+
+<http://example.org/FHIR/Basic/AD-11220> a fhir:Basic ;
+  fhir:id [ fhir:v "AD-11220"] ; # 
+  fhir:meta [
+     fhir:versionId [ fhir:v "1" ] ;
+     fhir:lastUpdated [ fhir:v "2019-08-07T10:49:22Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "extensions" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: Basic AD-11220</b></p><a name=\"AD-11220\"> </a><a name=\"hcAD-11220\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">version: 1; Last updated: 2019-08-07T10:49:22Z</p></div><blockquote><p><b>org/fhir/StructureDefinition/admission-content</b></p><ul><li>status: in-progress</li><li>patient: <a href=\"broken-link.html\">Patient/ABC</a></li><li>patient-group: <a href=\"broken-link.html\">Group/XYZ</a></li></ul></blockquote><p><b>code</b>: <span title=\"Codes:{http://example.org/fhir/CodeSystem/basic-resource-codes admission}\">Admission Notification</span></p><p><b>subject</b>: <a href=\"broken-link.html\">Patient/ABC</a></p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://example.org/fhir/StructureDefinition/admission-content"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/StructureDefinition/admission-content>
+     ] ;
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "status"^^xsd:anyURI ;
+         fhir:l fhir:status
+       ] ;
+       fhir:value [
+         a fhir:Code ;
+         fhir:v "in-progress"
+       ]
+     ] [
+       fhir:url [
+         fhir:v "patient"^^xsd:anyURI ;
+         fhir:l fhir:patient
+       ] ;
+       fhir:value [
+         a fhir:Reference ;
+         fhir:l <http://hl7.org/fhir/Patient/ABC> ;
+         fhir:reference [ fhir:v "Patient/ABC" ]
+       ]
+     ] [
+       fhir:url [
+         fhir:v "patient-group"^^xsd:anyURI ;
+         fhir:l fhir:patient-group
+       ] ;
+       fhir:value [
+         a fhir:Reference ;
+         fhir:l <http://hl7.org/fhir/Group/XYZ> ;
+         fhir:reference [ fhir:v "Group/XYZ" ]
+       ]
+     ] )
+  ] ) ; # 
+  fhir:code [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://example.org/fhir/CodeSystem/basic-resource-codes"^^xsd:anyURI ;
+         fhir:l <http://example.org/fhir/CodeSystem/basic-resource-codes>
+       ] ;
+       fhir:code [ fhir:v "admission" ] ;
+       fhir:display [ fhir:v "Admission Notification" ]
+     ] )
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/ABC> ;
+     fhir:reference [ fhir:v "Patient/ABC" ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/ABC> a fhir:Patient .
+
+<http://hl7.org/fhir/Group/XYZ> a fhir:Group .
+
+# -------------------------------------------------------------------------------------
+

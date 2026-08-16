@@ -1,0 +1,50 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/bundle-search-warning> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "bundle-search-warning"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2017-03-14T08:23:30+11:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:type [ fhir:v "searchset"] ; # 
+  fhir:total [ fhir:v "0"^^xsd:nonNegativeInteger] ; # 
+  fhir:link ( [
+     fhir:relation [ fhir:v "self" ] ;
+     fhir:url [
+       fhir:v "https://example.org/fhir/Observation?patient.identifier=http://example.com/fhir/identifier/mrn|123456"^^xsd:anyURI ;
+       fhir:l <https://example.org/fhir/Observation?patient.identifier=http://example.com/fhir/identifier/mrn&version=123456>
+     ]
+  ] ) ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:2866af9c-137d-4458-a8a9-eeeec0ce5583"^^xsd:anyURI ;
+       fhir:l <urn:uuid:2866af9c-137d-4458-a8a9-eeeec0ce5583>
+     ] ;
+     fhir:resource ( <urn:uuid:2866af9c-137d-4458-a8a9-eeeec0ce5583> ) ;
+     fhir:search [
+       fhir:mode [ fhir:v "outcome" ] # this is not a match - it's about the search
+     ]
+  ] ) . # 
+
+<urn:uuid:2866af9c-137d-4458-a8a9-eeeec0ce5583> a fhir:OperationOutcome ;
+  fhir:id [ fhir:v "warning"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">There is no matching patient for MRN 123456</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:issue ( [
+     fhir:severity [ fhir:v "warning" ] ;
+     fhir:code [ fhir:v "not-found" ] ;
+     fhir:details [
+       fhir:text [ fhir:v "There is no matching patient for MRN 123456" ]
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -171,10 +171,10 @@ function getNumericDatatype(value) {
 }
 function testKnownTypes(value, validationError, ldify, datatype, numeric, label) {
     if (value.termType !== "Literal") {
-        validationError(`mismatched datatype: ${JSON.stringify(ldify(value))} is not a literal with datatype ${datatype}`);
+        validationError({ type: "DatatypeMismatch", expected: datatype, actual: null }, `mismatched datatype: ${JSON.stringify(ldify(value))} is not a literal with datatype ${datatype}`);
     }
     else if (value.datatype.value !== datatype) {
-        validationError(`mismatched datatype: ${value.datatype.value} !== ${datatype}`);
+        validationError({ type: "DatatypeMismatch", expected: datatype, actual: value.datatype.value }, `mismatched datatype: ${value.datatype.value} !== ${datatype}`);
     }
     else if (numeric) {
         testRange(numericParsers[numeric](label, validationError), datatype, validationError);
@@ -194,7 +194,7 @@ function testFacets(valueExpr, label, validationError, numeric) {
             new RegExp(valueExpr.pattern, valueExpr.flags) :
             new RegExp(valueExpr.pattern);
         if (!(label.match(regexp)))
-            validationError(`value ${label} did not match pattern ${valueExpr.pattern}`);
+            validationError({ type: "PatternMismatch", pattern: valueExpr.pattern, flags: valueExpr.flags, actual: label }, `value ${label} did not match pattern ${valueExpr.pattern}`);
     }
     for (const [facet, testFunc] of Object.entries(stringTests)) {
         // @ts-ignore - TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'NodeConstraint'
@@ -209,7 +209,7 @@ function testFacets(valueExpr, label, validationError, numeric) {
                 // @ts-ignore - TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'NodeConstraint'
                 const facetParm = valueExpr[facet];
                 if (!testFunc(numericParsers[numeric](label, validationError), facetParm)) {
-                    validationError(`facet violation: expected ${facet} of ${facetParm} but got ${label}`);
+                    validationError({ type: "FacetViolation", facet, expected: facetParm, actual: label }, `facet violation: expected ${facet} of ${facetParm} but got ${label}`);
                 }
             }
             else {

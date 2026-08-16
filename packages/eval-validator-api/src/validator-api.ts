@@ -109,6 +109,16 @@ export interface QueryTracker {
 
 export interface SemActDispatcher {
   register(name: string, handler: SemActHandler): void;
+  /**
+   * Is there a handler for this action?
+   *
+   * An action with none is never dispatched (see dispatchAll), so it cannot
+   * observe anything and, for validation, may as well not be written.  An
+   * engine that changes how it searches when actions are watching asks this
+   * first.  Optional so an implementation that predates it still works: a
+   * caller that finds it absent should assume the action is live.
+   */
+  isRegistered?(name: string): boolean;
   dispatchAll(semActs: ShExJ.SemAct[] | undefined, ctx: any, resultsArtifact: any): SemActFailure[];
   results: { [id: string]: string | undefined }; // TODO: improve this trivial storage mechanism
 }

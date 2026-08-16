@@ -1,0 +1,181 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/OperationDefinition/DocumentReference-docref> a fhir:OperationDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "DocumentReference-docref"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: OperationDefinition DocumentReference-docref</b></p><a name=\"DocumentReference-docref\"> </a><a name=\"hcDocumentReference-docref\"> </a><p>URL: [base]/DocumentReference/$docref</p><h3>Parameters</h3><table class=\"grid\"><tr><td><b>Use</b></td><td><b>Name</b></td><td><b>Scope</b></td><td><b>Cardinality</b></td><td><b>Type</b></td><td><b>Binding</b></td><td><b>Documentation</b></td></tr><tr><td>IN</td><td>patient</td><td/><td>1..1</td><td><a href=\"datatypes.html#id\">id</a></td><td/><td><div><p>The id of the patient resource located on the server on which this operation is executed.  If there is no match, an empty Bundle is returned</p>\n</div></td></tr><tr><td>IN</td><td>start</td><td/><td>0..1</td><td><a href=\"datatypes.html#dateTime\">dateTime</a></td><td/><td><div><p>The date range relates to care dates, not record currency dates - e.g. all records relating to care provided in a certain date range. If no start date is provided, all documents prior to the end date are in scope.  If neither a start date nor an end date is provided, the most recent or current document is in scope.  The client <strong>SHOULD</strong> provide values precise to the second + time offset.</p>\n</div></td></tr><tr><td>IN</td><td>end</td><td/><td>0..1</td><td><a href=\"datatypes.html#dateTime\">dateTime</a></td><td/><td><div><p>The date range relates to care dates, not record currency dates - e.g. all records relating to care provided in a certain date range. If no end date is provided, all documents subsequent to the start date are in scope. If neither a start date nor an end date is provided, the most recent or current document is in scope.  The client <strong>SHOULD</strong> provide values precise to the second + time offset.</p>\n</div></td></tr><tr><td>IN</td><td>type</td><td/><td>0..1</td><td><a href=\"datatypes.html#CodeableConcept\">CodeableConcept</a></td><td><a href=\"valueset-doc-typecodes.html\">FHIR Document Type Codes</a> (Required)</td><td><div><p>The type relates to document type e.g. C-CDA Clinical Summary of Care (CCD) = LOINC 34133-9: Summary of episode note, and International Patient Summary (IPS) = LOINC 60591-5: Patient summary document.  If no type is provided, the summary document, if available, SHALL be in scope, and all other document types MAY be in scope. It is at the server's discretion how to respond if multiple types are provided. The server MAY return documents to any of the specified types. The server's CapabilityStatement should document its behavior and what types it supports</p>\n</div></td></tr><tr><td>IN</td><td>on-demand</td><td/><td>0..1</td><td><a href=\"datatypes.html#boolean\">boolean</a></td><td/><td><div><p>This on-demand parameter allows client to dictate whether they are requesting only 'on-demand' or both 'on-demand' and 'stable' documents (or delayed/deferred assembly) that meet the query parameters</p>\n</div></td></tr><tr><td>IN</td><td>profile</td><td/><td>0..*</td><td><a href=\"datatypes.html#canonical\">canonical</a></td><td/><td><div><p>This parameter allows the client to request documents according to a specific profile using the profile's canonical reference. It is at the server's discretion how to respond if multiple profiles are provided. The server MAY return documents to any of the specified profiles. The server's CapabilityStatement should document its behavior and what profiles it supports.</p>\n</div></td></tr><tr><td>OUT</td><td>return</td><td/><td>1..1</td><td><a href=\"bundle.html\">Bundle</a></td><td/><td><div><p>The bundle type is \"searchset\"containing <a href=\"documentreference.html\">DocumentReference</a> resources.</p>\n</div></td></tr></table><div><p>The server either returns a search result Bundle containing at least one DocumentReference,\nor it returns an error.</p>\n</div></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 3
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "oo"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/OperationDefinition/DocumentReference-docref"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/OperationDefinition/DocumentReference-docref>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "Docref"] ; # 
+  fhir:title [ fhir:v "Fetch DocumentReference"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:kind [ fhir:v "operation"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Orders and Observations"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/orders" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "This operation is used to return all the references to documents related to a patient. \n\n The operation requires a patient id and takes the optional input parameters: \n  - start date\n  - end date\n  - document type \n\n  - on demand \n\n  - profile \n\n and returns a [Bundle](bundle.html) of type \"searchset\" containing [DocumentReference](documentreference.html) resources for the patient. If the server has or can create documents that are related to the patient, and that are available for the given user, the server returns the DocumentReference resources needed to support the records.  The principle intended use for this operation is to provide a provider or patient with access to their available document information. \n\n This operation is *different* from a search by patient and type and date range because: \n\n 1. It is used to request a server to *generate* a document based on the specified parameters. \n\n 1. If no parameters are specified, the server SHALL return a DocumentReference to the patient's most current summary \n\n 1. If the server cannot *generate* a document based on the specified parameters, the operation will return an empty search bundle. \n\n Unless the client indicates they are only interested in 'on-demand' documents using the on-demand parameter, the server SHOULD return DocumentReference instances for existing documents that meet the request parameters. In this regard, this operation is similar to a FHIR RESTful query."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:affectsState [ fhir:v true] ; # 
+  fhir:code [ fhir:v "docref"] ; # 
+  fhir:comment [ fhir:v "The server either returns a search result Bundle containing at least one DocumentReference, \nor it returns an error."] ; # 
+  fhir:resource ( [
+     fhir:v "DocumentReference"^^xsd:anyURI ;
+     fhir:l fhir:DocumentReference
+  ] ) ; # 
+  fhir:system [ fhir:v false] ; # 
+  fhir:type [ fhir:v true] ; # 
+  fhir:instance [ fhir:v false] ; # 
+  fhir:parameter ( [
+     fhir:name [ fhir:v "patient" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "1"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The id of the patient resource located on the server on which this operation is executed.  If there is no match, an empty Bundle is returned" ] ;
+     fhir:type [
+       fhir:v "id"^^xsd:anyURI ;
+       fhir:l fhir:id
+     ]
+  ] [
+     fhir:name [ fhir:v "start" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The date range relates to care dates, not record currency dates - e.g. all records relating to care provided in a certain date range. If no start date is provided, all documents prior to the end date are in scope.  If neither a start date nor an end date is provided, the most recent or current document is in scope.  The client **SHOULD** provide values precise to the second + time offset." ] ;
+     fhir:type [
+       fhir:v "dateTime"^^xsd:anyURI ;
+       fhir:l fhir:dateTime
+     ]
+  ] [
+     fhir:name [ fhir:v "end" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The date range relates to care dates, not record currency dates - e.g. all records relating to care provided in a certain date range. If no end date is provided, all documents subsequent to the start date are in scope. If neither a start date nor an end date is provided, the most recent or current document is in scope.  The client **SHOULD** provide values precise to the second + time offset." ] ;
+     fhir:type [
+       fhir:v "dateTime"^^xsd:anyURI ;
+       fhir:l fhir:dateTime
+     ]
+  ] [
+     fhir:name [ fhir:v "type" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v " The type relates to document type e.g. C-CDA Clinical Summary of Care (CCD) = LOINC 34133-9: Summary of episode note, and International Patient Summary (IPS) = LOINC 60591-5: Patient summary document.  If no type is provided, the summary document, if available, SHALL be in scope, and all other document types MAY be in scope. It is at the server's discretion how to respond if multiple types are provided. The server MAY return documents to any of the specified types. The server's CapabilityStatement should document its behavior and what types it supports" ] ;
+     fhir:type [
+       fhir:v "CodeableConcept"^^xsd:anyURI ;
+       fhir:l fhir:CodeableConcept
+     ] ;
+     fhir:binding [
+       fhir:extension ( [
+         fhir:url [
+           fhir:v "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName>
+         ] ;
+         fhir:value [
+           a fhir:String ;
+           fhir:v "??"
+         ]
+       ] ) ;
+       fhir:strength [ fhir:v "required" ] ;
+       fhir:valueSet [
+         fhir:v "http://hl7.org/fhir/ValueSet/doc-typecodes|6.0.0-ballot4"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/ValueSet/doc-typecodes?version=6.0.0-ballot4>
+       ]
+     ]
+  ] [
+     fhir:name [ fhir:v "on-demand" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "This on-demand parameter allows client to dictate whether they are requesting only 'on-demand' or both 'on-demand' and 'stable' documents (or delayed/deferred assembly) that meet the query parameters" ] ;
+     fhir:type [
+       fhir:v "boolean"^^xsd:anyURI ;
+       fhir:l fhir:boolean
+     ]
+  ] [
+     fhir:name [ fhir:v "profile" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "This parameter allows the client to request documents according to a specific profile using the profile's canonical reference. It is at the server's discretion how to respond if multiple profiles are provided. The server MAY return documents to any of the specified profiles. The server's CapabilityStatement should document its behavior and what profiles it supports." ] ;
+     fhir:type [
+       fhir:v "canonical"^^xsd:anyURI ;
+       fhir:l fhir:canonical
+     ]
+  ] [
+     fhir:name [ fhir:v "return" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "1"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The bundle type is \"searchset\"containing [DocumentReference](documentreference.html) resources." ] ;
+     fhir:type [
+       fhir:v "Bundle"^^xsd:anyURI ;
+       fhir:l fhir:Bundle
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

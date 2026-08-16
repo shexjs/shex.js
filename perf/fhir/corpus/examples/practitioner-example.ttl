@@ -1,0 +1,64 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p>Dr Adam Careful is a Referring Practitioner for Acme Hospital from 1-Jan 2012 to 31-Mar\n        2012</p>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://www.acme.org/practitioners"^^xsd:anyURI ;
+       fhir:l <http://www.acme.org/practitioners>
+     ] ;
+     fhir:value [ fhir:v "23" ]
+  ] ) ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:name ( [
+     fhir:family [ fhir:v "Careful" ] ;
+     fhir:given ( [ fhir:v "Adam" ] ) ;
+     fhir:prefix ( [ fhir:v "Dr" ] )
+  ] ) ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:line ( [ fhir:v "534 Erewhon St" ] ) ;
+     fhir:city [ fhir:v "PleasantVille" ] ;
+     fhir:state [ fhir:v "Vic" ] ;
+     fhir:postalCode [ fhir:v "3999" ]
+  ] ) ; # 
+  fhir:qualification ( [
+     fhir:identifier ( [
+       fhir:system [
+         fhir:v "http://example.org/UniversityIdentifier"^^xsd:anyURI ;
+         fhir:l <http://example.org/UniversityIdentifier>
+       ] ;
+       fhir:value [ fhir:v "12345" ]
+     ] ) ;
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0360/2.7"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0360/2.7>
+         ] ;
+         fhir:code [ fhir:v "BS" ] ;
+         fhir:display [ fhir:v "Bachelor of Science" ]
+       ] ) ;
+       fhir:text [ fhir:v "Bachelor of Science" ]
+     ] ;
+     fhir:period [
+       fhir:start [ fhir:v "1995"^^xsd:gYear ]
+     ] ;
+     fhir:issuer [
+       fhir:display [ fhir:v "Example University" ]
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,242 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/medicinal-product-manufacturing-activity> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "medicinal-product-manufacturing-activity"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T11:01:55.562+11:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem medicinal-product-manufacturing-activity</b></p><a name=\"medicinal-product-manufacturing-activity\"> </a><a name=\"hcmedicinal-product-manufacturing-activity\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">Last updated: 2021-01-05T10:01:24.148+11:00</p></div><p>This case-sensitive code system <code>http://hl7.org/fhir/medicinal-product-manufacturing-activity</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td></tr><tr><td style=\"white-space:nowrap\">100000160407<a name=\"medicinal-product-manufacturing-activity-100000160407\"> </a></td><td>Manufacturer responsible for batch certification</td></tr><tr><td style=\"white-space:nowrap\">100000160408<a name=\"medicinal-product-manufacturing-activity-100000160408\"> </a></td><td>Quality control testing of medicinal product</td></tr><tr><td style=\"white-space:nowrap\">100000160409<a name=\"medicinal-product-manufacturing-activity-100000160409\"> </a></td><td>Microbiological testing: sterility</td></tr><tr><td style=\"white-space:nowrap\">100000160410<a name=\"medicinal-product-manufacturing-activity-100000160410\"> </a></td><td>Microbiological testing: non-sterility</td></tr><tr><td style=\"white-space:nowrap\">100000160411<a name=\"medicinal-product-manufacturing-activity-100000160411\"> </a></td><td>Chemical/Physical testing</td></tr><tr><td style=\"white-space:nowrap\">100000160412<a name=\"medicinal-product-manufacturing-activity-100000160412\"> </a></td><td>Biological testing1</td></tr><tr><td style=\"white-space:nowrap\">100000160413<a name=\"medicinal-product-manufacturing-activity-100000160413\"> </a></td><td>Processing operations for the medicinal product</td></tr><tr><td style=\"white-space:nowrap\">100000160414<a name=\"medicinal-product-manufacturing-activity-100000160414\"> </a></td><td>Manufacturer of finished products intermediate</td></tr><tr><td style=\"white-space:nowrap\">100000160415<a name=\"medicinal-product-manufacturing-activity-100000160415\"> </a></td><td>Manufacture of solvent / diluent</td></tr><tr><td style=\"white-space:nowrap\">100000160448<a name=\"medicinal-product-manufacturing-activity-100000160448\"> </a></td><td>Quality control testing of active substance</td></tr><tr><td style=\"white-space:nowrap\">100000160449<a name=\"medicinal-product-manufacturing-activity-100000160449\"> </a></td><td>Microbiological testing: sterility</td></tr><tr><td style=\"white-space:nowrap\">100000160450<a name=\"medicinal-product-manufacturing-activity-100000160450\"> </a></td><td>Microbiological testing: non-sterility</td></tr><tr><td style=\"white-space:nowrap\">100000160451<a name=\"medicinal-product-manufacturing-activity-100000160451\"> </a></td><td>Chemical/Physical testing</td></tr><tr><td style=\"white-space:nowrap\">100000160452<a name=\"medicinal-product-manufacturing-activity-100000160452\"> </a></td><td>Biological testing</td></tr><tr><td style=\"white-space:nowrap\">100000160453<a name=\"medicinal-product-manufacturing-activity-100000160453\"> </a></td><td>Manufacture of active substance intermediate</td></tr><tr><td style=\"white-space:nowrap\">100000160454<a name=\"medicinal-product-manufacturing-activity-100000160454\"> </a></td><td>Packaging of active substance</td></tr><tr><td style=\"white-space:nowrap\">100000160455<a name=\"medicinal-product-manufacturing-activity-100000160455\"> </a></td><td>Storage and/or distribution of active substance</td></tr><tr><td style=\"white-space:nowrap\">100000160456<a name=\"medicinal-product-manufacturing-activity-100000160456\"> </a></td><td>Sterilisation</td></tr><tr><td style=\"white-space:nowrap\">100000160457<a name=\"medicinal-product-manufacturing-activity-100000160457\"> </a></td><td>Filtration</td></tr><tr><td style=\"white-space:nowrap\">100000160458<a name=\"medicinal-product-manufacturing-activity-100000160458\"> </a></td><td>Dry heat</td></tr><tr><td style=\"white-space:nowrap\">100000160459<a name=\"medicinal-product-manufacturing-activity-100000160459\"> </a></td><td>Moist heat</td></tr><tr><td style=\"white-space:nowrap\">100000160460<a name=\"medicinal-product-manufacturing-activity-100000160460\"> </a></td><td>Chemical</td></tr><tr><td style=\"white-space:nowrap\">100000160461<a name=\"medicinal-product-manufacturing-activity-100000160461\"> </a></td><td>Gamma irradiation</td></tr><tr><td style=\"white-space:nowrap\">100000160462<a name=\"medicinal-product-manufacturing-activity-100000160462\"> </a></td><td>Electron beam</td></tr><tr><td style=\"white-space:nowrap\">100000160463<a name=\"medicinal-product-manufacturing-activity-100000160463\"> </a></td><td>Primary packaging</td></tr><tr><td style=\"white-space:nowrap\">100000160464<a name=\"medicinal-product-manufacturing-activity-100000160464\"> </a></td><td>Secondary packaging</td></tr><tr><td style=\"white-space:nowrap\">100000160465<a name=\"medicinal-product-manufacturing-activity-100000160465\"> </a></td><td>Physical Importation</td></tr><tr><td style=\"white-space:nowrap\">100000160466<a name=\"medicinal-product-manufacturing-activity-100000160466\"> </a></td><td>Storage and/or distribution of medicinal product</td></tr><tr><td style=\"white-space:nowrap\">100000160467<a name=\"medicinal-product-manufacturing-activity-100000160467\"> </a></td><td>Manufacture of active substance</td></tr><tr><td style=\"white-space:nowrap\">100000160476<a name=\"medicinal-product-manufacturing-activity-100000160476\"> </a></td><td>Preparation of Working Cell Bank</td></tr><tr><td style=\"white-space:nowrap\">100000160477<a name=\"medicinal-product-manufacturing-activity-100000160477\"> </a></td><td>Storage of Master Cell Bank and/or Working Cell Bank</td></tr><tr><td style=\"white-space:nowrap\">100000160478<a name=\"medicinal-product-manufacturing-activity-100000160478\"> </a></td><td>Bioequivalence Contract Research Organisation (CRO)</td></tr><tr><td style=\"white-space:nowrap\">100000160479<a name=\"medicinal-product-manufacturing-activity-100000160479\"> </a></td><td>Manufacturer of ancillary medicinal product</td></tr><tr><td style=\"white-space:nowrap\">100000160480<a name=\"medicinal-product-manufacturing-activity-100000160480\"> </a></td><td>Manufacturer of medical device</td></tr><tr><td style=\"white-space:nowrap\">100000160481<a name=\"medicinal-product-manufacturing-activity-100000160481\"> </a></td><td>Manufacturer of ancillary substance used in medical device</td></tr><tr><td style=\"white-space:nowrap\">100000160482<a name=\"medicinal-product-manufacturing-activity-100000160482\"> </a></td><td>Official Medicine Control Laboratory (OMCL)</td></tr><tr><td style=\"white-space:nowrap\">100000160483<a name=\"medicinal-product-manufacturing-activity-100000160483\"> </a></td><td>Notified Body of medical device</td></tr><tr><td style=\"white-space:nowrap\">100000163618<a name=\"medicinal-product-manufacturing-activity-100000163618\"> </a></td><td>Processing of non-sterile medicinal product</td></tr><tr><td style=\"white-space:nowrap\">100000163709<a name=\"medicinal-product-manufacturing-activity-100000163709\"> </a></td><td>Processing of sterile medicinal product - aseptically prepared</td></tr><tr><td style=\"white-space:nowrap\">100000163713<a name=\"medicinal-product-manufacturing-activity-100000163713\"> </a></td><td>Manufacture of active substance intermediate by chemical synthesis</td></tr><tr><td style=\"white-space:nowrap\">100000163714<a name=\"medicinal-product-manufacturing-activity-100000163714\"> </a></td><td>Manufacture of active substance intermediate using biological processes</td></tr><tr><td style=\"white-space:nowrap\">100000163715<a name=\"medicinal-product-manufacturing-activity-100000163715\"> </a></td><td>Active substance intermediate physical processing</td></tr><tr><td style=\"white-space:nowrap\">100000163716<a name=\"medicinal-product-manufacturing-activity-100000163716\"> </a></td><td>Primary Packaging of active substance</td></tr><tr><td style=\"white-space:nowrap\">100000163717<a name=\"medicinal-product-manufacturing-activity-100000163717\"> </a></td><td>Secondary Packaging of active substance</td></tr><tr><td style=\"white-space:nowrap\">100000163737<a name=\"medicinal-product-manufacturing-activity-100000163737\"> </a></td><td>Processing of sterile medicinal product - terminally sterilised</td></tr><tr><td style=\"white-space:nowrap\">100000163843<a name=\"medicinal-product-manufacturing-activity-100000163843\"> </a></td><td>Manufacture of active substance by chemical synthesis</td></tr><tr><td style=\"white-space:nowrap\">100000163844<a name=\"medicinal-product-manufacturing-activity-100000163844\"> </a></td><td>Extraction of active substance from natural sources</td></tr><tr><td style=\"white-space:nowrap\">100000163845<a name=\"medicinal-product-manufacturing-activity-100000163845\"> </a></td><td>Manufacture of active substance using biological processes</td></tr><tr><td style=\"white-space:nowrap\">100000163846<a name=\"medicinal-product-manufacturing-activity-100000163846\"> </a></td><td>Active substance physical processing</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "brr"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 1
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/medicinal-product-manufacturing-activity"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/medicinal-product-manufacturing-activity>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1920" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "MedicinalProductManufacturingActivityExample"] ; # 
+  fhir:title [ fhir:v "Medicinal Product Manufacturing Activity"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:date [ fhir:v "2021-01-05T10:01:24+11:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "The type of manufacturing or business operation for a medicinal product."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/medicinal-product-manufacturing-activity"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/medicinal-product-manufacturing-activity>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "100000160407" ] ;
+     fhir:display [ fhir:v "Manufacturer responsible for batch certification" ]
+  ] [
+     fhir:code [ fhir:v "100000160408" ] ;
+     fhir:display [ fhir:v "Quality control testing of medicinal product" ]
+  ] [
+     fhir:code [ fhir:v "100000160409" ] ;
+     fhir:display [ fhir:v "Microbiological testing: sterility" ]
+  ] [
+     fhir:code [ fhir:v "100000160410" ] ;
+     fhir:display [ fhir:v "Microbiological testing: non-sterility" ]
+  ] [
+     fhir:code [ fhir:v "100000160411" ] ;
+     fhir:display [ fhir:v "Chemical/Physical testing" ]
+  ] [
+     fhir:code [ fhir:v "100000160412" ] ;
+     fhir:display [ fhir:v "Biological testing1" ]
+  ] [
+     fhir:code [ fhir:v "100000160413" ] ;
+     fhir:display [ fhir:v "Processing operations for the medicinal product" ]
+  ] [
+     fhir:code [ fhir:v "100000160414" ] ;
+     fhir:display [ fhir:v "Manufacturer of finished products intermediate" ]
+  ] [
+     fhir:code [ fhir:v "100000160415" ] ;
+     fhir:display [ fhir:v "Manufacture of solvent / diluent" ]
+  ] [
+     fhir:code [ fhir:v "100000160448" ] ;
+     fhir:display [ fhir:v "Quality control testing of active substance" ]
+  ] [
+     fhir:code [ fhir:v "100000160449" ] ;
+     fhir:display [ fhir:v "Microbiological testing: sterility" ]
+  ] [
+     fhir:code [ fhir:v "100000160450" ] ;
+     fhir:display [ fhir:v "Microbiological testing: non-sterility" ]
+  ] [
+     fhir:code [ fhir:v "100000160451" ] ;
+     fhir:display [ fhir:v "Chemical/Physical testing" ]
+  ] [
+     fhir:code [ fhir:v "100000160452" ] ;
+     fhir:display [ fhir:v "Biological testing" ]
+  ] [
+     fhir:code [ fhir:v "100000160453" ] ;
+     fhir:display [ fhir:v "Manufacture of active substance intermediate" ]
+  ] [
+     fhir:code [ fhir:v "100000160454" ] ;
+     fhir:display [ fhir:v "Packaging of active substance" ]
+  ] [
+     fhir:code [ fhir:v "100000160455" ] ;
+     fhir:display [ fhir:v "Storage and/or distribution of active substance" ]
+  ] [
+     fhir:code [ fhir:v "100000160456" ] ;
+     fhir:display [ fhir:v "Sterilisation" ]
+  ] [
+     fhir:code [ fhir:v "100000160457" ] ;
+     fhir:display [ fhir:v "Filtration" ]
+  ] [
+     fhir:code [ fhir:v "100000160458" ] ;
+     fhir:display [ fhir:v "Dry heat" ]
+  ] [
+     fhir:code [ fhir:v "100000160459" ] ;
+     fhir:display [ fhir:v "Moist heat" ]
+  ] [
+     fhir:code [ fhir:v "100000160460" ] ;
+     fhir:display [ fhir:v "Chemical" ]
+  ] [
+     fhir:code [ fhir:v "100000160461" ] ;
+     fhir:display [ fhir:v "Gamma irradiation" ]
+  ] [
+     fhir:code [ fhir:v "100000160462" ] ;
+     fhir:display [ fhir:v "Electron beam" ]
+  ] [
+     fhir:code [ fhir:v "100000160463" ] ;
+     fhir:display [ fhir:v "Primary packaging" ]
+  ] [
+     fhir:code [ fhir:v "100000160464" ] ;
+     fhir:display [ fhir:v "Secondary packaging" ]
+  ] [
+     fhir:code [ fhir:v "100000160465" ] ;
+     fhir:display [ fhir:v "Physical Importation" ]
+  ] [
+     fhir:code [ fhir:v "100000160466" ] ;
+     fhir:display [ fhir:v "Storage and/or distribution of medicinal product" ]
+  ] [
+     fhir:code [ fhir:v "100000160467" ] ;
+     fhir:display [ fhir:v "Manufacture of active substance" ]
+  ] [
+     fhir:code [ fhir:v "100000160476" ] ;
+     fhir:display [ fhir:v "Preparation of Working Cell Bank" ]
+  ] [
+     fhir:code [ fhir:v "100000160477" ] ;
+     fhir:display [ fhir:v "Storage of Master Cell Bank and/or Working Cell Bank" ]
+  ] [
+     fhir:code [ fhir:v "100000160478" ] ;
+     fhir:display [ fhir:v "Bioequivalence Contract Research Organisation (CRO)" ]
+  ] [
+     fhir:code [ fhir:v "100000160479" ] ;
+     fhir:display [ fhir:v "Manufacturer of ancillary medicinal product" ]
+  ] [
+     fhir:code [ fhir:v "100000160480" ] ;
+     fhir:display [ fhir:v "Manufacturer of medical device" ]
+  ] [
+     fhir:code [ fhir:v "100000160481" ] ;
+     fhir:display [ fhir:v "Manufacturer of ancillary substance used in medical device" ]
+  ] [
+     fhir:code [ fhir:v "100000160482" ] ;
+     fhir:display [ fhir:v "Official Medicine Control Laboratory (OMCL)" ]
+  ] [
+     fhir:code [ fhir:v "100000160483" ] ;
+     fhir:display [ fhir:v "Notified Body of medical device" ]
+  ] [
+     fhir:code [ fhir:v "100000163618" ] ;
+     fhir:display [ fhir:v "Processing of non-sterile medicinal product" ]
+  ] [
+     fhir:code [ fhir:v "100000163709" ] ;
+     fhir:display [ fhir:v "Processing of sterile medicinal product - aseptically prepared" ]
+  ] [
+     fhir:code [ fhir:v "100000163713" ] ;
+     fhir:display [ fhir:v "Manufacture of active substance intermediate by chemical synthesis" ]
+  ] [
+     fhir:code [ fhir:v "100000163714" ] ;
+     fhir:display [ fhir:v "Manufacture of active substance intermediate using biological processes" ]
+  ] [
+     fhir:code [ fhir:v "100000163715" ] ;
+     fhir:display [ fhir:v "Active substance intermediate physical processing" ]
+  ] [
+     fhir:code [ fhir:v "100000163716" ] ;
+     fhir:display [ fhir:v "Primary Packaging of active substance" ]
+  ] [
+     fhir:code [ fhir:v "100000163717" ] ;
+     fhir:display [ fhir:v "Secondary Packaging of active substance" ]
+  ] [
+     fhir:code [ fhir:v "100000163737" ] ;
+     fhir:display [ fhir:v "Processing of sterile medicinal product - terminally sterilised" ]
+  ] [
+     fhir:code [ fhir:v "100000163843" ] ;
+     fhir:display [ fhir:v "Manufacture of active substance by chemical synthesis" ]
+  ] [
+     fhir:code [ fhir:v "100000163844" ] ;
+     fhir:display [ fhir:v "Extraction of active substance from natural sources" ]
+  ] [
+     fhir:code [ fhir:v "100000163845" ] ;
+     fhir:display [ fhir:v "Manufacture of active substance using biological processes" ]
+  ] [
+     fhir:code [ fhir:v "100000163846" ] ;
+     fhir:display [ fhir:v "Active substance physical processing" ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

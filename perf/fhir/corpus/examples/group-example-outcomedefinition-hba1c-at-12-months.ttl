@@ -1,0 +1,102 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Group/example-outcomedefinition-hba1c-at-12-months> a fhir:Group ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-outcomedefinition-hba1c-at-12-months"] ; # 
+  fhir:meta [
+     fhir:versionId [ fhir:v "6" ] ;
+     fhir:lastUpdated [ fhir:v "2025-03-15T21:09:28.653Z"^^xsd:dateTime ] ;
+     fhir:profile ( [
+       fhir:v "https://hl7.org/fhir/uv/ebm/StructureDefinition/outcome-definition"^^xsd:anyURI ;
+       fhir:l <https://hl7.org/fhir/uv/ebm/StructureDefinition/outcome-definition>
+     ] )
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/artifact-author"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/artifact-author>
+     ] ;
+     fhir:value [
+       a fhir:ContactDetail ;
+       fhir:name [ fhir:v "Brian S. Alper" ]
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/Group/example-outcomedefinition-hba1c-at-12-months"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/Group/example-outcomedefinition-hba1c-at-12-months>
+  ] ; # 
+  fhir:name [ fhir:v "HbA1c at 12 months"] ; # 
+  fhir:title [ fhir:v "OutcomeDefinition: HbA1c at 12 months"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "HbA1c at 12 months as the endpoint (outcome measure)"] ; # 
+  fhir:copyright [ fhir:v "https://creativecommons.org/licenses/by-nc-sa/4.0/"] ; # 
+  fhir:membership [ fhir:v "conceptual"] ; # 
+  fhir:characteristic ( [
+     fhir:code [
+       fhir:text [ fhir:v "Observation" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept, loinc:4548-4 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:code [ fhir:v "4548-4" ] ;
+         fhir:display [ fhir:v "Hemoglobin A1c/Hemoglobin.total in Blood" ]
+       ] )
+     ] ;
+     fhir:exclude [ fhir:v false ] ;
+     fhir:description [ fhir:v "HbA1c at 12 months" ] ;
+     fhir:relativeTime ( [
+       fhir:contextCode [
+         a sct:709491003 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "709491003" ] ;
+           fhir:display [ fhir:v "Enrollment in clinical trial" ]
+         ] )
+       ] ;
+       fhir:offset [
+         a fhir:Duration ;
+         fhir:value [ fhir:v "12"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "months" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "mo" ]
+       ] ;
+       fhir:text [ fhir:v "at 12 months" ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

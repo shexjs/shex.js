@@ -1,0 +1,50 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Provenance/example-delete> a fhir:Provenance ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-delete"] ; # 
+  fhir:target ( [
+     fhir:l <http://terminology.hl7.org/CodeSystem/location-physical-type/_history/3> ;
+     fhir:reference [ fhir:v "http://terminology.hl7.org/CodeSystem/location-physical-type/_history/3" ]
+  ] ) ; # 
+  fhir:recorded [ fhir:v "2015-06-27T08:39:24+10:00"^^xsd:dateTime] ; # 
+  fhir:authorization ( [] ) ; # 
+  fhir:activity [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-DataOperation"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-DataOperation>
+       ] ;
+       fhir:code [ fhir:v "DELETE" ]
+     ] )
+  ] ; # 
+  fhir:agent ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/provenance-participant-type"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/provenance-participant-type>
+         ] ;
+         fhir:code [ fhir:v "author" ]
+       ] )
+     ] ;
+     fhir:who [
+       fhir:display [ fhir:v "Brian Postlethwaite" ]
+     ]
+  ] ) ; # 
+  fhir:entity ( [
+     fhir:role [ fhir:v "removal" ] ;
+     fhir:what [
+       fhir:l <http://terminology.hl7.org/CodeSystem/location-physical-type/_history/3> ;
+       fhir:reference [ fhir:v "http://terminology.hl7.org/CodeSystem/location-physical-type/_history/3" ]
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

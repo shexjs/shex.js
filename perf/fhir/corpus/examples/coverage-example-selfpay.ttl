@@ -1,0 +1,61 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Coverage/SP1234> a fhir:Coverage ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "SP1234"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">A human-readable rendering of a Self Pay Agreement.</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://hospitalx.com/selfpayagreement"^^xsd:anyURI ;
+       fhir:l <http://hospitalx.com/selfpayagreement>
+     ] ;
+     fhir:value [ fhir:v "SP12345678" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:kind [ fhir:v "self-pay"] ; # 
+  fhir:paymentBy ( [
+     fhir:party [
+       fhir:l <http://hl7.org/fhir/Patient/5> ;
+       fhir:reference [ fhir:v "Patient/5" ]
+     ]
+  ] ) ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/coverage-selfpay"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/coverage-selfpay>
+       ] ;
+       fhir:code [ fhir:v "pay" ] ;
+       fhir:display [ fhir:v "PAY" ]
+     ] )
+  ] ; # 
+  fhir:subscriber [
+     fhir:l <http://hl7.org/fhir/Patient/5> ;
+     fhir:reference [ fhir:v "Patient/5" ]
+  ] ; # 
+  fhir:beneficiary [
+     fhir:l <http://hl7.org/fhir/Patient/5> ;
+     fhir:reference [ fhir:v "Patient/5" ]
+  ] ; # 
+  fhir:relationship [
+     fhir:coding ( [
+       fhir:code [ fhir:v "self" ]
+     ] )
+  ] ; # 
+  fhir:period [
+     fhir:end [ fhir:v "2012-03-17"^^xsd:date ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/5> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

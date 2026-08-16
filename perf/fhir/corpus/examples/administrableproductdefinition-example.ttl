@@ -1,0 +1,51 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/AdministrableProductDefinition/example> a fhir:AdministrableProductDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://ema.europa.eu/example/phpididentifiersets"^^xsd:anyURI ;
+       fhir:l <http://ema.europa.eu/example/phpididentifiersets>
+     ] ;
+     fhir:value [ fhir:v "{PhPID}" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:administrableDoseForm [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://ema.europa.eu/example/administrabledoseform"^^xsd:anyURI ;
+         fhir:l <http://ema.europa.eu/example/administrabledoseform>
+       ] ;
+       fhir:code [ fhir:v "Film-coatedtablet" ]
+     ] )
+  ] ; # 
+  fhir:unitOfPresentation [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://ema.europa.eu/example/unitofpresentation"^^xsd:anyURI ;
+         fhir:l <http://ema.europa.eu/example/unitofpresentation>
+       ] ;
+       fhir:code [ fhir:v "Tablet" ]
+     ] )
+  ] ; # 
+  fhir:routeOfAdministration ( [
+     fhir:code [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://ema.europa.eu/example/routeofadministration"^^xsd:anyURI ;
+           fhir:l <http://ema.europa.eu/example/routeofadministration>
+         ] ;
+         fhir:code [ fhir:v "OralUse" ]
+       ] )
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

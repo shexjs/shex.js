@@ -1,0 +1,161 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Medication/med0323> a fhir:Medication ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "med0323"] ; # 
+  fhir:contained ( [
+     a fhir:Substance ;
+     fhir:id [ fhir:v "sub10" ] ;
+     fhir:code [
+       fhir:concept [
+         a sct:419442005 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "419442005" ] ;
+           fhir:display [ fhir:v "Ethanol (substance)" ]
+         ] )
+       ]
+     ]
+  ] [
+     a fhir:Substance ;
+     fhir:id [ fhir:v "sub11" ] ;
+     fhir:code [
+       fhir:concept [
+         a sct:387171003 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "387171003" ] ;
+           fhir:display [ fhir:v "Hydrogen peroxide (substance)" ]
+         ] )
+       ]
+     ]
+  ] [
+     a fhir:Substance ;
+     fhir:id [ fhir:v "sub12" ] ;
+     fhir:code [
+       fhir:concept [
+         a sct:80582002 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "80582002" ] ;
+           fhir:display [ fhir:v "Glycerol (substance)" ]
+         ] )
+       ]
+     ]
+  ] [
+     a fhir:Substance ;
+     fhir:id [ fhir:v "sub13" ] ;
+     fhir:code [
+       fhir:concept [
+         a sct:444883009 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "444883009" ] ;
+           fhir:display [ fhir:v "Distilled Water (substance)" ]
+         ] )
+       ]
+     ]
+  ] ) ; # 
+  fhir:code [
+     fhir:text [ fhir:v "WHO Hand Sanitizer Formulation 1% - 10L" ]
+  ] ; # 
+  fhir:doseForm [
+     a sct:739006009 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "739006009" ] ;
+       fhir:display [ fhir:v "Solution (basic dose form)" ]
+     ] )
+  ] ; # 
+  fhir:ingredient ( [
+     fhir:item [
+       fhir:reference [
+         fhir:l <#sub10> ;
+         fhir:reference [ fhir:v "#sub10" ]
+       ]
+     ] ;
+     fhir:strength [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v "8333"^^xsd:decimal ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "mL" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:reference [
+         fhir:l <#sub11> ;
+         fhir:reference [ fhir:v "#sub11" ]
+       ]
+     ] ;
+     fhir:strength [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v "417"^^xsd:decimal ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "mL" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:reference [
+         fhir:l <#sub12> ;
+         fhir:reference [ fhir:v "#sub12" ]
+       ]
+     ] ;
+     fhir:strength [
+       a fhir:Quantity ;
+       fhir:value [ fhir:v "145"^^xsd:decimal ] ;
+       fhir:system [
+         fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+         fhir:l <http://unitsofmeasure.org>
+       ] ;
+       fhir:code [ fhir:v "mL" ]
+     ]
+  ] [
+     fhir:item [
+       fhir:reference [
+         fhir:l <#sub13> ;
+         fhir:reference [ fhir:v "#sub13" ]
+       ]
+     ] ;
+     fhir:strength [
+       a fhir:CodeableConcept ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/CodeSystem/medication-ingredientstrength"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/CodeSystem/medication-ingredientstrength>
+         ] ;
+         fhir:code [ fhir:v "qs" ] ;
+         fhir:display [ fhir:v "QS" ]
+       ] )
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,105 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Observation/f203> a fhir:Observation ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "f203"] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "https://intranet.aumc.nl/labvalues"^^xsd:anyURI ;
+       fhir:l <https://intranet.aumc.nl/labvalues>
+     ] ;
+     fhir:value [ fhir:v "1304-03720-Bicarbonate" ] # Does not exist
+  ] ) ; # 
+  fhir:status [ fhir:v "final"] ; # Bicarbonate was measured on April fourth
+  fhir:code [
+     a loinc:1963-8, sct:365722008 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "1963-8" ] ;
+       fhir:display [ fhir:v "Bicarbonate [Moles/volume] in Serum or Plasma" ]
+     ] [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "365722008" ] ;
+       fhir:display [ fhir:v "Bicarbonate level" ]
+     ] ) # Kind of observation = Bicarbonate LOINC and SNOMED CT translations here - Note in the US the primary code will be LOINC per meaningful use.  Further SNOMED CT  has acceeded to LOINC being the primary coding system for vitals and anthropromorphic measures.  SNOMED CT is required in some countries such as the UK.
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/f201> ;
+     fhir:reference [ fhir:v "Patient/f201" ] ;
+     fhir:display [ fhir:v "Roel" ]
+  ] ; # 
+  fhir:issued [ fhir:v "2013-04-04T14:34:00+01:00"^^xsd:dateTime] ; # 
+  fhir:performer ( [
+     fhir:l <http://hl7.org/fhir/Practitioner/f202> ;
+     fhir:reference [ fhir:v "Practitioner/f202" ] ;
+     fhir:display [ fhir:v "Luigi Maas" ]
+  ] ) ; # 
+  fhir:value [
+     a fhir:Quantity ;
+     fhir:value [ fhir:v "28"^^xsd:decimal ] ; # Bicarbonate=28mmol\/L
+     fhir:unit [ fhir:v "mmol/L" ] ;
+     fhir:system [
+       fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+       fhir:l <http://snomed.info/sct>
+     ] ;
+     fhir:code [ fhir:v "258813002" ]
+  ] ; # 
+  fhir:interpretation ( [
+     a sct:166698001 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "166698001" ] ;
+       fhir:display [ fhir:v "Serum bicarbonate level normal" ]
+     ] [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation>
+       ] ;
+       fhir:code [ fhir:v "N" ]
+     ] )
+  ] ) ; # 
+  fhir:method [
+     fhir:text [ fhir:v "enzymatic method" ] # Method was enzymatic method
+  ] ; # The observation is complete, No reliability concerns
+  fhir:referenceRange ( [
+     fhir:low [
+       fhir:value [ fhir:v "22"^^xsd:decimal ]
+     ] ; # Healthy bicarbonate level ranges from 22mmol\/L to 29mmol\/L
+     fhir:high [
+       fhir:value [ fhir:v "29"^^xsd:decimal ]
+     ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/referencerange-meaning"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/referencerange-meaning>
+         ] ;
+         fhir:code [ fhir:v "normal" ] ;
+         fhir:display [ fhir:v "Normal Range" ]
+       ] )
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/f201> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/f202> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

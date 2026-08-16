@@ -1,0 +1,127 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CodeSystem/audit-event-severity> a fhir:CodeSystem ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "audit-event-severity"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T11:01:55.562+11:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: CodeSystem audit-event-severity</b></p><a name=\"audit-event-severity\"> </a><a name=\"hcaudit-event-severity\"> </a><div style=\"display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%\"><p style=\"margin-bottom: 0px\">Last updated: 2022-06-06T10:01:24.148+11:00</p></div><p>This case-sensitive code system <code>http://hl7.org/fhir/audit-event-severity</code> defines the following codes:</p><table class=\"codes\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td style=\"white-space:nowrap\">emergency<a name=\"audit-event-severity-emergency\"> </a></td><td>Emergency</td><td>System is unusable. e.g., This level SHOULD only be reported by infrastructure and SHOULD NOT be used by applications.</td></tr><tr><td style=\"white-space:nowrap\">alert<a name=\"audit-event-severity-alert\"> </a></td><td>Alert</td><td>Notification SHOULD be sent to trigger action be taken. e.g., Loss of the primary network connection needing attention.</td></tr><tr><td style=\"white-space:nowrap\">critical<a name=\"audit-event-severity-critical\"> </a></td><td>Critical</td><td>Critical conditions. e.g., A failure in the system's primary application that will reset automatically.</td></tr><tr><td style=\"white-space:nowrap\">error<a name=\"audit-event-severity-error\"> </a></td><td>Error</td><td>Error conditions. e.g., An application has exceeded its file storage limit and attempts to write are failing. </td></tr><tr><td style=\"white-space:nowrap\">warning<a name=\"audit-event-severity-warning\"> </a></td><td>Warning</td><td>Warning conditions. May indicate that an error will occur if action is not taken. e.g., A non-root file system has only 2GB remaining.</td></tr><tr><td style=\"white-space:nowrap\">notice<a name=\"audit-event-severity-notice\"> </a></td><td>Notice</td><td>Notice messages. Normal but significant condition. Events that are unusual, but not error conditions.</td></tr><tr><td style=\"white-space:nowrap\">informational<a name=\"audit-event-severity-informational\"> </a></td><td>Informational</td><td>Normal operational messages that require no action. e.g., An application has started, paused, or ended successfully.</td></tr><tr><td style=\"white-space:nowrap\">debug<a name=\"audit-event-severity-debug\"> </a></td><td>Debug</td><td>Debug-level messages. Information useful to developers for debugging the application.</td></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "sec"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 6
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/audit-event-severity"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/audit-event-severity>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.4.1894" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "AuditEventSeverity"] ; # 
+  fhir:title [ fhir:v "Audit Event Severity"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2025-11-01"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Security"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/secure" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "The severity of the audit entry. These codes are derived from the SysLog header, PRI. http://tools.ietf.org/html/rfc5424#appendix-A.3"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:caseSensitive [ fhir:v true] ; # 
+  fhir:valueSet [
+     fhir:v "http://hl7.org/fhir/ValueSet/audit-event-severity"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/audit-event-severity>
+  ] ; # 
+  fhir:hierarchyMeaning [] ; # 
+  fhir:content [ fhir:v "complete"] ; # 
+  fhir:concept ( [
+     fhir:code [ fhir:v "emergency" ] ;
+     fhir:display [ fhir:v "Emergency" ] ;
+     fhir:definition [ fhir:v "System is unusable. e.g., This level SHOULD only be reported by infrastructure and SHOULD NOT be used by applications." ]
+  ] [
+     fhir:code [ fhir:v "alert" ] ;
+     fhir:display [ fhir:v "Alert" ] ;
+     fhir:definition [ fhir:v "Notification SHOULD be sent to trigger action be taken. e.g., Loss of the primary network connection needing attention." ]
+  ] [
+     fhir:code [ fhir:v "critical" ] ;
+     fhir:display [ fhir:v "Critical" ] ;
+     fhir:definition [ fhir:v "Critical conditions. e.g., A failure in the system's primary application that will reset automatically." ]
+  ] [
+     fhir:code [ fhir:v "error" ] ;
+     fhir:display [ fhir:v "Error" ] ;
+     fhir:definition [ fhir:v "Error conditions. e.g., An application has exceeded its file storage limit and attempts to write are failing. " ]
+  ] [
+     fhir:code [ fhir:v "warning" ] ;
+     fhir:display [ fhir:v "Warning" ] ;
+     fhir:definition [ fhir:v "Warning conditions. May indicate that an error will occur if action is not taken. e.g., A non-root file system has only 2GB remaining." ]
+  ] [
+     fhir:code [ fhir:v "notice" ] ;
+     fhir:display [ fhir:v "Notice" ] ;
+     fhir:definition [ fhir:v "Notice messages. Normal but significant condition. Events that are unusual, but not error conditions." ]
+  ] [
+     fhir:code [ fhir:v "informational" ] ;
+     fhir:display [ fhir:v "Informational" ] ;
+     fhir:definition [ fhir:v "Normal operational messages that require no action. e.g., An application has started, paused, or ended successfully." ]
+  ] [
+     fhir:code [ fhir:v "debug" ] ;
+     fhir:display [ fhir:v "Debug" ] ;
+     fhir:definition [ fhir:v "Debug-level messages. Information useful to developers for debugging the application." ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

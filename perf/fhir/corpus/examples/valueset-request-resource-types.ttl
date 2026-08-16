@@ -1,0 +1,122 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ValueSet/request-resource-types> a fhir:ValueSet ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "request-resource-types"] ; # 
+  fhir:meta [
+     fhir:lastUpdated [ fhir:v "2026-08-15T00:01:55.562+00:00"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "extensions" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: ValueSet request-resource-types</b></p><a name=\"request-resource-types\"> </a><a name=\"hcrequest-resource-types\"> </a><ul><li>Include these codes as defined in <a href=\"codesystem-fhir-types.html\"><code>http://hl7.org/fhir/fhir-types</code></a><span title=\"Version is not explicitly stated, which means it is fixed to the version provided in this specification\"> version ?6.0.0-ballot4</span><table class=\"none\"><tr><td style=\"white-space:nowrap\"><b>Code</b></td><td><b>Display</b></td><td><b>Definition</b></td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-Appointment\">Appointment</a></td><td style=\"color: #cccccc\">Appointment</td><td>A booking of a healthcare event among patient(s), practitioner(s), related person(s) and/or device(s) for a specific date/time. This may result in one or more Encounter(s).</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-CarePlan\">CarePlan</a></td><td style=\"color: #cccccc\">CarePlan</td><td>Describes the intention of how one or more practitioners intend to deliver care for a particular patient, group or community for a period of time, possibly limited to care for a specific condition or set of conditions.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-Claim\">Claim</a></td><td style=\"color: #cccccc\">Claim</td><td>A provider issued list of professional services and products which have been provided, or are to be provided, to a patient which is sent to an insurer for reimbursement.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-CommunicationRequest\">CommunicationRequest</a></td><td style=\"color: #cccccc\">CommunicationRequest</td><td>A request to convey information from a sender to a recipient.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-CoverageEligibilityRequest\">CoverageEligibilityRequest</a></td><td style=\"color: #cccccc\">CoverageEligibilityRequest</td><td>The CoverageEligibilityRequest provides patient and insurance coverage information to an insurer for them to respond, in the form of an CoverageEligibilityResponse, with information regarding whether the stated coverage is valid and in-force and optionally to provide the insurance details of the policy.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-DeviceRequest\">DeviceRequest</a></td><td style=\"color: #cccccc\">DeviceRequest</td><td>Represents a request a device to be provided to a specific patient. The device may be an implantable device to be subsequently implanted, or an external assistive device, such as a walker, to be delivered and subsequently be used.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-MedicationRequest\">MedicationRequest</a></td><td style=\"color: #cccccc\">MedicationRequest</td><td>An order or request for both supply of the medication and the instructions for administration of the medication to a patient. The resource is called \"MedicationRequest\" rather than \"MedicationPrescription\" or \"MedicationOrder\" to generalize the use across inpatient and outpatient settings, including care plans, etc., and to harmonize with workflow patterns.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-NutritionOrder\">NutritionOrder</a></td><td style=\"color: #cccccc\">NutritionOrder</td><td>A request to supply a diet, formula feeding (enteral) or oral nutritional supplement to an individual or group.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-RequestOrchestration\">RequestOrchestration</a></td><td style=\"color: #cccccc\">RequestOrchestration</td><td>A set of related requests that can be used to capture intended activities that have inter-dependencies such as \"give this medication after that one\".</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-ServiceRequest\">ServiceRequest</a></td><td style=\"color: #cccccc\">ServiceRequest</td><td>A record of a request for service such as diagnostic investigations, treatments, or operations to be performed.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-Task\">Task</a></td><td style=\"color: #cccccc\">Task</td><td>A task to be performed as a part of a workflow and the related information like inputs, outputs and execution progress.</td></tr><tr><td><a href=\"codesystem-fhir-types.html#fhir-types-VisionPrescription\">VisionPrescription</a></td><td style=\"color: #cccccc\">VisionPrescription</td><td>An authorization for the provision of glasses and/or contact lenses to a patient.</td></tr></table></li></ul></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 5
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ValueSet/request-resource-types"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/request-resource-types>
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:2.16.840.1.113883.4.642.3.1058" ]
+  ] ) ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "RequestResourceTypes"] ; # 
+  fhir:title [ fhir:v "Request Resource Types"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "All Resource Types that represent request resources"] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:immutable [ fhir:v true] ; # 
+  fhir:compose [
+     fhir:include ( [
+       fhir:system [
+         fhir:v "http://hl7.org/fhir/fhir-types"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/fhir-types>
+       ] ;
+       fhir:concept ( [
+         fhir:code [ fhir:v "Appointment" ]
+       ] [
+         fhir:code [ fhir:v "CarePlan" ]
+       ] [
+         fhir:code [ fhir:v "Claim" ]
+       ] [
+         fhir:code [ fhir:v "CommunicationRequest" ]
+       ] [
+         fhir:code [ fhir:v "CoverageEligibilityRequest" ]
+       ] [
+         fhir:code [ fhir:v "DeviceRequest" ]
+       ] [
+         fhir:code [ fhir:v "MedicationRequest" ]
+       ] [
+         fhir:code [ fhir:v "NutritionOrder" ]
+       ] [
+         fhir:code [ fhir:v "RequestOrchestration" ]
+       ] [
+         fhir:code [ fhir:v "ServiceRequest" ]
+       ] [
+         fhir:code [ fhir:v "Task" ]
+       ] [
+         fhir:code [ fhir:v "VisionPrescription" ]
+       ] )
+     ] )
+  ] ; # 
+  fhir:expansion [] . # 
+
+# -------------------------------------------------------------------------------------
+

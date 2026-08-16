@@ -1,0 +1,64 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Coverage/7547E> a fhir:Coverage ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "7547E"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">A human-readable rendering of the European Health Insurance Card</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://ehic.com/insurer/123456789/member"^^xsd:anyURI ;
+       fhir:l <http://ehic.com/insurer/123456789/member>
+     ] ;
+     fhir:value [ fhir:v "A123456780" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:kind [ fhir:v "insurance"] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+       ] ;
+       fhir:code [ fhir:v "EHCPOL" ] ;
+       fhir:display [ fhir:v "extended healthcare" ]
+     ] )
+  ] ; # 
+  fhir:subscriber [
+     fhir:l <http://hl7.org/fhir/Patient/5> ;
+     fhir:reference [ fhir:v "Patient/5" ]
+  ] ; # 
+  fhir:beneficiary [
+     fhir:l <http://hl7.org/fhir/Patient/5> ;
+     fhir:reference [ fhir:v "Patient/5" ]
+  ] ; # 
+  fhir:relationship [
+     fhir:coding ( [
+       fhir:code [ fhir:v "self" ]
+     ] )
+  ] ; # 
+  fhir:period [
+     fhir:end [ fhir:v "2012-03-17"^^xsd:date ]
+  ] ; # 
+  fhir:insurer [
+     fhir:identifier [
+       fhir:system [
+         fhir:v "http://ehic.com/insurer"^^xsd:anyURI ;
+         fhir:l <http://ehic.com/insurer>
+       ] ;
+       fhir:value [ fhir:v "123456789" ]
+     ]
+  ] . # 
+
+<http://hl7.org/fhir/Patient/5> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

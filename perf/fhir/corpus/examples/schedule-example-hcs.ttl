@@ -1,0 +1,62 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Schedule/example-hcs> a fhir:Schedule ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-hcs"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      Burgers UMC, Posttraumatic Stress Disorder Clinic\n		</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:serviceCategory ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/service-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/service-category>
+       ] ;
+       fhir:code [ fhir:v "8" ] ;
+       fhir:display [ fhir:v "Counselling" ]
+     ] )
+  ] ) ; # 
+  fhir:serviceType ( [
+     fhir:reference [
+       fhir:l <http://hl7.org/fhir/HealthcareService/example> ;
+       fhir:reference [ fhir:v "HealthcareService/example" ] ;
+       fhir:display [ fhir:v "Burgers UMC, Posttraumatic Stress Disorder Clinic" ]
+     ]
+  ] ) ; # 
+  fhir:specialty ( [
+     a sct:47505003 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "47505003" ] ;
+       fhir:display [ fhir:v "Posttraumatic stress disorder" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "Burgers UMC, Posttraumatic Stress Disorder counselling"] ; # 
+  fhir:actor ( [
+     fhir:l <http://hl7.org/fhir/Location/1> ;
+     fhir:reference [ fhir:v "Location/1" ] ;
+     fhir:display [ fhir:v "Burgers UMC, South Wing, second floor" ]
+  ] ) ; # 
+  fhir:planningHorizon [
+     fhir:start [ fhir:v "2023-12-25T09:15:00Z"^^xsd:dateTime ] ;
+     fhir:end [ fhir:v "2023-12-25T09:30:00Z"^^xsd:dateTime ]
+  ] . # 
+
+<http://hl7.org/fhir/HealthcareService/example> a fhir:HealthcareService .
+
+<http://hl7.org/fhir/Location/1> a fhir:Location .
+
+# -------------------------------------------------------------------------------------
+

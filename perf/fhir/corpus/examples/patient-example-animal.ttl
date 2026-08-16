@@ -1,0 +1,122 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Patient/animal> a fhir:Patient ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "animal"] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/patient-animal"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/patient-animal>
+     ] ;
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "species"^^xsd:anyURI ;
+         fhir:l fhir:species
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/animal-species"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/animal-species>
+           ] ;
+           fhir:code [ fhir:v "canislf" ] ;
+           fhir:display [ fhir:v "Dog" ]
+         ] )
+       ]
+     ] [
+       fhir:url [
+         fhir:v "breed"^^xsd:anyURI ;
+         fhir:l fhir:breed
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept, sct:58108001 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "58108001" ] ;
+           fhir:display [ fhir:v "Golden retriever" ]
+         ] [
+           fhir:system [
+             fhir:v "http://example.org/fhir/CodeSystem/animal-breed"^^xsd:anyURI ;
+             fhir:l <http://example.org/fhir/CodeSystem/animal-breed>
+           ] ;
+           fhir:code [ fhir:v "gret" ] ;
+           fhir:display [ fhir:v "Golden Retriever" ]
+         ] )
+       ]
+     ] [
+       fhir:url [
+         fhir:v "genderStatus"^^xsd:anyURI ;
+         fhir:l fhir:genderStatus
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/animal-genderstatus"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/animal-genderstatus>
+           ] ;
+           fhir:code [ fhir:v "neutered" ]
+         ] )
+       ]
+     ] )
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:text [ fhir:v "Dog Tag" ]
+     ] ;
+     fhir:system [
+       fhir:v "http://www.maroondah.vic.gov.au/AnimalRegFees.aspx"^^xsd:anyURI ;
+       fhir:l <http://www.maroondah.vic.gov.au/AnimalRegFees.aspx>
+     ] ;
+     fhir:value [ fhir:v "1234123" ] ;
+     fhir:period [
+       fhir:start [ fhir:v "2010-05-31"^^xsd:date ]
+     ] ;
+     fhir:assigner [
+       fhir:display [ fhir:v "Maroondah City Council" ]
+     ]
+  ] ) ; # Dog tag, under Maroondah City council
+  fhir:active [ fhir:v true] ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:given ( [ fhir:v "Kenzi" ] )
+  ] ) ; # Dog's name: Kenzi
+  fhir:gender [ fhir:v "female"] ; # 
+  fhir:birthDate [ fhir:v "2010-03-23"^^xsd:date] ; # 
+  fhir:contact ( [
+     fhir:relationship ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0131"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0131>
+         ] ;
+         fhir:code [ fhir:v "C" ]
+       ] )
+     ] ) ;
+     fhir:name [
+       fhir:family [ fhir:v "Chalmers" ] ;
+       fhir:given ( [ fhir:v "Peter" ] [ fhir:v "James" ] )
+     ] ;
+     fhir:telecom ( [
+       fhir:system [ fhir:v "phone" ] ;
+       fhir:value [ fhir:v "(03) 5555 6473" ] ;
+       fhir:use [ fhir:v "work" ]
+     ] )
+  ] ) ; # 
+  fhir:managingOrganization [
+     fhir:display [ fhir:v "Pete's Vetinary Services" ]
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,96 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Consent/consent-example-Emergency> a fhir:Consent ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "consent-example-Emergency"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p>Withhold Authorization for Treatment rule for except for Emergency Treatment</p>\n      <p>Patient \"Pieter van de Heuvel\" wishes to have no data at the Artis University Medical Center available except for Emergency treatment use. \n      An overall Deny consent directive, with an exception \"Permit\" for purposeOfUse \"ETREAT\" at Artis University Medical Center.</p>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+       ] ;
+       fhir:code [ fhir:v "INFA" ]
+     ] )
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/f001> ;
+     fhir:reference [ fhir:v "Patient/f001" ] ;
+     fhir:display [ fhir:v "Pieter van de Heuvel" ]
+  ] ; # 
+  fhir:date [ fhir:v "2018-12-24"^^xsd:date] ; # 
+  fhir:controller ( [
+     fhir:l <http://hl7.org/fhir/Organization/f201> ;
+     fhir:reference [ fhir:v "Organization/f201" ]
+  ] ) ; # The example given is Organization wide
+  fhir:sourceAttachment ( [
+     fhir:title [ fhir:v "The patient [grantor] declines to agree to the provider's [grantee's] consent directive form, which lists permissible collection, access, use, or disclosure activities, purposes of use, handling caveats, revocation policies, and consequences of not assenting." ]
+  ] ) ; # the text terms of the consent in lawyer speak, likely use url pointer to common text
+  fhir:regulatoryBasis ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+       ] ;
+       fhir:code [ fhir:v "INFA" ]
+     ] )
+  ] ) ; # 
+  fhir:decision [ fhir:v "deny"] ; # 
+  fhir:provision ( [
+     fhir:actor ( [
+       fhir:role [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationType"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationType>
+           ] ;
+           fhir:code [ fhir:v "CST" ]
+         ] )
+       ] ;
+       fhir:reference [
+         fhir:l <http://hl7.org/fhir/Organization/f201> ;
+         fhir:reference [ fhir:v "Organization/f201" ]
+       ]
+     ] ) ; # deny Artis University Medical Center specifically
+     fhir:provision ( [
+       fhir:actor ( [
+         fhir:role [
+           fhir:coding ( [
+             fhir:system [
+               fhir:v "http://terminology.hl7.org/CodeSystem/v3-ParticipationType"^^xsd:anyURI ;
+               fhir:l <http://terminology.hl7.org/CodeSystem/v3-ParticipationType>
+             ] ;
+             fhir:code [ fhir:v "CST" ]
+           ] )
+         ] ;
+         fhir:reference [
+           fhir:l <http://hl7.org/fhir/Organization/f201> ;
+           fhir:reference [ fhir:v "Organization/f201" ]
+         ]
+       ] ) ; # permit Artis University Medical Center for Emergency Treatment
+       fhir:purpose ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActReason"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActReason>
+         ] ;
+         fhir:code [ fhir:v "ETREAT" ]
+       ] )
+     ] )
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/f001> a fhir:Patient .
+
+<http://hl7.org/fhir/Organization/f201> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

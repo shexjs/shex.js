@@ -1,0 +1,70 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/List/example> a fhir:List ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <table>\n        <thead>\n          <tr>\n            <th>Condition</th>\n            <th>Severity</th>\n            <th>Date</th>\n            <th>Location</th>\n            <th>Status</th>\n          </tr>\n        </thead>\n        <tbody>\n          <tr>\n            <td>Burnt Ear</td>\n            <td>Severe</td>\n            <td>24-May 2012</td>\n            <td>Left Ear</td>\n            <td>deleted</td>\n          </tr>\n          <tr>\n            <td>Asthma</td>\n            <td>Mild</td>\n            <td>21-Nov 2012</td>\n            <td>--</td>\n            <td>added</td>\n          </tr>\n        </tbody>\n      </table>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "urn:uuid:a9fcea7c-fcdf-4d17-a5e0-f26dda030b59"^^xsd:anyURI ;
+       fhir:l <urn:uuid:a9fcea7c-fcdf-4d17-a5e0-f26dda030b59>
+     ] ;
+     fhir:value [ fhir:v "23974652" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "current"] ; # 
+  fhir:mode [ fhir:v "changes"] ; # 
+  fhir:subject ( [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ) ; # This list does not have a code. In actual fact, 
+#    it's a Condition list produced at the end of an encounter 
+#    to a regular primary care practitioner. But the only way
+#    to know this is to hunt down the place it is used 
+#    and find out
+  fhir:encounter [
+     fhir:l <http://hl7.org/fhir/Encounter/example> ;
+     fhir:reference [ fhir:v "Encounter/example" ]
+  ] ; # 
+  fhir:date [ fhir:v "2012-11-25T22:17:00+11:00"^^xsd:dateTime] ; # 
+  fhir:source [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:entry ( [
+     fhir:flag [
+       fhir:text [ fhir:v "Deleted due to error" ]
+     ] ;
+     fhir:deleted [ fhir:v true ] ;
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Condition/example> ;
+       fhir:reference [ fhir:v "Condition/example" ]
+     ]
+  ] [
+     fhir:flag [
+       fhir:text [ fhir:v "Added" ]
+     ] ;
+     fhir:item [
+       fhir:l <http://hl7.org/fhir/Condition/example2> ;
+       fhir:reference [ fhir:v "Condition/example2" ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/example> a fhir:Encounter .
+
+<http://hl7.org/fhir/Condition/example> a fhir:Condition .
+
+<http://hl7.org/fhir/Condition/example2> a fhir:Condition .
+
+# -------------------------------------------------------------------------------------
+

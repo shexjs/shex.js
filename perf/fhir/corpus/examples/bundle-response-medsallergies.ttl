@@ -1,0 +1,269 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/bundle-response-medsallergies> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "bundle-response-medsallergies"] ; # 
+  fhir:type [ fhir:v "batch-response"] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "http://example.org/fhir/Patient/example"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/Patient/example>
+     ] ;
+     fhir:resource ( <http://example.org/fhir/Patient/example> ) ;
+     fhir:response [
+       fhir:status [ fhir:v "200" ] ;
+       fhir:etag [ fhir:v "W/1" ] ;
+       fhir:lastModified [ fhir:v "2018-11-12T03:35:20.717Z"^^xsd:dateTime ]
+     ]
+  ] [
+     fhir:resource ( [
+       a fhir:Bundle ;
+       fhir:id [ fhir:v "5bdf95d0-24a6-4024-95f5-d546fb479b" ] ;
+       fhir:meta [
+         fhir:lastUpdated [ fhir:v "2018-11-12T05:42:16.086Z"^^xsd:dateTime ]
+       ] ;
+       fhir:type [ fhir:v "searchset" ] ;
+       fhir:total [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+       fhir:link ( [
+         fhir:relation [ fhir:v "self" ] ;
+         fhir:url [
+           fhir:v "http://test.fhir.org/r5/MedicationStatement?_format=application/fhir+xml&search-id=804eee4a-0a54-4414-9c07-169952f929&&patient=example&_list=%24current%2Dmedications&_sort=_id"^^xsd:anyURI ;
+           fhir:l <http://test.fhir.org/r5/MedicationStatement?_format=application/fhir+xml&search-id=804eee4a-0a54-4414-9c07-169952f929&&patient=example&_list=%24current%2Dmedications&_sort=_id>
+         ]
+       ] )
+     ] ) ;
+     fhir:response [
+       fhir:status [ fhir:v "200" ] ;
+       fhir:etag [ fhir:v "W/1" ] ;
+       fhir:lastModified [ fhir:v "2018-11-12T03:35:20.717Z"^^xsd:dateTime ]
+     ]
+  ] [
+     fhir:resource ( [
+       a fhir:Bundle ;
+       fhir:id [ fhir:v "0c11a91c-3638-4d58-8cf1-40e60f43c6" ] ;
+       fhir:meta [
+         fhir:lastUpdated [ fhir:v "2018-11-12T05:42:16.209Z"^^xsd:dateTime ]
+       ] ;
+       fhir:type [ fhir:v "searchset" ] ;
+       fhir:total [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+       fhir:link ( [
+         fhir:relation [ fhir:v "self" ] ;
+         fhir:url [
+           fhir:v "http://test.fhir.org/r5/AllergyIntolerance?_format=application/fhir+xml&search-id=b1981f8a-4139-4db6-923d-77d764c990&&patient=example&_list=%24current%2Dallergies&_sort=_id"^^xsd:anyURI ;
+           fhir:l <http://test.fhir.org/r5/AllergyIntolerance?_format=application/fhir+xml&search-id=b1981f8a-4139-4db6-923d-77d764c990&&patient=example&_list=%24current%2Dallergies&_sort=_id>
+         ]
+       ] )
+     ] ) ;
+     fhir:response [
+       fhir:status [ fhir:v "200" ] ;
+       fhir:etag [ fhir:v "W/1" ] ;
+       fhir:lastModified [ fhir:v "2018-11-12T03:35:20.717Z"^^xsd:dateTime ]
+     ]
+  ] [
+     fhir:resource ( [
+       a fhir:Bundle ;
+       fhir:id [ fhir:v "19f0fa29-f8fe-4b07-b035-f488893f06" ] ;
+       fhir:meta [
+         fhir:lastUpdated [ fhir:v "2018-11-12T05:42:16.279Z"^^xsd:dateTime ]
+       ] ;
+       fhir:type [ fhir:v "searchset" ] ;
+       fhir:total [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+       fhir:link ( [
+         fhir:relation [ fhir:v "self" ] ;
+         fhir:url [
+           fhir:v "http://test.fhir.org/r5/Condition?_format=application/fhir+xml&search-id=4d097c43-54aa-4157-b500-be22208dd0&&patient=example&_list=%24current%2Dproblems&_sort=_id"^^xsd:anyURI ;
+           fhir:l <http://test.fhir.org/r5/Condition?_format=application/fhir+xml&search-id=4d097c43-54aa-4157-b500-be22208dd0&&patient=example&_list=%24current%2Dproblems&_sort=_id>
+         ]
+       ] )
+     ] ) ;
+     fhir:response [
+       fhir:status [ fhir:v "200" ] ;
+       fhir:etag [ fhir:v "W/1" ] ;
+       fhir:lastModified [ fhir:v "2018-11-12T03:35:20.717Z"^^xsd:dateTime ]
+     ]
+  ] [
+     fhir:resource ( [
+       a fhir:Bundle ;
+       fhir:id [ fhir:v "dff8ab42-33f9-42ec-88c5-83d3f05323" ] ;
+       fhir:meta [
+         fhir:lastUpdated [ fhir:v "2018-11-12T05:42:16.351Z"^^xsd:dateTime ]
+       ] ;
+       fhir:type [ fhir:v "searchset" ] ;
+       fhir:total [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+       fhir:link ( [
+         fhir:relation [ fhir:v "self" ] ;
+         fhir:url [
+           fhir:v "http://test.fhir.org/r5/MedicationStatement?_format=application/fhir+xml&search-id=31d4af75-cdcf-4f85-9666-4bafadebb5&&patient=example&_sort=_id"^^xsd:anyURI ;
+           fhir:l <http://test.fhir.org/r5/MedicationStatement?_format=application/fhir+xml&search-id=31d4af75-cdcf-4f85-9666-4bafadebb5&&patient=example&_sort=_id>
+         ]
+       ] )
+     ] ) ;
+     fhir:response [
+       fhir:status [ fhir:v "200" ] ;
+       fhir:etag [ fhir:v "W/1" ] ;
+       fhir:lastModified [ fhir:v "2018-11-12T03:35:20.717Z"^^xsd:dateTime ]
+     ]
+  ] ) . # 
+
+<http://example.org/fhir/Patient/example> a fhir:Patient ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:meta [
+     fhir:versionId [ fhir:v "1" ] ;
+     fhir:lastUpdated [ fhir:v "2018-11-12T03:35:20.715Z"^^xsd:dateTime ]
+  ] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n                        <table>\n                            <tbody>\n                                <tr>\n                                    <td>Name</td>\n                                    <td>Peter James \n                                        <b>Chalmers</b> (\"Jim\")\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td>Address</td>\n                                    <td>534 Erewhon, Pleasantville, Vic, 3999</td>\n                                </tr>\n                                <tr>\n                                    <td>Contacts</td>\n                                    <td>Home: unknown. Work: (03) 5555 6473</td>\n                                </tr>\n                                <tr>\n                                    <td>Id</td>\n                                    <td>MRN: 12345 (Acme Healthcare)</td>\n                                </tr>\n                            </tbody>\n                        </table>\n                    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "MR" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "urn:oid:1.2.36.146.595.217.0.1"^^xsd:anyURI ;
+       fhir:l <urn:oid:1.2.36.146.595.217.0.1>
+     ] ;
+     fhir:value [ fhir:v "12345" ] ;
+     fhir:period [
+       fhir:start [ fhir:v "2001-05-06"^^xsd:date ]
+     ] ;
+     fhir:assigner [
+       fhir:display [ fhir:v "Acme Healthcare" ]
+     ]
+  ] ) ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Chalmers" ] ;
+     fhir:given ( [ fhir:v "Peter" ] [ fhir:v "James" ] )
+  ] [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:given ( [ fhir:v "Jim" ] )
+  ] [
+     fhir:use [ fhir:v "maiden" ] ;
+     fhir:family [ fhir:v "Windsor" ] ;
+     fhir:given ( [ fhir:v "Peter" ] [ fhir:v "James" ] ) ;
+     fhir:period [
+       fhir:end [ fhir:v "2002"^^xsd:gYear ]
+     ]
+  ] ) ; # 
+  fhir:telecom ( [
+     fhir:use [ fhir:v "home" ]
+  ] [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "(03) 5555 6473" ] ;
+     fhir:use [ fhir:v "work" ] ;
+     fhir:rank [ fhir:v "1"^^xsd:positiveInteger ]
+  ] [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "(03) 3410 5613" ] ;
+     fhir:use [ fhir:v "mobile" ] ;
+     fhir:rank [ fhir:v "2"^^xsd:positiveInteger ]
+  ] [
+     fhir:system [ fhir:v "phone" ] ;
+     fhir:value [ fhir:v "(03) 5555 8834" ] ;
+     fhir:use [ fhir:v "old" ] ;
+     fhir:period [
+       fhir:end [ fhir:v "2014"^^xsd:gYear ]
+     ]
+  ] ) ; # 
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:birthDate [
+     fhir:v "1974-12-25"^^xsd:date ;
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "http://hl7.org/fhir/StructureDefinition/patient-birthTime"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/StructureDefinition/patient-birthTime>
+       ] ;
+       fhir:value [
+         a fhir:DateTime ;
+         fhir:v "1974-12-25T14:35:45-05:00"^^xsd:dateTime
+       ]
+     ] )
+  ] ; # 
+  fhir:deceased [
+     a fhir:Boolean ;
+     fhir:v false
+  ] ; # 
+  fhir:address ( [
+     fhir:use [ fhir:v "home" ] ;
+     fhir:type [ fhir:v "both" ] ;
+     fhir:text [ fhir:v "534 Erewhon St PeasantVille, Rainbow, Vic  3999" ] ;
+     fhir:line ( [ fhir:v "534 Erewhon St" ] ) ;
+     fhir:city [ fhir:v "PleasantVille" ] ;
+     fhir:district [ fhir:v "Rainbow" ] ;
+     fhir:state [ fhir:v "Vic" ] ;
+     fhir:postalCode [ fhir:v "3999" ] ;
+     fhir:period [
+       fhir:start [ fhir:v "1974-12-25"^^xsd:date ]
+     ]
+  ] ) ; # 
+  fhir:contact ( [
+     fhir:relationship ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0131"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0131>
+         ] ;
+         fhir:code [ fhir:v "N" ]
+       ] )
+     ] ) ;
+     fhir:name [
+       fhir:family [
+         fhir:v "du Marché" ;
+         fhir:extension ( [
+           fhir:url [
+             fhir:v "http://hl7.org/fhir/StructureDefinition/humanname-own-prefix"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/StructureDefinition/humanname-own-prefix>
+           ] ;
+           fhir:value [
+             a fhir:String ;
+             fhir:v "VV"
+           ]
+         ] )
+       ] ;
+       fhir:given ( [ fhir:v "Bénédicte" ] )
+     ] ;
+     fhir:telecom ( [
+       fhir:system [ fhir:v "phone" ] ;
+       fhir:value [ fhir:v "+33 (237) 998327" ]
+     ] ) ;
+     fhir:address [
+       fhir:use [ fhir:v "home" ] ;
+       fhir:type [ fhir:v "both" ] ;
+       fhir:line ( [ fhir:v "534 Erewhon St" ] ) ;
+       fhir:city [ fhir:v "PleasantVille" ] ;
+       fhir:district [ fhir:v "Rainbow" ] ;
+       fhir:state [ fhir:v "Vic" ] ;
+       fhir:postalCode [ fhir:v "3999" ] ;
+       fhir:period [
+         fhir:start [ fhir:v "1974-12-25"^^xsd:date ]
+       ]
+     ] ;
+     fhir:gender [ fhir:v "female" ] ;
+     fhir:period [
+       fhir:start [ fhir:v "2012"^^xsd:gYear ]
+     ]
+  ] ) ; # 
+  fhir:managingOrganization [
+     fhir:l <http://hl7.org/fhir/Organization/1> ;
+     fhir:reference [ fhir:v "Organization/1" ]
+  ] . # 
+
+<http://hl7.org/fhir/Organization/1> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

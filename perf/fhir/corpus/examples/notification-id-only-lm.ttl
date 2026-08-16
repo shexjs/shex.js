@@ -1,0 +1,48 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Bundle/9afb3cb3-6c64-474d-9412-d4d74ea7ecbe> a fhir:Bundle ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "9afb3cb3-6c64-474d-9412-d4d74ea7ecbe"] ; # 
+  fhir:type [ fhir:v "subscription-notification"] ; # 
+  fhir:timestamp [ fhir:v "2020-04-17T10:24:13.1882432-05:00"^^xsd:dateTime] ; # 
+  fhir:entry ( [
+     fhir:fullUrl [
+       fhir:v "urn:uuid:d93f7f20-ea65-4607-9681-01996e1b2b6a"^^xsd:anyURI ;
+       fhir:l <urn:uuid:d93f7f20-ea65-4607-9681-01996e1b2b6a>
+     ] ;
+     fhir:resource ( <urn:uuid:d93f7f20-ea65-4607-9681-01996e1b2b6a> )
+  ] ) . # 
+
+<urn:uuid:d93f7f20-ea65-4607-9681-01996e1b2b6a> a fhir:SubscriptionStatus ;
+  fhir:id [ fhir:v "d93f7f20-ea65-4607-9681-01996e1b2b6a"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: SubscriptionStatus d93f7f20-ea65-4607-9681-01996e1b2b6a</b></p><a name=\"d93f7f20-ea65-4607-9681-01996e1b2b6a\"> </a><a name=\"hcd93f7f20-ea65-4607-9681-01996e1b2b6a\"> </a><p><b>status</b>: Active</p><p><b>type</b>: Event Notification</p><p><b>eventsSinceSubscriptionStart</b>: 20</p><h3>NotificationEvents</h3><table class=\"grid\"><tr><td style=\"display: none\">-</td><td><b>EventNumber</b></td><td><b>Focus</b></td></tr><tr><td style=\"display: none\">*</td><td>20</td><td><a href=\"broken-link.html\">http://example.org/LogicalModels/Admission/925b19a3-1f1f-49ce-ac59-dae9ae3e5637</a></td></tr></table><p><b>subscription</b>: <a href=\"broken-link.html\">http://example.org/FHIR/Subscription/LM-123</a></p><p><b>topic</b>: <a href=\"subscriptiontopic-example-admission-lm.html\">SubscriptionTopic admission-lm</a></p></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:type [ fhir:v "event-notification"] ; # 
+  fhir:eventsSinceSubscriptionStart [ fhir:v "20"^^xsd:long] ; # 
+  fhir:notificationEvent ( [
+     fhir:eventNumber [ fhir:v "20"^^xsd:long ] ;
+     fhir:focus [
+       fhir:l <http://example.org/LogicalModels/Admission/925b19a3-1f1f-49ce-ac59-dae9ae3e5637> ;
+       fhir:reference [ fhir:v "http://example.org/LogicalModels/Admission/925b19a3-1f1f-49ce-ac59-dae9ae3e5637" ]
+     ]
+  ] ) ; # 
+  fhir:subscription [
+     fhir:l <http://example.org/FHIR/Subscription/LM-123> ;
+     fhir:reference [ fhir:v "http://example.org/FHIR/Subscription/LM-123" ]
+  ] ; # 
+  fhir:topic [
+     fhir:v "http://example.org/FHIR/SubscriptionTopic/admission-lm"^^xsd:anyURI ;
+     fhir:l <http://example.org/FHIR/SubscriptionTopic/admission-lm>
+  ] . # 
+
+# -------------------------------------------------------------------------------------
+

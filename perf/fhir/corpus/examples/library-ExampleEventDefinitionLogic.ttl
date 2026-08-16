@@ -1,0 +1,55 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Library/ExampleEventDefinitionLogic> a fhir:Library ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "ExampleEventDefinitionLogic"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      <p class=\"res-header-id\">\n        <b>Generated Narrative: Library ExampleEventDefinitionLogic</b>\n      </p>\n      <a name=\"ExampleEventDefinitionLogic\"> </a>\n      <a name=\"hcExampleEventDefinitionLogic\"> </a>\n      <h2>Contents</h2>\n      <p>\n        <code>text/cql</code>\n      </p>\n      <pre>\n        <code class=\"language-sql\">library ExampleEventDefinitionLogic\n\nusing FHIR\n\ninclude FHIRHelpers\n\ncodesystem \"LOINC\": 'http://loinc.org'\n\ncode \"LA6577-6|http://loinc.org\": 'LA6577-6' from \"LOINC\"\n\nvalueset \"Stick Test Codes\": 'http://example.org/ValueSet/stick-test-codes'\n\ncontext Patient\n\nparameter %context Encounter\n\ndefine StickTest:\n  [Observation: \"Stick Test Codes\"] O\n    where O.status in { 'final', 'amended', 'corrected' }\n\n// These functions are all candidates for [FHIRCommon](https://hl7.org/fhir/uv/cql/Library-FHIRCommon.html)\n// Or perhaps a FHIRCommonObservation library\ndefine fluent function negative(observations List&lt;Observation&gt;):\n  observations O\n    where O.interpretation ~ \"LA6577-6|http://loinc.org\"\n\ndefine fluent function during(observations List&lt;Observation&gt;, encounter Encounter):\n  observations O\n    where O.issued during minute of encounter.period\n\ndefine fluent function within(observations List&lt;Observation&gt;, quantity Quantity):\n  observations O\n    where (O.issued + quantity) on or after minute of Now()\n\ndefine fluent function consecutively(observations List&lt;Observation&gt;):\n  observations O\n    sort by issued\n\ndefine fluent function consecutivelyAfter(observations List&lt;Observation&gt;, observation Observation):\n  observations O\n    where O.issued on or after observation.issued\n    sort by issued</code>\n      </pre>\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "cds"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/EventDefinition/ExampleEventDefinitionLogic"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/EventDefinition/ExampleEventDefinitionLogic>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "ExampleEventDefinitionLogic"] ; # 
+  fhir:title [ fhir:v "Example EventDefinition Logic"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:experimental [ fhir:v true] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:code [ fhir:v "logic-library" ]
+     ] )
+  ] ; # 
+  fhir:date [ fhir:v "2016-03-08"^^xsd:date] ; # 
+  fhir:publisher [ fhir:v "HL7 International / Clinical Decision Support"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/dss" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "Example EventDefinition Logic"] ; # 
+  fhir:content ( [
+     fhir:contentType [ fhir:v "text/cql" ] ;
+     fhir:data [ fhir:v "bGlicmFyeSBFeGFtcGxlRXZlbnREZWZpbml0aW9uTG9naWMKCnVzaW5nIEZISVIKCmluY2x1ZGUgRkhJUkhlbHBlcnMKCmNvZGVzeXN0ZW0gIkxPSU5DIjogJ2h0dHA6Ly9sb2luYy5vcmcnCgpjb2RlICJMQTY1NzctNnxodHRwOi8vbG9pbmMub3JnIjogJ0xBNjU3Ny02JyBmcm9tICJMT0lOQyIKCnZhbHVlc2V0ICJTdGljayBUZXN0IENvZGVzIjogJ2h0dHA6Ly9leGFtcGxlLm9yZy9WYWx1ZVNldC9zdGljay10ZXN0LWNvZGVzJwoKY29udGV4dCBQYXRpZW50CgpwYXJhbWV0ZXIgJWNvbnRleHQgRW5jb3VudGVyCgpkZWZpbmUgU3RpY2tUZXN0OgogIFtPYnNlcnZhdGlvbjogIlN0aWNrIFRlc3QgQ29kZXMiXSBPCiAgICB3aGVyZSBPLnN0YXR1cyBpbiB7ICdmaW5hbCcsICdhbWVuZGVkJywgJ2NvcnJlY3RlZCcgfQoKLy8gVGhlc2UgZnVuY3Rpb25zIGFyZSBhbGwgY2FuZGlkYXRlcyBmb3IgW0ZISVJDb21tb25dKGh0dHBzOi8vaGw3Lm9yZy9maGlyL3V2L2NxbC9MaWJyYXJ5LUZISVJDb21tb24uaHRtbCkKLy8gT3IgcGVyaGFwcyBhIEZISVJDb21tb25PYnNlcnZhdGlvbiBsaWJyYXJ5CmRlZmluZSBmbHVlbnQgZnVuY3Rpb24gbmVnYXRpdmUob2JzZXJ2YXRpb25zIExpc3Q8T2JzZXJ2YXRpb24+KToKICBvYnNlcnZhdGlvbnMgTwogICAgd2hlcmUgTy5pbnRlcnByZXRhdGlvbiB+ICJMQTY1NzctNnxodHRwOi8vbG9pbmMub3JnIgoKZGVmaW5lIGZsdWVudCBmdW5jdGlvbiBkdXJpbmcob2JzZXJ2YXRpb25zIExpc3Q8T2JzZXJ2YXRpb24+LCBlbmNvdW50ZXIgRW5jb3VudGVyKToKICBvYnNlcnZhdGlvbnMgTwogICAgd2hlcmUgTy5pc3N1ZWQgZHVyaW5nIG1pbnV0ZSBvZiBlbmNvdW50ZXIucGVyaW9kCgpkZWZpbmUgZmx1ZW50IGZ1bmN0aW9uIHdpdGhpbihvYnNlcnZhdGlvbnMgTGlzdDxPYnNlcnZhdGlvbj4sIHF1YW50aXR5IFF1YW50aXR5KToKICBvYnNlcnZhdGlvbnMgTwogICAgd2hlcmUgKE8uaXNzdWVkICsgcXVhbnRpdHkpIG9uIG9yIGFmdGVyIG1pbnV0ZSBvZiBOb3coKQoKZGVmaW5lIGZsdWVudCBmdW5jdGlvbiBjb25zZWN1dGl2ZWx5KG9ic2VydmF0aW9ucyBMaXN0PE9ic2VydmF0aW9uPik6CiAgb2JzZXJ2YXRpb25zIE8KICAgIHNvcnQgYnkgaXNzdWVkCgpkZWZpbmUgZmx1ZW50IGZ1bmN0aW9uIGNvbnNlY3V0aXZlbHlBZnRlcihvYnNlcnZhdGlvbnMgTGlzdDxPYnNlcnZhdGlvbj4sIG9ic2VydmF0aW9uIE9ic2VydmF0aW9uKToKICBvYnNlcnZhdGlvbnMgTwogICAgd2hlcmUgTy5pc3N1ZWQgb24gb3IgYWZ0ZXIgb2JzZXJ2YXRpb24uaXNzdWVkCiAgICBzb3J0IGJ5IGlzc3VlZA=="^^xsd:base64Binary ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

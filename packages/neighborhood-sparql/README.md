@@ -84,8 +84,11 @@ labels. Two families of tests are out of scope, marked by the manifest traits
 `LexicalBNode` (the verdict measures a blank node's *label* with `length` or
 `pattern` — labels don't survive SPARQL). They are filtered out rather than
 marked pending: a pending test reads as work to return to, and these can never
-run. A meta-test audits the `ToldBNode` tagging in both directions. Every
-untagged facet-plus-bnode test demonstrably agrees across the two
+run. A meta-test audits the boundary in both directions: no blank node focus
+may reach the endpoint (either trait keeps it out — a test whose focus is
+`_:abcd` *and* whose verdict measures that label is tagged `LexicalBNode`, the
+more specific of the two), and nothing carries `ToldBNode` without a blank node
+focus. Every untagged facet-plus-bnode test demonstrably agrees across the two
 neighborhoods, so the tags are trusted as the exact boundary.
 
 The endpoint under test (`sparql-test-server.js`, comunica-backed) is as hostile

@@ -1,0 +1,230 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Coverage/9876B1> a fhir:Coverage ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "9876B1"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">A human-readable rendering of the coverage</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://benefitsinc.com/certificate"^^xsd:anyURI ;
+       fhir:l <http://benefitsinc.com/certificate>
+     ] ;
+     fhir:value [ fhir:v "12345" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:kind [ fhir:v "insurance"] ; # 
+  fhir:type [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/v3-ActCode"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/v3-ActCode>
+       ] ;
+       fhir:code [ fhir:v "EHCPOL" ] ;
+       fhir:display [ fhir:v "extended healthcare" ]
+     ] )
+  ] ; # 
+  fhir:policyHolder [
+     fhir:l <http://benefits.example.org/FHIR/Organization/CBI35> ;
+     fhir:reference [ fhir:v "http://benefits.example.org/FHIR/Organization/CBI35" ]
+  ] ; # 
+  fhir:subscriber [
+     fhir:l <http://hl7.org/fhir/Patient/4> ;
+     fhir:reference [ fhir:v "Patient/4" ]
+  ] ; # 
+  fhir:beneficiary [
+     fhir:l <http://hl7.org/fhir/Patient/4> ;
+     fhir:reference [ fhir:v "Patient/4" ]
+  ] ; # 
+  fhir:dependent [ fhir:v "0"] ; # 
+  fhir:relationship [
+     fhir:coding ( [
+       fhir:code [ fhir:v "self" ]
+     ] )
+  ] ; # 
+  fhir:period [
+     fhir:start [ fhir:v "2011-05-23"^^xsd:date ] ;
+     fhir:end [ fhir:v "2012-05-23"^^xsd:date ]
+  ] ; # 
+  fhir:insurer [
+     fhir:l <http://hl7.org/fhir/Organization/2> ;
+     fhir:reference [ fhir:v "Organization/2" ]
+  ] ; # 
+  fhir:class ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/coverage-class"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/coverage-class>
+         ] ;
+         fhir:code [ fhir:v "group" ]
+       ] )
+     ] ;
+     fhir:value [
+       fhir:value [ fhir:v "CB135" ]
+     ] ;
+     fhir:name [ fhir:v "Corporate Baker's Inc. Local #35" ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/coverage-class"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/coverage-class>
+         ] ;
+         fhir:code [ fhir:v "subgroup" ]
+       ] )
+     ] ;
+     fhir:value [
+       fhir:value [ fhir:v "123" ]
+     ] ;
+     fhir:name [ fhir:v "Trainee Part-time Benefits" ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/coverage-class"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/coverage-class>
+         ] ;
+         fhir:code [ fhir:v "plan" ]
+       ] )
+     ] ;
+     fhir:value [
+       fhir:value [ fhir:v "B37FC" ]
+     ] ;
+     fhir:name [ fhir:v "Full Coverage: Medical, Dental, Pharmacy, Vision, EHC" ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/coverage-class"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/coverage-class>
+         ] ;
+         fhir:code [ fhir:v "subplan" ]
+       ] )
+     ] ;
+     fhir:value [
+       fhir:value [ fhir:v "P7" ]
+     ] ;
+     fhir:name [ fhir:v "Includes afterlife benefits" ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/coverage-class"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/coverage-class>
+         ] ;
+         fhir:code [ fhir:v "class" ]
+       ] )
+     ] ;
+     fhir:value [
+       fhir:value [ fhir:v "SILVER" ]
+     ] ;
+     fhir:name [ fhir:v "Silver: Family Plan spouse only" ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/coverage-class"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/coverage-class>
+         ] ;
+         fhir:code [ fhir:v "subclass" ]
+       ] )
+     ] ;
+     fhir:value [
+       fhir:value [ fhir:v "Tier2" ]
+     ] ;
+     fhir:name [ fhir:v "Low deductable, max $20 copay" ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/coverage-class"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/coverage-class>
+         ] ;
+         fhir:code [ fhir:v "sequence" ]
+       ] )
+     ] ;
+     fhir:value [
+       fhir:value [ fhir:v "9" ]
+     ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/coverage-class"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/coverage-class>
+         ] ;
+         fhir:code [ fhir:v "rxid" ]
+       ] )
+     ] ;
+     fhir:value [
+       fhir:value [ fhir:v "MDF12345" ]
+     ] # member id used when submitting pharmacy claims
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/coverage-class"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/coverage-class>
+         ] ;
+         fhir:code [ fhir:v "rxbin" ]
+       ] )
+     ] ;
+     fhir:value [
+       fhir:value [ fhir:v "987654" ]
+     ] # the pharmacy processor BIN number used when submitting pharmacy claims
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/coverage-class"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/coverage-class>
+         ] ;
+         fhir:code [ fhir:v "rxgroup" ]
+       ] )
+     ] ;
+     fhir:value [
+       fhir:value [ fhir:v "M35PT" ]
+     ] # group used when submitting pharmacy claims
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/coverage-class"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/coverage-class>
+         ] ;
+         fhir:code [ fhir:v "rxpcn" ]
+       ] )
+     ] ;
+     fhir:value [
+       fhir:value [ fhir:v "234516" ]
+     ] # the PCN number used when submitting pharmacy claims
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/coverage-class"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/coverage-class>
+         ] ;
+         fhir:code [ fhir:v "sequence" ]
+       ] )
+     ] ;
+     fhir:value [
+       fhir:value [ fhir:v "9" ]
+     ] # the sequence number for a short-term continuance of the coverage
+  ] ) . # The repeating 'class' element is proposed to replace the 'grouping' element
+
+<http://hl7.org/fhir/Patient/4> a fhir:Patient .
+
+<http://hl7.org/fhir/Organization/2> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

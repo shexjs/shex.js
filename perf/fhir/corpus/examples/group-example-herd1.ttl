@@ -1,0 +1,89 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# An example of a herd used in the subject screening observation for Mycoplasmal Pneumonia in Pigs
+#(Enzootic pneumonia).  Many thanks to Veterinary Diagnostic Laboratory Iowa State University for the data.
+
+<http://hl7.org/fhir/Group/herd1> a fhir:Group ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "herd1"] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://example.org/fhir/StructureDefinition/owner"^^xsd:anyURI ;
+       fhir:l <http://example.org/fhir/StructureDefinition/owner>
+     ] ;
+     fhir:value [
+       a fhir:Reference ;
+       fhir:l <http://hl7.org/fhir/RelatedPerson/peter> ;
+       fhir:reference [ fhir:v "RelatedPerson/peter" ] ;
+       fhir:display [ fhir:v "Peter Chalmers" ]
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # added this extension to reference the owner (client) of the herd
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "https://vetmed.iastate.edu/vdl"^^xsd:anyURI ;
+       fhir:l <https://vetmed.iastate.edu/vdl>
+     ] ;
+     fhir:value [ fhir:v "20171120-1234" ]
+  ] ) ; # diagnostic lab's identifier
+  fhir:name [ fhir:v "Breeding herd"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:type [ fhir:v "animal"] ; # 
+  fhir:membership [ fhir:v "enumerated"] ; # 
+  fhir:code [
+     a sct:388393002 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "388393002" ] ;
+       fhir:display [ fhir:v "Genus Sus (organism)" ]
+     ] [
+       fhir:system [
+         fhir:v "https://www.aphis.usda.gov"^^xsd:anyURI ;
+         fhir:l <https://www.aphis.usda.gov>
+       ] ;
+       fhir:code [ fhir:v "POR" ] ;
+       fhir:display [ fhir:v "porcine" ]
+     ] ) ;
+     fhir:text [ fhir:v "Porcine" ]
+  ] ; # describes a bunch of female breeding sows  added a translation from US APHIS codes to SNOMED CT
+  fhir:quantity [ fhir:v "2500"^^xsd:nonNegativeInteger] ; # 
+  fhir:characteristic ( [
+     fhir:code [
+       fhir:text [ fhir:v "gender" ]
+     ] ;
+     fhir:value [
+       a fhir:CodeableConcept ;
+       fhir:text [ fhir:v "female" ]
+     ] ;
+     fhir:exclude [ fhir:v false ] # required element - false means they are all sows
+  ] ) . # the share the common charasteristic of being sows
+
+<http://hl7.org/fhir/RelatedPerson/peter> a fhir:RelatedPerson .
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,102 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+# The use case illustrates the use of an  UDI for an implant  is built with GS-1 format UDI data
+
+<http://hl7.org/fhir/Device/example-udi1> a fhir:Device ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-udi1"] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://acme.com/devices/pacemakers/octane/serial"^^xsd:anyURI ;
+           fhir:l <http://acme.com/devices/pacemakers/octane/serial>
+         ]
+       ] )
+     ] ;
+     fhir:value [ fhir:v "1234-5678-90AB-CDEF" ]
+  ] [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "SNO" ]
+       ] )
+     ] ;
+     fhir:value [ fhir:v "10987654d321" ]
+  ] ) ; # 
+  fhir:udiCarrier ( [
+     fhir:deviceIdentifier [ fhir:v "00844588003288" ] ;
+     fhir:issuer [
+       fhir:v "http://hl7.org/fhir/NamingSystem/gs1-di"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/NamingSystem/gs1-di>
+     ] ;
+     fhir:jurisdiction [
+       fhir:v "http://hl7.org/fhir/NamingSystem/us-fda-udi"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/NamingSystem/us-fda-udi>
+     ] ;
+     fhir:carrierAIDC [ fhir:v "XWQyMDExMDg1NzY3NDAwMjAxNzE3MTQxMTIwMTBOWUZVTDAx4oaUMjExOTI4MzfihpQ3MTNBMUIyQzNENEU1RjZH"^^xsd:base64Binary ] ;
+     fhir:carrierHRF [ fhir:v "{01}00844588003288{17}141120{10}7654321D{21}10987654d321" ] ;
+     fhir:entryType [ fhir:v "barcode" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:manufacturer [ fhir:v "Acme Devices, Inc"] ; # 
+  fhir:expirationDate [ fhir:v "2014-11-20"^^xsd:date] ; # 
+  fhir:lotNumber [ fhir:v "7654321D"] ; # 
+  fhir:name ( [
+     fhir:value [ fhir:v "PM/Octane 2014" ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://hl7.org/fhir/device-nametype"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/device-nametype>
+         ] ;
+         fhir:code [ fhir:v "user-friendly-name" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:type ( [
+     a sct:468063009 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+         fhir:l <http://snomed.info/sct>
+       ] ;
+       fhir:code [ fhir:v "468063009" ] ;
+       fhir:display [ fhir:v "Coated femoral stem prosthesis, modular" ]
+     ] ) ;
+     fhir:text [ fhir:v "Coated femoral stem prosthesis, modular" ]
+  ] ) ; # note: optional text value added here for a prettier generated narrative
+  fhir:safety ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl"^^xsd:anyURI ;
+         fhir:l <http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl>
+       ] ;
+       fhir:code [ fhir:v "mr-unsafe" ] ;
+       fhir:display [ fhir:v "MR Unsafe" ]
+     ] ) ;
+     fhir:text [ fhir:v "MR Unsafe" ]
+  ] ) . # <association>
+#	  <status> 
+#	     <coding>
+#		   <system value="http://terminology.hl7.org/CodeSystem/device-association-status" />
+#           <code value="attached"/>
+#		 </coding>
+#	  </status>
+#      <humanSubject>
+#		<reference value="Patient/example"/>
+#	  </humanSubject>
+#	</association>, note: optional text value added here for a prettier generated narrative
+
+# -------------------------------------------------------------------------------------
+

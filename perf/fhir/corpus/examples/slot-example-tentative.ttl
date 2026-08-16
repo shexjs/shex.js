@@ -1,0 +1,34 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Slot/2> a fhir:Slot ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "2"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n			25 Dec 2013 9:45am - 10:00am: <b>Tentative</b> Physiotherapy\n		</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:serviceCategory ( [
+     fhir:coding ( [
+       fhir:code [ fhir:v "17" ] ;
+       fhir:display [ fhir:v "General Practice" ]
+     ] )
+  ] ) ; # 
+  fhir:schedule [
+     fhir:l <http://hl7.org/fhir/Schedule/example> ;
+     fhir:reference [ fhir:v "Schedule/example" ]
+  ] ; # 
+  fhir:status [ fhir:v "busy-tentative"] ; # 
+  fhir:start [ fhir:v "2013-12-25T09:45:00Z"^^xsd:dateTime] ; # 
+  fhir:end [ fhir:v "2013-12-25T10:00:00Z"^^xsd:dateTime] ; # 
+  fhir:comment [ fhir:v "Dr Careful is out of the office"] . # 
+
+<http://hl7.org/fhir/Schedule/example> a fhir:Schedule .
+
+# -------------------------------------------------------------------------------------
+

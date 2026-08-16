@@ -1,0 +1,78 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/VisionPrescription/33123> a fhir:VisionPrescription ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "33123"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n			<p>OD -2.00 SPH         +2.00 add    0.5 p.d. BD</p>\n			<p>OS -1.00 -0.50 x 180 +2.00 add    0.5 p.d. BU</p>\n		</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:system [
+       fhir:v "http://www.happysight.com/prescription"^^xsd:anyURI ;
+       fhir:l <http://www.happysight.com/prescription>
+     ] ;
+     fhir:value [ fhir:v "15013" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:intent [ fhir:v "order"] ; # 
+  fhir:created [ fhir:v "2014-06-15"^^xsd:date] ; # 
+  fhir:patient [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:dateWritten [ fhir:v "2014-06-15"^^xsd:date] ; # 
+  fhir:prescriber [
+     fhir:l <http://hl7.org/fhir/Practitioner/example> ;
+     fhir:reference [ fhir:v "Practitioner/example" ]
+  ] ; # 
+  fhir:lensSpecification ( [
+     fhir:product [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ex-visionprescriptionproduct"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ex-visionprescriptionproduct>
+         ] ;
+         fhir:code [ fhir:v "lens" ]
+       ] )
+     ] ;
+     fhir:eye [ fhir:v "right" ] ;
+     fhir:sphere [ fhir:v -2.00 ] ;
+     fhir:prism ( [
+       fhir:amount [ fhir:v 0.5 ] ;
+       fhir:base [ fhir:v "down" ]
+     ] ) ;
+     fhir:add [ fhir:v 2.00 ]
+  ] [
+     fhir:product [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/ex-visionprescriptionproduct"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/ex-visionprescriptionproduct>
+         ] ;
+         fhir:code [ fhir:v "lens" ]
+       ] )
+     ] ;
+     fhir:eye [ fhir:v "left" ] ;
+     fhir:sphere [ fhir:v -1.00 ] ;
+     fhir:cylinder [ fhir:v -0.50 ] ;
+     fhir:axis [ fhir:v 180 ] ;
+     fhir:prism ( [
+       fhir:amount [ fhir:v 0.5 ] ;
+       fhir:base [ fhir:v "up" ]
+     ] ) ;
+     fhir:add [ fhir:v 2.00 ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Practitioner/example> a fhir:Practitioner .
+
+# -------------------------------------------------------------------------------------
+

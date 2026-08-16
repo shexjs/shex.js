@@ -1,0 +1,102 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/CareTeam/example> a fhir:CareTeam ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Peter James Charlmers Care Team for Inpatient Encounter with one member.</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:contained ( [
+     a fhir:Practitioner ;
+     fhir:id [ fhir:v "pr1" ] ;
+     fhir:name ( [
+       fhir:family [ fhir:v "Dietician" ] ;
+       fhir:given ( [ fhir:v "Dorothy" ] )
+     ] )
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:value [ fhir:v "12345" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:category ( [
+     a loinc:LA27976-2 ;
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://loinc.org"^^xsd:anyURI ;
+         fhir:l <http://loinc.org>
+       ] ;
+       fhir:code [ fhir:v "LA27976-2" ] ;
+       fhir:display [ fhir:v "Encounter-focused care team" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "Peter James Charlmers Care Team for Inpatient Encounter"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Peter James Chalmers" ]
+  ] ; # 
+  fhir:period [
+     fhir:end [ fhir:v "2013-01-01"^^xsd:date ]
+  ] ; # 
+  fhir:participant ( [
+     fhir:role [
+       fhir:text [ fhir:v "responsiblePerson" ]
+     ] ;
+     fhir:member [
+       fhir:l <http://hl7.org/fhir/Patient/example> ;
+       fhir:reference [ fhir:v "Patient/example" ] ;
+       fhir:display [ fhir:v "Peter James Chalmers" ]
+     ]
+  ] [
+     fhir:role [
+       fhir:text [ fhir:v "adviser" ]
+     ] ;
+     fhir:member [
+       fhir:l <#pr1> ;
+       fhir:reference [ fhir:v "#pr1" ] ;
+       fhir:display [ fhir:v "Dorothy Dietition" ]
+     ] ;
+     fhir:onBehalfOf [
+       fhir:l <http://hl7.org/fhir/Organization/f001> ;
+       fhir:reference [ fhir:v "Organization/f001" ]
+     ] ;
+     fhir:effective [
+       a fhir:Timing ;
+       fhir:repeat [
+         fhir:bounds [
+           a fhir:Period ;
+           fhir:start [ fhir:v "2010-12-23"^^xsd:date ] ;
+           fhir:end [ fhir:v "2013-01-01"^^xsd:date ]
+         ] ;
+         fhir:frequency [ fhir:v "1"^^xsd:positiveInteger ] ;
+         fhir:period [ fhir:v "1"^^xsd:decimal ] ;
+         fhir:periodUnit [ fhir:v "d" ] ;
+         fhir:dayOfWeek ( [ fhir:v "mon" ] ) ;
+         fhir:when ( [ fhir:v "MORN" ] )
+       ]
+     ]
+  ] ) ; # 
+  fhir:reason ( [
+     fhir:concept [
+       fhir:text [ fhir:v "obesity" ]
+     ]
+  ] ) ; # 
+  fhir:managingOrganization ( [
+     fhir:l <http://hl7.org/fhir/Organization/f001> ;
+     fhir:reference [ fhir:v "Organization/f001" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Organization/f001> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

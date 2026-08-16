@@ -20213,7 +20213,7 @@ exports.RegexpModule = {
                 patch(pair.tail, matchstate);
                 startNo = pair.start;
             }
-            return new EvalSimple1ErrRegexEngine(shape, states, startNo, matchstate, debugHooks);
+            return new EvalSimple1ErrRegexEngine(shape, index, states, startNo, matchstate, debugHooks);
             function maybeAddRept(expr, start, tail) {
                 if ((expr.min == undefined || expr.min === 1) &&
                     (expr.max == undefined || expr.max === 1))
@@ -20354,10 +20354,53 @@ class RegExpThread {
         this.errors = errors;
     }
 }
+/**
+ * The semantic actions written anywhere in here, by name.
+ *
+ * Without any, ShEx asks only how many triples a constraint took, so two
+ * ways of matching the same bag are the same answer and the frontier can
+ * keep one of them.  An action is handed the triples it fired on and does
+ * something opaque with them, so where one is watching the specific
+ * assignment is part of the answer and the merge has to be off.
+ *
+ * Names rather than a flag, because an action nobody handles is never
+ * dispatched (SemActDispatcher.dispatchAll skips it) and so cannot observe
+ * anything.  Which handlers are registered isn't known until match().
+ */
+function semActNamesIn(exprOrRef, index, seen, into) {
+    if (typeof exprOrRef === "string") {
+        if (seen.has(exprOrRef))
+            return into; // an Inclusion cycle
+        seen.add(exprOrRef);
+        const included = index.tripleExprs[exprOrRef];
+        return included === undefined ? into : semActNamesIn(included, index, seen, into);
+    }
+    (exprOrRef.semActs || []).forEach(sa => into.add(sa.name));
+    switch (exprOrRef.type) {
+        case "EachOf":
+        case "OneOf":
+            exprOrRef.expressions.forEach(nested => semActNamesIn(nested, index, seen, into));
+    }
+    return into;
+}
+/** May the frontier be deduplicated, given who is listening? */
+function merging(names, semActHandler) {
+    if (names.size === 0)
+        return true;
+    if (semActHandler.isRegistered === undefined)
+        return false; // can't ask: assume it is live
+    for (const name of names)
+        if (semActHandler.isRegistered(name))
+            return false;
+    return true; // written, but nobody is handling them
+}
 class EvalSimple1ErrRegexEngine {
-    constructor(shape, states, startNo, matchstate, debugHooks) {
+    constructor(shape, index, states, startNo, matchstate, debugHooks) {
         this._live = null;
         this.shape = shape;
+        this.semActNames = new Set((shape.semActs || []).map(sa => sa.name));
+        if (shape.expression !== undefined)
+            semActNamesIn(shape.expression, index, new Set(), this.semActNames);
         this.end = matchstate;
         this.states = states;
         this.start = startNo;
@@ -20384,6 +20427,7 @@ class EvalSimple1ErrRegexEngine {
      */
     *runMatch(node, constraintToTripleMapping, semActHandler, trace) {
         const thisEvalSimple1ErrRegexEngine = this;
+        const mayMerge = merging(this.semActNames, semActHandler);
         let clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
         let generation = 0;
         this._live = () => ({ clist, nlist }); // closes over the swapped lists
@@ -20475,7 +20519,7 @@ class EvalSimple1ErrRegexEngine {
             // filled in lazily, so a thread that hasn't reached a constraint
             // still has all of its triples.
             const seenFrontier = new Set();
-            clist = nlist.filter(thread => {
+            clist = !mayMerge ? nlist : nlist.filter(thread => {
                 const counts = [];
                 constraintToTripleMapping.data.forEach((pairs, constraint) => counts.push(thread.avail.has(constraint) ? thread.avail.get(constraint).length : pairs.length));
                 const key = thread.state + "|" + JSON.stringify(thread.repeats)
@@ -20927,8 +20971,58 @@ class EvalThreadedNErrRegexEngine {
         this.index = index;
         this.debugHooks = debugHooks;
         this.node = null; // the focus node while match() runs
+        /** Set per match(): whether the frontier may be deduplicated. */
+        this.mayMerge = true;
         this.outerExpression = shape.expression;
         this.greedy = this.takesAllItCan(this.outerExpression);
+        this.semActNames = new Set();
+        (this.shape.semActs || []).forEach(sa => this.semActNames.add(sa.name));
+        this.collectSemActs(this.outerExpression, new Set());
+    }
+    /**
+     * The semantic actions written anywhere in this shape, by name.
+     *
+     * Without any, ShEx asks only how many triples a constraint took: two
+     * ways of matching the same bag are the same answer, which is what lets
+     * mergeEquivalent drop all but one of them.  An action is handed the
+     * triples it fired on and does something opaque with them, so where one
+     * is watching the specific assignment is part of the answer -- both which
+     * triples it sees and, for a group's actions, how many threads it is
+     * dispatched over.
+     *
+     * Names rather than a flag, because an action nobody handles is never
+     * dispatched (SemActDispatcher.dispatchAll skips it) and so cannot
+     * observe anything.  Which handlers are registered isn't known until
+     * match() is called, so the question is asked there.
+     */
+    collectSemActs(exprOrRef, seen) {
+        if (typeof exprOrRef === "string") {
+            if (seen.has(exprOrRef))
+                return; // an Inclusion cycle
+            seen.add(exprOrRef);
+            const included = this.index.tripleExprs[exprOrRef];
+            if (included !== undefined)
+                this.collectSemActs(included, seen);
+            return;
+        }
+        (exprOrRef.semActs || []).forEach(sa => this.semActNames.add(sa.name));
+        switch (exprOrRef.type) {
+            case "EachOf":
+            case "OneOf":
+                exprOrRef.expressions.forEach(nested => this.collectSemActs(nested, seen));
+                return;
+        }
+    }
+    /** May the frontier be deduplicated, given who is listening? */
+    merging(semActHandler) {
+        if (this.semActNames.size === 0)
+            return true;
+        if (semActHandler.isRegistered === undefined)
+            return false; // can\'t ask: assume it is live
+        for (const name of this.semActNames)
+            if (semActHandler.isRegistered(name))
+                return false;
+        return true; // written, but nobody is handling them
     }
     /**
      * Which constraints can take every triple assigned to them at once.
@@ -20983,6 +21077,7 @@ class EvalThreadedNErrRegexEngine {
     }
     match(node, constraintToTripleMapping, semActHandler, _trace) {
         this.node = node;
+        this.mayMerge = this.merging(semActHandler);
         const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
             tripleResult.forEach(res => allTriples.add(res.triple));
             return allTriples;
@@ -21020,9 +21115,11 @@ class EvalThreadedNErrRegexEngine {
         }
         else {
             return ret.length > 1 ? {
-                type: "PossibleErrors",
+                // more than one way to read this neighborhood, and each of them
+                // failed: say so as a disjunction rather than as a nested array
+                type: "Alternatives",
                 errors: ret.reduce((all, e) => {
-                    return all.concat([e.errors]);
+                    return all.concat([{ type: "AllOf", errors: e.errors }]);
                 }, [])
             } : {
                 type: "Failure",
@@ -21075,7 +21172,7 @@ class EvalThreadedNErrRegexEngine {
                     Array.prototype.push.apply(failed, sub);
             }
             return matched.length > 0 ? matched : failed;
-        }, semActHandler);
+        }, semActHandler, this.mayMerge);
     }
     matchEachOf(expr, min, max, thread, constraintToTripleMapping, semActHandler) {
         return EvalThreadedNErrRegexEngine.homogenize(EvalThreadedNErrRegexEngine.matchRepeat(expr, min, max, thread, "EachOfSolutions", (th) => {
@@ -21103,7 +21200,7 @@ class EvalThreadedNErrRegexEngine {
                     return nextThreads.concat(sub);
                 }, []));
             }, [th]);
-        }, semActHandler));
+        }, semActHandler, this.mayMerge));
     }
     // Early return in case of insufficient matching triples
     matchTripleConstraint(constraint, min, max, thread, constraintToTripleMapping, semActHandler) {
@@ -21206,7 +21303,7 @@ class EvalThreadedNErrRegexEngine {
         }
         return Array.from(byRemaining.values());
     }
-    static matchRepeat(groupTE, min, max, thread, type, evalGroup, semActHandler) {
+    static matchRepeat(groupTE, min, max, thread, type, evalGroup, semActHandler, mayMerge) {
         let repeated = 0, errOut = false;
         let newThreads = [thread];
         const minmax = {};
@@ -21252,7 +21349,7 @@ class EvalThreadedNErrRegexEngine {
                 // none of them could: short of the minimum that is the failure,
                 // and past it the iterations already made stand
                 return repeated < min ? stumbled : newThreads;
-            newThreads = EvalThreadedNErrRegexEngine.mergeEquivalent(inner);
+            newThreads = mayMerge ? EvalThreadedNErrRegexEngine.mergeEquivalent(inner) : inner;
         }
         if (newThreads.length > 0 && newThreads[0].errors.length === 0 && groupTE.semActs !== undefined) {
             const passes = [];
@@ -25421,6 +25518,7 @@ exports.stringifyWithOffsets = stringifyWithOffsets;
 const ShExParser = __importStar(__webpack_require__(4822));
 const emit_1 = __webpack_require__(2388);
 const RdfJs = __importStar(__webpack_require__(4957));
+const { describeError } = __webpack_require__(546);
 const XSD_STRING = "http://www.w3.org/2001/XMLSchema#string";
 const RDF_LANGSTRING = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
 // ---------------------------------------------------------------------------
@@ -25822,52 +25920,41 @@ function rangeOfNode(parsed, node, bnodes) {
 }
 // error types that anchor a diagnostic (as opposed to containers to recurse
 // through); each entry renders a message and picks its anchors
-const ErrorLeaves = {
-    // Note each leaf also carries `predicate` where known: object identity
-    // doesn't survive a structured clone (worker-app results), so the
-    // (shape, predicate) lookup is the anchor that always works.
-    TypeMismatch: (err, _ctx) => ({
-        message: `${termStr(err.triple.object)} doesn't satisfy ${err.constraint ? constraintStr(err.constraint) : "the constraint"}`,
-        schemaObj: err.constraint,
-        predicate: err.constraint ? err.constraint.predicate : err.triple.predicate,
-        triple: err.triple,
-    }),
-    MissingProperty: (err, ctx) => ({
-        message: `missing expected property ${termStr(err.property)}`,
-        predicate: err.property,
-        node: ctx.node,
-    }),
-    ExcessTripleViolation: (err, ctx) => ({
-        message: `too many occurrences of ${termStr(err.property)}`,
-        predicate: err.property,
-        node: ctx.node,
-    }),
-    ClosedShapeViolation: (err, ctx) => ({
-        message: `unexpected properties in closed shape: ${(err.unexpectedTriples || []).map((t) => termStr(t.predicate)).join(", ")}`,
-        triples: err.unexpectedTriples,
-        node: ctx.node,
-    }),
-    NodeConstraintViolation: (err, ctx) => {
-        var _a;
-        return ({
-            message: firstLine((err.errors || [])[0] || "node constraint violation"),
-            schemaObj: ctx.constraint, // usually nested in a TypeMismatch
-            predicate: ((_a = ctx.constraint) === null || _a === void 0 ? void 0 : _a.predicate) || (ctx.triple && ctx.triple.predicate),
+/**
+ * What each error type says, and what to point at when saying it.
+ *
+ * The sentence comes from @shexjs/util's describeError, which the human
+ * writer uses too -- these two used to write the same sentences differently
+ * and drift.  What is this module's own is the *anchoring*: which schema
+ * object and which triple a range can be found for.  See
+ * doc/error-reporting.md (F1).
+ */
+const ErrorLeaves = {};
+["TypeMismatch", "MissingProperty", "ExcessTripleViolation", "ClosedShapeViolation",
+    "NodeConstraintViolation", "NegatedProperty", "AbstractShapeFailure", "SemActFailure",
+    "SemActViolation", "FeasibilityViolation"].forEach(type => {
+    ErrorLeaves[type] = (err, ctx) => {
+        const said = describeError(err, {
+            constraint: ctx.constraint,
             triple: ctx.triple,
             node: ctx.node,
-        });
-    },
-    SemActFailure: (_err, ctx) => {
-        var _a;
-        return ({
-            message: "semantic action failure",
-            schemaObj: ctx.constraint,
-            predicate: ((_a = ctx.constraint) === null || _a === void 0 ? void 0 : _a.predicate) || (ctx.triple && ctx.triple.predicate),
-            triple: ctx.triple,
-            node: ctx.node,
-        });
-    },
-};
+            prefixes: schemaPrefixes,
+        }) || { text: type };
+        return {
+            message: said.text,
+            // object identity doesn't survive a structured clone (worker-app
+            // results), so the (shape, predicate) lookup is the anchor that
+            // always works
+            schemaObj: said.schemaObj || ctx.constraint,
+            predicate: said.predicate,
+            triple: said.triple || ctx.triple,
+            triples: said.triples,
+            node: said.node !== undefined ? said.node : ctx.node,
+        };
+    };
+});
+/** the prefixes a quoted fragment is written with; set per mapping run */
+let schemaPrefixes = {};
 function termStr(t) {
     return typeof t === "object" ? JSON.stringify(t.value) : "<" + t + ">";
 }
@@ -28682,124 +28769,363 @@ __webpack_unused_export__ = StoreDuplicates;
 
 /***/ },
 
+/***/ 546
+(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+var __webpack_unused_export__;
+
+/**
+ * One place that turns a validation error into a sentence.
+ *
+ * There were two: this package's ShExHumanErrorWriter, which builds an
+ * indented tree for `errsToSimple`, and editor-services' ErrorLeaves, which
+ * builds one line per error for a CodeMirror diagnostic.  They wrote the
+ * same sentences differently -- "Missing property: <p>" against "missing
+ * expected property <p>" -- and drifted apart as each was touched.
+ *
+ * The two jobs really do differ: a tree indents its causes, a diagnostic
+ * points at a range.  What they share is the *leaf*: what went wrong with
+ * this triple, this constraint, this node.  That is what lives here.
+ * Composition (the tree) and anchoring (the ranges) stay with their
+ * callers, which is where they belong.
+ *
+ * See doc/error-reporting.md (F1, F2).
+ */
+__webpack_unused_export__ = ({ value: true });
+__webpack_unused_export__ = iriText;
+__webpack_unused_export__ = termText;
+__webpack_unused_export__ = shexcFragment;
+__webpack_unused_export__ = constraintText;
+__webpack_unused_export__ = nodeConstraintDetail;
+exports.describeError = describeError;
+exports.isLeafError = isLeafError;
+exports.repairText = repairText;
+const ShExWriter = __webpack_require__(6526);
+/** an IRI as the schema spells it, where it has a prefix for it */
+function iriText(iri, prefixes) {
+    for (const [prefix, namespace] of Object.entries(prefixes || {}))
+        if (typeof namespace === "string" && namespace.length > 0 && iri.startsWith(namespace)
+            && iri.substring(namespace.length).match(/^[A-Za-z_][-\w.]*$/))
+            return prefix + ":" + iri.substring(namespace.length);
+    return "<" + iri + ">";
+}
+/** an RDF term as a reader writes it */
+function termText(term) {
+    if (term === undefined || term === null)
+        return "?";
+    if (typeof term === "string")
+        return term.startsWith("_:") ? term : "<" + term + ">";
+    if (typeof term !== "object")
+        return String(term);
+    if (typeof term.value !== "string")
+        return JSON.stringify(term);
+    const quoted = JSON.stringify(term.value);
+    return term.language ? quoted + "@" + term.language
+        : term.type ? quoted + "^^<" + term.type + ">"
+            : quoted;
+}
+/**
+ * A fragment of schema, as ShExC.
+ *
+ * A message naming what a node had to satisfy reads as the schema does --
+ * `xsd:integer mininclusive 3` -- rather than as the ShExJ it is made of.
+ * A fragment the writer can't render (a reference to something it hasn't
+ * been given, say) falls back to its label or to nothing, never to JSON.
+ */
+function shexcFragment(expr, prefixes) {
+    if (expr === undefined || expr === null)
+        return "";
+    if (typeof expr === "string") // a shape reference
+        return "@<" + expr + ">";
+    try {
+        const writer = new ShExWriter({ simplifyParentheses: false, prefixes: prefixes || {} });
+        const said = writer.writeShapeExpr(expr);
+        return typeof said === "string" ? said.trim() : "";
+    }
+    catch (e) {
+        return expr.id ? "@<" + expr.id + ">" : "";
+    }
+}
+/** a TripleConstraint as a reader would write it: predicate, value, cardinality */
+function constraintText(tc, prefixes) {
+    if (!tc || typeof tc !== "object")
+        return "the constraint";
+    const value = tc.valueExpr === undefined ? "." : shexcFragment(tc.valueExpr, prefixes) || ".";
+    const min = tc.min === undefined ? 1 : tc.min, max = tc.max === undefined ? 1 : tc.max;
+    const card = min === 1 && max === 1 ? ""
+        : min === 0 && max === 1 ? "?"
+            : min === 0 && max === -1 ? "*"
+                : min === 1 && max === -1 ? "+"
+                    : " {" + min + "," + (max === -1 ? "*" : max) + "}";
+    return (tc.predicate ? "<" + tc.predicate + "> " : "") + value + card;
+}
+/**
+ * Why a node missed a constraint, from the leaf the validator now records.
+ * A leaf it hasn't typed yet carries only its English, which is used as-is.
+ */
+function nodeConstraintDetail(leaf, prefixes) {
+    if (typeof leaf === "string")
+        return firstLine(leaf);
+    if (leaf === null || typeof leaf !== "object")
+        return String(leaf);
+    switch (leaf.type) {
+        case "DatatypeMismatch":
+            return leaf.actual === null || leaf.actual === undefined
+                ? "not a literal of type " + iriText(leaf.expected, prefixes)
+                : "has type " + iriText(leaf.actual, prefixes) + ", not "
+                    + iriText(leaf.expected, prefixes);
+        case "NodeKindMismatch":
+            return "is a " + leaf.actual + ", not an " + leaf.expected;
+        case "ValueSetMismatch":
+            return "is not in "
+                + (shexcFragment({ type: "NodeConstraint", values: leaf.values || [] }, prefixes) || "the value set");
+        case "PatternMismatch":
+            return "doesn't match /" + leaf.pattern + "/" + (leaf.flags || "");
+        case "FacetViolation":
+            return "is " + JSON.stringify(leaf.actual) + ", not " + leaf.facet + " " + leaf.expected;
+        default:
+            return firstLine(leaf.message !== undefined ? leaf.message : JSON.stringify(leaf));
+    }
+}
+/** the first line of a legacy stringified explanation, minus any ShExJ in it */
+function firstLine(said) {
+    const text = typeof said === "string" ? said : JSON.stringify(said);
+    const line = text.split("\n")[0];
+    // legacy leaves read "Error validating "x" as {"type":"NodeConstraint",...}: why"
+    const blob = line.match(/^Error validating (.*?) as \{.*\}: (.*)$/);
+    return blob ? blob[2] + " (" + blob[1] + ")" : line;
+}
+const leaves = {
+    TypeMismatch: (err, ctx) => ({
+        text: termText(err.triple && err.triple.object) + " doesn't satisfy "
+            + constraintText(err.constraint || ctx.constraint, ctx.prefixes),
+        schemaObj: err.constraint || ctx.constraint,
+        predicate: (err.constraint || ctx.constraint || {}).predicate
+            || (err.triple && err.triple.predicate),
+        triple: err.triple,
+    }),
+    MissingProperty: (err, ctx) => ({
+        text: "missing property " + termText(err.property)
+            + (err.valueExpr === undefined ? "" : " " + shexcFragment(err.valueExpr, ctx.prefixes)),
+        predicate: err.property,
+        node: ctx.node,
+    }),
+    ExcessTripleViolation: (err, ctx) => ({
+        text: "too many occurrences of " + termText(err.property || (err.triple && err.triple.predicate)),
+        predicate: err.property || (err.triple && err.triple.predicate),
+        triple: err.triple,
+        node: ctx.node,
+    }),
+    ClosedShapeViolation: (err, ctx) => ({
+        text: "unexpected in a closed shape: "
+            + (err.unexpectedTriples || []).map((t) => termText(t.predicate)).join(", "),
+        triples: err.unexpectedTriples,
+        node: ctx.node,
+    }),
+    NodeConstraintViolation: (err, ctx) => ({
+        text: (ctx.terse
+            ? ""
+            : termText(err.node) + " doesn't satisfy "
+                + (shexcFragment(err.shapeExpr, ctx.prefixes) || "the node constraint")
+                + ((err.errors || []).length === 0 ? "" : ": "))
+            + (err.errors || []).map((leaf) => nodeConstraintDetail(leaf, ctx.prefixes)).join("; ")
+            + ((err.errors || []).length === 0 && ctx.terse
+                ? "doesn't satisfy " + (shexcFragment(err.shapeExpr, ctx.prefixes) || "the node constraint")
+                : ""),
+        schemaObj: err.shapeExpr || ctx.constraint,
+        predicate: (ctx.constraint || {}).predicate || (ctx.triple && ctx.triple.predicate),
+        triple: ctx.triple,
+        node: err.node || ctx.node,
+    }),
+    NegatedProperty: (err, ctx) => ({
+        text: "unexpected " + termText(err.property),
+        predicate: err.property,
+        node: ctx.node,
+    }),
+    AbstractShapeFailure: (err, ctx) => ({
+        text: "abstract shape " + termText(err.shape) + " can't be matched directly",
+        node: ctx.node,
+    }),
+    SemActFailure: (_err, ctx) => ({
+        text: "rejected by a semantic action",
+        schemaObj: ctx.constraint,
+        predicate: (ctx.constraint || {}).predicate || (ctx.triple && ctx.triple.predicate),
+        triple: ctx.triple,
+        node: ctx.node,
+    }),
+    SemActViolation: (err, ctx) => ({
+        text: err.message || "rejected by a semantic action",
+        node: ctx.node,
+    }),
+    FeasibilityViolation: (err, ctx) => {
+        // each repair is a set of arcs to add together; the repairs are the
+        // alternatives, and removing the triple is always one of them
+        const ways = (err.repairs || []).map((repair) => (repair.arcs || []).map((arc) => arc.property));
+        const each1 = ways.every((arcs) => arcs.length === 1);
+        const said = each1
+            ? "add " + ways.map((arcs) => arcs[0]).join(" or ")
+            : ways.map((arcs) => "add " + arcs.join(" and ")).join(", or ");
+        return {
+            text: "triple " + termText(err.triple && err.triple.predicate) + " "
+                + termText(err.triple && err.triple.object) + " fits no triple constraint: "
+                + (ways.length === 0 ? "remove it" : "either " + said + ", or remove it"),
+            predicate: err.triple && err.triple.predicate,
+            triple: err.triple,
+            node: ctx.node,
+        };
+    },
+};
+/**
+ * The sentence for one error, or null where it has none of its own -- a
+ * wrapper whose account is the errors nested inside it, which the caller
+ * composes as it sees fit.
+ */
+function describeError(err, ctx = {}) {
+    if (typeof err === "string")
+        return { text: firstLine(err) };
+    if (err === null || typeof err !== "object" || typeof err.type !== "string")
+        return null;
+    const leaf = leaves[err.type];
+    return leaf === undefined ? null : leaf(err, ctx);
+}
+/** Does this error say something itself, or only through what it contains? */
+function isLeafError(err) {
+    return typeof err === "string"
+        || (err !== null && typeof err === "object" && typeof err.type === "string"
+            && err.type in leaves);
+}
+/** what would make a node conform, as one line per way */
+function repairText(repairs) {
+    return (repairs || []).map(repair => (repair.arcs || []).map((arc) => (arc.delta > 0 ? "add " : "remove ") + Math.abs(arc.delta) + " " + arc.property)
+        .join(" and ")).filter(way => way !== "");
+}
+//# sourceMappingURL=error-messages.js.map
+
+/***/ },
+
 /***/ 7388
-(module) {
+(module, __unused_webpack_exports, __webpack_require__) {
 
 "use strict";
 
-/** ShExHumanErrorWriter - render validation failures as indented human-readable text.
+/** ShExHumanErrorWriter - render validation failures as indented
+ * human-readable text.
+ *
+ * The sentences come from ./error-messages.ts, which editor-services uses
+ * too; what is left here is the *shape* of a report -- what nests under
+ * what, and where the connectives go.  See doc/error-reporting.md.
  */
+const error_messages_1 = __webpack_require__(546);
 const XSD = {};
 XSD._namespace = "http://www.w3.org/2001/XMLSchema#";
 ["anyURI", "string"].forEach(p => {
     XSD[p] = XSD._namespace + p;
 });
 class ShExHumanErrorWriter {
+    constructor() {
+        this.prefixes = {};
+    }
     /** nested errors, each indented under what they explain */
-    nest(errors) {
-        return (Array.isArray(errors) ? errors : [errors]).reduce((ret, e) => ret.concat((typeof e === "string" ? [e] : this.write(e)).map(s => "  " + s)), []);
+    nest(errors, ctx = {}) {
+        return (Array.isArray(errors) ? errors : [errors]).reduce((ret, e) => ret.concat(this.write(e, this.prefixes, ctx).map(s => "  " + s)), []);
     }
     /** a list of errors with a connector between them: AND for things that are
      * all wrong, OR for alternative accounts of one thing */
-    joined(errors, connector) {
+    joined(errors, connector, ctx = {}) {
+        // one thing joined to nothing is just the thing: the indent is there to
+        // show what the connector governs, and with no connector it only buries
+        // the sentence a level deeper for every wrapper it passes through
+        if (errors.length === 1)
+            return this.write(errors[0], this.prefixes, ctx);
         return errors.reduce((ret, e) => {
-            const nested = (typeof e === "string" ? [e] : this.write(e)).map(s => "  " + s);
+            const nested = this.write(e, this.prefixes, ctx).map(s => "  " + s);
             return ret.length > 0 ? ret.concat([connector]).concat(nested) : nested;
         }, []);
     }
-    write(val) {
-        const _HumanErrorWriter = this;
-        if (Array.isArray(val)) {
+    write(val, prefixes, ctx = {}) {
+        if (prefixes !== undefined)
+            this.prefixes = prefixes;
+        const said = Object.assign({ prefixes: this.prefixes }, ctx);
+        if (Array.isArray(val))
             return val.reduce((ret, e) => {
-                const nested = _HumanErrorWriter.write(e).map(s => "  " + s);
+                const nested = this.write(e, this.prefixes, ctx).map(s => "  " + s);
                 return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
             }, []);
-        }
-        if (typeof val === "string")
-            return [val];
-        switch (val.type) {
+        // a leaf says what is wrong with one thing; everything below composes
+        const leaf = (0, error_messages_1.isLeafError)(val) ? (0, error_messages_1.describeError)(val, said) : null;
+        if (leaf !== null && !hasNested(val))
+            return [leaf.text];
+        switch (val === null || val === undefined ? "" : val.type) {
             case "FailureList":
-                return val.errors.reduce((ret, e) => {
-                    return ret.concat(_HumanErrorWriter.write(e));
-                }, []);
+                return val.errors.reduce((ret, e) => ret.concat(this.write(e, this.prefixes, ctx)), []);
             case "Failure": {
                 // everything in a Failure's list is wrong with the node at once; the
                 // alternatives live in PossibleErrors below
-                const said = ["validating " + val.node + " as " + val.shape + ":"]
-                    .concat(_HumanErrorWriter.joined(errorList(val.errors), "AND").map(s => "  " + s));
-                // ...and, where the validator was asked for them, what would make the
-                // node conform: the nearest bag of arcs this shape accepts
-                const ways = (val.repairs || [])
-                    .map((repair) => (repair.arcs || []).map((arc) => (arc.delta > 0 ? "add " : "remove ") + Math.abs(arc.delta)
-                    + " " + arc.property).join(" and "))
-                    .filter((way) => way !== "");
-                return ways.length === 0 ? said
-                    : said.concat(["  to conform: " + ways.join(", or ")]);
+                // What would make the node conform leads, where the validator worked
+                // it out: it is the part of a report a reader can act on.  The errors
+                // are the detail under it -- why it doesn't, arc by arc.
+                const ways = (0, error_messages_1.repairText)(val.repairs);
+                const detail = this.joined(errorList(val.errors), "AND", said).map(s => "  " + s);
+                return ["validating " + val.node + " as " + val.shape + ":"]
+                    .concat(ways.length === 0 ? [] : ["  to conform: " + ways.join(", or ")])
+                    .concat(detail);
             }
-            case "PossibleErrors":
-                // one list per way of reading the neighborhood: any one of them, put
+            case "AllOf":
+                // one reading's errors, all true at once
+                return this.joined(errorList(val.errors), "AND", said);
+            case "Alternatives":
+            case "PossibleErrors": // its older spelling
+                // one entry per way of reading the neighborhood: any one of them, put
                 // right, would settle it
-                return val.errors.reduce((ret, alternative) => {
+                return (val.of || val.errors).reduce((ret, alternative) => {
                     const nested = (Array.isArray(alternative)
-                        ? _HumanErrorWriter.joined(alternative, "AND")
-                        : _HumanErrorWriter.write(alternative)).map(s => "  " + s);
+                        ? this.joined(alternative, "AND", said)
+                        : this.write(alternative, this.prefixes, ctx)).map(s => "  " + s);
                     return ret.length > 0 ? ret.concat(["OR"]).concat(nested) : nested;
                 }, []);
-            case "TypeMismatch":
-                return ["validating " + n3ify(val.triple.object) + ":"].concat(_HumanErrorWriter.nest(val.errors));
+            case "TypeMismatch": {
+                // the header names the triple and the constraint; a cause that says no
+                // more than the header does isn't worth a line of its own
+                const header = leaf !== null ? leaf.text : "validating " + n3ify(val.triple.object);
+                // the causes say only *why*: the header has named the node already
+                const causes = this.nest(val.errors, Object.assign({}, said, {
+                    constraint: val.constraint || said.constraint, triple: val.triple, terse: true,
+                })).filter(line => line.trim() !== "" && !header.endsWith(line.trim()));
+                return [header + (causes.length ? ":" : "")].concat(causes);
+            }
             case "RestrictionError":
-                return ["validating restrictions on " + n3ify(val.focus) + ":"]
-                    .concat(_HumanErrorWriter.nest(val.errors));
+                return ["validating restrictions on " + n3ify(val.focus) + ":"].concat(this.nest(val.errors, said));
             case "ShapeAndFailure":
-                return _HumanErrorWriter.nest(val.errors);
+                return this.nest(val.errors, said);
             case "ShapeOrFailure":
-                return _HumanErrorWriter.joined(Array.isArray(val.errors) ? val.errors : [val.errors], "OR");
+                return this.joined(Array.isArray(val.errors) ? val.errors : [val.errors], "OR", said);
             case "ShapeNotFailure":
                 return ["Node " + val.errors.node + " expected to NOT pass " + val.errors.shape];
-            case "ExcessTripleViolation":
-                return ["validating " + n3ify(val.triple.object) + ": exceeds cardinality"];
-            case "ClosedShapeViolation":
-                return ["Unexpected triple(s): {"].concat(val.unexpectedTriples.map((t) => {
-                    return "  " + t.subject + " " + t.predicate + " " + n3ify(t.object) + " .";
-                })).concat(["}"]);
-            case "NodeConstraintViolation":
-                return ["NodeConstraintError: expected to " + this.nodeConstraintToSimple(val.shapeExpr).join(', ')];
-            case "MissingProperty":
-                return ["Missing property: " + val.property];
-            case "NegatedProperty":
-                return ["Unexpected property: " + val.property];
-            case "AbstractShapeFailure":
-                return ["Abstract Shape: " + val.shape];
             case "SemActFailure":
-                return ["rejected by semantic action:"].concat(_HumanErrorWriter.nest(val.errors));
-            case "SemActViolation":
-                return [val.message];
-            case "FeasibilityViolation": {
-                // Say what would settle it rather than only that nothing does: a
-                // :system inside `( :code . ; :system . ? )?` wants a :code beside it,
-                // and the two ways out are worth naming.
-                const arc = "Triple " + val.triple.subject + " " + val.triple.predicate + " "
-                    + n3ify(val.triple.object);
-                // each repair is a set of arcs to add together; the repairs are the
-                // alternatives, and removing the triple is always one of them
-                const ways = (val.repairs || []).map((r) => (r.arcs || []).map((a) => a.property));
-                const every1 = ways.every((arcs) => arcs.length === 1);
-                const said = every1
-                    ? "add " + ways.map((arcs) => arcs[0]).join(" or ")
-                    : ways.map((arcs) => "add " + arcs.join(" and ")).join(", or ");
-                return [ways.length === 0
-                        ? arc + " fits no triple constraint: remove it."
-                        : arc + " fits no triple constraint: either " + said + ", or remove it."];
-            }
+                return ["rejected by semantic action:"].concat(this.nest(val.errors, said));
             case "ResultReference":
                 return ["see " + val.ref];
             default:
-                debugger; // console.log(val);
-                throw Error("unknown shapeExpression type \"" + val.type + "\" in " + JSON.stringify(val));
+                if (leaf !== null)
+                    return [leaf.text];
+                if (typeof val === "string")
+                    return [val];
+                throw Error("unknown shapeExpression type \"" + (val && val.type) + "\" in " + JSON.stringify(val));
         }
+        /** does this error have causes to nest, or is its own sentence the whole account? */
+        function hasNested(e) {
+            if (e === null || typeof e !== "object" || !("errors" in e))
+                return false;
+            if (e.type === "NodeConstraintViolation")
+                return false; // its errors are the stringified form of itself
+            return Array.isArray(e.errors) ? e.errors.length > 0 : e.errors !== undefined;
+        }
+        /** unwrap the anonymous {errors: [...]} boxes the validator still nests;
+         * an AllOf or an Alternatives says what it is and is left alone */
         function errorList(errors) {
-            return errors.reduce(function (acc, e) {
-                const attrs = Object.keys(e);
+            return (errors || []).reduce(function (acc, e) {
+                const attrs = Object.keys(e || {});
                 return acc.concat((attrs.length === 1 && attrs[0] === "errors")
                     ? errorList(e.errors)
                     : e);
@@ -30589,8 +30915,10 @@ const ShExUtil = {
             });
         });
     },
-    errsToSimple: function (val) {
-        return new ShExHumanErrorWriter().write(val);
+    /** A failure as indented lines.  Give it the schema's prefixes and the
+     * fragments it quotes read as the schema spells them. */
+    errsToSimple: function (val, prefixes) {
+        return new ShExHumanErrorWriter().write(val, prefixes || {});
     },
     // static
     resolvePrefixedIRI: function (prefixedIri, prefixes) {
@@ -31048,7 +31376,31 @@ const UNBOUNDED = -1;
 const KEEP = 8;
 const min = (expr) => expr.min === undefined ? 1 : expr.min;
 const max = (expr) => expr.max === undefined ? 1 : expr.max === UNBOUNDED ? Infinity : expr.max;
-const key = (bag, order) => order.map(tc => bag.get(tc) || 0).join(",");
+/**
+ * A bag's identity, for the dedup in together() and better().
+ *
+ * Spelling it as one count per *known* constraint -- `order.map(tc =>
+ * bag.get(tc) || 0).join(",")` -- costs a walk over every constraint the
+ * expression reaches, plus an array and a string, for every combination
+ * considered.  The bags are sparse, so nearly all of that emitted zeroes:
+ * over shexTest this was the single hottest thing in the validator once
+ * repairs became the default, at 34% of one test file's whole run.
+ *
+ * Keying on the non-zero entries alone is the same identity -- a missing
+ * count and a zero count already meant the same thing -- and is
+ * proportional to what the bag actually holds.
+ */
+function key(bag, index) {
+    const parts = [];
+    let unknown = 0;
+    bag.forEach((n, tc) => {
+        if (n === 0)
+            return;
+        const at = index.get(tc);
+        parts.push((at === undefined ? -(++unknown) : at) * 1e6 + n);
+    });
+    return parts.sort((a, b) => a - b).join(",");
+}
 class NearestAcceptedBag {
     constructor(expr, lookupInclusion) {
         this.expr = expr;
@@ -31059,7 +31411,21 @@ class NearestAcceptedBag {
         this.memo = new Map();
         this.ids = new Map();
         this.slots = new Map();
+        /** each constraint's position, so a bag can be keyed by what it holds */
+        this.tcIndex = new Map();
+        /**
+         * The answer for a bag this has already been asked about.
+         *
+         * The validator asks once per failing shape test, and a search that
+         * ultimately succeeds still fails plenty of branches on the way: over
+         * shexTest's parser round-trip -- where every test passes -- this was
+         * asked 5485 times about 40 distinct bags.  The question is a pure
+         * function of (expression, bag), and the expression is fixed per
+         * instance, so the bag is the whole key.
+         */
+        this.answered = new Map();
         this.collect(this.resolve(expr, new Set()), new Set());
+        this.tripleConstraints.forEach((tc, i) => this.tcIndex.set(tc, i));
     }
     resolve(expr, seen) {
         if (typeof expr !== "string")
@@ -31116,6 +31482,15 @@ class NearestAcceptedBag {
      * one-`:mbox` spelling does.
      */
     repairs(observed) {
+        const asked = key(observed, this.tcIndex);
+        const already = this.answered.get(asked);
+        if (already !== undefined)
+            return already;
+        const answer = this.computeRepairs(observed);
+        this.answered.set(asked, answer);
+        return answer;
+    }
+    computeRepairs(observed) {
         let best = [];
         let bestCost = Infinity;
         for (const dealt of this.deals(observed)) {
@@ -31248,7 +31623,7 @@ class NearestAcceptedBag {
             for (const other of b.bags) {
                 const merged = new Map(one);
                 other.forEach((n, tc) => merged.set(tc, n));
-                const k = key(merged, this.tripleConstraints);
+                const k = key(merged, this.tcIndex);
                 if (!seen.has(k)) {
                     seen.add(k);
                     if (bags.length < KEEP)
@@ -31264,9 +31639,9 @@ class NearestAcceptedBag {
         if (b.cost < a.cost)
             return b;
         const bags = a.bags.slice();
-        const seen = new Set(bags.map(bag => key(bag, this.tripleConstraints)));
+        const seen = new Set(bags.map(bag => key(bag, this.tcIndex)));
         for (const bag of b.bags) {
-            const k = key(bag, this.tripleConstraints);
+            const k = key(bag, this.tcIndex);
             if (!seen.has(k)) {
                 seen.add(k);
                 if (bags.length < KEEP)
@@ -31366,6 +31741,10 @@ class SemActDispatcherImpl {
      */
     register(name, handler) {
         this.handlers[name] = handler;
+    }
+    /** Is there a handler for this action?  If not, dispatchAll skips it. */
+    isRegistered(name) {
+        return name in this.handlers;
     }
     /**
      * Calls all semantic actions, allowing each to write to resultsArtifact.
@@ -31659,7 +32038,14 @@ class ShExValidator {
         }
         // Find all non-abstract shapeExprs extended with label.
         let candidates = [shapeLabel];
-        candidates = candidates.concat(indexExtensions(this.schema)[shapeLabel] || []);
+        // Built once per schema, not once per validation: it walks every shape
+        // there is, which for FHIR's ~1400 was 650ms of an 810ms validation --
+        // 80% of the time, spent re-deriving something the schema had already
+        // determined.  It lives on the index for the same reason labelToTcs
+        // does, so a second validator over the same schema doesn't pay again.
+        if (this.index.extensions === undefined)
+            this.index.extensions = indexExtensions(this.schema);
+        candidates = candidates.concat(this.index.extensions[shapeLabel] || []);
         // Uniquify list.
         for (let i = candidates.length - 1; i >= 0; --i) {
             if (candidates.indexOf(candidates[i]) < i)
@@ -31718,8 +32104,19 @@ class ShExValidator {
                     if (shape.extends !== undefined) {
                         shape.extends.forEach(ext => {
                             const extendsVisitor = new visitor_1.ShExVisitor();
+                            // A reference reached twice is the same reference: walking it
+                            // again adds nothing, and where the references form a cycle --
+                            // FHIR's <Resource> is an OR over every shape, and those shapes
+                            // EXTEND <DomainResource>, which leads back to <Resource> --
+                            // walking it again never stops.  `extensions` is a MapArray,
+                            // which rejects a repeated pair outright, so this guards the
+                            // bookkeeping as much as the recursion.
+                            const walked = new Set();
                             extendsVisitor.visitExpression = function (_expr, ..._args) { return "null"; };
                             extendsVisitor.visitShapeRef = function (reference, ..._args) {
+                                if (walked.has(reference))
+                                    return "null";
+                                walked.add(reference);
                                 extensions.add(reference, curLabel);
                                 extendsVisitor.visitShapeDecl(_ShExValidator.lookupShape(reference));
                                 // makeSchemaVisitor().visitSchema(schema);
@@ -31785,7 +32182,10 @@ class ShExValidator {
             case "ShapeNot":
                 const sub = this.validateShapeExpr(focus, shapeExpr.shapeExpr, ctx);
                 return ("errors" in sub)
-                    ? { type: "ShapeNotResults", solution: sub }
+                    // The negation is satisfied *because* this failed, so the failure
+                    // is recorded as a reason for success.  Repairs answer "what would
+                    // make this conform", which here is advice to break the data.
+                    ? { type: "ShapeNotResults", solution: stripRepairs(sub) }
                     : { type: "ShapeNotFailure", errors: sub };
             case "ShapeAnd":
                 const andPasses = [];
@@ -31897,9 +32297,32 @@ class ShExValidator {
         // What would make the node conform, said as the difference between the
         // bag of arcs it has and the nearest bag this shape accepts.  Unlike the
         // errors above it doesn't depend on how the expression was written.
-        if (this.options.repairs && ret !== null && ret.type === "Failure"
-            && shape.expression !== undefined)
-            ret.repairs = this.nearestBagRepairs(shape.expression, observedBag);
+        //
+        // Answered on demand rather than in advance.  A search that ultimately
+        // succeeds still fails branches on the way, and this is reached for each
+        // of them: over shexTest's parser round-trip, where every test passes
+        // and no failure reaches a caller at all, it was reached 5485 times.
+        // Failures that get thrown away never ask, so they now cost nothing.
+        //
+        // It stays an ordinary enumerable property: JSON.stringify, deep-equal
+        // against a fixture and `for...in` all read it exactly as they read an
+        // eager one, and a bag with nothing to repair yields undefined, which
+        // JSON.stringify omits.  The first read replaces the accessor with the
+        // value, so nothing recomputes.
+        if (this.options.repairs !== false && ret !== null && ret.type === "Failure"
+            && shape.expression !== undefined) {
+            const expression = shape.expression, bag = observedBag, validator = this;
+            Object.defineProperty(ret, "repairs", {
+                enumerable: true, configurable: true,
+                get() {
+                    const repairs = validator.nearestBagRepairs(expression, bag);
+                    // nothing to say beats an empty list to read
+                    const value = repairs.length > 0 ? repairs : undefined;
+                    Object.defineProperty(this, "repairs", { value, enumerable: true, configurable: true, writable: true });
+                    return value;
+                },
+            });
+        }
         // A reported result may contain ResultReferences whose named referents appeared
         // only in partitions that are not part of the report: attach those referents in
         // a "shared" side table so every reference is resolvable within the document.
@@ -32041,13 +32464,21 @@ class ShExValidator {
     /**
      * The repairs for a failed shape: the arcs to add or drop to reach the
      * nearest bag the expression accepts (see ./repairs.ts).
+     *
+     * A repair of cost 0 is dropped, and with it the whole answer.  Cost 0
+     * means the arcs this node has are already a bag the expression accepts,
+     * so whatever it failed on -- a value, a semantic action, a NOT it fell
+     * inside of -- is not something a bag can speak to, and "to conform:
+     * change nothing" is worse than saying nothing.  The classic errors
+     * carry that failure; this only ever answers the counting question.
      */
     nearestBagRepairs(expression, observed) {
         try {
             let nearest = this.nearestBags.get(expression);
             if (nearest === undefined)
                 this.nearestBags.set(expression, nearest = new repairs_1.NearestAcceptedBag(expression, label => this.index.tripleExprs[label]));
-            return nearest.repairs(observed);
+            const repairs = nearest.repairs(observed);
+            return repairs.some(repair => repair.cost === 0) ? [] : repairs;
         }
         catch (e) {
             return []; // e.g. a recursive triple expression
@@ -32197,8 +32628,15 @@ class ShExValidator {
             }
         }
         // TODO: what if results is a TypedError (i.e. not a container of further errors)?
-        if (results !== null && results.errors !== undefined)
-            Array.prototype.push.apply(errors, results.errors);
+        if (results !== null && results.errors !== undefined) {
+            // An Alternatives is one error saying "any of these": spreading its
+            // children into this list would turn a choice into a conjunction,
+            // which is how "either an :a or a :b" came to be read as needing both.
+            if (results.type === "Alternatives")
+                errors.push(results);
+            else
+                Array.prototype.push.apply(errors, results.errors);
+        }
         return { errors, triples: usedTriples, results };
     }
     /**
@@ -32322,8 +32760,18 @@ class ShExValidator {
         const visitor = new visitor_1.ShExVisitor(labelToTcs);
         function emptyShapeExpr() { return []; }
         visitor.visitShapeDecl = function (decl, _min, _max) {
-            // if (labelToTcs.has(decl.id)) !! uncomment cache for production
-            //   return labelToTcs[decl.id];
+            // A decl already walked is answered with the same Ref this returns
+            // below, and not walked again.  It is the memo the old comment here
+            // asked for ("uncomment cache for production"), but it is first a
+            // termination condition: references can lead back to where they
+            // started -- FHIR's <Resource> is an OR over every shape, and those
+            // shapes EXTEND <DomainResource>, which leads back to <Resource> --
+            // and without this the walk recurses until the stack gives out.
+            // The entry goes in *before* the walk so a cycle meets it on the way
+            // round rather than after.
+            if (decl.id in labelToTcs)
+                return [{ type: "Ref", ref: decl.id }];
+            labelToTcs[decl.id] = emptyShapeExpr();
             labelToTcs[decl.id] = decl.shapeExpr
                 ? visitor.visitShapeExpr(decl.shapeExpr, 1, 1)
                 : emptyShapeExpr();
@@ -32379,13 +32827,21 @@ class ShExValidator {
             const tc2exts = new Map();
             extendsTcOrRefsz.map((tcOrRefs, ord) => flattenExtends(tcOrRefs, ord));
             return { extendsTCs: tcs, tc2exts, localTCs };
-            function flattenExtends(tcOrRefs, ord) {
+            // `walked` is per top-level extension (per ord): a ref reached twice
+            // contributes the triple constraints it contributed the first time --
+            // add() dedupes them by identity anyway -- and where the refs form a
+            // cycle, following it again never returns.  Fresh per call, so two
+            // extensions don't hide each other's references from one another.
+            function flattenExtends(tcOrRefs, ord, walked = new Set()) {
                 return tcOrRefs.forEach(tcOrRef => {
                     if (tcOrRef.type === "TripleConstraint") {
                         add(tcOrRef); // as TC
                     }
-                    else {
-                        flattenExtends(labelToTcs[tcOrRef.ref], ord);
+                    else if (!walked.has(tcOrRef.ref)) {
+                        walked.add(tcOrRef.ref);
+                        const referent = labelToTcs[tcOrRef.ref];
+                        if (referent !== undefined) // a label the walk hasn't reached
+                            flattenExtends(referent, ord, walked);
                     }
                 });
                 function add(tc) {
@@ -32471,9 +32927,17 @@ class ShExValidator {
      */
     validateNodeConstraint(focus, nc, ctx) {
         const errors = [];
-        function validationError(...s) {
-            const errorStr = Array.prototype.join.call(s, "");
-            errors.push("Error validating " + ShExTerm.rdfJsTerm2Turtle(focus) + " as " + JSON.stringify(nc) + ": " + errorStr);
+        /**
+         * Why a node didn't satisfy this constraint: a leaf saying what failed,
+         * and the English that used to be all of it.  Called either way --
+         * `validationError("...")` for the cases with nothing worth typing, or
+         * with a leaf first (see shex-xsd's ValidationError, and
+         * doc/error-reporting.md F3).
+         */
+        function validationError(leafOrText, ...s) {
+            const leaf = typeof leafOrText === "string" ? {} : leafOrText;
+            const said = (typeof leafOrText === "string" ? [leafOrText] : []).concat(s).join("");
+            errors.push(Object.assign({ type: "NodeConstraintDetail" }, leaf, { message: said }));
             return false;
         }
         if (nc.nodeKind !== undefined) {
@@ -32482,23 +32946,23 @@ class ShExValidator {
             }
             if (focus.termType === "BlankNode") {
                 if (nc.nodeKind === "iri" || nc.nodeKind === "literal") {
-                    validationError(`blank node found when ${nc.nodeKind} expected`);
+                    validationError({ type: "NodeKindMismatch", expected: nc.nodeKind, actual: "bnode" }, `blank node found when ${nc.nodeKind} expected`);
                 }
             }
             else if (focus.termType === "Literal") {
                 if (nc.nodeKind !== "literal") {
-                    validationError(`literal found when ${nc.nodeKind} expected`);
+                    validationError({ type: "NodeKindMismatch", expected: nc.nodeKind, actual: "literal" }, `literal found when ${nc.nodeKind} expected`);
                 }
             }
             else if (nc.nodeKind === "bnode" || nc.nodeKind === "literal") {
-                validationError(`iri found when ${nc.nodeKind} expected`);
+                validationError({ type: "NodeKindMismatch", expected: nc.nodeKind, actual: "iri" }, `iri found when ${nc.nodeKind} expected`);
             }
         }
         if (nc.datatype && nc.values)
             validationError("found both datatype and values in " + nc);
         if (nc.values !== undefined) {
             if (!nc.values.some(valueSetValue => testValueSetValue(valueSetValue, focus))) {
-                validationError(`value ${(focus.value)} not found in set ${JSON.stringify(nc.values)}`);
+                validationError({ type: "ValueSetMismatch", values: nc.values, actual: (0, term_1.rdfJsTerm2Ld)(focus) }, `value ${(focus.value)} not found in set ${JSON.stringify(nc.values)}`);
             }
         }
         const numeric = (0, shex_xsd_1.getNumericDatatype)(focus);
@@ -32808,6 +33272,31 @@ function indexNeighborhood(triples) {
 function _seq(n) {
     return Array.from(Array(n)); // ha ha ha, javascript, you suck.
 }
+/**
+ * The same result with every `repairs` taken out of it, at any depth.
+ *
+ * Used where a failure is recorded as the reason something *succeeded* (a
+ * satisfied ShapeNot), so the reader isn't handed instructions for undoing
+ * the thing that just worked.  Both spellings go: a shape's nearest bag and
+ * a homeless triple's `FeasibilityViolation.repairs`.
+ */
+function stripRepairs(result) {
+    if (Array.isArray(result))
+        return result.map(stripRepairs);
+    if (result === null || typeof result !== "object")
+        return result;
+    const proto = Object.getPrototypeOf(result);
+    if (proto !== Object.prototype && proto !== null)
+        return result; // an RDF term or the like: leave it whole
+    const out = {};
+    // by key, not by entry: `repairs` is an accessor that computes on read, and
+    // Object.entries would run it for every failure here only to throw the
+    // answer away -- which is the whole thing this is trying not to do.
+    for (const key of Object.keys(result))
+        if (key !== "repairs")
+            out[key] = stripRepairs(result[key]);
+    return out;
+}
 function runtimeError(...args) {
     const errorStr = args.join("");
     const e = new Error(errorStr);
@@ -32998,10 +33487,10 @@ function getNumericDatatype(value) {
 }
 function testKnownTypes(value, validationError, ldify, datatype, numeric, label) {
     if (value.termType !== "Literal") {
-        validationError(`mismatched datatype: ${JSON.stringify(ldify(value))} is not a literal with datatype ${datatype}`);
+        validationError({ type: "DatatypeMismatch", expected: datatype, actual: null }, `mismatched datatype: ${JSON.stringify(ldify(value))} is not a literal with datatype ${datatype}`);
     }
     else if (value.datatype.value !== datatype) {
-        validationError(`mismatched datatype: ${value.datatype.value} !== ${datatype}`);
+        validationError({ type: "DatatypeMismatch", expected: datatype, actual: value.datatype.value }, `mismatched datatype: ${value.datatype.value} !== ${datatype}`);
     }
     else if (numeric) {
         testRange(numericParsers[numeric](label, validationError), datatype, validationError);
@@ -33021,7 +33510,7 @@ function testFacets(valueExpr, label, validationError, numeric) {
             new RegExp(valueExpr.pattern, valueExpr.flags) :
             new RegExp(valueExpr.pattern);
         if (!(label.match(regexp)))
-            validationError(`value ${label} did not match pattern ${valueExpr.pattern}`);
+            validationError({ type: "PatternMismatch", pattern: valueExpr.pattern, flags: valueExpr.flags, actual: label }, `value ${label} did not match pattern ${valueExpr.pattern}`);
     }
     for (const [facet, testFunc] of Object.entries(stringTests)) {
         // @ts-ignore - TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'NodeConstraint'
@@ -33036,7 +33525,7 @@ function testFacets(valueExpr, label, validationError, numeric) {
                 // @ts-ignore - TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'NodeConstraint'
                 const facetParm = valueExpr[facet];
                 if (!testFunc(numericParsers[numeric](label, validationError), facetParm)) {
-                    validationError(`facet violation: expected ${facet} of ${facetParm} but got ${label}`);
+                    validationError({ type: "FacetViolation", facet, expected: facetParm, actual: label }, `facet violation: expected ${facet} of ${facetParm} but got ${label}`);
                 }
             }
             else {
@@ -33883,6 +34372,18 @@ class ShExWriter {
     // ### `_blockedWrite` replaces `_write` after the writer has been closed
     _blockedWrite() {
         throw new Error('Cannot write because the writer has been closed.');
+    }
+    /**
+     * A fragment, as ShExC, returned rather than written.
+     *
+     * For quoting a piece of schema where a reader will see it -- an error
+     * message naming the constraint a node didn't satisfy reads better as
+     * `xsd:integer mininclusive 3` than as the ShExJ it is made of.  Give the
+     * writer the schema's prefixes and the fragment comes back in the
+     * spelling the schema itself uses.
+     */
+    writeShapeExpr(shapeExpr, forceBraces = false) {
+        return this._writeShapeExpr(shapeExpr, undefined, forceBraces, 0).join("");
     }
     writeSchema(shape, done) {
         this._writeSchema(shape, done);

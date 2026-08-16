@@ -1,11 +1,9 @@
 {
   "type": "ShapeTest",
-  "node": "x",
+  "node": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
   "shape": "http://a.example/S1",
   "solution": {
     "type": "OneOfSolutions",
-    "min": 2,
-    "max": 3,
     "solutions": [
       {
         "type": "OneOfSolution",
@@ -16,9 +14,11 @@
             "solutions": [
               {
                 "type": "TestedTriple",
-                "subject": "x",
+                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
                 "predicate": "http://a.example/p1",
-                "object": { "value": "p1-0" }
+                "object": {
+                  "value": "p1-0"
+                }
               }
             ]
           }
@@ -33,14 +33,18 @@
             "solutions": [
               {
                 "type": "TestedTriple",
-                "subject": "x",
+                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
                 "predicate": "http://a.example/p1",
-                "object": { "value": "p1-1" }
+                "object": {
+                  "value": "p1-1"
+                }
               }
             ]
           }
         ]
       }
-    ]
+    ],
+    "min": 2,
+    "max": 3
   }
 }

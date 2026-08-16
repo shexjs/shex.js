@@ -1,0 +1,121 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ConceptMap/cm-name-use-v2> a fhir:ConceptMap ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "cm-name-use-v2"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: ConceptMap cm-name-use-v2</b></p><a name=\"cm-name-use-v2\"> </a><a name=\"hccm-name-use-v2\"> </a><p>Mapping from <a href=\"valueset-name-use.html\">NameUse</a> to <a href=\"http://terminology.hl7.org/7.3.0/ValueSet-v2-0200.html\">hl7VS-nameType</a></p><br/><p>Mapping from <a href=\"codesystem-name-use.html\">NameUse</a> to <a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v2-0200.html\">nameType2</a></p><table class=\"grid\"><tr><td colspan=\"2\"><b>Source Concept Details</b></td><td><b>Relationship</b></td><td colspan=\"2\"><b>Target Concept Details</b></td><td><b>Comment</b></td></tr><tr><td colspan=\"2\"><b>Codes</b> from <a href=\"codesystem-name-use.html\" title=\"http://hl7.org/fhir/name-use\">NameUse</a></td><td/><td colspan=\"2\"><b>Codes</b> from <a href=\"http://terminology.hl7.org/7.3.0/CodeSystem-v2-0200.html\" title=\"http://terminology.hl7.org/CodeSystem/v2-0200\">nameType2</a></td><td/></tr><tr><td style=\"border-right-width: 0px\">usual</td><td style=\"border-left-width: 0px\">Usual</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td style=\"border-right-width: 0px\">D</td><td style=\"border-left-width: 0px\"></td><td/></tr><tr><td style=\"border-right-width: 0px\">official</td><td style=\"border-left-width: 0px\">Official</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td style=\"border-right-width: 0px\">L</td><td style=\"border-left-width: 0px\"></td><td/></tr><tr><td style=\"border-right-width: 0px\">temp</td><td style=\"border-left-width: 0px\">Temp</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td style=\"border-right-width: 0px\">TEMP</td><td style=\"border-left-width: 0px\"></td><td/></tr><tr><td style=\"border-right-width: 0px\">nickname</td><td style=\"border-left-width: 0px\">Nickname</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td style=\"border-right-width: 0px\">N</td><td style=\"border-left-width: 0px\"></td><td/></tr><tr><td style=\"border-right-width: 0px\">anonymous</td><td style=\"border-left-width: 0px\">Anonymous</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td style=\"border-right-width: 0px\">S</td><td style=\"border-left-width: 0px\"></td><td/></tr><tr><td style=\"border-right-width: 0px; border-bottom-style: none\">old</td><td style=\"border-left-width: 0px; border-bottom-style: none\">Old</td><td><a href=\"codesystem-concept-map-relationship.html#source-is-broader-than-target\" title=\"source-is-broader-than-target\">is broader than</a></td><td style=\"border-right-width: 0px\">NOUSE</td><td style=\"border-left-width: 0px\"></td><td>No Use Addresses are considered to be old records</td></tr><tr><td style=\"border-right-width: 0px; border-top-style: none\"/><td style=\"border-top-style: none; border-left-width: 0px\"/><td><a href=\"codesystem-concept-map-relationship.html#source-is-broader-than-target\" title=\"source-is-broader-than-target\">is broader than</a></td><td style=\"border-right-width: 0px\">BAD</td><td style=\"border-left-width: 0px\"></td><td>bad addresses are old records</td></tr><tr><td style=\"border-right-width: 0px\">maiden</td><td style=\"border-left-width: 0px\">Name changed for Marriage</td><td><a href=\"codesystem-concept-map-relationship.html#equivalent\" title=\"equivalent\">is equivalent to</a></td><td style=\"border-right-width: 0px\">M</td><td style=\"border-left-width: 0px\"></td><td/></tr></table></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/ConceptMap/cm-name-use-v2"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ConceptMap/cm-name-use-v2>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "v2.NameUse"] ; # 
+  fhir:title [ fhir:v "v2 map for NameUse"] ; # 
+  fhir:status [ fhir:v "draft"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 (FHIR Project)"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:sourceScope [
+     a fhir:Canonical ;
+     fhir:v "http://hl7.org/fhir/ValueSet/name-use"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/ValueSet/name-use>
+  ] ; # 
+  fhir:targetScope [
+     a fhir:Canonical ;
+     fhir:v "http://terminology.hl7.org/ValueSet/v2-0200"^^xsd:anyURI ;
+     fhir:l <http://terminology.hl7.org/ValueSet/v2-0200>
+  ] ; # 
+  fhir:group ( [
+     fhir:source [
+       fhir:v "http://hl7.org/fhir/name-use"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/name-use>
+     ] ;
+     fhir:target [
+       fhir:v "http://terminology.hl7.org/CodeSystem/v2-0200"^^xsd:anyURI ;
+       fhir:l <http://terminology.hl7.org/CodeSystem/v2-0200>
+     ] ;
+     fhir:element ( [
+       fhir:code [ fhir:v "usual" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "D" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "official" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "L" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "temp" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "TEMP" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "nickname" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "N" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "anonymous" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "S" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "old" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "NOUSE" ] ;
+         fhir:relationship [ fhir:v "source-is-broader-than-target" ] ;
+         fhir:comment [ fhir:v "No Use Addresses are considered to be old records" ]
+       ] [
+         fhir:code [ fhir:v "BAD" ] ;
+         fhir:relationship [ fhir:v "source-is-broader-than-target" ] ;
+         fhir:comment [ fhir:v "bad addresses are old records" ]
+       ] )
+     ] [
+       fhir:code [ fhir:v "maiden" ] ;
+       fhir:target ( [
+         fhir:code [ fhir:v "M" ] ;
+         fhir:relationship [ fhir:v "equivalent" ]
+       ] )
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

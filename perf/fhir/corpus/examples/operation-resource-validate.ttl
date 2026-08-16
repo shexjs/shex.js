@@ -1,0 +1,360 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/OperationDefinition/Resource-validate> a fhir:OperationDefinition ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "Resource-validate"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p class=\"res-header-id\"><b>Generated Narrative: OperationDefinition Resource-validate</b></p><a name=\"Resource-validate\"> </a><a name=\"hcResource-validate\"> </a><p>URL: [base]/$validate</p><p>URL: [base]/Resource/$validate</p><p>URL: [base]/Resource/[id]/$validate</p><h3>Parameters</h3><table class=\"grid\"><tr><td><b>Use</b></td><td><b>Name</b></td><td><b>Scope</b></td><td><b>Cardinality</b></td><td><b>Type</b></td><td><b>Binding</b></td><td><b>Documentation</b></td></tr><tr><td>IN</td><td>resource</td><td/><td>0..1</td><td><a href=\"resource.html\">Resource</a></td><td/><td><div><p>Must be present unless the mode is \"delete\" or the operation is invoked at the instance level</p>\n</div></td></tr><tr><td>IN</td><td>mode</td><td/><td>0..1</td><td><a href=\"datatypes.html#code\">code</a></td><td><a href=\"valueset-resource-validation-mode.html\">Resource Validation Mode</a> (Required)</td><td><div><p>Default is 'no action'; (e.g. general validation). If the mode is <code>create</code>, the operation cannot be invoked on a particular resource.</p>\n</div></td></tr><tr><td>IN</td><td>profile</td><td/><td>0..1</td><td><a href=\"datatypes.html#canonical\">canonical</a> (<a href=\"structuredefinition.html\" title=\"http://hl7.org/fhir/StructureDefinition/StructureDefinition\">StructureDefinition</a>)</td><td/><td><div><p>If this is nominated, then the resource is validated against this specific profile. If a profile is nominated, and the server cannot validate against the nominated profile, it SHALL return an error. The profile parameter is required for mode=profile, and may be present in other modes</p>\n</div></td></tr><tr><td>IN</td><td>graph</td><td/><td>0..1</td><td><a href=\"datatypes.html#canonical\">canonical</a> (<code>http://hl7.org/fhir/StructureDefinition/GraphDefinition</code>)</td><td/><td><div><p>Indicates that the referenced resource should be treated as the 'root' as the specified graph, validating all references for the resource to ensure they follow the rules. This parameter is not widely supported.</p>\n</div></td></tr><tr><td>IN</td><td>usageContext</td><td/><td>0..*</td><td><a href=\"metadatatypes.html#UsageContext\">UsageContext</a></td><td/><td><div><p>Indicates an implementation context that applies to this validation.  Influences which <a href=\"terminologies.html#binding\">additionalBindings</a> are relevant.  NOTE: Expectations around subsumption testing, etc. are not yet defined and may be server-specific.</p>\n</div></td></tr><tr><td>IN</td><td>language</td><td/><td>0..1</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>One or more language codes (W3C Language tags, with sub-tags). This has the same format as the HTTP accept header, and defaults to the value of the header</p>\n</div></td></tr><tr><td>IN</td><td>jurisdiction</td><td/><td>0..1</td><td><a href=\"datatypes.html#code\">code</a></td><td><a href=\"http://terminology.hl7.org/7.3.0/ValueSet-jurisdiction.html\">Jurisdiction ValueSet</a> (Extensible)</td><td><div><p>The jurisdiction is used for validating in some profiles where country specific bindings are defined. The default jurisdiction is at the discretion of the server. If you want to specify No jurisdiction, this is functionally equivalent to a jurisdiction of the 'the whole world', which is jurisdiction=uv</p>\n</div></td></tr><tr><td>IN</td><td>hintAboutNonMustSupport</td><td/><td>0..1</td><td><a href=\"datatypes.html#boolean\">boolean</a></td><td/><td><div><p>In some cases (e.g. when creating examples for implementation guides or when checking for potential interoperability issues with a new communication partner), it can be useful to know when data elements are present in an instance when those elements are not <code>mustSupport</code> in the profile(s) the instance is being validated against. Identifying situations where this occurs might drive a change to the profile or cause a designer to drop an element from the instance. In other cases, the presence of the element can be fine and the information message ignored.</p>\n</div></td></tr><tr><td>IN</td><td>extension</td><td/><td>0..*</td><td><a href=\"datatypes.html#string\">string</a></td><td/><td><div><p>The extension parameter controls how extensions are validated. It allows extensions from the specified domain (by matching the URL for the extension), and also has the special values 'any' and 'none'. It is up to the server to choose default settings for this parameter</p>\n</div></td></tr><tr><td>IN</td><td>questionnaire</td><td/><td>0..1</td><td><a href=\"datatypes.html#code\">code</a></td><td/><td><div><p>Whether to validate the questionnaire in QuestionnaireResponse. Values: <code>none</code> - ignore, <code>check</code> - validate if a questionnaire is specified, and <code>require</code> - a questionnaire must be specified, and will be checked.</p>\n</div></td></tr><tr><td>IN</td><td>extensible-binding-warnings</td><td/><td>0..1</td><td><a href=\"datatypes.html#boolean\">boolean</a></td><td/><td><div><p>When the validator encounters a code that is not part of an extensible binding, add a warning to suggest that the code be reviewed. This turns the warning on or off. It's up to the server to decide what the default is.</p>\n</div></td></tr><tr><td>IN</td><td>display-issues-are-warnings</td><td/><td>0..1</td><td><a href=\"datatypes.html#boolean\">boolean</a></td><td/><td><div><p>Whether it's an error or just a warning when the validator encounters a coding or CodeableConcept where the display value isn't consistent with the display(s) defined by the code systems. It's up to the server to decide what the default is.</p>\n</div></td></tr><tr><td>IN</td><td>unknown-codesystems-cause-errors</td><td/><td>0..1</td><td><a href=\"datatypes.html#boolean\">boolean</a></td><td/><td><div><p>Whether it's an error or just a warning when the validator encounters a unknown CodeSystem. It's up to the server to decide what the default is.</p>\n</div></td></tr><tr><td>IN</td><td>level</td><td/><td>0..1</td><td><a href=\"datatypes.html#code\">code</a></td><td><a href=\"valueset-issue-severity.html\">Issue Severity</a> (Required)</td><td><div><p>The minimum level to report issues - e.g. ignore hints and warnings. By default, all issues are returned</p>\n</div></td></tr><tr><td>IN</td><td>best-practice</td><td/><td>0..1</td><td><a href=\"datatypes.html#code\">code</a></td><td><a href=\"valueset-issue-severity.html\">Issue Severity</a> (Required)</td><td><div><p>The level to treat best-practice invariants etc as. By default these are treated as warnings</p>\n</div></td></tr><tr><td>IN</td><td>current</td><td/><td>0..1</td><td><a href=\"datatypes.html#boolean\">boolean</a></td><td/><td><div><p>If this is true, additional bindings marked as 'current' will also be enforced</p>\n</div></td></tr><tr><td>IN</td><td>forPublication</td><td/><td>0..1</td><td><a href=\"datatypes.html#boolean\">boolean</a></td><td/><td><div><p>If this is true, additional validation regarding suitability for 'publishing' are also enforced. Note that HL7 defines a set of rules, but the meaning and use of 'publishing' is at the discretion of the server.</p>\n</div></td></tr><tr><td>IN</td><td>html-in-markdown</td><td/><td>0..1</td><td><a href=\"datatypes.html#code\">code</a></td><td/><td><div><p>What to do when HTML is found in markdown fields. Values = ignore, warning, and error. It's server discretion what the default is, and servers may choose to ignore turning this off (for security consideration reasons)</p>\n</div></td></tr><tr><td>IN</td><td>no_unicode_bidi_control_chars</td><td/><td>0..1</td><td><a href=\"datatypes.html#boolean\">boolean</a></td><td/><td><div><p>Whether the existence of hidden bidi control characters is treated as a warning or an error. See <a href=\"https://nvd.nist.gov/vuln/detail/CVE-2021-42574\">CVE-2021-42574</a>.  Server discretion for the default value, and servers can ignore this setting.</p>\n</div></td></tr><tr><td>IN</td><td>verbose-mode</td><td/><td>0..1</td><td><a href=\"datatypes.html#boolean\">boolean</a></td><td/><td><div><p>Turns on verbose output, which servers may use to provide explanation of the validation process (e.g. slicing decisions).</p>\n</div></td></tr><tr><td>IN</td><td>allow-example-urls</td><td/><td>0..1</td><td><a href=\"datatypes.html#boolean\">boolean</a></td><td/><td><div><p>Allow references in resources to refer to example.org, which are understood to be example URLs. Server discretion for the default value</p>\n</div></td></tr><tr><td>OUT</td><td>return</td><td/><td>1..1</td><td><a href=\"operationoutcome.html\">OperationOutcome</a></td><td/><td><div><p>If the operation outcome does not list any errors, and a mode was specified, then this is an indication that the operation would be expected to succeed (excepting for transactional integrity issues, see below)</p>\n</div></td></tr></table><div><p>This operation may be used during design and development to validate application design. It can also be used at run-time. One possible use might be that a client asks the server whether a proposed update is valid as the user is editing a dialog and displays an updated error to the user. The operation can be used as part of a light-weight two phase commit protocol but there is no expectation that the server will hold the content of the resource after this operation is used, or that the server guarantees to successfully perform an actual create, update or delete after the validation operation completes.</p>\n<p>This operation returns a 200 Ok provided that it was possible to perform validation, irrespective of whether validation issues were found.  However, it is possible that certain errors in the validated content (e.g. invalid character set, broken JSON, etc.) may cause the overall validation operation to fail with a 4xx or 5xx series response.</p>\n<p>Note: the correct behavior of validation with regard to language (especially for Coding.display) is currently undefined, and further development and testing may lead to specific requirements or recommendations in subsequent releases</p>\n<p>Future versions of this specifcation may add additional validation parameters. A candidate list is maintained with the <a href=\"https://confluence.hl7.org/display/FHIR/Using+the+FHIR+Validator\">FHIR Validator Documentation</a></p>\n</div></div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-fmm>
+     ] ;
+     fhir:value [
+       a fhir:Integer ;
+       fhir:v 5
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-standards-status>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "normative"
+     ]
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/structuredefinition-wg"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/structuredefinition-wg>
+     ] ;
+     fhir:value [
+       a fhir:Code ;
+       fhir:v "fhir"
+     ]
+  ] ) ; # 
+  fhir:url [
+     fhir:v "http://hl7.org/fhir/OperationDefinition/Resource-validate"^^xsd:anyURI ;
+     fhir:l <http://hl7.org/fhir/OperationDefinition/Resource-validate>
+  ] ; # 
+  fhir:version [ fhir:v "6.0.0-ballot4"] ; # 
+  fhir:name [ fhir:v "Validate"] ; # 
+  fhir:title [ fhir:v "Validate a resource"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:kind [ fhir:v "operation"] ; # 
+  fhir:experimental [ fhir:v false] ; # 
+  fhir:date [ fhir:v "2026-08-15T00:01:55+00:00"^^xsd:dateTime] ; # 
+  fhir:publisher [ fhir:v "HL7 International / FHIR Infrastructure"] ; # 
+  fhir:contact ( [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://hl7.org/fhir" ]
+     ] [
+       fhir:system [ fhir:v "email" ] ;
+       fhir:value [ fhir:v "fhir@lists.hl7.org" ]
+     ] )
+  ] [
+     fhir:telecom ( [
+       fhir:system [ fhir:v "url" ] ;
+       fhir:value [ fhir:v "http://www.hl7.org/Special/committees/fiwg" ]
+     ] )
+  ] ) ; # 
+  fhir:description [ fhir:v "The validate operation checks whether the attached content would be acceptable either generally, as a create, an update or as a delete to an existing resource.  The action the server takes depends on the mode parameter:  \n\n* [mode not provided]: The server checks the content of the resource against any schema, constraint rules, and other general terminology rules \n* create: The server checks the content, and then checks that the content would be acceptable as a create (e.g. that the content would not violate any uniqueness constraints) \n* update: The server checks the content, and then checks that it would accept it as an update against the nominated specific resource (e.g. that there are no changes to immutable fields the server does not allow to change, and checking version integrity if appropriate) \n* delete: The server ignores the content, and checks that the nominated resource is allowed to be deleted (e.g. checking referential integrity rules)  \n\nModes update and delete can only be used when the operation is invoked at the resource instance level.   The return from this operation is an [OperationOutcome](operationoutcome.html)\n\nNote that this operation is not the only way to validate resources - see [Validating Resources](validation.html) for further information."] ; # 
+  fhir:jurisdiction ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://unstats.un.org/unsd/methods/m49/m49.htm"^^xsd:anyURI ;
+         fhir:l <http://unstats.un.org/unsd/methods/m49/m49.htm>
+       ] ;
+       fhir:code [ fhir:v "001" ] ;
+       fhir:display [ fhir:v "World" ]
+     ] )
+  ] ) ; # 
+  fhir:affectsState [ fhir:v false] ; # 
+  fhir:code [ fhir:v "validate"] ; # 
+  fhir:comment [ fhir:v "This operation may be used during design and development to validate application design. It can also be used at run-time. One possible use might be that a client asks the server whether a proposed update is valid as the user is editing a dialog and displays an updated error to the user. The operation can be used as part of a light-weight two phase commit protocol but there is no expectation that the server will hold the content of the resource after this operation is used, or that the server guarantees to successfully perform an actual create, update or delete after the validation operation completes.\n\nThis operation returns a 200 Ok provided that it was possible to perform validation, irrespective of whether validation issues were found.  However, it is possible that certain errors in the validated content (e.g. invalid character set, broken JSON, etc.) may cause the overall validation operation to fail with a 4xx or 5xx series response.\n\nNote: the correct behavior of validation with regard to language (especially for Coding.display) is currently undefined, and further development and testing may lead to specific requirements or recommendations in subsequent releases\n\nFuture versions of this specifcation may add additional validation parameters. A candidate list is maintained with the [FHIR Validator Documentation](https://confluence.hl7.org/display/FHIR/Using+the+FHIR+Validator)"] ; # 
+  fhir:resource ( [
+     fhir:v "Resource"^^xsd:anyURI ;
+     fhir:l fhir:Resource
+  ] ) ; # 
+  fhir:system [ fhir:v true] ; # 
+  fhir:type [ fhir:v true] ; # 
+  fhir:instance [ fhir:v true] ; # 
+  fhir:parameter ( [
+     fhir:name [ fhir:v "resource" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "Must be present unless the mode is \"delete\" or the operation is invoked at the instance level" ] ;
+     fhir:type [
+       fhir:v "Resource"^^xsd:anyURI ;
+       fhir:l fhir:Resource
+     ]
+  ] [
+     fhir:name [ fhir:v "mode" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "Default is 'no action'; (e.g. general validation). If the mode is `create`, the operation cannot be invoked on a particular resource." ] ;
+     fhir:type [
+       fhir:v "code"^^xsd:anyURI ;
+       fhir:l fhir:code
+     ] ;
+     fhir:binding [
+       fhir:extension ( [
+         fhir:url [
+           fhir:v "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName"^^xsd:anyURI ;
+           fhir:l <http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName>
+         ] ;
+         fhir:value [
+           a fhir:String ;
+           fhir:v "ResourceValidationMode"
+         ]
+       ] ) ;
+       fhir:strength [ fhir:v "required" ] ;
+       fhir:valueSet [
+         fhir:v "http://hl7.org/fhir/ValueSet/resource-validation-mode|6.0.0-ballot4"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/ValueSet/resource-validation-mode?version=6.0.0-ballot4>
+       ]
+     ]
+  ] [
+     fhir:name [ fhir:v "profile" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "If this is nominated, then the resource is validated against this specific profile. If a profile is nominated, and the server cannot validate against the nominated profile, it SHALL return an error. The profile parameter is required for mode=profile, and may be present in other modes" ] ;
+     fhir:type [
+       fhir:v "canonical"^^xsd:anyURI ;
+       fhir:l fhir:canonical
+     ] ;
+     fhir:targetProfile ( [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/StructureDefinition"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/StructureDefinition>
+     ] )
+  ] [
+     fhir:name [ fhir:v "graph" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "Indicates that the referenced resource should be treated as the 'root' as the specified graph, validating all references for the resource to ensure they follow the rules. This parameter is not widely supported." ] ;
+     fhir:type [
+       fhir:v "canonical"^^xsd:anyURI ;
+       fhir:l fhir:canonical
+     ] ;
+     fhir:targetProfile ( [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/GraphDefinition"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/GraphDefinition>
+     ] )
+  ] [
+     fhir:name [ fhir:v "usageContext" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "Indicates an implementation context that applies to this validation.  Influences which [additionalBindings](terminologies.html#binding) are relevant.  NOTE: Expectations around subsumption testing, etc. are not yet defined and may be server-specific." ] ;
+     fhir:type [
+       fhir:v "UsageContext"^^xsd:anyURI ;
+       fhir:l fhir:UsageContext
+     ]
+  ] [
+     fhir:name [ fhir:v "language" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "One or more language codes (W3C Language tags, with sub-tags). This has the same format as the HTTP accept header, and defaults to the value of the header" ] ;
+     fhir:type [
+       fhir:v "string"^^xsd:anyURI ;
+       fhir:l fhir:string
+     ]
+  ] [
+     fhir:name [ fhir:v "jurisdiction" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The jurisdiction is used for validating in some profiles where country specific bindings are defined. The default jurisdiction is at the discretion of the server. If you want to specify No jurisdiction, this is functionally equivalent to a jurisdiction of the 'the whole world', which is jurisdiction=uv" ] ;
+     fhir:type [
+       fhir:v "code"^^xsd:anyURI ;
+       fhir:l fhir:code
+     ] ;
+     fhir:binding [
+       fhir:strength [ fhir:v "extensible" ] ;
+       fhir:valueSet [
+         fhir:v "http://terminology.hl7.org/ValueSet/jurisdiction"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/ValueSet/jurisdiction>
+       ]
+     ]
+  ] [
+     fhir:name [ fhir:v "hintAboutNonMustSupport" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "In some cases (e.g. when creating examples for implementation guides or when checking for potential interoperability issues with a new communication partner), it can be useful to know when data elements are present in an instance when those elements are not `mustSupport` in the profile(s) the instance is being validated against. Identifying situations where this occurs might drive a change to the profile or cause a designer to drop an element from the instance. In other cases, the presence of the element can be fine and the information message ignored." ] ;
+     fhir:type [
+       fhir:v "boolean"^^xsd:anyURI ;
+       fhir:l fhir:boolean
+     ]
+  ] [
+     fhir:name [ fhir:v "extension" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "*" ] ;
+     fhir:documentation [ fhir:v "The extension parameter controls how extensions are validated. It allows extensions from the specified domain (by matching the URL for the extension), and also has the special values 'any' and 'none'. It is up to the server to choose default settings for this parameter" ] ;
+     fhir:type [
+       fhir:v "string"^^xsd:anyURI ;
+       fhir:l fhir:string
+     ]
+  ] [
+     fhir:name [ fhir:v "questionnaire" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "Whether to validate the questionnaire in QuestionnaireResponse. Values: `none` - ignore, `check` - validate if a questionnaire is specified, and `require` - a questionnaire must be specified, and will be checked." ] ;
+     fhir:type [
+       fhir:v "code"^^xsd:anyURI ;
+       fhir:l fhir:code
+     ]
+  ] [
+     fhir:name [ fhir:v "extensible-binding-warnings" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "When the validator encounters a code that is not part of an extensible binding, add a warning to suggest that the code be reviewed. This turns the warning on or off. It's up to the server to decide what the default is." ] ;
+     fhir:type [
+       fhir:v "boolean"^^xsd:anyURI ;
+       fhir:l fhir:boolean
+     ]
+  ] [
+     fhir:name [ fhir:v "display-issues-are-warnings" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "Whether it's an error or just a warning when the validator encounters a coding or CodeableConcept where the display value isn't consistent with the display(s) defined by the code systems. It's up to the server to decide what the default is." ] ;
+     fhir:type [
+       fhir:v "boolean"^^xsd:anyURI ;
+       fhir:l fhir:boolean
+     ]
+  ] [
+     fhir:name [ fhir:v "unknown-codesystems-cause-errors" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "Whether it's an error or just a warning when the validator encounters a unknown CodeSystem. It's up to the server to decide what the default is." ] ;
+     fhir:type [
+       fhir:v "boolean"^^xsd:anyURI ;
+       fhir:l fhir:boolean
+     ]
+  ] [
+     fhir:name [ fhir:v "level" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The minimum level to report issues - e.g. ignore hints and warnings. By default, all issues are returned" ] ;
+     fhir:type [
+       fhir:v "code"^^xsd:anyURI ;
+       fhir:l fhir:code
+     ] ;
+     fhir:binding [
+       fhir:strength [ fhir:v "required" ] ;
+       fhir:valueSet [
+         fhir:v "http://hl7.org/fhir/ValueSet/issue-severity|6.0.0-ballot4"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/ValueSet/issue-severity?version=6.0.0-ballot4>
+       ]
+     ]
+  ] [
+     fhir:name [ fhir:v "best-practice" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "The level to treat best-practice invariants etc as. By default these are treated as warnings" ] ;
+     fhir:type [
+       fhir:v "code"^^xsd:anyURI ;
+       fhir:l fhir:code
+     ] ;
+     fhir:binding [
+       fhir:strength [ fhir:v "required" ] ;
+       fhir:valueSet [
+         fhir:v "http://hl7.org/fhir/ValueSet/issue-severity|6.0.0-ballot4"^^xsd:anyURI ;
+         fhir:l <http://hl7.org/fhir/ValueSet/issue-severity?version=6.0.0-ballot4>
+       ]
+     ]
+  ] [
+     fhir:name [ fhir:v "current" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "If this is true, additional bindings marked as 'current' will also be enforced" ] ;
+     fhir:type [
+       fhir:v "boolean"^^xsd:anyURI ;
+       fhir:l fhir:boolean
+     ]
+  ] [
+     fhir:name [ fhir:v "forPublication" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "If this is true, additional validation regarding suitability for 'publishing' are also enforced. Note that HL7 defines a set of rules, but the meaning and use of 'publishing' is at the discretion of the server." ] ;
+     fhir:type [
+       fhir:v "boolean"^^xsd:anyURI ;
+       fhir:l fhir:boolean
+     ]
+  ] [
+     fhir:name [ fhir:v "html-in-markdown" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "What to do when HTML is found in markdown fields. Values = ignore, warning, and error. It's server discretion what the default is, and servers may choose to ignore turning this off (for security consideration reasons)" ] ;
+     fhir:type [
+       fhir:v "code"^^xsd:anyURI ;
+       fhir:l fhir:code
+     ]
+  ] [
+     fhir:name [ fhir:v "no_unicode_bidi_control_chars" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "Whether the existence of hidden bidi control characters is treated as a warning or an error. See [CVE-2021-42574](https://nvd.nist.gov/vuln/detail/CVE-2021-42574).  Server discretion for the default value, and servers can ignore this setting." ] ;
+     fhir:type [
+       fhir:v "boolean"^^xsd:anyURI ;
+       fhir:l fhir:boolean
+     ]
+  ] [
+     fhir:name [ fhir:v "verbose-mode" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "Turns on verbose output, which servers may use to provide explanation of the validation process (e.g. slicing decisions)." ] ;
+     fhir:type [
+       fhir:v "boolean"^^xsd:anyURI ;
+       fhir:l fhir:boolean
+     ]
+  ] [
+     fhir:name [ fhir:v "allow-example-urls" ] ;
+     fhir:use [ fhir:v "in" ] ;
+     fhir:min [ fhir:v "0"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "Allow references in resources to refer to example.org, which are understood to be example URLs. Server discretion for the default value" ] ;
+     fhir:type [
+       fhir:v "boolean"^^xsd:anyURI ;
+       fhir:l fhir:boolean
+     ]
+  ] [
+     fhir:name [ fhir:v "return" ] ;
+     fhir:use [ fhir:v "out" ] ;
+     fhir:min [ fhir:v "1"^^xsd:nonNegativeInteger ] ;
+     fhir:max [ fhir:v "1" ] ;
+     fhir:documentation [ fhir:v "If the operation outcome does not list any errors, and a mode was specified, then this is an indication that the operation would be expected to succeed (excepting for transactional integrity issues, see below)" ] ;
+     fhir:type [
+       fhir:v "OperationOutcome"^^xsd:anyURI ;
+       fhir:l fhir:OperationOutcome
+     ]
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

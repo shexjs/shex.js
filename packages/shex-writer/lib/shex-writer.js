@@ -491,6 +491,18 @@ class ShExWriter {
     _blockedWrite() {
         throw new Error('Cannot write because the writer has been closed.');
     }
+    /**
+     * A fragment, as ShExC, returned rather than written.
+     *
+     * For quoting a piece of schema where a reader will see it -- an error
+     * message naming the constraint a node didn't satisfy reads better as
+     * `xsd:integer mininclusive 3` than as the ShExJ it is made of.  Give the
+     * writer the schema's prefixes and the fragment comes back in the
+     * spelling the schema itself uses.
+     */
+    writeShapeExpr(shapeExpr, forceBraces = false) {
+        return this._writeShapeExpr(shapeExpr, undefined, forceBraces, 0).join("");
+    }
     writeSchema(shape, done) {
         this._writeSchema(shape, done);
         this.end(done);

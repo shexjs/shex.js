@@ -1,0 +1,413 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/ArtifactAssessment/example-risk-of-bias-assessment-of-parachute-trial> a fhir:ArtifactAssessment ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-risk-of-bias-assessment-of-parachute-trial"] ; # 
+  fhir:meta [
+     fhir:versionId [ fhir:v "4" ] ;
+     fhir:lastUpdated [ fhir:v "2025-02-25T20:01:47.665Z"^^xsd:dateTime ] ;
+     fhir:profile ( [
+       fhir:v "http://hl7.org/fhir/uv/ebm/StructureDefinition/risk-of-bias"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/uv/ebm/StructureDefinition/risk-of-bias>
+     ] )
+  ] ; # 
+  fhir:identifier ( [
+     fhir:type [
+       fhir:text [ fhir:v "FEvIR Object Identifier" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:ietf:rfc:3986"^^xsd:anyURI ;
+       fhir:l <urn:ietf:rfc:3986>
+     ] ;
+     fhir:value [ fhir:v "https://fevir.net/FOI/307449" ] ;
+     fhir:assigner [
+       fhir:display [ fhir:v "Computable Publishing LLC" ]
+     ]
+  ] ) ; # artifact-url is not allowed on ArtifactAssessment. Should it be?, <extension url="http://hl7.org/fhir/StructureDefinition/artifact-url">
+#		<valueUri value="https://fevir.net/resources/ArtifactAssessment/307449"/>
+#	</extension>, artifact-description is not allowed on ArtifactAssessment. Should it be?, <extension url="http://hl7.org/fhir/StructureDefinition/artifact-description">
+#		<valueMarkdown value="This is an example of the RiskOfBias Profile."/>
+#	</extension>
+  fhir:title [ fhir:v "Risk of Bias Assessment of PARACHUTE trial"] ; # 
+  fhir:artifact [
+     a fhir:Reference ;
+     fhir:type [
+       fhir:v "Citation"^^xsd:anyURI ;
+       fhir:l fhir:Citation
+     ] ; # <reference value=\"Citation\/306957\"\/>
+     fhir:display [ fhir:v "30545967 Parachute use to prevent death and major trauma when jumping from aircraft: randomized controlled trial." ]
+  ] ; # 
+  fhir:copyright [ fhir:v "https://creativecommons.org/licenses/by-nc-sa/4.0/"] ; # 
+  fhir:content ( [
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+           fhir:l <https://fevir.net/resources/CodeSystem/27270>
+         ] ;
+         fhir:code [ fhir:v "SEVCO:00001" ] ;
+         fhir:display [ fhir:v "Bias" ]
+       ] )
+     ] ;
+     fhir:freeToShare [ fhir:v true ] ;
+     fhir:component ( [
+       fhir:summary [ fhir:v "Assignment was done by order of enrollment. " ] ;
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00278" ] ;
+           fhir:display [ fhir:v "Inadequate random sequence generation" ]
+         ] )
+       ] ;
+       fhir:classifier ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00194" ] ;
+           fhir:display [ fhir:v "Factor present" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00208" ] ;
+           fhir:display [ fhir:v "Factor likely has potential to impact results" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00205" ] ;
+           fhir:display [ fhir:v "Risk of bias direction unpredictable" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00187" ] ;
+           fhir:display [ fhir:v "Moderate risk of bias" ]
+         ] )
+       ] )
+     ] [
+       fhir:summary [ fhir:v "The investigator who assigned the treatment was aware of the assignment which was reported verbally to the participant. " ] ;
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00031" ] ;
+           fhir:display [ fhir:v "Inadequate allocation concealment" ]
+         ] )
+       ] ;
+       fhir:classifier ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00194" ] ;
+           fhir:display [ fhir:v "Factor present" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00208" ] ;
+           fhir:display [ fhir:v "Factor likely has potential to impact results" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00205" ] ;
+           fhir:display [ fhir:v "Risk of bias direction unpredictable" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00187" ] ;
+           fhir:display [ fhir:v "Moderate risk of bias" ]
+         ] )
+       ] )
+     ] [
+       fhir:summary [ fhir:v "Participants could discern the difference between a parachute and an empty backpack. Knowing that they have only an empty backpack might change jumping behavior which would have an unpredictable effect on the outcome. " ] ;
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00035" ] ;
+           fhir:display [ fhir:v "Inadequate blinding of participants" ]
+         ] )
+       ] ;
+       fhir:classifier ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00195" ] ;
+           fhir:display [ fhir:v "Factor likely present" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00208" ] ;
+           fhir:display [ fhir:v "Factor likely has potential to impact results" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00205" ] ;
+           fhir:display [ fhir:v "Risk of bias direction unpredictable" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00187" ] ;
+           fhir:display [ fhir:v "Moderate risk of bias" ]
+         ] )
+       ] )
+     ] [
+       fhir:summary [ fhir:v "Intervention deliverers could discern the difference between the parachute and the empty backback. This likely made no difference in the outcome." ] ;
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00036" ] ;
+           fhir:display [ fhir:v "Inadequate blinding of intervention deliverers" ]
+         ] )
+       ] ;
+       fhir:classifier ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00195" ] ;
+           fhir:display [ fhir:v "Factor likely present" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00209" ] ;
+           fhir:display [ fhir:v "Factor likely does not have potential to impact results" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00205" ] ;
+           fhir:display [ fhir:v "Risk of bias direction unpredictable" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00186" ] ;
+           fhir:display [ fhir:v "Low risk of bias" ]
+         ] )
+       ] )
+     ] [
+       fhir:summary [ fhir:v "Although outcome determination was done with full knowledge of exposure status, it was not likely that this changed the determination of death or injury" ] ;
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00048" ] ;
+           fhir:display [ fhir:v "Bias due to lack of masking for outcome determination" ]
+         ] )
+       ] ;
+       fhir:classifier ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00195" ] ;
+           fhir:display [ fhir:v "Factor likely present" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00209" ] ;
+           fhir:display [ fhir:v "Factor likely does not have potential to impact results" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00205" ] ;
+           fhir:display [ fhir:v "Risk of bias direction unpredictable" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00186" ] ;
+           fhir:display [ fhir:v "Low risk of bias" ]
+         ] )
+       ] )
+     ] [
+       fhir:summary [ fhir:v "Attrition was much higher in the intervention group." ] ;
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00019" ] ;
+           fhir:display [ fhir:v "Attrition Bias" ]
+         ] )
+       ] ;
+       fhir:classifier ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00195" ] ;
+           fhir:display [ fhir:v "Factor likely present" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00208" ] ;
+           fhir:display [ fhir:v "Factor likely has potential to impact results" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00205" ] ;
+           fhir:display [ fhir:v "Risk of bias direction unpredictable" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00187" ] ;
+           fhir:display [ fhir:v "Moderate risk of bias" ]
+         ] )
+       ] )
+     ] [
+       fhir:summary [ fhir:v "Study was only published in a satirical journal issue." ] ;
+       fhir:type [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00023" ] ;
+           fhir:display [ fhir:v "Reporting Bias" ]
+         ] )
+       ] ;
+       fhir:classifier ( [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00194" ] ;
+           fhir:display [ fhir:v "Factor present" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00208" ] ;
+           fhir:display [ fhir:v "Factor likely has potential to impact results" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00205" ] ;
+           fhir:display [ fhir:v "Risk of bias direction unpredictable" ]
+         ] )
+       ] [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://fevir.net/resources/CodeSystem/27270"^^xsd:anyURI ;
+             fhir:l <https://fevir.net/resources/CodeSystem/27270>
+           ] ;
+           fhir:code [ fhir:v "SEVCO:00187" ] ;
+           fhir:display [ fhir:v "Moderate risk of bias" ]
+         ] )
+       ] )
+     ] )
+  ] [
+     fhir:type [
+       fhir:text [ fhir:v "Profile" ]
+     ] ;
+     fhir:classifier ( [
+       fhir:text [ fhir:v "ROB1" ]
+     ] )
+  ] ) . # 
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,498 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Patient/patient-example-sex-and-gender> a fhir:Patient ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "patient-example-sex-and-gender"] ; # 
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/individual-genderIdentity"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/individual-genderIdentity>
+     ] ;
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "value"^^xsd:anyURI ;
+         fhir:l fhir:value
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept, sct:446141000124107 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+             fhir:l <http://snomed.info/sct>
+           ] ;
+           fhir:code [ fhir:v "446141000124107" ] ;
+           fhir:display [ fhir:v "Female gender identity" ]
+         ] )
+       ]
+     ] [
+       fhir:url [
+         fhir:v "period"^^xsd:anyURI ;
+         fhir:l fhir:period
+       ] ;
+       fhir:value [
+         a fhir:Period ;
+         fhir:start [ fhir:v "2001-05-06"^^xsd:date ]
+       ]
+     ] [
+       fhir:url [
+         fhir:v "comment"^^xsd:anyURI ;
+         fhir:l fhir:comment
+       ] ;
+       fhir:value [
+         a fhir:String ;
+         fhir:v "Patient transitioned from male to female in 2001."
+       ]
+     ] )
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/individual-pronouns"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/individual-pronouns>
+     ] ;
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "value"^^xsd:anyURI ;
+         fhir:l fhir:value
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept, loinc:LA29519-8 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://loinc.org"^^xsd:anyURI ;
+             fhir:l <http://loinc.org>
+           ] ;
+           fhir:code [ fhir:v "LA29519-8" ] ;
+           fhir:display [ fhir:v "she/her/her/hers/herself" ]
+         ] )
+       ]
+     ] [
+       fhir:url [
+         fhir:v "period"^^xsd:anyURI ;
+         fhir:l fhir:period
+       ] ;
+       fhir:value [
+         a fhir:Period ;
+         fhir:start [ fhir:v "2001-05-06"^^xsd:date ]
+       ]
+     ] [
+       fhir:url [
+         fhir:v "comment"^^xsd:anyURI ;
+         fhir:l fhir:comment
+       ] ;
+       fhir:value [
+         a fhir:String ;
+         fhir:v "Patient transitioned from male to female in 2001."
+       ]
+     ] )
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/individual-recordedSexOrGender"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/individual-recordedSexOrGender>
+     ] ;
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "value"^^xsd:anyURI ;
+         fhir:l fhir:value
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/administrative-gender"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/administrative-gender>
+           ] ;
+           fhir:code [ fhir:v "male" ] ;
+           fhir:display [ fhir:v "Male" ]
+         ] )
+       ]
+     ] [
+       fhir:url [
+         fhir:v "type"^^xsd:anyURI ;
+         fhir:l fhir:type
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept, loinc:76689-9 ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://loinc.org"^^xsd:anyURI ;
+             fhir:l <http://loinc.org>
+           ] ;
+           fhir:code [ fhir:v "76689-9" ] ;
+           fhir:display [ fhir:v "Sex Assigned At Birth" ]
+         ] )
+       ]
+     ] [
+       fhir:url [
+         fhir:v "effectivePeriod"^^xsd:anyURI ;
+         fhir:l fhir:effectivePeriod
+       ] ;
+       fhir:value [
+         a fhir:Period ;
+         fhir:start [ fhir:v "1974-12-25"^^xsd:date ]
+       ]
+     ] [
+       fhir:url [
+         fhir:v "acquisitionDate"^^xsd:anyURI ;
+         fhir:l fhir:acquisitionDate
+       ] ;
+       fhir:value [
+         a fhir:DateTime ;
+         fhir:v "2005-12-06"^^xsd:date
+       ]
+     ] [
+       fhir:url [
+         fhir:v "sourceDocument"^^xsd:anyURI ;
+         fhir:l fhir:sourceDocument
+       ] ;
+       fhir:value [
+         a fhir:Reference ;
+         fhir:l <http://hl7.org/fhir/DocumentReference/1> ;
+         fhir:reference [ fhir:v "DocumentReference/1" ]
+       ] # Reference to a scan of the birth certificate
+     ] [
+       fhir:url [
+         fhir:v "sourceField"^^xsd:anyURI ;
+         fhir:l fhir:sourceField
+       ] ;
+       fhir:value [
+         a fhir:String ;
+         fhir:v "SEX"
+       ]
+     ] [
+       fhir:url [
+         fhir:v "jurisdiction"^^xsd:anyURI ;
+         fhir:l fhir:jurisdiction
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://www.usps.com/"^^xsd:anyURI ;
+             fhir:l <https://www.usps.com/>
+           ] ;
+           fhir:code [ fhir:v "OH" ] ;
+           fhir:display [ fhir:v "Ohio" ]
+         ] )
+       ]
+     ] [
+       fhir:url [
+         fhir:v "comment"^^xsd:anyURI ;
+         fhir:l fhir:comment
+       ] ;
+       fhir:value [
+         a fhir:String ;
+         fhir:v "Patient transitioned from male to female in 2001, but their birth certificate still indicates male."
+       ]
+     ] )
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/individual-recordedSexOrGender"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/individual-recordedSexOrGender>
+     ] ;
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "value"^^xsd:anyURI ;
+         fhir:l fhir:value
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://hl7.org/fhir/administrative-gender"^^xsd:anyURI ;
+             fhir:l <http://hl7.org/fhir/administrative-gender>
+           ] ;
+           fhir:code [ fhir:v "male" ] ;
+           fhir:display [ fhir:v "Male" ]
+         ] )
+       ]
+     ] [
+       fhir:url [
+         fhir:v "type"^^xsd:anyURI ;
+         fhir:l fhir:type
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://local-code-system.org/recorded-sex-or-gender-type"^^xsd:anyURI ;
+             fhir:l <http://local-code-system.org/recorded-sex-or-gender-type>
+           ] ;
+           fhir:code [ fhir:v "insurance-card" ] ;
+           fhir:display [ fhir:v "Insurance Card" ]
+         ] )
+       ]
+     ] [
+       fhir:url [
+         fhir:v "effectivePeriod"^^xsd:anyURI ;
+         fhir:l fhir:effectivePeriod
+       ] ;
+       fhir:value [
+         a fhir:Period ;
+         fhir:start [ fhir:v "2021-05-25"^^xsd:date ]
+       ]
+     ] [
+       fhir:url [
+         fhir:v "acquisitionDate"^^xsd:anyURI ;
+         fhir:l fhir:acquisitionDate
+       ] ;
+       fhir:value [
+         a fhir:DateTime ;
+         fhir:v "2021-06-06"^^xsd:date
+       ]
+     ] [
+       fhir:url [
+         fhir:v "sourceDocument"^^xsd:anyURI ;
+         fhir:l fhir:sourceDocument
+       ] ;
+       fhir:value [
+         a fhir:Reference ;
+         fhir:l <http://hl7.org/fhir/DocumentReference/2> ;
+         fhir:reference [ fhir:v "DocumentReference/2" ]
+       ] # Reference to a scan of the insurance card
+     ] [
+       fhir:url [
+         fhir:v "sourceField"^^xsd:anyURI ;
+         fhir:l fhir:sourceField
+       ] ;
+       fhir:value [
+         a fhir:String ;
+         fhir:v "SEX"
+       ]
+     ] [
+       fhir:url [
+         fhir:v "jurisdiction"^^xsd:anyURI ;
+         fhir:l fhir:jurisdiction
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://local-code-system.org/recorded-sex-or-gender-jurisdiction"^^xsd:anyURI ;
+             fhir:l <http://local-code-system.org/recorded-sex-or-gender-jurisdiction>
+           ] ;
+           fhir:code [ fhir:v "ICCA-P" ] ;
+           fhir:display [ fhir:v "Indigo Crucifix Cobalt Aegis Payer" ]
+         ] )
+       ]
+     ] [
+       fhir:url [
+         fhir:v "comment"^^xsd:anyURI ;
+         fhir:l fhir:comment
+       ] ;
+       fhir:value [
+         a fhir:String ;
+         fhir:v "Patient transitioned from male to female in 2001, but her insurance card still indicates male."
+       ]
+     ] )
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/individual-recordedSexOrGender"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/individual-recordedSexOrGender>
+     ] ;
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "value"^^xsd:anyURI ;
+         fhir:l fhir:value
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://ohio.example.gov/drivers-license-sex"^^xsd:anyURI ;
+             fhir:l <http://ohio.example.gov/drivers-license-sex>
+           ] ;
+           fhir:code [ fhir:v "M" ] ;
+           fhir:display [ fhir:v "Male" ]
+         ] )
+       ]
+     ] [
+       fhir:url [
+         fhir:v "type"^^xsd:anyURI ;
+         fhir:l fhir:type
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://jurisdiction-specific.example.com/document-type-code-system"^^xsd:anyURI ;
+             fhir:l <http://jurisdiction-specific.example.com/document-type-code-system>
+           ] ;
+           fhir:code [ fhir:v "drivers-license" ] ;
+           fhir:display [ fhir:v "Driver's License" ]
+         ] )
+       ]
+     ] [
+       fhir:url [
+         fhir:v "effectivePeriod"^^xsd:anyURI ;
+         fhir:l fhir:effectivePeriod
+       ] ;
+       fhir:value [
+         a fhir:Period ;
+         fhir:start [ fhir:v "1974-12-25"^^xsd:date ]
+       ]
+     ] [
+       fhir:url [
+         fhir:v "acquisitionDate"^^xsd:anyURI ;
+         fhir:l fhir:acquisitionDate
+       ] ;
+       fhir:value [
+         a fhir:DateTime ;
+         fhir:v "2005-12-06"^^xsd:date
+       ]
+     ] [
+       fhir:url [
+         fhir:v "sourceDocument"^^xsd:anyURI ;
+         fhir:l fhir:sourceDocument
+       ] ;
+       fhir:value [
+         a fhir:Reference ;
+         fhir:l <http://hl7.org/fhir/DocumentReference/1> ;
+         fhir:reference [ fhir:v "DocumentReference/1" ]
+       ] # Reference to a scan of the driver's license
+     ] [
+       fhir:url [
+         fhir:v "jurisdiction"^^xsd:anyURI ;
+         fhir:l fhir:jurisdiction
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "https://www.usps.com/"^^xsd:anyURI ;
+             fhir:l <https://www.usps.com/>
+           ] ;
+           fhir:code [ fhir:v "OH" ] ;
+           fhir:display [ fhir:v "Ohio" ]
+         ] )
+       ]
+     ] [
+       fhir:url [
+         fhir:v "comment"^^xsd:anyURI ;
+         fhir:l fhir:comment
+       ] ;
+       fhir:value [
+         a fhir:String ;
+         fhir:v "Patient transitioned from male to female in 2001, but their driver's license still indicates male."
+       ]
+     ] )
+  ] [
+     fhir:url [
+       fhir:v "http://hl7.org/fhir/StructureDefinition/patient-sexParameterForClinicalUse"^^xsd:anyURI ;
+       fhir:l <http://hl7.org/fhir/StructureDefinition/patient-sexParameterForClinicalUse>
+     ] ;
+     fhir:extension ( [
+       fhir:url [
+         fhir:v "value"^^xsd:anyURI ;
+         fhir:l fhir:value
+       ] ;
+       fhir:value [
+         a fhir:CodeableConcept ;
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://terminology.hl7.org/CodeSystem/sex-parameter-for-clinical-use"^^xsd:anyURI ;
+             fhir:l <http://terminology.hl7.org/CodeSystem/sex-parameter-for-clinical-use>
+           ] ;
+           fhir:code [ fhir:v "specified" ] ;
+           fhir:display [ fhir:v "Apply specified setting or reference range" ]
+         ] )
+       ]
+     ] [
+       fhir:url [
+         fhir:v "period"^^xsd:anyURI ;
+         fhir:l fhir:period
+       ] ;
+       fhir:value [
+         a fhir:Period ;
+         fhir:start [ fhir:v "2002-07-13"^^xsd:date ]
+       ]
+     ] [
+       fhir:url [
+         fhir:v "comment"^^xsd:anyURI ;
+         fhir:l fhir:comment
+       ] ;
+       fhir:value [
+         a fhir:String ;
+         fhir:v "Patient transitioned from male to female in 2001."
+       ]
+     ] [
+       fhir:url [
+         fhir:v "supportingInfo"^^xsd:anyURI ;
+         fhir:l fhir:supportingInfo
+       ] ;
+       fhir:value [
+         a fhir:Reference ;
+         fhir:l <http://hl7.org/fhir/Observation/1> ;
+         fhir:reference [ fhir:v "Observation/1" ]
+       ] # Observation about an organ inventory (prostate)
+     ] [
+       fhir:url [
+         fhir:v "supportingInfo"^^xsd:anyURI ;
+         fhir:l fhir:supportingInfo
+       ] ;
+       fhir:value [
+         a fhir:Reference ;
+         fhir:l <http://hl7.org/fhir/MedicationStatement/2> ;
+         fhir:reference [ fhir:v "MedicationStatement/2" ]
+       ] # MedicationStatement indicating patient underwent hormone therapy
+     ] )
+  ] ) ; # 
+  fhir:identifier ( [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:type [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://terminology.hl7.org/CodeSystem/v2-0203"^^xsd:anyURI ;
+           fhir:l <http://terminology.hl7.org/CodeSystem/v2-0203>
+         ] ;
+         fhir:code [ fhir:v "MR" ]
+       ] )
+     ] ;
+     fhir:system [
+       fhir:v "urn:oid:1.2.36.146.595.217.0.1"^^xsd:anyURI ;
+       fhir:l <urn:oid:1.2.36.146.595.217.0.1>
+     ] ;
+     fhir:value [ fhir:v "12345" ]
+  ] ) ; # 
+  fhir:active [ fhir:v true] ; # 
+  fhir:name ( [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Roth" ] ;
+     fhir:given ( [ fhir:v "Patrick" ] )
+  ] [
+     fhir:use [ fhir:v "usual" ] ;
+     fhir:family [ fhir:v "Roth" ] ;
+     fhir:given ( [ fhir:v "Patricia" ] )
+  ] [
+     fhir:use [ fhir:v "nickname" ] ;
+     fhir:given ( [ fhir:v "Pat" ] )
+  ] ) ; # Legal Name: Patrick Roth, goes by Patricia (formally), but also Pat (informally)
+  fhir:gender [ fhir:v "male"] ; # 
+  fhir:birthDate [ fhir:v "1974-12-25"^^xsd:date] ; # 
+  fhir:deceased [
+     a fhir:Boolean ;
+     fhir:v false
+  ] ; # 
+  fhir:managingOrganization [
+     fhir:l <http://hl7.org/fhir/Organization/1> ;
+     fhir:reference [ fhir:v "Organization/1" ]
+  ] . # 
+
+<http://hl7.org/fhir/DocumentReference/1> a fhir:DocumentReference .
+
+<http://hl7.org/fhir/DocumentReference/2> a fhir:DocumentReference .
+
+<http://hl7.org/fhir/Observation/1> a fhir:Observation .
+
+<http://hl7.org/fhir/MedicationStatement/2> a fhir:MedicationStatement .
+
+<http://hl7.org/fhir/Organization/1> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,92 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Ingredient/example-strength-repeat> a fhir:Ingredient ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example-strength-repeat"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:role [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://ema.europa.eu/example/ingredientRole"^^xsd:anyURI ;
+         fhir:l <http://ema.europa.eu/example/ingredientRole>
+       ] ;
+       fhir:code [ fhir:v "ActiveBase" ]
+     ] )
+  ] ; # 
+  fhir:manufacturer ( [
+     fhir:manufacturer [
+       fhir:l <http://hl7.org/fhir/Organization/example> ;
+       fhir:reference [ fhir:v "Organization/example" ]
+     ]
+  ] ) ; # 
+  fhir:substance [
+     fhir:code [
+       fhir:concept [
+         fhir:coding ( [
+           fhir:system [
+             fhir:v "http://ema.europa.eu/example/substance"^^xsd:anyURI ;
+             fhir:l <http://ema.europa.eu/example/substance>
+           ] ;
+           fhir:code [ fhir:v "Wizzohaler" ]
+         ] )
+       ]
+     ] ;
+     fhir:strength ( [
+       fhir:presentation [
+         a fhir:Ratio ;
+         fhir:numerator [
+           fhir:value [ fhir:v "730"^^xsd:decimal ] ;
+           fhir:unit [ fhir:v "mcg" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "ug" ]
+         ] ;
+         fhir:denominator [
+           fhir:value [ fhir:v "1"^^xsd:decimal ] ;
+           fhir:unit [ fhir:v "delivered dose" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "{delivered dose}" ]
+         ]
+       ] ;
+       fhir:measurementPoint [ fhir:v "2cm" ]
+     ] [
+       fhir:presentation [
+         a fhir:Ratio ;
+         fhir:numerator [
+           fhir:value [ fhir:v "460"^^xsd:decimal ] ;
+           fhir:unit [ fhir:v "mcg" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "ug" ]
+         ] ;
+         fhir:denominator [
+           fhir:value [ fhir:v "1"^^xsd:decimal ] ;
+           fhir:unit [ fhir:v "delivered dose" ] ;
+           fhir:system [
+             fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+             fhir:l <http://unitsofmeasure.org>
+           ] ;
+           fhir:code [ fhir:v "{delivered dose}" ]
+         ]
+       ] ;
+       fhir:measurementPoint [ fhir:v "5cm" ]
+     ] ) # A single drug only has a single strength (amount of active ingredient).\n		     However it can be measured in different ways, giving rise to different values of what is basically the same underlying strength.\n		     In these cases the \"strength\" attribute can repeat.\n		     This is common with inhalers, where the strength is the amount of ingredient found in a spray or puff, but which differs at\n		     different distances from the nozzle. The effective strength is therefore different when the inhaler is used with a spacer device, \n		     which changes the distance. Different countries may also chose to measure at different standard distances.\n		     This is a separate concept to presentation vs. concentration strength (which are two ways of expressing the same numeric value).\n		     Concentration strength could be in the example below, in each \"strength\", but is omitted for clarity.\n		     All these are different from reference strength (a strength in terms of a different substance).
+  ] . # 
+
+<http://hl7.org/fhir/Organization/example> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,108 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix loinc: <https://loinc.org/rdf/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Goal/example> a fhir:Goal ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "example"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "additional" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n			<p> A simple care goal for a patient to lose weight due to obesity.</p>\n		</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:identifier ( [
+     fhir:value [ fhir:v "123" ]
+  ] ) ; # 
+  fhir:lifecycleStatus [ fhir:v "on-hold"] ; # 
+  fhir:lifecycleStatusReason ( [
+     fhir:text [ fhir:v "Patient wants to defer weight loss until after honeymoon." ]
+  ] ) ; # 
+  fhir:achievementStatusDate [ fhir:v "2016-02-14"^^xsd:date] ; # 
+  fhir:category ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/goal-category"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/goal-category>
+       ] ;
+       fhir:code [ fhir:v "dietary" ]
+     ] )
+  ] ) ; # 
+  fhir:continuous [ fhir:v true] ; # 
+  fhir:priority [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://terminology.hl7.org/CodeSystem/goal-priority"^^xsd:anyURI ;
+         fhir:l <http://terminology.hl7.org/CodeSystem/goal-priority>
+       ] ;
+       fhir:code [ fhir:v "high-priority" ] ;
+       fhir:display [ fhir:v "High Priority" ]
+     ] ) ;
+     fhir:text [ fhir:v "high" ]
+  ] ; # 
+  fhir:description [
+     fhir:text [ fhir:v "Target weight is 160 to 180 lbs." ]
+  ] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Peter James Chalmers" ]
+  ] ; # 
+  fhir:start [
+     a fhir:Date ;
+     fhir:v "2015-04-05"^^xsd:date
+  ] ; # 
+  fhir:target ( [
+     fhir:measure [
+       a loinc:3141-9 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://loinc.org"^^xsd:anyURI ;
+           fhir:l <http://loinc.org>
+         ] ;
+         fhir:code [ fhir:v "3141-9" ] ;
+         fhir:display [ fhir:v "Weight Measured" ]
+       ] )
+     ] ;
+     fhir:detail [
+       a fhir:Range ;
+       fhir:low [
+         fhir:value [ fhir:v "160"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "lbs" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "[lb_av]" ]
+       ] ;
+       fhir:high [
+         fhir:value [ fhir:v "180"^^xsd:decimal ] ;
+         fhir:unit [ fhir:v "lbs" ] ;
+         fhir:system [
+           fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ;
+           fhir:l <http://unitsofmeasure.org>
+         ] ;
+         fhir:code [ fhir:v "[lb_av]" ]
+       ]
+     ] ;
+     fhir:due [
+       a fhir:Date ;
+       fhir:v "2016-04-05"^^xsd:date
+     ]
+  ] ) ; # 
+  fhir:source [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ] ;
+     fhir:display [ fhir:v "Peter James Chalmers" ]
+  ] ; # 
+  fhir:addresses ( [
+     fhir:display [ fhir:v "obesity condition" ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

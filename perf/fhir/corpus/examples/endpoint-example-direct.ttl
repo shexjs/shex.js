@@ -1,0 +1,43 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/Endpoint/direct-endpoint> a fhir:Endpoint ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "direct-endpoint"] ; # 
+  fhir:status [ fhir:v "active"] ; # 
+  fhir:connectionType ( [
+     fhir:coding ( [
+       fhir:code [ fhir:v "direct-project" ]
+     ] )
+  ] ) ; # 
+  fhir:name [ fhir:v "MARTIN SMIETANKA"] ; # 
+  fhir:managingOrganization [
+     fhir:l <http://hl7.org/fhir/Organization/f201> ;
+     fhir:reference [ fhir:v "Organization/f201" ]
+  ] ; # 
+  fhir:payload ( [
+     fhir:type ( [
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "urn:oid:1.3.6.1.4.1.19376.1.2.3"^^xsd:anyURI ;
+           fhir:l <urn:oid:1.3.6.1.4.1.19376.1.2.3>
+         ] ;
+         fhir:code [ fhir:v "urn:hl7-org:sdwg:ccda-structuredBody:1.1" ]
+       ] )
+     ] ) ;
+     fhir:mimeType ( [ fhir:v "text/x-hl7-text+xml" ] [ fhir:v "application/fhir+xml" ] [ fhir:v "application/fhir+json" ] )
+  ] ) ; # 
+  fhir:address [
+     fhir:v "mailto:MARTIN.SMIETANKA@directnppes.com"^^xsd:anyURI ;
+     fhir:l fhir:mailto:MARTIN.SMIETANKA@directnppes.com
+  ] . # 
+
+<http://hl7.org/fhir/Organization/f201> a fhir:Organization .
+
+# -------------------------------------------------------------------------------------
+

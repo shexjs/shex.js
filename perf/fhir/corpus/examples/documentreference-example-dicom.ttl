@@ -1,0 +1,120 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/DocumentReference/1.2.840.11361907579238403408700.3.1.04.19970327150033> a fhir:DocumentReference ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "1.2.840.11361907579238403408700.3.1.04.19970327150033"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n      Ultrasound Image on patient \"James Chalmers\":<br/>\n      <img src=\"http://imaging.acme.com/wado/server?requestType=WADO&amp;contentType=application%2Fdicom&amp;studyUid=1.2.840.113619.2.21.848.34082.0.538976288.3&amp;seriesUid=1.2.840.113619.2.21.3408.700.0.757923840.3.0&amp;objectUid=1.2.840.11361907579238403408700.3.1.04.19970327150033\" alt=\"WADO reference to image\"/>\n\n    </div>"^^rdf:XMLLiteral ]
+  ] ; # This example demonstrates how to represent an image
+#    originally sourced by a DICOM acquisition device
+#    as a DocumentReference resource. Whether this is appropriate depends
+#    on the complexity of the image - the DocumentReference resource only
+#    contains crude metadata, and plain png/jpg (typically)
+#    pixels. This is suitable for the bulk of simple images
+#    shared as summaries with consumers, but not at all suitable
+#    for other kinds of images, or for internal radiology
+#    reporting usage
+  fhir:extension ( [
+     fhir:url [
+       fhir:v "http://nema.org/fhir/extensions#0002-0010"^^xsd:anyURI ;
+       fhir:l <http://nema.org/fhir/extensions#0002-0010>
+     ] ;
+     fhir:value [
+       a fhir:Uri ;
+       fhir:v "urn:oid:1.2.840.10008.1.2.1"^^xsd:anyURI ;
+       fhir:l <urn:oid:1.2.840.10008.1.2.1>
+     ]
+  ] ) ; # this is added to demonstrate the use of DICOM extensions.
+#    0002,0010 is the DICOM transfer syntax of the referenced image
+  fhir:identifier ( [
+     fhir:type [
+       fhir:text [ fhir:v "accessionNo" ]
+     ] ;
+     fhir:system [
+       fhir:v "http://acme-imaging.com/accession/2012"^^xsd:anyURI ;
+       fhir:l <http://acme-imaging.com/accession/2012>
+     ] ; # the imaging department accession number. (they recycle numbers each year)
+     fhir:value [ fhir:v "1234567" ]
+  ] [
+     fhir:type [
+       fhir:text [ fhir:v "studyId" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:dicom:uid"^^xsd:anyURI ;
+       fhir:l <urn:dicom:uid>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:1.2.840.113619.2.21.848.34082.0.538976288.3" ]
+  ] [
+     fhir:type [
+       fhir:text [ fhir:v "seriesId" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:dicom:uid"^^xsd:anyURI ;
+       fhir:l <urn:dicom:uid>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:1.2.840.113619.2.21.3408.700.0.757923840.3.0" ]
+  ] [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:type [
+       fhir:text [ fhir:v "InstanceUID" ]
+     ] ;
+     fhir:system [
+       fhir:v "urn:dicom:uid"^^xsd:anyURI ;
+       fhir:l <urn:dicom:uid>
+     ] ;
+     fhir:value [ fhir:v "urn:oid:1.2.840.11361907579238403408700.3.1.04.19970327150033" ]
+  ] ) ; # 
+  fhir:status [ fhir:v "current"] ; # 
+  fhir:modality ( [
+     fhir:coding ( [
+       fhir:system [
+         fhir:v "http://dicom.nema.org/resources/ontology/DCM"^^xsd:anyURI ;
+         fhir:l <http://dicom.nema.org/resources/ontology/DCM>
+       ] ;
+       fhir:code [ fhir:v "US" ]
+     ] ) # modality
+  ] ) ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:event ( [
+     fhir:concept [
+       a sct:399067008 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "399067008" ] ;
+         fhir:display [ fhir:v "Lateral projection" ]
+       ] ) # view
+     ]
+  ] ) ; # 
+  fhir:author ( [
+     fhir:display [ fhir:v "G.E. Medical Systems" ]
+  ] ) ; # 
+  fhir:content ( [
+     fhir:attachment [
+       fhir:contentType [ fhir:v "application/dicom" ] ;
+       fhir:url [
+         fhir:v "http://imaging.acme.com/wado/server?requestType=WADO&contentType=application%2Fdicom&studyUid=1.2.840.113619.2.21.848.34082.0.538976288.3&seriesUid=1.2.840.113619.2.21.3408.700.0.757923840.3.0&objectUid=1.2.840.11361907579238403408700.3.1.04.19970327150033"^^xsd:anyURI ;
+         fhir:l <http://imaging.acme.com/wado/server?requestType=WADO&contentType=application%2Fdicom&studyUid=1.2.840.113619.2.21.848.34082.0.538976288.3&seriesUid=1.2.840.113619.2.21.3408.700.0.757923840.3.0&objectUid=1.2.840.11361907579238403408700.3.1.04.19970327150033>
+       ] ; # The actual image could be anywhere. This is a WADO example
+       fhir:height [ fhir:v "480"^^xsd:positiveInteger ] ;
+       fhir:width [ fhir:v "640"^^xsd:positiveInteger ]
+     ]
+  ] ) . # and a reference to the image data
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+# -------------------------------------------------------------------------------------
+

@@ -1,0 +1,75 @@
+@prefix fhir: <http://hl7.org/fhir/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sct: <http://snomed.info/id/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# - resource -------------------------------------------------------------------
+
+<http://hl7.org/fhir/DocumentReference/xray> a fhir:DocumentReference ;
+  fhir:nodeRole fhir:treeRoot ;
+  fhir:id [ fhir:v "xray"] ; # 
+  fhir:text [
+     fhir:status [ fhir:v "generated" ] ;
+     fhir:div [ fhir:v "<div xmlns=\"http://www.w3.org/1999/xhtml\">Xray of left hand for Patient Henry Levin (MRN 12345) 2016-03-15</div>"^^rdf:XMLLiteral ]
+  ] ; # 
+  fhir:status [ fhir:v "current"] ; # 
+  fhir:subject [
+     fhir:l <http://hl7.org/fhir/Patient/example> ;
+     fhir:reference [ fhir:v "Patient/example" ]
+  ] ; # 
+  fhir:context ( [
+     fhir:l <http://hl7.org/fhir/Encounter/example> ;
+     fhir:reference [ fhir:v "Encounter/example" ]
+  ] [
+     fhir:l <http://hl7.org/fhir/DocumentReference/documentreference-example-xray-encounter> ;
+     fhir:reference [ fhir:v "DocumentReference/documentreference-example-xray-encounter" ]
+  ] ) ; # 
+  fhir:event ( [
+     fhir:concept [
+       a sct:39714003 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "39714003" ] ;
+         fhir:display [ fhir:v "Skeletal X-ray of wrist and hand" ]
+       ] )
+     ]
+  ] [
+     fhir:concept [
+       a sct:85151006 ;
+       fhir:coding ( [
+         fhir:system [
+           fhir:v "http://snomed.info/sct"^^xsd:anyURI ;
+           fhir:l <http://snomed.info/sct>
+         ] ;
+         fhir:code [ fhir:v "85151006" ] ;
+         fhir:display [ fhir:v "Structure of left hand (body structure)" ]
+       ] )
+     ]
+  ] ) ; # 
+  fhir:content ( [
+     fhir:id [ fhir:v "a1" ] ;
+     fhir:attachment [
+       fhir:contentType [ fhir:v "image/jpeg" ] ;
+       fhir:url [
+         fhir:v "http://someimagingcenter.org/fhir/Binary/A12345"^^xsd:anyURI ;
+         fhir:l <http://someimagingcenter.org/fhir/Binary/A12345>
+       ] ;
+       fhir:creation [ fhir:v "2016-03-15"^^xsd:date ] ; # the date this image was created
+       fhir:height [ fhir:v "432"^^xsd:positiveInteger ] ;
+       fhir:width [ fhir:v "640"^^xsd:positiveInteger ]
+     ]
+  ] ) . # 
+
+<http://hl7.org/fhir/Patient/example> a fhir:Patient .
+
+<http://hl7.org/fhir/Encounter/example> a fhir:Encounter .
+
+<http://hl7.org/fhir/DocumentReference/documentreference-example-xray-encounter> a fhir:DocumentReference .
+
+# -------------------------------------------------------------------------------------
+

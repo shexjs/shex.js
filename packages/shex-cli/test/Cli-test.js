@@ -216,8 +216,8 @@ if (!TEST_cli) {
     });
 
     /* What would make a failing node conform, on the command line
-     * (doc/error-normalization.md §4).  Off unless asked for: a caller who
-     * doesn't want the search shouldn't pay for it. */
+     * (doc/error-normalization.md §4).  Given without asking; --no-repairs
+     * declines it. */
     describe("--repairs", function () {
       const shape = "<http://a.example/S>";
       function inTmp (name, text) {
@@ -233,7 +233,7 @@ if (!TEST_cli) {
       const args = ["-x", schema, "-d", data, "-m", "<http://a.example/x>@" + shape];
 
       it("should say what to add", async function () {
-        const {stdout} = await validate(args.concat(["--repairs"]));
+        const {stdout} = await validate(args);
         const repairs = JSON.parse(stdout).repairs;
         expect(repairs.length).to.equal(1);
         expect(repairs[0].arcs.map(a => a.delta + " " + a.property))
@@ -241,15 +241,20 @@ if (!TEST_cli) {
       });
 
       it("should say it in words for a reader", async function () {
-        const {stdout} = await validate(args.concat(["--repairs", "--human"]));
+        const {stdout} = await validate(args.concat(["--human"]));
         expect(stdout).to.include("to conform: add 1 http://a.example/mbox");
         // and the human output is lines, not an array literal
         expect(stdout).to.not.include("[ '");
       });
 
-      it("should not compute them unasked", async function () {
-        const {stdout} = await validate(args);
+      it("should let a caller decline them", async function () {
+        const {stdout} = await validate(args.concat(["--no-repairs"]));
         expect(JSON.parse(stdout)).to.not.have.property("repairs");
+      });
+
+      it("should still accept --repairs from scripts that pass it", async function () {
+        const {stdout} = await validate(args.concat(["--repairs"]));
+        expect(JSON.parse(stdout).repairs.length).to.equal(1);
       });
     });
 
