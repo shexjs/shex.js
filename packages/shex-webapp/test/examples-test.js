@@ -94,11 +94,19 @@ describe("the examples manifest", () => {
   it("should ship the site table its offline example names", () => {
     // a Wikibase page's sitelinks name wikis like "enwiki", and only the
     // site table says which URL and language that is; this entry names a
-    // downloaded copy so it needs no network at all.  The value is resolved
-    // by the browser against the page that loads it, i.e. doc/.
+    // downloaded copy so it needs no network at all.
+    //
+    // It is resolved against the *manifest*, like schemaURL and dataURL
+    // beside it -- not against the page, which is what it used to be.  The
+    // difference is invisible from shex-webapp, whose doc/ and examples/ are
+    // siblings, and fatal from extension-map, which reads this same manifest
+    // from a doc/ of its own: "../examples/..." found the file for one app
+    // and 404'd for the other.
     const entry = json.find(e => e.dataLabel === "Q42 from a downloaded page");
     expect(entry.sitematrix, "the example that shows what sitematrix is for").to.be.a("string");
-    expect(Fs.existsSync(Path.join(__dirname, "../doc", entry.sitematrix)),
+    expect(entry.sitematrix, "relative to the manifest, so it survives being read from elsewhere")
+      .to.not.match(/^\.\./);
+    expect(Fs.existsSync(Path.join(__dirname, "../examples", entry.sitematrix)),
            entry.sitematrix).to.equal(true);
   });
 

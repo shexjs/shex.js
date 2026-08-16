@@ -913,7 +913,13 @@ class ManifestCache extends InterfaceCache {
           elt.metaURL = action.termResolverURL || url;
         }
       }
-      ["schemaURL", "dataURL", "queryMapURL"].forEach(parm => {
+      // `sitematrix` is here because it is a document reference like the
+      // others, and a manifest's references are relative to the *manifest*.
+      // Left out, it was resolved against whichever page loaded the manifest
+      // -- so "../examples/wikidata-sitematrix.json" found the file from
+      // shex-webapp/doc/ and 404'd from extension-map/doc/, which is the same
+      // manifest read by a different app.
+      ["schemaURL", "dataURL", "queryMapURL", "sitematrix"].forEach(parm => {
         if (parm in elt) {
           // an entry may name several documents under one key; each is a
           // reference of its own, not one comma-joined reference
