@@ -146,7 +146,10 @@ const schemaFixups = [
     // Loading every example into one store instead makes the references
     // resolve, but is stricter, not looser: the referents get validated too.
     // Worth 38 -> 60 of 118.
-    apply: text => text.replace(/\{fhir:l[\s\S]{0,400}?\}/g, "{fhir:l IRI?}"),
+    // `[^{}]*` rather than a bounded `[\s\S]{0,400}?`: these inline shapes
+    // nest no braces but can be very long, e.g. Reference targets spelled as
+    // a fifteen-way OR, and a length cap silently left those unrelaxed.
+    apply: text => text.replace(/\{fhir:l[^{}]*\}/g, "{fhir:l IRI?}"),
   },
   {
     what: "Bundle.entry.resource is 0..1 but the data wraps it in an RDF list",
@@ -157,6 +160,21 @@ const schemaFixups = [
     // it should be settled (hcls-fhir-rdf#245).
     apply: text => text.replace(/fhir:resource @<Resource>\?;/,
                                 "fhir:resource (@<OneOrMore_Resource> OR @<Resource>)?;"),
+  },
+  {
+    what: "a repeating coded element binds its value set to the list, not the members",
+    // For a single-valued coded element the generator emits
+    //     fhir:status @<Code> AND {fhir:v @fhirvs:account-status};
+    // which is right: the Code node carries fhir:v.  For a *repeating* one it
+    // emits
+    //     fhir:format @<OneOrMore_Code> AND {fhir:v @fhirvs:supplemented-mimetypes};
+    // and ANDs the binding onto the RDF *list*, which has rdf:first and
+    // rdf:rest and no fhir:v at all -- so the element can never match.  30
+    // occurrences, against 297 of the correct single-valued form.  The
+    // binding belongs on the list's members; dropping it here keeps the
+    // structure checkable at the cost of not checking those 30 value sets.
+    apply: text => text.replace(
+      /(@<OneOrMore_[A-Za-z_.]*>) AND\s*\{fhir:v @fhirvs:[^}]*\}/g, "$1"),
   },
   {
     what: "<Xhtml> and <SimpleQuantity> are referenced but never declared",
@@ -181,6 +199,49 @@ const schemaFixups = [
 
 /** Examples that aren't examples: the ontologies, which carry no treeRoot. */
 const NOT_EXAMPLES = ["fhir.ttl", "rim.ttl", "w5.ttl"];
+
+/**
+ * Fixups to the *data*, counted like the schema ones.
+ *
+ * Same rule: each is a thing the published examples would have to change,
+ * and the goal is zero.
+ */
+const dataFixups = [
+  {
+    what: "an element written with no value, e.g. `fhir:expansion []` or "
+      + "`fhir:asNeededFor ( [] )`",
+    // 1115 occurrences across 1115 files -- fhir:expansion (682),
+    // fhir:hierarchyMeaning (343), fhir:dosageInstruction (68) and a tail.
+    // The Turtle asserts that the element is present and then gives it no
+    // value at all, which no shape can match: the object needs a fhir:v (or
+    // whatever the element's own shape wants), and if there is nothing to
+    // say, the element should simply be absent.
+    //
+    // Repeating elements get the same treatment one level in -- `( [] )` is
+    // a list whose only member is valueless -- so this runs to a fixpoint:
+    // drop valueless objects, then drop any list cell left without an
+    // rdf:first, which turns `( [] )` into nothing rather than into a
+    // malformed list.
+    apply: graph => {
+      const RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+      let removed = 0, changed = true;
+      while (changed) {
+        changed = false;
+        for (const q of graph.getQuads(null, null, null, null)) {
+          if (q.object.termType !== "BlankNode") continue;
+          const arcs = graph.getQuads(q.object, null, null, null);
+          const valueless = arcs.length === 0;
+          const brokenCell = arcs.length > 0
+                && arcs.every(a => a.predicate.value === RDF + "rest");
+          if (!valueless && !brokenCell) continue;
+          arcs.forEach(a => { graph.removeQuad(a); ++removed; });
+          graph.removeQuad(q); ++removed; changed = true;
+        }
+      }
+      return removed;
+    },
+  },
+];
 
 function loadSchema () {
   const at = Path.join(CORPUS, "fhir.shex");
@@ -221,7 +282,7 @@ function main () {
   applied.forEach(w => console.log("  fixup: " + w));
 
   const timings = [], nonconformant = [], broken = {};
-  let conformant = 0, parseMs = 0, validateMs = 0, quads = 0;
+  let conformant = 0, parseMs = 0, validateMs = 0, quads = 0, dataFixupCount = 0;
   const wall = Date.now();
 
   for (const f of files) {
@@ -232,6 +293,7 @@ function main () {
       graph.addQuads(new N3.Parser({baseIRI: FHIR, format: "text/turtle"})
         .parse(fs.readFileSync(Path.join(CORPUS, "examples", f), "utf8")));
       parseMs += Date.now() - t;
+      dataFixups.forEach(fixup => { dataFixupCount += fixup.apply(graph); });
       quads += graph.size;
     } catch (e) {
       record(broken, "turtle: " + short(e), f);
@@ -261,6 +323,9 @@ function main () {
   console.log("    turtle " + parseMs + "ms, validation " + validateMs + "ms"
               + (timings.length ? "  (median " + percentile(sorted, .5) + "ms, p90 "
                  + percentile(sorted, .9) + "ms, max " + sorted[sorted.length - 1] + "ms)" : ""));
+  if (dataFixupCount > 0)
+    console.log("    data fixups: " + dataFixupCount + " triple(s) -- "
+                + dataFixups.map(f => f.what).join("; "));
   console.log("    conformant " + conformant + ", nonconformant " + nonconformant.length
               + ", unfinished " + Object.values(broken).reduce((n, l) => n + l.length, 0));
 
@@ -296,4 +361,11 @@ function main () {
 function record (into, why, f) { (into[why] = into[why] || []).push(f); }
 function short (e) { return String(e).split("\n")[0].slice(0, 60); }
 
-main();
+/* Diagnostics import the same loadSchema and the same fixup list rather
+ * than re-deriving them: every "why is this failing" script I wrote by hand
+ * drifted from the bench within a run or two, and a diagnosis against a
+ * schema the bench isn't using is worth nothing. */
+if (require.main === module)
+  main();
+else
+  module.exports = {loadSchema, schemaFixups, dataFixups, NOT_EXAMPLES, CORPUS, FHIR};
