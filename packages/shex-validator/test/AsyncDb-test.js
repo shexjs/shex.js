@@ -97,6 +97,40 @@ describe("validating over an async db", function () {
     expect(Date.now() - started, "the level went out together").to.be.below(25 * 4);
   });
 
+  /* The pairs of a shape map are independent of each other, so they are a
+   * fan like any other -- and over a db that fetches they are usually the
+   * widest one there is.  A SPARQL query naming ten nodes used to walk them
+   * strictly in turn, each starting only after the one before it had been
+   * to the network and back for every node it reached. */
+  it("should walk a shape map's pairs together rather than one at a time", async function () {
+    const {schema, graph} = parse(
+      "<S> { :st @<T> + }\n<T> { :v . }",
+      [0, 1, 2, 3].map(n => `:q${n} :st :s${n} .\n:s${n} :v ${n} .`).join("\n"));
+    const map = [0, 1, 2, 3].map(n => ({node: base + "q" + n, shape: base + "S"}));
+    const db = remote(graph, {latency: 25});
+    const started = Date.now();
+    const results = await new ShExValidator(schema, db, {}).validateShapeMapAsync(map);
+    expect(results.map(r => r.status)).to.deep.equal(Array(4).fill("conformant"));
+    expect(db.asked.length, "two levels for each of four nodes").to.equal(8);
+    // eight fetches, but only two waits deep: the four walks overlap
+    expect(Date.now() - started, "the map went out together").to.be.below(25 * 8);
+  });
+
+  it("should reach the same verdicts as walking them in turn", async function () {
+    const {schema, graph} = parse(
+      "<S> { :v [1 2] }",
+      ":a :v 1 .\n:b :v 9 .\n:c :v 2 .");
+    const map = ["a", "b", "c"].map(n => ({node: base + n, shape: base + "S"}));
+    const asyncRan = await new ShExValidator(schema, remote(graph), {})
+          .validateShapeMapAsync(map);
+    const syncRan = new ShExValidator(schema, RdfJsDb(graph), {}).validateShapeMap(map);
+    expect(asyncRan.map(r => r.status)).to.deep.equal(syncRan.map(r => r.status));
+    expect(asyncRan.map(r => r.status)).to.deep.equal(
+      ["conformant", "nonconformant", "conformant"]);
+    // and in the order they were asked for, which is what a result map is
+    expect(asyncRan.map(r => r.node)).to.deep.equal(map.map(p => p.node));
+  });
+
   /* The probe passes are wrong on purpose -- they run against neighborhoods
    * that haven't arrived -- so a semantic action must not see them.  An
    * action is handed the triples it fired on and does something opaque with
