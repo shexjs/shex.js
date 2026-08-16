@@ -117,6 +117,48 @@ const schemaFixups = [
       "<Uri> EXTENDS @<PrimitiveType> CLOSED {\n    a [fhir:Uri]?;\n    fhir:l IRI?;"),
   },
   {
+    what: "integer primitives: the schema says xsd:int, the data never uses it",
+    // <Integer> constrains fhir:v to xsd:int, and <PositiveInt> and
+    // <UnsignedInt> EXTEND it, so they inherit xsd:int too -- which they
+    // could not override anyway, since EXTENDS conjoins and a literal has
+    // one datatype.  The examples never emit xsd:int at all: 2423
+    // xsd:nonNegativeInteger, 295 xsd:positiveInteger, 39 xsd:long.  The
+    // writer appears to pick the narrowest XSD type that fits the *value*
+    // where the schema expects the one implied by the FHIR *type*.
+    // Accepting the union is the smallest change that lets the rest of a
+    // document be judged; which side should really move is a question for
+    // FHIR (hcls-fhir-rdf#245, #246).  Worth 60 -> 83 of 118.
+    apply: text => text
+      .replace(/fhir:v xsd:int MININCLUSIVE -2147483648 MAXINCLUSIVE 2147483647\?;/,
+               "fhir:v (xsd:int OR xsd:integer OR xsd:nonNegativeInteger OR xsd:positiveInteger)?;")
+      .replace(/fhir:v xsd:long MININCLUSIVE -9223372036854775808 MAXINCLUSIVE 9223372036854775807\?;/,
+               "fhir:v (xsd:long OR xsd:integer OR xsd:nonNegativeInteger OR xsd:positiveInteger)?;"),
+  },
+  {
+    what: "reference targets: fhir:l @<Target> demands a whole resource that "
+      + "a single document doesn't contain",
+    // `fhir:securityContext @<Reference> AND {fhir:l @<Resource>?}` asks the
+    // *referent* to conform.  An example document carries a stub for what it
+    // points at -- `<DocumentReference/example> a fhir:DocumentReference` and
+    // nothing else -- so the referent can never conform, and with <Resource>
+    // abstract the failure is reported once per resource type.  Relaxing the
+    // target to an IRI validates the document rather than the world.
+    // Loading every example into one store instead makes the references
+    // resolve, but is stricter, not looser: the referents get validated too.
+    // Worth 38 -> 60 of 118.
+    apply: text => text.replace(/\{fhir:l[\s\S]{0,400}?\}/g, "{fhir:l IRI?}"),
+  },
+  {
+    what: "Bundle.entry.resource is 0..1 but the data wraps it in an RDF list",
+    // `fhir:resource ( <urn:uuid:...> )` against `fhir:resource @<Resource>?`.
+    // 1383 occurrences across 102 files -- and the same predicate also
+    // appears unwrapped as `fhir:resource [ ... ]`, so the writer is
+    // inconsistent with itself.  Accepting both here; the writer is where
+    // it should be settled (hcls-fhir-rdf#245).
+    apply: text => text.replace(/fhir:resource @<Resource>\?;/,
+                                "fhir:resource (@<OneOrMore_Resource> OR @<Resource>)?;"),
+  },
+  {
     what: "<Xhtml> is referenced (fhir:div @<Xhtml>) but never declared",
     // One reference, no declaration, so any document with a Narrative --
     // most of them -- fails to validate with "shape ... Xhtml not found".

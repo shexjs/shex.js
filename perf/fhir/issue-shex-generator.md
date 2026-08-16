@@ -135,7 +135,65 @@ On `<Uri>` it reaches `Url`, `Canonical`, `Oid` and `Uuid` through `EXTENDS`.
 This alone takes the first 60 examples from 3 conformant to 29 — the largest
 single gap after #3.
 
-### 5. `<Xhtml>` is referenced but never declared
+### 5. `<PositiveInt>` and `<UnsignedInt>` can never match their own values
+
+`<Integer>` constrains `fhir:v` to `xsd:int`, and both extend it:
+
+```
+<Integer>     fhir:v xsd:int MININCLUSIVE -2147483648 MAXINCLUSIVE 2147483647?;
+<PositiveInt> EXTENDS @<Integer> CLOSED { a [fhir:PositiveInt]?; }
+<UnsignedInt> EXTENDS @<Integer> CLOSED { a [fhir:UnsignedInt]?; }
+```
+
+Since `EXTENDS` conjoins and a literal has exactly one datatype, neither can
+narrow `xsd:int` to the type its own values actually carry. And the examples
+never emit `xsd:int` at all — across the published corpus:
+
+| datatype | occurrences |
+| --- | --- |
+| `xsd:nonNegativeInteger` | 2423 |
+| `xsd:positiveInteger` | 295 |
+| `xsd:long` | 39 |
+| `xsd:int` | **0** |
+
+So every `positiveInt` and `unsignedInt` value in every example fails. Two
+ways out, and it's really a question for whoever owns the RDF writer too
+(see w3c-cg/hcls-fhir-rdf#245): either the writer emits the datatype implied
+by the FHIR *type* rather than the narrowest one that fits the *value*, or
+these shapes stop extending `<Integer>` and declare their own —
+
+```diff
+-<PositiveInt> EXTENDS @<Integer> CLOSED {
++<PositiveInt> EXTENDS @<PrimitiveType> CLOSED {
+     a [fhir:PositiveInt]?;
++    fhir:v xsd:positiveInteger?;
+ }
+```
+
+Accepting the union of all four is worth 60 → 83 of the first 118 examples.
+
+### 6. `fhir:l @<Target>` asks a single document to contain the world
+
+```
+fhir:securityContext @<Reference> AND {fhir:l @<Resource>?}?;
+```
+
+This requires the *referenced* resource to be present **and conformant in the
+same graph**. An example document carries only a stub for what it points at —
+`<DocumentReference/example> a fhir:DocumentReference` and nothing else — so
+the referent can never conform, and with `<Resource>` abstract (#2) the
+failure is reported once per resource type, which also makes the error output
+enormous.
+
+Loading all 2165 example documents into one store does make the references
+resolve, but it is *stricter*, not looser: the referents then get validated
+too, and any nonconformance propagates.
+
+Worth 38 → 60 of the first 118 examples when reference targets are relaxed to
+plain IRIs. I don't think "relax them" is the answer — it's a question of what
+a resource's shape should assert about things it merely points at.
+
+### 7. `<Xhtml>` is referenced but never declared
 
 ```diff
  # line 3292
@@ -148,14 +206,14 @@ One reference, no declaration, so every document with a Narrative fails with
 `shape http://hl7.org/fhir/Xhtml not found`. Either declare it or point
 `fhir:div` at an existing shape.
 
-### 6. (minor) `ABSTRACT` is never emitted
+### 8. (minor) `ABSTRACT` is never emitted
 
 `grep -c '^ABSTRACT' fhir.shex` → `0`, though `Base`, `Resource`,
 `DomainResource` and `Element` are all `abstract=true` upstream. Worth an
 audit beyond `<Resource>`: without it, an abstract type can be matched
 directly, and value-position references to it don't dispatch to descendants.
 
-### 7. (cosmetic) a comment is glued to a closing brace
+### 9. (cosmetic) a comment is glued to a closing brace
 
 ```diff
 -}# Potential outcomes for a subject with likelihood
