@@ -49,6 +49,14 @@ An actionable, sized consolidation of these lives in
   parser is ts-jison and can grow the same `_locations` treatment.
 - Hover tooltips showing the constraint's text when hovering its data-side
   counterpart (currently only highlights).
+- Schema-side result highlighting needs a data pane it can pair with:
+  `setPairHovers` returns early without one, so a source that answers from
+  a store nobody typed -- a SPARQL endpoint, a Wikibase -- lights up
+  nothing in the schema either, though every schema range it would use was
+  found.  The pairs are already computed and already carry `data: null`;
+  what is missing is a hover path that highlights the schema alone.
+  (Related: `reportValidation` used to throw outright on such a source,
+  fixed in "mark the document that has the bad triple".)
 - Autocomplete vocabulary reads `cache.parsed` — labels typed but not yet
   parsed (no validate/refresh) aren't offered; could fall back to the live
   linter's last parse.  Trigger eagerness (`activateOnTyping`, the
