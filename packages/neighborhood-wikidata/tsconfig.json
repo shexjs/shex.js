@@ -11,6 +11,7 @@
         "strict": true,
         "noUnusedParameters": true,
         "lib": [
+            "DOM",
             "ES2021.String"
         ]
     },
