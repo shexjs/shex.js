@@ -290,14 +290,20 @@ ul {
     margin-left: .6em;
     white-space: nowrap;
 }
-/* the same strip as the validator's threads, and for the same reason */
-#dbgThreads {
-    display: inline-block;
-    vertical-align: middle;
-    margin-left: .5em;
-    max-width: 18em;
+/* The materializer's thread list, at the left edge of the target schema
+ * pane rather than in the right-floating controls.
+ *
+ * There it shared a right edge with the bindings pane, so every thread that
+ * appeared or died changed the width of the block the step buttons sit in
+ * and moved them out from under the mouse.  Here it grows rightward from an
+ * edge that doesn't move. */
+#dbgThreadsRow {
+    min-height: 1.6em;
+    margin-bottom: .2em;
     overflow-x: auto;
     white-space: nowrap;
+}
+#dbgThreads {
     font-size: small;
 }
 #dbgStatus {

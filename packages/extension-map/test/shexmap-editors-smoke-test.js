@@ -270,6 +270,13 @@ if (!TEST_browser) {
       $("#dbgInto").trigger("click"); // at :fullName
       $("#dbgInto").trigger("click"); // at :phone; the mbox disjunct is pending
       expect($("#dbgThreads button").length, "pending threads listed").to.be.above(0);
+      // the list lives at the left edge of the target schema pane, not in
+      // the right-floating controls: a thread appearing or dying there
+      // changed the width of the block the step buttons sit in and moved
+      // them out from under the mouse
+      expect($("#dbgThreads").closest("#debugControls").length, "not in the controls").to.equal(0);
+      expect($("#dbgThreads").closest("#output").length, "in the target schema panel").to.equal(1);
+      expect($("#dbgThreads").closest("#dbgThreadsRow").length, "on a row of its own").to.equal(1);
       $("#dbgThreads button").first().trigger("mouseenter"); // partial preview
       // ...and that preview is written the way the finished graph is.  A
       // thread paused halfway cannot be validated against the output schema
@@ -406,6 +413,14 @@ if (!TEST_browser) {
       $("#materialize").trigger("click");
       await shared.promise;
       const [{pairs, text: resultText}] = shared.Caches.editorSupport.lastMaterialized;
+      // Nested, which is the whole point of rendering it this way: a blank
+      // node's arc has to reach the writer before the triples hanging off
+      // it, and both render paths used to pass the quads through an
+      // N3.Store, whose getQuads() answers in index order.  What came out
+      // was `fhir:subject []` with the subject's triples stranded below.
+      expect(resultText, "the subject nests under the report").to.match(/fhir:subject \[\n/);
+      expect(resultText, "no empty stand-ins").to.not.include("[]");
+      expect(resultText, "and nothing stranded at the top level").to.not.match(/^_:/m);
       // four readings, all shaped alike, with distinct values
       ["100", "60", "101", "61", "110", "70", "111", "71"].forEach(v =>
         expect(resultText, "rendered " + v).to.include('"' + v + '"'));
@@ -528,6 +543,58 @@ if (!TEST_browser) {
           app.bindingRanges(bindingsText, perFrameVar, f).map(r => r.from).join(","));
         expect(new Set(spots).size, perFrameVar + " is written once per frame")
           .to.equal(frames);
+      }
+    });
+
+    /* Triples exist from the moment each is emitted -- the arc into a nested
+     * shape before the shape is entered -- so stepping should show them as
+     * they appear.  Nothing drew them until the session ended or the reader
+     * hovered a thread button, so stepping through a shape showed no output
+     * until the shape was finished. */
+    it("should show the graph as it is built, not only when the shape closes", async function () {
+      this.timeout(60000);
+      // a nested schema, so "before the shape closes" is a real interval:
+      // the little :p/:q one in this describe finishes in two steps
+      const pick = async (selector, label) => {
+        const li = $(selector).filter((_, elt) => $(elt).text() === label);
+        expect(li.length, label + " in " + selector).to.equal(1);
+        if (li.hasClass("selected"))
+          return;
+        li.trigger("click");
+        await shared.promise;
+      };
+      await pick("#inputSchema .manifest li", "BPPatient 2 levels");
+      await pick("#inputData .passes li", "simple");
+      $("#validate").trigger("click");
+      await shared.promise;
+
+      $("#debugMaterialize").trigger("click");
+      await shared.promise;
+      const app = shared.app;
+      try {
+        const rendered = () => {
+          const panes = app.materializationPanes || [];
+          return panes.length ? panes[panes.length - 1].text : "";
+        };
+        // a few steps in, while the session is very much still going
+        for (let i = 0; i < 4 && app.debugSession; ++i)
+          $("#dbgInto").trigger("click");
+        expect(app.debugSession, "the session is still going").to.exist;
+
+        const early = rendered();
+        expect(early, "the graph is on the page already").to.include("PREFIX");
+        expect((app.materializationPanes || []).length, "in a pane of its own").to.be.above(0);
+        const shown = (early.match(/\n/g) || []).length;
+
+        // ...and it keeps up as the thread goes on, rather than waiting for
+        // the shape to close
+        for (let i = 0; i < 8 && app.debugSession; ++i)
+          $("#dbgInto").trigger("click");
+        expect((rendered().match(/\n/g) || []).length, "still showing the graph")
+          .to.be.at.least(shown);
+      } finally {
+        if (app.debugSession)
+          $("#dbgStop").trigger("click");
       }
     });
 

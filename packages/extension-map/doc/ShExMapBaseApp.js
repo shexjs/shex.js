@@ -45,6 +45,44 @@ class ShExMapResultsRenderer extends ShExResultsRenderer {
   }
 }
 
+/** a stable key for a quad by value, since the same triple arrives as
+ * different objects from the materializer and from the proof graph */
+function quadKey (q) {
+  const term = t => t.termType + "\u0000" + t.value +
+        (t.language ? "@" + t.language : "") +
+        (t.datatype ? "^^" + t.datatype.value : "");
+  return term(q.subject) + "\u0001" + term(q.predicate) + "\u0001" + term(q.object);
+}
+
+/**
+ * Quads in the order that makes nested Turtle readable: a blank node's
+ * arc before the triples hanging off it.
+ *
+ * The materializer already emits them that way -- the arc into a nested
+ * shape is written before the sub-NFA starts, so it can be retracted with
+ * the rest if that shape turns out not to materialize.  What loses it is
+ * putting them through an N3.Store on the way to the writer: getQuads()
+ * answers in index order, and the nested writer, meeting `fhir:subject
+ * _:tm1` after it has already written _:tm1 as a subject of its own, has
+ * nothing left to nest and emits an empty `[]`.
+ *
+ *     <tag:root> fhir:item [ ... fhir:subject []; ... ].
+ *     _:tm1 fhir:Patient.name "Sue".
+ *
+ * So this is only a `filter`: the order is the caller's, and all this does
+ * is drop duplicates so a quad can't be written twice.
+ */
+function orderedForNesting (quads) {
+  const seen = new Set();
+  return (quads || []).filter(q => {
+    const key = quadKey(q);
+    if (seen.has(key))
+      return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 class ShExMapBaseApp extends ShExBaseApp {
   /* Two kinds of results, a tab each.  A materialization is *of* a
    * validation -- it consumes the bindings one produced -- so its tab shows
@@ -206,8 +244,18 @@ class ShExMapBaseApp extends ShExBaseApp {
     const event = session.dbg[command]();
     this.showDebugEvent(event);
     this.updateThreadList();
-    if (session.dbg.done)
+    if (session.dbg.done) {
       this.endDebugSession(false);
+      return event;
+    }
+    // Show what the thread has built so far.  Its triples exist from the
+    // moment each is emitted -- the arc into a nested shape before the
+    // shape is even entered -- but nothing drew them until the session
+    // ended or the reader thought to hover a thread button, so stepping
+    // through a shape showed no output until the shape was finished.
+    const [current] = session.dbg.threads();
+    if (current)
+      this.previewThread(current, false, this.stepLabel(event, current));
     return event;
   }
 
@@ -304,6 +352,14 @@ class ShExMapBaseApp extends ShExBaseApp {
       ).join("\n");
   }
 
+  /** what to call the step just taken, over the graph it has built */
+  stepLabel (event, thread) {
+    const where = event && event.tc
+          ? " at <" + event.tc.predicate + ">"
+          : event && event.type ? " (" + event.type + ")" : "";
+    return "stepping" + where + ": " + thread.emitted + " quads so far";
+  }
+
   /** The same statement bindingStateText makes, written on the bindings
    * themselves: which this thread has consumed, and which frame its cursor
    * is in.
@@ -369,12 +425,13 @@ class ShExMapBaseApp extends ShExBaseApp {
     if (bindingState)
       this.resultsWidget.append($("<pre/>", {class: "dbgBindingState"}).text(bindingState));
     this.annotateBindingState(thread);
-    const store = new RdfJs.Store();
-    store.addQuads(thread.quads);
     if (complete && session) {
+      const store = new RdfJs.Store();
+      store.addQuads(thread.quads);
       this.renderMaterializedGraph(store, session.outputShapeMap, thread.provenance);
     } else {
-      this.writeNestedTurtle(store, (error, result) => this.addResult(error, result));
+      // the thread's quads as it emitted them, which is what nests
+      this.writeNestedTurtle(thread.quads, (error, result) => this.addResult(error, result));
       this.reportMaterialization(thread.provenance);
       this.resultsWidget.finish();
     }
@@ -390,9 +447,13 @@ class ShExMapBaseApp extends ShExBaseApp {
    * that, and a flat dump of thirty triples with N3's own bnode labels is
    * what stepping used to show.
    */
-  writeNestedTurtle (store, onDone) {
+  writeNestedTurtle (quads, onDone) {
     const prefixes = this.Caches.outputSchema.parsed._prefixes;
+    const ordered = orderedForNesting(quads);
     try {
+      // extractLists wants a store, and takes the list triples out of it
+      const store = new RdfJs.Store();
+      store.addQuads(ordered);
       const lists = store.extractLists({remove: true});
       const writer = new ShExWebApp.NestedTurtleWriter.Writer(null, {
         format: "text/turtle",
@@ -402,13 +463,16 @@ class ShExMapBaseApp extends ShExBaseApp {
         indent: "    ",
         checkCorefs: n => false,
       });
-      writer.addQuads(store.getQuads());
+      // ...but the *order* is the materializer's, not the store's: see
+      // orderedForNesting
+      writer.addQuads(ordered.filter(
+        q => store.countQuads(q.subject, q.predicate, q.object, q.graph) > 0));
       writer.end(onDone);
     } catch (e) {
       // a graph the nested writer can't lay out still has to be readable
       console.warn("NestedWriter on a partial graph:", e);
       const writer = new RdfJs.Writer({prefixes});
-      writer.addQuads(store.getQuads());
+      writer.addQuads(ordered);
       writer.end(onDone);
     }
   }
@@ -726,7 +790,22 @@ class ShExMapBaseApp extends ShExBaseApp {
           const rest = new RdfJs.Store();
           rest.addQuads(generatedGraph.getQuads()); // the resource giveth
           matched.forEach(q => rest.removeQuad(q)); // the matched taketh away
-          nestedWriter.addQuads(matched.filter(q => ([ShExWebApp.Util.RDF.first, ShExWebApp.Util.RDF.rest]).indexOf(q.predicate.value) === -1));
+          // The proof graph is in the validator's order, which is not the
+          // one that nests: put the materializer's back, so a blank node's
+          // arc precedes the triples hanging off it (see orderedForNesting).
+          // Anything the proof found that the materializer didn't emit keeps
+          // its place at the end.
+          const emitted = new Map();
+          (provenance || []).forEach((prov, i) => {
+            if (prov && prov.quad)
+              emitted.set(quadKey(prov.quad), i);
+          });
+          const inEmissionOrder = orderedForNesting(matched).sort((a, b) => {
+            const ai = emitted.has(quadKey(a)) ? emitted.get(quadKey(a)) : Infinity;
+            const bi = emitted.has(quadKey(b)) ? emitted.get(quadKey(b)) : Infinity;
+            return ai - bi;
+          });
+          nestedWriter.addQuads(inEmissionOrder.filter(q => ([ShExWebApp.Util.RDF.first, ShExWebApp.Util.RDF.rest]).indexOf(q.predicate.value) === -1));
           if (rest.size > 0) {
             nestedWriter.comment("\n# Triples not in the schema:");
             nestedWriter.addQuads(rest.getQuads())
