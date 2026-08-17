@@ -484,6 +484,74 @@ describe("EditorServices", function () {
         expect(outer.fields[k].to).to.be.at.most(inner.from);
       });
     });
+
+    /* The synthetic case above pins the mechanism.  This one asks the
+     * question the reader cares about, over a result the validator actually
+     * produced: when the app paints a match, does it paint anything that
+     * belongs to a different match?  A results pane is one long JSON
+     * document in which every nested solution is lexically inside its
+     * parent, so "highlight this triple" has to mean its three members and
+     * not the subtree hanging off them. */
+    describe("over a real validation, with real nesting", function () {
+      const nestSchema = [
+        "PREFIX : <http://a.example/>",
+        "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>",
+        "BASE <http://a.example/>",
+        "<S> { :name xsd:string ; :tag @<T> * }",
+        "<T> { :v . ; :sub @<U> ? }",
+        "<U> { :w . }",
+        ""].join("\n");
+      const nestData = [
+        "PREFIX : <http://a.example/>",
+        '<x> :name "Bob" ; :tag [ :v 1 ; :sub [ :w 9 ] ] , [ :v 2 ] .',
+        ""].join("\n");
+      const schemaParsed = EditorServices.parseShExC(nestSchema, {base});
+      const results = validate(schemaParsed, nestData);
+
+      // the app's own two lines: which objects get a range, and which of
+      // those ranges it paints (ShExBaseApp's ShExResultsRenderer)
+      const {text, ranges} = EditorServices.stringifyWithOffsets(
+        results, o => o && (o.type === "TestedTriple" || results.indexOf(o) !== -1));
+      const tested = ranges.filter(r => r.target && r.target.type === "TestedTriple");
+      const painted = r => r.fields
+            ? ["subject", "predicate", "object"].map(k => r.fields[k]).filter(f => f)
+            : [{from: r.from, to: r.to}];
+
+      it("should conform, so every triple is a match with a range", function () {
+        expect(results[0].status).to.equal("conformant");
+        expect(tested.length, "nested solutions, not just top-level ones").to.be.above(4);
+      });
+
+      it("should paint no part of another triple's match", function () {
+        const overlaps = [];
+        tested.forEach((a, i) => tested.slice(i + 1).forEach(b => {
+          painted(a).forEach(ra => painted(b).forEach(rb => {
+            if (ra.from < rb.to && rb.from < ra.to)
+              overlaps.push(JSON.stringify(text.slice(ra.from, ra.to)).slice(0, 60));
+          }));
+        }));
+        expect(overlaps, "one match's highlight covering another's").to.deep.equal([]);
+      });
+
+      it("should stop at the members and never reach the subtree", function () {
+        tested.forEach(r => painted(r).forEach(range => {
+          const said = text.slice(range.from, range.to);
+          expect(said, "a member, not the solution hanging off it")
+            .to.not.include('"referenced"');
+          expect(said).to.not.include('"TestedTriple"');
+        }));
+      });
+
+      it("should paint a member that says which member it is", function () {
+        tested.forEach(r => {
+          expect(r.fields, "every tested triple has its members located").to.exist;
+          ["subject", "predicate", "object"].forEach(k =>
+            expect(text.slice(r.fields[k].from, r.fields[k].to))
+              .to.match(new RegExp('^"' + k + '": ')));
+        });
+      });
+    });
+
   });
 
   describe("mapValidationErrors", function () {
