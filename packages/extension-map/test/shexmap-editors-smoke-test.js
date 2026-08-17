@@ -607,6 +607,45 @@ if (!TEST_browser) {
       }
     });
 
+    /* One materialization, one rendering.  Stepping draws the thread's graph
+     * as it grows, so the finished graph has to replace that rather than land
+     * beside it -- otherwise running a session to the end left two identical
+     * copies in the output data pane, where #materialize leaves one. */
+    it("should end with one copy of the graph, not the stepped one plus the finished one", async function () {
+      this.timeout(60000);
+      const pick = async (selector, label) => {
+        const li = $(selector).filter((_, elt) => $(elt).text() === label);
+        expect(li.length, label + " in " + selector).to.equal(1);
+        if (li.hasClass("selected"))
+          return;
+        li.trigger("click");
+        await shared.promise;
+      };
+      await pick("#inputSchema .manifest li", "BPPatient 2 levels");
+      await pick("#inputData .passes li", "simple");
+      $("#validate").trigger("click");
+      await shared.promise;
+
+      // what #materialize leaves, for comparison
+      $("#materialize").trigger("click");
+      await shared.promise;
+      const app = shared.app;
+      const plain = (app.materializationPanes || []).length;
+      expect(plain, "#materialize renders the graph once").to.equal(1);
+
+      // ...and the same session run to the end through the debugger
+      $("#debugMaterialize").trigger("click");
+      await shared.promise;
+      for (let i = 0; i < 400 && app.debugSession; ++i)
+        $("#dbgContinue").trigger("click");
+      expect(app.debugSession, "the session ran to the end").to.equal(null);
+      expect((app.materializationPanes || []).length,
+             "one graph, not the stepped one plus the finished one").to.equal(plain);
+      // (addResult marks two things `.data`: the shape-map label, which is a
+      // span, and the div holding the pane)
+      expect($("#results div.data").length, "and one pane holding it").to.equal(plain);
+    });
+
     /* Stepping is watching a graph grow, so the triple just added leads:
      * highlighted and scrolled into view in the output data, with the
      * constraint that made it and the binding it read.  It is a *default* --

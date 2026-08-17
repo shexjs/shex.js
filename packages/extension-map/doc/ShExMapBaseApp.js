@@ -532,6 +532,11 @@ class ShExMapBaseApp extends ShExBaseApp {
     if (session.dbg.error) {
       this.reportMaterializationError(session.dbg.error, "materialization (debugged)");
     } else {
+      // The finished graph replaces what stepping was showing.  Stepping
+      // renders the thread's graph as it grows, so without this the last
+      // step's rendering is still there and the finished one lands beside
+      // it -- two identical copies of the same materialization.
+      this.clearResults();
       this.anchorMaterializationFailures(null, session.materializer.lastReport);
       const generatedGraph = new RdfJs.Store();
       generatedGraph.addQuads(session.dbg.quads);
