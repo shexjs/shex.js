@@ -287,10 +287,16 @@ describe("A ShEx validator", function () {
                       if (params.results !== "api") {
                         // REGEN=1 rewrites the reference file when the (canonicalized) result
                         // differs, so reference diffs can be reviewed with ediff and committed.
+                        // Written the way the loader above reads it -- relative to the data and
+                        // the schema.  A result carries the absolute file: URL of wherever this
+                        // checkout happens to be, and writing that down makes a reference that
+                        // only holds on the machine that wrote it (six of them did, and CI said
+                        // so on every run).
                         const regen = "REGEN" in process.env && params.valFilePath
                               ? (canonWas, canonNow) => {
                                 if (JSON.stringify(canonNow) !== JSON.stringify(canonWas))
-                                  fs.writeFileSync(params.valFilePath, JSON.stringify(validationResult, null, 2) + "\n");
+                                  fs.writeFileSync(params.valFilePath, JSON.stringify(
+                                    relativizeResults(validationResult, schemaURL, dataURL), null, 2) + "\n");
                                 return true;
                               }
                               : null;
@@ -374,6 +380,45 @@ function parseJSONFile(filename, mapFunction) {
 
 // Not sure this is needed when everything's working but I have hunch it makes
 // error handling a little more graceful.
+/** The inverse of the loader's "resolve relative URLs in results file": turn
+ * a result's absolute file: URLs back into references relative to the schema
+ * or the data, so a written reference says what it means on any checkout.
+ *
+ * Same key list, and the same choice of base per key, or the round trip
+ * wouldn't be one.
+ */
+const SCHEMA_KEYS = ["shape", "reference", "valueExprRef"];
+const DATA_KEYS = ["node", "focus", "subject", "predicate", "object"];
+
+function relativizeResults (object, schemaURL, dataURL) {
+  const under = (url, base) => {
+    const dir = base.substring(0, base.lastIndexOf("/") + 1);
+    return typeof url === "string" && url.startsWith(dir) && url.length > dir.length
+      ? url.substring(dir.length) : null;
+  };
+  const walk = value => {
+    if (Array.isArray(value))
+      return value.map(walk);
+    if (value === null || typeof value !== "object")
+      return value;
+    const out = Array.isArray(value) ? [] : {};
+    for (const key of Object.keys(value)) {
+      const item = value[key];
+      const base = SCHEMA_KEYS.indexOf(key) !== -1 ? schemaURL
+            : DATA_KEYS.indexOf(key) !== -1 ? dataURL : null;
+      if (base !== null && typeof item === "string" && !item.startsWith("_:")) {
+        out[key] = under(item, base) || item;
+      } else if (key === "values" && Array.isArray(item)) {
+        out[key] = item.map(v => typeof v === "string" ? (under(v, dataURL) || v) : walk(v));
+      } else {
+        out[key] = walk(item);
+      }
+    }
+    return out;
+  };
+  return walk(object);
+}
+
 function canonicalizeJ (object, map) {
   "use strict";
   for (const key in object) {
