@@ -2657,7 +2657,11 @@ class EditorSupport {
           perDocument.forEach(d => {
             const anchored = d.mapped.pairs.find(p => p.anchors && p.anchors.subject);
             if (anchored)
-              dataOf(d.at).push(Object.assign({severity: "error", message}, anchored.anchors.subject));
+              // a bnode subject is a whole [ property list ]; mark where it
+              // opens rather than every triple written inside it
+              dataOf(d.at).push(Object.assign(
+                {severity: "error", message},
+                (anchored.anchors.subjectParts || [anchored.anchors.subject])[0]));
           });
         } // else: expected failure -- no error marks
       });
