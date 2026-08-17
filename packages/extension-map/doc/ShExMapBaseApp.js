@@ -304,6 +304,59 @@ class ShExMapBaseApp extends ShExBaseApp {
       ).join("\n");
   }
 
+  /** The same statement bindingStateText makes, written on the bindings
+   * themselves: which this thread has consumed, and which frame its cursor
+   * is in.
+   *
+   * The text block says it by frame, which is how the materializer thinks;
+   * a reader is looking at the tree they wrote, where a frame is not a
+   * thing -- one written binding can be read by several (see
+   * normalizeBindingTreeWithOrigins).  So a binding is marked consumed if
+   * any frame consumed it, and the title says which; the cursor frame's
+   * unconsumed bindings are marked as what this thread would read next.
+   */
+  annotateBindingState (thread) {
+    const pane = this.editorSupport && this.editorSupport.panes
+          && this.editorSupport.panes.bindings;
+    if (!pane)
+      return;
+    const origins = this.bindingOrigins;
+    if (!origins || !thread || !thread.used) {
+      pane.annotate(null);
+      return;
+    }
+    const text = this.Caches.bindings.selection.val();
+    const used = new Set(thread.used);
+    // one entry per place a binding is written, gathering the frames that
+    // read it -- the same grouping the hover regions use
+    const byPath = new Map();
+    origins.forEach((frameOrigin, frame) => {
+      Object.keys(frameOrigin || {}).forEach(variable => {
+        const path = frameOrigin[variable];
+        const key = path.join(" ");
+        if (!byPath.has(key))
+          byPath.set(key, {path, variable, consumed: [], frames: []});
+        const at = byPath.get(key);
+        at.frames.push(frame);
+        if (used.has(frame + " " + variable))
+          at.consumed.push(frame);
+      });
+    });
+    const marks = [];
+    byPath.forEach(({path, variable, consumed, frames}) => {
+      const cursorHere = frames.indexOf(thread.frame) !== -1;
+      if (consumed.length === 0 && !cursorHere)
+        return;
+      const cls = consumed.length ? "shexjs-binding-consumed" : "shexjs-binding-cursor";
+      const title = consumed.length
+            ? "consumed by this thread, in frame " + consumed.join(", ")
+            : "in frame " + thread.frame + ", where this thread's cursor is -- not consumed";
+      this.bindingRangesAt(text, path).forEach(
+        range => marks.push({from: range.from, to: range.to, cls, title}));
+    });
+    pane.annotate(marks);
+  }
+
   /** render one thread's aspects in #results: its binding-tree state and its
    * generated graph -- accepted threads get the validating
    * NestedTurtleWriter rendering (as at end of materialization), partial
@@ -315,6 +368,7 @@ class ShExMapBaseApp extends ShExBaseApp {
     const bindingState = this.bindingStateText(thread);
     if (bindingState)
       this.resultsWidget.append($("<pre/>", {class: "dbgBindingState"}).text(bindingState));
+    this.annotateBindingState(thread);
     const store = new RdfJs.Store();
     store.addQuads(thread.quads);
     if (complete && session) {
@@ -391,6 +445,10 @@ class ShExMapBaseApp extends ShExBaseApp {
       return;
     this.debugSession = null;
     session.pane.clearHighlights();
+    const bindingsPane = this.editorSupport && this.editorSupport.panes
+          && this.editorSupport.panes.bindings;
+    if (bindingsPane)
+      bindingsPane.annotate(null);
     $("#debugControls").hide();
     $("#debugMaterialize").show();
     $("#dbgThreads").empty();

@@ -531,10 +531,115 @@ if (!TEST_browser) {
       }
     });
 
+    /* What #dbgBindingState says, written on the bindings themselves.  The
+     * text block says it by frame, which is how the materializer thinks; a
+     * reader is looking at the tree they wrote, where one binding can be
+     * read by several frames and a frame is not a thing you can point at. */
+    it("should mark the bindings a stepping thread has consumed", async function () {
+      this.timeout(60000);
+      const pick = async (selector, label) => {
+        const li = $(selector).filter((_, elt) => $(elt).text() === label);
+        expect(li.length, label + " in " + selector).to.equal(1);
+        if (li.hasClass("selected"))
+          return;
+        li.trigger("click");
+        await shared.promise;
+      };
+      await pick("#inputSchema .manifest li", "BPPatient 2 levels");
+      await pick("#inputData .passes li", "simple");
+      $("#validate").trigger("click");
+      await shared.promise;
+      // a materialization first, so the origins are known
+      $("#materialize").trigger("click");
+      await shared.promise;
+
+      const app = shared.app;
+      const pane = shared.Caches.editorSupport.panes.bindings;
+      expect(pane, "a bindings pane to annotate").to.exist;
+
+      const drawn = [];
+      const was = pane.annotate;
+      pane.annotate = marks => { drawn.push(marks); return was.call(pane, marks); };
+      try {
+        $("#debugMaterialize").trigger("click");
+        await shared.promise;
+        // step until a thread has consumed something
+        // the marks and the text block are two renderings of one hover, so
+        // take them together or they describe different threads
+        const consumedIn = ms => (ms || []).filter(m => m.cls === "shexjs-binding-consumed");
+        let marks = null, said = "";
+        for (let i = 0; i < 60 && !consumedIn(marks).length; ++i) {
+          $("#dbgInto").trigger("click");
+          const buttons = $("#dbgThreads button").get();
+          for (const b of buttons) {
+            drawn.length = 0;
+            $(b).trigger("mouseenter");
+            const got = drawn.length ? drawn[drawn.length - 1] : null;
+            if (consumedIn(got).length || !marks) {
+              marks = got;
+              said = $(".dbgBindingState").text();
+            }
+            if (consumedIn(marks).length)
+              break;
+          }
+        }
+        expect(marks, "the thread's state was drawn on the bindings").to.be.an("array");
+        expect(marks.length, "something marked").to.be.above(0);
+
+        const bindingsText = $("#bindings1 textarea").first().val();
+        const consumed = marks.filter(m => m.cls === "shexjs-binding-consumed");
+        expect(consumed.length, "at least one binding consumed").to.be.above(0);
+        consumed.forEach(m => {
+          expect(m.to, "inside the document").to.be.at.most(bindingsText.length);
+          expect(m.title, "says which frame consumed it").to.include("frame");
+        });
+        // the marks land on bindings, not on arbitrary text
+        const names = marks.map(m => bindingsText.substring(m.from, m.to));
+        expect(names.some(s => s.indexOf("BPDAM-") !== -1), "a variable name is marked")
+          .to.equal(true);
+
+        // ...saying what the text block says.  It spells variables as the
+        // output schema does (bp:name) and these are the JSON keys they were
+        // written as, so the two are compared by what they claim rather than
+        // by how they spell it: a tick there, a consumed mark here.
+        expect(said, "the text block is still there").to.include("binding tree");
+        const ticks = (said.match(/✓/g) || []).length;
+        expect(ticks, "the text ticks what the marks mark").to.be.above(0);
+        // a binding is marked twice (its name and its value), and a binding
+        // consumed in several frames is ticked once per frame, so the two
+        // counts are not equal -- what must hold is that neither is empty
+        // while the other isn't
+        expect(consumed.length, "marks where the text has ticks").to.be.above(0);
+
+        // stopping takes them down
+        drawn.length = 0;
+        $("#dbgStop").trigger("click");
+        expect(drawn[drawn.length - 1], "withdrawn with the session").to.equal(null);
+      } finally {
+        pane.annotate = was;
+      }
+    });
+
     /* Hovering a binding lights up the schema that claimed it and the data
      * it landed in -- the use case this is all for.  A binding read by
      * several frames stands for all of their triples. */
-    it("should light up the schema and the data from a hover in the bindings", function () {
+    it("should light up the schema and the data from a hover in the bindings", async function () {
+      this.timeout(60000);
+      const pick = async (selector, label) => {
+        const li = $(selector).filter((_, elt) => $(elt).text() === label);
+        expect(li.length, label + " in " + selector).to.equal(1);
+        if (li.hasClass("selected"))
+          return;
+        li.trigger("click");
+        await shared.promise;
+      };
+      await pick("#inputSchema .manifest li", "BPPatient 2 levels");
+      await pick("#inputData .passes li", "simple");
+      $("#validate").trigger("click");
+      await shared.promise;
+      $("#materialize").trigger("click");
+      await shared.promise;
+
       const app = shared.app;
       const panes = shared.Caches.editorSupport.panes;
       expect(panes.bindings, "a bindings pane to hover in").to.exist;

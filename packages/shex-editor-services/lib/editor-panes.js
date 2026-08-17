@@ -197,6 +197,7 @@ function makeResultPane(text, language = "json", opts = {}) {
             codemirror_1.basicSetup,
             exports.languages[language](),
             highlightField,
+            annotationField,
             paneTheme,
             ...dressing,
             view_1.EditorView.editable.of(false),
@@ -225,6 +226,7 @@ function makeResultPane(text, language = "json", opts = {}) {
         clearHighlights() {
             view.dispatch({ effects: setHighlightsEffect.of(view_1.Decoration.none) });
         },
+        annotate(marks) { annotateOn(view, marks); },
         setHoverRegions,
     };
 }
@@ -323,7 +325,42 @@ const highlightField = state_1.StateField.define({
     },
     provide: f => view_1.EditorView.decorations.from(f),
 });
+/** A second, independent decoration layer.
+ *
+ * Highlights belong to the mouse: every hover replaces the whole set and
+ * leaving clears it.  An annotation is a statement about the document that
+ * stays until it is withdrawn -- which bindings a materializer thread has
+ * consumed, say, which a reader wants to keep seeing while they hover
+ * around the panes comparing them.
+ */
+const setAnnotationsEffect = state_1.StateEffect.define();
+const annotationField = state_1.StateField.define({
+    create: () => view_1.Decoration.none,
+    update(deco, tr) {
+        deco = deco.map(tr.changes);
+        for (const e of tr.effects)
+            if (e.is(setAnnotationsEffect))
+                deco = e.value;
+        return deco;
+    },
+    provide: f => view_1.EditorView.decorations.from(f),
+});
+/** the shared body of Pane.annotate; see the interface */
+function annotateOn(view, marks) {
+    const end = view.state.doc.length;
+    const decos = (marks || [])
+        .filter(m => m && m.to > m.from && m.from >= 0 && m.to <= end)
+        .sort((a, b) => a.from - b.from)
+        .map(m => view_1.Decoration.mark({
+        class: m.cls || "shexjs-annotation",
+        attributes: m.title ? { title: m.title } : undefined,
+    }).range(m.from, m.to));
+    view.dispatch({ effects: setAnnotationsEffect.of(view_1.Decoration.set(decos, true)) });
+}
 const paneTheme = view_1.EditorView.baseTheme({
+    ".shexjs-annotation": { borderBottom: "2px solid #7a86c8" },
+    ".shexjs-binding-consumed": { backgroundColor: "#e6f0d8", borderBottom: "2px solid #6a9a3a" },
+    ".shexjs-binding-cursor": { borderBottom: "2px dashed #a8620a" },
     ".shexjs-highlight": { backgroundColor: "#fff3b0" },
     ".shexjs-highlight-match": { backgroundColor: "#c8f0c8" },
     ".shexjs-highlight-fail": { backgroundColor: "#ffcdcd" },
@@ -488,6 +525,7 @@ function makePane(textarea, opts = {}) {
         (0, lint_1.lintGutter)(),
         breakpointExtension,
         highlightField,
+        annotationField,
         paneTheme,
         view_1.EditorView.updateListener.of(update => {
             if (update.docChanged) {
@@ -611,6 +649,7 @@ function makePane(textarea, opts = {}) {
         clearHighlights() {
             view.dispatch({ effects: setHighlightsEffect.of(view_1.Decoration.none) });
         },
+        annotate(marks) { annotateOn(view, marks); },
         setHoverRegions,
         requestMeasure() { view.requestMeasure(); },
         listBreakpoints() {
