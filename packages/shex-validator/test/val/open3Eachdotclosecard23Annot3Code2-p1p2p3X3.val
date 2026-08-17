@@ -1,6 +1,6 @@
 {
   "type": "ShapeTest",
-  "node": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+  "node": "x",
   "shape": "http://a.example/S1",
   "solution": {
     "type": "EachOfSolutions",
@@ -14,7 +14,7 @@
             "solutions": [
               {
                 "type": "TestedTriple",
-                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+                "subject": "x",
                 "predicate": "http://a.example/p1",
                 "object": {
                   "value": "p1-0"
@@ -28,7 +28,7 @@
             "solutions": [
               {
                 "type": "TestedTriple",
-                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+                "subject": "x",
                 "predicate": "http://a.example/p2",
                 "object": {
                   "value": "p2-0"
@@ -42,7 +42,7 @@
             "solutions": [
               {
                 "type": "TestedTriple",
-                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+                "subject": "x",
                 "predicate": "http://a.example/p3",
                 "object": {
                   "value": "p3-0"
@@ -61,7 +61,7 @@
             "solutions": [
               {
                 "type": "TestedTriple",
-                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+                "subject": "x",
                 "predicate": "http://a.example/p1",
                 "object": {
                   "value": "p1-1"
@@ -75,7 +75,7 @@
             "solutions": [
               {
                 "type": "TestedTriple",
-                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+                "subject": "x",
                 "predicate": "http://a.example/p2",
                 "object": {
                   "value": "p2-1"
@@ -89,7 +89,7 @@
             "solutions": [
               {
                 "type": "TestedTriple",
-                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+                "subject": "x",
                 "predicate": "http://a.example/p3",
                 "object": {
                   "value": "p3-1"
@@ -108,7 +108,7 @@
             "solutions": [
               {
                 "type": "TestedTriple",
-                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+                "subject": "x",
                 "predicate": "http://a.example/p1",
                 "object": {
                   "value": "p1-2"
@@ -122,7 +122,7 @@
             "solutions": [
               {
                 "type": "TestedTriple",
-                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+                "subject": "x",
                 "predicate": "http://a.example/p2",
                 "object": {
                   "value": "p2-2"
@@ -136,7 +136,7 @@
             "solutions": [
               {
                 "type": "TestedTriple",
-                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+                "subject": "x",
                 "predicate": "http://a.example/p3",
                 "object": {
                   "value": "p3-2"

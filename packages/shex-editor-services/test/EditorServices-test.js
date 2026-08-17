@@ -345,6 +345,69 @@ describe("EditorServices", function () {
     });
   });
 
+  /* The data pane's half of the same rule.  A term written as a nested
+   * structure -- a blank node's [ property list ], a collection's ( ... ) --
+   * spans everything between its delimiters, which includes whatever the
+   * author wrote in there.  What gets marked is where it opens; the triples
+   * inside carry their own marks. */
+  describe("nested Turtle terms mark their delimiters, not their contents", function () {
+    const nestSchema = [
+      "PREFIX : <http://a.example/>",
+      "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>",
+      "<S> { :addr @<T> }",
+      "<T> { :city xsd:integer }",
+      ""].join("\n");
+    const nestData = [
+      "PREFIX : <http://a.example/>",
+      "<x> :addr [ # inline",
+      '    :city "Y"   # a note',
+      "  ] .",
+      ""].join("\n");
+
+    const schemaParsed = EditorServices.parseShExC(nestSchema, {base});
+    const dataParsed = EditorServices.parseTurtle(nestData, {baseIRI: base});
+    const results = validate(schemaParsed, nestData);
+    const mapped = EditorServices.mapValidationErrors(results, schemaParsed, dataParsed);
+
+    it("should fail, so there is something to mark", function () {
+      expect(results[0].status).to.equal("nonconformant");
+    });
+
+    it("should not stretch a squiggle over the whole property list", function () {
+      mapped.data.forEach(d => {
+        expect(slice(nestData, d), d.message).to.not.include("#");
+        expect(slice(nestData, d), d.message).to.not.include("\n");
+      });
+    });
+
+    it("should mark where the blank node opens", function () {
+      const onBnode = mapped.pairs.filter(
+        p => p.anchors.objectParts && p.data);
+      expect(onBnode.length, "a pair whose object is the property list").to.be.above(0);
+      expect(slice(nestData, onBnode[0].data)).to.equal("[");
+    });
+
+    it("should read a collection as a nested form too", function () {
+      const listSchema = [
+        "PREFIX : <http://a.example/>",
+        "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>",
+        "<S> { :list xsd:integer }",
+        ""].join("\n");
+      const listData = [
+        "PREFIX : <http://a.example/>",
+        "<x> :list ( 1 # one",
+        "  2 ) . # two",
+        ""].join("\n");
+      const sp = EditorServices.parseShExC(listSchema, {base});
+      const dp = EditorServices.parseTurtle(listData, {baseIRI: base});
+      const m = EditorServices.mapValidationErrors(validate(sp, listData), sp, dp);
+      const withParts = m.pairs.filter(p => p.anchors.objectParts);
+      expect(withParts.length, "( ... ) has delimiters like [ ... ] does").to.be.above(0);
+      expect(withParts.map(p => slice(listData, p.anchors.objectParts[0]))).to.include("(");
+      m.data.forEach(d => expect(slice(listData, d), d.message).to.not.include("#"));
+    });
+  });
+
   describe("commentRanges", function () {
     const found = text => EditorServices.commentRanges(text)
           .map(r => text.substring(r.from, r.to));
@@ -421,6 +484,74 @@ describe("EditorServices", function () {
         expect(outer.fields[k].to).to.be.at.most(inner.from);
       });
     });
+
+    /* The synthetic case above pins the mechanism.  This one asks the
+     * question the reader cares about, over a result the validator actually
+     * produced: when the app paints a match, does it paint anything that
+     * belongs to a different match?  A results pane is one long JSON
+     * document in which every nested solution is lexically inside its
+     * parent, so "highlight this triple" has to mean its three members and
+     * not the subtree hanging off them. */
+    describe("over a real validation, with real nesting", function () {
+      const nestSchema = [
+        "PREFIX : <http://a.example/>",
+        "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>",
+        "BASE <http://a.example/>",
+        "<S> { :name xsd:string ; :tag @<T> * }",
+        "<T> { :v . ; :sub @<U> ? }",
+        "<U> { :w . }",
+        ""].join("\n");
+      const nestData = [
+        "PREFIX : <http://a.example/>",
+        '<x> :name "Bob" ; :tag [ :v 1 ; :sub [ :w 9 ] ] , [ :v 2 ] .',
+        ""].join("\n");
+      const schemaParsed = EditorServices.parseShExC(nestSchema, {base});
+      const results = validate(schemaParsed, nestData);
+
+      // the app's own two lines: which objects get a range, and which of
+      // those ranges it paints (ShExBaseApp's ShExResultsRenderer)
+      const {text, ranges} = EditorServices.stringifyWithOffsets(
+        results, o => o && (o.type === "TestedTriple" || results.indexOf(o) !== -1));
+      const tested = ranges.filter(r => r.target && r.target.type === "TestedTriple");
+      const painted = r => r.fields
+            ? ["subject", "predicate", "object"].map(k => r.fields[k]).filter(f => f)
+            : [{from: r.from, to: r.to}];
+
+      it("should conform, so every triple is a match with a range", function () {
+        expect(results[0].status).to.equal("conformant");
+        expect(tested.length, "nested solutions, not just top-level ones").to.be.above(4);
+      });
+
+      it("should paint no part of another triple's match", function () {
+        const overlaps = [];
+        tested.forEach((a, i) => tested.slice(i + 1).forEach(b => {
+          painted(a).forEach(ra => painted(b).forEach(rb => {
+            if (ra.from < rb.to && rb.from < ra.to)
+              overlaps.push(JSON.stringify(text.slice(ra.from, ra.to)).slice(0, 60));
+          }));
+        }));
+        expect(overlaps, "one match's highlight covering another's").to.deep.equal([]);
+      });
+
+      it("should stop at the members and never reach the subtree", function () {
+        tested.forEach(r => painted(r).forEach(range => {
+          const said = text.slice(range.from, range.to);
+          expect(said, "a member, not the solution hanging off it")
+            .to.not.include('"referenced"');
+          expect(said).to.not.include('"TestedTriple"');
+        }));
+      });
+
+      it("should paint a member that says which member it is", function () {
+        tested.forEach(r => {
+          expect(r.fields, "every tested triple has its members located").to.exist;
+          ["subject", "predicate", "object"].forEach(k =>
+            expect(text.slice(r.fields[k].from, r.fields[k].to))
+              .to.match(new RegExp('^"' + k + '": ')));
+        });
+      });
+    });
+
   });
 
   describe("mapValidationErrors", function () {

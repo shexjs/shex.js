@@ -126,7 +126,13 @@ export interface Pane {
   setDiagnostics (diagnostics: Diagnostic[]): void;
   /** highlight ranges with an optional CSS class; scroll: bring the first
    * range into view (default true -- pass false when the user's mouse is in
-   * this pane) */
+   * this pane).
+   *
+   * The *first range given*, not the earliest in the document: a caller
+   * orders them by what a reader wants to see, and for a match that is the
+   * object.  Sorting these by position instead scrolled a Wikidata page to
+   * the entity id at the top of it rather than to the claim that matched,
+   * which is the one thing on screen the reader already knew. */
   highlight (ranges: Range[], cls?: string, opts?: {scroll?: boolean}): void;
   clearHighlights (): void;
   /** replace the set of mouse-over-sensitive ranges; `leave` fires when the
@@ -269,7 +275,9 @@ export function makeResultPane (text: string, language: PaneLanguage = "json",
       view.dispatch({effects: EditorView.scrollIntoView(at, {y: "start"})});
     },
     highlight (ranges: Range[], cls = "shexjs-highlight", opts: {scroll?: boolean} = {}): void {
-      const inRange = (ranges || []).filter(clampRange).sort((a, b) => a.from - b.from);
+      // kept in the order given: Decoration.set sorts what it needs sorted,
+      // and the caller's order is what says where to scroll
+      const inRange = (ranges || []).filter(clampRange);
       const decos = ([] as Range[]).concat(...inRange.map(r => textRanges(view, r)))
             .map((r: Range) => Decoration.mark({class: cls}).range(r.from, r.to));
       view.dispatch({effects: setHighlightsEffect.of(Decoration.set(decos, true))});
@@ -697,7 +705,7 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
         d => d.to >= d.from && d.to <= view.state.doc.length)));
     },
     highlight (ranges: Range[], cls = "shexjs-highlight", opts: {scroll?: boolean} = {}): void {
-      const inRange = (ranges || []).filter(clampRange).sort((a, b) => a.from - b.from);
+      const inRange = (ranges || []).filter(clampRange);   // caller's order: see highlight()
       const decos = ([] as Range[]).concat(...inRange.map(r => textRanges(view, r)))
             .map((r: Range) => Decoration.mark({class: cls}).range(r.from, r.to));
       view.dispatch({effects: setHighlightsEffect.of(Decoration.set(decos, true))});

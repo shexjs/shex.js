@@ -25213,7 +25213,9 @@ function makeResultPane(text, language = "json", opts = {}) {
             view.dispatch({ effects: view_1.EditorView.scrollIntoView(at, { y: "start" }) });
         },
         highlight(ranges, cls = "shexjs-highlight", opts = {}) {
-            const inRange = (ranges || []).filter(clampRange).sort((a, b) => a.from - b.from);
+            // kept in the order given: Decoration.set sorts what it needs sorted,
+            // and the caller's order is what says where to scroll
+            const inRange = (ranges || []).filter(clampRange);
             const decos = [].concat(...inRange.map(r => textRanges(view, r)))
                 .map((r) => view_1.Decoration.mark({ class: cls }).range(r.from, r.to));
             view.dispatch({ effects: setHighlightsEffect.of(view_1.Decoration.set(decos, true)) });
@@ -25599,7 +25601,7 @@ function makePane(textarea, opts = {}) {
             view.dispatch((0, lint_1.setDiagnostics)(view.state, diagnostics.filter(d => d.to >= d.from && d.to <= view.state.doc.length)));
         },
         highlight(ranges, cls = "shexjs-highlight", opts = {}) {
-            const inRange = (ranges || []).filter(clampRange).sort((a, b) => a.from - b.from);
+            const inRange = (ranges || []).filter(clampRange); // caller's order: see highlight()
             const decos = [].concat(...inRange.map(r => textRanges(view, r)))
                 .map((r) => view_1.Decoration.mark({ class: cls }).range(r.from, r.to));
             view.dispatch({ effects: setHighlightsEffect.of(view_1.Decoration.set(decos, true)) });
@@ -25789,10 +25791,14 @@ function parseShExCUncached(text, opts = {}) {
     return Object.assign({ diagnostics }, locateInParsed(text, schema));
 }
 /**
- * The `#`-to-end-of-line comments in a ShExC document.
+ * The `#`-to-end-of-line comments in a ShExC or Turtle document.
  *
- * A `#` only starts one where it isn't inside something that may contain it,
- * which in ShExC is most of the interesting text: an IRI
+ * One rule serves both: they inherit their comments, their IRIs and their
+ * literals from the same place, so a scanner that gets ShExC right gets
+ * Turtle right.
+ *
+ * A `#` only starts a comment where it isn't inside something that may
+ * contain it, which is most of the interesting text: an IRI
  * (`<...EntitySchemaText/E107#>` -- a fragment, not a comment), a string, or
  * a `\#` escape in a local name.  Scanning for those is cheaper than it
  * sounds and much cheaper than getting it wrong.
@@ -26106,13 +26112,31 @@ function uttRange(spans) {
 }
 /** trimRange - drop trailing whitespace from a range (some term sources
  * include following trivia). */
-function trimRange(range, text) {
+function trimRange(range, text, comments = []) {
     if (!range)
         return null;
     let to = range.to;
-    while (to > range.from && /\s/.test(text[to - 1]))
-        --to;
+    for (;;) {
+        const was = to;
+        while (to > range.from && /\s/.test(text[to - 1]))
+            --to;
+        const c = comments.find(r => to - 1 >= r.from && to - 1 < r.to);
+        if (c && c.from >= range.from)
+            to = c.from;
+        if (to === was)
+            break;
+    }
     return to === range.to ? range : { from: range.from, to };
+}
+/** the comments of a parsed document, worked out once and kept */
+const commentsByParse = new WeakMap();
+function commentsOf(parsed) {
+    let got = commentsByParse.get(parsed);
+    if (got === undefined) {
+        got = commentRanges(parsed.text);
+        commentsByParse.set(parsed, got);
+    }
+    return got;
 }
 /** alignQuad - find the parsed quad a validation-result triple denotes */
 function alignQuad(parsed, s, p, o, bnodes) {
@@ -26158,19 +26182,22 @@ function quadAnchors(parsed, quad, text) {
     if (!utt)
         return null;
     // A term whose source form is a nested structure -- a blank node's whole
-    // [ property list ] in Turtle, an entity page's { ... } in JSON -- marks
-    // just its delimiters, so the contents read as their own triples.
+    // [ property list ] or a collection's ( ... ) in Turtle, an entity page's
+    // { ... } in JSON -- marks just its delimiters, so the contents read as
+    // their own triples.  Which also keeps whatever is written between them,
+    // notes included, out of a highlight about the term itself.
+    const PAIRS = { "[": "]", "{": "}", "(": ")" };
     const nested = (range) => !!range && range.to - range.from >= 2 &&
-        ((text[range.from] === "[" && text[range.to - 1] === "]") ||
-            (text[range.from] === "{" && text[range.to - 1] === "}"));
+        PAIRS[text[range.from]] === text[range.to - 1];
     const delims = (range, _term) => nested(range)
         ? [{ from: range.from, to: range.from + 1 }, { from: range.to - 1, to: range.to }]
         : undefined;
-    const subject = trimRange(uttRange(utt.subject), text);
-    const object = trimRange(uttRange(utt.object), text);
+    const comments = commentsOf(parsed);
+    const subject = trimRange(uttRange(utt.subject), text, comments);
+    const object = trimRange(uttRange(utt.object), text, comments);
     return {
         subject,
-        predicate: trimRange(uttRange(utt.predicate), text),
+        predicate: trimRange(uttRange(utt.predicate), text, comments),
         object,
         subjectParts: delims(subject, quad.subject),
         objectParts: delims(object, quad.object),
@@ -26463,7 +26490,12 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed, opts = {}) {
                 const termRanges = tripleAnchors(turtleParsed, triple, turtleParsed.text, bnodes);
                 if (termRanges)
                     Object.assign(anchors, termRanges);
-                dataRange = anchors.object;
+                // where the object is written as a nested structure, mark its
+                // opening delimiter rather than the block: the block is a subgraph
+                // whose triples carry their own marks, and a squiggle stretched over
+                // all of it covers everything the author wrote in between.  The
+                // schema side has always anchored this way (parts[0] above).
+                dataRange = (anchors.objectParts && anchors.objectParts[0]) || anchors.object;
             }
             if (!dataRange && leaf.node !== undefined && leaf.node !== null)
                 dataRange = rangeOfNode(turtleParsed, leaf.node, bnodes);

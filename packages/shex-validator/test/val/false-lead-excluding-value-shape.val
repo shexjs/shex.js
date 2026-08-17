@@ -1,6 +1,6 @@
 {
   "type": "ShapeTest",
-  "node": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+  "node": "x",
   "shape": "http://a.example.org/S",
   "solution": {
     "type": "EachOfSolutions",
@@ -17,12 +17,12 @@
             "solutions": [
               {
                 "type": "TestedTriple",
-                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+                "subject": "x",
                 "predicate": "http://a.example/a",
-                "object": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x1",
+                "object": "x1",
                 "referenced": {
                   "type": "ShapeTest",
-                  "node": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x1",
+                  "node": "x1",
                   "shape": "http://a.example.org/T1",
                   "solution": {
                     "type": "TripleConstraintSolutions",
@@ -31,12 +31,12 @@
                     "solutions": [
                       {
                         "type": "TestedTriple",
-                        "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x1",
+                        "subject": "x1",
                         "predicate": "http://a.example/b",
-                        "object": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/y1",
+                        "object": "y1",
                         "referenced": {
                           "type": "ShapeTest",
-                          "node": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/y1",
+                          "node": "y1",
                           "shape": "http://a.example.org/T3",
                           "solution": {
                             "type": "TripleConstraintSolutions",
@@ -44,7 +44,7 @@
                             "solutions": [
                               {
                                 "type": "TestedTriple",
-                                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/y1",
+                                "subject": "y1",
                                 "predicate": "http://a.example/c",
                                 "object": {
                                   "value": "1",
@@ -61,12 +61,12 @@
               },
               {
                 "type": "TestedTriple",
-                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+                "subject": "x",
                 "predicate": "http://a.example/a",
-                "object": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x3",
+                "object": "x3",
                 "referenced": {
                   "type": "ShapeTest",
-                  "node": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x3",
+                  "node": "x3",
                   "shape": "http://a.example.org/T1",
                   "solution": {
                     "type": "TripleConstraintSolutions",
@@ -75,12 +75,12 @@
                     "solutions": [
                       {
                         "type": "TestedTriple",
-                        "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x3",
+                        "subject": "x3",
                         "predicate": "http://a.example/b",
-                        "object": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/y3",
+                        "object": "y3",
                         "referenced": {
                           "type": "ShapeTest",
-                          "node": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/y3",
+                          "node": "y3",
                           "shape": "http://a.example.org/T3",
                           "solution": {
                             "type": "TripleConstraintSolutions",
@@ -88,7 +88,7 @@
                             "solutions": [
                               {
                                 "type": "TestedTriple",
-                                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/y3",
+                                "subject": "y3",
                                 "predicate": "http://a.example/c",
                                 "object": {
                                   "value": "3",
@@ -118,12 +118,12 @@
                     "solutions": [
                       {
                         "type": "TestedTriple",
-                        "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+                        "subject": "x",
                         "predicate": "http://a.example/a",
-                        "object": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x2",
+                        "object": "x2",
                         "referenced": {
                           "type": "ShapeTest",
-                          "node": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x2",
+                          "node": "x2",
                           "shape": "http://a.example.org/T2",
                           "solution": {
                             "type": "TripleConstraintSolutions",
@@ -132,12 +132,12 @@
                             "solutions": [
                               {
                                 "type": "TestedTriple",
-                                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x2",
+                                "subject": "x2",
                                 "predicate": "http://a.example/b",
-                                "object": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/y2",
+                                "object": "y2",
                                 "referenced": {
                                   "type": "ShapeTest",
-                                  "node": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/y2",
+                                  "node": "y2",
                                   "shape": "http://a.example.org/T4",
                                   "solution": {
                                     "type": "TripleConstraintSolutions",
@@ -145,7 +145,7 @@
                                     "solutions": [
                                       {
                                         "type": "TestedTriple",
-                                        "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/y2",
+                                        "subject": "y2",
                                         "predicate": "http://a.example/d",
                                         "object": {
                                           "value": "2",
@@ -172,9 +172,9 @@
             "solutions": [
               {
                 "type": "TestedTriple",
-                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+                "subject": "x",
                 "predicate": "http://a.example/b",
-                "object": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x4"
+                "object": "x4"
               }
             ]
           }

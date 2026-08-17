@@ -1,6 +1,6 @@
 {
   "type": "ShapeTest",
-  "node": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+  "node": "x",
   "shape": "http://a.example.org/S",
   "solution": {
     "type": "EachOfSolutions",
@@ -23,7 +23,7 @@
             "solutions": [
               {
                 "type": "TestedTriple",
-                "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+                "subject": "x",
                 "predicate": "http://a.example/a",
                 "object": {
                   "value": "1",
@@ -70,7 +70,7 @@
                     "solutions": [
                       {
                         "type": "TestedTriple",
-                        "subject": "file:///Users/eric/checkouts/shexSpec/shexTest/validation/x",
+                        "subject": "x",
                         "predicate": "http://a.example/a",
                         "object": {
                           "value": "3",

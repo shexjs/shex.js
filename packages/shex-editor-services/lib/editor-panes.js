@@ -213,7 +213,9 @@ function makeResultPane(text, language = "json", opts = {}) {
             view.dispatch({ effects: view_1.EditorView.scrollIntoView(at, { y: "start" }) });
         },
         highlight(ranges, cls = "shexjs-highlight", opts = {}) {
-            const inRange = (ranges || []).filter(clampRange).sort((a, b) => a.from - b.from);
+            // kept in the order given: Decoration.set sorts what it needs sorted,
+            // and the caller's order is what says where to scroll
+            const inRange = (ranges || []).filter(clampRange);
             const decos = [].concat(...inRange.map(r => textRanges(view, r)))
                 .map((r) => view_1.Decoration.mark({ class: cls }).range(r.from, r.to));
             view.dispatch({ effects: setHighlightsEffect.of(view_1.Decoration.set(decos, true)) });
@@ -599,7 +601,7 @@ function makePane(textarea, opts = {}) {
             view.dispatch((0, lint_1.setDiagnostics)(view.state, diagnostics.filter(d => d.to >= d.from && d.to <= view.state.doc.length)));
         },
         highlight(ranges, cls = "shexjs-highlight", opts = {}) {
-            const inRange = (ranges || []).filter(clampRange).sort((a, b) => a.from - b.from);
+            const inRange = (ranges || []).filter(clampRange); // caller's order: see highlight()
             const decos = [].concat(...inRange.map(r => textRanges(view, r)))
                 .map((r) => view_1.Decoration.mark({ class: cls }).range(r.from, r.to));
             view.dispatch({ effects: setHighlightsEffect.of(view_1.Decoration.set(decos, true)) });
