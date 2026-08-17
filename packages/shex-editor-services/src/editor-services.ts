@@ -273,6 +273,54 @@ function parseShExCUncached (text: string, opts: ParseShExCOptions = {}): Parsed
   return Object.assign({diagnostics}, locateInParsed(text, schema));
 }
 
+/**
+ * The `#`-to-end-of-line comments in a ShExC document.
+ *
+ * A `#` only starts one where it isn't inside something that may contain it,
+ * which in ShExC is most of the interesting text: an IRI
+ * (`<...EntitySchemaText/E107#>` -- a fragment, not a comment), a string, or
+ * a `\#` escape in a local name.  Scanning for those is cheaper than it
+ * sounds and much cheaper than getting it wrong.
+ */
+export function commentRanges (text: string): Range[] {
+  const out: Range[] = [];
+  const n = text.length;
+  let i = 0;
+  while (i < n) {
+    const c = text[i];
+    if (c === "\\") { i += 2; continue; }          // an escape hides what follows
+    if (c === "<") {
+      // an IRIREF holds no whitespace, so a `<` with no `>` before the line
+      // ends is a less-than or a typo rather than the start of one
+      const close = text.indexOf(">", i + 1);
+      const nl = text.indexOf("\n", i + 1);
+      i = close !== -1 && (nl === -1 || close < nl) ? close + 1 : i + 1;
+      continue;
+    }
+    if (c === '"' || c === "'") {
+      const q = text.substr(i, 3) === c + c + c ? c + c + c : c;
+      let j = i + q.length;
+      while (j < n) {
+        if (text[j] === "\\") { j += 2; continue; }
+        if (text.startsWith(q, j)) { j += q.length; break; }
+        if (q.length === 1 && text[j] === "\n") break;   // unterminated: don't run away
+        ++j;
+      }
+      i = j;
+      continue;
+    }
+    if (c === "#") {
+      const nl = text.indexOf("\n", i);
+      const to = nl === -1 ? n : nl;
+      out.push({from: i, to});
+      i = to;
+      continue;
+    }
+    ++i;
+  }
+  return out;
+}
+
 /** locateInParsed - range lookups over an ALREADY-parsed schema (e.g. the
  * web apps' cache.parsed, whose expression objects are the ones validation
  * errors reference by identity -- @shexjs/loader's import-merging makes a
@@ -280,6 +328,36 @@ function parseShExCUncached (text: string, opts: ParseShExCOptions = {}): Parsed
  */
 export function locateInParsed (text: string, schema: SchemaWithMeta | null): LocatedSchema {
   const starts = lineOffsets(text);
+  // Whitespace and comments are both trivia: an anchor that keeps a
+  // constraint's delimiters and drops its nested constraints has no more
+  // business painting the note somebody left between them than the newline.
+  const comments = commentRanges(text);
+  const commentAt = (at: number): Range | null =>
+    comments.find(c => at >= c.from && at < c.to) || null;
+  /** the first position at or after `at` that is neither space nor comment */
+  const afterTrivia = (at: number, limit: number): number => {
+    let i = at;
+    for (;;) {
+      while (i < limit && /\s/.test(text[i]))
+        ++i;
+      const c = i < limit ? commentAt(i) : null;
+      if (c === null || c.to > limit)
+        return i;
+      i = c.to;
+    }
+  };
+  /** the first position at or before `at` with only trivia between them */
+  const beforeTrivia = (at: number, limit: number): number => {
+    let i = at;
+    for (;;) {
+      while (i > limit && /\s/.test(text[i - 1]))
+        --i;
+      const c = i > limit ? commentAt(i - 1) : null;
+      if (c === null || c.from < limit)
+        return i;
+      i = c.from;
+    }
+  };
   const tcRange = (tc: any): Range | null =>
     schema && schema._exprLocations
       ? yyllocToRange(schema._exprLocations.get(tc), starts)
@@ -294,8 +372,14 @@ export function locateInParsed (text: string, schema: SchemaWithMeta | null): Lo
           ? nestedConstraintExtent(tc, schema._exprLocations, starts) : null;
     if (nested && nested.from > range.from && nested.from <= range.to) {
       let to = nested.from;
-      while (to > range.from && /[\s{]/.test(text[to - 1]))
-        --to;
+      for (;;) {
+        const was = to;
+        to = beforeTrivia(to, range.from);
+        while (to > range.from && text[to - 1] === "{")
+          --to;
+        if (to === was)
+          break;
+      }
       if (to > range.from)
         return {from: range.from, to};
     }
@@ -311,13 +395,9 @@ export function locateInParsed (text: string, schema: SchemaWithMeta | null): Lo
     if (!nested || !(nested.from > range.from && nested.to <= range.to))
       return [range];
     const parts: Range[] = [];
-    let headTo = nested.from; // keep the opening brace, drop the whitespace
-    while (headTo > range.from && /\s/.test(text[headTo - 1]))
-      --headTo;
+    const headTo = beforeTrivia(nested.from, range.from); // keep the opening brace
     parts.push(headTo > range.from ? {from: range.from, to: headTo} : range);
-    let tailFrom = nested.to;
-    while (tailFrom < range.to && /\s/.test(text[tailFrom]))
-      ++tailFrom;
+    const tailFrom = afterTrivia(nested.to, range.to);
     if (tailFrom < range.to)
       parts.push({from: tailFrom, to: range.to});
     return parts;
