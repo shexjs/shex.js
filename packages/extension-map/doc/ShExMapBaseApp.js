@@ -540,6 +540,12 @@ class ShExMapBaseApp extends ShExBaseApp {
       // a MaterializationError propagates to the outer catch, which anchors
       // its failures in the output-schema editor pane
       const generatedGraph = await materializer.invoke();
+      // where each (frame, variable) was written, for exact binding
+      // highlighting -- known only once the tree has been flattened, which
+      // materialize() does.  A remote materializer (the worker app) flattens
+      // on the far side of postMessage and has none; bindingRanges falls
+      // back to counting occurrences there, as it always did.
+      this.bindingOrigins = materializer.frameOrigins || null;
       // on success: clear stale error marks, but surface never-bound
       // variables and unreferenced statics as warnings
       this.anchorMaterializationFailures(null, materializer.lastReport);
@@ -717,10 +723,64 @@ class ShExMapBaseApp extends ShExBaseApp {
     }
   }
 
+  /** the bindings pane's text, parsed for positions -- one parse per text,
+   * since hovering asks repeatedly and the text rarely changes */
+  locatedBindings (text) {
+    if (!this._locatedBindings || this._locatedBindings.text !== text)
+      this._locatedBindings = {text, loc: ShExWebApp.EditorServices.locateJsonText(text)};
+    return this._locatedBindings.loc;
+  }
+
+  /** what to light up for the binding written at `path`: the variable that
+   * names it and the value under it.  The value of a literal binding is
+   * `{"value": "Sue"}`, and what a reader is looking at there is "Sue". */
+  bindingRangesAt (text, path) {
+    const loc = this.locatedBindings(text);
+    const out = [];
+    const name = loc.nameAt(path);
+    if (name)
+      out.push(name);
+    const value = loc.at(path.concat(["value"])) || loc.at(path);
+    if (value)
+      out.push(value);
+    return out;
+  }
+
+  /** Where a binding was written, exactly.
+   *
+   * The materializer flattens the binding tree into a sequence of frames,
+   * and the two do not line up: a binding written once beside a list of
+   * repeated groups is distributed into every frame those groups produce,
+   * so the third occurrence of a variable in the text is not frame 3's.
+   * frameOrigins says which path each (frame, variable) came from, and the
+   * pane's own JSON grammar says where that path is.
+   *
+   * Without origins -- the worker app materializes across postMessage --
+   * this falls back to counting occurrences, which is what it always did.
+   */
+  bindingRanges (text, variable, frame) {
+    const origins = this.bindingOrigins;
+    if (!origins)
+      return this.variableRanges(text, variable, frame);
+    const paths = (frame === null || frame === undefined
+                   ? origins.map(o => o && o[variable])
+                   : [(origins[frame] || {})[variable]]).filter(path => path);
+    if (paths.length === 0)
+      return this.variableRanges(text, variable, frame);
+    const seen = new Set();
+    return paths.flatMap(path => {
+      const key = path.join(" ");
+      if (seen.has(key))
+        return [];
+      seen.add(key);
+      return this.bindingRangesAt(text, path);
+    });
+  }
+
   /** ranges of a variable's occurrences in the bindings (or statics) pane
    * text: the JSON keys naming it.  A variable bound in several frames has
    * several occurrences; `frame` picks one when the counts line up, else
-   * they all highlight. */
+   * they all highlight.  Statics have no frames, and it is exact for them. */
   variableRanges (text, variable, frame) {
     const key = JSON.stringify(variable);
     const found = [];
@@ -761,7 +821,7 @@ class ShExMapBaseApp extends ShExBaseApp {
       if (bindingsPane)
         bindingsPane.highlight(
           group.filter(p => !p.statics).flatMap(
-            p => p.variables.flatMap(v => this.variableRanges(bindingsText, v, p.frame))),
+            p => p.variables.flatMap(v => this.bindingRanges(bindingsText, v, p.frame))),
           cls, {scroll: hoveredPane !== bindingsPane});
       if (staticsPane)
         staticsPane.highlight(
@@ -807,7 +867,32 @@ class ShExMapBaseApp extends ShExBaseApp {
           byVariable.set(v, []);
         byVariable.get(v).push(p);
       }));
+      const origins = wantStatics ? null : this.bindingOrigins;
       byVariable.forEach((group, variable) => {
+        if (origins) {
+          // one region per place this binding was written, standing for
+          // every frame that reads it -- a binding distributed across
+          // repeated groups is one piece of text and several frames
+          const byPath = new Map();
+          origins.forEach((frameOrigin, frame) => {
+            const path = frameOrigin && frameOrigin[variable];
+            if (!path)
+              return;
+            const key = path.join(" ");
+            if (!byPath.has(key))
+              byPath.set(key, {path, frames: new Set()});
+            byPath.get(key).frames.add(frame);
+          });
+          if (byPath.size > 0) {
+            byPath.forEach(({path, frames}) => {
+              const forFrames = group.filter(p => frames.has(p.frame));
+              this.bindingRangesAt(text, path).forEach(r =>
+                regions.push({from: r.from, to: r.to,
+                              enter: () => show(forFrames.length ? forFrames : group, pane)}));
+            });
+            return;
+          }
+        }
         this.variableRanges(text, variable, null).forEach((r, occurrence) => {
           // an occurrence highlights the triples of the frame it belongs to
           // when the frames line up one-to-one with the occurrences

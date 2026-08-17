@@ -73,46 +73,73 @@ class MaterializationError extends Error {
  * the tree into a linear input tape for the NFA.
  */
 function normalizeBindingTree(tree) {
-    return walk(Array.isArray(tree) ? tree : [tree]).frames;
-    function walk(node) {
+    return normalizeBindingTreeWithOrigins(tree).frames;
+}
+/**
+ * The same flattening, and where each binding came from in the tree.
+ *
+ * `origins[i][varName]` is the path to that binding in the *original* JSON
+ * -- ["1", 0, "http://…#name"] and so on -- which is the only way back: the
+ * frames are copies, and distribution means one written binding can appear
+ * in several of them (bp:name beside a list of repeated groups lands in
+ * every frame those groups produce).  A UI that wants to point at the
+ * binding a triple came from needs the path, not the value.
+ */
+function normalizeBindingTreeWithOrigins(tree) {
+    const walked = walk(tree, []);
+    return { frames: walked.frames, origins: walked.origins };
+    function walk(node, path) {
         if (!Array.isArray(node)) {
             const counts = {};
-            for (const k of Object.keys(node))
+            const origin = {};
+            for (const k of Object.keys(node)) {
                 counts[k] = 1;
-            return { frames: [Object.assign({}, node)], leaf: true, counts };
+                origin[k] = path.concat([k]);
+            }
+            return { frames: [Object.assign({}, node)], origins: [origin], leaf: true, counts };
         }
-        const kids = node.map(walk);
+        const kids = node.map((kid, i) => walk(kid, path.concat([i])));
         const counts = {};
         kids.forEach((kid) => {
             for (const k of Object.keys(kid.counts))
                 counts[k] = (counts[k] || 0) + kid.counts[k];
         });
         if (!kids.some((kid) => !kid.leaf)) // plain sequence of frames
-            return { frames: [].concat.apply([], kids.map((kid) => kid.frames)), leaf: false, counts };
+            return { frames: [].concat.apply([], kids.map((kid) => kid.frames)),
+                origins: [].concat.apply([], kids.map((kid) => kid.origins)),
+                leaf: false, counts };
         // distribute each singleton binding from leaf kids into array kids' frames
         const shared = {};
+        const sharedOrigin = {};
         const ordered = [];
         kids.forEach((kid) => {
             if (kid.leaf) {
                 const rest = {};
+                const restOrigin = {};
                 for (const [k, v] of Object.entries(kid.frames[0])) {
-                    if (counts[k] === 1)
+                    if (counts[k] === 1) {
                         shared[k] = v;
-                    else
+                        sharedOrigin[k] = kid.origins[0][k];
+                    }
+                    else {
                         rest[k] = v;
+                        restOrigin[k] = kid.origins[0][k];
+                    }
                 }
                 if (Object.keys(rest).length > 0)
-                    ordered.push({ frames: [rest], leaf: true });
+                    ordered.push({ frames: [rest], origins: [restOrigin], leaf: true });
             }
             else {
                 ordered.push(kid);
             }
         });
         const frames = [];
-        ordered.forEach((kid) => kid.frames.forEach((frame) => {
+        const origins = [];
+        ordered.forEach((kid) => kid.frames.forEach((frame, i) => {
             frames.push(kid.leaf ? frame : Object.assign({}, shared, frame));
+            origins.push(kid.leaf ? kid.origins[i] : Object.assign({}, sharedOrigin, kid.origins[i]));
         }));
-        return { frames, leaf: false, counts };
+        return { frames, origins, leaf: false, counts };
     }
 }
 /** cursorGet - immutable lookup in the frame sequence.
@@ -195,8 +222,9 @@ class ThreadedMaterializer {
         this.accepts = null;
         this.chosen = null;
         this.provenance = null;
-        const frames = normalizeBindingTree(bindingTree);
+        const { frames, origins } = normalizeBindingTreeWithOrigins(bindingTree);
         this.frames = frames; // exposed so UIs can render binding-tree state
+        this.frameOrigins = origins; // ...and to point back at where it was written
         const nfa = this._compileShapeExprNFA(shapeLabel || this.schema.start
             || runtimeError("no shape given and no start in schema"));
         const failures = [];
@@ -877,6 +905,7 @@ function tripleConstraints(schema) {
     (schema.shapes || []).forEach(shapeExpr);
     return found;
 }
-module.exports = { ThreadedMaterializer, MaterializerDebugger, normalizeBindingTree,
+module.exports = { ThreadedMaterializer, MaterializerDebugger,
+    normalizeBindingTree, normalizeBindingTreeWithOrigins,
     MaterializationError, tripleConstraints };
 //# sourceMappingURL=ThreadedMaterializer.js.map

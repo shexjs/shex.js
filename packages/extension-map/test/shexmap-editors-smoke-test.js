@@ -445,5 +445,134 @@ if (!TEST_browser) {
           .to.equal(value.quad.subject.value);
       });
     });
+    /* Which binding a triple came from, said exactly.
+     *
+     * The materializer flattens the binding tree into frames, and the two do
+     * not line up: a binding written once beside a list of repeated groups
+     * is distributed into every frame those groups produce.  So counting
+     * occurrences of a variable in the text and calling the nth one "frame
+     * n" is wrong wherever it matters -- which is exactly the tree this
+     * entry has, one bp:name over four readings. */
+    it("should point at the binding a triple actually read, not the nth one", async function () {
+      this.timeout(60000);
+      // its own setup: this asserts about a materialization, and depending on
+      // the one a previous test left behind makes it fail when run alone
+      // ...idempotently: clicking a schema that is already chosen unpicks it
+      const pick = async (selector, label) => {
+        const li = $(selector).filter((_, elt) => $(elt).text() === label);
+        expect(li.length, label + " in " + selector).to.equal(1);
+        if (li.hasClass("selected"))
+          return;
+        li.trigger("click");
+        await shared.promise;
+      };
+      await pick("#inputSchema .manifest li", "BPPatient 2 levels");
+      await pick("#inputData .passes li", "simple");
+      $("#validate").trigger("click");
+      await shared.promise;
+      $("#materialize").trigger("click");
+      await shared.promise;
+
+      const app = shared.app;
+      const bindingsText = $("#bindings1 textarea").first().val();
+      const at = range => bindingsText.substring(range.from, range.to);
+
+      expect(app.bindingOrigins, "the materializer said where each binding was written")
+        .to.be.an("array");
+      const frames = app.bindingOrigins.length;
+      expect(frames, "several frames").to.be.above(1);
+
+      // a variable in every frame, written once: the distributed case
+      const distributed = Object.keys(app.bindingOrigins[0]).find(v =>
+        app.bindingOrigins.every(o => o && o[v]) &&
+        new Set(app.bindingOrigins.map(o => o[v].join(" "))).size === 1);
+      expect(distributed, "a binding shared by every frame").to.exist;
+
+      // it is one place in the text, whichever frame asks
+      const perFrame = app.bindingOrigins.map((_, f) =>
+        app.bindingRanges(bindingsText, distributed, f).map(at).join("|"));
+      expect(new Set(perFrame).size, "one written binding, one answer").to.equal(1);
+      expect(perFrame[0], "the variable and the value under it")
+        .to.include(distributed.replace(/^.*[/#]/, ""));
+      expect(app.bindingRanges(bindingsText, distributed, 0).length,
+             "the name and the value, not just the key").to.equal(2);
+
+      // The case that makes this more than tidying: a binding written fewer
+      // times than there are frames, but more than once -- bp:reports here,
+      // one per report, read by the systolic frame and the diastolic frame
+      // alike.  Counting occurrences sends frame 1 to the *second* report.
+      const shared_ = Object.keys(app.bindingOrigins[0]).find(v => {
+        const places = new Set();
+        app.bindingOrigins.forEach(o => { if (o && o[v]) places.add(o[v].join(" ")); });
+        return places.size > 1 && places.size < frames;
+      });
+      expect(shared_, "a binding read by more frames than it is written").to.exist;
+
+      const exact0 = app.bindingRanges(bindingsText, shared_, 0).map(r => r.from);
+      const exact1 = app.bindingRanges(bindingsText, shared_, 1).map(r => r.from);
+      expect(exact1, "frames 0 and 1 read the same written binding").to.deep.equal(exact0);
+
+      const guess1 = app.variableRanges(bindingsText, shared_, 1).map(r => r.from);
+      expect(guess1, "which counting occurrences got wrong").to.not.deep.equal(exact1);
+      // ...and the exact one is really where that binding is written
+      expect(at(app.bindingRanges(bindingsText, shared_, 1)[0]))
+        .to.equal(JSON.stringify(shared_));
+
+      // and a variable that really is written once per frame gets a
+      // different place for each
+      const perFrameVar = Object.keys(app.bindingOrigins[0]).find(v =>
+        app.bindingOrigins.every(o => o && o[v]) &&
+        new Set(app.bindingOrigins.map(o => o[v].join(" "))).size === frames);
+      if (perFrameVar) {
+        const spots = app.bindingOrigins.map((_, f) =>
+          app.bindingRanges(bindingsText, perFrameVar, f).map(r => r.from).join(","));
+        expect(new Set(spots).size, perFrameVar + " is written once per frame")
+          .to.equal(frames);
+      }
+    });
+
+    /* Hovering a binding lights up the schema that claimed it and the data
+     * it landed in -- the use case this is all for.  A binding read by
+     * several frames stands for all of their triples. */
+    it("should light up the schema and the data from a hover in the bindings", function () {
+      const app = shared.app;
+      const panes = shared.Caches.editorSupport.panes;
+      expect(panes.bindings, "a bindings pane to hover in").to.exist;
+
+      const painted = {schema: null, bindings: null, results: []};
+      const spies = [];
+      const spy = (pane, where) => {
+        const was = pane.highlight;
+        spies.push(() => { pane.highlight = was; });
+        pane.highlight = (ranges, cls, opts) => {
+          if (where === "results") painted.results.push((ranges || []).length);
+          else painted[where] = (ranges || []).slice();
+          return was.call(pane, ranges, cls, opts);
+        };
+      };
+      spy(panes.outputSchema, "schema");
+      spy(panes.bindings, "bindings");
+      shared.Caches.editorSupport.lastMaterialized.forEach(({pane}) => spy(pane, "results"));
+
+      const regions = [];
+      const wasSet = panes.bindings.setHoverRegions;
+      panes.bindings.setHoverRegions = (rs, leave) => {
+        regions.length = 0; regions.push(...(rs || []));
+        return wasSet.call(panes.bindings, rs, leave);
+      };
+      try {
+        app.setMaterializationHovers(shared.Caches.editorSupport.lastMaterialized);
+        expect(regions.length, "the bindings are hoverable").to.be.above(0);
+        regions[0].enter();
+        expect(painted.schema, "the constraint that claimed it").to.be.an("array");
+        expect(painted.schema.length, "schema ranges").to.be.above(0);
+        expect(painted.results.some(n => n > 0), "where it landed in the data").to.equal(true);
+        expect(painted.bindings.length, "and the binding itself").to.be.above(0);
+      } finally {
+        panes.bindings.setHoverRegions = wasSet;
+        spies.forEach(undo => undo());
+      }
+    });
+
   });
 }

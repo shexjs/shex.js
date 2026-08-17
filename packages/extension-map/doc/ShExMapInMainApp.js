@@ -24,6 +24,8 @@ class DirectShExMaterializer {
     this.lastReport = materializer.lastReport; // unbound-variable / unused-static warnings
     this.accepts = materializer.accepts;       // all viable materializations
     this.chosen = materializer.chosen;         // ... and the one returned
+    this.frames = materializer.frames;         // the flattened binding tree
+    this.frameOrigins = materializer.frameOrigins; // ... and where each was written
     time = new Date() - time;
     $("#shapeMap-tabs").attr("title", "last materialization: " + time + " ms");
     $("#results .status").text("rendering results...").show();
