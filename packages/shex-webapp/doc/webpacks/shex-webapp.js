@@ -25197,6 +25197,7 @@ function makeResultPane(text, language = "json", opts = {}) {
             codemirror_1.basicSetup,
             exports.languages[language](),
             highlightField,
+            annotationField,
             paneTheme,
             ...dressing,
             view_1.EditorView.editable.of(false),
@@ -25225,6 +25226,7 @@ function makeResultPane(text, language = "json", opts = {}) {
         clearHighlights() {
             view.dispatch({ effects: setHighlightsEffect.of(view_1.Decoration.none) });
         },
+        annotate(marks) { annotateOn(view, marks); },
         setHoverRegions,
     };
 }
@@ -25323,7 +25325,42 @@ const highlightField = state_1.StateField.define({
     },
     provide: f => view_1.EditorView.decorations.from(f),
 });
+/** A second, independent decoration layer.
+ *
+ * Highlights belong to the mouse: every hover replaces the whole set and
+ * leaving clears it.  An annotation is a statement about the document that
+ * stays until it is withdrawn -- which bindings a materializer thread has
+ * consumed, say, which a reader wants to keep seeing while they hover
+ * around the panes comparing them.
+ */
+const setAnnotationsEffect = state_1.StateEffect.define();
+const annotationField = state_1.StateField.define({
+    create: () => view_1.Decoration.none,
+    update(deco, tr) {
+        deco = deco.map(tr.changes);
+        for (const e of tr.effects)
+            if (e.is(setAnnotationsEffect))
+                deco = e.value;
+        return deco;
+    },
+    provide: f => view_1.EditorView.decorations.from(f),
+});
+/** the shared body of Pane.annotate; see the interface */
+function annotateOn(view, marks) {
+    const end = view.state.doc.length;
+    const decos = (marks || [])
+        .filter(m => m && m.to > m.from && m.from >= 0 && m.to <= end)
+        .sort((a, b) => a.from - b.from)
+        .map(m => view_1.Decoration.mark({
+        class: m.cls || "shexjs-annotation",
+        attributes: m.title ? { title: m.title } : undefined,
+    }).range(m.from, m.to));
+    view.dispatch({ effects: setAnnotationsEffect.of(view_1.Decoration.set(decos, true)) });
+}
 const paneTheme = view_1.EditorView.baseTheme({
+    ".shexjs-annotation": { borderBottom: "2px solid #7a86c8" },
+    ".shexjs-binding-consumed": { backgroundColor: "#e6f0d8", borderBottom: "2px solid #6a9a3a" },
+    ".shexjs-binding-cursor": { borderBottom: "2px dashed #a8620a" },
     ".shexjs-highlight": { backgroundColor: "#fff3b0" },
     ".shexjs-highlight-match": { backgroundColor: "#c8f0c8" },
     ".shexjs-highlight-fail": { backgroundColor: "#ffcdcd" },
@@ -25488,6 +25525,7 @@ function makePane(textarea, opts = {}) {
         (0, lint_1.lintGutter)(),
         breakpointExtension,
         highlightField,
+        annotationField,
         paneTheme,
         view_1.EditorView.updateListener.of(update => {
             if (update.docChanged) {
@@ -25611,6 +25649,7 @@ function makePane(textarea, opts = {}) {
         clearHighlights() {
             view.dispatch({ effects: setHighlightsEffect.of(view_1.Decoration.none) });
         },
+        annotate(marks) { annotateOn(view, marks); },
         setHoverRegions,
         requestMeasure() { view.requestMeasure(); },
         listBreakpoints() {
@@ -25696,6 +25735,7 @@ exports.lineOffsets = lineOffsets;
 exports.yyllocToRange = yyllocToRange;
 exports.sourceExcerpt = sourceExcerpt;
 exports.commentRanges = commentRanges;
+exports.locateJsonText = locateJsonText;
 exports.locateInParsed = locateInParsed;
 exports.mapValidationErrors = mapValidationErrors;
 exports.mapMaterialization = mapMaterialization;
@@ -25703,6 +25743,7 @@ exports.stringifyWithOffsets = stringifyWithOffsets;
 const ShExParser = __importStar(__webpack_require__(4822));
 const emit_1 = __webpack_require__(2388);
 const RdfJs = __importStar(__webpack_require__(4957));
+const lang_json_1 = __webpack_require__(5533);
 const { describeError, relativeIri } = __webpack_require__(546);
 const XSD_STRING = "http://www.w3.org/2001/XMLSchema#string";
 const RDF_LANGSTRING = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
@@ -25850,6 +25891,79 @@ function commentRanges(text) {
         ++i;
     }
     return out;
+}
+/** the tokens Lezer's JSON grammar emits for punctuation, which are nodes
+ * like any other and are not what a path step means */
+const JSON_PUNCTUATION = new Set(["[", "]", "{", "}", ",", ":"]);
+/**
+ * Where each path in a JSON document was written.
+ *
+ * Uses the grammar the JSON panes are edited with, so a range here is
+ * exactly the text the reader is looking at -- and stays right through
+ * whatever they type, since it is re-read from the pane's own text.
+ *
+ * (neighborhood-wikidata has a hand-written locator of its own for entity
+ * pages.  It predates this and serves a package that must not depend on an
+ * editor: a CLI reading Wikibase JSON should not be pulling in CodeMirror.)
+ */
+function locateJsonText(text) {
+    let tree = null;
+    const parsed = () => tree || (tree = lang_json_1.jsonLanguage.parser.parse(text));
+    /** the value nodes of a container, in order, skipping punctuation */
+    const children = (node) => {
+        const out = [];
+        for (let kid = node.firstChild; kid; kid = kid.nextSibling)
+            if (!JSON_PUNCTUATION.has(kid.name))
+                out.push(kid);
+        return out;
+    };
+    /** a Property's value, which follows its name */
+    const valueOf = (property) => {
+        const kids = children(property); // PropertyName, then the value
+        return kids.length > 1 ? kids[kids.length - 1] : null;
+    };
+    const nameText = (property) => {
+        const kids = children(property);
+        if (!kids.length || kids[0].name !== "PropertyName")
+            return null;
+        try {
+            return JSON.parse(text.slice(kids[0].from, kids[0].to));
+        }
+        catch (e) {
+            return null;
+        }
+    };
+    /** walk to the node a path names; `wantName` stops at the member name */
+    const find = (path, wantName) => {
+        let node = children(parsed().topNode)[0] || null; // JsonText's one value
+        for (let i = 0; i < path.length && node; ++i) {
+            const step = path[i];
+            const last = i === path.length - 1;
+            if (typeof step === "number") {
+                if (node.name !== "Array")
+                    return null;
+                node = children(node)[step] || null;
+                if (last && wantName)
+                    return null; // an index has no name
+            }
+            else {
+                if (node.name !== "Object")
+                    return null;
+                const property = children(node).find(kid => kid.name === "Property" && nameText(kid) === step);
+                if (!property)
+                    return null;
+                if (last && wantName)
+                    return children(property)[0] || null;
+                node = valueOf(property);
+            }
+        }
+        return node;
+    };
+    const range = (node) => node ? { from: node.from, to: node.to } : null;
+    return {
+        at: (path) => range(find(path, false)),
+        nameAt: (path) => range(find(path, true)),
+    };
 }
 /** locateInParsed - range lookups over an ALREADY-parsed schema (e.g. the
  * web apps' cache.parsed, whose expression objects are the ones validation
@@ -39478,7 +39592,6 @@ exports.undoSelection = undoSelection;
 (__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
-var __webpack_unused_export__;
 
 
 var json$1 = __webpack_require__(350);
@@ -39545,7 +39658,7 @@ function json() {
 }
 
 exports.json = json;
-__webpack_unused_export__ = jsonLanguage;
+exports.jsonLanguage = jsonLanguage;
 exports.jsonParseLinter = jsonParseLinter;
 
 

@@ -177,6 +177,12 @@ if (!TEST_browser) {
       const session = await shared.promise;
       expect(session, "debug session started: " + $("#results").text().substring(0, 120)).to.exist;
       expect($("#debugControls").css("display")).not.to.equal("none");
+      // laid out like the validator's: steps beside the button that started
+      // them, status on its own row, and 🐞 stands down meanwhile
+      expect($("#dbgStatusRow").css("display"), "the status row").to.not.equal("none");
+      expect($("#debugMaterialize").css("display"), "the bug button").to.equal("none");
+      expect($("#dbgContinue").closest("#dbgStatusRow").length, "steps are not in the status row").to.equal(0);
+      expect($("#dbgStatus").closest("#dbgStatusRow").length, "the status is").to.equal(1);
 
       // step into: pauses at :p (the first constraint)
       $("#dbgInto").trigger("click");
@@ -191,8 +197,35 @@ if (!TEST_browser) {
       $("#dbgContinue").trigger("click");
       expect($("#dbgStatus").text()).to.include("accepted: 2 quads");
       expect($("#debugControls").css("display")).to.equal("none");
+      // a session that ran to the end keeps its last word, which is the
+      // answer: hiding the controls used to take the sentence with them
+      expect($("#dbgStatusRow").css("display"), "how it finished is still readable")
+        .to.not.equal("none");
+      expect($("#debugMaterialize").css("display"), "and 🐞 is offered again").to.not.equal("none");
       expect($("#results").text()).to.include('"one"');
       expect($("#results").text()).to.include('"two"');
+    });
+
+    /* #outactions floats right so the buttons sit at the panel's edge, and
+     * its wrapper held nothing else -- so the wrapper collapsed to no height,
+     * the float escaped it, and the next thing in the page laid out over the
+     * buttons.  jsdom does no layout, so what is checkable here is the shape
+     * that avoids it: the float has a container that establishes a block
+     * formatting context. */
+    it("should keep the materialize buttons inside a box that contains them", function () {
+      const row = $("#outactionsRow");
+      expect(row.length, "#outactions has a named wrapper").to.equal(1);
+      expect(row.find("#outactions").length, "which holds it").to.equal(1);
+      expect(row.css("display"), "a block formatting context contains its floats")
+        .to.equal("flow-root");
+      // and the float is styled from the sheet, not from an inline style
+      // that only this page would carry
+      expect($("#outactions").attr("style") || "", "no inline float").to.not.include("float");
+      expect($("#outactions").css("float")).to.equal("right");
+      ["#materialize", "#debugMaterialize", "#outputShapeMap"].forEach(sel => {
+        expect($(sel).length, sel).to.equal(1);
+        expect($(sel).closest("#outactions").length, sel + " is in the row").to.equal(1);
+      });
     });
 
     it("should stop a session on demand", async function () {
@@ -237,7 +270,23 @@ if (!TEST_browser) {
       $("#dbgInto").trigger("click"); // at :fullName
       $("#dbgInto").trigger("click"); // at :phone; the mbox disjunct is pending
       expect($("#dbgThreads button").length, "pending threads listed").to.be.above(0);
+      // the list lives at the left edge of the target schema pane, not in
+      // the right-floating controls: a thread appearing or dying there
+      // changed the width of the block the step buttons sit in and moved
+      // them out from under the mouse
+      expect($("#dbgThreads").closest("#debugControls").length, "not in the controls").to.equal(0);
+      expect($("#dbgThreads").closest("#output").length, "in the target schema panel").to.equal(1);
+      expect($("#dbgThreads").closest("#dbgThreadsRow").length, "on a row of its own").to.equal(1);
       $("#dbgThreads button").first().trigger("mouseenter"); // partial preview
+      // ...and that preview is written the way the finished graph is.  A
+      // thread paused halfway cannot be validated against the output schema
+      // -- not satisfying it yet is what "partial" means -- but the nesting
+      // needs none of that, and this used to be a flat N3.Writer dump.
+      const partial = $("#results .data").last().data("rawText");
+      expect(partial, "the partial graph rendered").to.be.a("string");
+      expect(partial, "the nested writer's prefixes, not N3's @prefix")
+        .to.match(/^PREFIX /m);
+      expect(partial).to.not.include("@prefix");
       expect($("#results").text()).to.include("thread");
       // ... including the thread's private view of the binding tree
       expect($("#results").text()).to.include("binding tree");
@@ -364,6 +413,14 @@ if (!TEST_browser) {
       $("#materialize").trigger("click");
       await shared.promise;
       const [{pairs, text: resultText}] = shared.Caches.editorSupport.lastMaterialized;
+      // Nested, which is the whole point of rendering it this way: a blank
+      // node's arc has to reach the writer before the triples hanging off
+      // it, and both render paths used to pass the quads through an
+      // N3.Store, whose getQuads() answers in index order.  What came out
+      // was `fhir:subject []` with the subject's triples stranded below.
+      expect(resultText, "the subject nests under the report").to.match(/fhir:subject \[\n/);
+      expect(resultText, "no empty stand-ins").to.not.include("[]");
+      expect(resultText, "and nothing stranded at the top level").to.not.match(/^_:/m);
       // four readings, all shaped alike, with distinct values
       ["100", "60", "101", "61", "110", "70", "111", "71"].forEach(v =>
         expect(resultText, "rendered " + v).to.include('"' + v + '"'));
@@ -403,5 +460,300 @@ if (!TEST_browser) {
           .to.equal(value.quad.subject.value);
       });
     });
+    /* Which binding a triple came from, said exactly.
+     *
+     * The materializer flattens the binding tree into frames, and the two do
+     * not line up: a binding written once beside a list of repeated groups
+     * is distributed into every frame those groups produce.  So counting
+     * occurrences of a variable in the text and calling the nth one "frame
+     * n" is wrong wherever it matters -- which is exactly the tree this
+     * entry has, one bp:name over four readings. */
+    it("should point at the binding a triple actually read, not the nth one", async function () {
+      this.timeout(60000);
+      // its own setup: this asserts about a materialization, and depending on
+      // the one a previous test left behind makes it fail when run alone
+      // ...idempotently: clicking a schema that is already chosen unpicks it
+      const pick = async (selector, label) => {
+        const li = $(selector).filter((_, elt) => $(elt).text() === label);
+        expect(li.length, label + " in " + selector).to.equal(1);
+        if (li.hasClass("selected"))
+          return;
+        li.trigger("click");
+        await shared.promise;
+      };
+      await pick("#inputSchema .manifest li", "BPPatient 2 levels");
+      await pick("#inputData .passes li", "simple");
+      $("#validate").trigger("click");
+      await shared.promise;
+      $("#materialize").trigger("click");
+      await shared.promise;
+
+      const app = shared.app;
+      const bindingsText = $("#bindings1 textarea").first().val();
+      const at = range => bindingsText.substring(range.from, range.to);
+
+      expect(app.bindingOrigins, "the materializer said where each binding was written")
+        .to.be.an("array");
+      const frames = app.bindingOrigins.length;
+      expect(frames, "several frames").to.be.above(1);
+
+      // a variable in every frame, written once: the distributed case
+      const distributed = Object.keys(app.bindingOrigins[0]).find(v =>
+        app.bindingOrigins.every(o => o && o[v]) &&
+        new Set(app.bindingOrigins.map(o => o[v].join(" "))).size === 1);
+      expect(distributed, "a binding shared by every frame").to.exist;
+
+      // it is one place in the text, whichever frame asks
+      const perFrame = app.bindingOrigins.map((_, f) =>
+        app.bindingRanges(bindingsText, distributed, f).map(at).join("|"));
+      expect(new Set(perFrame).size, "one written binding, one answer").to.equal(1);
+      expect(perFrame[0], "the variable and the value under it")
+        .to.include(distributed.replace(/^.*[/#]/, ""));
+      expect(app.bindingRanges(bindingsText, distributed, 0).length,
+             "the name and the value, not just the key").to.equal(2);
+
+      // The case that makes this more than tidying: a binding written fewer
+      // times than there are frames, but more than once -- bp:reports here,
+      // one per report, read by the systolic frame and the diastolic frame
+      // alike.  Counting occurrences sends frame 1 to the *second* report.
+      const shared_ = Object.keys(app.bindingOrigins[0]).find(v => {
+        const places = new Set();
+        app.bindingOrigins.forEach(o => { if (o && o[v]) places.add(o[v].join(" ")); });
+        return places.size > 1 && places.size < frames;
+      });
+      expect(shared_, "a binding read by more frames than it is written").to.exist;
+
+      const exact0 = app.bindingRanges(bindingsText, shared_, 0).map(r => r.from);
+      const exact1 = app.bindingRanges(bindingsText, shared_, 1).map(r => r.from);
+      expect(exact1, "frames 0 and 1 read the same written binding").to.deep.equal(exact0);
+
+      const guess1 = app.variableRanges(bindingsText, shared_, 1).map(r => r.from);
+      expect(guess1, "which counting occurrences got wrong").to.not.deep.equal(exact1);
+      // ...and the exact one is really where that binding is written
+      expect(at(app.bindingRanges(bindingsText, shared_, 1)[0]))
+        .to.equal(JSON.stringify(shared_));
+
+      // and a variable that really is written once per frame gets a
+      // different place for each
+      const perFrameVar = Object.keys(app.bindingOrigins[0]).find(v =>
+        app.bindingOrigins.every(o => o && o[v]) &&
+        new Set(app.bindingOrigins.map(o => o[v].join(" "))).size === frames);
+      if (perFrameVar) {
+        const spots = app.bindingOrigins.map((_, f) =>
+          app.bindingRanges(bindingsText, perFrameVar, f).map(r => r.from).join(","));
+        expect(new Set(spots).size, perFrameVar + " is written once per frame")
+          .to.equal(frames);
+      }
+    });
+
+    /* Triples exist from the moment each is emitted -- the arc into a nested
+     * shape before the shape is entered -- so stepping should show them as
+     * they appear.  Nothing drew them until the session ended or the reader
+     * hovered a thread button, so stepping through a shape showed no output
+     * until the shape was finished. */
+    it("should show the graph as it is built, not only when the shape closes", async function () {
+      this.timeout(60000);
+      // a nested schema, so "before the shape closes" is a real interval:
+      // the little :p/:q one in this describe finishes in two steps
+      const pick = async (selector, label) => {
+        const li = $(selector).filter((_, elt) => $(elt).text() === label);
+        expect(li.length, label + " in " + selector).to.equal(1);
+        if (li.hasClass("selected"))
+          return;
+        li.trigger("click");
+        await shared.promise;
+      };
+      await pick("#inputSchema .manifest li", "BPPatient 2 levels");
+      await pick("#inputData .passes li", "simple");
+      $("#validate").trigger("click");
+      await shared.promise;
+
+      $("#debugMaterialize").trigger("click");
+      await shared.promise;
+      const app = shared.app;
+      try {
+        const rendered = () => {
+          const panes = app.materializationPanes || [];
+          return panes.length ? panes[panes.length - 1].text : "";
+        };
+        // a few steps in, while the session is very much still going
+        for (let i = 0; i < 4 && app.debugSession; ++i)
+          $("#dbgInto").trigger("click");
+        expect(app.debugSession, "the session is still going").to.exist;
+        // the thread being stepped is off the worklist while it is stepped,
+        // so a debugger paused inside it used to find no thread at all --
+        // which is why nothing was drawn and no button appeared for the one
+        // thread the reader was watching
+        const [current] = app.debugSession.dbg.threads();
+        expect(current, "the thread this step was about").to.exist;
+        expect(current.current, "and it says so").to.equal(true);
+        expect(current.emitted, "with the triples it has emitted so far").to.be.above(0);
+        expect($("#dbgThreads button").length, "listed, so it can be re-rendered").to.be.above(0);
+
+        const early = rendered();
+        expect(early, "the graph is on the page already").to.include("PREFIX");
+        expect((app.materializationPanes || []).length, "in a pane of its own").to.be.above(0);
+        const shown = (early.match(/\n/g) || []).length;
+
+        // ...and it keeps up as the thread goes on, rather than waiting for
+        // the shape to close
+        for (let i = 0; i < 8 && app.debugSession; ++i)
+          $("#dbgInto").trigger("click");
+        expect((rendered().match(/\n/g) || []).length, "still showing the graph")
+          .to.be.at.least(shown);
+      } finally {
+        if (app.debugSession)
+          $("#dbgStop").trigger("click");
+      }
+    });
+
+    /* What #dbgBindingState says, written on the bindings themselves.  The
+     * text block says it by frame, which is how the materializer thinks; a
+     * reader is looking at the tree they wrote, where one binding can be
+     * read by several frames and a frame is not a thing you can point at. */
+    it("should mark the bindings a stepping thread has consumed", async function () {
+      this.timeout(60000);
+      const pick = async (selector, label) => {
+        const li = $(selector).filter((_, elt) => $(elt).text() === label);
+        expect(li.length, label + " in " + selector).to.equal(1);
+        if (li.hasClass("selected"))
+          return;
+        li.trigger("click");
+        await shared.promise;
+      };
+      await pick("#inputSchema .manifest li", "BPPatient 2 levels");
+      await pick("#inputData .passes li", "simple");
+      $("#validate").trigger("click");
+      await shared.promise;
+      // a materialization first, so the origins are known
+      $("#materialize").trigger("click");
+      await shared.promise;
+
+      const app = shared.app;
+      const pane = shared.Caches.editorSupport.panes.bindings;
+      expect(pane, "a bindings pane to annotate").to.exist;
+
+      const drawn = [];
+      const was = pane.annotate;
+      pane.annotate = marks => { drawn.push(marks); return was.call(pane, marks); };
+      try {
+        $("#debugMaterialize").trigger("click");
+        await shared.promise;
+        // step until a thread has consumed something
+        // the marks and the text block are two renderings of one hover, so
+        // take them together or they describe different threads
+        const consumedIn = ms => (ms || []).filter(m => m.cls === "shexjs-binding-consumed");
+        let marks = null, said = "";
+        for (let i = 0; i < 60 && !consumedIn(marks).length; ++i) {
+          $("#dbgInto").trigger("click");
+          const buttons = $("#dbgThreads button").get();
+          for (const b of buttons) {
+            drawn.length = 0;
+            $(b).trigger("mouseenter");
+            const got = drawn.length ? drawn[drawn.length - 1] : null;
+            if (consumedIn(got).length || !marks) {
+              marks = got;
+              said = $(".dbgBindingState").text();
+            }
+            if (consumedIn(marks).length)
+              break;
+          }
+        }
+        expect(marks, "the thread's state was drawn on the bindings").to.be.an("array");
+        expect(marks.length, "something marked").to.be.above(0);
+
+        const bindingsText = $("#bindings1 textarea").first().val();
+        const consumed = marks.filter(m => m.cls === "shexjs-binding-consumed");
+        expect(consumed.length, "at least one binding consumed").to.be.above(0);
+        consumed.forEach(m => {
+          expect(m.to, "inside the document").to.be.at.most(bindingsText.length);
+          expect(m.title, "says which frame consumed it").to.include("frame");
+        });
+        // the marks land on bindings, not on arbitrary text
+        const names = marks.map(m => bindingsText.substring(m.from, m.to));
+        expect(names.some(s => s.indexOf("BPDAM-") !== -1), "a variable name is marked")
+          .to.equal(true);
+
+        // ...saying what the text block says.  It spells variables as the
+        // output schema does (bp:name) and these are the JSON keys they were
+        // written as, so the two are compared by what they claim rather than
+        // by how they spell it: a tick there, a consumed mark here.
+        expect(said, "the text block is still there").to.include("binding tree");
+        const ticks = (said.match(/✓/g) || []).length;
+        expect(ticks, "the text ticks what the marks mark").to.be.above(0);
+        // a binding is marked twice (its name and its value), and a binding
+        // consumed in several frames is ticked once per frame, so the two
+        // counts are not equal -- what must hold is that neither is empty
+        // while the other isn't
+        expect(consumed.length, "marks where the text has ticks").to.be.above(0);
+
+        // stopping takes them down
+        drawn.length = 0;
+        $("#dbgStop").trigger("click");
+        expect(drawn[drawn.length - 1], "withdrawn with the session").to.equal(null);
+      } finally {
+        pane.annotate = was;
+      }
+    });
+
+    /* Hovering a binding lights up the schema that claimed it and the data
+     * it landed in -- the use case this is all for.  A binding read by
+     * several frames stands for all of their triples. */
+    it("should light up the schema and the data from a hover in the bindings", async function () {
+      this.timeout(60000);
+      const pick = async (selector, label) => {
+        const li = $(selector).filter((_, elt) => $(elt).text() === label);
+        expect(li.length, label + " in " + selector).to.equal(1);
+        if (li.hasClass("selected"))
+          return;
+        li.trigger("click");
+        await shared.promise;
+      };
+      await pick("#inputSchema .manifest li", "BPPatient 2 levels");
+      await pick("#inputData .passes li", "simple");
+      $("#validate").trigger("click");
+      await shared.promise;
+      $("#materialize").trigger("click");
+      await shared.promise;
+
+      const app = shared.app;
+      const panes = shared.Caches.editorSupport.panes;
+      expect(panes.bindings, "a bindings pane to hover in").to.exist;
+
+      const painted = {schema: null, bindings: null, results: []};
+      const spies = [];
+      const spy = (pane, where) => {
+        const was = pane.highlight;
+        spies.push(() => { pane.highlight = was; });
+        pane.highlight = (ranges, cls, opts) => {
+          if (where === "results") painted.results.push((ranges || []).length);
+          else painted[where] = (ranges || []).slice();
+          return was.call(pane, ranges, cls, opts);
+        };
+      };
+      spy(panes.outputSchema, "schema");
+      spy(panes.bindings, "bindings");
+      shared.Caches.editorSupport.lastMaterialized.forEach(({pane}) => spy(pane, "results"));
+
+      const regions = [];
+      const wasSet = panes.bindings.setHoverRegions;
+      panes.bindings.setHoverRegions = (rs, leave) => {
+        regions.length = 0; regions.push(...(rs || []));
+        return wasSet.call(panes.bindings, rs, leave);
+      };
+      try {
+        app.setMaterializationHovers(shared.Caches.editorSupport.lastMaterialized);
+        expect(regions.length, "the bindings are hoverable").to.be.above(0);
+        regions[0].enter();
+        expect(painted.schema, "the constraint that claimed it").to.be.an("array");
+        expect(painted.schema.length, "schema ranges").to.be.above(0);
+        expect(painted.results.some(n => n > 0), "where it landed in the data").to.equal(true);
+        expect(painted.bindings.length, "and the binding itself").to.be.above(0);
+      } finally {
+        panes.bindings.setHoverRegions = wasSet;
+        spies.forEach(undo => undo());
+      }
+    });
+
   });
 }

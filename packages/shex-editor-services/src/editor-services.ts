@@ -15,6 +15,7 @@
 import * as ShExParser from "@shexjs/parser";
 import {parseTurtle as lezerTurtle} from "lezer-turtle/emit";
 import * as RdfJs from "n3";
+import {jsonLanguage} from "@codemirror/lang-json";
 const {describeError, relativeIri} = require("@shexjs/util/lib/error-messages");
 import type {TermLexer, TermRole} from "@shexjs/util/src/error-messages";
 
@@ -323,6 +324,99 @@ export function commentRanges (text: string): Range[] {
     ++i;
   }
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// JSON, by path
+
+/** A path into a JSON document: member names and array indices, outermost
+ * first -- ["entities", "Q42", 0]. */
+export type JsonPath = (string | number)[];
+
+export interface LocatedJsonText {
+  /** where the value at this path was written, braces and all */
+  at (path: JsonPath): Range | null;
+  /** where the *name* of the member at this path was written, quotes and all */
+  nameAt (path: JsonPath): Range | null;
+}
+
+/** the tokens Lezer's JSON grammar emits for punctuation, which are nodes
+ * like any other and are not what a path step means */
+const JSON_PUNCTUATION = new Set(["[", "]", "{", "}", ",", ":"]);
+
+/**
+ * Where each path in a JSON document was written.
+ *
+ * Uses the grammar the JSON panes are edited with, so a range here is
+ * exactly the text the reader is looking at -- and stays right through
+ * whatever they type, since it is re-read from the pane's own text.
+ *
+ * (neighborhood-wikidata has a hand-written locator of its own for entity
+ * pages.  It predates this and serves a package that must not depend on an
+ * editor: a CLI reading Wikibase JSON should not be pulling in CodeMirror.)
+ */
+export function locateJsonText (text: string): LocatedJsonText {
+  let tree: any = null;
+  const parsed = () => tree || (tree = jsonLanguage.parser.parse(text));
+
+  /** the value nodes of a container, in order, skipping punctuation */
+  const children = (node: any): any[] => {
+    const out: any[] = [];
+    for (let kid = node.firstChild; kid; kid = kid.nextSibling)
+      if (!JSON_PUNCTUATION.has(kid.name))
+        out.push(kid);
+    return out;
+  };
+  /** a Property's value, which follows its name */
+  const valueOf = (property: any): any | null => {
+    const kids = children(property);   // PropertyName, then the value
+    return kids.length > 1 ? kids[kids.length - 1] : null;
+  };
+  const nameText = (property: any): string | null => {
+    const kids = children(property);
+    if (!kids.length || kids[0].name !== "PropertyName")
+      return null;
+    try {
+      return JSON.parse(text.slice(kids[0].from, kids[0].to));
+    } catch (e) {
+      return null;
+    }
+  };
+
+  /** walk to the node a path names; `wantName` stops at the member name */
+  const find = (path: JsonPath, wantName: boolean): any | null => {
+    let node = children(parsed().topNode)[0] || null;   // JsonText's one value
+    for (let i = 0; i < path.length && node; ++i) {
+      const step = path[i];
+      const last = i === path.length - 1;
+      if (typeof step === "number") {
+        if (node.name !== "Array")
+          return null;
+        node = children(node)[step] || null;
+        if (last && wantName)
+          return null;                                  // an index has no name
+      } else {
+        if (node.name !== "Object")
+          return null;
+        const property = children(node).find(
+          kid => kid.name === "Property" && nameText(kid) === step);
+        if (!property)
+          return null;
+        if (last && wantName)
+          return children(property)[0] || null;
+        node = valueOf(property);
+      }
+    }
+    return node;
+  };
+
+  const range = (node: any): Range | null =>
+    node ? {from: node.from, to: node.to} : null;
+
+  return {
+    at: (path: JsonPath) => range(find(path, false)),
+    nameAt: (path: JsonPath) => range(find(path, true)),
+  };
 }
 
 /** locateInParsed - range lookups over an ALREADY-parsed schema (e.g. the

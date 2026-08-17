@@ -51,6 +51,7 @@ exports.lineOffsets = lineOffsets;
 exports.yyllocToRange = yyllocToRange;
 exports.sourceExcerpt = sourceExcerpt;
 exports.commentRanges = commentRanges;
+exports.locateJsonText = locateJsonText;
 exports.locateInParsed = locateInParsed;
 exports.mapValidationErrors = mapValidationErrors;
 exports.mapMaterialization = mapMaterialization;
@@ -58,6 +59,7 @@ exports.stringifyWithOffsets = stringifyWithOffsets;
 const ShExParser = __importStar(require("@shexjs/parser"));
 const emit_1 = require("lezer-turtle/emit");
 const RdfJs = __importStar(require("n3"));
+const lang_json_1 = require("@codemirror/lang-json");
 const { describeError, relativeIri } = require("@shexjs/util/lib/error-messages");
 const XSD_STRING = "http://www.w3.org/2001/XMLSchema#string";
 const RDF_LANGSTRING = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
@@ -205,6 +207,79 @@ function commentRanges(text) {
         ++i;
     }
     return out;
+}
+/** the tokens Lezer's JSON grammar emits for punctuation, which are nodes
+ * like any other and are not what a path step means */
+const JSON_PUNCTUATION = new Set(["[", "]", "{", "}", ",", ":"]);
+/**
+ * Where each path in a JSON document was written.
+ *
+ * Uses the grammar the JSON panes are edited with, so a range here is
+ * exactly the text the reader is looking at -- and stays right through
+ * whatever they type, since it is re-read from the pane's own text.
+ *
+ * (neighborhood-wikidata has a hand-written locator of its own for entity
+ * pages.  It predates this and serves a package that must not depend on an
+ * editor: a CLI reading Wikibase JSON should not be pulling in CodeMirror.)
+ */
+function locateJsonText(text) {
+    let tree = null;
+    const parsed = () => tree || (tree = lang_json_1.jsonLanguage.parser.parse(text));
+    /** the value nodes of a container, in order, skipping punctuation */
+    const children = (node) => {
+        const out = [];
+        for (let kid = node.firstChild; kid; kid = kid.nextSibling)
+            if (!JSON_PUNCTUATION.has(kid.name))
+                out.push(kid);
+        return out;
+    };
+    /** a Property's value, which follows its name */
+    const valueOf = (property) => {
+        const kids = children(property); // PropertyName, then the value
+        return kids.length > 1 ? kids[kids.length - 1] : null;
+    };
+    const nameText = (property) => {
+        const kids = children(property);
+        if (!kids.length || kids[0].name !== "PropertyName")
+            return null;
+        try {
+            return JSON.parse(text.slice(kids[0].from, kids[0].to));
+        }
+        catch (e) {
+            return null;
+        }
+    };
+    /** walk to the node a path names; `wantName` stops at the member name */
+    const find = (path, wantName) => {
+        let node = children(parsed().topNode)[0] || null; // JsonText's one value
+        for (let i = 0; i < path.length && node; ++i) {
+            const step = path[i];
+            const last = i === path.length - 1;
+            if (typeof step === "number") {
+                if (node.name !== "Array")
+                    return null;
+                node = children(node)[step] || null;
+                if (last && wantName)
+                    return null; // an index has no name
+            }
+            else {
+                if (node.name !== "Object")
+                    return null;
+                const property = children(node).find(kid => kid.name === "Property" && nameText(kid) === step);
+                if (!property)
+                    return null;
+                if (last && wantName)
+                    return children(property)[0] || null;
+                node = valueOf(property);
+            }
+        }
+        return node;
+    };
+    const range = (node) => node ? { from: node.from, to: node.to } : null;
+    return {
+        at: (path) => range(find(path, false)),
+        nameAt: (path) => range(find(path, true)),
+    };
 }
 /** locateInParsed - range lookups over an ALREADY-parsed schema (e.g. the
  * web apps' cache.parsed, whose expression objects are the ones validation

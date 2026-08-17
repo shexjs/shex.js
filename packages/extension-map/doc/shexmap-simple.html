@@ -210,13 +210,9 @@
           </div>
         </div>
         <div style="clear:both; padding-top: .5em;">
-          <button id="validate">validate (ctl-enter)</button> <button id="debugValidate" title="step through a triple-expression match (enable the language-aware editors; gutter clicks in the schema set breakpoints)">🐞</button>
-          <span id="valDebugControls" style="display:none">
-            <select id="valDbgMatches" title="which recorded node@shape match to step through"></select>
-            <button id="valDbgContinue" title="continue">▶</button><button id="valDbgInto" title="step">⤵</button><button id="valDbgOver" title="run to the next generation">⏭</button><button id="valDbgStop" title="stop">⏹</button>
-            <span id="valDbgStatus" style="font-size: small"></span>
-            <span id="valDbgThreads" title="this generation's threads (• = already advanced); hover or click for a thread's state" style="font-size: small"></span>
-          </span>
+          <button id="validate">validate (ctl-enter)</button> <button id="debugValidate" title="step through a triple-expression match (enable the language-aware editors; gutter clicks in the schema set breakpoints)">🐞</button><span id="valDebugControls" style="display:none"><button id="valDbgContinue" title="continue">▶</button><button id="valDbgInto" title="step">⤵</button><button id="valDbgOver" title="run to the next generation">⏭</button><button id="valDbgStop" title="stop">⏹</button><span id="valDbgThreads" title="this generation's threads (• = already advanced); hover or click for a thread's state"></span></span>
+          <div id="valDbgMatchesRow" class="valDbgRow" style="display:none"><select id="valDbgMatches" title="which recorded node@shape match to step through"></select></div>
+          <div id="valDbgStatusRow" class="valDbgRow" style="display:none"><span id="valDbgStatus"></span></div>
         </div>
       </div>
       <div class="panel">
@@ -228,14 +224,10 @@
           <h2 class="status"> </h2>
           <textarea rows="5" class="vars droparea" style="width: 100%" spellcheck="false"></textarea>
         </div>
-        <div>
-          <div id="outactions" style="float:right; margin-right: .1em;">
-            <button id="materialize">materialize (ctl-\)</button> <button id="debugMaterialize" title="step through materialization (set breakpoints in the output schema's gutter)">🐞</button> <input id="outputShapeMap" type="text" value="" class="schema context-menu-one btn btn-neutral" placeholder="&lt;node&gt;@&lt;shape&gt;" title="output ShapeMap, e.g. &lt;tag:root&gt;@&lt;OutputShape&gt; — the node names the graph root to create; right-click picks the shape"/>
-            <span id="debugControls" style="display:none">
-              <button id="dbgContinue" title="continue">▶</button><button id="dbgInto" title="step into">⤵</button><button id="dbgOver" title="step over">⏭</button><button id="dbgOut" title="step out">⤴</button><button id="dbgStop" title="stop">⏹</button>
-              <span id="dbgStatus" style="font-size: small"></span>
-              <span id="dbgThreads" title="pending and accepted threads; hover or click to render one's graph" style="font-size: small"></span>
-            </span>
+        <div id="outactionsRow">
+          <div id="outactions">
+            <button id="materialize">materialize (ctl-\)</button> <button id="debugMaterialize" title="step through materialization (set breakpoints in the output schema's gutter)">🐞</button> <input id="outputShapeMap" type="text" value="" class="schema context-menu-one btn btn-neutral" placeholder="&lt;node&gt;@&lt;shape&gt;" title="output ShapeMap, e.g. &lt;tag:root&gt;@&lt;OutputShape&gt; — the node names the graph root to create; right-click picks the shape"/><span id="debugControls" style="display:none"><button id="dbgContinue" title="continue">▶</button><button id="dbgInto" title="step into">⤵</button><button id="dbgOver" title="step over">⏭</button><button id="dbgOut" title="step out">⤴</button><button id="dbgStop" title="stop">⏹</button></span>
+            <div id="dbgStatusRow" class="valDbgRow" style="display:none"><span id="dbgStatus"></span></div>
           </div>
         </div>
       </div>
@@ -244,6 +236,7 @@
           <h2 class="status"> </h2>
           <textarea rows="25" class="schema droparea" style="width: 100%" spellcheck="false"></textarea>
         </div>
+        <div id="dbgThreadsRow"><span id="dbgThreads" title="pending and accepted threads; hover or click to render one's graph"></span></div>
       </div>
     </div>
     <div id="results">

@@ -45,6 +45,44 @@ class ShExMapResultsRenderer extends ShExResultsRenderer {
   }
 }
 
+/** a stable key for a quad by value, since the same triple arrives as
+ * different objects from the materializer and from the proof graph */
+function quadKey (q) {
+  const term = t => t.termType + "\u0000" + t.value +
+        (t.language ? "@" + t.language : "") +
+        (t.datatype ? "^^" + t.datatype.value : "");
+  return term(q.subject) + "\u0001" + term(q.predicate) + "\u0001" + term(q.object);
+}
+
+/**
+ * Quads in the order that makes nested Turtle readable: a blank node's
+ * arc before the triples hanging off it.
+ *
+ * The materializer already emits them that way -- the arc into a nested
+ * shape is written before the sub-NFA starts, so it can be retracted with
+ * the rest if that shape turns out not to materialize.  What loses it is
+ * putting them through an N3.Store on the way to the writer: getQuads()
+ * answers in index order, and the nested writer, meeting `fhir:subject
+ * _:tm1` after it has already written _:tm1 as a subject of its own, has
+ * nothing left to nest and emits an empty `[]`.
+ *
+ *     <tag:root> fhir:item [ ... fhir:subject []; ... ].
+ *     _:tm1 fhir:Patient.name "Sue".
+ *
+ * So this is only a `filter`: the order is the caller's, and all this does
+ * is drop duplicates so a quad can't be written twice.
+ */
+function orderedForNesting (quads) {
+  const seen = new Set();
+  return (quads || []).filter(q => {
+    const key = quadKey(q);
+    if (seen.has(key))
+      return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 class ShExMapBaseApp extends ShExBaseApp {
   /* Two kinds of results, a tab each.  A materialization is *of* a
    * validation -- it consumes the bindings one produced -- so its tab shows
@@ -186,7 +224,11 @@ class ShExMapBaseApp extends ShExBaseApp {
       });
 
       this.debugSession = {dbg, materializer, outputShapeMap, located, pane};
-      $("#debugControls").show();
+      // the step buttons beside the button that started them, the status on
+      // its own row -- see the validator's, which this follows.  🐞 stands
+      // down while its session is live.
+      $("#debugControls, #dbgStatusRow").show();
+      $("#debugMaterialize").hide();
       $("#dbgStatus").text("paused before materialization; step or continue");
       return this.debugSession;
     } catch (e) {
@@ -202,8 +244,20 @@ class ShExMapBaseApp extends ShExBaseApp {
     const event = session.dbg[command]();
     this.showDebugEvent(event);
     this.updateThreadList();
-    if (session.dbg.done)
+    if (session.dbg.done) {
       this.endDebugSession(false);
+      return event;
+    }
+    // Show what the thread has built so far.  Its triples exist from the
+    // moment each is emitted -- the arc into a nested shape before the
+    // shape is even entered -- but nothing drew them until the session
+    // ended or the reader thought to hover a thread button, so stepping
+    // through a shape showed no output until the shape was finished.
+    // the thread being stepped leads the list (liveThreads), which is the
+    // one this step was about
+    const [current] = session.dbg.threads();
+    if (current)
+      this.previewThread(current, false, this.stepLabel(event, current));
     return event;
   }
 
@@ -300,6 +354,67 @@ class ShExMapBaseApp extends ShExBaseApp {
       ).join("\n");
   }
 
+  /** what to call the step just taken, over the graph it has built */
+  stepLabel (event, thread) {
+    const where = event && event.tc
+          ? " at <" + event.tc.predicate + ">"
+          : event && event.type ? " (" + event.type + ")" : "";
+    return "stepping" + where + ": " + thread.emitted + " quads so far";
+  }
+
+  /** The same statement bindingStateText makes, written on the bindings
+   * themselves: which this thread has consumed, and which frame its cursor
+   * is in.
+   *
+   * The text block says it by frame, which is how the materializer thinks;
+   * a reader is looking at the tree they wrote, where a frame is not a
+   * thing -- one written binding can be read by several (see
+   * normalizeBindingTreeWithOrigins).  So a binding is marked consumed if
+   * any frame consumed it, and the title says which; the cursor frame's
+   * unconsumed bindings are marked as what this thread would read next.
+   */
+  annotateBindingState (thread) {
+    const pane = this.editorSupport && this.editorSupport.panes
+          && this.editorSupport.panes.bindings;
+    if (!pane)
+      return;
+    const origins = this.bindingOrigins;
+    if (!origins || !thread || !thread.used) {
+      pane.annotate(null);
+      return;
+    }
+    const text = this.Caches.bindings.selection.val();
+    const used = new Set(thread.used);
+    // one entry per place a binding is written, gathering the frames that
+    // read it -- the same grouping the hover regions use
+    const byPath = new Map();
+    origins.forEach((frameOrigin, frame) => {
+      Object.keys(frameOrigin || {}).forEach(variable => {
+        const path = frameOrigin[variable];
+        const key = path.join(" ");
+        if (!byPath.has(key))
+          byPath.set(key, {path, variable, consumed: [], frames: []});
+        const at = byPath.get(key);
+        at.frames.push(frame);
+        if (used.has(frame + " " + variable))
+          at.consumed.push(frame);
+      });
+    });
+    const marks = [];
+    byPath.forEach(({path, variable, consumed, frames}) => {
+      const cursorHere = frames.indexOf(thread.frame) !== -1;
+      if (consumed.length === 0 && !cursorHere)
+        return;
+      const cls = consumed.length ? "shexjs-binding-consumed" : "shexjs-binding-cursor";
+      const title = consumed.length
+            ? "consumed by this thread, in frame " + consumed.join(", ")
+            : "in frame " + thread.frame + ", where this thread's cursor is -- not consumed";
+      this.bindingRangesAt(text, path).forEach(
+        range => marks.push({from: range.from, to: range.to, cls, title}));
+    });
+    pane.annotate(marks);
+  }
+
   /** render one thread's aspects in #results: its binding-tree state and its
    * generated graph -- accepted threads get the validating
    * NestedTurtleWriter rendering (as at end of materialization), partial
@@ -311,16 +426,56 @@ class ShExMapBaseApp extends ShExBaseApp {
     const bindingState = this.bindingStateText(thread);
     if (bindingState)
       this.resultsWidget.append($("<pre/>", {class: "dbgBindingState"}).text(bindingState));
-    const store = new RdfJs.Store();
-    store.addQuads(thread.quads);
+    this.annotateBindingState(thread);
     if (complete && session) {
+      const store = new RdfJs.Store();
+      store.addQuads(thread.quads);
       this.renderMaterializedGraph(store, session.outputShapeMap, thread.provenance);
     } else {
-      const writer = new RdfJs.Writer({prefixes: this.Caches.outputSchema.parsed._prefixes});
-      writer.addQuads(store.getQuads());
-      writer.end((error, result) => this.addResult(error, result));
+      // the thread's quads as it emitted them, which is what nests
+      this.writeNestedTurtle(thread.quads, (error, result) => this.addResult(error, result));
       this.reportMaterialization(thread.provenance);
       this.resultsWidget.finish();
+    }
+  }
+
+  /** The graph as nested Turtle, without asking the schema to approve it
+   * first.
+   *
+   * renderMaterializedGraph validates before it writes, so it can lead with
+   * the triples the schema accounts for and follow with the rest -- which a
+   * thread paused halfway through cannot survive: not satisfying the output
+   * schema yet is what "partial" means.  The nesting itself needs none of
+   * that, and a flat dump of thirty triples with N3's own bnode labels is
+   * what stepping used to show.
+   */
+  writeNestedTurtle (quads, onDone) {
+    const prefixes = this.Caches.outputSchema.parsed._prefixes;
+    const ordered = orderedForNesting(quads);
+    try {
+      // extractLists wants a store, and takes the list triples out of it
+      const store = new RdfJs.Store();
+      store.addQuads(ordered);
+      const lists = store.extractLists({remove: true});
+      const writer = new ShExWebApp.NestedTurtleWriter.Writer(null, {
+        format: "text/turtle",
+        prefixes,
+        lists,
+        version: 1.1,
+        indent: "    ",
+        checkCorefs: n => false,
+      });
+      // ...but the *order* is the materializer's, not the store's: see
+      // orderedForNesting
+      writer.addQuads(ordered.filter(
+        q => store.countQuads(q.subject, q.predicate, q.object, q.graph) > 0));
+      writer.end(onDone);
+    } catch (e) {
+      // a graph the nested writer can't lay out still has to be readable
+      console.warn("NestedWriter on a partial graph:", e);
+      const writer = new RdfJs.Writer({prefixes});
+      writer.addQuads(ordered);
+      writer.end(onDone);
     }
   }
 
@@ -356,12 +511,21 @@ class ShExMapBaseApp extends ShExBaseApp {
       return;
     this.debugSession = null;
     session.pane.clearHighlights();
+    const bindingsPane = this.editorSupport && this.editorSupport.panes
+          && this.editorSupport.panes.bindings;
+    if (bindingsPane)
+      bindingsPane.annotate(null);
     $("#debugControls").hide();
+    $("#debugMaterialize").show();
     $("#dbgThreads").empty();
     if (stopped) {
       $("#dbgStatus").text("");
+      $("#dbgStatusRow").hide();
       return;
     }
+    // a session that ran to the end keeps its last word: how it finished is
+    // the answer.  That was the intent before, but #dbgStatus lived inside
+    // #debugControls, so hiding those took the sentence with them.
     if (session.dbg.error) {
       this.reportMaterializationError(session.dbg.error, "materialization (debugged)");
     } else {
@@ -474,6 +638,9 @@ class ShExMapBaseApp extends ShExBaseApp {
   }
 
   async materialize () {
+    // ...and it replaces what a debug session was stepping through, so that
+    // session goes with it (the validator's #validate does the same)
+    this.endDebugSession(true);
     this.showMaterialization();
     this.resultsWidget.clear();
     this.resultsWidget.start();
@@ -497,6 +664,12 @@ class ShExMapBaseApp extends ShExBaseApp {
       // a MaterializationError propagates to the outer catch, which anchors
       // its failures in the output-schema editor pane
       const generatedGraph = await materializer.invoke();
+      // where each (frame, variable) was written, for exact binding
+      // highlighting -- known only once the tree has been flattened, which
+      // materialize() does.  A remote materializer (the worker app) flattens
+      // on the far side of postMessage and has none; bindingRanges falls
+      // back to counting occurrences there, as it always did.
+      this.bindingOrigins = materializer.frameOrigins || null;
       // on success: clear stale error marks, but surface never-bound
       // variables and unreferenced statics as warnings
       this.anchorMaterializationFailures(null, materializer.lastReport);
@@ -619,7 +792,22 @@ class ShExMapBaseApp extends ShExBaseApp {
           const rest = new RdfJs.Store();
           rest.addQuads(generatedGraph.getQuads()); // the resource giveth
           matched.forEach(q => rest.removeQuad(q)); // the matched taketh away
-          nestedWriter.addQuads(matched.filter(q => ([ShExWebApp.Util.RDF.first, ShExWebApp.Util.RDF.rest]).indexOf(q.predicate.value) === -1));
+          // The proof graph is in the validator's order, which is not the
+          // one that nests: put the materializer's back, so a blank node's
+          // arc precedes the triples hanging off it (see orderedForNesting).
+          // Anything the proof found that the materializer didn't emit keeps
+          // its place at the end.
+          const emitted = new Map();
+          (provenance || []).forEach((prov, i) => {
+            if (prov && prov.quad)
+              emitted.set(quadKey(prov.quad), i);
+          });
+          const inEmissionOrder = orderedForNesting(matched).sort((a, b) => {
+            const ai = emitted.has(quadKey(a)) ? emitted.get(quadKey(a)) : Infinity;
+            const bi = emitted.has(quadKey(b)) ? emitted.get(quadKey(b)) : Infinity;
+            return ai - bi;
+          });
+          nestedWriter.addQuads(inEmissionOrder.filter(q => ([ShExWebApp.Util.RDF.first, ShExWebApp.Util.RDF.rest]).indexOf(q.predicate.value) === -1));
           if (rest.size > 0) {
             nestedWriter.comment("\n# Triples not in the schema:");
             nestedWriter.addQuads(rest.getQuads())
@@ -674,10 +862,64 @@ class ShExMapBaseApp extends ShExBaseApp {
     }
   }
 
+  /** the bindings pane's text, parsed for positions -- one parse per text,
+   * since hovering asks repeatedly and the text rarely changes */
+  locatedBindings (text) {
+    if (!this._locatedBindings || this._locatedBindings.text !== text)
+      this._locatedBindings = {text, loc: ShExWebApp.EditorServices.locateJsonText(text)};
+    return this._locatedBindings.loc;
+  }
+
+  /** what to light up for the binding written at `path`: the variable that
+   * names it and the value under it.  The value of a literal binding is
+   * `{"value": "Sue"}`, and what a reader is looking at there is "Sue". */
+  bindingRangesAt (text, path) {
+    const loc = this.locatedBindings(text);
+    const out = [];
+    const name = loc.nameAt(path);
+    if (name)
+      out.push(name);
+    const value = loc.at(path.concat(["value"])) || loc.at(path);
+    if (value)
+      out.push(value);
+    return out;
+  }
+
+  /** Where a binding was written, exactly.
+   *
+   * The materializer flattens the binding tree into a sequence of frames,
+   * and the two do not line up: a binding written once beside a list of
+   * repeated groups is distributed into every frame those groups produce,
+   * so the third occurrence of a variable in the text is not frame 3's.
+   * frameOrigins says which path each (frame, variable) came from, and the
+   * pane's own JSON grammar says where that path is.
+   *
+   * Without origins -- the worker app materializes across postMessage --
+   * this falls back to counting occurrences, which is what it always did.
+   */
+  bindingRanges (text, variable, frame) {
+    const origins = this.bindingOrigins;
+    if (!origins)
+      return this.variableRanges(text, variable, frame);
+    const paths = (frame === null || frame === undefined
+                   ? origins.map(o => o && o[variable])
+                   : [(origins[frame] || {})[variable]]).filter(path => path);
+    if (paths.length === 0)
+      return this.variableRanges(text, variable, frame);
+    const seen = new Set();
+    return paths.flatMap(path => {
+      const key = path.join(" ");
+      if (seen.has(key))
+        return [];
+      seen.add(key);
+      return this.bindingRangesAt(text, path);
+    });
+  }
+
   /** ranges of a variable's occurrences in the bindings (or statics) pane
    * text: the JSON keys naming it.  A variable bound in several frames has
    * several occurrences; `frame` picks one when the counts line up, else
-   * they all highlight. */
+   * they all highlight.  Statics have no frames, and it is exact for them. */
   variableRanges (text, variable, frame) {
     const key = JSON.stringify(variable);
     const found = [];
@@ -718,7 +960,7 @@ class ShExMapBaseApp extends ShExBaseApp {
       if (bindingsPane)
         bindingsPane.highlight(
           group.filter(p => !p.statics).flatMap(
-            p => p.variables.flatMap(v => this.variableRanges(bindingsText, v, p.frame))),
+            p => p.variables.flatMap(v => this.bindingRanges(bindingsText, v, p.frame))),
           cls, {scroll: hoveredPane !== bindingsPane});
       if (staticsPane)
         staticsPane.highlight(
@@ -764,7 +1006,32 @@ class ShExMapBaseApp extends ShExBaseApp {
           byVariable.set(v, []);
         byVariable.get(v).push(p);
       }));
+      const origins = wantStatics ? null : this.bindingOrigins;
       byVariable.forEach((group, variable) => {
+        if (origins) {
+          // one region per place this binding was written, standing for
+          // every frame that reads it -- a binding distributed across
+          // repeated groups is one piece of text and several frames
+          const byPath = new Map();
+          origins.forEach((frameOrigin, frame) => {
+            const path = frameOrigin && frameOrigin[variable];
+            if (!path)
+              return;
+            const key = path.join(" ");
+            if (!byPath.has(key))
+              byPath.set(key, {path, frames: new Set()});
+            byPath.get(key).frames.add(frame);
+          });
+          if (byPath.size > 0) {
+            byPath.forEach(({path, frames}) => {
+              const forFrames = group.filter(p => frames.has(p.frame));
+              this.bindingRangesAt(text, path).forEach(r =>
+                regions.push({from: r.from, to: r.to,
+                              enter: () => show(forFrames.length ? forFrames : group, pane)}));
+            });
+            return;
+          }
+        }
         this.variableRanges(text, variable, null).forEach((r, occurrence) => {
           // an occurrence highlights the triples of the frame it belongs to
           // when the frames line up one-to-one with the occurrences
