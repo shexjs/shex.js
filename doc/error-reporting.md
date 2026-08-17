@@ -8,7 +8,7 @@ It is a companion to [error-normalization.md](error-normalization.md), which
 is about *what* to report (the nearest bag the schema accepts). This one is
 about *how a report is shaped and said*.
 
-F0–F5 are done; each section below says what landed.  F0 was a matcher
+F0–F6 are done; each section below says what landed.  F0 was a matcher
 fix rather than a reporting one, so it sits on `main` with the
 eval-simple-1err fix that followed it; F1–F5 are the `error-repair`
 branch.  [error-reporting-comparison.md](error-reporting-comparison.md)
@@ -191,6 +191,54 @@ against a hand-built object can tell.  Two things fell out of that:
 `stripRepairs` reads by key rather than by entry (`Object.entries` would
 run every accessor it is trying to avoid), and SemActs-test compares
 through JSON, which is what its fixture is.
+
+### F6. Terms as the reader's document writes them (S) — done
+
+A result carries IRIs, because that is what a validator decides about. A
+reader is looking at a *document*, and `<http://hl7.example/Patient2>` is
+`<Patient2>` on line 8 of it — so every sentence began by asking the reader
+to work out that these were the same thing.
+
+`ErrorContext` gained `lex`, a host's say in how a term is written, and
+`describeError`'s leaves route each term through whichever of two things
+names it: `dataTerm` for what the document says, `schemaIri` for what the
+schema requires. The fall-backs differ on purpose — a data term never falls
+back to the *schema's* prefixes, which are a different table that may bind
+the same prefix to a different namespace, and a friendly name that names
+something else is worse than a long one.
+
+Best spelling first:
+
+1. **The range the term was written in.** `mapValidationErrors` already
+   locates every triple it reports, so the source text is right there. This
+   is the only spelling that is *read* rather than reconstructed, so it is
+   right even where the document does something no rule anticipates.
+2. **The document's own PREFIX and BASE**, for a term it doesn't contain —
+   a missing property is best named the way this document names properties,
+   since that is where the reader is about to go looking for it.
+   (`parseTurtle` had both from the parser and was dropping them.)
+3. **The full IRI.**
+
+Two things are deliberately not taken from the source: Turtle writes an
+anonymous blank node as a whole nested structure, and quoting `[ :gender "M" ]`
+into the middle of a sentence says more than the sentence is about — its
+label is shorter and points at one node; and a literal is left to the
+caller, which already quotes it the one way every document does.
+
+`mapValidationErrors(…, {spelling})` and `errsToSimple(…, {lex, base})`
+select it; the apps offer it as **term spelling** and default to the
+documents' own. The editors do it per document, which is the point: the
+same failure reads `<Patient2>` from the observation and `:gender` from the
+patient, because that is what each one says. The human interface's indented
+tree is one block of text rather than a mark on a line, so it has only the
+showing document's prefixes to go on.
+
+Two gaps this closed on the way. `schemaPrefixes` in editor-services was
+declared and never assigned, so F2's "fragments read as the schema spells
+them" had never reached a red dot's hover; and a shape reference was written
+`@<http://schema.example/PatientShape>` because `shexcFragment` had the
+prefixes but not the base. Both now read as the schema declares them, in
+either spelling.
 
 ### F0. Before trusting any of it: the matcher (M/L) — done for the default engine
 

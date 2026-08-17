@@ -37,6 +37,44 @@ function ldToTurtle (ld, termToLex) {
   }
 }
 
+/** Which spelling the messages use: see the `spelling` control. */
+function termSpelling () {
+  return $("#spelling").val() === "explicit" ? "explicit" : "document";
+}
+
+/**
+ * How to spell a term in a report that isn't tied to a document range: the
+ * human interface's indented tree, which is a block of text about a result
+ * rather than a mark on a line.
+ *
+ * The editors do better than this -- they have the range the term was
+ * written in, so they can quote it (see mapValidationErrors) -- but a block
+ * of text has only the document's prefixes and base to go on, which is what
+ * a data cache's meta is.  Shapes are named by the schema and left to it.
+ */
+function termLexerFor (dataCache) {
+  if (termSpelling() !== "document")
+    return undefined;
+  const meta = dataCache && dataCache.meta;
+  if (!meta || typeof meta.termToLex !== "function")
+    return undefined;
+  return (term, role) => {
+    if (role === "shape")
+      return null;
+    try {
+      const said = meta.termToLex(
+        typeof term === "string"
+          ? (term.startsWith("_:")
+             ? RdfJs.DataFactory.blankNode(term.substr(2))
+             : RdfJs.DataFactory.namedNode(term))
+          : term);
+      return typeof said === "string" && said !== "" ? said : null;
+    } catch (e) {
+      return null;   // a term this document has no better name for
+    }
+  };
+}
+
 class InterfaceCache {
   // caches for textarea parsers
   constructor (selection, onLoad) {
@@ -325,6 +363,17 @@ class NeighborhoodConfig {
       this.panes[param.name] = (bySpec[param.name] || []).slice();
     this.showing = 0;
     this.textarea.val((this.documents()[0] || {}).text || "");
+    this.render();
+  }
+
+  /** Throw away every source's documents, back to the empty panes a source
+   * insists on (`pane.min`).  Every source's, not just the selected one:
+   * this is what "there is no data now" means, and a stash left under a
+   * source nobody is looking at reappears the moment they choose it. */
+  forgetDocuments () {
+    this.panesByModule = {};
+    this.showing = 0;
+    this.textarea.val("");
     this.render();
   }
 
@@ -743,8 +792,15 @@ class TurtleCache extends InterfaceCache {
         params[turtlePane.name] || [], this.meta, base);
 
     const res = module.fromParams(params, this.queryTrackerController.queryTracker);
+    // A db that can go to the network offers a second face which asks with
+    // fetch() rather than with a synchronous XMLHttpRequest.  Take it: a
+    // blocking request freezes the tab -- every editor, every button -- for
+    // as long as the endpoint takes to answer, and a wikidata walk makes one
+    // per entity it reaches.  Validation awaits it (see invoke).
     this.callOnLoad();
-    return res;
+    return module.asAsyncDb && typeof res.getNeighborhoodAsync === "function"
+      ? module.asAsyncDb(res)
+      : res;
   }
 
   /** Resolve a query map extension -- SPARQL "SELECT ...", QENTITIES "42"
@@ -760,7 +816,8 @@ class TurtleCache extends InterfaceCache {
     if (!resolver)
       throw Error("the QueryMap extension " + extensionName(language) +
                   " is not supported by the neighborhood " + moduleId(module));
-    return resolver.resolve(lexical, await this.refresh());
+    // await: a resolver over an endpoint answers with a promise
+    return await resolver.resolve(lexical, await this.refresh());
   }
 
   /** how a query map extension is written back out: by the name the source
@@ -789,9 +846,11 @@ class TurtleCache extends InterfaceCache {
       const q = "SELECT DISTINCT ?s { ?s ?p ?o } LIMIT " + SPARQL_get_items_limit;
       // (this read ShEx.Util, which is not a thing in this file: the menu
       // has been quietly falling back to "no choices found" over endpoints)
-      return [MENU_ITEM_materialize]
-        .concat(ShExWebApp.Util.executeQuery(q, this.endpoint, RdfJs.DataFactory)
-                .map(row => this.lexifyFirstColumn(row)));
+      // ...Promise: a blocking request here freezes the tab while someone is
+      // typing into the menu it fills, which is the worst possible moment
+      const rows = await ShExWebApp.Util.executeQueryPromise(
+        q, this.endpoint, RdfJs.DataFactory);
+      return [MENU_ITEM_materialize].concat(rows.map(row => this.lexifyFirstColumn(row)));
     }
     return data.getQuads().map(t => this.meta.termToLex(t.subject));
   }
@@ -903,7 +962,13 @@ class ManifestCache extends InterfaceCache {
           elt.metaURL = action.termResolverURL || url;
         }
       }
-      ["schemaURL", "dataURL", "queryMapURL"].forEach(parm => {
+      // `sitematrix` is here because it is a document reference like the
+      // others, and a manifest's references are relative to the *manifest*.
+      // Left out, it was resolved against whichever page loaded the manifest
+      // -- so "../examples/wikidata-sitematrix.json" found the file from
+      // shex-webapp/doc/ and 404'd from extension-map/doc/, which is the same
+      // manifest read by a different app.
+      ["schemaURL", "dataURL", "queryMapURL", "sitematrix"].forEach(parm => {
         if (parm in elt) {
           // an entry may name several documents under one key; each is a
           // reference of its own, not one comma-joined reference
@@ -1258,6 +1323,14 @@ class ManifestCache extends InterfaceCache {
     await this.caches.inputData.set("", DefaultBase);
     $("#inputData .status").text(" ");
     delete this.caches.inputData.endpoint;
+    // ...and the documents beside it.  The textarea holds one document of
+    // however many the source has, so emptying it used to leave the rest
+    // standing: pick the example with an observation and a patient, then
+    // pick any other example, and its two tabs were still there with none
+    // of the new example's data in either of them.
+    const neighborhoods = this.caches.inputData.neighborhoods;
+    if (neighborhoods)
+      neighborhoods.forgetDocuments();
 
     // Clear out every form of ShapeMap.
     $("#queryMap").val("").removeClass("error");
@@ -2102,7 +2175,11 @@ class DirectShExValidator {
     this.renderer = renderer;
   }
   async invoke (fixedMap, validationTracker, time, _done, _currentAction) {
-    const ret = this.validator.validateShapeMap(fixedMap, validationTracker);
+    // ...async: a db that fetches answers with a promise, and the search
+    // stops at the fetch rather than blocking on it.  Given a db that
+    // doesn't, this is one traversal and one await, so it is right either
+    // way and the caller doesn't have to know which it has.
+    const ret = await this.validator.validateShapeMapAsync(fixedMap, validationTracker);
     time = new Date() - time;
     $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms");
     $("#results .status").text("rendering results...").show();
@@ -2276,13 +2353,17 @@ class ShExResultsRenderer {
           )).addClass(klass);
         if (fails)
           elt.append($("<pre>").text(ShExWebApp.Util.errsToSimple(
-            entry.appinfo, this.caches.inputSchema.meta.prefixes).join("\n")));
+            entry.appinfo, this.caches.inputSchema.meta.prefixes,
+            {lex: termLexerFor(this.caches.inputData),
+             base: this.caches.inputSchema.meta.base}).join("\n")));
         break;
 
       case "minimal":
         if (fails)
           entry.reason = ShExWebApp.Util.errsToSimple(
-            entry.appinfo, this.caches.inputSchema.meta.prefixes).join("\n");
+            entry.appinfo, this.caches.inputSchema.meta.prefixes,
+            {lex: termLexerFor(this.caches.inputData),
+             base: this.caches.inputSchema.meta.base}).join("\n");
         renderMe = Object.keys(entry).reduce((acc, key) => {
           if (key !== "appinfo")
             acc[key] = entry[key];
@@ -2517,13 +2598,30 @@ class EditorSupport {
                               parsed: locate(inputData.selection.val())}].concat(
         documents.map((d, at) => ({at, parsed: at === showing ? null : locate(d.text)})))
             .filter(d => d.parsed);
-      const merged = {schema: [], data: [], pairs: []};
+      // A source can have no document to locate anything in -- an endpoint
+      // answers from a store nobody typed -- and the schema-side diagnostics
+      // are still worth drawing.  Map against nothing rather than against
+      // an empty list, which has no [0] to read.
+      if (dataDocuments.length === 0)
+        dataDocuments.push({at: -1, parsed: null});
+      // data ranges are offsets into one document, so they are kept per
+      // document: whichever is showing gets its own (see reaimAtShowingDocument)
+      const merged = {schema: [], data: [], pairs: [], dataByDoc: new Map()};
+      const dataOf = at => {
+        if (!merged.dataByDoc.has(at))
+          merged.dataByDoc.set(at, []);
+        return merged.dataByDoc.get(at);
+      };
       entries.forEach(entry => {
         // one mapping per document; a pair takes the anchors of whichever
         // document turns out to have said its triple
         const perDocument = dataDocuments.map(d => ({
           at: d.at,
-          mapped: ShExWebApp.EditorServices.mapValidationErrors(entry.appinfo, located, d.parsed),
+          // each document spells the message for itself: the same failure
+          // read from the observation says <Patient2> and read from the
+          // patient says :gender, because that is what each one says
+          mapped: ShExWebApp.EditorServices.mapValidationErrors(
+            entry.appinfo, located, d.parsed, {spelling: termSpelling()}),
         }));
         const mapped = perDocument[0].mapped;
         mapped.pairs.forEach((pair, i) => {
@@ -2543,7 +2641,12 @@ class EditorSupport {
         const actualFail = entry.status === "nonconformant";
         if (!this.expectsNonconformant(entry)) {
           merged.schema.push.apply(merged.schema, mapped.schema);
-          merged.data.push.apply(merged.data, mapped.data);
+          // Every document, not only the one on screen.  A validation walks
+          // wherever the data leads it -- the observation names a patient the
+          // next document describes -- and the reader who goes looking for
+          // the bad triple is looking in *that* document, where the dot
+          // belongs.
+          perDocument.forEach(d => dataOf(d.at).push.apply(dataOf(d.at), d.mapped.data));
         } else if (!actualFail) {
           // unexpected conformance: flag the shape declaration and the node
           const message = entry.node + " matched " + entry.shape
@@ -2551,11 +2654,14 @@ class EditorSupport {
           const shapeRange = typeof entry.shape === "string" ? located.locate.shape(entry.shape) : null;
           if (shapeRange)
             merged.schema.push(Object.assign({severity: "error", message}, shapeRange));
-          const anchored = mapped.pairs.find(p => p.anchors.subject);
-          if (anchored)
-            merged.data.push(Object.assign({severity: "error", message}, anchored.anchors.subject));
+          perDocument.forEach(d => {
+            const anchored = d.mapped.pairs.find(p => p.anchors && p.anchors.subject);
+            if (anchored)
+              dataOf(d.at).push(Object.assign({severity: "error", message}, anchored.anchors.subject));
+          });
         } // else: expected failure -- no error marks
       });
+      merged.data = merged.dataByDoc.get(showing) || [];
       this.lastMapped = merged; // introspection for tests/debugging
       this.mappedDoc = showing;  // the document these data ranges are offsets into
       this.panes.inputSchema.setDiagnostics(merged.schema);
@@ -2567,15 +2673,20 @@ class EditorSupport {
     }
   }
 
-  /** Another document is showing: the data-side ranges were offsets into
-   * the one before it, so aim them again -- and take away the marks that
-   * belong to a document nobody is looking at. */
+  /** Another document is showing: the data-side ranges are offsets into one
+   * document, so hand the pane the ones belonging to the document it is now
+   * holding.  It used to have only the mapping for whichever document the
+   * validation ran under, so moving off that one took the marks away and
+   * the document that actually contained the bad triple never showed one. */
   reaimAtShowingDocument () {
     if (!this.lastMapped)
       return;
     const showing = this.app.neighborhoods ? this.app.neighborhoods.showing : -1;
+    const byDoc = this.lastMapped.dataByDoc;
     if (this.panes.inputData)
-      this.panes.inputData.setDiagnostics(showing === this.mappedDoc ? this.lastMapped.data : []);
+      this.panes.inputData.setDiagnostics(
+        byDoc ? (byDoc.get(showing) || [])
+          : showing === this.mappedDoc ? this.lastMapped.data : []);
     this.setPairHovers(this.lastMapped.pairs);
   }
 
@@ -2798,6 +2909,9 @@ class ShExBaseApp {
     this.QueryParams = this.Getables.concat([
       {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
       {queryStringParm: "success",      location: $("#success"),         deflt: "proof"     },
+      // how a term is written in a message: as the document the reader is
+      // being pointed at writes it, or in full (see mapValidationErrors)
+      {queryStringParm: "spelling",     location: $("#spelling"),        deflt: "document"  },
       // an entry may ask for an engine: the thorough one enumerates every
       // way a shape could match, which some real data makes impractical
       {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr",

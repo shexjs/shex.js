@@ -15,7 +15,8 @@
 import * as ShExParser from "@shexjs/parser";
 import {parseTurtle as lezerTurtle} from "lezer-turtle/emit";
 import * as RdfJs from "n3";
-const {describeError} = require("@shexjs/util/lib/error-messages");
+const {describeError, relativeIri} = require("@shexjs/util/lib/error-messages");
+import type {TermLexer, TermRole} from "@shexjs/util/src/error-messages";
 
 const XSD_STRING = "http://www.w3.org/2001/XMLSchema#string";
 const RDF_LANGSTRING = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
@@ -116,6 +117,10 @@ export interface ParsedTurtle {
    * twice has two utterances) */
   provenance: {get(quad: any): any[], size: number};
   diagnostics: Diagnostic[];
+  /** the document's own PREFIX table and BASE, for spelling a term the way
+   * this document would -- including one it doesn't happen to contain */
+  prefixes?: {[prefix: string]: string};
+  base?: string;
 }
 
 /** term-level ranges of a data triple plus the shape-label range: the
@@ -268,6 +273,54 @@ function parseShExCUncached (text: string, opts: ParseShExCOptions = {}): Parsed
   return Object.assign({diagnostics}, locateInParsed(text, schema));
 }
 
+/**
+ * The `#`-to-end-of-line comments in a ShExC document.
+ *
+ * A `#` only starts one where it isn't inside something that may contain it,
+ * which in ShExC is most of the interesting text: an IRI
+ * (`<...EntitySchemaText/E107#>` -- a fragment, not a comment), a string, or
+ * a `\#` escape in a local name.  Scanning for those is cheaper than it
+ * sounds and much cheaper than getting it wrong.
+ */
+export function commentRanges (text: string): Range[] {
+  const out: Range[] = [];
+  const n = text.length;
+  let i = 0;
+  while (i < n) {
+    const c = text[i];
+    if (c === "\\") { i += 2; continue; }          // an escape hides what follows
+    if (c === "<") {
+      // an IRIREF holds no whitespace, so a `<` with no `>` before the line
+      // ends is a less-than or a typo rather than the start of one
+      const close = text.indexOf(">", i + 1);
+      const nl = text.indexOf("\n", i + 1);
+      i = close !== -1 && (nl === -1 || close < nl) ? close + 1 : i + 1;
+      continue;
+    }
+    if (c === '"' || c === "'") {
+      const q = text.substr(i, 3) === c + c + c ? c + c + c : c;
+      let j = i + q.length;
+      while (j < n) {
+        if (text[j] === "\\") { j += 2; continue; }
+        if (text.startsWith(q, j)) { j += q.length; break; }
+        if (q.length === 1 && text[j] === "\n") break;   // unterminated: don't run away
+        ++j;
+      }
+      i = j;
+      continue;
+    }
+    if (c === "#") {
+      const nl = text.indexOf("\n", i);
+      const to = nl === -1 ? n : nl;
+      out.push({from: i, to});
+      i = to;
+      continue;
+    }
+    ++i;
+  }
+  return out;
+}
+
 /** locateInParsed - range lookups over an ALREADY-parsed schema (e.g. the
  * web apps' cache.parsed, whose expression objects are the ones validation
  * errors reference by identity -- @shexjs/loader's import-merging makes a
@@ -275,6 +328,36 @@ function parseShExCUncached (text: string, opts: ParseShExCOptions = {}): Parsed
  */
 export function locateInParsed (text: string, schema: SchemaWithMeta | null): LocatedSchema {
   const starts = lineOffsets(text);
+  // Whitespace and comments are both trivia: an anchor that keeps a
+  // constraint's delimiters and drops its nested constraints has no more
+  // business painting the note somebody left between them than the newline.
+  const comments = commentRanges(text);
+  const commentAt = (at: number): Range | null =>
+    comments.find(c => at >= c.from && at < c.to) || null;
+  /** the first position at or after `at` that is neither space nor comment */
+  const afterTrivia = (at: number, limit: number): number => {
+    let i = at;
+    for (;;) {
+      while (i < limit && /\s/.test(text[i]))
+        ++i;
+      const c = i < limit ? commentAt(i) : null;
+      if (c === null || c.to > limit)
+        return i;
+      i = c.to;
+    }
+  };
+  /** the first position at or before `at` with only trivia between them */
+  const beforeTrivia = (at: number, limit: number): number => {
+    let i = at;
+    for (;;) {
+      while (i > limit && /\s/.test(text[i - 1]))
+        --i;
+      const c = i > limit ? commentAt(i - 1) : null;
+      if (c === null || c.from < limit)
+        return i;
+      i = c.from;
+    }
+  };
   const tcRange = (tc: any): Range | null =>
     schema && schema._exprLocations
       ? yyllocToRange(schema._exprLocations.get(tc), starts)
@@ -289,8 +372,14 @@ export function locateInParsed (text: string, schema: SchemaWithMeta | null): Lo
           ? nestedConstraintExtent(tc, schema._exprLocations, starts) : null;
     if (nested && nested.from > range.from && nested.from <= range.to) {
       let to = nested.from;
-      while (to > range.from && /[\s{]/.test(text[to - 1]))
-        --to;
+      for (;;) {
+        const was = to;
+        to = beforeTrivia(to, range.from);
+        while (to > range.from && text[to - 1] === "{")
+          --to;
+        if (to === was)
+          break;
+      }
       if (to > range.from)
         return {from: range.from, to};
     }
@@ -306,13 +395,9 @@ export function locateInParsed (text: string, schema: SchemaWithMeta | null): Lo
     if (!nested || !(nested.from > range.from && nested.to <= range.to))
       return [range];
     const parts: Range[] = [];
-    let headTo = nested.from; // keep the opening brace, drop the whitespace
-    while (headTo > range.from && /\s/.test(text[headTo - 1]))
-      --headTo;
+    const headTo = beforeTrivia(nested.from, range.from); // keep the opening brace
     parts.push(headTo > range.from ? {from: range.from, to: headTo} : range);
-    let tailFrom = nested.to;
-    while (tailFrom < range.to && /\s/.test(text[tailFrom]))
-      ++tailFrom;
+    const tailFrom = afterTrivia(nested.to, range.to);
     if (tailFrom < range.to)
       parts.push({from: tailFrom, to: range.to});
     return parts;
@@ -483,7 +568,7 @@ export interface ParseTurtleOptions {
 export const parseTurtle = memoLast(parseTurtleUncached, opts => (opts && opts.baseIRI) || "");
 
 function parseTurtleUncached (text: string, opts: ParseTurtleOptions = {}): ParsedTurtle {
-  const {quads, provenance, diagnostics: lezerDiagnostics} = lezerTurtle(text, {
+  const {quads, provenance, diagnostics: lezerDiagnostics, prefixes, base} = lezerTurtle(text, {
     factory: RdfJs.DataFactory,
     baseIRI: opts.baseIRI || "urn:editor:data",
   });
@@ -493,7 +578,8 @@ function parseTurtleUncached (text: string, opts: ParseTurtleOptions = {}): Pars
     from: d.start,
     to: Math.max(d.end, d.start + 1),
   }));
-  return {text, dataset: new RdfJs.Store(quads), quads, provenance, diagnostics};
+  return {text, dataset: new RdfJs.Store(quads), quads, provenance, diagnostics,
+          prefixes: prefixes || {}, base: base || opts.baseIRI};
 }
 
 // ---------------------------------------------------------------------------
@@ -669,6 +755,8 @@ const ErrorLeaves: {[type: string]: (err: any, ctx: WalkContext) => ErrorLeaf} =
       triple: ctx.triple,
       node: ctx.node,
       prefixes: schemaPrefixes,
+      base: schemaBase,
+      lex: documentLexer === null ? undefined : documentLexer(err.triple || ctx.triple),
     }) || {text: type};
     return {
       message: said.text,
@@ -684,8 +772,102 @@ const ErrorLeaves: {[type: string]: (err: any, ctx: WalkContext) => ErrorLeaf} =
   };
 });
 
-/** the prefixes a quoted fragment is written with; set per mapping run */
+/** the prefixes and base a quoted fragment is written with; set per run */
 let schemaPrefixes: {[prefix: string]: string} = {};
+let schemaBase: string | undefined = undefined;
+
+/** how to spell terms for the document being mapped; set per mapping run,
+ * null where the caller asked for explicit IRIs (see SpellingOption) */
+let documentLexer: ((triple: any) => TermLexer) | null = null;
+
+/** an IRI as a prefix table writes it, or null where no prefix covers it */
+function curie (iri: string, prefixes?: {[prefix: string]: string}): string | null {
+  for (const [prefix, namespace] of Object.entries(prefixes || {}))
+    if (typeof namespace === "string" && namespace.length > 0 && iri.startsWith(namespace)
+        && iri.substring(namespace.length).match(/^[A-Za-z_][-\w.]*$/))
+      return prefix + ":" + iri.substring(namespace.length);
+  return null;
+}
+
+/**
+ * Spell terms the way the document the reader is looking at spells them.
+ *
+ * Three answers, best first:
+ *
+ *  1. the source range the term was written in.  A validation result carries
+ *     IRIs, and `<http://hl7.example/Patient2>` is a fact about the term, not
+ *     about the document: line 8 says `<Patient2>`, and that is what the
+ *     reader is looking for.  This is the only spelling that is *read* rather
+ *     than reconstructed, so it is right even where the document does
+ *     something no rule here anticipates.
+ *  2. the document's own PREFIX table and BASE, for a term it doesn't
+ *     contain -- a property that is missing is still best named the way this
+ *     document names properties.
+ *  3. nothing, and the caller says it in full.
+ *
+ * Two things are deliberately *not* taken from the source.  A term whose
+ * written form is a nested structure -- Turtle's `[ :a 1 ]` for a blank node
+ * -- would quote a whole subgraph into the middle of a sentence, and its
+ * label reads better; and a literal is left to the caller, which already
+ * quotes and marks it up in the one way every document writes it.
+ */
+function lexerFor (parsed: ParsedTurtle, bnodes: BnodeAlignment): (triple: any) => TermLexer {
+  const text = parsed.text;
+  const anchorCache = new Map<any, any>();
+  const anchorsOf = (triple: any) => {
+    if (!triple)
+      return null;
+    if (!anchorCache.has(triple))
+      anchorCache.set(triple, tripleAnchors(parsed, triple, text, bnodes));
+    return anchorCache.get(triple);
+  };
+  const written = (range: Range | null | undefined): string | null => {
+    if (!range || range.to <= range.from)
+      return null;
+    const said = text.slice(range.from, range.to);
+    // a nested form stands for a subgraph, not a name
+    return said[0] === "[" || said[0] === "{" ? null : said;
+  };
+
+  return (triple: any): TermLexer => (term: any, role: TermRole) => {
+    if (term === undefined || term === null)
+      return null;
+    // a literal reads the same in any document; let the caller quote it
+    if (typeof term === "object")
+      return null;
+    if (typeof term !== "string")
+      return null;
+
+    const anchors = anchorsOf(triple);
+    if (anchors && (role === "subject" || role === "predicate" || role === "object")) {
+      const at = triple && triple[role];
+      // the term has to be the one standing in that position, not merely
+      // equal to some other term of the same triple
+      if (at !== undefined && termsEqual(at, term)) {
+        const said = written(anchors[role]);
+        if (said)
+          return said;
+      }
+    }
+    if (role === "node" || role === "subject") {
+      const said = written(rangeOfNode(parsed, term, bnodes));
+      if (said)
+        return said;
+    }
+    if (term.startsWith("_:"))
+      return null;                  // its label, which the caller has
+    return curie(term, parsed.prefixes) || relativeIri(term, parsed.base);
+  };
+}
+
+/** are these the same term, as a validation result spells them? */
+function termsEqual (a: any, b: any): boolean {
+  if (typeof a === "string" || typeof b === "string")
+    return a === b;
+  if (!a || !b)
+    return false;
+  return a.value === b.value && a.type === b.type && a.language === b.language;
+}
 
 function termStr (t: LdTerm): string {
   return typeof t === "object" ? JSON.stringify(t.value) : "<" + t + ">";
@@ -743,6 +925,17 @@ function repairNotes (valResult: unknown, shexcParsed: LocatedSchema): Diagnosti
   return notes;
 }
 
+/** How terms are spelled in the sentences (doc/error-reporting.md F6).
+ *
+ * "explicit" writes every IRI in full, which is unambiguous and says nothing
+ * about any document; "document" spells them as the document the reader is
+ * being pointed at spells them.  Explicit is the default: a caller with no
+ * document to send anyone to, or one whose output is compared rather than
+ * read, wants the spelling that doesn't move. */
+export interface MapErrorsOptions {
+  spelling?: "explicit" | "document";
+}
+
 /** mapValidationErrors - walk a validation result (single Failure, a
  * ShapeMap entry list, or anything ShExValidator returns) and resolve each
  * error to ranges in the schema and data documents.
@@ -753,10 +946,21 @@ function repairNotes (valResult: unknown, shexcParsed: LocatedSchema): Diagnosti
  */
 export function mapValidationErrors (valResult: unknown,
                                      shexcParsed: LocatedSchema,
-                                     turtleParsed?: ParsedTurtle | null): MappedErrors {
+                                     turtleParsed?: ParsedTurtle | null,
+                                     opts: MapErrorsOptions = {}): MappedErrors {
   const pairs: ErrorPair[] = [];
   const seen = new Set<object>();
   const bnodes: BnodeAlignment = {toProv: new Map(), used: new Set()};
+
+  // A sentence reads for one reader looking at one pair of documents, so
+  // how to spell a term is settled here rather than passed down every call.
+  const schemaMeta = (shexcParsed.schema || {}) as
+        {_prefixes?: {[p: string]: string}, _base?: string};
+  schemaPrefixes = schemaMeta._prefixes || {};
+  schemaBase = schemaMeta._base;
+  documentLexer = opts.spelling === "document" && turtleParsed && turtleParsed.quads
+    ? lexerFor(turtleParsed, bnodes)
+    : null;
 
   (function walk (node: any, ctx: WalkContext): void {
     if (!node || typeof node !== "object" || seen.has(node))

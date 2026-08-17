@@ -203,6 +203,9 @@ describe("nearest-bag repairs", function () {
     const result = new ShExValidator(schema, RdfJsDb(graph), {repairs: true})
           .validateShapeMap([{node: base + "x", shape: ShExValidator.Start}])[0];
     expect(ShExUtil.errsToSimple(result.appinfo).join("\n"))
-      .to.include("to conform: add 1 " + FOAF + "mbox");
+      .to.include("to conform: add 1 <" + FOAF + "mbox>");
+    // ...and with the schema's prefixes, as the schema writes it
+    expect(ShExUtil.errsToSimple(result.appinfo, {foaf: FOAF}).join("\n"))
+      .to.include("to conform: add 1 foaf:mbox");
   });
 });

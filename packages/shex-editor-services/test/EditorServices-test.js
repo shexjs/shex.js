@@ -272,6 +272,107 @@ describe("EditorServices", function () {
     });
   });
 
+  /* A constraint whose value is an inline shape lexically contains that
+   * shape's constraints, so its own highlight is only its delimiters -- and a
+   * note the author left between the last nested constraint and the closing
+   * brace is neither a delimiter nor a nested constraint.  Highlighting
+   * E107's `p:P31 { ps:P31 [...] }` used to paint "# wd:Q37748 = chromosome"
+   * along with the brace. */
+  describe("comments are trivia, not part of a constraint", function () {
+    const withComments = [
+      "PREFIX p: <http://www.wikidata.org/prop/>",
+      "PREFIX ps: <http://www.wikidata.org/prop/statement/>",
+      "PREFIX wd: <http://www.wikidata.org/entity/>",
+      "",
+      "<chromosome> EXTRA p:P279 {",
+      "    # instance of;",
+      "    p:P31 {",
+      "        ps:P31 [ wd:Q37748 ] # wd:Q37748 = chromosome",
+      "    } ;",
+      "    p:P279 { # a note before the nested constraint",
+      "        ps:P279 [ wd:Q186380 ]",
+      "    } ? ;",
+      "}",
+      ""].join("\n");
+
+    const parsed = EditorServices.parseShExC(withComments);
+    const tcs = {};
+    (function walk (expr) {
+      if (!expr || typeof expr !== "object")
+        return;
+      if (expr.type === "TripleConstraint")
+        tcs[expr.predicate.replace(/^.*\//, "")] = expr;
+      ["expression", "expressions", "valueExpr", "shapeExpr", "shapeExprs"].forEach(k => {
+        const v = expr[k];
+        if (Array.isArray(v)) v.forEach(walk); else walk(v);
+      });
+    })(parsed.schema.shapes[0]);
+
+    const parts = tc => (parsed.locate.exprAnchors(tc) || {parts: []})
+          .parts.map(r => slice(withComments, r));
+
+    it("should find the constraints this is about", function () {
+      // prop/P31 and prop/statement/P31 both end in P31; the walk keeps the
+      // inner one, which is why the outer is fetched through the shape below
+      expect(Object.keys(tcs).sort()).to.deep.equal(["P279", "P31"]);
+    });
+
+    it("should paint only the delimiters of a constraint holding an inline shape", function () {
+      const outer = parsed.schema.shapes[0].shapeExpr.expression.expressions[0];
+      expect(outer.predicate).to.equal("http://www.wikidata.org/prop/P31");
+      // the whole range does contain the comment -- it is inside the braces
+      expect(slice(withComments, parsed.locate.expr(outer))).to.include("# wd:Q37748");
+      // ...but what lights up is the two ends of it
+      expect(parts(outer)).to.deep.equal(["p:P31 {", "}"]);
+    });
+
+    it("should skip a comment before the nested constraint too", function () {
+      const outer = parsed.schema.shapes[0].shapeExpr.expression.expressions[1];
+      expect(outer.predicate).to.equal("http://www.wikidata.org/prop/P279");
+      expect(parts(outer)).to.deep.equal(["p:P279 {", "} ?"]);
+    });
+
+    it("should leave a constraint with nothing nested in it whole", function () {
+      expect(parts(tcs.P31)).to.deep.equal(["ps:P31 [ wd:Q37748 ]"]);
+    });
+
+    it("should keep the predicate side clear of the comment", function () {
+      const label = Object.keys(parsed.schema._locations)[0];
+      expect(slice(withComments, parsed.locate.constraint(
+        label, "http://www.wikidata.org/prop/P31"))).to.equal("p:P31");
+      expect(slice(withComments, parsed.locate.constraint(
+        label, "http://www.wikidata.org/prop/P279"))).to.equal("p:P279");
+    });
+  });
+
+  describe("commentRanges", function () {
+    const found = text => EditorServices.commentRanges(text)
+          .map(r => text.substring(r.from, r.to));
+
+    it("should not read an IRI fragment as a comment", function () {
+      // the wikidata schemas are full of these
+      expect(found("PREFIX E107: <https://www.wikidata.org/wiki/Special:EntitySchemaText/E107#>"))
+        .to.deep.equal([]);
+    });
+
+    it("should not read a hash inside a literal as a comment", function () {
+      expect(found('<S> { :p ["a # b"] } # real')).to.deep.equal(["# real"]);
+      const long = "<S> { :p [" + "'''" + "a\n# not a comment\n" + "'''" + "] } # real";
+      expect(found(long)).to.deep.equal(["# real"]);
+    });
+
+    it("should not read an escaped hash in a local name as a comment", function () {
+      expect(found("<S> { :p ex:a\\#b } # real")).to.deep.equal(["# real"]);
+    });
+
+    it("should take a comment to the end of its line, or of the document", function () {
+      expect(found('# with <angles> and "quotes"\n<S> { :p . }'))
+        .to.deep.equal(['# with <angles> and "quotes"']);
+      expect(found("<S> { :p . } # trailing, no newline"))
+        .to.deep.equal(["# trailing, no newline"]);
+    });
+  });
+
   describe("stringifyWithOffsets", function () {
     const results = {type: "ShapeTest", solution: {type: "TripleConstraintSolutions", solutions: [
       {type: "TestedTriple", subject: "s", predicate: "p", object: {value: "o1"}},

@@ -20,6 +20,25 @@ import type * as ShExJ from "shexj";
 
 const ShExWriter = require("@shexjs/writer");
 
+/** where in a sentence a term stands, so a host can spell it accordingly */
+export type TermRole = "subject" | "predicate" | "object" | "node" | "property" | "shape";
+
+/**
+ * How a host spells a term for a reader who is looking at a document.
+ *
+ * `<http://hl7.example/Patient2>` is the same node the reader sees written
+ * `<Patient2>` on line 8, and only the host knows that: it has the document,
+ * its prefixes and its base -- and, where the term is actually written down,
+ * the range it was written in, which is better than any of them, being what
+ * the author typed rather than a reconstruction of it.
+ *
+ * Return null for a term the host can't better, and the explicit spelling is
+ * used.  Terms are spelled for the document the *reader* is being sent to,
+ * which is not always the one the term came from: a property missing from
+ * the patient is spelled as the patient's document spells its properties.
+ */
+export type TermLexer = (term: any, role: TermRole) => string | null;
+
 /** what a caller may already know about where an error was found */
 export interface ErrorContext {
   /** the node has been named by whatever this nests under: say only why */
@@ -30,6 +49,11 @@ export interface ErrorContext {
   node?: any;
   /** the schema's prefixes, so a quoted fragment reads as the schema spells it */
   prefixes?: { [prefix: string]: string };
+  /** the schema's BASE, so a shape it declares reads as `<PatientShape>`
+   * rather than as the absolute IRI that spelling stands for */
+  base?: string;
+  /** how the host spells terms, where it can do better than the full IRI */
+  lex?: TermLexer;
 }
 
 /** a leaf error, said once, with whatever a host needs to point at it */
@@ -45,12 +69,27 @@ export interface ErrorDescription {
 }
 
 /** an IRI as the schema spells it, where it has a prefix for it */
-export function iriText (iri: string, prefixes?: { [prefix: string]: string }): string {
+export function iriText (iri: string, prefixes?: { [prefix: string]: string },
+                         base?: string): string {
   for (const [prefix, namespace] of Object.entries(prefixes || {}))
     if (typeof namespace === "string" && namespace.length > 0 && iri.startsWith(namespace)
         && iri.substring(namespace.length).match(/^[A-Za-z_][-\w.]*$/))
       return prefix + ":" + iri.substring(namespace.length);
-  return "<" + iri + ">";
+  return relativeIri(iri, base) || "<" + iri + ">";
+}
+
+/**
+ * An IRI written against a BASE, or null where it isn't under one.
+ *
+ * Only a plain relative reference: something that would re-resolve elsewhere
+ * -- a second scheme, a leading slash, a query or a fragment -- has to stay
+ * absolute or it stops naming the same thing.
+ */
+export function relativeIri (iri: string, base?: string): string | null {
+  if (!base || !iri.startsWith(base) || iri.length === base.length)
+    return null;
+  const rest = iri.substring(base.length);
+  return rest.match(/^[^\/:?#][^:?#]*$/) ? "<" + rest + ">" : null;
 }
 
 /** an RDF term as a reader writes it */
@@ -70,6 +109,36 @@ export function termText (term: any): string {
 }
 
 /**
+ * A term from the data, as the reader will find it written.
+ *
+ * The host's spelling if it has one, and the explicit form otherwise -- never
+ * the *schema's* prefixes, which are a different table that may bind the same
+ * prefix to a different namespace.  A friendly name that names something else
+ * is worse than a long one.
+ */
+export function dataTerm (term: any, ctx: ErrorContext, role: TermRole): string {
+  const said = ctx.lex ? ctx.lex(term, role) : null;
+  return said || termText(term);
+}
+
+/**
+ * An IRI the *schema* names -- a property it requires, a shape it refers to.
+ *
+ * The host still gets first say: a property missing from a document is best
+ * spelled the way that document spells its properties, since that is where
+ * the reader will go looking for it.  Failing that, the schema's own
+ * spelling, which is at least a table this IRI was written against.
+ */
+export function schemaIri (iri: any, ctx: ErrorContext, role: TermRole): string {
+  const said = ctx.lex ? ctx.lex(iri, role) : null;
+  if (said)
+    return said;
+  return typeof iri === "string" && !iri.startsWith("_:")
+    ? iriText(iri, ctx.prefixes, ctx.base)
+    : termText(iri);
+}
+
+/**
  * A fragment of schema, as ShExC.
  *
  * A message naming what a node had to satisfy reads as the schema does --
@@ -77,11 +146,12 @@ export function termText (term: any): string {
  * A fragment the writer can't render (a reference to something it hasn't
  * been given, say) falls back to its label or to nothing, never to JSON.
  */
-export function shexcFragment (expr: any, prefixes?: { [prefix: string]: string }): string {
+export function shexcFragment (expr: any, prefixes?: { [prefix: string]: string },
+                               base?: string): string {
   if (expr === undefined || expr === null)
     return "";
   if (typeof expr === "string")            // a shape reference
-    return "@<" + expr + ">";
+    return "@" + iriText(expr, prefixes, base);
   try {
     const writer = new ShExWriter({simplifyParentheses: false, prefixes: prefixes || {}});
     const said = writer.writeShapeExpr(expr);
@@ -92,17 +162,21 @@ export function shexcFragment (expr: any, prefixes?: { [prefix: string]: string 
 }
 
 /** a TripleConstraint as a reader would write it: predicate, value, cardinality */
-export function constraintText (tc: any, prefixes?: { [prefix: string]: string }): string {
+export function constraintText (tc: any, prefixes?: { [prefix: string]: string },
+                                ctx?: ErrorContext): string {
   if (!tc || typeof tc !== "object")
     return "the constraint";
-  const value = tc.valueExpr === undefined ? "." : shexcFragment(tc.valueExpr, prefixes) || ".";
+  const value = tc.valueExpr === undefined ? "."
+        : shexcFragment(tc.valueExpr, prefixes, ctx && ctx.base) || ".";
   const min = tc.min === undefined ? 1 : tc.min, max = tc.max === undefined ? 1 : tc.max;
   const card = min === 1 && max === 1 ? ""
     : min === 0 && max === 1 ? "?"
     : min === 0 && max === -1 ? "*"
     : min === 1 && max === -1 ? "+"
     : " {" + min + "," + (max === -1 ? "*" : max) + "}";
-  return (tc.predicate ? "<" + tc.predicate + "> " : "") + value + card;
+  const predicate = tc.predicate === undefined ? ""
+        : schemaIri(tc.predicate, ctx || {prefixes}, "predicate") + " ";
+  return predicate + value + card;
 }
 
 /**
@@ -145,40 +219,41 @@ function firstLine (said: any): string {
 
 const leaves: {[type: string]: (err: any, ctx: ErrorContext) => ErrorDescription} = {
   TypeMismatch: (err, ctx) => ({
-    text: termText(err.triple && err.triple.object) + " doesn't satisfy "
-      + constraintText(err.constraint || ctx.constraint, ctx.prefixes),
+    text: dataTerm(err.triple && err.triple.object, ctx, "object") + " doesn't satisfy "
+      + constraintText(err.constraint || ctx.constraint, ctx.prefixes, ctx),
     schemaObj: err.constraint || ctx.constraint,
     predicate: (err.constraint || ctx.constraint || {}).predicate
       || (err.triple && err.triple.predicate),
     triple: err.triple,
   }),
   MissingProperty: (err, ctx) => ({
-    text: "missing property " + termText(err.property)
-      + (err.valueExpr === undefined ? "" : " " + shexcFragment(err.valueExpr, ctx.prefixes)),
+    text: "missing property " + schemaIri(err.property, ctx, "property")
+      + (err.valueExpr === undefined ? "" : " " + shexcFragment(err.valueExpr, ctx.prefixes, ctx.base)),
     predicate: err.property,
     node: ctx.node,
   }),
   ExcessTripleViolation: (err, ctx) => ({
-    text: "too many occurrences of " + termText(err.property || (err.triple && err.triple.predicate)),
+    text: "too many occurrences of "
+      + schemaIri(err.property || (err.triple && err.triple.predicate), ctx, "predicate"),
     predicate: err.property || (err.triple && err.triple.predicate),
     triple: err.triple,
     node: ctx.node,
   }),
   ClosedShapeViolation: (err, ctx) => ({
     text: "unexpected in a closed shape: "
-      + (err.unexpectedTriples || []).map((t: any) => termText(t.predicate)).join(", "),
+      + (err.unexpectedTriples || []).map((t: any) => dataTerm(t.predicate, ctx, "predicate")).join(", "),
     triples: err.unexpectedTriples,
     node: ctx.node,
   }),
   NodeConstraintViolation: (err, ctx) => ({
     text: (ctx.terse
            ? ""
-           : termText(err.node) + " doesn't satisfy "
-             + (shexcFragment(err.shapeExpr, ctx.prefixes) || "the node constraint")
+           : dataTerm(err.node, ctx, "node") + " doesn't satisfy "
+             + (shexcFragment(err.shapeExpr, ctx.prefixes, ctx.base) || "the node constraint")
              + ((err.errors || []).length === 0 ? "" : ": "))
       + (err.errors || []).map((leaf: any) => nodeConstraintDetail(leaf, ctx.prefixes)).join("; ")
       + ((err.errors || []).length === 0 && ctx.terse
-         ? "doesn't satisfy " + (shexcFragment(err.shapeExpr, ctx.prefixes) || "the node constraint")
+         ? "doesn't satisfy " + (shexcFragment(err.shapeExpr, ctx.prefixes, ctx.base) || "the node constraint")
          : ""),
     schemaObj: err.shapeExpr || ctx.constraint,
     predicate: (ctx.constraint || {}).predicate || (ctx.triple && ctx.triple.predicate),
@@ -186,12 +261,12 @@ const leaves: {[type: string]: (err: any, ctx: ErrorContext) => ErrorDescription
     node: err.node || ctx.node,
   }),
   NegatedProperty: (err, ctx) => ({
-    text: "unexpected " + termText(err.property),
+    text: "unexpected " + dataTerm(err.property, ctx, "predicate"),
     predicate: err.property,
     node: ctx.node,
   }),
   AbstractShapeFailure: (err, ctx) => ({
-    text: "abstract shape " + termText(err.shape) + " can't be matched directly",
+    text: "abstract shape " + schemaIri(err.shape, ctx, "shape") + " can't be matched directly",
     node: ctx.node,
   }),
   SemActFailure: (_err, ctx) => ({
@@ -215,8 +290,8 @@ const leaves: {[type: string]: (err: any, ctx: ErrorContext) => ErrorDescription
           ? "add " + ways.map((arcs: string[]) => arcs[0]).join(" or ")
           : ways.map((arcs: string[]) => "add " + arcs.join(" and ")).join(", or ");
     return {
-      text: "triple " + termText(err.triple && err.triple.predicate) + " "
-        + termText(err.triple && err.triple.object) + " fits no triple constraint: "
+      text: "triple " + dataTerm(err.triple && err.triple.predicate, ctx, "predicate") + " "
+        + dataTerm(err.triple && err.triple.object, ctx, "object") + " fits no triple constraint: "
         + (ways.length === 0 ? "remove it" : "either " + said + ", or remove it"),
       predicate: err.triple && err.triple.predicate,
       triple: err.triple,
@@ -247,8 +322,9 @@ export function isLeafError (err: any): boolean {
 }
 
 /** what would make a node conform, as one line per way */
-export function repairText (repairs: any[]): string[] {
+export function repairText (repairs: any[], ctx: ErrorContext = {}): string[] {
   return (repairs || []).map(repair => (repair.arcs || []).map(
-    (arc: any) => (arc.delta > 0 ? "add " : "remove ") + Math.abs(arc.delta) + " " + arc.property)
+    (arc: any) => (arc.delta > 0 ? "add " : "remove ") + Math.abs(arc.delta)
+      + " " + schemaIri(arc.property, ctx, "property"))
     .join(" and ")).filter(way => way !== "");
 }

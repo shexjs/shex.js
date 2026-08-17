@@ -68,11 +68,17 @@ export interface WikidataDbOptions extends Omit<WikibaseRdfOptions, "siteInfo"> 
    * where it would have fetched them and fetches everything else as usual,
    * so a speculative constellation is checked in its real surroundings. */
   pages?: string[];
-  /** synchronous transport: fetch a URL, return the response body.  The
-   * default uses a synchronous XMLHttpRequest, which browsers provide;
-   * under node install a shim (e.g. neighborhood-sparql's test sync-fetch)
-   * or pass this option. */
+  /** synchronous transport: fetch a URL, return the response body.
+   *
+   * Only the synchronous db needs one, and only for a page it hasn't got.
+   * There is no synchronous fetch() -- the default here is a synchronous
+   * XMLHttpRequest, which browsers still provide but have deprecated, and
+   * which blocks the tab while it runs.  Prefer the asynchronous db (see
+   * `asAsyncDb`), which uses fetch() and needs none of this. */
   fetchDoc?: (url: string) => string;
+  /** asynchronous transport: fetch a URL, resolve to the response body.
+   * Defaults to `fetch()`.  This is the one to want. */
+  fetchDocAsync?: (url: string) => Promise<string>;
   /** resolve a sitelink's site id yourself instead of via the sitematrix */
   siteInfo?: (siteId: string) => SiteInfo | undefined;
 }
@@ -191,6 +197,10 @@ export interface WikidataNeighborhoodDb extends NeighborhoodWebAppDb {
     diagnostics: {from: number, to: number, severity: string, message: string}[];
   } | null;
   loadedPages (): { id: string, text: string }[];
+  /** a neighborhood, fetching the entity page with fetch() if it hasn't got
+   * it.  Use it through asAsyncDb(); see that for why. */
+  getNeighborhoodAsync (point: RdfJs.Term, shapeLabel: string | typeof Start,
+                        shape: Shape): Promise<Neighborhood>;
 }
 
 export function wikidataDB (queryTracker?: DbQueryTracker, options: WikidataDbOptions = {}): WikidataNeighborhoodDb {
@@ -227,6 +237,24 @@ export function wikidataDB (queryTracker?: DbQueryTracker, options: WikidataDbOp
     if (xhr.status >= 400)
       throw Error(`GET <${url}> returned ${xhr.status}:\n${xhr.responseText}`);
     return xhr.responseText;
+  };
+
+  const fetchDocAsync = options.fetchDocAsync || async function (url: string): Promise<string> {
+    if (url.startsWith("file://"))
+      return fs.readFileSync(fileURLToPath(url), "utf8");
+    // The header story is the same as the synchronous transport's: Wikimedia
+    // 403s clients that don't identify themselves (T400119), a browser sets
+    // its own User-Agent and won't let anyone else, and a *custom* header
+    // would make this a preflighted cross-origin request.  fetch() at least
+    // could preflight -- but there is no reason to pay for it.
+    const headers: Record<string, string> = {"Accept": "application/json"};
+    if (!inBrowser())
+      headers["User-Agent"] = USER_AGENT;
+    const response = await fetch(url, {headers});
+    const body = await response.text();
+    if (!response.ok)
+      throw Error(`GET <${url}> returned ${response.status}:\n${body}`);
+    return body;
   };
 
   /** this process over disk over network */
@@ -294,6 +322,69 @@ export function wikidataDB (queryTracker?: DbQueryTracker, options: WikidataDbOp
 
   /** the pages this DB has read, by the id each is the page of */
   const pageTexts = new Map<string, string>();
+
+  /**
+   * Load the sitematrix, if this page will want it.
+   *
+   * The converter resolves sitelinks through a *synchronous* callback, so by
+   * the time it asks there is nowhere left to await -- it has to be here or
+   * not at all.  Only pages with sitelinks need it, so a walk over entities
+   * that have none never fetches it.
+   */
+  async function ensureSiteMatrixAsync (doc: EntityDoc): Promise<void> {
+    if (siteInfo !== null) return;
+    const cached = siteInfoByUrl.get(siteMatrixUrl);
+    if (cached !== undefined) { siteInfo = cached; return; }
+    const entity = Object.values(doc.entities)[0] as {sitelinks?: object} | undefined;
+    if (entity === undefined || entity.sitelinks === undefined
+        || Object.keys(entity.sitelinks).length === 0)
+      return;
+    let text = fetchedPages.get(siteMatrixUrl);
+    if (text === undefined) {
+      text = await fetchDocAsync(siteMatrixUrl);
+      fetchedPages.set(siteMatrixUrl, text);
+    }
+    siteInfo = siteInfoFromSitematrix(JSON.parse(text));
+    siteInfoByUrl.set(siteMatrixUrl, siteInfo);
+  }
+
+  /** the same, awaiting the network rather than blocking on it */
+  async function ensureLoadedAsync (id: string): Promise<void> {
+    if (loaded.has(id)) return;
+    let doc = supplied.get(id);
+    if (doc === undefined) {
+      const url = entityDataUrl(id);
+      let text = fetchedPages.get(url);
+      if (text === undefined) {
+        text = await fetchDocAsync(url);
+        fetchedPages.set(url, text);
+      }
+      pageTexts.set(id, text);
+      doc = JSON.parse(text) as EntityDoc;
+    }
+    await ensureSiteMatrixAsync(doc);
+    store.addQuads(converter.entityToQuads(doc, id) as any);
+    loaded.add(id);
+    const returned = Object.keys(doc.entities)[0];
+    if (returned !== id) loaded.add(returned);
+  }
+
+  /**
+   * A neighborhood, fetching the entity page first if this is a node the DB
+   * hasn't got.
+   *
+   * Which is the only thing here that can need the network.  Everything the
+   * walk does *within* an entity -- its statements, their qualifiers, their
+   * values -- is already in the page that was fetched for it, so this awaits
+   * only where the validation crosses from one entity to another.
+   */
+  async function getNeighborhoodAsync (point: RdfJs.Term, shapeLabel: string | typeof Start,
+                                       shape: Shape): Promise<Neighborhood> {
+    const id = entityOf(point);
+    if (id !== null)
+      await ensureLoadedAsync(id);
+    return getNeighborhood(point, shapeLabel, shape);
+  }
 
   function ensureLoaded (id: string): void {
     if (loaded.has(id)) return;
@@ -411,6 +502,7 @@ export function wikidataDB (queryTracker?: DbQueryTracker, options: WikidataDbOp
 
   return {
     getNeighborhood,
+    getNeighborhoodAsync,
     getSubjects: () => store.getSubjects(null, null, null),
     getPredicates: () => store.getPredicates(null, null, null),
     getObjects: () => store.getObjects(null, null, null),
@@ -710,4 +802,27 @@ export const paneEditor: ParamEditor = {
 
 function isEntityDataBase (base: string): boolean {
   return /^(https?|file):\/\/\S*[/=:]$/.test(base);
+}
+
+/**
+ * The asynchronous face of one of these, for ShExValidator.validateShapeMapAsync.
+ *
+ * The db is the same db -- same store, same cache, same loaded pages -- with
+ * getNeighborhood answering with a promise, so it fetches with fetch() rather
+ * than with a synchronous XMLHttpRequest that blocks the tab.  It awaits only
+ * when the walk crosses into an entity page it hasn't got.
+ */
+export function asAsyncDb (db: WikidataNeighborhoodDb) {
+  // delegate, don't copy: `size` and friends are getters over the live store,
+  // and Object.assign would call each one once and freeze the answer -- a db
+  // that reported 0 quads forever, having been copied before it loaded
+  // anything.
+  return Object.create(db, {
+    getNeighborhood: {
+      value: db.getNeighborhoodAsync.bind(db), enumerable: true, configurable: true,
+    },
+  }) as Omit<WikidataNeighborhoodDb, "getNeighborhood"> & {
+    getNeighborhood (point: RdfJs.Term, shapeLabel: string | typeof Start,
+                     shape: Shape): Promise<Neighborhood>;
+  };
 }

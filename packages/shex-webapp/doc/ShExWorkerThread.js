@@ -13,8 +13,13 @@ try {
   switch (msg.data.request) {
   case "create":
     errorText = "creating validator";
+    // An endpoint is a network away, and a worker blocked on a synchronous
+    // request is a worker that can't answer anything else -- including being
+    // told to stop.  Ask with fetch() and let the validation stop at the
+    // fetch instead (see validateShapeMapAsync below).
     const inputData = "endpoint" in msg.data
-          ? ShExWebApp.SparqlDb(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
+          ? ShExWebApp.SparqlDbAsync(
+            ShExWebApp.SparqlDb(msg.data.endpoint, msg.data.slurp ? queryTracker() : null))
           : ShExWebApp.RdfJsDb(makeStaticDB(msg.data.data.map(t => WorkerMarshalling.jsonTripleToRdfjsTriple(t, N3js.DataFactory))));
 
     let createOpts = msg.data.options;
@@ -43,7 +48,9 @@ try {
       if (singletonMap[0].shape === START_SHAPE_INDEX_ENTRY)
         singletonMap[0].shape = ShExWebApp.Validator.Start;
       time = new Date();
-      const newResults = validator.validateShapeMap(singletonMap, options.track ? makeRelayTracker() : undefined); // undefined to trigger default parameter assignment
+      // ...Async: right for either db -- given one that doesn't fetch it is
+      // a single traversal and a single await
+      const newResults = await validator.validateShapeMapAsync(singletonMap, options.track ? makeRelayTracker() : undefined); // undefined to trigger default parameter assignment
       time = new Date() - time;
       newResults.forEach(function (res) {
         if (res.shape === ShExWebApp.Validator.Start)

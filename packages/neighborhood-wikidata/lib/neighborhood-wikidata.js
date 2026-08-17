@@ -32,6 +32,15 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.paneEditor = exports.dbParams = exports.ctor = exports.queryMapResolvers = exports.capabilities = exports.description = exports.label = exports.name = exports.EntityResolutionError = void 0;
 exports.forgetPages = forgetPages;
@@ -42,6 +51,7 @@ exports.asEntityDoc = asEntityDoc;
 exports.fromParams = fromParams;
 exports.distributeDocuments = distributeDocuments;
 exports.claimPaneText = claimPaneText;
+exports.asAsyncDb = asAsyncDb;
 const neighborhood_api_1 = require("@shexjs/neighborhood-api");
 const N3 = __importStar(require("n3"));
 const fs = __importStar(require("fs"));
@@ -178,6 +188,25 @@ function wikidataDB(queryTracker, options = {}) {
             throw Error(`GET <${url}> returned ${xhr.status}:\n${xhr.responseText}`);
         return xhr.responseText;
     };
+    const fetchDocAsync = options.fetchDocAsync || function (url) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (url.startsWith("file://"))
+                return fs.readFileSync((0, url_1.fileURLToPath)(url), "utf8");
+            // The header story is the same as the synchronous transport's: Wikimedia
+            // 403s clients that don't identify themselves (T400119), a browser sets
+            // its own User-Agent and won't let anyone else, and a *custom* header
+            // would make this a preflighted cross-origin request.  fetch() at least
+            // could preflight -- but there is no reason to pay for it.
+            const headers = { "Accept": "application/json" };
+            if (!inBrowser())
+                headers["User-Agent"] = USER_AGENT;
+            const response = yield fetch(url, { headers });
+            const body = yield response.text();
+            if (!response.ok)
+                throw Error(`GET <${url}> returned ${response.status}:\n${body}`);
+            return body;
+        });
+    };
     /** this process over disk over network */
     function getDoc(cacheKey, url) {
         const remembered = fetchedPages.get(url);
@@ -239,6 +268,77 @@ function wikidataDB(queryTracker, options = {}) {
     });
     /** the pages this DB has read, by the id each is the page of */
     const pageTexts = new Map();
+    /**
+     * Load the sitematrix, if this page will want it.
+     *
+     * The converter resolves sitelinks through a *synchronous* callback, so by
+     * the time it asks there is nowhere left to await -- it has to be here or
+     * not at all.  Only pages with sitelinks need it, so a walk over entities
+     * that have none never fetches it.
+     */
+    function ensureSiteMatrixAsync(doc) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (siteInfo !== null)
+                return;
+            const cached = siteInfoByUrl.get(siteMatrixUrl);
+            if (cached !== undefined) {
+                siteInfo = cached;
+                return;
+            }
+            const entity = Object.values(doc.entities)[0];
+            if (entity === undefined || entity.sitelinks === undefined
+                || Object.keys(entity.sitelinks).length === 0)
+                return;
+            let text = fetchedPages.get(siteMatrixUrl);
+            if (text === undefined) {
+                text = yield fetchDocAsync(siteMatrixUrl);
+                fetchedPages.set(siteMatrixUrl, text);
+            }
+            siteInfo = siteInfoFromSitematrix(JSON.parse(text));
+            siteInfoByUrl.set(siteMatrixUrl, siteInfo);
+        });
+    }
+    /** the same, awaiting the network rather than blocking on it */
+    function ensureLoadedAsync(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (loaded.has(id))
+                return;
+            let doc = supplied.get(id);
+            if (doc === undefined) {
+                const url = entityDataUrl(id);
+                let text = fetchedPages.get(url);
+                if (text === undefined) {
+                    text = yield fetchDocAsync(url);
+                    fetchedPages.set(url, text);
+                }
+                pageTexts.set(id, text);
+                doc = JSON.parse(text);
+            }
+            yield ensureSiteMatrixAsync(doc);
+            store.addQuads(converter.entityToQuads(doc, id));
+            loaded.add(id);
+            const returned = Object.keys(doc.entities)[0];
+            if (returned !== id)
+                loaded.add(returned);
+        });
+    }
+    /**
+     * A neighborhood, fetching the entity page first if this is a node the DB
+     * hasn't got.
+     *
+     * Which is the only thing here that can need the network.  Everything the
+     * walk does *within* an entity -- its statements, their qualifiers, their
+     * values -- is already in the page that was fetched for it, so this awaits
+     * only where the validation crosses from one entity to another.
+     */
+    function getNeighborhoodAsync(point, shapeLabel, shape) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const id = entityOf(point);
+            if (id !== null)
+                yield ensureLoadedAsync(id);
+            return getNeighborhood(point, shapeLabel, shape);
+        });
+    }
     function ensureLoaded(id) {
         if (loaded.has(id))
             return;
@@ -350,6 +450,7 @@ function wikidataDB(queryTracker, options = {}) {
     }
     return {
         getNeighborhood,
+        getNeighborhoodAsync,
         getSubjects: () => store.getSubjects(null, null, null),
         getPredicates: () => store.getPredicates(null, null, null),
         getObjects: () => store.getObjects(null, null, null),
@@ -634,5 +735,24 @@ exports.paneEditor = {
 };
 function isEntityDataBase(base) {
     return /^(https?|file):\/\/\S*[/=:]$/.test(base);
+}
+/**
+ * The asynchronous face of one of these, for ShExValidator.validateShapeMapAsync.
+ *
+ * The db is the same db -- same store, same cache, same loaded pages -- with
+ * getNeighborhood answering with a promise, so it fetches with fetch() rather
+ * than with a synchronous XMLHttpRequest that blocks the tab.  It awaits only
+ * when the walk crosses into an entity page it hasn't got.
+ */
+function asAsyncDb(db) {
+    // delegate, don't copy: `size` and friends are getters over the live store,
+    // and Object.assign would call each one once and freeze the answer -- a db
+    // that reported 0 quads forever, having been copied before it loaded
+    // anything.
+    return Object.create(db, {
+        getNeighborhood: {
+            value: db.getNeighborhoodAsync.bind(db), enumerable: true, configurable: true,
+        },
+    });
 }
 //# sourceMappingURL=neighborhood-wikidata.js.map

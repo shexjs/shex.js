@@ -21740,8 +21740,18 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.paneEditor = exports.dbParams = exports.ctor = exports.queryMapResolvers = exports.capabilities = exports.description = exports.label = exports.name = exports.BNodeIdentityError = void 0;
+exports.asAsyncDb = asAsyncDb;
 exports.sparqlDB = sparqlDB;
 exports.fromParams = fromParams;
 exports.claimPaneText = claimPaneText;
@@ -21749,6 +21759,21 @@ const neighborhood_api_1 = __webpack_require__(7682);
 const ShExUtil = __importStar(__webpack_require__(5590));
 const visitor_1 = __webpack_require__(2818);
 const N3 = __importStar(__webpack_require__(4957)); // TODO: set global externally
+/**
+ * The asynchronous face of one of these, for ShExValidator.validateShapeMapAsync.
+ *
+ * The same db -- same query cache, same blank node descriptions -- asking the
+ * endpoint with fetch() instead of a synchronous XMLHttpRequest.  The work
+ * either way is the same generator; only the waiting differs.
+ */
+function asAsyncDb(db) {
+    // delegate rather than copy, so live members stay live
+    return Object.create(db, {
+        getNeighborhood: {
+            value: db.getNeighborhoodAsync.bind(db), enumerable: true, configurable: true,
+        },
+    });
+}
 /** Thrown when a blank node can't be pinned down by an anchored description. */
 class BNodeIdentityError extends Error {
     constructor(message, query) {
@@ -21768,17 +21793,42 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
     const verify = options.verifyBnodeDescriptions !== false;
     const execute = options.executeQuery ||
         ((q, ep, df) => ShExUtil.executeQuery(q, ep, df));
+    const executeAsync = options.executeQueryAsync ||
+        ((q, ep, df) => ShExUtil.executeQueryPromise(q, ep, df));
     const queryCache = options.cacheQueries === false ? null : new Map();
-    const runQuery = (query) => {
+    /**
+     * Ask the endpoint, without saying how to wait for it.
+     *
+     * The db's work is the same whether the rows arrive from a blocking
+     * request or from a promise, so it is written once as a generator that
+     * *yields the query* and is resumed with the rows.  driveSync answers with
+     * the synchronous transport, driveAsync awaits fetch() -- and the cache
+     * means neither is asked twice for the same query.
+     */
+    function* runQuery(query) {
         if (queryCache === null)
-            return execute(query, endpoint, DataFactory);
+            return yield query;
         let rows = queryCache.get(query);
         if (rows === undefined) {
-            rows = execute(query, endpoint, DataFactory);
+            rows = yield query;
             queryCache.set(query, rows);
         }
         return rows;
-    };
+    }
+    function driveSync(task) {
+        let step = task.next(undefined);
+        while (!step.done)
+            step = task.next(execute(step.value, endpoint, DataFactory));
+        return step.value;
+    }
+    function driveAsync(task) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let step = task.next(undefined);
+            while (!step.done)
+                step = task.next(yield executeAsync(step.value, endpoint, DataFactory));
+            return step.value;
+        });
+    }
     /** Every blank node this DB has handed out, by its internal label. */
     const described = new Map();
     let nextLabel = 0;
@@ -22135,7 +22185,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
      * This is the difference between a subtly wrong description showing up as an
      * error and showing up as a wrong validation result.
      */
-    function verifyDescriptions(fresh) {
+    function* verifyDescriptions(fresh) {
         if (!verify || fresh.length === 0)
             return;
         const branches = fresh.map((d, i) => `  {\n${instantiate(d.text, `v${i}_`)}` +
@@ -22143,7 +22193,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         const query = `SELECT ?i (COUNT(DISTINCT ?v) AS ?n) WHERE {\n` +
             branches.join("\n  UNION\n") + `\n} GROUP BY ?i`;
         const counts = new Map();
-        for (const row of runQuery(query))
+        for (const row of yield* runQuery(query))
             counts.set(parseInt(row[0].value, 10), parseInt(row[1].value, 10));
         for (let i = 0; i < fresh.length; ++i) {
             const got = counts.get(i) || 0;
@@ -22187,11 +22237,11 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
      * chains -- and only walks the blank-node component when the probe shows
      * blank nodes (the truncation retry below escalates the same way when a
      * description bottoms out). */
-    function fetch(point, preds, inverse) {
+    function* fetch(point, preds, inverse) {
         for (let depth = options.expectBnodes ? (startDepth || 4) : 0;; depth = depth === 0 ? (startDepth || 4) : Math.min(depth * 2, maxDepth)) {
             const anchor = descriptionOf(point);
             const query = componentQuery(anchor, preds, depth, inverse);
-            const rows = runQuery(query);
+            const rows = yield* runQuery(query);
             if (rows.length === 0)
                 return [];
             // Rows are [lvl, s, p, o, a0, a1, ...]; the anchor columns repeat.
@@ -22275,7 +22325,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
                 fresh.push(describe(internalOf.get(c.key), c.b, c.v, matches, text));
                 fresh.push(...mintNested(c.b, matches, internalOf));
             }
-            verifyDescriptions(fresh);
+            yield* verifyDescriptions(fresh);
             // Describing a blank node walked all its arcs; remember them so stepping
             // into it needs no further query.
             const byInternal = new Map([...internalOf].map(([k, l]) => [l, k]));
@@ -22310,7 +22360,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         return DataFactory.blankNode(label);
     }
     // ── NeighborhoodDb ────────────────────────────────────────────────────────
-    function getNeighborhood(point, shapeLabel, shape) {
+    function* getNeighborhood(point, shapeLabel, shape) {
         const arcs = requiredArcs(shape);
         const wantEverything = !!shape.closed || !!options.allOutgoing;
         const outPreds = wantEverything ? null : arcs.out;
@@ -22319,7 +22369,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
             queryTracker.start(false, point, shapeLabel);
         const cached = cachedOutgoing(point, outPreds);
         const outgoing = (wantEverything || outPreds.length > 0)
-            ? (cached !== null ? cached : fetch(point, outPreds, false))
+            ? (cached !== null ? cached : yield* fetch(point, outPreds, false))
             : [];
         if (queryTracker) {
             const now = Date.now();
@@ -22330,7 +22380,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         if (arcs.anyInverse) {
             if (queryTracker)
                 queryTracker.start(true, point, shapeLabel);
-            incoming = fetch(point, null, true);
+            incoming = yield* fetch(point, null, true);
             if (queryTracker)
                 queryTracker.end(incoming, Date.now() - startTime);
         }
@@ -22347,23 +22397,27 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
             ? known.outgoing
             : known.outgoing.filter(q => preds.indexOf(q.predicate.value) !== -1);
     }
-    function getQuads(s, p, o) {
+    function* getQuads(s, p, o) {
         const spo = [["?s", s], ["?p", p], ["?o", o]];
         const selected = spo.filter(([, t]) => !t).map(([v]) => v);
         const where = spo.map(([v, t]) => t ? turtlifyRdfJs(t) : v).join(" ");
-        const rows = runQuery(`SELECT ${selected.join(" ") || "*"} WHERE { ${where} }`);
+        const rows = yield* runQuery(`SELECT ${selected.join(" ") || "*"} WHERE { ${where} }`);
         const pick = (v, given, row) => given ? given : row[selected.indexOf(v)];
         return rows.map(row => DataFactory.quad(asN3Term(pick("?s", s, row)), asN3Term(pick("?p", p, row)), asN3Term(pick("?o", o, row))));
     }
     return {
-        getNeighborhood,
-        getQuads,
+        // the synchronous face: the generators above, driven with the blocking
+        // transport.  Same code the asynchronous face runs.
+        getNeighborhood: (point, shapeLabel, shape) => driveSync(getNeighborhood(point, shapeLabel, shape)),
+        getNeighborhoodAsync: (point, shapeLabel, shape) => driveAsync(getNeighborhood(point, shapeLabel, shape)),
+        getQuads: (s, p, o) => driveSync(getQuads(s, p, o)),
         getSubjects: function () { return ["!Query DB can't index subjects"]; },
         getPredicates: function () { return ["!Query DB can't index predicates"]; },
         getObjects: function () { return ["!Query DB can't index objects"]; },
         get size() { return undefined; },
         setSchema: function (schema) { schemaIndex = schema._index || visitor_1.ShExIndexVisitor.index(schema); },
-        executeSelect: (query) => runQuery(query),
+        executeSelect: (query) => driveSync(runQuery(query)),
+        executeSelectAsync: (query) => driveAsync(runQuery(query)),
     };
 }
 exports.name = "neighborhood-sparql";
@@ -22375,7 +22429,15 @@ exports.queryMapResolvers = [{
         language: "http://www.w3.org/ns/shex#Extensions-sparql",
         name: "SPARQL",
         description: "the focus nodes are the first column of this SELECT, run on this endpoint",
-        resolve: (lexical, db) => db.executeSelect(lexical).map(row => row[0]),
+        // A shape map's `SPARQL "SELECT ..."` is a question for the endpoint, so
+        // it is a network round trip like any other: ask with fetch() where the db
+        // can, rather than freezing the tab of whoever typed it.
+        resolve: (lexical, db) => {
+            const sparql = db;
+            return typeof sparql.executeSelectAsync === "function"
+                ? sparql.executeSelectAsync(lexical).then(rows => rows.map(row => row[0]))
+                : sparql.executeSelect(lexical).map(row => row[0]);
+        },
     }];
 exports.ctor = sparqlDB;
 /** What it takes to construct this DB, declared for hosts (the CLI, the
@@ -22760,6 +22822,15 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.paneEditor = exports.dbParams = exports.ctor = exports.queryMapResolvers = exports.capabilities = exports.description = exports.label = exports.name = exports.EntityResolutionError = void 0;
 exports.forgetPages = forgetPages;
@@ -22770,6 +22841,7 @@ exports.asEntityDoc = asEntityDoc;
 exports.fromParams = fromParams;
 exports.distributeDocuments = distributeDocuments;
 exports.claimPaneText = claimPaneText;
+exports.asAsyncDb = asAsyncDb;
 const neighborhood_api_1 = __webpack_require__(7682);
 const N3 = __importStar(__webpack_require__(4957));
 const fs = __importStar(__webpack_require__(6478));
@@ -22906,6 +22978,25 @@ function wikidataDB(queryTracker, options = {}) {
             throw Error(`GET <${url}> returned ${xhr.status}:\n${xhr.responseText}`);
         return xhr.responseText;
     };
+    const fetchDocAsync = options.fetchDocAsync || function (url) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (url.startsWith("file://"))
+                return fs.readFileSync((0, url_1.fileURLToPath)(url), "utf8");
+            // The header story is the same as the synchronous transport's: Wikimedia
+            // 403s clients that don't identify themselves (T400119), a browser sets
+            // its own User-Agent and won't let anyone else, and a *custom* header
+            // would make this a preflighted cross-origin request.  fetch() at least
+            // could preflight -- but there is no reason to pay for it.
+            const headers = { "Accept": "application/json" };
+            if (!inBrowser())
+                headers["User-Agent"] = USER_AGENT;
+            const response = yield fetch(url, { headers });
+            const body = yield response.text();
+            if (!response.ok)
+                throw Error(`GET <${url}> returned ${response.status}:\n${body}`);
+            return body;
+        });
+    };
     /** this process over disk over network */
     function getDoc(cacheKey, url) {
         const remembered = fetchedPages.get(url);
@@ -22967,6 +23058,77 @@ function wikidataDB(queryTracker, options = {}) {
     });
     /** the pages this DB has read, by the id each is the page of */
     const pageTexts = new Map();
+    /**
+     * Load the sitematrix, if this page will want it.
+     *
+     * The converter resolves sitelinks through a *synchronous* callback, so by
+     * the time it asks there is nowhere left to await -- it has to be here or
+     * not at all.  Only pages with sitelinks need it, so a walk over entities
+     * that have none never fetches it.
+     */
+    function ensureSiteMatrixAsync(doc) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (siteInfo !== null)
+                return;
+            const cached = siteInfoByUrl.get(siteMatrixUrl);
+            if (cached !== undefined) {
+                siteInfo = cached;
+                return;
+            }
+            const entity = Object.values(doc.entities)[0];
+            if (entity === undefined || entity.sitelinks === undefined
+                || Object.keys(entity.sitelinks).length === 0)
+                return;
+            let text = fetchedPages.get(siteMatrixUrl);
+            if (text === undefined) {
+                text = yield fetchDocAsync(siteMatrixUrl);
+                fetchedPages.set(siteMatrixUrl, text);
+            }
+            siteInfo = siteInfoFromSitematrix(JSON.parse(text));
+            siteInfoByUrl.set(siteMatrixUrl, siteInfo);
+        });
+    }
+    /** the same, awaiting the network rather than blocking on it */
+    function ensureLoadedAsync(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (loaded.has(id))
+                return;
+            let doc = supplied.get(id);
+            if (doc === undefined) {
+                const url = entityDataUrl(id);
+                let text = fetchedPages.get(url);
+                if (text === undefined) {
+                    text = yield fetchDocAsync(url);
+                    fetchedPages.set(url, text);
+                }
+                pageTexts.set(id, text);
+                doc = JSON.parse(text);
+            }
+            yield ensureSiteMatrixAsync(doc);
+            store.addQuads(converter.entityToQuads(doc, id));
+            loaded.add(id);
+            const returned = Object.keys(doc.entities)[0];
+            if (returned !== id)
+                loaded.add(returned);
+        });
+    }
+    /**
+     * A neighborhood, fetching the entity page first if this is a node the DB
+     * hasn't got.
+     *
+     * Which is the only thing here that can need the network.  Everything the
+     * walk does *within* an entity -- its statements, their qualifiers, their
+     * values -- is already in the page that was fetched for it, so this awaits
+     * only where the validation crosses from one entity to another.
+     */
+    function getNeighborhoodAsync(point, shapeLabel, shape) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const id = entityOf(point);
+            if (id !== null)
+                yield ensureLoadedAsync(id);
+            return getNeighborhood(point, shapeLabel, shape);
+        });
+    }
     function ensureLoaded(id) {
         if (loaded.has(id))
             return;
@@ -23078,6 +23240,7 @@ function wikidataDB(queryTracker, options = {}) {
     }
     return {
         getNeighborhood,
+        getNeighborhoodAsync,
         getSubjects: () => store.getSubjects(null, null, null),
         getPredicates: () => store.getPredicates(null, null, null),
         getObjects: () => store.getObjects(null, null, null),
@@ -23362,6 +23525,25 @@ exports.paneEditor = {
 };
 function isEntityDataBase(base) {
     return /^(https?|file):\/\/\S*[/=:]$/.test(base);
+}
+/**
+ * The asynchronous face of one of these, for ShExValidator.validateShapeMapAsync.
+ *
+ * The db is the same db -- same store, same cache, same loaded pages -- with
+ * getNeighborhood answering with a promise, so it fetches with fetch() rather
+ * than with a synchronous XMLHttpRequest that blocks the tab.  It awaits only
+ * when the walk crosses into an entity page it hasn't got.
+ */
+function asAsyncDb(db) {
+    // delegate, don't copy: `size` and friends are getters over the live store,
+    // and Object.assign would call each one once and freeze the answer -- a db
+    // that reported 0 quads forever, having been copied before it loaded
+    // anything.
+    return Object.create(db, {
+        getNeighborhood: {
+            value: db.getNeighborhoodAsync.bind(db), enumerable: true, configurable: true,
+        },
+    });
 }
 //# sourceMappingURL=neighborhood-wikidata.js.map
 
@@ -25511,6 +25693,7 @@ exports.parseTurtle = exports.parseShExC = void 0;
 exports.lineOffsets = lineOffsets;
 exports.yyllocToRange = yyllocToRange;
 exports.sourceExcerpt = sourceExcerpt;
+exports.commentRanges = commentRanges;
 exports.locateInParsed = locateInParsed;
 exports.mapValidationErrors = mapValidationErrors;
 exports.mapMaterialization = mapMaterialization;
@@ -25518,7 +25701,7 @@ exports.stringifyWithOffsets = stringifyWithOffsets;
 const ShExParser = __importStar(__webpack_require__(4822));
 const emit_1 = __webpack_require__(2388);
 const RdfJs = __importStar(__webpack_require__(4957));
-const { describeError } = __webpack_require__(546);
+const { describeError, relativeIri } = __webpack_require__(546);
 const XSD_STRING = "http://www.w3.org/2001/XMLSchema#string";
 const RDF_LANGSTRING = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
 // ---------------------------------------------------------------------------
@@ -25605,6 +25788,63 @@ function parseShExCUncached(text, opts = {}) {
     }
     return Object.assign({ diagnostics }, locateInParsed(text, schema));
 }
+/**
+ * The `#`-to-end-of-line comments in a ShExC document.
+ *
+ * A `#` only starts one where it isn't inside something that may contain it,
+ * which in ShExC is most of the interesting text: an IRI
+ * (`<...EntitySchemaText/E107#>` -- a fragment, not a comment), a string, or
+ * a `\#` escape in a local name.  Scanning for those is cheaper than it
+ * sounds and much cheaper than getting it wrong.
+ */
+function commentRanges(text) {
+    const out = [];
+    const n = text.length;
+    let i = 0;
+    while (i < n) {
+        const c = text[i];
+        if (c === "\\") {
+            i += 2;
+            continue;
+        } // an escape hides what follows
+        if (c === "<") {
+            // an IRIREF holds no whitespace, so a `<` with no `>` before the line
+            // ends is a less-than or a typo rather than the start of one
+            const close = text.indexOf(">", i + 1);
+            const nl = text.indexOf("\n", i + 1);
+            i = close !== -1 && (nl === -1 || close < nl) ? close + 1 : i + 1;
+            continue;
+        }
+        if (c === '"' || c === "'") {
+            const q = text.substr(i, 3) === c + c + c ? c + c + c : c;
+            let j = i + q.length;
+            while (j < n) {
+                if (text[j] === "\\") {
+                    j += 2;
+                    continue;
+                }
+                if (text.startsWith(q, j)) {
+                    j += q.length;
+                    break;
+                }
+                if (q.length === 1 && text[j] === "\n")
+                    break; // unterminated: don't run away
+                ++j;
+            }
+            i = j;
+            continue;
+        }
+        if (c === "#") {
+            const nl = text.indexOf("\n", i);
+            const to = nl === -1 ? n : nl;
+            out.push({ from: i, to });
+            i = to;
+            continue;
+        }
+        ++i;
+    }
+    return out;
+}
 /** locateInParsed - range lookups over an ALREADY-parsed schema (e.g. the
  * web apps' cache.parsed, whose expression objects are the ones validation
  * errors reference by identity -- @shexjs/loader's import-merging makes a
@@ -25612,6 +25852,35 @@ function parseShExCUncached(text, opts = {}) {
  */
 function locateInParsed(text, schema) {
     const starts = lineOffsets(text);
+    // Whitespace and comments are both trivia: an anchor that keeps a
+    // constraint's delimiters and drops its nested constraints has no more
+    // business painting the note somebody left between them than the newline.
+    const comments = commentRanges(text);
+    const commentAt = (at) => comments.find(c => at >= c.from && at < c.to) || null;
+    /** the first position at or after `at` that is neither space nor comment */
+    const afterTrivia = (at, limit) => {
+        let i = at;
+        for (;;) {
+            while (i < limit && /\s/.test(text[i]))
+                ++i;
+            const c = i < limit ? commentAt(i) : null;
+            if (c === null || c.to > limit)
+                return i;
+            i = c.to;
+        }
+    };
+    /** the first position at or before `at` with only trivia between them */
+    const beforeTrivia = (at, limit) => {
+        let i = at;
+        for (;;) {
+            while (i > limit && /\s/.test(text[i - 1]))
+                --i;
+            const c = i > limit ? commentAt(i - 1) : null;
+            if (c === null || c.from < limit)
+                return i;
+            i = c.from;
+        }
+    };
     const tcRange = (tc) => schema && schema._exprLocations
         ? yyllocToRange(schema._exprLocations.get(tc), starts)
         : null;
@@ -25625,8 +25894,14 @@ function locateInParsed(text, schema) {
             ? nestedConstraintExtent(tc, schema._exprLocations, starts) : null;
         if (nested && nested.from > range.from && nested.from <= range.to) {
             let to = nested.from;
-            while (to > range.from && /[\s{]/.test(text[to - 1]))
-                --to;
+            for (;;) {
+                const was = to;
+                to = beforeTrivia(to, range.from);
+                while (to > range.from && text[to - 1] === "{")
+                    --to;
+                if (to === was)
+                    break;
+            }
             if (to > range.from)
                 return { from: range.from, to };
         }
@@ -25642,13 +25917,9 @@ function locateInParsed(text, schema) {
         if (!nested || !(nested.from > range.from && nested.to <= range.to))
             return [range];
         const parts = [];
-        let headTo = nested.from; // keep the opening brace, drop the whitespace
-        while (headTo > range.from && /\s/.test(text[headTo - 1]))
-            --headTo;
+        const headTo = beforeTrivia(nested.from, range.from); // keep the opening brace
         parts.push(headTo > range.from ? { from: range.from, to: headTo } : range);
-        let tailFrom = nested.to;
-        while (tailFrom < range.to && /\s/.test(text[tailFrom]))
-            ++tailFrom;
+        const tailFrom = afterTrivia(nested.to, range.to);
         if (tailFrom < range.to)
             parts.push({ from: tailFrom, to: range.to });
         return parts;
@@ -25805,7 +26076,7 @@ function nestedConstraintExtent(tc, locations, starts) {
 /** Memoized on (text, baseIRI); see parseShExC. */
 exports.parseTurtle = memoLast(parseTurtleUncached, opts => (opts && opts.baseIRI) || "");
 function parseTurtleUncached(text, opts = {}) {
-    const { quads, provenance, diagnostics: lezerDiagnostics } = (0, emit_1.parseTurtle)(text, {
+    const { quads, provenance, diagnostics: lezerDiagnostics, prefixes, base } = (0, emit_1.parseTurtle)(text, {
         factory: RdfJs.DataFactory,
         baseIRI: opts.baseIRI || "urn:editor:data",
     });
@@ -25815,7 +26086,8 @@ function parseTurtleUncached(text, opts = {}) {
         from: d.start,
         to: Math.max(d.end, d.start + 1),
     }));
-    return { text, dataset: new RdfJs.Store(quads), quads, provenance, diagnostics };
+    return { text, dataset: new RdfJs.Store(quads), quads, provenance, diagnostics,
+        prefixes: prefixes || {}, base: base || opts.baseIRI };
 }
 // ---------------------------------------------------------------------------
 // validation-error mapping
@@ -25939,6 +26211,8 @@ const ErrorLeaves = {};
             triple: ctx.triple,
             node: ctx.node,
             prefixes: schemaPrefixes,
+            base: schemaBase,
+            lex: documentLexer === null ? undefined : documentLexer(err.triple || ctx.triple),
         }) || { text: type };
         return {
             message: said.text,
@@ -25953,8 +26227,96 @@ const ErrorLeaves = {};
         };
     };
 });
-/** the prefixes a quoted fragment is written with; set per mapping run */
+/** the prefixes and base a quoted fragment is written with; set per run */
 let schemaPrefixes = {};
+let schemaBase = undefined;
+/** how to spell terms for the document being mapped; set per mapping run,
+ * null where the caller asked for explicit IRIs (see SpellingOption) */
+let documentLexer = null;
+/** an IRI as a prefix table writes it, or null where no prefix covers it */
+function curie(iri, prefixes) {
+    for (const [prefix, namespace] of Object.entries(prefixes || {}))
+        if (typeof namespace === "string" && namespace.length > 0 && iri.startsWith(namespace)
+            && iri.substring(namespace.length).match(/^[A-Za-z_][-\w.]*$/))
+            return prefix + ":" + iri.substring(namespace.length);
+    return null;
+}
+/**
+ * Spell terms the way the document the reader is looking at spells them.
+ *
+ * Three answers, best first:
+ *
+ *  1. the source range the term was written in.  A validation result carries
+ *     IRIs, and `<http://hl7.example/Patient2>` is a fact about the term, not
+ *     about the document: line 8 says `<Patient2>`, and that is what the
+ *     reader is looking for.  This is the only spelling that is *read* rather
+ *     than reconstructed, so it is right even where the document does
+ *     something no rule here anticipates.
+ *  2. the document's own PREFIX table and BASE, for a term it doesn't
+ *     contain -- a property that is missing is still best named the way this
+ *     document names properties.
+ *  3. nothing, and the caller says it in full.
+ *
+ * Two things are deliberately *not* taken from the source.  A term whose
+ * written form is a nested structure -- Turtle's `[ :a 1 ]` for a blank node
+ * -- would quote a whole subgraph into the middle of a sentence, and its
+ * label reads better; and a literal is left to the caller, which already
+ * quotes and marks it up in the one way every document writes it.
+ */
+function lexerFor(parsed, bnodes) {
+    const text = parsed.text;
+    const anchorCache = new Map();
+    const anchorsOf = (triple) => {
+        if (!triple)
+            return null;
+        if (!anchorCache.has(triple))
+            anchorCache.set(triple, tripleAnchors(parsed, triple, text, bnodes));
+        return anchorCache.get(triple);
+    };
+    const written = (range) => {
+        if (!range || range.to <= range.from)
+            return null;
+        const said = text.slice(range.from, range.to);
+        // a nested form stands for a subgraph, not a name
+        return said[0] === "[" || said[0] === "{" ? null : said;
+    };
+    return (triple) => (term, role) => {
+        if (term === undefined || term === null)
+            return null;
+        // a literal reads the same in any document; let the caller quote it
+        if (typeof term === "object")
+            return null;
+        if (typeof term !== "string")
+            return null;
+        const anchors = anchorsOf(triple);
+        if (anchors && (role === "subject" || role === "predicate" || role === "object")) {
+            const at = triple && triple[role];
+            // the term has to be the one standing in that position, not merely
+            // equal to some other term of the same triple
+            if (at !== undefined && termsEqual(at, term)) {
+                const said = written(anchors[role]);
+                if (said)
+                    return said;
+            }
+        }
+        if (role === "node" || role === "subject") {
+            const said = written(rangeOfNode(parsed, term, bnodes));
+            if (said)
+                return said;
+        }
+        if (term.startsWith("_:"))
+            return null; // its label, which the caller has
+        return curie(term, parsed.prefixes) || relativeIri(term, parsed.base);
+    };
+}
+/** are these the same term, as a validation result spells them? */
+function termsEqual(a, b) {
+    if (typeof a === "string" || typeof b === "string")
+        return a === b;
+    if (!a || !b)
+        return false;
+    return a.value === b.value && a.type === b.type && a.language === b.language;
+}
 function termStr(t) {
     return typeof t === "object" ? JSON.stringify(t.value) : "<" + t + ">";
 }
@@ -26017,10 +26379,18 @@ function repairNotes(valResult, shexcParsed) {
  * schema, data}]}; paired diagnostics share `pair` ids so an editor can
  * flash the counterpart range on hover.
  */
-function mapValidationErrors(valResult, shexcParsed, turtleParsed) {
+function mapValidationErrors(valResult, shexcParsed, turtleParsed, opts = {}) {
     const pairs = [];
     const seen = new Set();
     const bnodes = { toProv: new Map(), used: new Set() };
+    // A sentence reads for one reader looking at one pair of documents, so
+    // how to spell a term is settled here rather than passed down every call.
+    const schemaMeta = (shexcParsed.schema || {});
+    schemaPrefixes = schemaMeta._prefixes || {};
+    schemaBase = schemaMeta._base;
+    documentLexer = opts.spelling === "document" && turtleParsed && turtleParsed.quads
+        ? lexerFor(turtleParsed, bnodes)
+        : null;
     (function walk(node, ctx) {
         if (!node || typeof node !== "object" || seen.has(node))
             return;
@@ -28794,7 +29164,10 @@ var __webpack_unused_export__;
  */
 __webpack_unused_export__ = ({ value: true });
 __webpack_unused_export__ = iriText;
+exports.relativeIri = relativeIri;
 __webpack_unused_export__ = termText;
+exports.dataTerm = dataTerm;
+exports.schemaIri = schemaIri;
 __webpack_unused_export__ = shexcFragment;
 __webpack_unused_export__ = constraintText;
 __webpack_unused_export__ = nodeConstraintDetail;
@@ -28803,12 +29176,25 @@ exports.isLeafError = isLeafError;
 exports.repairText = repairText;
 const ShExWriter = __webpack_require__(6526);
 /** an IRI as the schema spells it, where it has a prefix for it */
-function iriText(iri, prefixes) {
+function iriText(iri, prefixes, base) {
     for (const [prefix, namespace] of Object.entries(prefixes || {}))
         if (typeof namespace === "string" && namespace.length > 0 && iri.startsWith(namespace)
             && iri.substring(namespace.length).match(/^[A-Za-z_][-\w.]*$/))
             return prefix + ":" + iri.substring(namespace.length);
-    return "<" + iri + ">";
+    return relativeIri(iri, base) || "<" + iri + ">";
+}
+/**
+ * An IRI written against a BASE, or null where it isn't under one.
+ *
+ * Only a plain relative reference: something that would re-resolve elsewhere
+ * -- a second scheme, a leading slash, a query or a fragment -- has to stay
+ * absolute or it stops naming the same thing.
+ */
+function relativeIri(iri, base) {
+    if (!base || !iri.startsWith(base) || iri.length === base.length)
+        return null;
+    const rest = iri.substring(base.length);
+    return rest.match(/^[^\/:?#][^:?#]*$/) ? "<" + rest + ">" : null;
 }
 /** an RDF term as a reader writes it */
 function termText(term) {
@@ -28826,6 +29212,34 @@ function termText(term) {
             : quoted;
 }
 /**
+ * A term from the data, as the reader will find it written.
+ *
+ * The host's spelling if it has one, and the explicit form otherwise -- never
+ * the *schema's* prefixes, which are a different table that may bind the same
+ * prefix to a different namespace.  A friendly name that names something else
+ * is worse than a long one.
+ */
+function dataTerm(term, ctx, role) {
+    const said = ctx.lex ? ctx.lex(term, role) : null;
+    return said || termText(term);
+}
+/**
+ * An IRI the *schema* names -- a property it requires, a shape it refers to.
+ *
+ * The host still gets first say: a property missing from a document is best
+ * spelled the way that document spells its properties, since that is where
+ * the reader will go looking for it.  Failing that, the schema's own
+ * spelling, which is at least a table this IRI was written against.
+ */
+function schemaIri(iri, ctx, role) {
+    const said = ctx.lex ? ctx.lex(iri, role) : null;
+    if (said)
+        return said;
+    return typeof iri === "string" && !iri.startsWith("_:")
+        ? iriText(iri, ctx.prefixes, ctx.base)
+        : termText(iri);
+}
+/**
  * A fragment of schema, as ShExC.
  *
  * A message naming what a node had to satisfy reads as the schema does --
@@ -28833,11 +29247,11 @@ function termText(term) {
  * A fragment the writer can't render (a reference to something it hasn't
  * been given, say) falls back to its label or to nothing, never to JSON.
  */
-function shexcFragment(expr, prefixes) {
+function shexcFragment(expr, prefixes, base) {
     if (expr === undefined || expr === null)
         return "";
     if (typeof expr === "string") // a shape reference
-        return "@<" + expr + ">";
+        return "@" + iriText(expr, prefixes, base);
     try {
         const writer = new ShExWriter({ simplifyParentheses: false, prefixes: prefixes || {} });
         const said = writer.writeShapeExpr(expr);
@@ -28848,17 +29262,20 @@ function shexcFragment(expr, prefixes) {
     }
 }
 /** a TripleConstraint as a reader would write it: predicate, value, cardinality */
-function constraintText(tc, prefixes) {
+function constraintText(tc, prefixes, ctx) {
     if (!tc || typeof tc !== "object")
         return "the constraint";
-    const value = tc.valueExpr === undefined ? "." : shexcFragment(tc.valueExpr, prefixes) || ".";
+    const value = tc.valueExpr === undefined ? "."
+        : shexcFragment(tc.valueExpr, prefixes, ctx && ctx.base) || ".";
     const min = tc.min === undefined ? 1 : tc.min, max = tc.max === undefined ? 1 : tc.max;
     const card = min === 1 && max === 1 ? ""
         : min === 0 && max === 1 ? "?"
             : min === 0 && max === -1 ? "*"
                 : min === 1 && max === -1 ? "+"
                     : " {" + min + "," + (max === -1 ? "*" : max) + "}";
-    return (tc.predicate ? "<" + tc.predicate + "> " : "") + value + card;
+    const predicate = tc.predicate === undefined ? ""
+        : schemaIri(tc.predicate, ctx || { prefixes }, "predicate") + " ";
+    return predicate + value + card;
 }
 /**
  * Why a node missed a constraint, from the leaf the validator now records.
@@ -28898,40 +29315,41 @@ function firstLine(said) {
 }
 const leaves = {
     TypeMismatch: (err, ctx) => ({
-        text: termText(err.triple && err.triple.object) + " doesn't satisfy "
-            + constraintText(err.constraint || ctx.constraint, ctx.prefixes),
+        text: dataTerm(err.triple && err.triple.object, ctx, "object") + " doesn't satisfy "
+            + constraintText(err.constraint || ctx.constraint, ctx.prefixes, ctx),
         schemaObj: err.constraint || ctx.constraint,
         predicate: (err.constraint || ctx.constraint || {}).predicate
             || (err.triple && err.triple.predicate),
         triple: err.triple,
     }),
     MissingProperty: (err, ctx) => ({
-        text: "missing property " + termText(err.property)
-            + (err.valueExpr === undefined ? "" : " " + shexcFragment(err.valueExpr, ctx.prefixes)),
+        text: "missing property " + schemaIri(err.property, ctx, "property")
+            + (err.valueExpr === undefined ? "" : " " + shexcFragment(err.valueExpr, ctx.prefixes, ctx.base)),
         predicate: err.property,
         node: ctx.node,
     }),
     ExcessTripleViolation: (err, ctx) => ({
-        text: "too many occurrences of " + termText(err.property || (err.triple && err.triple.predicate)),
+        text: "too many occurrences of "
+            + schemaIri(err.property || (err.triple && err.triple.predicate), ctx, "predicate"),
         predicate: err.property || (err.triple && err.triple.predicate),
         triple: err.triple,
         node: ctx.node,
     }),
     ClosedShapeViolation: (err, ctx) => ({
         text: "unexpected in a closed shape: "
-            + (err.unexpectedTriples || []).map((t) => termText(t.predicate)).join(", "),
+            + (err.unexpectedTriples || []).map((t) => dataTerm(t.predicate, ctx, "predicate")).join(", "),
         triples: err.unexpectedTriples,
         node: ctx.node,
     }),
     NodeConstraintViolation: (err, ctx) => ({
         text: (ctx.terse
             ? ""
-            : termText(err.node) + " doesn't satisfy "
-                + (shexcFragment(err.shapeExpr, ctx.prefixes) || "the node constraint")
+            : dataTerm(err.node, ctx, "node") + " doesn't satisfy "
+                + (shexcFragment(err.shapeExpr, ctx.prefixes, ctx.base) || "the node constraint")
                 + ((err.errors || []).length === 0 ? "" : ": "))
             + (err.errors || []).map((leaf) => nodeConstraintDetail(leaf, ctx.prefixes)).join("; ")
             + ((err.errors || []).length === 0 && ctx.terse
-                ? "doesn't satisfy " + (shexcFragment(err.shapeExpr, ctx.prefixes) || "the node constraint")
+                ? "doesn't satisfy " + (shexcFragment(err.shapeExpr, ctx.prefixes, ctx.base) || "the node constraint")
                 : ""),
         schemaObj: err.shapeExpr || ctx.constraint,
         predicate: (ctx.constraint || {}).predicate || (ctx.triple && ctx.triple.predicate),
@@ -28939,12 +29357,12 @@ const leaves = {
         node: err.node || ctx.node,
     }),
     NegatedProperty: (err, ctx) => ({
-        text: "unexpected " + termText(err.property),
+        text: "unexpected " + dataTerm(err.property, ctx, "predicate"),
         predicate: err.property,
         node: ctx.node,
     }),
     AbstractShapeFailure: (err, ctx) => ({
-        text: "abstract shape " + termText(err.shape) + " can't be matched directly",
+        text: "abstract shape " + schemaIri(err.shape, ctx, "shape") + " can't be matched directly",
         node: ctx.node,
     }),
     SemActFailure: (_err, ctx) => ({
@@ -28967,8 +29385,8 @@ const leaves = {
             ? "add " + ways.map((arcs) => arcs[0]).join(" or ")
             : ways.map((arcs) => "add " + arcs.join(" and ")).join(", or ");
         return {
-            text: "triple " + termText(err.triple && err.triple.predicate) + " "
-                + termText(err.triple && err.triple.object) + " fits no triple constraint: "
+            text: "triple " + dataTerm(err.triple && err.triple.predicate, ctx, "predicate") + " "
+                + dataTerm(err.triple && err.triple.object, ctx, "object") + " fits no triple constraint: "
                 + (ways.length === 0 ? "remove it" : "either " + said + ", or remove it"),
             predicate: err.triple && err.triple.predicate,
             triple: err.triple,
@@ -28996,8 +29414,9 @@ function isLeafError(err) {
             && err.type in leaves);
 }
 /** what would make a node conform, as one line per way */
-function repairText(repairs) {
-    return (repairs || []).map(repair => (repair.arcs || []).map((arc) => (arc.delta > 0 ? "add " : "remove ") + Math.abs(arc.delta) + " " + arc.property)
+function repairText(repairs, ctx = {}) {
+    return (repairs || []).map(repair => (repair.arcs || []).map((arc) => (arc.delta > 0 ? "add " : "remove ") + Math.abs(arc.delta)
+        + " " + schemaIri(arc.property, ctx, "property"))
         .join(" and ")).filter(way => way !== "");
 }
 //# sourceMappingURL=error-messages.js.map
@@ -29025,6 +29444,8 @@ XSD._namespace = "http://www.w3.org/2001/XMLSchema#";
 class ShExHumanErrorWriter {
     constructor() {
         this.prefixes = {};
+        /** the schema's BASE, so a shape it declares reads as it is written */
+        this.base = undefined;
     }
     /** nested errors, each indented under what they explain */
     nest(errors, ctx = {}) {
@@ -29046,7 +29467,9 @@ class ShExHumanErrorWriter {
     write(val, prefixes, ctx = {}) {
         if (prefixes !== undefined)
             this.prefixes = prefixes;
-        const said = Object.assign({ prefixes: this.prefixes }, ctx);
+        if (ctx.base !== undefined)
+            this.base = ctx.base;
+        const said = Object.assign({ prefixes: this.prefixes, base: this.base }, ctx);
         if (Array.isArray(val))
             return val.reduce((ret, e) => {
                 const nested = this.write(e, this.prefixes, ctx).map(s => "  " + s);
@@ -29065,9 +29488,10 @@ class ShExHumanErrorWriter {
                 // What would make the node conform leads, where the validator worked
                 // it out: it is the part of a report a reader can act on.  The errors
                 // are the detail under it -- why it doesn't, arc by arc.
-                const ways = (0, error_messages_1.repairText)(val.repairs);
+                const ways = (0, error_messages_1.repairText)(val.repairs, said);
                 const detail = this.joined(errorList(val.errors), "AND", said).map(s => "  " + s);
-                return ["validating " + val.node + " as " + val.shape + ":"]
+                return ["validating " + (0, error_messages_1.dataTerm)(val.node, said, "node")
+                        + " as " + (0, error_messages_1.schemaIri)(val.shape, said, "shape") + ":"]
                     .concat(ways.length === 0 ? [] : ["  to conform: " + ways.join(", or ")])
                     .concat(detail);
             }
@@ -29087,7 +29511,8 @@ class ShExHumanErrorWriter {
             case "TypeMismatch": {
                 // the header names the triple and the constraint; a cause that says no
                 // more than the header does isn't worth a line of its own
-                const header = leaf !== null ? leaf.text : "validating " + n3ify(val.triple.object);
+                const header = leaf !== null ? leaf.text
+                    : "validating " + (0, error_messages_1.dataTerm)(val.triple.object, said, "object");
                 // the causes say only *why*: the header has named the node already
                 const causes = this.nest(val.errors, Object.assign({}, said, {
                     constraint: val.constraint || said.constraint, triple: val.triple, terse: true,
@@ -29095,13 +29520,14 @@ class ShExHumanErrorWriter {
                 return [header + (causes.length ? ":" : "")].concat(causes);
             }
             case "RestrictionError":
-                return ["validating restrictions on " + n3ify(val.focus) + ":"].concat(this.nest(val.errors, said));
+                return ["validating restrictions on " + (0, error_messages_1.dataTerm)(val.focus, said, "node") + ":"].concat(this.nest(val.errors, said));
             case "ShapeAndFailure":
                 return this.nest(val.errors, said);
             case "ShapeOrFailure":
                 return this.joined(Array.isArray(val.errors) ? val.errors : [val.errors], "OR", said);
             case "ShapeNotFailure":
-                return ["Node " + val.errors.node + " expected to NOT pass " + val.errors.shape];
+                return ["Node " + (0, error_messages_1.dataTerm)(val.errors.node, said, "node")
+                        + " expected to NOT pass " + (0, error_messages_1.schemaIri)(val.errors.shape, said, "shape")];
             case "SemActFailure":
                 return ["rejected by semantic action:"].concat(this.nest(val.errors, said));
             case "ResultReference":
@@ -29252,6 +29678,15 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 const ShExTerm = __importStar(__webpack_require__(2130));
 const visitor_1 = __webpack_require__(2818);
 const Hierarchy = __webpack_require__(9950);
@@ -30916,9 +31351,15 @@ const ShExUtil = {
         });
     },
     /** A failure as indented lines.  Give it the schema's prefixes and the
-     * fragments it quotes read as the schema spells them. */
-    errsToSimple: function (val, prefixes) {
-        return new ShExHumanErrorWriter().write(val, prefixes || {});
+     * fragments it quotes read as the schema spells them; give it a `lex` as
+     * well and the terms read as the reader's document writes them. */
+    errsToSimple: function (val, prefixes, opts = {}) {
+        const ctx = {};
+        if (opts.lex)
+            ctx.lex = opts.lex;
+        if (opts.base !== undefined)
+            ctx.base = opts.base;
+        return new ShExHumanErrorWriter().write(val, prefixes || {}, ctx);
     },
     // static
     resolvePrefixedIRI: function (prefixedIri, prefixes) {
@@ -30988,25 +31429,65 @@ const ShExUtil = {
             ? headers
             : Object.assign({ "User-Agent": this.sparqlUserAgent }, headers);
     },
+    /** How long to wait on an endpoint before giving up, in ms; 0 waits
+     * forever.  `fetch` has no timeout of its own, so a service that accepts
+     * the connection and then says nothing stops a validation for good, with
+     * nothing said anywhere -- and a walk makes one request per node, so the
+     * one that stalls is rarely the first.  Wikidata's own query timeout is
+     * 60s; anything an endpoint will really answer, it answers inside this. */
+    sparqlTimeout: 60000,
+    /** an AbortSignal that fires after sparqlTimeout, where that can be had */
+    sparqlAbortSignal: function () {
+        const AS = globalThis.AbortSignal;
+        return this.sparqlTimeout > 0 && AS && typeof AS.timeout === "function"
+            ? AS.timeout(this.sparqlTimeout)
+            : undefined;
+    },
+    /** What went wrong, in terms of the request that went wrong.
+     *
+     * A SPARQL endpoint under load answers 429 with an empty body or a page of
+     * HTML, and parsing that as JSON used to be the whole of the report: a bare
+     * "Unexpected end of JSON input", naming neither the service, nor what it
+     * said, nor which of a walk's hundred queries it was. */
+    sparqlHttpError: function (endpoint, status, statusText, body, query) {
+        const said = body.trim().slice(0, 200);
+        return Error(`SPARQL endpoint <${endpoint}> returned ${status}`
+            + (statusText ? " " + statusText : "")
+            + (said ? ":\n" + said : "")
+            + `\n\nquery was:\n${query}`);
+    },
     executeQueryPromise: function (query, endpoint, dataFactory) {
         if (!endpoint)
             throw Error(`Can't execute a SPARQL query with no endpoint`);
         const queryURL = endpoint + "?query=" + encodeURIComponent(query);
+        const signal = this.sparqlAbortSignal();
         const request = queryURL.length <= this.sparqlGetLimit
-            ? fetch(queryURL, { headers: this.requestHeaders({
+            ? fetch(queryURL, { signal, headers: this.requestHeaders({
                     'Accept': 'application/sparql-results+json',
                 }) })
             : fetch(endpoint, {
                 method: 'POST',
+                signal,
                 headers: this.requestHeaders({
                     'Accept': 'application/sparql-results+json',
                     'Content-Type': 'application/sparql-query',
                 }),
                 body: query,
             });
-        return request.then(resp => resp.json()).then(jsonObject => {
+        return request.then((resp) => __awaiter(this, void 0, void 0, function* () {
+            if (!resp.ok)
+                throw this.sparqlHttpError(endpoint, resp.status, resp.statusText, yield resp.text().catch(() => ""), query);
+            return resp.json();
+        })).then(jsonObject => {
             return this.parseSparqlJsonResults(jsonObject, dataFactory);
-        }); // .then(x => new Promise(resolve => setTimeout(() => resolve(x), 1000)));
+        }, (e) => {
+            // a timeout arrives as an AbortError, which says nothing about what
+            // was being waited on
+            if (e && (e.name === "TimeoutError" || e.name === "AbortError"))
+                throw Error(`SPARQL endpoint <${endpoint}> did not answer within `
+                    + `${this.sparqlTimeout}ms\n\nquery was:\n${query}`);
+            throw e;
+        });
     },
     executeQuery: function (query, endpoint, dataFactory) {
         if (!endpoint)
@@ -31027,6 +31508,8 @@ const ShExUtil = {
         }
         // const selectsBlock = query.match(/SELECT\s*(.*?)\s*{/)[1];
         // const selects = selectsBlock.match(/\?[^\s?]+/g);
+        if (xhr.status < 200 || xhr.status >= 300)
+            throw this.sparqlHttpError(endpoint, xhr.status, xhr.statusText, xhr.responseText || "", query);
         const jsonObject = JSON.parse(xhr.responseText);
         return this.parseSparqlJsonResults(jsonObject, dataFactory);
     },
@@ -31699,9 +32182,19 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ShExValidator = exports.ShapeExprValidationContext = exports.InterfaceOptions = void 0;
 exports.resultMapToShapeExprTest = resultMapToShapeExprTest;
+exports.isFork = isFork;
 // interface constants
 const ShExTerm = __importStar(__webpack_require__(2130));
 const term_1 = __webpack_require__(2130);
@@ -31813,6 +32306,19 @@ class ShapeExprValidationContext {
     followTripleConstraint() {
         return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, null, false);
     }
+    /**
+     * The same, for a branch that will run beside its siblings.
+     *
+     * `seen` is the (node, shape) pairs being validated *on the way here*, and
+     * the sync search keeps it honest by deleting each on the way back out --
+     * so a sibling reached later never sees an earlier sibling's marks.  Run
+     * two branches at once and that stops being true: the second finds the
+     * first's in-progress mark and calls it recursion, which is a different
+     * answer.  Siblings are different paths, so each takes its own copy.
+     */
+    forkTripleConstraint() {
+        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, Object.assign({}, this.seen), this.matchTarget, null, false);
+    }
     checkExtendsPartition(subGraph, partitionClosed) {
         return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, subGraph, partitionClosed);
     }
@@ -31910,6 +32416,42 @@ class TrivialNeighborhood {
     addIncomingTriples(tz) { Array.prototype.push.apply(this.incoming, tz); }
     addOutgoingTriples(tz) { Array.prototype.push.apply(this.outgoing, tz); }
 }
+function isFork(r) {
+    return r.fork !== undefined;
+}
+/** every semantic action named anywhere in a schema */
+function collectSemActNames(v, into) {
+    if (Array.isArray(v)) {
+        v.forEach(x => collectSemActNames(x, into));
+        return;
+    }
+    if (v === null || typeof v !== "object")
+        return;
+    const o = v;
+    if (Array.isArray(o.semActs))
+        o.semActs.forEach(sa => into.add(sa.name));
+    for (const key of Object.keys(o))
+        if (key !== "_index" && key !== "_prefixes")
+            collectSemActNames(o[key], into);
+}
+/** is this a validation that may stop, rather than a finished answer? */
+function isResumable(x) {
+    return x !== null && typeof x === "object"
+        && typeof x.next === "function"
+        && typeof x[Symbol.iterator] === "function";
+}
+/** run one to completion against data that is already there */
+function driveSync(task, db) {
+    let step = task.next(undefined);
+    while (!step.done) {
+        const request = step.value;
+        step = task.next(isFork(request)
+            // nothing to overlap when the data is already here: run them in order
+            ? request.fork.map(sub => driveSync(sub, db))
+            : db.getNeighborhood(request.point, request.shapeLabel, request.shape));
+    }
+    return step.value;
+}
 class ShExValidator {
     /* ShExValidator - construct an object for validating a schema.
      *
@@ -31921,6 +32463,10 @@ class ShExValidator {
     constructor(schema, db, options = {}) {
         /** one repair search per triple expression, reused across nodes */
         this.nearestBags = new Map();
+        /** whether independent branches may be interleaved: see canFork */
+        this.forkable = undefined;
+        /** what the last validateShapeMapAsync did, for anyone measuring */
+        this.asyncStats = null;
         const index = schema._index || visitor_1.ShExIndexVisitor.index(schema);
         if (index.labelToTcs === undefined) // make sure there's a labelToTcs in the index
             index.labelToTcs = {};
@@ -31942,18 +32488,106 @@ class ShExValidator {
      * @param seen - optional (and discouraged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
      */
     validateShapeMap(shapeMap, tracker = new EmptyTracker(), seen = {}) {
-        return shapeMap.reduce((acc, pair) => {
-            // let time = +new Date();
-            const res = this.validateNodeShapePair(ShExTerm.ld2RdfJsTerm(pair.node), pair.shape, tracker, seen);
-            // time = +new Date() - time;
-            return acc.concat([{
-                    node: pair.node,
-                    shape: pair.shape,
-                    status: "errors" in res ? "nonconformant" : "conformant",
-                    appinfo: res,
-                    // elapsed: time
-                }]);
-        }, []);
+        return driveSync(this.resumeShapeMap(shapeMap, tracker, seen), this.db);
+    }
+    /** the same, as a validation that can stop for data: see Resumable */
+    *resumeShapeMap(shapeMap, tracker = new EmptyTracker(), seen = {}) {
+        const entry = (pair, res) => ({
+            node: pair.node,
+            shape: pair.shape,
+            status: ("errors" in res ? "nonconformant" : "conformant"),
+            appinfo: res,
+        });
+        // The pairs of a shape map are as independent of each other as the
+        // triples of a repeated constraint are, and over a db that fetches they
+        // are where the waiting is: ten nodes named by a query used to be ten
+        // walks end to end, each starting only once the one before it had
+        // finished going to the network.  Hand them over as a fork and a driver
+        // can run them together -- the same gate (no handled semantic action)
+        // and the same reason as forkTripleConstraint, which says why a branch
+        // needs its own `seen`.
+        if (this.canFork() && shapeMap.length > 1) {
+            const subs = (yield { fork: shapeMap.map(pair => this.resumeNodeShapePair(ShExTerm.ld2RdfJsTerm(pair.node), pair.shape, tracker, Object.assign({}, seen))) });
+            return shapeMap.map((pair, i) => entry(pair, subs[i]));
+        }
+        const acc = [];
+        for (const pair of shapeMap) {
+            const res = yield* this.resumeNodeShapePair(ShExTerm.ld2RdfJsTerm(pair.node), pair.shape, tracker, seen);
+            acc.push(entry(pair, res));
+        }
+        return acc;
+    }
+    /**
+     * Validate over a db that has to go and get what it answers with.
+     *
+     * One traversal.  The search stops at a fetch and goes on from there, so
+     * nothing is validated twice -- which is the whole point of the search
+     * being resumable.  Three things fall out of that:
+     *
+     *  - a fork's branches run concurrently, so a level's fetches are in
+     *    flight together rather than one after another;
+     *  - two branches wanting the same neighborhood *share* the fetch: the
+     *    second finds it already in flight and waits on the same promise;
+     *  - a neighborhood is fetched once per validation and then cached.
+     *
+     * `asyncStats` records fetches, shares and the deepest fork nesting, for
+     * anyone who wants to see the shape of the traffic.
+     */
+    validateShapeMapAsync(shapeMap_1) {
+        return __awaiter(this, arguments, void 0, function* (shapeMap, tracker = new EmptyTracker()) {
+            // either kind of db: an AsyncNeighborhoodDb answers with a promise, a
+            // NeighborhoodDb answers outright, and Promise.resolve takes both
+            const db = this.db;
+            const cache = new Map();
+            const inFlight = new Map();
+            const stats = { fetched: 0, shared: 0, cached: 0, forks: 0, branches: 0 };
+            this.asyncStats = stats;
+            const keyOf = (r) => r.point.termType + " " + r.point.value + " @ "
+                + (typeof r.shapeLabel === "string" ? r.shapeLabel : "START");
+            const demand = (r) => {
+                const key = keyOf(r);
+                const have = cache.get(key);
+                if (have !== undefined) {
+                    ++stats.cached;
+                    return have;
+                }
+                const flying = inFlight.get(key);
+                if (flying !== undefined) {
+                    // another branch asked first and is still waiting: wait with it
+                    ++stats.shared;
+                    return flying;
+                }
+                ++stats.fetched;
+                const promise = Promise.resolve(db.getNeighborhood(r.point, r.shapeLabel, r.shape))
+                    .then(neighborhood => {
+                    cache.set(key, neighborhood);
+                    inFlight.delete(key);
+                    return neighborhood;
+                });
+                inFlight.set(key, promise);
+                return promise;
+            };
+            const run = (task) => __awaiter(this, void 0, void 0, function* () {
+                let step = task.next(undefined);
+                while (!step.done) {
+                    const request = step.value;
+                    let answer;
+                    if (isFork(request)) {
+                        ++stats.forks;
+                        stats.branches += request.fork.length;
+                        // every branch starts before any of them waits, so their fetches
+                        // overlap and duplicates meet each other in `inFlight`
+                        answer = yield Promise.all(request.fork.map(sub => run(sub)));
+                    }
+                    else {
+                        answer = yield demand(request);
+                    }
+                    step = task.next(answer);
+                }
+                return step.value;
+            });
+            return run(this.resumeShapeMap(shapeMap, tracker, {}));
+        });
     }
     /**
      * Validate a single node as a labeled shape expression or as the Start shape
@@ -31964,6 +32598,9 @@ class ShExValidator {
      * @param seen - optional (and discouraged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
      */
     validateNodeShapePair(focus, labelOrStart, tracker = new EmptyTracker(), seen = {}) {
+        return driveSync(this.resumeNodeShapePair(focus, labelOrStart, tracker, seen), this.db);
+    }
+    *resumeNodeShapePair(focus, labelOrStart, tracker = new EmptyTracker(), seen = {}) {
         const ctx = new ShapeExprValidationContext(null, labelOrStart, 0, tracker, seen, null, null);
         if ("startActs" in this.schema) {
             const startActionStorage = {}; // !!! need test to see this write to results structure.
@@ -31976,19 +32613,19 @@ class ShExValidator {
                     errors: semActErrors
                 }; // some semAct aborted !! return a better error
         }
-        const ret = this.validateShapeLabel(focus, ctx);
+        const ret = yield* this.validateShapeLabel(focus, ctx);
         if ("startActs" in this.schema) {
             ret.startActs = this.schema.startActs;
         }
         return ret;
     }
-    validateShapeLabel(focus, ctx) {
+    *validateShapeLabel(focus, ctx) {
         if (typeof ctx.label !== "string") {
             if (ctx.label !== ShExValidator.Start)
                 runtimeError(`unknown shape ctx.label ${JSON.stringify(ctx.label)}`);
             if (!this.schema.start)
                 runtimeError("start production not defined");
-            return this.validateShapeExpr(focus, this.schema.start, ctx);
+            return yield* this.resumeShapeExpr(focus, this.schema.start, ctx);
         }
         const seenKey = ShExTerm.rdfJsTerm2Turtle(focus) + "@" + ctx.label;
         if (!ctx.subGraph) { // Don't cache base shape validations as they aren't testing the full neighborhood.
@@ -32009,7 +32646,7 @@ class ShExValidator {
             ctx.seen[seenKey] = { node: focus, shape: ctx.label };
             ctx.tracker.enter(focus, ctx.label);
         }
-        const ret = this.validateDescendants(focus, ctx.label, ctx, false);
+        const ret = yield* this.validateDescendants(focus, ctx.label, ctx, false);
         if (!ctx.subGraph) {
             ctx.tracker.exit(focus, ctx.label, ret);
             delete ctx.seen[seenKey];
@@ -32026,12 +32663,12 @@ class ShExValidator {
      * @param ctx - validation context
      * @param includeAbstractShapes - if true, don't strip out abstract classes (needed for validating abstract base shapes)
      */
-    validateDescendants(focus, shapeLabel, ctx, includeAbstractShapes = false) {
+    *validateDescendants(focus, shapeLabel, ctx, includeAbstractShapes = false) {
         const _ShExValidator = this;
         if (ctx.subGraph) { // !! matchTarget?
             // matchTarget indicates that shape substitution has already been applied.
             // Now we're testing a subgraph against the base shapes.
-            const res = this.validateShapeDecl(focus, this.lookupShape(shapeLabel), ctx);
+            const res = yield* this.resumeShapeDecl(focus, this.lookupShape(shapeLabel), ctx);
             if (ctx.matchTarget && shapeLabel === ctx.matchTarget.label && !("errors" in res))
                 ctx.matchTarget.count++;
             return res;
@@ -32055,15 +32692,19 @@ class ShExValidator {
         if (!includeAbstractShapes)
             candidates = candidates.filter(l => !this.lookupShape(l).abstract);
         // Aggregate results in a SolutionList or FailureList.
-        const results = candidates.reduce((ret, candidateShapeLabel) => {
+        // a loop rather than a reduce: `yield*` can't cross a callback, and this
+        // is on the path that stops for data
+        const results = { passes: [], failures: [] };
+        for (const candidateShapeLabel of candidates) {
             const shapeExpr = this.lookupShape(candidateShapeLabel);
             const matchTarget = candidateShapeLabel === shapeLabel ? null : { label: shapeLabel, count: 0 };
             ctx = ctx.checkExtendingClass(candidateShapeLabel, matchTarget);
-            const res = this.validateShapeDecl(focus, shapeExpr, ctx);
-            return "errors" in res || matchTarget && matchTarget.count === 0 ?
-                { passes: ret.passes, failures: ret.failures.concat(res) } :
-                { passes: ret.passes.concat(res), failures: ret.failures };
-        }, { passes: [], failures: [] });
+            const res = yield* this.resumeShapeDecl(focus, shapeExpr, ctx);
+            if ("errors" in res || matchTarget && matchTarget.count === 0)
+                results.failures.push(res);
+            else
+                results.passes.push(res);
+        }
         let ret;
         if (results.passes.length > 0) {
             ret = results.passes.length !== 1 ?
@@ -32139,11 +32780,34 @@ class ShExValidator {
      * @param ctx - validation context
      */
     validateShapeDecl(focus, shapeDecl, ctx) {
+        return driveSync(this.resumeShapeDecl(focus, shapeDecl, ctx), this.db);
+    }
+    /**
+     * May independent branches be run in any order, or interleaved?
+     *
+     * Only with no *handled* semantic action.  An unhandled one is never
+     * dispatched, so it cannot observe anything (see
+     * SemActDispatcher.isRegistered); a handled one is handed the triples it
+     * fired on, writes into shared results, and is rolled back per triple by
+     * triplesMatchingShapeExpr -- which is an order, and forking would lose it.
+     */
+    canFork() {
+        if (this.forkable === undefined) {
+            const handler = this.semActHandler;
+            const names = new Set();
+            collectSemActNames(this.schema, names);
+            this.forkable = names.size === 0 ? true
+                : handler.isRegistered === undefined ? false
+                    : ![...names].some(name => handler.isRegistered(name));
+        }
+        return this.forkable;
+    }
+    *resumeShapeDecl(focus, shapeDecl, ctx) {
         const conjuncts = (shapeDecl.restricts || []).concat([shapeDecl.shapeExpr]);
         const expr = conjuncts.length === 1
             ? conjuncts[0]
             : { type: "ShapeAnd", shapeExprs: conjuncts };
-        return this.validateShapeExpr(focus, expr, ctx);
+        return yield* this.resumeShapeExpr(focus, expr, ctx);
     }
     lookupShape(label) {
         const shapes = this.schema.shapes;
@@ -32156,23 +32820,32 @@ class ShExValidator {
         runtimeError("shape " + label + " not found in:\n" + Object.keys(this.index.shapeExprs || []).map(s => "  " + s).join("\n"));
     }
     validateShapeExpr(focus, shapeExpr, ctx) {
+        return driveSync(this.resumeShapeExpr(focus, shapeExpr, ctx), this.db);
+    }
+    *resumeShapeExpr(focus, shapeExpr, ctx) {
         if (typeof shapeExpr === "string") { // ShapeRef
-            return this.validateShapeLabel(focus, ctx.checkShapeLabel(shapeExpr));
+            return yield* this.validateShapeLabel(focus, ctx.checkShapeLabel(shapeExpr));
         }
         switch (shapeExpr.type) {
             case "NodeConstraint":
                 return this.validateNodeConstraint(focus, shapeExpr, ctx);
             case "Shape":
-                return this.validateShape(focus, shapeExpr, ctx);
+                return yield* this.validateShape(focus, shapeExpr, ctx);
             case "ShapeExternal":
                 if (typeof this.options.validateExtern !== "function")
                     throw runtimeError(`validating ${ShExTerm.shExJsTerm2Turtle(focus)} as EXTERNAL shapeExpr ${ctx.label} requires a 'validateExtern' option`);
-                return this.options.validateExtern(focus, ctx.label, ctx.checkShapeLabel(ctx.label));
+                // Either an answer or a validation that may itself stop for data:
+                // an external validator over a remote db should be able to say "I
+                // need this" too, rather than being forced to fetch synchronously.
+                const extern = this.options.validateExtern(focus, ctx.label, ctx.checkShapeLabel(ctx.label));
+                return isResumable(extern)
+                    ? yield* extern
+                    : extern;
             case "ShapeOr":
                 const orErrors = [];
                 for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
                     const nested = shapeExpr.shapeExprs[i];
-                    const sub = this.validateShapeExpr(focus, nested, ctx);
+                    const sub = yield* this.resumeShapeExpr(focus, nested, ctx);
                     if ("errors" in sub)
                         orErrors.push(sub);
                     else if (!ctx.matchTarget || ctx.matchTarget.count > 0)
@@ -32180,7 +32853,7 @@ class ShExValidator {
                 }
                 return { type: "ShapeOrFailure", errors: orErrors };
             case "ShapeNot":
-                const sub = this.validateShapeExpr(focus, shapeExpr.shapeExpr, ctx);
+                const sub = yield* this.resumeShapeExpr(focus, shapeExpr.shapeExpr, ctx);
                 return ("errors" in sub)
                     // The negation is satisfied *because* this failed, so the failure
                     // is recorded as a reason for success.  Repairs answer "what would
@@ -32192,7 +32865,7 @@ class ShExValidator {
                 const andErrors = [];
                 for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
                     const nested = shapeExpr.shapeExprs[i];
-                    const sub = this.validateShapeExpr(focus, nested, ctx);
+                    const sub = yield* this.resumeShapeExpr(focus, nested, ctx);
                     if ("errors" in sub)
                         andErrors.push(sub);
                     else
@@ -32215,14 +32888,19 @@ class ShExValidator {
         }
         return ret;
     }
-    validateShape(focus, shape, ctx) {
+    *validateShape(focus, shape, ctx) {
         let ret = null;
-        const fromDB = (ctx.subGraph || this.db).getNeighborhood(focus, ctx.label, shape);
+        // The one place a validation stops.  A partition's subgraph is triples
+        // already read, so it answers here and now; only the real db can be a
+        // question, and asking it is a yield rather than a call.
+        const fromDB = ctx.subGraph
+            ? ctx.subGraph.getNeighborhood(focus, ctx.label, shape)
+            : yield { point: focus, shapeLabel: ctx.label, shape };
         const neighborhood = fromDB.outgoing.concat(fromDB.incoming);
         const { extendsTCs, tc2exts, localTCs } = this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
         const tripleConstraints = extendsTCs.concat(localTCs);
         // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
-        const { t2tcs, t2tcErrors, tc2TResults } = this.matchByPredicate(tripleConstraints, fromDB, ctx);
+        const { t2tcs, t2tcErrors, tc2TResults } = yield* this.matchByPredicate(tripleConstraints, fromDB, ctx);
         // The bag the node has, counted before the feasibility layer prunes
         // candidates out of t2tcs -- it is what the node holds, not what is left
         // of the search.  One count per triple, against the first constraint
@@ -32261,7 +32939,7 @@ class ShExValidator {
                 continue;
             }
             triedSome = true;
-            const { errors, triples, results } = this.tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine, extendsResultCache);
+            const { errors, triples, results } = yield* this.tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine, extendsResultCache);
             const possibleRet = { type: "ShapeTest", node: (0, term_1.rdfJsTerm2Ld)(focus), shape: ctx.label };
             if (errors.length === 0 && results !== null) // only include .solution for non-empty pattern
                 // @ts-ignore TODO
@@ -32278,7 +32956,7 @@ class ShExValidator {
         }
         // Every partition was pruned: run the first one for a classic error report.
         if (ret === null && !triedSome && firstPruned !== null && feasibilityErrors.length === 0) {
-            const { errors } = this.tryPartition(firstPruned, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine, extendsResultCache);
+            const { errors } = yield* this.tryPartition(firstPruned, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine, extendsResultCache);
             partitionErrors.push(errors);
         }
         // Of the partitions tried, report the one that found least wrong: the
@@ -32286,7 +32964,7 @@ class ShExValidator {
         // that left a triple unassigned reports the constraint it was assigned
         // to as missing -- an artifact of the reading, not a fault of the node.
         const bestErrors = partitionErrors.reduce((best, errs) => best === null || errs.length < best.length ? errs : best, null) || [];
-        let errors = missErrors.concat(feasibilityErrors, bestErrors.length === 1 ? bestErrors[0] : bestErrors);
+        let errors = dropContradictedMisses(missErrors.concat(feasibilityErrors, bestErrors.length === 1 ? bestErrors[0] : bestErrors));
         if (errors.length > 0)
             ret = {
                 type: "Failure",
@@ -32342,7 +33020,13 @@ class ShExValidator {
                 }
                 if (typeof v.resultName === "string")
                     embedded.add(v.resultName);
-                Object.values(v).forEach(walk);
+                // by key, skipping `repairs`: it is an accessor that computes on
+                // read (see validateShape), and Object.values would run it for every
+                // failure this passes over -- 23% of a FHIR run, spent answering a
+                // question nobody asked.  Repairs contain no ResultReferences.
+                for (const key of Object.keys(v))
+                    if (key !== "repairs")
+                        walk(v[key]);
             })(ret);
             const shared = {};
             let anyShared = false;
@@ -32567,7 +33251,7 @@ class ShExValidator {
      * @param regexEngine engine to use to test regular triple expression
      * @private
      */
-    tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, t2tcErrors, outgoing, regexEngine, extendsResultCache = new Map()) {
+    *tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, t2tcErrors, outgoing, regexEngine, extendsResultCache = new Map()) {
         const tc2ts = new eval_validator_api_1.MapArray();
         tripleConstraints.forEach(tc => tc2ts.empty(tc));
         const usedTriples = [];
@@ -32612,7 +33296,7 @@ class ShExValidator {
                 })
             });
         }
-        let results = this.testExtends(shape, focus, extendsToTriples, ctx, extendsResultCache);
+        let results = yield* this.testExtends(shape, focus, extendsToTriples, ctx, extendsResultCache);
         if (results === null || !("errors" in results)) {
             if (regexEngine !== null /* i.e. shape.expression !== undefined */) {
                 const sub = regexEngine.match(focus, tc2ts, this.semActHandler, null);
@@ -32645,20 +33329,24 @@ class ShExValidator {
      * @param neighborhood - list of Quad
      * @param ctx - evaluation context
      */
-    matchByPredicate(constraintList, neighborhood, ctx) {
+    *matchByPredicate(constraintList, neighborhood, ctx) {
         const _ShExValidator = this;
         const outgoing = indexNeighborhood(neighborhood.outgoing);
         const incoming = indexNeighborhood(neighborhood.incoming);
         const init = { t2tcErrors: new Map(), tc2TResults: new MapMap(), t2tcs: new eval_validator_api_1.MapArray() };
         [neighborhood.outgoing, neighborhood.incoming].forEach(quads => quads.forEach(triple => init.t2tcs.data.set(triple, [])));
-        return constraintList.reduce(function (ret, constraint) {
+        // a loop rather than a reduce: this is where the value expressions are
+        // checked, so it is where a validation reaches the *next* nodes -- and
+        // `yield*` can't cross a callback
+        const ret = init;
+        for (const constraint of constraintList) {
             // subject and object depend on direction of constraint.
             const index = constraint.inverse ? incoming : outgoing;
             // get triples matching predicate
             const matchPredicate = index.byPredicate.get(constraint.predicate) ||
                 []; // empty list when no triple matches that constraint
             // strip to triples matching value constraints (apart from @<someShape>)
-            const matchConstraints = _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
+            const matchConstraints = yield* _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
             matchConstraints.hits.forEach(function (evidence) {
                 ret.t2tcs.add(evidence.triple, constraint);
                 ret.tc2TResults.set(constraint, evidence.triple, evidence.sub);
@@ -32666,8 +33354,8 @@ class ShExValidator {
             matchConstraints.misses.forEach(function (evidence) {
                 ret.t2tcErrors.set(evidence.triple, { constraint: constraint, errors: evidence.sub });
             });
-            return ret;
-        }, init);
+        }
+        return ret;
     }
     whatsMissing(t2tcs, misses, extras) {
         const matchedExtras = []; // triples accounted for by EXTRA
@@ -32696,7 +33384,7 @@ class ShExValidator {
         }
         return ret;
     }
-    testExtends(expr, focus, extendsToTriples, ctx, extendsResultCache = new Map()) {
+    *testExtends(expr, focus, extendsToTriples, ctx, extendsResultCache = new Map()) {
         if (expr.extends === undefined)
             return null;
         const passes = [];
@@ -32722,7 +33410,7 @@ class ShExValidator {
             // new context with subgraph; closedness propagates through the inheritance
             // chain so an ancestor's ancestors must consume their allocations too
             ctx = ctx.checkExtendsPartition(subgraph, expr.closed === true || ctx.partitionClosed);
-            const sub = this.validateShapeExpr(focus, extend, ctx);
+            const sub = yield* this.resumeShapeExpr(focus, extend, ctx);
             // Name the result <focus node><ShExPath>: the part after the focus is a ShExPath
             // (shape-path-core) expression addressing the extension — a labeled extension by
             // its shape-declaration selector "@<label>", an inline shapeExpr by a child step
@@ -32899,10 +33587,29 @@ class ShExValidator {
         };
         return { getAllTripleConstraints };
     }
-    triplesMatchingShapeExpr(triples, constraint, ctx) {
+    *triplesMatchingShapeExpr(triples, constraint, ctx) {
         const _ShExValidator = this;
         const misses = [];
         const hits = [];
+        // Every triple here is checked against the same value expression, and
+        // nothing one of them does is visible to another -- *unless* a semantic
+        // action is handled, in which case each iteration snapshots and rolls
+        // back shared results below, and the order is part of the meaning.
+        // Where they are independent, hand them over as a fork so a driver can
+        // run them together and fetch what they all want in one go.  This is
+        // the only place a validation reaches sideways rather than downwards,
+        // so it is the only place worth forking.
+        if (this.canFork() && triples.length > 1 && constraint.valueExpr !== undefined
+            && !(typeof constraint.valueExpr === "object" && constraint.valueExpr.type === "NodeConstraint")) {
+            const subs = (yield { fork: triples.map(triple => this.resumeShapeExpr(constraint.inverse ? triple.subject : triple.object, constraint.valueExpr, ctx.forkTripleConstraint())) });
+            subs.forEach((sub, i) => {
+                if (sub.errors === undefined)
+                    hits.push(new TriplesMatchingHit(triples[i], sub));
+                else
+                    misses.push(new TriplesMatchingMiss(triples[i], sub));
+            });
+            return new TriplesMatching(hits, misses);
+        }
         for (const triple of triples) {
             const value = constraint.inverse ? triple.subject : triple.object;
             const oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
@@ -32910,7 +33617,15 @@ class ShExValidator {
                 hits.push(new TriplesMatchingNoValueConstraint(triple));
             else {
                 ctx = ctx.followTripleConstraint();
-                const sub = _ShExValidator.validateShapeExpr(value, constraint.valueExpr, ctx);
+                // A NodeConstraint is a leaf: it looks at the value and nothing else,
+                // so it can never reach a fetch and needs no generator.  This is the
+                // innermost, most frequent call in a validation -- once per triple per
+                // constraint -- and in FHIR most of them are exactly this, a datatype
+                // or a value set on fhir:v.
+                const sub = typeof constraint.valueExpr === "object"
+                    && constraint.valueExpr.type === "NodeConstraint"
+                    ? _ShExValidator.validateNodeConstraint(value, constraint.valueExpr, ctx)
+                    : yield* _ShExValidator.resumeShapeExpr(value, constraint.valueExpr, ctx);
                 if (sub.errors === undefined) { // TODO: improve typing to cast isn't necessary
                     hits.push(new TriplesMatchingHit(triple, sub));
                 }
@@ -33296,6 +34011,44 @@ function stripRepairs(result) {
         if (key !== "repairs")
             out[key] = stripRepairs(result[key]);
     return out;
+}
+/**
+ * A property is either absent or present and wrong; a failure that says both
+ * is asking the reader to resolve a contradiction.
+ *
+ * A `TripleConstraint` whose value expression rejects the one arc the node has
+ * produces exactly that.  The arc is refuted on its value, so the matcher is
+ * offered nothing to take and reports the property missing -- while the value
+ * test's own complaint travels beside it, quoting the arc it just read:
+ *
+ *     <Patient2> doesn't satisfy <.../subject> @<PatientShape>: ...
+ *     AND
+ *     missing property <.../subject>
+ *
+ * The second sentence is false as it reads: `:subject` is right there in the
+ * document, and a reader who trusts it goes looking for a triple to add.
+ * What is true -- that no *conforming* `:subject` was found, and that the node
+ * is one short -- is what the first sentence and `repairs` already say
+ * ("to conform: add 1 <.../subject>"), so nothing is lost by dropping it.
+ *
+ * Only within one shape's own error list, and only for a predicate some
+ * `TypeMismatch` beside it names: with no arc on that predicate at all there
+ * is no mismatch to contradict it, and "missing" is then the whole story.
+ */
+function dropContradictedMisses(errors) {
+    const refuted = new Set();
+    for (const err of errors) {
+        const e = err;
+        if (e.type === "TypeMismatch" && e.constraint && typeof e.constraint.predicate === "string")
+            refuted.add(e.constraint.predicate);
+    }
+    if (refuted.size === 0)
+        return errors;
+    return errors.filter(err => {
+        const e = err;
+        return !(e.type === "MissingProperty" && typeof e.property === "string"
+            && refuted.has(e.property));
+    });
 }
 function runtimeError(...args) {
     const errorStr = args.join("");
@@ -34537,6 +35290,9 @@ ShExWebApp = (function () {
     Util:                 modules["@shexjs/util"],
     RdfJsDb:              modules["@shexjs/neighborhood-rdfjs"].ctor,
     SparqlDb:             modules["@shexjs/neighborhood-sparql"].ctor,
+    /* the asynchronous face of a SPARQL db, for a worker or a tab that
+       shouldn't be blocked while the endpoint thinks */
+    SparqlDbAsync:        modules["@shexjs/neighborhood-sparql"].asAsyncDb,
     NeighborhoodApi:      modules["@shexjs/neighborhood-api"],
     /* The data sources this app offers, in picklist order.  The first is
      * the default -- an RDF document, which is what a data pane has always

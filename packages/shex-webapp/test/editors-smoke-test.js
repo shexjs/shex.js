@@ -956,6 +956,115 @@ if (!TEST_browser) {
         }
       });
 
+      /* The failure the reader has to look at may be in a document that
+       * wasn't showing when the validation ran: the observation names a
+       * patient, the patient's gender is the bad one, and the diagnostic
+       * belongs on the patient's line.  Diagnostics used to be computed for
+       * the showing document alone and thrown away on moving off it, so
+       * that line never got a mark. */
+      it("should mark the document that has the bad triple, whichever is showing", async function () {
+        this.timeout(60000);
+        const examples = Path.join(__dirname, "../examples");
+        const read = f => Fs.readFileSync(Path.join(examples, f), "utf8");
+        const entry = JSON.parse(Fs.readFileSync(Path.join(examples, "manifest.json"), "utf8"))
+              .find(e => e.dataLabel === "two documents, and the mistake is in the second");
+        expect(entry, "the manifest's own two-document failure").to.exist;
+
+        await shared.Caches.manifest.set([{
+          schemaLabel: "FHIR-ish", schema: read("ClinObs.shex"),
+          dataLabel: "the mistake is in the second", neighborhood: "rdfjs",
+          data: entry.data, queryMap: entry.queryMap,
+        }], "http://localhost/manifest.json");
+        $("#inputSchema .manifest li").last().trigger("click");
+        await shared.promise;
+        $("#inputData .indeterminant li, #inputData .fails li").last().trigger("click");
+        await shared.promise;
+        $("#validate").trigger("click");
+        await shared.promise;
+
+        const source = shared.neighborhoods;
+        const es = shared.Caches.editorSupport;
+        const docs = source.documents();
+        const observationAt = docs.findIndex(d => d.text.indexOf(":subject") !== -1);
+        const patientAt = docs.findIndex(d => d.text.indexOf(":gender") !== -1);
+        expect(observationAt, "an observation document").to.be.at.least(0);
+        expect(patientAt, "a patient document").to.be.at.least(0);
+
+        // what the pane is handed when a tab comes forward is what the
+        // reader sees, so ask that rather than the mapping behind it
+        const pane = es.panes.inputData;
+        const wasSet = pane.setDiagnostics;
+        const marks = at => {
+          let given = null;
+          pane.setDiagnostics = ds => { given = ds; return wasSet.call(pane, ds); };
+          try { source.show(at); } finally { pane.setDiagnostics = wasSet; }
+          return given || [];
+        };
+
+        const inPatient = marks(patientAt);
+        expect(inPatient.length, "the patient's document gets a mark of its own").to.be.above(0);
+        // and it is on the gender, which is the thing the schema refused
+        const patientText = docs[patientAt].text;
+        expect(patientText.slice(inPatient[0].from, inPatient[0].to)).to.include("M");
+        expect(patientText.lastIndexOf(":gender", inPatient[0].from),
+               "the mark sits in the :gender triple").to.be.at.least(0);
+
+        // moving between the tabs re-aims rather than clears: each document
+        // keeps its own, and coming back finds them again
+        expect(marks(observationAt).length, "the observation is marked too").to.be.above(0);
+        expect(marks(patientAt).length, "and the patient still is")
+          .to.equal(inPatient.length);
+      });
+
+      /* The `spelling` control (doc/error-reporting.md F6): a term is written
+       * the way the document the reader is being sent to writes it, or in
+       * full.  The editors quote the range the term was written in; the
+       * human report has only the prefixes and base to go on. */
+      it("should spell terms as the documents do, or in full", async function () {
+        this.timeout(60000);
+        const examples = Path.join(__dirname, "../examples");
+        const read = f => Fs.readFileSync(Path.join(examples, f), "utf8");
+        const entry = JSON.parse(Fs.readFileSync(Path.join(examples, "manifest.json"), "utf8"))
+              .find(e => e.dataLabel === "two documents, and the mistake is in the second");
+        await shared.Caches.manifest.set([{
+          schemaLabel: "FHIR-ish", schema: read("ClinObs.shex"),
+          dataLabel: "the mistake is in the second", neighborhood: "rdfjs",
+          data: entry.data, queryMap: entry.queryMap,
+        }], "http://localhost/manifest.json");
+        $("#inputSchema .manifest li").last().trigger("click");
+        await shared.promise;
+        $("#inputData .indeterminant li, #inputData .fails li").last().trigger("click");
+        await shared.promise;
+
+        const wasSpelling = $("#spelling").val(), wasInterface = $("#interface").val();
+        const es = shared.Caches.editorSupport;
+        const say = async mode => {
+          $("#spelling").val(mode);
+          $("#interface").val("human");
+          $("#validate").trigger("click");
+          await shared.promise;
+          return {marks: [...es.lastMapped.dataByDoc.values()].flat().map(d => d.message).join(" "),
+                  human: $("#results .human pre").text()};
+        };
+        try {
+          const friendly = await say("document");
+          // <http://hl7.example/Patient2> is what the result carries; the
+          // document says <Patient2>, and so does the sentence about it
+          expect(friendly.marks).to.include("<Patient2>");
+          expect(friendly.marks).to.not.include("http://hl7.example/");
+          expect(friendly.human).to.include("validating <Obs1> as <ObservationShape>");
+          expect(friendly.human, "the repair names the arc as the schema does")
+            .to.include("to conform: add 1 :subject");
+
+          const explicit = await say("explicit");
+          expect(explicit.marks).to.include("<http://hl7.example/Patient2>");
+          expect(explicit.human).to.include("validating <http://hl7.example/Obs1>");
+        } finally {
+          $("#spelling").val(wasSpelling);
+          $("#interface").val(wasInterface);
+        }
+      });
+
       it("should carry the source and its settings in the permalink", async function () {
         source().select("sparql");
         $("#nbhd-endpoint").val("http://ex.example/sparql").trigger("change");

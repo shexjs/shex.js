@@ -5,6 +5,7 @@ import {ShExVisitor, ShExIndexVisitor} from '@shexjs/visitor';
 import * as ShExJ from 'shexj';
 const Hierarchy = require('hierarchy-closure')
 import ShExHumanErrorWriter = require('./shex-human-error-writer');
+import type {TermLexer} from './error-messages';
 
 // runs in browsers (bundled) as well as node; not typed in the node-only lib
 declare const XMLHttpRequest: any;
@@ -1702,9 +1703,14 @@ const ShExUtil = {
   },
 
   /** A failure as indented lines.  Give it the schema's prefixes and the
-   * fragments it quotes read as the schema spells them. */
-  errsToSimple: function (val: any, prefixes?: { [prefix: string]: string }): string[] {
-    return new ShExHumanErrorWriter().write(val, prefixes || {});
+   * fragments it quotes read as the schema spells them; give it a `lex` as
+   * well and the terms read as the reader's document writes them. */
+  errsToSimple: function (val: any, prefixes?: { [prefix: string]: string },
+                          opts: {lex?: TermLexer, base?: string} = {}): string[] {
+    const ctx: {lex?: TermLexer, base?: string} = {};
+    if (opts.lex) ctx.lex = opts.lex;
+    if (opts.base !== undefined) ctx.base = opts.base;
+    return new ShExHumanErrorWriter().write(val, prefixes || {}, ctx);
   },
 
   // static
@@ -1781,26 +1787,71 @@ const ShExUtil = {
       : Object.assign({"User-Agent": this.sparqlUserAgent}, headers);
   },
 
+  /** How long to wait on an endpoint before giving up, in ms; 0 waits
+   * forever.  `fetch` has no timeout of its own, so a service that accepts
+   * the connection and then says nothing stops a validation for good, with
+   * nothing said anywhere -- and a walk makes one request per node, so the
+   * one that stalls is rarely the first.  Wikidata's own query timeout is
+   * 60s; anything an endpoint will really answer, it answers inside this. */
+  sparqlTimeout: 60000,
+
+  /** an AbortSignal that fires after sparqlTimeout, where that can be had */
+  sparqlAbortSignal: function (): AbortSignal | undefined {
+    const AS = (globalThis as any).AbortSignal;
+    return this.sparqlTimeout > 0 && AS && typeof AS.timeout === "function"
+      ? AS.timeout(this.sparqlTimeout)
+      : undefined;
+  },
+
+  /** What went wrong, in terms of the request that went wrong.
+   *
+   * A SPARQL endpoint under load answers 429 with an empty body or a page of
+   * HTML, and parsing that as JSON used to be the whole of the report: a bare
+   * "Unexpected end of JSON input", naming neither the service, nor what it
+   * said, nor which of a walk's hundred queries it was. */
+  sparqlHttpError: function (endpoint: string, status: number, statusText: string,
+                             body: string, query: string): Error {
+    const said = body.trim().slice(0, 200);
+    return Error(`SPARQL endpoint <${endpoint}> returned ${status}`
+                 + (statusText ? " " + statusText : "")
+                 + (said ? ":\n" + said : "")
+                 + `\n\nquery was:\n${query}`);
+  },
+
   executeQueryPromise: function (query: string, endpoint: string, dataFactory: any): Promise<any[][]> {
     if (!endpoint)
       throw Error(`Can't execute a SPARQL query with no endpoint`);
 
     const queryURL = endpoint + "?query=" + encodeURIComponent(query);
+    const signal = this.sparqlAbortSignal();
     const request = queryURL.length <= this.sparqlGetLimit
-          ? fetch(queryURL, {headers: this.requestHeaders({
+          ? fetch(queryURL, {signal, headers: this.requestHeaders({
             'Accept': 'application/sparql-results+json',
           })})
           : fetch(endpoint, {
             method: 'POST',
+            signal,
             headers: this.requestHeaders({
               'Accept': 'application/sparql-results+json',
               'Content-Type': 'application/sparql-query',
             }),
             body: query,
           });
-    return request.then(resp => resp.json()).then(jsonObject => {
+    return request.then(async resp => {
+      if (!resp.ok)
+        throw this.sparqlHttpError(endpoint, resp.status, resp.statusText,
+                                   await resp.text().catch(() => ""), query);
+      return resp.json();
+    }).then(jsonObject => {
         return this.parseSparqlJsonResults(jsonObject, dataFactory);
-      })// .then(x => new Promise(resolve => setTimeout(() => resolve(x), 1000)));
+      }, (e: Error) => {
+        // a timeout arrives as an AbortError, which says nothing about what
+        // was being waited on
+        if (e && (e.name === "TimeoutError" || e.name === "AbortError"))
+          throw Error(`SPARQL endpoint <${endpoint}> did not answer within `
+                      + `${this.sparqlTimeout}ms\n\nquery was:\n${query}`);
+        throw e;
+      });
   },
 
   executeQuery: function (query: string, endpoint: string, dataFactory: any): any[][] {
@@ -1822,6 +1873,9 @@ const ShExUtil = {
     }
     // const selectsBlock = query.match(/SELECT\s*(.*?)\s*{/)[1];
     // const selects = selectsBlock.match(/\?[^\s?]+/g);
+    if (xhr.status < 200 || xhr.status >= 300)
+      throw this.sparqlHttpError(endpoint, xhr.status, xhr.statusText,
+                                 xhr.responseText || "", query);
     const jsonObject = JSON.parse(xhr.responseText);
     return this.parseSparqlJsonResults(jsonObject, dataFactory);
   },

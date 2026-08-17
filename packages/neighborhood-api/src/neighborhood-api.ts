@@ -29,6 +29,30 @@ export interface NeighborhoodDb {
   get size(): number
 }
 
+/**
+ * The same, for a source that has to go and get it -- a fetch(), a query.
+ *
+ * Deliberately a *second* interface rather than a widening of the first.
+ * The validator's search is synchronous recursion, and an await at every
+ * step of it would cost a promise per node visited: measured over the FHIR
+ * corpus that is ~2800 neighborhoods for one root against an 11ms median
+ * (perf/baseline-sync.json), so the data already in memory -- most of it,
+ * most of the time -- would pay for the data that isn't.
+ *
+ * The search doesn't become async to use one of these.  It becomes
+ * *resumable*: it stops at the fetch and goes on from there, driven by
+ * ShExValidator.validateShapeMapAsync.  A caller with a local store keeps
+ * NeighborhoodDb and pays nothing.
+ */
+export interface AsyncNeighborhoodDb {
+  getSubjects(): RdfJs.Term[];
+  getPredicates(): RdfJs.Term[];
+  getObjects(): RdfJs.Term[];
+  getQuads(): RdfJs.Quad[];
+  getNeighborhood (point: RdfJs.Term, shapeLabel: string | typeof Start, shape: Shape): Promise<Neighborhood>;
+  get size(): number
+}
+
 // ── declaring a DB's construction parameters ────────────────────────────────
 // STRAWMAN (names and shapes negotiable).  Each neighborhood implementation
 // needs different things to come to life -- an rdfjs store wants files (with
@@ -236,9 +260,13 @@ export interface QueryMapResolver {
   /** how it is written in a shape map, the bare word before the string */
   name: string;
   description?: string;
-  /** the focus nodes this extension's text picks out.  Synchronous, like
-   * the rest of this API: the db it is handed answers synchronously too. */
-  resolve (lexical: string, db: NeighborhoodDb): RdfJsTerm[];
+  /** the focus nodes this extension's text picks out.
+   *
+   * May answer with a promise: a db that reaches the network to work this
+   * out should do it with fetch() rather than with a blocking request, and
+   * the only caller (a WebApp resolving what someone typed) is async.  A
+   * resolver over data already in hand still answers outright. */
+  resolve (lexical: string, db: NeighborhoodDb): RdfJsTerm[] | Promise<RdfJsTerm[]>;
 }
 
 /** the selected source's resolver for an extension, or null if it has none */

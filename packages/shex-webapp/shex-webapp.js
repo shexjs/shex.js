@@ -31,6 +31,9 @@ ShExWebApp = (function () {
     Util:                 modules["@shexjs/util"],
     RdfJsDb:              modules["@shexjs/neighborhood-rdfjs"].ctor,
     SparqlDb:             modules["@shexjs/neighborhood-sparql"].ctor,
+    /* the asynchronous face of a SPARQL db, for a worker or a tab that
+       shouldn't be blocked while the endpoint thinks */
+    SparqlDbAsync:        modules["@shexjs/neighborhood-sparql"].asAsyncDb,
     NeighborhoodApi:      modules["@shexjs/neighborhood-api"],
     /* The data sources this app offers, in picklist order.  The first is
      * the default -- an RDF document, which is what a data pane has always
