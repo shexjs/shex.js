@@ -2722,8 +2722,11 @@ class EditorSupport {
     });
     // a TestedTriple's subject/predicate/object member lines (its full range
     // would also paint any nested solutions)
+    // object first: the pane scrolls to the first range it is given, and the
+    // object is the answer -- the subject and predicate are what the reader
+    // asked with
     const termRanges = (r) => r.fields
-          ? ["subject", "predicate", "object"].map(k => r.fields[k]).filter(f => f)
+          ? ["object", "subject", "predicate"].map(k => r.fields[k]).filter(f => f)
           : [{from: r.from, to: r.to}];
     const showInResults = (group, cls, scroll) => {
       resultPanes.forEach(({pane, ranges}) => {
@@ -2751,6 +2754,8 @@ class EditorSupport {
                     ? group.flatMap(p => p.schemaPath || []).concat([lead.anchors.shapeLabel])
                     : [])
             .filter(r => r);
+      // object first, for the same reason: an entity page is thousands of
+      // lines and the claim that matched is what the reader came to see
       const dataRanges = group.flatMap(p => [].concat(
         anchorRanges(p, "object"), anchorRanges(p, "subject"), anchorRanges(p, "predicate")));
       // don't auto-scroll the pane the mouse is in

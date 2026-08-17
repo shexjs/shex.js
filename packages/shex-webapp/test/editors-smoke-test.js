@@ -900,6 +900,69 @@ if (!TEST_browser) {
        * no business lighting up text here -- and a hover in the data pane
        * must never switch documents, which would pull the page out from
        * under the mouse that is pointing at it. */
+      /* Hovering a constraint scrolls the data pane, and where it scrolls to
+       * is the first range handed over.  The object is what the reader came
+       * to see: the subject and predicate are what they asked with, and in
+       * an entity page they sit thousands of lines from the answer. */
+      it("should offer the object first, so that is what the pane scrolls to", async function () {
+        this.timeout(60000);
+        const examples = Path.join(__dirname, "../examples");
+        const read = f => Fs.readFileSync(Path.join(examples, f), "utf8");
+        const entry = JSON.parse(Fs.readFileSync(Path.join(examples, "manifest.json"), "utf8"))
+              .find(e => e.dataLabel === "two documents, and the mistake is in the second");
+
+        await shared.Caches.manifest.set([{
+          schemaLabel: "FHIR-ish", schema: read("ClinObs.shex"),
+          dataLabel: "the mistake is in the second", neighborhood: "rdfjs",
+          data: entry.data, queryMap: entry.queryMap,
+        }], "http://localhost/manifest.json");
+        $("#inputSchema .manifest li").last().trigger("click");
+        await shared.promise;
+        $("#inputData .indeterminant li, #inputData .fails li").last().trigger("click");
+        await shared.promise;
+        $("#validate").trigger("click");
+        await shared.promise;
+
+        const es = shared.Caches.editorSupport;
+        // catch the schema-side hover regions, then hover one and watch what
+        // the data pane is asked to highlight
+        const regions = [];
+        const schemaPane = es.panes.inputSchema, dataPane = es.panes.inputData;
+        const wasSet = schemaPane.setHoverRegions;
+        schemaPane.setHoverRegions = (rs, leave) => {
+          regions.length = 0; regions.push(...(rs || []));
+          return wasSet.call(schemaPane, rs, leave);
+        };
+        const asked = [];
+        const wasHighlight = dataPane.highlight;
+        dataPane.highlight = (ranges, cls, opts) => {
+          asked.push({ranges: (ranges || []).slice(), opts});
+          return wasHighlight.call(dataPane, ranges, cls, opts);
+        };
+        try {
+          es.setPairHovers(es.lastMapped.pairs);
+          expect(regions.length, "hoverable constraints").to.be.above(0);
+          regions[0].enter();
+          expect(asked.length, "the data pane was asked to highlight").to.be.above(0);
+
+          const {ranges, opts} = asked[asked.length - 1];
+          expect(ranges.length, "something to show").to.be.above(0);
+          // a hover from the schema side scrolls the data pane
+          expect(opts && opts.scroll, "the pane the mouse is not in scrolls").to.not.equal(false);
+
+          // the first range is an object anchor of one of the pairs shown
+          const pairs = es.lastMapped.pairs;
+          const objectFirst = pairs.some(p => {
+            const o = (p.anchors && (p.anchors.objectParts || (p.anchors.object ? [p.anchors.object] : []))) || [];
+            return o.some(r => r.from === ranges[0].from && r.to === ranges[0].to);
+          });
+          expect(objectFirst, "the pane is pointed at an object, not a subject").to.equal(true);
+        } finally {
+          schemaPane.setHoverRegions = wasSet;
+          dataPane.highlight = wasHighlight;
+        }
+      });
+
       it("should keep one document's hovers out of another's", async function () {
         this.timeout(60000);
         const examples = Path.join(__dirname, "../examples");

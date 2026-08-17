@@ -148,6 +148,52 @@ describe("EditorPanes", function () {
     }
   });
 
+  /* Which range a pane scrolls to is the caller's to say, and it says so by
+   * putting that range first.  These were sorted by position before the
+   * choice was made, so "first" meant "earliest in the document": hovering a
+   * constraint scrolled a Wikidata entity page to the id at the top of it
+   * rather than to the claim that matched -- the one thing on screen the
+   * reader already knew. */
+  it("should scroll to the first range it is given, not the earliest", function () {
+    const textarea = dom.window.document.createElement("textarea");
+    textarea.value = '{\n  "id": "Q1",\n  "x": 1,\n  "y": 2,\n  "claim": "here"\n}\n';
+    dom.window.document.body.appendChild(textarea);
+    const pane = makePane(textarea, {language: "json", lint: false});
+    try {
+      const scrolls = [];
+      const was = pane.view.dispatch.bind(pane.view);
+      pane.view.dispatch = spec => {
+        [].concat(spec.effects || []).forEach(e => {
+          if (e.value && e.value.range && e.value.constructor.name === "ScrollTarget")
+            scrolls.push(e.value.range.head);
+        });
+        return was(spec);
+      };
+      const at = s => ({from: textarea.value.indexOf(s), to: textarea.value.indexOf(s) + s.length});
+      const early = at('"id"'), late = at('"claim"');
+      expect(early.from, "the subject really is earlier").to.be.below(late.from);
+
+      // the object first, as the app orders them
+      pane.highlight([late, early], "shexjs-highlight", {scroll: true});
+      expect(scrolls.pop(), "scrolled to the object, not the id above it").to.equal(late.from);
+
+      // ...and the order is honoured the other way round too, so this is
+      // the caller's choice rather than a preference for later positions
+      pane.highlight([early, late], "shexjs-highlight", {scroll: true});
+      expect(scrolls.pop()).to.equal(early.from);
+
+      // scroll:false still marks without moving the pane
+      pane.highlight([late, early], "shexjs-highlight", {scroll: false});
+      expect(scrolls, "nothing scrolled").to.deep.equal([]);
+      const marks = [];
+      pane.view.dom.querySelectorAll(".shexjs-highlight").forEach(e => marks.push(e.textContent));
+      expect(marks.join(""), "both ranges still marked").to.include("claim");
+    } finally {
+      pane.destroy();
+      textarea.remove();
+    }
+  });
+
   /* posAtCoords answers for anywhere in the content, so the comment column
    * beside a short line reports that line's end -- inside any range that
    * spans the line.  Hovering there used to light the range up. */
