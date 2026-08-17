@@ -607,6 +607,138 @@ if (!TEST_browser) {
       }
     });
 
+    /* One materialization, one rendering.  Stepping draws the thread's graph
+     * as it grows, so the finished graph has to replace that rather than land
+     * beside it -- otherwise running a session to the end left two identical
+     * copies in the output data pane, where #materialize leaves one. */
+    it("should end with one copy of the graph, not the stepped one plus the finished one", async function () {
+      this.timeout(60000);
+      const pick = async (selector, label) => {
+        const li = $(selector).filter((_, elt) => $(elt).text() === label);
+        expect(li.length, label + " in " + selector).to.equal(1);
+        if (li.hasClass("selected"))
+          return;
+        li.trigger("click");
+        await shared.promise;
+      };
+      await pick("#inputSchema .manifest li", "BPPatient 2 levels");
+      await pick("#inputData .passes li", "simple");
+      $("#validate").trigger("click");
+      await shared.promise;
+
+      // what #materialize leaves, for comparison
+      $("#materialize").trigger("click");
+      await shared.promise;
+      const app = shared.app;
+      const plain = (app.materializationPanes || []).length;
+      expect(plain, "#materialize renders the graph once").to.equal(1);
+
+      // ...and the same session run to the end through the debugger
+      $("#debugMaterialize").trigger("click");
+      await shared.promise;
+      for (let i = 0; i < 400 && app.debugSession; ++i)
+        $("#dbgContinue").trigger("click");
+      expect(app.debugSession, "the session ran to the end").to.equal(null);
+      expect((app.materializationPanes || []).length,
+             "one graph, not the stepped one plus the finished one").to.equal(plain);
+      // (addResult marks two things `.data`: the shape-map label, which is a
+      // span, and the div holding the pane)
+      expect($("#results div.data").length, "and one pane holding it").to.equal(plain);
+    });
+
+    /* Stepping is watching a graph grow, so the triple just added leads:
+     * highlighted and scrolled into view in the output data, with the
+     * constraint that made it and the binding it read.  It is a *default* --
+     * the mouse overrides it and leaving comes back to it. */
+    it("should lead with the triple just added, until the mouse says otherwise", async function () {
+      this.timeout(60000);
+      const pick = async (selector, label) => {
+        const li = $(selector).filter((_, elt) => $(elt).text() === label);
+        expect(li.length, label + " in " + selector).to.equal(1);
+        if (li.hasClass("selected"))
+          return;
+        li.trigger("click");
+        await shared.promise;
+      };
+      await pick("#inputSchema .manifest li", "BPPatient 2 levels");
+      await pick("#inputData .passes li", "simple");
+      $("#validate").trigger("click");
+      await shared.promise;
+
+      $("#debugMaterialize").trigger("click");
+      await shared.promise;
+      const app = shared.app;
+      const panes = shared.Caches.editorSupport.panes;
+      const painted = {};
+      const undo = [];
+      try {
+        for (let i = 0; i < 6 && app.debugSession; ++i)
+          $("#dbgInto").trigger("click");
+        expect(app.debugSession, "still stepping").to.exist;
+
+        const watch = (pane, name) => {
+          const was = pane.highlight;
+          undo.push(() => { pane.highlight = was; });
+          pane.highlight = (ranges, cls, opts) => {
+            painted[name] = {ranges: (ranges || []).slice(), opts: opts || {}};
+            return was.call(pane, ranges, cls, opts);
+          };
+        };
+        watch(panes.outputSchema, "schema");
+        watch(panes.bindings, "bindings");
+        const resultPanes = shared.Caches.editorSupport.lastMaterialized;
+        expect(resultPanes.length, "a rendered graph").to.be.above(0);
+        resultPanes.forEach(({pane}, i) => watch(pane, "data" + i));
+
+        // re-arm to catch what it paints by default
+        const th0 = app.debugSession.dbg.threads()[0];
+        const last = th0.quads.slice(-1)[0];
+        // every emitted triple has an anchor: provenance entries name their
+        // quad, without which mapMaterialization skips them and a stepping
+        // thread's graph links to nothing at all
+        expect(resultPanes[0].pairs.length, "a pair per emitted triple")
+          .to.equal(th0.quads.length);
+        app.setMaterializationHovers(resultPanes, last);
+
+        expect(painted.data0, "the data pane was painted").to.exist;
+        expect(painted.data0.ranges.length, "with the triple's ranges").to.be.above(0);
+        expect(painted.data0.opts.scroll, "and scrolled to it").to.not.equal(false);
+        expect(painted.schema, "the constraint that made it").to.exist;
+        expect(painted.schema.ranges.length).to.be.above(0);
+
+        // it is the *last* triple: its object is in the rendered text
+        const {text} = resultPanes[0];
+        const lastQuad = last;
+        const shown = painted.data0.ranges.map(r => text.substring(r.from, r.to)).join(" ");
+        if (lastQuad.object.termType === "Literal")
+          expect(shown, "the newest triple's object").to.include(lastQuad.object.value);
+
+        // a hover elsewhere overrides it ...
+        const before = JSON.stringify(painted.data0.ranges);
+        let regions = [];
+        const wasSet = panes.outputSchema.setHoverRegions;
+        panes.outputSchema.setHoverRegions = (rs, leave) => {
+          regions = (rs || []).slice();
+          return wasSet.call(panes.outputSchema, rs, leave);
+        };
+        try {
+          app.setMaterializationHovers(resultPanes, lastQuad);
+          const other = regions.find(r => {
+            painted.data0 = null;
+            r.enter();
+            return painted.data0 && JSON.stringify(painted.data0.ranges) !== before;
+          });
+          expect(other, "a constraint whose triples are not the newest one").to.exist;
+        } finally {
+          panes.outputSchema.setHoverRegions = wasSet;
+        }
+      } finally {
+        undo.forEach(f => f());
+        if (app.debugSession)
+          $("#dbgStop").trigger("click");
+      }
+    });
+
     /* What #dbgBindingState says, written on the bindings themselves.  The
      * text block says it by frame, which is how the materializer thinks; a
      * reader is looking at the tree they wrote, where one binding can be
