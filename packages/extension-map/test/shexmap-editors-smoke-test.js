@@ -580,6 +580,15 @@ if (!TEST_browser) {
         for (let i = 0; i < 4 && app.debugSession; ++i)
           $("#dbgInto").trigger("click");
         expect(app.debugSession, "the session is still going").to.exist;
+        // the thread being stepped is off the worklist while it is stepped,
+        // so a debugger paused inside it used to find no thread at all --
+        // which is why nothing was drawn and no button appeared for the one
+        // thread the reader was watching
+        const [current] = app.debugSession.dbg.threads();
+        expect(current, "the thread this step was about").to.exist;
+        expect(current.current, "and it says so").to.equal(true);
+        expect(current.emitted, "with the triples it has emitted so far").to.be.above(0);
+        expect($("#dbgThreads button").length, "listed, so it can be re-rendered").to.be.above(0);
 
         const early = rendered();
         expect(early, "the graph is on the page already").to.include("PREFIX");

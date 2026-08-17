@@ -253,6 +253,8 @@ class ShExMapBaseApp extends ShExBaseApp {
     // shape is even entered -- but nothing drew them until the session
     // ended or the reader thought to hover a thread button, so stepping
     // through a shape showed no output until the shape was finished.
+    // the thread being stepped leads the list (liveThreads), which is the
+    // one this step was about
     const [current] = session.dbg.threads();
     if (current)
       this.previewThread(current, false, this.stepLabel(event, current));

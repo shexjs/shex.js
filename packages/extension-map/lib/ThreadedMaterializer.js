@@ -288,6 +288,10 @@ class ThreadedMaterializer {
             // deferred threads resume oldest-first: the greedy leader deferred at a
             // frame boundary gets back in front of the variants deferred after it
             const th = stack.length > 0 ? stack.pop() : deferred.shift();
+            // the thread being stepped is off both lists while it is stepped, so
+            // a debugger paused at a yield inside it would not find it anywhere
+            // -- which is the one thread its reader is looking at
+            this._live.current = th;
             const st = th.nfa.states[th.stateNo];
             switch (st.type) {
                 case "Match":
@@ -520,6 +524,10 @@ class ThreadedMaterializer {
         const view = (th, isDeferred) => Object.assign(threadView(th), { deferred: isDeferred }, collectQuadsAndProvenance(th.quads), // quads + provenance
         { used: Object.keys(th.cursor.used) }); // "<frame> <var>" marks
         const ret = [];
+        // the thread being stepped leads, since it is the one a paused debugger
+        // is about; it is on neither list while it is being stepped
+        if (this._live.current)
+            ret.push(Object.assign(view(this._live.current, false), { current: true }));
         for (let i = this._live.stack.length - 1; i >= 0; --i) // top of stack first
             ret.push(view(this._live.stack[i], false));
         for (const th of this._live.deferred) // resumed oldest-first

@@ -299,9 +299,10 @@ ul {
  * edge that doesn't move. */
 #dbgThreadsRow {
     min-height: 1.6em;
-    margin-bottom: .2em;
+    padding-top: .5em;   /* level with the controls under the bindings pane */
     overflow-x: auto;
     white-space: nowrap;
+    text-align: left;
 }
 #dbgThreads {
     font-size: small;
