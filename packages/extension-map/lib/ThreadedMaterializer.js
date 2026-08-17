@@ -849,9 +849,14 @@ function collectQuadsAndProvenance(quadList) {
         const key = t.s + " " + t.p + " " + t.o;
         return key in seen ? false : (seen[key] = true);
     });
+    // each entry names its quad: the provenance array is *about* quads, and a
+    // consumer handed the two separately has to trust that they are parallel.
+    // mapMaterialization skips an entry with no quad, which is how a stepping
+    // thread's emissions came to have no anchors at all.
+    const quads = kept.map((t) => n3idQuad2RdfJs(t.s, t.p, t.o));
     return {
-        quads: kept.map((t) => n3idQuad2RdfJs(t.s, t.p, t.o)),
-        provenance: kept.map((t) => ({ tc: t.tc, predicate: t.p, src: t.src })),
+        quads,
+        provenance: kept.map((t, i) => ({ quad: quads[i], tc: t.tc, predicate: t.p, src: t.src })),
     };
 }
 function stackDepth(callStack) {

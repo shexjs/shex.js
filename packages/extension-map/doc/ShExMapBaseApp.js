@@ -434,7 +434,10 @@ class ShExMapBaseApp extends ShExBaseApp {
     } else {
       // the thread's quads as it emitted them, which is what nests
       this.writeNestedTurtle(thread.quads, (error, result) => this.addResult(error, result));
-      this.reportMaterialization(thread.provenance);
+      // lead with the triple this step just added: the reader is stepping
+      // to watch the graph grow, and the newest one is the news
+      this.reportMaterialization(thread.provenance,
+                                 thread.quads[thread.quads.length - 1] || null);
       this.resultsWidget.finish();
     }
   }
@@ -833,7 +836,7 @@ class ShExMapBaseApp extends ShExBaseApp {
    * generated triple in the result pane hover-links to the output-schema
    * constraint that synthesized it and to the binding (or static) whose
    * value it carries, and each of those links back to its triples. */
-  reportMaterialization (provenance) {
+  reportMaterialization (provenance, focus) {
     const panes = this.editorSupport && this.editorSupport.panes;
     if (!panes || !panes.outputSchema || !this.materializationPanes.length
         || !provenance || !provenance.length)
@@ -856,7 +859,7 @@ class ShExMapBaseApp extends ShExBaseApp {
       // introspection for tests/debugging, as EditorSupport.lastMapped is
       // for validation
       this.editorSupport.lastMaterialized = rendered;
-      this.setMaterializationHovers(rendered);
+      this.setMaterializationHovers(rendered, focus);
     } catch (e) {
       console.warn("materialization diagnostics failed:", e);
     }
@@ -932,16 +935,22 @@ class ShExMapBaseApp extends ShExBaseApp {
 
   /** cross-pane hover highlighting for a materialization: hovering a
    * generated triple, its constraint, or its binding highlights all three. */
-  setMaterializationHovers (rendered) {
+  setMaterializationHovers (rendered, focus) {
     const panes = this.editorSupport.panes;
     const schemaPane = panes.outputSchema;
     const bindingsPane = panes.bindings;
     const staticsPane = panes.statics;
+    // `focus` is a triple to show when the mouse isn't asking for anything
+    // else -- the one just added, while stepping.  A hover overrides it and
+    // leaving comes back to it, which is what makes it a default rather
+    // than a highlight nobody can get rid of.
+    let showDefault = () => {};
     const clearAll = () => {
       schemaPane.clearHighlights();
       if (bindingsPane) bindingsPane.clearHighlights();
       if (staticsPane) staticsPane.clearHighlights();
       rendered.forEach(({pane}) => pane.clearHighlights());
+      showDefault();
     };
     const termRanges = (p) => [].concat(
       p.anchors.objectParts || (p.anchors.object ? [p.anchors.object] : []),
@@ -1044,6 +1053,15 @@ class ShExMapBaseApp extends ShExBaseApp {
     };
     varHovers(bindingsPane, this.Caches.bindings, false);
     varHovers(staticsPane, this.Caches.statics, true);
+
+    // ...and lead with the focus triple, scrolled into view.  Passing no
+    // hovered pane means every one of them scrolls, which is the point: the
+    // reader is being shown where this triple is in all three.
+    const leading = focus ? allPairs.filter(p => p.quad.equals(focus)) : [];
+    if (leading.length) {
+      showDefault = () => show(leading, null);
+      showDefault();
+    }
   }
 
   addResult (error, result) {
