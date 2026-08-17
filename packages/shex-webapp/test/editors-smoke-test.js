@@ -745,6 +745,9 @@ if (!TEST_browser) {
         const [open, close] = nested[0].anchors.objectParts;
         expect(shown.substring(open.from, open.to)).to.equal("{");
         expect(shown.substring(close.from, close.to)).to.equal("}");
+
+        // (the squiggle's half of this is JsonPaneAnchors-test, which needs
+        // a validation that fails and so a page small enough to say why)
       });
 
       /* A source can hold several documents -- an entity page each -- and a
