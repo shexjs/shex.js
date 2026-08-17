@@ -271,6 +271,15 @@ if (!TEST_browser) {
       $("#dbgInto").trigger("click"); // at :phone; the mbox disjunct is pending
       expect($("#dbgThreads button").length, "pending threads listed").to.be.above(0);
       $("#dbgThreads button").first().trigger("mouseenter"); // partial preview
+      // ...and that preview is written the way the finished graph is.  A
+      // thread paused halfway cannot be validated against the output schema
+      // -- not satisfying it yet is what "partial" means -- but the nesting
+      // needs none of that, and this used to be a flat N3.Writer dump.
+      const partial = $("#results .data").last().data("rawText");
+      expect(partial, "the partial graph rendered").to.be.a("string");
+      expect(partial, "the nested writer's prefixes, not N3's @prefix")
+        .to.match(/^PREFIX /m);
+      expect(partial).to.not.include("@prefix");
       expect($("#results").text()).to.include("thread");
       // ... including the thread's private view of the binding tree
       expect($("#results").text()).to.include("binding tree");

@@ -320,11 +320,42 @@ class ShExMapBaseApp extends ShExBaseApp {
     if (complete && session) {
       this.renderMaterializedGraph(store, session.outputShapeMap, thread.provenance);
     } else {
-      const writer = new RdfJs.Writer({prefixes: this.Caches.outputSchema.parsed._prefixes});
-      writer.addQuads(store.getQuads());
-      writer.end((error, result) => this.addResult(error, result));
+      this.writeNestedTurtle(store, (error, result) => this.addResult(error, result));
       this.reportMaterialization(thread.provenance);
       this.resultsWidget.finish();
+    }
+  }
+
+  /** The graph as nested Turtle, without asking the schema to approve it
+   * first.
+   *
+   * renderMaterializedGraph validates before it writes, so it can lead with
+   * the triples the schema accounts for and follow with the rest -- which a
+   * thread paused halfway through cannot survive: not satisfying the output
+   * schema yet is what "partial" means.  The nesting itself needs none of
+   * that, and a flat dump of thirty triples with N3's own bnode labels is
+   * what stepping used to show.
+   */
+  writeNestedTurtle (store, onDone) {
+    const prefixes = this.Caches.outputSchema.parsed._prefixes;
+    try {
+      const lists = store.extractLists({remove: true});
+      const writer = new ShExWebApp.NestedTurtleWriter.Writer(null, {
+        format: "text/turtle",
+        prefixes,
+        lists,
+        version: 1.1,
+        indent: "    ",
+        checkCorefs: n => false,
+      });
+      writer.addQuads(store.getQuads());
+      writer.end(onDone);
+    } catch (e) {
+      // a graph the nested writer can't lay out still has to be readable
+      console.warn("NestedWriter on a partial graph:", e);
+      const writer = new RdfJs.Writer({prefixes});
+      writer.addQuads(store.getQuads());
+      writer.end(onDone);
     }
   }
 
