@@ -224,14 +224,10 @@
           <h2 class="status"> </h2>
           <textarea rows="5" class="vars droparea" style="width: 100%" spellcheck="false"></textarea>
         </div>
-        <div>
-          <div id="outactions" style="float:right; margin-right: .1em;">
-            <button id="materialize">materialize (ctl-\)</button> <button id="debugMaterialize" title="step through materialization (set breakpoints in the output schema's gutter)">🐞</button> <input id="outputShapeMap" type="text" value="" class="schema context-menu-one btn btn-neutral" placeholder="&lt;node&gt;@&lt;shape&gt;" title="output ShapeMap, e.g. &lt;tag:root&gt;@&lt;OutputShape&gt; — the node names the graph root to create; right-click picks the shape"/>
-            <span id="debugControls" style="display:none">
-              <button id="dbgContinue" title="continue">▶</button><button id="dbgInto" title="step into">⤵</button><button id="dbgOver" title="step over">⏭</button><button id="dbgOut" title="step out">⤴</button><button id="dbgStop" title="stop">⏹</button>
-              <span id="dbgStatus" style="font-size: small"></span>
-              <span id="dbgThreads" title="pending and accepted threads; hover or click to render one's graph" style="font-size: small"></span>
-            </span>
+        <div id="outactionsRow">
+          <div id="outactions">
+            <button id="materialize">materialize (ctl-\)</button> <button id="debugMaterialize" title="step through materialization (set breakpoints in the output schema's gutter)">🐞</button> <input id="outputShapeMap" type="text" value="" class="schema context-menu-one btn btn-neutral" placeholder="&lt;node&gt;@&lt;shape&gt;" title="output ShapeMap, e.g. &lt;tag:root&gt;@&lt;OutputShape&gt; — the node names the graph root to create; right-click picks the shape"/><span id="debugControls" style="display:none"><button id="dbgContinue" title="continue">▶</button><button id="dbgInto" title="step into">⤵</button><button id="dbgOver" title="step over">⏭</button><button id="dbgOut" title="step out">⤴</button><button id="dbgStop" title="stop">⏹</button><span id="dbgThreads" title="pending and accepted threads; hover or click to render one's graph"></span></span>
+            <div id="dbgStatusRow" class="valDbgRow" style="display:none"><span id="dbgStatus"></span></div>
           </div>
         </div>
       </div>

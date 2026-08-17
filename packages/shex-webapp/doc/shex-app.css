@@ -271,3 +271,38 @@ ul {
     white-space: normal;
     overflow-wrap: anywhere;
 }
+
+/* The materializer's controls, arranged like the validator's above.
+ *
+ * #outactions floats right so it sits at the panel's edge, and its wrapper
+ * held nothing else -- so the wrapper collapsed to no height at all, the
+ * float escaped it, and what came next in the page laid out over the top of
+ * the buttons.  A block formatting context contains its floats. */
+#outactionsRow {
+    display: flow-root;
+}
+#outactions {
+    float: right;
+    margin-right: .1em;
+    text-align: right;
+}
+#debugControls {
+    margin-left: .6em;
+    white-space: nowrap;
+}
+/* the same strip as the validator's threads, and for the same reason */
+#dbgThreads {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: .5em;
+    max-width: 18em;
+    overflow-x: auto;
+    white-space: nowrap;
+    font-size: small;
+}
+#dbgStatus {
+    display: inline-block;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}

@@ -177,6 +177,12 @@ if (!TEST_browser) {
       const session = await shared.promise;
       expect(session, "debug session started: " + $("#results").text().substring(0, 120)).to.exist;
       expect($("#debugControls").css("display")).not.to.equal("none");
+      // laid out like the validator's: steps beside the button that started
+      // them, status on its own row, and 🐞 stands down meanwhile
+      expect($("#dbgStatusRow").css("display"), "the status row").to.not.equal("none");
+      expect($("#debugMaterialize").css("display"), "the bug button").to.equal("none");
+      expect($("#dbgContinue").closest("#dbgStatusRow").length, "steps are not in the status row").to.equal(0);
+      expect($("#dbgStatus").closest("#dbgStatusRow").length, "the status is").to.equal(1);
 
       // step into: pauses at :p (the first constraint)
       $("#dbgInto").trigger("click");
@@ -191,8 +197,35 @@ if (!TEST_browser) {
       $("#dbgContinue").trigger("click");
       expect($("#dbgStatus").text()).to.include("accepted: 2 quads");
       expect($("#debugControls").css("display")).to.equal("none");
+      // a session that ran to the end keeps its last word, which is the
+      // answer: hiding the controls used to take the sentence with them
+      expect($("#dbgStatusRow").css("display"), "how it finished is still readable")
+        .to.not.equal("none");
+      expect($("#debugMaterialize").css("display"), "and 🐞 is offered again").to.not.equal("none");
       expect($("#results").text()).to.include('"one"');
       expect($("#results").text()).to.include('"two"');
+    });
+
+    /* #outactions floats right so the buttons sit at the panel's edge, and
+     * its wrapper held nothing else -- so the wrapper collapsed to no height,
+     * the float escaped it, and the next thing in the page laid out over the
+     * buttons.  jsdom does no layout, so what is checkable here is the shape
+     * that avoids it: the float has a container that establishes a block
+     * formatting context. */
+    it("should keep the materialize buttons inside a box that contains them", function () {
+      const row = $("#outactionsRow");
+      expect(row.length, "#outactions has a named wrapper").to.equal(1);
+      expect(row.find("#outactions").length, "which holds it").to.equal(1);
+      expect(row.css("display"), "a block formatting context contains its floats")
+        .to.equal("flow-root");
+      // and the float is styled from the sheet, not from an inline style
+      // that only this page would carry
+      expect($("#outactions").attr("style") || "", "no inline float").to.not.include("float");
+      expect($("#outactions").css("float")).to.equal("right");
+      ["#materialize", "#debugMaterialize", "#outputShapeMap"].forEach(sel => {
+        expect($(sel).length, sel).to.equal(1);
+        expect($(sel).closest("#outactions").length, sel + " is in the row").to.equal(1);
+      });
     });
 
     it("should stop a session on demand", async function () {

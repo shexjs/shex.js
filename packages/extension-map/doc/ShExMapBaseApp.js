@@ -186,7 +186,11 @@ class ShExMapBaseApp extends ShExBaseApp {
       });
 
       this.debugSession = {dbg, materializer, outputShapeMap, located, pane};
-      $("#debugControls").show();
+      // the step buttons beside the button that started them, the status on
+      // its own row -- see the validator's, which this follows.  🐞 stands
+      // down while its session is live.
+      $("#debugControls, #dbgStatusRow").show();
+      $("#debugMaterialize").hide();
       $("#dbgStatus").text("paused before materialization; step or continue");
       return this.debugSession;
     } catch (e) {
@@ -357,11 +361,16 @@ class ShExMapBaseApp extends ShExBaseApp {
     this.debugSession = null;
     session.pane.clearHighlights();
     $("#debugControls").hide();
+    $("#debugMaterialize").show();
     $("#dbgThreads").empty();
     if (stopped) {
       $("#dbgStatus").text("");
+      $("#dbgStatusRow").hide();
       return;
     }
+    // a session that ran to the end keeps its last word: how it finished is
+    // the answer.  That was the intent before, but #dbgStatus lived inside
+    // #debugControls, so hiding those took the sentence with them.
     if (session.dbg.error) {
       this.reportMaterializationError(session.dbg.error, "materialization (debugged)");
     } else {
@@ -474,6 +483,9 @@ class ShExMapBaseApp extends ShExBaseApp {
   }
 
   async materialize () {
+    // ...and it replaces what a debug session was stepping through, so that
+    // session goes with it (the validator's #validate does the same)
+    this.endDebugSession(true);
     this.showMaterialization();
     this.resultsWidget.clear();
     this.resultsWidget.start();
