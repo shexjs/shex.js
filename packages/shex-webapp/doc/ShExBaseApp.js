@@ -3365,7 +3365,12 @@ class ShExBaseApp {
       return; // return if < 100ms since last error.
     }
     // a validation replaces whatever the last one produced, including
-    // anything an app derived from it (see ShExMapBaseApp)
+    // anything an app derived from it (see ShExMapBaseApp) -- and including
+    // a debug session, whose recorded matches belong to the results about to
+    // be thrown away.  This is not "continue, ignoring breakpoints": that is
+    // ▶, which resumes the recorded match; this re-runs the whole validation
+    // and rebuilds the results underneath it.
+    this.endValidationDebugSession();
     this.startingValidation();
     this.resultsWidget.clear();
     this.resultsWidget.start();
@@ -3453,7 +3458,11 @@ class ShExBaseApp {
       captures.forEach((cap, i) =>
         select.append($("<option/>", {value: i}).text(this.matchCaptureLabel(cap, schema))));
       select.off("change").on("change", () => this.pickValidationMatch(parseInt(select.val(), 10)));
-      $("#valDebugControls").show();
+      // the step buttons, the match picker and the status line are three
+      // rows of one control; 🐞 started this session, and pressing it again
+      // would only start another over the same results
+      $("#valDebugControls, .valDbgRow").show();
+      $("#debugValidate").hide();
       this.pickValidationMatch(0);
       return this.valDebugSession;
     } catch (e) {
@@ -3592,7 +3601,8 @@ class ShExBaseApp {
       return;
     this.valDebugSession = null;
     session.pane.clearHighlights();
-    $("#valDebugControls").hide();
+    $("#valDebugControls, .valDbgRow").hide();
+    $("#debugValidate").show();
     $("#valDbgStatus").text("");
     $("#valDbgThreads").empty();
   }

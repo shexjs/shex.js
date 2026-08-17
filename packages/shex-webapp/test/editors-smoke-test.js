@@ -1453,6 +1453,17 @@ if (!TEST_browser) {
       expect($("#valDbgMatches option").length, "one recorded match").to.equal(1);
       expect($("#valDbgMatches option").first().text()).to.include("x@");
 
+      // three rows, and the button that started this stands down: pressing
+      // it again would open a second session over the same results
+      $("#valDbgMatchesRow, #valDbgStatusRow").each((i, e) =>
+        expect($(e).css("display"), e.id).to.not.equal("none"));
+      expect($("#debugValidate").css("display"), "the bug button").to.equal("none");
+      // the step buttons sit beside #validate, not below it
+      expect($("#valDbgContinue").closest("#valDbgMatchesRow, #valDbgStatusRow").length,
+             "the step buttons are on the first row").to.equal(0);
+      expect($("#valDbgMatches").closest("#valDbgMatchesRow").length, "matches row").to.equal(1);
+      expect($("#valDbgStatus").closest("#valDbgStatusRow").length, "status row").to.equal(1);
+
       // step into: the first constraint event, with live threads listed
       $("#valDbgInto").trigger("click");
       expect($("#valDbgStatus").text()).to.include("at <http://a.example/p>");
@@ -1476,7 +1487,45 @@ if (!TEST_browser) {
 
       $("#valDbgStop").trigger("click");
       expect($("#valDebugControls").css("display")).to.equal("none");
+      $("#valDbgMatchesRow, #valDbgStatusRow").each((i, e) =>
+        expect($(e).css("display"), e.id).to.equal("none"));
+      expect($("#debugValidate").css("display"), "the bug button is back").to.not.equal("none");
       pane.toggleBreakpoint(schemaText.indexOf(":q .")); // clean up the gutter
+    });
+
+    /* Validating again is not "continue, ignoring breakpoints" -- that is ▶.
+     * It re-runs the whole validation and replaces the results the session's
+     * recorded matches were taken from, so the session goes with them rather
+     * than stepping through something that is no longer on screen. */
+    it("should end a debug session when a new validation replaces its results", async function () {
+      this.timeout(60000);
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      set("#inputSchema textarea", "PREFIX : <http://a.example/>\n:S { :p . }");
+      set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .");
+      set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
+      await shared.promise;
+
+      $("#debugValidate").trigger("click");
+      const session = await shared.promise;
+      expect(session, "a session to interrupt").to.exist;
+      expect(shared.app.valDebugSession, "live").to.exist;
+
+      // validate refuses within 100ms of the last shape-map error ("...again
+      // to continue"), and an earlier test in this file may have left one --
+      // so wait that out, or this asserts about a validation that declined
+      // to happen.  A session outliving *that* is right: nothing replaced it.
+      await new Promise(res => dom.window.setTimeout(res, 150));
+      const before = shared.promise;
+      $("#validate").trigger("click");
+      expect(shared.promise, "the validation actually started").to.not.equal(before);
+      await shared.promise;
+      expect(shared.app.valDebugSession, "the session went with its results").to.equal(null);
+      expect($("#valDebugControls").css("display")).to.equal("none");
+      expect($("#debugValidate").css("display"), "and 🐞 is offered again").to.not.equal("none");
     });
 
     it("should toggle editors off and on from the menu select", function () {

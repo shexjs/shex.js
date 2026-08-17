@@ -234,3 +234,40 @@ ul {
     padding-left: 1.2em;
     padding-right: .4em;
 }
+
+/* The validation debugger's controls (doc/debugger-design.md).
+ *
+ * Three rows rather than one long line: the step buttons beside the button
+ * that started them, then which match is being stepped, then what it is
+ * doing.  On one line the status text -- "paused before matching
+ * <http://…/P31>; step or continue" -- pushed everything after it off to
+ * the right, and the pane scrolled sideways to follow. */
+#valDebugControls {
+    margin-left: .6em;
+    white-space: nowrap;
+}
+.valDbgRow {
+    margin-top: .35em;
+    font-size: small;
+}
+#valDbgMatches {
+    max-width: 100%;
+}
+/* one small button per thread, and a generation can have a lot of them:
+   let the list scroll in its own strip instead of widening the page */
+#valDbgThreads {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: .5em;
+    max-width: 22em;
+    overflow-x: auto;
+    white-space: nowrap;
+    font-size: small;
+}
+/* the status is a sentence, so let it wrap rather than run off the edge */
+#valDbgStatus {
+    display: inline-block;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
