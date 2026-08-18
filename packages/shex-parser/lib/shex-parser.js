@@ -173,8 +173,11 @@ class ShExCParserState {
         if (!this.shapes)
             this.shapes = {};
         if (label in this.shapes) {
-            if (this.options.duplicateShape === "replace")
-                this.shapes[label] = shape;
+            if (this.options.duplicateShape === "replace") {
+                // the later declaration wins, id and location and all
+                this.shapes[label] = Object.assign({ id: label }, shape);
+                this.locations[label] = this.makeLocation(start, end);
+            }
             else if (this.options.duplicateShape !== "ignore")
                 this.error(new Error("Parse error: " + label + " already defined"));
         }
