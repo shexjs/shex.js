@@ -98,7 +98,8 @@
       "test/"
     ],
     "extension": [
-      ".js"
+      ".js",
+      ".ts"
     ],
     "reporter": [
       "lcov",
