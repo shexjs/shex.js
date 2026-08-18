@@ -1131,7 +1131,104 @@ if (!TEST_browser) {
         }
       });
 
-      it("should carry the source and its settings in the permalink", async function () {
+      /* The highlight switch (see HighlightMode).  Three resting positions and
+     * a momentary key, which is AutoCAD's ortho and Raskin's quasimode: a
+     * state your finger holds open is one you cannot forget you are in. */
+    describe("the highlight switch", function () {
+      const mode = () => shared.HighlightMode;
+      const chip = () => $("#highlightMode");
+      const key = (type, props) => {
+        const evt = $.Event(type, Object.assign({key: "Shift"}, props || {}));
+        $(dom.window.document).trigger(evt);
+      };
+
+      afterEach(function () {
+        // leave the switch where the other tests expect it
+        const m = mode();
+        if (m) { m.unpin(); m.setHeld(false); m.set("on"); }
+      });
+
+      it("should offer a chip that says what the switch is set to", function () {
+        expect(chip().length, "the chip").to.equal(1);
+        // beside the controls button, sharing its line: #menuForm is a form
+        // and so a block, which is why sitting after it put it underneath
+        expect(chip().closest("#menuForm").length, "inside the menu form").to.equal(1);
+        expect($("#highlightModeRow").prevAll("#menu-button").length,
+               "on the controls button's line, after it").to.equal(1);
+        expect(chip().closest("#menu-button").length, "beside the button, not inside it")
+          .to.equal(0);
+        expect(mode(), "the controller is reachable").to.exist;
+        mode().set("on");
+        expect(chip().attr("data-state")).to.equal("on");
+        expect(chip().attr("data-live"), "on means the mouse paints").to.equal("yes");
+        expect(chip().text()).to.include("highlight: on");
+        expect(chip().attr("aria-pressed")).to.equal("true");
+      });
+
+      it("should cycle on click and on ctrl-alt-h", function () {
+        mode().set("on");
+        chip().trigger("click");
+        expect(chip().attr("data-state"), "on -> hold").to.equal("hold");
+        chip().trigger("click");
+        expect(chip().attr("data-state"), "hold -> off").to.equal("off");
+        chip().trigger("click");
+        expect(chip().attr("data-state"), "and round").to.equal("on");
+
+        key("keydown", {key: "h", ctrlKey: true, altKey: true});
+        expect(chip().attr("data-state"), "the keystroke does the same").to.equal("hold");
+      });
+
+      it("should say off is off, and hold is only while held", function () {
+        mode().set("off");
+        expect(mode().live(), "off").to.equal(false);
+        key("keydown");
+        expect(mode().live(), "off stays off under the key").to.equal(false);
+        key("keyup");
+
+        mode().set("hold");
+        expect(mode().live(), "hold, resting").to.equal(false);
+        expect(chip().attr("data-live")).to.equal("no");
+        key("keydown");
+        expect(mode().live(), "hold, held").to.equal(true);
+        expect(chip().attr("data-live"), "and the chip says so while it is held").to.equal("yes");
+        key("keyup");
+        expect(mode().live(), "and back").to.equal(false);
+      });
+
+      /* Holding while `on` suspends rather than repeats: that is the
+       * inversion AutoCAD's Shift does to Ortho, and it is what lets a
+       * reader cross the panes without the mouse repainting on the way. */
+      it("should suspend rather than repeat when held in on", function () {
+        mode().set("on");
+        expect(mode().live()).to.equal(true);
+        key("keydown");
+        expect(mode().live(), "held suspends").to.equal(false);
+        key("keyup");
+        expect(mode().live()).to.equal(true);
+      });
+
+      it("should let go of the key if the window does", function () {
+        mode().set("hold");
+        key("keydown");
+        expect(mode().live()).to.equal(true);
+        $(dom.window).trigger("blur");
+        expect(mode().live(), "a key released elsewhere never reaches us").to.equal(false);
+      });
+
+      it("should say when a highlight is frozen, and release on Escape", function () {
+        mode().set("on");
+        expect(mode().frozen()).to.equal(false);
+        mode().pin([{}]);
+        expect(mode().frozen(), "frozen").to.equal(true);
+        expect(chip().attr("data-frozen")).to.equal("yes");
+        expect(chip().text(), "and says so").to.include("frozen");
+        key("keydown", {key: "Escape"});
+        expect(mode().frozen(), "Escape releases it").to.equal(false);
+        expect(chip().text()).to.not.include("frozen");
+      });
+    });
+
+    it("should carry the source and its settings in the permalink", async function () {
         source().select("sparql");
         $("#nbhd-endpoint").val("http://ex.example/sparql").trigger("change");
         const permalink = await shared.app.getPermalink();

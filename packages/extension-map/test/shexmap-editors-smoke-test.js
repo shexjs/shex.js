@@ -739,6 +739,98 @@ if (!TEST_browser) {
       }
     });
 
+    describe("the highlight switch", function () {
+      const mode = () => shared.HighlightMode;
+      const key = (type, props) => $(dom.window.document).trigger(
+        $.Event(type, Object.assign({key: "Shift"}, props || {})));
+
+      /* ...and that the switch actually governs the paint, and a pin
+       * actually freezes it.  The map app's materialization hovers are the
+       * richest case: schema, bindings and the rendered graph all at once. */
+      it("should paint by the switch, and stop when frozen", async function () {
+        this.timeout(60000);
+        const pick = async (selector, label) => {
+          const li = $(selector).filter((_, elt) => $(elt).text() === label);
+          expect(li.length, label + " in " + selector).to.equal(1);
+          if (li.hasClass("selected"))
+            return;
+          li.trigger("click");
+          await shared.promise;
+        };
+        await pick("#inputSchema .manifest li", "BPPatient 2 levels");
+        await pick("#inputData .passes li", "simple");
+        $("#validate").trigger("click");
+        await shared.promise;
+        $("#materialize").trigger("click");
+        await shared.promise;
+
+        const app = shared.app;
+        const panes = shared.Caches.editorSupport.panes;
+        const painted = [];
+        const was = panes.outputSchema.highlight;
+        panes.outputSchema.highlight = (ranges, cls, opts) => {
+          painted.push((ranges || []).length);
+          return was.call(panes.outputSchema, ranges, cls, opts);
+        };
+        let regions = [];
+        const wasSet = panes.bindings.setHoverRegions;
+        panes.bindings.setHoverRegions = (rs, leave) => {
+          regions = (rs || []).slice();
+          return wasSet.call(panes.bindings, rs, leave);
+        };
+        try {
+          app.setMaterializationHovers(shared.Caches.editorSupport.lastMaterialized);
+          expect(regions.length, "bindings to hover").to.be.above(1);
+
+          // off: the mouse paints nothing
+          mode().set("off");
+          painted.length = 0;
+          regions[0].enter();
+          expect(painted, "off paints nothing").to.deep.equal([]);
+
+          // on: it paints
+          mode().set("on");
+          painted.length = 0;
+          regions[0].enter();
+          expect(painted.length, "on paints").to.be.above(0);
+
+          // held while on: suspended
+          painted.length = 0;
+          key("keydown");
+          regions[1].enter();
+          expect(painted, "held suspends the mouse").to.deep.equal([]);
+          key("keyup");
+
+          // frozen: a click pins it, and hovering elsewhere leaves it alone
+          // the gesture is cmd on a Mac and ctrl elsewhere, and jsdom is
+          // neither -- so ask the app which it is rather than guessing
+          const evt = {metaKey: shared.PIN_WITH_META, ctrlKey: !shared.PIN_WITH_META};
+          expect(shared.isPinGesture(evt), "a pin gesture").to.equal(true);
+          expect(shared.isPinGesture({}), "and a bare click is not").to.equal(false);
+          expect(regions[0].click, "a binding can be frozen").to.be.a("function");
+          // an unmodified click is *not* consumed, so the editor keeps its
+          // ordinary caret placement; a pin gesture is, which is what stops
+          // the click extending the selection across the pane
+          expect(regions[0].click({}), "an ordinary click passes through").to.equal(false);
+          expect(regions[0].click(evt), "a pin consumes the event").to.equal(true);
+          expect(mode().frozen(), "frozen by the click").to.equal(true);
+          painted.length = 0;
+          regions[1].enter();
+          expect(painted, "and the mouse no longer changes it").to.deep.equal([]);
+
+          // clicking it again releases
+          regions[0].click(evt);
+          expect(mode().frozen(), "released").to.equal(false);
+        } finally {
+          panes.outputSchema.highlight = was;
+          panes.bindings.setHoverRegions = wasSet;
+          mode().unpin();
+          mode().setHeld(false);
+          mode().set("on");
+        }
+      });
+    });
+
     /* What #dbgBindingState says, written on the bindings themselves.  The
      * text block says it by frame, which is how the materializer thinks; a
      * reader is looking at the tree they wrote, where one binding can be

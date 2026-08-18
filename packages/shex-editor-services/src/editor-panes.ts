@@ -113,9 +113,15 @@ export function completionSource (getSets: () => CompletionSets) {
   };
 }
 
-/** a document range that reacts to the mouse entering it */
+/** a document range that reacts to the mouse entering it, and optionally to
+ * being clicked -- which is how a transient highlight is made to stay */
 export interface HoverRegion extends Range {
   enter (): void;
+  /** Handle a click on this range.  Return true to consume it: the event is
+   * then stopped before the editor sees it, so the gesture doesn't also move
+   * the caret or drag out a selection.  Return false and the click is an
+   * ordinary one. */
+  click? (event: MouseEvent): boolean;
 }
 
 /** one annotated range: a CSS class to wear and, optionally, what it means */
@@ -381,6 +387,45 @@ function attachHoverRegions (view: EditorView): (regions: HoverRegion[], leave?:
     }
   });
   view.contentDOM.addEventListener("mouseleave", clearHover);
+  /* A click on a region is how a reader says "keep showing me this".
+   *
+   * In the *capture* phase, and stopped dead when the region claims it.  The
+   * editor installs its own mousedown handler when the view is built, which
+   * is before this one, so bubbling here would arrive after CodeMirror had
+   * already moved the caret -- and a modified click moves it by *extending*
+   * the selection, which is why pinning used to highlight everything between
+   * the old cursor and the click.  preventDefault after the fact undoes none
+   * of that; not letting the editor see it does.
+   */
+  const clickRegions = (e: MouseEvent): void => {
+    if (e.button !== 0)
+      return;
+    const pos = view.posAtCoords({x: e.clientX, y: e.clientY});
+    if (pos === null || !onText(view, e.clientX, e.clientY, pos))
+      return;
+    const hit = hoverRegions.reduce((best: HoverRegion | null, r) =>
+      r.click && pos >= r.from && pos < r.to && (!best || r.to - r.from < best.to - best.from)
+        ? r : best, null);
+    if (!hit || !hit.click)
+      return;
+    if (hit.click(e) === false)
+      return;                        // not this gesture: an ordinary click
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  };
+  view.contentDOM.addEventListener("mousedown", clickRegions, true);
+  // ctrl-click raises a context menu on a Mac even when the mousedown was
+  // swallowed, so the same gesture has to be refused here too
+  view.contentDOM.addEventListener("contextmenu", (e: MouseEvent) => {
+    if (!(e.ctrlKey || e.metaKey))
+      return;
+    const pos = view.posAtCoords({x: e.clientX, y: e.clientY});
+    if (pos === null)
+      return;
+    if (hoverRegions.some(r => r.click && pos >= r.from && pos < r.to))
+      e.preventDefault();
+  }, true);
   return (regions, leave) => {
     // replacing the region set while one of its regions is hovered would
     // strand that region's highlights: with currentRegion nulled, the next

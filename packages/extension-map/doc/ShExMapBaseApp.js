@@ -950,11 +950,18 @@ class ShExMapBaseApp extends ShExBaseApp {
     // leaving comes back to it, which is what makes it a default rather
     // than a highlight nobody can get rid of.
     let showDefault = () => {};
-    const clearAll = () => {
+    const wipe = () => {
       schemaPane.clearHighlights();
       if (bindingsPane) bindingsPane.clearHighlights();
       if (staticsPane) staticsPane.clearHighlights();
       rendered.forEach(({pane}) => pane.clearHighlights());
+    };
+    const clearAll = () => {
+      // a frozen highlight outlasts the mouse leaving it: that is what
+      // freezing is for -- going to look at what it points at
+      if (HighlightMode.frozen())
+        return;
+      wipe();
       showDefault();
     };
     const termRanges = (p) => [].concat(
@@ -963,7 +970,11 @@ class ShExMapBaseApp extends ShExBaseApp {
       p.anchors.predicate ? [p.anchors.predicate] : []);
     // a structural triple only links into a nested shape: distinguish it
     // from one carrying a binding
-    const show = (group, hoveredPane) => {
+    const show = (group, hoveredPane, pinning) => {
+      // the switch decides whether the mouse paints; a pin decides whether
+      // it may change what is painted
+      if (!pinning && (!HighlightMode.live() || HighlightMode.frozen()))
+        return;
       const cls = group.every(p => p.structural)
             ? "shexjs-highlight" : "shexjs-highlight-match";
       schemaPane.highlight(
@@ -986,11 +997,38 @@ class ShExMapBaseApp extends ShExBaseApp {
         pane.highlight(hits.flatMap(termRanges), cls, {scroll: hoveredPane !== pane});
       });
     };
+    // ctrl/cmd-click freezes what is under the mouse and scrolls every pane
+    // to its counterpart; clicking the frozen thing again releases it.  (On
+    // a Mac ctrl-click is the context menu, so cmd is the Mac spelling --
+    // which is what every IDE does, for the same reason.)
+    const freeze = (group, pane) => evt => {
+      if (!isPinGesture(evt))
+        return false;            // an ordinary click: let the editor have it
+      if (HighlightMode.frozen() && HighlightMode.pinned === group) {
+        HighlightMode.unpin();
+        wipe();
+        showDefault();
+        return true;
+      }
+      HighlightMode.pin(group);
+      show(group, null, true);   // no hovered pane: every one of them travels
+      return true;
+    };
+    this.materializationPaint = () => {
+      if (HighlightMode.frozen())
+        show(HighlightMode.pinned, null, true);
+      else {
+        wipe();
+        showDefault();
+      }
+    };
     // ... from a triple in a result pane
     rendered.forEach(({pane, pairs}) => {
       pane.setHoverRegions(
         pairs.flatMap(p => termRanges(p).map(
-          r => ({from: r.from, to: r.to, enter: () => show([p], pane)}))),
+          r => ({from: r.from, to: r.to,
+                 enter: () => show([p], pane),
+                 click: freeze([p], pane)}))),
         clearAll);
     });
     // ... from a constraint in the output schema: one constraint can have
@@ -1006,7 +1044,9 @@ class ShExMapBaseApp extends ShExBaseApp {
     schemaPane.setHoverRegions(
       [...bySchema.values()].flatMap(group =>
         (group[0].schemaParts || [group[0].schema]).map(
-          r => ({from: r.from, to: r.to, enter: () => show(group, schemaPane)}))),
+          r => ({from: r.from, to: r.to,
+                 enter: () => show(group, schemaPane),
+                 click: freeze(group, schemaPane)}))),
       clearAll);
     // ... and from a variable in the bindings/statics panes
     const varHovers = (pane, cache, wantStatics) => {
@@ -1039,9 +1079,11 @@ class ShExMapBaseApp extends ShExBaseApp {
           if (byPath.size > 0) {
             byPath.forEach(({path, frames}) => {
               const forFrames = group.filter(p => frames.has(p.frame));
+              const forThis = forFrames.length ? forFrames : group;
               this.bindingRangesAt(text, path).forEach(r =>
                 regions.push({from: r.from, to: r.to,
-                              enter: () => show(forFrames.length ? forFrames : group, pane)}));
+                              enter: () => show(forThis, pane),
+                              click: freeze(forThis, pane)}));
             });
             return;
           }
@@ -1050,8 +1092,10 @@ class ShExMapBaseApp extends ShExBaseApp {
           // an occurrence highlights the triples of the frame it belongs to
           // when the frames line up one-to-one with the occurrences
           const forFrame = group.filter(p => p.frame === occurrence);
+          const forThis = forFrame.length ? forFrame : group;
           regions.push({from: r.from, to: r.to,
-                        enter: () => show(forFrame.length ? forFrame : group, pane)});
+                        enter: () => show(forThis, pane),
+                        click: freeze(forThis, pane)});
         });
       });
       pane.setHoverRegions(regions, clearAll);
@@ -1064,8 +1108,18 @@ class ShExMapBaseApp extends ShExBaseApp {
     // reader is being shown where this triple is in all three.
     const leading = focus ? allPairs.filter(p => p.quad.equals(focus)) : [];
     if (leading.length) {
-      showDefault = () => show(leading, null);
+      showDefault = () => {
+        if (HighlightMode.state !== "off")
+          show(leading, null, true);
+      };
       showDefault();
+    }
+    if (!this._materializationRepaintWired) {
+      this._materializationRepaintWired = true;
+      HighlightMode.onChange(() => {
+        if (this.materializationPaint)
+          this.materializationPaint();
+      });
     }
   }
 

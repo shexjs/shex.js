@@ -194,6 +194,66 @@ describe("EditorPanes", function () {
     }
   });
 
+  /* A click that pins must never reach the editor.  CodeMirror installs its
+   * own mousedown handler when the view is built -- before any of ours -- and
+   * a *modified* click there moves the caret by extending the selection, so
+   * pinning used to light up everything between the old cursor and the click.
+   * preventDefault after the fact undoes none of that; taking the event in
+   * the capture phase and stopping it does. */
+  it("should keep a claimed click away from the editor's own handler", function () {
+    const textarea = dom.window.document.createElement("textarea");
+    textarea.value = "aaaa bbbb cccc\ndddd eeee ffff\n";
+    dom.window.document.body.appendChild(textarea);
+    const pane = makePane(textarea, {language: "turtle", lint: false});
+    try {
+      dom.window.Range.prototype.getClientRects = function () { return []; };
+      const seen = [];
+      // stand in for the editor: a listener on the same element, in the
+      // bubble phase, which is where CodeMirror's lives
+      pane.view.contentDOM.addEventListener("mousedown", () => seen.push("editor"));
+
+      let claim = true;
+      pane.setHoverRegions([{from: 0, to: 4, enter: () => {}, click: () => claim}]);
+
+      const at = (from) => {
+        const was = pane.view.posAtCoords;
+        pane.view.posAtCoords = () => from;
+        // jsdom measures nothing, so say the position is over text (which is
+        // what onText concludes when nothing can be measured)
+        const wasCoords = pane.view.coordsAtPos;
+        pane.view.coordsAtPos = () => null;
+        const evt = new dom.window.MouseEvent("mousedown",
+                                              {bubbles: true, cancelable: true, button: 0});
+        pane.view.contentDOM.dispatchEvent(evt);
+        pane.view.posAtCoords = was;
+        pane.view.coordsAtPos = wasCoords;
+        return evt;
+      };
+
+      // claimed: the editor never sees it, and the default is prevented
+      seen.length = 0;
+      const claimed = at(1);
+      expect(seen, "the editor was not told").to.deep.equal([]);
+      expect(claimed.defaultPrevented, "and the default is refused").to.equal(true);
+
+      // declined: an ordinary click, which the editor must still get
+      claim = false;
+      seen.length = 0;
+      const passed = at(1);
+      expect(seen, "an unclaimed click reaches the editor").to.deep.equal(["editor"]);
+      expect(passed.defaultPrevented).to.equal(false);
+
+      // outside any region: likewise
+      claim = true;
+      seen.length = 0;
+      at(9);
+      expect(seen, "a click outside every region reaches the editor").to.deep.equal(["editor"]);
+    } finally {
+      pane.destroy();
+      textarea.remove();
+    }
+  });
+
   /* posAtCoords answers for anywhere in the content, so the comment column
    * beside a short line reports that line's end -- inside any range that
    * spans the line.  Hovering there used to light the range up. */
