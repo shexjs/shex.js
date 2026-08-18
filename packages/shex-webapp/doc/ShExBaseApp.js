@@ -75,6 +75,125 @@ function termLexerFor (dataCache) {
   };
 }
 
+/**
+ * The highlight switch: whether hovering a constraint, a triple or a binding
+ * lights up its counterparts in the other panes.
+ *
+ * Three resting positions and a momentary override, which is AutoCAD's ortho
+ * (F8 locks, Shift inverts) and Raskin's quasimode: a state your finger is
+ * holding open is a state you cannot forget you are in.
+ *
+ *   on    highlight follows the mouse; holding Shift *suspends* it, so you
+ *         can cross the panes to read a frozen highlight without disturbing it
+ *   hold  quiet until you hold Shift, then live -- the accelerator position
+ *   off   never, for readers who find it noisy
+ *
+ * Freezing is separate and stronger: a click pins what is showing, and the
+ * mouse stops changing it until it is released (Escape, or a click on
+ * something else).  That is the answer to the standing problem with linked
+ * highlighting -- you cannot travel to the thing being pointed at without
+ * losing the pointer.  Pinning also scrolls every pane to its counterpart,
+ * which is the navigation half.
+ */
+/** The pin gesture, per platform.
+ *
+ * ctrl-click on a Mac is the context menu, so the Mac spelling is cmd --
+ * which is what every IDE does, and for this reason.  Taking *both*
+ * everywhere would mean Mac users raising a menu every time they pinned.
+ */
+const PIN_WITH_META = /Mac|iPhone|iPad|iPod/.test(
+  (typeof navigator === "undefined" ? "" : (navigator.platform || navigator.userAgent)));
+function isPinGesture (evt) {
+  const meta = !!(evt && evt.metaKey), ctrl = !!(evt && evt.ctrlKey);
+  return PIN_WITH_META ? (meta && !ctrl) : (ctrl && !meta);
+}
+
+const HighlightMode = {
+  ORDER: ["on", "hold", "off"],
+  state: "on",              // discoverable by default; see the note above
+  held: false,              // the momentary key is down
+  pinned: null,             // a frozen group, or null
+  listeners: [],
+
+  /** does a hover paint right now? */
+  live () {
+    if (this.state === "off")
+      return false;
+    return this.state === "hold" ? this.held : !this.held;
+  },
+  /** ...and is what is painted allowed to change? */
+  frozen () { return this.pinned !== null; },
+
+  set (state) {
+    if (this.ORDER.indexOf(state) === -1 || state === this.state)
+      return;
+    this.state = state;
+    this.changed();
+  },
+  cycle () {
+    this.set(this.ORDER[(this.ORDER.indexOf(this.state) + 1) % this.ORDER.length]);
+  },
+  setHeld (held) {
+    if (held === this.held)
+      return;
+    this.held = held;
+    this.changed();
+  },
+  pin (group) { this.pinned = group || null; this.changed(); },
+  unpin () { if (this.pinned !== null) { this.pinned = null; this.changed(); } },
+
+  onChange (fn) { this.listeners.push(fn); },
+  changed () {
+    this.render();
+    this.listeners.forEach(fn => { try { fn(this); } catch (e) { console.warn(e); } });
+  },
+
+  /** the chip: what the switch is set to, and whether anything is frozen */
+  render () {
+    const chip = $("#highlightMode");
+    if (chip.length === 0)
+      return;
+    const live = this.live();
+    const says = {on: "highlight: on", hold: "highlight: hold ⇧", off: "highlight: off"}[this.state];
+    chip.text(says + (this.frozen() ? " · frozen" : ""))
+      .attr("data-state", this.state)
+      .attr("data-live", live ? "yes" : "no")
+      .attr("data-frozen", this.frozen() ? "yes" : "no")
+      .attr("aria-pressed", live ? "true" : "false")
+      .attr("title",
+            "hovering a constraint, triple or binding lights up its counterparts"
+            + "\n\non — follows the mouse (hold ⇧ to suspend)"
+            + "\nhold — only while ⇧ is held"
+            + "\noff — never"
+            + "\n\nclick to cycle, or ctrl-alt-h"
+            + "\n" + (PIN_WITH_META ? "⌘" : "ctrl")
+            + "-click a highlight to freeze it and go there; Escape releases");
+  },
+
+  /** the chip, the keystroke, and the momentary key */
+  wire () {
+    $("#highlightMode").off("click").on("click", () => this.cycle());
+    $(document).on("keydown.highlightMode", evt => {
+      if (evt.key === "Shift")
+        this.setHeld(true);
+      // ctrl-alt-h: rare in browsers, and the app already speaks ctrl-<key>
+      if ((evt.ctrlKey || evt.metaKey) && evt.altKey && (evt.key === "h" || evt.key === "H")) {
+        evt.preventDefault();
+        this.cycle();
+      }
+      if (evt.key === "Escape" && this.frozen())
+        this.unpin();
+    });
+    $(document).on("keyup.highlightMode", evt => {
+      if (evt.key === "Shift")
+        this.setHeld(false);
+    });
+    // a modifier released while the window was away never reaches us
+    $(window).on("blur.highlightMode", () => this.setHeld(false));
+    this.render();
+  },
+};
+
 class InterfaceCache {
   // caches for textarea parsers
   constructor (selection, onLoad) {
@@ -2705,10 +2824,17 @@ class EditorSupport {
     if (!schemaPane || !dataPane)
       return;
     const resultPanes = this.app.resultsWidget.resultPanes;
-    const clearAll = () => {
+    const wipe = () => {
       schemaPane.clearHighlights();
       dataPane.clearHighlights();
       resultPanes.forEach(({pane}) => pane.clearHighlights());
+    };
+    // a frozen highlight stays until it is released: leaving it is what a
+    // reader does on the way to look at what it is pointing at
+    const clearAll = () => {
+      if (HighlightMode.frozen())
+        return;
+      wipe();
     };
     // a constraint with cardinality > 1 yields one pair per matched triple,
     // all sharing a schema range: group them so hovering the constraint
@@ -2743,7 +2869,11 @@ class EditorSupport {
     const constraintRanges = (p) => p.schemaParts || (p.schema ? [p.schema] : []);
     const anchorRanges = (p, term) =>
       p.anchors[term + "Parts"] || (p.anchors[term] ? [p.anchors[term]] : []);
-    const show = (group, hoveredSide) => {
+    const show = (group, hoveredSide, pinning) => {
+      // the switch says whether the mouse paints at all; a pin says the
+      // mouse may no longer change what is painted
+      if (!pinning && (!HighlightMode.live() || HighlightMode.frozen()))
+        return;
       const lead = group[0];
       const cls = group.some(p => p.status !== "conformant")
             ? "shexjs-highlight-fail" : "shexjs-highlight-match";
@@ -2779,10 +2909,34 @@ class EditorSupport {
       dataPane.highlight(dataRanges, cls, {scroll: hoveredSide !== "data"});
       showInResults(group, cls, hoveredSide !== "results");
     };
+    // ctrl/cmd-click freezes what is under the mouse and scrolls every pane
+    // to its counterpart -- the navigation half.  Clicking the frozen thing
+    // again releases it.  (ctrl-click is the context menu on a Mac, so the
+    // Mac spelling is cmd, which is what every IDE does for the same reason.)
+    const freeze = (group, side) => evt => {
+      if (!isPinGesture(evt))
+        return false;            // an ordinary click: let the editor have it
+      if (HighlightMode.frozen() && HighlightMode.pinned === group) {
+        HighlightMode.unpin();
+        wipe();
+        return true;
+      }
+      HighlightMode.pin(group);
+      show(group, side, true);   // scrolls the other panes: this is the travel
+      return true;
+    };
+    this.pairHoverPaint = () => {
+      if (HighlightMode.frozen())
+        show(HighlightMode.pinned, null, true);
+      else
+        wipe();
+    };
     schemaPane.setHoverRegions(
       [...bySchemaRange.values()].flatMap(group =>
         constraintRanges(group[0]).map(r => ({
-          from: r.from, to: r.to, enter: () => show(group, "schema"),
+          from: r.from, to: r.to,
+          enter: () => show(group, "schema"),
+          click: freeze(group, "schema"),
         }))),
       clearAll);
     // Both the object and the predicate trigger data-side hovers -- but
@@ -2794,7 +2948,9 @@ class EditorSupport {
     dataPane.setHoverRegions(
       pairs.filter(shownHere).flatMap(
         p => [].concat(anchorRanges(p, "object"), anchorRanges(p, "predicate"))
-          .map(r => ({from: r.from, to: r.to, enter: () => show([p], "data")}))),
+          .map(r => ({from: r.from, to: r.to,
+                      enter: () => show([p], "data"),
+                      click: freeze([p], "data")}))),
       clearAll);
     // hovering a TestedTriple in an appinfo results pane highlights its
     // constraint in the schema and its triple in the data
@@ -2806,11 +2962,22 @@ class EditorSupport {
           const pair = pairs.find(p => p.triple === r.target);
           return pair
             ? acc.concat(termRanges(r).map(f => (
-                {from: f.from, to: f.to, enter: () => show([pair], "results")})))
+                {from: f.from, to: f.to,
+                 enter: () => show([pair], "results"),
+                 click: freeze([pair], "results")})))
             : acc;
         }, []),
         clearAll);
     });
+    // turning the switch off, or releasing a pin, has to take the paint with
+    // it -- the mouse may be nowhere near a region when either happens
+    if (!this._repaintWired) {   // setPairHovers runs per validation
+      this._repaintWired = true;
+      HighlightMode.onChange(() => {
+        if (this.pairHoverPaint)
+          this.pairHoverPaint();
+      });
+    }
   }
 
   /** highlight a shape's declaration in the schema pane */
@@ -3007,7 +3174,8 @@ class ShExBaseApp {
   }
 
   async start () {
-    SharedForTests = {Caches: this.Caches, neighborhoods: this.neighborhoods, app: this}
+    SharedForTests = {Caches: this.Caches, neighborhoods: this.neighborhoods, app: this,
+                      HighlightMode, isPinGesture, PIN_WITH_META}
     this.neighborhoods.init(); // before ?neighborhood=… reaches the picklist
     this.prepareControls();
     const dndPromise = this.prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
@@ -3061,6 +3229,7 @@ class ShExBaseApp {
       }
     } catch (e) { /* private mode */ }
     $("#menu-button").on("click", this.toggleControls.bind(this));
+    HighlightMode.wire();   // the chip, ctrl-alt-h, and the momentary key
     $("#interface").on("change", this.setInterface.bind(this));
     $("#success").on("change", this.setInterface.bind(this));
     $("#regexpEngine").on("change", this.toggleControls.bind(this));

@@ -313,3 +313,46 @@ ul {
     white-space: normal;
     overflow-wrap: anywhere;
 }
+
+/* The highlight switch's chip: centred above the validate/materialize
+ * controls, where the reader is already looking when they press a button.
+ *
+ * A momentary mode has to be *visible* while it is held -- that is the whole
+ * argument for holding a key rather than latching one -- so this says both
+ * what the switch is set to and whether a highlight is frozen. */
+/* beside the controls button, on its line.  #menuForm is a form and so a
+ * block, which is why sitting after it put the chip underneath. */
+#highlightModeRow {
+    display: inline;
+    margin-left: .6em;
+}
+#highlightMode {
+    font-size: small;
+    padding: .1em .7em;
+    border: 1px solid #bbb;
+    border-radius: 999px;
+    background: #f4f4f4;
+    color: #444;
+    cursor: pointer;
+    white-space: nowrap;
+}
+/* live: the mouse is painting right now (whether by the switch or the key) */
+#highlightMode[data-live="yes"] {
+    border-color: #6a9a3a;
+    background: #eef6e4;
+    color: #33521c;
+}
+#highlightMode[data-state="off"] {
+    color: #888;
+}
+/* frozen outranks the rest: nothing the mouse does will change the picture */
+#highlightMode[data-frozen="yes"] {
+    border-color: #7a86c8;
+    background: #eceefb;
+    color: #333c78;
+    font-weight: bold;
+}
+#highlightMode:focus-visible {
+    outline: 2px solid #88f;
+    outline-offset: 1px;
+}
