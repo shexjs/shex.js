@@ -168,8 +168,10 @@ class ShExCParserState {
     addShape(label, shape, start, end) {
         if (shape === this.EmptyShape)
             shape = { type: "Shape" };
+        // a label declared twice, once as each kind: the names in one document
+        // decide it, which is the negativeSyntax side of the line
         if (this.productions && label in this.productions)
-            this.error(new Error("Structural error: " + label + " is a triple expression"));
+            this.error(new Error("Parse error: " + label + " is a triple expression"));
         if (!this.shapes)
             this.shapes = {};
         if (label in this.shapes) {
@@ -200,7 +202,7 @@ class ShExCParserState {
     // Add a production to the map
     addProduction(label, production) {
         if (this.shapes && label in this.shapes)
-            this.error(new Error("Structural error: " + label + " is a shape expression"));
+            this.error(new Error("Parse error: " + label + " is a shape expression"));
         if (!this.productions)
             this.productions = {};
         if (label in this.productions) {
