@@ -35,7 +35,7 @@
     "@shexjs/validator": "^1.0.0-alpha.29",
     "chai": "^4.5.0",
     "mocha": "^10.7.3",
-    "n3": "^1.17.3",
+    "n3": "^2.2.0",
     "wabt": "^1.0.36"
   },
   "publishConfig": {
