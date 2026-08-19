@@ -42,7 +42,7 @@
     "@shexjs/webapp": "^1.0.0-alpha.28",
     "@shexjs/writer": "^1.0.0-alpha.27",
     "chalk": "^4.1.2",
-    "command-line-args": "^5.0.2",
+    "command-line-args": "^6.0.2",
     "command-line-usage": "^7.0.3",
     "dctap": "^0.0.6",
     "hierarchy-closure": "^1.2.2",
