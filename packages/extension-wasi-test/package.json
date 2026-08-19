@@ -33,7 +33,7 @@
     "@shexjs/parser": "^1.0.0-alpha.28",
     "@shexjs/term": "^1.0.0-alpha.27",
     "@shexjs/validator": "^1.0.0-alpha.29",
-    "chai": "^4.5.0",
+    "chai": "^6.2.2",
     "mocha": "^10.7.3",
     "n3": "^1.17.3",
     "wabt": "^1.0.36"
