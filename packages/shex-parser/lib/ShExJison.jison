@@ -98,6 +98,19 @@
     return base;
   }
 
+  // An Inclusion is a bare label in ShExJ, and ShExJ has nowhere else to put
+  // one: EachOf and OneOf both want two or more expressions, so a group of
+  // one is not a triple expression that could carry the extra.  Rather than
+  // spreading the label's characters into an object (extend) or setting
+  // .min on a string, say so.
+  function inclusionCantTake(expr, what, yy) {
+    if (typeof expr !== "string")
+      return false;
+    yy.error(new Error("Structural error: a group containing only the Inclusion &<"
+                       + expr + "> can't take " + what));
+    return true;
+  }
+
   // Creates an array that contains all items of the given arrays
   function unionAll() {
     let union = [];
@@ -1013,7 +1026,7 @@ _Q_O_QGT_SEMI_E_S_QunaryTripleExpr_E_C_E_Plus:
 
 unaryTripleExpr:
       _Q_O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C_E_Opt _O_QtripleConstraint_E_Or_QbracketedTripleExpr_E_C	{
-        if ($1) { // t: 2EachInclude1
+        if ($1 && !inclusionCantTake($2, "a label", yy)) { // t: 2EachInclude1 : includeWithLabel
           $$ = extend({ id: $1 }, $2);
           yy.addProduction($1,  $$);
         } else { // t: 1dot
@@ -1041,15 +1054,19 @@ bracketedTripleExpr:
       '(' tripleExpression ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // t: open1dotOr1dot, !openopen1dotcloseCode1closeCode2
         $$ = $2;
-        // Copy all of the new attributes into the encapsulated shape.
-        if ("min" in $4) { $$.min = $4.min; } // t: 1cardOpt : @@
-        if ("max" in $4) { $$.max = $4.max; } // t: 1cardOpt : @@
-        if ($5.length) { $$.annotations = $5; } // t: open3EachdotcloseAnnot3 : 1dot
-        if ($6) {
-          $$.semActs = "semActs" in $2
-            ? $2.semActs.concat($6.semActs) // t: 1dotCode3
-            : $6.semActs; // t: 1dotCode1
-        } // t: 1dotCode1 : @@
+        // Copy all of the new attributes into the encapsulated shape -- or,
+        // if there is nothing to copy them onto, say so.  t: includeWithCardinality
+        if (!(("min" in $4 || "max" in $4 || $5.length || $6)
+              && inclusionCantTake($$, "a cardinality, an annotation or a semantic action", yy))) {
+          if ("min" in $4) { $$.min = $4.min; } // t: 1cardOpt : @@
+          if ("max" in $4) { $$.max = $4.max; } // t: 1cardOpt : @@
+          if ($5.length) { $$.annotations = $5; } // t: open3EachdotcloseAnnot3 : 1dot
+          if ($6) {
+            $$.semActs = "semActs" in $$
+              ? $$.semActs.concat($6.semActs) // t: 1dotCode3
+              : $6.semActs; // t: 1dotCode1
+          } // t: 1dotCode1 : @@
+        }
       }
     ;
 

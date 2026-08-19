@@ -27439,6 +27439,19 @@ const { JisonParser, o } = __webpack_require__(5546);
     return base;
   }
 
+  // An Inclusion is a bare label in ShExJ, and ShExJ has nowhere else to put
+  // one: EachOf and OneOf both want two or more expressions, so a group of
+  // one is not a triple expression that could carry the extra.  Rather than
+  // spreading the label's characters into an object (extend) or setting
+  // .min on a string, say so.
+  function inclusionCantTake(expr, what, yy) {
+    if (typeof expr !== "string")
+      return false;
+    yy.error(new Error("Structural error: a group containing only the Inclusion &<"
+                       + expr + "> can't take " + what));
+    return true;
+  }
+
   // Creates an array that contains all items of the given arrays
   function unionAll() {
     let union = [];
@@ -28068,7 +28081,7 @@ this.$ = appendTo($$[$0-1], $$[$0]) // t: 3Eachdot;
 break;
 case 166:
 
-        if ($$[$0-1]) { // t: 2EachInclude1
+        if ($$[$0-1] && !inclusionCantTake($$[$0], "a label", yy)) { // t: 2EachInclude1 : includeWithLabel
           this.$ = extend({ id: $$[$0-1] }, $$[$0]);
           yy.addProduction($$[$0-1],  this.$);
         } else { // t: 1dot
@@ -28083,15 +28096,19 @@ case 173:
 
         // t: open1dotOr1dot, !openopen1dotcloseCode1closeCode2
         this.$ = $$[$0-4];
-        // Copy all of the new attributes into the encapsulated shape.
-        if ("min" in $$[$0-2]) { this.$.min = $$[$0-2].min; } // t: 1cardOpt : @@
-        if ("max" in $$[$0-2]) { this.$.max = $$[$0-2].max; } // t: 1cardOpt : @@
-        if ($$[$0-1].length) { this.$.annotations = $$[$0-1]; } // t: open3EachdotcloseAnnot3 : 1dot
-        if ($$[$0]) {
-          this.$.semActs = "semActs" in $$[$0-4]
-            ? $$[$0-4].semActs.concat($$[$0].semActs) // t: 1dotCode3
-            : $$[$0].semActs; // t: 1dotCode1
-        } // t: 1dotCode1 : @@
+        // Copy all of the new attributes into the encapsulated shape -- or,
+        // if there is nothing to copy them onto, say so.  t: includeWithCardinality
+        if (!(("min" in $$[$0-2] || "max" in $$[$0-2] || $$[$0-1].length || $$[$0])
+              && inclusionCantTake(this.$, "a cardinality, an annotation or a semantic action", yy))) {
+          if ("min" in $$[$0-2]) { this.$.min = $$[$0-2].min; } // t: 1cardOpt : @@
+          if ("max" in $$[$0-2]) { this.$.max = $$[$0-2].max; } // t: 1cardOpt : @@
+          if ($$[$0-1].length) { this.$.annotations = $$[$0-1]; } // t: open3EachdotcloseAnnot3 : 1dot
+          if ($$[$0]) {
+            this.$.semActs = "semActs" in this.$
+              ? this.$.semActs.concat($$[$0].semActs) // t: 1dotCode3
+              : $$[$0].semActs; // t: 1dotCode1
+          } // t: 1dotCode1 : @@
+        }
       
 break;
 case 174:
@@ -28768,13 +28785,18 @@ class ShExCParserState {
     addShape(label, shape, start, end) {
         if (shape === this.EmptyShape)
             shape = { type: "Shape" };
+        // a label declared twice, once as each kind: the names in one document
+        // decide it, which is the negativeSyntax side of the line
         if (this.productions && label in this.productions)
-            this.error(new Error("Structural error: " + label + " is a triple expression"));
+            this.error(new Error("Parse error: " + label + " is a triple expression"));
         if (!this.shapes)
             this.shapes = {};
         if (label in this.shapes) {
-            if (this.options.duplicateShape === "replace")
-                this.shapes[label] = shape;
+            if (this.options.duplicateShape === "replace") {
+                // the later declaration wins, id and location and all
+                this.shapes[label] = Object.assign({ id: label }, shape);
+                this.locations[label] = this.makeLocation(start, end);
+            }
             else if (this.options.duplicateShape !== "ignore")
                 this.error(new Error("Parse error: " + label + " already defined"));
         }
@@ -28797,7 +28819,7 @@ class ShExCParserState {
     // Add a production to the map
     addProduction(label, production) {
         if (this.shapes && label in this.shapes)
-            this.error(new Error("Structural error: " + label + " is a shape expression"));
+            this.error(new Error("Parse error: " + label + " is a shape expression"));
         if (!this.productions)
             this.productions = {};
         if (label in this.productions) {
@@ -35236,14 +35258,13 @@ class ShExWriter {
         if (iri[0] === '_' && iri[1] === ':')
             return iri;
         // Escape special characters
-        if (ESCAPE_1.test(iri))
-            iri = iri.replace(ESCAPE_g, characterReplacer);
+        const escaped = ESCAPE_1.test(iri) ? iri.replace(ESCAPE_g, characterReplacer) : iri;
         // Try to represent the IRI as prefixed name
-        const prefixMatch = this._prefixRegex.exec(iri);
+        const prefixMatch = this._prefixRegex.exec(escaped);
         return (!prefixMatch
-            ? this._relateUrl(iri)
+            ? this._relateUrl(iri) // unescaped: _relateUrl escapes what it returns
             : (!prefixMatch[1]
-                ? iri
+                ? escaped
                 : this._prefixIRIs[prefixMatch[1]] + prefixMatch[2]))
             + trailer;
     }
@@ -35251,12 +35272,23 @@ class ShExWriter {
     _relateUrl(iri) {
         const base = this._baseIRI;
         try {
-            if (base && new URL(base).host === new URL(iri).host) // https://github.com/stevenvachon/relateurl/issues/28
+            // RelativizeIri reads a URL, not an IRI: it percent-encodes anything
+            // outside ASCII and reads a backslash in a path as a slash.  An IRI it
+            // would rewrite is one it can't shorten losslessly, so leave those
+            // absolute -- relativizing is cosmetic, and a rewritten IRI is a
+            // different IRI.
+            const parsed = new URL(iri);
+            if (base && parsed.href === iri && new URL(base).host === parsed.host) // https://github.com/stevenvachon/relateurl/issues/28
                 iri = RelativizeIri(iri, base);
         }
         catch (e) {
             // invalid URL for e.g. already relative IMPORTs
         }
+        // Escape last: an escape writes a backslash, and a URL parser reads a
+        // backslash in a path as a slash, so <...p\U0001d400> relativized comes
+        // back as <...p/U0001d400>.
+        if (ESCAPE_1.test(iri))
+            iri = iri.replace(ESCAPE_g, characterReplacer);
         return '<' + iri + '>';
     }
     // ### `_encodeLiteral` represents a literal

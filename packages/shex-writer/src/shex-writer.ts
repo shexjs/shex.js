@@ -489,14 +489,13 @@ class ShExWriter {
     // A blank node is represented as-is
     if (iri[0] === '_' && iri[1] === ':') return iri;
     // Escape special characters
-    if (ESCAPE_1.test(iri))
-      iri = iri.replace(ESCAPE_g, characterReplacer);
+    const escaped = ESCAPE_1.test(iri) ? iri.replace(ESCAPE_g, characterReplacer) : iri;
     // Try to represent the IRI as prefixed name
-    const prefixMatch = this._prefixRegex.exec(iri);
+    const prefixMatch = this._prefixRegex.exec(escaped);
     return (!prefixMatch
-      ? this._relateUrl(iri)
+      ? this._relateUrl(iri) // unescaped: _relateUrl escapes what it returns
       : (!prefixMatch[1]
-         ? iri
+         ? escaped
          : this._prefixIRIs[prefixMatch[1]] + prefixMatch[2]))
       + trailer;
   }
@@ -505,11 +504,22 @@ class ShExWriter {
   _relateUrl (iri: string): string {
     const base = this._baseIRI;
     try {
-      if (base && new URL(base).host === new URL(iri).host) // https://github.com/stevenvachon/relateurl/issues/28
+      // RelativizeIri reads a URL, not an IRI: it percent-encodes anything
+      // outside ASCII and reads a backslash in a path as a slash.  An IRI it
+      // would rewrite is one it can't shorten losslessly, so leave those
+      // absolute -- relativizing is cosmetic, and a rewritten IRI is a
+      // different IRI.
+      const parsed = new URL(iri);
+      if (base && parsed.href === iri && new URL(base).host === parsed.host) // https://github.com/stevenvachon/relateurl/issues/28
         iri = RelativizeIri(iri, base);
     } catch (e) {
       // invalid URL for e.g. already relative IMPORTs
     }
+    // Escape last: an escape writes a backslash, and a URL parser reads a
+    // backslash in a path as a slash, so <...p\U0001d400> relativized comes
+    // back as <...p/U0001d400>.
+    if (ESCAPE_1.test(iri))
+      iri = iri.replace(ESCAPE_g, characterReplacer);
     return '<' + iri + '>';
   }
 

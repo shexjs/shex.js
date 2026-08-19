@@ -2867,8 +2867,9 @@ class EditorSupport {
     // an inline-shape body); a bnode subject/object highlights as its
     // [ ] delimiters rather than the whole property list
     const constraintRanges = (p) => p.schemaParts || (p.schema ? [p.schema] : []);
-    const anchorRanges = (p, term) =>
-      p.anchors[term + "Parts"] || (p.anchors[term] ? [p.anchors[term]] : []);
+    // a pair whose triple isn't in any showing document has no anchors at all
+    const anchorRanges = (p, term) => !p.anchors ? []
+          : p.anchors[term + "Parts"] || (p.anchors[term] ? [p.anchors[term]] : []);
     const show = (group, hoveredSide, pinning) => {
       // the switch says whether the mouse paints at all; a pin says the
       // mouse may no longer change what is painted
@@ -2881,7 +2882,7 @@ class EditorSupport {
             .concat(hoveredSide === "schema"
                     // connect a (possibly nested) constraint back to its
                     // labeled shape: enclosing predicates, then the label
-                    ? group.flatMap(p => p.schemaPath || []).concat([lead.anchors.shapeLabel])
+                    ? group.flatMap(p => p.schemaPath || []).concat([lead.anchors && lead.anchors.shapeLabel])
                     : [])
             .filter(r => r);
       // object first, for the same reason: an entity page is thousands of
