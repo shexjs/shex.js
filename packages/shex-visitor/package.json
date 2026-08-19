@@ -21,7 +21,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@rdfjs/types": "^1.1.0",
+    "@rdfjs/types": "^2.0.1",
     "@shexjs/term": "^1.0.0-alpha.27"
   },
   "scripts": {
