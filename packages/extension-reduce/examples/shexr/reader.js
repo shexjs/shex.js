@@ -47,7 +47,8 @@ function makeReader (shexrText, actionsText, base = DEFAULT_BASE) {
 
   const overlay = new N3.Store();
   overlay.addQuads(new N3.Parser({baseIRI: base, format: "text/turtle"}).parse(actionsText));
-  return applyOverlay(shexr, overlay);
+  // a Turtle store has no prefixes left in it, so the sa:paths get theirs here
+  return applyOverlay(shexr, overlay, {prefixes: {sx: SX, rdf: RDF}});
 }
 
 /** the ShExJ a ShExR document says, or null if it isn't a ShExR schema graph */

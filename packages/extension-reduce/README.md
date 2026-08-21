@@ -61,6 +61,42 @@ which an evaluator that has never heard of RDF can then run. Compiled, not
 evaluated as it matched — the grammar and the compiler are separate documents,
 and a second overlay could compile the same grammar to something else.
 
+## Naming what a production matched
+
+yacc writes `$$ = $1 + $3`. A ShEx production's parts have names rather than
+positions — they are arcs — so the name is the usual way to reach one, and a
+production can be written as its sub-expressions:
+
+```turtle
+[ sa:ref sx:NodeConstraint ;
+  sa:code "$ = Object.assign({type: 'NodeConstraint'},
+                             ...($sx:nodeKind || []), ...($sx:datatype || []))" ] ,
+[ sa:path "@sx:NodeConstraint~sx:nodeKind" ; sa:code "$ = {nodeKind: local($1)}" ] ,
+[ sa:path "@sx:NodeConstraint~sx:datatype" ; sa:code "$ = {datatype: $1}" ] ,
+```
+
+| | |
+| --- | --- |
+| `$sx:nodeKind` `$<http://…#nodeKind>` `$:local` | what the arc on that predicate reduced to, as an array — and `undefined` if the arc didn't match, so `\|\| []` reads as "however many of these there were" |
+| `$1` `$2` | the values in the order the body matched them, numbered from 1 as in yacc. This is for the sub-productions that share a name, which is the case a name can't address; on a triple constraint, `$1` is its object |
+| `$` `$$` | this production's value, which the action may assign to |
+
+This is *this module's* doing rather than the evaluator's: the code is rewritten
+to ordinary names — `_nodeKind`, `_1`, `_ret` — and the values arrive beside it
+as `bindings`. So the syntax is the same whatever the actions are written in,
+and an implementation of this fold in another language gets it by doing the
+same rewrite.
+
+It is a textual substitution. yacc splices `$1` into the C it emits because it
+knows what C is; this doesn't know what your actions are written in, so:
+
+- `$name` with no prefix is left alone — `$` starts an identifier in several
+  action languages, and a name with no prefix is not a predicate.
+- A bare `$` before `{`, `/` or a quote is left alone: far more likely a
+  template literal, the end of a regular expression, or a dollar sign in a
+  string than a reference.
+- Anywhere else, `$1` is a reference — inside a string literal too.
+
 ## Using it
 
 ```js
@@ -91,8 +127,14 @@ So no functions cross the line. An evaluator is handed plain data:
 | `node`, `shape` | the focus term and the label it matched |
 | `arcs` | what each arc reduced to, keyed by **full predicate IRI** |
 | `subject`, `predicate`, `object`, `value` | for a constraint: the triple, and what its object reduced to |
+| `bindings` | what each `$…` in the code was rewritten to, and what it stands for |
+| `ret` | the name the action assigns its value to, if it used `$` |
 | `prefixes`, `api` | what the caller passed |
 | `where` | where in the result this is, for error messages |
+
+An evaluator puts `bindings` in scope by name and is done with `$…`; the one
+thing it has to say for itself is `ret`, since "the name the action assigned
+to" is a question only the language can answer.
 
 Everything an action author expects — `one(':left')`, `str`, `num`, prefix
 expansion, "an expression if it parses as one" — is the *evaluator's* doing,
@@ -146,6 +188,11 @@ walking.
 It reads 440 of the 441 ShExR documents in shexTest's `schemas/`. The one it
 doesn't, `3circRefS2-IS3.ttl`, doesn't comply with `ShExR.shex`; its entry in
 `schemas/manifest.ttl` is commented out for the same reason.
+
+`NodeConstraint` there is written as its sub-expressions — one action per
+attribute saying what that attribute means in ShExJ, and the production
+merging what they said — and the rest are written as one action each, so the
+file has both styles side by side.
 
 RDF lists come out of the same mechanism as everything else — a list shape
 recurses on `rdf:rest`, so its action conses the head onto what the tail
