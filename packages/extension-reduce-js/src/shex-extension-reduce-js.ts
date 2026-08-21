@@ -15,6 +15,12 @@
  * doesn't, so `{op: 'num', value: num(one(':value'))}` and
  * `const v = one(':value'); return v > 0 ? v : -v` both work.
  *
+ * `extension-reduce` has already rewritten `$1` and `$sx:nodeKind` to names
+ * by the time the code arrives; putting `scope.bindings` in scope is all
+ * this has to do about them.  `$` is the one that needs saying twice: it is
+ * a name the action assigns to, so when `scope.ret` names it, the action's
+ * value is what that name ended up holding.
+ *
  * Running code that arrived with a document is a decision the caller makes
  * by passing this evaluator at all; another one can run something safer.
  */
@@ -33,6 +39,8 @@ interface ReduceScope {
   prefixes: {[prefix: string]: string};
   api: {[name: string]: any};
   arcs: {[predicate: string]: any[]};
+  bindings: {[name: string]: any};
+  ret?: string;
   node?: LdTerm;
   shape?: string;
   subject?: LdTerm;
@@ -43,7 +51,11 @@ interface ReduceScope {
 
 /** run one action, with the scope's data in scope as names */
 function evaluate (code: string, scope: ReduceScope): any {
-  return compile(code)(namesFor(scope));
+  const names = namesFor(scope);
+  const value = compile(code)(names);
+  // `with` writes an assignment through to the object when the name is one
+  // of its own, so `$ = ...` lands on the binding extension-reduce made
+  return scope.ret === undefined ? value : names[scope.ret];
 }
 
 /**
@@ -89,7 +101,7 @@ function namesFor (scope: ReduceScope): {[name: string]: any} {
     // reading a term
     str, num, iri, local, lang, datatype, isBnode,
     expand, RDF, XSD, nil: RDF + 'nil',
-  });
+  }, scope.bindings);
 }
 
 // ## terms, as an action wants to see them

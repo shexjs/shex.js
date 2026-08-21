@@ -11,6 +11,7 @@
 # ShExUtil.ShExRtoShExJ to fold the repeats back into shape references.
 
 PREFIX sa: <http://shex.io/ns/semact#>
+PREFIX sx: <http://www.w3.org/ns/shex#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 BASE <http://shex.io/examples/shexr-actions>
 
@@ -21,7 +22,7 @@ BASE <http://shex.io/examples/shexr-actions>
   ##### the schema, and the declarations in it
 
   sa:action
-  [ sa:ref <http://www.w3.org/ns/shex#Schema> ;
+  [ sa:ref sx:Schema ;
     sa:code """
       const s = {type: 'Schema'};
       if (has('sx:imports'))   s.imports   = one('sx:imports');
@@ -31,7 +32,7 @@ BASE <http://shex.io/examples/shexr-actions>
       return s;
     """ ] ,
 
-  [ sa:ref <http://www.w3.org/ns/shex#ShapeDecl> ;
+  [ sa:ref sx:ShapeDecl ;
     sa:code """
       // every node in RDF has a name, so everything gets an id here and
       // ShExUtil.ShExRtoShExJ drops the ones nothing refers to twice
@@ -43,19 +44,19 @@ BASE <http://shex.io/examples/shexr-actions>
 
   ##### shape expressions
 
-  [ sa:ref <http://www.w3.org/ns/shex#ShapeOr> ;
+  [ sa:ref sx:ShapeOr ;
     sa:code "{type: 'ShapeOr', shapeExprs: one('sx:shapeExprs')}" ] ,
 
-  [ sa:ref <http://www.w3.org/ns/shex#ShapeAnd> ;
+  [ sa:ref sx:ShapeAnd ;
     sa:code "{type: 'ShapeAnd', shapeExprs: one('sx:shapeExprs')}" ] ,
 
-  [ sa:ref <http://www.w3.org/ns/shex#ShapeNot> ;
+  [ sa:ref sx:ShapeNot ;
     sa:code "{type: 'ShapeNot', shapeExpr: one('sx:shapeExpr')}" ] ,
 
-  [ sa:ref <http://www.w3.org/ns/shex#ShapeExternal> ;
+  [ sa:ref sx:ShapeExternal ;
     sa:code "{type: 'ShapeExternal'}" ] ,
 
-  [ sa:ref <http://www.w3.org/ns/shex#Shape> ;
+  [ sa:ref sx:Shape ;
     sa:code """
       const s = {type: 'Shape'};
       if (has('sx:extends'))    s.extends     = one('sx:extends');
@@ -67,26 +68,61 @@ BASE <http://shex.io/examples/shexr-actions>
       return s;
     """ ] ,
 
-  [ sa:ref <http://www.w3.org/ns/shex#NodeConstraint> ;
+  # NodeConstraint is the one production here written as its sub-expressions.
+  # Every other action reads its own arcs with one() and has(); each of these
+  # says what one attribute means in ShExJ, and the production merges what
+  # they said.  That is yacc's `$$ = $1 + $3` with the sub-production named
+  # instead of numbered -- which is the spelling a grammar wants, since a
+  # ShEx production's parts are named by predicate rather than ordered.
+  [ sa:ref sx:NodeConstraint ;
     sa:code """
-      const nc = {type: 'NodeConstraint'};
-      if (has('sx:nodeKind')) nc.nodeKind = local(one('sx:nodeKind'));
-      if (has('sx:datatype')) nc.datatype = one('sx:datatype');
-      ['length', 'minlength', 'maxlength', 'totaldigits', 'fractiondigits']
-        .forEach(f => { if (has('sx:' + f)) nc[f] = num(one('sx:' + f)); });
-      ['mininclusive', 'minexclusive', 'maxinclusive', 'maxexclusive']
-        .forEach(f => { if (has('sx:' + f)) nc[f] = num(one('sx:' + f)); });
-      if (has('sx:pattern'))    nc.pattern     = str(one('sx:pattern'));
-      if (has('sx:flags'))      nc.flags       = str(one('sx:flags'));
-      if (has('sx:values'))     nc.values      = one('sx:values');
-      if (has('sx:semActs'))    nc.semActs     = one('sx:semActs');
-      if (has('sx:annotation')) nc.annotations = one('sx:annotation');
-      return nc;
+      $ = Object.assign(
+        {type: 'NodeConstraint'},
+        ...($sx:nodeKind || []), ...($sx:datatype || []),
+        ...($sx:length || []), ...($sx:minlength || []), ...($sx:maxlength || []),
+        ...($sx:pattern || []), ...($sx:flags || []),
+        ...($sx:mininclusive || []), ...($sx:minexclusive || []),
+        ...($sx:maxinclusive || []), ...($sx:maxexclusive || []),
+        ...($sx:totaldigits || []), ...($sx:fractiondigits || []),
+        ...($sx:values || []), ...($sx:semActs || []), ...($sx:annotation || []));
     """ ] ,
+
+  # `$1` is the one value a triple constraint matched: its object, reduced.
+  [ sa:path "@sx:NodeConstraint~sx:nodeKind" ;   sa:code "$ = {nodeKind: local($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:datatype" ;   sa:code "$ = {datatype: $1}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:values" ;     sa:code "$ = {values: $1}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:semActs" ;    sa:code "$ = {semActs: $1}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:annotation" ; sa:code "$ = {annotations: $1}" ] ,
+
+  # The facets are their own production -- NodeConstraint has them by
+  # `&<#xsFacets>` -- so their actions hang off that production, and the
+  # values turn up in the NodeConstraint's arcs all the same.
+  [ sa:path "$sx:stringFacet/thisTripleExpr::TripleConstraint[predicate = sx:length]" ;
+    sa:code "$ = {length: num($1)}" ] ,
+  [ sa:path "$sx:stringFacet/thisTripleExpr::TripleConstraint[predicate = sx:minlength]" ;
+    sa:code "$ = {minlength: num($1)}" ] ,
+  [ sa:path "$sx:stringFacet/thisTripleExpr::TripleConstraint[predicate = sx:maxlength]" ;
+    sa:code "$ = {maxlength: num($1)}" ] ,
+  [ sa:path "$sx:stringFacet/thisTripleExpr::TripleConstraint[predicate = sx:pattern]" ;
+    sa:code "$ = {pattern: str($1)}" ] ,
+  [ sa:path "$sx:stringFacet/thisTripleExpr::TripleConstraint[predicate = sx:flags]" ;
+    sa:code "$ = {flags: str($1)}" ] ,
+  [ sa:path "$sx:numericFacet/thisTripleExpr::TripleConstraint[predicate = sx:mininclusive]" ;
+    sa:code "$ = {mininclusive: num($1)}" ] ,
+  [ sa:path "$sx:numericFacet/thisTripleExpr::TripleConstraint[predicate = sx:minexclusive]" ;
+    sa:code "$ = {minexclusive: num($1)}" ] ,
+  [ sa:path "$sx:numericFacet/thisTripleExpr::TripleConstraint[predicate = sx:maxinclusive]" ;
+    sa:code "$ = {maxinclusive: num($1)}" ] ,
+  [ sa:path "$sx:numericFacet/thisTripleExpr::TripleConstraint[predicate = sx:maxexclusive]" ;
+    sa:code "$ = {maxexclusive: num($1)}" ] ,
+  [ sa:path "$sx:numericFacet/thisTripleExpr::TripleConstraint[predicate = sx:totaldigits]" ;
+    sa:code "$ = {totaldigits: num($1)}" ] ,
+  [ sa:path "$sx:numericFacet/thisTripleExpr::TripleConstraint[predicate = sx:fractiondigits]" ;
+    sa:code "$ = {fractiondigits: num($1)}" ] ,
 
   ##### triple expressions
 
-  [ sa:ref <http://www.w3.org/ns/shex#TripleConstraint> ;
+  [ sa:ref sx:TripleConstraint ;
     sa:code """
       const t = {type: 'TripleConstraint', id: node};
       if (has('sx:inverse'))    t.inverse     = str(one('sx:inverse')) === 'true';
@@ -100,7 +136,7 @@ BASE <http://shex.io/examples/shexr-actions>
       return t;
     """ ] ,
 
-  [ sa:ref <http://www.w3.org/ns/shex#EachOf> ;
+  [ sa:ref sx:EachOf ;
     sa:code """
       const e = {type: 'EachOf', id: node};
       e.expressions = one('sx:expressions');
@@ -111,7 +147,7 @@ BASE <http://shex.io/examples/shexr-actions>
       return e;
     """ ] ,
 
-  [ sa:ref <http://www.w3.org/ns/shex#OneOf> ;
+  [ sa:ref sx:OneOf ;
     sa:code """
       const e = {type: 'OneOf', id: node};
       e.expressions = one('sx:expressions');
@@ -124,34 +160,34 @@ BASE <http://shex.io/examples/shexr-actions>
 
   ##### value sets
 
-  [ sa:path "@<http://www.w3.org/ns/shex#Wildcard>/shapeExprs/*/thisShapeExpr::Shape" ;
+  [ sa:path "@sx:Wildcard/shapeExprs/*/thisShapeExpr::Shape" ;
     sa:code "{type: 'Wildcard'}" ] ,
 
-  [ sa:ref <http://www.w3.org/ns/shex#IriStem> ;
+  [ sa:ref sx:IriStem ;
     sa:code "{type: 'IriStem', stem: str(one('sx:stem'))}" ] ,
-  [ sa:ref <http://www.w3.org/ns/shex#LiteralStem> ;
+  [ sa:ref sx:LiteralStem ;
     sa:code "{type: 'LiteralStem', stem: str(one('sx:stem'))}" ] ,
-  [ sa:ref <http://www.w3.org/ns/shex#LanguageStem> ;
+  [ sa:ref sx:LanguageStem ;
     sa:code "{type: 'LanguageStem', stem: str(one('sx:stem'))}" ] ,
-  [ sa:ref <http://www.w3.org/ns/shex#Language> ;
+  [ sa:ref sx:Language ;
     sa:code "{type: 'Language', languageTag: str(one('sx:languageTag'))}" ] ,
 
   # a stem range's stem is a string or the Wildcard shape above
-  [ sa:ref <http://www.w3.org/ns/shex#IriStemRange> ;
+  [ sa:ref sx:IriStemRange ;
     sa:code """
       const stem = one('sx:stem');
       return {type: 'IriStemRange',
               stem: stem && stem.type === 'Wildcard' ? stem : str(stem),
               exclusions: one('sx:exclusion')};
     """ ] ,
-  [ sa:ref <http://www.w3.org/ns/shex#LiteralStemRange> ;
+  [ sa:ref sx:LiteralStemRange ;
     sa:code """
       const stem = one('sx:stem');
       return {type: 'LiteralStemRange',
               stem: stem && stem.type === 'Wildcard' ? stem : str(stem),
               exclusions: one('sx:exclusion')};
     """ ] ,
-  [ sa:ref <http://www.w3.org/ns/shex#LanguageStemRange> ;
+  [ sa:ref sx:LanguageStemRange ;
     sa:code """
       const stem = one('sx:stem');
       return {type: 'LanguageStemRange',
@@ -161,14 +197,14 @@ BASE <http://shex.io/examples/shexr-actions>
 
   ##### semantic actions and annotations, in the schema being read
 
-  [ sa:ref <http://www.w3.org/ns/shex#SemAct> ;
+  [ sa:ref sx:SemAct ;
     sa:code """
       const a = {type: 'SemAct', name: one('sx:name')};
       if (has('sx:code')) a.code = str(one('sx:code'));
       return a;
     """ ] ,
 
-  [ sa:ref <http://www.w3.org/ns/shex#Annotation> ;
+  [ sa:ref sx:Annotation ;
     sa:code "{type: 'Annotation', predicate: one('sx:predicate'), object: one('sx:object')}" ] ,
 
   ##### RDF lists
@@ -176,42 +212,42 @@ BASE <http://shex.io/examples/shexr-actions>
   # A list is a shape that recurses on rdf:rest, so a list reduces the way
   # every other production does: cons the head onto what the tail reduced to.
 
-  [ sa:path "@<http://www.w3.org/ns/shex#IriList1Plus>" ; sa:code """
+  [ sa:path "@sx:IriList1Plus" ; sa:code """
       [one('rdf:first')].concat(one('rdf:rest') === nil ? [] : one('rdf:rest'))""" ] ,
-  [ sa:path "@<http://www.w3.org/ns/shex#SemActList1Plus>" ; sa:code """
+  [ sa:path "@sx:SemActList1Plus" ; sa:code """
       [one('rdf:first')].concat(one('rdf:rest') === nil ? [] : one('rdf:rest'))""" ] ,
-  [ sa:path "@<http://www.w3.org/ns/shex#ShapeDeclList1Plus>" ; sa:code """
+  [ sa:path "@sx:ShapeDeclList1Plus" ; sa:code """
       [one('rdf:first')].concat(one('rdf:rest') === nil ? [] : one('rdf:rest'))""" ] ,
-  [ sa:path "@<http://www.w3.org/ns/shex#valueSetValueList1Plus>" ; sa:code """
+  [ sa:path "@sx:valueSetValueList1Plus" ; sa:code """
       [one('rdf:first')].concat(one('rdf:rest') === nil ? [] : one('rdf:rest'))""" ] ,
-  [ sa:path "@<http://www.w3.org/ns/shex#AnnotationList1Plus>" ; sa:code """
+  [ sa:path "@sx:AnnotationList1Plus" ; sa:code """
       [one('rdf:first')].concat(one('rdf:rest') === nil ? [] : one('rdf:rest'))""" ] ,
-  [ sa:path "@<http://www.w3.org/ns/shex#IriStemExclusionList1Plus>" ; sa:code """
+  [ sa:path "@sx:IriStemExclusionList1Plus" ; sa:code """
       // an excluded literal is its lexical form in ShExJ, where an excluded
       // IRI or a nested stem is the object it already reduced to
       const head = one('rdf:first');
       return [head && typeof head === 'object' && 'value' in head ? str(head) : head]
         .concat(one('rdf:rest') === nil ? [] : one('rdf:rest'));""" ] ,
-  [ sa:path "@<http://www.w3.org/ns/shex#LiteralStemExclusionList1Plus>" ; sa:code """
+  [ sa:path "@sx:LiteralStemExclusionList1Plus" ; sa:code """
       // an excluded literal is its lexical form in ShExJ, where an excluded
       // IRI or a nested stem is the object it already reduced to
       const head = one('rdf:first');
       return [head && typeof head === 'object' && 'value' in head ? str(head) : head]
         .concat(one('rdf:rest') === nil ? [] : one('rdf:rest'));""" ] ,
-  [ sa:path "@<http://www.w3.org/ns/shex#LanguageStemExclusionList1Plus>" ; sa:code """
+  [ sa:path "@sx:LanguageStemExclusionList1Plus" ; sa:code """
       // an excluded literal is its lexical form in ShExJ, where an excluded
       // IRI or a nested stem is the object it already reduced to
       const head = one('rdf:first');
       return [head && typeof head === 'object' && 'value' in head ? str(head) : head]
         .concat(one('rdf:rest') === nil ? [] : one('rdf:rest'));""" ] ,
-  [ sa:path "@<http://www.w3.org/ns/shex#tripleExpressionList1Plus>" ; sa:code """
+  [ sa:path "@sx:tripleExpressionList1Plus" ; sa:code """
       [one('rdf:first')].concat(one('rdf:rest') === nil ? [] : one('rdf:rest'))""" ] ,
-  [ sa:path "@<http://www.w3.org/ns/shex#shapeDeclOrExprList1Plus>" ; sa:code """
+  [ sa:path "@sx:shapeDeclOrExprList1Plus" ; sa:code """
       [one('rdf:first')].concat(one('rdf:rest') === nil ? [] : one('rdf:rest'))""" ] ,
 
   # the 2Plus heads have no rdf:nil case: their tail is always another list
-  [ sa:path "@<http://www.w3.org/ns/shex#tripleExpressionList2Plus>" ; sa:code """
+  [ sa:path "@sx:tripleExpressionList2Plus" ; sa:code """
       [one('rdf:first')].concat(one('rdf:rest'))""" ] ,
-  [ sa:path "@<http://www.w3.org/ns/shex#shapeDeclOrExprList2Plus>" ; sa:code """
+  [ sa:path "@sx:shapeDeclOrExprList2Plus" ; sa:code """
       [one('rdf:first')].concat(one('rdf:rest'))""" ]
 .

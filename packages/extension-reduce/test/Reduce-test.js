@@ -114,6 +114,115 @@ describe("reduce", function () {
     });
   });
 
+  /* yacc writes `$$ = $1 + $3`; PEG names the sub-production instead.  Both
+   * spellings are here, and both are extension-reduce's doing rather than
+   * the evaluator's: the code is rewritten to ordinary names before anyone
+   * runs it, which is what lets an implementation in another language have
+   * the same syntax. */
+  describe("$, a production's sub-productions by name", function () {
+    const TWO = "<http://a.example/S> { :p1 . ; :p2 . ? }";
+
+    it("should name an arc with a prefixed name", function () {
+      expect(run(TWO, ONE_TRIPLE, {S: "$:p1"})).to.deep.equal([B + "o1"]);
+    });
+
+    it("should name an arc with an IRI", function () {
+      expect(run(TWO, ONE_TRIPLE, {S: "$<http://a.example/p1>"})).to.deep.equal([B + "o1"]);
+    });
+
+    /* An arc that didn't match is absent rather than empty, so `|| []` is
+     * how an action says "however many of these there were". */
+    it("should be undefined for an arc that isn't there", function () {
+      expect(run(TWO, ONE_TRIPLE, {S: "[$:p1, $:p2, ...($:p2 || [])]"}))
+        .to.deep.equal([[B + "o1"], undefined]);
+    });
+
+    it("should say which prefixes it knows when one is missing", function () {
+      expect(() => run(TWO, ONE_TRIPLE, {S: "$nope:p1"})).to.throw(/no prefix "nope:"/);
+      expect(() => run(TWO, ONE_TRIPLE, {S: "$nope:p1"}), "and which it does know")
+        .to.throw(/xsd:/);
+    });
+
+    it("should hand $ the production's value", function () {
+      expect(run(TWO, ONE_TRIPLE, {S: "$ = {got: one(':p1')}"})).to.deep.equal({got: B + "o1"});
+    });
+
+    it("should take yacc's $$ for the same thing", function () {
+      expect(run(TWO, ONE_TRIPLE, {S: "$$ = {got: one(':p1')}; $$.also = 1;"}))
+        .to.deep.equal({got: B + "o1", also: 1});
+    });
+
+    it("should give a triple constraint's action its object as $1", function () {
+      const schema = "<http://a.example/S> { $<http://a.example/S-p1> :p1 . }";
+      expect(run(schema, ONE_TRIPLE, {S: "one(':p1')", "S-p1": "$ = {p1: local($1)}"}))
+        .to.deep.equal({p1: "o1"});
+    });
+
+    /* What $n is for: two sub-productions with one name, which is the case
+     * a name can't address. */
+    it("should number a shape's values in the order the body matched them", function () {
+      expect(run("<http://a.example/S> { :p1 xsd:integer ; :p1 IRI }",
+                 ":x :p1 42 ; :p1 :o1 .", {S: "[num($1), $2]"}))
+        .to.deep.equal([42, B + "o1"]);
+    });
+
+    it("should count from $1, as yacc does", function () {
+      expect(() => run(TWO, ONE_TRIPLE, {S: "$0"})).to.throw(/numbered from \$1/);
+    });
+
+    /* The whole point: a production written as one action per attribute,
+     * with the shape merging what its constraints said. */
+    it("should let a production be written as its sub-expressions", function () {
+      const schema = "<http://a.example/S> {\n"
+            + "  $<http://a.example/S-p1> :p1 . ;\n"
+            + "  $<http://a.example/S-p2> :p2 . ?\n}";
+      expect(run(schema, ONE_TRIPLE, {
+        S: "$ = Object.assign({type: 'S'}, ...($:p1 || []), ...($:p2 || []))",
+        "S-p1": "$ = {p1: local($1)}",
+        "S-p2": "$ = {p2: local($1)}",
+      })).to.deep.equal({type: "S", p1: "o1"});
+    });
+
+    /* A substitution with no lexer for the action language has to leave
+     * alone everything that isn't unambiguously a reference. */
+    describe("what it doesn't touch", function () {
+
+      it("should leave $name, which is an identifier in several languages", function () {
+        expect(run(TWO, ONE_TRIPLE, {S: "const $p1 = 'mine'; return $p1;"})).to.equal("mine");
+      });
+
+      it("should leave $ before a brace, quote or slash", function () {
+        expect(run(TWO, ONE_TRIPLE, {S: "`${str(one(':p1'))}`"})).to.equal(B + "o1");
+        expect(run(TWO, ONE_TRIPLE, {S: "/o1$/.test(one(':p1'))"})).to.equal(true);
+        expect(run(TWO, ONE_TRIPLE, {S: "'costs $'"})).to.equal("costs $");
+      });
+
+      it("should not shadow a name the action is already using", function () {
+        expect(run(TWO, ONE_TRIPLE, {S: "const _1 = 'mine'; $ = [_1, $1];"}))
+          .to.deep.equal(["mine", B + "o1"]);
+      });
+    });
+
+    it("should hand the evaluator the names and what they stand for", function () {
+      const seen = [];
+      run(TWO, ONE_TRIPLE, {S: "$ = [$1, $:p1]"}, undefined, undefined,
+          {evaluate: (code, scope) => { seen.push([code, scope]); return undefined; }});
+      const [code, scope] = seen[0];
+      expect(code, "the code is rewritten before the evaluator sees it")
+        .to.equal("_ret = [_1, _p1]");
+      expect(scope.bindings).to.deep.equal(
+        {_ret: undefined, _1: B + "o1", _p1: [B + "o1"]});
+      expect(scope.ret, "which name the action assigns to").to.equal("_ret");
+    });
+
+    it("should leave ret out when the action doesn't assign", function () {
+      const seen = [];
+      run(TWO, ONE_TRIPLE, {S: "$:p1"}, undefined, undefined,
+          {evaluate: (code, scope) => { seen.push(scope); return undefined; }});
+      expect("ret" in seen[0]).to.equal(false);
+    });
+  });
+
   describe("naming a predicate", function () {
 
     it("should expand a prefixed name", function () {
