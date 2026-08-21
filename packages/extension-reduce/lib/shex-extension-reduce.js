@@ -27,9 +27,6 @@
  * this extension at all.
  */
 const ReduceExt = 'http://shex.io/extensions/Reduce/';
-const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
-const RDF_type = RDF + 'type';
-const XSD = 'http://www.w3.org/2001/XMLSchema#';
 // ## the SemAct extension half: record, don't run
 function register(validator, api) {
     if (validator === undefined || validator.semActHandler === undefined)
@@ -68,7 +65,12 @@ class ReduceError extends Error {
  */
 function reduce(result, options = {}) {
     const url = options.url || ReduceExt;
-    const expand = prefixExpander(options.prefixes || {});
+    const evaluate = options.evaluate;
+    if (typeof evaluate !== 'function')
+        throw Error('reduce() needs an `evaluate` option -- (code, scope) => value. '
+            + 'For actions written in JavaScript that is @shexjs/extension-reduce-js.');
+    const prefixes = options.prefixes || {};
+    const api = options.api || {};
     const seen = new Map();
     return reduceResult(result);
     function reduceResult(res) {
@@ -101,12 +103,12 @@ function reduce(result, options = {}) {
             case 'ShapeTest': {
                 const key = keyOf(node.node, node.shape);
                 const arcs = arcsOf(node.solution);
-                const value = run(node, Object.assign({ node: node.node, shape: node.shape, arcs }, accessors(arcs, node)), () => node.node);
+                const value = run(node, { kind: 'shape', node: node.node, shape: node.shape, arcs }, () => node.node);
                 seen.set(key, value);
                 return value;
             }
             case 'NodeConstraintTest':
-                return run(node, Object.assign({ node: node.node, shape: node.shape, arcs: {} }, accessors({}, node)), () => node.node);
+                return run(node, { kind: 'shape', node: node.node, shape: node.shape, arcs: {} }, () => node.node);
             case 'Recursion': {
                 // The matcher found this pair on the way down, so its value is still
                 // being computed; if it happens to be finished, use it.
@@ -154,7 +156,9 @@ function reduce(result, options = {}) {
                             : reduceNode(tested.referenced);
                         const code = actionOn(tested);
                         const value = code === undefined ? bare
-                            : runCode(code, s, Object.assign({ subject: tested.subject, predicate: tested.predicate, object: tested.object, value: bare, arcs: {} }, accessors({}, s)));
+                            : runCode(code, s, { kind: 'tripleConstraint', subject: tested.subject,
+                                predicate: tested.predicate, object: tested.object,
+                                value: bare, arcs: {} });
                         (arcs[s.predicate] = arcs[s.predicate] || []).push(value);
                     });
                     return;
@@ -182,117 +186,14 @@ function reduce(result, options = {}) {
         return code === undefined ? fallback() : runCode(code, node, scope);
     }
     function runCode(code, node, scope) {
-        const names = Object.assign({}, options.api, scope, { expand });
+        const where = describe(node);
         try {
-            return compile(code)(names);
+            return evaluate(code, Object.assign({ where, prefixes, api }, scope));
         }
         catch (e) {
-            throw new ReduceError(describe(node), code, e);
+            throw new ReduceError(where, code, e);
         }
     }
-    /** the helpers every action gets */
-    function accessors(arcs, node) {
-        const at = (p) => arcs[expand(p)] || [];
-        return {
-            all: at,
-            has: (p) => at(p).length > 0,
-            opt: (p) => {
-                const found = at(p);
-                if (found.length > 1)
-                    throw Error(`opt(${JSON.stringify(p)}) found ${found.length} values`);
-                return found[0];
-            },
-            one: (p) => {
-                const found = at(p);
-                if (found.length !== 1)
-                    throw Error(`one(${JSON.stringify(p)}) found ${found.length} values`
-                        + (Object.keys(arcs).length
-                            ? `; ${describe(node)} matched ` + Object.keys(arcs).join(', ')
-                            : ''));
-                return found[0];
-            },
-            str, num, iri, local, lang, datatype, isBnode,
-            RDF, XSD, nil: RDF + 'nil',
-        };
-    }
-}
-// ## terms, as an action wants to see them
-/** the lexical form of a literal, or the IRI of an IRI */
-function str(term) {
-    return term === null || term === undefined ? term
-        : typeof term === 'string' ? term : term.value;
-}
-/** a literal read as a JavaScript number */
-function num(term) {
-    return Number(str(term));
-}
-/** an IRI, refusing a literal */
-function iri(term) {
-    if (typeof term !== 'string')
-        throw Error(`expected an IRI, got the literal ${JSON.stringify(term)}`);
-    return term;
-}
-/** the part of an IRI after the last / or # -- what a type usually reads as */
-function local(term) {
-    return str(term).replace(/^.*[/#]/, '');
-}
-/** whether a term is a blank node, which ShExJ writes as a _: name */
-function isBnode(term) {
-    return typeof term === 'string' && term.substr(0, 2) === '_:';
-}
-function lang(term) {
-    return typeof term === 'string' ? undefined : term.language;
-}
-function datatype(term) {
-    return typeof term === 'string' ? undefined : term.type;
-}
-// ## compiling an action
-const compiled = new Map();
-/**
- * An action is an expression if it parses as one, and a function body if it
- * doesn't -- so `{op: 'num'}` and `const x = 1; return x` both work, and
- * neither needs a keyword the writer has to remember.
- */
-function compile(code) {
-    const already = compiled.get(code);
-    if (already !== undefined)
-        return already;
-    let fn;
-    try {
-        fn = build('return (' + code + '\n)');
-    }
-    catch (e) {
-        if (!(e instanceof SyntaxError))
-            throw e;
-        fn = build(code);
-    }
-    compiled.set(code, fn);
-    return fn;
-}
-function build(body) {
-    // `with` is the cheapest way to put an open-ended set of helpers in scope,
-    // and these are already arbitrary strings being run as code.
-    // eslint-disable-next-line no-new-func
-    const f = new Function('__names', 'with (__names) { ' + body + '\n}');
-    return (names) => f(names);
-}
-function prefixExpander(prefixes) {
-    return function expand(name) {
-        if (name === 'a')
-            return RDF_type;
-        const at = name.indexOf(':');
-        if (at === -1)
-            return name;
-        const prefix = name.substr(0, at);
-        if (/^[a-z][a-z0-9+.-]*$/i.test(prefix) && !(prefix in prefixes)
-            && (name.substr(at + 1, 2) === '//' || prefix === 'urn' || prefix === 'mailto'))
-            return name; // already an IRI
-        if (!(prefix in prefixes))
-            throw Error(`no prefix "${prefix}:" (the reduce options declare `
-                + (Object.keys(prefixes).length
-                    ? Object.keys(prefixes).map(p => p + ':').join(', ') : 'none') + ')');
-        return prefixes[prefix] + name.substr(at + 1);
-    };
 }
 // ## reporting
 function describe(node) {
@@ -333,20 +234,27 @@ module.exports = {
     name: 'Reduce',
     description: `ShEx as a parser generator: the schema recognizes, the actions reduce.
 
-Each action is JavaScript -- an expression if it parses as one, a function
-body otherwise -- run after the match, over the result that survived.  An
-action on a shape sees:
-  node, shape          the focus term and the label it matched
-  one(p) opt(p) all(p) what the arc on predicate p reduced to
-  has(p) arcs          whether there is one; everything, by predicate
-  str num iri local    reading a term
-An action on a triple constraint sees subject, predicate, object and value.
+The schema is the grammar and a validation result is the parse tree it
+recognized by; this folds one action per production over that tree, bottom
+up, and what comes out is an AST.  Actions run after the match, not during
+it, so a partition the matcher abandoned leaves nothing behind and an action
+cannot reject a match -- that is the schema's job.
+
+This module has no action language.  reduce() takes an \`evaluate(code, scope)\`
+and hands it plain data:
+  kind                 'shape' or 'tripleConstraint'
+  node, shape, arcs    the focus term, the label it matched, and what each
+                       arc reduced to, by full predicate IRI
+  subject, predicate,  for a constraint: the triple, and what its object
+  object, value        reduced to
+  prefixes, api, where the caller's prefixes and extras, and where this is
+No functions cross that line, so the same fold ports to an implementation in
+another language.  @shexjs/extension-reduce-js is the JavaScript evaluator.
 
 url: ${ReduceExt}`,
     register,
     done,
     url: ReduceExt,
     reduce,
-    str, num, iri, local, lang, datatype, isBnode,
 };
 //# sourceMappingURL=shex-extension-reduce.js.map

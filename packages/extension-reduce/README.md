@@ -10,7 +10,11 @@ an AST.
 
 > Working title while this was being built: `extension-yacc`. It is named for
 > the half of yacc it is — the `$$ = $1 + $3` half — rather than for the parser
-> generator, since ShEx is already the parser generator here.
+> generator, since ShEx is already the parser generator here. Unlike yacc,
+> which splices action text into the C it emits, this hands each action a
+> scope of data and asks a pluggable evaluator to run it; the actions in the
+> examples are JavaScript because `@shexjs/extension-reduce-js` is, not because the fold
+> is.
 
 ## The calculator
 
@@ -45,7 +49,7 @@ And a compiler, `calc-actions.ttl`, as a
 ```
 
 Recognizing the graph against the grammar and folding the actions over the
-result gives:
+result — with `@shexjs/extension-reduce-js` running the code between the quotes — gives:
 
 ```json
 {"op": "Mul",
@@ -61,43 +65,49 @@ and a second overlay could compile the same grammar to something else.
 
 ```js
 const Reduce = require('@shexjs/extension-reduce');
+const evaluate = require('@shexjs/extension-reduce-js');       // or your own
 
 const validator = new ShExValidator(schema, db, {});
 Reduce.register(validator);
 const res = validator.validateShapeMap(shapeMap);
-const ast = Reduce.reduce(res, {prefixes: {'': 'http://a.example/calc#'}});
+const ast = Reduce.reduce(res, {evaluate, prefixes: {'': 'http://a.example/calc#'}});
 ```
 
 `reduce` returns one value per node/shape pair in the map.
 
-## What an action sees
+## This module has no action language
 
-An action is JavaScript: an expression if it parses as one, a function body
-otherwise, so both of these work.
+`evaluate` is required, and it is the only language-dependent part. Everything
+above it — which production reduced, what its arcs reduced to — is the same
+whatever the actions are written in, which is what makes the fold portable: an
+implementation in Rust or Python or Java reimplements *this* and brings its own
+evaluator.
 
-    {op: 'num', value: num(one(':value'))}
+So no functions cross the line. An evaluator is handed plain data:
 
-    const v = one(':value');
-    return v > 0 ? {op: 'pos', v} : {op: 'neg', v};
-
-On a **shape**:
-
-| name | is |
+| | |
 | --- | --- |
-| `node` | the focus term |
-| `shape` | the label it matched |
-| `one(p)` | the one value the arc on `p` reduced to; complains if there isn't exactly one |
-| `opt(p)` | that value or `undefined`; complains if there is more than one |
-| `all(p)` | every value, as an array |
-| `has(p)` | whether there is one |
-| `arcs` | all of them, by predicate |
+| `kind` | `'shape'` or `'tripleConstraint'` |
+| `node`, `shape` | the focus term and the label it matched |
+| `arcs` | what each arc reduced to, keyed by **full predicate IRI** |
+| `subject`, `predicate`, `object`, `value` | for a constraint: the triple, and what its object reduced to |
+| `prefixes`, `api` | what the caller passed |
+| `where` | where in the result this is, for error messages |
 
-On a **triple constraint**: `subject`, `predicate`, `object`, and `value` — what
-the object reduced to. What the action returns stands in for that arc.
+Everything an action author expects — `one(':left')`, `str`, `num`, prefix
+expansion, "an expression if it parses as one" — is the *evaluator's* doing,
+not this module's. [`@shexjs/extension-reduce-js`](../extension-reduce-js) is the JavaScript one,
+and its README is the list.
 
-Reading terms, in both: `str` `num` `iri` `local` `lang` `datatype` `isBnode`,
-plus `RDF`, `XSD` and `nil`. A predicate is written as a full IRI, as `a`, or
-with a prefix from `reduce`'s `prefixes` option.
+An evaluator is a function, so a second action language is not a fork:
+
+```js
+// a JSON template whose "$p" strings name arcs
+const template = (code, scope) => JSON.parse(code, (k, v) =>
+  typeof v === 'string' && v[0] === '$'
+    ? (scope.arcs[scope.prefixes[''] + v.substr(1)] || [])[0]
+    : v);
+```
 
 ## What a production reduces to
 
@@ -122,8 +132,8 @@ So an action cannot reject a match — that is the schema's job — and it is fr
 to be as effectful as it likes. Actions on `EachOf`/`OneOf` groups are not run:
 a shape's action already sees everything its body matched, by predicate.
 
-Actions are code that arrived with a document. Registering this extension is
-where you decide to run it.
+Actions are code that arrived with a document. Passing an evaluator is where
+you decide to run it — and which language you run.
 
 ## ShExR
 

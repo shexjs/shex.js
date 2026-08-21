@@ -28,17 +28,46 @@
 
 const ReduceExt = 'http://shex.io/extensions/Reduce/';
 
-const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
-const RDF_type = RDF + 'type';
-const XSD = 'http://www.w3.org/2001/XMLSchema#';
-
 /** an RDF term as a ShExJ result records it: an IRI string, or an ObjectLiteral */
 type LdTerm = string | {value: string, type?: string, language?: string};
 
+/**
+ * What runs an action.  This is the only language-dependent part: everything
+ * above it -- which production reduced, what its arcs reduced to -- is the
+ * same whatever the actions are written in, so an implementation in another
+ * language reimplements the fold and brings its own evaluator.
+ * `@shexjs/extension-reduce-js` is the JavaScript one.
+ */
+type Evaluator = (code: string, scope: ReduceScope) => any;
+
+/** What an evaluator is handed.  Plain data: no functions cross this line. */
+interface ReduceScope {
+  /** which kind of production reduced */
+  kind: 'shape' | 'tripleConstraint';
+  /** where in the result this happened, for the evaluator's error messages */
+  where: string;
+  /** prefixes an action may use to name a predicate */
+  prefixes: {[prefix: string]: string};
+  /** whatever the caller passed as `api` */
+  api: {[name: string]: any};
+  /** what each arc reduced to, by full predicate IRI; empty for a constraint */
+  arcs: {[predicate: string]: any[]};
+  /** kind 'shape': the focus term and the label it matched */
+  node?: LdTerm;
+  shape?: string;
+  /** kind 'tripleConstraint': the triple, and what its object reduced to */
+  subject?: LdTerm;
+  predicate?: string;
+  object?: LdTerm;
+  value?: any;
+}
+
 interface ReduceOptions {
-  /** prefixes the actions may use, e.g. `one(':left')`; `a` is always rdf:type */
+  /** what runs an action; required, since this module has no language */
+  evaluate?: Evaluator;
+  /** prefixes an action may use to name a predicate */
   prefixes?: {[prefix: string]: string};
-  /** extra names in scope for every action */
+  /** extra names for the evaluator to put in scope */
   api?: {[name: string]: any};
   /** the extension IRI to read actions for (default: this module's) */
   url?: string;
@@ -96,7 +125,12 @@ class ReduceError extends Error {
  */
 function reduce (result: any, options: ReduceOptions = {}): any {
   const url = options.url || ReduceExt;
-  const expand = prefixExpander(options.prefixes || {});
+  const evaluate = options.evaluate;
+  if (typeof evaluate !== 'function')
+    throw Error('reduce() needs an `evaluate` option -- (code, scope) => value. '
+                + 'For actions written in JavaScript that is @shexjs/extension-reduce-js.');
+  const prefixes = options.prefixes || {};
+  const api = options.api || {};
   const seen = new Map<string, any>();
 
   return reduceResult(result);
@@ -136,17 +170,15 @@ function reduce (result: any, options: ReduceOptions = {}): any {
     case 'ShapeTest': {
       const key = keyOf(node.node, node.shape);
       const arcs = arcsOf(node.solution);
-      const value = run(node, {
-        node: node.node, shape: node.shape, arcs,
-        ...accessors(arcs, node),
-      }, () => node.node);
+      const value = run(node, {kind: 'shape', node: node.node, shape: node.shape, arcs},
+                        () => node.node);
       seen.set(key, value);
       return value;
     }
 
     case 'NodeConstraintTest':
-      return run(node, {node: node.node, shape: node.shape, arcs: {},
-                        ...accessors({}, node)}, () => node.node);
+      return run(node, {kind: 'shape', node: node.node, shape: node.shape, arcs: {}},
+                 () => node.node);
 
     case 'Recursion': {
       // The matcher found this pair on the way down, so its value is still
@@ -194,9 +226,9 @@ function reduce (result: any, options: ReduceOptions = {}): any {
             : reduceNode(tested.referenced);
           const code = actionOn(tested);
           const value = code === undefined ? bare
-            : runCode(code, s, {subject: tested.subject, predicate: tested.predicate,
-                                object: tested.object, value: bare, arcs: {},
-                                ...accessors({}, s)});
+            : runCode(code, s, {kind: 'tripleConstraint', subject: tested.subject,
+                                predicate: tested.predicate, object: tested.object,
+                                value: bare, arcs: {}});
           (arcs[s.predicate] = arcs[s.predicate] || []).push(value);
         });
         return;
@@ -225,123 +257,13 @@ function reduce (result: any, options: ReduceOptions = {}): any {
   }
 
   function runCode (code: string, node: any, scope: any): any {
-    const names = Object.assign({}, options.api, scope, {expand});
+    const where = describe(node);
     try {
-      return compile(code)(names);
+      return evaluate!(code, Object.assign({where, prefixes, api}, scope) as ReduceScope);
     } catch (e) {
-      throw new ReduceError(describe(node), code, e);
+      throw new ReduceError(where, code, e);
     }
   }
-
-  /** the helpers every action gets */
-  function accessors (arcs: {[p: string]: any[]}, node: any) {
-    const at = (p: string) => arcs[expand(p)] || [];
-    return {
-      all: at,
-      has: (p: string) => at(p).length > 0,
-      opt: (p: string) => {
-        const found = at(p);
-        if (found.length > 1)
-          throw Error(`opt(${JSON.stringify(p)}) found ${found.length} values`);
-        return found[0];
-      },
-      one: (p: string) => {
-        const found = at(p);
-        if (found.length !== 1)
-          throw Error(`one(${JSON.stringify(p)}) found ${found.length} values`
-                      + (Object.keys(arcs).length
-                         ? `; ${describe(node)} matched ` + Object.keys(arcs).join(', ')
-                         : ''));
-        return found[0];
-      },
-      str, num, iri, local, lang, datatype, isBnode,
-      RDF, XSD, nil: RDF + 'nil',
-    };
-  }
-}
-
-// ## terms, as an action wants to see them
-
-/** the lexical form of a literal, or the IRI of an IRI */
-function str (term: LdTerm): string {
-  return term === null || term === undefined ? term as any
-    : typeof term === 'string' ? term : term.value;
-}
-/** a literal read as a JavaScript number */
-function num (term: LdTerm): number {
-  return Number(str(term));
-}
-/** an IRI, refusing a literal */
-function iri (term: LdTerm): string {
-  if (typeof term !== 'string')
-    throw Error(`expected an IRI, got the literal ${JSON.stringify(term)}`);
-  return term;
-}
-/** the part of an IRI after the last / or # -- what a type usually reads as */
-function local (term: LdTerm): string {
-  return str(term).replace(/^.*[/#]/, '');
-}
-/** whether a term is a blank node, which ShExJ writes as a _: name */
-function isBnode (term: LdTerm): boolean {
-  return typeof term === 'string' && term.substr(0, 2) === '_:';
-}
-function lang (term: LdTerm): string | undefined {
-  return typeof term === 'string' ? undefined : term.language;
-}
-function datatype (term: LdTerm): string | undefined {
-  return typeof term === 'string' ? undefined : term.type;
-}
-
-// ## compiling an action
-
-const compiled = new Map<string, (names: any) => any>();
-
-/**
- * An action is an expression if it parses as one, and a function body if it
- * doesn't -- so `{op: 'num'}` and `const x = 1; return x` both work, and
- * neither needs a keyword the writer has to remember.
- */
-function compile (code: string): (names: any) => any {
-  const already = compiled.get(code);
-  if (already !== undefined)
-    return already;
-  let fn: (names: any) => any;
-  try {
-    fn = build('return (' + code + '\n)');
-  } catch (e) {
-    if (!(e instanceof SyntaxError))
-      throw e;
-    fn = build(code);
-  }
-  compiled.set(code, fn);
-  return fn;
-}
-
-function build (body: string): (names: any) => any {
-  // `with` is the cheapest way to put an open-ended set of helpers in scope,
-  // and these are already arbitrary strings being run as code.
-  // eslint-disable-next-line no-new-func
-  const f = new Function('__names', 'with (__names) { ' + body + '\n}');
-  return (names: any) => f(names);
-}
-
-function prefixExpander (prefixes: {[prefix: string]: string}) {
-  return function expand (name: string): string {
-    if (name === 'a')
-      return RDF_type;
-    const at = name.indexOf(':');
-    if (at === -1)
-      return name;
-    const prefix = name.substr(0, at);
-    if (/^[a-z][a-z0-9+.-]*$/i.test(prefix) && !(prefix in prefixes)
-        && (name.substr(at + 1, 2) === '//' || prefix === 'urn' || prefix === 'mailto'))
-      return name;            // already an IRI
-    if (!(prefix in prefixes))
-      throw Error(`no prefix "${prefix}:" (the reduce options declare `
-                  + (Object.keys(prefixes).length
-                     ? Object.keys(prefixes).map(p => p + ':').join(', ') : 'none') + ')');
-    return prefixes[prefix] + name.substr(at + 1);
-  };
 }
 
 // ## reporting
@@ -381,19 +303,26 @@ export = {
   name: 'Reduce',
   description: `ShEx as a parser generator: the schema recognizes, the actions reduce.
 
-Each action is JavaScript -- an expression if it parses as one, a function
-body otherwise -- run after the match, over the result that survived.  An
-action on a shape sees:
-  node, shape          the focus term and the label it matched
-  one(p) opt(p) all(p) what the arc on predicate p reduced to
-  has(p) arcs          whether there is one; everything, by predicate
-  str num iri local    reading a term
-An action on a triple constraint sees subject, predicate, object and value.
+The schema is the grammar and a validation result is the parse tree it
+recognized by; this folds one action per production over that tree, bottom
+up, and what comes out is an AST.  Actions run after the match, not during
+it, so a partition the matcher abandoned leaves nothing behind and an action
+cannot reject a match -- that is the schema's job.
+
+This module has no action language.  reduce() takes an \`evaluate(code, scope)\`
+and hands it plain data:
+  kind                 'shape' or 'tripleConstraint'
+  node, shape, arcs    the focus term, the label it matched, and what each
+                       arc reduced to, by full predicate IRI
+  subject, predicate,  for a constraint: the triple, and what its object
+  object, value        reduced to
+  prefixes, api, where the caller's prefixes and extras, and where this is
+No functions cross that line, so the same fold ports to an implementation in
+another language.  @shexjs/extension-reduce-js is the JavaScript evaluator.
 
 url: ${ReduceExt}`,
   register,
   done,
   url: ReduceExt,
   reduce,
-  str, num, iri, local, lang, datatype, isBnode,
 }

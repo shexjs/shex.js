@@ -12,6 +12,7 @@ const ShExParser = require("@shexjs/parser");
 const {ctor: RdfJsDb} = require("@shexjs/neighborhood-rdfjs");
 const {ShExValidator} = require("@shexjs/validator");
 const Reduce = require("..");
+const evaluate = require("@shexjs/extension-reduce-js");
 
 const B = "http://a.example/";
 const PREFIXES = {"": B, xsd: "http://www.w3.org/2001/XMLSchema#"};
@@ -40,7 +41,7 @@ function run (shexc, turtle, actions, node = B + "x", shape = B + "S", options =
   Reduce.register(validator);
   const res = validator.validateShapeMap([{node, shape}]);
   expect(res[0].status, JSON.stringify(res[0].appinfo)).to.equal("conformant");
-  return Reduce.reduce(res, Object.assign({prefixes: PREFIXES}, options))[0];
+  return Reduce.reduce(res, Object.assign({evaluate, prefixes: PREFIXES}, options))[0];
 }
 
 const ONE_ARC = "<http://a.example/S> { :p1 . }";
@@ -258,8 +259,70 @@ describe("reduce", function () {
     Reduce.register(validator);
     const res = validator.validateShapeMap(
       [{node: B + "x", shape: B + "S"}, {node: B + "y", shape: B + "S"}]);
-    expect(Reduce.reduce(res, {prefixes: PREFIXES}))
+    expect(Reduce.reduce(res, {evaluate, prefixes: PREFIXES}))
       .to.deep.equal([{at: B + "x"}, {at: B + "y"}]);
+  });
+
+  describe("the evaluator", function () {
+
+    it("should be required, and say which one runs JavaScript", function () {
+      const schema = ShExParser.construct(B, null, {index: true})
+            .parse("PREFIX : <http://a.example/>\n<http://a.example/S> { :p1 . }",
+                   B, undefined, "reduce-test");
+      const graph = new N3.Store();
+      graph.addQuads(new N3.Parser({baseIRI: B, format: "text/turtle"})
+                     .parse("PREFIX : <http://a.example/>\n:x :p1 :o ."));
+      const validator = new ShExValidator(schema, RdfJsDb(graph), {});
+      Reduce.register(validator);
+      const res = validator.validateShapeMap([{node: B + "x", shape: B + "S"}]);
+      expect(() => Reduce.reduce(res)).to.throw(/needs an `evaluate` option/);
+      expect(() => Reduce.reduce(res)).to.throw(/@shexjs\/extension-reduce-js/);
+    });
+
+    /* The scope is the portable half of this: an implementation in another
+     * language reimplements the fold and brings its own evaluator, so no
+     * function may cross the line. */
+    it("should hand it plain data", function () {
+      const seen = [];
+      run("<http://a.example/S> { $<http://a.example/S-p1> :p1 . }", ONE_TRIPLE,
+          {S: "shape action", "S-p1": "tc action"}, undefined, undefined,
+          {evaluate: (code, scope) => { seen.push([code, scope]); return code; },
+           api: {extra: 1}});
+
+      const byCode = c => seen.find(([code]) => code === c)[1];
+      const shape = byCode("shape action");
+      expect(shape.kind).to.equal("shape");
+      expect(shape.node).to.equal(B + "x");
+      expect(shape.shape).to.equal(B + "S");
+      expect(shape.arcs).to.deep.equal({[B + "p1"]: ["tc action"]});
+      expect(shape.prefixes).to.equal(PREFIXES);
+      expect(shape.api).to.deep.equal({extra: 1});
+      expect(shape.where).to.include(B + "S");
+
+      const tc = byCode("tc action");
+      expect(tc.kind).to.equal("tripleConstraint");
+      expect(tc.subject).to.equal(B + "x");
+      expect(tc.predicate).to.equal(B + "p1");
+      expect(tc.object).to.equal(B + "o1");
+      expect(tc.value).to.equal(B + "o1");
+
+      seen.forEach(([, scope]) =>
+        Object.keys(scope).forEach(k =>
+          expect(typeof scope[k], `scope.${k} is data`).to.not.equal("function")));
+    });
+
+    /* ...so an action language that isn't JavaScript is a function, not a
+     * fork.  This one is a JSON template whose "$p" strings name arcs. */
+    it("should take an evaluator that isn't JavaScript", function () {
+      const template = (code, scope) => JSON.parse(code, (_k, v) =>
+        typeof v === "string" && v[0] === "$"
+          ? (scope.arcs[PREFIXES[""] + v.substr(1)] || [])[0]
+          : v);
+      expect(run("<http://a.example/S> { :p1 . ; :p2 . }", ":x :p1 :o1 ; :p2 :o2 .",
+                 {S: '{"left": "$p1", "right": "$p2"}'}, undefined, undefined,
+                 {evaluate: template}))
+        .to.deep.equal({left: B + "o1", right: B + "o2"});
+    });
   });
 
   it("should refuse a validator it can't register on", function () {

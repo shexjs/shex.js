@@ -50,8 +50,9 @@ An action names its element exactly one way: `sa:ref`, `sa:path` or `sa:start`.
 a name — `<#Shape>` and `$<#tripleExpr>`. Everything else needs a `sa:path`; the
 predicate shortcut is usually the readable one:
 
-    @<http://a.example/S1>~<http://a.example/p2>      the constraint on :p2 in <S1>
-    @<http://a.example/S1>/expression/expressions/*   every constraint in <S1>
+    @<http://a.example/S1>~<http://a.example/p2>       the constraint on :p2 in <S1>
+    @<http://a.example/S1>/expression/expressions/*    every constraint in <S1>
+    @<http://a.example/S1>/expression/expressions/*[0] the first of them
 
 A `sa:ref` to a shape label lands on the shape *expression*, since ShExJ puts
 `semActs` there rather than on the `ShapeDecl` around it. ShExJ has `semActs` on

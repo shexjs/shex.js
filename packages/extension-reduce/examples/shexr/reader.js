@@ -17,6 +17,7 @@ const {ctor: RdfJsDb} = require("@shexjs/neighborhood-rdfjs");
 const {ShExValidator} = require("@shexjs/validator");
 const {applyOverlay} = require("@shexjs/semact-overlay");
 const Reduce = require("@shexjs/extension-reduce");
+const evaluate = require("@shexjs/extension-reduce-js");
 
 const SX = "http://www.w3.org/ns/shex#";
 const RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
@@ -69,7 +70,7 @@ function read (reader, turtleText, base = DEFAULT_BASE) {
   // the way ShExUtil.valuesToSchema does; ShExRtoShExJ folds the repeats
   // back into references and drops the ids nothing refers to.
   return ShExUtil.ShExJtoAS(
-    ShExUtil.ShExRtoShExJ(Reduce.reduce(res, {prefixes: {sx: SX, rdf: RDF}})));
+    ShExUtil.ShExRtoShExJ(Reduce.reduce(res, {evaluate, prefixes: {sx: SX, rdf: RDF}})));
 }
 
 module.exports = {makeReader, read, SX, RDF, DEFAULT_BASE};

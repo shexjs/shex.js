@@ -74,6 +74,43 @@ describe("semact overlay", function () {
       expect(actsOf(tc)).to.deep.equal([EXT + " p2!"]);
     });
 
+    /* Positional selection, which needs shape-path-core >= 0.0.6: until then
+     * `[N]` ignored N and kept every node whose position was truthy, so [0]
+     * and [1] both selected the last constraint. */
+    it("should hang one on the element at a position", function () {
+      const at = n => applyOverlay(parse(), overlayOf(`
+        <#o> a sa:Overlay ; sa:extension <${EXT}> ;
+          sa:action [ sa:path "@<http://a.example/S1>/expression/expressions/*[${n}]" ;
+                      sa:code "at ${n}" ] .`))
+            .shapes.find(s => s.id === B + "S1").shapeExpr.expression.expressions;
+      expect(at(0).map(tc => [tc.predicate, actsOf(tc)]))
+        .to.deep.equal([[B + "p1", [EXT + " at 0"]], [B + "p2", []]]);
+      expect(at(1).map(tc => [tc.predicate, actsOf(tc)]))
+        .to.deep.equal([[B + "p1", []], [B + "p2", [EXT + " at 1"]]]);
+    });
+
+    it("should say so when the position is past the end", function () {
+      expect(() => applyOverlay(parse(), overlayOf(`
+        <#o> a sa:Overlay ; sa:extension <${EXT}> ;
+          sa:action [ sa:path "@<http://a.example/S1>/expression/expressions/*[9]" ;
+                      sa:code "x" ] .`))).to.throw(/selected nothing/);
+    });
+
+    /* A labelled triple expression: `sa:ref` finds it through the schema
+     * index, and since shape-path-core 0.0.7 a path can name it too.  The
+     * two reach the same element by the two names it has. */
+    it("should hang one on a triple expression named by a ShapePath", function () {
+      const byPath = applyOverlay(parse(), overlayOf(`
+        <#o> a sa:Overlay ; sa:extension <${EXT}> ;
+          sa:action [ sa:path "$<http://a.example/S1-p1>" ; sa:code "p1!" ] .`));
+      const byRef = applyOverlay(parse(), overlayOf(`
+        <#o> a sa:Overlay ; sa:extension <${EXT}> ;
+          sa:action [ sa:ref :S1-p1 ; sa:code "p1!" ] .`));
+      const tcOf = s => s.shapes.find(x => x.id === B + "S1").shapeExpr.expression.expressions[0];
+      expect(actsOf(tcOf(byPath))).to.deep.equal([EXT + " p1!"]);
+      expect(tcOf(byPath), "the same element sa:ref reaches").to.deep.equal(tcOf(byRef));
+    });
+
     it("should put a start action on the schema", function () {
       const schema = applyOverlay(parse(), overlayOf(`
         <#o> a sa:Overlay ; sa:extension <${EXT}> ;

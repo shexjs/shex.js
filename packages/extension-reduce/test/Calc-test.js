@@ -18,6 +18,8 @@ const {ctor: RdfJsDb} = require("@shexjs/neighborhood-rdfjs");
 const {ShExValidator} = require("@shexjs/validator");
 const {applyOverlay} = require("@shexjs/semact-overlay");
 const Reduce = require("..");
+const jsActions = require("@shexjs/extension-reduce-js");   // runs the actions
+// ...not to be confused with `evaluate` below, which runs the AST they build
 
 const HERE = Path.join(__dirname, "..", "examples", "calc");
 const read = f => Fs.readFileSync(Path.join(HERE, f), "utf8");
@@ -42,7 +44,7 @@ function compile (dataFile, node) {
   Reduce.register(validator);
   const res = validator.validateShapeMap([{node, shape: CALC + "Expr"}]);
   expect(res[0].status, JSON.stringify(res[0].appinfo)).to.equal("conformant");
-  return Reduce.reduce(res, {prefixes: PREFIXES})[0];
+  return Reduce.reduce(res, {evaluate: jsActions, prefixes: PREFIXES})[0];
 }
 
 /** an evaluator for the AST -- deliberately knowing nothing about RDF */
