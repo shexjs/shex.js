@@ -1267,15 +1267,16 @@ class ShExValidator {
             const sub = yield* this.resumeShapeExpr(focus, extend, ctx);
             // Name the result <focus node><ShExPath>: the part after the focus is a ShExPath
             // (shape-path-core) expression addressing the extension — a labeled extension by
-            // its shape-declaration selector "@<label>", an inline shapeExpr by a child step
-            // in the extending shape, "@<label>/extends[i]". (The "extends" step parallels the
-            // grammar's "shapeExprs[i]" and is proposed for shape-path-core, which predates
-            // EXTENDS.) Only when the same name recurs (same node and extension against a
-            // different subgraph) is "#2", "#3", … appended.
+            // its shape-declaration selector "@<label>", an inline shapeExpr by a step into
+            // the extending shape's EXTENDS list, "@<label>/extends/*[i]". (A ShExPath array
+            // is an item of its own and "[i]" filters the node set the item is in, so
+            // "extends" is the list, "/*" steps into it and "[i]" picks one out; "extends[i]"
+            // would be the list again.) Only when the same name recurs (same node and
+            // extension against a different subgraph) is "#2", "#3", … appended.
             const asShapePath = (label) => label.startsWith("_:") ? "@" + label : "@<" + label + ">";
             const shapePath = typeof extend === "string"
                 ? asShapePath(extend)
-                : `${typeof ctx.label === "string" ? asShapePath(ctx.label) : "@START"}/extends[${eNo}]`;
+                : `${typeof ctx.label === "string" ? asShapePath(ctx.label) : "@START"}/extends/*[${eNo}]`;
             const base = `${ShExTerm.rdfJsTerm2Turtle(focus)}${shapePath}`;
             const collisions = [...extendsResultCache.values()].filter(v => v.name === base || v.name.startsWith(base + "#")).length;
             const name = collisions === 0 ? base : `${base}#${collisions + 1}`;

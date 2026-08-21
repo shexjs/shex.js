@@ -285,9 +285,9 @@ extension: a labeled extension by its shape-declaration selector,
 ```
 <http://a.example/s>@<http://a.example/#B>
 ```
-an inline extension by a child step in the extending shape
-(`…@<label>/extends[0]` — the `extends` step parallels the grammar's
-`shapeExprs[i]` and is proposed for shape-path-core, which predates EXTENDS).
+an inline extension by a step into the extending shape's EXTENDS list
+(`…@<label>/extends/*[0]` — `extends` selects the list, which is an item of its
+own in ShExPath, `/*` steps into it and `[0]` picks the first out).
 Only when the same node and extension are validated against a *different*
 subgraph is a disambiguating `#2`, `#3`, … appended.
 

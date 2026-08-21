@@ -98,7 +98,7 @@ BASE <http://shex.io/examples/shexr-actions>
   # `&<#xsFacets>` -- so their actions hang off that production, and the
   # values turn up in the NodeConstraint's arcs all the same.
   [ sa:path "$sx:stringFacet/thisTripleExpr::TripleConstraint[predicate = sx:length]" ;
-    sa:code "$ = {length: num($1)}" ] ,
+    sa:code "$ = {length: num($1)}; console.log('HERE', arguments); debugger" ] ,
   [ sa:path "$sx:stringFacet/thisTripleExpr::TripleConstraint[predicate = sx:minlength]" ;
     sa:code "$ = {minlength: num($1)}" ] ,
   [ sa:path "$sx:stringFacet/thisTripleExpr::TripleConstraint[predicate = sx:maxlength]" ;
