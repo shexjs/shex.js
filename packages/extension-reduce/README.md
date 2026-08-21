@@ -102,14 +102,23 @@ knows what C is; this doesn't know what your actions are written in, so:
 ```js
 const Reduce = require('@shexjs/extension-reduce');
 const evaluate = require('@shexjs/extension-reduce-js');       // or your own
+const {indexOverlay} = require('@shexjs/semact-overlay');
 
-const validator = new ShExValidator(schema, db, {});
+const validator = new ShExValidator(schema, db,
+                                    {semActIndex: indexOverlay(schema, actions)});
 Reduce.register(validator);
 const res = validator.validateShapeMap(shapeMap);
 const ast = Reduce.reduce(res, {evaluate, prefixes: {'': 'http://a.example/calc#'}});
 ```
 
 `reduce` returns one value per node/shape pair in the map.
+
+The overlay is where the actions come from, and it has two modes: `indexOverlay`
+keys them by element and hands the validator the Map, as above, leaving the
+schema untouched; `applyOverlay(schema, actions)` writes them into the schema
+instead, and then the validator needs nothing. Either way `register` is what
+makes the actions run: an action nobody registered a handler for is never
+dispatched.
 
 ## This module has no action language
 

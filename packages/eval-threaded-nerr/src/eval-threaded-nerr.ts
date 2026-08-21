@@ -137,6 +137,18 @@ interface TripleTestedErrors {
   semActErrors: any;
 }
 
+/**
+ * The actions on a schema element: its own, plus any an overlay indexed
+ * against it rather than writing into it.  The dispatcher answers, since it
+ * is the one holding the index; a dispatcher that predates the question
+ * keeps its elements' own.
+ */
+function semActsOn (semActHandler: SemActDispatcher, node: any): ShExJ.SemAct[] | undefined {
+  return semActHandler.semActsFor === undefined
+    ? node.semActs
+    : semActHandler.semActsFor(node);
+}
+
 class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
   public outerExpression: ShExJ.tripleExprOrRef;
   protected node: RdfJsTerm | null = null; // the focus node while match() runs
@@ -144,6 +156,8 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
   protected greedy: Set<ShExJ.TripleConstraint>;
   /** Semantic actions anywhere in this shape, by name: see mayMerge. */
   protected semActNames: Set<string>;
+  /** ...and the elements they could be on, for actions an overlay indexed. */
+  protected semActNodes: Set<object>;
   /** Set per match(): whether the frontier may be deduplicated. */
   protected mayMerge = true;
   constructor(
@@ -154,6 +168,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
     this.outerExpression = shape.expression!;
     this.greedy = this.takesAllItCan(this.outerExpression);
     this.semActNames = new Set();
+    this.semActNodes = new Set([this.shape as object]);
     (this.shape.semActs || []).forEach(sa => this.semActNames.add(sa.name));
     this.collectSemActs(this.outerExpression, new Set());
   }
@@ -184,6 +199,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
         this.collectSemActs(included, seen);
       return;
     }
+    this.semActNodes.add(exprOrRef as object);
     (exprOrRef.semActs || []).forEach(sa => this.semActNames.add(sa.name));
     switch (exprOrRef.type) {
     case "EachOf":
@@ -195,14 +211,30 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
 
   /** May the frontier be deduplicated, given who is listening? */
   merging (semActHandler: SemActDispatcher): boolean {
-    if (this.semActNames.size === 0)
+    const names = this.watching(semActHandler);
+    if (names.size === 0)
       return true;
     if (semActHandler.isRegistered === undefined)
       return false;                         // can\'t ask: assume it is live
-    for (const name of this.semActNames)
+    for (const name of names)
       if (semActHandler.isRegistered(name))
         return false;
     return true;                            // written, but nobody is handling them
+  }
+
+  /**
+   * The actions on this shape, by name -- the ones the constructor found
+   * written into it, and the ones this dispatcher has indexed against its
+   * elements.  An overlay that indexes rather than amends is asked here
+   * because the dispatcher isn't known until match() is called.
+   */
+  protected watching (semActHandler: SemActDispatcher): Set<string> {
+    if (semActHandler.semActsFor === undefined)
+      return this.semActNames;
+    const names = new Set(this.semActNames);
+    this.semActNodes.forEach(node =>
+      (semActHandler.semActsFor!(node) || []).forEach(sa => names.add(sa.name)));
+    return names;
   }
 
   /**
@@ -450,9 +482,10 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
         const hit = constraintToTripleMapping.get(constraint)!.find(x => x.triple === triple)!;
         if (hit.res !== undefined)
           tested.referenced = hit.res;
+        const constraintSemActs = semActsOn(semActHandler, constraint);
         const semActErrors = thread.errors.concat(
-            constraint.semActs !== undefined
-                ? semActHandler.dispatchAll(constraint.semActs, {triples: [triple], tripleExpr: constraint}, tested)
+            constraintSemActs !== undefined && constraintSemActs.length > 0
+                ? semActHandler.dispatchAll(constraintSemActs, {triples: [triple], tripleExpr: constraint}, tested)
                 : []
         )
         if (semActErrors.length > 0)
@@ -570,7 +603,9 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
         return repeated < min ? stumbled : newThreads;
       newThreads = mayMerge ? EvalThreadedNErrRegexEngine.mergeEquivalent(inner) : inner;
     }
-    if (newThreads.length > 0 && newThreads[0].errors.length === 0 && groupTE.semActs !== undefined) {
+    const groupSemActs = semActsOn(semActHandler, groupTE);
+    if (newThreads.length > 0 && newThreads[0].errors.length === 0
+        && groupSemActs !== undefined && groupSemActs.length > 0) {
       const passes: RegexpThread[] = [];
       const failures: RegexpThread[] = [];
       for (const newThread of newThreads) {
@@ -580,7 +615,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
           triples: ([] as RdfJsQuad[]).concat(...newThread.matched.map(m => m.triples)),
           tripleExpr: groupTE,
         }
-        const semActErrors = semActHandler.dispatchAll(groupTE.semActs, ctx, newThread)
+        const semActErrors = semActHandler.dispatchAll(groupSemActs, ctx, newThread)
         if (semActErrors.length === 0) {
           passes.push(newThread)
         } else {

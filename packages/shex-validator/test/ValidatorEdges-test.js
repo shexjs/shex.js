@@ -174,6 +174,70 @@ describe("validator edges", function () {
       expect(res).to.have.property("errors");
       expect(JSON.stringify(res.errors)).to.include("nope");
     });
+
+    /* An overlay may hang actions on a schema without writing them into it
+     * (@shexjs/semact-overlay's indexOverlay), which only works if the
+     * validator asks what applies to an element rather than reading its
+     * .semActs.  These say it asks, at each place it dispatches. */
+    describe("indexed rather than written into the schema", function () {
+      const parse = shexc =>
+        ShExParser.construct(BASE, null, {index: true}).parse(shexc, BASE, undefined, "edges");
+      const act = code => [{type: "SemAct", name: TestExt, code}];
+
+      /** validate with `index` in hand, collecting what the handler saw */
+      const dispatched = (schema, index, turtle = ONE_TRIPLE) => {
+        const saw = [];
+        const validator = new ShExValidator(schema, dbOf(turtle), {semActIndex: index});
+        validator.semActHandler.register(
+          TestExt, {dispatch: code => { saw.push(code.trim()); return []; }});
+        const res = validator.validateNodeShapePair(node(s1), S1);
+        expect(res, JSON.stringify(res.errors)).to.not.have.property("errors");
+        return saw;
+      };
+
+      it("should dispatch one indexed against a shape", function () {
+        const schema = parse(`<${S1}> { <${p1}> . }`);
+        const shape = schema._index.shapeExprs[S1].shapeExpr;
+        expect(dispatched(schema, new Map([[shape, act("on the shape")]])))
+          .to.deep.equal(["on the shape"]);
+      });
+
+      it("should dispatch one indexed against a triple constraint", function () {
+        const schema = parse(`<${S1}> { <${p1}> . }`);
+        const tc = schema._index.shapeExprs[S1].shapeExpr.expression;
+        expect(dispatched(schema, new Map([[tc, act("on the constraint")]])))
+          .to.deep.equal(["on the constraint"]);
+      });
+
+      it("should dispatch one indexed against a group", function () {
+        const schema = parse(`<${S1}> { <${p1}> . ; <${BASE}p2> . }`);
+        const eachOf = schema._index.shapeExprs[S1].shapeExpr.expression;
+        expect(eachOf.type).to.equal("EachOf");
+        expect(dispatched(schema, new Map([[eachOf, act("on the group")]]),
+                          `<s1> <p1> <o1> ; <p2> <o1> .`))
+          .to.deep.equal(["on the group"]);
+      });
+
+      it("should dispatch one indexed against the schema as a start action", function () {
+        const schema = parse(`<${S1}> { <${p1}> . }`);
+        expect(dispatched(schema, new Map([[schema, act("at the start")]])))
+          .to.deep.equal(["at the start"]);
+      });
+
+      /* Indexed actions are dispatched as well as, not instead of, the
+       * ones the schema carries. */
+      it("should dispatch both the element's own and the indexed ones", function () {
+        const schema = parse(`<${S1}> { <${p1}> . %<${TestExt}>{ written %} }`);
+        const tc = schema._index.shapeExprs[S1].shapeExpr.expression;
+        expect(dispatched(schema, new Map([[tc, act("indexed")]])))
+          .to.deep.equal(["written", "indexed"]);
+      });
+
+      it("should leave a schema with no index dispatching what it carries", function () {
+        const schema = parse(`<${S1}> { <${p1}> . %<${TestExt}>{ written %} }`);
+        expect(dispatched(schema, undefined)).to.deep.equal(["written"]);
+      });
+    });
   });
 
   /* A satisfied NOT is reported with the failure that made it satisfied, and

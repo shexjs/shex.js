@@ -47,6 +47,17 @@ exports.RegexpModule = {
         return new EvalThreadedNErrRegexEngine(shape, index, debugHooks); // not called if there's no expression
     }
 };
+/**
+ * The actions on a schema element: its own, plus any an overlay indexed
+ * against it rather than writing into it.  The dispatcher answers, since it
+ * is the one holding the index; a dispatcher that predates the question
+ * keeps its elements' own.
+ */
+function semActsOn(semActHandler, node) {
+    return semActHandler.semActsFor === undefined
+        ? node.semActs
+        : semActHandler.semActsFor(node);
+}
 class EvalThreadedNErrRegexEngine {
     constructor(shape, index, debugHooks) {
         this.shape = shape;
@@ -58,6 +69,7 @@ class EvalThreadedNErrRegexEngine {
         this.outerExpression = shape.expression;
         this.greedy = this.takesAllItCan(this.outerExpression);
         this.semActNames = new Set();
+        this.semActNodes = new Set([this.shape]);
         (this.shape.semActs || []).forEach(sa => this.semActNames.add(sa.name));
         this.collectSemActs(this.outerExpression, new Set());
     }
@@ -87,6 +99,7 @@ class EvalThreadedNErrRegexEngine {
                 this.collectSemActs(included, seen);
             return;
         }
+        this.semActNodes.add(exprOrRef);
         (exprOrRef.semActs || []).forEach(sa => this.semActNames.add(sa.name));
         switch (exprOrRef.type) {
             case "EachOf":
@@ -97,14 +110,28 @@ class EvalThreadedNErrRegexEngine {
     }
     /** May the frontier be deduplicated, given who is listening? */
     merging(semActHandler) {
-        if (this.semActNames.size === 0)
+        const names = this.watching(semActHandler);
+        if (names.size === 0)
             return true;
         if (semActHandler.isRegistered === undefined)
             return false; // can\'t ask: assume it is live
-        for (const name of this.semActNames)
+        for (const name of names)
             if (semActHandler.isRegistered(name))
                 return false;
         return true; // written, but nobody is handling them
+    }
+    /**
+     * The actions on this shape, by name -- the ones the constructor found
+     * written into it, and the ones this dispatcher has indexed against its
+     * elements.  An overlay that indexes rather than amends is asked here
+     * because the dispatcher isn't known until match() is called.
+     */
+    watching(semActHandler) {
+        if (semActHandler.semActsFor === undefined)
+            return this.semActNames;
+        const names = new Set(this.semActNames);
+        this.semActNodes.forEach(node => (semActHandler.semActsFor(node) || []).forEach(sa => names.add(sa.name)));
+        return names;
     }
     /**
      * Which constraints can take every triple assigned to them at once.
@@ -321,8 +348,9 @@ class EvalThreadedNErrRegexEngine {
                 const hit = constraintToTripleMapping.get(constraint).find(x => x.triple === triple);
                 if (hit.res !== undefined)
                     tested.referenced = hit.res;
-                const semActErrors = thread.errors.concat(constraint.semActs !== undefined
-                    ? semActHandler.dispatchAll(constraint.semActs, { triples: [triple], tripleExpr: constraint }, tested)
+                const constraintSemActs = semActsOn(semActHandler, constraint);
+                const semActErrors = thread.errors.concat(constraintSemActs !== undefined && constraintSemActs.length > 0
+                    ? semActHandler.dispatchAll(constraintSemActs, { triples: [triple], tripleExpr: constraint }, tested)
                     : []);
                 if (semActErrors.length > 0)
                     acc.fail.push({ triple, tested, semActErrors });
@@ -433,7 +461,9 @@ class EvalThreadedNErrRegexEngine {
                 return repeated < min ? stumbled : newThreads;
             newThreads = mayMerge ? EvalThreadedNErrRegexEngine.mergeEquivalent(inner) : inner;
         }
-        if (newThreads.length > 0 && newThreads[0].errors.length === 0 && groupTE.semActs !== undefined) {
+        const groupSemActs = semActsOn(semActHandler, groupTE);
+        if (newThreads.length > 0 && newThreads[0].errors.length === 0
+            && groupSemActs !== undefined && groupSemActs.length > 0) {
             const passes = [];
             const failures = [];
             for (const newThread of newThreads) {
@@ -443,7 +473,7 @@ class EvalThreadedNErrRegexEngine {
                     triples: [].concat(...newThread.matched.map(m => m.triples)),
                     tripleExpr: groupTE,
                 };
-                const semActErrors = semActHandler.dispatchAll(groupTE.semActs, ctx, newThread);
+                const semActErrors = semActHandler.dispatchAll(groupSemActs, ctx, newThread);
                 if (semActErrors.length === 0) {
                     passes.push(newThread);
                 }

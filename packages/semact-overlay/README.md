@@ -22,7 +22,7 @@ PREFIX sa: <http://shex.io/ns/semact#>
 
 ```js
 const {applyOverlay} = require('@shexjs/semact-overlay');
-const withActions = applyOverlay(schema, overlayStore);   // schema is not modified
+applyOverlay(schema, overlayStore);          // the actions are now in the schema
 ```
 
 The idea, the vocabulary shape and the two ways of naming an element come from
@@ -65,10 +65,42 @@ RDF has no document order, so two actions on the same element are ordered by
 `sa:order` and then by their code, which is arbitrary but the same every run.
 Say `sa:order` when it matters.
 
+## Two modes
+
+Where the actions end up is the caller's choice, and it is the only difference
+between the two:
+
+```js
+applyOverlay(schema, overlay);                // writes them into the schema
+const index = indexOverlay(schema, overlay);  // keys them by element instead
+```
+
+`applyOverlay` costs the schema its innocence: an element the overlay names
+comes away carrying `semActs`, and everything else holding that schema sees
+them. It returns the schema, so a caller may read it either way.
+
+`indexOverlay` leaves the schema exactly as it found it and answers with a
+`Map` from element to actions. The keys are that schema's own objects, so the
+Map means nothing without it — hand both to the validator:
+
+```js
+const validator = new ShExValidator(schema, db, {semActIndex: index});
+```
+
+The validator asks the dispatcher what applies to an element rather than
+reading its `semActs`, so indexed actions are dispatched exactly where written
+ones would be — *and* alongside them, since a schema may carry its own. Which
+mode to use is a question about the schema, not about the actions: index it
+when the schema is shared, on disk, or read again by something else; write on
+it when the overlaid schema is the thing you are going to use.
+
+`replace` has nothing to do in index mode: it is for keeping a second run from
+stacking actions onto the schema, and a run of `indexOverlay` builds a new Map.
+
 ## Options
 
 ```js
-applyOverlay(schema, overlay, {
+applyOverlay(schema, overlay, {  // indexOverlay takes the same options
   base: 'http://a.example/',   // for resolving ShapePaths
   prefixes: {ex: '...'},       // for resolving ShapePaths
   replace: true,               // take over an element's actions instead of adding to them
