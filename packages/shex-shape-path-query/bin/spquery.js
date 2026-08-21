@@ -4,8 +4,9 @@
 //   spquery.js '@<http://project.example/schema#DiscItem>~<http://project.example/ns#href>' Issue.json \
 //     -d Issue2.ttl -m '<http://instance.example/project1/Issue2>@<http://project.example/schema#Issue>'
 // Steps include ShExJ attribute names; the `extends` step addresses a shape's
-// EXTENDS list, e.g. the first extended shape expression of <#EmployeeShape>:
-//   spquery.js '@<http://project.example/schema#EmployeeShape>/extends[0]' Employee.json ...
+// EXTENDS list, and `/*` steps into it, e.g. the first extended shape expression
+// of <#EmployeeShape>:
+//   spquery.js '@<http://project.example/schema#EmployeeShape>/extends/*[0]' Employee.json ...
 const Fs = require('fs');
 const Path = require('path');
 
