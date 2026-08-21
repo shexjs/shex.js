@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Vocab = exports.NS = void 0;
 exports.applyOverlay = applyOverlay;
+exports.indexOverlay = indexOverlay;
 exports.evalShapePath = evalShapePath;
 exports.extractOverlay = extractOverlay;
 exports.overlayTurtle = overlayTurtle;
@@ -47,40 +48,82 @@ const CAN_HOLD_SEMACTS = [
     'Shape', 'NodeConstraint', 'TripleConstraint', 'EachOf', 'OneOf',
 ];
 /**
- * A copy of `schema` with the overlay's actions attached.
+ * `schema`, with the overlay's actions written into it -- and returned, so
+ * a caller may read it either way.
  *
- * The schema is copied, not written on: an overlay is a reading of a schema,
- * and the next reading should get the same schema to work from.
+ * This is the mode that costs the schema its innocence: an element that the
+ * overlay names comes away carrying `semActs`, and anything else holding
+ * that schema sees them.  Where that isn't wanted -- a schema several
+ * readings share, or one on disk that should stay what it says --
+ * `indexOverlay` says the same thing beside the schema rather than in it.
  */
 function applyOverlay(schema, overlay, options = {}) {
-    const copy = JSON.parse(JSON.stringify(schema));
-    delete copy._index; // stale: it points into the original
-    const index = visitor_1.ShExIndexVisitor.index(copy);
-    const bindings = readOverlay(overlay, options)
-        .map(spec => resolve(spec, copy, index, options));
-    // Same element, more than one action: order by sa:order, then by the code
-    // itself, so a document that doesn't say gets the same answer every run.
-    bindings.sort((l, r) => l.order - r.order || cmp(l.semAct.code, r.semAct.code));
     const started = new Set();
-    for (const b of bindings) {
-        if (b.target === copy) { // sa:start -- the schema's own startActs
-            if (options.replace && !started.has(copy)) {
-                copy.startActs = [];
-                started.add(copy);
+    for (const b of bind(schema, overlay, options)) {
+        if (b.target === schema) { // sa:start -- the schema's own startActs
+            if (options.replace && !started.has(schema)) {
+                schema.startActs = [];
+                started.add(schema);
             }
-            copy.startActs = (copy.startActs || []).concat([b.semAct]);
+            schema.startActs = (schema.startActs || []).concat([b.semAct]);
             continue;
         }
-        if (CAN_HOLD_SEMACTS.indexOf(b.target.type) === -1)
-            throw Error(`${b.named} is a ${b.target.type}; ShExJ has semActs on `
-                + CAN_HOLD_SEMACTS.join(', '));
+        canHold(b);
         if (options.replace && !started.has(b.target)) {
             b.target.semActs = [];
             started.add(b.target);
         }
         b.target.semActs = (b.target.semActs || []).concat([b.semAct]);
     }
-    return copy;
+    return schema;
+}
+/**
+ * What the overlay says, keyed by the element it says it about, with the
+ * schema left exactly as it was.
+ *
+ * The keys are the schema's own objects, so the Map means nothing without
+ * it: hand both to the validator, which asks the Map about an element as
+ * well as reading the element's own actions
+ * (`new ShExValidator(schema, db, {semActIndex: index})`).
+ *
+ * `replace` has nothing to do here.  It is for keeping a second run of an
+ * overlay from stacking actions onto the schema, and a run of this one
+ * builds a new Map rather than adding to anything.
+ */
+function indexOverlay(schema, overlay, options = {}) {
+    const index = new Map();
+    for (const b of bind(schema, overlay, options)) {
+        if (b.target !== schema)
+            canHold(b);
+        const already = index.get(b.target);
+        if (already === undefined)
+            index.set(b.target, [b.semAct]);
+        else
+            already.push(b.semAct);
+    }
+    return index;
+}
+/**
+ * The overlay's actions, each resolved to the element it lands on.
+ *
+ * Same element, more than one action: order by sa:order, then by the code
+ * itself, so a document that doesn't say gets the same answer every run.
+ */
+function bind(schema, overlay, options) {
+    const index = visitor_1.ShExIndexVisitor.index(schema);
+    const bindings = readOverlay(overlay, options)
+        .map(spec => resolve(spec, schema, index, options));
+    bindings.sort((l, r) => l.order - r.order || cmp(l.semAct.code, r.semAct.code));
+    return bindings;
+}
+/**
+ * ShExJ has semActs on five productions, and those are the five a validator
+ * dispatches at, so an action anywhere else would never run either way.
+ */
+function canHold(b) {
+    if (CAN_HOLD_SEMACTS.indexOf(b.target.type) === -1)
+        throw Error(`${b.named} is a ${b.target.type}; ShExJ has semActs on `
+            + CAN_HOLD_SEMACTS.join(', '));
 }
 function readOverlay(overlay, options) {
     const overlays = overlay.getQuads(null, RDF_type, exports.Vocab.Overlay)

@@ -250,24 +250,42 @@ class RegExpThread {
  * dispatched (SemActDispatcher.dispatchAll skips it) and so cannot observe
  * anything.  Which handlers are registered isn't known until match().
  */
-function semActNamesIn(exprOrRef, index, seen, into) {
+function semActNamesIn(exprOrRef, index, seen, into, nodes) {
     if (typeof exprOrRef === "string") {
         if (seen.has(exprOrRef))
             return into; // an Inclusion cycle
         seen.add(exprOrRef);
         const included = index.tripleExprs[exprOrRef];
-        return included === undefined ? into : semActNamesIn(included, index, seen, into);
+        return included === undefined ? into : semActNamesIn(included, index, seen, into, nodes);
     }
+    nodes.add(exprOrRef);
     (exprOrRef.semActs || []).forEach(sa => into.add(sa.name));
     switch (exprOrRef.type) {
         case "EachOf":
         case "OneOf":
-            exprOrRef.expressions.forEach(nested => semActNamesIn(nested, index, seen, into));
+            exprOrRef.expressions.forEach(nested => semActNamesIn(nested, index, seen, into, nodes));
     }
     return into;
 }
+/**
+ * The actions on a schema element: its own, plus any an overlay indexed
+ * against it rather than writing into it.  The dispatcher answers, since it
+ * is the one holding the index; a dispatcher that predates the question
+ * keeps its elements' own.
+ */
+function semActsOn(semActHandler, node) {
+    return semActHandler.semActsFor === undefined
+        ? node.semActs
+        : semActHandler.semActsFor(node);
+}
 /** May the frontier be deduplicated, given who is listening? */
-function merging(names, semActHandler) {
+function merging(names, nodes, semActHandler) {
+    if (semActHandler.semActsFor !== undefined) {
+        // an overlay may have indexed actions against these elements rather
+        // than writing them in, and the dispatcher is the one who knows
+        names = new Set(names);
+        nodes.forEach(node => (semActHandler.semActsFor(node) || []).forEach(sa => names.add(sa.name)));
+    }
     if (names.size === 0)
         return true;
     if (semActHandler.isRegistered === undefined)
@@ -282,8 +300,9 @@ class EvalSimple1ErrRegexEngine {
         this._live = null;
         this.shape = shape;
         this.semActNames = new Set((shape.semActs || []).map(sa => sa.name));
+        this.semActNodes = new Set([shape]);
         if (shape.expression !== undefined)
-            semActNamesIn(shape.expression, index, new Set(), this.semActNames);
+            semActNamesIn(shape.expression, index, new Set(), this.semActNames, this.semActNodes);
         this.end = matchstate;
         this.states = states;
         this.start = startNo;
@@ -310,7 +329,7 @@ class EvalSimple1ErrRegexEngine {
      */
     *runMatch(node, constraintToTripleMapping, semActHandler, trace) {
         const thisEvalSimple1ErrRegexEngine = this;
-        const mayMerge = merging(this.semActNames, semActHandler);
+        const mayMerge = merging(this.semActNames, this.semActNodes, semActHandler);
         let clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
         let generation = 0;
         this._live = () => ({ clist, nlist }); // closes over the swapped lists
@@ -625,13 +644,14 @@ class EvalSimple1ErrRegexEngine {
                     xOfSolns = t;
                     last[mis].i = null;
                     // !!! on the way out to call after valueExpr test
-                    if ("semActs" in m.stack[mis].c) {
+                    const groupSemActs = semActsOn(semActHandler, m.stack[mis].c);
+                    if (groupSemActs !== undefined && groupSemActs.length > 0) {
                         const ctx = {
                             triples: constraintToTripleMapping.get(m.c)
                                 .map(m => m.triple),
                             tripleExpr: m.c
                         };
-                        const errors = semActHandler.dispatchAll(m.stack[mis].c.semActs, ctx, ptr);
+                        const errors = semActHandler.dispatchAll(groupSemActs, ctx, ptr);
                         if (errors.length)
                             throw errors;
                     }
@@ -688,8 +708,9 @@ class EvalSimple1ErrRegexEngine {
                 const hit = constraintToTripleMapping.get(m.c).find(x => x.triple === triple);
                 if (hit.res && Object.keys(hit.res).length > 0)
                     ret.referenced = hit.res;
-                if (errors.length === 0 && "semActs" in m.c) {
-                    Array.prototype.push.apply(errors, semActHandler.dispatchAll(m.c.semActs, { triples: [triple], tripleExpr: m.c }, ret));
+                const constraintSemActs = semActsOn(semActHandler, m.c);
+                if (errors.length === 0 && constraintSemActs !== undefined && constraintSemActs.length > 0) {
+                    Array.prototype.push.apply(errors, semActHandler.dispatchAll(constraintSemActs, { triples: [triple], tripleExpr: m.c }, ret));
                 }
                 return acc.concat(ret);
             }, []);

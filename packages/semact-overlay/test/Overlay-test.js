@@ -1,16 +1,18 @@
 /** Actions arriving from outside the schema.
  *
- * The point of an overlay is that the schema is unchanged by it -- the same
- * shapes can be read by a tool that knows nothing about the actions -- so
- * most of what there is to check is that the actions land where the document
- * said and that the schema they landed on is a copy.
+ * The point of an overlay is that the actions are written somewhere the
+ * schema's other readers don't have to step over, so most of what there is
+ * to check is that each action lands on the element the document named.
+ * Where it lands is the caller's choice of two: applyOverlay writes it into
+ * the schema, indexOverlay keys it by the element and leaves the schema as
+ * it found it.
  */
 "use strict";
 
 const {expect} = require("chai");
 const N3 = require("n3");
 const ShExParser = require("@shexjs/parser");
-const {applyOverlay, evalShapePath, NS} = require("..");
+const {applyOverlay, indexOverlay, evalShapePath, NS} = require("..");
 
 const B = "http://a.example/";
 const EXT = "http://shex.io/extensions/Reduce/";
@@ -119,17 +121,79 @@ describe("semact overlay", function () {
     });
   });
 
-  /* The schema an overlay reads is shared with tools that know nothing about
-   * the actions, so writing on it is the one thing an overlay must not do. */
-  it("should leave the schema it read alone", function () {
-    const original = parse();
-    const before = JSON.stringify(original);
-    const schema = applyOverlay(original, overlayOf(`
-      <#o> a sa:Overlay ; sa:extension <${EXT}> ;
-        sa:action [ sa:ref :S1 ; sa:code "S1!" ] .`));
-    expect(JSON.stringify(original), "unchanged").to.equal(before);
-    expect(schema).to.not.equal(original);
-    expect(actsOf(schema.shapes.find(s => s.id === B + "S1").shapeExpr).length).to.equal(1);
+  /* Two ways to say the same thing, and the difference is what happens to
+   * the schema: one writes the actions into it, the other keys them by the
+   * element and hands the caller the Map. */
+  describe("the two modes", function () {
+
+    const ONE = `<#o> a sa:Overlay ; sa:extension <${EXT}> ;
+      sa:action [ sa:ref :S1 ; sa:code "S1!" ] .`;
+    const shapeOf = schema => schema.shapes.find(s => s.id === B + "S1").shapeExpr;
+    const S1_ACT = {type: "SemAct", name: EXT, code: "S1!"};
+
+    it("should write on the schema it was handed", function () {
+      const schema = parse();
+      expect(applyOverlay(schema, overlayOf(ONE)), "the schema itself, not a copy")
+        .to.equal(schema);
+      expect(actsOf(shapeOf(schema))).to.deep.equal([EXT + " S1!"]);
+    });
+
+    it("should leave it alone when it indexes instead", function () {
+      const schema = parse();
+      const before = JSON.stringify(schema);
+      const index = indexOverlay(schema, overlayOf(ONE));
+      expect(JSON.stringify(schema), "unchanged").to.equal(before);
+      expect(index.size).to.equal(1);
+    });
+
+    /* The Map means nothing without the schema it was built from: what it
+     * is keyed by is that schema's own objects. */
+    it("should key the index by the element the action lands on", function () {
+      const schema = parse();
+      const index = indexOverlay(schema, overlayOf(ONE));
+      expect(index.get(shapeOf(schema))).to.deep.equal([S1_ACT]);
+      expect(index.get(shapeOf(parse())), "not another parse of the same text")
+        .to.equal(undefined);
+    });
+
+    it("should index a start action against the schema itself", function () {
+      const schema = parse();
+      const index = indexOverlay(schema, overlayOf(`
+        <#o> a sa:Overlay ; sa:extension <${EXT}> ;
+          sa:action [ sa:start true ; sa:code "go!" ] .`));
+      expect(index.get(schema)).to.deep.equal([{type: "SemAct", name: EXT, code: "go!"}]);
+      expect(schema, "and not on the schema").to.not.have.property("startActs");
+    });
+
+    it("should reach the same elements either way", function () {
+      const overlay = `<#o> a sa:Overlay ; sa:extension <${EXT}> ;
+        sa:action [ sa:ref :S1 ; sa:code "S1!" ] ,
+                  [ sa:path "@<http://a.example/S1>~<http://a.example/p2>" ; sa:code "p2!" ] .`;
+      const written = applyOverlay(parse(), overlayOf(overlay));
+      const schema = parse();
+      const index = indexOverlay(schema, overlayOf(overlay));
+      const eltsOf = s => [shapeOf(s), shapeOf(s).expression.expressions[1]];
+      expect(eltsOf(written).map(actsOf))
+        .to.deep.equal([[EXT + " S1!"], [EXT + " p2!"]]);
+      expect(eltsOf(schema).map(e => (index.get(e) || []).map(a => a.name + " " + a.code)))
+        .to.deep.equal([[EXT + " S1!"], [EXT + " p2!"]]);
+    });
+
+    it("should keep sa:order in the index too", function () {
+      const schema = parse();
+      const index = indexOverlay(schema, overlayOf(`
+        <#o> a sa:Overlay ; sa:extension <${EXT}> ;
+          sa:action [ sa:ref :S1 ; sa:code "second" ; sa:order 2 ] ,
+                    [ sa:ref :S1 ; sa:code "first"  ; sa:order 1 ] .`));
+      expect(index.get(shapeOf(schema)).map(a => a.code)).to.deep.equal(["first", "second"]);
+    });
+
+    it("should refuse an element ShExJ has no semActs on, either way", function () {
+      const onADecl = `<#o> a sa:Overlay ; sa:extension <${EXT}> ;
+        sa:action [ sa:path "/shapes/*[0]" ; sa:code "nope" ] .`;
+      expect(() => applyOverlay(parse(), overlayOf(onADecl))).to.throw(/is a ShapeDecl/);
+      expect(() => indexOverlay(parse(), overlayOf(onADecl))).to.throw(/is a ShapeDecl/);
+    });
   });
 
   describe("more than one action", function () {
