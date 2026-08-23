@@ -1,0 +1,38 @@
+{
+  "name": "@shexjs/extension-reduce-js",
+  "version": "1.0.0-alpha.29",
+  "description": "The JavaScript evaluator for @shexjs/extension-reduce semantic actions.",
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
+  "keywords": [
+    "shex",
+    "shape expressions",
+    "rdf",
+    "semantic actions"
+  ],
+  "license": "MIT",
+  "main": "./lib/shex-extension-reduce-js.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "cd ../.. && mocha -C -R dot packages/extension-reduce-js/test/*test.js",
+    "build": "tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shexjs/shex.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shexjs/shex.js/issues"
+  },
+  "homepage": "https://github.com/shexjs/shex.js#readme",
+  "types": "./src/shex-extension-reduce-js.ts"
+}

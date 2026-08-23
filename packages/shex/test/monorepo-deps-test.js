@@ -55,7 +55,17 @@ describe("workspace packages", function () {
             if (!isTracked(Path.join(d, entry.name)))
               return;
             const src = Fs.readFileSync(Path.join(d, entry.name), "utf8");
+            // A header comment showing how to use the module is documentation,
+            // not a dependency: skip a match whose line starts a comment.  A
+            // require after code on the same line as a trailing comment would
+            // still count, which is the right way round to be wrong.
+            const inComment = (at) => {
+              const bol = src.lastIndexOf("\n", at) + 1;
+              return /^\s*(\*|\/\/|\/\*)/.test(src.slice(bol, at));
+            };
             for (const m of src.matchAll(/require\s*\(\s*["']([^"'.][^"']*)["']\s*\)/g)) {
+              if (inComment(m.index))
+                continue;
               let name = m[1].replace(/^node:/, "");
               name = name.startsWith("@") ? name.split("/").slice(0, 2).join("/") : name.split("/")[0];
               if (!builtins.has(name) && !declared.has(name))

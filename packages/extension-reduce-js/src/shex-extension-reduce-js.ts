@@ -1,0 +1,190 @@
+/**
+ * The JavaScript evaluator for `@shexjs/extension-reduce`.
+ *
+ * `extension-reduce` folds one action per production over a validation
+ * result and hands each action a scope of plain data -- which production
+ * reduced, and what its arcs reduced to, by predicate.  It has no opinion
+ * about what an action is written in.  This is the half that does: it puts
+ * that scope in scope as JavaScript names and runs the code.
+ *
+ *     const Reduce = require('@shexjs/extension-reduce');
+ *     const evaluate = require('@shexjs/extension-reduce-js');
+ *     Reduce.reduce(result, {evaluate, prefixes: {'': 'http://a.example/calc#'}});
+ *
+ * An action is an expression if it parses as one and a function body if it
+ * doesn't, so `{op: 'num', value: num(one(':value'))}` and
+ * `const v = one(':value'); return v > 0 ? v : -v` both work.
+ *
+ * Running code that arrived with a document is a decision the caller makes
+ * by passing this evaluator at all; another one can run something safer.
+ */
+
+const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
+const RDF_type = RDF + 'type';
+const XSD = 'http://www.w3.org/2001/XMLSchema#';
+
+/** an RDF term as a ShExJ result records it: an IRI string, or an ObjectLiteral */
+type LdTerm = string | {value: string, type?: string, language?: string};
+
+/** the plain data `extension-reduce` hands an evaluator */
+interface ReduceScope {
+  kind: 'shape' | 'tripleConstraint';
+  where: string;
+  prefixes: {[prefix: string]: string};
+  api: {[name: string]: any};
+  arcs: {[predicate: string]: any[]};
+  node?: LdTerm;
+  shape?: string;
+  subject?: LdTerm;
+  predicate?: string;
+  object?: LdTerm;
+  value?: any;
+}
+
+/** run one action, with the scope's data in scope as names */
+function evaluate (code: string, scope: ReduceScope): any {
+  return compile(code)(namesFor(scope));
+}
+
+/**
+ * What an action can say.  The arcs arrive keyed by full predicate IRI, so
+ * the accessors expand a prefixed name before looking one up; `a` is always
+ * rdf:type.
+ */
+function namesFor (scope: ReduceScope): {[name: string]: any} {
+  const expand = prefixExpander(scope.prefixes || {});
+  const arcs = scope.arcs || {};
+  const at = (p: string) => arcs[expand(p)] || [];
+
+  return Object.assign({}, scope.api, {
+    // what reduced
+    kind: scope.kind,
+    node: scope.node,
+    shape: scope.shape,
+    subject: scope.subject,
+    predicate: scope.predicate,
+    object: scope.object,
+    value: scope.value,
+    arcs,
+
+    // reaching the arcs
+    all: at,
+    has: (p: string) => at(p).length > 0,
+    opt: (p: string) => {
+      const found = at(p);
+      if (found.length > 1)
+        throw Error(`opt(${JSON.stringify(p)}) found ${found.length} values`);
+      return found[0];
+    },
+    one: (p: string) => {
+      const found = at(p);
+      if (found.length !== 1)
+        throw Error(`one(${JSON.stringify(p)}) found ${found.length} values`
+                    + (Object.keys(arcs).length
+                       ? `; ${scope.where} matched ` + Object.keys(arcs).join(', ')
+                       : ''));
+      return found[0];
+    },
+
+    // reading a term
+    str, num, iri, local, lang, datatype, isBnode,
+    expand, RDF, XSD, nil: RDF + 'nil',
+  });
+}
+
+// ## terms, as an action wants to see them
+
+/** the lexical form of a literal, or the IRI of an IRI */
+function str (term: LdTerm): string {
+  return term === null || term === undefined ? term as any
+    : typeof term === 'string' ? term : term.value;
+}
+/** a literal read as a JavaScript number */
+function num (term: LdTerm): number {
+  return Number(str(term));
+}
+/** an IRI, refusing a literal */
+function iri (term: LdTerm): string {
+  if (typeof term !== 'string')
+    throw Error(`expected an IRI, got the literal ${JSON.stringify(term)}`);
+  return term;
+}
+/** the part of an IRI after the last / or # -- what a type usually reads as */
+function local (term: LdTerm): string {
+  return str(term).replace(/^.*[/#]/, '');
+}
+/** whether a term is a blank node, which ShExJ writes as a _: name */
+function isBnode (term: LdTerm): boolean {
+  return typeof term === 'string' && term.substr(0, 2) === '_:';
+}
+function lang (term: LdTerm): string | undefined {
+  return typeof term === 'string' ? undefined : term.language;
+}
+function datatype (term: LdTerm): string | undefined {
+  return typeof term === 'string' ? undefined : term.type;
+}
+
+// ## compiling an action
+
+const compiled = new Map<string, (names: any) => any>();
+
+/**
+ * An action is an expression if it parses as one, and a function body if it
+ * doesn't -- so `{op: 'num'}` and `const x = 1; return x` both work, and
+ * neither needs a keyword the writer has to remember.  (An object literal at
+ * the head of a statement is a block in JavaScript, which is why the
+ * expression reading has to be tried first.)
+ */
+function compile (code: string): (names: any) => any {
+  const already = compiled.get(code);
+  if (already !== undefined)
+    return already;
+  let fn: (names: any) => any;
+  try {
+    fn = build('return (' + code + '\n)');
+  } catch (e) {
+    if (!(e instanceof SyntaxError))
+      throw e;
+    fn = build(code);
+  }
+  compiled.set(code, fn);
+  return fn;
+}
+
+function build (body: string): (names: any) => any {
+  // `with` is the cheapest way to put an open-ended set of names in scope,
+  // and this is already arbitrary text being run as code.
+  // eslint-disable-next-line no-new-func
+  const f = new Function('__names', 'with (__names) { ' + body + '\n}');
+  return (names: any) => f(names);
+}
+
+function prefixExpander (prefixes: {[prefix: string]: string}) {
+  return function expand (name: string): string {
+    if (name === 'a')
+      return RDF_type;
+    const at = name.indexOf(':');
+    if (at === -1)
+      return name;
+    const prefix = name.substr(0, at);
+    if (/^[a-z][a-z0-9+.-]*$/i.test(prefix) && !(prefix in prefixes)
+        && (name.substr(at + 1, 2) === '//' || prefix === 'urn' || prefix === 'mailto'))
+      return name;            // already an IRI
+    if (!(prefix in prefixes))
+      throw Error(`no prefix "${prefix}:" (the reduce options declare `
+                  + (Object.keys(prefixes).length
+                     ? Object.keys(prefixes).map(p => p + ':').join(', ') : 'none') + ')');
+    return prefixes[prefix] + name.substr(at + 1);
+  };
+}
+
+module.exports = evaluate;
+module.exports.evaluate = evaluate;
+module.exports.namesFor = namesFor;
+module.exports.str = str;
+module.exports.num = num;
+module.exports.iri = iri;
+module.exports.local = local;
+module.exports.lang = lang;
+module.exports.datatype = datatype;
+module.exports.isBnode = isBnode;
