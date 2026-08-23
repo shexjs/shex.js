@@ -20367,24 +20367,42 @@ class RegExpThread {
  * dispatched (SemActDispatcher.dispatchAll skips it) and so cannot observe
  * anything.  Which handlers are registered isn't known until match().
  */
-function semActNamesIn(exprOrRef, index, seen, into) {
+function semActNamesIn(exprOrRef, index, seen, into, nodes) {
     if (typeof exprOrRef === "string") {
         if (seen.has(exprOrRef))
             return into; // an Inclusion cycle
         seen.add(exprOrRef);
         const included = index.tripleExprs[exprOrRef];
-        return included === undefined ? into : semActNamesIn(included, index, seen, into);
+        return included === undefined ? into : semActNamesIn(included, index, seen, into, nodes);
     }
+    nodes.add(exprOrRef);
     (exprOrRef.semActs || []).forEach(sa => into.add(sa.name));
     switch (exprOrRef.type) {
         case "EachOf":
         case "OneOf":
-            exprOrRef.expressions.forEach(nested => semActNamesIn(nested, index, seen, into));
+            exprOrRef.expressions.forEach(nested => semActNamesIn(nested, index, seen, into, nodes));
     }
     return into;
 }
+/**
+ * The actions on a schema element: its own, plus any an overlay indexed
+ * against it rather than writing into it.  The dispatcher answers, since it
+ * is the one holding the index; a dispatcher that predates the question
+ * keeps its elements' own.
+ */
+function semActsOn(semActHandler, node) {
+    return semActHandler.semActsFor === undefined
+        ? node.semActs
+        : semActHandler.semActsFor(node);
+}
 /** May the frontier be deduplicated, given who is listening? */
-function merging(names, semActHandler) {
+function merging(names, nodes, semActHandler) {
+    if (semActHandler.semActsFor !== undefined) {
+        // an overlay may have indexed actions against these elements rather
+        // than writing them in, and the dispatcher is the one who knows
+        names = new Set(names);
+        nodes.forEach(node => (semActHandler.semActsFor(node) || []).forEach(sa => names.add(sa.name)));
+    }
     if (names.size === 0)
         return true;
     if (semActHandler.isRegistered === undefined)
@@ -20399,8 +20417,9 @@ class EvalSimple1ErrRegexEngine {
         this._live = null;
         this.shape = shape;
         this.semActNames = new Set((shape.semActs || []).map(sa => sa.name));
+        this.semActNodes = new Set([shape]);
         if (shape.expression !== undefined)
-            semActNamesIn(shape.expression, index, new Set(), this.semActNames);
+            semActNamesIn(shape.expression, index, new Set(), this.semActNames, this.semActNodes);
         this.end = matchstate;
         this.states = states;
         this.start = startNo;
@@ -20427,7 +20446,7 @@ class EvalSimple1ErrRegexEngine {
      */
     *runMatch(node, constraintToTripleMapping, semActHandler, trace) {
         const thisEvalSimple1ErrRegexEngine = this;
-        const mayMerge = merging(this.semActNames, semActHandler);
+        const mayMerge = merging(this.semActNames, this.semActNodes, semActHandler);
         let clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
         let generation = 0;
         this._live = () => ({ clist, nlist }); // closes over the swapped lists
@@ -20742,13 +20761,14 @@ class EvalSimple1ErrRegexEngine {
                     xOfSolns = t;
                     last[mis].i = null;
                     // !!! on the way out to call after valueExpr test
-                    if ("semActs" in m.stack[mis].c) {
+                    const groupSemActs = semActsOn(semActHandler, m.stack[mis].c);
+                    if (groupSemActs !== undefined && groupSemActs.length > 0) {
                         const ctx = {
                             triples: constraintToTripleMapping.get(m.c)
                                 .map(m => m.triple),
                             tripleExpr: m.c
                         };
-                        const errors = semActHandler.dispatchAll(m.stack[mis].c.semActs, ctx, ptr);
+                        const errors = semActHandler.dispatchAll(groupSemActs, ctx, ptr);
                         if (errors.length)
                             throw errors;
                     }
@@ -20805,8 +20825,9 @@ class EvalSimple1ErrRegexEngine {
                 const hit = constraintToTripleMapping.get(m.c).find(x => x.triple === triple);
                 if (hit.res && Object.keys(hit.res).length > 0)
                     ret.referenced = hit.res;
-                if (errors.length === 0 && "semActs" in m.c) {
-                    Array.prototype.push.apply(errors, semActHandler.dispatchAll(m.c.semActs, { triples: [triple], tripleExpr: m.c }, ret));
+                const constraintSemActs = semActsOn(semActHandler, m.c);
+                if (errors.length === 0 && constraintSemActs !== undefined && constraintSemActs.length > 0) {
+                    Array.prototype.push.apply(errors, semActHandler.dispatchAll(constraintSemActs, { triples: [triple], tripleExpr: m.c }, ret));
                 }
                 return acc.concat(ret);
             }, []);
@@ -20965,6 +20986,17 @@ exports.RegexpModule = {
         return new EvalThreadedNErrRegexEngine(shape, index, debugHooks); // not called if there's no expression
     }
 };
+/**
+ * The actions on a schema element: its own, plus any an overlay indexed
+ * against it rather than writing into it.  The dispatcher answers, since it
+ * is the one holding the index; a dispatcher that predates the question
+ * keeps its elements' own.
+ */
+function semActsOn(semActHandler, node) {
+    return semActHandler.semActsFor === undefined
+        ? node.semActs
+        : semActHandler.semActsFor(node);
+}
 class EvalThreadedNErrRegexEngine {
     constructor(shape, index, debugHooks) {
         this.shape = shape;
@@ -20976,6 +21008,7 @@ class EvalThreadedNErrRegexEngine {
         this.outerExpression = shape.expression;
         this.greedy = this.takesAllItCan(this.outerExpression);
         this.semActNames = new Set();
+        this.semActNodes = new Set([this.shape]);
         (this.shape.semActs || []).forEach(sa => this.semActNames.add(sa.name));
         this.collectSemActs(this.outerExpression, new Set());
     }
@@ -21005,6 +21038,7 @@ class EvalThreadedNErrRegexEngine {
                 this.collectSemActs(included, seen);
             return;
         }
+        this.semActNodes.add(exprOrRef);
         (exprOrRef.semActs || []).forEach(sa => this.semActNames.add(sa.name));
         switch (exprOrRef.type) {
             case "EachOf":
@@ -21015,14 +21049,28 @@ class EvalThreadedNErrRegexEngine {
     }
     /** May the frontier be deduplicated, given who is listening? */
     merging(semActHandler) {
-        if (this.semActNames.size === 0)
+        const names = this.watching(semActHandler);
+        if (names.size === 0)
             return true;
         if (semActHandler.isRegistered === undefined)
             return false; // can\'t ask: assume it is live
-        for (const name of this.semActNames)
+        for (const name of names)
             if (semActHandler.isRegistered(name))
                 return false;
         return true; // written, but nobody is handling them
+    }
+    /**
+     * The actions on this shape, by name -- the ones the constructor found
+     * written into it, and the ones this dispatcher has indexed against its
+     * elements.  An overlay that indexes rather than amends is asked here
+     * because the dispatcher isn't known until match() is called.
+     */
+    watching(semActHandler) {
+        if (semActHandler.semActsFor === undefined)
+            return this.semActNames;
+        const names = new Set(this.semActNames);
+        this.semActNodes.forEach(node => (semActHandler.semActsFor(node) || []).forEach(sa => names.add(sa.name)));
+        return names;
     }
     /**
      * Which constraints can take every triple assigned to them at once.
@@ -21239,8 +21287,9 @@ class EvalThreadedNErrRegexEngine {
                 const hit = constraintToTripleMapping.get(constraint).find(x => x.triple === triple);
                 if (hit.res !== undefined)
                     tested.referenced = hit.res;
-                const semActErrors = thread.errors.concat(constraint.semActs !== undefined
-                    ? semActHandler.dispatchAll(constraint.semActs, { triples: [triple], tripleExpr: constraint }, tested)
+                const constraintSemActs = semActsOn(semActHandler, constraint);
+                const semActErrors = thread.errors.concat(constraintSemActs !== undefined && constraintSemActs.length > 0
+                    ? semActHandler.dispatchAll(constraintSemActs, { triples: [triple], tripleExpr: constraint }, tested)
                     : []);
                 if (semActErrors.length > 0)
                     acc.fail.push({ triple, tested, semActErrors });
@@ -21351,7 +21400,9 @@ class EvalThreadedNErrRegexEngine {
                 return repeated < min ? stumbled : newThreads;
             newThreads = mayMerge ? EvalThreadedNErrRegexEngine.mergeEquivalent(inner) : inner;
         }
-        if (newThreads.length > 0 && newThreads[0].errors.length === 0 && groupTE.semActs !== undefined) {
+        const groupSemActs = semActsOn(semActHandler, groupTE);
+        if (newThreads.length > 0 && newThreads[0].errors.length === 0
+            && groupSemActs !== undefined && groupSemActs.length > 0) {
             const passes = [];
             const failures = [];
             for (const newThread of newThreads) {
@@ -21361,7 +21412,7 @@ class EvalThreadedNErrRegexEngine {
                     triples: [].concat(...newThread.matched.map(m => m.triples)),
                     tripleExpr: groupTE,
                 };
-                const semActErrors = semActHandler.dispatchAll(groupTE.semActs, ctx, newThread);
+                const semActErrors = semActHandler.dispatchAll(groupSemActs, ctx, newThread);
                 if (semActErrors.length === 0) {
                     passes.push(newThread);
                 }
@@ -32421,10 +32472,24 @@ const minOf = (tc) => tc.min === undefined ? 1 : tc.min || 1;
 const VERBOSE = false; // "VERBOSE" in process.env;
 const EvalThreadedNErr = (__webpack_require__(4516).RegexpModule);
 class SemActDispatcherImpl {
-    constructor(externalCode) {
+    constructor(externalCode, indexed) {
         this.handlers = {};
         this.results = {};
         this.externalCode = externalCode || {};
+        this.indexed = indexed || new Map();
+    }
+    /** an element's own actions and the ones indexed against it */
+    semActsFor(node, own) {
+        const mine = own === undefined ? (node === null || node === undefined
+            ? undefined : node.semActs) : own;
+        if (this.indexed.size === 0)
+            return mine; // the overwhelmingly common case
+        const extra = this.indexed.get(node);
+        return extra === undefined ? mine : (mine || []).concat(extra);
+    }
+    /** whether any actions are indexed rather than written into the schema */
+    hasIndexed() {
+        return this.indexed.size > 0;
     }
     /**
      * Store a semantic action handler.
@@ -32459,7 +32524,7 @@ class SemActDispatcherImpl {
                 const code = ("code" in semAct ? semAct.code : this.externalCode[semAct.name]) || null;
                 const existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
                 const extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
-                const response = this.handlers[semAct.name].dispatch(code, semActParm, extensionStorage);
+                const response = this.handlers[semAct.name].dispatch(code, semActParm, extensionStorage, resultsArtifact);
                 if (typeof response === 'object' && Array.isArray(response)) {
                     if (response.length > 0)
                         ret.push({ type: "SemActFailure", errors: response });
@@ -32684,7 +32749,7 @@ class ShExValidator {
         this.db = db;
         // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
         this.regexModule = this.options.regexModule || EvalThreadedNErr;
-        this.semActHandler = new SemActDispatcherImpl(options.semActs);
+        this.semActHandler = new SemActDispatcherImpl(options.semActs, options.semActIndex);
     }
     /**
      * Validate each entry in a fixed ShapeMap, returning a results ShapeMap
@@ -32808,9 +32873,10 @@ class ShExValidator {
     }
     *resumeNodeShapePair(focus, labelOrStart, tracker = new EmptyTracker(), seen = {}) {
         const ctx = new ShapeExprValidationContext(null, labelOrStart, 0, tracker, seen, null, null);
-        if ("startActs" in this.schema) {
+        const startActs = this.semActHandler.semActsFor(this.schema, this.schema.startActs);
+        if (startActs !== undefined && startActs.length > 0) {
             const startActionStorage = {}; // !!! need test to see this write to results structure.
-            const semActErrors = this.semActHandler.dispatchAll(this.schema.startActs, null, startActionStorage);
+            const semActErrors = this.semActHandler.dispatchAll(startActs, null, startActionStorage);
             if (semActErrors.length)
                 return {
                     type: "Failure",
@@ -33086,8 +33152,9 @@ class ShExValidator {
     }
     // TODO: should this be called for and, or, not?
     evaluateShapeExprSemActs(ret, shapeExpr, point, shapeLabel) {
-        if (!("errors" in ret) && shapeExpr.semActs !== undefined) {
-            const semActErrors = this.semActHandler.dispatchAll(shapeExpr.semActs, Object.assign({}, ret, { node: point }), ret);
+        const semActs = this.semActHandler.semActsFor(shapeExpr);
+        if (!("errors" in ret) && semActs !== undefined && semActs.length > 0) {
+            const semActErrors = this.semActHandler.dispatchAll(semActs, Object.assign({}, ret, { node: point }), ret);
             if (semActErrors.length)
                 // some semAct aborted
                 return { type: "Failure", node: (0, term_1.rdfJsTerm2Ld)(point), shape: shapeLabel, errors: semActErrors };
@@ -33150,8 +33217,13 @@ class ShExValidator {
             if (errors.length === 0 && results !== null) // only include .solution for non-empty pattern
                 // @ts-ignore TODO
                 possibleRet.solution = results;
-            if ("semActs" in shape) {
-                const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({ node: focus, triples }, results), possibleRet);
+            // An action on a shape describes a match, so a partition that already
+            // failed is not one to tell it about: it would be told this shape
+            // matched when it didn't, and handed the empty solution of a partition
+            // that came to nothing.
+            const shapeSemActs = errors.length === 0 ? this.semActHandler.semActsFor(shape) : undefined;
+            if (shapeSemActs !== undefined && shapeSemActs.length > 0) {
+                const semActErrors = this.semActHandler.dispatchAll(shapeSemActs, Object.assign({ node: focus, triples }, results), possibleRet);
                 if (semActErrors.length)
                     // some semAct aborted
                     Array.prototype.push.apply(errors, semActErrors);
@@ -33619,15 +33691,16 @@ class ShExValidator {
             const sub = yield* this.resumeShapeExpr(focus, extend, ctx);
             // Name the result <focus node><ShExPath>: the part after the focus is a ShExPath
             // (shape-path-core) expression addressing the extension — a labeled extension by
-            // its shape-declaration selector "@<label>", an inline shapeExpr by a child step
-            // in the extending shape, "@<label>/extends[i]". (The "extends" step parallels the
-            // grammar's "shapeExprs[i]" and is proposed for shape-path-core, which predates
-            // EXTENDS.) Only when the same name recurs (same node and extension against a
-            // different subgraph) is "#2", "#3", … appended.
+            // its shape-declaration selector "@<label>", an inline shapeExpr by a step into
+            // the extending shape's EXTENDS list, "@<label>/extends/*[i]". (A ShExPath array
+            // is an item of its own and "[i]" filters the node set the item is in, so
+            // "extends" is the list, "/*" steps into it and "[i]" picks one out; "extends[i]"
+            // would be the list again.) Only when the same name recurs (same node and
+            // extension against a different subgraph) is "#2", "#3", … appended.
             const asShapePath = (label) => label.startsWith("_:") ? "@" + label : "@<" + label + ">";
             const shapePath = typeof extend === "string"
                 ? asShapePath(extend)
-                : `${typeof ctx.label === "string" ? asShapePath(ctx.label) : "@START"}/extends[${eNo}]`;
+                : `${typeof ctx.label === "string" ? asShapePath(ctx.label) : "@START"}/extends/*[${eNo}]`;
             const base = `${ShExTerm.rdfJsTerm2Turtle(focus)}${shapePath}`;
             const collisions = [...extendsResultCache.values()].filter(v => v.name === base || v.name.startsWith(base + "#")).length;
             const name = collisions === 0 ? base : `${base}#${collisions + 1}`;

@@ -101,6 +101,13 @@ interface ValidatorOptions {
   ignoreClosed?: boolean;
   noCache?: boolean;
   semActs?: SemActCodeIndex;
+  /**
+   * Actions to run for schema elements without the schema carrying them:
+   * a Map from element to actions, as @shexjs/semact-overlay's
+   * indexOverlay() returns.  The elements have to be this schema's own
+   * objects, since that is what they are keyed by.
+   */
+  semActIndex?: Map<any, ShExJ.SemAct[]>;
   validateExtern?: (point: RdfJsTerm, shapeLabel: LabelOrStart, ctx: ShapeExprValidationContext) => shapeExprTest;
   /** debugger callbacks forwarded to the regex engine (doc/debugger-design.md §4) */
   debugHooks?: RegexDebugHooks;
@@ -143,9 +150,31 @@ class SemActDispatcherImpl implements SemActDispatcher {
   handlers: { [id: string]: SemActHandler; } = {};
   externalCode: SemActCodeIndex;
   public results: { [id: string]: string | undefined } = {};
+  /**
+   * Actions an overlay hung on schema elements without writing them in,
+   * keyed by the element they apply to (@shexjs/semact-overlay's
+   * indexOverlay).  Empty unless the caller passed one.
+   */
+  indexed: Map<any, ShExJ.SemAct[]>;
 
-  constructor(externalCode?: SemActCodeIndex) {
+  constructor(externalCode?: SemActCodeIndex, indexed?: Map<any, ShExJ.SemAct[]>) {
     this.externalCode = externalCode || {};
+    this.indexed = indexed || new Map();
+  }
+
+  /** an element's own actions and the ones indexed against it */
+  semActsFor (node: any, own?: ShExJ.SemAct[]): ShExJ.SemAct[] | undefined {
+    const mine = own === undefined ? (node === null || node === undefined
+                                      ? undefined : node.semActs) : own;
+    if (this.indexed.size === 0)
+      return mine;                          // the overwhelmingly common case
+    const extra = this.indexed.get(node);
+    return extra === undefined ? mine : (mine || []).concat(extra);
+  }
+
+  /** whether any actions are indexed rather than written into the schema */
+  hasIndexed (): boolean {
+    return this.indexed.size > 0;
   }
 
   /**
@@ -184,7 +213,8 @@ class SemActDispatcherImpl implements SemActDispatcher {
         const code: string | null = ("code" in semAct ? semAct.code : this.externalCode[semAct.name]) || null;
         const existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
         const extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
-        const response: SemActFailure[] = this.handlers[semAct.name].dispatch(code, semActParm, extensionStorage);
+        const response: SemActFailure[] = this.handlers[semAct.name].dispatch(
+            code, semActParm, extensionStorage, resultsArtifact);
         if (typeof response === 'object' && Array.isArray(response)) {
           if (response.length > 0)
             ret.push({ type: "SemActFailure", errors: response })
@@ -502,7 +532,9 @@ export class ShExValidator {
     [id: string]: shapeExprTest;
   }
   public readonly schema: InternalSchema;
-  public readonly semActHandler: SemActDispatcher;
+  /** SemActDispatcherImpl rather than the interface: this is the one that
+   * holds the overlay index, and the validator asks it about that. */
+  public readonly semActHandler: SemActDispatcherImpl;
   public readonly index: SchemaIndex;
   private readonly db: NeighborhoodDb;
   private regexModule: ValidatorRegexModule;
@@ -535,7 +567,7 @@ export class ShExValidator {
     this.db = db;
     // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
     this.regexModule = this.options.regexModule || EvalThreadedNErr;
-    this.semActHandler = new SemActDispatcherImpl(options.semActs);
+    this.semActHandler = new SemActDispatcherImpl(options.semActs, options.semActIndex);
   }
 
   /**
@@ -671,9 +703,10 @@ export class ShExValidator {
 
   * resumeNodeShapePair (focus: RdfJsTerm, labelOrStart: LabelOrStart, tracker: QueryTracker = new EmptyTracker(), seen: SeenIndex = {}): Resumable<shapeExprTest> {
     const ctx = new ShapeExprValidationContext(null, labelOrStart, 0, tracker, seen, null, null,)
-    if ("startActs" in this.schema) {
+    const startActs = this.semActHandler.semActsFor(this.schema, this.schema.startActs);
+    if (startActs !== undefined && startActs.length > 0) {
       const startActionStorage = {}; // !!! need test to see this write to results structure.
-      const semActErrors = this.semActHandler.dispatchAll(this.schema.startActs, null, startActionStorage)
+      const semActErrors = this.semActHandler.dispatchAll(startActs, null, startActionStorage)
       if (semActErrors.length)
         return {
           type: "Failure",
@@ -966,8 +999,9 @@ export class ShExValidator {
 
   // TODO: should this be called for and, or, not?
   protected evaluateShapeExprSemActs(ret: shapeExprTest, shapeExpr: NodeConstraint, point: RdfJsTerm, shapeLabel: LabelOrStart) {
-    if (!("errors" in ret) && shapeExpr.semActs !== undefined) {
-      const semActErrors = this.semActHandler.dispatchAll((shapeExpr as any).semActs, Object.assign({}, ret, {node: point}), ret)
+    const semActs = this.semActHandler.semActsFor(shapeExpr);
+    if (!("errors" in ret) && semActs !== undefined && semActs.length > 0) {
+      const semActErrors = this.semActHandler.dispatchAll(semActs, Object.assign({}, ret, {node: point}), ret)
       if (semActErrors.length)
           // some semAct aborted
         return {type: "Failure", node: rdfJsTerm2Ld(point), shape: shapeLabel, errors: semActErrors} as Failure;
@@ -1038,8 +1072,13 @@ export class ShExValidator {
       if (errors.length === 0 && results !== null) // only include .solution for non-empty pattern
         // @ts-ignore TODO
         possibleRet.solution = results;
-      if ("semActs" in shape) {
-        const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({node: focus, triples}, results), possibleRet)
+      // An action on a shape describes a match, so a partition that already
+      // failed is not one to tell it about: it would be told this shape
+      // matched when it didn't, and handed the empty solution of a partition
+      // that came to nothing.
+      const shapeSemActs = errors.length === 0 ? this.semActHandler.semActsFor(shape) : undefined;
+      if (shapeSemActs !== undefined && shapeSemActs.length > 0) {
+        const semActErrors = this.semActHandler.dispatchAll(shapeSemActs, Object.assign({node: focus, triples}, results), possibleRet)
         if (semActErrors.length)
           // some semAct aborted
           Array.prototype.push.apply(errors, semActErrors);
@@ -1549,15 +1588,16 @@ export class ShExValidator {
       const sub = yield* this.resumeShapeExpr(focus, extend, ctx);
       // Name the result <focus node><ShExPath>: the part after the focus is a ShExPath
       // (shape-path-core) expression addressing the extension — a labeled extension by
-      // its shape-declaration selector "@<label>", an inline shapeExpr by a child step
-      // in the extending shape, "@<label>/extends[i]". (The "extends" step parallels the
-      // grammar's "shapeExprs[i]" and is proposed for shape-path-core, which predates
-      // EXTENDS.) Only when the same name recurs (same node and extension against a
-      // different subgraph) is "#2", "#3", … appended.
+      // its shape-declaration selector "@<label>", an inline shapeExpr by a step into
+      // the extending shape's EXTENDS list, "@<label>/extends/*[i]". (A ShExPath array
+      // is an item of its own and "[i]" filters the node set the item is in, so
+      // "extends" is the list, "/*" steps into it and "[i]" picks one out; "extends[i]"
+      // would be the list again.) Only when the same name recurs (same node and
+      // extension against a different subgraph) is "#2", "#3", … appended.
       const asShapePath = (label: string) => label.startsWith("_:") ? "@" + label : "@<" + label + ">";
       const shapePath = typeof extend === "string"
           ? asShapePath(extend)
-          : `${typeof ctx.label === "string" ? asShapePath(ctx.label) : "@START"}/extends[${eNo}]`;
+          : `${typeof ctx.label === "string" ? asShapePath(ctx.label) : "@START"}/extends/*[${eNo}]`;
       const base = `${ShExTerm.rdfJsTerm2Turtle(focus)}${shapePath}`;
       const collisions = [...extendsResultCache.values()].filter(v => v.name === base || v.name.startsWith(base + "#")).length;
       const name = collisions === 0 ? base : `${base}#${collisions + 1}`;

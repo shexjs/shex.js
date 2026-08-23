@@ -1,0 +1,19 @@
+# The other half of the parser generator: one action per production, saying
+# what that production reduces to.  Nothing here is in the schema, so the
+# schema stays shareable -- and a second overlay could compile the same
+# grammar to something else entirely.
+PREFIX sa: <http://shex.io/ns/semact#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+BASE <http://a.example/calc-actions>
+
+<#compile> a sa:Overlay ;
+  rdfs:comment "compile a calc graph to an AST" ;
+  sa:extension <http://shex.io/extensions/Reduce/> ;
+
+  sa:action
+  [ sa:ref <http://a.example/calc#Num> ;
+    sa:code "{op: 'num', value: num(one(':value'))}" ] ,
+
+  [ sa:ref <http://a.example/calc#BinOp> ;
+    sa:code "{op: local(one('a')), left: one(':left'), right: one(':right')}" ]
+.

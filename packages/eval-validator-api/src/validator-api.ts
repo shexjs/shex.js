@@ -119,10 +119,34 @@ export interface SemActDispatcher {
    * caller that finds it absent should assume the action is live.
    */
   isRegistered?(name: string): boolean;
+  /**
+   * The actions that apply to a schema element.
+   *
+   * An overlay may hang actions on an element without writing them into it
+   * -- keeping the schema the thing several tools can share -- in which
+   * case they are indexed by the element they apply to rather than found on
+   * it.  This answers with both, so an engine asks here rather than reading
+   * `.semActs` itself.  `own` says where the element keeps its own, for the
+   * schema, whose are `startActs`.
+   *
+   * Optional so an implementation that predates it still works: a caller
+   * that finds it absent reads `.semActs`.
+   */
+  semActsFor?(node: any, own?: ShExJ.SemAct[]): ShExJ.SemAct[] | undefined;
   dispatchAll(semActs: ShExJ.SemAct[] | undefined, ctx: any, resultsArtifact: any): SemActFailure[];
   results: { [id: string]: string | undefined }; // TODO: improve this trivial storage mechanism
 }
 
 export interface SemActHandler {
-  dispatch(code: string | null, ctx: any, extensionStorage: any): SemActFailure[];
+  /**
+   * Run one action.
+   *
+   * `extensionStorage` is where the handler writes into the result;
+   * `resultsArtifact` is the result it is being written into -- the
+   * TestedTriple, ShapeTest or NodeConstraintTest this action applies to,
+   * which is what an action that wants to know what its object matched has
+   * to read.  Optional, since a handler that only records ignores it.
+   */
+  dispatch(code: string | null, ctx: any, extensionStorage: any,
+           resultsArtifact?: any): SemActFailure[];
 }
