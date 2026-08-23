@@ -23,14 +23,11 @@ BASE <http://shex.io/examples/shexr-actions>
 
   sa:action
   [ sa:ref sx:Schema ;
-    sa:code """
-      const s = {type: 'Schema'};
-      if (has('sx:imports'))   s.imports   = one('sx:imports');
-      if (has('sx:startActs')) s.startActs = one('sx:startActs');
-      if (has('sx:start'))     s.start     = one('sx:start');
-      if (has('sx:shapes'))    s.shapes    = one('sx:shapes');
-      return s;
-    """ ] ,
+    sa:code "$ = merge({type: 'Schema'}, $sx:imports, $sx:startActs, $sx:start, $sx:shapes)" ] ,
+  [ sa:path "@sx:Schema~sx:imports" ;   sa:code "$ = {imports: $1}" ] ,
+  [ sa:path "@sx:Schema~sx:startActs" ; sa:code "$ = {startActs: $1}" ] ,
+  [ sa:path "@sx:Schema~sx:start" ;     sa:code "$ = {start: $1}" ] ,
+  [ sa:path "@sx:Schema~sx:shapes" ;    sa:code "$ = {shapes: $1}" ] ,
 
   [ sa:ref sx:ShapeDecl ;
     sa:code """
@@ -58,15 +55,18 @@ BASE <http://shex.io/examples/shexr-actions>
 
   [ sa:ref sx:Shape ;
     sa:code """
-      const s = {type: 'Shape'};
-      if (has('sx:extends'))    s.extends     = one('sx:extends');
-      if (has('sx:closed'))     s.closed      = str(one('sx:closed')) === 'true';
-      if (has('sx:extra'))      s.extra       = all('sx:extra');
-      if (has('sx:expression')) s.expression  = one('sx:expression');
-      if (has('sx:semActs'))    s.semActs     = one('sx:semActs');
-      if (has('sx:annotation')) s.annotations = one('sx:annotation');
-      return s;
+      $ = merge({type: 'Shape'}, $sx:extends, $sx:closed, $sx:extra,
+                $sx:expression, $sx:semActs, $sx:annotation)
     """ ] ,
+  [ sa:path "@sx:Shape~sx:extends" ;    sa:code "$ = {extends: $1}" ] ,
+  [ sa:path "@sx:Shape~sx:closed" ;     sa:code "$ = {closed: str($1) === 'true'}" ] ,
+  # `sx:extra IRI *` is the one arc that repeats, and an action on a
+  # constraint runs once per triple it matched, so this says what one of
+  # them contributes and merge() concatenates them.
+  [ sa:path "@sx:Shape~sx:extra" ;      sa:code "$ = {extra: [$1]}" ] ,
+  [ sa:path "@sx:Shape~sx:expression" ; sa:code "$ = {expression: $1}" ] ,
+  [ sa:path "@sx:Shape~sx:semActs" ;    sa:code "$ = {semActs: $1}" ] ,
+  [ sa:path "@sx:Shape~sx:annotation" ; sa:code "$ = {annotations: $1}" ] ,
 
   # NodeConstraint is the one production here written as its sub-expressions.
   # Every other action reads its own arcs with one() and has(); each of these
@@ -76,15 +76,11 @@ BASE <http://shex.io/examples/shexr-actions>
   # ShEx production's parts are named by predicate rather than ordered.
   [ sa:ref sx:NodeConstraint ;
     sa:code """
-      $ = Object.assign(
-        {type: 'NodeConstraint'},
-        ...($sx:nodeKind || []), ...($sx:datatype || []),
-        ...($sx:length || []), ...($sx:minlength || []), ...($sx:maxlength || []),
-        ...($sx:pattern || []), ...($sx:flags || []),
-        ...($sx:mininclusive || []), ...($sx:minexclusive || []),
-        ...($sx:maxinclusive || []), ...($sx:maxexclusive || []),
-        ...($sx:totaldigits || []), ...($sx:fractiondigits || []),
-        ...($sx:values || []), ...($sx:semActs || []), ...($sx:annotation || []));
+      $ = merge({type: 'NodeConstraint'}, $sx:nodeKind, $sx:datatype,
+                $sx:length, $sx:minlength, $sx:maxlength, $sx:pattern, $sx:flags,
+                $sx:mininclusive, $sx:minexclusive, $sx:maxinclusive, $sx:maxexclusive,
+                $sx:totaldigits, $sx:fractiondigits,
+                $sx:values, $sx:semActs, $sx:annotation)
     """ ] ,
 
   # `$1` is the one value a triple constraint matched: its object, reduced.
@@ -112,41 +108,46 @@ BASE <http://shex.io/examples/shexr-actions>
 
   ##### triple expressions
 
+  # every node in RDF has a name, so everything gets an id here and
+  # ShExUtil.ShExRtoShExJ drops the ones nothing refers to twice
   [ sa:ref sx:TripleConstraint ;
     sa:code """
-      const t = {type: 'TripleConstraint', id: node};
-      if (has('sx:inverse'))    t.inverse     = str(one('sx:inverse')) === 'true';
-      if (has('sx:negated'))    t.negated     = str(one('sx:negated')) === 'true';
-      t.predicate = one('sx:predicate');
-      if (has('sx:valueExpr'))  t.valueExpr   = one('sx:valueExpr');
-      if (has('sx:min'))        t.min         = num(one('sx:min'));
-      if (has('sx:max'))        t.max         = num(one('sx:max'));
-      if (has('sx:semActs'))    t.semActs     = one('sx:semActs');
-      if (has('sx:annotation')) t.annotations = one('sx:annotation');
-      return t;
+      $ = merge({type: 'TripleConstraint', id: node},
+                $sx:inverse, $sx:negated, $sx:predicate, $sx:valueExpr,
+                $sx:min, $sx:max, $sx:semActs, $sx:annotation)
     """ ] ,
+  [ sa:path "@sx:TripleConstraint~sx:inverse" ;
+    sa:code "$ = {inverse: str($1) === 'true'}" ] ,
+  [ sa:path "@sx:TripleConstraint~sx:negated" ;
+    sa:code "$ = {negated: str($1) === 'true'}" ] ,
+  [ sa:path "@sx:TripleConstraint~sx:predicate" ;  sa:code "$ = {predicate: $1}" ] ,
+  [ sa:path "@sx:TripleConstraint~sx:valueExpr" ;  sa:code "$ = {valueExpr: $1}" ] ,
+  [ sa:path "@sx:TripleConstraint~sx:min" ;        sa:code "$ = {min: num($1)}" ] ,
+  [ sa:path "@sx:TripleConstraint~sx:max" ;        sa:code "$ = {max: num($1)}" ] ,
+  [ sa:path "@sx:TripleConstraint~sx:semActs" ;    sa:code "$ = {semActs: $1}" ] ,
+  [ sa:path "@sx:TripleConstraint~sx:annotation" ; sa:code "$ = {annotations: $1}" ] ,
 
   [ sa:ref sx:EachOf ;
     sa:code """
-      const e = {type: 'EachOf', id: node};
-      e.expressions = one('sx:expressions');
-      if (has('sx:min'))        e.min         = num(one('sx:min'));
-      if (has('sx:max'))        e.max         = num(one('sx:max'));
-      if (has('sx:semActs'))    e.semActs     = one('sx:semActs');
-      if (has('sx:annotation')) e.annotations = one('sx:annotation');
-      return e;
+      $ = merge({type: 'EachOf', id: node}, $sx:expressions,
+                $sx:min, $sx:max, $sx:semActs, $sx:annotation)
     """ ] ,
+  [ sa:path "@sx:EachOf~sx:expressions" ; sa:code "$ = {expressions: $1}" ] ,
+  [ sa:path "@sx:EachOf~sx:min" ;         sa:code "$ = {min: num($1)}" ] ,
+  [ sa:path "@sx:EachOf~sx:max" ;         sa:code "$ = {max: num($1)}" ] ,
+  [ sa:path "@sx:EachOf~sx:semActs" ;     sa:code "$ = {semActs: $1}" ] ,
+  [ sa:path "@sx:EachOf~sx:annotation" ;  sa:code "$ = {annotations: $1}" ] ,
 
   [ sa:ref sx:OneOf ;
     sa:code """
-      const e = {type: 'OneOf', id: node};
-      e.expressions = one('sx:expressions');
-      if (has('sx:min'))        e.min         = num(one('sx:min'));
-      if (has('sx:max'))        e.max         = num(one('sx:max'));
-      if (has('sx:semActs'))    e.semActs     = one('sx:semActs');
-      if (has('sx:annotation')) e.annotations = one('sx:annotation');
-      return e;
+      $ = merge({type: 'OneOf', id: node}, $sx:expressions,
+                $sx:min, $sx:max, $sx:semActs, $sx:annotation)
     """ ] ,
+  [ sa:path "@sx:OneOf~sx:expressions" ; sa:code "$ = {expressions: $1}" ] ,
+  [ sa:path "@sx:OneOf~sx:min" ;         sa:code "$ = {min: num($1)}" ] ,
+  [ sa:path "@sx:OneOf~sx:max" ;         sa:code "$ = {max: num($1)}" ] ,
+  [ sa:path "@sx:OneOf~sx:semActs" ;     sa:code "$ = {semActs: $1}" ] ,
+  [ sa:path "@sx:OneOf~sx:annotation" ;  sa:code "$ = {annotations: $1}" ] ,
 
   ##### value sets
 
