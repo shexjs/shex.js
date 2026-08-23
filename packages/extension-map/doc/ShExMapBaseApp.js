@@ -1164,7 +1164,11 @@ class ShExMapBaseApp extends ShExBaseApp {
     $("#bindings1").append(div.append(table))
 
     let vars = [];
-    function varsIn (a) {
+    // an arrow: a class body is strict, so a plain function called as
+    // varsIn(...) has no `this`, and the first cell it filled threw
+    // "Cannot read properties of undefined (reading 'Caches')" -- which
+    // left the table headerless and the pane hidden behind it
+    const varsIn = (a) => {
       return a.forEach(elt => {
         if (Array.isArray(elt)) {
           varsIn(elt)
@@ -1179,27 +1183,19 @@ class ShExMapBaseApp extends ShExBaseApp {
           })
           // tr.append(cols.map(c => $("<td/>").text(c)))
           for (let colI = 0; colI < cols.length; ++colI)
-            tr.append($("<td/>").text(cols[colI] ? this.Caches.inputData.meta.termToLex(n3ify(cols[colI])) : "").css("background-color", "#f7f7f7"))
+            // termToLex wants an RDFJS term; a binding is ShExJ's {value,
+            // type?, language?}, and n3ify handed it a Turtle string, which
+            // is what "unknown RDFJS node type" was complaining about
+            tr.append($("<td/>").text(cols[colI] ? this.Caches.inputData.meta.termToLex(ShExWebApp.ShExTerm.ld2RdfJsTerm(cols[colI])) : "").css("background-color", "#f7f7f7"))
           tbody.append(tr)
         }
       })
-    }
+    };
     varsIn(Array.isArray(d) ? d : [d])
 
     vars.forEach(v => {
       thead.append($("<th/>").css("font-size", "small").text(v.substr(v.lastIndexOf("#")+1, 999)))
     })
-
-    function n3ify (ldterm) {
-      if (typeof ldterm !== "object")
-        return ldterm;
-      const ret = "\"" + ldterm.value + "\"";
-      if ("language" in ldterm)
-        return ret + "@" + ldterm.language;
-      if ("type" in ldterm)
-        return ret + "^^" + ldterm.type;
-      return ret;
-    }
   }
 
   tableToBindings () {

@@ -228,6 +228,49 @@ if (!TEST_browser) {
       });
     });
 
+    /* Two of ShExMap's verbs are only a keystroke, so nothing else on the
+     * page notices when they stop working: ctl-\\ is the materialize button,
+     * and ctl-[ / ctl-] swap the bindings pane for a table of the same
+     * bindings and back.  The table is the only reader those bindings have
+     * that isn't the pane itself. */
+    it("should reach materialize on ctl-\\ and the bindings table on ctl-[ / ctl-]", async function () {
+      this.timeout(60000);
+      const key = k => dom.window.document.body.dispatchEvent(
+        new dom.window.KeyboardEvent("keydown", {key: k, ctrlKey: true, bubbles: true}));
+
+      if (!$("#queryMap").val().trim()) {   // a preceding test may have deselected
+        $("#inputSchema .manifest li").filter((_, e) => $(e).text() === "BP").trigger("click");
+        await shared.promise;
+        $("#inputData .passes li").filter((_, e) => $(e).text() === "simple").trigger("click");
+        await shared.promise;
+      }
+      $("#validate").trigger("click");
+      await shared.promise;
+
+      let pressed = 0;
+      $("#materialize").on("click", () => { ++pressed; });
+      key("\\");
+      await shared.promise;
+      expect(pressed, "ctl-\\ presses the button").to.equal(1);
+      expect($("#resultsTabs > ul > li > a").map((i, a) => $(a).text()).get(),
+             "and the button materializes").to.deep.equal(["validation", "materialization"]);
+
+      // the table is built from whatever the pane holds
+      const pane = $("#bindings1 textarea").first();
+      pane.val(bindingsJson);
+      key("[");
+      expect($("#bindings1 table thead th").map((i, th) => $(th).text()).get(),
+             "a column per variable").to.include("http://a.example/v1");
+      expect($("#bindings1 table tbody tr").length, "a row per binding").to.be.above(0);
+      // jsdom lays nothing out, so :visible is no help; hide() writes the
+      // inline style this reads
+      expect(pane.css("display"), "the textarea steps aside").to.equal("none");
+
+      key("]");
+      expect($("#bindings1 table").length, "and comes back").to.equal(0);
+      expect(pane.css("display"), "with the textarea in front again").to.not.equal("none");
+    });
+
     it("should stop a session on demand", async function () {
       $("#debugMaterialize").trigger("click");
       await shared.promise;
