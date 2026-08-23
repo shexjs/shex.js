@@ -213,7 +213,8 @@ class SemActDispatcherImpl implements SemActDispatcher {
         const code: string | null = ("code" in semAct ? semAct.code : this.externalCode[semAct.name]) || null;
         const existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
         const extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
-        const response: SemActFailure[] = this.handlers[semAct.name].dispatch(code, semActParm, extensionStorage);
+        const response: SemActFailure[] = this.handlers[semAct.name].dispatch(
+            code, semActParm, extensionStorage, resultsArtifact);
         if (typeof response === 'object' && Array.isArray(response)) {
           if (response.length > 0)
             ret.push({ type: "SemActFailure", errors: response })
@@ -1071,7 +1072,11 @@ export class ShExValidator {
       if (errors.length === 0 && results !== null) // only include .solution for non-empty pattern
         // @ts-ignore TODO
         possibleRet.solution = results;
-      const shapeSemActs = this.semActHandler.semActsFor(shape);
+      // An action on a shape describes a match, so a partition that already
+      // failed is not one to tell it about: it would be told this shape
+      // matched when it didn't, and handed the empty solution of a partition
+      // that came to nothing.
+      const shapeSemActs = errors.length === 0 ? this.semActHandler.semActsFor(shape) : undefined;
       if (shapeSemActs !== undefined && shapeSemActs.length > 0) {
         const semActErrors = this.semActHandler.dispatchAll(shapeSemActs, Object.assign({node: focus, triples}, results), possibleRet)
         if (semActErrors.length)

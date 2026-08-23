@@ -374,10 +374,14 @@ describe("reduce", function () {
 
   describe("the evaluator", function () {
 
+    /* Required to run an action -- a result with none in it needs no
+     * evaluator, which is what an eager registration leaves behind. */
     it("should be required, and say which one runs JavaScript", function () {
       const schema = ShExParser.construct(B, null, {index: true})
             .parse("PREFIX : <http://a.example/>\n<http://a.example/S> { :p1 . }",
                    B, undefined, "reduce-test");
+      schema._index.shapeExprs[B + "S"].shapeExpr.semActs =
+        [{type: "SemAct", name: EXT, code: "({})"}];
       const graph = new N3.Store();
       graph.addQuads(new N3.Parser({baseIRI: B, format: "text/turtle"})
                      .parse("PREFIX : <http://a.example/>\n:x :p1 :o ."));

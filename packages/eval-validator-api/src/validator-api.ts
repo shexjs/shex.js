@@ -138,5 +138,15 @@ export interface SemActDispatcher {
 }
 
 export interface SemActHandler {
-  dispatch(code: string | null, ctx: any, extensionStorage: any): SemActFailure[];
+  /**
+   * Run one action.
+   *
+   * `extensionStorage` is where the handler writes into the result;
+   * `resultsArtifact` is the result it is being written into -- the
+   * TestedTriple, ShapeTest or NodeConstraintTest this action applies to,
+   * which is what an action that wants to know what its object matched has
+   * to read.  Optional, since a handler that only records ignores it.
+   */
+  dispatch(code: string | null, ctx: any, extensionStorage: any,
+           resultsArtifact?: any): SemActFailure[];
 }

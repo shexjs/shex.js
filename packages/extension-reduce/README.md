@@ -136,6 +136,7 @@ So no functions cross the line. An evaluator is handed plain data:
 | `node`, `shape` | the focus term and the label it matched |
 | `arcs` | what each arc reduced to, keyed by **full predicate IRI** |
 | `subject`, `predicate`, `object`, `value` | for a constraint: the triple, and what its object reduced to |
+| `state` | one object for the run, handed to every action in it: where an action puts what the next one needs to know |
 | `bindings` | what each `$…` in the code was rewritten to, and what it stands for |
 | `ret` | the name the action assigns its value to, if it used `$` |
 | `prefixes`, `api` | what the caller passed |
@@ -174,14 +175,65 @@ const template = (code, scope) => JSON.parse(code, (k, v) =>
 
 ## When the actions run
 
-**After the match, not during it.** The matcher backtracks, and an action that
+Two bargains, and you pick one when you register.
+
+**`register` — after the match.** The matcher backtracks, and an action that
 fired on a partition it later abandoned would have built part of an AST for a
 parse that never happened. Dispatch only records that an action applies at a
-place in the result; `reduce()` folds the result that survived.
+place in the result; `reduce()` folds the result that survived. So an action
+runs exactly once, for a parse that actually happened — and an action cannot
+reject a match, which is the schema's job. This is LR's bargain: defer the
+reduction until the parse is decided.
 
-So an action cannot reject a match — that is the schema's job — and it is free
-to be as effectful as it likes. Actions on `EachOf`/`OneOf` groups are not run:
-a shape's action already sees everything its body matched, by predicate.
+**`registerEager` — while matching.** The action runs at dispatch, its value is
+kept on the result so the fold takes it rather than running the code again, and
+a value the `rejects` test recognizes *fails the match* — which sends an `OR`
+to its next branch exactly as a node constraint that didn't hold would. This is
+PEG's bargain, and it costs what PEG's costs: an action may run inside an
+attempt that is then thrown away, and may run more than once for one node.
+
+```js
+Reduce.registerEager(validator, {evaluate, prefixes, rejects});
+```
+
+`rejects(value)` defaults to "a value with a `failure` key". Everything else is
+a value, and becomes what that production reduced to.
+
+`examples/calc-semact/` is the worked pair, two schemas over the same data and
+the same rule — *the number that ends an expression is the sum of the numbers
+before it*, which no schema can say, because it is a fact about what has been
+read rather than about the number:
+
+| | |
+| --- | --- |
+| `guide.shex` | `<#MidNum>` and `<#LastNum>` have the same body, so the schema leaves the choice open and the actions **steer** it: `<#MidNum>` refuses the number that is the sum, and the `OR` goes on to `<#LastNum>` |
+| `falsify.shex` | `<#LastExpr>` is an operator whose right is another `<#LastExpr>`, so the schema **chooses** the last number structurally, and the action only checks it — a check that fails fails the match |
+
+Both carry their actions inline (`%Reduce:{ … %}`), so the schema is the whole
+example: it needs nothing of the caller but an evaluator, and nothing of you
+but a look at it.
+
+The running sum they keep is `state`, and a **start action** — one that runs
+before the match rather than at some place in it — is what sets it up:
+
+```shex
+%Reduce:{
+  state.noted = {};
+  state.note = (node, value) => { state.noted[node] = value; return value; };
+  state.before = node => Object.keys(state.noted)
+    .filter(at => at !== node)
+    .reduce((sum, at) => sum + state.noted[at], 0);
+%}
+```
+
+Keyed by node rather than added up, because an eager action runs inside an
+attempt that may be abandoned and may run twice for one node: `+=` would count
+a node twice where noting it twice notes it once. What that keying can't undo
+is a note taken down a branch that is then abandoned — state outliving an
+attempt is the bill for an action that can decide one.
+
+Either way, actions on `EachOf`/`OneOf` groups are not run: a shape's action
+already sees everything its body matched, by predicate.
 
 Actions are code that arrived with a document. Passing an evaluator is where
 you decide to run it — and which language you run.

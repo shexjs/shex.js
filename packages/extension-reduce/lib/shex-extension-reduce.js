@@ -47,6 +47,91 @@ function register(validator, api) {
         api,
     });
 }
+/**
+ * ...or run them as the matcher matches, and let them reject.
+ *
+ * The other `register` records and `reduce()` folds afterwards, because the
+ * matcher backtracks: an action that fired on a partition later abandoned
+ * would have built part of an AST for a parse that never happened.  That is
+ * the LR bargain -- defer the reduction until the parse is decided -- and
+ * the price of it is that an action cannot say "not this way".
+ *
+ * PEG pays the other way: actions run inside the attempt, an attempt may be
+ * abandoned, and an action may fail the attempt it is in.  This is that.
+ * The action runs at dispatch, its value is stored on the result so the
+ * fold takes it rather than running the code again, and a value the
+ * `rejects` test recognizes fails the match -- which sends an OR to its next
+ * branch, exactly as a node constraint that didn't hold would.
+ *
+ * So the author owns two things they did not before: an action may run on a
+ * branch that is then thrown away (write it without side effects, or expect
+ * them twice), and an action's value is now part of what "matched" means.
+ */
+function registerEager(validator, options = {}) {
+    if (validator === undefined || validator.semActHandler === undefined)
+        throw Error('registerEager(validator, ...) wants a ShExValidator');
+    if (typeof options.evaluate !== 'function')
+        throw Error('registerEager() needs an `evaluate` option -- (code, scope) => value. '
+            + 'For actions written in JavaScript that is @shexjs/extension-reduce-js.');
+    const f = foldFor(options);
+    const rejects = options.rejects || refused;
+    validator.semActHandler.results[f.url] = [];
+    return validator.semActHandler.register(f.url, {
+        dispatch: function (code, ctx, storage, artifact) {
+            // a group's action is not run in either mode: a shape's action already
+            // sees everything its body matched, by predicate
+            if (ctx && ctx.tripleExpr
+                && (ctx.tripleExpr.type === 'EachOf' || ctx.tripleExpr.type === 'OneOf'))
+                return [];
+            const where = describe(artifact);
+            const { scope, values } = eagerScope(f, ctx, artifact);
+            const value = runAction(f, code, where, scope, values);
+            storage.code = code;
+            storage.value = value; // what the fold will take
+            return rejects(value)
+                ? [{ type: 'SemActFailure', errors: [rejection(value, where)] }]
+                : [];
+        },
+        api: options.api,
+    });
+}
+/** the value an action returns to say "this match is no good" */
+function refused(value) {
+    return value !== null && typeof value === 'object' && !Array.isArray(value)
+        && 'failure' in value;
+}
+function rejection(value, where) {
+    const said = value && value.failure;
+    return `the action on ${where} rejected the match`
+        + (said === undefined || said === '' ? '' : ': ' + String(said));
+}
+/**
+ * What an eager action sees.  The same scope the fold builds, from the same
+ * places -- the result artifact is the fold's own input, and the values
+ * underneath it are stored there by the actions that already ran.
+ */
+function eagerScope(f, ctx, artifact) {
+    if (ctx === null || ctx === undefined) // a start action: before any of it
+        return { scope: { kind: 'start', arcs: {} }, values: [] };
+    if (artifact && artifact.type === 'TestedTriple') {
+        const bare = artifact.referenced === undefined
+            ? artifact.object
+            : reduceNode(f, artifact.referenced);
+        return {
+            scope: { kind: 'tripleConstraint', subject: artifact.subject,
+                predicate: artifact.predicate, object: artifact.object,
+                value: bare, arcs: {} },
+            values: [bare],
+        };
+    }
+    const { arcs, values } = arcsOf(f, artifact && artifact.solution !== undefined
+        ? artifact.solution : ctx);
+    return {
+        scope: { kind: 'shape', node: artifact ? artifact.node : undefined,
+            shape: artifact ? artifact.shape : undefined, arcs },
+        values,
+    };
+}
 function done(validator) {
     if (validator.semActHandler.results[ReduceExt].length === 0)
         delete validator.semActHandler.results[ReduceExt];
@@ -59,6 +144,17 @@ class ReduceError extends Error {
         this.name = 'ReduceError';
     }
 }
+function foldFor(options) {
+    return {
+        runner: typeof options.evaluate === 'function'
+            ? { evaluate: options.evaluate, prefixes: options.prefixes || {},
+                api: options.api || {}, state: {}, bounds: new Map() }
+            : null,
+        url: options.url || ReduceExt,
+        onRecursion: options.onRecursion || 'node',
+        seen: new Map(),
+    };
+}
 /**
  * The value the actions reduce a validation result to.
  *
@@ -67,150 +163,163 @@ class ReduceError extends Error {
  * per pair, in the order they were asked for.
  */
 function reduce(result, options = {}) {
-    const url = options.url || ReduceExt;
-    const evaluate = options.evaluate;
-    if (typeof evaluate !== 'function')
-        throw Error('reduce() needs an `evaluate` option -- (code, scope) => value. '
-            + 'For actions written in JavaScript that is @shexjs/extension-reduce-js.');
-    const prefixes = options.prefixes || {};
-    const api = options.api || {};
-    const seen = new Map();
-    const bounds = new Map();
-    return reduceResult(result);
-    function reduceResult(res) {
-        // a results ShapeMap: [{node, shape, status, appinfo}, ...]
-        if (Array.isArray(res))
-            return res.map(entry => 'appinfo' in entry ? reduceResult(entry.appinfo) : reduceNode(entry));
-        return reduceNode(res);
-    }
-    function reduceNode(node) {
-        if (node === null || node === undefined)
+    return reduceResult(foldFor(options), result);
+}
+function reduceResult(f, res) {
+    // a results ShapeMap: [{node, shape, status, appinfo}, ...]
+    if (Array.isArray(res))
+        return res.map(entry => 'appinfo' in entry ? reduceResult(f, entry.appinfo) : reduceNode(f, entry));
+    runStartActs(f, res);
+    return reduceNode(f, res);
+}
+/**
+ * The schema's start actions, before the walk.
+ *
+ * A start action runs before the match rather than at some place in it, so
+ * `register` has nothing to record for one -- the validator hands its
+ * dispatch a scratch object and then drops it -- and the fold is where a
+ * recorded run gets to run them.  An eager run has already run them, and
+ * folds with no evaluator, which is what tells the two apart here.
+ */
+function runStartActs(f, res) {
+    if (f.runner === null) // nothing to run: an eager run
+        return;
+    ((res && res.startActs) || [])
+        .filter((act) => act.name === f.url && typeof act.code === 'string')
+        .forEach((act) => runAction(f, act.code, 'the start actions', { kind: 'start', arcs: {} }, []));
+}
+function reduceNode(f, node) {
+    if (node === null || node === undefined)
+        return node;
+    switch (node.type) {
+        case 'SolutionList':
+            return node.solutions.map((s) => reduceNode(f, s));
+        /* An AND is several constraints on one node, so it reduces to one value:
+         * whichever conjunct said something.  A conjunct with no action reduces
+         * to its own node, and saying "this node is this node" is not an answer
+         * anyone wrote an action for, so those drop out.  `IRI /pattern/` and
+         * `BNODE CLOSED {...}` are the everyday shapes of this. */
+        case 'ShapeAndResults': {
+            const values = node.solutions.map((s) => reduceNode(f, s));
+            const spoke = values.filter((v, i) => v !== nodeOf(node.solutions[i]));
+            return spoke.length === 1 ? spoke[0]
+                : spoke.length === 0 ? nodeOf(node.solutions[0])
+                    : values;
+        }
+        case 'ShapeOrResults':
+        case 'ShapeNotResults':
+            return reduceNode(f, node.solution);
+        case 'ShapeTest': {
+            const key = keyOf(node.node, node.shape);
+            const { arcs, values } = arcsOf(f, node.solution);
+            const value = run(f, node, { kind: 'shape', node: node.node, shape: node.shape, arcs }, values, () => node.node);
+            f.seen.set(key, value);
+            return value;
+        }
+        case 'NodeConstraintTest':
+            return run(f, node, { kind: 'shape', node: node.node, shape: node.shape, arcs: {} }, [], () => node.node);
+        case 'Recursion': {
+            // The matcher found this pair on the way down, so its value is still
+            // being computed; if it happens to be finished, use it.
+            const key = keyOf(node.node, node.shape);
+            if (f.seen.has(key))
+                return f.seen.get(key);
+            switch (f.onRecursion) {
+                case 'marker': return { type: 'Recursion', node: node.node, shape: node.shape };
+                case 'throw': throw Error(`${key} is still being reduced: the data has a cycle`);
+                default: return node.node;
+            }
+        }
+        default:
+            // an unlabelled shape (`{ :p . }` with no ShapeDecl) reports no wrapper
+            if ('solution' in node)
+                return reduceNode(f, node.solution);
+            if ('solutions' in node)
+                return node.solutions.map((s) => reduceNode(f, s));
             return node;
-        switch (node.type) {
-            case 'SolutionList':
-                return node.solutions.map(reduceNode);
-            /* An AND is several constraints on one node, so it reduces to one value:
-             * whichever conjunct said something.  A conjunct with no action reduces
-             * to its own node, and saying "this node is this node" is not an answer
-             * anyone wrote an action for, so those drop out.  `IRI /pattern/` and
-             * `BNODE CLOSED {...}` are the everyday shapes of this. */
-            case 'ShapeAndResults': {
-                const values = node.solutions.map(reduceNode);
-                const spoke = values.filter((v, i) => v !== nodeOf(node.solutions[i]));
-                return spoke.length === 1 ? spoke[0]
-                    : spoke.length === 0 ? nodeOf(node.solutions[0])
-                        : values;
-            }
-            case 'ShapeOrResults':
-            case 'ShapeNotResults':
-                return reduceNode(node.solution);
-            case 'ShapeTest': {
-                const key = keyOf(node.node, node.shape);
-                const { arcs, values } = arcsOf(node.solution);
-                const value = run(node, { kind: 'shape', node: node.node, shape: node.shape, arcs }, values, () => node.node);
-                seen.set(key, value);
-                return value;
-            }
-            case 'NodeConstraintTest':
-                return run(node, { kind: 'shape', node: node.node, shape: node.shape, arcs: {} }, [], () => node.node);
-            case 'Recursion': {
-                // The matcher found this pair on the way down, so its value is still
-                // being computed; if it happens to be finished, use it.
-                const key = keyOf(node.node, node.shape);
-                if (seen.has(key))
-                    return seen.get(key);
-                switch (options.onRecursion || 'node') {
-                    case 'marker': return { type: 'Recursion', node: node.node, shape: node.shape };
-                    case 'throw': throw Error(`${key} is still being reduced: the data has a cycle`);
-                    default: return node.node;
-                }
+    }
+}
+/**
+ * What a shape's body matched, twice over: by predicate, which is how an
+ * action names a sub-production, and in match order, which is how `$1`
+ * reaches one whose name it shares with another.
+ */
+function arcsOf(f, solution) {
+    const arcs = {};
+    const values = [];
+    collect(solution);
+    return { arcs, values };
+    function collect(s) {
+        if (s === null || s === undefined)
+            return;
+        if (Array.isArray(s))
+            return s.forEach(collect);
+        switch (s.type) {
+            case 'EachOfSolutions':
+            case 'OneOfSolutions':
+                return s.solutions.forEach(collect);
+            case 'EachOfSolution':
+            case 'OneOfSolution':
+                return s.expressions.forEach(collect);
+            case 'TripleConstraintSolutions': {
+                // an action on a triple constraint is recorded per matched triple,
+                // so a repeated arc gets one run of the action per occurrence
+                (s.solutions || []).forEach((tested) => {
+                    const bare = tested.referenced === undefined
+                        ? tested.object
+                        : reduceNode(f, tested.referenced);
+                    // the object is this production's one sub-production, so it is $1
+                    const value = run(f, tested, { kind: 'tripleConstraint', subject: tested.subject,
+                        predicate: tested.predicate, object: tested.object,
+                        value: bare, arcs: {} }, [bare], () => bare);
+                    (arcs[s.predicate] = arcs[s.predicate] || []).push(value);
+                    values.push(value);
+                });
+                return;
             }
             default:
-                // an unlabelled shape (`{ :p . }` with no ShapeDecl) reports no wrapper
-                if ('solution' in node)
-                    return reduceNode(node.solution);
-                if ('solutions' in node)
-                    return node.solutions.map(reduceNode);
-                return node;
+                if ('solutions' in s)
+                    return collect(s.solutions);
+                if ('solution' in s)
+                    return collect(s.solution);
         }
     }
-    /**
-     * What a shape's body matched, twice over: by predicate, which is how an
-     * action names a sub-production, and in match order, which is how `$1`
-     * reaches one whose name it shares with another.
-     */
-    function arcsOf(solution) {
-        const arcs = {};
-        const values = [];
-        collect(solution);
-        return { arcs, values };
-        function collect(s) {
-            if (s === null || s === undefined)
-                return;
-            if (Array.isArray(s))
-                return s.forEach(collect);
-            switch (s.type) {
-                case 'EachOfSolutions':
-                case 'OneOfSolutions':
-                    return s.solutions.forEach(collect);
-                case 'EachOfSolution':
-                case 'OneOfSolution':
-                    return s.expressions.forEach(collect);
-                case 'TripleConstraintSolutions': {
-                    // an action on a triple constraint is recorded per matched triple,
-                    // so a repeated arc gets one run of the action per occurrence
-                    (s.solutions || []).forEach((tested) => {
-                        const bare = tested.referenced === undefined
-                            ? tested.object
-                            : reduceNode(tested.referenced);
-                        const code = actionOn(tested);
-                        // the object is this production's one sub-production, so it is $1
-                        const value = code === undefined ? bare
-                            : runCode(code, s, { kind: 'tripleConstraint', subject: tested.subject,
-                                predicate: tested.predicate, object: tested.object,
-                                value: bare, arcs: {} }, [bare]);
-                        (arcs[s.predicate] = arcs[s.predicate] || []).push(value);
-                        values.push(value);
-                    });
-                    return;
-                }
-                default:
-                    if ('solutions' in s)
-                        return collect(s.solutions);
-                    if ('solution' in s)
-                        return collect(s.solution);
-            }
-        }
+}
+/**
+ * Only what dispatch left counts.  A result node also carries the schema's
+ * `semActs`, but not always its own -- a shape's actions turn up on the
+ * solution beneath it too -- and `extensions` is written by the dispatch for
+ * exactly one artifact, so it is the one that can be trusted.
+ */
+function extOn(f, node) {
+    const ext = node && node.extensions && node.extensions[f.url];
+    return ext && (typeof ext.code === 'string' || 'value' in ext) ? ext : undefined;
+}
+function run(f, node, scope, values, fallback) {
+    const ext = extOn(f, node);
+    if (ext === undefined)
+        return fallback();
+    if ('value' in ext)
+        return ext.value; // an eager action already ran here
+    return runAction(f, ext.code, describe(node), scope, values);
+}
+function runAction(f, code, where, scope, values) {
+    const runner = f.runner;
+    if (runner === null)
+        throw Error('reduce() needs an `evaluate` option -- (code, scope) => value. '
+            + 'For actions written in JavaScript that is @shexjs/extension-reduce-js.');
+    try {
+        const bound = bindRefs(code, runner.prefixes, runner.bounds);
+        const bindings = {};
+        bound.refs.forEach(({ id, ref }) => {
+            bindings[id] = ref.kind === 'ret' ? undefined
+                : ref.kind === 'pos' ? values[ref.at - 1]
+                    : (scope.arcs || {})[ref.iri];
+        });
+        return runner.evaluate(bound.code, Object.assign({ where, prefixes: runner.prefixes, api: runner.api, state: runner.state }, scope, bound.ret === undefined ? { bindings } : { bindings, ret: bound.ret }));
     }
-    /**
-     * Only what dispatch recorded counts.  A result node also carries the
-     * schema's `semActs`, but not always its own -- a shape's actions turn up
-     * on the solution beneath it too -- and `extensions` is written by the
-     * dispatch for exactly one artifact, so it is the one that can be trusted.
-     */
-    function actionOn(node) {
-        const ext = node && node.extensions && node.extensions[url];
-        return ext && typeof ext.code === 'string' ? ext.code : undefined;
-    }
-    function run(node, scope, values, fallback) {
-        const code = actionOn(node);
-        return code === undefined ? fallback() : runCode(code, node, scope, values);
-    }
-    function runCode(code, node, scope, values) {
-        const where = describe(node);
-        try {
-            const bound = bindRefs(code, prefixes, bounds);
-            const bindings = {};
-            bound.refs.forEach(({ id, ref }) => {
-                bindings[id] = ref.kind === 'ret' ? undefined
-                    : ref.kind === 'pos' ? values[ref.at - 1]
-                        : (scope.arcs || {})[ref.iri];
-            });
-            return evaluate(bound.code, Object.assign({ where, prefixes, api }, scope, bound.ret === undefined ? { bindings } : { bindings, ret: bound.ret }));
-        }
-        catch (e) {
-            throw new ReduceError(where, code, e);
-        }
+    catch (e) {
+        throw new ReduceError(where, code, e);
     }
 }
 /**
@@ -309,6 +418,8 @@ function describe(node) {
             return `<${node.shape}> at ${short(node.node)}`;
         case 'TripleConstraintSolutions':
             return `the constraint on <${node.predicate}>`;
+        case 'TestedTriple':
+            return `the constraint on <${node.predicate}> at ${short(node.subject)}`;
         default:
             return node.type || 'the result';
     }
@@ -359,6 +470,7 @@ another language.  @shexjs/extension-reduce-js is the JavaScript evaluator.
 
 url: ${ReduceExt}`,
     register,
+    registerEager,
     done,
     url: ReduceExt,
     reduce,

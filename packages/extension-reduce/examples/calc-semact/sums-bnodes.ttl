@@ -1,0 +1,15 @@
+# The same expression with the numbers written as blank nodes.
+#
+# A blank node reaches an action as the string "_:label" where an IRI
+# reaches it as itself, so both are keys already; a literal is an object,
+# and every object is the same key, which is what key() is for.
+PREFIX : <http://a.example/calc#>
+BASE <http://a.example/expr2>
+
+<#e1> a :Mul ;
+  :left  [ a :Num ; :value 10 ] ;
+  :right [ a :Sub ;
+           :left  [ a :Mul ;
+                    :left  [ a :Num ; :value  5 ] ;
+                    :right [ a :Num ; :value 45 ] ] ;
+           :right [ a :Num ; :value 60 ] ] .

@@ -1,0 +1,51 @@
+# calc, where the actions guide the match.
+#
+# The schema leaves ambiguous whether something is a <#MidNum> or a <#LastNum>.
+# The SemActs determine whether a passed number is a <#MidNum> or a <#LastNum>.
+# The decision is based on numeric computations beyond the expressivity of ShEx
+# itself so they must be executed as a SemAct.
+PREFIX : <http://a.example/calc#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX Reduce: <http://shex.io/extensions/Reduce/>
+BASE <http://a.example/calc>
+
+# The running sum: a start action runs once, before the match, which is
+# where the state the other actions share is set up.  Keyed by node rather
+# than added up: an action may be tried on a node twice, and noting a node
+# twice notes it once.  key() is what makes a term a key: an IRI is a string
+# already, a literal is an object, and every object is the same key.
+%Reduce:{
+  state.noted = {};
+  state.note = (node, value) => { state.noted[key(node)] = value; return value; };
+  state.before = node => Object.keys(state.noted)
+    .filter(at => at !== key(node))
+    .reduce((sum, at) => sum + state.noted[at], 0);
+%}
+
+<#Expr> @<#BinOp> OR @<#MidNum> OR @<#LastNum>
+
+<#BinOp> {
+  a       [:Add :Sub :Mul :Div] ;
+  :left   @<#Expr> ;
+  :right  @<#Expr>
+} %Reduce:{ $ = {op: local(one('a')), left: one(':left'), right: one(':right')} %}
+
+# A number with more to come: not the sum, and noted so the sum grows.
+<#MidNum> {
+  a       [:Num] ;
+  :value  xsd:integer %Reduce:{
+    $ = num($1) === state.before(subject)
+      ? {failure: 'the sum of the numbers before it, so it ends the expression'}
+      : state.note(subject, num($1))
+  %}
+} %Reduce:{ $ = {op: 'num', value: one(':value')} %}
+
+# ...and the one that ends it: the sum, with nothing after it to note.
+<#LastNum> {
+  a       [:Num] ;
+  :value  xsd:integer %Reduce:{
+    $ = num($1) === state.before(subject)
+      ? num($1)
+      : {failure: 'not the sum of the numbers before it'}
+  %}
+} %Reduce:{ $ = {op: 'last', value: one(':value')} %}

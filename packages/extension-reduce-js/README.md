@@ -46,7 +46,14 @@ On a **triple constraint**: `subject`, `predicate`, `object`, and `value` — wh
 the object reduced to. What the action returns stands in for that arc.
 
 In both: `str` `num` `iri` `local` `lang` `datatype` `isBnode` for reading a
-term, `RDF` `XSD` `nil` `expand`, and whatever the caller passed as `api`.
+term, `key` for using one as a key, `RDF` `XSD` `nil` `expand`, `state` for
+what an action wants the next one to know, and whatever the caller passed as
+`api`.
+
+`key(term)` earns its place because an IRI and a blank node reach an action as
+strings and a literal reaches it as `{value, type?, language?}` — and an object
+used as a key is `"[object Object]"`, the same key for every literal there is.
+`key` answers with the term as N-Triples writes it, so no two terms share one.
 
 A predicate is written as a full IRI, as `a` (always `rdf:type`), or with a
 prefix from `reduce`'s `prefixes` option.

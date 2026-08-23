@@ -55,6 +55,7 @@ function namesFor(scope) {
         object: scope.object,
         value: scope.value,
         arcs,
+        state: scope.state,
         // reaching the arcs
         all: at,
         has: (p) => at(p).length > 0,
@@ -74,7 +75,7 @@ function namesFor(scope) {
             return found[0];
         },
         // reading a term
-        str, num, iri, local, lang, datatype, isBnode,
+        str, num, iri, local, lang, datatype, isBnode, key,
         expand, RDF, XSD, nil: RDF + 'nil',
     }, scope.bindings);
 }
@@ -97,6 +98,24 @@ function iri(term) {
 /** the part of an IRI after the last / or # -- what a type usually reads as */
 function local(term) {
     return str(term).replace(/^.*[/#]/, '');
+}
+/**
+ * A string that tells this term from every other one, for an action that
+ * keeps something per node.
+ *
+ * An IRI and a blank node arrive as strings and can be used as keys as they
+ * are; a literal arrives as `{value, type?, language?}`, and an object used
+ * as a key is the string "[object Object]" -- every literal the same one.
+ * So: the term as N-Triples writes it, near enough that no two terms share
+ * a key.
+ */
+function key(term) {
+    if (term === null || term === undefined)
+        return String(term);
+    if (typeof term === 'string')
+        return term;
+    return '"' + term.value + '"'
+        + (term.language ? '@' + term.language : term.type ? '^^' + term.type : '');
 }
 /** whether a term is a blank node, which ShExJ writes as a _: name */
 function isBnode(term) {
@@ -168,4 +187,5 @@ module.exports.local = local;
 module.exports.lang = lang;
 module.exports.datatype = datatype;
 module.exports.isBnode = isBnode;
+module.exports.key = key;
 //# sourceMappingURL=shex-extension-reduce-js.js.map

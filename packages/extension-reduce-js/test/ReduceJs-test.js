@@ -136,6 +136,17 @@ describe("the JavaScript evaluator", function () {
           expect(() => run(schema, data, {S: "iri(one(':p1'))"})).to.throw(/expected an IRI/);
         });
 
+        /* An action that keeps something per node needs a key, and a term
+         * is a string only when it is an IRI or a blank node: a literal is
+         * an object, and every object is the string "[object Object]". */
+        it("should key a term so that no two terms share one", function () {
+          const schema = "<http://a.example/S> { :p1 xsd:integer ; :p2 . ; :p3 . }";
+          const data = ':x :p1 42 ; :p2 "42" ; :p3 :o1 .';
+          expect(run(schema, data,
+                     {S: "[key(one(':p1')), key(one(':p2')), key(one(':p3')), key(node)]"}))
+            .to.deep.equal([`"42"^^${XSD}integer`, '"42"', B + "o1", B + "x"]);
+        });
+
         it("should put the caller's api alongside them", function () {
           expect(run(ONE_ARC, ONE_TRIPLE, {S: "helper(node)"},
                      {api: {helper: n => "saw " + n}}))
