@@ -28,7 +28,7 @@
     "@shexjs/validator": "^1.0.0-alpha.29",
     "n3": "^1.20.4",
     "shape-map": "^1.0.0-alpha.26",
-    "shape-path-core": "^0.0.7"
+    "shape-path-core": "^0.0.8"
   },
   "devDependencies": {
     "sinon": "^18.0.0"

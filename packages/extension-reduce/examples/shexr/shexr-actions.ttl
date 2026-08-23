@@ -95,30 +95,20 @@ BASE <http://shex.io/examples/shexr-actions>
   [ sa:path "@sx:NodeConstraint~sx:annotation" ; sa:code "$ = {annotations: $1}" ] ,
 
   # The facets are their own production -- NodeConstraint has them by
-  # `&<#xsFacets>` -- so their actions hang off that production, and the
-  # values turn up in the NodeConstraint's arcs all the same.
-  [ sa:path "$sx:stringFacet/thisTripleExpr::TripleConstraint[predicate = sx:length]" ;
-    sa:code "$ = {length: num($1)}; console.log('HERE', arguments); debugger" ] ,
-  [ sa:path "$sx:stringFacet/thisTripleExpr::TripleConstraint[predicate = sx:minlength]" ;
-    sa:code "$ = {minlength: num($1)}" ] ,
-  [ sa:path "$sx:stringFacet/thisTripleExpr::TripleConstraint[predicate = sx:maxlength]" ;
-    sa:code "$ = {maxlength: num($1)}" ] ,
-  [ sa:path "$sx:stringFacet/thisTripleExpr::TripleConstraint[predicate = sx:pattern]" ;
-    sa:code "$ = {pattern: str($1)}" ] ,
-  [ sa:path "$sx:stringFacet/thisTripleExpr::TripleConstraint[predicate = sx:flags]" ;
-    sa:code "$ = {flags: str($1)}" ] ,
-  [ sa:path "$sx:numericFacet/thisTripleExpr::TripleConstraint[predicate = sx:mininclusive]" ;
-    sa:code "$ = {mininclusive: num($1)}" ] ,
-  [ sa:path "$sx:numericFacet/thisTripleExpr::TripleConstraint[predicate = sx:minexclusive]" ;
-    sa:code "$ = {minexclusive: num($1)}" ] ,
-  [ sa:path "$sx:numericFacet/thisTripleExpr::TripleConstraint[predicate = sx:maxinclusive]" ;
-    sa:code "$ = {maxinclusive: num($1)}" ] ,
-  [ sa:path "$sx:numericFacet/thisTripleExpr::TripleConstraint[predicate = sx:maxexclusive]" ;
-    sa:code "$ = {maxexclusive: num($1)}" ] ,
-  [ sa:path "$sx:numericFacet/thisTripleExpr::TripleConstraint[predicate = sx:totaldigits]" ;
-    sa:code "$ = {totaldigits: num($1)}" ] ,
-  [ sa:path "$sx:numericFacet/thisTripleExpr::TripleConstraint[predicate = sx:fractiondigits]" ;
-    sa:code "$ = {fractiondigits: num($1)}" ] ,
+  # `&<#xsFacets>` -- and ~ reads an inclusion as part of the body that
+  # takes it in, so they are addressed the way the arcs written into the
+  # shape are.  The values turn up in the NodeConstraint's arcs all the same.
+  [ sa:path "@sx:NodeConstraint~sx:length" ;         sa:code "$ = {length: num($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:minlength" ;      sa:code "$ = {minlength: num($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:maxlength" ;      sa:code "$ = {maxlength: num($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:pattern" ;        sa:code "$ = {pattern: str($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:flags" ;          sa:code "$ = {flags: str($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:mininclusive" ;   sa:code "$ = {mininclusive: num($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:minexclusive" ;   sa:code "$ = {minexclusive: num($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:maxinclusive" ;   sa:code "$ = {maxinclusive: num($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:maxexclusive" ;   sa:code "$ = {maxexclusive: num($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:totaldigits" ;    sa:code "$ = {totaldigits: num($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:fractiondigits" ; sa:code "$ = {fractiondigits: num($1)}" ] ,
 
   ##### triple expressions
 

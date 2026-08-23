@@ -37,7 +37,7 @@
   "homepage": "https://github.com/shexjs/shex.js#readme",
   "dependencies": {
     "@shexjs/visitor": "^1.0.0-alpha.27",
-    "shape-path-core": "^0.0.7"
+    "shape-path-core": "^0.0.8"
   },
   "types": "./src/semact-overlay.ts",
   "devDependencies": {
