@@ -257,7 +257,7 @@ way to a DFA.
   with `--jsonvars` as `staticVars` (CLI tests: `test/Map-cli-test.js`,
   including a `validate --extension | materialize` round trip over the
   BPDAMFHIR pair).
-* **shexmap-simple.html** (`doc/ShExMapInMainApp.js`): `DirectShExMaterializer`
+* **shexmap-simple.html** (`doc/ShExMapPlugin.js`): `DirectShExMaterializer`
   materializes with `MapModule.ThreadedMaterializer` and adds the returned
   quads to the result graph directly.
 * **shexmap-worker.html** (`doc/ShExMapInWorkerApp.js` /

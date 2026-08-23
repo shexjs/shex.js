@@ -88,6 +88,19 @@ if (!TEST_browser) {
         dom.window.close();
     });
 
+    /* The other half of doc/extension-ui-plan.md §5: a page that registers
+     * no extension gets nothing from one -- no sheet, and #inputarea keeps
+     * what this page says about it. */
+    it("should add nothing where no extension is registered", function () {
+      expect($("head style[data-extension]").length, "no extension sheets").to.equal(0);
+      expect(dom.window.ShExPlugins.all(), "and nothing registered").to.deep.equal([]);
+      expect($("#inputarea").css("overflow-x"), "a validator's inputs overflow")
+        .to.equal("visible");
+      expect($("#extensionPanes").children().length, "and no panes are built").to.equal(0);
+      expect(Object.keys(shared.Caches).sort(), "so these are the caches")
+        .to.deep.equal(["extension", "inputData", "inputSchema", "manifest", "shapeMap"]);
+    });
+
     it("should boot without errors in #results", function () {
       const errors = $("#results .error");
       expect(errors.length, errors.text()).to.equal(0);
@@ -537,6 +550,56 @@ if (!TEST_browser) {
             "the QueryMap extension " + extension +
             " is not supported by the neighborhood " + id);
         }
+      });
+
+      /* Inventory row 7 of doc/extension-ui-plan.md, which had no test.
+       * A query map names its nodes by asking the source, so an edit map
+       * over one has a cell nobody can point at.  Right-clicking it offers
+       * the nodes the question answered with, and "- materialize -" at the
+       * head of them means all of them: the map becomes the rows it stood
+       * for, which is the only way to get at them one at a time. */
+      it("should expand a query map into one edit-map row per node it names", async function () {
+        // on this page, with nothing registered: "materialize" here is the
+        // query's, not ShExMap's
+        expect(dom.window.ShExPlugins.all()).to.deep.equal([]);
+        source().select("wikidata");
+        const shapeMap = shared.Caches.shapeMap;
+        const qentities = "http://www.w3.org/ns/shex#Extensions-qentities";
+        shapeMap.removeEditMapPair(null);
+        shapeMap.addEditMapPairs(
+          [{node: {type: "Extension", language: qentities, lexical: "42 76"},
+            shape: "http://a.example/S"}], null);
+
+        const focus = $("#editMap .pair:nth(0) .focus");
+        expect(focus.val(), "the question, as the source writes it")
+          .to.equal("QENTITIES \'\'\'42 76\'\'\'");
+
+        // a real right-click: the plugin ignores a synthetic contextmenu
+        // (its own "open" is one), and the app's handler builds the items
+        focus[0].dispatchEvent(new dom.window.MouseEvent(
+          "contextmenu", {bubbles: true, cancelable: true, button: 2}));
+        for (let i = 0; i < 200 && $("ul.context-menu-list li").length === 0; ++i)
+          await new Promise(res => setTimeout(res, 10));
+        const items = $("ul.context-menu-list li");
+        // spelled as the page would write them: a scheme-relative reference
+        // resolves back to the same IRI against the page's own base
+        expect(items.map((i, li) => $(li).text()).get(),
+               "the answers, and the item that takes all of them").to.deep.equal([
+          "- materialize -",
+          "<//www.wikidata.org/entity/Q42>",
+          "<//www.wikidata.org/entity/Q76>",
+        ]);
+
+        items.eq(0).trigger("mouseup");   // as the plugin activates an item
+        const pairs = $("#editMap .pair").map((i, tr) => [[
+          $(tr).find(".focus").val(), $(tr).find(".inputShape").val()
+        ]]).get();
+        expect(pairs, "a row per node, each with the shape the query had")
+          .to.deep.equal([
+            ["<//www.wikidata.org/entity/Q42>", "<//a.example/S>"],
+            ["<//www.wikidata.org/entity/Q76>", "<//a.example/S>"],
+          ]);
+        shapeMap.removeEditMapPair(null);
       });
 
       /* A manifest entry's source settings arrive after its documents do --

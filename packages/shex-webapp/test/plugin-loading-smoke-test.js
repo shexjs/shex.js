@@ -1,0 +1,247 @@
+/** Loading an extension by URL (doc/extension-ui-plan.md §5 phase 2).
+ *
+ * shex-simple.html has no ShExMap in it.  Told where one is -- in the query
+ * string, or by the manifest entry that needs it -- it fetches the module,
+ * registers what the module says it adds, and puts it on the page: the
+ * panes appear, the manifest keys they declare get read, and the permalink
+ * brings the whole thing back.
+ *
+ * The other half is the half ?extension= was built for: a module that
+ * registers a semantic action handler, which is what the schema's
+ * %Ext:{...%} dispatches on.  One module may do either or both.
+ */
+"use strict";
+
+const TEST_browser = "TEST_browser" in process.env ? JSON.parse(process.env["TEST_browser"]) : false;
+
+const Fs = require("fs");
+const Path = require("path");
+const expect = require("chai").expect;
+const node_fetch = require("node-fetch");
+let JSDOM, VirtualConsole;
+
+const [[GitRootServer]] = require("../../../tools/testServer")
+      .startServer(
+        [ { url: "http://localhost:9999/shex.js/",
+            fromDir: Path.join(__dirname, "../../..") }
+        ]
+      );
+
+const PAGE = "packages/shex-webapp/doc/shex-simple.html";
+const MAP_EXTENSION = "../../extension-map/doc/ShExMapPlugin.js";
+const MAP_MANIFEST = "../../extension-map/examples/manifest.yaml";
+// the package's build output, which needs no bundler: no requires, and
+// module.exports is the extension.  (browser/ holds a browserify bundle of
+// a file that no longer exists, from before SemActFailure -- it returns
+// `false`, which the validator now refuses.)
+const TEST_EXTENSION = "../../extension-test/lib/shex-extension-test.js";
+const MAP_ID = "http://shex.io/extensions/Map/#";
+
+if (!TEST_browser) {
+  console.warn("Skipping extension-loading-smoke-tests; to activate these tests, set environment variable TEST_browser=true");
+} else {
+  ({JSDOM, VirtualConsole} = require("jsdom"));
+
+  /** shex-simple.html, booted with this query string */
+  async function boot (search) {
+    const virtualConsole = new VirtualConsole().forwardTo(console, {jsdomErrors: "none"});
+    const dom = new JSDOM(Fs.readFileSync(Path.join(__dirname, "../../..", PAGE), "utf8"), {
+      url: GitRootServer.urlFor(PAGE + search),
+      runScripts: "dangerously",
+      resources: "usable",
+      pretendToBeVisual: true,
+      virtualConsole,
+    });
+    dom.window.fetch = node_fetch;
+    if (!dom.window.CSS)
+      dom.window.CSS = { escape: s => String(s).replace(/[^a-zA-Z0-9_ -￿-]/g, c => `\\${c}`) };
+    dom.window.Range.prototype.getClientRects = function () { return []; };
+    dom.window.Range.prototype.getBoundingClientRect =
+      function () { return {x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0, width: 0, height: 0}; };
+    const shared = await new Promise((resolve, reject) => {
+      dom.window._testCallback = parm => parm instanceof Error ? reject(parm) : resolve(parm);
+    });
+    await shared.promise;
+    return {dom, $: dom.window.$, shared};
+  }
+
+  /** what the three ShExMap panes hold, or null where there is no such pane */
+  const paneTexts = $ => ["#bindings1", "#staticVars", "#outputSchema"].map(
+    sel => $(sel + " textarea").length ? $(sel + " textarea").first().val() : null);
+
+  describe("shex-simple, told in the query string where an extension is", function () {
+    this.timeout(20000);
+    let dom, $, shared;
+
+    before(async function () {
+      ({dom, $, shared} = await boot("?editors=1&extension=" + encodeURIComponent(MAP_EXTENSION)));
+    });
+    after(function () { if (dom) dom.window.close(); });
+
+    it("should fetch the module and register what it says it adds", function () {
+      expect(dom.window.ShExPlugins.all().map(e => e.label)).to.deep.equal(["ShExMap"]);
+      expect($("head style[data-extension]").attr("data-extension")).to.equal(MAP_ID);
+    });
+
+    it("should build its panes on a page that has no markup for them", function () {
+      const card = $("#extensionPanes > [data-extension]");
+      expect(card.length, "one card").to.equal(1);
+      expect(card.children("[id]").map((i, e) => e.id).get())
+        .to.deep.equal(["bindings1", "staticVars", "outputSchema"]);
+      expect(Object.keys(shared.Caches)).to.include.members(["bindings", "statics", "outputSchema"]);
+      // ?editors=1: the panes it declared are editors like the page's own
+      expect(Object.keys(shared.Caches.editorSupport.panes))
+        .to.include.members(["bindings", "statics", "outputSchema"]);
+    });
+
+    /* The declaration moves before the code does.  The verb is here now --
+     * the descriptor carries it -- but what it materializes with is
+     * ShExMap's module, which this page has never loaded, so pressing the
+     * button says that where the results go rather than throwing into the
+     * console.  The module arrives in phase 3. */
+    it("should build its toolbar, and say so when the verb is not loaded", async function () {
+      const toolbar = $("#extensionPanes [data-extension] > .pluginToolbar");
+      expect(toolbar.length, "one toolbar").to.equal(1);
+      expect(toolbar.find("button").map((i, b) => b.id).get()).to.deep.equal(
+        ["materialize", "debugMaterialize",
+         "dbgContinue", "dbgInto", "dbgOver", "dbgOut", "dbgStop"]);
+      expect($("#outputShapeMap").length, "and the input that is not a pane").to.equal(1);
+      expect($("#debugControls").css("display"), "the step buttons wait").to.equal("none");
+
+      $("#materialize").trigger("click");
+      await shared.promise;
+      expect($("#results .error").text(), "the button says what it hasn't got")
+        .to.include("ShExMap's module is not loaded on this page");
+    });
+
+    /* A validator has one kind of result and writes it into #results.  An
+     * extension with a second kind gets a tab, and this page -- which has
+     * never heard of materialization -- grows one on being told where
+     * ShExMap is. */
+    it("should give the extension's results a tab beside its own", function () {
+      expect($("#resultsTabs > ul > li > a").map((i, a) => $(a).text()).get())
+        .to.deep.equal(["validation"]);
+      expect($("#resultsTabs > #validationResults > div").length,
+             "this app's results, where they always were").to.equal(1);
+      expect($("#resultsTabs > #materializationResults").length,
+             "and a panel for the extension's").to.equal(1);
+      expect(shared.app.resultsTarget).to.equal("#validationResults > div");
+    });
+
+    it("should declare the query parameters and manifest keys that fill them", function () {
+      const parms = shared.app.QueryParams.filter(
+        p => ["bindings", "statics", "outSchema", "output-map"].includes(p.queryStringParm));
+      expect(parms.map(p => p.queryStringParm))
+        .to.deep.equal(["bindings", "statics", "outSchema", "output-map"]);
+      expect(parms.map(p => p.manifest && p.manifest.key))
+        .to.deep.equal([undefined, "staticVars", "outputSchema", "outputShapeMap"]);
+      // the toolbar's input is a parameter like a pane, without being a cache
+      expect(parms[3].location.attr("id")).to.equal("outputShapeMap");
+    });
+
+    /* Otherwise the link reproduces a page that can't read half of what the
+     * link says: an extension is part of the session, not a side effect. */
+    it("should carry it in the permalink", async function () {
+      const parms = (await shared.app.getPermalink()).split(/[?&]/);
+      expect(parms.filter(p => p.startsWith("extension"))).to.deep.equal([
+        "pluginURL=" + encodeURIComponent(GitRootServer.urlFor(
+          "packages/extension-map/doc/ShExMapPlugin.js")),
+      ]);
+    });
+  });
+
+  describe("shex-simple, given a manifest whose entries name an extension", function () {
+    this.timeout(20000);
+    let dom, $, shared;
+
+    before(async function () {
+      ({dom, $, shared} = await boot(
+        "?editors=1&interface=appinfo&manifestURL=" + encodeURIComponent(MAP_MANIFEST)));
+    });
+    after(function () { if (dom) dom.window.close(); });
+
+    /* The manifest is a list of entries; an extension is what an entry is
+     * read *by*, so nothing loads until an entry is picked. */
+    it("should load nothing until an entry asks for it", function () {
+      expect(dom.window.ShExPlugins.all()).to.deep.equal([]);
+      expect(paneTexts($), "no panes").to.deep.equal([null, null, null]);
+      expect($("#inputSchema .manifest li").length, "but the entries are there").to.be.above(0);
+    });
+
+    /* ...and then everything the entry says is read, including the keys
+     * that only exist because the extension declared them.  Before this,
+     * outputSchemaURL and staticVars were dropped in silence. */
+    it("should load it when an entry is picked, and read the entry into it", async function () {
+      $("#inputSchema .manifest li").filter((i, li) => $(li).text() === "BP").trigger("click");
+      await shared.promise;
+      $("#inputData .passes li").filter((i, li) => $(li).text() === "simple").trigger("click");
+      await shared.promise;
+
+      expect(dom.window.ShExPlugins.all().map(e => e.label)).to.deep.equal(["ShExMap"]);
+      const [bindings, statics, outputSchema] = paneTexts($);
+      expect(bindings, "a validation product, not an input").to.equal("");
+      expect(JSON.parse(statics))
+        .to.deep.equal({"http://abc.example/someConstant": "\"123-456\""});
+      expect(outputSchema, "fetched via the entry's outputSchemaURL").to.include("<BPunitsDAM>");
+      // a pane built after the editors were switched on is still an editor
+      expect(Object.keys(shared.Caches.editorSupport.panes))
+        .to.include.members(["bindings", "statics", "outputSchema"]);
+    });
+
+    it("should load it once, however many entries name it", async function () {
+      $("#inputSchema .manifest li").filter((i, li) => $(li).text() === "BP back").trigger("click");
+      await shared.promise;
+      expect(dom.window.ShExPlugins.all().length, "the same extension, not a second one")
+        .to.equal(1);
+      expect($("#extensionPanes > [data-extension]").length, "and one card").to.equal(1);
+    });
+  });
+
+  describe("shex-simple, given a semantic action extension", function () {
+    this.timeout(20000);
+    let dom, $, shared;
+    const set = (selector, value) => {
+      const elt = $(selector).first();
+      elt.val(value);
+      elt.trigger("change");
+    };
+
+    before(async function () {
+      ({dom, $, shared} = await boot("?extension=" + encodeURIComponent(TEST_EXTENSION)));
+      set("#inputSchema textarea", [
+        "PREFIX : <http://a.example/>",
+        "PREFIX Test: <http://shex.io/extensions/Test/>",
+        ':S { :p . %Test:{ fail("no") %} }',
+      ].join("\n"));
+      set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .");
+      set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
+      await shared.promise;
+    });
+    after(function () { if (dom) dom.window.close(); });
+
+    it("should offer it in the menu, with no panes and no styles", function () {
+      const control = $(".pluginControl");
+      expect(control.length, "one control").to.equal(1);
+      expect(control.attr("data-name")).to.equal("Test");
+      expect(control.is(":checked"), "on when loaded").to.equal(true);
+      expect(dom.window.ShExPlugins.all(), "it adds nothing to the page").to.deep.equal([]);
+    });
+
+    /* The handler decides the match: shexTest's Test extension fails a
+     * node whose action says fail().  Unregistered, the same action is
+     * skipped -- so this says the loaded code reached the validator, which
+     * is what `$(".pluginControl:checked")` is for. */
+    it("should hand its handler to the validator", async function () {
+      $("#validate").trigger("click");
+      await shared.promise;
+      expect($("#results .fails").length, "the action failed the node").to.be.above(0);
+    });
+
+    it("should leave the action to nobody when it is switched off", async function () {
+      $(".pluginControl").prop("checked", false);
+      $("#validate").trigger("click");
+      await shared.promise;
+      expect($("#results .passes").length, "an unhandled action is skipped").to.be.above(0);
+    });
+  });
+}

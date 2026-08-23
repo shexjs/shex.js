@@ -48,7 +48,10 @@ if (!TEST_browser) {
         virtualConsole,
         beforeParse (window) {
           // the page's head script runs new Worker("ShExMapWorkerThread.js")
-          window.Worker = makeWorkerClass(Path.dirname(base));
+          window.Worker = makeWorkerClass(Path.dirname(base), {}, [
+            // the app names its extensions' worker halves by URL
+            {prefix: GitRootServer.urlFor(""), dir: Path.join(__dirname, "../../..")},
+          ]);
         },
       });
       dom.window.fetch = node_fetch;
@@ -75,6 +78,23 @@ if (!TEST_browser) {
     after(function () {
       if (dom)
         dom.window.close();
+    });
+
+
+    /* Inventory rows 15 and 16.  This page's worker is the plain one; what
+     * makes it a ShExMap worker is the extension's own worker half, named
+     * by URL on every request and imported once -- which is why
+     * ShExMapWorkerThread.js is no longer a copy of ShExWorkerThread.js
+     * with materialize bolted on, and why the copy's staleness (a
+     * synchronous SPARQL db, unmarshalled query-tracker terms) went with
+     * it. */
+    it("should validate in the plain worker, with ShExMap named as an extension", function () {
+      expect(shared.app.remote, "this app validates over there").to.equal(true);
+      const ext = dom.window.ShExPlugins.byId("http://shex.io/extensions/Map/#");
+      expect(ext.worker, "and says where its worker half is, relative to itself")
+        .to.equal("./ShExMapWorkerThread.js");
+      expect(new dom.window.URL(ext.worker, ext.baseUrl).href)
+        .to.equal(GitRootServer.urlFor("packages/extension-map/doc/ShExMapWorkerThread.js"));
     });
 
     it("should boot with editor panes on the ShExMap caches", function () {

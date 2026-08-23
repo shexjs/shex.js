@@ -8,11 +8,6 @@
     <script src="../../shex-webapp/doc/webpacks/jquery-components.min.js"></script>
     <link rel="stylesheet" href="../../shex-webapp/doc/shex-app.css" />
     <style>
-      /* a map app has an output panel too, so its inputs may need scrolling */
-      #inputarea { overflow-x: auto; }
-      /* and a bindings pane, which is neither schema nor data */
-      #bindings1 textarea, .meta { background-color: #fffff4; color: #000000; border-color: #56fc1c}
-      #bindings1 li.selected { background-color: #ffffe8; }
     </style>
   </head>
 
@@ -52,7 +47,7 @@
               <li class="menuitem" id="load-schema-button">load <span class="schema">schema</span></li>
               <li class="menuitem" id="load-data-button">load <span class="data">data</span></li>
               <li class="menuitem" id="load-manifest-button">load <span class="manifest">manifest</span></li>
-              <li id="extensionDrop" class="droparea"><h3>Extensions</h3></li>
+              <li id="pluginDrop" class="droparea"><h3>Extensions</h3></li>
               <li class="menuitem" id="load-extension-button">load <span class="extension">extension</span></li>
               <li class="        "><hr/></li>
               <li class="        "><h3>drag and drop</h3></li>
@@ -216,41 +211,13 @@
           <div id="valDbgStatusRow" class="valDbgRow" style="display:none"><span id="valDbgStatus"></span></div>
         </div>
       </div>
-      <div class="panel">
-        <div id="bindings1">
-          <h2 class="status"> </h2>
-          <textarea rows="19" class="bindings droparea" style="width: 100%" spellcheck="false"></textarea>
-        </div>
-        <div id="staticVars" style="width: 100%;">
-          <h2 class="status"> </h2>
-          <textarea rows="5" class="vars droparea" style="width: 100%" spellcheck="false"></textarea>
-        </div>
-        <div id="outactionsRow">
-          <div id="outactions">
-            <button id="materialize">materialize (ctl-\)</button> <button id="debugMaterialize" title="step through materialization (set breakpoints in the output schema's gutter)">🐞</button> <input id="outputShapeMap" type="text" value="" class="schema context-menu-one btn btn-neutral" placeholder="&lt;node&gt;@&lt;shape&gt;" title="output ShapeMap, e.g. &lt;tag:root&gt;@&lt;OutputShape&gt; — the node names the graph root to create; right-click picks the shape"/><span id="debugControls" style="display:none"><button id="dbgContinue" title="continue">▶</button><button id="dbgInto" title="step into">⤵</button><button id="dbgOver" title="step over">⏭</button><button id="dbgOut" title="step out">⤴</button><button id="dbgStop" title="stop">⏹</button></span>
-            <div id="dbgStatusRow" class="valDbgRow" style="display:none"><span id="dbgStatus"></span></div>
-          </div>
-        </div>
-      </div>
-      <div id="output" class="panel">
-        <div id="outputSchema" style="width: 100%;">
-          <h2 class="status"> </h2>
-          <textarea rows="25" class="schema droparea" style="width: 100%" spellcheck="false"></textarea>
-        </div>
-        <div id="dbgThreadsRow"><span id="dbgThreads" title="pending and accepted threads; hover or click to render one's graph"></span></div>
-      </div>
+      <!-- where the registered extensions build their panes; ShExMap's
+           bindings, static variables and output schema land here -->
+      <div id="extensionPanes"></div>
     </div>
     <div id="results">
       <h2 class="status"> </h2>
-      <!-- two kinds of results, a tab each: a validation, and the
-           materialization of one.  The materialization tab appears when
-           there is a materialization and goes when a validation replaces
-           the bindings it came from. -->
-      <div id="resultsTabs">
-        <ul><li><a href="#validationResults">validation</a></li></ul>
-        <div id="validationResults"><div></div></div>
-        <div id="materializationResults" style="display: none;"><div></div></div>
-      </div>
+      <div></div>
     </div>
     <script src="../../shex-webapp/doc/webpacks/n3js.js"></script>
 
@@ -304,11 +271,12 @@
     </script>
     <script src="../../shex-webapp/doc/iri.js"></script>
     <script src="../../shex-webapp/doc/ShExBaseApp.js"></script>
-    <script src="./ShExMapBaseApp.js"></script>
-    <script src="./ShExMapInMainApp.js"></script>
+    <script src="../../shex-webapp/doc/ShExPlugins.js"></script>
+    <script src="./ShExMapPlugin.js"></script>
+    <script src="../../shex-webapp/doc/ShExApp.js"></script>
     <script src="../../shex-webapp/doc/ShExRSchema.js"></script>
     <script>
-      const shExAppInstance = new ShExMapInMainApp(DefaultBase);
+      const shExAppInstance = new ShExApp(DefaultBase);
       shExAppInstance.start();
       const isRealBrowser = Object.getOwnPropertyDescriptor(globalThis, 'window')?.get?.toString().includes('[native code]') ?? false;
       if (isRealBrowser) // quiet in tests

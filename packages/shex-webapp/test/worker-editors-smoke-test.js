@@ -65,7 +65,10 @@ if (!TEST_browser) {
         virtualConsole,
         beforeParse (window) {
           // the page's head script runs new Worker("ShExWorkerThread.js")
-          window.Worker = makeWorkerClass(Path.dirname(base));
+          window.Worker = makeWorkerClass(Path.dirname(base), {}, [
+            // the app names its extensions' worker halves by URL
+            {prefix: GitRootServer.urlFor(""), dir: Path.join(__dirname, "../..")},
+          ]);
         },
       });
       dom.window.fetch = node_fetch;

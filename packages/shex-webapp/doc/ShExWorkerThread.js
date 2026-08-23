@@ -5,11 +5,45 @@ importScripts("./WorkerMarshalling.js");
 
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 let validator = null;
+
+/**
+ * The worker half of an extension (doc/extension-ui-plan.md §3).
+ *
+ * A classic worker can importScripts any URL that permits it, which is what
+ * "load an extension by URL" means on this side.  The app names its
+ * extensions' worker scripts on every request; each is imported once, and
+ * what it registers here is a handler for the validator and handlers for
+ * the requests it adds.  ShExMap's `materialize` is the first.
+ */
+const WorkerPlugins = [];
+const importedPlugins = new Set();
+
+function registerWorkerPlugin (extension) {
+  WorkerPlugins.push(extension);
+}
+
+/** the base a just-imported extension resolves its own files against: a
+ * worker resolves importScripts against *its* URL, not the imported one */
+let pluginBase = null;
+
+function importPlugins (urls) {
+  (urls || []).forEach(url => {
+    if (importedPlugins.has(url))
+      return;
+    importedPlugins.add(url);
+    pluginBase = new URL(".", url).href;
+    importScripts(url);
+    pluginBase = null;
+  });
+}
+
 self.onmessage = async function (msg) {
 let errorText = undefined;
 let time;
 // await wait(1000); // play with delays in response
 try {
+  errorText = "loading extensions";
+  importPlugins(msg.data.extensions);
   switch (msg.data.request) {
   case "create":
     errorText = "creating validator";
@@ -34,7 +68,10 @@ try {
       inputData,
       createOpts
     );
-    // extensions.each(ext => ext.register(validator, ShExWebApp);
+    WorkerPlugins.forEach(ext => {
+      if (typeof ext.register === "function")
+        ext.register(validator, ShExWebApp);
+    });
     self.postMessage({ response: "created", results: {timestamp: new Date()} });
     break;
 
@@ -74,8 +111,17 @@ try {
       self.postMessage({ response: "done" });
     break;
 
-  default:
-    throw "unknown request: " + JSON.stringify(msg.data);
+  default: {
+    // a request an extension added: ShExMap's "materialize" is one
+    const handler = WorkerPlugins
+          .map(ext => (ext.requests || {})[msg.data.request])
+          .find(fn => typeof fn === "function");
+    if (!handler)
+      throw "unknown request: " + JSON.stringify(msg.data);
+    errorText = msg.data.request;
+    await handler(msg, ShExWebApp);
+    break;
+  }
   }
 } catch (e) {
 self.postMessage({ response: "error", message: e.message, stack: e.stack, text: errorText });

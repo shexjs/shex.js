@@ -95,6 +95,47 @@ if (!TEST_browser) {
       });
     });
 
+    /* Inventory row 6, and the first contribution to move: the bindings
+     * pane's colours were three rules in each map page's <style>, and are
+     * now one descriptor the page registers (doc/extension-ui-plan.md §5). */
+    it("should take its pane colours from the extension, not from the page", function () {
+      const sheet = $("head style[data-extension]");
+      expect(sheet.length, "the register put a sheet on the page").to.equal(1);
+      expect(sheet.attr("data-extension"), "whose").to.equal("http://shex.io/extensions/Map/#");
+      expect($("#bindings1 textarea").first().css("background-color"),
+             "and the bindings pane wears its colour").to.equal("rgb(255, 255, 244)");
+      expect($("#inputarea").css("overflow-x"),
+             "a map app's inputs scroll where a validator's overflow").to.equal("auto");
+      expect(dom.window.ShExPlugins.all().map(e => e.label)).to.deep.equal(["ShExMap"]);
+    });
+
+    /* Inventory rows 1-3, and the second contribution to move: bindings,
+     * static variables and the output schema were markup in each map page
+     * plus caches and parameter entries in ShExMapBaseApp, and are now three
+     * pane declarations.  The page supplies the slot; the extension says
+     * what goes in it and the base app makes all four parts agree. */
+    it("should build its panes from the extension, not from the page", function () {
+      const card = $("#extensionPanes > [data-extension]");
+      expect(card.length, "one card for the one extension").to.equal(1);
+      expect(card.attr("data-extension")).to.equal("http://shex.io/extensions/Map/#");
+      expect(card.children("[id]").map((_, elt) => elt.id).get(), "in declared order")
+        .to.deep.equal(["bindings1", "staticVars", "outputSchema"]);
+      expect($("#bindings1 textarea").first().attr("rows"), "as tall as it asked")
+        .to.equal("19");
+      expect($("#staticVars textarea").first().hasClass("vars"),
+             "wearing the class it asked for").to.be.true;
+      // a declaration makes four things that have to agree: the cache, the
+      // pane over it, the query parameter and the manifest key that fill it
+      expect(Object.keys(shared.Caches))
+        .to.include.members(["bindings", "statics", "outputSchema"]);
+      const parms = shared.app.QueryParams.filter(
+        p => ["bindings", "statics", "outSchema"].includes(p.queryStringParm));
+      expect(parms.map(p => p.queryStringParm))
+        .to.deep.equal(["bindings", "statics", "outSchema"]);
+      expect(parms.map(p => p.manifest && p.manifest.key), "bindings are a product")
+        .to.deep.equal([undefined, "staticVars", "outputSchema"]);
+    });
+
     it("should load a picked manifest entry's materialization inputs", async function () {
       // the default ../examples/manifest.json painted the schema list at boot
       const schemaLi = $("#inputSchema .manifest li").filter((_, elt) => $(elt).text() === "BP");
@@ -212,20 +253,31 @@ if (!TEST_browser) {
      * buttons.  jsdom does no layout, so what is checkable here is the shape
      * that avoids it: the float has a container that establishes a block
      * formatting context. */
+    /* Inventory rows 4 and 5, the third contribution to move: the row of
+     * controls was markup in both map pages and click handlers in
+     * ShExMapBaseApp.prepareControls, and is now `toolbar` in the
+     * descriptor.  It builds into the extension's own card, under the panes
+     * it consumes. */
     it("should keep the materialize buttons inside a box that contains them", function () {
-      const row = $("#outactionsRow");
-      expect(row.length, "#outactions has a named wrapper").to.equal(1);
-      expect(row.find("#outactions").length, "which holds it").to.equal(1);
+      const row = $("#extensionPanes [data-extension] > .pluginToolbar");
+      expect(row.length, "the toolbar has a wrapper").to.equal(1);
+      expect(row.find(".pluginToolbarInner").length, "which holds it").to.equal(1);
       expect(row.css("display"), "a block formatting context contains its floats")
         .to.equal("flow-root");
       // and the float is styled from the sheet, not from an inline style
       // that only this page would carry
-      expect($("#outactions").attr("style") || "", "no inline float").to.not.include("float");
-      expect($("#outactions").css("float")).to.equal("right");
+      expect(row.find(".pluginToolbarInner").attr("style") || "", "no inline float")
+        .to.not.include("float");
+      expect(row.find(".pluginToolbarInner").css("float")).to.equal("right");
       ["#materialize", "#debugMaterialize", "#outputShapeMap"].forEach(sel => {
         expect($(sel).length, sel).to.equal(1);
-        expect($(sel).closest("#outactions").length, sel + " is in the row").to.equal(1);
+        expect($(sel).closest(".pluginToolbarInner").length, sel + " is in the row").to.equal(1);
       });
+      // the step buttons wait inside it, hidden until a session starts
+      expect($("#debugControls").css("display")).to.equal("none");
+      expect($("#dbgStatusRow").closest(".pluginToolbarInner").length,
+             "and the status line is outside them, so hiding them keeps it").to.equal(1);
+      expect($("#dbgStatus").closest("#debugControls").length).to.equal(0);
     });
 
     /* Two of ShExMap's verbs are only a keystroke, so nothing else on the
@@ -247,13 +299,23 @@ if (!TEST_browser) {
       $("#validate").trigger("click");
       await shared.promise;
 
-      let pressed = 0;
-      $("#materialize").on("click", () => { ++pressed; });
-      key("\\");
-      await shared.promise;
-      expect(pressed, "ctl-\\ presses the button").to.equal(1);
-      expect($("#resultsTabs > ul > li > a").map((i, a) => $(a).text()).get(),
-             "and the button materializes").to.deep.equal(["validation", "materialization"]);
+      // the key runs the verb rather than pressing the button, so this
+      // counts the verb: one declaration, and both ways in reach it
+      const app = shared.app, real = app.materialize.bind(app);
+      let ran = 0;
+      app.materialize = () => { ++ran; return real(); };
+      try {
+        key("\\");
+        await shared.promise;
+        expect(ran, "ctl-\\ runs materialize").to.equal(1);
+        expect($("#resultsTabs > ul > li > a").map((i, a) => $(a).text()).get(),
+               "and materializing shows in the tabs").to.deep.equal(["validation", "materialization"]);
+        $("#materialize").trigger("click");
+        await shared.promise;
+        expect(ran, "and so does the button").to.equal(2);
+      } finally {
+        app.materialize = real;
+      }
 
       // the table is built from whatever the pane holds
       const pane = $("#bindings1 textarea").first();
@@ -318,7 +380,8 @@ if (!TEST_browser) {
       // changed the width of the block the step buttons sit in and moved
       // them out from under the mouse
       expect($("#dbgThreads").closest("#debugControls").length, "not in the controls").to.equal(0);
-      expect($("#dbgThreads").closest("#output").length, "in the target schema panel").to.equal(1);
+      expect($("#dbgThreads").closest(".pluginStatusbar").length,
+             "under the controls, in a row whose width nothing else depends on").to.equal(1);
       expect($("#dbgThreads").closest("#dbgThreadsRow").length, "on a row of its own").to.equal(1);
       $("#dbgThreads button").first().trigger("mouseenter"); // partial preview
       // ...and that preview is written the way the finished graph is.  A

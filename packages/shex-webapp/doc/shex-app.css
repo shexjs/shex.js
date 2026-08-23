@@ -64,7 +64,7 @@ ul[data-navColumn] button:focus::after  { content: " <"; color: #730; margin-rig
 .results { background-color: #fffff4; color: #000000; }
 #manifestDrop { border-color: white; width: 100%; }
 #manifestDrop div.manifest { overflow: auto; max-height: 10ex; }
-#extensionDrop { border-color: #00ffff; width: 88%; border-width: thin; }
+#pluginDrop { border-color: #00ffff; width: 88%; border-width: thin; }
 #inputSchema li button, #inputData li button {
   font-size: .7em;
   padding: 0em 2ex;
@@ -146,6 +146,9 @@ label {
 .heading {
   font-weight: bold;
 }
+/* the slot extensions' pane cards are built into: the cards are the
+   .panels, so the slot itself lays nothing out */
+#extensionPanes { display: contents; }
 .panel {
   width: 48.5%;
   display: inline-block;
@@ -272,46 +275,19 @@ ul {
     overflow-wrap: anywhere;
 }
 
-/* The materializer's controls, arranged like the validator's above.
+/* An extension's row of controls, arranged like the validator's above.
  *
- * #outactions floats right so it sits at the panel's edge, and its wrapper
- * held nothing else -- so the wrapper collapsed to no height at all, the
- * float escaped it, and what came next in the page laid out over the top of
- * the buttons.  A block formatting context contains its floats. */
-#outactionsRow {
+ * The inner box floats right so it sits at the panel's edge, and its
+ * wrapper held nothing else -- so the wrapper collapsed to no height at
+ * all, the float escaped it, and what came next in the page laid out over
+ * the top of the buttons.  A block formatting context contains its floats. */
+.pluginToolbar {
     display: flow-root;
 }
-#outactions {
+.pluginToolbarInner {
     float: right;
     margin-right: .1em;
     text-align: right;
-}
-#debugControls {
-    margin-left: .6em;
-    white-space: nowrap;
-}
-/* The materializer's thread list, at the left edge of the target schema
- * pane rather than in the right-floating controls.
- *
- * There it shared a right edge with the bindings pane, so every thread that
- * appeared or died changed the width of the block the step buttons sit in
- * and moved them out from under the mouse.  Here it grows rightward from an
- * edge that doesn't move. */
-#dbgThreadsRow {
-    min-height: 1.6em;
-    padding-top: .5em;   /* level with the controls under the bindings pane */
-    overflow-x: auto;
-    white-space: nowrap;
-    text-align: left;
-}
-#dbgThreads {
-    font-size: small;
-}
-#dbgStatus {
-    display: inline-block;
-    max-width: 100%;
-    white-space: normal;
-    overflow-wrap: anywhere;
 }
 
 /* The highlight switch's chip: centred above the validate/materialize

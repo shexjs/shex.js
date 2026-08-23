@@ -18,7 +18,11 @@ class Canceleable {
       ShExWorker.onmessage = (msg) => {
         return this.handler(msg, () => this.workerUICleanup(), resolve, reject)
       },
-      ShExWorker.postMessage(this.startMessage);
+      // what the worker has to have loaded to answer this: said on every
+      // request, since a materialization may reach a worker that has been
+      // restarted since the validation that fed it
+      ShExWorker.postMessage(
+        Object.assign({extensions: pluginWorkerUrls()}, this.startMessage));
     });
   }
 
