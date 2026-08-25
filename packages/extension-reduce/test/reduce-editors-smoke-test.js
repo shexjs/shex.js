@@ -83,12 +83,28 @@ if (!TEST_browser) {
       expect(dom.window.ShExPlugins.all().map(e => e.label)).to.deep.equal(["ShExReduce"]);
       const screen = $("#screens > .screen[data-plugin]");
       expect(screen.attr("data-plugin")).to.equal(REDUCE_ID);
+      // the schema and the overlay hung on it take turns in one column,
+      // the way the data source's documents do in #dataPaneTabs
       expect(screen.find(".panel > div[id]").map((i, e) => e.id).get())
-        .to.deep.equal(["reduceOverlay", "reduceAst"]);
-      expect(screen.children(".panel").length, "the input beside the product").to.equal(2);
+        .to.deep.equal(["schemaPaneTabs"]);
+      expect($("#schemaPaneTabs > ul > li > a").map((i, a) => $(a).attr("href")).get())
+        .to.deep.equal(["#inputSchemaTab", "#reduceOverlay"]);
+      expect($("#schemaPaneTabs > ul > li > a").map((i, a) => $(a).text()).get())
+        .to.deep.equal(["schema", "overlay"]);
+      // two of its panes are the app's own, borrowed when this screen is up:
+      // the schema an overlay names things in, and the data it is read against
+      expect(screen.find("[data-borrow]").map((i, e) => $(e).attr("data-borrow")).get())
+        .to.deep.equal(["inputSchema", "inputData"]);
+      // ...and what the fold built is a product, so it reads with the other
+      // results rather than on the screen you work on
+      expect($("#reduceAst").closest("#resultsTabs").length, "the AST is a results tab")
+        .to.equal(1);
+      expect($("#resultsTabs > ul > li > a").map((i, a) => $(a).text()).get())
+        .to.deep.equal(["validation", "AST"]);
       expect(screen.find(".pluginToolbar button").map((i, b) => b.id).get())
         .to.deep.equal(["reduce"]);
-      expect($("#screen option").length, "and a screen to switch to").to.equal(2);
+      expect($("#screenTabs button").map((i, b) => $(b).text()).get(),
+             "and a tab to switch by").to.deep.equal(["Validator", "ShExReduce"]);
       expect(typeof dom.window.ShExWebApp.Reduce, "the fold it runs on").to.equal("object");
       expect(typeof dom.window.ShExWebApp.ReduceJs, "and the language its actions are in")
         .to.equal("function");
@@ -128,16 +144,90 @@ if (!TEST_browser) {
     });
 
     /* A number that isn't the sum: no branch of the OR is left, so there is
-     * no parse, and the fold says so rather than folding nothing.  (The
-     * manifest entry expects the failure, so the page reports it as one
-     * that was expected -- a pass, in the results.) */
-    it("should say so when there is no parse to fold", async function () {
+     * no parse, and the fold says so rather than folding nothing.  It says
+     * it in the AST's own tab: the validation it is complaining about is in
+     * the tab next door, and clearing that to report on it would throw away
+     * what the reader is comparing against. */
+    it("should say so when there is no parse to fold, without clearing the validation",
+       async function () {
       await open("calc, actions falsify", "doesn't sum");
-      expect($("#results .passes, #results .fails").length, "it ran").to.be.above(0);
+      const validation = $("#validationResults > div").text();
+      expect(validation.length, "a validation to keep").to.be.above(0);
+
       $("#reduce").trigger("click");
       await shared.promise;
-      expect($("#results .error").text()).to.include("Validate conformant data");
+      expect($("#reduceAst .status").text()).to.include("validate conformant data");
       expect($("#reduceAst textarea").first().val()).to.equal("");
+      expect($("#validationResults > div").text(), "and the validation still there")
+        .to.equal(validation);
+    });
+
+    /* Having folded, it brings up what it folded into: the AST is a tab
+     * beside the validation, and both are the same box, so switching
+     * between them doesn't move the page underneath the reader. */
+    it("should bring up the AST tab, and leave the validation in the other one",
+       async function () {
+      await open("calc, actions guide", "sums");
+      const validation = $("#validationResults > div").text();
+      $("#reduce").trigger("click");
+      await shared.promise;
+
+      expect($("#resultsTabs > ul > li[aria-selected='true'] > a").attr("href"),
+             "the AST tab came up").to.equal("#reduceAstResults");
+      expect($("#reduceAst .status").text()).to.include("reduced 1 parse");
+      expect($("#validationResults > div").text(), "the validation kept its tab")
+        .to.equal(validation);
+      expect($("#reduceAstResults").css("height"), "in a box the size of the other")
+        .to.equal($("#validationResults").css("height"));
+      expect($("#reduceAst").hasClass("fillsColumn"), "which the AST fills").to.equal(true);
+    });
+
+    /* One pane, in whichever screen is looking at it -- not a copy, which
+     * would be a second thing to keep in step. */
+    it("should show the app's data pane on its screen, and give it back", function () {
+      const home = () => $("#inputData").parent().attr("id");
+      expect(home(), "at home to begin with").to.equal("inputarea");
+
+      $("#screenTabs button[data-screen]").last().trigger("click");
+      expect($("#inputData").closest("#screens > .screen").attr("data-plugin"),
+             "on the reduce screen").to.equal(REDUCE_ID);
+      // ...and the schema document with it, into its tab
+      expect($("#schemaDocument").parent().attr("id"), "the schema in its tab")
+        .to.equal("inputSchemaTab");
+      expect($("#schemaDocument textarea").length, "the same editor, moved").to.equal(1);
+      expect($("#inputData").css("display"), "and showing there").to.not.equal("none");
+      expect($("#inputData textarea, #inputData .shexjs-editor-pane").length,
+             "the same pane, still one of it").to.be.above(0);
+
+      $("#screenTabs button[data-screen='']").trigger("click");
+      expect(home(), "and back where the page put it").to.equal("inputarea");
+      expect($("#schemaDocument").parent().attr("id"), "the schema back in its panel")
+        .to.equal("inputSchema");
+      expect($("#inputData").css("display"), "showing on the validator's screen")
+        .to.not.equal("none");
+    });
+
+    /* The overlay stands where the schema stands on the validator's screen,
+     * and a dozen rows of textarea beside a full-height data pane looked
+     * like an afterthought.  It says `fill`, so it is the column: the
+     * screen's columns stretch to the tallest and the pane takes what its
+     * own has left once the status line has had its share.  (jsdom lays
+     * nothing out, so this reads the rules that would do it.) */
+    it("should give the overlay the height its column has", function () {
+      $("#screenTabs button[data-screen]").last().trigger("click");
+      const screen = $("#screens > .screen[data-plugin]");
+      expect(screen.css("display"), "columns side by side").to.equal("flex");
+      expect(screen.css("align-items"), "as tall as the tallest").to.equal("stretch");
+      expect(screen.children(".pluginToolbar").css("flex"), "the toolbar on its own line")
+        .to.include("100%");
+
+      const pane = $("#reduceOverlay");
+      expect(pane.hasClass("fillsColumn"), "the pane is the column").to.equal(true);
+      expect(pane.css("height")).to.equal("100%");
+      expect(pane.css("flex-direction")).to.equal("column");
+      expect($("#reduceOverlay textarea").attr("rows"),
+             "with a row count to fall back on").to.equal("25");
+      $("#screenTabs button[data-screen='']").trigger("click");
     });
 
     /* The hook ShExMap never needed: actions written in a document of their

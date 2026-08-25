@@ -35,7 +35,7 @@ const CONTRACT = {
   worker: "its half in the worker",
 };
 /** filled in by the register and the app, not written by an author */
-const BOOKKEEPING = ["baseUrl", "applied", "initialized"];
+const BOOKKEEPING = ["baseUrl", "applied", "initialized", "panesBuilt"];
 
 describe("the plugin contract", () => {
   const doc = read("doc/plugins.md");

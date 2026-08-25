@@ -27,7 +27,7 @@
     </svg>
 
     <div id="title">
-      <img src="ShEx-bones-min.svg" class="ShExLogo" alt="ShEx Icon"/><h1 style="float:left;">ShEx - <span class="screenName">Validator</span><select id="screen" style="display:none;" title="which screen is showing"><option value=""></option></select></h1>
+      <img src="ShEx-bones-min.svg" class="ShExLogo" alt="ShEx Icon"/><h1 style="float:left;">ShEx - <span class="screenName">Validator</span><span id="screenTabs" role="tablist" aria-label="screen" style="display:none;"></span></h1><input type="hidden" id="screen" value=""/>
       <span id="dataSource" style="float:right; padding-right:1em;"><label for="neighborhood">data source: </label><select id="neighborhood" title="where the data to validate comes from"></select></span>
       <!-- <ul id="navlist" style="float:left; padding-left: 1em;"> -->
       <!--   <li>â£ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
@@ -137,7 +137,7 @@
     <div id="inputarea">
       <div id="inputSchema" class="panel">
         <h2 class="status">Â </h2>
-        <textarea rows="25" class="schema droparea" style="width: 100%" spellcheck="false"></textarea>
+        <div id="schemaDocument"><textarea rows="25" class="schema droparea" style="width: 100%" spellcheck="false"></textarea></div>
         <div>
           <div id="manifestDrop" class="droparea">
             <p>Manifest:</p>

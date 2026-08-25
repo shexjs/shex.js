@@ -3158,6 +3158,8 @@ class ShExBaseApp {
   constructor (base) {
     this.base = base;
     this.resultsTargetSel = "#results > div";
+    // where a pane a screen borrowed came from, so it can go back
+    this.paneHomes = {};
     this.resultsWidget = new ResultsWidget(this.resultsTarget);
 
     // make parser/serializers available to extending classes
@@ -3228,7 +3230,7 @@ class ShExBaseApp {
       // answers to quietly means the validator, since there is nothing to
       // switch to.  start() shows what this lands on.
       {queryStringParm: "screen",       location: $("#screen"),          deflt: "",
-       normalize: v => $("#screen option").filter((i, o) => $(o).attr("value") === v).length
+       normalize: v => $("#screenTabs button").filter((i, b) => $(b).attr("data-screen") === v).length
                        ? v : ""},
       // The data source and whatever it wants configured.  A parameter is
       // named for what it means, not for the module that declares it, so a
@@ -3349,12 +3351,36 @@ class ShExBaseApp {
    * no markup for any of it.
    */
   buildPluginResultsTabs (ext) {
-    const panels = ext.resultsTabs || [];
-    if (panels.length === 0)
+    (ext.resultsTabs || []).forEach(
+      panel => this.resultsTabFor(panel.id, panel.label, {empty: true}));
+  }
+
+  /** Bring a results tab up, if the results are tabs at all.  A plugin
+   * that has just filled one says so rather than leaving the reader to
+   * find it. */
+  showResultsTab (id) {
+    const tabs = $("#resultsTabs");
+    if (tabs.length === 0 || !tabs.data("ui-tabs"))
       return;
+    const at = tabs.find("> ul > li > a").map((i, a) => $(a).attr("href")).get()
+          .indexOf("#" + id);
+    if (at !== -1)
+      tabs.tabs("option", "active", at);
+  }
+
+  /**
+   * The panel of one results tab, made if it isn't there.
+   *
+   * The results area is one panel until something else has results to show;
+   * then it becomes tabs, this app's own first (where they already are, so
+   * nothing that renders into them has to know) and the rest beside it.  A
+   * plugin gets here two ways: `resultsTabs`, for a tab it renders into
+   * itself, and a pane that says `tab:`, for one that is a pane like any
+   * other and happens to belong here.
+   */
+  resultsTabFor (id, label, {empty = false} = {}) {
     let tabs = $("#resultsTabs");
     if (tabs.length === 0) {
-      // this app's own results become the first tab, where they already are
       const mine = $("#results > div").first();
       tabs = $("<div/>").attr("id", "resultsTabs").insertBefore(mine);
       $("<ul/>").append($("<li/>").append(
@@ -3363,13 +3389,25 @@ class ShExBaseApp {
       this.resultsTargetSel = "#" + APP_RESULTS_TAB + " > div";
       this.resultsWidget.setTarget(this.resultsTarget);
     }
-    panels.forEach(panel => {
-      if ($("#" + panel.id).length > 0)
-        return;
-      $("<div/>").attr("id", panel.id).css("display", "none")
-        .append($("<div/>")).appendTo(tabs);
-    });
-    tabs.tabs();
+    let panel = $("#" + id);
+    if (panel.length === 0) {
+      panel = $("<div/>").attr("id", id).appendTo(tabs);
+      if (empty) {
+        // a tab the plugin renders into, and shows and hides itself: the
+        // materialization's comes and goes with the bindings it was made
+        // from, so the <li> is ShExMap's to add (showMaterialization)
+        panel.css("display", "none").append($("<div/>"));
+      } else {
+        // ...and a pane's tab is there as long as the pane is
+        $("<li/>").append($("<a/>", {href: "#" + id}).text(label || id))
+          .appendTo(tabs.children("ul").first());
+      }
+    }
+    if (tabs.data("ui-tabs"))
+      tabs.tabs("refresh");
+    else
+      tabs.tabs();
+    return panel;
   }
 
   /**
@@ -3395,41 +3433,64 @@ class ShExBaseApp {
     const screen = $("<div/>").addClass("screen").attr("data-plugin", ext.id).appendTo(slot);
     // a page without the switch keeps every screen visible, which is the
     // pre-screens layout; a page with it starts a new screen put away
-    if (this.addScreenOption(ext))
+    if (this.addScreenTab(ext))
       screen.hide();
     return screen;
   }
 
   /**
-   * The drop-down of screens, standing where the <h1> stood.
+   * The screen tabs, standing where the <h1>'s tail stood.
    *
-   * It appears with the first plugin screen: a page with only the
-   * validator's has nothing to switch and keeps its title.  The title's
-   * text becomes the first option, so the page is still named on screen.
+   * They appear with the first plugin screen: a page with only the
+   * validator's has nothing to switch and keeps its whole title.  What the
+   * title called the page -- "Validator" -- becomes the first tab, so the
+   * page is still named on screen and the name is still the thing you press
+   * to get back to it.  `#screen` is a hidden input rather than the control
+   * itself: it is where the answer lives, so a permalink reads and writes it
+   * like any other parameter (`?screen=`).
+   *
+   * Not jquery-ui tabs, which own the panels they switch; these switch
+   * screens that live further down the page, and the results area's tabs
+   * (which jquery-ui does own) are a different set of tabs about a
+   * different thing.
    */
-  addScreenOption (ext) {
-    const select = $("#screen");
-    if (select.length === 0)
+  addScreenTab (ext) {
+    const tabs = $("#screenTabs");
+    if (tabs.length === 0)
       return false;
-    if (!this.screenSelectLive) {
-      this.screenSelectLive = true;
+    if (!this.screenTabsLive) {
+      this.screenTabsLive = true;
       // .first(): the dialogs (#loadForm, #about) start life inside #title
       // and carry <h1>s of their own until jquery-ui moves them out
       const title = $("#title h1").first();
-      // The switch replaces the part of the title that named what is
-      // showing and leaves the rest of it -- "ShEx - " -- standing, so the
-      // page is still called something and still has a heading.  A title
-      // not marked up that way hands the switch the whole of itself.
+      // The tabs replace the part of the title that named what is showing
+      // and leave the rest of it -- "ShEx - " -- standing, so the page is
+      // still called something and still has a heading.  A title not marked
+      // up that way hands the tabs the whole of itself.
       const named = title.find(".screenName").first();
       const standsFor = named.length ? named : title;
-      select.children().first().text(standsFor.text().trim() || "validator");
+      this.addScreenTabFor("", standsFor.text().trim() || "validator");
       standsFor.hide();
-      select.show();
-      select.on("change", () => this.showScreen(select.val()));
+      tabs.show();
     }
-    if (select.children().filter((i, o) => $(o).attr("value") === ext.id).length === 0)
-      select.append($("<option/>").attr("value", ext.id).text(ext.label || ext.id));
+    this.addScreenTabFor(ext.id, ext.label || ext.id);
     return true;
+  }
+
+  /** one tab, unless it is already there */
+  addScreenTabFor (id, label) {
+    const tabs = $("#screenTabs");
+    if (tabs.children().filter((i, b) => $(b).attr("data-screen") === id).length > 0)
+      return;
+    $("<button/>", {type: "button", role: "tab", text: label,
+                    "data-screen": id, "aria-selected": String(id === this.currentScreen())})
+      .on("click", () => this.showScreen(id))
+      .appendTo(tabs);
+  }
+
+  /** which screen is up: the hidden input is the one place it is written */
+  currentScreen () {
+    return $("#screen").val() || "";
   }
 
   /**
@@ -3440,14 +3501,66 @@ class ShExBaseApp {
    * screen is up.
    */
   showScreen (id) {
-    const select = $("#screen");
-    if (select.length === 0)
+    if ($("#screen").length === 0)
       return;
-    if (select.val() !== id)
-      select.val(id);
+    $("#screen").val(id);
+    $("#screenTabs button").each(
+      (i, b) => $(b).attr("aria-selected", String($(b).attr("data-screen") === id)));
+    // home first: a screen that borrows one of the app's panes has it on
+    // loan, and the next screen (or the validator) wants it back
+    this.returnBorrowedPanes();
     $("#inputSchema, #inputData").toggle(id === "");
     $("#screens > .screen").each((i, e) => $(e).toggle($(e).attr("data-plugin") === id));
+    this.lendBorrowedPanes(id);
     this.remeasureScreenPanes(id);
+  }
+
+  /**
+   * A screen may show one of the app's own panes as well as its own.
+   *
+   * ShExReduce's overlay is read *against* the data, so its screen shows
+   * the data pane beside it -- the same pane, not a copy of it: one
+   * element, one cache, one editor, moved to wherever it is being looked
+   * at.  A copy would be a second thing to keep in step, which is what
+   * panes are for in the first place.
+   */
+  lendBorrowedPanes (id) {
+    if (id === "")
+      return;
+    $("#screens > .screen").filter((i, e) => $(e).attr("data-plugin") === id)
+      .find("[data-borrow]").each((i, slot) => {
+        const name = $(slot).attr("data-borrow");
+        const pane = this.borrowablePane(name, $(slot).attr("data-borrow-what"));
+        if (pane.length === 0)
+          return;
+        if (!this.paneHomes[name])
+          this.paneHomes[name] = {parent: pane.parent(), next: pane.next(),
+                                  what: $(slot).attr("data-borrow-what")};
+        pane.appendTo(slot).show();
+      });
+  }
+
+  /** every borrowed pane, back where the page put it */
+  returnBorrowedPanes () {
+    Object.keys(this.paneHomes).forEach(name => {
+      const home = this.paneHomes[name];
+      const pane = this.borrowablePane(name, home.what);
+      if (pane.length === 0)
+        return;
+      if (home.next.length)
+        pane.insertBefore(home.next);
+      else
+        pane.appendTo(home.parent);
+    });
+  }
+
+  /** what a screen borrows for a pane: the element the descriptor named,
+   * or the whole column the pane's textarea sits in */
+  borrowablePane (name, what) {
+    if (what)
+      return $(what);
+    const cache = this.Caches[name];
+    return cache ? cache.selection.closest(".panel") : $();
   }
 
   /** A CodeMirror pane measures nothing while it is display:none, so a
@@ -3636,29 +3749,58 @@ class ShExBaseApp {
    */
   buildPluginPanes (ext) {
     const panes = ext.panes || [];
-    if (panes.length === 0)
+    if (panes.length === 0 || ext.panesBuilt)
       return;
-    const screen = this.pluginScreen(ext);
-    if (screen.children(".panel").length > 0)
-      return; // already built: registered twice, or applied twice
+    ext.panesBuilt = true;
+    // A screen, if anything is going to be on it: a pane in a results tab
+    // and a pane the screen borrows are both located elsewhere.
+    const screen = panes.some(pane => !pane.tab) ? this.pluginScreen(ext) : $();
     // The screen's columns.  Panes share one unless `panel:` groups them
     // otherwise, so a descriptor written before screens renders as it did
     // -- one column -- and ShExMap says its output schema is a column of
     // its own, which is the two-column layout its own page had.
     const columns = new Map();
     panes.forEach(pane => {
-      const key = pane.panel === undefined ? "" : pane.panel;
-      if (!columns.has(key))
-        columns.set(key, $("<div/>").addClass("panel").attr("data-panel", key || null)
-                    .appendTo(screen));
+      // a pane of the app's, shown on this screen too: a slot to move it
+      // into, and nothing else -- it is built, filled and cached already
+      if (pane.borrow) {
+        const slot = $("<div/>").attr({
+          "data-borrow": pane.name,
+          // what to borrow: the pane's whole column, or the element named
+          "data-borrow-what": typeof pane.borrow === "string" ? pane.borrow : null,
+          id: pane.tabs ? pane.id || pane.name + "Tab" : null,
+        });
+        slot.appendTo(pane.tabs ? this.paneTabset(pane, screen, columns) : screen);
+        return;
+      }
+      // A pane that names a results tab is a product to read beside the
+      // other results rather than an input to work in, and goes there; the
+      // rest are columns of the screen, shared unless `panel:` says
+      // otherwise.
+      let container;
+      if (pane.tab) {
+        container = this.resultsTabFor(pane.tab.id || pane.id + "Tab", pane.tab.label);
+      } else if (pane.tabs) {
+        // panes that take turns in one column rather than stacking in it
+        container = this.paneTabset(pane, screen, columns);
+      } else {
+        const key = pane.panel === undefined ? "" : pane.panel;
+        if (!columns.has(key))
+          columns.set(key, $("<div/>").addClass("panel").attr("data-panel", key || null)
+                      .appendTo(screen));
+        container = columns.get(key);
+      }
       const textarea = $("<textarea/>")
             .attr({rows: pane.rows || 10, spellcheck: "false"})
             .addClass(pane.className || "")
             .css("width", "100%");
       $("<div/>").attr("id", pane.id).css("width", "100%")
+        // `fill`: this pane is the column, so it takes the column's height
+        // rather than asking for a number of rows (.fillsColumn, shex-app.css)
+        .addClass(pane.fill ? "fillsColumn" : null)
         // a non-breaking space, so an empty status line keeps its height
         .append($("<h2/>").addClass("status").text("\u00a0"), textarea)
-        .appendTo(columns.get(key));
+        .appendTo(container);
       const cache = this.paneCache(pane.kind, textarea);
       this.Caches[pane.name] = cache;
       const entry = {queryStringParm: pane.queryStringParm, location: cache.selection, cache};
@@ -3672,6 +3814,33 @@ class ShExBaseApp {
       if (this.editorSupport && pane.editor)
         this.editorSupport.addPane(pane.name, cache, pane.editor);
     });
+    screen.find("[data-tabset]").each((i, set) => $(set).tabs());
+  }
+
+  /**
+   * The tab set panes take turns in, made on demand (§4).
+   *
+   * A column can hold one pane at a time as well as several at once: the
+   * schema and the overlay it is read with are the same column of
+   * ShExReduce's screen, a tab each -- which is what the data source's own
+   * documents do in #dataPaneTabs.  `tabs:` names the set, `label:` names
+   * the tab, and the panes that share a set share a column in declaration
+   * order.
+   */
+  paneTabset (pane, screen, columns) {
+    const key = pane.panel === undefined ? "" : pane.panel;
+    if (!columns.has(key))
+      columns.set(key, $("<div/>").addClass("panel").attr("data-panel", key || null)
+                  .appendTo(screen));
+    let set = $("#" + pane.tabs);
+    if (set.length === 0) {
+      set = $("<div/>").attr({id: pane.tabs, "data-tabset": ""}).appendTo(columns.get(key));
+      $("<ul/>").appendTo(set);
+    }
+    const panel = pane.id || pane.name + "Tab";
+    set.children("ul").first().append(
+      $("<li/>").append($("<a/>", {href: "#" + panel}).text(pane.label || pane.name)));
+    return set;
   }
 
   /** The Menu → "user interface" editors select (?editors=1 in permalinks)
@@ -3753,7 +3922,7 @@ class ShExBaseApp {
     const ready = Promise.all([ dndPromise, loads ]).then(resolved => {
       this.setEditors(); // after ?editors=... has reached the menu select
       // ...and after the editors exist, so the screen's panes can measure
-      this.showScreen($("#screen").val() || "");
+      this.showScreen(this.currentScreen());
       return resolved;
     });
     if ('_testCallback' in window) {
@@ -4962,7 +5131,7 @@ class ShExBaseApp {
     $("#inputData .status").html("data (<span id=\"dataDialect\">" + this.neighborhoods.dialect() + "</span>)").show();
     // minimal: the shape map is all that stays beside the schema
     $("#shapeMapArea").siblings().hide();
-    $("#title img, #title h1, #screen").hide();
+    $("#title img, #title h1, #screenTabs").hide();
     $("#menuForm").css("position", "absolute").css(
       "left",
       $("#inputSchema .status").get(0).getBoundingClientRect().width -
@@ -4979,9 +5148,9 @@ class ShExBaseApp {
     // way and the part it replaced does not.  A title with no such part
     // hands over the whole of itself, and stays away while the switch is up.
     const named = $("#title h1").first().find(".screenName");
-    $("#title h1").toggle(!this.screenSelectLive || named.length > 0);
-    named.toggle(!this.screenSelectLive);
-    $("#screen").toggle(!!this.screenSelectLive);
+    $("#title h1").toggle(!this.screenTabsLive || named.length > 0);
+    named.toggle(!this.screenTabsLive);
+    $("#screenTabs").toggle(!!this.screenTabsLive);
     $("#menuForm").removeAttr("style");
     $("#controls").css("position", "absolute");
   }

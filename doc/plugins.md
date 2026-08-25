@@ -95,7 +95,10 @@ at registration, and the app marks `initialized` once `init` has run.
 ### On the page
 
 A plugin with panes or controls gets a **screen**: a page-full of its own,
-switched to by the select that stands where the page title stood.  The
+reached by the **screen tabs** that stand where the page title stood -- the
+first of them says what the title said, so the app's own screen is a tab
+like any other.  (Not to be confused with the **results tabs** below, which
+are about what came *of* a screen rather than which one you are on.)  The
 app's own screen is the validator -- schema, data, shape map -- and each
 plugin's screen holds its panes laid out in columns (**panels**), with its
 toolbar and statusbar underneath.  The results area below is shared across
@@ -124,7 +127,32 @@ Applied in this order, once per app:
    ```
    Panes share one column of the screen unless `panel:` groups them
    otherwise: panes naming the same `panel` stack in one column, in
-   declaration order.  `manifest` is how a manifest entry fills it: `key`
+   declaration order.  Two say where a pane goes instead:
+
+   - **`fill: true`** gives it the height of its column instead of the
+     `rows` it asks for -- for a pane that *is* the column, like
+     ShExReduce's overlay, which stands where the schema stands on the
+     validator's screen.  `rows` stays as what it falls back to.
+   - **`tab: {id, label}`** puts it in a results tab rather than on the
+     screen -- for a pane that holds what a verb *produced*, which reads
+     with the other results.  ShExReduce's AST is one.
+   - **`borrow: true`** takes a pane the app already has (`name` is its
+     cache's name, e.g. `inputData`) and shows it on this screen too.  It
+     is the same pane -- one element, one cache, one editor -- moved to
+     whichever screen is looking at it, and returned when you leave.
+     ShExReduce borrows the data pane, since an overlay is written for a
+     shape of data.  `borrow: "<selector>"` takes that element instead of
+     the pane's whole column, which is how ShExReduce gets the schema
+     document (`#schemaDocument`) without the manifest and the shape map
+     that share its column.  Nothing else in the entry is read but `tabs`
+     and `label`: the pane is not yours to declare.
+   - **`tabs: "<id>", label: "<text>"`** puts the pane in a set of tabs
+     rather than stacking it in the column: panes naming the same `tabs`
+     take turns in one column, a tab each, the way the data source's
+     documents do in `#dataPaneTabs`.  ShExReduce's schema and the overlay
+     hung on it are `#schemaPaneTabs`.
+
+     `manifest` is how a manifest entry fills it: `key`
    (and `<key>URL`, which is fetched and resolved against the manifest),
    `spillName` for a gist, `asYamlObject` where the entry holds a mapping
    and the pane holds JSON.  Omit `manifest` for a pane that is a *product*

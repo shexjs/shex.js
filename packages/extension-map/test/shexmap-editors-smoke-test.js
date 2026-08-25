@@ -152,30 +152,31 @@ if (!TEST_browser) {
      * ctl-\ still materializes -- which is the rule that hiding is display
      * and nothing else. */
     it("should stand a screen switch where the title stood", function () {
-      const select = $("#screen");
-      expect(select.length, "the switch is in the title bar").to.equal(1);
-      expect(select.css("display"), "and showing").to.not.equal("none");
+      const tabs = $("#screenTabs");
+      expect(tabs.length, "the tabs are in the title bar").to.equal(1);
+      expect(tabs.css("display"), "and showing").to.not.equal("none");
       // it stands in for the part of the title that named what is showing;
       // the rest of the heading stays, and says what the page is
       expect($("#title h1").css("display"), "the heading stays").to.not.equal("none");
       expect($("#title h1").text(), "with its name in it").to.include("ShEx");
       expect($("#title h1 .screenName").css("display"), "and the switch in the rest's place")
         .to.equal("none");
-      expect(select.find("option").first().text(), "which is what it says first")
+      expect(tabs.find("button").first().text(), "which is what the first tab says")
         .to.equal("Validator");
-      expect(select.find("option").map((i, o) => $(o).attr("value")).get())
+      expect(tabs.find("button").map((i, b) => $(b).attr("data-screen")).get())
         .to.deep.equal(["", "http://shex.io/extensions/Map/#"]);
-      expect(select.find("option").last().text()).to.equal("ShExMap");
-      expect(select.val(), "the validator's screen is up").to.equal("");
+      expect(tabs.find("button").last().text()).to.equal("ShExMap");
+      expect(tabs.find("button[aria-selected='true']").attr("data-screen"),
+             "the validator's is the one pressed").to.equal("");
       expect($("#screens > .screen").css("display"), "and the map's is away").to.equal("none");
     });
 
     it("should switch screens without unloading the one that hides", function () {
-      $("#screen").val("http://shex.io/extensions/Map/#").trigger("change");
+      $("#screenTabs button[data-screen='http://shex.io/extensions/Map/#']").trigger("click");
       expect($("#inputSchema").css("display"), "the schema panel went away").to.equal("none");
       expect($("#screens > .screen").css("display"), "the map's screen is up")
         .to.not.equal("none");
-      $("#screen").val("").trigger("change");
+      $("#screenTabs button[data-screen='']").trigger("click");
       expect($("#inputSchema").css("display"), "and back").to.not.equal("none");
       expect($("#screens > .screen").css("display")).to.equal("none");
     });
@@ -185,7 +186,7 @@ if (!TEST_browser) {
      * materialization's tab sits beside a validation's whichever screen is
      * showing, in the same place at the bottom of the page. */
     it("should keep the results below, across screens", async function () {
-      $("#screen").val("").trigger("change");
+      $("#screenTabs button[data-screen='']").trigger("click");
       $("#validate").trigger("click");
       await shared.promise;
       $("#materialize").trigger("click");
@@ -193,21 +194,21 @@ if (!TEST_browser) {
       const tabs = () => $("#resultsTabs > ul > li > a").map((i, a) => $(a).text()).get();
       expect(tabs(), "both kinds of result").to.deep.equal(["validation", "materialization"]);
 
-      $("#screen").val("http://shex.io/extensions/Map/#").trigger("change");
+      $("#screenTabs button[data-screen='http://shex.io/extensions/Map/#']").trigger("click");
       expect($("#results").css("display"), "still showing").to.not.equal("none");
       expect($("#results").prev().attr("id"), "still under the inputs").to.equal("inputarea");
       expect($("#results").closest("#screens, .screen").length, "and in no screen").to.equal(0);
       expect(tabs(), "with both tabs still in it").to.deep.equal(["validation", "materialization"]);
-      $("#screen").val("").trigger("change");
+      $("#screenTabs button[data-screen='']").trigger("click");
       expect(tabs(), "and back").to.deep.equal(["validation", "materialization"]);
     });
 
     it("should carry the screen in the permalink", async function () {
-      $("#screen").val("http://shex.io/extensions/Map/#").trigger("change");
+      $("#screenTabs button[data-screen='http://shex.io/extensions/Map/#']").trigger("click");
       const parms = (await shared.app.getPermalink()).split(/[?&]/);
       expect(parms).to.include(
         "screen=" + encodeURIComponent("http://shex.io/extensions/Map/#"));
-      $("#screen").val("").trigger("change");
+      $("#screenTabs button[data-screen='']").trigger("click");
       const back = (await shared.app.getPermalink()).split(/[?&]/);
       expect(back.filter(p => p.startsWith("screen=")), "the default rides free")
         .to.deep.equal([]);

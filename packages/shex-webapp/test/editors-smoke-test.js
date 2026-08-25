@@ -97,7 +97,7 @@ if (!TEST_browser) {
       expect($("#inputarea").css("overflow-x"), "a validator's inputs overflow")
         .to.equal("visible");
       expect($("#screens").length, "no screens are built").to.equal(0);
-      expect($("#screen").css("display"), "the switch stays hidden").to.equal("none");
+      expect($("#screenTabs").css("display"), "no tabs to switch by").to.equal("none");
       expect($("#title h1 .screenName").css("display"), "so the title says it all")
         .to.not.equal("none");
       expect($("#title h1").css("display"), "and the page keeps its title")

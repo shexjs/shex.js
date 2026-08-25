@@ -279,7 +279,7 @@ Three hosting facts shape it:
 
 A **screen** is a page-full of panes.  The validator — schema, data, shape
 map — is the app's own screen; a plugin that declares panes or controls
-gets a screen of its own, and a drop-down standing where the `<h1>` stood
+gets a screen of its own, and tabs standing where the `<h1>`'s tail stood
 switches between them (`#screen`; the title text becomes its first option,
 and a page with no plugin screens keeps its plain title).  Inside a screen,
 panes lay out in **panels** — the 48.5% columns the pages have always used

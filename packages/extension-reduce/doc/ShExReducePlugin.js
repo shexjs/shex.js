@@ -37,17 +37,27 @@ const ShExReduce = {
   panes: [
     // actions in a document of their own: an sa:Overlay, which `schema`
     // below hangs on the schema before anything validates against it
+    // The schema and the overlay hung on it are one column, a tab each --
+    // what #dataPaneTabs does for the data source's documents.  The schema
+    // is the app's own pane, borrowed: one pane, one cache, one editor,
+    // moved to whichever screen is looking at it, not a copy to keep in
+    // step.  An overlay names things in the schema, so this is the pane you
+    // want to be able to turn to.
+    {name: "inputSchema", borrow: "#schemaDocument",
+     tabs: "schemaPaneTabs", label: "schema"},
     {name: "overlay", id: "reduceOverlay", kind: "turtle", editor: "turtle",
-     rows: 12, className: "data droparea",
+     tabs: "schemaPaneTabs", label: "overlay",
+     fill: true, rows: 25, className: "data droparea",
      queryStringParm: "overlay",
      manifest: {key: "overlay", spillName: "overlay.ttl"}},
-    // ...and what the fold built, which is a product like ShExMap's
-    // bindings: no manifest key writes it.  Its own column, so the input
-    // reads on the left and the product on the right, like the validator
+    // ...and the data those actions are read against, beside it
+    {name: "inputData", borrow: true},
+    // ...and what the fold built, which is a product rather than an input:
+    // it belongs with the other results, in a tab of its own.
     {name: "ast", id: "reduceAst", kind: "json", editor: "json",
-     panel: "ast",
-     rows: 20, className: "bindings droparea",
-     queryStringParm: "ast"},
+     fill: true, rows: 20, className: "bindings droparea",
+     queryStringParm: "ast",
+     tab: {id: "reduceAstResults", label: "AST"}},
   ],
 
   toolbar: [
@@ -67,6 +77,7 @@ const ShExReduce = {
   /** a validation replaces the parse the last AST was folded from */
   onStartingValidation (app) {
     this.parsed = [];
+    $("#reduceAst .status").text("\u00a0");
     if (app.Caches.ast)
       app.Caches.ast.set("");
   },
@@ -131,24 +142,30 @@ const ShExReduce = {
      * production, run bottom-up.  What comes out is an AST with no RDF left
      * in it.
      */
+    /**
+     * Fold, and say so in the AST's own tab.
+     *
+     * Not through the results widget: that writes into the validation's
+     * tab, and the parse this folded is *in* those results -- clearing them
+     * to report on them would throw away what the reader is comparing the
+     * AST against.  So the AST pane's own status line carries the news, and
+     * the tab it is in comes up.
+     */
     reduce () {
       const ext = ShExPlugins.byId(REDUCE_ID);
-      this.resultsWidget.clear();
-      this.resultsWidget.start();
+      const said = text => $("#reduceAst .status").text(text).show();
+      this.showResultsTab("reduceAstResults");
       if (!ShExWebApp.Reduce)
         throw Error("ShExReduce's module is not loaded on this page: nothing to fold with");
       if (ext.parsed.length === 0) {
-        this.resultsWidget.replace(
-          "Validate conformant data against a schema with Reduce actions first: " +
-            "the fold is over the parse a validation found.")
-          .removeClass("passes fails").addClass("error");
+        said("validate conformant data against a schema with Reduce actions first: " +
+             "the fold is over the parse a validation found");
         return this.Caches.ast.set("");
       }
       // {}: an eager run stored every value as it computed it, so the fold
       // has nothing left to evaluate
       const asts = ShExWebApp.Reduce.reduce(ext.parsed, {});
-      $("#results .status").text("reduced " + asts.length +
-                                 (asts.length === 1 ? " parse" : " parses")).show();
+      said("reduced " + asts.length + (asts.length === 1 ? " parse" : " parses"));
       return this.Caches.ast.set(
         JSON.stringify(asts.length === 1 ? asts[0] : asts, null, "  "));
     },

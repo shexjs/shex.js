@@ -151,10 +151,61 @@ label {
    plugin's panes land in a .screen of its own inside #screens, one showing
    at a time (ShExBaseApp.showScreen).  A screen is a block the full width
    of the page; the .panels inside it are its columns. */
-/* The switch stands in for the part of the title that named what is
-   showing: "ShEx - " stays, "Validator" becomes option one.  It sits in the
-   heading, and a select inherits no type unless it is told to. */
-#screen { font: inherit; font-size: .85em; vertical-align: baseline; margin-left: .1em; }
+/* The screen tabs stand in for the part of the title that named what is
+   showing: "ShEx - " stays, "Validator" becomes the first tab.  They sit in
+   the heading, so they are told the type a button does not inherit, and
+   they are tabs on the page's own terms rather than jquery-ui's -- what
+   they switch is elsewhere on the page, which jquery-ui tabs cannot do. */
+#screenTabs { margin-left: .2em; vertical-align: baseline; }
+#screenTabs button {
+    font: inherit;
+    font-size: .6em;
+    padding: .15em .6em;
+    margin-right: .15em;
+    border: 1px solid #bbb;
+    border-bottom: none;
+    border-radius: .4em .4em 0 0;
+    background-color: #eee;
+    color: #444;
+    cursor: pointer;
+}
+#screenTabs button[aria-selected="true"] {
+    background-color: #fff;
+    color: #000;
+    font-weight: bold;
+}
+/* A screen's columns stand side by side and stretch to the tallest of
+   them, so a pane that is alone in its column may have all of it: the
+   overlay ShExReduce puts where the schema stands gets the height that
+   column gets, rather than the dozen rows a textarea asks for.  The toolbar
+   and the statusbar wrap to lines of their own underneath. */
+.screen { display: flex; flex-wrap: wrap; align-items: stretch; }
+.screen > .panel, .screen [data-borrow] > .panel { flex: 1 1 0; }
+.screen > .pluginToolbar, .screen > .pluginStatusbar { flex: 0 0 100%; }
+/* ...and a pane that asked for its box takes what is left of it once the
+   status line above has had its share.  Used on a screen's column and in a
+   results tab, which are the two boxes a pane can be given whole. */
+.fillsColumn { display: flex; flex-direction: column; height: 100%; }
+.fillsColumn > textarea,
+.fillsColumn > .shexjs-editor-pane { flex: 1 1 auto; }
+
+/* Every kind of result gets the same box.  Two reasons: a reader switching
+   between a validation and what was made of it should not have the page
+   change size underneath them, and a long result used to push the rest of
+   the page off the bottom -- a results pane measured while its tab was
+   hidden can come back taller than the window, and a tab that scrolls keeps
+   that between its own edges. */
+#resultsTabs > div[id] { height: 40vh; overflow: auto; }
+
+/* the slot a screen keeps for a pane it borrows: as a column of the
+   screen the pane is a .panel already, so the slot lays nothing out; in a
+   tab set the slot is the tab's panel, and what it holds fills it */
+.screen > [data-borrow] { display: contents; }
+.screen [data-tabset] .panel,
+.screen [data-tabset] > [data-borrow] > * { width: auto; margin: 0; }
+/* a set of panes taking turns is as much the column as one pane is */
+.screen [data-tabset] { display: flex; flex-direction: column; height: 100%; }
+.screen [data-tabset] > div[id] { flex: 1 1 auto; }
 .panel {
   width: 48.5%;
   display: inline-block;
