@@ -5,15 +5,19 @@ name: webapps-site
 # branch: the full main tree (so every URL GitHub Pages served from main keeps
 # working, CNAME included) plus
 #
-#   packages/{shex-webapp,extension-map}/doc/webpacks/  (the built bundles)
+#   packages/{shex-webapp,extension-map,extension-reduce}/doc/webpacks/
+#                 (the built bundles)
 #   .nojekyll     (serve the tree as-is; test fixtures confuse Jekyll)
 #
 # and with the <!-- STRIP-FOR-PUBLICATION --> … <!-- /STRIP-FOR-PUBLICATION -->
 # block (clone-local instructions) removed from /index.html.
 #
-# The repo-relative layout is preserved because the pages reference each other
-# relatively (e.g. shexmap-simple.html loads
-# ../../shex-webapp/doc/webpacks/shex-webapp.js).
+# The repo-relative layout is preserved because everything here points at
+# everything else relatively: shex-simple.html loads webpacks/shex-webapp.js,
+# shexmap-simple.html redirects to ../../shex-webapp/doc/shex-simple.html with
+# ?extension=<relative URL of ShExMapPlugin.js>, and an extension's
+# `scripts` are resolved against the extension rather than the page -- so an
+# extension's bundle has to be published beside it.
 #
 # Each publish commits ON TOP of the existing gh-pages history so consumers
 # can update with a plain `git pull`:
@@ -66,7 +70,8 @@ jobs:
           # node_modules) plus the ignored built bundles
           git add -A .
           git add -f .nojekyll \
-            packages/shex-webapp/doc/webpacks packages/extension-map/doc/webpacks
+            packages/shex-webapp/doc/webpacks packages/extension-map/doc/webpacks \
+            packages/extension-reduce/doc/webpacks
           # commit on top of the existing gh-pages history; if the branch was
           # deleted (to shed old bundle history), start it afresh
           git fetch origin gh-pages || true

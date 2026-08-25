@@ -45,6 +45,7 @@ packages/shex-webapp/doc/webpacks/n3js*.js
 packages/shex-webapp/doc/webpacks/shex-webapp*.js
 packages/shex-webapp/doc/webpacks/*.LICENSE.txt
 packages/extension-map/doc/webpacks/
+packages/extension-reduce/doc/webpacks/
 
 .coveralls.yml
 .nyc_output/

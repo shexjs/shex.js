@@ -1414,7 +1414,11 @@ class ManifestCache extends InterfaceCache {
       let value = dataTest.entry[m.key];
       let url = dataTest.url;
       if (value === undefined && dataTest.entry[m.key + "URL"] !== undefined) {
-        url = dataTest.entry[m.key + "URL"] = new URL(dataTest.entry[m.key + "URL"], dataTest.url).href;
+        // against the manifest, where the entry was written: an entry whose
+        // documents are in different directories (schemaURL: calc/calc.shex,
+        // overlayURL: calc/calc-actions.ttl) means them from one place
+        url = dataTest.entry[m.key + "URL"] =
+          new URL(dataTest.entry[m.key + "URL"], this.url || dataTest.url || DefaultBase).href;
         try {
           value = dataTest.entry[m.key] = await this.fetchOK(url);
         } catch (e) {
@@ -4303,6 +4307,7 @@ class ShExBaseApp {
             skipCycleCheck: $("#skipCycleCheck").is(":checked"),
           });
           let time;
+          loaded.schema = this.extendSchema(loaded.schema);
           const validator = this.getValidator(loaded, alreadLoaded.url, inputData, this.makeRenderer());
 
           // Some DBs need to be able to inspect the schema to calculate the neighborhood.
@@ -4425,6 +4430,29 @@ class ShExBaseApp {
    * extensions compose rather than the second replacing the first -- and
    * neither has to know the name of a global to subclass.
    */
+  /**
+   * The schema, as the extensions would have it.
+   *
+   * An extension may have something to add to what is validated -- ShExReduce
+   * hangs the actions of a `sa:Overlay` document on the schema they were
+   * written apart from -- and it has to happen here, before the schema goes
+   * to a validator or across a postMessage.  ShExMap wants none of this,
+   * which is the point: a hook that only one extension needs is still a hook
+   * the app doesn't have to know the reason for.
+   */
+  extendSchema (schema) {
+    return pluginDescriptors().reduce((sofar, ext) => {
+      if (typeof ext.schema !== "function")
+        return sofar;
+      try {
+        return ext.schema(sofar, this) || sofar;
+      } catch (e) {
+        this.resultsWidget.failMessage(e, (ext.label || ext.id) + "'s schema");
+        return sofar;
+      }
+    }, schema);
+  }
+
   makeRenderer () {
     const cls = pluginDescriptors().reduce(
       (sofar, ext) => typeof ext.results === "function" ? ext.results(sofar) : sofar,

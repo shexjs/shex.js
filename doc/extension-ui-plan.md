@@ -478,6 +478,31 @@ manifest — the two schemas make a demo that shows an action steering a parse
 and an action falsifying one. If the contract only fits ShExMap, this is where
 that shows.
 
+> **done, and it fits.** `extension-reduce/doc/ShExReducePlugin.js` is 150
+> lines: two panes, one button and its key, a `register` that hands the fold
+> to the validator eagerly (the actions in `guide.shex` decide which branch
+> of an `OR` matches, which they can only do while the matcher matches), a
+> `results` wrapper that keeps the parses a validation found, and a `reduce`
+> verb that folds them. Everything else is the same hooks ShExMap uses.
+>
+> **One new hook, and it is the one worth having:** `schema(schema, app)`,
+> which an extension gets a turn at before anything validates. ShExReduce
+> uses it to hang a `sa:Overlay` document's actions on a schema that says
+> nothing about them — `examples/calc/calc.shex` with `calc-actions.ttl`, a
+> manifest entry whose `overlayURL` fills the pane the extension declared.
+> ShExMap wants none of it, which is the point: a hook the app doesn't have
+> to know the reason for.
+>
+> Two things it found. `loadExtraInputs` resolved an entry's `<key>URL`
+> against the *data*'s URL, which is indistinguishable from the manifest's
+> until an entry names documents in two directories (`schemaURL:
+> calc/calc.shex`, `overlayURL: calc/calc-actions.ttl`) — it resolves
+> against the manifest now, where the entry was written. And the committed
+> `shex-webapp` webpack bundle was three weeks stale (2026-08-02), older
+> than the validator's own `SemActFailure` contract, so ShExReduce's start
+> action failed in the page and every value came out `null`; `npm run
+> webpack` covers the new bundle now, so a rebuild is one command.
+
 **Phase 5 — outside contributors.** Document the contract, add a manifest that
 loads an extension from a *different origin* (the test server can serve a
 second port, so cross-origin is tested rather than assumed), and publish a
