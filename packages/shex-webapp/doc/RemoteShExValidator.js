@@ -22,7 +22,7 @@ class Canceleable {
       // request, since a materialization may reach a worker that has been
       // restarted since the validation that fed it
       ShExWorker.postMessage(
-        Object.assign({extensions: pluginWorkerUrls()}, this.startMessage));
+        Object.assign({plugins: pluginWorkerUrls()}, this.startMessage));
     });
   }
 

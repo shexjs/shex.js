@@ -24,6 +24,12 @@ function log404 (url) {
   // console.warn(404, url)
 }
 
+/* A host that serves extensions to other origins has to say so: the app
+ * fetches a module before it runs it, and a browser will not hand over a
+ * cross-origin response that doesn't permit the reader.  A real host does
+ * this deliberately; this one does it always, being a test double. */
+const Cors = {'Access-Control-Allow-Origin': '*'};
+
 const ContentTypes = {
   '.js': 'text/javascript',
   '.mjs': 'text/javascript',
@@ -58,7 +64,7 @@ function realServer (port) {
       const reqPath = req.url.replace(/\?.*$/, '');
       const file = entry.files.find(f => f.path === reqPath);
       if (file) {
-        res.writeHead(200, {'Content-Type': contentTypeFor(file.file)});
+        res.writeHead(200, Object.assign({'Content-Type': contentTypeFor(file.file)}, Cors));
         res.end(Fs.readFileSync(file.file));
         return;
       }
@@ -68,7 +74,7 @@ function realServer (port) {
       const [status, body, headers] = route
             ? readFromFilesystem(req.url, route.fromDir, route.webroot)
             : [404, `${reqPath} not found`, {}];
-      res.writeHead(status, Object.assign({'Content-Type': contentTypeFor(reqPath)}, headers));
+      res.writeHead(status, Object.assign({'Content-Type': contentTypeFor(reqPath)}, Cors, headers));
       res.end(body);
     });
     entry.server.listen(port);

@@ -18,8 +18,8 @@ const GIST_INLINE_LINES = 15; // longer texts become separate gist files
 const GIST_CREATED_KEY = "shexjsCreatedGist"; // sessionStorage handoff across the post-create reload
 
 const DefaultBase = location.origin + location.pathname;
-// this app's own results, once an extension's results sit beside them
-const APP_RESULTS_PANEL = "validationResults";
+// this app's own results, once a plugin's results sit beside them
+const APP_RESULTS_TAB = "validationResults";
 let SharedForTests = null; // testing global used by browser-test
 
 /** what is registered, or nothing where a page loaded no register */
@@ -27,7 +27,7 @@ function pluginDescriptors () {
   return typeof ShExPlugins === "undefined" ? [] : ShExPlugins.all();
 }
 
-/** every registered extension's worker half, absolute: a worker resolves a
+/** every registered plugin's worker half, absolute: a worker resolves a
  * relative importScripts against its own script, not against the page */
 function pluginWorkerUrls () {
   return pluginDescriptors().filter(ext => ext.worker)
@@ -1346,7 +1346,7 @@ class ManifestCache extends InterfaceCache {
       // ...and everything else the entry configures it with, before the
       // query map below asks it anything: a source with its endpoint still
       // to come is a source that can't answer.
-      // An entry may name the extensions it needs.  They add the panes,
+      // An entry may name the plugins it needs.  They add the panes,
       // and the manifest keys that fill them, that the rest of this entry
       // is read into -- so they load before anything reads it.
       await this.loadEntryPlugins(dataTest);
@@ -1391,17 +1391,20 @@ class ManifestCache extends InterfaceCache {
    * (assigned post-construction): shexmap's staticVars, outputSchema[URL] and
    * outputShapeMap; nothing in shex-simple.  <key>URL values resolve against
    * the manifest's base, and their fetched text memoizes into the entry. */
-  /** the extension modules an entry names, resolved against the manifest */
+  /** the plugin modules an entry names, resolved against the manifest.
+   * `plugins` is the key; `extensions` is what it was called before the
+   * word was split from the semantic-action kind, and still answers. */
   async loadEntryPlugins (dataTest) {
-    const named = dataTest.entry.extensions;
+    const named = dataTest.entry.plugins !== undefined
+          ? dataTest.entry.plugins : dataTest.entry.extensions;
     if (named === undefined)
       return;
     for (const url of Array.isArray(named) ? named : [named]) {
       const absolute = new URL(url, this.url || dataTest.url || DefaultBase).href;
       try {
-        await this.caches.extension.asyncGet(absolute);
+        await this.caches.plugin.asyncGet(absolute);
       } catch (e) {
-        this.renderErrorMessage(e, "extension");
+        this.renderErrorMessage(e, "plugin");
       }
     }
   }
@@ -1522,20 +1525,20 @@ class ManifestCache extends InterfaceCache {
 
 const ShExJsUrl = 'https://github.com/shexSpec/shex.js'
 /**
- * An extension module, fetched and run.
+ * A plugin module, fetched and run.
  *
- * One module, whatever it has to add: a semantic action handler is
+ * One module, whatever it has to add: a semantic-action extension is
  * `register(validator, ShExWebApp)`, and what it adds to the page is a
  * descriptor for ShExPlugins -- exported as `ui`, or handed to
  * `ShExPlugins.register` while the module evaluates, which is what a
  * module written as a page script does.  Either or both; a module that
- * does neither is not an extension, and says so.
+ * does neither is not a plugin, and says so.
  */
 class PluginCache extends InterfaceCache {
   constructor (selection, resultsWidget) {
     super(selection, null);
     this.resultsWidget = resultsWidget;
-    this.urls = []; // every extension loaded, for the permalink
+    this.urls = []; // every plugin loaded, for the permalink
   }
 
   async set (code, url, source, mediaType) {
@@ -1556,7 +1559,7 @@ class PluginCache extends InterfaceCache {
       // `exports` as well as `module`: a UMD bundle asks for both before it
       // decides it is being loaded as a CommonJS module, and hangs itself on
       // the window if it isn't
-      const extension = Function(`"use strict";
+      const loaded = Function(`"use strict";
 const module = {exports: {}};
 const exports = module.exports;
 ${code}
@@ -1564,64 +1567,64 @@ return module.exports;
 `)()
       if (typeof ShExPlugins !== "undefined")
         ShExPlugins.loadingFrom = null;
-      if (extension.ui && typeof ShExPlugins !== "undefined")
-        ShExPlugins.register(extension.ui);
+      if (loaded.ui && typeof ShExPlugins !== "undefined")
+        ShExPlugins.register(loaded.ui);
       const painted = pluginDescriptors().filter(d => before.indexOf(d.id) === -1);
       painted.forEach(d => { if (!d.baseUrl) d.baseUrl = url; });
-      const handles = typeof extension.register === "function";
+      const handles = typeof loaded.register === "function";
       if (!handles && painted.length === 0)
-        throw Error("no extension here: a module registers a semantic action handler,"
+        throw Error("no plugin here: a module registers a semantic action handler,"
                     + " or hands ShExPlugins what it adds to the page, or both");
       if (this.urls.indexOf(url) === -1)
         this.urls.push(url);
-      // an extension is loaded when what it registered has been applied,
+      // a plugin is loaded when what it registered has been applied,
       // which may have meant fetching the module it runs on
       await Promise.all(painted.map(d => d.applied));
       if (!handles) {
         this.resultsWidget.append($("<div/>").append(
-          $("<span/>").text(`extension ${painted.map(d => d.label || d.id).join(", ")} loaded from <${url}>`)
+          $("<span/>").text(`plugin ${painted.map(d => d.label || d.id).join(", ")} loaded from <${url}>`)
         ));
         return;
       }
-      const name = extension.name;
+      const name = loaded.name;
       const id = "plugin_" + name;
 
-      // Delete any old li associated with this extension.
-      const old = $(`.pluginControl[data-url="${extension.url}"]`)
+      // Delete any old li associated with this plugin.
+      const old = $(`.pluginControl[data-url="${loaded.url}"]`)
       if (old.length) {
         this.resultsWidget.append($("<div/>").append(
-          $("<span/>").text(`removing old ${old.attr('data-name')} extension`)
+          $("<span/>").text(`removing old ${old.attr('data-name')} plugin`)
         ));
         old.parent().remove();
       }
 
       // Create a new li.
-      const elt = $("<li/>", { class: "menuItem", title: extension.description }).append(
+      const elt = $("<li/>", { class: "menuItem", title: loaded.description }).append(
         $("<input/>", {
           type: "checkbox",
           checked: "checked",
           class: "pluginControl",
           id: id,
           "data-name": name,
-          "data-url": extension.url
+          "data-url": loaded.url
         }),
         $("<label/>", { for: id }).append(
-          $("<a/>", {href: extension.url, text: name})
+          $("<a/>", {href: loaded.url, text: name})
         )
       );
-      elt.insertBefore("#load-extension-button");
-      $("#" + id).data("code", extension);
+      elt.insertBefore("#load-plugin-button");
+      $("#" + id).data("code", loaded);
 
       this.resultsWidget.append($("<div/>").append(
-        $("<span/>").text(`extension ${name} loaded from <${url}>`)
+        $("<span/>").text(`plugin ${name} loaded from <${url}>`)
       ));
     } catch (e) {
-      // $("#inputSchema .extension").append($("<li/>").text(NO_EXTENSION_LOADED));
+      // $("#inputSchema .plugin").append($("<li/>").text(NO_PLUGIN_LOADED));
       const throwMe = Error(e + '\n' + code);
-      throwMe.action = 'load extension'
+      throwMe.action = 'load plugin'
       throw throwMe
     }
-    // $("#pluginDrop").show(); // may have been hidden if no extension loaded.
+    // $("#pluginDrop").show(); // may have been hidden if no plugin loaded.
   }
 
   /* Poke around in HTML for a PACKAGE link in
@@ -1660,20 +1663,23 @@ return module.exports;
       ).addClass("error"));
     } else {
       code = await refd.text();
-      await this.set(code, url, source, refd.headers.get('content-type'));
+      // href, not url: the module's own files (`scripts`, `worker`) resolve
+      // against where the module is, and the index that pointed at it is
+      // somewhere else
+      await this.set(code, href, source, refd.headers.get('content-type'));
     }
   }
 
   async parse (text, base) {
-    throw Error("should not try to parse extension cache");
+    throw Error("should not try to parse plugin cache");
   }
 
   async getItems () {
-    throw Error("should not try to get extension cache items");
+    throw Error("should not try to get plugin cache items");
   }
 }
 
-/** a pane holding JSON: bindings, static variables, anything an extension
+/** a pane holding JSON: bindings, static variables, anything a plugin
  * wants read back as data rather than as a document */
 class JSONCache extends InterfaceCache {
   constructor (selection) {
@@ -2383,13 +2389,13 @@ class DirectShExValidator {
       });
     // each: the element is the argument, and an arrow function's `this`
     // is this constructor's -- so this read `undefined.register` for as
-    // long as anyone has been able to load an extension
+    // long as anyone has been able to load one
     $(".pluginControl:checked").each((i, elt) => {
       $(elt).data("code").register(this.validator, ShExWebApp);
     });
-    // ...and an extension that is on the page rather than in the menu says
-    // the same thing in its descriptor.  One or the other: a module loaded
-    // by URL gets a menu control, a descriptor gets this.
+    // ...and a plugin that is on the page rather than in the menu says the
+    // same thing in its descriptor.  One or the other: a handler-only
+    // module gets a menu control, a descriptor gets this.
     pluginDescriptors().forEach(ext => {
       if (typeof ext.register !== "function")
         return;
@@ -3138,13 +3144,13 @@ const ShExLoader = ShExWebApp.Loader({
   fetch: window.fetch.bind(window), rdfjs: RdfJs, jsonld: null
 })
 class ShExBaseApp {
-  /** whether this app validates in a worker: an extension with a worker
-   * half has one thing to do here and another there */
+  /** whether this app validates in a worker: a plugin with a worker half
+   * has one thing to do here and another there */
   get remote () { return false; }
 
-  /** where this app's results are written.  An extension with results of
-   * its own puts them in a panel beside these, and this becomes the first
-   * of them (buildPluginResultsPanels). */
+  /** where this app's results are written.  A plugin with results of its
+   * own puts them in a tab beside these, and this becomes the first of
+   * them (buildPluginResultsTabs). */
   get resultsTarget () { return this.resultsTargetSel; }
 
   constructor (base) {
@@ -3159,10 +3165,10 @@ class ShExBaseApp {
 
     const inputSchema = new SchemaCache($("#inputSchema textarea.schema"), this.onDataLoad.bind(this), this.shexcParser, this.turtleParser);
     const inputData = new TurtleCache($("#inputData textarea"), this.onDataLoad.bind(this), this.turtleParser, this.queryTrackerController);
-    const extension = new PluginCache($("#pluginDrop"), this.resultsWidget);
+    const plugin = new PluginCache($("#pluginDrop"), this.resultsWidget);
     const shapeMap = new ShapeMapCache($("#queryMap"), {inputSchema, inputData}, this.turtleParser, this.resultsWidget);
 
-    this.Caches = { inputSchema, inputData, extension, shapeMap };
+    this.Caches = { inputSchema, inputData, plugin, shapeMap };
 
     // where the data comes from, and the configuration that source asks for
     this.neighborhoods = new NeighborhoodConfig(
@@ -3193,9 +3199,9 @@ class ShExBaseApp {
        manifest: {key: "schema", spillName: "schema.shex", labelKey: "schemaLabel", label: "schema"}},
       {queryStringParm: "data",         location: this.Caches.inputData.selection,   cache: this.Caches.inputData,
        manifest: {key: "data", spillName: "data.ttl", labelKey: "dataLabel", label: "data"}},
-      // earlyLoad: what an extension adds may itself be a query parameter,
+      // earlyLoad: what a plugin adds may itself be a query parameter,
       // so it is loaded before this list is walked rather than in it
-      {queryStringParm: "extension",    location: this.Caches.extension.selection,   cache: this.Caches.extension,
+      {queryStringParm: "plugin",       location: this.Caches.plugin.selection,      cache: this.Caches.plugin,
        earlyLoad: true},
       {queryStringParm: "shape-map",    location: $("#queryMap"),                     cache: this.Caches.shapeMap,
        manifest: {key: "queryMap", spillName: "queryMap.qm"}},
@@ -3226,7 +3232,7 @@ class ShExBaseApp {
 
     ShExWebApp.ShapeMap.Start = ShExWebApp.Validator.Start;
     // what registered before this app existed, and whatever registers after
-    // it: an extension loaded by URL reaches the same code as one the page
+    // it: a plugin loaded by URL reaches the same code as one the page
     // loaded as a script
     pluginDescriptors().forEach(ext => this.applyPlugin(ext));
     if (typeof ShExPlugins !== "undefined")
@@ -3234,19 +3240,23 @@ class ShExBaseApp {
   }
 
   /**
-   * Put on the page what one extension adds to it: styles and panes so far,
-   * verbs, menu items and results as those hooks land (§5).
+   * Put on the page what one plugin adds to it: styles, panes, controls,
+   * verbs, results (§5).
    *
    * Idempotent, and callable at any time -- at construction for what the
-   * page loaded, and again for an extension that arrives later, which is
-   * what makes loading one by URL possible.  Styles go after the page's own
-   * rules, so an extension may say differently what the page said.
+   * page loaded, and again for a plugin that arrives later, which is what
+   * makes loading one by URL possible.  Styles go after the page's own
+   * rules, so a plugin may say differently what the page said.
+   *
+   * @returns {Promise|undefined} a promise only when something had to be
+   * fetched first.  Deliberately not always a promise: a page script
+   * registers while this app is being constructed and start() follows the
+   * constructor immediately, so a descriptor with nothing to fetch must be
+   * on the page before either returns.
    */
   applyPlugin (ext) {
     // What it runs on, if the page hasn't got it: a module of its own,
-    // fetched before anything of it is built.  Synchronous when there is
-    // nothing to fetch, because a page script registers while this app is
-    // being constructed and start() follows it immediately.
+    // fetched before anything of it is built.
     const pending = this.loadPluginScripts(ext);
     return pending
       ? pending.then(() => this.applyPluginNow(ext))
@@ -3254,13 +3264,13 @@ class ShExBaseApp {
   }
 
   /**
-   * The scripts an extension says it needs, injected in the order it said
+   * The scripts a plugin says it needs, injected in the order it said
    * them, or null if the page already has them all (§5 phase 3).
    *
-   * A classic page has no module system, so this is what "load an
-   * extension's code by URL" means here: `scripts` are resolved against the
-   * extension rather than against the page, since the extension knows where
-   * its own bundle sits and the page has never heard of it.
+   * A classic page has no module system, so this is what "load a plugin's
+   * code by URL" means here: `scripts` are resolved against the plugin
+   * rather than against the page, since the plugin knows where its own
+   * bundle sits and the page has never heard of it.
    */
   loadPluginScripts (ext) {
     const urls = (ext.scripts || [])
@@ -3273,17 +3283,17 @@ class ShExBaseApp {
       const script = document.createElement("script");
       script.src = url;
       script.onload = () => resolve();
-      script.onerror = () => reject(Error("no extension script at <" + url + ">"));
+      script.onerror = () => reject(Error("no plugin script at <" + url + ">"));
       document.head.appendChild(script);
     })), Promise.resolve());
   }
 
   applyPluginNow (ext) {
     if (typeof ext.css === "string" && ext.css.trim().length > 0
-        && $("head style[data-extension]").filter((i, e) => $(e).attr("data-extension") === ext.id).length === 0)
-      $("<style/>").attr("data-extension", ext.id).text(ext.css).appendTo("head");
+        && $("head style[data-plugin]").filter((i, e) => $(e).attr("data-plugin") === ext.id).length === 0)
+      $("<style/>").attr("data-plugin", ext.id).text(ext.css).appendTo("head");
     this.buildPluginPanes(ext);
-    this.buildPluginResultsPanels(ext);
+    this.buildPluginResultsTabs(ext);
     this.buildPluginToolbar(ext);
     this.buildPluginStatusbar(ext);
     this.bindPluginKeys(ext);
@@ -3299,16 +3309,16 @@ class ShExBaseApp {
   }
 
   /**
-   * Add an extension's verbs to this app (§5, inventory row 10).
+   * Add a plugin's verbs to this app (§5, inventory row 10).
    *
    * ShExMap's verbs were methods on a subclass of this, which is why its
    * page needed an app class of its own.  They are an object in the
    * descriptor now, mixed in here, so `this` still means the app and
    * nothing about how they are written had to change.
    *
-   * A name the app already has is left alone: an extension adds verbs, it
-   * does not replace them, and the app it is mixed into may already have
-   * one (the worker app has its own materializer, until rows 15 and 16).
+   * A name the app already has is left alone: a plugin adds verbs, it does
+   * not replace them, and the app it is mixed into may already have one
+   * (the worker app had its own materializer, until rows 15 and 16).
    */
   mixinPluginMethods (ext) {
     Object.keys(ext.methods || {}).forEach(name => {
@@ -3319,17 +3329,17 @@ class ShExBaseApp {
   }
 
   /**
-   * A results panel of an extension's own (§4's `results` slot).
+   * A results tab of a plugin's own.
    *
    * A validator has one kind of result, so it writes into `#results > div`
-   * and that is that.  An extension with a second kind -- ShExMap's
-   * materialization of the validation -- declares a panel, and the results
-   * area becomes tabs: this app's results are the first tab, the declared
-   * panels follow, and the widget is re-pointed at the first.  A page needs
+   * and that is that.  A plugin with a second kind -- ShExMap's
+   * materialization of the validation -- declares a tab, and the results
+   * area becomes tabs: this app's results are the first, the declared
+   * ones follow, and the widget is re-pointed at the first.  A page needs
    * no markup for any of it.
    */
-  buildPluginResultsPanels (ext) {
-    const panels = ext.resultsPanels || [];
+  buildPluginResultsTabs (ext) {
+    const panels = ext.resultsTabs || [];
     if (panels.length === 0)
       return;
     let tabs = $("#resultsTabs");
@@ -3338,9 +3348,9 @@ class ShExBaseApp {
       const mine = $("#results > div").first();
       tabs = $("<div/>").attr("id", "resultsTabs").insertBefore(mine);
       $("<ul/>").append($("<li/>").append(
-        $("<a/>", {href: "#" + APP_RESULTS_PANEL}).text("validation"))).appendTo(tabs);
-      $("<div/>").attr("id", APP_RESULTS_PANEL).append(mine).appendTo(tabs);
-      this.resultsTargetSel = "#" + APP_RESULTS_PANEL + " > div";
+        $("<a/>", {href: "#" + APP_RESULTS_TAB}).text("validation"))).appendTo(tabs);
+      $("<div/>").attr("id", APP_RESULTS_TAB).append(mine).appendTo(tabs);
+      this.resultsTargetSel = "#" + APP_RESULTS_TAB + " > div";
       this.resultsWidget.setTarget(this.resultsTarget);
     }
     panels.forEach(panel => {
@@ -3352,15 +3362,15 @@ class ShExBaseApp {
     tabs.tabs();
   }
 
-  /** the card an extension builds into, made on demand */
+  /** the card a plugin builds into, made on demand */
   pluginCard (ext) {
     let slot = $("#extensionPanes");
     if (slot.length === 0)
       slot = $("<div/>").attr("id", "extensionPanes").appendTo("#inputarea");
-    const already = slot.children().filter((i, e) => $(e).attr("data-extension") === ext.id);
+    const already = slot.children().filter((i, e) => $(e).attr("data-plugin") === ext.id);
     return already.length
       ? already
-      : $("<div/>").addClass("panel").attr("data-extension", ext.id).appendTo(slot);
+      : $("<div/>").addClass("panel").attr("data-plugin", ext.id).appendTo(slot);
   }
 
   /**
@@ -3391,12 +3401,12 @@ class ShExBaseApp {
   }
 
   /**
-   * Build the row of controls an extension declares (§5, inventory row 4).
+   * Build the row of controls a plugin declares (§5, inventory row 4).
    *
    * `toolbar` is the row, in order: a button, an input the app fills from a
    * query parameter, a group that may hide, a status line.  A button says
    * what it runs; an input says which parameter and manifest key fill it,
-   * the way a pane does.  They go in the extension's own card, under its
+   * the way a pane does.  They go in the plugin's own card, under its
    * panes -- the verb beside the things it consumes.
    */
   buildPluginToolbar (ext) {
@@ -3414,7 +3424,7 @@ class ShExBaseApp {
   }
 
   /**
-   * What an extension says under its controls, across the card (§4's
+   * What a plugin says under its controls, across the card (§4's
    * `statusbar` slot).
    *
    * Not in the toolbar: that box floats right, so anything in it that grows
@@ -3481,12 +3491,12 @@ class ShExBaseApp {
   }
 
   /**
-   * Bind the keys an extension declares (inventory row 5).
+   * Bind the keys a plugin declares (inventory row 5).
    *
    * Some verbs are only a keystroke, so nothing on the page notices when
    * they stop working; they are declared beside the ones that have buttons.
    * keyDownHandlers is read on each keydown, so a binding may arrive at any
-   * time -- which is what an extension loaded mid-session does.
+   * time -- which is what a plugin loaded mid-session does.
    */
   bindPluginKeys (ext) {
     const keys = (ext.toolbar || []).filter(c => c.key).concat(ext.keys || []);
@@ -3516,7 +3526,7 @@ class ShExBaseApp {
   }
 
   /**
-   * Build the panes the registered extensions declare (§5 phase 1).
+   * Build the panes the registered plugins declare (§5 phase 1).
    *
    * A pane in this app is a textarea, a status line, a cache that parses
    * what is in it, and an entry in Getables/QueryParams saying which query
@@ -3526,7 +3536,7 @@ class ShExBaseApp {
    *
    * They go in `#extensionPanes`: the page may put that where it likes, and
    * gets it appended to `#inputarea` if it doesn't, so a page needs no
-   * markup to host an extension.  One card per extension, so two of them
+   * markup to host a plugin.  One card per plugin, so two of them
    * are two cards rather than a fight over the same column.
    */
   buildPluginPanes (ext) {
@@ -3536,9 +3546,9 @@ class ShExBaseApp {
     let slot = $("#extensionPanes");
     if (slot.length === 0)
       slot = $("<div/>").attr("id", "extensionPanes").appendTo("#inputarea");
-    if (slot.children().filter((i, e) => $(e).attr("data-extension") === ext.id).length > 0)
+    if (slot.children().filter((i, e) => $(e).attr("data-plugin") === ext.id).length > 0)
       return; // already built: registered twice, or applied twice
-    const card = $("<div/>").addClass("panel").attr("data-extension", ext.id).appendTo(slot);
+    const card = $("<div/>").addClass("panel").attr("data-plugin", ext.id).appendTo(slot);
     panes.forEach(pane => {
       const textarea = $("<textarea/>")
             .attr({rows: pane.rows || 10, spellcheck: "false"})
@@ -3557,7 +3567,7 @@ class ShExBaseApp {
       // has to be pushed to both
       this.Getables.push(entry);
       this.QueryParams.push(entry);
-      // an extension that arrives while the editors are on gets them too
+      // a plugin that arrives while the editors are on gets them too
       if (this.editorSupport && pane.editor)
         this.editorSupport.addPane(pane.name, cache, pane.editor);
     });
@@ -3876,12 +3886,17 @@ class ShExBaseApp {
     // Load all known query parameters. Save load results into array like:
     /* [ [ "data", { "skipped": "skipped" } ],
        [ "manifest", { "fromUrl": { "url": "http://...", "data": "..." } } ], ] */
-    // Extensions first, and one at a time: what one adds -- panes, and the
+    // Plugins first, and one at a time: what one adds -- panes, and the
     // parameters and manifest keys that fill them -- has to be in
-    // QueryParams before the walk below reads QueryParams.  ?extension= and
-    // ?pluginURL= are the same thing said two ways; a permalink writes
-    // the second, and a person writes whichever they remember.
-    await this.loadPlugins((iface.pluginURL || []).concat(iface.extension || []));
+    // QueryParams before the walk below reads QueryParams.  ?plugin= and
+    // ?pluginURL= are the same thing said two ways; a permalink writes the
+    // second, and a person writes whichever they remember.  ?extension= and
+    // ?extensionURL= are what both were called before "extension" was left
+    // to the semantic-action kind, and links wrote them, so they still
+    // answer.
+    await this.loadPlugins([].concat(
+      iface.pluginURL || [], iface.plugin || [],
+      iface.extensionURL || [], iface.extension || []));
 
     const loadedAsArray = await Promise.all(this.QueryParams.map(async input => {
       const label = input.queryStringParm;
@@ -3973,13 +3988,13 @@ class ShExBaseApp {
    * parse query string into map of arrays
    * location.search: e.g. "?schema=asdf&data=qwer&shape-map=ab%5Ecd%5E%5E_ef%5Egh"
    */
-  /** the extension modules named by URL, loaded in the order they were named */
+  /** the plugin modules named by URL, loaded in the order they were named */
   async loadPlugins (urls) {
     for (const url of urls) {
       if (url.length === 0)
         continue;
       try {
-        await this.Caches.extension.asyncGet(new URL(url, DefaultBase).href);
+        await this.Caches.plugin.asyncGet(new URL(url, DefaultBase).href);
       } catch (e) {
         this.resultsWidget.append($("<pre/>").text(e).addClass("error"));
       }
@@ -4424,20 +4439,20 @@ class ShExBaseApp {
   }
 
   /**
-   * The renderer, wrapped by whatever the extensions add to it (row 13).
+   * The renderer, wrapped by whatever the plugins add to it (row 13).
    *
    * `results` takes the class and returns one that extends it, so two
-   * extensions compose rather than the second replacing the first -- and
+   * plugins compose rather than the second replacing the first -- and
    * neither has to know the name of a global to subclass.
    */
   /**
-   * The schema, as the extensions would have it.
+   * The schema, as the plugins would have it.
    *
-   * An extension may have something to add to what is validated -- ShExReduce
+   * A plugin may have something to add to what is validated -- ShExReduce
    * hangs the actions of a `sa:Overlay` document on the schema they were
    * written apart from -- and it has to happen here, before the schema goes
    * to a validator or across a postMessage.  ShExMap wants none of this,
-   * which is the point: a hook that only one extension needs is still a hook
+   * which is the point: a hook that only one plugin needs is still a hook
    * the app doesn't have to know the reason for.
    */
   extendSchema (schema) {
@@ -4625,7 +4640,7 @@ class ShExBaseApp {
     parms = parms.concat(this.QueryParams.reduce((acc, input) => {
       let parm = input.queryStringParm;
       let val = input.location.val();
-      // more than one extension may be loaded, and the link has to bring
+      // more than one plugin may be loaded, and the link has to bring
       // them all back
       if (input.cache && Array.isArray(input.cache.urls))
         return acc.concat(input.cache.urls.map(u => parm + "URL=" + encodeURIComponent(u)));

@@ -31,10 +31,10 @@ if (!TEST_browser) {
   ({JSDOM} = jsdom);
   describe("shexmap-worker with ?editors=1", function () {
     this.timeout(20000);
-    // ShExMap is an extension of this page now; shexmap-worker.html is a
+    // ShExMap is a plugin of this page now; shexmap-worker.html is a
     // redirect that opens it with exactly these parameters (§5 phase 2)
     const page = "packages/shex-webapp/doc/shex-worker.html";
-    const asShExMap = "&extension=" + encodeURIComponent("../../extension-map/doc/ShExMapPlugin.js")
+    const asShExMap = "&plugin=" + encodeURIComponent("../../extension-map/doc/ShExMapPlugin.js")
           + "&manifestURL=" + encodeURIComponent("../../extension-map/examples/manifest.json");
 
     let dom, $, shared;
@@ -51,9 +51,9 @@ if (!TEST_browser) {
         pretendToBeVisual: true, // CodeMirror needs rAF etc.
         virtualConsole,
         beforeParse (window) {
-          // the page's head script runs new Worker("ShExMapWorkerThread.js")
+          // the page's head script runs new Worker("ShExWorkerThread.js")
           window.Worker = makeWorkerClass(Path.dirname(base), {}, [
-            // the app names its extensions' worker halves by URL
+            // the app names its plugins' worker halves by URL
             {prefix: GitRootServer.urlFor(""), dir: Path.join(__dirname, "../../..")},
           ]);
         },
@@ -92,7 +92,7 @@ if (!TEST_browser) {
      * with materialize bolted on, and why the copy's staleness (a
      * synchronous SPARQL db, unmarshalled query-tracker terms) went with
      * it. */
-    it("should validate in the plain worker, with ShExMap named as an extension", function () {
+    it("should validate in the plain worker, with ShExMap named as a plugin", function () {
       expect(shared.app.remote, "this app validates over there").to.equal(true);
       const ext = dom.window.ShExPlugins.byId("http://shex.io/extensions/Map/#");
       expect(ext.worker, "and says where its worker half is, relative to itself")

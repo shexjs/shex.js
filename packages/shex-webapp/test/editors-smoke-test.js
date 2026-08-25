@@ -89,16 +89,16 @@ if (!TEST_browser) {
     });
 
     /* The other half of doc/extension-ui-plan.md §5: a page that registers
-     * no extension gets nothing from one -- no sheet, and #inputarea keeps
+     * no plugin gets nothing from one -- no sheet, and #inputarea keeps
      * what this page says about it. */
-    it("should add nothing where no extension is registered", function () {
-      expect($("head style[data-extension]").length, "no extension sheets").to.equal(0);
+    it("should add nothing where no plugin is registered", function () {
+      expect($("head style[data-plugin]").length, "no plugin sheets").to.equal(0);
       expect(dom.window.ShExPlugins.all(), "and nothing registered").to.deep.equal([]);
       expect($("#inputarea").css("overflow-x"), "a validator's inputs overflow")
         .to.equal("visible");
       expect($("#extensionPanes").children().length, "and no panes are built").to.equal(0);
       expect(Object.keys(shared.Caches).sort(), "so these are the caches")
-        .to.deep.equal(["extension", "inputData", "inputSchema", "manifest", "shapeMap"]);
+        .to.deep.equal(["inputData", "inputSchema", "manifest", "plugin", "shapeMap"]);
     });
 
     it("should boot without errors in #results", function () {

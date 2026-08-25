@@ -1,4 +1,4 @@
-/** Loading an extension by URL (doc/extension-ui-plan.md §5 phase 2).
+/** Loading a plugin by URL (doc/extension-ui-plan.md §5 phase 2).
  *
  * shex-simple.html has no ShExMap in it.  Told where one is -- in the query
  * string, or by the manifest entry that needs it -- it fetches the module,
@@ -6,8 +6,8 @@
  * panes appear, the manifest keys they declare get read, and the permalink
  * brings the whole thing back.
  *
- * The other half is the half ?extension= was built for: a module that
- * registers a semantic action handler, which is what the schema's
+ * The other half is the half ?plugin= was built for: a module that
+ * registers a semantic-action extension, which is what the schema's
  * %Ext:{...%} dispatches on.  One module may do either or both.
  */
 "use strict";
@@ -28,17 +28,17 @@ const [[GitRootServer]] = require("../../../tools/testServer")
       );
 
 const PAGE = "packages/shex-webapp/doc/shex-simple.html";
-const MAP_EXTENSION = "../../extension-map/doc/ShExMapPlugin.js";
+const MAP_PLUGIN = "../../extension-map/doc/ShExMapPlugin.js";
 const MAP_MANIFEST = "../../extension-map/examples/manifest.yaml";
 // the package's build output, which needs no bundler: no requires, and
-// module.exports is the extension.  (browser/ holds a browserify bundle of
+// module.exports is the module.  (browser/ holds a browserify bundle of
 // a file that no longer exists, from before SemActFailure -- it returns
 // `false`, which the validator now refuses.)
 const TEST_EXTENSION = "../../extension-test/lib/shex-extension-test.js";
 const MAP_ID = "http://shex.io/extensions/Map/#";
 
 if (!TEST_browser) {
-  console.warn("Skipping extension-loading-smoke-tests; to activate these tests, set environment variable TEST_browser=true");
+  console.warn("Skipping plugin-loading-smoke-tests; to activate these tests, set environment variable TEST_browser=true");
 } else {
   ({JSDOM, VirtualConsole} = require("jsdom"));
 
@@ -69,22 +69,24 @@ if (!TEST_browser) {
   const paneTexts = $ => ["#bindings1", "#staticVars", "#outputSchema"].map(
     sel => $(sel + " textarea").length ? $(sel + " textarea").first().val() : null);
 
-  describe("shex-simple, told in the query string where an extension is", function () {
+  describe("shex-simple, told in the query string where a plugin is", function () {
     this.timeout(20000);
     let dom, $, shared;
 
     before(async function () {
-      ({dom, $, shared} = await boot("?editors=1&extension=" + encodeURIComponent(MAP_EXTENSION)));
+      // ?extension= rather than ?plugin=: the parameter's old name, which
+      // published links carry, so this describe is also the alias's test
+      ({dom, $, shared} = await boot("?editors=1&extension=" + encodeURIComponent(MAP_PLUGIN)));
     });
     after(function () { if (dom) dom.window.close(); });
 
     it("should fetch the module and register what it says it adds", function () {
       expect(dom.window.ShExPlugins.all().map(e => e.label)).to.deep.equal(["ShExMap"]);
-      expect($("head style[data-extension]").attr("data-extension")).to.equal(MAP_ID);
+      expect($("head style[data-plugin]").attr("data-plugin")).to.equal(MAP_ID);
     });
 
     it("should build its panes on a page that has no markup for them", function () {
-      const card = $("#extensionPanes > [data-extension]");
+      const card = $("#extensionPanes > [data-plugin]");
       expect(card.length, "one card").to.equal(1);
       expect(card.children("[id]").map((i, e) => e.id).get())
         .to.deep.equal(["bindings1", "staticVars", "outputSchema"]);
@@ -95,16 +97,16 @@ if (!TEST_browser) {
     });
 
     /* A validator has one kind of result and writes it into #results.  An
-     * extension with a second kind gets a tab, and this page -- which has
+     * plugin with a second kind gets a tab, and this page -- which has
      * never heard of materialization -- grows one on being told where
      * ShExMap is. */
-    it("should give the extension's results a tab beside its own", function () {
+    it("should give the plugin's results a tab beside its own", function () {
       expect($("#resultsTabs > ul > li > a").map((i, a) => $(a).text()).get()[0])
         .to.equal("validation");
       expect($("#resultsTabs > #validationResults > div").length,
              "this app's results, where they always were").to.equal(1);
       expect($("#resultsTabs > #materializationResults").length,
-             "and a panel for the extension's").to.equal(1);
+             "and a tab for the plugin's").to.equal(1);
       expect(shared.app.resultsTarget).to.equal("#validationResults > div");
     });
 
@@ -113,7 +115,7 @@ if (!TEST_browser) {
      * and the app fetches.  Pressing materialize gets ShExMap's own answer
      * -- there are no bindings yet -- rather than a missing-module error. */
     it("should build its toolbar, and bring the module its verbs run on", async function () {
-      const toolbar = $("#extensionPanes [data-extension] > .pluginToolbar");
+      const toolbar = $("#extensionPanes [data-plugin] > .pluginToolbar");
       expect(toolbar.length, "one toolbar").to.equal(1);
       expect(toolbar.find("button").map((i, b) => b.id).get()).to.deep.equal(
         ["materialize", "debugMaterialize",
@@ -140,17 +142,18 @@ if (!TEST_browser) {
     });
 
     /* Otherwise the link reproduces a page that can't read half of what the
-     * link says: an extension is part of the session, not a side effect. */
+     * link says: a plugin is part of the session, not a side effect. */
     it("should carry it in the permalink", async function () {
       const parms = (await shared.app.getPermalink()).split(/[?&]/);
-      expect(parms.filter(p => p.startsWith("extension"))).to.deep.equal([
+      expect(parms.filter(p => p.startsWith("plugin") || p.startsWith("extension")),
+             "under the new name, however it was loaded").to.deep.equal([
         "pluginURL=" + encodeURIComponent(GitRootServer.urlFor(
           "packages/extension-map/doc/ShExMapPlugin.js")),
       ]);
     });
   });
 
-  describe("shex-simple, given a manifest whose entries name an extension", function () {
+  describe("shex-simple, given a manifest whose entries name a plugin", function () {
     this.timeout(20000);
     let dom, $, shared;
 
@@ -160,7 +163,7 @@ if (!TEST_browser) {
     });
     after(function () { if (dom) dom.window.close(); });
 
-    /* The manifest is a list of entries; an extension is what an entry is
+    /* The manifest is a list of entries; a plugin is what an entry is
      * read *by*, so nothing loads until an entry is picked. */
     it("should load nothing until an entry asks for it", function () {
       expect(dom.window.ShExPlugins.all()).to.deep.equal([]);
@@ -169,7 +172,7 @@ if (!TEST_browser) {
     });
 
     /* ...and then everything the entry says is read, including the keys
-     * that only exist because the extension declared them.  Before this,
+     * that only exist because the plugin declared them.  Before this,
      * outputSchemaURL and staticVars were dropped in silence. */
     it("should load it when an entry is picked, and read the entry into it", async function () {
       $("#inputSchema .manifest li").filter((i, li) => $(li).text() === "BP").trigger("click");
@@ -191,13 +194,13 @@ if (!TEST_browser) {
     it("should load it once, however many entries name it", async function () {
       $("#inputSchema .manifest li").filter((i, li) => $(li).text() === "BP back").trigger("click");
       await shared.promise;
-      expect(dom.window.ShExPlugins.all().length, "the same extension, not a second one")
+      expect(dom.window.ShExPlugins.all().length, "the same plugin, not a second one")
         .to.equal(1);
-      expect($("#extensionPanes > [data-extension]").length, "and one card").to.equal(1);
+      expect($("#extensionPanes > [data-plugin]").length, "and one card").to.equal(1);
     });
   });
 
-  describe("shex-simple, given a semantic action extension", function () {
+  describe("shex-simple, given a semantic-action extension module", function () {
     this.timeout(20000);
     let dom, $, shared;
     const set = (selector, value) => {
@@ -207,7 +210,7 @@ if (!TEST_browser) {
     };
 
     before(async function () {
-      ({dom, $, shared} = await boot("?extension=" + encodeURIComponent(TEST_EXTENSION)));
+      ({dom, $, shared} = await boot("?plugin=" + encodeURIComponent(TEST_EXTENSION)));
       set("#inputSchema textarea", [
         "PREFIX : <http://a.example/>",
         "PREFIX Test: <http://shex.io/extensions/Test/>",

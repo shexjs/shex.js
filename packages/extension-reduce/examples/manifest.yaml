@@ -9,7 +9,7 @@
   dataURL: calc-semact/sums.ttl
   queryMap: "<http://a.example/expr2#e1>@<http://a.example/calc#Expr>"
   status: conformant
-  extensions:
+  plugins:
   - ../doc/ShExReducePlugin.js
 # ...and the same numbers with a last one that isn't their sum: every number
 # is a <#MidNum>, so it still parses -- the AST just ends in an ordinary num
@@ -19,7 +19,7 @@
   dataURL: calc-semact/doesnt-sum.ttl
   queryMap: "<http://a.example/expr2#e1>@<http://a.example/calc#Expr>"
   status: conformant
-  extensions:
+  plugins:
   - ../doc/ShExReducePlugin.js
 - schemaLabel: calc, actions falsify
   schemaURL: calc-semact/falsify.shex
@@ -27,7 +27,7 @@
   dataURL: calc-semact/sums.ttl
   queryMap: "<http://a.example/expr2#e1>@<http://a.example/calc#CalcExpr>"
   status: conformant
-  extensions:
+  plugins:
   - ../doc/ShExReducePlugin.js
 # where the schema chooses the last number and the action only checks it, a
 # wrong sum has nowhere else to go: the match fails
@@ -37,7 +37,7 @@
   dataURL: calc-semact/doesnt-sum.ttl
   queryMap: "<http://a.example/expr2#e1>@<http://a.example/calc#CalcExpr>"
   status: nonconformant
-  extensions:
+  plugins:
   - ../doc/ShExReducePlugin.js
 - schemaLabel: calc, actions in an overlay
   schemaURL: calc/calc.shex
@@ -46,5 +46,5 @@
   queryMap: "<http://a.example/expr1#e1>@<http://a.example/calc#Expr>"
   overlayURL: calc/calc-actions.ttl
   status: conformant
-  extensions:
+  plugins:
   - ../doc/ShExReducePlugin.js

@@ -3,7 +3,7 @@
  * is how the shape map lost its left padding on three of them: the fix was
  * made once, in the page whose author noticed.
  *
- * They are two now: ShExMap is an extension, and the map pages are the
+ * They are two now: ShExMap is a plugin, and the map pages are the
  * redirects that open a page with it (doc/extension-ui-plan.md §5 phase 2).
  * This checks that the two share the stylesheet, that a page's own <style>
  * holds only what is actually its own, and that the redirects still answer
@@ -74,7 +74,7 @@ describe("the app pages", () => {
       for (const id of ["bindings1", "staticVars", "outputSchema", "materialize",
                         "outputShapeMap", "debugControls", "dbgStatus", "dbgThreads",
                         "resultsTabs", "validationResults", "materializationResults"])
-        expect(text, file + " leaves " + id + " to the extension")
+        expect(text, file + " leaves " + id + " to the plugin")
           .to.not.include('id="' + id + '"');
       expect(text, file + " has no app class of ShExMap's").to.not.include("ShExMapIn");
       expect(text, file + " has no worker script of ShExMap's")
@@ -83,10 +83,10 @@ describe("the app pages", () => {
   });
 
   /* The map pages' URLs are published, so they answer for them: they open
-   * an app page with ?extension= naming ShExMap and carry whatever they
+   * an app page with ?plugin= naming ShExMap and carry whatever they
    * were asked for.  A parameter is relative to the page it was written
    * for, so the redirect makes URLs absolute on the way. */
-  it("should redirect the map pages to an app page with the extension", () => {
+  it("should redirect the map pages to an app page with the plugin", () => {
     for (const {file, to} of redirects) {
       const text = read(file);
       expect(text, file).to.include('redirectToPlugin("../../shex-webapp/doc/' + to + '"');
@@ -104,8 +104,8 @@ describe("the app pages", () => {
       location: {href: from + search, search, replace (to) { sandbox.went = to; }},
     };
     vm.createContext(sandbox);
-    vm.runInContext(read("../../extension-map/doc/redirect-to-extension.js") +
-                    "\nredirectToExtension('../../shex-webapp/doc/shex-simple.html'," +
+    vm.runInContext(read("../../extension-map/doc/redirect-to-plugin.js") +
+                    "\nredirectToPlugin('../../shex-webapp/doc/shex-simple.html'," +
                     " './ShExMapPlugin.js', '../examples/manifest.json');", sandbox);
     return new URL(sandbox.went);
   }
@@ -113,7 +113,7 @@ describe("the app pages", () => {
   it("should open the app page with ShExMap and the manifest it always had", () => {
     const to = redirected("");
     expect(to.pathname).to.equal("/packages/shex-webapp/doc/shex-simple.html");
-    expect(to.searchParams.get("extension")).to.equal(
+    expect(to.searchParams.get("plugin")).to.equal(
       "http://x.example/packages/extension-map/doc/ShExMapPlugin.js");
     expect(to.searchParams.get("manifestURL")).to.equal(
       "http://x.example/packages/extension-map/examples/manifest.json");
@@ -130,8 +130,18 @@ describe("the app pages", () => {
     expect(to.searchParams.get("manifestURL"), "resolved where it was written")
       .to.equal("http://x.example/packages/extension-map/examples/manifest.yaml");
     expect(to.searchParams.getAll("manifestURL").length, "and not twice").to.equal(1);
-    expect(to.searchParams.get("extension"), "with ShExMap still named").to.equal(
+    expect(to.searchParams.get("plugin"), "with ShExMap still named").to.equal(
       "http://x.example/packages/extension-map/doc/ShExMapPlugin.js");
+  });
+
+  /* A bookmark from when the parameter was called `extension` names its
+   * plugin by the old word; the redirect carries it, absolutized, and does
+   * not name ShExMap a second time -- the app reads both spellings. */
+  it("should honour a bookmark that says extension= the old way", () => {
+    const to = redirected("?extension=./MyExtension.js");
+    expect(to.searchParams.get("extension"), "carried and absolutized").to.equal(
+      "http://x.example/packages/extension-map/doc/MyExtension.js");
+    expect(to.searchParams.get("plugin"), "and ShExMap not added over it").to.equal(null);
   });
 
   /* A dead rule is worse than no rule: `#shapeMap { padding-left: .25em }
@@ -142,8 +152,8 @@ describe("the app pages", () => {
     for (const {file} of pages)
       for (const m of read(file).matchAll(/\bid="([^"]+)"/g))
         ids.add(m[1]);
-    // ids the apps create as they go count as had -- including the ones an
-    // extension declares, which is where a page's controls come from now
+    // ids the apps create as they go count as had -- including the ones a
+    // plugin declares, which is where a page's controls come from now
     for (const js of ["../doc/ShExBaseApp.js",
                       "../../extension-map/doc/ShExMapPlugin.js"])
       // including the ones written into markup the app builds as strings

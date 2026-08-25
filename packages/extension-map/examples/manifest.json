@@ -1,7 +1,7 @@
 [
   {
     "schemaLabel": "BP",
-    "extensions": [
+    "plugins": [
       "../doc/ShExMapPlugin.js"
     ],
     "schemaURL": "BPfhir-schema.shex",
@@ -19,7 +19,7 @@
   },
   {
     "schemaLabel": "BP back",
-    "extensions": [
+    "plugins": [
       "../doc/ShExMapPlugin.js"
     ],
     "schemaURL": "BPdam-schema.shex",
@@ -37,7 +37,7 @@
   },
   {
     "schemaLabel": "BPPatient multi-bindings",
-    "extensions": [
+    "plugins": [
       "../doc/ShExMapPlugin.js"
     ],
     "schema": "PREFIX  : <http://dam.example/med#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX bp: <http://shex.io/extensions/Map/#BPDAM->\nPREFIX Map: <http://shex.io/extensions/Map/#>\n\nstart = @<PatientDAM>\n\n<PatientDAM> {\n  :name LITERAL %Map:{ bp:name %};\n  :vitals @<BPunitsDAM>* %Map:{ bp:XXX %}\n}\n\n<BPunitsDAM> {\n  :systolic {\n    :value xsd:float %Map:{ bp:sysVal %};\n    :units xsd:string %Map:{ bp:sysUnits %}\n  };\n  :diastolic {\n    :value xsd:float %Map:{ bp:diaVal %};\n    :units xsd:string %Map:{ bp:diaUnits %}\n  };\n  :someConstProp xsd:string? %Map:{ <http://abc.example/someConstant> %}\n}\n",
@@ -55,7 +55,7 @@
   },
   {
     "schemaLabel": "BPPatient 2 levels",
-    "extensions": [
+    "plugins": [
       "../doc/ShExMapPlugin.js"
     ],
     "schema": "PREFIX  : <http://dam.example/med#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX bp: <http://shex.io/extensions/Map/#BPDAM->\nPREFIX Map: <http://shex.io/extensions/Map/#>\n\nstart = @<PatientDAM>\n\n<PatientDAM> {\n  :name LITERAL %Map:{ bp:name %};\n  :reports @<ReportsDAM>* %Map:{ bp:reports %}\n}\n\n<ReportsDAM> {\n  :reportNo LITERAL %Map:{ bp:reportNo %};\n  :results @<BPunitsDAM>* %Map:{ bp:bp %}\n}\n\n<BPunitsDAM> {\n  :systolic {\n    :value xsd:float %Map:{ bp:sysVal %};\n    :units xsd:string %Map:{ bp:sysUnits %}\n  };\n  :diastolic {\n    :value xsd:float %Map:{ bp:diaVal %};\n    :units xsd:string %Map:{ bp:diaUnits %}\n  };\n  :someConstProp xsd:string? %Map:{ <http://abc.example/someConstant> %}\n}\n",
@@ -71,7 +71,7 @@
   },
   {
     "schemaLabel": "symmetric",
-    "extensions": [
+    "plugins": [
       "../doc/ShExMapPlugin.js"
     ],
     "schema": "PREFIX    : <http://a.example/>\nPREFIX schema: <http://schema.org/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX Map: <http://shex.io/extensions/Map/#>\n\nstart=@<Concert>\n\n<Concert> {\n  schema:bandName xsd:string %Map:{ :Name %} ;\n  schema:tix IRI %Map:{ :TicketUrl %} ;\n  schema:venue @<Venue>\n}\n<Venue> {\n  schema:location xsd:string %Map:{ :LocationName %} ;\n  schema:address  xsd:string %Map:{ :LocationAddress %}\n}\n",
@@ -87,7 +87,7 @@
   },
   {
     "schemaLabel": "splits",
-    "extensions": [
+    "plugins": [
       "../doc/ShExMapPlugin.js"
     ],
     "threadedOnly": true,
@@ -104,7 +104,7 @@
   },
   {
     "schemaLabel": "splits",
-    "extensions": [
+    "plugins": [
       "../doc/ShExMapPlugin.js"
     ],
     "threadedOnly": true,
@@ -121,7 +121,7 @@
   },
   {
     "schemaLabel": "ambiguous",
-    "extensions": [
+    "plugins": [
       "../doc/ShExMapPlugin.js"
     ],
     "schemaURL": "contact-flat-schema.shex",

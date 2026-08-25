@@ -53,7 +53,6 @@ registerWorkerPlugin({
         }
       });
       self.postMessage({ response: "done" });
-      self.postMessage({ response: "done" });
     },
   },
 });

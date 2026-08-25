@@ -1,25 +1,26 @@
 /**
- * What ShExMap adds to the page.
+ * The ShExMap plugin: what ShExMap adds to the page.
  *
  * Everything, now: the panes and the manifest keys that fill them, the
- * styles, the row of controls and the keys that reach them, the handler the
- * schema's %Map:{...%} dispatches on, the materialize verb, what it does to
- * the results, the graph it renders and the debugger that steps it --
- * doc/extension-ui-plan.md's inventory rows 1-6 and 9-14.
+ * styles, the row of controls and the keys that reach them, the Map
+ * semantic-action extension the schema's %Map:{...%} dispatches on, the
+ * materialize verb, what it does to the results, the graph it renders and
+ * the debugger that steps it -- doc/extension-ui-plan.md's inventory rows
+ * 1-6 and 9-14.
  *
  * The verbs are mixed into the app rather than living on a subclass of it,
  * so `this` is the app and they call each other as they always did.  Which
- * is why shexmap-simple.html has no app class: it is shex-simple.html with
- * this file loaded.
+ * is why shexmap-simple.html has no app class: it is a redirect to
+ * shex-simple.html with this file named as a plugin.
  *
  * What is not here is the worker's half (rows 15 and 16,
- * ShExMapInWorkerApp.js and ShExMapWorkerThread.js) and the module this
- * runs on, which the page still loads as a bundle (phase 3).
+ * ShExMapWorkerThread.js beside this) and the module this runs on, which
+ * the descriptor's `scripts` names and the app fetches.
  */
 
 const MAP_ID = "http://shex.io/extensions/Map/#";
-/** the second kind of results this extension has: a materialization */
-const MATERIALIZATION_PANEL = "materializationResults";
+/** the second kind of results this plugin has: a materialization */
+const MATERIALIZATION_TAB = "materializationResults";
 
 /** index of the first "node@shape" separator in an output ShapeMap ('@'
  * outside <>s), or -1 if there is none yet */
@@ -181,7 +182,7 @@ class RemoteShExMaterializer {
 }
 
 /**
- * ShExMap's verbs, mixed into the app by the base app's applyPlugin.
+ * ShExMap's verbs, mixed into the app by the base app's applyExtension.
  *
  * `this` is the app: these were methods on a subclass of it, and moving
  * them here changed their indentation and nothing else.  They call each
@@ -278,25 +279,25 @@ const ShExMapVerbs = {
    * this materialization consumed. */
   showMaterialization () {
     const tabs = $("#resultsTabs");
-    if (tabs.find('[href="#' + MATERIALIZATION_PANEL + '"]').length === 0)
+    if (tabs.find('[href="#' + MATERIALIZATION_TAB + '"]').length === 0)
       tabs.find("> ul").append(
         $("<li/>").append($("<a/>", {href: "#materializationResults"}).text("materialization")));
-    $("#" + MATERIALIZATION_PANEL).show();
+    $("#" + MATERIALIZATION_TAB).show();
     if (tabs.data("ui-tabs")) {
       tabs.tabs("refresh");
       tabs.tabs("option", "active", tabs.find("> ul > li").length - 1);
     }
-    this.resultsWidget.setTarget("#" + MATERIALIZATION_PANEL + " > div");
+    this.resultsWidget.setTarget("#" + MATERIALIZATION_TAB + " > div");
   },
 
   /** A validation replaces the bindings a materialization was made from, so
    * its results are no longer about anything: the tab goes. */
   hideMaterialization () {
     const tabs = $("#resultsTabs");
-    const tab = tabs.find('[href="#' + MATERIALIZATION_PANEL + '"]').closest("li");
+    const tab = tabs.find('[href="#' + MATERIALIZATION_TAB + '"]').closest("li");
     this.materializationPanes = [];
-    $("#" + MATERIALIZATION_PANEL + " > div").empty();
-    $("#" + MATERIALIZATION_PANEL).hide();
+    $("#" + MATERIALIZATION_TAB + " > div").empty();
+    $("#" + MATERIALIZATION_TAB).hide();
     if (tab.length) {
       tab.remove();
       if (tabs.data("ui-tabs")) {
@@ -1275,7 +1276,7 @@ ShExPlugins.register({
   // rows 11 and 14 need somewhere to render: a materialization is a second
   // kind of result, so it gets a tab of its own beside the validation's and
   // a validation no longer wipes what it produced.
-  resultsPanels: [{id: MATERIALIZATION_PANEL, label: "materialization"}],
+  resultsTabs: [{id: MATERIALIZATION_TAB, label: "materialization"}],
 
   // rows 4 and 5.  The row of controls under the panes: what to do with
   // what is in them, and the one input that isn't a pane.  A button says
@@ -1330,7 +1331,7 @@ ShExPlugins.register({
 
   // row 9.  The handler the schema's %Map:{...%} dispatches on, which is
   // what makes a validation produce bindings at all.  Said here, it reaches
-  // the validator the same way a module loaded by ?extension= does.
+  // the validator the same way a module loaded by ?plugin= does.
   register (validator, api) {
     if (typeof api.Map !== "function")
       return; // ShExMap's module is not on this page: nothing to register
@@ -1378,7 +1379,7 @@ ShExPlugins.register({
 
   // row 13.  A validation's bindings are what a materialization consumes,
   // so rendering one fills the bindings pane.  `base` is the renderer the
-  // app would otherwise have used, or the one another extension wrapped.
+  // app would otherwise have used, or the one another plugin wrapped.
   results: base => class extends base {
     async entry (entry) {
       await super.entry(entry);

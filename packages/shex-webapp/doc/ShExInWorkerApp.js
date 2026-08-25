@@ -2,7 +2,7 @@
   Override ShExApp.getValidator with a RemoteShExValidator
  */
 class ShExInWorkerApp extends ShExApp {
-  /** an extension with a worker half has one thing to do here, another there */
+  /** a plugin with a worker half has one thing to do here, another there */
   get remote () { return true; }
 
   getValidator (loaded, base, inputData) {

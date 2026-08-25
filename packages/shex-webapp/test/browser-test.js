@@ -12,7 +12,7 @@ const SHEX_SIMPLE = 'packages/shex-webapp/doc/shex-simple.html'
 const SHEX_WORKER = 'packages/shex-webapp/doc/shex-worker.html'
 // ShExMap is an extension of those pages now, and shexmap-simple.html is a
 // redirect that opens one with these -- so this is what it opens (§5 phase 2)
-const SHEXMAP_PARMS = "?extension=" + encodeURIComponent("../../extension-map/doc/ShExMapPlugin.js")
+const SHEXMAP_PARMS = "?plugin=" + encodeURIComponent("../../extension-map/doc/ShExMapPlugin.js")
       + "&manifestURL=" + encodeURIComponent("../../extension-map/examples/manifest.json")
 const TESTS = [ // page and the labels on the top-most buttons on the manifest it opens with
   {label: SHEX_SIMPLE, page: SHEX_SIMPLE, parms: '',

@@ -38,7 +38,7 @@ if (!TEST_browser) {
 
     before(async function () {
       const base = Path.join(__dirname, "../../..", PAGE);
-      const search = "?editors=1&extension=" +
+      const search = "?editors=1&plugin=" +
             encodeURIComponent("../../extension-reduce/doc/ShExReducePlugin.js") +
             "&manifestURL=" +
             encodeURIComponent("../../extension-reduce/examples/manifest.yaml");
@@ -81,8 +81,8 @@ if (!TEST_browser) {
 
     it("should build its panes and its verb, and fetch the module they need", function () {
       expect(dom.window.ShExPlugins.all().map(e => e.label)).to.deep.equal(["ShExReduce"]);
-      const card = $("#extensionPanes > [data-extension]");
-      expect(card.attr("data-extension")).to.equal(REDUCE_ID);
+      const card = $("#extensionPanes > [data-plugin]");
+      expect(card.attr("data-plugin")).to.equal(REDUCE_ID);
       expect(card.children("[id]").map((i, e) => e.id).get())
         .to.deep.equal(["reduceOverlay", "reduceAst"]);
       expect(card.find(".pluginToolbar button").map((i, b) => b.id).get())

@@ -1,6 +1,6 @@
 ---
 - schemaLabel: BP
-  extensions:
+  plugins:
   - ../doc/ShExMapPlugin.js
   schemaURL: BPfhir-schema.shex
   dataLabel: simple
@@ -14,7 +14,7 @@
   expectedBindingsURL: BP-simple-bindings.json
   expectedOutputDataURL: BP-simple-out.ttl
 - schemaLabel: BP back
-  extensions:
+  plugins:
   - ../doc/ShExMapPlugin.js
   schemaURL: BPdam-schema.shex
   dataLabel: simple
@@ -28,7 +28,7 @@
   expectedBindingsURL: BP-simple-bindings.json
   expectedOutputDataURL: BP-back-simple-out.ttl
 - schemaLabel: BPPatient multi-bindings
-  extensions:
+  plugins:
   - ../doc/ShExMapPlugin.js
   schema: |
     PREFIX  : <http://dam.example/med#>
@@ -131,7 +131,7 @@
   expectedBindingsURL: BPPatient-multi-bindings-bindings.json
   expectedOutputDataURL: BPPatient-multi-bindings-out.ttl
 - schemaLabel: BPPatient 2 levels
-  extensions:
+  plugins:
   - ../doc/ShExMapPlugin.js
   schema: |
     PREFIX  : <http://dam.example/med#>
@@ -274,7 +274,7 @@
   expectedBindingsURL: BPPatient-2-levels-bindings.json
   expectedOutputDataURL: BPPatient-2-levels-out.ttl
 - schemaLabel: symmetric
-  extensions:
+  plugins:
   - ../doc/ShExMapPlugin.js
   schema: |
     PREFIX    : <http://a.example/>
@@ -327,7 +327,7 @@
   expectedBindingsURL: symmetric-bindings.json
   expectedOutputDataURL: symmetric-out.ttl
 - schemaLabel: splits
-  extensions:
+  plugins:
   - ../doc/ShExMapPlugin.js
   threadedOnly: true
   schemaURL: contact-schema.shex
@@ -341,7 +341,7 @@
   expectedBindingsURL: splits-bindings.json
   expectedOutputDataURL: splits-out.ttl
 - schemaLabel: splits
-  extensions:
+  plugins:
   - ../doc/ShExMapPlugin.js
   threadedOnly: true
   schemaURL: contact-schema.shex
@@ -355,7 +355,7 @@
   expectedBindingsURL: splits-bindings.json
   expectedOutputDataURL: splits-out.ttl
 - schemaLabel: ambiguous
-  extensions:
+  plugins:
   - ../doc/ShExMapPlugin.js
   schemaURL: contact-flat-schema.shex
   dataLabel: Bob

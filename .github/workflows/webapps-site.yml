@@ -15,9 +15,9 @@ name: webapps-site
 # The repo-relative layout is preserved because everything here points at
 # everything else relatively: shex-simple.html loads webpacks/shex-webapp.js,
 # shexmap-simple.html redirects to ../../shex-webapp/doc/shex-simple.html with
-# ?extension=<relative URL of ShExMapPlugin.js>, and an extension's
-# `scripts` are resolved against the extension rather than the page -- so an
-# extension's bundle has to be published beside it.
+# ?plugin=<absolutized URL of ShExMapPlugin.js>, and a plugin's `scripts`
+# are resolved against the plugin rather than the page -- so a plugin's
+# bundle has to be published beside it.
 #
 # Each publish commits ON TOP of the existing gh-pages history so consumers
 # can update with a plain `git pull`:

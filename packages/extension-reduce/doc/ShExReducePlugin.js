@@ -1,7 +1,8 @@
 /**
- * What ShExReduce adds to a page (doc/extension-ui-plan.md §5 phase 4).
+ * The ShExReduce plugin: what ShExReduce adds to a page
+ * (doc/extension-ui-plan.md §5 phase 4).
  *
- * The second extension, and the one that says whether the contract is a
+ * The second plugin, and the one that says whether the contract is a
  * contract or just ShExMap's shape written out.  It wants what ShExMap
  * wanted -- panes, a verb, a handler, a hand in the results -- and one
  * thing ShExMap never needed: a say in the schema, because actions may
@@ -18,7 +19,7 @@
 
 const REDUCE_ID = "http://shex.io/extensions/Reduce/";
 
-/** the extension, as a value, so its own hooks can reach its state */
+/** the plugin, as a value, so its own hooks can reach its state */
 const ShExReduce = {
   id: REDUCE_ID,
   label: "ShExReduce",

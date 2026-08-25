@@ -1,11 +1,12 @@
-/* Styles for the ShEx web apps -- shex-simple and shex-worker here, and
- * shexmap-simple and shexmap-worker in @shexjs/extension-map, which link
- * this file rather than keeping a copy.  Four copies is how the shape map
- * lost its left padding on three pages: the fix was made once, in the page
- * whose author noticed, and the others quietly did without.
+/* Styles for the ShEx web apps -- shex-simple and shex-worker.  The map
+ * pages in @shexjs/extension-map are redirects to these now, and ShExMap's
+ * own rules (the bindings pane) ride in its plugin descriptor's css.  Four
+ * copies is how the shape map lost its left padding on three pages: the
+ * fix was made once, in the page whose author noticed, and the others
+ * quietly did without.
  *
  * A page keeps a <style> of its own for what is actually its own: how its
- * input area scrolls, and, for the map apps, the bindings pane.
+ * input area scrolls.
  *
  * The palette, so it stays a family:
  *   schema  #f4f4ff   data  #f4fff4   results  #fffff4   bindings #fffff4
@@ -275,7 +276,7 @@ ul {
     overflow-wrap: anywhere;
 }
 
-/* An extension's row of controls, arranged like the validator's above.
+/* A plugin's row of controls, arranged like the validator's above.
  *
  * The inner box floats right so it sits at the panel's edge, and its
  * wrapper held nothing else -- so the wrapper collapsed to no height at

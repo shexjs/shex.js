@@ -6,6 +6,21 @@
 > was dropped.  Phase 0 pinned it, wrote the missing test, and fixed the two
 > bugs that test found.
 
+> **Terminology (2026-08-25), after the phases below were written.**  What
+> this plan calls an "extension" is called a **plugin** now: a module the
+> app loads by URL, which may install any number of ShEx's actual
+> extensions — the IRI-named semantic-action handlers — and may change the
+> page.  Overloading the spec's word was this plan's naming mistake, and it
+> also made a descriptor's `id` look like it had to be a SemAct IRI, which
+> a module installing two handlers (or none) hasn't got.  `doc/plugins.md`
+> (né `doc/extensions.md`) records the choice and the new spellings —
+> `ShExPlugins`, `?plugin=`, `plugins:` on a manifest entry — and which old
+> spellings still answer.  The phase notes below keep the vocabulary they
+> were written in; the files they name have moved with the rename
+> (`ShExMapExtension.js` → `ShExMapPlugin.js`, `ShExReduceExtension.js` →
+> `ShExReducePlugin.js`, `doc/extension-skeleton/` → `doc/plugin-skeleton/`,
+> `ShExExtensions.js` → `ShExPlugins.js`).
+
 ## 1. Where it stands
 
 `@shexjs/extension-map` is a validator extension that also has a web app, and
@@ -58,7 +73,7 @@ covers it; a port is done when every row is ticked, and a row with no test
 gets one **before** it moves.
 
 - [x] **1. `#bindings1` pane** (JSON bindings, editable) — **a declared
-      pane** (`ShExMapPlugin.js`), built by `buildPluginPanes`; the
+      pane** (`ShExMapExtension.js`), built by `buildExtensionPanes`; the
       `JSONCache` it wants is now the base app's `json` pane kind. *smoke:
       "should boot with editor panes on the ShExMap caches" and "should build
       its panes from the extension, not from the page"*
@@ -82,7 +97,7 @@ gets one **before** it moves.
       reach materialize on ctl-\ and the bindings table on ctl-[ / ctl-]" —
       **written in phase 0**, and it found the two bugs below*
 - [x] **6. pane CSS** (bindings colours, selected row, `#inputarea`
-      overflow) — **a descriptor's `css`** (`ShExMapPlugin.js`), appended
+      overflow) — **a descriptor's `css`** (`ShExMapExtension.js`), appended
       after the page's own rules. *smoke: "should take its pane colours from
       the extension, not from the page", and the plain page's "should add
       nothing where no extension is registered"*
@@ -93,12 +108,15 @@ gets one **before** it moves.
       edit-map row per node it names" — **written in this phase**, and it
       found the bug below.* Nothing moves; the constant stays, with a
       comment saying which materialize it is.
-- [ ] **8. manifest keys** `staticVars`, `outputSchema[URL]`,
+- [x] **8. manifest keys** `staticVars`, `outputSchema[URL]`,
       `outputShapeMap` — `loadExtraInputs:1373` walks `QueryParams`, which was
       already general; two of the three keys now arrive there from the pane
       declarations. `outputShapeMap` is not a pane — it is the `#outactions`
-      row's input — so it waits for row 4. *smoke: "should load a picked
-      manifest entry's materialization inputs"*
+      row's input — so it waited for row 4, and arrived with it: the
+      toolbar's input declares `manifest: {key: "outputShapeMap"}` the way a
+      pane does. *smoke: "should load a picked manifest entry's
+      materialization inputs", and "should declare the query parameters and
+      manifest keys that fill them"*
 - [x] **9. validator wiring** `MapModule.register(validator, ShExWebApp)` —
       **`register` in the descriptor**, called where a module loaded by
       `?extension=` is called; it returns early when ShExMap's module isn't
@@ -116,9 +134,11 @@ gets one **before** it moves.
       the hovers it hangs on them. *smoke: eight tests, "should render the
       materialized graph…" through "should light up the schema and the data
       from a hover in the bindings"*
-- [ ] **12. bindings ⇄ table** — `:1155`, `:1205`, reachable only by ctl-[ /
+- [x] **12. bindings ⇄ table** — `:1155`, `:1205`, reachable only by ctl-[ /
       ctl-]. *covered by the phase-0 test above.* **It did not work**: see
-      below.
+      below.  Fixed with the test, and moved with row 5: the two verbs are
+      `keys` entries in the descriptor and the table code is in its
+      `methods`.
 - [x] **13. results renderer addition** (`valToExtension`) — **`results:
       base => class extends base`** in the descriptor, so two extensions
       compose rather than the second replacing the first, and neither has to
@@ -179,7 +199,7 @@ page, so a feature that survives them survived the port.
 An extension is a module loaded by URL that registers a descriptor:
 
 ```js
-ShExPlugins.register({
+ShExExtensions.register({
   id:    "http://shex.io/extensions/Map/",   // the SemAct IRI: it already names it
   label: "ShExMap",
   css:   "…",                       // or a stylesheet URL
@@ -201,7 +221,7 @@ ShExPlugins.register({
 
 **Loading (phase 2, done).** One URL, one module, whatever it has to add --
 because an extension is one thing to the person using it. `?extension=<url>`
-(repeatable; `?pluginURL=` is the same thing, and is what a permalink
+(repeatable; `?extensionURL=` is the same thing, and is what a permalink
 writes) and `extensions: [url, …]` on a manifest entry both mean *fetch this
 and run it*. The module says what it adds:
 
@@ -214,7 +234,7 @@ module.exports = {
 ```
 
 Either half or both. A module written as a page script hands its descriptor
-straight to `ShExPlugins.register` instead of exporting `ui`, and is
+straight to `ShExExtensions.register` instead of exporting `ui`, and is
 loadable both ways: registering the same `id` twice is a no-op, so a page
 that loads it as a script, a manifest entry that names it, and a permalink
 that carries it are one extension between them.
@@ -289,11 +309,11 @@ at a time, smoke tests green after each: css → panes+manifest keys → ~~menu
 items~~ → actions → results → worker requests. After this phase the base app
 contains no ShExMap identifier.
 
-> **css: done.** `doc/ShExPlugins.js` is the register; `ShExBaseApp.start`
+> **css: done.** `doc/ShExExtensions.js` is the register; `ShExBaseApp.start`
 > calls `applyExtensions`, which appends each descriptor's `css` to the head
 > after the page's own rules, so an extension may say differently what the
 > page said — which is how a map app gets `#inputarea { overflow-x: auto }`
-> without a page of its own. `extension-map/doc/ShExMapPlugin.js` is the
+> without a page of its own. `extension-map/doc/ShExMapExtension.js` is the
 > first descriptor. Tested from both sides: the map page wears the colours
 > and names the sheet's `data-extension`, and the plain page has no such
 > sheet and nothing registered. Inventory row 6 is off the page.
@@ -313,7 +333,7 @@ contains no ShExMap identifier.
 > bullet.
 >
 > **panes + manifest keys: done.** A descriptor's `panes` say name, id,
-> `kind`, `rows`, class, query parameter and manifest key; `buildPluginPanes`
+> `kind`, `rows`, class, query parameter and manifest key; `buildExtensionPanes`
 > makes the textarea, the status line, the cache (`json` | `schema` |
 > `turtle`), and the `Getables`/`QueryParams` entries — four things that have
 > to agree, said once. They go in `#extensionPanes`, which a page may place
@@ -331,7 +351,7 @@ contains no ShExMap identifier.
 become redirects (the URLs are published on gh-pages), and the stale
 `.patch` goes.
 
-> **done.** The map pages are 20 lines each: a `redirectToPlugin` call
+> **done.** The map pages are 20 lines each: a `redirectToExtension` call
 > naming the app page, ShExMap, and the manifest they always opened with.
 > Whatever they were asked for goes along, and a parameter that is a URL
 > (`extension`, anything `…URL`) is made absolute on the way, since it was
@@ -348,7 +368,7 @@ become redirects (the URLs are published on gh-pages), and the stale
 
 > **loading: done**, ahead of the rest of phase 1, because it is what makes
 > `shex-simple.html?manifestURL=…/extension-map/examples/manifest.yaml` mean
-> anything. `ShExPlugins.register` is idempotent and notifies; the app
+> anything. `ShExExtensions.register` is idempotent and notifies; the app
 > applies each descriptor as it arrives rather than only at boot, so an
 > extension may land at any moment -- and a pane built after `?editors=1`
 > took effect is still an editor. The map's example manifests name their
@@ -362,7 +382,7 @@ become redirects (the URLs are published on gh-pages), and the stale
 > Three things were in the way, none of them the design. `?extension=` set
 > `this.Caches.extension.url` on a cache that has no `Caches`, so every load
 > threw; the handler was handed to the validator through
-> `$(".pluginControl:checked").each(() => $(this)…)`, where an arrow
+> `$(".extensionControl:checked").each(() => $(this)…)`, where an arrow
 > function's `this` is the enclosing class, so `undefined.register` -- the
 > feature has never run; and the evaluation context defined `module` but not
 > `exports`, so a UMD bundle took its browser branch and hung itself on the
@@ -379,7 +399,7 @@ become redirects (the URLs are published on gh-pages), and the stale
 > **controls + keys: done** (rows 4 and 5). A `toolbar` is a row of controls
 > — button, input, group, status — built into the extension's card, and a
 > button may name the key that runs it; a verb with no button is a `keys`
-> entry. Both go through one `runPluginAction`, which reports what it
+> entry. Both go through one `runExtensionAction`, which reports what it
 > can't run instead of throwing, and leaves `SharedForTests.promise` alone
 > when the verb set it itself (materialize hands over the materialization,
 > not the click). `keyDownHandlers` is read per keydown, so a binding may
@@ -422,7 +442,7 @@ become redirects (the URLs are published on gh-pages), and the stale
 > carrying.
 >
 > The containment rule the row needs (`display: flow-root` around a floated
-> inner box) is the *app's* now, as `.pluginToolbar` — every extension's
+> inner box) is the *app's* now, as `.extensionToolbar` — every extension's
 > row gets it. Which turned up a leak the css hook missed: `shex-app.css`,
 > not just the pages, carried ShExMap rules. `#outactionsRow`/`#outactions`
 > are gone, `#debugControls` moved to the descriptor, and the debugger's
@@ -467,7 +487,7 @@ keeps no page.
 > Applying is awaited: `register` records what the apps did about a
 > descriptor as `applied`, and whoever loaded the module waits for it.
 >
-> What is left is packaging: `ShExMapPlugin.js` is a 1300-line classic
+> What is left is packaging: `ShExMapExtension.js` is a 1300-line classic
 > script rather than a built bundle, and the worker half is a second file
 > beside it. Both work as they are; bundling them is tidying, not enabling.
 
@@ -478,7 +498,7 @@ manifest — the two schemas make a demo that shows an action steering a parse
 and an action falsifying one. If the contract only fits ShExMap, this is where
 that shows.
 
-> **done, and it fits.** `extension-reduce/doc/ShExReducePlugin.js` is 150
+> **done, and it fits.** `extension-reduce/doc/ShExReduceExtension.js` is 150
 > lines: two panes, one button and its key, a `register` that hands the fold
 > to the validator eagerly (the actions in `guide.shex` decide which branch
 > of an `OR` matches, which they can only do while the matcher matches), a
@@ -507,6 +527,32 @@ that shows.
 loads an extension from a *different origin* (the test server can serve a
 second port, so cross-origin is tested rather than assumed), and publish a
 skeleton extension repo.
+
+> **done, bar the publishing.** `doc/extensions.md` is the contract: how an
+> extension is loaded (three ways, one extension), every field a descriptor
+> may carry and the order they are applied in, the worker half, what a host
+> serving one to another origin has to send, and what is deliberately *not*
+> in the contract -- unloading, ordering between extensions, trust.
+>
+> `doc/extension-skeleton/hello-extension.js` is the smallest working
+> extension: a handler that records what `%Hello:{ ... %}` matched, a pane,
+> and a button that writes one into the other, in forty lines. It is what
+> the document tells an author to copy, and what the cross-origin test
+> loads -- `extension-cross-origin-test.js` serves it from a second port and
+> asks a page on the first to load it, which is the case the whole contract
+> is for. The panes and the button appear, the handler reaches the
+> validator, the descriptor is stamped with the origin it came from (so its
+> own files resolve against *it*), and the response carries the
+> `Access-Control-Allow-Origin` a browser insists on -- asserted rather than
+> relied on, since the page tests use node-fetch, which does not enforce
+> CORS.
+>
+> `extension-contract-test.js` keeps the document honest in both directions:
+> every hook it names is documented, and a hook the app reads that the
+> contract does not name fails there rather than being found by accident.
+>
+> What is left is the publishing: a skeleton *repository*, outside this one,
+> is somebody's account rather than a commit.
 
 ## 6. Guardrails
 

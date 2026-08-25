@@ -1,15 +1,19 @@
 /**
- * Where an extension says what it adds to the page.
+ * Where a plugin says what it adds to the page.
  *
- * An extension to ShEx is a semantic action handler.  An extension to *this*
- * is that plus whatever the page has to grow for it: panes, verbs, menu
- * items, manifest keys, a worker script.  ShExMap grew them by copying the
+ * Two different things around here got called "extension", and this file is
+ * where the line is drawn.  An *extension* is ShEx's word: a semantic-action
+ * handler, named by IRI, that a schema invokes with `%<IRI>:{ ... %}` --
+ * GenX, Map, Test and the rest of shexSpec/extensions.  A *plugin* is this
+ * app's word: a module loaded by URL that may install any number of those
+ * handlers -- one, several, none -- and may change the page: panes, verbs,
+ * styles, a worker script.  ShExMap grew its page changes by copying the
  * page and the app class, which is how shexmap-simple.html came to be a
  * fork of shex-simple.html; this is the register it hands them to instead.
  *
- * See doc/extension-ui-plan.md.  Contributions move here one kind at a time
- * -- `css` first -- so a descriptor may carry kinds the app does not read
- * yet, and the app reads kinds no descriptor carries.  Both are fine.
+ * See doc/plugins.md for the contract and doc/extension-ui-plan.md for how
+ * it got here.  A descriptor may carry kinds the app does not read yet, and
+ * the app reads kinds no descriptor carries.  Both are fine.
  */
 const ShExPlugins = (function () {
   const registered = [];
@@ -23,8 +27,11 @@ const ShExPlugins = (function () {
     loadingFrom: null,
 
     /**
-     * @param descriptor.id     the SemAct IRI: the extension is already
-     *                          named by what it dispatches on
+     * @param descriptor.id     what names this plugin: any string unique to
+     *                          it.  A plugin that installs exactly one
+     *                          semantic-action extension conventionally uses
+     *                          that extension's IRI; one that installs two,
+     *                          or none, names itself some other way
      * @param descriptor.label  what to call it on screen
      * @param descriptor.css    rules the page needs for what it adds
      * @param descriptor.baseUrl where it was loaded from (filled in here)
@@ -32,11 +39,12 @@ const ShExPlugins = (function () {
      */
     register (descriptor) {
       if (!descriptor || typeof descriptor.id !== "string")
-        throw Error("an extension registers with an id: the SemAct IRI it dispatches on");
-      // One extension may arrive several ways -- a script on the page, an
-      // ?extension= URL, a manifest entry that names it -- and they mean
-      // the same extension.  The first registration wins and the rest are
-      // no-ops, so naming it twice is not an error.
+        throw Error("a plugin registers with an id: a string that names it"
+                    + " (the IRI of the one extension it installs, by convention)");
+      // One plugin may arrive several ways -- a script on the page, a
+      // ?plugin= URL, a manifest entry that names it -- and they mean the
+      // same plugin.  The first registration wins and the rest are no-ops,
+      // so naming it twice is not an error.
       const already = registered.find(d => d.id === descriptor.id);
       if (already)
         return already;
@@ -49,17 +57,17 @@ const ShExPlugins = (function () {
                               && document.currentScript.src) || this.loadingFrom;
       registered.push(descriptor);
       // an app may have to fetch something before it can apply this -- the
-      // module the extension runs on, say -- so what it hands back is
-      // waited for here, and whoever loaded the extension can await it
+      // module the plugin runs on, say -- so what it hands back is waited
+      // for here, and whoever loaded the plugin can await it
       descriptor.applied = Promise.all(listeners.map(fn => fn(descriptor)));
       return descriptor;
     },
 
     /** call fn for each descriptor registered from here on.
      *
-     * An app applies what is registered when it starts, and an extension
-     * loaded afterwards -- by URL, or because a manifest entry named it --
-     * has to reach the same code.  Returns a function that unsubscribes. */
+     * An app applies what is registered when it starts, and a plugin loaded
+     * afterwards -- by URL, or because a manifest entry named it -- has to
+     * reach the same code.  Returns a function that unsubscribes. */
     onRegister (fn) {
       listeners.push(fn);
       return () => {
@@ -77,9 +85,13 @@ const ShExPlugins = (function () {
 })();
 
 // A `const` in a classic script is reachable from the scripts after it but
-// is not a property of the window, and an extension fetched at runtime (§5
-// phase 2) is a script like any other -- so say it both ways.
-if (typeof window !== "undefined")
+// is not a property of the window, and a plugin fetched at runtime is a
+// script like any other -- so say it both ways.  `ShExExtensions` is the
+// name this register had while it and the handlers shared a word: a module
+// written against that contract still finds it.
+if (typeof window !== "undefined") {
   window.ShExPlugins = ShExPlugins;
+  window.ShExExtensions = ShExPlugins;
+}
 if (typeof module !== "undefined" && module.exports)
   module.exports = ShExPlugins;

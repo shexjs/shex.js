@@ -43,10 +43,10 @@ if (!TEST_browser) {
   nock = require("nock");
   describe("shexmap-simple with ?editors=1", function () {
     this.timeout(20000);
-    // ShExMap is an extension of this page now; shexmap-simple.html is a
+    // ShExMap is a plugin of this page now; shexmap-simple.html is a
     // redirect that opens it with exactly these parameters (§5 phase 2)
     const page = "packages/shex-webapp/doc/shex-simple.html";
-    const asShExMap = "&extension=" + encodeURIComponent("../../extension-map/doc/ShExMapPlugin.js")
+    const asShExMap = "&plugin=" + encodeURIComponent("../../extension-map/doc/ShExMapPlugin.js")
           + "&manifestURL=" + encodeURIComponent("../../extension-map/examples/manifest.json");
 
     let dom, $, shared, app;
@@ -102,10 +102,10 @@ if (!TEST_browser) {
     /* Inventory row 6, and the first contribution to move: the bindings
      * pane's colours were three rules in each map page's <style>, and are
      * now one descriptor the page registers (doc/extension-ui-plan.md §5). */
-    it("should take its pane colours from the extension, not from the page", function () {
-      const sheet = $("head style[data-extension]");
+    it("should take its pane colours from the plugin, not from the page", function () {
+      const sheet = $("head style[data-plugin]");
       expect(sheet.length, "the register put a sheet on the page").to.equal(1);
-      expect(sheet.attr("data-extension"), "whose").to.equal("http://shex.io/extensions/Map/#");
+      expect(sheet.attr("data-plugin"), "whose").to.equal("http://shex.io/extensions/Map/#");
       expect($("#bindings1 textarea").first().css("background-color"),
              "and the bindings pane wears its colour").to.equal("rgb(255, 255, 244)");
       expect($("#inputarea").css("overflow-x"),
@@ -116,12 +116,12 @@ if (!TEST_browser) {
     /* Inventory rows 1-3, and the second contribution to move: bindings,
      * static variables and the output schema were markup in each map page
      * plus caches and parameter entries in ShExMapBaseApp, and are now three
-     * pane declarations.  The page supplies the slot; the extension says
+     * pane declarations.  The page supplies the slot; the plugin says
      * what goes in it and the base app makes all four parts agree. */
-    it("should build its panes from the extension, not from the page", function () {
-      const card = $("#extensionPanes > [data-extension]");
-      expect(card.length, "one card for the one extension").to.equal(1);
-      expect(card.attr("data-extension")).to.equal("http://shex.io/extensions/Map/#");
+    it("should build its panes from the plugin, not from the page", function () {
+      const card = $("#extensionPanes > [data-plugin]");
+      expect(card.length, "one card for the one plugin").to.equal(1);
+      expect(card.attr("data-plugin")).to.equal("http://shex.io/extensions/Map/#");
       expect(card.children("[id]").map((_, elt) => elt.id).get(), "in declared order")
         .to.deep.equal(["bindings1", "staticVars", "outputSchema"]);
       expect($("#bindings1 textarea").first().attr("rows"), "as tall as it asked")
@@ -260,10 +260,10 @@ if (!TEST_browser) {
     /* Inventory rows 4 and 5, the third contribution to move: the row of
      * controls was markup in both map pages and click handlers in
      * ShExMapBaseApp.prepareControls, and is now `toolbar` in the
-     * descriptor.  It builds into the extension's own card, under the panes
+     * descriptor.  It builds into the plugin's own card, under the panes
      * it consumes. */
     it("should keep the materialize buttons inside a box that contains them", function () {
-      const row = $("#extensionPanes [data-extension] > .pluginToolbar");
+      const row = $("#extensionPanes [data-plugin] > .pluginToolbar");
       expect(row.length, "the toolbar has a wrapper").to.equal(1);
       expect(row.find(".pluginToolbarInner").length, "which holds it").to.equal(1);
       expect(row.css("display"), "a block formatting context contains its floats")

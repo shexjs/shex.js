@@ -11,7 +11,7 @@
  * against pageDir the way a browser resolves them against the page URL.
  *
  * urlRoots ([{prefix, dir}]) maps served URLs back to files, for the
- * absolute ones: an app tells its worker where its extensions are by URL,
+ * absolute ones: an app tells its worker where its plugins are by URL,
  * because a worker resolves a relative importScripts against its own script
  * and knows nothing of the page.
  */
