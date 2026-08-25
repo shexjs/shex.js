@@ -184,7 +184,12 @@ if (!TEST_browser) {
 
       const paneDom = $("#results .shexjs-turtle-pane");
       expect(paneDom.length, "materialization renders in a Turtle pane").to.equal(1);
-      expect(paneDom[0].style.height, "pane fills the remaining height").to.match(/^\d+px$/);
+      // no height of its own: the page is divided for this now -- panes
+      // above, results below -- and the results tab is what scrolls
+      expect(paneDom[0].style.height, "no height measured against the window")
+        .to.equal("");
+      expect($("#resultsTabs > div[id]").first().css("overflow"),
+             "the tab it is in is what scrolls").to.equal("auto");
 
       const [{pairs, text: resultText}] = shared.Caches.editorSupport.lastMaterialized;
       expect(pairs.length, "one pair per generated triple").to.equal(2);

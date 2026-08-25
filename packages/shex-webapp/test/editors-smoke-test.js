@@ -106,6 +106,125 @@ if (!TEST_browser) {
         .to.deep.equal(["inputData", "inputSchema", "manifest", "plugin", "shapeMap"]);
     });
 
+    /* The page is the window: title, then as much of the middle as is
+     * left, then the results at the bottom of it.  #results used to ride up
+     * and down with whatever was above it -- the validator's screen has the
+     * manifest and the shape map under the schema and a plugin's has
+     * neither -- so where you looked for the results depended on which
+     * screen you were on.  (jsdom lays nothing out; these are the rules
+     * that would do the laying.) */
+    it("should pin the results to the bottom and let the panes take the slack", function () {
+      const body = $("body");
+      expect(body.css("display")).to.equal("flex");
+      expect(body.css("flex-direction")).to.equal("column");
+      // height, not min-height: a floor lets the page grow, and a page that
+      // can grow never makes anything give way -- which is how a document
+      // taller than its pane ended up making the pane taller
+      expect(body.css("height"), "the window is the budget").to.equal("100%");
+      expect(body.css("overflow"), "and what does not fit scrolls where it is")
+        .to.equal("hidden");
+      expect(body.css("margin-top"), "so the gap round the page is inside it")
+        .to.equal("0px");
+
+      expect($("#inputarea").css("flex"), "the panes take the slack").to.include("1 1");
+      expect($("#inputarea").css("overflow"), "and scroll if they run out").to.equal("auto");
+      expect($("#results").css("flex"), "the results keep their place and their size")
+        .to.include("0 0");
+      expect($("#results").css("flex-direction"), "and are a column of their own")
+        .to.equal("column");
+      // whichever box holds them is the one that scrolls -- here, with no
+      // plugin and so no tabs, #results' own div
+      expect($("#results > div").css("overflow"), "the results scroll in their box")
+        .to.equal("auto");
+      expect($("#results > div").css("flex"), "which is the box, not the content")
+        .to.include("1 1");
+      // the middle is a row and the columns are its items, stretched to it
+      expect($("#inputarea").css("display"), "the columns stay side by side")
+        .to.equal("flex");
+      expect($("#inputarea").css("align-items"), "each as tall as the middle")
+        .to.equal("stretch");
+      expect($("#inputSchema").css("flex"), "and side by side at their width")
+        .to.include("48.5%");
+      expect($("#inputSchema").css("display"), "each a column in itself")
+        .to.equal("flex");
+      // ...and in a column, the document is what grows
+      expect($("#schemaDocument").css("flex"), "the schema takes the slack")
+        .to.include("1 1");
+      expect($("#inputSchema > div:not(#schemaDocument)").css("flex"),
+             "the manifest under it is as tall as it is").to.include("0 0");
+
+      /* ...so what is under the document is at the foot of the column,
+       * which is the foot of the space above the results: the shape map on
+       * one side and the validate row on the other touch it. */
+      const foot = column => $(column).children().last();
+      expect(foot("#inputSchema").find("#shapeMapArea").length,
+             "the shape map is the last thing in the schema column").to.equal(1);
+      expect(foot("#inputSchema").css("flex"), "and is as tall as it is")
+        .to.include("0 0");
+      expect(foot("#inputData").find("#validate").length,
+             "the validate row is the last thing in the data column").to.equal(1);
+      expect(foot("#inputData").css("flex")).to.include("0 0");
+      expect($("#dataArea").css("flex"), "the data document takes the slack")
+        .to.include("1 1");
+      // ...and nothing remembers a height that would stop the column
+      // shrinking when the reader drags the results up
+      expect($("#dataArea").attr("style") || "", "no remembered height")
+        .to.not.include("min-height");
+    });
+
+    /* A schema with a dozen examples has a taller list of them, and the
+     * column is the same height either way: the list takes what it needs up
+     * to a share of the column and scrolls past that, so the document above
+     * it resizes and the validate row below it does not move.  Squeezing
+     * the list instead left a sliver with half a button in it. */
+    it("should give the example lists a share, and take the rest from the document",
+       async function () {
+      expect($("#dataExamples").css("flex"), "the lists take what they need")
+        .to.include("0 0");
+      expect($("#dataExamples").css("max-height"), "up to a share of the column")
+        .to.equal("30%");
+      expect($("#dataExamples").css("overflow"), "and scroll rather than push")
+        .to.equal("auto");
+
+      // the document is what the space is taken from, all the way down
+      for (const sel of ["#dataArea", "#dataDocument"]) {
+        expect($(sel).css("flex"), sel + " takes the slack").to.include("1 1");
+        expect($(sel).css("flex-direction"), sel + " passes it on").to.equal("column");
+      }
+      const foot = $("#inputData").children().last();
+      expect(foot.find("#validate").length, "and the validate row is still the foot")
+        .to.equal(1);
+      expect(foot.css("flex"), "which never gives way").to.include("0 0");
+    });
+
+    /* How the page is divided is the reader's: a long result wants more of
+     * it than a long schema does. */
+    it("should divide the page at a handle you can drag", function () {
+      const grip = $("#resultsGrip");
+      expect(grip.length, "the top edge of the results is one").to.equal(1);
+      expect(grip.next().attr("id"), "between the panes and the results")
+        .to.equal("results");
+      expect(grip.prev().attr("id")).to.equal("inputarea");
+      expect(grip.css("cursor")).to.equal("row-resize");
+      expect(grip.css("flex"), "and is not itself the results").to.include("0 0");
+
+      const drag = y => {
+        grip.trigger($.Event("mousedown", {clientY: 400}));
+        $(dom.window.document).trigger($.Event("mousemove", {clientY: y}));
+        $(dom.window.document).trigger($.Event("mouseup"));
+      };
+      const page = dom.window.innerHeight;
+      drag(page - 300);
+      expect($("#results").css("flex"), "dragging up gives the results more")
+        .to.equal("0 0 300px");
+      drag(page - 120);
+      expect($("#results").css("flex"), "and dragging down gives them less")
+        .to.equal("0 0 120px");
+      // ...within reason: the results keep enough to be worth showing
+      drag(page + 500);
+      expect($("#results").css("flex")).to.equal("0 0 48px");
+    });
+
     it("should boot without errors in #results", function () {
       const errors = $("#results .error");
       expect(errors.length, errors.text()).to.equal(0);
@@ -1510,8 +1629,9 @@ if (!TEST_browser) {
         expect(painted.join("\n"), "the results tint").to.include("rgb(255, 255, 244)");
         const {pane, ranges} = rw.resultPanes[0];
         expect(ranges.length, "TestedTriples mapped").to.be.above(0);
-        // fitted to the bottom of the window; scrolls internally
-        expect(pane.dom.style.height).to.match(/^\d+px$/);
+        // no height of its own: the results have a box now, and the tab
+        // it is in is what scrolls
+        expect(pane.dom.style.height, "left to the box it is in").to.equal("");
 
         // hovering a TestedTriple highlights its constraint and its triple:
         // swap in a spy pane and re-derive the hover regions

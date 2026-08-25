@@ -794,15 +794,13 @@ class NeighborhoodConfig {
       // before is what it keeps until it is told to look again
       if (this.onShown)
         this.onShown();
-      // and remember how tall this block is with a document in it, so that
-      // showing the settings pane -- which is a line or two -- doesn't let
-      // everything below jump up.  Measured rather than declared: the
-      // document is a textarea, or an editor, or an editor the reader has
-      // resized.
+      // This used to remember how tall the block was with a document in
+      // it, so that showing the settings pane -- a line or two -- didn't
+      // let everything below jump up.  The column fills the space above the
+      // results now and the document is what takes the slack, so nothing
+      // below it moves either way, and a remembered height would only stop
+      // the column shrinking when the reader drags the results up.
       area.css("min-height", "");
-      const height = area.outerHeight();
-      if (height)
-        area.css("min-height", height + "px");
     }
   }
 
@@ -2446,12 +2444,13 @@ class ResultsWidget {
     this.resultsElt = this.resultsSel.get(0);
     return this;
   }
-  /** fit a result pane to the bottom of the window so the inputs and the
-   * results stay visible together; without a height the pane grows to its
-   * content and hover-scrolling within it scrolls the whole page */
+  /** A result pane used to reach for the bottom of the window, so that the
+   * inputs and the results stayed visible together.  The page is divided
+   * for that now -- panes above, results below, the reader dragging the
+   * line between them -- and a results tab is what scrolls, so a pane
+   * measured against the window overshoots the box it is in. */
   fitPaneToWindow (paneDom) {
-    const top = paneDom.getBoundingClientRect().top;
-    paneDom.style.height = Math.max(200, window.innerHeight - top - 12) + "px";
+    paneDom.style.height = "";
   }
 
   /** Bring the result an anchor names into view, when the results share an
@@ -2501,7 +2500,10 @@ class ResultsWidget {
     $("#results").removeClass("running");
     const height = this.resultsSel.height();
     this.resultsSel.height(1);
-    this.resultsSel.animate({height:height}, 100);
+    // ...and give the height back to the stylesheet when it lands: the
+    // results fill their tab, and an animated pixel height would pin them
+    this.resultsSel.animate({height: height}, 100,
+                            () => this.resultsSel.css("height", ""));
   }
   text () {
     // CodeMirror virtualizes long documents, so read appinfo panes' raw text
@@ -3355,6 +3357,24 @@ class ShExBaseApp {
       panel => this.resultsTabFor(panel.id, panel.label, {empty: true}));
   }
 
+  /**
+   * The corner of the results tab strip.
+   *
+   * For a control that is about the results rather than in them -- ShExMap
+   * offers the materializations it could have made instead -- which put
+   * where the results are would push the results it is about down the
+   * page, and off the bottom of it.
+   */
+  resultsTabsAside () {
+    const tabs = $("#resultsTabs");
+    if (tabs.length === 0)
+      return $();
+    let aside = tabs.children(".resultsTabsAside").first();
+    if (aside.length === 0)
+      aside = $("<div/>").addClass("resultsTabsAside").prependTo(tabs);
+    return aside;
+  }
+
   /** Bring a results tab up, if the results are tabs at all.  A plugin
    * that has just filled one says so rather than leaving the reader to
    * find it. */
@@ -3770,7 +3790,8 @@ class ShExBaseApp {
           "data-borrow-what": typeof pane.borrow === "string" ? pane.borrow : null,
           id: pane.tabs ? pane.id || pane.name + "Tab" : null,
         });
-        slot.appendTo(pane.tabs ? this.paneTabset(pane, screen, columns) : screen);
+        slot.appendTo(pane.tabs ? this.paneTabset(pane, screen, columns)
+                     : this.screenColumns(screen));
         return;
       }
       // A pane that names a results tab is a product to read beside the
@@ -3787,7 +3808,7 @@ class ShExBaseApp {
         const key = pane.panel === undefined ? "" : pane.panel;
         if (!columns.has(key))
           columns.set(key, $("<div/>").addClass("panel").attr("data-panel", key || null)
-                      .appendTo(screen));
+                      .appendTo(this.screenColumns(screen)));
         container = columns.get(key);
       }
       const textarea = $("<textarea/>")
@@ -3798,6 +3819,14 @@ class ShExBaseApp {
         // `fill`: this pane is the column, so it takes the column's height
         // rather than asking for a number of rows (.fillsColumn, shex-app.css)
         .addClass(pane.fill ? "fillsColumn" : null)
+        // ...and where panes share a column, `rows` is the share each asks
+        // for: a nineteen-row pane over a five-row one divides it 19:5, as
+        // the rows themselves would have.  Longhands, because the `flex`
+        // shorthand is one of the things a document without a layout
+        // engine declines to parse.  (Not in a results tab, where a pane is
+        // the whole of what it is in.)
+        .css(pane.tab ? {} : {"flex-grow": pane.rows || 10,
+                              "flex-shrink": 1, "flex-basis": 0})
         // a non-breaking space, so an empty status line keeps its height
         .append($("<h2/>").addClass("status").text("\u00a0"), textarea)
         .appendTo(container);
@@ -3818,6 +3847,47 @@ class ShExBaseApp {
   }
 
   /**
+   * The top edge of the results is a handle.
+   *
+   * The page is a fixed division -- panes above, results below -- and how
+   * much each gets depends on what you are doing: reading a long result, or
+   * writing a long schema.  Dragging the edge says which, and the panes
+   * take (or give up) what the results don't (or do).
+   */
+  prepareResultsGrip () {
+    const grip = $("#resultsGrip");
+    if (grip.length === 0)
+      return;
+    const least = 48; // px: the tab strip, and enough result to know it is there
+    let dragging = false;
+    const divideAt = y => {
+      // innerHeight rather than $(window).height(): the latter reads a
+      // layout, and asks it of a document that may not have one
+      const page = window.innerHeight || 0;
+      const most = page > 2 * least ? page - least : Infinity;
+      const height = Math.min(Math.max(page - y, least), most);
+      $("#results").css("flex", "0 0 " + Math.round(height) + "px");
+      // a pane that just changed size measures again, editors included
+      this.remeasureScreenPanes(this.currentScreen());
+    };
+    grip.on("mousedown", evt => {
+      dragging = true;
+      evt.preventDefault(); // or the drag selects the page instead
+    });
+    $(document).on("mousemove.shexjsGrip", evt => { if (dragging) divideAt(evt.clientY); });
+    $(document).on("mouseup.shexjsGrip", () => { dragging = false; });
+  }
+
+  /** the row of columns a screen's panes lay out in: the toolbar and the
+   * statusbar are the screen's other children, and go under it */
+  screenColumns (screen) {
+    let row = screen.children(".screenColumns").first();
+    if (row.length === 0)
+      row = $("<div/>").addClass("screenColumns").prependTo(screen);
+    return row;
+  }
+
+  /**
    * The tab set panes take turns in, made on demand (§4).
    *
    * A column can hold one pane at a time as well as several at once: the
@@ -3831,7 +3901,7 @@ class ShExBaseApp {
     const key = pane.panel === undefined ? "" : pane.panel;
     if (!columns.has(key))
       columns.set(key, $("<div/>").addClass("panel").attr("data-panel", key || null)
-                  .appendTo(screen));
+                  .appendTo(this.screenColumns(screen)));
     let set = $("#" + pane.tabs);
     if (set.length === 0) {
       set = $("<div/>").attr({id: pane.tabs, "data-tabset": ""}).appendTo(columns.get(key));
@@ -3917,6 +3987,7 @@ class ShExBaseApp {
                       HighlightMode, isPinGesture, PIN_WITH_META}
     this.neighborhoods.init(); // before ?neighborhood=… reaches the picklist
     this.prepareControls();
+    this.prepareResultsGrip();
     const dndPromise = this.prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
     const loads = this.loadSearchParameters();
     const ready = Promise.all([ dndPromise, loads ]).then(resolved => {

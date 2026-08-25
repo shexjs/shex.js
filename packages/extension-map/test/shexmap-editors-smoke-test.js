@@ -126,7 +126,27 @@ if (!TEST_browser) {
         .to.deep.equal(["bindings1", "staticVars", "outputSchema"]);
       // two columns, the layout the map page had: bindings and statics
       // share one, the output schema declared a `panel` of its own
-      expect(screen.children(".panel").length, "two columns").to.equal(2);
+      expect(screen.children(".screenColumns").children(".panel").length, "two columns")
+        .to.equal(2);
+      /* ...and they fill the screen the way the validator's columns fill
+       * the page: the column shares its height among its panes, and each
+       * pane's document takes what its pane has left. */
+      const columns = screen.children(".screenColumns");
+      expect(columns.css("flex"), "the row takes what the controls leave")
+        .to.include("1 1");
+      expect(columns.children(".panel").first().css("display"), "a column of panes")
+        .to.equal("flex");
+      // ...and they share it in the proportion they asked for: the bindings
+      // pane declared 19 rows and the statics 5, so the column is 19:5
+      expect($("#bindings1").css("flex-grow"), "the bindings pane's share")
+        .to.equal("19");
+      expect($("#staticVars").css("flex-grow"), "and the statics'").to.equal("5");
+      expect($("#bindings1").css("flex-basis"), "shares, not content sizes")
+        .to.equal("0px");
+      expect($("#outputSchema").css("flex-grow"), "alone in its column, and still asking")
+        .to.equal("25");
+      expect($("#bindings1 textarea, #bindings1 .shexjs-editor-pane").first().css("flex"),
+             "and the document taking the pane").to.include("1 1");
       expect($("#outputSchema").closest(".panel").attr("data-panel"),
              "the output schema in its own").to.equal("output");
       expect($("#bindings1 textarea").first().attr("rows"), "as tall as it asked")
@@ -196,7 +216,9 @@ if (!TEST_browser) {
 
       $("#screenTabs button[data-screen='http://shex.io/extensions/Map/#']").trigger("click");
       expect($("#results").css("display"), "still showing").to.not.equal("none");
-      expect($("#results").prev().attr("id"), "still under the inputs").to.equal("inputarea");
+      expect($("#results").prev().attr("id"), "still under the inputs, past the handle")
+        .to.equal("resultsGrip");
+      expect($("#resultsGrip").prev().attr("id")).to.equal("inputarea");
       expect($("#results").closest("#screens, .screen").length, "and in no screen").to.equal(0);
       expect(tabs(), "with both tabs still in it").to.deep.equal(["validation", "materialization"]);
       $("#screenTabs button[data-screen='']").trigger("click");
@@ -483,6 +505,12 @@ if (!TEST_browser) {
       expect($("#results").text()).to.include('"+1"'); // chosen: first disjunct
 
       // pick the other accepted thread
+      // in the corner of the tab strip, not among the results: it is about
+      // them, and putting it in with them pushed them off the bottom
+      expect($(".dbgAlternatives").closest("#resultsTabs").length, "in the tab strip")
+        .to.equal(1);
+      expect($(".dbgAlternatives").closest("#materializationResults").length,
+             "and not among the results it is about").to.equal(0);
       $("#results .dbgAlternatives button").last().trigger("click");
       expect($("#results").text()).to.include('"bob@x"');
       expect($("#results").text()).to.include("2 viable materializations"); // chooser re-rendered
@@ -542,7 +570,12 @@ if (!TEST_browser) {
 
       const paneDom = $("#results .shexjs-turtle-pane");
       expect(paneDom.length, "materialization renders in a Turtle pane").to.equal(1);
-      expect(paneDom[0].style.height, "pane fills the remaining height").to.match(/^\d+px$/);
+      // no height of its own: the page is divided for this now -- panes
+      // above, results below -- and the results tab is what scrolls
+      expect(paneDom[0].style.height, "no height measured against the window")
+        .to.equal("");
+      expect($("#resultsTabs > div[id]").first().css("overflow"),
+             "the tab it is in is what scrolls").to.equal("auto");
       expect($("#results").text()).to.include('"one"');
     });
 

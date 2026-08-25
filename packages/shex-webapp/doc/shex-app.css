@@ -77,7 +77,100 @@ ul[data-navColumn] button:focus::after  { content: " <"; color: #730; margin-rig
 #inputSchema li button.disabled, #inputData li button.disabled {
   color: #777;
 }
-body { border-width: .25em; border-style: solid; border-color: white; }
+/* The page is the window: the title, as much of the middle as is left,
+   and the results pinned to the bottom.  Which is what puts #results in one
+   place whichever screen is up -- the validator's screen is the tall one,
+   since only it has the manifest and the shape map under the schema, and
+   the results used to ride up and down with whatever was above them.  The
+   panes take the slack instead.
+   (margin: the window's height is the budget, so the gap around the page is
+   padding inside it rather than margin outside.) */
+/* height, not min-height: the window's height has to be the budget rather
+   than the floor, or nothing is ever obliged to give anything up -- a
+   document taller than its pane simply made the page taller, and the panes
+   grew with what was in them instead of being what was left of the page.
+   What does not fit scrolls where it is; nothing is lost by the page
+   staying the size of the window. */
+html { height: 100%; }
+body {
+    box-sizing: border-box;
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: .4em;
+    display: flex;
+    flex-direction: column;
+    border-width: .25em; border-style: solid; border-color: white;
+}
+#title { flex: 0 0 auto; }
+#inputarea { flex: 1 1 auto; min-height: 0; overflow: auto; }
+#results { flex: 0 0 40vh; display: flex; flex-direction: column; min-height: 0; }
+
+/* ...and the slack goes to the panes rather than to the space around them.
+   The columns are as tall as the middle is; in each, the document is what
+   grows -- the manifest under the schema, the source's tabs and the buttons
+   under the data, are as tall as they are.  Without this the middle grew
+   and the panes didn't, which put a band of nothing between the panes and
+   the results.
+
+   A column is the height of the middle because it is *stretched* to it, not
+   because it asks for a percentage of it: a flex item's height is only
+   definite once it has been laid out, and a column that asks too early gets
+   its content's height and leaves that band under itself. */
+#inputarea { display: flex; align-items: stretch; }
+#inputarea > .panel { flex: 0 0 48.5%; }
+#inputarea > #screens { flex: 1 1 auto; min-width: 0; }
+#screens > .screen { height: 100%; }
+#inputSchema, #inputData { display: flex; flex-direction: column; min-height: 0; }
+#schemaDocument, #dataArea, #dataDocument {
+    flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
+}
+#dataSource-tabs { flex: 0 0 auto; }
+/* What is under the document is anchored to the foot of the column, which
+   is the top of the results: the validate row never moves.  The example
+   lists are what gives way when there are more of them than there is room
+   for -- they take what they need up to that, and scroll past it -- so
+   picking a schema with a dozen examples resizes the document rather than
+   pushing everything below it down the page. */
+#inputSchema > div:not(#schemaDocument),
+#inputData > div:not(#dataArea):not(#dataExamples) { flex: 0 0 auto; }
+#dataExamples { flex: 0 0 auto; max-height: 30%; overflow: auto; }
+/* a document is its box: a textarea sized in rows, or an editor that takes
+   its height from what it was given rather than from what is in it */
+#schemaDocument > textarea, #dataDocument > textarea,
+.fillsColumn > textarea { height: 100%; box-sizing: border-box; }
+#schemaDocument > .shexjs-editor-pane, #dataDocument > .shexjs-editor-pane,
+.screen .panel > div[id] > .shexjs-editor-pane { flex: 1 1 auto; min-height: 0; }
+.shexjs-editor-pane > .cm-editor { height: 100%; }
+/* ...and inside the results, the tab strip is fixed and the panel takes the
+   rest, so what is in it scrolls rather than the page growing.
+
+   Whichever box holds the results is the one that scrolls: a tab's panel
+   where there are tabs, and #results' own div where there are none -- which
+   is every page with no plugin on it.  Without that the results ran past
+   the foot of the page with nothing to scroll them, and a hover that
+   scrolled a result into view took the whole page with it, the body being
+   the nearest thing that would move. */
+#results > div, #resultsTabs { flex: 1 1 auto; min-height: 0; }
+#results > div:not(#resultsTabs) { overflow: auto; }
+/* Between the two: a handle to drag, to say how much of the page is what
+   you are working on and how much is what came of it.  Outside #results,
+   because "#results > div" is where results are written. */
+#resultsGrip {
+    flex: 0 0 auto;
+    height: .45em;
+    margin: .15em 0;
+    border-radius: .2em;
+    background-color: #ddd;
+    cursor: row-resize;
+}
+#resultsGrip:hover { background-color: #bbb; }
+#resultsTabs { display: flex; flex-direction: column; }
+#resultsTabs > ul { flex: 0 0 auto; }
+/* something about the results as a whole rather than in them: ShExMap's
+   list of viable materializations, in the corner of the tab strip, where it
+   cannot push the results it is about */
+.resultsTabsAside { float: right; margin: .3em .4em 0 0; font-size: .9em; }
 /* the tab set and the document share one box, whose height the app
    fixes to what a document needs once it has measured one (see
    showDocumentArea) so the buttons below don't move when the settings
@@ -179,9 +272,23 @@ label {
    overlay ShExReduce puts where the schema stands gets the height that
    column gets, rather than the dozen rows a textarea asks for.  The toolbar
    and the statusbar wrap to lines of their own underneath. */
-.screen { display: flex; flex-wrap: wrap; align-items: stretch; }
-.screen > .panel, .screen [data-borrow] > .panel { flex: 1 1 0; }
-.screen > .pluginToolbar, .screen > .pluginStatusbar { flex: 0 0 100%; }
+.screen { display: flex; flex-direction: column; height: 100%; }
+.screenColumns { display: flex; align-items: stretch; flex: 1 1 auto; min-height: 0; }
+.screenColumns > .panel, .screenColumns [data-borrow] > .panel { flex: 1 1 0; }
+/* A screen's panes fill it the way the validator's do: a column shares its
+   height among the panes in it -- in proportion to the rows each asked for,
+   which the app writes on the pane -- each pane's document takes what its
+   pane has left, and what doesn't fit scrolls where it is.  A pane that says
+   `fill` is one that happens to be alone in its column. */
+.screenColumns > .panel { display: flex; flex-direction: column; min-height: 0; }
+.screenColumns > .panel > div[id],
+.screen [data-tabset] > div[id],
+.screen [data-tabset] > [data-borrow] {
+    flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
+}
+.screen div[id] > textarea,
+.screen div[id] > .shexjs-editor-pane { flex: 1 1 auto; min-height: 0; }
+.screen > .pluginToolbar, .screen > .pluginStatusbar { flex: 0 0 auto; }
 /* ...and a pane that asked for its box takes what is left of it once the
    status line above has had its share.  Used on a screen's column and in a
    results tab, which are the two boxes a pane can be given whole. */
@@ -195,7 +302,7 @@ label {
    the page off the bottom -- a results pane measured while its tab was
    hidden can come back taller than the window, and a tab that scrolls keeps
    that between its own edges. */
-#resultsTabs > div[id] { height: 40vh; overflow: auto; }
+#resultsTabs > div[id] { flex: 1 1 auto; min-height: 0; overflow: auto; }
 
 /* the slot a screen keeps for a pane it borrows: as a column of the
    screen the pane is a .panel already, so the slot lays nothing out; in a

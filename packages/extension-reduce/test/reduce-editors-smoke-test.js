@@ -215,19 +215,30 @@ if (!TEST_browser) {
      * nothing out, so this reads the rules that would do it.) */
     it("should give the overlay the height its column has", function () {
       $("#screenTabs button[data-screen]").last().trigger("click");
-      const screen = $("#screens > .screen[data-plugin]");
-      expect(screen.css("display"), "columns side by side").to.equal("flex");
-      expect(screen.css("align-items"), "as tall as the tallest").to.equal("stretch");
-      expect(screen.children(".pluginToolbar").css("flex"), "the toolbar on its own line")
-        .to.include("100%");
+      try {
+        const screen = $("#screens > .screen[data-plugin]");
+        expect(screen.css("display"), "the screen is the height it was given")
+          .to.equal("flex");
+        expect(screen.css("flex-direction"), "columns, then the controls under them")
+          .to.equal("column");
+        const columns = screen.children(".screenColumns");
+        expect(columns.css("display"), "the columns side by side").to.equal("flex");
+        expect(columns.css("align-items"), "each as tall as the tallest").to.equal("stretch");
+        expect(columns.css("flex"), "and the row taking what the controls leave")
+          .to.include("1 1");
+        expect(screen.children(".pluginToolbar").css("flex"), "which is little")
+          .to.include("0 0");
 
-      const pane = $("#reduceOverlay");
-      expect(pane.hasClass("fillsColumn"), "the pane is the column").to.equal(true);
-      expect(pane.css("height")).to.equal("100%");
-      expect(pane.css("flex-direction")).to.equal("column");
-      expect($("#reduceOverlay textarea").attr("rows"),
-             "with a row count to fall back on").to.equal("25");
-      $("#screenTabs button[data-screen='']").trigger("click");
+        const pane = $("#reduceOverlay");
+        expect(pane.hasClass("fillsColumn"), "the pane is the column").to.equal(true);
+        expect(pane.css("height")).to.equal("100%");
+        expect(pane.css("flex-direction")).to.equal("column");
+        expect($("#reduceOverlay textarea").attr("rows"),
+               "with a row count to fall back on").to.equal("25");
+      } finally {
+        // whatever happened, the next test starts where it expects to
+        $("#screenTabs button[data-screen='']").trigger("click");
+      }
     });
 
     /* The hook ShExMap never needed: actions written in a document of their

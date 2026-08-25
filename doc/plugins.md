@@ -121,7 +121,9 @@ Applied in this order, once per app:
     kind: "json",            // json | schema | turtle: which cache class
     editor: "json",          // json | shexc | turtle: the ?editors=1 pane
     panel: "inputs",         // which column of the screen; omit to share one
-    rows: 19, className: "bindings droparea",
+    rows: 19,                // its share of the column, and the rows it
+                             // falls back to where nothing is sharing
+    className: "bindings droparea",
     queryStringParm: "bindings",
     manifest: {key: "staticVars", asYamlObject: true}}
    ```

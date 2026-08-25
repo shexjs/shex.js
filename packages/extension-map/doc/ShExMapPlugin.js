@@ -269,6 +269,7 @@ const ShExMapVerbs = {
   /** empty the results panel now being written, dropping the panes that
    * rendered into it */
   clearResults () {
+    this.resultsTabsAside().empty();
     this.materializationPanes = [];
     this.resultsWidget.resultPanes = [];
     this.resultsWidget.resultsSel.empty();
@@ -635,7 +636,7 @@ const ShExMapVerbs = {
                    this.renderAcceptAlternatives(materializer, outputShapeMap);
                  }));
     });
-    this.resultsWidget.append(div);
+    this.resultsTabsAside().empty().append(div);
   },
 
   /** wrap up: on completion render the graph (or the error) as materialize

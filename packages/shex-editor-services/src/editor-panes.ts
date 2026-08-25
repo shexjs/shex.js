@@ -771,7 +771,17 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
   // back to its rows attribute where there's no layout (e.g. jsdom)
   view.dom.style.width = textarea.offsetWidth ? textarea.offsetWidth + "px"
     : (textarea.style.width || "100%");
-  view.dom.style.height = textarea.offsetHeight ? textarea.offsetHeight + "px"
+  // ...and its height, unless the box it goes into says otherwise: a pane
+  // in a column that fills the page takes the column's height, where a
+  // pixel height measured from the textarea would hold it to the rows the
+  // textarea asked for (shex-app.css: #schemaDocument, .fillsColumn)
+  const box = textarea.parentNode as Element;
+  const styles = box && box.ownerDocument && (box.ownerDocument as any).defaultView;
+  const fills = !!(styles && styles.getComputedStyle
+                   && styles.getComputedStyle(box).flexDirection === "column");
+  view.dom.style.height =
+    fills ? ""
+    : textarea.offsetHeight ? textarea.offsetHeight + "px"
     : `calc(${textarea.rows || 20} * 1.4em)`;
   textarea.parentNode!.insertBefore(view.dom, textarea);
   textarea.style.display = "none";
