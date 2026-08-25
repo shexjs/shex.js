@@ -25,6 +25,8 @@
       }
       .app.shex { background-color: #f4f4ff; border-color: #fc561c; }
       .app.shexmap { background-color: #f4fff4; border-color: #f0a133; }
+      .app.shexreduce { background-color: #fff4f4; border-color: #fc561c; }
+      .app.yours { background-color: #fffff4; border-color: #56fc1c; }
       .app h2 { font-size: 1.1em; margin: 0 0 .3em; }
       .app p { margin: .3em 0 .8em; font-size: .9em; color: #444; }
       .app ul { list-style: none; margin: 0; padding: 0; }
@@ -51,14 +53,21 @@
     <p class="blurb">
       In-browser demos of the <a href="https://github.com/shexSpec/shex.js">shex.js</a>
       implementation of <a href="http://shex.io/">Shape Expressions</a>.
-      Each comes in two flavors: <em>simple</em> runs validation on the UI
+      One validator, in two flavors: <em>simple</em> runs validation on the UI
       thread; <em>worker</em> runs it in a Web Worker so the page stays
       responsive (and validation can be interrupted).
+      Everything else is a <em>plugin</em> the validator loads by URL
+      (<code>?plugin=&lt;url&gt;</code>, or named by a manifest entry): a
+      module that may install
+      <a href="http://shex.io/extensions/">semantic-action extensions</a>
+      for schemas to dispatch, and may add a screen of panes and verbs of
+      its own beside the validator's.
     </p>
 <!-- STRIP-FOR-PUBLICATION -->
     <div class="local-dev">
       <p><strong>Browsing a clone?</strong> The app pages need the webpack
-        bundles in (e.g. the <a href="packages/shex-webapp/doc/webpacks/shex-webapp.js">shex-webapp</a> and <a href="packages/extension-map/doc/webpacks/shexmap-webapp.js">shexmap</a> bundles), which aren't checked
+        bundles in (e.g. the <a href="packages/shex-webapp/doc/webpacks/shex-webapp.js">shex-webapp</a>, <a href="packages/extension-map/doc/webpacks/shexmap-webapp.js">shexmap</a>
+        and <a href="packages/extension-reduce/doc/webpacks/shexreduce-webapp.js">shexreduce</a> bundles), which aren't checked
         in on <code>main</code>. Build them with
         <code>npm ci &amp;&amp; npm run webpacks-all</code>, or fetch the
         last-published ones with <code>npm run webpacks-fetch</code>
@@ -76,12 +85,34 @@
         </ul>
       </div>
       <div class="app shexmap">
-        <h2>ShExMap materializer</h2>
+        <h2>ShExMap plugin</h2>
         <p>Validate with the <a href="http://shex.io/extensions/Map/">Map extension</a>,
-          capture bindings, and materialize them into another RDF graph.</p>
+          capture bindings, and materialize them into another RDF graph on a
+          screen of its own.  These URLs open the validator with the plugin
+          and its examples loaded.</p>
         <ul>
           <li><a href="packages/extension-map/doc/shexmap-simple.html">shexmap-simple</a> <span class="variant">— single-threaded</span> (<a href="packages/extension-map/doc/shexmap-simple.html?editors=1">LSE</a>)</li>
           <li><a href="packages/extension-map/doc/shexmap-worker.html">shexmap-worker</a> <span class="variant">— in a Web Worker</span> (<a href="packages/extension-map/doc/shexmap-worker.html?editors=1">LSE</a>)</li>
+        </ul>
+      </div>
+      <div class="app shexreduce">
+        <h2>ShExReduce plugin</h2>
+        <p>Validate with the Reduce extension — actions that steer or check a
+          match as it happens — then fold the parse into an AST.  The demo
+          manifest's calculator entries show both.</p>
+        <ul>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?editors=1&amp;plugin=..%2F..%2Fextension-reduce%2Fdoc%2FShExReducePlugin.js&amp;manifestURL=..%2F..%2Fextension-reduce%2Fexamples%2Fmanifest.yaml">shex-simple + ShExReduce</a> <span class="variant">— with the calc examples</span></li>
+        </ul>
+      </div>
+      <div class="app yours">
+        <h2>Write your own</h2>
+        <p>A plugin is one URL: a module that registers what it adds.
+          <a href="https://github.com/shexSpec/shex.js/blob/main/doc/plugins.md">doc/plugins.md</a>
+          is the contract, and
+          <a href="doc/plugin-skeleton/hello-plugin.js">hello-plugin.js</a>
+          is a working one in about forty lines.</p>
+        <ul>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?editors=1&amp;plugin=..%2F..%2F..%2Fdoc%2Fplugin-skeleton%2Fhello-plugin.js">shex-simple + Hello</a> <span class="variant">— the skeleton, loaded</span></li>
         </ul>
       </div>
     </div>
