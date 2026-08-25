@@ -550,6 +550,15 @@ skeleton extension repo.
 > relied on, since the page tests use node-fetch, which does not enforce
 > CORS.
 >
+> **The worker half's crossing is tested too (2026-08-25)**: the same file
+> boots the worker page with ShExMap served whole from a second origin, and
+> the fake worker resolves URLs through a map that only knows that origin,
+> so a worker half named on the wrong one fails rather than quietly loading
+> a local copy.  Writing it corrected the contract: importScripts in a
+> classic worker is a no-cors fetch like a script tag, so the header the
+> module needs (the app fetch()es *it*) is not required for the half the
+> worker imports -- what that is held to is a JavaScript MIME type.
+>
 > `extension-contract-test.js` keeps the document honest in both directions:
 > every hook it names is documented, and a hook the app reads that the
 > contract does not name fails there rather than being found by accident.

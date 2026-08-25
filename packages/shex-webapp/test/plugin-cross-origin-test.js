@@ -21,11 +21,14 @@ const node_fetch = require("node-fetch");
 let JSDOM, VirtualConsole;
 
 const ROOT = Path.join(__dirname, "../../..");
-const [[GitRootServer, ElsewhereServer]] = require("../../../tools/testServer")
+const {makeWorkerClass} = require("./fakeWorker");
+const [[GitRootServer, ElsewhereServer, ElsewhereRepoServer]] = require("../../../tools/testServer")
       .startServer(
         [ { url: "http://localhost:9999/shex.js/", fromDir: ROOT },
           // somebody else's host, on somebody else's port
           { url: "http://localhost:9994/extensions/", fromDir: Path.join(ROOT, "doc/plugin-skeleton") },
+          // ...and a host serving a whole plugin with a worker half
+          { url: "http://localhost:9993/elsewhere/", fromDir: ROOT },
         ]
       );
 
@@ -120,6 +123,92 @@ if (!TEST_browser) {
       expect(resp.ok).to.equal(true);
       expect(resp.headers.get("access-control-allow-origin"),
              "or no browser would let the app read it").to.equal("*");
+    });
+  });
+
+  /* The worker half of the same story: the app names its plugins' worker
+   * scripts absolutely, so a plugin from another origin has its half
+   * importScripts'd across origins too.  Unlike the module -- which the
+   * app fetch()es, so CORS gates it -- a classic worker's importScripts is
+   * a no-cors fetch like a script tag; what it *is* held to is a
+   * JavaScript MIME type.  The fake worker resolves URLs through an
+   * explicit map that only knows the second origin, so a worker half named
+   * on the wrong origin fails here rather than quietly loading a local
+   * copy. */
+  describe("a plugin whose worker half is on another origin", function () {
+    this.timeout(20000);
+    const page = "packages/shex-webapp/doc/shex-worker.html";
+    const MAP_ELSEWHERE = ElsewhereRepoServer.urlFor("packages/extension-map/doc/ShExMapPlugin.js");
+    let dom, $, shared;
+
+    before(async function () {
+      const base = Path.join(ROOT, page);
+      const virtualConsole = new VirtualConsole().forwardTo(console, {jsdomErrors: "none"});
+      dom = new JSDOM(Fs.readFileSync(base, "utf8"), {
+        url: GitRootServer.urlFor(page + "?editors=1&plugin=" + encodeURIComponent(MAP_ELSEWHERE)),
+        runScripts: "dangerously",
+        resources: "usable",
+        pretendToBeVisual: true,
+        virtualConsole,
+        beforeParse (window) {
+          // the page's head script runs new Worker("ShExWorkerThread.js");
+          // the only served URLs this worker can resolve are the second
+          // origin's, which is the point
+          window.Worker = makeWorkerClass(Path.dirname(base), {}, [
+            {prefix: ElsewhereRepoServer.urlFor(""), dir: ROOT},
+          ]);
+        },
+      });
+      dom.window.fetch = node_fetch;
+      if (!dom.window.CSS)
+        dom.window.CSS = { escape: s => String(s).replace(/[^a-zA-Z0-9_ -￿-]/g, c => `\\${c}`) };
+      dom.window.Range.prototype.getClientRects = function () { return []; };
+      dom.window.Range.prototype.getBoundingClientRect =
+        function () { return {x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0, width: 0, height: 0}; };
+      shared = await new Promise((resolve, reject) => {
+        dom.window._testCallback = parm => parm instanceof Error ? reject(parm) : resolve(parm);
+      });
+      await shared.promise;
+      $ = dom.window.$;
+    });
+    after(function () { if (dom) dom.window.close(); });
+
+    it("should name the worker half on the origin the plugin came from", function () {
+      const ext = dom.window.ShExPlugins.byId("http://shex.io/extensions/Map/#");
+      expect(ext.baseUrl, "stamped with where it was fetched from").to.equal(MAP_ELSEWHERE);
+      expect(new dom.window.URL(ext.worker, ext.baseUrl).origin)
+        .to.not.equal(new dom.window.URL(dom.window.location.href).origin);
+    });
+
+    it("should materialize through a worker half imported from over there", async function () {
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      set("#outputSchema textarea", [
+        "PREFIX : <http://a.example/>",
+        "PREFIX Map: <http://shex.io/extensions/Map/#>",
+        "start = @:S",
+        ":S { :p . %Map:{ :v1 %} }",
+      ].join("\n"));
+      set("#bindings1 textarea", JSON.stringify({"http://a.example/v1": {value: "one"}}));
+      set("#staticVars textarea", "{}");
+      $("#outputShapeMap").val("<tag:root>@<http://a.example/S>");
+      $("#materialize").trigger("click");
+      await shared.promise;
+      const [{text}] = shared.Caches.editorSupport.lastMaterialized;
+      expect(text, "the graph the far half built").to.include('"one"');
+    });
+
+    /* What a host serving worker halves is actually held to: the MIME
+     * type.  (The always-on CORS header is the test double being easy,
+     * not a requirement -- see doc/plugins.md, "From another origin".) */
+    it("should serve the worker half as JavaScript", async function () {
+      const ext = dom.window.ShExPlugins.byId("http://shex.io/extensions/Map/#");
+      const resp = await node_fetch(new URL(ext.worker, ext.baseUrl).href);
+      expect(resp.ok).to.equal(true);
+      expect(resp.headers.get("content-type")).to.equal("text/javascript");
     });
   });
 }
