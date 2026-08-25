@@ -2,7 +2,7 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>ShEx2 - Simple Online Validator</title>
+    <title>ShEx - Simple Online Validator</title>
     <meta name="description" content="simple ShEx2 demo" />
     <link rel="icon" href="ShEx-bones-min.svg" />
     <script src="webpacks/jquery-components.min.js"></script>
@@ -27,7 +27,7 @@
     </svg>
 
     <div id="title">
-      <img src="ShEx-bones-min.svg" class="ShExLogo" alt="ShEx Icon"/><h1 style="float:left;">ShEx2 - Simple Online Validator</h1><select id="screen" style="float:left; display:none;" title="which screen is showing"><option value=""></option></select>
+      <img src="ShEx-bones-min.svg" class="ShExLogo" alt="ShEx Icon"/><h1 style="float:left;">ShEx - <span class="screenName">Validator</span><select id="screen" style="display:none;" title="which screen is showing"><option value=""></option></select></h1>
       <span id="dataSource" style="float:right; padding-right:1em;"><label for="neighborhood">data source: </label><select id="neighborhood" title="where the data to validate comes from"></select></span>
       <!-- <ul id="navlist" style="float:left; padding-left: 1em;"> -->
       <!--   <li>â£ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
@@ -209,10 +209,11 @@
             </ul>
           </div>
         </div>
-        <div style="clear:both; padding-top: .5em;"/>
+        <div style="clear:both; padding-top: .5em;">
             <button id="validate">validate (ctl-enter)</button> <button id="debugValidate" title="step through a triple-expression match (enable the language-aware editors; gutter clicks in the schema set breakpoints)">🐞</button><span id="valDebugControls" style="display:none"><button id="valDbgContinue" title="continue">▶</button><button id="valDbgInto" title="step">⤵</button><button id="valDbgOver" title="run to the next generation">⏭</button><button id="valDbgStop" title="stop">⏹</button><span id="valDbgThreads" title="this generation's threads (• = already advanced); hover or click for a thread's state"></span></span>
             <div id="valDbgMatchesRow" class="valDbgRow" style="display:none"><select id="valDbgMatches" title="which recorded node@shape match to step through"></select></div>
             <div id="valDbgStatusRow" class="valDbgRow" style="display:none"><span id="valDbgStatus"></span></div>
+        </div>
       </div>
     </div>
     <div id="results">

@@ -155,7 +155,14 @@ if (!TEST_browser) {
       const select = $("#screen");
       expect(select.length, "the switch is in the title bar").to.equal(1);
       expect(select.css("display"), "and showing").to.not.equal("none");
-      expect($("#title h1").css("display"), "in the title's place").to.equal("none");
+      // it stands in for the part of the title that named what is showing;
+      // the rest of the heading stays, and says what the page is
+      expect($("#title h1").css("display"), "the heading stays").to.not.equal("none");
+      expect($("#title h1").text(), "with its name in it").to.include("ShEx");
+      expect($("#title h1 .screenName").css("display"), "and the switch in the rest's place")
+        .to.equal("none");
+      expect(select.find("option").first().text(), "which is what it says first")
+        .to.equal("Validator");
       expect(select.find("option").map((i, o) => $(o).attr("value")).get())
         .to.deep.equal(["", "http://shex.io/extensions/Map/#"]);
       expect(select.find("option").last().text()).to.equal("ShExMap");
@@ -171,6 +178,28 @@ if (!TEST_browser) {
       $("#screen").val("").trigger("change");
       expect($("#inputSchema").css("display"), "and back").to.not.equal("none");
       expect($("#screens > .screen").css("display")).to.equal("none");
+    });
+
+    /* Screens are what you are working on; the results are what came of
+     * it, and they belong to the app rather than to any one screen -- a
+     * materialization's tab sits beside a validation's whichever screen is
+     * showing, in the same place at the bottom of the page. */
+    it("should keep the results below, across screens", async function () {
+      $("#screen").val("").trigger("change");
+      $("#validate").trigger("click");
+      await shared.promise;
+      $("#materialize").trigger("click");
+      await shared.promise;
+      const tabs = () => $("#resultsTabs > ul > li > a").map((i, a) => $(a).text()).get();
+      expect(tabs(), "both kinds of result").to.deep.equal(["validation", "materialization"]);
+
+      $("#screen").val("http://shex.io/extensions/Map/#").trigger("change");
+      expect($("#results").css("display"), "still showing").to.not.equal("none");
+      expect($("#results").prev().attr("id"), "still under the inputs").to.equal("inputarea");
+      expect($("#results").closest("#screens, .screen").length, "and in no screen").to.equal(0);
+      expect(tabs(), "with both tabs still in it").to.deep.equal(["validation", "materialization"]);
+      $("#screen").val("").trigger("change");
+      expect(tabs(), "and back").to.deep.equal(["validation", "materialization"]);
     });
 
     it("should carry the screen in the permalink", async function () {

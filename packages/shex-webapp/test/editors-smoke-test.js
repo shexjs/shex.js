@@ -98,6 +98,8 @@ if (!TEST_browser) {
         .to.equal("visible");
       expect($("#screens").length, "no screens are built").to.equal(0);
       expect($("#screen").css("display"), "the switch stays hidden").to.equal("none");
+      expect($("#title h1 .screenName").css("display"), "so the title says it all")
+        .to.not.equal("none");
       expect($("#title h1").css("display"), "and the page keeps its title")
         .to.not.equal("none");
       expect(Object.keys(shared.Caches).sort(), "so these are the caches")

@@ -2,7 +2,7 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>ShEx2 — Simple Online Validator</title>
+    <title>ShEx — Online Validator With Workers</title>
     <meta name="description" content="simple ShEx2 demo" />
     <link rel="icon" href="ShEx-bones-min.svg" />
     <script src="webpacks/jquery-components.min.js"></script>
@@ -32,7 +32,7 @@
     </svg>
 
     <div id="title">
-      <img src="ShEx-bones-min.svg" class="ShExLogo" alt="ShEx Icon"/><h1 style="float:left;">ShEx2 — Simple Online Validator</h1><select id="screen" style="float:left; display:none;" title="which screen is showing"><option value=""></option></select>
+      <img src="ShEx-bones-min.svg" class="ShExLogo" alt="ShEx Icon"/><h1 style="float:left;">ShEx — <span class="screenName">Validator</span><select id="screen" style="display:none;" title="which screen is showing"><option value=""></option></select></h1>
       <span id="dataSource" style="float:right; padding-right:1em;"><label for="neighborhood">data source: </label><select id="neighborhood" title="where the data to validate comes from"></select></span>
       <!-- <ul id="navlist" style="float:left; padding-left: 1em;"> -->
       <!--   <li>‣ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
@@ -214,8 +214,9 @@
             </ul>
           </div>
         </div>
-        <div style="clear:both; padding-top: .5em;"/>
+        <div style="clear:both; padding-top: .5em;">
             <button id="validate">validate (ctl-enter)</button>
+        </div>
       </div>
     </div>
     <div id="results">

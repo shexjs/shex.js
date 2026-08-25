@@ -3416,8 +3416,14 @@ class ShExBaseApp {
       // .first(): the dialogs (#loadForm, #about) start life inside #title
       // and carry <h1>s of their own until jquery-ui moves them out
       const title = $("#title h1").first();
-      select.children().first().text(title.text() || "validator");
-      title.hide();
+      // The switch replaces the part of the title that named what is
+      // showing and leaves the rest of it -- "ShEx - " -- standing, so the
+      // page is still called something and still has a heading.  A title
+      // not marked up that way hands the switch the whole of itself.
+      const named = title.find(".screenName").first();
+      const standsFor = named.length ? named : title;
+      select.children().first().text(standsFor.text().trim() || "validator");
+      standsFor.hide();
       select.show();
       select.on("change", () => this.showScreen(select.val()));
     }
@@ -4968,9 +4974,13 @@ class ShExBaseApp {
     $("#inputData .status").html("data (<span id=\"dataDialect\">" + this.neighborhoods.dialect() + "</span>)").hide();
     $("#shapeMapArea").siblings().show();
     $("#title img").show();
-    // the screen switch stands where the title stood, so bring back
-    // whichever of the two is serving as the title (addScreenOption)
-    $("#title h1").toggle(!this.screenSelectLive);
+    // The switch stands in for the part of the title that named what is
+    // showing (addScreenOption), so the heading itself comes back either
+    // way and the part it replaced does not.  A title with no such part
+    // hands over the whole of itself, and stays away while the switch is up.
+    const named = $("#title h1").first().find(".screenName");
+    $("#title h1").toggle(!this.screenSelectLive || named.length > 0);
+    named.toggle(!this.screenSelectLive);
     $("#screen").toggle(!!this.screenSelectLive);
     $("#menuForm").removeAttr("style");
     $("#controls").css("position", "absolute");
