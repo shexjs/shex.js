@@ -43,7 +43,11 @@ if (!TEST_browser) {
   nock = require("nock");
   describe("shexmap-simple with ?editors=1", function () {
     this.timeout(20000);
-    const page = "packages/extension-map/doc/shexmap-simple.html";
+    // ShExMap is an extension of this page now; shexmap-simple.html is a
+    // redirect that opens it with exactly these parameters (§5 phase 2)
+    const page = "packages/shex-webapp/doc/shex-simple.html";
+    const asShExMap = "&extension=" + encodeURIComponent("../../extension-map/doc/ShExMapPlugin.js")
+          + "&manifestURL=" + encodeURIComponent("../../extension-map/examples/manifest.json");
 
     let dom, $, shared, app;
     before(async function () {
@@ -56,7 +60,7 @@ if (!TEST_browser) {
           console.error(e.type === "unhandled-exception" ? e.cause.stack : e.message);
       });
       dom = new JSDOM(Fs.readFileSync(base, "utf8"), {
-        url: GitRootServer.urlFor(page + "?editors=1"),
+        url: GitRootServer.urlFor(page + "?editors=1" + asShExMap),
         runScripts: "dangerously",
         resources: "usable",
         pretendToBeVisual: true,

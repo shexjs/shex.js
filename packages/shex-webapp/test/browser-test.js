@@ -10,13 +10,16 @@ const STARTUP_TIMEOUT = 10000
 const SCRIPT_CALLBACK_TIMEOUT = 40000
 const SHEX_SIMPLE = 'packages/shex-webapp/doc/shex-simple.html'
 const SHEX_WORKER = 'packages/shex-webapp/doc/shex-worker.html'
-const SHEXMAP_SIMPLE = 'packages/extension-map/doc/shexmap-simple.html'
-const SHEXMAP_WORKER = 'packages/extension-map/doc/shexmap-worker.html'
-const TESTS = [ // page and the labels on the top-most buttons on the default manifest
-  {page: SHEX_SIMPLE, schemaLabel: "clinical observation", dataLabel: "with birthdate"},
+// ShExMap is an extension of those pages now, and shexmap-simple.html is a
+// redirect that opens one with these -- so this is what it opens (§5 phase 2)
+const SHEXMAP_PARMS = "?extension=" + encodeURIComponent("../../extension-map/doc/ShExMapPlugin.js")
+      + "&manifestURL=" + encodeURIComponent("../../extension-map/examples/manifest.json")
+const TESTS = [ // page and the labels on the top-most buttons on the manifest it opens with
+  {label: SHEX_SIMPLE, page: SHEX_SIMPLE, parms: '',
+   schemaLabel: "clinical observation", dataLabel: "with birthdate"},
   // {page: SHEX_WORKER, schemaLabel: "clinical observation", dataLabel: "with birthdate"},
-  {page: SHEXMAP_SIMPLE, schemaLabel: "BP", dataLabel: "simple"},
-  // {page: SHEXMAP_WORKER, schemaLabel: "BP", dataLabel: "simple"},
+  {label: SHEX_SIMPLE + " + ShExMap", page: SHEX_SIMPLE, parms: SHEXMAP_PARMS,
+   schemaLabel: "BP", dataLabel: "simple"},
 ]
 let Fs = require('fs')
 let Path = require('path')
@@ -93,14 +96,14 @@ if (!TEST_browser) {
 
   TESTS.forEach(test => {
 
-    describe(`WEBapp ${test.page}`, function () {
-      const {page, schemaLabel, dataLabel} = test
+    describe(`WEBapp ${test.label}`, function () {
+      const {page, parms, schemaLabel, dataLabel} = test
 
-      describe('no URL parameters', function () {
+      describe(parms ? 'as its own URL opens it' : 'no URL parameters', function () {
         this.timeout(SCRIPT_CALLBACK_TIMEOUT);
         let dom, $, loaded
         before(async () => {
-          ({ dom, $, loaded } = await loadPage(page, ''))
+          ({ dom, $, loaded } = await loadPage(page, parms))
           expect(loaded.manifest).to.have.property('fromUrl') // shex-simple.js defaults to some URL
         })
 
@@ -528,14 +531,15 @@ if (!TEST_browser) {
   })
 
 
-  describe(`WEBapp ${SHEXMAP_SIMPLE}'s synthesis interface}`, function () {
-    const page = SHEXMAP_SIMPLE
+  describe(`WEBapp ${SHEX_SIMPLE} + ShExMap's synthesis interface}`, function () {
+    const page = SHEX_SIMPLE
 
     describe('another manifest', function () {
       this.timeout(SCRIPT_CALLBACK_TIMEOUT);
       let dom, $, loaded
       before(async () => {
-        ({ dom, $, loaded } = await loadPage(page, `?manifestURL=${abs(Manifest_ShExMap)}`));
+        ({ dom, $, loaded } = await loadPage(
+          page, `${SHEXMAP_PARMS.replace(/&manifestURL=.*/, "")}&manifestURL=${abs(Manifest_ShExMap)}`));
           expect(loaded.manifest).to.have.property('fromUrl')
       })
 

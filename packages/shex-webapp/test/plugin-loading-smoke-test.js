@@ -94,12 +94,25 @@ if (!TEST_browser) {
         .to.include.members(["bindings", "statics", "outputSchema"]);
     });
 
-    /* The declaration moves before the code does.  The verb is here now --
-     * the descriptor carries it -- but what it materializes with is
-     * ShExMap's module, which this page has never loaded, so pressing the
-     * button says that where the results go rather than throwing into the
-     * console.  The module arrives in phase 3. */
-    it("should build its toolbar, and say so when the verb is not loaded", async function () {
+    /* A validator has one kind of result and writes it into #results.  An
+     * extension with a second kind gets a tab, and this page -- which has
+     * never heard of materialization -- grows one on being told where
+     * ShExMap is. */
+    it("should give the extension's results a tab beside its own", function () {
+      expect($("#resultsTabs > ul > li > a").map((i, a) => $(a).text()).get()[0])
+        .to.equal("validation");
+      expect($("#resultsTabs > #validationResults > div").length,
+             "this app's results, where they always were").to.equal(1);
+      expect($("#resultsTabs > #materializationResults").length,
+             "and a panel for the extension's").to.equal(1);
+      expect(shared.app.resultsTarget).to.equal("#validationResults > div");
+    });
+
+    /* The whole of it, on a page that has never heard of ShExMap: the
+     * controls, and the module the verbs run on, which the descriptor names
+     * and the app fetches.  Pressing materialize gets ShExMap's own answer
+     * -- there are no bindings yet -- rather than a missing-module error. */
+    it("should build its toolbar, and bring the module its verbs run on", async function () {
       const toolbar = $("#extensionPanes [data-extension] > .pluginToolbar");
       expect(toolbar.length, "one toolbar").to.equal(1);
       expect(toolbar.find("button").map((i, b) => b.id).get()).to.deep.equal(
@@ -107,25 +120,12 @@ if (!TEST_browser) {
          "dbgContinue", "dbgInto", "dbgOver", "dbgOut", "dbgStop"]);
       expect($("#outputShapeMap").length, "and the input that is not a pane").to.equal(1);
       expect($("#debugControls").css("display"), "the step buttons wait").to.equal("none");
+      expect(typeof dom.window.ShExWebApp.Map, "the module it fetched").to.equal("function");
 
       $("#materialize").trigger("click");
       await shared.promise;
-      expect($("#results .error").text(), "the button says what it hasn't got")
-        .to.include("ShExMap's module is not loaded on this page");
-    });
-
-    /* A validator has one kind of result and writes it into #results.  An
-     * extension with a second kind gets a tab, and this page -- which has
-     * never heard of materialization -- grows one on being told where
-     * ShExMap is. */
-    it("should give the extension's results a tab beside its own", function () {
-      expect($("#resultsTabs > ul > li > a").map((i, a) => $(a).text()).get())
-        .to.deep.equal(["validation"]);
-      expect($("#resultsTabs > #validationResults > div").length,
-             "this app's results, where they always were").to.equal(1);
-      expect($("#resultsTabs > #materializationResults").length,
-             "and a panel for the extension's").to.equal(1);
-      expect(shared.app.resultsTarget).to.equal("#validationResults > div");
+      expect($("#results .error").text(), "and the verb ran")
+        .to.include("You must validate data against a ShExMap schema");
     });
 
     it("should declare the query parameters and manifest keys that fill them", function () {

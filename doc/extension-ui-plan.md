@@ -331,6 +331,21 @@ contains no ShExMap identifier.
 become redirects (the URLs are published on gh-pages), and the stale
 `.patch` goes.
 
+> **done.** The map pages are 20 lines each: a `redirectToPlugin` call
+> naming the app page, ShExMap, and the manifest they always opened with.
+> Whatever they were asked for goes along, and a parameter that is a URL
+> (`extension`, anything `…URL`) is made absolute on the way, since it was
+> written relative to a page the reader is leaving. `shexmap-simple.html.patch`
+> — the 2018 delta nobody could re-derive, and the reason §1 called this a
+> fork — is deleted.
+>
+> The map's smoke tests boot `shex-simple.html?editors=1&extension=…` now,
+> which is what the redirect opens: 22 tests over the app page and the
+> extension, where they used to be over a page that had ShExMap built in.
+> `pages-test` covers the redirect by running it, in a `vm` with a fake
+> `location`, and checks that `?editors=1&manifestURL=../examples/…` comes
+> out carried, absolutized, and not doubled.
+
 > **loading: done**, ahead of the rest of phase 1, because it is what makes
 > `shex-simple.html?manifestURL=…/extension-map/examples/manifest.yaml` mean
 > anything. `ShExPlugins.register` is idempotent and notifies; the app
@@ -442,6 +457,19 @@ become redirects (the URLs are published on gh-pages), and the stale
 bundle pair, `webpacks/shexmap-ui.js` and `webpacks/shexmap-worker.js`, built
 from `packages/extension-map/`. shex-webapp keeps no map code; extension-map
 keeps no page.
+
+> **half done, and the half that matters.** A descriptor declares `scripts`,
+> which the app fetches — resolved against the extension, since the page has
+> never heard of its bundle — before applying anything of it; ShExMap names
+> `./webpacks/shexmap-webapp.js`, which is the bundle the map page used to
+> load in a `<script>` tag. So `shex-simple.html?extension=…` brings the code
+> as well as the description, which is what "loaded by URL" has to mean.
+> Applying is awaited: `register` records what the apps did about a
+> descriptor as `applied`, and whoever loaded the module waits for it.
+>
+> What is left is packaging: `ShExMapPlugin.js` is a 1300-line classic
+> script rather than a built bundle, and the worker half is a second file
+> beside it. Both work as they are; bundling them is tidying, not enabling.
 
 **Phase 4 — a second extension proves the contract.** ShExReduce
 (`@shexjs/extension-reduce`): panes for the overlay and for the reduced AST, a

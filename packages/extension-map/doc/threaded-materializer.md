@@ -257,10 +257,10 @@ way to a DFA.
   with `--jsonvars` as `staticVars` (CLI tests: `test/Map-cli-test.js`,
   including a `validate --extension | materialize` round trip over the
   BPDAMFHIR pair).
-* **shexmap-simple.html** (`doc/ShExMapPlugin.js`): `DirectShExMaterializer`
+* **the page** (`doc/ShExMapPlugin.js`): `DirectShExMaterializer`
   materializes with `MapModule.ThreadedMaterializer` and adds the returned
   quads to the result graph directly.
-* **shexmap-worker.html** (`doc/ShExMapInWorkerApp.js` /
+* **the worker** (`doc/ShExMapPlugin.js`'s `RemoteShExMaterializer` /
   `doc/ShExMapWorkerThread.js`): the worker materializes with
   `MapModule.ThreadedMaterializer` and posts `WorkerMarshalling`-encoded quads
   back to the page (the old protocol shipped a validation-result structure).

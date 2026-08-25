@@ -1261,6 +1261,12 @@ ShExPlugins.register({
      manifest: {key: "outputSchema", spillName: "outputSchema.shex"}},
   ],
 
+  // What this runs on: the ShExMap half of the webapp bundle, which hangs
+  // Map, StringToRdfJs and NestedTurtleWriter on the ShExWebApp global.  A
+  // page that has it already (the worker page loads it for its own reasons)
+  // is left alone; any other page fetches it on being told about ShExMap.
+  scripts: ["./webpacks/shexmap-webapp.js"],
+
   // rows 15 and 16.  The worker half: ShExWorkerThread imports this on the
   // app's say-so, and it registers the handler and the materialize request.
   // Named relative to this file, so it is found from whatever page loads it.

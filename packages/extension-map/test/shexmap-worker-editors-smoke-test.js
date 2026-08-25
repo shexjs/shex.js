@@ -31,7 +31,11 @@ if (!TEST_browser) {
   ({JSDOM} = jsdom);
   describe("shexmap-worker with ?editors=1", function () {
     this.timeout(20000);
-    const page = "packages/extension-map/doc/shexmap-worker.html";
+    // ShExMap is an extension of this page now; shexmap-worker.html is a
+    // redirect that opens it with exactly these parameters (§5 phase 2)
+    const page = "packages/shex-webapp/doc/shex-worker.html";
+    const asShExMap = "&extension=" + encodeURIComponent("../../extension-map/doc/ShExMapPlugin.js")
+          + "&manifestURL=" + encodeURIComponent("../../extension-map/examples/manifest.json");
 
     let dom, $, shared;
     before(async function () {
@@ -41,7 +45,7 @@ if (!TEST_browser) {
       const virtualConsole = new jsdom.VirtualConsole().forwardTo(console);
       virtualConsole.removeAllListeners("debug");
       dom = new JSDOM(Fs.readFileSync(base, "utf8"), {
-        url: GitRootServer.urlFor(page + "?editors=1"),
+        url: GitRootServer.urlFor(page + "?editors=1" + asShExMap),
         runScripts: "dangerously",
         resources: "usable",
         pretendToBeVisual: true, // CodeMirror needs rAF etc.

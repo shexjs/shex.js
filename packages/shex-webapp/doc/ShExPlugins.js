@@ -15,12 +15,20 @@ const ShExPlugins = (function () {
   const registered = [];
   const listeners = [];
   return {
+    /** where the module now being evaluated came from.
+     *
+     * A script on the page knows its own src; a module the app fetched and
+     * ran does not, and registers before whoever fetched it gets a chance
+     * to say -- so the fetcher says it here first. */
+    loadingFrom: null,
+
     /**
      * @param descriptor.id     the SemAct IRI: the extension is already
      *                          named by what it dispatches on
      * @param descriptor.label  what to call it on screen
      * @param descriptor.css    rules the page needs for what it adds
      * @param descriptor.baseUrl where it was loaded from (filled in here)
+     * @param descriptor.applied  what the apps did about it (filled in here)
      */
     register (descriptor) {
       if (!descriptor || typeof descriptor.id !== "string")
@@ -36,10 +44,14 @@ const ShExPlugins = (function () {
       // worker script, say -- relative to itself rather than to whatever
       // page it lands on.  A module fetched by URL is stamped by whoever
       // fetched it; a script on the page knows its own src.
-      if (!descriptor.baseUrl && typeof document !== "undefined" && document.currentScript)
-        descriptor.baseUrl = document.currentScript.src;
+      if (!descriptor.baseUrl)
+        descriptor.baseUrl = (typeof document !== "undefined" && document.currentScript
+                              && document.currentScript.src) || this.loadingFrom;
       registered.push(descriptor);
-      listeners.forEach(fn => fn(descriptor));
+      // an app may have to fetch something before it can apply this -- the
+      // module the extension runs on, say -- so what it hands back is
+      // waited for here, and whoever loaded the extension can await it
+      descriptor.applied = Promise.all(listeners.map(fn => fn(descriptor)));
       return descriptor;
     },
 

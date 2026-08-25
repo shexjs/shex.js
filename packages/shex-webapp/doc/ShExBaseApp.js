@@ -1545,6 +1545,10 @@ class PluginCache extends InterfaceCache {
         return this.grepHtmlIndexForPackage(code, url, source)
 
       const before = pluginDescriptors().map(d => d.id);
+      // a module registers while it evaluates, and what it registers has to
+      // know where it came from before anything of it is applied
+      if (typeof ShExPlugins !== "undefined")
+        ShExPlugins.loadingFrom = url;
       // `exports` as well as `module`: a UMD bundle asks for both before it
       // decides it is being loaded as a CommonJS module, and hangs itself on
       // the window if it isn't
@@ -1554,6 +1558,8 @@ const exports = module.exports;
 ${code}
 return module.exports;
 `)()
+      if (typeof ShExPlugins !== "undefined")
+        ShExPlugins.loadingFrom = null;
       if (extension.ui && typeof ShExPlugins !== "undefined")
         ShExPlugins.register(extension.ui);
       const painted = pluginDescriptors().filter(d => before.indexOf(d.id) === -1);
@@ -1564,6 +1570,9 @@ return module.exports;
                     + " or hands ShExPlugins what it adds to the page, or both");
       if (this.urls.indexOf(url) === -1)
         this.urls.push(url);
+      // an extension is loaded when what it registered has been applied,
+      // which may have meant fetching the module it runs on
+      await Promise.all(painted.map(d => d.applied));
       if (!handles) {
         this.resultsWidget.append($("<div/>").append(
           $("<span/>").text(`extension ${painted.map(d => d.label || d.id).join(", ")} loaded from <${url}>`)
@@ -3230,6 +3239,42 @@ class ShExBaseApp {
    * rules, so an extension may say differently what the page said.
    */
   applyPlugin (ext) {
+    // What it runs on, if the page hasn't got it: a module of its own,
+    // fetched before anything of it is built.  Synchronous when there is
+    // nothing to fetch, because a page script registers while this app is
+    // being constructed and start() follows it immediately.
+    const pending = this.loadPluginScripts(ext);
+    return pending
+      ? pending.then(() => this.applyPluginNow(ext))
+      : this.applyPluginNow(ext);
+  }
+
+  /**
+   * The scripts an extension says it needs, injected in the order it said
+   * them, or null if the page already has them all (§5 phase 3).
+   *
+   * A classic page has no module system, so this is what "load an
+   * extension's code by URL" means here: `scripts` are resolved against the
+   * extension rather than against the page, since the extension knows where
+   * its own bundle sits and the page has never heard of it.
+   */
+  loadPluginScripts (ext) {
+    const urls = (ext.scripts || [])
+          .map(src => new URL(src, ext.baseUrl || DefaultBase).href)
+          .filter(url => $("head script, body script").filter(
+            (i, s) => s.src === url).length === 0);
+    if (urls.length === 0)
+      return null;
+    return urls.reduce((sofar, url) => sofar.then(() => new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = url;
+      script.onload = () => resolve();
+      script.onerror = () => reject(Error("no extension script at <" + url + ">"));
+      document.head.appendChild(script);
+    })), Promise.resolve());
+  }
+
+  applyPluginNow (ext) {
     if (typeof ext.css === "string" && ext.css.trim().length > 0
         && $("head style[data-extension]").filter((i, e) => $(e).attr("data-extension") === ext.id).length === 0)
       $("<style/>").attr("data-extension", ext.id).text(ext.css).appendTo("head");
