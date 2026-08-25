@@ -394,7 +394,10 @@ become redirects (the URLs are published on gh-pages), and the stale
 > longer has, from before `SemActFailure`: its `dispatch` returns `false`,
 > which the validator refuses. `lib/shex-extension-test.js` needs no bundler
 > (no requires, `module.exports` is the extension), so the test loads that;
-> the stale bundle wants rebuilding, which wants a bundler installed.
+> the stale bundle wanted rebuilding, which wanted a bundler installed.
+> **Deleted instead (2026-08-25)**, with the `browser` npm script that
+> pointed at the missing source: `lib/` is what everything loads, and a
+> bundle nothing loads can only go stale again.
 >
 > **controls + keys: done** (rows 4 and 5). A `toolbar` is a row of controls
 > — button, input, group, status — built into the extension's card, and a

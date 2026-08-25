@@ -7,6 +7,8 @@ const VALIDATE_LABEL = "validate (ctl-enter)";
 const NO_MANIFEST_LOADED = "no manifest loaded";
 
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
+// flip by hand for a per-step trace: makeConsoleTracker on this thread,
+// track messages from the worker.  Not dead code; a debug tap.
 const LOG_PROGRESS = false;
 const SPARQL_get_items_limit = 50;
 // heads the focus-node menu over a query map: take every node the query

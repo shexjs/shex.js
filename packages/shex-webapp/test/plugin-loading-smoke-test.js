@@ -31,9 +31,9 @@ const PAGE = "packages/shex-webapp/doc/shex-simple.html";
 const MAP_PLUGIN = "../../extension-map/doc/ShExMapPlugin.js";
 const MAP_MANIFEST = "../../extension-map/examples/manifest.yaml";
 // the package's build output, which needs no bundler: no requires, and
-// module.exports is the module.  (browser/ holds a browserify bundle of
-// a file that no longer exists, from before SemActFailure -- it returns
-// `false`, which the validator now refuses.)
+// module.exports is the module.  (The browserify bundle that used to sit
+// in browser/ was built from a file the package no longer has, from
+// before SemActFailure, and is deleted.)
 const TEST_EXTENSION = "../../extension-test/lib/shex-extension-test.js";
 const MAP_ID = "http://shex.io/extensions/Map/#";
 
