@@ -81,12 +81,14 @@ if (!TEST_browser) {
 
     it("should build its panes and its verb, and fetch the module they need", function () {
       expect(dom.window.ShExPlugins.all().map(e => e.label)).to.deep.equal(["ShExReduce"]);
-      const card = $("#extensionPanes > [data-plugin]");
-      expect(card.attr("data-plugin")).to.equal(REDUCE_ID);
-      expect(card.children("[id]").map((i, e) => e.id).get())
+      const screen = $("#screens > .screen[data-plugin]");
+      expect(screen.attr("data-plugin")).to.equal(REDUCE_ID);
+      expect(screen.find(".panel > div[id]").map((i, e) => e.id).get())
         .to.deep.equal(["reduceOverlay", "reduceAst"]);
-      expect(card.find(".pluginToolbar button").map((i, b) => b.id).get())
+      expect(screen.children(".panel").length, "the input beside the product").to.equal(2);
+      expect(screen.find(".pluginToolbar button").map((i, b) => b.id).get())
         .to.deep.equal(["reduce"]);
+      expect($("#screen option").length, "and a screen to switch to").to.equal(2);
       expect(typeof dom.window.ShExWebApp.Reduce, "the fold it runs on").to.equal("object");
       expect(typeof dom.window.ShExWebApp.ReduceJs, "and the language its actions are in")
         .to.equal("function");
@@ -147,6 +149,10 @@ if (!TEST_browser) {
         .to.not.include("%Reduce:");
       expect($("#reduceOverlay textarea").first().val(), "the actions came with the entry")
         .to.include("sa:Overlay");
+      // ...and steered the validation from a screen that was not showing:
+      // ShExReduce's screen affects validation, so hiding must not unload
+      expect($("#screens > .screen").css("display"), "the overlay's screen was away")
+        .to.equal("none");
       $("#reduce").trigger("click");
       await shared.promise;
       expect(ast()).to.deep.equal({

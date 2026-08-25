@@ -86,9 +86,9 @@ if (!TEST_browser) {
     });
 
     it("should build its panes on a page that has no markup for them", function () {
-      const card = $("#extensionPanes > [data-plugin]");
-      expect(card.length, "one card").to.equal(1);
-      expect(card.children("[id]").map((i, e) => e.id).get())
+      const screen = $("#screens > .screen[data-plugin]");
+      expect(screen.length, "one screen").to.equal(1);
+      expect(screen.find(".panel > div[id]").map((i, e) => e.id).get())
         .to.deep.equal(["bindings1", "staticVars", "outputSchema"]);
       expect(Object.keys(shared.Caches)).to.include.members(["bindings", "statics", "outputSchema"]);
       // ?editors=1: the panes it declared are editors like the page's own
@@ -115,7 +115,7 @@ if (!TEST_browser) {
      * and the app fetches.  Pressing materialize gets ShExMap's own answer
      * -- there are no bindings yet -- rather than a missing-module error. */
     it("should build its toolbar, and bring the module its verbs run on", async function () {
-      const toolbar = $("#extensionPanes [data-plugin] > .pluginToolbar");
+      const toolbar = $("#screens .screen[data-plugin] > .pluginToolbar");
       expect(toolbar.length, "one toolbar").to.equal(1);
       expect(toolbar.find("button").map((i, b) => b.id).get()).to.deep.equal(
         ["materialize", "debugMaterialize",
@@ -196,7 +196,30 @@ if (!TEST_browser) {
       await shared.promise;
       expect(dom.window.ShExPlugins.all().length, "the same plugin, not a second one")
         .to.equal(1);
-      expect($("#extensionPanes > [data-plugin]").length, "and one card").to.equal(1);
+      expect($("#screens > .screen[data-plugin]").length, "and one screen").to.equal(1);
+    });
+  });
+
+  describe("shex-simple, told to open on a plugin's screen", function () {
+    this.timeout(20000);
+    let dom, $, shared;
+
+    before(async function () {
+      // plugins load before ?screen= is read, so a permalink may name a
+      // screen the same link brings
+      ({dom, $, shared} = await boot("?editors=1&plugin=" + encodeURIComponent(MAP_PLUGIN)
+                                     + "&screen=" + encodeURIComponent(MAP_ID)));
+    });
+    after(function () { if (dom) dom.window.close(); });
+
+    it("should open with that screen up and the validator's away", function () {
+      expect($("#screen").val()).to.equal(MAP_ID);
+      expect($("#screens > .screen").css("display"), "the map's screen is up")
+        .to.not.equal("none");
+      expect($("#inputSchema").css("display"), "the schema panel is away").to.equal("none");
+      // the old global's name still answers, for modules written against it
+      expect(dom.window.ShExExtensions, "ShExExtensions is an alias now")
+        .to.equal(dom.window.ShExPlugins);
     });
   });
 

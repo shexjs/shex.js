@@ -94,6 +94,17 @@ at registration, and the app marks `initialized` once `init` has run.
 
 ### On the page
 
+A plugin with panes or controls gets a **screen**: a page-full of its own,
+switched to by the select that stands where the page title stood.  The
+app's own screen is the validator -- schema, data, shape map -- and each
+plugin's screen holds its panes laid out in columns (**panels**), with its
+toolbar and statusbar underneath.  The results area below is shared across
+screens.  A screen that is not showing is hidden and nothing else: its
+panes still load from the query string and from manifest entries, its keys
+still answer, and hooks like `schema` still read it -- ShExReduce's overlay
+steers a validation from wherever the reader happens to be looking.  The
+current screen rides in permalinks as `screen=<plugin id>`.
+
 Applied in this order, once per app:
 
 1. **`css`** -- a string of rules, appended to the head *after* the page's
@@ -106,18 +117,23 @@ Applied in this order, once per app:
     id: "bindings1",         // the div's id, for your CSS and your code
     kind: "json",            // json | schema | turtle: which cache class
     editor: "json",          // json | shexc | turtle: the ?editors=1 pane
+    panel: "inputs",         // which column of the screen; omit to share one
     rows: 19, className: "bindings droparea",
     queryStringParm: "bindings",
     manifest: {key: "staticVars", asYamlObject: true}}
    ```
-   `manifest` is how a manifest entry fills it: `key` (and `<key>URL`, which
-   is fetched and resolved against the manifest), `spillName` for a gist,
-   `asYamlObject` where the entry holds a mapping and the pane holds JSON.
-   Omit `manifest` for a pane that is a *product* rather than an input.
+   Panes share one column of the screen unless `panel:` groups them
+   otherwise: panes naming the same `panel` stack in one column, in
+   declaration order.  `manifest` is how a manifest entry fills it: `key`
+   (and `<key>URL`, which is fetched and resolved against the manifest),
+   `spillName` for a gist, `asYamlObject` where the entry holds a mapping
+   and the pane holds JSON.  Omit `manifest` for a pane that is a *product*
+   rather than an input.
 3. **`resultsTabs`** -- `[{id, label}]`.  A validator has one kind of result
    and writes it into `#results`; declare a second and the results area
    becomes tabs, this app's own first.
-4. **`toolbar`** -- a row of controls under the plugin's panes, in order:
+4. **`toolbar`** -- a row of controls across the plugin's screen, under its
+   columns, in order:
    ```js
    {kind: "button", id, label, title, key: {ctrl: true, key: "\\"}, run: app => …}
    {kind: "input",  id, className, placeholder, title, queryStringParm, manifest}

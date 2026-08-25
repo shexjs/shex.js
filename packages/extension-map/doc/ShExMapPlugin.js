@@ -1256,7 +1256,10 @@ ShExPlugins.register({
      rows: 5, className: "vars droparea",
      queryStringParm: "statics",
      manifest: {key: "staticVars", asYamlObject: true}},
+    // a column of its own ("panel"), beside the bindings and statics --
+    // the two-column layout the map page had when it was a page
     {name: "outputSchema", id: "outputSchema", kind: "schema", editor: "shexc",
+     panel: "output",
      rows: 25, className: "schema droparea",
      queryStringParm: "outSchema",
      manifest: {key: "outputSchema", spillName: "outputSchema.shex"}},

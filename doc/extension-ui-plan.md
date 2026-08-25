@@ -269,21 +269,52 @@ Three hosting facts shape it:
   their extensions first and await them; the parameter pass skips the
   `extension` entry (`earlyLoad`) because it already ran.
 
-## 4. Where extensions go on screen
+## 4. Where plugins go on screen
 
-ShExMap puts its panes in a right-hand column. Keep the column, but make it a
-**stack of collapsible cards, one per extension**, in a named slot:
+> **Superseded (2026-08-25) by screens, which are implemented.**  The card
+> column below was built first and put ShExMap's panes at the bottom of the
+> page: one 48.5% card after the schema and data panels, where the map's
+> panes used to sit beside them in a row the page scrolled sideways to.
+> What replaced it:
 
-    toolbar     buttons and inputs beside `validate`
-    aside       the right-hand column: one card per extension, panes inside
-    results     sections appended under a validation result
-    statusbar   short status text
+A **screen** is a page-full of panes.  The validator — schema, data, shape
+map — is the app's own screen; a plugin that declares panes or controls
+gets a screen of its own, and a drop-down standing where the `<h1>` stood
+switches between them (`#screen`; the title text becomes its first option,
+and a page with no plugin screens keeps its plain title).  Inside a screen,
+panes lay out in **panels** — the 48.5% columns the pages have always used
+— sharing one unless a pane's `panel:` groups them otherwise; the plugin's
+toolbar and statusbar are full-width rows underneath.  ShExMap declares
+`panel: "output"` on its output schema and gets back the two-column layout
+its own page had: bindings and statics left, output schema right, controls
+below.
 
-Cards rather than tabs because ShExMap's bindings, statics and output want to
-be visible at the same time as the results. With one extension loaded the page
-looks like today's ShExMap; with two, neither has to know about the other.
-Extensions never address `#bindings1` directly — the app owns layout, and an
-extension owning a `<div>` is how the fork started.
+The load-bearing rule: **hiding is display and nothing else.**  A screen
+that is not showing still loads from the query string and from manifest
+entries, its keys still answer, and validation hooks still read it —
+ShExMap's screen *consumes* a validation (materialize reads the bindings
+the last one produced), but ShExReduce's *steers* one (its overlay pane is
+hung on the schema before validating), so a screen must never be modelled
+as downstream of validation.  The reduce smoke test validates through an
+overlay whose screen is hidden, which is that rule as a regression test.
+
+Decisions taken with it, so they are written somewhere:
+
+- **Results are shared.**  `#results` stays below `#inputarea`, visible
+  from every screen; a plugin's second kind of result is a tab there
+  (`resultsTabs`), not a screen.  Validate on the validator's screen,
+  switch to ShExMap's, materialize: both results are tabs side by side.
+- **The permalink carries the screen** (`?screen=<plugin id>`, defaulted
+  and normalized like any other parameter: plugins load before it is read,
+  and a name no loaded plugin answers to quietly means the validator).
+- **Toolbar and statusbar are per screen** — they were already in the
+  plugin's card, and the card became the screen.
+- **`?editors=1` panes re-measure on switch** (`remeasureScreenPanes`): a
+  CodeMirror pane measures nothing while `display: none`, the same problem
+  the neighborhood pane code solved with `requestMeasure`.
+- **`?interface=minimal` hides the switch** along with the rest of the
+  title bar; keys and `?screen=` still reach the screens.  Minimal is
+  minimal.
 
 ## 5. Phases
 
@@ -598,3 +629,31 @@ skeleton extension repo.
   into binding frames and pane ranges. It may be the one thing that stays a
   ShExMap-shaped hook rather than becoming a general one; decide in phase 3
   with the tests in hand.
+
+### Questions for the author (2026-08-25), each with a recommendation
+
+- **Should the map redirects open on ShExMap's screen?**  Today
+  `shexmap-simple.html` opens the app on the validator's screen with
+  ShExMap loaded and one select away.  Recommendation: leave it — the map
+  workflow *starts* with a validation, which is the validator's screen, and
+  a link that wants the map screen first can say `&screen=…`.  The
+  alternative (the redirect appending `screen=`) needs the redirect to know
+  the plugin's id, which only the plugin knows today.
+- **A trust prompt for off-origin plugins** (`?plugin=`, and above all a
+  manifest fetched by `?manifestURL=` whose entries name plugins).  Loading
+  one runs a stranger's JavaScript with everything the page can reach —
+  gist tokens in localStorage included — and doc/plugins.md currently just
+  says so.  Recommendation: before the *first* plugin whose origin differs
+  from the page's loads in a session, say what is about to run and from
+  where, with "this session"/"never" as the answers; same-origin plugins
+  and page `<script>`s stay silent, since the page's own host already
+  speaks for them.  Not built, because whether the friction is worth it on
+  a site whose whole point is running what a URL names is a call the
+  author should make.
+- **Is "panes share a column unless `panel:` says otherwise" the right
+  default?**  It keeps a descriptor written before screens rendering as it
+  did, but a plugin with two fat panes gets one tall column until it says
+  `panel:`.  The alternative default (each pane its own column) reads
+  better for two-pane plugins and worse for five-pane ones.
+  Recommendation: keep the conservative default; the annotation is one
+  word.

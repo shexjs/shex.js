@@ -3222,6 +3222,14 @@ class ShExBaseApp {
       // types: ?editors=0 and ?editors=false mean the same thing
       {queryStringParm: "editors",      location: $("#editors"),         deflt: "",
        normalize: v => /^(1|true|yes|on)$/i.test(v) ? "1" : ""},
+      // which screen is up (a plugin's id; empty is the validator's own).
+      // Plugins load before this list is walked, so their screens exist by
+      // the time a permalink's choice arrives; a name no loaded plugin
+      // answers to quietly means the validator, since there is nothing to
+      // switch to.  start() shows what this lands on.
+      {queryStringParm: "screen",       location: $("#screen"),          deflt: "",
+       normalize: v => $("#screen option").filter((i, o) => $(o).attr("value") === v).length
+                       ? v : ""},
       // The data source and whatever it wants configured.  A parameter is
       // named for what it means, not for the module that declares it, so a
       // manifest entry or a permalink says `neighborhood=sparql&endpoint=…`
@@ -3364,15 +3372,92 @@ class ShExBaseApp {
     tabs.tabs();
   }
 
-  /** the card a plugin builds into, made on demand */
-  pluginCard (ext) {
-    let slot = $("#extensionPanes");
+  /**
+   * The screen a plugin builds into, made on demand (§4).
+   *
+   * A screen is a page-full of panes.  The validator's two panels are this
+   * app's own screen; a plugin that declares panes or controls gets one of
+   * its own, and the select standing where the title stood switches between
+   * them.  Hiding a screen never unloads it: its caches stay live, its
+   * query parameters and manifest keys still fill, its keys still answer,
+   * and a hook like ShExReduce's `schema` reads its panes wherever the
+   * reader happens to be looking.  ShExMap's screen consumes a validation;
+   * ShExReduce's overlay steers one -- so a screen is beside validation,
+   * never downstream of it.
+   */
+  pluginScreen (ext) {
+    let slot = $("#screens");
     if (slot.length === 0)
-      slot = $("<div/>").attr("id", "extensionPanes").appendTo("#inputarea");
+      slot = $("<div/>").attr("id", "screens").appendTo("#inputarea");
     const already = slot.children().filter((i, e) => $(e).attr("data-plugin") === ext.id);
-    return already.length
-      ? already
-      : $("<div/>").addClass("panel").attr("data-plugin", ext.id).appendTo(slot);
+    if (already.length)
+      return already;
+    const screen = $("<div/>").addClass("screen").attr("data-plugin", ext.id).appendTo(slot);
+    // a page without the switch keeps every screen visible, which is the
+    // pre-screens layout; a page with it starts a new screen put away
+    if (this.addScreenOption(ext))
+      screen.hide();
+    return screen;
+  }
+
+  /**
+   * The drop-down of screens, standing where the <h1> stood.
+   *
+   * It appears with the first plugin screen: a page with only the
+   * validator's has nothing to switch and keeps its title.  The title's
+   * text becomes the first option, so the page is still named on screen.
+   */
+  addScreenOption (ext) {
+    const select = $("#screen");
+    if (select.length === 0)
+      return false;
+    if (!this.screenSelectLive) {
+      this.screenSelectLive = true;
+      // .first(): the dialogs (#loadForm, #about) start life inside #title
+      // and carry <h1>s of their own until jquery-ui moves them out
+      const title = $("#title h1").first();
+      select.children().first().text(title.text() || "validator");
+      title.hide();
+      select.show();
+      select.on("change", () => this.showScreen(select.val()));
+    }
+    if (select.children().filter((i, o) => $(o).attr("value") === ext.id).length === 0)
+      select.append($("<option/>").attr("value", ext.id).text(ext.label || ext.id));
+    return true;
+  }
+
+  /**
+   * Show one screen and put the others away -- away, not gone: display and
+   * nothing else changes, so what a hidden screen's panes hold is still
+   * read wherever it is used.  The results stay below, shared: a
+   * validation's tab and a materialization's sit side by side whichever
+   * screen is up.
+   */
+  showScreen (id) {
+    const select = $("#screen");
+    if (select.length === 0)
+      return;
+    if (select.val() !== id)
+      select.val(id);
+    $("#inputSchema, #inputData").toggle(id === "");
+    $("#screens > .screen").each((i, e) => $(e).toggle($(e).attr("data-plugin") === id));
+    this.remeasureScreenPanes(id);
+  }
+
+  /** A CodeMirror pane measures nothing while it is display:none, so a
+   * pane that just came on screen is asked to measure again -- the same
+   * treatment the data pane gets when another document swaps in. */
+  remeasureScreenPanes (id) {
+    if (!this.editorSupport)
+      return;
+    const names = id === ""
+          ? ["inputSchema", "inputData"]
+          : ((pluginDescriptors().find(d => d.id === id) || {}).panes || []).map(p => p.name);
+    names.forEach(name => {
+      const pane = this.editorSupport.panes[name];
+      if (pane && pane.requestMeasure)
+        pane.requestMeasure();
+    });
   }
 
   /**
@@ -3415,12 +3500,13 @@ class ShExBaseApp {
     const toolbar = ext.toolbar || [];
     if (toolbar.length === 0)
       return;
-    const card = this.pluginCard(ext);
-    if (card.children(".pluginToolbar").length > 0)
+    const screen = this.pluginScreen(ext);
+    if (screen.children(".pluginToolbar").length > 0)
       return; // already built
-    // two boxes: the row is a block formatting context, so the inner one
-    // may float to the panel's edge without escaping it
-    const row = $("<div/>").addClass("pluginToolbar").appendTo(card);
+    // a full-width row under the screen's columns.  Two boxes: the row is
+    // a block formatting context, so the inner one may float to the
+    // screen's edge without escaping it
+    const row = $("<div/>").addClass("pluginToolbar").appendTo(screen);
     const inner = $("<div/>").addClass("pluginToolbarInner").appendTo(row);
     toolbar.forEach(control => this.buildPluginControl(control, inner));
   }
@@ -3438,10 +3524,10 @@ class ShExBaseApp {
     const items = ext.statusbar || [];
     if (items.length === 0)
       return;
-    const card = this.pluginCard(ext);
-    if (card.children(".pluginStatusbar").length > 0)
+    const screen = this.pluginScreen(ext);
+    if (screen.children(".pluginStatusbar").length > 0)
       return;
-    const row = $("<div/>").addClass("pluginStatusbar").appendTo(card);
+    const row = $("<div/>").addClass("pluginStatusbar").appendTo(screen);
     items.forEach(control => this.buildPluginControl(control, row));
   }
 
@@ -3536,22 +3622,29 @@ class ShExBaseApp {
    * have to agree, which is why a declaration says them once and this makes
    * all four.
    *
-   * They go in `#extensionPanes`: the page may put that where it likes, and
-   * gets it appended to `#inputarea` if it doesn't, so a page needs no
-   * markup to host a plugin.  One card per plugin, so two of them
-   * are two cards rather than a fight over the same column.
+   * They go in the plugin's screen (pluginScreen): the page may place
+   * `#screens` where it likes and gets it appended to `#inputarea` if it
+   * doesn't, so a page needs no markup to host a plugin.  One screen per
+   * plugin, so two of them are two screens rather than a fight over the
+   * same column.
    */
   buildPluginPanes (ext) {
     const panes = ext.panes || [];
     if (panes.length === 0)
       return;
-    let slot = $("#extensionPanes");
-    if (slot.length === 0)
-      slot = $("<div/>").attr("id", "extensionPanes").appendTo("#inputarea");
-    if (slot.children().filter((i, e) => $(e).attr("data-plugin") === ext.id).length > 0)
+    const screen = this.pluginScreen(ext);
+    if (screen.children(".panel").length > 0)
       return; // already built: registered twice, or applied twice
-    const card = $("<div/>").addClass("panel").attr("data-plugin", ext.id).appendTo(slot);
+    // The screen's columns.  Panes share one unless `panel:` groups them
+    // otherwise, so a descriptor written before screens renders as it did
+    // -- one column -- and ShExMap says its output schema is a column of
+    // its own, which is the two-column layout its own page had.
+    const columns = new Map();
     panes.forEach(pane => {
+      const key = pane.panel === undefined ? "" : pane.panel;
+      if (!columns.has(key))
+        columns.set(key, $("<div/>").addClass("panel").attr("data-panel", key || null)
+                    .appendTo(screen));
       const textarea = $("<textarea/>")
             .attr({rows: pane.rows || 10, spellcheck: "false"})
             .addClass(pane.className || "")
@@ -3559,7 +3652,7 @@ class ShExBaseApp {
       $("<div/>").attr("id", pane.id).css("width", "100%")
         // a non-breaking space, so an empty status line keeps its height
         .append($("<h2/>").addClass("status").text("\u00a0"), textarea)
-        .appendTo(card);
+        .appendTo(columns.get(key));
       const cache = this.paneCache(pane.kind, textarea);
       this.Caches[pane.name] = cache;
       const entry = {queryStringParm: pane.queryStringParm, location: cache.selection, cache};
@@ -3653,6 +3746,8 @@ class ShExBaseApp {
     const loads = this.loadSearchParameters();
     const ready = Promise.all([ dndPromise, loads ]).then(resolved => {
       this.setEditors(); // after ?editors=... has reached the menu select
+      // ...and after the editors exist, so the screen's panes can measure
+      this.showScreen($("#screen").val() || "");
       return resolved;
     });
     if ('_testCallback' in window) {
@@ -4861,7 +4956,7 @@ class ShExBaseApp {
     $("#inputData .status").html("data (<span id=\"dataDialect\">" + this.neighborhoods.dialect() + "</span>)").show();
     // minimal: the shape map is all that stays beside the schema
     $("#shapeMapArea").siblings().hide();
-    $("#title img, #title h1").hide();
+    $("#title img, #title h1, #screen").hide();
     $("#menuForm").css("position", "absolute").css(
       "left",
       $("#inputSchema .status").get(0).getBoundingClientRect().width -
@@ -4872,7 +4967,11 @@ class ShExBaseApp {
     $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").hide();
     $("#inputData .status").html("data (<span id=\"dataDialect\">" + this.neighborhoods.dialect() + "</span>)").hide();
     $("#shapeMapArea").siblings().show();
-    $("#title img, #title h1").show();
+    $("#title img").show();
+    // the screen switch stands where the title stood, so bring back
+    // whichever of the two is serving as the title (addScreenOption)
+    $("#title h1").toggle(!this.screenSelectLive);
+    $("#screen").toggle(!!this.screenSelectLive);
     $("#menuForm").removeAttr("style");
     $("#controls").css("position", "absolute");
   }

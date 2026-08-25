@@ -147,9 +147,11 @@ label {
 .heading {
   font-weight: bold;
 }
-/* the slot extensions' pane cards are built into: the cards are the
-   .panels, so the slot itself lays nothing out */
-#extensionPanes { display: contents; }
+/* Screens: the validator's two panels are the app's own screen, and each
+   plugin's panes land in a .screen of its own inside #screens, one showing
+   at a time (ShExBaseApp.showScreen).  A screen is a block the full width
+   of the page; the .panels inside it are its columns. */
+#screen { float: left; font-size: 1.1em; margin: .1em 0 0 .3em; }
 .panel {
   width: 48.5%;
   display: inline-block;

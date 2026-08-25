@@ -96,7 +96,10 @@ if (!TEST_browser) {
       expect(dom.window.ShExPlugins.all(), "and nothing registered").to.deep.equal([]);
       expect($("#inputarea").css("overflow-x"), "a validator's inputs overflow")
         .to.equal("visible");
-      expect($("#extensionPanes").children().length, "and no panes are built").to.equal(0);
+      expect($("#screens").length, "no screens are built").to.equal(0);
+      expect($("#screen").css("display"), "the switch stays hidden").to.equal("none");
+      expect($("#title h1").css("display"), "and the page keeps its title")
+        .to.not.equal("none");
       expect(Object.keys(shared.Caches).sort(), "so these are the caches")
         .to.deep.equal(["inputData", "inputSchema", "manifest", "plugin", "shapeMap"]);
     });

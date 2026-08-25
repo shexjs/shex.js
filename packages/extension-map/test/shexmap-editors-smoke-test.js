@@ -119,11 +119,16 @@ if (!TEST_browser) {
      * pane declarations.  The page supplies the slot; the plugin says
      * what goes in it and the base app makes all four parts agree. */
     it("should build its panes from the plugin, not from the page", function () {
-      const card = $("#extensionPanes > [data-plugin]");
-      expect(card.length, "one card for the one plugin").to.equal(1);
-      expect(card.attr("data-plugin")).to.equal("http://shex.io/extensions/Map/#");
-      expect(card.children("[id]").map((_, elt) => elt.id).get(), "in declared order")
+      const screen = $("#screens > .screen[data-plugin]");
+      expect(screen.length, "one screen for the one plugin").to.equal(1);
+      expect(screen.attr("data-plugin")).to.equal("http://shex.io/extensions/Map/#");
+      expect(screen.find(".panel > div[id]").map((_, elt) => elt.id).get(), "in declared order")
         .to.deep.equal(["bindings1", "staticVars", "outputSchema"]);
+      // two columns, the layout the map page had: bindings and statics
+      // share one, the output schema declared a `panel` of its own
+      expect(screen.children(".panel").length, "two columns").to.equal(2);
+      expect($("#outputSchema").closest(".panel").attr("data-panel"),
+             "the output schema in its own").to.equal("output");
       expect($("#bindings1 textarea").first().attr("rows"), "as tall as it asked")
         .to.equal("19");
       expect($("#staticVars textarea").first().hasClass("vars"),
@@ -138,6 +143,45 @@ if (!TEST_browser) {
         .to.deep.equal(["bindings", "statics", "outSchema"]);
       expect(parms.map(p => p.manifest && p.manifest.key), "bindings are a product")
         .to.deep.equal([undefined, "staticVars", "outputSchema"]);
+    });
+
+    /* §4: a plugin's panes are a screen of their own, and the switch
+     * between screens stands where the page title stood.  Every other test
+     * in this file runs with the map's screen *hidden* -- the panes still
+     * fill from the manifest, the bindings still fill from a validation,
+     * ctl-\ still materializes -- which is the rule that hiding is display
+     * and nothing else. */
+    it("should stand a screen switch where the title stood", function () {
+      const select = $("#screen");
+      expect(select.length, "the switch is in the title bar").to.equal(1);
+      expect(select.css("display"), "and showing").to.not.equal("none");
+      expect($("#title h1").css("display"), "in the title's place").to.equal("none");
+      expect(select.find("option").map((i, o) => $(o).attr("value")).get())
+        .to.deep.equal(["", "http://shex.io/extensions/Map/#"]);
+      expect(select.find("option").last().text()).to.equal("ShExMap");
+      expect(select.val(), "the validator's screen is up").to.equal("");
+      expect($("#screens > .screen").css("display"), "and the map's is away").to.equal("none");
+    });
+
+    it("should switch screens without unloading the one that hides", function () {
+      $("#screen").val("http://shex.io/extensions/Map/#").trigger("change");
+      expect($("#inputSchema").css("display"), "the schema panel went away").to.equal("none");
+      expect($("#screens > .screen").css("display"), "the map's screen is up")
+        .to.not.equal("none");
+      $("#screen").val("").trigger("change");
+      expect($("#inputSchema").css("display"), "and back").to.not.equal("none");
+      expect($("#screens > .screen").css("display")).to.equal("none");
+    });
+
+    it("should carry the screen in the permalink", async function () {
+      $("#screen").val("http://shex.io/extensions/Map/#").trigger("change");
+      const parms = (await shared.app.getPermalink()).split(/[?&]/);
+      expect(parms).to.include(
+        "screen=" + encodeURIComponent("http://shex.io/extensions/Map/#"));
+      $("#screen").val("").trigger("change");
+      const back = (await shared.app.getPermalink()).split(/[?&]/);
+      expect(back.filter(p => p.startsWith("screen=")), "the default rides free")
+        .to.deep.equal([]);
     });
 
     it("should load a picked manifest entry's materialization inputs", async function () {
@@ -260,10 +304,10 @@ if (!TEST_browser) {
     /* Inventory rows 4 and 5, the third contribution to move: the row of
      * controls was markup in both map pages and click handlers in
      * ShExMapBaseApp.prepareControls, and is now `toolbar` in the
-     * descriptor.  It builds into the plugin's own card, under the panes
+     * descriptor.  It builds into the plugin's own screen, under the panes
      * it consumes. */
     it("should keep the materialize buttons inside a box that contains them", function () {
-      const row = $("#extensionPanes [data-plugin] > .pluginToolbar");
+      const row = $("#screens .screen[data-plugin] > .pluginToolbar");
       expect(row.length, "the toolbar has a wrapper").to.equal(1);
       expect(row.find(".pluginToolbarInner").length, "which holds it").to.equal(1);
       expect(row.css("display"), "a block formatting context contains its floats")

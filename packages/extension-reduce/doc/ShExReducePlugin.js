@@ -42,8 +42,10 @@ const ShExReduce = {
      queryStringParm: "overlay",
      manifest: {key: "overlay", spillName: "overlay.ttl"}},
     // ...and what the fold built, which is a product like ShExMap's
-    // bindings: no manifest key writes it
+    // bindings: no manifest key writes it.  Its own column, so the input
+    // reads on the left and the product on the right, like the validator
     {name: "ast", id: "reduceAst", kind: "json", editor: "json",
+     panel: "ast",
      rows: 20, className: "bindings droparea",
      queryStringParm: "ast"},
   ],

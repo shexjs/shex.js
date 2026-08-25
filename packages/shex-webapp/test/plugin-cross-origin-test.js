@@ -82,10 +82,10 @@ if (!TEST_browser) {
     });
 
     it("should build what it declared, on a page that has never seen it", function () {
-      const card = $("#extensionPanes > [data-plugin]");
-      expect(card.attr("data-plugin")).to.equal(HELLO_ID);
-      expect(card.children("[id]").map((i, e) => e.id).get()).to.deep.equal(["helloSaid"]);
-      expect(card.find(".pluginToolbar button").map((i, b) => b.id).get())
+      const screen = $("#screens > .screen[data-plugin]");
+      expect(screen.attr("data-plugin")).to.equal(HELLO_ID);
+      expect(screen.find(".panel > div[id]").map((i, e) => e.id).get()).to.deep.equal(["helloSaid"]);
+      expect(screen.find(".pluginToolbar button").map((i, b) => b.id).get())
         .to.deep.equal(["hello"]);
       expect($("head style[data-plugin]").attr("data-plugin")).to.equal(HELLO_ID);
     });
