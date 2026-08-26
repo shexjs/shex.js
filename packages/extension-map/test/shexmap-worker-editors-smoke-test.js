@@ -259,5 +259,40 @@ if (!TEST_browser) {
           .to.equal(value.quad.subject.value);
       });
     });
+
+    /* The × on the screen tab, on the page that has a worker: the worker
+     * imported ShExMap's half and cannot un-import it, so the page gets a
+     * fresh one -- otherwise the handler over there would still answer a
+     * schema that named it after the plugin had gone.  Last, since nothing
+     * of ShExMap is left afterwards. */
+    it("should give the page a worker that never heard of it, on unload", async function () {
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      const before = dom.window.ShExWorker;
+
+      $("#screenTabs .unloadPlugin").first().trigger("click");
+
+      expect(dom.window.ShExPlugins.all(), "out of the register").to.deep.equal([]);
+      expect($("#screens > .screen").length, "and off the page").to.equal(0);
+      expect(dom.window.ShExWorker, "a worker of its own").to.not.equal(before);
+
+      // ...and the page still validates over there, which is the thing a
+      // fresh worker has to still be able to do
+      set("#inputSchema textarea", [
+        "PREFIX : <http://a.example/>",
+        "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>",
+        ":S { :p xsd:integer }",
+      ].join("\n"));
+      set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .");
+      set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
+      await shared.promise;
+      $("#validate").trigger("click");
+      await shared.promise;
+      expect($("#results .error").text(), "no complaint").to.equal("");
+      expect($("#results .passes").length, "it validated in the new worker").to.be.above(0);
+    });
   });
 }

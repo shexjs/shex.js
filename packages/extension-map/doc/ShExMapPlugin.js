@@ -1383,6 +1383,20 @@ ShExPlugins.register({
     });
   },
 
+  /** ...and what to take back when the × on the screen tab says so.
+   *
+   * The screen goes with the descriptor and the verbs unmix themselves; what
+   * is left is what init hung elsewhere: two things on the app, and a
+   * context menu jquery-contextMenu holds by selector -- the element it
+   * triggers on is about to stop existing. */
+  unload (app) {
+    app.resultsTabsAside().empty(); // the corner of the results strip is the app's
+    delete app.materializationPanes;
+    delete app.MapModule;
+    if ($.contextMenu)
+      $.contextMenu("destroy", "#outputShapeMap");
+  },
+
   // row 13.  A validation's bindings are what a materialization consumes,
   // so rendering one fills the bindings pane.  `base` is the renderer the
   // app would otherwise have used, or the one another plugin wrapped.

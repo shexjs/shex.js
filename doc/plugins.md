@@ -82,7 +82,9 @@ way -- its own URL is a fine choice.
 
 The register also *writes* to the descriptor, so a plugin can rely on the
 bookkeeping without doing it: `baseUrl` and `applied` below are filled in
-at registration, and the app marks `initialized` once `init` has run.
+at registration, and the app marks `initialized` once `init` has run,
+`panesBuilt` once they are, and `mixedIn` with the names `methods` actually
+took (a plugin may be unloaded, and the app has to know what to hand back).
 
 ### What it runs on
 
@@ -213,6 +215,34 @@ materialization: N ms` into the shape map's tooltip, where the app writes
 the same thing for a validation.  A hook for "how long the verb took" would
 be the tidy answer if a third plugin ever wanted one; for two it would be
 ceremony, and the tooltip is where a reader who knows the app already looks.
+
+### Unloading
+
+A plugin arrived as a URL, and the × on its screen tab is the way back out.
+The app undoes what applying the descriptor did, in reverse: the screen goes
+(and with it the panes, the toolbar and the statusbar), the caches under
+those panes and the entries that filled them from the query string and the
+manifest, the results tabs, the `<style data-plugin>`, the keys, the verbs
+`methods` mixed in, the `plugin=` the permalink carried -- and the
+descriptor leaves the register, so nothing that reads the plugins has heard
+of it any more.  A page with a worker gets a fresh one, since a worker
+cannot un-`importScripts` the half it loaded.
+
+| | |
+| --- | --- |
+| `unload(app)` | optional, called first: hand back anything you hung on the app outside your own screen |
+
+Most plugins need no `unload`: what you declared is what the app takes away.
+Write one if `init` reached outside your screen -- ShExMap empties
+`resultsTabsAside()`, drops the two things it put on the app, and destroys
+the context menu jquery-contextMenu holds by selector.
+
+What is *not* undone is your module: a `scripts` bundle is a classic script
+and cannot be un-run, so the code stays on the page.  Registering again is
+therefore cheap, and it has to work: the app clears the descriptor's
+bookkeeping on the way out so that a second registration builds everything
+afresh.  Selecting a manifest entry that names your plugin is one way it
+happens.
 
 ### Validation
 

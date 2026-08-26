@@ -74,6 +74,13 @@ const ShExReduce = {
     this.app = app;
   },
 
+  /** the × on the screen tab: the panes go with the screen, and what is
+   * left is what this descriptor was holding between validations */
+  unload () {
+    this.app = null;
+    this.parsed = [];
+  },
+
   /** a validation replaces the parse the last AST was folded from */
   onStartingValidation (app) {
     this.parsed = [];

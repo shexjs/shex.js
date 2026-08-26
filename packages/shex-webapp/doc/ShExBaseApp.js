@@ -3360,6 +3360,166 @@ class ShExBaseApp {
   }
 
   /**
+   * Take a plugin off the page: the × on its screen tab.
+   *
+   * A plugin arrives as a URL and this is the way back out.  It undoes what
+   * applyPluginNow did, in the reverse order and to the same list: its
+   * screen (and so its panes, its toolbar and its statusbar), the caches
+   * under those panes and the two lists that say what fills them, its
+   * results tabs, its sheet, its keys, the verbs it mixed in, and its
+   * entry in the register -- after which nothing that reads the plugins
+   * (extendSchema, makeRenderer, the handlers a validation registers, the
+   * worker scripts a request names) has ever heard of it.
+   *
+   * What it does not undo is the plugin's own module: a `scripts` bundle
+   * stays on the page, since a classic script cannot be un-run.  That is
+   * why the descriptor's bookkeeping is reset rather than kept -- the same
+   * module may register again, and must build everything afresh when it
+   * does.  A plugin that hung something on the app outside its own screen
+   * says how to take it back in `unload`.
+   *
+   * @returns true if there was such a plugin
+   */
+  unloadPlugin (id) {
+    const ext = typeof ShExPlugins === "undefined" ? null : ShExPlugins.byId(id);
+    if (!ext)
+      return false;
+    // A screen may have one of the app's own panes on loan, and removing it
+    // while it does would take the pane with it: home first.
+    const back = this.currentScreen() === id ? "" : this.currentScreen();
+    this.returnBorrowedPanes();
+    if (typeof ext.unload === "function") {
+      try {
+        ext.unload(this);
+      } catch (e) {
+        this.resultsWidget.failMessage(e, "unloading " + (ext.label || ext.id));
+      }
+    }
+
+    // its panes: the editor over each, the cache under it, and the results
+    // tab a pane that lives there was given
+    const caches = new Set();
+    (ext.panes || []).forEach(pane => {
+      if (pane.borrow)
+        return; // the app's own pane, which was only visiting
+      if (this.editorSupport && this.editorSupport.panes[pane.name]) {
+        this.editorSupport.panes[pane.name].destroy(); // hands the text back
+        delete this.editorSupport.panes[pane.name];
+      }
+      if (this.Caches[pane.name]) {
+        caches.add(this.Caches[pane.name]);
+        delete this.Caches[pane.name];
+      }
+      if (pane.tab)
+        this.removeResultsTab(pane.tab.id || pane.id + "Tab");
+    });
+    (ext.resultsTabs || []).forEach(panel => this.removeResultsTab(panel.id));
+
+    // ...and what said how to fill them: a pane's entry is known by the
+    // cache it holds, a control's by the parameter it named
+    const parms = new Set();
+    const readControls = controls => (controls || []).forEach(control => {
+      if (control.queryStringParm)
+        parms.add(control.queryStringParm);
+      readControls(control.controls);
+    });
+    readControls(ext.toolbar);
+    readControls(ext.statusbar);
+    [this.Getables, this.QueryParams].forEach(list => {
+      for (let i = list.length; i-- > 0;)
+        if (caches.has(list[i].cache)
+            || (list[i].queryStringParm && parms.has(list[i].queryStringParm)))
+          list.splice(i, 1);
+    });
+
+    // the page: screen, tab, sheet
+    $("#screens > .screen").filter((i, e) => $(e).attr("data-plugin") === id).remove();
+    $("#screenTabs button").filter((i, b) => $(b).attr("data-screen") === id).remove();
+    $("head style[data-plugin]").filter((i, e) => $(e).attr("data-plugin") === id).remove();
+
+    // the keys it answered and the verbs it lent
+    for (let i = this.keyDownHandlers.length; i-- > 0;)
+      if (this.keyDownHandlers[i].plugin === id)
+        this.keyDownHandlers.splice(i, 1);
+    (ext.toolbar || []).filter(c => c.key).concat(ext.keys || [])
+      .forEach(binding => { delete binding.bound; });
+    (ext.mixedIn || []).forEach(name => { delete this[name]; });
+    delete ext.mixedIn;
+    delete ext.initialized;
+    delete ext.panesBuilt;
+
+    // the permalink stops naming it, so a reload comes back without it
+    const urls = (this.Caches.plugin || {}).urls;
+    if (urls && ext.baseUrl) {
+      const at = urls.indexOf(ext.baseUrl);
+      if (at !== -1)
+        urls.splice(at, 1);
+    }
+    ShExPlugins.unregister(id);
+
+    // A worker cannot un-importScripts, so a page that has one gets a new
+    // one: otherwise the handler this plugin registered over there would
+    // still answer a schema that named it.
+    // (the page's own globals, not window's: `const WorkerUrl` in a classic
+    // script is a lexical binding the scripts after it see and window does
+    // not, which is how RemoteShExValidator reaches the same two)
+    if (ext.worker && typeof ShExWorker !== "undefined" && typeof WorkerUrl !== "undefined") {
+      ShExWorker.terminate();
+      ShExWorker = new Worker(WorkerUrl);
+    }
+
+    if ($("#screens > .screen").length === 0)
+      this.dropScreenTabs();
+    this.collapseResultsTabs();
+    this.showScreen(back);
+    return true;
+  }
+
+  /** one results tab, gone: the strip loses its <li> and the page the
+   * panel.  jquery-ui picks another tab if this was the one showing. */
+  removeResultsTab (id) {
+    const tabs = $("#resultsTabs");
+    if (tabs.length === 0)
+      return;
+    tabs.find("> ul > li").filter(
+      (i, li) => $(li).children("a").attr("href") === "#" + id).remove();
+    $("#" + id).remove();
+    if (tabs.data("ui-tabs"))
+      tabs.tabs("refresh");
+  }
+
+  /** The results are one panel again once the last plugin tab has gone --
+   * the shape resultsTabFor found them in, and the shape a page that never
+   * loaded a plugin keeps. */
+  collapseResultsTabs () {
+    const tabs = $("#resultsTabs");
+    if (tabs.length === 0)
+      return;
+    if (tabs.children("div[id]").filter((i, e) => e.id !== APP_RESULTS_TAB).length > 0)
+      return;
+    const mine = $("#" + APP_RESULTS_TAB).children("div").first();
+    if (tabs.data("ui-tabs"))
+      tabs.tabs("destroy");
+    mine.insertBefore(tabs);
+    tabs.remove();
+    this.resultsTargetSel = "#results > div";
+    this.resultsWidget.setTarget(this.resultsTarget);
+  }
+
+  /** ...and the title says what the page is again once the last plugin
+   * screen has gone: nothing left to switch between. */
+  dropScreenTabs () {
+    const tabs = $("#screenTabs");
+    if (tabs.length === 0)
+      return;
+    tabs.empty().hide();
+    this.screenTabsLive = false;
+    const title = $("#title h1").first();
+    const named = title.find(".screenName").first();
+    (named.length ? named : title).show();
+  }
+
+  /**
    * Add a plugin's verbs to this app (§5, inventory row 10).
    *
    * ShExMap's verbs were methods on a subclass of this, which is why its
@@ -3372,10 +3532,12 @@ class ShExBaseApp {
    * (the worker app had its own materializer, until rows 15 and 16).
    */
   mixinPluginMethods (ext) {
+    ext.mixedIn = ext.mixedIn || [];
     Object.keys(ext.methods || {}).forEach(name => {
       if (name in this)
         return;
       this[name] = ext.methods[name].bind(this);
+      ext.mixedIn.push(name); // what to take back on unloadPlugin
     });
   }
 
@@ -3548,15 +3710,28 @@ class ShExBaseApp {
     return true;
   }
 
-  /** one tab, unless it is already there */
+  /** one tab, unless it is already there.
+   *
+   * A plugin's tab carries an × : the plugin came from a URL and can go
+   * back where it came from (unloadPlugin).  The validator's does not --
+   * it is the page, not a guest on it. */
   addScreenTabFor (id, label) {
     const tabs = $("#screenTabs");
     if (tabs.children().filter((i, b) => $(b).attr("data-screen") === id).length > 0)
       return;
-    $("<button/>", {type: "button", role: "tab", text: label,
+    const tab = $("<button/>", {type: "button", role: "tab",
                     "data-screen": id, "aria-selected": String(id === this.currentScreen())})
+      .append($("<span/>").addClass("screenTabLabel").text(label))
       .on("click", () => this.showScreen(id))
       .appendTo(tabs);
+    if (id !== "")
+      $("<span/>").addClass("unloadPlugin")
+        .attr({role: "button", title: "unload " + label, "aria-label": "unload " + label})
+        .text("\u00d7")
+        // the × is inside the tab, so pressing it would otherwise also
+        // switch to the screen it is about to remove
+        .on("click", evt => { evt.stopPropagation(); this.unloadPlugin(id); })
+        .appendTo(tab);
   }
 
   /** which screen is up: the hidden input is the one place it is written */
@@ -3782,12 +3957,15 @@ class ShExBaseApp {
       if (binding.bound)
         return; // this descriptor was applied before
       binding.bound = true;
-      this.keyDownHandlers.push(e => {
+      // tagged with whose it is: unloadPlugin has to find it again
+      const handler = e => {
         if (!!binding.key.ctrl !== e.ctrlKey || e.key !== binding.key.key)
           return false;
         this.runPluginAction(binding);
         return true;
-      });
+      };
+      handler.plugin = ext.id;
+      this.keyDownHandlers.push(handler);
     });
   }
 

@@ -77,6 +77,22 @@ const ShExPlugins = (function () {
       };
     },
 
+    /**
+     * Take one back out, and hand it back.
+     *
+     * A plugin is loaded by URL, so it can be unloaded the same way -- the
+     * ×  on its screen tab (ShExBaseApp's unloadPlugin, which undoes what
+     * applying the descriptor did to the page).  Here is only the register:
+     * once a descriptor is out of it, nothing that reads the plugins --
+     * extendSchema, makeRenderer, the handlers a validation registers, the
+     * worker scripts a request names -- knows anything about it, and the
+     * same module may register again later.
+     */
+    unregister (id) {
+      const at = registered.findIndex(d => d.id === id);
+      return at === -1 ? null : registered.splice(at, 1)[0];
+    },
+
     /** every descriptor, in the order they registered */
     all () { return registered.slice(); },
 

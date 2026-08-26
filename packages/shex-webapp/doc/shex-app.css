@@ -280,6 +280,20 @@ label {
     color: #000;
     font-weight: bold;
 }
+/* The × that unloads the plugin whose tab it is.  Quiet until the tab is
+   under the mouse: a reader switching screens should not keep finding a
+   button that takes one away. */
+#screenTabs .unloadPlugin {
+    margin-left: .5em;
+    padding: 0 .15em;
+    border-radius: .2em;
+    color: #999;
+    opacity: 0;
+    cursor: pointer;
+}
+#screenTabs button:hover .unloadPlugin,
+#screenTabs button:focus-within .unloadPlugin { opacity: 1; }
+#screenTabs .unloadPlugin:hover { color: #a00; background-color: #f4dede; }
 /* A screen's columns stand side by side and stretch to the tallest of
    them, so a pane that is alone in its column may have all of it: the
    overlay ShExReduce puts where the schema stands gets the height that

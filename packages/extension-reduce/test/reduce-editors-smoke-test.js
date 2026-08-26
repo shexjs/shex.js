@@ -103,7 +103,8 @@ if (!TEST_browser) {
         .to.deep.equal(["validation", "AST"]);
       expect(screen.find(".pluginToolbar button").map((i, b) => b.id).get())
         .to.deep.equal(["reduce"]);
-      expect($("#screenTabs button").map((i, b) => $(b).text()).get(),
+      expect($("#screenTabs button").map(
+        (i, b) => $(b).find(".screenTabLabel").text() || $(b).text()).get(),
              "and a tab to switch by").to.deep.equal(["Validator", "ShExReduce"]);
       expect(typeof dom.window.ShExWebApp.Reduce, "the fold it runs on").to.equal("object");
       expect(typeof dom.window.ShExWebApp.ReduceJs, "and the language its actions are in")
@@ -261,6 +262,37 @@ if (!TEST_browser) {
         left: {op: "Add", left: {op: "num", value: 1}, right: {op: "num", value: 2}},
         right: {op: "num", value: 3},
       });
+    });
+
+    /* ...and the × on its tab takes it back off, from the screen it is on:
+     * the panes it borrowed are the app's own, and go home rather than out
+     * with the screen that was holding them.  Last, since nothing of it is
+     * left afterwards. */
+    it("should hand the app's panes back when it is unloaded", function () {
+      $("#screenTabs button[data-screen]").last().trigger("click");
+      expect($("#inputData").closest("#screens > .screen").length, "on its screen")
+        .to.equal(1);
+
+      $("#screenTabs .unloadPlugin").first().trigger("click");
+
+      expect(dom.window.ShExPlugins.all(), "out of the register").to.deep.equal([]);
+      expect($("#inputData").parent().attr("id"), "the data pane went home")
+        .to.equal("inputarea");
+      expect($("#schemaDocument").parent().attr("id"), "and the schema document")
+        .to.equal("inputSchema");
+      expect($("#inputData textarea, #inputData .shexjs-editor-pane").length,
+             "with what was in it").to.be.above(0);
+      expect($("#screens > .screen").length, "the screen it lent them to is gone")
+        .to.equal(0);
+      expect($("#reduceOverlay, #reduceAst, #reduce").length, "and its own panes with it")
+        .to.equal(0);
+      expect(Object.keys(shared.Caches).sort(), "so are the caches under them")
+        .to.deep.equal(["inputData", "inputSchema", "manifest", "plugin", "shapeMap"]);
+      // its AST tab was the only reason the results were tabs at all
+      expect($("#resultsTabs").length, "the results are one panel again").to.equal(0);
+      expect($("#results > div").length).to.equal(1);
+      expect($("#screenTabs").css("display"), "and the title is the whole title")
+        .to.equal("none");
     });
 
     /* Nothing of ShExReduce is in the page: it is the app page, told a URL. */

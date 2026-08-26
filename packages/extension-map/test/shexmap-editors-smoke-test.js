@@ -194,10 +194,12 @@ if (!TEST_browser) {
       expect($("#title h1 .screenName").css("display"), "and the switch in the rest's place")
         .to.equal("none");
       expect(tabs.find("button").first().text(), "which is what the first tab says")
-        .to.equal("Validator");
+        .to.equal("Validator"); // and no ×: the validator is the page, not a guest
       expect(tabs.find("button").map((i, b) => $(b).attr("data-screen")).get())
         .to.deep.equal(["", "http://shex.io/extensions/Map/#"]);
-      expect(tabs.find("button").last().text()).to.equal("ShExMap");
+      expect(tabs.find("button").last().find(".screenTabLabel").text()).to.equal("ShExMap");
+      expect(tabs.find("button").last().find(".unloadPlugin").length,
+             "and an × to unload it by").to.equal(1);
       expect(tabs.find("button[aria-selected='true']").attr("data-screen"),
              "the validator's is the one pressed").to.equal("");
       expect($("#screens > .screen").css("display"), "and the map's is away").to.equal("none");

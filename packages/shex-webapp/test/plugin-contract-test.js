@@ -28,6 +28,7 @@ const CONTRACT = {
   keys: "verbs with no button",
   methods: "verbs, mixed into the app",
   init: "what it does rather than declares",
+  unload: "what to take back when it goes",
   register: "the handler a schema dispatches",
   schema: "a turn at what is validated",
   results: "composing the renderer",
@@ -35,7 +36,7 @@ const CONTRACT = {
   worker: "its half in the worker",
 };
 /** filled in by the register and the app, not written by an author */
-const BOOKKEEPING = ["baseUrl", "applied", "initialized", "panesBuilt"];
+const BOOKKEEPING = ["baseUrl", "applied", "initialized", "panesBuilt", "mixedIn"];
 
 describe("the plugin contract", () => {
   const doc = read("doc/plugins.md");

@@ -223,6 +223,101 @@ if (!TEST_browser) {
     });
   });
 
+  /* A plugin came from a URL, and the × on its screen tab is the way back
+   * out: the page it leaves is the page it arrived at. */
+  describe("shex-simple, told to unload the plugin it loaded", function () {
+    this.timeout(20000);
+    let dom, $, shared, descriptor;
+    const set = (selector, value) => {
+      const elt = $(selector).first();
+      elt.val(value);
+      elt.trigger("change");
+    };
+
+    before(async function () {
+      ({dom, $, shared} = await boot("?editors=1&plugin=" + encodeURIComponent(MAP_PLUGIN)));
+      descriptor = dom.window.ShExPlugins.byId(MAP_ID);
+    });
+    after(function () { if (dom) dom.window.close(); });
+
+    it("should offer an × on the plugin's tab and none on the validator's", function () {
+      expect($("#screenTabs button[data-screen=''] .unloadPlugin").length,
+             "the validator is the page, not a guest").to.equal(0);
+      const mine = $("#screenTabs button").filter(
+        (i, b) => $(b).attr("data-screen") === MAP_ID);
+      expect(mine.find(".unloadPlugin").length, "and the plugin has a door").to.equal(1);
+      expect(mine.find(".unloadPlugin").attr("title")).to.equal("unload ShExMap");
+    });
+
+    it("should take the whole of it off the page when the × is pressed", function () {
+      expect(typeof shared.app.materialize, "a verb it mixed in").to.equal("function");
+      $("#screenTabs .unloadPlugin").first().trigger("click");
+
+      expect(dom.window.ShExPlugins.all(), "out of the register").to.deep.equal([]);
+      expect($("#screens > .screen").length, "screen gone").to.equal(0);
+      expect($("head style[data-plugin]").length, "sheet gone").to.equal(0);
+      expect($("#outputShapeMap").length, "and the controls with it").to.equal(0);
+      expect(Object.keys(shared.Caches).sort(), "the caches it declared, gone")
+        .to.deep.equal(["inputData", "inputSchema", "manifest", "plugin", "shapeMap"]);
+      expect(Object.keys(shared.Caches.editorSupport.panes).sort(),
+             "and the editors over them").to.deep.equal(["inputData", "inputSchema"]);
+      expect(shared.app.QueryParams.filter(
+        p => ["bindings", "statics", "outSchema", "output-map"].includes(p.queryStringParm)),
+             "nothing left to fill them from").to.deep.equal([]);
+      expect(shared.app.Getables.filter(
+        g => ["bindings", "statics", "outSchema"].includes(g.queryStringParm)),
+             "nor to fetch them by URL").to.deep.equal([]);
+      expect(typeof shared.app.materialize, "the verb went back too").to.equal("undefined");
+    });
+
+    it("should give the page its title and its results back", function () {
+      expect($("#screenTabs").css("display"), "nothing left to switch between")
+        .to.equal("none");
+      expect($("#title h1 .screenName").css("display"), "so the title says it all")
+        .to.not.equal("none");
+      expect($("#screen").val(), "and the validator is what is showing").to.equal("");
+      expect($("#inputSchema").css("display")).to.not.equal("none");
+      // ...and the results are one panel again, which is the shape a page
+      // that never loaded a plugin has them in
+      expect($("#resultsTabs").length, "the tabs are gone").to.equal(0);
+      expect($("#results > div").length, "and this app's results are back").to.equal(1);
+      expect(shared.app.resultsTarget).to.equal("#results > div");
+    });
+
+    it("should stop naming it in the permalink", async function () {
+      const parms = (await shared.app.getPermalink()).split(/[?&]/);
+      expect(parms.filter(p => p.startsWith("plugin") || p.startsWith("extension")),
+             "a reload comes back without it").to.deep.equal([]);
+    });
+
+    it("should validate as a page that never loaded one", async function () {
+      set("#inputSchema textarea",
+          "PREFIX : <http://a.example/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n:S { :p xsd:integer }");
+      set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .");
+      set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
+      $("#validate").trigger("click");
+      await shared.promise;
+      expect($("#results .passes").length, "it still validates").to.be.above(0);
+    });
+
+    /* The module is still on the page -- a classic script cannot be un-run
+     * -- so registering again is the cheap thing to do, and has to work:
+     * everything the descriptor's bookkeeping said was already built was
+     * unsaid on the way out. */
+    it("should build the whole of it again if the same plugin registers", function () {
+      dom.window.ShExPlugins.register(descriptor);
+      expect(dom.window.ShExPlugins.all().map(e => e.label)).to.deep.equal(["ShExMap"]);
+      expect($("#screens > .screen[data-plugin]").length, "one screen, built afresh").to.equal(1);
+      expect($("#screens > .screen .panel > div[id]").map((i, e) => e.id).get())
+        .to.deep.equal(["bindings1", "staticVars", "outputSchema"]);
+      expect(Object.keys(shared.Caches)).to.include.members(["bindings", "statics", "outputSchema"]);
+      expect(typeof shared.app.materialize, "and its verbs are back").to.equal("function");
+      expect($("#screenTabs button").length, "so is its tab").to.equal(2);
+      expect($("#resultsTabs > #materializationResults").length, "and its results tab")
+        .to.equal(1);
+    });
+  });
+
   describe("shex-simple, given a semantic-action extension module", function () {
     this.timeout(20000);
     let dom, $, shared;
