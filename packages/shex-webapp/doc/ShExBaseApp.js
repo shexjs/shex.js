@@ -4581,24 +4581,29 @@ class ShExBaseApp {
       return acc
     }, {});
 
-    // Parse the shape-map using the prefixes and base.
-    const shapeMapErrors = $("#queryMap").val().trim().length > 0
-          ? this.Caches.shapeMap.copyQueryMapToEditMap()
-          : this.Caches.shapeMap.makeFreshEditMap();
+    // Parse the shape-map using the prefixes and base.  What it reports is
+    // rendered where the map is; this is called for what it fills in -- and
+    // awaited, so that a link finishes loading with the map it named ready
+    // to validate rather than still being built.  (It reports its errors
+    // rather than throwing them, so a bad map is a message, not a failed
+    // load.)
+    if ($("#queryMap").val().trim().length > 0)
+      await this.Caches.shapeMap.copyQueryMapToEditMap();
+    else
+      this.Caches.shapeMap.makeFreshEditMap();
 
     this.customizeInterface();
     $("body").keydown(e => { // keydown because we need to preventDefault
       const code = e.keyCode || e.charCode; // standards anyone?
       return !this.keyDownHandlers.find(h => h(e, code)); // if we find a handler, stop propagation
     });
-    if ("schemaURL" in iface ||
-        // some schema is non-empty
-        ("schema" in iface &&
-         iface.schema.reduce((r, elt) => { return r+elt.length; }, 0))
-        && shapeMapErrors.length === 0) {
-      return callValidator();
-    }
-
+    // A link that carries a schema does not validate on arrival.  It used to
+    // say it did -- and threw a ReferenceError instead, for the two years
+    // since these became methods of a class (`callValidator()`, with no
+    // `this`), so nothing has ever run here.  Opening a link is not asking
+    // for the walk behind it: a permalink may name an endpoint or a Wikibase,
+    // where validating costs a hundred requests to somebody else's service.
+    // Press validate.
     return loaded;
   }
 

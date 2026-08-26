@@ -2048,6 +2048,26 @@ if (!TEST_browser) {
         .to.not.equal("none");
     });
 
+    /* A link that carries a schema does not validate on arrival.  The code
+     * said it did and threw a ReferenceError instead, for the two years
+     * since these became methods of a class, so nothing had ever run it --
+     * and opening a link is not asking for the walk behind it: a permalink
+     * may name an endpoint, where validating costs a hundred requests to
+     * somebody else's service. */
+    it("should load what a link carries without validating it", async function () {
+      const {$, shared} = await boot("?" + [
+        "schema=" + encodeURIComponent("PREFIX : <http://a.example/>\n:S { :p . }"),
+        "data=" + encodeURIComponent("PREFIX : <http://a.example/>\n:x :p 1 ."),
+        "shape-map=" + encodeURIComponent("<http://a.example/x>@<http://a.example/S>"),
+      ].join("&"));
+      expect($("#inputSchema textarea").first().val(), "the schema arrived").to.include(":S {");
+      expect($("#inputData textarea").first().val(), "and the data").to.include(":x :p 1");
+      expect($("#fixedMap .pair").length, "and the map it says to validate").to.equal(1);
+      expect($("#results .passes, #results .error").length,
+             "but nothing has been validated").to.equal(0);
+      expect(shared.app.valDebugSession, "and nothing is running").to.not.exist;
+    });
+
     it("should read the words that used to turn them off as textareas", async function () {
       const {$} = await boot("?editors=false");
       expect($("#editors").val(), "?editors=false means the textareas").to.equal("textarea");
