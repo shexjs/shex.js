@@ -2654,10 +2654,11 @@ class ShExResultsRenderer {
     fixedMapEntry.attr("title", entry.elapsed + " ms")
   }
 
-  /** are the language-aware editors on?  The results follow the rest of the
+  /** are the language-aware editors on?  They are what the app is unless
+   * the reader asked for textareas, and the results follow the rest of the
    * interface: editors everywhere, or textareas and <pre>s everywhere. */
   editorsOn () {
-    return "EditorPanes" in ShExWebApp && $("#editors").val() === "1";
+    return "EditorPanes" in ShExWebApp && $("#editors").val() !== "textarea";
   }
 
   /** One editor holding every result, as the array they are.
@@ -3254,10 +3255,14 @@ class ShExBaseApp {
       // way a shape could match, which some real data makes impractical
       {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr",
        manifest: {key: "regexpEngine"} },
-      // the select's "off" is the empty string, which is not what anyone
-      // types: ?editors=0 and ?editors=false mean the same thing
+      // The editors are what the app is, so the parameter is the way to
+      // ask for what it isn't: ?editors=textarea.  The words that used to
+      // turn them off mean that now, and the ones that turned them on mean
+      // the default and ride free -- ?editors=1 was in every link anyone
+      // wrote when they were the thing you had to ask for.
       {queryStringParm: "editors",      location: $("#editors"),         deflt: "",
-       normalize: v => /^(1|true|yes|on)$/i.test(v) ? "1" : ""},
+       normalize: v => /^(textarea|textareas|plain|0|false|no|off)$/i.test(v)
+                       ? "textarea" : ""},
       // which screen is up (a plugin's id; empty is the validator's own).
       // Plugins load before this list is walked, so their screens exist by
       // the time a permalink's choice arrives; a name no loaded plugin
@@ -3959,7 +3964,7 @@ class ShExBaseApp {
     return set;
   }
 
-  /** The Menu → "user interface" editors select (?editors=1 in permalinks)
+  /** The Menu → "user interface" editors select (?editors= in permalinks)
    * replaces the textareas with language-aware CodeMirror panes (when the
    * webpack bundle includes EditorPanes); the textareas stay in the DOM as
    * live value proxies so caches/permalinks/tests are unaffected.  Toggling
@@ -3967,7 +3972,7 @@ class ShExBaseApp {
    * comparing editor and textarea behaviors.
    */
   setEditors () {
-    const want = "EditorPanes" in ShExWebApp && $("#editors").val() === "1";
+    const want = "EditorPanes" in ShExWebApp && $("#editors").val() !== "textarea";
     if (want && !this.editorSupport) {
       this.editorSupport = new EditorSupport(this);
       // ShExResultsRenderer reaches editorSupport through its caches

@@ -158,14 +158,15 @@ if (!TEST_browser) {
         .to.include('"not a number"');
     });
 
-    it("should carry editors=1 into the permalink", async function () {
-      expect($("#editors").val(), "menu select set from ?editors=1").to.equal("1");
-      $("#menu-button").trigger("click"); // permalink is built when the menu opens
+    it("should leave the editors out of the permalink", async function () {
+      expect($("#editors").val(), "the editors are what the app is").to.equal("");
+      $("#permalink a").removeAttr("href"); // built afresh when the menu opens
+      $("#menu-button").trigger("click");
       let href;
       for (let i = 0; i < 100 && !(href = $("#permalink a").attr("href")); ++i)
         await new Promise(resolve => setTimeout(resolve, 20));
       $("#menu-button").trigger("click"); // close it again
-      expect(href, "permalink: " + href).to.include("editors=1");
+      expect(href, "permalink: " + href).to.not.include("editors=");
     });
   });
 }

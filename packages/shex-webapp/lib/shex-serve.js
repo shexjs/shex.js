@@ -193,7 +193,7 @@ SharedArrayBuffer, e.g. for debugger worker suspension).`);
         console.log(`serving ${root} on http://localhost:${port}/${opts.coi ? " (cross-origin isolated)" : ""}`);
         KnownPages.filter(page => Fs.existsSync(Path.join(root, page))).forEach(page => {
             console.log(`  http://localhost:${port}/${page}`);
-            console.log(`  http://localhost:${port}/${page}?editors=1   (language-aware editors)`);
+            console.log(`  http://localhost:${port}/${page}?editors=textarea   (plain textareas)`);
         });
     });
 }

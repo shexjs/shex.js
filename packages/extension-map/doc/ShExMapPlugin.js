@@ -852,7 +852,7 @@ const ShExMapVerbs = {
     }
   },
 
-  /** map a materialization onto the editor panes (?editors=1), the
+  /** map a materialization onto the editor panes, the
    * materialization counterpart of EditorSupport.reportValidation: each
    * generated triple in the result pane hover-links to the output-schema
    * constraint that synthesized it and to the binding (or static) whose

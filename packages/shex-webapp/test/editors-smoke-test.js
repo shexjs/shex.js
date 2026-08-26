@@ -1,4 +1,7 @@
-/** Smoke test for ?editors=1 (EditorSupport / CodeMirror panes): the app
+/** Smoke test for the editors (EditorSupport / CodeMirror panes), which are
+ * what the app is unless ?editors=textarea says otherwise -- this suite boots
+ * the legacy spelling of asking for them, ?editors=1, and the last describe
+ * covers the two ends the switch now has.  The app
  * must boot, auto-load the examples manifest, and report no errors -- the
  * editorSupport stash once leaked into the Caches iteration and broke
  * manifest loading with "Cannot read properties of undefined (reading
@@ -44,7 +47,7 @@ if (!TEST_browser) {
       })
     ]
   };
-  describe("shex-simple with ?editors=1", function () {
+  describe("shex-simple with ?editors=1 (the legacy spelling of the default)", function () {
     this.timeout(20000);
     const page = "packages/shex-webapp/doc/shex-simple.html";
 
@@ -352,7 +355,7 @@ if (!TEST_browser) {
 
       afterEach(async function () {
         $("#interface").val(wasInterface).trigger("change");
-        $("#editors").val("1").trigger("change");
+        $("#editors").val("").trigger("change");
         // put back the one entry the other tests were left expecting
         shared.Caches.shapeMap.removeEditMapPair(null);
         set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
@@ -424,7 +427,7 @@ if (!TEST_browser) {
       });
 
       it("should render results as <pre> when the editors are off", async function () {
-        $("#editors").val("").trigger("change");
+        $("#editors").val("textarea").trigger("change");
         $("#validate").trigger("click");
         await shared.promise;
 
@@ -1522,14 +1525,25 @@ if (!TEST_browser) {
         .to.include('"not a number"');
     });
 
-    it("should carry editors=1 into the permalink", async function () {
-      expect($("#editors").val(), "menu select set from ?editors=1").to.equal("1");
-      $("#menu-button").trigger("click"); // permalink is built when the menu opens
-      let href;
-      for (let i = 0; i < 100 && !(href = $("#permalink a").attr("href")); ++i)
-        await new Promise(resolve => setTimeout(resolve, 20));
-      $("#menu-button").trigger("click"); // close it again
-      expect(href, "permalink: " + href).to.include("editors=1");
+    it("should leave the editors out of the permalink and name the textareas", async function () {
+      expect($("#editors").val(), "the editors are what the app is").to.equal("");
+      const on = await permalink();
+      expect(on, "the default rides free: " + on).to.not.include("editors=");
+
+      $("#editors").val("textarea").trigger("change");
+      const off = await permalink();
+      expect(off, "asking for the textareas is carried: " + off).to.include("editors=textarea");
+      $("#editors").val("").trigger("change"); // put them back for the rest
+
+      async function permalink () {
+        $("#permalink a").removeAttr("href"); // built afresh when the menu opens
+        $("#menu-button").trigger("click");
+        let href;
+        for (let i = 0; i < 100 && !(href = $("#permalink a").attr("href")); ++i)
+          await new Promise(resolve => setTimeout(resolve, 20));
+        $("#menu-button").trigger("click"); // close it again
+        return href;
+      }
     });
 
     it("should validate edited pane text (cache staleness regression)", async function () {
@@ -1863,15 +1877,75 @@ if (!TEST_browser) {
       const schemaTextarea = $("#inputSchema textarea").first();
       const before = schemaTextarea.val();
 
-      $("#editors").val("").trigger("change");
+      $("#editors").val("textarea").trigger("change");
       expect($(".shexjs-editor-pane").length, "panes removed").to.equal(0);
       expect(schemaTextarea[0].style.display).not.to.equal("none");
       expect(schemaTextarea.val(), "textarea kept the edited text").to.equal(before);
       expect(shared.Caches.editorSupport, "stash removed").to.equal(undefined);
 
-      $("#editors").val("1").trigger("change");
+      $("#editors").val("").trigger("change");
       expect($("#inputSchema .shexjs-editor-pane").length, "schema pane back").to.equal(1);
       expect($("#inputSchema textarea").first().val(), "text survived the round trip").to.equal(before);
+    });
+  });
+  /* The editors used to be the thing you asked for; now they are the app and
+   * ?editors=textarea is the ask.  Both ends, from a cold boot. */
+  describe("what a page boots with", function () {
+    this.timeout(20000);
+    const page = "packages/shex-webapp/doc/shex-simple.html";
+    let dom;
+
+    afterEach(function () {
+      if (dom)
+        dom.window.close();
+      dom = null;
+    });
+
+    async function boot (search) {
+      const base = Path.join(__dirname, "../../..", page);
+      const virtualConsole = new jsdom.VirtualConsole().forwardTo(console);
+      virtualConsole.removeAllListeners("debug");
+      dom = new JSDOM(Fs.readFileSync(base, "utf8"), {
+        url: GitRootServer.urlFor(page + search),
+        runScripts: "dangerously",
+        resources: StaticResourceConfig,
+        pretendToBeVisual: true, // CodeMirror needs rAF etc.
+        virtualConsole,
+      });
+      dom.window.fetch = node_fetch;
+      if (!dom.window.CSS)
+        dom.window.CSS = { escape: s => String(s).replace(/[^a-zA-Z0-9_\u00A0-\uFFFF-]/g, c => `\\${c}`) };
+      dom.window.Range.prototype.getClientRects = function () { return []; };
+      dom.window.Range.prototype.getBoundingClientRect =
+        function () { return {x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0, width: 0, height: 0}; };
+      const shared = await new Promise((resolve, reject) => {
+        dom.window._testCallback = (parm) => parm instanceof Error ? reject(parm) : resolve(parm);
+      });
+      await shared.promise;
+      return {$: dom.window.$, shared};
+    }
+
+    it("should open with the editors when nothing is asked for", async function () {
+      const {$} = await boot("");
+      expect($("#editors").val(), "the select agrees").to.equal("");
+      expect($("#inputSchema .shexjs-editor-pane").length, "schema pane").to.equal(1);
+      expect($("#inputData .shexjs-editor-pane").length, "data pane").to.equal(1);
+      expect($("#inputSchema textarea").first()[0].style.display, "textarea stood down")
+        .to.equal("none");
+    });
+
+    it("should open with textareas when ?editors=textarea asks for them", async function () {
+      const {$} = await boot("?editors=textarea");
+      expect($("#editors").val(), "the select agrees").to.equal("textarea");
+      expect($(".shexjs-editor-pane").length, "no panes anywhere").to.equal(0);
+      expect($("#inputSchema textarea").first()[0].style.display, "the textarea is the pane")
+        .to.not.equal("none");
+    });
+
+    it("should read the words that used to turn them off as textareas", async function () {
+      const {$} = await boot("?editors=false");
+      expect($("#editors").val(), "?editors=false means the textareas").to.equal("textarea");
+      expect($(".shexjs-editor-pane").length, "so no panes").to.equal(0);
     });
   });
 }

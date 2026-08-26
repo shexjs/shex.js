@@ -119,7 +119,7 @@ Applied in this order, once per app:
    {name: "bindings",        // this.Caches[name]
     id: "bindings1",         // the div's id, for your CSS and your code
     kind: "json",            // json | schema | turtle: which cache class
-    editor: "json",          // json | shexc | turtle: the ?editors=1 pane
+    editor: "json",          // json | shexc | turtle: the editor pane
     panel: "inputs",         // which column of the screen; omit to share one
     rows: 19,                // its share of the column, and the rows it
                              // falls back to where nothing is sharing

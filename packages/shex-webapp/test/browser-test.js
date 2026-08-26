@@ -783,6 +783,10 @@ async function loadPage (page, searchParms) {
   // }
 
   function getDom (page, searchParms) {
+    // the editors are the app now; this suite is the plain-textarea one (and
+    // its jsdom has no rAF for CodeMirror), so it asks for the textareas
+    if (!/[?&]editors=/.test(searchParms))
+      searchParms += (searchParms.startsWith("?") ? "&" : "?") + "editors=textarea"
     let url = GitRootServer.urlFor(page + searchParms)
     // forward page console traffic, but drop the expected jsdom complaint
     // from tests that set location.search (jsdom can't navigate)
