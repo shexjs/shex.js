@@ -106,7 +106,6 @@ class DirectShExMaterializer {
     this.frameOrigins = materializer.frameOrigins; // ... and where each was written
     time = new Date() - time;
     $("#shapeMap-tabs").attr("title", "last materialization: " + time + " ms");
-    $("#results .status").text("rendering results...").show();
 
     return generatedGraph;
   }
@@ -222,7 +221,7 @@ const ShExMapVerbs = {
             await this.collectMaterializationInputs();
       const materializer = this.getMaterializer(outputSchema, outputShapeMap, resultBindings, staticVars);
       this.clearResults();
-      $("#results .status").text("materializing data...").show();
+      this.resultsTabStatus(MATERIALIZATION_TAB).text("materializing data...").show();
 
       // a MaterializationError propagates to the outer catch, which anchors
       // its failures in the output-schema editor pane
@@ -241,7 +240,9 @@ const ShExMapVerbs = {
       // validation results back.  It renders the appinfo results, which it
       // already did when the validation ended and which now sit in their own
       // tab, so calling it again only rendered them a second time.
-      $("#results .status").text("materialization results").show();
+      // ...and nothing is said here: the tab is called "materialization",
+      // which is what a line saying "materialization results" said.
+      this.resultsTabStatus(MATERIALIZATION_TAB).text("").hide();
       this.renderMaterializedGraph(generatedGraph, outputShapeMap, materializer.provenance);
       this.renderAcceptAlternatives(materializer, outputShapeMap);
       return { materializationResults: generatedGraph };
@@ -555,7 +556,7 @@ const ShExMapVerbs = {
   previewThread (thread, complete, label) {
     const session = this.debugSession;
     this.clearResults();
-    $("#results .status").text(label).show();
+    this.resultsTabStatus(MATERIALIZATION_TAB).text(label).show();
     const bindingState = this.bindingStateText(thread);
     if (bindingState)
       this.resultsWidget.append($("<pre/>", {class: "dbgBindingState"}).text(bindingState));
@@ -629,7 +630,8 @@ const ShExMapVerbs = {
                  .text((a === materializer.chosen ? "★" : "") + (i + 1))
                  .on("click", () => {
                    this.clearResults();
-                   $("#results .status").text("materialization alternative " + (i + 1)).show();
+                   this.resultsTabStatus(MATERIALIZATION_TAB)
+                     .text("alternative " + (i + 1)).show();
                    const store = new RdfJs.Store();
                    store.addQuads(a.quads);
                    this.renderMaterializedGraph(store, outputShapeMap, a.provenance);
@@ -673,7 +675,7 @@ const ShExMapVerbs = {
       this.anchorMaterializationFailures(null, session.materializer.lastReport);
       const generatedGraph = new RdfJs.Store();
       generatedGraph.addQuads(session.dbg.quads);
-      $("#results .status").text("materialization results (debugged)").show();
+      this.resultsTabStatus(MATERIALIZATION_TAB).text("stepped through").show();
       this.renderMaterializedGraph(generatedGraph, session.outputShapeMap,
                                    session.materializer.provenance);
       this.renderAcceptAlternatives(session.materializer, session.outputShapeMap);
@@ -716,7 +718,7 @@ const ShExMapVerbs = {
   },
 
   reportMaterializationError (materializationError, currentAction) {
-    $("#results .status").text("materialization errors:").show();
+    this.resultsTabStatus(MATERIALIZATION_TAB).text("errors:").show();
     if (materializationError && Array.isArray(materializationError.failures))
       materializationError.inputError = true; // schema/bindings problem, not a bug
     this.resultsWidget.failMessage(materializationError, currentAction);

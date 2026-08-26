@@ -3371,8 +3371,22 @@ class ShExBaseApp {
       return $();
     let aside = tabs.children(".resultsTabsAside").first();
     if (aside.length === 0)
-      aside = $("<div/>").addClass("resultsTabsAside").prependTo(tabs);
+      aside = $("<div/>").addClass("resultsTabsAside").appendTo(tabs);
     return aside;
+  }
+
+  /** A results tab's own status line, for what a plugin has to say about
+   * what is in it.  In it: a tab says what kind of result it holds, and
+   * anything more particular than that belongs where the results are
+   * rather than over the whole results area. */
+  resultsTabStatus (id) {
+    const panel = $("#" + id);
+    if (panel.length === 0)
+      return $();
+    let status = panel.children(".status").first();
+    if (status.length === 0)
+      status = $("<h2/>").addClass("status").prependTo(panel);
+    return status;
   }
 
   /** Bring a results tab up, if the results are tabs at all.  A plugin
@@ -3416,7 +3430,7 @@ class ShExBaseApp {
         // a tab the plugin renders into, and shows and hides itself: the
         // materialization's comes and goes with the bindings it was made
         // from, so the <li> is ShExMap's to add (showMaterialization)
-        panel.css("display", "none").append($("<div/>"));
+        panel.css("display", "none").append($("<h2/>").addClass("status"), $("<div/>"));
       } else {
         // ...and a pane's tab is there as long as the pane is
         $("<li/>").append($("<a/>", {href: "#" + id}).text(label || id))

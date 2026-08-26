@@ -128,6 +128,18 @@ if (!TEST_browser) {
       // share one, the output schema declared a `panel` of its own
       expect(screen.children(".screenColumns").children(".panel").length, "two columns")
         .to.equal(2);
+      /* A screen is stretched to what holds it rather than asking for its
+       * height, so what is under its panes -- the toolbar, the statusbar --
+       * lands on the foot of the screen rather than under the panes. */
+      expect($("#screens").css("display"), "the screens are a column").to.equal("flex");
+      expect($("#inputarea > #screens").css("flex"), "taking the middle")
+        .to.include("1 1");
+      expect(screen.css("flex"), "and the screen showing takes that")
+        .to.include("1 1");
+      expect(screen.children().last().hasClass("pluginToolbar")
+             || screen.children().last().hasClass("pluginStatusbar"),
+             "with the controls at the foot of it").to.equal(true);
+
       /* ...and they fill the screen the way the validator's columns fill
        * the page: the column shares its height among its panes, and each
        * pane's document takes what its pane has left. */
@@ -205,6 +217,25 @@ if (!TEST_browser) {
      * it, and they belong to the app rather than to any one screen -- a
      * materialization's tab sits beside a validation's whichever screen is
      * showing, in the same place at the bottom of the page. */
+    /* The tab is called "materialization"; a line over the results saying
+     * "materialization results" said it twice.  What ShExMap has to say
+     * about a particular materialization -- which alternative, that it was
+     * stepped through -- it says inside that tab. */
+    it("should say what it has to say inside its own tab", async function () {
+      $("#screenTabs button[data-screen='']").trigger("click");
+      $("#validate").trigger("click");
+      await shared.promise;
+      $("#materialize").trigger("click");
+      await shared.promise;
+
+      expect($("#results > .status").css("display"), "nothing over the results")
+        .to.equal("none");
+      expect($("#materializationResults > .status").length,
+             "the tab has a line of its own to use").to.equal(1);
+      expect($("#materializationResults > .status").text(),
+             "and says nothing the tab label says").to.not.include("materialization results");
+    });
+
     it("should keep the results below, across screens", async function () {
       $("#screenTabs button[data-screen='']").trigger("click");
       $("#validate").trigger("click");
@@ -505,10 +536,18 @@ if (!TEST_browser) {
       expect($("#results").text()).to.include('"+1"'); // chosen: first disjunct
 
       // pick the other accepted thread
-      // in the corner of the tab strip, not among the results: it is about
-      // them, and putting it in with them pushed them off the bottom
-      expect($(".dbgAlternatives").closest("#resultsTabs").length, "in the tab strip")
+      // at the right-hand end of the tab strip, out of the flow: it is
+      // about the results, and putting it in with them pushed them down
+      const aside = $(".resultsTabsAside");
+      expect(aside.find(".dbgAlternatives").length, "in the strip's own corner")
         .to.equal(1);
+      expect(aside.closest("#resultsTabs").length).to.equal(1);
+      expect(aside.css("position"), "out of the flow").to.equal("absolute");
+      expect(aside.css("right"), "at the right-hand end").to.not.equal("auto");
+      // ...and as wide as what it says: #results' own rule makes every div
+      // in there 99% wide, and a 99%-wide box anchored right puts its text
+      // at the left, over the tabs it is supposed to sit beside
+      expect(aside.css("width"), "not the width of the strip").to.not.equal("99%");
       expect($(".dbgAlternatives").closest("#materializationResults").length,
              "and not among the results it is about").to.equal(0);
       $("#results .dbgAlternatives button").last().trigger("click");

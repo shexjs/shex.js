@@ -182,6 +182,38 @@ Applied in this order, once per app:
 `run` may return a promise; a failure is reported where the results go
 rather than thrown into the console.
 
+### Where a plugin writes
+
+A plugin owns two places, and the contract is built to hand it those and
+nothing else:
+
+- **its screen** -- the panes, the toolbar and the statusbar it declared;
+- **its results tab** -- what it made, and a `resultsTabStatus(id)` line for
+  anything it has to say about what is in it.
+
+Everything else on the page belongs to the app: the title, the screen tabs,
+the validator's own screen and its results.  A tab is already labelled with
+the kind of result it holds, so a plugin has no reason to write over the
+results area as a whole -- ShExMap used to head it "materialization results"
+where the tab beside it said "materialization".  What it has to say that is
+more particular than the label ("stepped through", "alternative 3") it says
+on its own tab's status line.  The one thing over the results a plugin may
+have is `resultsTabsAside()`: the right-hand end of the tab strip, for a
+control *about* the results, which put among them would push them.
+
+Nothing enforces this -- a plugin is a script on the page and jQuery will
+find anything it asks for -- but the API is shaped so that the reaching is
+visible: `app.resultsTabStatus(id)`, `app.resultsTabsAside()`, and the
+descriptor for everything else.  A plugin writing `$("#inputSchema")` is
+doing something the contract has no name for, and that is the signal to ask
+for a hook rather than to keep reaching.
+
+One place ShExMap still reaches, deliberately: it writes `last
+materialization: N ms` into the shape map's tooltip, where the app writes
+the same thing for a validation.  A hook for "how long the verb took" would
+be the tidy answer if a third plugin ever wanted one; for two it would be
+ceremony, and the tooltip is where a reader who knows the app already looks.
+
 ### Validation
 
 | | |
