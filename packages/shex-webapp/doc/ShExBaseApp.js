@@ -2218,7 +2218,31 @@ class ShapeMapCache extends InterfaceCache {
    * had before.  Now the table is emptied by whichever run is still the
    * current one, at the point it has something to put there.
    */
+  /**
+   * Rebuild the Fixed Map, with the tab saying so while it happens.
+   *
+   * Said once however many rebuilds overlap, and unsaid however this one
+   * ends.  It used to restore whatever the label said on the way in -- for
+   * the second of two overlapping rebuilds, that is "resolving Fixed Map"
+   * -- and to restore nothing at all when a pair would not resolve, which
+   * is how a query map the data source cannot answer (`SPARQL '''…'''`
+   * asked of a local store) left the tab running for the rest of the
+   * session.
+   */
   async copyEditMapToFixedMap () {
+    if ((this.fixedMapRuns = (this.fixedMapRuns || 0) + 1) === 1) {
+      this.fixedMapLabel = this.fixedMapTab.text();
+      this.fixedMapTab.text("resolving Fixed Map").addClass("running");
+    }
+    try {
+      return await this.resolveFixedMap();
+    } finally {
+      if (--this.fixedMapRuns === 0)
+        this.fixedMapTab.text(this.fixedMapLabel).removeClass("running");
+    }
+  }
+
+  async resolveFixedMap () {
     const generation = this.fixedMapGeneration = (this.fixedMapGeneration || 0) + 1;
     const getQuads = async (s, p, o) => {
       const get = s === ShExWebApp.ShapeMap.Focus ? "subject" : "object";
@@ -2232,8 +2256,6 @@ class ShapeMapCache extends InterfaceCache {
       }
     }
 
-    const restoreText = this.fixedMapTab.text();
-    this.fixedMapTab.text("resolving Fixed Map").addClass("running");
     const nodeShapePromises = this.editMap.find(".pair").get().reduce((acc, queryPair) => {
       $(queryPair).find(".error").removeClass("error"); // remove previous error markers
       const node = $(queryPair).find(".focus").val();
@@ -2334,7 +2356,6 @@ class ShapeMapCache extends InterfaceCache {
     this.fixedMap.find("input").each((idx, focusElt) => {
       focusElt.scrollLeft = focusElt.scrollWidth;
     });
-    this.fixedMapTab.text(restoreText).removeClass("running");
     return []; // no errors
   }
 }

@@ -1019,6 +1019,39 @@ if (!TEST_browser) {
         expect(tabs()[1]).to.equal("Q42");
       });
 
+      /* The Fixed Map tab says what it is doing while it does it, and has
+       * to stop saying it however that ends.  A query map the source cannot
+       * answer -- a SPARQL SELECT asked of a local store, which is what a
+       * slurp leaves you looking at -- threw past the line that put the
+       * label back, and the tab read "resolving Fixed Map" for the rest of
+       * the session. */
+      it("should give the Fixed Map tab its label back when a pair won't resolve",
+         async function () {
+           source().select("rdfjs");
+           const tab = $('#shapeMap-tabs [href="#fixedMap-tab"]');
+           const label = tab.text();
+           expect(label, "not already stuck").to.equal("Fixed Map");
+
+           try {
+             $("#queryMap").val("SPARQL '''SELECT ?s { ?s ?p ?o }'''@START");
+             const errors = await shared.Caches.shapeMap.copyQueryMapToEditMap();
+             expect(errors.length, "a local store cannot answer that").to.be.above(0);
+             expect(String(errors[0]), "and says so")
+               .to.match(/QueryMap extension SPARQL is not supported/);
+             expect(tab.text(), "the tab is a tab again").to.equal(label);
+             expect(tab.hasClass("running"), "and not still resolving").to.equal(false);
+           } finally {
+             // a map the next test can build on, rather than whatever the
+             // last one left: this describe's tests share a page
+             $("#queryMap").val("<http://a.example/x>@<http://a.example/S>");
+             await shared.Caches.shapeMap.copyQueryMapToEditMap();
+             // ...and out of the app's 100ms "see shape map errors above"
+             // window, which is about a reader pressing validate on the
+             // heels of a failure rather than about the next test
+             await new Promise(resolve => setTimeout(resolve, 120));
+           }
+         });
+
       /* A source can have no document to edit at all -- a query service
        * answers from a store nobody typed -- and the schema and the results
        * are still there to point at each other.  Hovering used to be
