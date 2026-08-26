@@ -1673,6 +1673,52 @@ if (!TEST_browser) {
       }
     });
 
+    /* A mark is a claim about a validation of one schema against one
+     * document.  Editing either makes the claim stale in *both* panes, but
+     * only the edited one noticed: its own linter re-runs and replaces what
+     * is there, while the other pane, which nothing had happened to, kept
+     * pointing at an error that was no longer being made. */
+    it("should clear the marks in both panes when either is edited", async function () {
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      set("#inputSchema textarea", [
+        "PREFIX : <http://a.example/>",
+        "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>",
+        ":S { :p xsd:integer }",
+      ].join("\n"));
+      set("#inputData textarea", 'PREFIX : <http://a.example/>\n:x :p "not a number" .');
+      set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
+      await shared.promise;
+      $("#validate").trigger("click");
+      await shared.promise;
+
+      const support = shared.Caches.editorSupport;
+      expect(support.lastMapped.schema.length, "the schema is marked").to.be.above(0);
+      expect(support.lastMapped.data.length, "and so is the data").to.be.above(0);
+
+      const asked = [];
+      const real = {};
+      ["inputSchema", "inputData"].forEach(name => {
+        const pane = support.panes[name];
+        real[name] = pane.setDiagnostics.bind(pane);
+        pane.setDiagnostics = ds => { asked.push([name, ds.length]); return real[name](ds); };
+      });
+      try {
+        // one keystroke in the data, and the schema's marks go with it
+        $("#inputData textarea").first().trigger($.Event("keyup", {keyCode: 65}));
+        expect(asked.map(a => a[0]).sort(), "both panes were told")
+          .to.deep.equal(["inputData", "inputSchema"]);
+        expect(asked.every(a => a[1] === 0), "and told nothing is marked").to.equal(true);
+        expect(support.lastMapped, "the mapping goes too").to.equal(null);
+      } finally {
+        ["inputSchema", "inputData"].forEach(
+          name => { support.panes[name].setDiagnostics = real[name]; });
+      }
+    });
+
     it("should keep mid-edit parse errors off console.error", async function () {
       const errors = [];
       const origError = dom.window.console.error;

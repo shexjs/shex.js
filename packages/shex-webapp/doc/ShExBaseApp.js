@@ -1254,6 +1254,22 @@ class ManifestCache extends InterfaceCache {
         //   this.resultsWidget.clear();
         // }
         if (!(e.ctrlKey && (code === 10 || code === 13))) {
+          // A validation is about a schema and a document *together*, so an
+          // edit to either leaves the marks in both saying something about
+          // text that is no longer there.  The edited pane's go by
+          // themselves -- its own linter re-runs and replaces them -- and
+          // the other pane's, which nothing has happened to, are these.
+          //
+          // Unless it is the app writing rather than the reader typing: a
+          // pane swapping to another of the source's documents raises the
+          // same event (the editor writes through the textarea), and the
+          // marks are the point of the swap -- reaimAtShowingDocument hands
+          // the pane the ones belonging to the document now in it.
+          const source = this.caches.inputData && this.caches.inputData.neighborhoods;
+          if ((cache === "inputSchema" || cache === "inputData")
+              && this.caches.editorSupport
+              && !(source && source.showingPane))
+            this.caches.editorSupport.clearValidationMarks();
           later(e.target, cache, this.caches[cache]);
         }
       });
@@ -2912,6 +2928,22 @@ class EditorSupport {
     } catch (e) {
       console.warn("editor diagnostics failed:", e);
     }
+  }
+
+  /** Drop what the last validation marked, in both panes.
+   *
+   * Called when either is edited: a mark is a claim about a validation of
+   * one schema against one document, and editing either makes the claim
+   * about text that has moved or gone.  The hovers go with them, for the
+   * same reason -- they point at ranges in both panes at once. */
+  clearValidationMarks () {
+    this.lastMapped = null;
+    ["inputSchema", "inputData"].forEach(name => {
+      const pane = this.panes[name];
+      if (pane && pane.setDiagnostics)
+        pane.setDiagnostics([]);
+    });
+    this.setPairHovers([]);
   }
 
   /** Another document is showing: the data-side ranges are offsets into one
