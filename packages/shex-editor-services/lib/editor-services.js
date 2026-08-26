@@ -218,7 +218,7 @@ const JSON_PUNCTUATION = new Set(["[", "]", "{", "}", ",", ":"]);
  * exactly the text the reader is looking at -- and stays right through
  * whatever they type, since it is re-read from the pane's own text.
  *
- * (neighborhood-wikidata has a hand-written locator of its own for entity
+ * (neighborhood-wikibase has a hand-written locator of its own for entity
  * pages.  It predates this and serves a package that must not depend on an
  * editor: a CLI reading Wikibase JSON should not be pulling in CodeMirror.)
  */

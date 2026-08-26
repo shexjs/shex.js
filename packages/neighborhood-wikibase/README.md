@@ -1,12 +1,13 @@
-[![NPM Version](https://badge.fury.io/js/@shexjs%2Fneighborhood-wikidata.png)](https://npmjs.org/package/shex)
+[![NPM Version](https://badge.fury.io/js/@shexjs%2Fneighborhood-wikibase.png)](https://npmjs.org/package/shex)
 [![ShapeExpressions Gitter chat https://gitter.im/shapeExpressions/Lobby](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/shapeExpressions/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1213693.svg)](https://doi.org/10.5281/zenodo.1213693)
 
-# @shexjs/neighborhood-wikidata
+# @shexjs/neighborhood-wikibase
 Implementation of [`@shexjs/neighborhood-api`](../neighborhood-api#readme) which
-synthesizes Wikidata's RDF on the fly from entity JSON pages.
+synthesizes a Wikibase's RDF on the fly from entity JSON pages.
 
-Wikidata entities are edited and stored as JSON
+A Wikibase — Wikidata, its test instance, Wikimedia Commons, or one of your own
+— stores and edits its entities as JSON
 ([`Special:EntityData/Q42.json`](https://www.wikidata.org/wiki/Special:EntityData/Q42.json));
 the RDF that the query service exposes
 ([`Q42.ttl?flavor=dump`](https://www.wikidata.org/wiki/Special:EntityData/Q42.ttl?flavor=dump))
@@ -28,9 +29,9 @@ through MediaWiki's title encoding and BCP 47 mappings (`simple` →
 ## use
 
 ``` js
-const {ctor: WikidataDb} = require("@shexjs/neighborhood-wikidata");
+const {ctor: WikibaseDb} = require("@shexjs/neighborhood-wikibase");
 
-const db = wikidataDB(null, {
+const db = WikibaseDb(null, {
   cacheDir: "/some/cache/dir",     // strongly recommended
   fetchDoc: url => mySyncGet(url), // under node; browsers can omit it
 });
@@ -76,7 +77,7 @@ that wants the site's current answer again.
 The JSON → RDF converter is usable on its own:
 
 ``` js
-const {wikibaseRdfConverter} = require("@shexjs/neighborhood-wikidata/lib/wikibase-rdf");
+const {wikibaseRdfConverter} = require("@shexjs/neighborhood-wikibase/lib/wikibase-rdf");
 const quads = wikibaseRdfConverter(N3.DataFactory, {siteInfo})
   .entityToQuads(JSON.parse(entityDataJson));
 ```
@@ -89,24 +90,24 @@ The module declares its construction parameters (see the STRAWMAN notes in
 
 ``` shell
 validate -x human.shex -m '<http://www.wikidata.org/entity/Q42>@<#human>' \
-  --wikidata https://www.wikidata.org/wiki/Special:EntityData/ \
-  --wikidata-cache /tmp/wikidata-pages
+  --wikibase https://www.wikidata.org/wiki/Special:EntityData/ \
+  --wikibase-cache /tmp/wikibase-pages
 ```
 
-`--wikidata` names the base that entity ids are appended to
+`--wikibase` names the base that entity ids are appended to
 (`<base><id>.json`); a `file:` directory of captured pages works offline.
-`--wikidata-sitematrix` and `--wikidata-cache` cover the sitematrix source
+`--wikibase-sitematrix` and `--wikibase-cache` cover the sitematrix source
 and the on-disk page cache.
 
 ## validating an edit before making it
 
-`pages` (the CLI's `--wikidata-page`, the WebApp's entity-JSON panes) are
+`pages` (the CLI's `--wikibase-page`, the WebApp's entity-JSON panes) are
 entity pages to believe **instead of** what the site currently serves:
 
 ``` shell
 validate -x human.shex -m '<http://www.wikidata.org/entity/Q42>@<#human>' \
-  --wikidata https://www.wikidata.org/wiki/Special:EntityData/ \
-  --wikidata-page ./Q42-with-my-edit.json
+  --wikibase https://www.wikidata.org/wiki/Special:EntityData/ \
+  --wikibase-page ./Q42-with-my-edit.json
 ```
 
 The walk reads that page where it would have fetched Q42 and fetches
@@ -116,7 +117,7 @@ the bare entity, which is what hand-editing tends to leave you with.
 
 ## from the WebApp
 
-Pick **Wikidata JSON** from the data-source list. The module declares what
+Pick **Wikibase JSON** from the data-source list. The module declares what
 it needs, so the app draws it: a field for the entity-page base, and a pane
 per entity page with a `+` to open another — each tab named by reading the
 id back out of the page. Those pages are the `pages` above. Which entities a
@@ -145,8 +146,9 @@ What no host could offer, this module does: completing entity IRIs from the
 labels of the pages the db has loaded, so typing `wd:Q4` offers
 `http://www.wikidata.org/entity/Q42` — *Douglas Adams*. The same knowledge
 backs the shape-map's focus-node menu through `suggestFocusNodes`. A pane's
-first line may still say `# Wikidata: <base>`, which is how a permalink or a
-dropped file names this source.
+first line may still say `# Wikibase: <base>`, which is how a permalink or a
+dropped file names this source (`# Wikidata:`, what this source was called
+when Wikidata was the only instance it knew, is read too).
 
 Label lookup falls through `mul`, Wikidata's language-neutral label: a name
 that reads the same everywhere is now stored once rather than copied per

@@ -115,7 +115,7 @@ describe("the examples manifest", () => {
     const known = [
       require("@shexjs/neighborhood-rdfjs"),
       require("@shexjs/neighborhood-sparql"),
-      require("@shexjs/neighborhood-wikidata"),
+      require("@shexjs/neighborhood-wikibase"),
     ].map(moduleId);
     for (const entry of json)
       if ("neighborhood" in entry)
@@ -125,7 +125,7 @@ describe("the examples manifest", () => {
   it("should configure each source with settings that source declares", () => {
     const modules = {
       sparql: require("@shexjs/neighborhood-sparql"),
-      wikidata: require("@shexjs/neighborhood-wikidata"),
+      wikibase: require("@shexjs/neighborhood-wikibase"),
       rdfjs: require("@shexjs/neighborhood-rdfjs"),
     };
     // keys every entry may carry, whichever source it names

@@ -57,7 +57,7 @@ export interface AsyncNeighborhoodDb {
 // STRAWMAN (names and shapes negotiable).  Each neighborhood implementation
 // needs different things to come to life -- an rdfjs store wants files (with
 // media types), a SPARQL db wants an endpoint and query-strategy flags, a
-// wikidata db wants the page base it appends entity ids to.  A host that
+// Wikibase db wants the page base it appends entity ids to.  A host that
 // offers several implementations (the CLI, the WebApp) shouldn't hard-code
 // each one's needs, so a module may *declare* them.
 //
@@ -288,7 +288,7 @@ export interface NeighborhoodModule {
    * validation fetched (the WebApp's slurp).  A source that is handed its
    * data declares neither. */
   capabilities?: ("query" | "translate")[];
-  /** what to call this data source where a user picks one, e.g. "Wikidata".
+  /** what to call this data source where a user picks one, e.g. "Turtle".
    * A neighborhood is an implementation detail from inside; from outside it
    * is where the data comes from. */
   label?: string;
@@ -384,7 +384,7 @@ export function paramsToCommandLineArgs (specs: DbParamSpec[]): CliOptionDefinit
 // options).
 
 export interface NeighborhoodWebAppDb extends NeighborhoodDb {
-  /** typeahead for the focus node input, e.g. wikidata's label search.
+  /** typeahead for the focus node input, e.g. a Wikibase's label search.
    * Also what a module's ParamEditor completions can draw on, through the
    * EditorContext's `db`. */
   suggestFocusNodes?(prefix: string, limit: number): EditorCompletion[];

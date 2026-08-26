@@ -1,7 +1,7 @@
 {
-  "name": "@shexjs/neighborhood-wikidata",
+  "name": "@shexjs/neighborhood-wikibase",
   "version": "1.0.0-alpha.29",
-  "description": "Implementation of @shexjs/neighborhood-api which synthesizes Wikidata's RDF from entity JSON pages",
+  "description": "Implementation of @shexjs/neighborhood-api which synthesizes a Wikibase's RDF from entity JSON pages",
   "author": {
     "name": "Eric Prud'hommeaux",
     "email": "eric@w3.org",
@@ -15,8 +15,8 @@
     "wikibase"
   ],
   "license": "MIT",
-  "main": "./lib/neighborhood-wikidata.js",
-  "types": "./src/neighborhood-wikidata.ts",
+  "main": "./lib/neighborhood-wikibase.js",
+  "types": "./src/neighborhood-wikibase.ts",
   "engines": {
     "node": ">=18"
   },
@@ -26,7 +26,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "cd ../.. && mocha packages/neighborhood-wikidata/test/*test.js -R dot"
+    "test": "cd ../.. && mocha packages/neighborhood-wikibase/test/*test.js -R dot"
   },
   "devDependencies": {
     "@rdfjs/types": "^1.1.0"

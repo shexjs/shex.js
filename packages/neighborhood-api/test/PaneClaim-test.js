@@ -19,13 +19,13 @@ const {claimPane, paramsToCommandLineArgs} = require("..");
 // (c.f. the same dodge in @shexjs/util's common-test-infrastructure).  The
 // workspace resolves them.
 const Sparql = require("@shexjs/neighborhood-sparql");
-const Wikidata = require("@shexjs/neighborhood-wikidata");
+const Wikibase = require("@shexjs/neighborhood-wikibase");
 const RdfJs = require("@shexjs/neighborhood-rdfjs");
 
 // the order a host offers them: the default (a local store) first, since
 // nothing about a document says whether to parse it or to query something
 // instead -- that is the user's choice, not a claim
-const MODULES = [RdfJs, Sparql, Wikidata];
+const MODULES = [RdfJs, Sparql, Wikibase];
 
 const TURTLE = `PREFIX : <http://a.example/>\n:x :p 1 .\n`;
 
@@ -45,11 +45,16 @@ describe("neighborhood pane claims", () => {
     expect(claim.params).to.deep.equal({endpoint: "http://ex.example/sparql"});
   });
 
-  it("should give a Wikidata header to the wikidata module, base and all", () => {
-    expect(claimPane(MODULES, "# Wikidata\n").module.name).to.equal("neighborhood-wikidata");
-    expect(claimPane(MODULES, "# Wikidata\n").params).to.deep.equal({});
-    expect(claimPane(MODULES, "# Wikidata: https://test.wikidata.org/wiki/Special:EntityData/\n").params)
+  it("should give a Wikibase header to the Wikibase module, base and all", () => {
+    expect(claimPane(MODULES, "# Wikibase\n").module.name).to.equal("neighborhood-wikibase");
+    expect(claimPane(MODULES, "# Wikibase\n").params).to.deep.equal({});
+    expect(claimPane(MODULES, "# Wikibase: https://test.wikidata.org/wiki/Special:EntityData/\n").params)
       .to.deep.equal({base: "https://test.wikidata.org/wiki/Special:EntityData/"});
+    // ...and the spelling this source had when Wikidata was the only
+    // instance it knew, which is in whatever anyone saved back then
+    expect(claimPane(MODULES, "# Wikidata\n").module.name).to.equal("neighborhood-wikibase");
+    expect(claimPane(MODULES, "# Wikidata: https://www.wikidata.org/wiki/Special:EntityData/\n").params)
+      .to.deep.equal({base: "https://www.wikidata.org/wiki/Special:EntityData/"});
   });
 
   it("should only read a header on the first line", () => {
@@ -60,7 +65,7 @@ describe("neighborhood pane claims", () => {
 
   it("should name each module the way a manifest or permalink does", () => {
     const {moduleId} = require("..");
-    expect(MODULES.map(moduleId)).to.deep.equal(["rdfjs", "sparql", "wikidata"]);
+    expect(MODULES.map(moduleId)).to.deep.equal(["rdfjs", "sparql", "wikibase"]);
   });
 
   describe("module-described languages", () => {
@@ -70,7 +75,7 @@ describe("neighborhood pane claims", () => {
       // both query modules leave the pane's body -- slurped triples -- to
       // the host's Turtle, and describe only their own header
       expect(Sparql.paneEditor.language).to.equal("turtle");
-      expect(Wikidata.paneEditor.language).to.equal("turtle");
+      expect(Wikibase.paneEditor.language).to.equal("turtle");
     });
 
     it("should color a header it claims", () => {
@@ -92,12 +97,12 @@ describe("neighborhood pane claims", () => {
     it("should say nothing about text it doesn't claim", () => {
       expect(Sparql.paneEditor.tokens(TURTLE)).to.deep.equal([]);
       expect(Sparql.paneEditor.lint(TURTLE)).to.deep.equal([]);
-      expect(Wikidata.paneEditor.tokens(TURTLE)).to.deep.equal([]);
+      expect(Wikibase.paneEditor.tokens(TURTLE)).to.deep.equal([]);
     });
 
     it("should warn about a wikidata base that can't be extended with an id", () => {
       const text = "# Wikidata: https://www.wikidata.org/wiki/Q42\n";
-      const [diagnostic] = Wikidata.paneEditor.lint(text);
+      const [diagnostic] = Wikibase.paneEditor.lint(text);
       expect(diagnostic.severity).to.equal("error");
       expect(diagnostic.message).to.match(/trailing delimiter/);
     });
@@ -109,18 +114,18 @@ describe("neighborhood pane claims", () => {
       expect(Sparql.paneEditor.complete(TURTLE, TURTLE.length)).to.equal(null);
     });
 
-    it("should offer known bases on a wikidata header line", () => {
-      const text = "# Wikidata: ";
-      const completions = Wikidata.paneEditor.complete(text, text.length);
+    it("should offer known bases on a Wikibase header line", () => {
+      const text = "# Wikibase: ";
+      const completions = Wikibase.paneEditor.complete(text, text.length);
       expect(completions.options.map(o => o.label))
         .to.include("https://www.wikidata.org/wiki/Special:EntityData/");
     });
 
     it("should complete entity IRIs only a live db could know", () => {
       const path = require("path");
-      const fixtures = path.resolve(__dirname, "../../neighborhood-wikidata/test/fixtures");
+      const fixtures = path.resolve(__dirname, "../../neighborhood-wikibase/test/fixtures");
       const fs = require("fs");
-      const db = Wikidata.ctor(null, {
+      const db = Wikibase.ctor(null, {
         fetchDoc: url => {
           const m = url.match(/([QPL]\d+)\.json$/);
           return fs.readFileSync(path.join(fixtures, m ? m[1] + ".json" : "sitematrix.json"), "utf8");
@@ -131,14 +136,14 @@ describe("neighborhood pane claims", () => {
                          "-start-", {type: "Shape"});
 
       const text = "# Wikidata\n:x :p wd:Q4";
-      const completions = Wikidata.paneEditor.complete(text, text.length, {db});
+      const completions = Wikibase.paneEditor.complete(text, text.length, {db});
       expect(completions.options.map(o => o.label))
         .to.deep.equal(["http://www.wikidata.org/entity/Q42"]);
       expect(completions.options[0].detail).to.equal("Douglas Adams");
       expect(text.substring(completions.from, completions.to)).to.equal("wd:Q4");
 
       // ...and nothing without a db: the host has no way to know this
-      expect(Wikidata.paneEditor.complete(text, text.length)).to.equal(null);
+      expect(Wikibase.paneEditor.complete(text, text.length)).to.equal(null);
     });
   });
 
@@ -168,7 +173,7 @@ describe("neighborhood pane claims", () => {
       // this source holds entity pages; a list of ids is not one, and which
       // entities to visit is the query map's to say
       const page = '{"entities": {"Q42": {"id": "Q42"}}}';
-      expect(Wikidata.distributeDocuments([page, "Q5 Q7"])).to.deep.equal({
+      expect(Wikibase.distributeDocuments([page, "Q5 Q7"])).to.deep.equal({
         pages: [JSON.stringify(JSON.parse(page), null, 2) + "\n"],
       });
       expect(RdfJs.distributeDocuments, "a graph is a graph").to.equal(undefined);
@@ -177,7 +182,7 @@ describe("neighborhood pane claims", () => {
     it("should say which sources fetch their answers", () => {
       // what a host needs to know to offer to record what was fetched
       expect(Sparql.capabilities).to.deep.equal(["query"]);
-      expect(Wikidata.capabilities).to.deep.equal(["query", "translate"]);
+      expect(Wikibase.capabilities).to.deep.equal(["query", "translate"]);
       expect(RdfJs.capabilities, "handed its data").to.equal(undefined);
     });
 
@@ -190,19 +195,19 @@ describe("neighborhood pane claims", () => {
     it("should let a wikibase have as many entity pages as the user opens", () => {
       // one pane, and none of it to start: an entity page is a document, and
       // the entities a validation visits are the query map's business
-      const [pages, ...rest] = paneParams(Wikidata.dbParams);
+      const [pages, ...rest] = paneParams(Wikibase.dbParams);
       expect(rest, "the entity pages are the whole of it").to.deep.equal([]);
       expect(pages.name).to.equal("pages");
       expect(pages.pane).to.deep.include({label: "entity JSON", min: 0, creatable: true});
       expect(pages.pane.max).to.equal(undefined);
       expect(pages.pane.editor.language).to.equal("json");
       // fields go on being fields
-      expect(fieldParams(Wikidata.dbParams).map(p => p.name)).to.deep.equal(
+      expect(fieldParams(Wikibase.dbParams).map(p => p.name)).to.deep.equal(
         ["base", "sitematrix", "cacheDir"]);
     });
 
     it("should title an entity pane from the page in it", () => {
-      const {titleOf, template} = paneParams(Wikidata.dbParams)[0].pane;
+      const {titleOf, template} = paneParams(Wikibase.dbParams)[0].pane;
       expect(titleOf('{"entities": {"Q42": {"id": "Q42"}}}')).to.equal("Q42");
       expect(titleOf('{"id": "Q42", "type": "item"}')).to.equal("Q42"); // a bare entity
       expect(titleOf('{"entities": {"Q4'), "half-typed").to.equal(null);
@@ -229,9 +234,9 @@ describe("neighborhood pane claims", () => {
     });
 
     it("should let a wikibase answer QENTITIES, by id or by bare number", () => {
-      const resolver = queryMapResolverFor(Wikidata, extensionIri("QENTITIES"));
+      const resolver = queryMapResolverFor(Wikibase, extensionIri("QENTITIES"));
       expect(resolver.name).to.equal("QENTITIES");
-      const db = Wikidata.ctor(null, {fetchDoc: () => { throw Error("no fetching to resolve ids"); }});
+      const db = Wikibase.ctor(null, {fetchDoc: () => { throw Error("no fetching to resolve ids"); }});
       expect(resolver.resolve("42 Q76 P31", db).map(t => t.value)).to.deep.equal([
         "http://www.wikidata.org/entity/Q42",
         "http://www.wikidata.org/entity/Q76",
@@ -244,7 +249,7 @@ describe("neighborhood pane claims", () => {
     });
 
     it("should say what isn't an id rather than inventing one", () => {
-      const resolver = queryMapResolverFor(Wikidata, extensionIri("QENTITIES"));
+      const resolver = queryMapResolverFor(Wikibase, extensionIri("QENTITIES"));
       expect(() => resolver.resolve("42 rubbish", {})).to.throw(/"rubbish" is not an entity id/);
     });
 

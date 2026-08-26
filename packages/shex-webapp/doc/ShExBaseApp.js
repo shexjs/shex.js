@@ -4247,7 +4247,7 @@ class ShExBaseApp {
    *
    * The schema pane is ShExC and always will be.  The data pane's language
    * is not the app's to decide: its text says which neighborhood serves the
-   * data ("# Endpoint: <url>" queries SPARQL, "# Wikidata" synthesizes
+   * data ("# Endpoint: <url>" queries SPARQL, "# Wikibase" synthesizes
    * entity pages, anything else is Turtle to parse), and each of those
    * modules describes its own text.  So the pane asks whichever module
    * claims the text as it stands -- and gets a plain textarea, exactly as

@@ -54,7 +54,7 @@ const { paramsToCommandLineArgs, queryMapResolverFor, extensionName, moduleId } 
  * NeighborhoodDb (rdfjs over the loaded data files otherwise). */
 const QueryDbModules = [
   require('@shexjs/neighborhood-sparql'),   // --endpoint
-  require('@shexjs/neighborhood-wikidata'), // --wikidata
+  require('@shexjs/neighborhood-wikibase'), // --wikibase
 ];
 const ShExTerm = require("@shexjs/term");
 const ShExParser = require("@shexjs/parser");
@@ -111,7 +111,7 @@ const CommandLineOptions = [
   { name: "json",      alias: "j", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExJ schema" },
   { name: "dataURL",   alias: "d", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle data", defaultOption: true },
   { name: "jsonld",    alias: "l", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD data" },
-  // --endpoint, --wikidata etc. are appended from QueryDbModules' dbParams below
+  // --endpoint, --wikibase etc. are appended from QueryDbModules' dbParams below
   { name: "extension",             type: String, typeLabel: "file glob", multiple:  true, defaultValue:        [], description: "semantic action extension" },
   { name: "result",                type: String, typeLabel: "file|URL",  multiple: false, defaultValue: undefined, description: "expected JSON results" },
   { name: "serve",     alias: "S", type: String, typeLabel: "URL",       multiple: false, defaultValue: undefined, description: "server" },
@@ -147,8 +147,8 @@ for (const mod of QueryDbModules)
 function queryDbParams (mod, cmds) {
   const specs = mod.dbParams || [];
   const cliName = s => s.cli && s.cli.option || s.name;
-  // any of a module's selectors names it: --wikidata says which Wikibase,
-  // --wikidata-page says which pages, and either one is a choice of source
+  // any of a module's selectors names it: --wikibase says which Wikibase,
+  // --wikibase-page says which pages, and either one is a choice of source
   const selectors = specs.filter(s => s.selector);
   if (!selectors.some(s => cmds[cliName(s)] !== undefined))
     return null;

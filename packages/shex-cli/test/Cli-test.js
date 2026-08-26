@@ -144,10 +144,10 @@ if (!TEST_cli) {
 
   /* Validate a wikidata item through each query-backed NeighborhoodDb the
    * CLI can drive.  Both runs walk the same graph -- Q42's and Q5's entity
-   * pages as captured in neighborhood-wikidata's fixtures -- and the same
+   * pages as captured in neighborhood-wikibase's fixtures -- and the same
    * schema (entity -> statement -> value node, plus a hop into Q5's own
    * neighborhood): once served as JSON pages from a file: base
-   * (--wikidata), once loaded into a local SPARQL endpoint (--endpoint).
+   * (--wikibase), once loaded into a local SPARQL endpoint (--endpoint).
    * Hand-rolled rather than rows in AllTests because the endpoint has to be
    * listening before the child spawns, and runCliTests spawns at load time.
    */
@@ -158,7 +158,7 @@ if (!TEST_cli) {
     const chai = require("chai");
     const expect = chai.expect;
 
-    const wdFixtures = Path.resolve(__dirname, "../../neighborhood-wikidata/test/fixtures");
+    const wdFixtures = Path.resolve(__dirname, "../../neighborhood-wikibase/test/fixtures");
     const fixturesUrl = "file://" + wdFixtures + "/";
     const queryMap = "<http://www.wikidata.org/entity/Q42>@<#human>";
 
@@ -181,12 +181,12 @@ if (!TEST_cli) {
       expect(results.node).to.equal("http://www.wikidata.org/entity/Q42");
     }
 
-    it("by neighborhood-wikidata over captured entity pages", async function () {
+    it("by neighborhood-wikibase over captured entity pages", async function () {
       this.timeout(20000);
       expectConformant(await validate([
         "-x", "wikidata/human.shex", "-m", queryMap,
-        "--wikidata", fixturesUrl,
-        "--wikidata-sitematrix", fixturesUrl + "sitematrix.json",
+        "--wikibase", fixturesUrl,
+        "--wikibase-sitematrix", fixturesUrl + "sitematrix.json",
       ]));
     });
 
@@ -194,7 +194,7 @@ if (!TEST_cli) {
      * be named, so the CLI resolves each name to its content.  Here that
      * document is an entity page nobody has saved: the validation reads it
      * where it would have fetched Q42, and fetches Q5 around it as usual. */
-    it("by neighborhood-wikidata over an entity page that only exists locally", async function () {
+    it("by neighborhood-wikibase over an entity page that only exists locally", async function () {
       this.timeout(20000);
       const edited = Path.join(Fs.mkdtempSync(Path.join(require("os").tmpdir(), "wd-")), "Q42.json");
       const doc = JSON.parse(Fs.readFileSync(Path.join(wdFixtures, "Q42.json"), "utf8"));
@@ -203,9 +203,9 @@ if (!TEST_cli) {
       try {
         const run = await validate([
           "-x", "wikidata/human.shex", "-m", queryMap,
-          "--wikidata", fixturesUrl,
-          "--wikidata-sitematrix", fixturesUrl + "sitematrix.json",
-          "--wikidata-page", edited,
+          "--wikibase", fixturesUrl,
+          "--wikibase-sitematrix", fixturesUrl + "sitematrix.json",
+          "--wikibase-page", edited,
         ]);
         expectConformant(run);
         expect(run.stdout).to.include("1952-03-12T00:00:00Z");  // the unsaved edit
@@ -289,8 +289,8 @@ if (!TEST_cli) {
     it("by neighborhood-sparql over an endpoint holding the same synthesized graph", async function () {
       this.timeout(60000);
       const {startSparqlTestServer} = require("../../neighborhood-sparql/test/sparql-test-server");
-      const {wikibaseRdfConverter} = require("@shexjs/neighborhood-wikidata/lib/wikibase-rdf");
-      const {siteInfoFromSitematrix} = require("@shexjs/neighborhood-wikidata");
+      const {wikibaseRdfConverter} = require("@shexjs/neighborhood-wikibase/lib/wikibase-rdf");
+      const {siteInfoFromSitematrix} = require("@shexjs/neighborhood-wikibase");
       const N3 = require("n3");
 
       const server = await startSparqlTestServer({});

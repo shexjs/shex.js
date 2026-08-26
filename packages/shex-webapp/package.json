@@ -28,7 +28,7 @@
     "@shexjs/neighborhood-api": "^1.0.0-alpha.28",
     "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.29",
     "@shexjs/neighborhood-sparql": "^1.0.0-alpha.29",
-    "@shexjs/neighborhood-wikidata": "^1.0.0-alpha.29",
+    "@shexjs/neighborhood-wikibase": "^1.0.0-alpha.29",
     "@shexjs/parser": "^1.0.0-alpha.28",
     "@shexjs/term": "^1.0.0-alpha.27",
     "@shexjs/util": "^1.0.0-alpha.28",

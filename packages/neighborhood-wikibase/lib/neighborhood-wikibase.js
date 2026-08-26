@@ -46,7 +46,7 @@ exports.paneEditor = exports.dbParams = exports.ctor = exports.queryMapResolvers
 exports.forgetPages = forgetPages;
 exports.bcp47 = bcp47;
 exports.siteInfoFromSitematrix = siteInfoFromSitematrix;
-exports.wikidataDB = wikidataDB;
+exports.wikibaseDB = wikibaseDB;
 exports.asEntityDoc = asEntityDoc;
 exports.fromParams = fromParams;
 exports.distributeDocuments = distributeDocuments;
@@ -70,7 +70,7 @@ exports.EntityResolutionError = EntityResolutionError;
 const DataFactory = N3.DataFactory;
 /** Who this is, for hosts that ask (see fetchDoc): a tool and where to
  * read about it, which is what Wikimedia's robot policy wants. */
-const USER_AGENT = "@shexjs/neighborhood-wikidata (https://github.com/shexjs/shex.js)";
+const USER_AGENT = "@shexjs/neighborhood-wikibase (https://github.com/shexjs/shex.js)";
 /** Pages fetched by this process, by URL.
  *
  * A DB is rebuilt whenever its configuration changes -- a host that offers
@@ -154,7 +154,7 @@ function siteInfoFromSitematrix(doc) {
     }
     return siteId => map.get(siteId);
 }
-function wikidataDB(queryTracker, options = {}) {
+function wikibaseDB(queryTracker, options = {}) {
     const conceptBase = options.conceptBase || "http://www.wikidata.org/";
     const dataBase = options.dataBase || "https://www.wikidata.org/wiki/Special:EntityData/";
     const entityDataUrl = options.entityDataUrl || ((id) => `${dataBase}${id}.json`);
@@ -538,9 +538,9 @@ function labelIn(doc, id, language) {
         || Object.values(labels)[0];
     return found ? found.value : null;
 }
-exports.name = "neighborhood-wikidata";
-exports.label = "Wikidata JSON";
-exports.description = "Implementation of @shexjs/neighborhood-api which synthesizes Wikidata's RDF from entity JSON pages";
+exports.name = "neighborhood-wikibase";
+exports.label = "Wikibase JSON";
+exports.description = "Implementation of @shexjs/neighborhood-api which synthesizes a Wikibase's RDF from entity JSON pages";
 exports.capabilities = ["query", "translate"];
 /** A shape map may name the entities to validate rather than their IRIs:
  *
@@ -567,7 +567,7 @@ exports.queryMapResolvers = [{
             });
         },
     }];
-exports.ctor = wikidataDB;
+exports.ctor = wikibaseDB;
 /** What it takes to construct this DB, declared for hosts that offer several
  * neighborhood implementations (STRAWMAN, see @shexjs/neighborhood-api). */
 /** What an entity page opened from scratch starts as: the shape of the
@@ -587,17 +587,17 @@ exports.dbParams = [
         description: "where entity pages live: <base><id>.json names each page " +
             "(e.g. https://www.wikidata.org/wiki/Special:EntityData/ or a file: directory of captured pages)",
         schema: { type: "string", format: "uri" },
-        cli: { option: "wikidata", typeLabel: "IRI" } },
+        cli: { option: "wikibase", typeLabel: "IRI" } },
     { name: "sitematrix",
         description: "where the site matrix lives (site id -> URL/language/group, needed for sitelink RDF); " +
             "defaults to the wikidata API",
         schema: { type: "string", format: "uri" },
-        cli: { option: "wikidata-sitematrix", typeLabel: "IRI" } },
+        cli: { option: "wikibase-sitematrix", typeLabel: "IRI" } },
     { name: "cacheDir",
         description: "keep fetched entity pages on disk here",
         schema: { type: "string", format: "file-path" },
         ui: { hidden: true }, // a browser has no disk to cache on
-        cli: { option: "wikidata-cache", typeLabel: "dir" } },
+        cli: { option: "wikibase-cache", typeLabel: "dir" } },
     { name: "pages", selector: true,
         description: "entity pages to believe instead of what the site serves, " +
             "so an edit can be validated before it is made",
@@ -618,10 +618,10 @@ exports.dbParams = [
                 }
             },
         },
-        cli: { option: "wikidata-page", typeLabel: "file|URL" } },
+        cli: { option: "wikibase-page", typeLabel: "file|URL" } },
 ];
 function fromParams(params, queryTracker) {
-    return wikidataDB(queryTracker, {
+    return wikibaseDB(queryTracker, {
         entityDataUrl: params.base === undefined ? undefined : (id) => `${params.base}${id}.json`,
         siteMatrixUrl: params.sitematrix,
         cacheDir: params.cacheDir,
@@ -650,16 +650,20 @@ function distributeDocuments(texts) {
     }
     return { pages };
 }
-/** `# Wikidata` on the first line means "synthesize entity pages rather
- * than parsing me"; a URL after it points at another Wikibase instance. */
-const WIKIDATA_HEADER = /^([ \t]*#?[ \t]*Wikidata[ \t]*:?[ \t]*)(\S*)(.*)$/im;
+/** `# Wikibase` on the first line means "synthesize entity pages rather
+ * than parsing me"; a URL after it says which Wikibase.
+ *
+ * `# Wikidata` too, which is what this source was called when Wikidata was
+ * the only instance it knew: a document saved with that header still names
+ * this source, and is still read by it. */
+const WIKIBASE_HEADER = /^([ \t]*#?[ \t]*Wiki(?:base|data)[ \t]*:?[ \t]*)(\S*)(.*)$/im;
 const KNOWN_BASES = [
     { label: "https://www.wikidata.org/wiki/Special:EntityData/", detail: "Wikidata" },
     { label: "https://test.wikidata.org/wiki/Special:EntityData/", detail: "Wikidata test instance" },
     { label: "https://commons.wikimedia.org/wiki/Special:EntityData/", detail: "Wikimedia Commons" },
 ];
 function claimPaneText(text) {
-    const m = text.match(WIKIDATA_HEADER);
+    const m = text.match(WIKIBASE_HEADER);
     if (!m || m.index !== 0)
         return null;
     return m[2] === "" ? {} : { base: m[2] }; // bare header: the default base
@@ -671,7 +675,7 @@ function claimPaneText(text) {
 exports.paneEditor = {
     language: "turtle",
     tokens(text) {
-        const m = text.match(WIKIDATA_HEADER);
+        const m = text.match(WIKIBASE_HEADER);
         if (!m || m.index !== 0)
             return [];
         const base = m[2];
@@ -682,7 +686,7 @@ exports.paneEditor = {
         return tokens;
     },
     lint(text) {
-        const m = text.match(WIKIDATA_HEADER);
+        const m = text.match(WIKIBASE_HEADER);
         if (!m || m.index !== 0)
             return [];
         const [from, to] = [m[1].length, m[1].length + m[2].length];
@@ -697,11 +701,11 @@ exports.paneEditor = {
         const claimed = claimPaneText(text) !== null;
         if (lineStart === 0 && !claimed)
             return { from: 0, to: pos,
-                options: [{ label: "# Wikidata: ", type: "keyword",
+                options: [{ label: "# Wikibase: ", type: "keyword",
                         detail: "synthesize entity pages instead of parsing this pane" }] };
         if (lineStart === 0 && claimed) {
             // completing the base on the header line
-            const m = text.match(WIKIDATA_HEADER);
+            const m = text.match(WIKIBASE_HEADER);
             if (pos >= m[1].length)
                 return { from: m[1].length, to: m[1].length + m[2].length,
                     options: KNOWN_BASES.map(b => (Object.assign(Object.assign({}, b), { type: "namespace" }))) };
@@ -743,4 +747,4 @@ function asAsyncDb(db) {
         },
     });
 }
-//# sourceMappingURL=neighborhood-wikidata.js.map
+//# sourceMappingURL=neighborhood-wikibase.js.map

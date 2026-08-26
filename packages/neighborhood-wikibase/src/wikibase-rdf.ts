@@ -98,7 +98,7 @@ export interface WikibaseRdfOptions {
   /** resolve a sitelink's site id; required to convert an entity that has
    * sitelinks (the page names sites "enwiki"-style but the RDF needs their
    * URLs and languages -- see the sitematrix handling in
-   * neighborhood-wikidata) */
+   * neighborhood-wikibase) */
   siteInfo?: (siteId: string) => SiteInfo | undefined;
 }
 

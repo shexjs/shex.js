@@ -30,7 +30,7 @@ const {
   wikibaseRdfConverter, phpFloatStr, phpUrlencode, wfUrlencode,
   valueNodeHash, cleanTimeValue,
 } = require("../lib/wikibase-rdf");
-const {siteInfoFromSitematrix, bcp47} = require("../lib/neighborhood-wikidata");
+const {siteInfoFromSitematrix, bcp47} = require("../lib/neighborhood-wikibase");
 
 const fixtures = path.join(__dirname, "fixtures");
 const read = f => fs.readFileSync(path.join(fixtures, f), "utf8");
@@ -94,7 +94,7 @@ describe("wikibase-rdf", () => {
   it("should synthesize with none of node's globals, as a browser must", () => {
     const hadBuffer = global.Buffer;
     for (const id of Object.keys(require.cache))
-      if (/neighborhood-wikidata[\\/]lib[\\/]/.test(id))
+      if (/neighborhood-wikibase[\\/]lib[\\/]/.test(id))
         delete require.cache[id];
     delete global.Buffer;
     try {

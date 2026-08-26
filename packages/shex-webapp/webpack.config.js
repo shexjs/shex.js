@@ -40,7 +40,7 @@ module.exports = {
   },
   resolve: {
     fallback: {
-      // @shexjs/neighborhood-wikidata reaches for these only on the paths a
+      // @shexjs/neighborhood-wikibase reaches for these only on the paths a
       // browser never takes -- the on-disk page cache and file: bases -- so
       // they resolve to empty modules here rather than being polyfilled.
       fs: false,

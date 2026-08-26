@@ -236,7 +236,7 @@
 - schemaLabel: Wikidata person
   schemaURL: ../packages/shex-webapp/examples/wikidata-person.shex
   dataLabel: Q42 from the JSON API
-  neighborhood: wikidata
+  neighborhood: wikibase
   base: https://www.wikidata.org/wiki/Special:EntityData/
   queryMap: |
     QENTITIES "42 76"@START
@@ -245,7 +245,7 @@
 - schemaLabel: Wikidata person
   schemaURL: ../packages/shex-webapp/examples/wikidata-person.shex
   dataLabel: Q42 from a downloaded page
-  neighborhood: wikidata
+  neighborhood: wikibase
   dataURL: ../packages/shex-webapp/examples/wikidata-Q42.json
   queryMap: |
     <http://www.wikidata.org/entity/Q42>@START
@@ -255,7 +255,7 @@
 - schemaLabel: Wikidata human gene
   schemaURL: ../packages/shex-webapp/examples/wikidata-human-gene.shex
   dataLabel: BRCA1, its chromosome and its assembly
-  neighborhood: wikidata
+  neighborhood: wikibase
   base: https://www.wikidata.org/wiki/Special:EntityData/
   queryMap: |
     QENTITIES "227339"@START

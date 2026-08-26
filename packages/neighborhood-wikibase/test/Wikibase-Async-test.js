@@ -10,7 +10,7 @@
 const expect = require("chai").expect;
 const path = require("path");
 const fs = require("fs");
-const Wikidata = require("..");
+const Wikibase = require("..");
 
 const fixtures = path.resolve(__dirname, "fixtures");
 const pageFor = id => fs.readFileSync(path.join(fixtures, id + ".json"), "utf8");
@@ -33,17 +33,17 @@ function fetching (asked, {latency = 0} = {}) {
 
 const have = fs.existsSync(path.join(fixtures, "Q42.json"));
 
-describe("neighborhood-wikidata over fetch()", function () {
+describe("neighborhood-wikibase over fetch()", function () {
   if (!have) { it("needs the Q42 fixtures"); return; }
 
   // pages outlive the db that read them (see forgetPages), which is the point
   // of that cache -- but it means each of these has to start from cold to be
   // measuring its own fetching
-  beforeEach(() => Wikidata.forgetPages());
+  beforeEach(() => Wikibase.forgetPages());
 
   it("should fetch an entity page without a synchronous XMLHttpRequest", async function () {
     const asked = [];
-    const db = Wikidata.asAsyncDb(Wikidata.wikidataDB(undefined, {
+    const db = Wikibase.asAsyncDb(Wikibase.wikibaseDB(undefined, {
       fetchDocAsync: fetching(asked),
       // no fetchDoc: nothing here may fall back to the blocking transport
     }));
@@ -60,7 +60,7 @@ describe("neighborhood-wikidata over fetch()", function () {
 
   it("should not go back to the network for a node inside a page it has", async function () {
     const asked = [];
-    const db = Wikidata.asAsyncDb(Wikidata.wikidataDB(undefined, {
+    const db = Wikibase.asAsyncDb(Wikibase.wikibaseDB(undefined, {
       fetchDocAsync: fetching(asked),
     }));
     const Q42 = db.entityIri("Q42");
@@ -77,7 +77,7 @@ describe("neighborhood-wikidata over fetch()", function () {
 
   it("should reuse one page for repeated asks", async function () {
     const asked = [];
-    const db = Wikidata.asAsyncDb(Wikidata.wikidataDB(undefined, {
+    const db = Wikibase.asAsyncDb(Wikibase.wikibaseDB(undefined, {
       fetchDocAsync: fetching(asked),
     }));
     const Q42 = {termType: "NamedNode", value: db.entityIri("Q42")};
@@ -90,8 +90,8 @@ describe("neighborhood-wikidata over fetch()", function () {
 
   it("should still be the same db, synchronous parts and all", async function () {
     const asked = [];
-    const sync = Wikidata.wikidataDB(undefined, {fetchDocAsync: fetching(asked)});
-    const db = Wikidata.asAsyncDb(sync);
+    const sync = Wikibase.wikibaseDB(undefined, {fetchDocAsync: fetching(asked)});
+    const db = Wikibase.asAsyncDb(sync);
     await db.getNeighborhood(
       {termType: "NamedNode", value: db.entityIri("Q42")}, "S", {type: "Shape"});
     // asAsyncDb wraps rather than copies: the store, the loaded pages and the

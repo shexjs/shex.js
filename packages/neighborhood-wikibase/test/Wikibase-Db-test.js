@@ -1,6 +1,6 @@
 "use strict";
 /**
- * Behavior of the wikidata NeighborhoodDb: which page a focus node fetches,
+ * Behavior of the Wikibase NeighborhoodDb: which page a focus node fetches,
  * what the two cache layers save, and a validation that walks entity ->
  * statement -> value node -> neighboring entity over fixture pages alone.
  *
@@ -17,7 +17,7 @@ const assert = chai.assert;
 const expect = chai.expect;
 const N3 = require("n3");
 
-const {wikidataDB, EntityResolutionError, forgetPages} = require("../lib/neighborhood-wikidata");
+const {wikibaseDB, EntityResolutionError, forgetPages} = require("../lib/neighborhood-wikibase");
 const ShExParser = require("@shexjs/parser");
 const {ShExValidator} = require("@shexjs/validator");
 
@@ -48,14 +48,14 @@ function fixtureTransport () {
 
 const anyShape = {type: "Shape"};
 
-describe("neighborhood-wikidata", () => {
+describe("neighborhood-wikibase", () => {
   // pages outlive the DB that read them (see forgetPages), so a test that
   // counts fetches has to start from nothing fetched
   beforeEach(() => forgetPages());
 
   it("should serve an entity's neighborhood from its JSON page", () => {
     const {log, fetchDoc} = fixtureTransport();
-    const db = wikidataDB(null, {fetchDoc});
+    const db = wikibaseDB(null, {fetchDoc});
     const {outgoing, incoming} = db.getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
     assert.isTrue(outgoing.some(q => q.predicate.value === WDT + "P31" && q.object.value === WD + "Q5"),
                   "wdt:P31 wd:Q5 should be among Q42's outgoing arcs");
@@ -66,7 +66,7 @@ describe("neighborhood-wikidata", () => {
 
   it("should fetch each page and the sitematrix once, however many neighborhoods ask", () => {
     const {log, fetchDoc} = fixtureTransport();
-    const db = wikidataDB(null, {fetchDoc});
+    const db = wikibaseDB(null, {fetchDoc});
     db.getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
     db.getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
     const statement = db.getQuads(nn(WD + "Q42"), nn(P + "P569"), null, null)[0].object;
@@ -76,7 +76,7 @@ describe("neighborhood-wikidata", () => {
 
   it("should resolve a statement node to its entity's page", () => {
     const {log, fetchDoc} = fixtureTransport();
-    const db = wikidataDB(null, {fetchDoc});
+    const db = wikibaseDB(null, {fetchDoc});
     // "q42$D8404CDA-..." is a pre-2015 statement id: lowercase entity prefix
     const stmt = nn("http://www.wikidata.org/entity/statement/q42-D8404CDA-25E4-4334-AF13-A3290BCD9C0F");
     const {outgoing} = db.getNeighborhood(stmt, "-start-", anyShape);
@@ -85,7 +85,7 @@ describe("neighborhood-wikidata", () => {
   });
 
   it("should serve value and reference nodes reached through their statements", () => {
-    const db = wikidataDB(null, fixtureTransport());
+    const db = wikibaseDB(null, fixtureTransport());
     db.getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
     const psv = db.getQuads(null, nn(P + "statement/value/P569"), null, null);
     assert.isAbove(psv.length, 0);
@@ -94,13 +94,13 @@ describe("neighborhood-wikidata", () => {
   });
 
   it("should refuse a value node it has never seen rather than call it empty", () => {
-    const db = wikidataDB(null, fixtureTransport());
+    const db = wikibaseDB(null, fixtureTransport());
     expect(() => db.getNeighborhood(nn(WDV + "deadbeef00000000000000000000dead"), "-start-", anyShape))
       .to.throw(EntityResolutionError, /walk in through/);
   });
 
   it("should refuse a blank node it did not mint", () => {
-    const db = wikidataDB(null, fixtureTransport());
+    const db = wikibaseDB(null, fixtureTransport());
     expect(() => db.getNeighborhood(N3.DataFactory.blankNode("b0"), "-start-", anyShape))
       .to.throw(EntityResolutionError);
   });
@@ -109,13 +109,13 @@ describe("neighborhood-wikidata", () => {
     const cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), "wikidata-cache-"));
     try {
       const first = fixtureTransport();
-      wikidataDB(null, {fetchDoc: first.fetchDoc, cacheDir})
+      wikibaseDB(null, {fetchDoc: first.fetchDoc, cacheDir})
         .getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
       assert.equal(first.log.length, 2);
       assert.isTrue(fs.existsSync(path.join(cacheDir, "Q42.json")));
 
       const second = fixtureTransport();
-      wikidataDB(null, {fetchDoc: second.fetchDoc, cacheDir})
+      wikibaseDB(null, {fetchDoc: second.fetchDoc, cacheDir})
         .getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
       assert.deepEqual(second.log, [], "everything should have come from the disk cache");
     } finally {
@@ -129,12 +129,12 @@ describe("neighborhood-wikidata", () => {
    * it, so the second DB starts where the first left off. */
   it("should not fetch again what this process has already fetched", () => {
     const first = fixtureTransport();
-    wikidataDB(null, {fetchDoc: first.fetchDoc})
+    wikibaseDB(null, {fetchDoc: first.fetchDoc})
       .getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
     assert.equal(first.log.length, 2, "a page and a site table");
 
     const second = fixtureTransport();
-    const db = wikidataDB(null, {fetchDoc: second.fetchDoc});
+    const db = wikibaseDB(null, {fetchDoc: second.fetchDoc});
     db.getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
     assert.deepEqual(second.log, [], "a rebuilt DB re-fetches nothing");
     // and it is the same data, not an empty store
@@ -142,7 +142,7 @@ describe("neighborhood-wikidata", () => {
 
     forgetPages();
     const third = fixtureTransport();
-    wikidataDB(null, {fetchDoc: third.fetchDoc})
+    wikibaseDB(null, {fetchDoc: third.fetchDoc})
       .getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
     assert.equal(third.log.length, 2, "until a host asks for the site's current answer");
   });
@@ -160,7 +160,7 @@ describe("neighborhood-wikidata", () => {
 
     it("should read a supplied page where it would have fetched one", () => {
       const {log, fetchDoc} = fixtureTransport();
-      const db = wikidataDB(null, {fetchDoc, pages: [editedQ42()]});
+      const db = wikibaseDB(null, {fetchDoc, pages: [editedQ42()]});
       const {outgoing} = db.getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
       assert.deepEqual(log.filter(u => u.indexOf("Q42.json") !== -1), [],
                        "Q42's page came from the caller, so it shouldn't have been fetched");
@@ -173,7 +173,7 @@ describe("neighborhood-wikidata", () => {
     it("should still fetch the entities around it", () => {
       // the point of validating a speculative edit is its real surroundings
       const {log, fetchDoc} = fixtureTransport();
-      const db = wikidataDB(null, {fetchDoc, pages: [editedQ42()]});
+      const db = wikibaseDB(null, {fetchDoc, pages: [editedQ42()]});
       db.getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
       db.getNeighborhood(nn(WD + "Q5"), "-start-", anyShape);
       assert.isTrue(log.some(u => u.indexOf("Q5.json") !== -1));
@@ -181,7 +181,7 @@ describe("neighborhood-wikidata", () => {
 
     it("should accept a bare entity, which is what hand-editing leaves you with", () => {
       const {fetchDoc} = fixtureTransport();
-      const db = wikidataDB(null, {fetchDoc, pages: [JSON.stringify({
+      const db = wikibaseDB(null, {fetchDoc, pages: [JSON.stringify({
         type: "item", id: "Q1000000",
         labels: {en: {language: "en", value: "Fictitious"}},
         claims: {},
@@ -191,21 +191,21 @@ describe("neighborhood-wikidata", () => {
     });
 
     it("should offer supplied entities to a focus-node menu before they're walked", () => {
-      const db = wikidataDB(null, Object.assign(fixtureTransport(), {pages: [editedQ42()]}));
+      const db = wikibaseDB(null, Object.assign(fixtureTransport(), {pages: [editedQ42()]}));
       const suggestions = db.suggestFocusNodes("Q42", 10);
       assert.deepEqual(suggestions.map(s => s.label), [WD + "Q42"]);
       assert.equal(suggestions[0].detail, "Douglas Adams");
     });
 
     it("should say which supplied page it couldn't read", () => {
-      expect(() => wikidataDB(null, {pages: ["{\"nope\": true}"]}))
+      expect(() => wikibaseDB(null, {pages: ["{\"nope\": true}"]}))
         .to.throw(/supplied entity page 0/);
     });
   });
 
   describe("the pages it read", () => {
     it("should hand back what it fetched, readably, for a host to keep", () => {
-      const db = wikidataDB(null, fixtureTransport());
+      const db = wikibaseDB(null, fixtureTransport());
       db.getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
       const pages = db.loadedPages();
       assert.deepEqual(pages.map(p => p.id), ["Q42"]);
@@ -217,13 +217,13 @@ describe("neighborhood-wikidata", () => {
     it("should not hand back a page it was given", () => {
       // it is already a document the caller has; only what was fetched is news
       const doc = fs.readFileSync(path.join(fixtures, "Q42.json"), "utf8");
-      const db = wikidataDB(null, Object.assign(fixtureTransport(), {pages: [doc]}));
+      const db = wikibaseDB(null, Object.assign(fixtureTransport(), {pages: [doc]}));
       db.getNeighborhood(nn(WD + "Q42"), "-start-", anyShape);
       assert.deepEqual(db.loadedPages(), []);
     });
 
     it("should offer the entities it was told about, before reaching them", () => {
-      const db = wikidataDB(null, Object.assign(fixtureTransport(), {entities: ["Q42", "Q5"]}));
+      const db = wikibaseDB(null, Object.assign(fixtureTransport(), {entities: ["Q42", "Q5"]}));
       assert.deepEqual(db.suggestFocusNodes("Q", 10).map(s => s.label),
                        [WD + "Q42", WD + "Q5"]);
       assert.deepEqual(db.loadedPages(), [], "naming an entity is not asking for it");
@@ -271,7 +271,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
     it("should validate Q42 as a human across four fixture pages", () => {
       const {log, fetchDoc} = fixtureTransport();
-      const db = wikidataDB(null, {fetchDoc});
+      const db = wikibaseDB(null, {fetchDoc});
       const validator = new ShExValidator(schema, db, {});
       const results = validator.validateShapeMap([{node: WD + "Q42", shape: base + "#human"}]);
       assert.equal(results[0].status, "conformant",
@@ -282,7 +282,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     });
 
     it("should report a nonconformant node with the mismatch, not an error", () => {
-      const db = wikidataDB(null, fixtureTransport());
+      const db = wikibaseDB(null, fixtureTransport());
       const validator = new ShExValidator(schema, db, {});
       // an item is not a time value node
       const results = validator.validateShapeMap([{node: WD + "Q5", shape: base + "#timeValue"}]);
@@ -300,12 +300,12 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
     it("should fetch and convert a live entity page", function () {
       this.timeout(60000);
-      const db = wikidataDB(null, {
+      const db = wikibaseDB(null, {
         fetchDoc: url => {
           const res = syncRequest("GET", url, {
             Accept: "application/json",
             // wikimedia 403s requests that don't identify themselves
-            "User-Agent": "@shexjs/neighborhood-wikidata test suite",
+            "User-Agent": "@shexjs/neighborhood-wikibase test suite",
           });
           if (res.status >= 400) throw Error(`GET <${url}> returned ${res.status}`);
           return res.body;

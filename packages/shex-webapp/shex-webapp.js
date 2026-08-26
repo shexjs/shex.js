@@ -11,7 +11,7 @@ ShExWebApp = (function () {
     "@shexjs/neighborhood-api":    require('@shexjs/neighborhood-api'),
     "@shexjs/neighborhood-rdfjs":  require('@shexjs/neighborhood-rdfjs'),
     "@shexjs/neighborhood-sparql": require('@shexjs/neighborhood-sparql'),
-    "@shexjs/neighborhood-wikidata": require('@shexjs/neighborhood-wikidata'),
+    "@shexjs/neighborhood-wikibase": require('@shexjs/neighborhood-wikibase'),
     "@shexjs/validator":           require('@shexjs/validator'),
     "@shexjs/writer":              require('@shexjs/writer'),
     "@shexjs/loader":              require("@shexjs/loader"),
@@ -42,7 +42,7 @@ ShExWebApp = (function () {
     NeighborhoodModules: [
       modules["@shexjs/neighborhood-rdfjs"],
       modules["@shexjs/neighborhood-sparql"],
-      modules["@shexjs/neighborhood-wikidata"],
+      modules["@shexjs/neighborhood-wikibase"],
     ],
     Validator:            modules["@shexjs/validator"].ShExValidator,
     Writer:               modules["@shexjs/writer"],

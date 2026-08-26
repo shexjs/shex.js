@@ -462,11 +462,11 @@ if (!TEST_browser) {
 
       it("should offer every loaded source, defaulting to an RDF document", function () {
         expect($("#neighborhood option").map((i, o) => $(o).val()).get())
-          .to.deep.equal(["rdfjs", "sparql", "wikidata"]);
+          .to.deep.equal(["rdfjs", "sparql", "wikibase"]);
         // named by what they read, the way "Turtle" is: the Wikibase source
         // reads the JSON entity pages a wiki is edited through
         expect($("#neighborhood option").map((i, o) => $(o).text()).get())
-          .to.deep.equal(["Turtle", "SPARQL endpoint", "Wikidata JSON"]);
+          .to.deep.equal(["Turtle", "SPARQL endpoint", "Wikibase JSON"]);
         expect($("#neighborhood").val()).to.equal("rdfjs");
         expect($("#neighborhood option:selected").text()).to.equal("Turtle");
         // settings on the left, one document tab beside it, and that
@@ -504,7 +504,7 @@ if (!TEST_browser) {
       });
 
       it("should let a wikibase grow a pane per entity page", function () {
-        source().select("wikidata");
+        source().select("wikibase");
         // an entity page is a document of its own and there are none until
         // you open one; which entities a validation visits is the query
         // map's to say, so there is no list of them to keep as well
@@ -529,7 +529,7 @@ if (!TEST_browser) {
       it("should give each pane the language its source says it is in", function () {
         source().select("rdfjs");
         expect(source().paneEditor().language).to.equal("turtle");
-        source().select("wikidata");
+        source().select("wikibase");
         source().addPane();               // an entity page, which is JSON
         expect(source().paneEditor().language).to.equal("json");
         source().select("sparql");
@@ -545,7 +545,7 @@ if (!TEST_browser) {
                        '{"entities": {"Q2": {"id": "Q2"}}}'];
         await shared.Caches.manifest.set([{
           schemaLabel: "constellation", schema: "PREFIX : <http://a.example/>\n<#S> {}",
-          dataLabel: "two entities", neighborhood: "wikidata", data: pages,
+          dataLabel: "two entities", neighborhood: "wikibase", data: pages,
           queryMap: '<http://www.wikidata.org/entity/Q1>@<#S>',
         }], "http://localhost/manifest.json");
 
@@ -554,7 +554,7 @@ if (!TEST_browser) {
         $("#inputData .indeterminant li").last().trigger("click");
         await shared.promise;
 
-        expect($("#neighborhood").val(), "the entry named its source").to.equal("wikidata");
+        expect($("#neighborhood").val(), "the entry named its source").to.equal("wikibase");
         // the source sorted them out: both are pages, named by what is in them
         expect(tabs()).to.deep.equal(["settings", "Q1", "Q2"]);
         expect(source().params().pages.length).to.equal(2);
@@ -599,7 +599,7 @@ if (!TEST_browser) {
         // every source that fetches has something to record -- a Wikibase
         // translates pages into RDF, so it does too -- and one that is
         // handed its data has nothing
-        source().select("wikidata");
+        source().select("wikibase");
         expect($("#nbhd-slurp").length, "a translating source").to.equal(1);
         source().select("rdfjs");
         expect($("#nbhd-slurp").length, "but not a document you typed").to.equal(0);
@@ -634,7 +634,7 @@ if (!TEST_browser) {
         expect(tabs(), "a query service has no document").to.deep.equal(["settings"]);
 
         await pick(1);
-        expect($("#neighborhood").val()).to.equal("wikidata");
+        expect($("#neighborhood").val()).to.equal("wikibase");
         expect($("#nbhd-base").val()).to.equal("https://www.wikidata.org/wiki/Special:EntityData/");
         // the entry hands this source no document: its query map says which
         // entities to walk (QENTITIES "42 76") and the pages are fetched
@@ -643,7 +643,7 @@ if (!TEST_browser) {
         expect($("#nbhd-endpoint").length).to.equal(0);
 
         await pick(2);
-        expect($("#neighborhood").val()).to.equal("wikidata");
+        expect($("#neighborhood").val()).to.equal("wikibase");
         expect(tabs()[1], "the downloaded page, named by the id in it").to.equal("Q42");
         expect(source().texts("pages")[0]).to.include('"lastrevid"');
       });
@@ -654,7 +654,7 @@ if (!TEST_browser) {
        * source that does not understand an extension says which one it is
        * and which source refused it. */
       it("should resolve a QueryMap extension through the selected source", async function () {
-        source().select("wikidata");
+        source().select("wikibase");
         const data = shared.Caches.inputData;
         const qentities = "http://www.w3.org/ns/shex#Extensions-qentities";
         const nodes = await data.resolveQueryMapExtension(qentities, "42 76");
@@ -691,7 +691,7 @@ if (!TEST_browser) {
         // on this page, with nothing registered: "materialize" here is the
         // query's, not ShExMap's
         expect(dom.window.ShExPlugins.all()).to.deep.equal([]);
-        source().select("wikidata");
+        source().select("wikibase");
         const shapeMap = shared.Caches.shapeMap;
         const qentities = "http://www.w3.org/ns/shex#Extensions-qentities";
         shapeMap.removeEditMapPair(null);
@@ -813,7 +813,7 @@ if (!TEST_browser) {
         await shared.Caches.manifest.set([{
           schemaLabel: "person", schema: Fs.readFileSync(
             Path.join(examples, "wikidata-person.shex"), "utf8"),
-          dataLabel: "Q42, handed over whole", neighborhood: "wikidata",
+          dataLabel: "Q42, handed over whole", neighborhood: "wikibase",
           data: JSON.stringify(page),
           regexpEngine: "eval-simple-1err",
           queryMap: 'QENTITIES "42"@START',
@@ -823,7 +823,7 @@ if (!TEST_browser) {
         $("#inputData .indeterminant li").last().trigger("click");
         await shared.promise;
 
-        expect($("#neighborhood").val()).to.equal("wikidata");
+        expect($("#neighborhood").val()).to.equal("wikibase");
         expect($("#regexpEngine").val(), "the entry asked for an engine").to.equal("eval-simple-1err");
 
         const began = Date.now();
@@ -854,7 +854,7 @@ if (!TEST_browser) {
         await shared.Caches.manifest.set([{
           schemaLabel: "person", schema: Fs.readFileSync(
             Path.join(examples, "wikidata-person.shex"), "utf8"),
-          dataLabel: "Q42, and keep what it reads", neighborhood: "wikidata",
+          dataLabel: "Q42, and keep what it reads", neighborhood: "wikibase",
           data: JSON.stringify(page),
           regexpEngine: "eval-simple-1err",
           queryMap: 'QENTITIES "42"@START',
@@ -911,11 +911,11 @@ if (!TEST_browser) {
       /* A Wikibase keeps its own: the pages it read are the better artifact,
        * and they are already on screen. */
       it("should leave a source that has documents of its own showing them", function () {
-        source().select("wikidata");
+        source().select("wikibase");
         source().addPane('{"entities": {"Q42": {"id": "Q42"}}}');
         source().setLocalTurtle("# Visited data:\n");
         source().showSlurped();
-        expect($("#neighborhood").val(), "still the Wikibase").to.equal("wikidata");
+        expect($("#neighborhood").val(), "still the Wikibase").to.equal("wikibase");
         expect(tabs()[1]).to.equal("Q42");
       });
 
@@ -980,7 +980,7 @@ if (!TEST_browser) {
         const wasRequestMeasure = pane.requestMeasure;
         pane.requestMeasure = function () { ++measured; return wasRequestMeasure.apply(this, arguments); };
         try {
-          source().select("wikidata");
+          source().select("wikibase");
           source().show(0);            // a document tab, after the settings pane
           expect(measured, "hidden and shown again").to.be.above(0);
         } finally {
@@ -1004,7 +1004,7 @@ if (!TEST_browser) {
         await shared.Caches.manifest.set([{
           schemaLabel: "person", schema: Fs.readFileSync(
             Path.join(examples, "wikidata-person.shex"), "utf8"),
-          dataLabel: "Q42 as JSON", neighborhood: "wikidata", data: text,
+          dataLabel: "Q42 as JSON", neighborhood: "wikibase", data: text,
           regexpEngine: "eval-simple-1err",
           queryMap: 'QENTITIES "42"@START',
         }], "http://localhost/manifest.json");
@@ -1087,7 +1087,7 @@ if (!TEST_browser) {
         await shared.Caches.manifest.set([{
           schemaLabel: "person", schema: Fs.readFileSync(
             Path.join(examples, "wikidata-person.shex"), "utf8"),
-          dataLabel: "two pages", neighborhood: "wikidata",
+          dataLabel: "two pages", neighborhood: "wikibase",
           data: JSON.stringify(page, null, 2),
           regexpEngine: "eval-simple-1err",
           queryMap: 'QENTITIES "42"@START',
