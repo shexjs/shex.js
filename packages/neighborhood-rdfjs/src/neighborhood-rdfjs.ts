@@ -20,26 +20,25 @@ export function rdfjsDB (db: RdfJsQuadSource, queryTracker?: DbQueryTracker): Ne
   function getNeighborhood (point: RdfJs.Term, shapeLabel: string | typeof Start, _shape: Shape): Neighborhood {
     // I'm guessing a local DB doesn't benefit from shape optimization.
     let startTime: Date | null = null;
+    let token: unknown = null;
     if (queryTracker) {
       startTime = new Date();
-      queryTracker.start(false, point, shapeLabel);
+      token = queryTracker.start(false, point, shapeLabel);
     }
     const outgoing: RdfJs.Quad[] = [...db.match(point, null, null, null)].sort(
       (l, r) => sparqlOrder(l.object, r.object)
     );
     if (queryTracker) {
       const time = new Date();
-      queryTracker.end(outgoing, time.valueOf() - startTime!.valueOf());
+      queryTracker.end(outgoing, time.valueOf() - startTime!.valueOf(), token);
       startTime = time;
-    }
-    if (queryTracker) {
-      queryTracker.start(true, point, shapeLabel);
+      token = queryTracker.start(true, point, shapeLabel);
     }
     const incoming: RdfJs.Quad[] = [...db.match(null, null, point, null)].sort(
       (l, r) => sparqlOrder(l.object, r.object)
     );
     if (queryTracker) {
-      queryTracker.end(incoming, new Date().valueOf() - startTime!.valueOf());
+      queryTracker.end(incoming, new Date().valueOf() - startTime!.valueOf(), token);
     }
     return {
       outgoing: outgoing,

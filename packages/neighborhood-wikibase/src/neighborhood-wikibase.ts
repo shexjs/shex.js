@@ -387,11 +387,23 @@ export function wikibaseDB (queryTracker?: DbQueryTracker, options: WikibaseDbOp
    * only where the validation crosses from one entity to another.
    */
   async function getNeighborhoodAsync (point: RdfJs.Term, shapeLabel: string | typeof Start,
-                                       shape: Shape): Promise<Neighborhood> {
-    const id = entityOf(point);
-    if (id !== null)
-      await ensureLoadedAsync(id);
-    return getNeighborhood(point, shapeLabel, shape);
+                                       _shape: Shape): Promise<Neighborhood> {
+    const startTime = Date.now();
+    const token = queryTracker ? queryTracker.start(false, point, shapeLabel) : null;
+    try {
+      const id = entityOf(point);
+      if (id !== null)
+        await ensureLoadedAsync(id);
+      else
+        refuseUnknownNode(point);
+    } catch (e) {
+      // fetching the page is what this costs and what can fail, so it is
+      // inside the window: a host recording the walk hears about both
+      if (queryTracker && queryTracker.fail)
+        queryTracker.fail(e, Date.now() - startTime, token);
+      throw e;
+    }
+    return neighborhoodFromStore(point, shapeLabel, startTime, token);
   }
 
   function ensureLoaded (id: string): void {
@@ -440,34 +452,49 @@ export function wikibaseDB (queryTracker?: DbQueryTracker, options: WikibaseDbOp
   }
 
   function getNeighborhood (point: RdfJs.Term, shapeLabel: string | typeof Start, _shape: Shape): Neighborhood {
-    const id = entityOf(point);
-    if (id !== null)
-      ensureLoaded(id);
-    else if (mintedHere(point) &&
-             store.countQuads(point as any, null, null, null) === 0 &&
-             store.countQuads(null, null, point as any, null) === 0)
+    const startTime = Date.now();
+    const token = queryTracker ? queryTracker.start(false, point, shapeLabel) : null;
+    try {
+      const id = entityOf(point);
+      if (id !== null)
+        ensureLoaded(id);
+      else
+        refuseUnknownNode(point);
+    } catch (e) {
+      if (queryTracker && queryTracker.fail)
+        queryTracker.fail(e, Date.now() - startTime, token);
+      throw e;
+    }
+    return neighborhoodFromStore(point, shapeLabel, startTime, token);
+  }
+
+  /** A node this DB never loaded a page for and cannot name one from. */
+  function refuseUnknownNode (point: RdfJs.Term): void {
+    if (mintedHere(point) &&
+        store.countQuads(point as any, null, null, null) === 0 &&
+        store.countQuads(null, null, point as any, null) === 0)
       throw new EntityResolutionError(
         `${point.termType === "BlankNode" ? "_:" + point.value : "<" + point.value + ">"} ` +
           `is not in any entity page this DB has loaded, and its name doesn't say ` +
           `which page to fetch; walk in through the entity's statements instead`);
+  }
 
-    let startTime: number | null = null;
-    if (queryTracker) {
-      startTime = Date.now();
-      queryTracker.start(false, point, shapeLabel);
-    }
+  /** The arcs, once the page they are in is here: both faces do this half
+   * the same way, and report it under the request that opened it. */
+  function neighborhoodFromStore (point: RdfJs.Term, shapeLabel: string | typeof Start,
+                                  startTime: number, token: unknown): Neighborhood {
     const outgoing = store.getQuads(point as any, null, null, null)
           .sort((l, r) => sparqlOrder(l.object, r.object));
     if (queryTracker) {
       const now = Date.now();
-      queryTracker.end(outgoing, now - startTime!);
+      queryTracker.end(outgoing, now - startTime, token);
       startTime = now;
-      queryTracker.start(true, point, shapeLabel);
+      token = queryTracker.start(true, point, shapeLabel);
     }
     const incoming = store.getQuads(null, null, point as any, null)
           .sort((l, r) => sparqlOrder(l.object, r.object));
     if (queryTracker)
-      queryTracker.end(incoming, Date.now() - startTime!);
+      queryTracker.end(incoming, Date.now() - startTime, token);
     return {outgoing, incoming};
   }
 

@@ -710,13 +710,13 @@ if (!TEST_browser) {
         for (let i = 0; i < 200 && $("ul.context-menu-list li").length === 0; ++i)
           await new Promise(res => setTimeout(res, 10));
         const items = $("ul.context-menu-list li");
-        // spelled as the page would write them: a scheme-relative reference
-        // resolves back to the same IRI against the page's own base
+        // spelled against the base the entries before this one named
+        // (`dataBase`), which is what an entity IRI is written against
         expect(items.map((i, li) => $(li).text()).get(),
                "the answers, and the item that takes all of them").to.deep.equal([
           "- materialize -",
-          "<//www.wikidata.org/entity/Q42>",
-          "<//www.wikidata.org/entity/Q76>",
+          "<Q42>",
+          "<Q76>",
         ]);
 
         items.eq(0).trigger("mouseup");   // as the plugin activates an item
@@ -725,8 +725,8 @@ if (!TEST_browser) {
         ]]).get();
         expect(pairs, "a row per node, each with the shape the query had")
           .to.deep.equal([
-            ["<//www.wikidata.org/entity/Q42>", "<//a.example/S>"],
-            ["<//www.wikidata.org/entity/Q76>", "<//a.example/S>"],
+            ["<Q42>", "<//a.example/S>"],
+            ["<Q76>", "<//a.example/S>"],
           ]);
         shapeMap.removeEditMapPair(null);
       });
@@ -873,17 +873,117 @@ if (!TEST_browser) {
         try {
           $("#validate").trigger("click");
           await shared.promise;
-          // the writer ends asynchronously; its callback is what appends
           let turtle = "";
-          for (let i = 0; i < 100 && !/wd:Q42/.test(turtle); ++i) {
+          for (let i = 0; i < 100 && !/triples/.test(turtle); ++i) {
             await new Promise(resolve => setTimeout(resolve, 20));
             turtle = (source().panesFor("rdfjs").data || [""])[0] || "";
           }
-          // what it visited, as it visited it...
-          expect(turtle, "the walk it made").to.match(/#\s*[→←]\s*\S+@\S+ \d+ triples/);
-          // ...and the triples themselves, as Turtle to validate again
+          const lines = turtle.split("\n");
+
+          // it opens with what the document is and what it is written with,
+          // before anything has come back to write
+          expect(lines[0], "what this is").to.equal("# slurped");
+          expect(turtle, "the schema's prefixes, said once")
+            .to.include("PREFIX wdt: <http://www.wikidata.org/prop/direct/>");
+          expect(turtle.split("PREFIX wdt:").length - 1, "once").to.equal(1);
+
+          // ...then one complete line per request, and under each of them
+          // the triples that came back from it
+          const walk = lines.filter(l => /^# [→←]/.test(l));
+          expect(walk.length, "a line per request").to.be.above(0);
+          for (const line of walk)
+            expect(line, "said in full, after the answer")
+              .to.match(/^# [→←] \S+@\S+ \d+ triples \(\d+ ms\)$/);
+          const first = lines.indexOf(walk[0]);
+          expect(lines[first + 1], "the triples under the line about them")
+            .to.match(/^(<|_:|wd)/);
           expect(turtle, "and what it read").to.include("wd:Q42");
           expect(turtle).to.match(/wdt:P31|rdfs:label/);
+
+          // ...which is a Turtle document, whatever the walk did: the lines
+          // used to be opened by one request and closed by another's answer
+          const parsed = new (require("n3").Parser)(
+            {format: "text/turtle", baseIRI: "http://a.example/"}).parse(turtle);
+          expect(parsed.length, "and it parses").to.be.above(0);
+        } finally {
+          $("#nbhd-slurp").prop("checked", false).trigger("change");
+        }
+      });
+
+      /* A base the data is written against, which a source that answers
+       * from a service has no URL to supply: an entity reads as <Q42>
+       * rather than as forty characters of wikidata.org, in the walk and in
+       * the Turtle under it, and the document says which base that is. */
+      it("should write a slurp against the base the entry named", async function () {
+        this.timeout(60000);
+        const examples = Path.join(__dirname, "../examples");
+        const page = JSON.parse(Fs.readFileSync(Path.join(examples, "wikidata-Q42.json"), "utf8"));
+        delete page.entities.Q42.sitelinks;
+
+        await shared.Caches.manifest.set([{
+          schemaLabel: "person", schema: Fs.readFileSync(
+            Path.join(examples, "wikidata-person.shex"), "utf8"),
+          dataLabel: "Q42, against the entity base", neighborhood: "wikibase",
+          dataBase: "http://www.wikidata.org/entity/",
+          data: JSON.stringify(page),
+          regexpEngine: "eval-simple-1err",
+          queryMap: 'QENTITIES "42"@START',
+        }], "http://localhost/manifest.json");
+        $("#inputSchema .manifest li").last().trigger("click");
+        await shared.promise;
+        $("#inputData .indeterminant li").last().trigger("click");
+        await shared.promise;
+        expect(shared.Caches.inputData.meta.base, "the entry said what to write against")
+          .to.equal("http://www.wikidata.org/entity/");
+
+        $("#nbhd-slurp").prop("checked", true).trigger("change");
+        try {
+          $("#validate").trigger("click");
+          await shared.promise;
+          let turtle = "";
+          for (let i = 0; i < 100 && !/triples/.test(turtle); ++i) {
+            await new Promise(resolve => setTimeout(resolve, 20));
+            turtle = (source().panesFor("rdfjs").data || [""])[0] || "";
+          }
+          expect(turtle.split("\n")[0], "declared at the top")
+            .to.equal("BASE <http://www.wikidata.org/entity/>");
+          expect(turtle, "the walk, written against it").to.match(/^# → <Q42>@\S+ \d+ triples/m);
+          expect(turtle, "and the triples under it").to.match(/^<Q42> /m);
+          expect(turtle, "which is what it means")
+            .to.not.include("<http://www.wikidata.org/entity/Q42>");
+        } finally {
+          $("#nbhd-slurp").prop("checked", false).trigger("change");
+        }
+      });
+
+      /* A request that got nothing back says so where it happened, rather
+       * than leaving a line half-written and the reader wondering which of
+       * a hundred requests never came home. */
+      it("should say where a request got nothing back", async function () {
+        this.timeout(60000);
+        await shared.Caches.manifest.set([{
+          schemaLabel: "person", schema: Fs.readFileSync(
+            Path.join(__dirname, "../examples", "wikidata-person.shex"), "utf8"),
+          dataLabel: "an entity that isn't there", neighborhood: "wikibase",
+          base: dom.window.location.origin + "/no/such/directory/",
+          queryMap: 'QENTITIES "42"@START',
+        }], "http://localhost/manifest.json");
+        $("#inputSchema .manifest li").last().trigger("click");
+        await shared.promise;
+        $("#inputData .indeterminant li").last().trigger("click");
+        await shared.promise;
+
+        $("#nbhd-slurp").prop("checked", true).trigger("change");
+        try {
+          $("#validate").trigger("click");
+          await shared.promise;
+          let turtle = "";
+          for (let i = 0; i < 100 && !/nothing back/.test(turtle); ++i) {
+            await new Promise(resolve => setTimeout(resolve, 20));
+            turtle = (source().panesFor("rdfjs").data || [""])[0] || "";
+          }
+          expect(turtle, "the request, and what came of it")
+            .to.match(/^# → \S+@\S+ nothing back after \d+ ms: .*404/m);
         } finally {
           $("#nbhd-slurp").prop("checked", false).trigger("change");
         }

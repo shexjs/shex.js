@@ -16,8 +16,16 @@ export interface Neighborhood {
  * e.g. to log or slurp the retrieved triples.
  */
 export interface DbQueryTracker {
-  start (isIncoming: boolean, term: RdfJsTerm, shapeLabel: string | typeof Start): void;
-  end (quads: RdfJs.Quad[], time: number): void;
+  /** A query is going out.  What this returns comes back to `end` or
+   * `fail`, so that an answer can be told from the question it answers: an
+   * asynchronous db has several in flight at once, and pairing them by
+   * arrival order files one request's answer under another's. */
+  start (isIncoming: boolean, term: RdfJsTerm, shapeLabel: string | typeof Start): unknown;
+  /** what came back, how long it took, and which question it answers */
+  end (quads: RdfJs.Quad[], time: number, token?: unknown): void;
+  /** ...and when nothing came back: a timeout, a refusal, a service that
+   * broke.  Optional, since a db that cannot fail need not say so. */
+  fail? (error: unknown, time: number, token?: unknown): void;
 }
 
 export interface NeighborhoodDb {

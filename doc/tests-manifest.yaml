@@ -223,11 +223,13 @@
     } LIMIT 10'''@START
   status: conformant
   neighborhood: sparql
+  dataBase: http://www.wikidata.org/entity/
   endpoint: https://query.wikidata.org/sparql
 - schemaLabel: Wikidata person
   schemaURL: ../packages/shex-webapp/examples/wikidata-person.shex
   dataLabel: Q42 from the query service
   neighborhood: sparql
+  dataBase: http://www.wikidata.org/entity/
   endpoint: https://query.wikidata.org/sparql
   queryMap: |
     <http://www.wikidata.org/entity/Q42>@START
@@ -237,6 +239,7 @@
   schemaURL: ../packages/shex-webapp/examples/wikidata-person.shex
   dataLabel: Q42 from the JSON API
   neighborhood: wikibase
+  dataBase: http://www.wikidata.org/entity/
   base: https://www.wikidata.org/wiki/Special:EntityData/
   queryMap: |
     QENTITIES "42 76"@START
@@ -246,6 +249,7 @@
   schemaURL: ../packages/shex-webapp/examples/wikidata-person.shex
   dataLabel: Q42 from a downloaded page
   neighborhood: wikibase
+  dataBase: http://www.wikidata.org/entity/
   dataURL: ../packages/shex-webapp/examples/wikidata-Q42.json
   queryMap: |
     <http://www.wikidata.org/entity/Q42>@START
@@ -256,6 +260,7 @@
   schemaURL: ../packages/shex-webapp/examples/wikidata-human-gene.shex
   dataLabel: BRCA1, its chromosome and its assembly
   neighborhood: wikibase
+  dataBase: http://www.wikidata.org/entity/
   base: https://www.wikidata.org/wiki/Special:EntityData/
   queryMap: |
     QENTITIES "227339"@START

@@ -150,13 +150,25 @@ function makeStaticDB (quads) {
     return logger;
   }
 
+/** The tracker over there, reporting to the app over here.
+ *
+ * The token is what pairs an answer with its question across the two
+ * threads: a walk has several requests in flight, so which one finished is
+ * not "the last one that started".
+ */
+let nextQuery = 0;
 function queryTracker () {
   return {
     start: function (isOut, term, shapeLabel) {
-      self.postMessage ({ response: "startQuery", isOut: isOut, term: WorkerMarshalling.rdfjsTermToJsonTerm(term), shapeLabel: shapeLabel });
+      const token = ++nextQuery;
+      self.postMessage ({ response: "startQuery", token: token, isOut: isOut, term: WorkerMarshalling.rdfjsTermToJsonTerm(term), shapeLabel: shapeLabel });
+      return token;
     },
-    end: function (quads, time) {
-      self.postMessage({ response: "finishQuery", quads: quads.map(t => WorkerMarshalling.rdfjsTripleToJsonTriple(t)), time: time });
+    end: function (quads, time, token) {
+      self.postMessage({ response: "finishQuery", token: token, quads: quads.map(t => WorkerMarshalling.rdfjsTripleToJsonTriple(t)), time: time });
+    },
+    fail: function (error, time, token) {
+      self.postMessage({ response: "failedQuery", token: token, message: String((error && error.message) || error), time: time });
     }
   }
 }

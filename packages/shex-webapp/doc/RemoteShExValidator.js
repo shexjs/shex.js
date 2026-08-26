@@ -180,17 +180,27 @@ class RemoteShExValidator {
       // tracker that a local db also calls.
     case "startQuery":
       if (this.renderer.caches.inputData.queryTrackerController.queryTracker)
+        // the worker's token, not this tracker's: it is what the answer
+        // will arrive carrying
         this.renderer.caches.inputData.queryTrackerController.queryTracker.start(
           msg.data.isOut,
           WorkerMarshalling.jsonTermToRdfjsTerm(msg.data.term, RdfJs.DataFactory),
-          msg.data.shapeLabel);
+          msg.data.shapeLabel,
+          msg.data.token);
       break;
 
     case "finishQuery":
       if (this.renderer.caches.inputData.queryTrackerController.queryTracker)
         this.renderer.caches.inputData.queryTrackerController.queryTracker.end(
           msg.data.quads.map(t => WorkerMarshalling.jsonTripleToRdfjsTriple(t, RdfJs.DataFactory)),
-          msg.data.time);
+          msg.data.time, msg.data.token);
+      break;
+
+    case "failedQuery":
+      if (this.renderer.caches.inputData.queryTrackerController.queryTracker
+          && this.renderer.caches.inputData.queryTrackerController.queryTracker.fail)
+        this.renderer.caches.inputData.queryTrackerController.queryTracker.fail(
+          Error(msg.data.message), msg.data.time, msg.data.token);
       break;
 
     default:

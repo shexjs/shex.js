@@ -668,24 +668,39 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         const wantEverything = !!shape.closed || !!options.allOutgoing;
         const outPreds = wantEverything ? null : arcs.out;
         let startTime = Date.now();
-        if (queryTracker)
-            queryTracker.start(false, point, shapeLabel);
+        let token = queryTracker ? queryTracker.start(false, point, shapeLabel) : null;
         const cached = cachedOutgoing(point, outPreds);
-        const outgoing = (wantEverything || outPreds.length > 0)
-            ? (cached !== null ? cached : yield* fetch(point, outPreds, false))
-            : [];
+        let outgoing;
+        try {
+            outgoing = (wantEverything || outPreds.length > 0)
+                ? (cached !== null ? cached : yield* fetch(point, outPreds, false))
+                : [];
+        }
+        catch (e) {
+            // an endpoint that refused, timed out or broke: what the walk was
+            // asking for when it happened is the useful half of that news
+            if (queryTracker && queryTracker.fail)
+                queryTracker.fail(e, Date.now() - startTime, token);
+            throw e;
+        }
         if (queryTracker) {
             const now = Date.now();
-            queryTracker.end(outgoing, now - startTime);
+            queryTracker.end(outgoing, now - startTime, token);
             startTime = now;
         }
         let incoming = [];
         if (arcs.anyInverse) {
+            token = queryTracker ? queryTracker.start(true, point, shapeLabel) : null;
+            try {
+                incoming = yield* fetch(point, null, true);
+            }
+            catch (e) {
+                if (queryTracker && queryTracker.fail)
+                    queryTracker.fail(e, Date.now() - startTime, token);
+                throw e;
+            }
             if (queryTracker)
-                queryTracker.start(true, point, shapeLabel);
-            incoming = yield* fetch(point, null, true);
-            if (queryTracker)
-                queryTracker.end(incoming, Date.now() - startTime);
+                queryTracker.end(incoming, Date.now() - startTime, token);
         }
         return { outgoing, incoming };
     }

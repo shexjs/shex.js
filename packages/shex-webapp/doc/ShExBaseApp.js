@@ -237,7 +237,9 @@ class InterfaceCache {
   async set (text, base) {
     this._dirty = true;
     this.selection.val(text);
-    this.meta.base = base;
+    // a base this pane was given (?data-base=) outlasts the documents that
+    // come and go in it; a document's own URL is the base otherwise
+    this.meta.base = this.baseOverride || base;
     if (base !== this.base) {
       this.url = base; // @@crappyHack1 -- parms should differntiate:
       // working base: base for URL resolution.
@@ -971,14 +973,19 @@ class TurtleCache extends InterfaceCache {
                                       // the tracker is an input too: turning slurp on has to
                                       // build a db that reports what it fetches
                                       !!this.queryTrackerController.queryTracker]);
+    // What the parameters say, whether or not the db has to be rebuilt from
+    // them: this is bookkeeping about the source, and the shape map's SPARQL
+    // extension reads it.  Below the early return it was whatever the last
+    // db that *was* built had left -- so a second entry against the same
+    // endpoint asked its query map with no endpoint recorded.
+    if ("endpoint" in params)
+      this.endpoint = params.endpoint;
+    else
+      delete this.endpoint;
+
     if (fetches && this.parsed && signature === this.dbSignature)
       return this.parsed;
     this.dbSignature = signature;
-
-    if ("endpoint" in params)
-      this.endpoint = params.endpoint;    // the SPARQL shape-map extension reads this
-    else
-      delete this.endpoint;
 
     // A pane of Turtle is this app's to parse: it owns the parser, and the
     // prefixes and base it finds are what the rest of the app lexifies
@@ -2772,22 +2779,16 @@ class ShExResultsRenderer {
     // slurp leaves the entity pages it visited as panes to edit
     const neighborhoods = this.caches.inputData.neighborhoods;
     const db = this.caches.inputData.parsed;
-    if (neighborhoods && neighborhoods.slurping() && db && typeof db.loadedPages === "function") {
-      for (const {id, text} of db.loadedPages())
-        neighborhoods.addPageDocument(id, text);
-      neighborhoods.render();
-    }
-    if ("slurpWriter" in this.caches.inputData) {
-      this.caches.inputData.slurpWriter.end((err, chunk) => {
-        const neighborhoods = this.caches.inputData.neighborhoods;
-        neighborhoods.appendToLocalTurtle("\n\n# Visited data:\n" + chunk);
-        // ...and where the reader can see it, if this source has nothing of
-        // its own to show
-        neighborhoods.showSlurped();
-        // delete this.caches.intputData.endpoint;
-        this.caches.inputData.refresh();
-        delete this.caches.inputData.slurpWriter;
-      });
+    if (neighborhoods && neighborhoods.slurping()) {
+      if (db && typeof db.loadedPages === "function") {
+        for (const {id, text} of db.loadedPages())
+          neighborhoods.addPageDocument(id, text);
+        neighborhoods.render();
+      }
+      // the triples went in as they arrived (makeQueryTracker), so what is
+      // left is to show it and to parse what was written
+      neighborhoods.showSlurped();
+      this.caches.inputData.refresh();
     }
 
     this.renderAppinfo();
@@ -3350,7 +3351,25 @@ class ShExBaseApp {
       // named for what it means, not for the module that declares it, so a
       // manifest entry or a permalink says `neighborhood=sparql&endpoint=…`
       // and two sources that both take an `endpoint` agree about the word.
-    ]).concat(this.neighborhoods.queryParams());
+    ]).concat(this.neighborhoods.queryParams()).concat([
+      // What the data is written against: relative IRIs in the data pane
+      // resolve against it, terms are written back relative to it (a
+      // Wikidata entity as <Q42> rather than as forty characters of URL),
+      // and a slurp declares it at the top of what it collects.  A document
+      // loaded from a URL is written against that URL; this is for data that
+      // comes from somewhere without one -- an endpoint's answers, a
+      // Wikibase's pages -- and for saying otherwise.
+      //
+      // Last, after the source it is about: these are delivered in order,
+      // and a query map that asks the source a question (SPARQL, QENTITIES)
+      // is resolved as soon as the source is named, so anything the source
+      // needs has to be there before this list moves on.
+      {queryStringParm: "data-base",    deflt: "",  manifest: {key: "dataBase"},
+       location: {
+         val: (v) => v === undefined ? (this.dataBase || "") : this.setDataBase(v),
+         prop: () => undefined,
+       }},
+    ]);
     this.keyDownHandlers = [
       this.validateKeyDown.bind(this),
       this.navigateManifestKeyDown.bind(this),
@@ -4953,11 +4972,8 @@ class ShExBaseApp {
         this.queryTrackerController.queryTracker = this.makeQueryTracker();
         if (this.neighborhoods.slurping()) {
           // Start the Turtle document over: what this validation fetches is
-          // what it should end up holding.  With a line to name it by --
-          // that pane's tab is titled from its leading comment, and the
-          // trace lines that follow would name it after the first query.
-          this.neighborhoods.setLocalTurtle("# slurped\n");
-          this.Caches.inputData.slurpWriter = new RdfJs.Writer({ prefixes: this.Caches.inputSchema.meta.prefixes });
+          // what it should end up holding, and it is written as it arrives.
+          this.neighborhoods.setLocalTurtle(this.startSlurp());
         }
         if (wasTracking !== !!this.queryTrackerController.queryTracker) {
           // the db was built around the other answer
@@ -5053,30 +5069,128 @@ class ShExBaseApp {
     }
   }
 
-  /** What records the triples a validation fetches, or null when nothing is
+  /**
+   * What records the triples a validation fetches, or null when nothing is
    * being recorded.  The caller hangs it on the controller the data cache
-   * reads, which is what makes the db it builds next report what it fetches
-   * -- this used to assign it here and return undefined, so the caller's
-   * `queryTracker = makeQueryTracker()` promptly unset it and a slurp
-   * recorded a document of prefixes and nothing else. */
+   * reads, which is what makes the db it builds next report what it fetches.
+   *
+   * One line per request, written when the answer arrives rather than
+   * half-written when the question goes out: an asynchronous walk has
+   * several in flight, and a line opened by one request and closed by
+   * another's answer said the wrong thing about both -- and left the
+   * document unparseable where a `# → …` ran into the next one.  The
+   * triples that came back go directly under the line about them, so the
+   * document reads as the walk in order.
+   *
+   * A db hands `start` a token and hands it back with the answer, which is
+   * what pairs the two; the worker mints its own, since it is the thread
+   * that has to say which answer is which when it posts them over.
+   */
+  /** The base the data pane's documents are written against, when it is not
+   * the URL they came from (?data-base=, a manifest entry's `dataBase`).
+   * Sticky: documents come and go in that pane and this outlasts them. */
+  setDataBase (base) {
+    this.dataBase = base || "";
+    const cache = this.Caches.inputData;
+    cache.baseOverride = this.dataBase;
+    if (this.dataBase)
+      cache.meta.base = this.dataBase;
+    // ...and no dirty bit: the document that arrives with it marks the pane
+    // dirty itself, and asking for a re-parse here would rebuild the db in
+    // the middle of a manifest entry's settings being delivered -- for a
+    // source that fetches, that is a round trip for nothing, and it lands
+    // between the source being named and its endpoint arriving
+    return this.dataBase;
+  }
+
   makeQueryTracker () {
-    return this.neighborhoods.slurping()
-    ? {
+    if (!this.neighborhoods.slurping())
+      return null;
+    const asked = new Map();
+    let minted = 0;
+    const said = (token, tail) => {
+      const about = asked.get(token) || {arrow: "→", what: "(untracked request)"};
+      asked.delete(token);
+      this.neighborhoods.appendToLocalTurtle("# " + about.arrow + " " + about.what + " " + tail);
+    };
+    return {
       // a db reports in RDF/JS terms and quads (DbQueryTracker); what
       // comes back from the worker is marshalled JSON, and is turned back
       // into these at that boundary (RemoteShExValidator's startQuery)
-      start: (isOut, term, shapeLabel) => {
-        const node = this.Caches.inputData.meta.termToLex(term);
-        const shape = this.Caches.inputSchema.meta.termToLex(shapeLabel);
-        const slurpStatus = (isOut ? "←" : "→") + " " + node + "@" + shape;
-        this.neighborhoods.appendToLocalTurtle("# " + slurpStatus);
+      start: (isIncoming, term, shapeLabel, token) => {
+        const id = token === undefined ? ++minted : token;
+        asked.set(id, {
+          arrow: isIncoming ? "←" : "→",
+          // lexed now, while the term is in hand and the base is the one
+          // the header declared
+          what: this.Caches.inputData.meta.termToLex(term)
+            + "@" + this.Caches.inputSchema.meta.termToLex(shapeLabel),
+        });
+        return id;
       },
-      end: (triples, time) => {
-        this.neighborhoods.appendToLocalTurtle(" " + triples.length + " triples (" + time + " μs)\n");
-        this.Caches.inputData.slurpWriter.addQuads(triples);
-      }
-    }
-    : null;
+      end: (triples, time, token) => {
+        said(token, triples.length + " triples (" + time + " ms)\n"
+             + this.slurpTurtle(triples));
+      },
+      // a request that timed out, was refused, or asked for a page that
+      // isn't there: the walk stops, and this is the line that says where
+      fail: (error, time, token) => {
+        const why = String((error && error.message) || error).split("\n")[0];
+        said(token, "nothing back after " + time + " ms: " + why + "\n");
+      },
+    };
+  }
+
+  /**
+   * Where a slurp writes, before anything has come back.
+   *
+   * The base its triples are written against -- so a Wikidata entity reads
+   * as <Q42> rather than as forty characters of URL -- then what this
+   * document is, then the prefixes.  Those are the schema's: a validation is
+   * about one schema, and its names are the ones the reader has just been
+   * reading.  All of it up front, so that a document being filled a line at
+   * a time is Turtle from the first line down.
+   */
+  startSlurp () {
+    const prefixes = this.Caches.inputSchema.meta.prefixes || {};
+    // what the per-response writer will declare, so it can be taken off
+    // again: N3 says the prefixes it was given every time it is ended
+    this.slurpPrefixes = "";
+    new RdfJs.Writer({prefixes}).end((e, text) => { this.slurpPrefixes = text || ""; });
+    // what was asked for (?data-base=), not whatever URL the pane's last
+    // document came from: this is declared in the document, and only a
+    // declared base may be written relative to
+    const base = this.dataBase;
+    return (base ? "BASE <" + base + ">\n\n" : "")
+      + "# slurped\n"
+      + Object.keys(prefixes).map(p => "PREFIX " + p + ": <" + prefixes[p] + ">\n").join("")
+      + "\n";
+  }
+
+  /**
+   * One response's triples, to sit under the line about it.
+   *
+   * Turtle, with the prefixes the header has already declared and IRIs
+   * written against the base it declared.  Relativized here rather than by
+   * handing the writer a base, which would relativize the predicates too
+   * (`<../prop/P1748>` where `p:P1748` is what anyone would write).
+   */
+  slurpTurtle (quads) {
+    if (quads.length === 0)
+      return "";
+    const base = this.dataBase;
+    const factory = RdfJs.DataFactory;
+    const under = term => term.termType === "NamedNode" && base && term.value.startsWith(base)
+          ? factory.namedNode(term.value.substring(base.length))
+          : term;
+    const writer = new RdfJs.Writer({prefixes: this.Caches.inputSchema.meta.prefixes});
+    writer.addQuads(quads.map(
+      q => factory.quad(under(q.subject), under(q.predicate), under(q.object))));
+    let text = "";
+    writer.end((e, out) => { text = out || ""; }); // a writer with no stream answers here
+    return this.slurpPrefixes && text.startsWith(this.slurpPrefixes)
+      ? text.substring(this.slurpPrefixes.length)
+      : text;
   }
 
   /**

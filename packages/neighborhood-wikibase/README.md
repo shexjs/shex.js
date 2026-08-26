@@ -125,8 +125,22 @@ validation visits is the query map's to say (`QENTITIES "42 76"@START`, or
 their IRIs), so a source with nothing opened yet shows only its settings.
 
 Turning on **slurp** records what a validation fetched: the triples go to
-the local store's Turtle document, and every entity page the walk read comes
-back as a pane of its own, readably indented, to edit and validate again.
+the local store's Turtle document — a line per request saying what was asked
+and what came back, with that request's triples under it — and every entity
+page the walk read comes back as a pane of its own, readably indented, to
+edit and validate again.
+
+An entry may say what the data is written against, which is how the walk and
+the triples come out as `<Q42>` rather than as forty characters of URL:
+
+``` yaml
+neighborhood: wikibase
+dataBase: http://www.wikidata.org/entity/
+```
+
+`?data-base=` says the same thing in a link. It is the app's setting rather
+than this source's, since a query service's answers arrive without a URL of
+their own too.
 
 Requests identify themselves with a `User-Agent` where that can be said —
 Wikimedia's robot policy 403s clients that don't — which means under node,
