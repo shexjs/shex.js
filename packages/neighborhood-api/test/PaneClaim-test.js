@@ -165,11 +165,10 @@ describe("neighborhood pane claims", () => {
     });
 
     it("should sort documents into the panes they belong in", () => {
-      // an entity page is a page, and it also says which entity it is about;
-      // anything else is a list of ids
+      // this source holds entity pages; a list of ids is not one, and which
+      // entities to visit is the query map's to say
       const page = '{"entities": {"Q42": {"id": "Q42"}}}';
       expect(Wikidata.distributeDocuments([page, "Q5 Q7"])).to.deep.equal({
-        data: ["Q42 Q5 Q7"],
         pages: [JSON.stringify(JSON.parse(page), null, 2) + "\n"],
       });
       expect(RdfJs.distributeDocuments, "a graph is a graph").to.equal(undefined);
@@ -189,11 +188,10 @@ describe("neighborhood pane claims", () => {
     });
 
     it("should let a wikibase have as many entity pages as the user opens", () => {
-      // which entities are in play is one list; their pages are documents
-      const [ids, pages] = paneParams(Wikidata.dbParams);
-      expect(ids.name).to.equal("data");
-      expect(ids.pane).to.deep.include({label: "entity ids", min: 1, max: 1});
-      expect(ids.pane.editor, "a list of ids is not a language").to.equal(undefined);
+      // one pane, and none of it to start: an entity page is a document, and
+      // the entities a validation visits are the query map's business
+      const [pages, ...rest] = paneParams(Wikidata.dbParams);
+      expect(rest, "the entity pages are the whole of it").to.deep.equal([]);
       expect(pages.name).to.equal("pages");
       expect(pages.pane).to.deep.include({label: "entity JSON", min: 0, creatable: true});
       expect(pages.pane.max).to.equal(undefined);
@@ -204,7 +202,7 @@ describe("neighborhood pane claims", () => {
     });
 
     it("should title an entity pane from the page in it", () => {
-      const {titleOf, template} = paneParams(Wikidata.dbParams)[1].pane;
+      const {titleOf, template} = paneParams(Wikidata.dbParams)[0].pane;
       expect(titleOf('{"entities": {"Q42": {"id": "Q42"}}}')).to.equal("Q42");
       expect(titleOf('{"id": "Q42", "type": "item"}')).to.equal("Q42"); // a bare entity
       expect(titleOf('{"entities": {"Q4'), "half-typed").to.equal(null);

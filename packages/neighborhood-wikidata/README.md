@@ -116,11 +116,12 @@ the bare entity, which is what hand-editing tends to leave you with.
 
 ## from the WebApp
 
-Pick **Wikidata** from the data-source list. The module declares what it
-needs, so the app draws it: a field for the entity-page base, a first pane
-holding the entities in play as a whitespace-separated list of ids, and a
-pane per entity page with a `+` to open another — each tab named by reading
-the id back out of the page. Those pages are the `pages` above.
+Pick **Wikidata JSON** from the data-source list. The module declares what
+it needs, so the app draws it: a field for the entity-page base, and a pane
+per entity page with a `+` to open another — each tab named by reading the
+id back out of the page. Those pages are the `pages` above. Which entities a
+validation visits is the query map's to say (`QENTITIES "42 76"@START`, or
+their IRIs), so a source with nothing opened yet shows only its settings.
 
 Turning on **slurp** records what a validation fetched: the triples go to
 the local store's Turtle document, and every entity page the walk read comes

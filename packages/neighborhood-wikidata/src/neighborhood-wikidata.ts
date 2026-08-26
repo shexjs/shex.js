@@ -55,9 +55,14 @@ export interface WikidataDbOptions extends Omit<WikibaseRdfOptions, "siteInfo"> 
   /** directory for the persistent page cache; created on first write.
    * Without it, caching is in-memory only. */
   cacheDir?: string;
-  /** The entities in play, by id: what a host's "entity ids" pane holds.
+  /** The entities in play, by id, for a caller that knows them up front.
    * They are not fetched until a walk reaches them -- naming an entity is
-   * not asking for it -- but they are what a focus-node menu offers. */
+   * not asking for it -- but they are what a focus-node menu offers.
+   *
+   * Not a `dbParams` parameter: which entities a validation visits is what
+   * the query map says (`QENTITIES "42 76"@START`, or their IRIs), so a
+   * host that asked for the list as well was asking twice and using the
+   * answer for nothing but typeahead. */
   entities?: string[];
   /** Entity pages to believe instead of what the site currently serves,
    * as the JSON text of `Special:EntityData/<id>.json` (or of a bare
@@ -594,7 +599,7 @@ function labelIn (doc: EntityDoc, id: string, language: string): string | null {
 }
 
 export const name = "neighborhood-wikidata";
-export const label = "Wikidata";
+export const label = "Wikidata JSON";
 export const description = "Implementation of @shexjs/neighborhood-api which synthesizes Wikidata's RDF from entity JSON pages";
 export const capabilities = ["query", "translate"];
 
@@ -656,12 +661,6 @@ export const dbParams: DbParamSpec[] = [
     schema: {type: "string", format: "file-path"},
     ui: {hidden: true},                       // a browser has no disk to cache on
     cli: {option: "wikidata-cache", typeLabel: "dir"} },
-  { name: "data", selector: true,
-    description: "the entities to look at, by id, separated by whitespace",
-    schema: {type: "array", items: {type: "string", contentMediaType: "text/plain"}},
-    // one list, so one pane: which entities are in play is a single thought
-    pane: {label: "entity ids", min: 1, max: 1},
-    cli: {option: "wikidata-entities", typeLabel: "Q42 Q5 ..."} },
   { name: "pages", selector: true,
     description: "entity pages to believe instead of what the site serves, " +
       "so an edit can be validated before it is made",
@@ -690,35 +689,29 @@ export function fromParams (params: { [name: string]: any }, queryTracker?: DbQu
     siteMatrixUrl: params.sitematrix,
     cacheDir: params.cacheDir,
     pages: params.pages,
-    entities: (params.data || []).join(" ").split(/\s+/).filter((id: string) => id !== ""),
   });
 }
 
-/** Sort documents a host was handed into the panes they belong in: an
- * entity page is a page, anything else is a list of ids -- and a page also
- * says which entities it is about, so dropping one in fills the id list
- * too.  A host with documents and no idea which parameter they are for
- * (a manifest entry's `data`, a dropped file) asks this. */
+/** Sort documents a host was handed into the panes they belong in.  This
+ * source has one pane, so what that comes to is: an entity page is a page,
+ * and anything else is not a document of this source's at all -- which
+ * entities to visit is the query map's to say.  A host with documents and
+ * no idea which parameter they are for (a manifest entry's `data`, a
+ * dropped file) asks this. */
 export function distributeDocuments (texts: string[]): { [name: string]: string[] } {
-  const ids: string[] = [];
   const pages: string[] = [];
   for (const text of texts) {
     let doc: EntityDoc | null = null;
     try {
       doc = asEntityDoc(JSON.parse(text));
     } catch (e) {
-      doc = null;                  // not a page: a list of ids, then
+      continue;                    // not a page: nothing here holds it
     }
-    if (doc === null)
-      ids.push(...text.split(/\s+/).filter(id => id !== ""));
-    else {
-      // re-serialized so a downloaded page arrives readable rather than as
-      // one enormous line
-      pages.push(JSON.stringify(doc, null, 2) + "\n");
-      ids.push(...Object.keys(doc.entities));
-    }
+    // re-serialized so a downloaded page arrives readable rather than as
+    // one enormous line
+    pages.push(JSON.stringify(doc!, null, 2) + "\n");
   }
-  return {data: [ids.join(" ")], pages};
+  return {pages};
 }
 
 /** `# Wikidata` on the first line means "synthesize entity pages rather

@@ -539,7 +539,7 @@ function labelIn(doc, id, language) {
     return found ? found.value : null;
 }
 exports.name = "neighborhood-wikidata";
-exports.label = "Wikidata";
+exports.label = "Wikidata JSON";
 exports.description = "Implementation of @shexjs/neighborhood-api which synthesizes Wikidata's RDF from entity JSON pages";
 exports.capabilities = ["query", "translate"];
 /** A shape map may name the entities to validate rather than their IRIs:
@@ -598,12 +598,6 @@ exports.dbParams = [
         schema: { type: "string", format: "file-path" },
         ui: { hidden: true }, // a browser has no disk to cache on
         cli: { option: "wikidata-cache", typeLabel: "dir" } },
-    { name: "data", selector: true,
-        description: "the entities to look at, by id, separated by whitespace",
-        schema: { type: "array", items: { type: "string", contentMediaType: "text/plain" } },
-        // one list, so one pane: which entities are in play is a single thought
-        pane: { label: "entity ids", min: 1, max: 1 },
-        cli: { option: "wikidata-entities", typeLabel: "Q42 Q5 ..." } },
     { name: "pages", selector: true,
         description: "entity pages to believe instead of what the site serves, " +
             "so an edit can be validated before it is made",
@@ -632,16 +626,15 @@ function fromParams(params, queryTracker) {
         siteMatrixUrl: params.sitematrix,
         cacheDir: params.cacheDir,
         pages: params.pages,
-        entities: (params.data || []).join(" ").split(/\s+/).filter((id) => id !== ""),
     });
 }
-/** Sort documents a host was handed into the panes they belong in: an
- * entity page is a page, anything else is a list of ids -- and a page also
- * says which entities it is about, so dropping one in fills the id list
- * too.  A host with documents and no idea which parameter they are for
- * (a manifest entry's `data`, a dropped file) asks this. */
+/** Sort documents a host was handed into the panes they belong in.  This
+ * source has one pane, so what that comes to is: an entity page is a page,
+ * and anything else is not a document of this source's at all -- which
+ * entities to visit is the query map's to say.  A host with documents and
+ * no idea which parameter they are for (a manifest entry's `data`, a
+ * dropped file) asks this. */
 function distributeDocuments(texts) {
-    const ids = [];
     const pages = [];
     for (const text of texts) {
         let doc = null;
@@ -649,18 +642,13 @@ function distributeDocuments(texts) {
             doc = asEntityDoc(JSON.parse(text));
         }
         catch (e) {
-            doc = null; // not a page: a list of ids, then
+            continue; // not a page: nothing here holds it
         }
-        if (doc === null)
-            ids.push(...text.split(/\s+/).filter(id => id !== ""));
-        else {
-            // re-serialized so a downloaded page arrives readable rather than as
-            // one enormous line
-            pages.push(JSON.stringify(doc, null, 2) + "\n");
-            ids.push(...Object.keys(doc.entities));
-        }
+        // re-serialized so a downloaded page arrives readable rather than as
+        // one enormous line
+        pages.push(JSON.stringify(doc, null, 2) + "\n");
     }
-    return { data: [ids.join(" ")], pages };
+    return { pages };
 }
 /** `# Wikidata` on the first line means "synthesize entity pages rather
  * than parsing me"; a URL after it points at another Wikibase instance. */

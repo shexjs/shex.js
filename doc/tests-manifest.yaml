@@ -242,8 +242,6 @@
     QENTITIES "42 76"@START
   status: conformant
   comment: The same entity from the JSON pages Wikidata is edited through, turned back into the RDF the query service would serve.  The QueryMap names entities by id and lets this source work out what they are called.
-  data: |
-    Q42
 - schemaLabel: Wikidata person
   schemaURL: ../packages/shex-webapp/examples/wikidata-person.shex
   dataLabel: Q42 from a downloaded page
@@ -263,8 +261,6 @@
     QENTITIES "227339"@START
   status: conformant
   comment: 'GeneWiki''s human gene schema (EntitySchema:E37), with the two schemas it imports inlined: a gene''s chromosome is E109''s and the genome assembly its coordinates are given against is E108''s.  So validating BRCA1 (Q227339) walks from the gene to chromosome 17 (Q220677) and on to GRCh38 (Q20966585) -- three entities, three shapes, each page fetched as the walk reaches it.  Four constraints are relaxed here, each marked RELAXED IN THIS COPY where it stands: three are places where the data cites a source the schema enumerates without (a newer Ensembl release, the OMA browser), and one is a normalized value this source can''t derive from an entity page.'
-  data: |
-    Q227339
 - schemaLabel: repeated properties
   schema: |
     PREFIX : <http://hl7.org/fhir/>

@@ -463,6 +463,10 @@ if (!TEST_browser) {
       it("should offer every loaded source, defaulting to an RDF document", function () {
         expect($("#neighborhood option").map((i, o) => $(o).val()).get())
           .to.deep.equal(["rdfjs", "sparql", "wikidata"]);
+        // named by what they read, the way "Turtle" is: the Wikibase source
+        // reads the JSON entity pages a wiki is edited through
+        expect($("#neighborhood option").map((i, o) => $(o).text()).get())
+          .to.deep.equal(["Turtle", "SPARQL endpoint", "Wikidata JSON"]);
         expect($("#neighborhood").val()).to.equal("rdfjs");
         expect($("#neighborhood option:selected").text()).to.equal("Turtle");
         // settings on the left, one document tab beside it, and that
@@ -501,33 +505,31 @@ if (!TEST_browser) {
 
       it("should let a wikibase grow a pane per entity page", function () {
         source().select("wikidata");
-        // which entities are in play is one list; their pages are documents
-        // of their own, and there are none until you open one
-        expect(tabs(), "one to start").to.deep.equal(["settings", "entity ids"]);
-        expect(shown("#addDataPane"), "and a way to open another").to.equal(true);
+        // an entity page is a document of its own and there are none until
+        // you open one; which entities a validation visits is the query
+        // map's to say, so there is no list of them to keep as well
+        expect(tabs(), "settings, and nothing to edit yet").to.deep.equal(["settings"]);
+        expect(shown("#addDataPane"), "but a way to open a page").to.equal(true);
 
         $("#addDataPane").trigger("click");
-        expect(tabs().length).to.equal(3);
+        expect(tabs().length).to.equal(2);
         // a fresh page starts from the module's template, and its tab is
         // named by the module reading the page's id back out of it
         expect($("#inputData textarea").first().val()).to.include('"entities"');
-        expect(tabs()[2]).to.equal("Q0");
+        expect(tabs()[1]).to.equal("Q0");
 
         // the panes not showing are still there to be validated with
         $("#inputData textarea").first().val('{"entities": {"Q42": {"id": "Q42"}}}');
-        source().show(1);                     // back to the id list
-        expect(tabs()[2], "a tab is named by the page in it").to.equal("Q42");
+        source().onSettings = true;
+        source().render();                    // over to the settings tab
+        expect(tabs()[1], "a tab is named by the page in it").to.equal("Q42");
         expect(source().params().pages).to.deep.equal(['{"entities": {"Q42": {"id": "Q42"}}}']);
-        // ...and a pane nobody has written in isn't a document
-        expect(source().params().data).to.deep.equal([]);
-        expect(tabs()[2], "a tab is named by the page in it").to.equal("Q42");
       });
 
       it("should give each pane the language its source says it is in", function () {
         source().select("rdfjs");
         expect(source().paneEditor().language).to.equal("turtle");
         source().select("wikidata");
-        expect(source().paneEditor(), "a list of ids is not a language").to.equal(null);
         source().addPane();               // an entity page, which is JSON
         expect(source().paneEditor().language).to.equal("json");
         source().select("sparql");
@@ -553,9 +555,8 @@ if (!TEST_browser) {
         await shared.promise;
 
         expect($("#neighborhood").val(), "the entry named its source").to.equal("wikidata");
-        // the source sorted them out: two pages, and the ids they are about
-        expect(tabs()).to.deep.equal(["settings", "entity ids", "Q1", "Q2"]);
-        expect(source().texts("data")).to.deep.equal(["Q1 Q2"]);
+        // the source sorted them out: both are pages, named by what is in them
+        expect(tabs()).to.deep.equal(["settings", "Q1", "Q2"]);
         expect(source().params().pages.length).to.equal(2);
       });
 
@@ -635,14 +636,15 @@ if (!TEST_browser) {
         await pick(1);
         expect($("#neighborhood").val()).to.equal("wikidata");
         expect($("#nbhd-base").val()).to.equal("https://www.wikidata.org/wiki/Special:EntityData/");
-        expect(source().texts("data"), "the entry said which entity").to.deep.equal(["Q42"]);
+        // the entry hands this source no document: its query map says which
+        // entities to walk (QENTITIES "42 76") and the pages are fetched
+        expect(tabs(), "so there is nothing but the settings").to.deep.equal(["settings"]);
         // ...and the endpoint didn't follow it here
         expect($("#nbhd-endpoint").length).to.equal(0);
 
         await pick(2);
         expect($("#neighborhood").val()).to.equal("wikidata");
-        expect(tabs()[2], "the downloaded page, named by the id in it").to.equal("Q42");
-        expect(source().texts("data"), "and the id it is about").to.deep.equal(["Q42"]);
+        expect(tabs()[1], "the downloaded page, named by the id in it").to.equal("Q42");
         expect(source().texts("pages")[0]).to.include('"lastrevid"');
       });
 
@@ -835,6 +837,107 @@ if (!TEST_browser) {
         expect(elapsed, "and not in twenty seconds: " + elapsed + "ms").to.be.below(15000);
       });
 
+      /* Slurp records what a validation fetched, as Turtle: the point is
+       * that the same data can then be validated without the source, so
+       * what it writes goes to the local store's document.
+       *
+       * It wrote nothing at all for two years.  The app built the tracker
+       * that reports each fetch and then overwrote it with the return value
+       * of the function that had just assigned it (undefined), so the db was
+       * built without one and the slurp came out as a page of prefixes. */
+      it("should record what a validation fetched when slurp is on", async function () {
+        this.timeout(60000);
+        const examples = Path.join(__dirname, "../examples");
+        const page = JSON.parse(Fs.readFileSync(Path.join(examples, "wikidata-Q42.json"), "utf8"));
+        delete page.entities.Q42.sitelinks;   // ...so no site table is wanted
+
+        await shared.Caches.manifest.set([{
+          schemaLabel: "person", schema: Fs.readFileSync(
+            Path.join(examples, "wikidata-person.shex"), "utf8"),
+          dataLabel: "Q42, and keep what it reads", neighborhood: "wikidata",
+          data: JSON.stringify(page),
+          regexpEngine: "eval-simple-1err",
+          queryMap: 'QENTITIES "42"@START',
+        }], "http://localhost/manifest.json");
+        $("#inputSchema .manifest li").last().trigger("click");
+        await shared.promise;
+        $("#inputData .indeterminant li").last().trigger("click");
+        await shared.promise;
+
+        // the switch is a field of the source, since only a source that
+        // fetches has anything to record
+        expect($("#nbhd-slurp").length, "a source that fetches offers it").to.equal(1);
+        $("#nbhd-slurp").prop("checked", true).trigger("change");
+        expect(source().slurping()).to.equal(true);
+
+        try {
+          $("#validate").trigger("click");
+          await shared.promise;
+          // the writer ends asynchronously; its callback is what appends
+          let turtle = "";
+          for (let i = 0; i < 100 && !/wd:Q42/.test(turtle); ++i) {
+            await new Promise(resolve => setTimeout(resolve, 20));
+            turtle = (source().panesFor("rdfjs").data || [""])[0] || "";
+          }
+          // what it visited, as it visited it...
+          expect(turtle, "the walk it made").to.match(/#\s*[→←]\s*\S+@\S+ \d+ triples/);
+          // ...and the triples themselves, as Turtle to validate again
+          expect(turtle, "and what it read").to.include("wd:Q42");
+          expect(turtle).to.match(/wdt:P31|rdfs:label/);
+        } finally {
+          $("#nbhd-slurp").prop("checked", false).trigger("change");
+        }
+      });
+
+      /* A source can have no document to edit at all -- a query service
+       * answers from a store nobody typed -- and the schema and the results
+       * are still there to point at each other.  Hovering used to be
+       * skipped entirely when there was no data pane, so those sources got
+       * no highlighting anywhere. */
+      it("should hover schema and results where a source has no document", async function () {
+        source().select("rdfjs");
+        const set = (selector, value) => {
+          const elt = $(selector).first();
+          elt.val(value);
+          elt.trigger("change");
+        };
+        // the query map first: whatever ran before may have left an
+        // extension this source can't resolve (QENTITIES is a Wikibase's)
+        set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
+        set("#inputSchema textarea", [
+          "PREFIX : <http://a.example/>",
+          "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>",
+          ":S { :p xsd:integer }",
+        ].join("\n"));
+        set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .");
+        await shared.promise;
+        $("#validate").trigger("click");
+        await shared.promise;
+
+        const es = shared.Caches.editorSupport;
+        const pairs = (es.lastMapped || {}).pairs || [];
+        expect(pairs.length, "a validation to hover over").to.be.above(0);
+
+        let regions = 0;
+        const was = es.panes.inputSchema.setHoverRegions;
+        es.panes.inputSchema.setHoverRegions = function (rs) {
+          regions = rs.length;
+          return was.apply(this, arguments);
+        };
+        try {
+          source().select("sparql");        // fields, and nothing to edit
+          shared.app.refreshDataPaneEditor();
+          expect(es.panes.inputData, "so there is no data pane").to.not.exist;
+          es.setPairHovers(pairs);
+          expect(regions, "the constraints still light up with the results")
+            .to.be.above(0);
+        } finally {
+          es.panes.inputSchema.setHoverRegions = was;
+          source().select("rdfjs");         // and the pane the rest expects
+          shared.app.refreshDataPaneEditor();
+        }
+      });
+
       /* CodeMirror measures when it is built and when its own observers
        * fire; a pane built detached, or sitting behind another tab, has
        * measured nothing -- and draws a gutter for a viewport that never
@@ -887,9 +990,9 @@ if (!TEST_browser) {
         pageTab.trigger("click");
         const shown = $("#inputData textarea").first().val();
         expect(shown.trimStart()[0], "the pane holds the entity page").to.equal("{");
-        // ...in an editor: the ids pane before it describes no language, and
-        // moving between panes of one source changes language as much as
-        // moving between sources does
+        // ...in an editor: this source's pane is JSON, and moving between
+        // panes of one source changes language as much as moving between
+        // sources does
         expect(shared.app.editorSupport.panes.inputData,
                "an editor over the page, to highlight in").to.exist;
 
@@ -1759,10 +1862,13 @@ if (!TEST_browser) {
     });
 
     it("should size the panes like the textareas they replace", function () {
-      // jsdom has no layout, so the rows-based fallback applies
+      // jsdom has no layout, so the width falls back to what the textarea
+      // asked for.  The height doesn't: a pane in a box that fills the page
+      // (#schemaDocument is a flex column) takes the column's height rather
+      // than the rows the textarea named, and says so by setting none.
       const paneStyle = $("#inputSchema .shexjs-editor-pane")[0].style;
-      expect(paneStyle.height, "height set").to.not.equal("");
       expect(paneStyle.width, "width set").to.not.equal("");
+      expect(paneStyle.height, "the column gives the height").to.equal("");
     });
 
     it("should step through a triple-expression match with a thread list", async function () {

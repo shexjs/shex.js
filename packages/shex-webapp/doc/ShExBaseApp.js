@@ -365,6 +365,33 @@ class SchemaCache extends InterfaceCache {
   }
 }
 
+/** attempt to disable scrolling if not at bottom of target.
+ * tried both selectionState and scrollTop.
+ */
+function noScrollAppend (target, toAdd) {
+  var e = target.get(0);
+  // var oldLen = target.val().length
+  // var oldSel = target.prop("selectionStart");
+  // var oldScrollTop = e.scrollTop;
+  // var oldScrollHeight = e.scrollHeight;
+  target.val((i, text) => {
+    return text + toAdd;
+  });
+  // console.log(oldScrollTop, oldScrollHeight);
+  // if (oldScrollTop === oldScrollHeight) {
+  e.scrollTop = e.scrollHeight;
+  //   target.prop("selectionStart", target.val().length);
+  // } else {
+  //   target.prop("selectionStart", oldScrollTop);
+  // }
+  // if (oldSel === oldLen) {
+  //   e.scrollTop = e.scrollHeight;
+  //   target.prop("selectionStart", target.val().length);
+  // } else {
+  //   target.prop("selectionStart", oldSel);
+  // }
+}
+
 /** The data source picker and the configuration it draws.
  *
  * Where the data comes from is the user's choice, made from a list of the
@@ -570,8 +597,18 @@ class NeighborhoodConfig {
     const texts = this.panes[spec.name] || [];
     texts.push(text === undefined ? (spec.pane.template || "") : text);
     this.panes[spec.name] = texts;
-    this.show(this.documents().findIndex(
-      d => d.param.name === spec.name && d.index === texts.length - 1));
+    const at = this.documents().findIndex(
+      d => d.param.name === spec.name && d.index === texts.length - 1);
+    // The new document may land where `showing` already points -- at the
+    // first document a source has, when the settings tab was all there was
+    // to show.  The textarea is not holding that document, so say so:
+    // otherwise show()'s stash writes the empty textarea over the template.
+    if (at === this.showing)
+      this.showing = -1;
+    // ...and a source whose settings were all it had to show has a document
+    // now, which is what the reader asked for by opening one
+    this.onSettings = false;
+    this.show(at);
   }
 
   removePane (n) {
@@ -2971,13 +3008,20 @@ class EditorSupport {
    * failures. */
   setPairHovers (pairs) {
     const schemaPane = this.panes.inputSchema;
+    // A source need not have a document to show: a query service answers
+    // from a store nobody typed, and a Wikibase reached by entity id has
+    // nothing in the pane until a page is opened.  The schema and the
+    // results are still there to point at each other, so the data side is
+    // what goes missing -- not the whole of the hovering, which is what
+    // used to happen and left those sources with no highlighting at all.
     const dataPane = this.panes.inputData;
-    if (!schemaPane || !dataPane)
+    if (!schemaPane)
       return;
     const resultPanes = this.app.resultsWidget.resultPanes;
     const wipe = () => {
       schemaPane.clearHighlights();
-      dataPane.clearHighlights();
+      if (dataPane)
+        dataPane.clearHighlights();
       resultPanes.forEach(({pane}) => pane.clearHighlights());
     };
     // a frozen highlight stays until it is released: leaving it is what a
@@ -3058,7 +3102,8 @@ class EditorSupport {
           showingPane.highlight(dataRanges, cls, {scroll: true});
         return showInResults(group, cls, hoveredSide !== "results");
       }
-      dataPane.highlight(dataRanges, cls, {scroll: hoveredSide !== "data"});
+      if (dataPane)
+        dataPane.highlight(dataRanges, cls, {scroll: hoveredSide !== "data"});
       showInResults(group, cls, hoveredSide !== "results");
     };
     // ctrl/cmd-click freezes what is under the mouse and scrolls every pane
@@ -3097,13 +3142,14 @@ class EditorSupport {
     // would light up whatever text happens to sit at those offsets here.
     const showingDoc = this.app.neighborhoods ? this.app.neighborhoods.showing : -1;
     const shownHere = (p) => p.doc === undefined || p.doc < 0 || p.doc === showingDoc;
-    dataPane.setHoverRegions(
-      pairs.filter(shownHere).flatMap(
-        p => [].concat(anchorRanges(p, "object"), anchorRanges(p, "predicate"))
-          .map(r => ({from: r.from, to: r.to,
-                      enter: () => show([p], "data"),
-                      click: freeze([p], "data")}))),
-      clearAll);
+    if (dataPane)
+      dataPane.setHoverRegions(
+        pairs.filter(shownHere).flatMap(
+          p => [].concat(anchorRanges(p, "object"), anchorRanges(p, "predicate"))
+            .map(r => ({from: r.from, to: r.to,
+                        enter: () => show([p], "data"),
+                        click: freeze([p], "data")}))),
+        clearAll);
     // hovering a TestedTriple in an appinfo results pane highlights its
     // constraint in the schema and its triple in the data
     resultPanes.forEach(({pane, ranges}) => {
@@ -4865,12 +4911,20 @@ class ShExBaseApp {
         const fixedMap = $("#fixedMap tr").map((idx, tr) =>
           this.fixValidationShapeMapEntry($(tr).find("input.focus").val(), $(tr).find("input.inputShape").val())
         ).get();
+        // What records this validation's fetches, or nothing when it is not
+        // being recorded -- said on every validation, since a db is built
+        // around whichever it was and the last slurp's tracker would go on
+        // writing into a writer that closed when that validation finished.
+        const wasTracking = !!this.queryTrackerController.queryTracker;
+        this.queryTrackerController.queryTracker = this.makeQueryTracker();
         if (this.neighborhoods.slurping()) {
           // start the Turtle document over: what this validation fetches is
           // what it should end up holding
           this.neighborhoods.setLocalTurtle("");
           this.Caches.inputData.slurpWriter = new RdfJs.Writer({ prefixes: this.Caches.inputSchema.meta.prefixes });
-          this.queryTrackerController.queryTracker = this.makeQueryTracker();
+        }
+        if (wasTracking !== !!this.queryTrackerController.queryTracker) {
+          // the db was built around the other answer
           this.Caches.inputData.dirty(true);
           inputData = await this.Caches.inputData.refresh();
         }
@@ -4963,51 +5017,30 @@ class ShExBaseApp {
     }
   }
 
+  /** What records the triples a validation fetches, or null when nothing is
+   * being recorded.  The caller hangs it on the controller the data cache
+   * reads, which is what makes the db it builds next report what it fetches
+   * -- this used to assign it here and return undefined, so the caller's
+   * `queryTracker = makeQueryTracker()` promptly unset it and a slurp
+   * recorded a document of prefixes and nothing else. */
   makeQueryTracker () {
-    this.queryTrackerController.queryTracker = this.neighborhoods.slurping()
+    return this.neighborhoods.slurping()
     ? {
+      // a db reports in RDF/JS terms and quads (DbQueryTracker); what
+      // comes back from the worker is marshalled JSON, and is turned back
+      // into these at that boundary (RemoteShExValidator's startQuery)
       start: (isOut, term, shapeLabel) => {
-        const node = this.Caches.inputData.meta.termToLex(WorkerMarshalling.jsonTermToRdfjsTerm(term, RdfJs.DataFactory));
+        const node = this.Caches.inputData.meta.termToLex(term);
         const shape = this.Caches.inputSchema.meta.termToLex(shapeLabel);
         const slurpStatus = (isOut ? "←" : "→") + " " + node + "@" + shape;
         this.neighborhoods.appendToLocalTurtle("# " + slurpStatus);
       },
       end: (triples, time) => {
         this.neighborhoods.appendToLocalTurtle(" " + triples.length + " triples (" + time + " μs)\n");
-        this.Caches.inputData.slurpWriter.addQuads(triples.map(
-          t => WorkerMarshalling.jsonTripleToRdfjsTriple(t, RdfJs.DataFactory)
-          // t => ShExWebApp.ShExTerm.externalTriple(t, RdfJs.DataFactory)
-        ));
+        this.Caches.inputData.slurpWriter.addQuads(triples);
       }
     }
     : null;
-
-    /** attempt to disable scrolling if not at bottom of target.
-     * tried both selectionState and scrollTop.
-     */
-    function noScrollAppend (target, toAdd) {
-      var e = target.get(0);
-      // var oldLen = target.val().length
-      // var oldSel = target.prop("selectionStart");
-      // var oldScrollTop = e.scrollTop;
-      // var oldScrollHeight = e.scrollHeight;
-      target.val((i, text) => {
-        return text + toAdd;
-      });
-      // console.log(oldScrollTop, oldScrollHeight);
-      // if (oldScrollTop === oldScrollHeight) {
-      e.scrollTop = e.scrollHeight;
-      //   target.prop("selectionStart", target.val().length);
-      // } else {
-      //   target.prop("selectionStart", oldScrollTop);
-      // }
-      // if (oldSel === oldLen) {
-      //   e.scrollTop = e.scrollHeight;
-      //   target.prop("selectionStart", target.val().length);
-      // } else {
-      //   target.prop("selectionStart", oldSel);
-      // }
-    }
   }
 
   /**

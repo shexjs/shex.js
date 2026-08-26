@@ -174,15 +174,23 @@ class RemoteShExValidator {
       if (done) { done(e) }
       break;
 
-      // query tracking
+      // Query tracking: the tracker takes what a db reports, which is
+      // RDF/JS (DbQueryTracker) -- so the marshalling a postMessage needed
+      // is undone here, at the boundary that needed it, rather than in a
+      // tracker that a local db also calls.
     case "startQuery":
       if (this.renderer.caches.inputData.queryTrackerController.queryTracker)
-        this.renderer.caches.inputData.queryTrackerController.queryTracker.start(msg.data.isOut, msg.data.term, msg.data.shapeLabel);
+        this.renderer.caches.inputData.queryTrackerController.queryTracker.start(
+          msg.data.isOut,
+          WorkerMarshalling.jsonTermToRdfjsTerm(msg.data.term, RdfJs.DataFactory),
+          msg.data.shapeLabel);
       break;
 
     case "finishQuery":
       if (this.renderer.caches.inputData.queryTrackerController.queryTracker)
-        this.renderer.caches.inputData.queryTrackerController.queryTracker.end(msg.data.quads, msg.data.time);
+        this.renderer.caches.inputData.queryTrackerController.queryTracker.end(
+          msg.data.quads.map(t => WorkerMarshalling.jsonTripleToRdfjsTriple(t, RdfJs.DataFactory)),
+          msg.data.time);
       break;
 
     default:
