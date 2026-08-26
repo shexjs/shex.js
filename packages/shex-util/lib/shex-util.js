@@ -1804,12 +1804,19 @@ const ShExUtil = {
      * HTML, and parsing that as JSON used to be the whole of the report: a bare
      * "Unexpected end of JSON input", naming neither the service, nor what it
      * said, nor which of a walk's hundred queries it was. */
-    sparqlHttpError: function (endpoint, status, statusText, body, query) {
+    sparqlHttpError: function (endpoint, status, statusText, body, query, retryAfter) {
         const said = body.trim().slice(0, 200);
-        return Error(`SPARQL endpoint <${endpoint}> returned ${status}`
+        const e = Error(`SPARQL endpoint <${endpoint}> returned ${status}`
             + (statusText ? " " + statusText : "")
             + (said ? ":\n" + said : "")
             + `\n\nquery was:\n${query}`);
+        // what refused, and for how long: 429 is a service saying "not that
+        // fast", which is a thing to answer rather than only to report
+        // (@shexjs/neighborhood-sparql's RateLimiter)
+        e.status = status;
+        if (retryAfter)
+            e.retryAfter = retryAfter;
+        return e;
     },
     executeQueryPromise: function (query, endpoint, dataFactory) {
         if (!endpoint)
@@ -1831,7 +1838,7 @@ const ShExUtil = {
             });
         return request.then((resp) => __awaiter(this, void 0, void 0, function* () {
             if (!resp.ok)
-                throw this.sparqlHttpError(endpoint, resp.status, resp.statusText, yield resp.text().catch(() => ""), query);
+                throw this.sparqlHttpError(endpoint, resp.status, resp.statusText, yield resp.text().catch(() => ""), query, resp.headers && resp.headers.get("retry-after"));
             return resp.json();
         })).then(jsonObject => {
             return this.parseSparqlJsonResults(jsonObject, dataFactory);
@@ -1864,7 +1871,7 @@ const ShExUtil = {
         // const selectsBlock = query.match(/SELECT\s*(.*?)\s*{/)[1];
         // const selects = selectsBlock.match(/\?[^\s?]+/g);
         if (xhr.status < 200 || xhr.status >= 300)
-            throw this.sparqlHttpError(endpoint, xhr.status, xhr.statusText, xhr.responseText || "", query);
+            throw this.sparqlHttpError(endpoint, xhr.status, xhr.statusText, xhr.responseText || "", query, xhr.getResponseHeader && xhr.getResponseHeader("Retry-After"));
         const jsonObject = JSON.parse(xhr.responseText);
         return this.parseSparqlJsonResults(jsonObject, dataFactory);
     },
