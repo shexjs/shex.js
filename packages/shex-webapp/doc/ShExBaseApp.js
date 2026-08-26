@@ -787,6 +787,31 @@ class NeighborhoodConfig {
     panes[target.name] = texts;
   }
 
+  /** What a slurp collected, brought forward.
+   *
+   * The recording goes to the local store's document, so that switching the
+   * picklist to Turtle afterwards validates the same data without the
+   * service.  But a source that fetches may have nothing of its own to show
+   * -- a query service has no document at all -- and then the recording sits
+   * in a pane the reader has no reason to open, which is what "slurp doesn't
+   * do anything" looks like.  So a source with nothing to show hands over to
+   * the one now holding what it read.  A Wikibase, whose slurp leaves a pane
+   * per entity page it visited, keeps those instead.
+   */
+  showSlurped () {
+    if (this.documents().length > 0)
+      return;
+    const target = this.localTurtle();
+    if (!target || this.moduleId === target.id)
+      return;
+    this.select(target.id);
+    const at = this.documents().findIndex(d => d.param.name === target.name);
+    if (at === -1)
+      return;
+    this.onSettings = false;
+    this.show(at);
+  }
+
   setLocalTurtle (text) {
     const target = this.localTurtle();
     if (!target)
@@ -2754,7 +2779,11 @@ class ShExResultsRenderer {
     }
     if ("slurpWriter" in this.caches.inputData) {
       this.caches.inputData.slurpWriter.end((err, chunk) => {
-        this.caches.inputData.neighborhoods.appendToLocalTurtle("\n\n# Visited data:\n" + chunk);
+        const neighborhoods = this.caches.inputData.neighborhoods;
+        neighborhoods.appendToLocalTurtle("\n\n# Visited data:\n" + chunk);
+        // ...and where the reader can see it, if this source has nothing of
+        // its own to show
+        neighborhoods.showSlurped();
         // delete this.caches.intputData.endpoint;
         this.caches.inputData.refresh();
         delete this.caches.inputData.slurpWriter;
@@ -4923,9 +4952,11 @@ class ShExBaseApp {
         const wasTracking = !!this.queryTrackerController.queryTracker;
         this.queryTrackerController.queryTracker = this.makeQueryTracker();
         if (this.neighborhoods.slurping()) {
-          // start the Turtle document over: what this validation fetches is
-          // what it should end up holding
-          this.neighborhoods.setLocalTurtle("");
+          // Start the Turtle document over: what this validation fetches is
+          // what it should end up holding.  With a line to name it by --
+          // that pane's tab is titled from its leading comment, and the
+          // trace lines that follow would name it after the first query.
+          this.neighborhoods.setLocalTurtle("# slurped\n");
           this.Caches.inputData.slurpWriter = new RdfJs.Writer({ prefixes: this.Caches.inputSchema.meta.prefixes });
         }
         if (wasTracking !== !!this.queryTrackerController.queryTracker) {

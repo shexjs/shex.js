@@ -889,6 +889,36 @@ if (!TEST_browser) {
         }
       });
 
+      /* ...and what a slurp collected has to be somewhere the reader can
+       * see.  It goes to the local store's document, which is a pane of a
+       * source they are not looking at: a query service has no document of
+       * its own, so a slurp against one looked like nothing at all. */
+      it("should show what a slurp collected when the source has no pane", function () {
+        source().select("sparql");
+        expect(tabs(), "a query service has nothing to show").to.deep.equal(["settings"]);
+        source().setLocalTurtle("# slurped\n<http://a.example/x> <http://a.example/p> 1 .\n");
+
+        source().showSlurped();
+
+        expect($("#neighborhood").val(), "the source now holding it").to.equal("rdfjs");
+        // named by its first line, the way every Turtle pane is
+        expect(tabs()).to.deep.equal(["settings", "slurped"]);
+        expect(shown("#dataDocument"), "and it is what shows").to.equal(true);
+        expect($("#inputData textarea").first().val(), "the slurp, in the pane")
+          .to.include("<http://a.example/p>");
+      });
+
+      /* A Wikibase keeps its own: the pages it read are the better artifact,
+       * and they are already on screen. */
+      it("should leave a source that has documents of its own showing them", function () {
+        source().select("wikidata");
+        source().addPane('{"entities": {"Q42": {"id": "Q42"}}}');
+        source().setLocalTurtle("# Visited data:\n");
+        source().showSlurped();
+        expect($("#neighborhood").val(), "still the Wikibase").to.equal("wikidata");
+        expect(tabs()[1]).to.equal("Q42");
+      });
+
       /* A source can have no document to edit at all -- a query service
        * answers from a store nobody typed -- and the schema and the results
        * are still there to point at each other.  Hovering used to be
