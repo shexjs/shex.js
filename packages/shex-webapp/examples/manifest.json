@@ -1,13 +1,5 @@
 [
   {
-    "schemaLabel": "repeated properties",
-    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<#S1> {\n  :p xsd:integer ;\n  :p IRI ;\n  :p xsd:decimal ;\n  :p @<#S2>\n}\n\n<#S2> {\n  :q [5]\n}\n",
-    "dataLabel": "passing data",
-    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<#n1>\n  :p 1.1 ;\n  :p <#n3> ;\n  :p <#n2> ;\n  :p 4 ;\n.\n\n<#n3> :q 5 .\n",
-    "queryMap": "<#n1>@<#S1>\n",
-    "status": "conformant"
-  },
-  {
     "schemaLabel": "clinical observation",
     "schemaURL": "ClinObs.shex",
     "dataLabel": "the least an Observation can be",
@@ -160,5 +152,13 @@
     "status": "conformant",
     "comment": "GeneWiki's human gene schema (EntitySchema:E37), with the two schemas it imports inlined: a gene's chromosome is E109's and the genome assembly its coordinates are given against is E108's.  So validating BRCA1 (Q227339) walks from the gene to chromosome 17 (Q220677) and on to GRCh38 (Q20966585) -- three entities, three shapes, each page fetched as the walk reaches it.  Four constraints are relaxed here, each marked RELAXED IN THIS COPY where it stands: three are places where the data cites a source the schema enumerates without (a newer Ensembl release, the OMA browser), and one is a normalized value this source can't derive from an entity page.",
     "data": "Q227339\n"
+  },
+  {
+    "schemaLabel": "repeated properties",
+    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<#S1> {\n  :p xsd:integer ;\n  :p IRI ;\n  :p xsd:decimal ;\n  :p @<#S2>\n}\n\n<#S2> {\n  :q [5]\n}\n",
+    "dataLabel": "passing data",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<#n1>\n  :p 1.1 ;\n  :p <#n3> ;\n  :p <#n2> ;\n  :p 4 ;\n.\n\n<#n3> :q 5 .\n",
+    "queryMap": "<#n1>@<#S1>\n",
+    "status": "conformant"
   }
 ]
