@@ -36,6 +36,9 @@ const MAP_MANIFEST = "../../extension-map/examples/manifest.yaml";
 // before SemActFailure, and is deleted.)
 const TEST_EXTENSION = "../../extension-test/lib/shex-extension-test.js";
 const MAP_ID = "http://shex.io/extensions/Map/#";
+const REDUCE_ID = "http://shex.io/extensions/Reduce/";
+// every example in the repository, as one suite (tools/aggregate-manifests.js)
+const ALL_MANIFEST = "../../../doc/tests-manifest.yaml";
 
 if (!TEST_browser) {
   console.warn("Skipping plugin-loading-smoke-tests; to activate these tests, set environment variable TEST_browser=true");
@@ -220,6 +223,87 @@ if (!TEST_browser) {
       // the old global's name still answers, for modules written against it
       expect(dom.window.ShExExtensions, "ShExExtensions is an alias now")
         .to.equal(dom.window.ShExPlugins);
+    });
+  });
+
+  /* doc/tests-manifest.yaml is every example in the repository as one
+   * suite.  Its entries were written to be read from three different
+   * directories, so what this asks is whether they still find what they
+   * name from doc/ -- the documents, and the plugins the entries that need
+   * one name themselves by. */
+  describe("shex-simple, given the manifest that aggregates them all", function () {
+    this.timeout(20000);
+    let dom, $, shared;
+
+    /** pick a schema, then one of its documents */
+    async function open (schemaLabel, dataLabel) {
+      $("#inputSchema .manifest li").filter((i, li) => $(li).text() === schemaLabel)
+        .first().trigger("click");
+      await shared.promise;
+      $("#inputData .passes li, #inputData .fails li")
+        .filter((i, li) => $(li).text() === dataLabel).first().trigger("click");
+      await shared.promise;
+    }
+
+    before(async function () {
+      ({dom, $, shared} = await boot("?manifestURL=" + encodeURIComponent(ALL_MANIFEST)));
+    });
+    after(function () { if (dom) dom.window.close(); });
+
+    it("should offer every package's examples in one picklist", function () {
+      const labels = $("#inputSchema .manifest li").map((i, li) => $(li).text()).get();
+      expect(labels, "the validator's").to.include("clinical observation");
+      expect(labels, "ShExMap's").to.include("BP");
+      expect(labels, "and ShExReduce's").to.include("calc, actions guide");
+      expect(dom.window.ShExPlugins.all(), "and nothing loaded until asked")
+        .to.deep.equal([]);
+    });
+
+    it("should find a plain entry's documents from where it now sits", async function () {
+      await open("clinical observation", "the least an Observation can be");
+      expect($("#inputSchema textarea").first().val(), "schemaURL fetched")
+        .to.include("<ObservationShape>");
+      $("#validate").trigger("click");
+      await shared.promise;
+      expect($("#results .passes").length, "and it validates").to.be.above(0);
+    });
+
+    it("should load the plugin an entry names, and read the entry into it",
+       async function () {
+         await open("BP", "simple");
+         expect(dom.window.ShExPlugins.all().map(e => e.id)).to.deep.equal([MAP_ID]);
+         expect($("#outputSchema textarea").first().val(), "outputSchemaURL fetched")
+           .to.include("<BPunitsDAM>");
+         expect(JSON.parse($("#staticVars textarea").first().val()))
+           .to.deep.equal({"http://abc.example/someConstant": "\"123-456\""});
+       });
+
+    it("should load a second plugin, beside the first", async function () {
+      await open("calc, actions in an overlay", "(1 + 2) * 3");
+      expect(dom.window.ShExPlugins.all().map(e => e.id), "both, in the order asked for")
+        .to.deep.equal([MAP_ID, REDUCE_ID]);
+      expect($("#reduceOverlay textarea").first().val(), "overlayURL fetched")
+        .to.include("sa:Overlay");
+      expect($("#screens > .screen").length, "a screen each").to.equal(2);
+      expect($("#screenTabs button").map((i, b) => $(b).attr("data-screen")).get())
+        .to.deep.equal(["", MAP_ID, REDUCE_ID]);
+      expect($("#screenTabs .unloadPlugin").length, "an × each, and none on the page's")
+        .to.equal(2);
+    });
+
+    /* ...and one of two plugins unloads without taking the other with it. */
+    it("should unload one of them and leave the other standing", function () {
+      $("#screenTabs button").filter((i, b) => $(b).attr("data-screen") === MAP_ID)
+        .find(".unloadPlugin").trigger("click");
+      expect(dom.window.ShExPlugins.all().map(e => e.id)).to.deep.equal([REDUCE_ID]);
+      expect($("#screens > .screen").length, "one screen left").to.equal(1);
+      expect($("#screenTabs button").length, "and the page's tab beside it").to.equal(2);
+      expect($("#bindings1, #outputSchema, #outputShapeMap").length, "the map is gone")
+        .to.equal(0);
+      expect($("#reduceOverlay").length, "the fold is not").to.equal(1);
+      // the results are still tabs, because ShExReduce's tab is still one
+      expect($("#resultsTabs > ul > li > a").map((i, a) => $(a).attr("href")).get())
+        .to.deep.equal(["#validationResults", "#reduceAstResults"]);
     });
   });
 
