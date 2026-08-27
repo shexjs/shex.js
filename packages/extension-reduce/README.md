@@ -88,6 +88,16 @@ group around either. Reading it takes the schema, which `registerEager` has (it
 is the validator's) and `reduce()` takes as the `schema` option — without one
 every arc reference is an array, since nothing has said otherwise.
 
+So where the schema allows one, `$:value` *is* the value and an evaluator's
+`one(':value')` says the same thing the long way. What `one` is still for:
+
+- an arc the schema allows more than one of, where "exactly one, and say what
+  I did match if not" is the check the action wants to make;
+- a predicate the action computes rather than writes — a `$`-reference is
+  rewritten before anything runs, so its predicate is literal text;
+- a fold with no schema to read the arities from, where `$:value` is the list
+  and `one(':value')` is the value either way.
+
 This is *this module's* doing rather than the evaluator's: the code is rewritten
 to ordinary names — `_nodeKind`, `_1`, `_ret` — and the values arrive beside it
 as `bindings`. So the syntax is the same whatever the actions are written in,
