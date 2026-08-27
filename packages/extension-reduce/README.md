@@ -218,8 +218,30 @@ Reduce.registerEager(validator, {evaluate, prefixes, rejects});
 `rejects(value)` defaults to "a value with a `failure` key". Everything else is
 a value, and becomes what that production reduced to.
 
-A *rejection* is a value; an **exception** is a bug in the action, and it takes
-the fold (or the validation it was steering) with it. What it throws says which
+There are two ways of saying no, and they differ in what happens next:
+
+| | | |
+| --- | --- | --- |
+| **reject** | `{failure: why}` | this production is not it; the match goes on to whatever else the node could be |
+| **cut** | `{failure: why, cut: true}` | ...and no other reading will do: the node/shape pair fails where the action stood |
+
+A cut is the parser-combinator one (nom's `Err::Failure`, Prolog's `!`): the
+alternatives that are left cannot be right, and each one tried buries the
+reason this one failed under its own. Thrown rather than returned, it unwinds
+whatever the matcher was in the middle of — a nested shape, a partition, a fork
+— and lands at the node/shape pair the validator was asked about, which is
+reported nonconformant with the action's reason. The other pairs of the shape
+map are none of its business.
+
+An evaluator may offer the same two as control flow, so an action can refuse
+from wherever it finds out rather than arranging for a refusal to be its return
+value; [the JavaScript one](../extension-reduce-js#what-an-action-can-say)
+does, as `reject(why)` and `cut(why)`. That is the evaluator's to offer because
+exceptions are a fact about the action language, and what crosses the line
+between this module and one is plain data.
+
+A refusal is a value; an **exception** is a bug in the action, and it takes the
+fold (or the validation it was steering) with it. What it throws says which
 production, which node and what the action said, and an `onError` option is
 told about it before the throw goes on — a caller with somewhere to show it
 gets to, without having to catch what it cannot usefully continue from.
@@ -231,8 +253,8 @@ read rather than about the number:
 
 | | |
 | --- | --- |
-| `guide.shex` | `<#MidNum>` and `<#LastNum>` have the same body, so the schema leaves the choice open and the actions **steer** it: `<#MidNum>` refuses the number that is the sum, and the `OR` goes on to `<#LastNum>` |
-| `falsify.shex` | `<#LastExpr>` is an operator whose right is another `<#LastExpr>`, so the schema **chooses** the last number structurally, and the action only checks it — a check that fails fails the match |
+| `guide.shex` | `<#MidNum>` and `<#LastNum>` have the same body, so the schema leaves the choice open and the actions **steer** it: `<#MidNum>` rejects the number that is the sum, and the `OR` goes on to `<#LastNum>` |
+| `falsify.shex` | `<#LastExpr>` is an operator whose right is another `<#LastExpr>`, so the schema **chooses** the last number structurally, and the action only checks it — a check that fails cuts, since the schema has already chosen and no other reading is left to try |
 
 Both carry their actions inline (`%Reduce:{ … %}`), so the schema is the whole
 example: it needs nothing of the caller but an evaluator, and nothing of you

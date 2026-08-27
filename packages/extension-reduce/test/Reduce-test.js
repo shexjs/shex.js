@@ -18,8 +18,8 @@ const B = "http://a.example/";
 const PREFIXES = {"": B, xsd: "http://www.w3.org/2001/XMLSchema#"};
 const EXT = Reduce.url;
 
-/** parse ShExC, hang `actions` (label -> code) on the shapes, validate, reduce */
-function run (shexc, turtle, actions, node = B + "x", shape = B + "S", options = {}) {
+/** parse ShExC and hang `actions` (label -> code) on the shapes it names */
+function compile (shexc, actions) {
   const schema = ShExParser.construct(B, null, {index: true})
         .parse("PREFIX : <http://a.example/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n"
                + shexc, B, undefined, "reduce-test");
@@ -34,10 +34,21 @@ function run (shexc, turtle, actions, node = B + "x", shape = B + "S", options =
     elt.semActs = (elt.semActs || []).concat(
       [{type: "SemAct", name: EXT, code: actions[label]}]);
   });
+  return schema;
+}
+
+/** ...and the graph to read against it */
+function load (turtle) {
   const graph = new N3.Store();
   graph.addQuads(new N3.Parser({baseIRI: B, format: "text/turtle"})
                  .parse("PREFIX : <http://a.example/>\n" + turtle));
-  const validator = new ShExValidator(schema, RdfJsDb(graph), {});
+  return RdfJsDb(graph);
+}
+
+/** compile, validate, reduce: the actions run over what the match found */
+function run (shexc, turtle, actions, node = B + "x", shape = B + "S", options = {}) {
+  const schema = compile(shexc, actions);
+  const validator = new ShExValidator(schema, load(turtle), {});
   Reduce.register(validator);
   const res = validator.validateShapeMap([{node, shape}]);
   expect(res[0].status, JSON.stringify(res[0].appinfo)).to.equal("conformant");
@@ -496,6 +507,108 @@ describe("reduce", function () {
                  {S: '{"left": "$p1", "right": "$p2"}'}, undefined, undefined,
                  {evaluate: template}))
         .to.deep.equal({left: B + "o1", right: B + "o2"});
+    });
+  });
+
+  /* An action that runs while the matcher matches gets to say no, which is
+   * what registerEager is for.  There are two noes: this one doesn't fit,
+   * and nothing will. */
+  describe("saying no", function () {
+    /* <#S> is <#Mid> or <#Last>, alike but for their actions: the same
+     * shape written twice, so what the node is is the actions' to say. */
+    const EITHER = `<http://a.example/S> @<http://a.example/Mid> OR @<http://a.example/Last>
+<http://a.example/Mid>  { :p1 . }
+<http://a.example/Last> { :p1 . }`;
+
+    /** compile, register eagerly, validate: the entry, status and all */
+    function match (shexc, turtle, actions, node = B + "x", shape = B + "S", options = {}) {
+      const validator = new ShExValidator(compile(shexc, actions), load(turtle), {});
+      Reduce.registerEager(validator, Object.assign({evaluate, prefixes: PREFIXES}, options));
+      return validator.validateShapeMap([{node, shape}]);
+    }
+    const errorsOf = entry => JSON.stringify(entry.appinfo);
+
+    it("should take the next branch when an action rejects", function () {
+      const res = match(EITHER, ONE_TRIPLE,
+                        {Mid: "reject('not this one')", Last: "'last'"});
+      expect(res[0].status).to.equal("conformant");
+      expect(Reduce.reduce(res)[0], "...and the branch that took it").to.equal("last");
+    });
+
+    it("should read reject('why') as the value it could have returned", function () {
+      const res = match(EITHER, ONE_TRIPLE,
+                        {Mid: "reject('not this one')", Last: "({failure: 'nor this'})"});
+      expect(res[0].status).to.equal("nonconformant");
+      expect(errorsOf(res[0]), "both branches, and why each said no")
+        .to.match(/not this one/).and.to.match(/nor this/);
+    });
+
+    /* The difference: a rejection is about this shape, and the OR goes on
+     * to the next one; a cut is about the node, and there is nowhere left
+     * to go -- <#Last> would have matched, and is never tried. */
+    it("should stop the whole pair when an action cuts", function () {
+      const res = match(EITHER, ONE_TRIPLE, {Mid: "cut('no reading of this will do')",
+                                             Last: "'last'"});
+      expect(res[0].status).to.equal("nonconformant");
+      expect(errorsOf(res[0])).to.include("no reading of this will do");
+      expect(errorsOf(res[0]), "the branch it didn't try").to.not.include("last");
+    });
+
+    it("should take a cut as a value, for a language without exceptions", function () {
+      const res = match(EITHER, ONE_TRIPLE,
+                        {Mid: "({failure: 'nor by hand', cut: true})", Last: "'last'"});
+      expect(res[0].status).to.equal("nonconformant");
+      expect(errorsOf(res[0])).to.include("nor by hand");
+    });
+
+    it("should say where the action that cut was", function () {
+      const res = match(EITHER, ONE_TRIPLE, {Mid: "cut('enough')", Last: "'last'"});
+      expect(errorsOf(res[0])).to.include(B + "Mid");
+    });
+
+    /* A cut unwinds whatever the matcher was in the middle of -- a nested
+     * shape, a partition, a fork -- and lands at the pair it was asked
+     * about.  The pairs beside it are none of its business. */
+    it("should cut from inside a nested shape", function () {
+      const res = match(`<http://a.example/S> { :p1 @<http://a.example/T> }
+<http://a.example/T> { :p2 . }`,
+                        ":x :p1 :y . :y :p2 :o2 .", {T: "cut('deep')"});
+      expect(res[0].status).to.equal("nonconformant");
+      expect(errorsOf(res[0])).to.include("deep");
+    });
+
+    it("should leave the other pairs of the shape map alone", function () {
+      const validator = new ShExValidator(
+        compile(EITHER, {Mid: "node === ':x'.replace(':', 'http://a.example/') "
+                              + "? cut('not x') : 'mid'", Last: "'last'"}),
+        load(":x :p1 :o1 . :y :p1 :o1 ."), {});
+      Reduce.registerEager(validator, {evaluate, prefixes: PREFIXES});
+      const res = validator.validateShapeMap([
+        {node: B + "x", shape: B + "S"}, {node: B + "y", shape: B + "S"}]);
+      expect(res.map(e => e.status), "the cut is about the node it was on")
+        .to.deep.equal(["nonconformant", "conformant"]);
+    });
+
+    it("should cut a validation that is waiting on its data", async function () {
+      const validator = new ShExValidator(
+        compile(EITHER, {Mid: "cut('not even asynchronously')", Last: "'last'"}),
+        load(ONE_TRIPLE), {});
+      Reduce.registerEager(validator, {evaluate, prefixes: PREFIXES});
+      const res = await validator.validateShapeMapAsync([{node: B + "x", shape: B + "S"}]);
+      expect(res[0].status).to.equal("nonconformant");
+      expect(errorsOf(res[0])).to.include("not even asynchronously");
+    });
+
+    /* Folding a parse that already happened, there is no match to refuse:
+     * what reject() says is a value like the one it could have returned. */
+    it("should be a value when the fold is after the match", function () {
+      expect(run(ONE_ARC, ONE_TRIPLE, {S: "reject('too late')"}))
+        .to.deep.equal({failure: "too late"});
+    });
+
+    it("should let an action say more than a reason", function () {
+      expect(run(ONE_ARC, ONE_TRIPLE, {S: "reject({failure: 'nope', code: ':tooFew'})"}))
+        .to.deep.equal({failure: "nope", code: ":tooFew"});
     });
   });
 

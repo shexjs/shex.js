@@ -37,12 +37,18 @@ BASE <http://a.example/calc>
 } %Reduce:{ $$ = Object.assign($rdf:type, $:left, $:right) %}
 
 # A number with more to come: not the sum, and noted so the sum grows.
+#
+# `reject(why)` refuses the production the action is on, and the OR above
+# goes on to the next branch -- which is `<#LastNum>`, and is the whole
+# point.  It is a guard: the action says who this number isn't and then gets
+# on with what it is.  (`$$ = {failure: why}` says the same thing as a value,
+# which is what <#LastNum> below does; either reads better in its place.)
 <#MidNum> {
   a       [:Num] ;
   :value  xsd:integer %Reduce:{
-    $$ = num($1) === state.before(subject)
-      ? {failure: 'the sum of the numbers before it, so it ends the expression'}
-      : state.note(subject, num($1))
+    if (num($1) === state.before(subject))
+      reject('the sum of the numbers before it, so it ends the expression');
+    $$ = state.note(subject, num($1));
   %}
 } %Reduce:{ $$ = {op: 'num', value: one(':value')} %}
 

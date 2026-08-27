@@ -107,7 +107,8 @@ describe("calc, where the actions steer the parse", function () {
    * nowhere to keep it and nothing to read. */
   it("should have nowhere to keep the sum without the start action", function () {
     const withoutStart = read("guide.shex").replace(/%Reduce:\{[\s\S]*?%\}\n/, "");
-    expect(withoutStart, "the shapes' own actions are still there").to.include("$ = num($1)");
+    expect(withoutStart, "the shapes' own actions are still there")
+      .to.include("state.note(subject, num($1))");
     expect(() => compile("sums.ttl", {schemaText: withoutStart}))
       .to.throw(/state/);
   });

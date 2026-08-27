@@ -502,6 +502,28 @@ function collectSemActNames (v: unknown, into: Set<string>): void {
       collectSemActNames(o[key], into);
 }
 
+/**
+ * A semantic action's cut, if that is what was thrown.
+ *
+ * The protocol is the failure a handler would have returned, thrown
+ * instead and marked `cut`: returned, it fails the shape the action was on
+ * and the search goes on to the alternatives; thrown, it fails the whole
+ * node/shape pair.  Anything else thrown by an action is a bug in the
+ * action and goes where exceptions go.
+ */
+function semActCut (e: unknown): SemActFailure | null {
+  const said = e as {type?: string, cut?: boolean, errors?: unknown, message?: string};
+  if (said === null || typeof said !== "object"
+      || said.type !== "SemActFailure" || said.cut !== true)
+    return null;
+  return {
+    type: "SemActFailure",
+    cut: true,
+    errors: Array.isArray(said.errors) ? said.errors as error[]
+      : [String(said.message === undefined ? said : said.message)]
+  };
+}
+
 /** is this a validation that may stop, rather than a finished answer? */
 function isResumable (x: unknown): boolean {
   return x !== null && typeof x === "object"
@@ -514,10 +536,19 @@ function driveSync<T> (task: Resumable<T>, db: NeighborhoodDb): T {
   let step = task.next(undefined);
   while (!step.done) {
     const request = step.value;
-    step = task.next(isFork(request)
-      // nothing to overlap when the data is already here: run them in order
-      ? request.fork.map(sub => driveSync(sub, db))
-      : db.getNeighborhood(request.point, request.shapeLabel, request.shape));
+    try {
+      step = task.next(isFork(request)
+        // nothing to overlap when the data is already here: run them in order
+        ? request.fork.map(sub => driveSync(sub, db))
+        : db.getNeighborhood(request.point, request.shapeLabel, request.shape));
+    } catch (e) {
+      // ...to the code that asked for it, rather than past it: what went
+      // wrong servicing a request went wrong *in* the search, and a
+      // traversal that wants to answer for it (or clean up after it) is
+      // suspended at the yield.  Nothing catching means the same throw,
+      // from the same place, having run the finallys on the way out.
+      step = task.throw!(e);
+    }
   }
   return step.value;
 }
@@ -672,14 +703,19 @@ export class ShExValidator {
       while (!step.done) {
         const request = step.value;
         let answer: unknown;
-        if (isFork(request)) {
-          ++stats.forks;
-          stats.branches += request.fork.length;
-          // every branch starts before any of them waits, so their fetches
-          // overlap and duplicates meet each other in `inFlight`
-          answer = await Promise.all(request.fork.map(sub => run(sub)));
-        } else {
-          answer = await demand(request);
+        try {
+          if (isFork(request)) {
+            ++stats.forks;
+            stats.branches += request.fork.length;
+            // every branch starts before any of them waits, so their fetches
+            // overlap and duplicates meet each other in `inFlight`
+            answer = await Promise.all(request.fork.map(sub => run(sub)));
+          } else {
+            answer = await demand(request);
+          }
+        } catch (e) {
+          step = task.throw!(e);        // see driveSync: into the search
+          continue;
         }
         step = task.next(answer);
       }
@@ -715,7 +751,26 @@ export class ShExValidator {
           errors: semActErrors
         }; // some semAct aborted !! return a better error
     }
-    const ret: shapeExprTest = yield* this.validateShapeLabel (focus, ctx);
+    let ret: shapeExprTest;
+    try {
+      ret = yield* this.validateShapeLabel (focus, ctx);
+    } catch (e) {
+      // A semantic action that cut: it didn't merely refuse the shape it
+      // was on, it said no other reading of this node will do -- so the
+      // search for one stops here rather than going on to the alternatives
+      // that would otherwise be tried, and this pair is nonconformant for
+      // the reason the action gave.  Other pairs of the shape map are none
+      // of its business and go on being validated.
+      const cut = semActCut(e);
+      if (cut === null)
+        throw e;
+      return {
+        type: "Failure",
+        node: rdfJsTerm2Ld(focus),
+        shape: ctx.label,
+        errors: [cut]
+      };
+    }
     if ("startActs" in this.schema) {
       (ret as ShapeTest).startActs = this.schema.startActs;
     }

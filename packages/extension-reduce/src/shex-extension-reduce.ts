@@ -230,9 +230,13 @@ function registerEager (validator: any, options: EagerOptions = {}): any {
       const value = runAction(f, code, where, scope, values);
       storage.code = code;
       storage.value = value;                // what the fold will take
-      return rejects(value)
-        ? [{type: 'SemActFailure', errors: [rejection(value, where)]}]
-        : [];
+      if (!rejects(value))
+        return [];
+      // ...and a refusal that says `cut` is the value spelling of cut():
+      // an action language without exceptions can still say it
+      if (value !== null && typeof value === 'object' && value.cut)
+        throw new SemActCut(value, where);
+      return [{type: 'SemActFailure', errors: [rejection(value, where)]}];
     },
     api: options.api,
   });
@@ -284,6 +288,32 @@ function done (validator: any): void {
 }
 
 // ## the fold
+
+/**
+ * "Not this one, and not any of the others either": a cut.
+ *
+ * A rejection fails the shape the action was on and the match goes on to
+ * whatever else that node could be.  Sometimes the action knows there is no
+ * point -- the number is not the sum however you read the expression -- and
+ * every alternative left is work whose only result is to bury the reason
+ * this one failed under the last one's.  Thrown, this fails the node/shape
+ * pair where the action stood: the validator reads `type` and `cut` (see
+ * SemActFailure) and reports it as that pair's failure.
+ */
+class SemActCut extends Error {
+  readonly type = 'SemActFailure';
+  readonly cut = true;
+  readonly errors: string[];
+  constructor (why: any, where?: string) {
+    const gave = refused(why) ? why.failure : why;
+    const text = 'the action' + (where === undefined ? '' : ' on ' + where)
+          + ' cut the match'
+          + (gave === undefined || gave === '' ? '' : ': ' + String(gave));
+    super(text);
+    this.name = 'SemActCut';
+    this.errors = [text];
+  }
+}
 
 /** where an action was, when it goes wrong */
 class ReduceError extends Error {
@@ -769,8 +799,11 @@ and hands it plain data:
   subject, predicate,  for a constraint: the triple, and what its object
   object, value        reduced to
   bindings, ret        what each $... in the code was rewritten to, and the
-                       name the action assigns its value to, if it used $
+                       name the action assigns its value to, if it used $$
   prefixes, api, where the caller's prefixes and extras, and where this is
+An action refuses a match (registerEager) with a value: {failure: why} to say
+this production is not it, {failure: why, cut: true} to say no other reading
+of this node will do either.
 No functions cross that line, so the same fold ports to an implementation in
 another language.  @shexjs/extension-reduce-js is the JavaScript evaluator.
 

@@ -644,5 +644,24 @@ if (!TEST_browser) {
         await shared.Caches.inputSchema.set(good, base);
       }
     });
+
+    /* A cut is not an exception: it is this pair's answer, so it comes back
+     * as a result like any other -- and the reader gets the one reason the
+     * action gave rather than the pile of branches that were never tried. */
+    it("should bring an action's cut home as the failure it is", async function () {
+      $("#inputSchema .manifest li").filter((i, li) => $(li).text() === "calc, actions falsify")
+        .first().trigger("click");
+      await shared.promise;
+      $("#inputData .fails li, #inputData .passes li")
+        .filter((i, li) => $(li).text() === "doesn't sum").first().trigger("click");
+      await shared.promise;
+      $("#validate").trigger("click");
+      await shared.promise;
+
+      const said = $("#validationResults > div").text().replace(/\s+/g, " ");
+      expect(said, "the reason the action gave").to.include("not the sum of the numbers before it");
+      expect(said).to.include("cut the match");
+      expect(said, "and not the branches it never tried").to.not.include("LastBinOp");
+    });
   });
 }

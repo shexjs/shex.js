@@ -30,13 +30,19 @@ BASE <http://a.example/calc>
   :left   @<#MidExpr> ;
   :right  @<#LastExpr>
 } %Reduce:{ $$ = {op: local(one('a')), left: one(':left'), right: one(':right')} %}
+# The schema has already chosen which number this is, so a check that
+# fails here is final: `cut(why)` says so, and the match stops where the
+# action stood rather than trying the readings that are left -- none of
+# which can be right, and each of which would bury this reason under its
+# own.  `reject(why)` is the other one: this production is not it, try the
+# next.  (As a value: {failure: why, cut: true} and {failure: why}.)
 <#LastNum> {
   a       [:Num] ;
   # `AND [60]`, had the schema known 60 when it was written
   :value  xsd:integer %Reduce:{
-    $$ = num($1) === state.before(subject)
-      ? num($1)
-      : {failure: 'not the sum of the numbers before it'}
+    if (num($1) !== state.before(subject))
+      cut('not the sum of the numbers before it');
+    $$ = num($1);
   %}
 } %Reduce:{ $$ = {op: 'last', value: one(':value')} %}
 
