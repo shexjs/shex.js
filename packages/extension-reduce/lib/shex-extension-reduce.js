@@ -153,6 +153,7 @@ function foldFor(options) {
         url: options.url || ReduceExt,
         onRecursion: options.onRecursion || 'node',
         seen: new Map(),
+        provenance: Array.isArray(options.provenance) ? options.provenance : null,
     };
 }
 /**
@@ -211,7 +212,7 @@ function reduceNode(f, node) {
             return reduceNode(f, node.solution);
         case 'ShapeTest': {
             const key = keyOf(node.node, node.shape);
-            const { arcs, values } = arcsOf(f, node.solution);
+            const { arcs, values } = arcsOf(f, node.solution, node.shape);
             const value = run(f, node, { kind: 'shape', node: node.node, shape: node.shape, arcs }, values, () => node.node);
             f.seen.set(key, value);
             return value;
@@ -244,7 +245,7 @@ function reduceNode(f, node) {
  * action names a sub-production, and in match order, which is how `$1`
  * reaches one whose name it shares with another.
  */
-function arcsOf(f, solution) {
+function arcsOf(f, solution, inShape) {
     const arcs = {};
     const values = [];
     collect(solution);
@@ -269,9 +270,12 @@ function arcsOf(f, solution) {
                         ? tested.object
                         : reduceNode(f, tested.referenced);
                     // the object is this production's one sub-production, so it is $1
+                    // which of this predicate's constraints in this shape: with the
+                    // shape, that is which constraint in the schema (provenance)
+                    const occurrence = (arcs[s.predicate] || []).length;
                     const value = run(f, tested, { kind: 'tripleConstraint', subject: tested.subject,
                         predicate: tested.predicate, object: tested.object,
-                        value: bare, arcs: {} }, [bare], () => bare);
+                        value: bare, arcs: {} }, [bare], () => bare, { inShape, occurrence });
                     (arcs[s.predicate] = arcs[s.predicate] || []).push(value);
                     values.push(value);
                 });
@@ -295,13 +299,18 @@ function extOn(f, node) {
     const ext = node && node.extensions && node.extensions[f.url];
     return ext && (typeof ext.code === 'string' || 'value' in ext) ? ext : undefined;
 }
-function run(f, node, scope, values, fallback) {
+function run(f, node, scope, values, fallback, where) {
     const ext = extOn(f, node);
     if (ext === undefined)
         return fallback();
-    if ('value' in ext)
-        return ext.value; // an eager action already ran here
-    return runAction(f, ext.code, describe(node), scope, values);
+    const value = 'value' in ext
+        ? ext.value // an eager action already ran here
+        : runAction(f, ext.code, describe(node), scope, values);
+    if (f.provenance !== null)
+        f.provenance.push(Object.assign({ value, code: ext.code, kind: scope.kind, at: node }, scope.kind === 'shape'
+            ? { node: scope.node, shape: scope.shape }
+            : { subject: scope.subject, predicate: scope.predicate, object: scope.object }, where || {}));
+    return value;
 }
 function runAction(f, code, where, scope, values) {
     const runner = f.runner;

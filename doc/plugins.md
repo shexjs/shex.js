@@ -203,10 +203,42 @@ on its own tab's status line.  The one thing over the results a plugin may
 have is `resultsTabsAside()`: the right-hand end of the tab strip, for a
 control *about* the results, which put among them would push them.
 
+### Pointing at what made something
+
+The app highlights across panes: hovering a constraint lights the triple
+that matched it, hovering the triple lights the constraint.  A plugin joins
+that with `app.linkPanes(id, links)` — one link is one thing the reader can
+point at from several places:
+
+``` js
+app.linkPanes(MY_ID, [{
+  triple: testedTriple,          // ...or {node, shape}: what this is about,
+                                 // in the validation's terms.  The app knows
+                                 // where that is written, having anchored it
+  panes: {ast: [{from, to}],     // and where it is in panes of yours
+          overlay: [{from, to}]},
+  status: "conformant",          // green; anything else is red
+}]);
+```
+
+A link may say where it is for itself instead — `schema`/`schemaParts` for
+the schema pane, `anchors: {subject, predicate, object}` and `doc` for the
+data — which is the shape a validation's own links have.  That is the point:
+the two are wired together from one list, so a plugin's links join the
+validation's rather than replacing them, and a link that lands on a
+constraint's range lights up with that constraint.  A pane of yours that is
+one of a tabbed set comes forward when something in it is pointed at.
+
+Call it again to replace what you linked, or with nothing to take it back; a
+new validation clears it, since what you linked was about the last one.
+(ShExReduce links each node of the AST it folds to the action that made it,
+the production that action hangs on and the triple it ran over — four panes,
+one hover.)
+
 Nothing enforces this -- a plugin is a script on the page and jQuery will
 find anything it asks for -- but the API is shaped so that the reaching is
-visible: `app.resultsTabStatus(id)`, `app.resultsTabsAside()`, and the
-descriptor for everything else.  A plugin writing `$("#inputSchema")` is
+visible: `app.resultsTabStatus(id)`, `app.resultsTabsAside()`,
+`app.linkPanes(id, links)`, and the descriptor for everything else.  A plugin writing `$("#inputSchema")` is
 doing something the contract has no name for, and that is the signal to ask
 for a hook rather than to keep reaching.
 

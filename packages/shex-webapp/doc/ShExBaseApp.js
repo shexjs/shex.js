@@ -3027,6 +3027,8 @@ class EditorSupport {
    * same reason -- they point at ranges in both panes at once. */
   clearValidationMarks () {
     this.lastMapped = null;
+    // what a plugin linked was about the validation these marks were about
+    this.linkSets = {};
     ["inputSchema", "inputData"].forEach(name => {
       const pane = this.panes[name];
       if (pane && pane.setDiagnostics)
@@ -3052,12 +3054,86 @@ class EditorSupport {
     this.setPairHovers(this.lastMapped.pairs);
   }
 
+  /** what a validation says is linked, and what each plugin says is */
+  allPairs () {
+    return Object.keys(this.linkSets || {}).reduce(
+      (acc, id) => acc.concat(id === "validation"
+                              ? (this.linkSets[id] || [])
+                              : (this.linkSets[id] || []).map(l => this.resolveLink(l))), []);
+  }
+
+  /**
+   * Where a link's subject is written, for a link that says what it is
+   * about rather than where.
+   *
+   * A plugin knows which triple of the validation its value came from; it
+   * has no idea where that triple is written, and no business working it
+   * out -- this has already anchored every one of them.  So a link may say
+   * `triple` (a TestedTriple from the last results) or `node`/`shape`, and
+   * gets the schema and data ranges the validation found for it.
+   */
+  resolveLink (link) {
+    if (link.schema || link.anchors)
+      return link;                        // it said where for itself
+    const pairs = (this.lastMapped || {}).pairs || [];
+    const sameTerm = (l, r) => l === r ||
+          (!!l && !!r && (l.value !== undefined ? l.value : l) === (r.value !== undefined ? r.value : r));
+    if (link.triple) {
+      const found = pairs.find(p => p.triple === link.triple);
+      return found === undefined ? link : Object.assign({}, link, {
+        schema: found.schema, schemaParts: found.schemaParts,
+        schemaPath: found.schemaPath, anchors: found.anchors, doc: found.doc,
+      });
+    }
+    if (link.node !== undefined) {
+      // a shape's action: the node is where its arcs are written from, and
+      // the shape it matched is a label in the schema -- both of which the
+      // pairs for those arcs are carrying
+      const lead = pairs.find(p => p.triple && p.anchors && p.anchors.subject &&
+                              sameTerm(p.triple.subject, link.node));
+      if (lead === undefined)
+        return link;
+      return Object.assign({}, link, {
+        schema: lead.anchors.shapeLabel || undefined,
+        anchors: {subject: lead.anchors.subject, subjectParts: lead.anchors.subjectParts},
+        doc: lead.doc,
+      });
+    }
+    return link;
+  }
+
+  /**
+   * Links of somebody else's: a plugin saying which ranges of which panes
+   * are about each other (app.linkPanes).
+   *
+   * The same pairs a validation makes, wired the same way, so the two
+   * cannot fight over a pane: hovering is wired once, from all of them.  A
+   * pair that carries a schema range joins the group of validation pairs
+   * sharing it, which is what lets hovering a constraint light both the
+   * triple that matched it and what a plugin made of that match.
+   */
+  setLinks (id, pairs) {
+    this.linkSets = this.linkSets || {};
+    if (pairs && pairs.length)
+      this.linkSets[id] = pairs;
+    else
+      delete this.linkSets[id];
+    this.setPairHovers(this.linkSets.validation || []);
+  }
+
   /** cross-pane hover highlighting for validation matches and failures:
    * hovering a matched/failed TripleConstraint highlights it, its shape's
    * label and the data triple's object; hovering the object highlights the
    * whole data triple and the constraint.  Green for matches, red for
-   * failures. */
-  setPairHovers (pairs) {
+   * failures.
+   *
+   * A pair may name ranges in panes of its own (`panes: {name: [range…]}`),
+   * which is how a plugin's pane joins in: ShExReduce's AST, the action
+   * that built each node of it, and the triple that action ran over. */
+  setPairHovers (validationPairs) {
+    this.linkSets = this.linkSets || {};
+    this.linkSets.validation = validationPairs || [];
+    const pairs = this.allPairs();
     const schemaPane = this.panes.inputSchema;
     // A source need not have a document to show: a query service answers
     // from a store nobody typed, and a Wikibase reached by entity id has
@@ -3069,10 +3145,17 @@ class EditorSupport {
     if (!schemaPane)
       return;
     const resultPanes = this.app.resultsWidget.resultPanes;
+    // the panes the pairs name for themselves, which a hover may paint
+    const linkedPanes = new Set();
+    pairs.forEach(p => Object.keys(p.panes || {}).forEach(name => {
+      if (name !== "inputSchema" && name !== "inputData" && this.panes[name])
+        linkedPanes.add(name);
+    }));
     const wipe = () => {
       schemaPane.clearHighlights();
       if (dataPane)
         dataPane.clearHighlights();
+      linkedPanes.forEach(name => this.panes[name].clearHighlights());
       resultPanes.forEach(({pane}) => pane.clearHighlights());
     };
     // a frozen highlight stays until it is released: leaving it is what a
@@ -3135,6 +3218,31 @@ class EditorSupport {
       // lines and the claim that matched is what the reader came to see
       const dataRanges = group.flatMap(p => [].concat(
         anchorRanges(p, "object"), anchorRanges(p, "subject"), anchorRanges(p, "predicate")));
+      // ...and whatever else this group is about, in the panes it named:
+      // the app's own two are merged above rather than highlighted twice,
+      // since highlighting a pane replaces what it was showing
+      const named = new Map();
+      group.forEach(p => Object.keys(p.panes || {}).forEach(name => {
+        const ranges = (p.panes[name] || []).filter(r => r);
+        if (ranges.length)
+          named.set(name, (named.get(name) || []).concat(ranges));
+      }));
+      const alsoIn = name => named.get(name) || [];
+      schemaRanges.push.apply(schemaRanges, alsoIn("inputSchema"));
+      dataRanges.push.apply(dataRanges, alsoIn("inputData"));
+      named.forEach((ranges, name) => {
+        const pane = name === "inputSchema" || name === "inputData"
+              ? null : this.panes[name];
+        if (!pane)
+          return;
+        // a highlight in a pane nobody can see is no highlight at all: the
+        // panes of a screen's column take turns (schema, overlay), so the
+        // one being pointed at comes forward -- as another data document
+        // does above, and for the same reason
+        if (hoveredSide !== name)
+          this.showPaneTab(name);
+        pane.highlight(ranges, cls, {scroll: hoveredSide !== name});
+      });
       // don't auto-scroll the pane the mouse is in
       schemaPane.highlight(schemaRanges, cls, {scroll: hoveredSide !== "schema"});
       // the data may be in a document that isn't showing -- another entity
@@ -3201,6 +3309,21 @@ class EditorSupport {
                         enter: () => show([p], "data"),
                         click: freeze([p], "data")}))),
         clearAll);
+    // A pane a pair named is somewhere to hover from as well as somewhere
+    // to light up: the reader may start at the AST and ask what made it.
+    linkedPanes.forEach(name => {
+      const pane = this.panes[name];
+      if (!pane.setHoverRegions)
+        return;
+      pane.setHoverRegions(
+        pairs.filter(p => (p.panes || {})[name])
+          .flatMap(p => (p.panes[name] || []).filter(r => r).map(r => ({
+            from: r.from, to: r.to,
+            enter: () => show([p], name),
+            click: freeze([p], name),
+          }))),
+        clearAll);
+    });
     // hovering a TestedTriple in an appinfo results pane highlights its
     // constraint in the schema and its triple in the data
     resultPanes.forEach(({pane, ranges}) => {
@@ -3227,6 +3350,26 @@ class EditorSupport {
           this.pairHoverPaint();
       });
     }
+  }
+
+  /** Bring a pane forward where it is one of a set that take turns.
+   *
+   * A plugin may put two panes in one column with a tab each -- ShExReduce's
+   * schema and the overlay hung on it -- and only one of them is showing.
+   * Pointing at something in the other one has to say which one. */
+  showPaneTab (name) {
+    const cache = this.app.Caches[name];
+    if (!cache || !cache.selection)
+      return;
+    const panel = cache.selection.closest("[data-tabset] > *");
+    if (panel.length === 0)
+      return;
+    const set = panel.parent();
+    if (!set.data("ui-tabs"))
+      return;
+    const at = set.children("div").index(panel[0]);
+    if (at !== -1 && set.tabs("option", "active") !== at)
+      set.tabs("option", "active", at);
   }
 
   /** highlight a shape's declaration in the schema pane */
@@ -3654,6 +3797,32 @@ class ShExBaseApp {
       this[name] = ext.methods[name].bind(this);
       ext.mixedIn.push(name); // what to take back on unloadPlugin
     });
+  }
+
+  /**
+   * What a plugin says is about what: ranges in panes that light each other
+   * up (§5's highlighting, for a plugin's own panes).
+   *
+   * One link is one thing the reader can point at from several places.  It
+   * is the shape a validation's own links have, so the two are wired
+   * together rather than fighting over a pane:
+   *
+   *   {schema: {from, to},                    // a range in the schema pane
+   *    schemaParts: [range…],                 // ...or its pieces
+   *    anchors: {subject, predicate, object}, // and in the data pane
+   *    doc: 0,                                // which data document those are in
+   *    panes: {ast: [range…], overlay: [range…]},  // and in panes of yours
+   *    status: "conformant"}                  // green; anything else is red
+   *
+   * A link that carries a schema range joins the validation's group for
+   * that range, so hovering a constraint lights the triple that matched it
+   * *and* what you made of that match.  Call it again to replace what you
+   * linked, or with nothing to take it back; a new validation clears it,
+   * since what you linked was about the last one.
+   */
+  linkPanes (id, links) {
+    if (this.editorSupport)
+      this.editorSupport.setLinks(id, links);
   }
 
   /**

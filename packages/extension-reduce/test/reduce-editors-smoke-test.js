@@ -276,6 +276,98 @@ if (!TEST_browser) {
       });
     });
 
+    /* What a fold built, back to what built it.
+     *
+     * The provenance the fold records says which action made each value and
+     * what it ran over; the app knows where a triple of the validation is
+     * written, having anchored them all; and this plugin knows where the
+     * value ended up in the AST and where the action is in an overlay.  So
+     * a node of the AST, the production, the triple and the action are one
+     * thing the reader can point at from any of them. */
+    it("should link each node of the AST to the schema and the data that made it",
+       async function () {
+         await open("calc, actions guide", "sums");
+         $("#reduce").trigger("click");
+         await shared.promise;
+
+         const es = shared.Caches.editorSupport;
+         const links = (es.linkSets || {})[REDUCE_ID] || [];
+         expect(links.length, "a link per node of the AST").to.be.above(0);
+         const resolved = links.map(l => es.resolveLink(l));
+         const astText = $("#reduceAst textarea").first().val();
+         const schemaText = $("#inputSchema textarea").first().val();
+         const dataText = $("#inputData textarea").first().val();
+
+         const one = resolved.find(l => l.schema && l.anchors && l.anchors.subject);
+         expect(one, "one of them says all three").to.exist;
+         // the range in the AST is a node of the AST
+         const at = one.panes.ast[0];
+         expect(JSON.parse(astText.substring(at.from, at.to)), "a node of the AST")
+           .to.have.property("op");
+         // ...the schema range is the shape whose action made it...
+         expect(schemaText.substring(one.schema.from, one.schema.to),
+                "the production it hangs on").to.match(/^<#\w+>$/);
+         // ...and the data range is the node that matched
+         expect(dataText.substring(one.anchors.subject.from, one.anchors.subject.to),
+                "and the node it ran over").to.match(/^<#e\d+>$/);
+       });
+
+    /* An action written in a document of its own is written nowhere else,
+     * so that document is the fourth place this points at. */
+    it("should link a node of the AST to the action in the overlay", async function () {
+      await open("calc, actions in an overlay", "(1 + 2) * 3");
+      $("#reduce").trigger("click");
+      await shared.promise;
+
+      const es = shared.Caches.editorSupport;
+      const links = (es.linkSets || {})[REDUCE_ID] || [];
+      const overlayText = $("#reduceOverlay textarea").first().val();
+      const inOverlay = links.filter(l => (l.panes.overlay || []).length);
+      expect(inOverlay.length, "the actions are all in the overlay").to.be.above(0);
+      const range = inOverlay[0].panes.overlay[0];
+      expect(overlayText.substring(range.from, range.to), "the action itself")
+        .to.match(/^\{op:/);
+      // ...and the schema, which says nothing of actions, still says which
+      // production this was
+      const resolved = es.resolveLink(inOverlay[0]);
+      expect($("#inputSchema textarea").first().val()
+             .substring(resolved.schema.from, resolved.schema.to)).to.match(/^<#\w+>$/);
+    });
+
+    /* The validation's own highlighting is wired from the same list, so a
+     * plugin's links join it rather than replacing it -- and a constraint
+     * lights both the triple that matched it and what the fold made of it. */
+    it("should leave the validation's own highlighting alone", async function () {
+      await open("calc, actions guide", "sums");
+      const es = shared.Caches.editorSupport;
+      const validation = (es.linkSets.validation || []).length;
+      expect(validation, "a validation to hover over").to.be.above(0);
+
+      let schemaRegions = 0;
+      const was = es.panes.inputSchema.setHoverRegions;
+      es.panes.inputSchema.setHoverRegions = function (rs) {
+        schemaRegions = rs.length;
+        return was.apply(this, arguments);
+      };
+      try {
+        $("#reduce").trigger("click");
+        await shared.promise;
+      } finally {
+        es.panes.inputSchema.setHoverRegions = was;
+      }
+      expect((es.linkSets.validation || []).length, "the validation's links are still there")
+        .to.equal(validation);
+      expect(es.allPairs().length, "and the fold's are beside them")
+        .to.be.above(validation);
+      expect(schemaRegions, "the schema pane was wired from both").to.be.above(0);
+      // ...and a new validation takes the fold's links with it: they were
+      // about the parse it is replacing
+      $("#validate").trigger("click");
+      await shared.promise;
+      expect(((es.linkSets || {})[REDUCE_ID] || []).length, "gone with the parse")
+        .to.equal(0);
+    });
+
     /* ...and the × on its tab takes it back off, from the screen it is on:
      * the panes it borrowed are the app's own, and go home rather than out
      * with the screen that was holding them.  Last, since nothing of it is

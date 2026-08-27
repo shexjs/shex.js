@@ -83,9 +83,47 @@ interface ReduceScope {
   ret?: string;
 }
 
+/**
+ * Where one value in the AST came from.
+ *
+ * An action produced it, at a place in the schema, over a place in the
+ * data.  That is what it takes to draw a line between a node of the AST and
+ * the three things that made it -- the code, the production it hangs on and
+ * the triple it ran over -- which is what the WebApp draws.
+ *
+ * The value is the object the action returned, by identity: a host holds
+ * these next to a serialization of the AST and asks where each object it
+ * wrote ended up.
+ */
+interface ReduceProvenance {
+  value: any;
+  /** the action's own text, which is how a host finds it in a document */
+  code: string;
+  kind: 'shape' | 'tripleConstraint';
+  /** kind 'shape': what matched, and what it matched */
+  node?: LdTerm;
+  shape?: string;
+  /** kind 'tripleConstraint': the triple the action ran over... */
+  subject?: LdTerm;
+  predicate?: string;
+  object?: LdTerm;
+  /** the result node the action ran on -- the TestedTriple or the ShapeTest
+   * -- by identity, so a host that has anchored the same results can say
+   * where this one is without matching terms */
+  at?: any;
+  /** ...the shape whose body it was matched in, and which of that
+   * predicate's constraints it is -- between them, which constraint in the
+   * schema this was */
+  inShape?: string;
+  occurrence?: number;
+}
+
 interface ReduceOptions {
   /** what runs an action; required, since this module has no language */
   evaluate?: Evaluator;
+  /** somewhere to record where each value came from; see ReduceProvenance.
+   * Given an array, the fold pushes one record per action that ran. */
+  provenance?: ReduceProvenance[];
   /** prefixes an action may use to name a predicate */
   prefixes?: {[prefix: string]: string};
   /** extra names for the evaluator to put in scope */
@@ -253,6 +291,8 @@ interface Fold {
   url: string;
   onRecursion: 'node' | 'marker' | 'throw';
   seen: Map<string, any>;
+  /** where each value came from, when the caller asked to be told */
+  provenance: ReduceProvenance[] | null;
 }
 
 function foldFor (options: ReduceOptions): Fold {
@@ -264,6 +304,7 @@ function foldFor (options: ReduceOptions): Fold {
     url: options.url || ReduceExt,
     onRecursion: options.onRecursion || 'node',
     seen: new Map<string, any>(),
+    provenance: Array.isArray(options.provenance) ? options.provenance : null,
   };
 }
 
@@ -331,7 +372,7 @@ function reduceNode (f: Fold, node: any): any {
 
   case 'ShapeTest': {
     const key = keyOf(node.node, node.shape);
-    const {arcs, values} = arcsOf(f, node.solution);
+    const {arcs, values} = arcsOf(f, node.solution, node.shape);
     const value = run(f, node, {kind: 'shape', node: node.node, shape: node.shape, arcs},
                       values, () => node.node);
     f.seen.set(key, value);
@@ -368,7 +409,7 @@ function reduceNode (f: Fold, node: any): any {
  * action names a sub-production, and in match order, which is how `$1`
  * reaches one whose name it shares with another.
  */
-function arcsOf (f: Fold, solution: any): {arcs: {[predicate: string]: any[]}, values: any[]} {
+function arcsOf (f: Fold, solution: any, inShape?: string): {arcs: {[predicate: string]: any[]}, values: any[]} {
   const arcs: {[predicate: string]: any[]} = {};
   const values: any[] = [];
   collect(solution);
@@ -392,11 +433,14 @@ function arcsOf (f: Fold, solution: any): {arcs: {[predicate: string]: any[]}, v
           ? tested.object
           : reduceNode(f, tested.referenced);
         // the object is this production's one sub-production, so it is $1
+        // which of this predicate's constraints in this shape: with the
+        // shape, that is which constraint in the schema (provenance)
+        const occurrence = (arcs[s.predicate] || []).length;
         const value = run(f, tested,
                           {kind: 'tripleConstraint', subject: tested.subject,
                            predicate: tested.predicate, object: tested.object,
                            value: bare, arcs: {}},
-                          [bare], () => bare);
+                          [bare], () => bare, {inShape, occurrence});
         (arcs[s.predicate] = arcs[s.predicate] || []).push(value);
         values.push(value);
       });
@@ -420,13 +464,22 @@ function extOn (f: Fold, node: any): any {
   return ext && (typeof ext.code === 'string' || 'value' in ext) ? ext : undefined;
 }
 
-function run (f: Fold, node: any, scope: any, values: any[], fallback: () => any): any {
+function run (f: Fold, node: any, scope: any, values: any[], fallback: () => any,
+              where?: {inShape?: string, occurrence?: number}): any {
   const ext = extOn(f, node);
   if (ext === undefined)
     return fallback();
-  if ('value' in ext)
-    return ext.value;                     // an eager action already ran here
-  return runAction(f, ext.code, describe(node), scope, values);
+  const value = 'value' in ext
+        ? ext.value                       // an eager action already ran here
+        : runAction(f, ext.code, describe(node), scope, values);
+  if (f.provenance !== null)
+    f.provenance.push(Object.assign(
+      {value, code: ext.code, kind: scope.kind, at: node},
+      scope.kind === 'shape'
+        ? {node: scope.node, shape: scope.shape}
+        : {subject: scope.subject, predicate: scope.predicate, object: scope.object},
+      where || {}) as ReduceProvenance);
+  return value;
 }
 
 function runAction (f: Fold, code: string, where: string, scope: any, values: any[]): any {

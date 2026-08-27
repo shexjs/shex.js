@@ -87,6 +87,8 @@ const ShExReduce = {
     $("#reduceAst .status").text("\u00a0");
     if (app.Caches.ast)
       app.Caches.ast.set("");
+    // ...and what the last fold linked was about the last parse
+    app.linkPanes(REDUCE_ID, []);
   },
 
   /**
@@ -140,6 +142,40 @@ const ShExReduce = {
     }
   },
 
+  /**
+   * What each node of the AST was made from, so the reader can point at it.
+   *
+   * A fold's provenance says which action produced each value and what it
+   * ran over; the app knows where that -- the constraint, the shape, the
+   * triple -- is written, because it anchored the validation these actions
+   * folded.  So a link says what its value is *about* and lets the app say
+   * where, and adds the two places only this plugin knows: the node in the
+   * AST pane, and the action itself where it was written in an overlay.
+   *
+   * Hovering any of them lights the rest, beside (not instead of) the
+   * validation's own highlighting: a constraint lights the triple that
+   * matched it and what the fold made of that match.
+   */
+  link (app, provenance, ranges) {
+    const overlay = app.Caches.overlay ? app.Caches.overlay.selection.val() : "";
+    const links = provenance.map(made => {
+      const at = ranges.find(r => r.target === made.value);
+      if (at === undefined)
+        return null;                      // a value that isn't a node of the AST
+      const panes = {ast: [{from: at.from, to: at.to}]};
+      // an action written in an overlay is written nowhere else: its code
+      // is the sa:code literal, so that is where it is in that document
+      const wrote = overlay.indexOf(made.code);
+      if (made.code && wrote !== -1)
+        panes.overlay = [{from: wrote, to: wrote + made.code.length}];
+      return Object.assign({panes, status: "conformant"},
+                           made.kind === "shape"
+                           ? {node: made.node, shape: made.shape}
+                           : {triple: made.at});
+    }).filter(link => link !== null);
+    app.linkPanes(REDUCE_ID, links);
+  },
+
   methods: {
     /**
      * Fold the actions over the parse the last validation found.
@@ -170,11 +206,18 @@ const ShExReduce = {
         return this.Caches.ast.set("");
       }
       // {}: an eager run stored every value as it computed it, so the fold
-      // has nothing left to evaluate
-      const asts = ShExWebApp.Reduce.reduce(ext.parsed, {});
+      // has nothing left to evaluate.  `provenance` is what it fills in on
+      // the way: which action made each value, and what it ran over.
+      const provenance = [];
+      const asts = ShExWebApp.Reduce.reduce(ext.parsed, {provenance});
       said("reduced " + asts.length + (asts.length === 1 ? " parse" : " parses"));
-      return this.Caches.ast.set(
-        JSON.stringify(asts.length === 1 ? asts[0] : asts, null, "  "));
+      // written with offsets rather than JSON.stringify, so every node of
+      // the AST is a range the reader can point at
+      const {text, ranges} = ShExWebApp.EditorServices.stringifyWithOffsets(
+        asts.length === 1 ? asts[0] : asts, o => o !== null && typeof o === "object");
+      const written = this.Caches.ast.set(text);
+      ext.link(this, provenance, ranges);
+      return written;
     },
   },
 };
