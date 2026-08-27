@@ -273,6 +273,42 @@ describe("reduce", function () {
         expect(run(TWO, ONE_TRIPLE, {S: "const _1 = 'mine'; $ = [_1, $1];"}))
           .to.deep.equal(["mine", B + "o1"]);
       });
+
+      it("should read a bare $ wherever a value ends", function () {
+        expect(run(TWO, ONE_TRIPLE, {S: "$ = one(':p1')"})).to.equal(B + "o1");
+        expect(run(TWO, ONE_TRIPLE, {S: "$ = [one(':p1')]; $.push('and'); return $;"}))
+          .to.deep.equal([B + "o1", "and"]);
+        expect(run(TWO, ONE_TRIPLE, {S: "$ = one(':p1'); return str($)"}))
+          .to.equal(B + "o1");
+      });
+    });
+
+    /* A `$` with something after it that this doesn't recognize is a
+     * mistake now, rather than a dollar sign passed through: `$@` means
+     * whatever the action language makes of it today and would mean a
+     * reference the day `$@` got one, which is the way Perl's `\q` went. */
+    describe("what it refuses", function () {
+
+      it("should refuse a sigil it doesn't know", function () {
+        ["$@", "$&", "$#", "$!", "$?", "$^", "$~", "$%", "$|"].forEach(bad =>
+          expect(() => run(TWO, ONE_TRIPLE, {S: bad + " = 1"}), bad)
+            .to.throw(/is not a reference/));
+      });
+
+      it("should say what to write instead", function () {
+        expect(() => run(TWO, ONE_TRIPLE, {S: "$@ = 1"})).to.throw(/write \$\$/);
+        expect(() => run(TWO, ONE_TRIPLE, {S: "$+1"}), "an operator wants a space")
+          .to.throw(/\$\+ is not a reference/);
+      });
+
+      it("should say which production it was reading", function () {
+        expect(() => run(TWO, ONE_TRIPLE, {S: "$@ = 1"})).to.throw(B + "S");
+      });
+
+      it("should refuse what looks like an IRI and isn't", function () {
+        expect(() => run(TWO, ONE_TRIPLE, {S: "$<not an iri>"}))
+          .to.throw(/\$< is not a reference/);
+      });
     });
 
     it("should hand the evaluator the names and what they stand for", function () {

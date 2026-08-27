@@ -431,11 +431,36 @@ function arcRef(f, scope, iri) {
  * `$name`, which is deliberately none of them: `$` starts an identifier in
  * several action languages, and a name with no prefix is not a predicate.
  *
- * The last alternative is the bare `$`, which is not read as a reference
- * before `{`, `/` or a quote -- much more likely a template literal, the end
- * of a regular expression, or a dollar sign in a string than a reference.
+ * The token, if there is one; `sigil` sorts out the `$`s with nothing after
+ * them that this recognizes.
  */
-const REF = /\$(\$|\*|\d+|<[^\s<>"{}|^`\\]*>|[A-Za-z_][\w-]*:[\w-]*|:[\w-]*|[A-Za-z_][\w-]*)|\$(?![{/'"`])/g;
+const REF = /\$(\$|\*|\d+|<[^\s<>"{}|^`\\]*>|[A-Za-z_][\w-]*:[\w-]*|:[\w-]*|[A-Za-z_][\w-]*)?/g;
+/**
+ * What a `$` with nothing this recognizes after it is: the production's
+ * value, a dollar sign that was never a reference, or a mistake.
+ *
+ * `${`, `$/` and a `$` before a quote are left alone -- far more likely a
+ * template literal, the end of a regular expression or a dollar sign in a
+ * string than a reference -- and a `$` that ends a value (`$ = ...`, `f($)`,
+ * `$.length`) is the production's value.
+ *
+ * Everything else is refused rather than passed through, which is the whole
+ * point of this function: a `$@` passed through means whatever the action
+ * language makes of it now, and means a reference the day someone gives
+ * `$@` a meaning here.  Perl learned this about `\q` in regular
+ * expressions the slow way.  So the sigils a syntax might one day want --
+ * `@ & ! ? # ^ ~ % |` and the rest -- are an error while they are free,
+ * and `$$` is the spelling that cannot be reinterpreted.
+ */
+function sigil(code, at) {
+    const next = code[at + 1];
+    if (next === undefined || /[\s=;,.)\]}([]/.test(next))
+        return 'ret'; // nothing binds to it: the value
+    if (/[{/'"`\\]/.test(next))
+        return 'text'; // a template, a regexp, a string
+    throw Error(`$${next} is not a reference; write $$ for the production's `
+        + `value (and a space, if what follows it is an operator)`);
+}
 /**
  * The action as the evaluator should see it: every reference rewritten to a
  * name, and a list of what those names stand for.
@@ -453,9 +478,11 @@ function bindRefs(code, prefixes, cache) {
     const refs = [];
     const seen = new Map();
     let ret;
-    const rewritten = code.replace(REF, (whole, text) => {
+    const rewritten = code.replace(REF, (whole, text, at) => {
         if (text !== undefined && /^[A-Za-z_]/.test(text) && text.indexOf(':') === -1)
             return whole; // `$name`: an identifier, not a reference
+        if (text === undefined && sigil(code, at) === 'text')
+            return whole; // a dollar sign that is not a reference
         const key = text === undefined || text === '$' ? '' : text;
         const before = seen.get(key);
         if (before !== undefined)

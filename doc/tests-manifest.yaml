@@ -720,6 +720,36 @@
   status: conformant
   plugins:
   - ../packages/extension-reduce/doc/ShExReducePlugin.js
+# ...and one the grammar is happy with and the compiler is not: `/ 0` is a
+# fact about two of the production's parts at once, which is beyond a
+# grammar.  The action cuts rather than rejects -- <#e1> was never going to
+# be a <#Num> instead -- so the reader gets that reason rather than the last
+# branch's.  (An explicit `/ 0`, mind: `/ (5 - 5)` is a division by zero the
+# grammar and the actions both let through, and the AST it builds is one
+# for whoever evaluates it to complain about.)
+- schemaLabel: calc, actions in an overlay
+  schemaURL: ../packages/extension-reduce/examples/calc/calc.shex
+  dataLabel: (1 + 2) / 0
+  dataURL: ../packages/extension-reduce/examples/calc/divide-by-zero.ttl
+  queryMap: "<http://a.example/expr3#e1>@<http://a.example/calc#Expr>"
+  overlayURL: ../packages/extension-reduce/examples/calc/calc-actions.ttl
+  status: nonconformant
+  plugins:
+  - ../packages/extension-reduce/doc/ShExReducePlugin.js
+# ...and the other side of the line that draws.  The action asks whether the
+# right operand is the number 0 -- a fact about the production it is
+# reducing -- and does not evaluate the expression, which is somebody else's
+# job.  So this conforms, and `reduce` builds an AST that divides by zero
+# for whoever evaluates it to answer for.
+- schemaLabel: calc, actions in an overlay
+  schemaURL: ../packages/extension-reduce/examples/calc/calc.shex
+  dataLabel: (1 + 2) / (5 - 5)
+  dataURL: ../packages/extension-reduce/examples/calc/divide-by-computed-zero.ttl
+  queryMap: "<http://a.example/expr4#e1>@<http://a.example/calc#Expr>"
+  overlayURL: ../packages/extension-reduce/examples/calc/calc-actions.ttl
+  status: conformant
+  plugins:
+  - ../packages/extension-reduce/doc/ShExReducePlugin.js
 # ...and the same trick on a grammar nobody wrote for the occasion: ShExR is
 # the RDF serialization of ShEx, ShExR.shex is the schema for it, and the
 # overlay says what each of its productions means in ShExJ.  So the data is

@@ -112,6 +112,15 @@ knows what C is; this doesn't know what your actions are written in, so:
 - A bare `$` before `{`, `/` or a quote is left alone: far more likely a
   template literal, the end of a regular expression, or a dollar sign in a
   string than a reference.
+- A bare `$` where a value ends — before whitespace, `=`, `;`, `,`, `.`, a
+  bracket, or the end of the code — is this production's value.
+- A `$` with anything else after it is an **error**: `$@`, `$&`, `$#`, `$!`,
+  `$^`, `$~`, `$+`. Passing those through is what makes a new `$X` a breaking
+  change: an action that wrote `$@` would mean whatever the action language
+  made of it, until the day `$@` meant a reference here. Perl learned that
+  about `\q` in regular expressions the slow way. They are refused while they
+  are free, which is also why `$$` is the spelling for a production's value:
+  it has nothing after it to reinterpret.
 - Anywhere else, `$1` is a reference — inside a string literal too.
 
 `$$` and `$` are the same thing — yacc's left-hand side is `$$`, so an action
@@ -179,6 +188,23 @@ Everything an action author expects — `one(':left')`, `str`, `num`, prefix
 expansion, "an expression if it parses as one" — is the *evaluator's* doing,
 not this module's. [`@shexjs/extension-reduce-js`](../extension-reduce-js) is the JavaScript one,
 and its README is the list.
+
+Which is why `examples/` is here and not there, though every action in it is
+written in JavaScript and none of them runs without that package: what the
+examples demonstrate is this one — the two bargains, refusing a match, a
+production written as its arcs, actions in a document of their own — and
+the JavaScript is the vehicle. Port the evaluator and the schemas, the data
+and the manifest stay, with different code in the `%Reduce:{…%}` blocks.
+The claim that holds that up is a pair of tests rather than a directory:
+`Reduce-test` checks that no functions cross the line above, and `Calc-test`
+compiles `calc.shex` and `expr1.ttl` — the example files, unchanged — with a
+second overlay whose actions are JSON templates and a six-line evaluator for
+them, to the same AST the JavaScript actions build.
+
+(The JavaScript one is a *dependency* of this package rather than a
+devDependency for one reason: `shexreduce-webapp.js`, the browser bundle
+the plugin loads, has to put an evaluator on the page, and that is the one
+it ships.)
 
 An evaluator is a function, so a second action language is not a fork:
 
