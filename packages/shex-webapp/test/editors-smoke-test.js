@@ -518,10 +518,11 @@ if (!TEST_browser) {
         expect($("#inputData textarea").first().val()).to.include('"entities"');
         expect(tabs()[1]).to.equal("Q0");
 
-        // the panes not showing are still there to be validated with
+        // the panes not showing are still there to be validated with, and
+        // what was typed in one goes with it when the reader turns away
         $("#inputData textarea").first().val('{"entities": {"Q42": {"id": "Q42"}}}');
-        source().onSettings = true;
-        source().render();                    // over to the settings tab
+        $("#dataSource-tabs").tabs("option", "active", 0);   // the settings tab
+        expect(source().onSettings, "the settings are up").to.equal(true);
         expect(tabs()[1], "a tab is named by the page in it").to.equal("Q42");
         expect(source().params().pages).to.deep.equal(['{"entities": {"Q42": {"id": "Q42"}}}']);
       });

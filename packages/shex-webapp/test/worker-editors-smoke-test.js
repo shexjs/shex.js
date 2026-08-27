@@ -158,6 +158,80 @@ if (!TEST_browser) {
         .to.include('"not a number"');
     });
 
+    /* A data source that fetches its answers cannot cross a postMessage:
+     * the worker has to build one of its own.  It used to be told only
+     * "endpoint" or a list of triples, so a Wikibase source arrived over
+     * there as whatever triples the app happened to have -- none, before a
+     * walk -- and the validation failed with nothing fetched and nothing
+     * said. */
+    it("should validate over a source the worker builds for itself", async function () {
+      this.timeout(60000);
+      const fixtures = GitRootServer.urlFor(
+        "packages/neighborhood-wikibase/test/fixtures/");
+      await shared.Caches.manifest.set([{
+        schemaLabel: "person", schema: Fs.readFileSync(
+          Path.join(__dirname, "../examples/wikidata-person.shex"), "utf8"),
+        dataLabel: "Q42, fetched over there", neighborhood: "wikibase",
+        base: fixtures, sitematrix: fixtures + "sitematrix.json",
+        dataBase: "http://www.wikidata.org/entity/",
+        regexpEngine: "eval-simple-1err",
+        queryMap: 'QENTITIES "42"@START',
+      }], "http://localhost/manifest.json");
+      $("#inputSchema .manifest li").last().trigger("click");
+      await shared.promise;
+      $("#inputData .indeterminant li").last().trigger("click");
+      await shared.promise;
+      expect($("#neighborhood").val(), "the entry named a source that fetches")
+        .to.equal("wikibase");
+
+      $("#validate").trigger("click");
+      await shared.promise;
+
+      expect($("#results .error").length, $("#results").text().substring(0, 300))
+        .to.equal(0);
+      expect($("#results").text(), "Q42 is a person")
+        .to.match(/\u2713|ShapeTest|conformant/);
+    });
+
+    /* ...and what it fetched is what a slurp records, from over there: the
+     * worker's tracker posts each answer back to this side, which is where
+     * the document being written lives. */
+    it("should record what the worker fetched when slurp is on", async function () {
+      this.timeout(60000);
+      expect($("#nbhd-slurp").length, "a source that fetches offers it").to.equal(1);
+      $("#nbhd-slurp").prop("checked", true).trigger("change");
+      try {
+        $("#validate").trigger("click");
+        await shared.promise;
+        let turtle = "";
+        for (let i = 0; i < 100 && !/triples/.test(turtle); ++i) {
+          await new Promise(resolve => setTimeout(resolve, 20));
+          turtle = (shared.neighborhoods.panesFor("rdfjs").data || [""])[0] || "";
+        }
+        expect(turtle, "the walk it made over there")
+          .to.match(/^# [\u2192\u2190] \S+@\S+ \d+ triples \(\d+ ms\)$/m);
+        // ...written against the base the entry named, which is why an
+        // entity reads as <Q42> rather than as its whole URL
+        expect(turtle.split("\n")[0]).to.equal("BASE <http://www.wikidata.org/entity/>");
+        expect(turtle, "and what it read").to.match(/^<Q42> wdt:/m);
+
+        // ...and the pages that walk read, which are over there: a slurp
+        // leaves them here as panes to edit and validate again
+        const pages = shared.neighborhoods.panesFor("wikibase").pages || [];
+        expect(pages.length, "the pages the walk read, carried back").to.be.above(0);
+        expect(pages.some(page => /"Q42"/.test(page)), "Q42 among them").to.equal(true);
+        expect(pages[0], "an entity page, as JSON").to.include('"entities"');
+        expect($("#dataPaneTabs > li > a").map((i, a) => $(a).text()).get(),
+               "each one a pane of its own").to.include("Q42");
+      } finally {
+        $("#nbhd-slurp").prop("checked", false).trigger("change");
+        // the slurp handed the reader the local store, whose query map is
+        // the one the next test validates with
+        $("#queryMap").val("<http://a.example/x>@<http://a.example/S>");
+        await shared.Caches.shapeMap.copyQueryMapToEditMap();
+      }
+    });
+
     it("should leave the editors out of the permalink", async function () {
       expect($("#editors").val(), "the editors are what the app is").to.equal("");
       $("#permalink a").removeAttr("href"); // built afresh when the menu opens

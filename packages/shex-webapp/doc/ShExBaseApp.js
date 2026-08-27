@@ -659,7 +659,11 @@ class NeighborhoodConfig {
     const docs = this.documents();
     docs.forEach(({param, index, text}, n) => {
       const id = "dataPanePanel-" + n;
-      const showingText = n === this.showing ? this.textarea.val() : text;
+      // the textarea holds the showing document -- while one is showing:
+      // with the settings up it holds whatever was there last, which is not
+      // what to name a tab after
+      const showingText = n === this.showing && !this.onSettings
+            ? this.textarea.val() : text;
       const title = (param.pane.titleOf && param.pane.titleOf(showingText))
             || (param.pane.max === 1 ? param.pane.label : param.pane.label + " " + (index + 1));
       tabs.append($("<li/>").append($("<a/>", {href: "#" + id, title: param.pane.label}).text(title)));
@@ -769,6 +773,13 @@ class NeighborhoodConfig {
     else
       texts[at] = text;
     this.panes[spec.name] = texts;
+    // The pane this landed in may be the one the reader is looking at, and
+    // a showing document's text is the textarea's rather than this -- so
+    // the two have to agree, or they go on reading the page this replaced.
+    const showing = this.onSettings ? null : this.docAt(this.showing);
+    if (showing && showing.param.name === spec.name &&
+        showing.index === (at === -1 ? texts.length - 1 : at))
+      this.textarea.val(text);
   }
 
   /** Append to that document, and to the textarea too when it is the one
@@ -801,6 +812,10 @@ class NeighborhoodConfig {
    * per entity page it visited, keeps those instead.
    */
   showSlurped () {
+    // It has its own to show -- the entity pages a Wikibase walk read, a tab
+    // each, named after the entity in them.  Left in their tabs rather than
+    // opened: a fetched page is half a megabyte of JSON, and opening one is
+    // a decision for whoever wants to read it.
     if (this.documents().length > 0)
       return;
     const target = this.localTurtle();
@@ -832,11 +847,18 @@ class NeighborhoodConfig {
           return;                        // render() moving the tabs, not the user
         const panel = ui.newPanel.attr("id") || "";
         const m = panel.match(/^dataPanePanel-(\d+)$/);
-        this.onSettings = !m;
-        if (m)
+        if (m) {
+          this.onSettings = false;
           this.show(parseInt(m[1], 10));
-        else
-          this.showDocumentArea();       // the settings pane: no document
+        } else {
+          // the settings pane: no document, so what the reader typed in the
+          // one they are leaving has to be kept here -- nothing else is
+          // holding it, and the tab it belongs to is named after it
+          this.stash();
+          this.onSettings = true;
+          this.showDocumentArea();
+          this.render();
+        }
       },
     });
     $("#addDataPane").on("click", () => this.addPane());
@@ -5610,7 +5632,16 @@ class ShExBaseApp {
    */
   async getPermalink () {
     let parms = [];
-    await this.Caches.shapeMap.copyEditMapToQueryMap();
+    // The map as it stands, whether or not the source can still answer it:
+    // a link is about what is on screen, and a query map this source cannot
+    // resolve -- a `SPARQL '''…'''` after a slurp handed the reader the
+    // local store -- is still what the link should carry.  Failing to build
+    // one leaves the menu with no link and says nothing about why.
+    try {
+      await this.Caches.shapeMap.copyEditMapToQueryMap();
+    } catch (e) {
+      // the query map keeps what it says, which is what goes in the link
+    }
     parms = parms.concat(this.QueryParams.reduce((acc, input) => {
       let parm = input.queryStringParm;
       let val = input.location.val();

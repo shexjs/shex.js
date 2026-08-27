@@ -90,7 +90,11 @@ function forgetPages() {
  * who may set it? */
 function inBrowser() {
     const global = globalThis;
-    return typeof global.window !== "undefined" && typeof global.window.document !== "undefined";
+    // ...or a worker, which is a browser context with no `window`: it has a
+    // User-Agent of its own and the same refusal to let anyone set it, so a
+    // request made from one must not ask.
+    return (typeof global.window !== "undefined" && typeof global.window.document !== "undefined")
+        || typeof global.WorkerGlobalScope !== "undefined";
 }
 // ── site languages ──────────────────────────────────────────────────────────
 // The sitematrix names each wiki's language by its subdomain-ish code;

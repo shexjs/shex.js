@@ -5,6 +5,12 @@ importScripts("./WorkerMarshalling.js");
 
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 let validator = null;
+/** the db this validator asks, and what of it has been sent back: a source
+ * that reads documents to answer with has them over here, and a slurp is on
+ * the other side (postSlurpedPages) */
+let inputDb = null;
+let slurping = false;
+const postedPages = new Set();
 
 /**
  * The worker half of a plugin (doc/extension-ui-plan.md §3).
@@ -47,13 +53,19 @@ try {
   switch (msg.data.request) {
   case "create":
     errorText = "creating validator";
-    // An endpoint is a network away, and a worker blocked on a synchronous
-    // request is a worker that can't answer anything else -- including being
-    // told to stop.  Ask with fetch() and let the validation stop at the
-    // fetch instead (see validateShapeMapAsync below).
-    const inputData = "endpoint" in msg.data
-          ? ShExWebApp.SparqlDbAsync(
-            ShExWebApp.SparqlDb(msg.data.endpoint, msg.data.slurp ? queryTracker() : null))
+    // A source that fetches its answers is built here rather than sent:
+    // a db that goes to the network is not a thing that crosses a
+    // postMessage, so the app says which module and what it takes
+    // (fromParams, the same constructor it uses itself) and this end builds
+    // it.  A source that is handed its data sends the data.
+    //
+    // Asked with fetch(), where the module offers that: a worker blocked on
+    // a synchronous request is a worker that can't answer anything else --
+    // including being told to stop -- so the validation waits at the fetch
+    // instead (see validateShapeMapAsync below).
+    const inputData = msg.data.neighborhood
+          ? asyncFace(neighborhoodModule(msg.data.neighborhood), msg.data.params,
+                      msg.data.slurp ? queryTracker() : null)
           : ShExWebApp.RdfJsDb(makeStaticDB(msg.data.data.map(t => WorkerMarshalling.jsonTripleToRdfjsTriple(t, N3js.DataFactory))));
 
     let createOpts = msg.data.options;
@@ -72,6 +84,9 @@ try {
       if (typeof ext.register === "function")
         ext.register(validator, ShExWebApp);
     });
+    inputDb = inputData;
+    slurping = !!msg.data.slurp;
+    postedPages.clear();
     self.postMessage({ response: "created", results: {timestamp: new Date()} });
     break;
 
@@ -98,12 +113,14 @@ try {
 
       // Notify caller.
       self.postMessage({ response: "update", results: newResults });
+      postSlurpedPages();
 
       // Skip entries that were already processed.
       while (currentEntry < queryMap.length &&
              results.has(queryMap[currentEntry]))
         ++currentEntry;
     }
+    postSlurpedPages();
     // Done -- show results and restore interface.
     if (options.includeDoneResults)
       self.postMessage({ response: "done", results: results.getShapeMap() });
@@ -157,6 +174,42 @@ function makeStaticDB (quads) {
  * not "the last one that started".
  */
 let nextQuery = 0;
+/**
+ * The pages a translating source read, as they turn up.
+ *
+ * A slurp leaves the reader the entity pages a walk visited, to edit and
+ * validate again -- and this walk happened over here, so they have to be
+ * carried across.  Only the ones this worker has not sent: a walk revisits
+ * pages, and a validation asks about several nodes.
+ */
+function postSlurpedPages () {
+  if (!slurping || inputDb === null || typeof inputDb.loadedPages !== "function")
+    return;
+  const fresh = inputDb.loadedPages().filter(page => !postedPages.has(page.id));
+  if (fresh.length === 0)
+    return;
+  fresh.forEach(page => postedPages.add(page.id));
+  self.postMessage({ response: "slurpedPages", pages: fresh });
+}
+
+/** the neighborhood module the app named, by the id both ends know it by */
+function neighborhoodModule (id) {
+  const {moduleId} = ShExWebApp.NeighborhoodApi;
+  const found = (ShExWebApp.NeighborhoodModules || []).find(m => moduleId(m) === id);
+  if (found === undefined)
+    throw Error(`no neighborhood module ${JSON.stringify(id)} in this worker;`
+                + ` there are ${(ShExWebApp.NeighborhoodModules || []).map(moduleId).join(", ")}`);
+  return found;
+}
+
+/** ...built, and asked with fetch() where it offers that */
+function asyncFace (module, params, tracker) {
+  const db = module.fromParams(params || {}, tracker);
+  return module.asAsyncDb && typeof db.getNeighborhoodAsync === "function"
+    ? module.asAsyncDb(db)
+    : db;
+}
+
 function queryTracker () {
   return {
     start: function (isOut, term, shapeLabel) {

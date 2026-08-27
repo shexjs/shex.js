@@ -44,7 +44,7 @@ class Canceleable {
 
 const USE_INCREMENTAL_RESULTS = true;
 class RemoteShExValidator {
-  constructor (loaded, schemaURL, inputData, renderer, onCancel, endpoint, workerUrl) {
+  constructor (loaded, schemaURL, inputData, renderer, onCancel, source, workerUrl) {
     this.renderer = renderer;
     this.onCancel = onCancel;
     this.workerUrl = workerUrl;
@@ -62,8 +62,10 @@ class RemoteShExValidator {
           // node conform (doc/error-normalization.md §4)
           options: {regexModule: $("#regexpEngine").val(), repairs: true},
         },
-        endpoint
-          ? { endpoint }
+        // a source that fetches is named and rebuilt over there; one that
+        // is handed its data hands it over
+        source
+          ? source
           : { data: inputData.getQuads().map(
               t => WorkerMarshalling.rdfjsTripleToJsonTriple(t)
             ) }
@@ -173,6 +175,18 @@ class RemoteShExValidator {
       console.error(e); // dump details to console.
       if (done) { done(e) }
       break;
+
+      // A source that reads documents to answer with has them over there,
+      // and the panes a slurp leaves are over here: these are the pages
+      // that walk has read since the last lot.
+    case "slurpedPages": {
+      const neighborhoods = this.renderer.caches.inputData.neighborhoods;
+      (msg.data.pages || []).forEach(
+        ({id, text}) => neighborhoods.addPageDocument(id, text));
+      if ((msg.data.pages || []).length)
+        neighborhoods.render();
+      break;
+    }
 
       // Query tracking: the tracker takes what a db reports, which is
       // RDF/JS (DbQueryTracker) -- so the marshalling a postMessage needed
