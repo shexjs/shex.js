@@ -58,13 +58,13 @@ used as a key is `"[object Object]"`, the same key for every literal there is.
 A predicate is written as a full IRI, as `a` (always `rdf:type`), or with a
 prefix from `reduce`'s `prefixes` option.
 
-`$sx:nodeKind`, `$1` and `$` are
+`$sx:nodeKind`, `$1` and `$$` are
 [extension-reduce's](../extension-reduce#naming-what-a-production-matched) —
 they are ordinary names by the time the code gets here. All this does about
 them is put `scope.bindings` in scope and, when `scope.ret` says the action
 assigns to a name, answer with what that name ended up holding rather than
 with the code's own value. `with` writes an assignment through to the object
-when the name is one of its own, so `$ = ...` needs nothing else.
+when the name is one of its own, so `$$ = ...` needs nothing else.
 
 ## Writing another one
 

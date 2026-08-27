@@ -31,27 +31,27 @@ BASE <http://a.example/calc>
 # rdf:type.  (`$*` is all three in match order, so this could equally be
 # written `Object.assign({}, ...$*)`.)
 <#BinOp> {
-  a       [:Add :Sub :Mul :Div] %Reduce:{ $ = {op: local($1)} %} ;
-  :left   @<#Expr> %Reduce:{ $ = {left: $1} %};
-  :right  @<#Expr> %Reduce:{ $ = {right: $1} %}
-} %Reduce:{ $ = Object.assign($rdf:type, $:left, $:right) %}
+  a       [:Add :Sub :Mul :Div] %Reduce:{ $$ = {op: local($1)} %} ;
+  :left   @<#Expr> %Reduce:{ $$ = {left: $1} %};
+  :right  @<#Expr> %Reduce:{ $$ = {right: $1} %}
+} %Reduce:{ $$ = Object.assign($rdf:type, $:left, $:right) %}
 
 # A number with more to come: not the sum, and noted so the sum grows.
 <#MidNum> {
   a       [:Num] ;
   :value  xsd:integer %Reduce:{
-    $ = num($1) === state.before(subject)
+    $$ = num($1) === state.before(subject)
       ? {failure: 'the sum of the numbers before it, so it ends the expression'}
       : state.note(subject, num($1))
   %}
-} %Reduce:{ $ = {op: 'num', value: one(':value')} %}
+} %Reduce:{ $$ = {op: 'num', value: one(':value')} %}
 
 # ...and the one that ends it: the sum, with nothing after it to note.
 <#LastNum> {
   a       [:Num] ;
   :value  xsd:integer %Reduce:{
-    $ = num($1) === state.before(subject)
+    $$ = num($1) === state.before(subject)
       ? num($1)
       : {failure: 'not the sum of the numbers before it'}
   %}
-} %Reduce:{ $ = {op: 'last', value: one(':value')} %}
+} %Reduce:{ $$ = {op: 'last', value: one(':value')} %}

@@ -23,7 +23,7 @@
  *
  * An action names what its sub-productions reduced to the way yacc does:
  * `$sx:nodeKind` is what the arc on that predicate reduced to, `$1` is the
- * first value the body matched, and `$` is the value of this production.
+ * first value the body matched, and `$$` is the value of this production.
  *
  * This module has no action language: `reduce()` takes an `evaluate(code,
  * scope)` and hands it plain data.  Running code that arrived with a document
@@ -399,9 +399,9 @@ function arcRef(f, scope, iri) {
     return f.many(scope.shape, iri) || got === undefined ? got : got[0];
 }
 /**
- * `$$` or `$`, `$1`, `$*`, `$<iri>`, `$prefix:local`, `$:local` --
- * and `$name`, which is deliberately none of them: `$` starts an identifier
- * in several action languages, and a name with no prefix is not a predicate.
+ * `$$` or `$`, `$1`, `$*`, `$<iri>`, `$prefix:local`, `$:local` -- and
+ * `$name`, which is deliberately none of them: `$` starts an identifier in
+ * several action languages, and a name with no prefix is not a predicate.
  *
  * The last alternative is the bare `$`, which is not read as a reference
  * before `{`, `/` or a quote -- much more likely a template literal, the end

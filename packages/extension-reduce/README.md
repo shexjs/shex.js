@@ -69,10 +69,10 @@ production can be written as its sub-expressions:
 
 ```turtle
 [ sa:ref sx:NodeConstraint ;
-  sa:code "$ = Object.assign({type: 'NodeConstraint'},
+  sa:code "$$ = Object.assign({type: 'NodeConstraint'},
                              ...($sx:nodeKind || []), ...($sx:datatype || []))" ] ,
-[ sa:path "@sx:NodeConstraint~sx:nodeKind" ; sa:code "$ = {nodeKind: local($1)}" ] ,
-[ sa:path "@sx:NodeConstraint~sx:datatype" ; sa:code "$ = {datatype: $1}" ] ,
+[ sa:path "@sx:NodeConstraint~sx:nodeKind" ; sa:code "$$ = {nodeKind: local($1)}" ] ,
+[ sa:path "@sx:NodeConstraint~sx:datatype" ; sa:code "$$ = {datatype: $1}" ] ,
 ```
 
 | | |
@@ -80,7 +80,7 @@ production can be written as its sub-expressions:
 | `$sx:nodeKind` `$<http://…#nodeKind>` `$:local` | what the arc on that predicate reduced to — the value itself where the schema gives that shape at most one such arc, and the array of them where it may have several. `undefined` if the arc didn't match, so `\|\| []` reads as "however many of these there were" |
 | `$1` `$2` | the values in the order the body matched them, numbered from 1 as in yacc. This is for the sub-productions that share a name, which is the case a name can't address; on a triple constraint, `$1` is its object |
 | `$*` | all of them, in the order the body matched them — `Object.assign({}, ...$*)` is a production written as its sub-expressions without naming any of them |
-| `$` `$$` | this production's value, which the action may assign to |
+| `$$` `$` | this production's value, which the action may assign to |
 
 An arc reference is an array unless the schema says it cannot be: a constraint
 that may match more than once, two constraints on one predicate, or a repeated
@@ -104,11 +104,17 @@ knows what C is; this doesn't know what your actions are written in, so:
   string than a reference.
 - Anywhere else, `$1` is a reference — inside a string literal too.
 
-`$` and `$$` are the same thing: yacc's left-hand side is
-`$$`, so an action ported from one reads unchanged, and `$` alone is what is
-left when there is only one of them to name. (make(1)'s `$@` is the *target* —
-the left-hand side — and `$^` is the whole right-hand side; the shell's `$*`
-is "all the arguments", which is what a production's values are here.)
+`$$` and `$` are the same thing — yacc's left-hand side is `$$`, so an action
+ported from one reads unchanged — but they are not equally future-proof, and
+the examples here all write `$$`. A `$` with something after it is a reference
+if this knows the something and left alone if it doesn't; give `${`, `$/` or
+`$'` a meaning later and an action that wrote a bare `$` there says something
+new. `$$` is a reference in every position and has nothing after it to
+reinterpret, so an action written with it means today what it will mean then.
+
+(`$*` is the shell's "all the arguments", which is what a production's values
+are. make(1) is the other way round: its `$@` is the *target* — the left-hand
+side, our `$$` — and `$^` is the whole right-hand side.)
 
 ## Using it
 
@@ -263,7 +269,15 @@ you decide to run it — and which language you run.
 schema for ShEx schemas written as RDF, and `shexr-actions.ttl` is one action
 per production saying what that production means in ShExJ. Together they read
 ShExR, which `ShExUtil.valuesToSchema` does in about 280 lines of hand-written
-walking.
+walking. (`ShExR.shex` there is a copy of shexTest's `doc/ShExR.shex`, so that
+the example — and the manifest entry that opens it in the app — carries what
+it needs; `ShExR-test` checks the copy against the original.)
+
+The actions bring their own helper rather than asking the caller for one: the
+merging productions below are written with `state.merge`, and a **start
+action** in the overlay is what defines it. So `issue-schema.ttl` — a small
+schema, written as RDF — reads as the ShExJ it means given nothing but those
+two files and an evaluator, which is what the manifest entry does.
 
 It reads 440 of the 441 ShExR documents in shexTest's `schemas/`. The one it
 doesn't, `3circRefS2-IS3.ttl`, doesn't comply with `ShExR.shex`; its entry in

@@ -29,27 +29,27 @@ BASE <http://a.example/calc>
   a       [:Add :Sub :Mul :Div] ;
   :left   @<#MidExpr> ;
   :right  @<#LastExpr>
-} %Reduce:{ $ = {op: local(one('a')), left: one(':left'), right: one(':right')} %}
+} %Reduce:{ $$ = {op: local(one('a')), left: one(':left'), right: one(':right')} %}
 <#LastNum> {
   a       [:Num] ;
   # `AND [60]`, had the schema known 60 when it was written
   :value  xsd:integer %Reduce:{
-    $ = num($1) === state.before(subject)
+    $$ = num($1) === state.before(subject)
       ? num($1)
       : {failure: 'not the sum of the numbers before it'}
   %}
-} %Reduce:{ $ = {op: 'last', value: one(':value')} %}
+} %Reduce:{ $$ = {op: 'last', value: one(':value')} %}
 
 <#MidExpr> @<#MidBinOp> OR @<#MidNum>
 <#MidBinOp> {
   a       [:Add :Sub :Mul :Div] ;
   :left   @<#MidExpr> ;
   :right  @<#MidExpr>
-} %Reduce:{ $ = {op: local(one('a')), left: one(':left'), right: one(':right')} %}
+} %Reduce:{ $$ = {op: local(one('a')), left: one(':left'), right: one(':right')} %}
 <#MidNum> {
   a       [:Num] ;
   # `AND NOT [60]`, likewise
   :value  xsd:integer %Reduce:{
-    $ = state.note(subject, num($1))
+    $$ = state.note(subject, num($1))
   %}
-} %Reduce:{ $ = {op: 'num', value: one(':value')} %}
+} %Reduce:{ $$ = {op: 'num', value: one(':value')} %}

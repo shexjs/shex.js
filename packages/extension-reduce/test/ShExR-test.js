@@ -22,10 +22,12 @@ const findPath = require("./findPath.js");
 
 const BASE = "http://a.example/application/base/";
 const schemasPath = findPath("schemas");
-const shexrPath = findPath("doc") + "ShExR.shex";
-const ACTIONS = Path.join(__dirname, "..", "examples", "shexr", "shexr-actions.ttl");
+const HERE = Path.join(__dirname, "..", "examples", "shexr");
+// the copy the example ships, so what is tested is what a reader opens
+const SHEXR = Path.join(HERE, "ShExR.shex");
+const ACTIONS = Path.join(HERE, "shexr-actions.ttl");
 
-const reader = makeReader(Fs.readFileSync(shexrPath, "utf8"),
+const reader = makeReader(Fs.readFileSync(SHEXR, "utf8"),
                           Fs.readFileSync(ACTIONS, "utf8"), BASE);
 
 const readShExR = ttlPath => read(reader, Fs.readFileSync(ttlPath, "utf8"), BASE);
@@ -38,6 +40,36 @@ const stable = o =>
       : "{" + Object.keys(o).sort().map(k => JSON.stringify(k) + ":" + stable(o[k])).join(",") + "}";
 
 describe("ShExR, read by ShEx", function () {
+
+  /* The example carries its own ShExR.shex so that it -- and the manifest
+   * entry that opens it in the app -- needs nothing but this repository.
+   * A copy that has drifted from the spec's is a copy that reads a language
+   * nobody else is writing. */
+  it("should ship the ShExR.shex the spec has", function () {
+    expect(Fs.readFileSync(SHEXR, "utf8"),
+           "out of date: cp " + findPath("doc") + "ShExR.shex " + SHEXR)
+      .to.equal(Fs.readFileSync(findPath("doc") + "ShExR.shex", "utf8"));
+  });
+
+  /* ...and what the manifest entry validates: a schema, written as RDF,
+   * that reads as the ShExC in its own header. */
+  it("should read the schema the example ships", function () {
+    const got = readShExR(Path.join(HERE, "issue-schema.ttl"));
+    expect(canon(got)).to.deep.equal(canon(ShExUtil.ShExJtoAS(
+      require("@shexjs/parser").construct("http://a.example/", null, {index: true}).parse(`
+PREFIX : <http://a.example/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+BASE <http://a.example/>
+<#IssueShape> {
+  :state      [:unassigned :assigned] ;
+  :reportedBy @<#UserShape> ;
+  :reportedOn xsd:dateTime ?
+}
+<#UserShape> {
+  :name  xsd:string ;
+  :email IRI *
+}`, "http://a.example/"))));
+  });
 
   it("should read a one-triple-constraint schema", function () {
     const got = readShExR(Path.join(schemasPath, "1dot.ttl"));

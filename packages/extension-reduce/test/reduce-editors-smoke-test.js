@@ -327,6 +327,36 @@ if (!TEST_browser) {
       });
     });
 
+    /* The grammar nobody wrote for the occasion: ShExR is ShEx written as
+     * RDF, so the data is a schema and the schema is the schema for
+     * schemas.  Everything the entry needs is in the repository -- the
+     * spec's ShExR.shex, the actions as an overlay -- and the query map
+     * finds the schema node without naming it, which is as well: it is a
+     * blank node whose label is whatever the parser called it. */
+    it("should read a ShExR schema as the ShExJ it means", async function () {
+      await open("ShExR, read by ShEx", "an issue schema");
+      expect($("#validationResults > div .error").length,
+             $("#validationResults > div").text().substring(0, 200)).to.equal(0);
+      expect($("#reduceOverlay textarea").first().val(), "the actions came with the entry")
+        .to.include("sa:start");
+
+      $("#reduce").trigger("click");
+      await shared.promise;
+      const schema = ast();
+      expect(schema.type).to.equal("Schema");
+      expect(schema.shapes.map(d => d.id))
+        .to.deep.equal(["http://a.example/#IssueShape", "http://a.example/#UserShape"]);
+      const issue = schema.shapes[0].shapeExpr.expression.expressions;
+      expect(issue.map(tc => tc.predicate)).to.deep.equal(
+        ["http://a.example/state", "http://a.example/reportedBy", "http://a.example/reportedOn"]);
+      expect(issue[0].valueExpr.values, "the value set it reduced")
+        .to.deep.equal(["http://a.example/unassigned", "http://a.example/assigned"]);
+      expect(issue[2].max, "and the cardinality").to.equal(1);
+      // ...and every node of it points back at the production that made it
+      expect(((shared.Caches.editorSupport.linkSets || {})[REDUCE_ID] || []).length,
+             "a link per node").to.be.above(10);
+    });
+
     /* What a fold built, back to what built it.
      *
      * The provenance the fold records says which action made each value and

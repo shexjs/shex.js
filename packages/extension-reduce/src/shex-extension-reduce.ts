@@ -22,7 +22,7 @@
  *
  * An action names what its sub-productions reduced to the way yacc does:
  * `$sx:nodeKind` is what the arc on that predicate reduced to, `$1` is the
- * first value the body matched, and `$` is the value of this production.
+ * first value the body matched, and `$$` is the value of this production.
  *
  * This module has no action language: `reduce()` takes an `evaluate(code,
  * scope)` and hands it plain data.  Running code that arrived with a document
@@ -77,7 +77,7 @@ interface ReduceScope {
   bindings: {[name: string]: any};
   /**
    * The name the action assigns its value to, present only if the action
-   * used `$`.  An evaluator that sees this makes that name assignable and
+   * used `$$`.  An evaluator that sees this makes that name assignable and
    * answers with its value rather than with the code's own.
    */
   ret?: string;
@@ -603,7 +603,7 @@ function arcRef (f: Fold, scope: any, iri: string): any {
 
 /** what a `$...` in an action stands for, once the values are in hand */
 type Ref =
-  | {kind: 'ret'}                    // `$`  -- this production's value
+  | {kind: 'ret'}                    // `$$` -- this production's value
   | {kind: 'pos', at: number}        // `$1` -- the first value the body matched
   | {kind: 'all'}                    // `$*` -- all of them, in match order
   | {kind: 'arc', iri: string};      // `$sx:nodeKind` -- what that arc reduced to
@@ -612,14 +612,14 @@ type Ref =
 interface Bound {
   code: string;
   refs: {id: string, ref: Ref}[];
-  /** the name `$` became, if the action used it */
+  /** the name `$$` became, if the action used it */
   ret?: string;
 }
 
 /**
- * `$$` or `$`, `$1`, `$*`, `$<iri>`, `$prefix:local`, `$:local` --
- * and `$name`, which is deliberately none of them: `$` starts an identifier
- * in several action languages, and a name with no prefix is not a predicate.
+ * `$$` or `$`, `$1`, `$*`, `$<iri>`, `$prefix:local`, `$:local` -- and
+ * `$name`, which is deliberately none of them: `$` starts an identifier in
+ * several action languages, and a name with no prefix is not a predicate.
  *
  * The last alternative is the bare `$`, which is not read as a reference
  * before `{`, `/` or a quote -- much more likely a template literal, the end

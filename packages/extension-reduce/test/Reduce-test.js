@@ -173,11 +173,11 @@ describe("reduce", function () {
 
     /* All of them, without naming any: what `Object.assign({}, ...$*)` is
      * for.  yacc counts ($1, $2) and has no word for the lot; make(1)
-     * spells the whole right-hand side `$^` and the shell spells "all the
+     * spells the whole right-hand side `$^`; the shell spells "all the
      * arguments" `$*`, which is what a production's values are here. */
     it("should take $* for every value the body matched, in match order", function () {
       expect(run("<http://a.example/S> { :p1 . ; :p2 . }", ":x :p1 :o1 ; :p2 :o2 .",
-                 {S: "$*"})).to.deep.equal([B + "o1", B + "o2"]);
+                 {S: "$$ = $*"})).to.deep.equal([B + "o1", B + "o2"]);
     });
 
     it("should count from $1, as yacc does", function () {

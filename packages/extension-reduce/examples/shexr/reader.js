@@ -51,26 +51,6 @@ function makeReader (shexrText, actionsText, base = DEFAULT_BASE) {
   return applyOverlay(shexr, overlay, {prefixes: {sx: SX, rdf: RDF}});
 }
 
-/**
- * What the actions build a production out of: the parts its members said.
- *
- * Each member answers with the one ShExJ property it is -- `{min: 1}` --
- * and the production merges them, which is why no action here has to ask
- * whether an arc was there.  An arc that repeats (`sx:extra IRI *`) is
- * matched once per triple, so its member says `{extra: [iri]}` and the
- * lists join.
- */
-function merge (target, ...groups) {
-  groups.forEach(group => (group || []).forEach(part => {
-    Object.keys(part).forEach(key => {
-      target[key] = Array.isArray(target[key]) && Array.isArray(part[key])
-        ? target[key].concat(part[key])
-        : part[key];
-    });
-  }));
-  return target;
-}
-
 /** the ShExJ a ShExR document says, or null if it isn't a ShExR schema graph */
 function read (reader, turtleText, base = DEFAULT_BASE) {
   const graph = new N3.Store();
@@ -90,9 +70,11 @@ function read (reader, turtleText, base = DEFAULT_BASE) {
   // The actions expand every reference in place and give every node an id,
   // the way ShExUtil.valuesToSchema does; ShExRtoShExJ folds the repeats
   // back into references and drops the ids nothing refers to.
+  // ...with the schema, which says how many values an arc reference stands
+  // for: the same reading the app gets when it folds the same actions
   return ShExUtil.ShExJtoAS(
-    ShExUtil.ShExRtoShExJ(Reduce.reduce(res, {evaluate, prefixes: {sx: SX, rdf: RDF},
-                                             api: {merge}})));
+    ShExUtil.ShExRtoShExJ(Reduce.reduce(res, {evaluate, schema: reader,
+                                             prefixes: {sx: SX, rdf: RDF}})));
 }
 
 module.exports = {makeReader, read, SX, RDF, DEFAULT_BASE};

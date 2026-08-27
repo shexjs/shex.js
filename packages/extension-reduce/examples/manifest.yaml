@@ -48,3 +48,19 @@
   status: conformant
   plugins:
   - ../doc/ShExReducePlugin.js
+# ...and the same trick on a grammar nobody wrote for the occasion: ShExR is
+# the RDF serialization of ShEx, ShExR.shex is the schema for it, and the
+# overlay says what each of its productions means in ShExJ.  So the data is
+# a schema, the schema is the schema for schemas, and what the fold builds
+# is the ShExJ the data says -- a ShExR reader that is a reader ShEx
+# generates rather than one anybody hand-wrote (packages/extension-reduce/
+# examples/shexr/, and ShExR-test runs it over the whole shexTest corpus).
+- schemaLabel: ShExR, read by ShEx
+  schemaURL: shexr/ShExR.shex
+  dataLabel: an issue schema
+  dataURL: shexr/issue-schema.ttl
+  overlayURL: shexr/shexr-actions.ttl
+  queryMap: "{FOCUS rdf:type sx:Schema}@START"
+  status: conformant
+  plugins:
+  - ../doc/ShExReducePlugin.js
