@@ -6,6 +6,7 @@
 # itself so they must be executed as a SemAct.
 PREFIX : <http://a.example/calc#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX Reduce: <http://shex.io/extensions/Reduce/>
 BASE <http://a.example/calc>
 
@@ -24,11 +25,16 @@ BASE <http://a.example/calc>
 
 <#Expr> @<#BinOp> OR @<#MidNum> OR @<#LastNum>
 
+# Each arc says what it contributes, and the shape puts the contributions
+# together: `$rdf:type` is what the `a` arc's action returned -- the value
+# itself, not a list of them, because the schema gives a <#BinOp> at most one
+# rdf:type.  (`$*` is all three in match order, so this could equally be
+# written `Object.assign({}, ...$*)`.)
 <#BinOp> {
-  a       [:Add :Sub :Mul :Div] ;
-  :left   @<#Expr> ;
-  :right  @<#Expr>
-} %Reduce:{ $ = {op: local(one('a')), left: one(':left'), right: one(':right')} %}
+  a       [:Add :Sub :Mul :Div] %Reduce:{ $ = {op: local($1)} %} ;
+  :left   @<#Expr> %Reduce:{ $ = {left: $1} %};
+  :right  @<#Expr> %Reduce:{ $ = {right: $1} %}
+} %Reduce:{ $ = Object.assign($rdf:type, $:left, $:right) %}
 
 # A number with more to come: not the sum, and noted so the sum grows.
 <#MidNum> {

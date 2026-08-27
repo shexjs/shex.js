@@ -141,7 +141,11 @@ try {
   }
   }
 } catch (e) {
-self.postMessage({ response: "error", message: e.message, stack: e.stack, text: errorText });
+// the name too: it is how the far side tells one kind of failure from
+// another -- a plugin's action threw, rather than the schema was bad --
+// and it is the only part of an Error that survives being a message
+self.postMessage({ response: "error", name: e.name, message: e.message,
+                   stack: e.stack, text: errorText });
 }
 }
 

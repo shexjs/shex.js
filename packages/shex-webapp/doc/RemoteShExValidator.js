@@ -30,7 +30,7 @@ class Canceleable {
     ShExWorker.terminate();
     ShExWorker = new Worker(this.workerUrl);
     if (evt !== null)
-      $("#results .status").text(this.abortText).show();
+      $("#results > .status").text(this.abortText).show();
     this.workerUICleanup();
     this.reject(new FlowControlError("Interrupted by user click"))
   }
@@ -106,6 +106,8 @@ class RemoteShExValidator {
       break;
     case "error":
       const throwMe = Error(msg.data.message);
+      if (msg.data.name)
+        throwMe.name = msg.data.name;
       throwMe.stack = msg.data.stack;
       throwMe.text = msg.data.errorText;
       reject(throwMe);
@@ -150,7 +152,7 @@ class RemoteShExValidator {
 
     case "done":
       ShExWorker.onmessage = false;
-      $("#results .status").text("rendering results...").show();
+      $("#results > .status").text("rendering results...").show();
       if (!USE_INCREMENTAL_RESULTS) {
         if ("solutions" in msg.data.results)
           msg.data.results.solutions.forEach(this.renderEntry);
@@ -168,12 +170,20 @@ class RemoteShExValidator {
     case "error":
       ShExWorker.onmessage = false;
       const e = Error(msg.data.message);
+      if (msg.data.name)
+        e.name = msg.data.name;             // ...so a plugin can know its own
       e.stack = msg.data.stack;
       workerUICleanup();
-      $("#results .status").text("validation errors:").show();
+      $("#results > .status").text("validation errors:").show();
       this.renderer.failure(e, currentAction);
       console.error(e); // dump details to console.
       if (done) { done(e) }
+      // ...and the validation is over: the error has been rendered, so this
+      // answers the way the page's own validator answers a failure it has
+      // reported.  Left unanswered, whoever asked for the validation waits
+      // for it forever -- and the app is holding the validate button down
+      // until it hears.
+      resolve({validationError: e});
       break;
 
       // A source that reads documents to answer with has them over there,

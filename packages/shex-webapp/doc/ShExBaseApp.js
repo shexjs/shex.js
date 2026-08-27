@@ -324,13 +324,13 @@ class SchemaCache extends InterfaceCache {
       isDCTAP ? "DCTAP":
       this.graph ? "ShExR" :
       "ShExC";
-    $("#results .status").text("parsing "+this.language+" schema...").show();
+    $("#results > .status").text("parsing "+this.language+" schema...").show();
     const schema =
           isJSON ? ShExWebApp.Util.ShExJtoAS(JSON.parse(text)) :
           isDCTAP ? await parseDcTap(text) :
           this.graph ? parseShExR() :
           this.shexcParser.parseString(text, this.meta, base);
-    $("#results .status").hide();
+    $("#results > .status").hide();
     this.callOnLoad();
     return schema;
 
@@ -1616,7 +1616,7 @@ class ManifestCache extends InterfaceCache {
   }
 
   async clearAll () {
-    $("#results .status").hide();
+    $("#results > .status").hide();
     await this.caches.inputSchema.set("", DefaultBase);
     $(".inputShape").val("");
     $("#inputSchema .status").text(" ");
@@ -2549,7 +2549,7 @@ class DirectShExValidator {
     const ret = await this.validator.validateShapeMapAsync(fixedMap, validationTracker);
     time = new Date() - time;
     $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms");
-    $("#results .status").text("rendering results...").show();
+    $("#results > .status").text("rendering results...").show();
 
     await Promise.all(ret.map(entry => this.renderer.entry(entry)));
     this.renderer.finish();
@@ -2622,7 +2622,7 @@ class ResultsWidget {
   clear () {
     this.resultPanes = [];
     this.resultsSel.removeClass("passes fails error");
-    $("#results .status").text("").hide();
+    $("#results > .status").text("").hide();
     $("#shapeMap-tabs").removeAttr("title");
     return this.resultsSel.text("");
   }
@@ -2653,7 +2653,7 @@ class ResultsWidget {
       console.debug("input error " + action + ":", e.message); // the UI; only
     else              // programming errors deserve the console error channel
       console.error(e);
-    $("#results .status").empty().text("Errors encountered:").show()
+    $("#results > .status").empty().text("Errors encountered:").show()
     const div = $("<div/>").addClass("error");
     div.append($("<h3/>").text("error " + action + ":\n"));
     div.append($("<pre/>").text(e.message));
@@ -2841,7 +2841,7 @@ class ShExResultsRenderer {
     }
 
     this.renderAppinfo();
-    $("#results .status").text("rendering results...").show();
+    $("#results > .status").text("rendering results...").show();
     // Results used to be punctuated into a JSON array -- "[" before the
     // first, "," between -- which `$("#results div *")` did by appending to
     // every *descendant* of the results.  Once a result is an editor rather
@@ -2849,7 +2849,7 @@ class ShExResultsRenderer {
     // is where the commas in the gutter came from.  One result per block,
     // separated by a rule, says the same thing without writing into
     // somebody else's DOM.
-    $("#results .status").hide();
+    $("#results > .status").hide();
     // for debugging values and schema formats:
     // try {
     //   const x = ShExWebApp.Util.valToValues(ret);
@@ -5249,7 +5249,7 @@ class ShExBaseApp {
     if (t.errors)
       lines.push("errors: " + t.errors);
     $("#results div").empty();
-    $("#results .status").text("validation thread").show();
+    $("#results > .status").text("validation thread").show();
     this.resultsWidget.append($("<pre/>", {class: "dbgThreadState"}).text(lines.join("\n")));
   }
 
@@ -5267,14 +5267,14 @@ class ShExBaseApp {
 
   async callValidator (done) {
     $("#fixedMap .pair").removeClass("passes fails");
-    $("#results .status").hide();
+    $("#results > .status").hide();
     let currentAction = "parsing input schema";
     try {
       await this.Caches.inputSchema.refresh(); // @@ throw away parser stack?
       $("#schemaDialect").text(this.Caches.inputSchema.language);
       if (hasFocusNode()) {
         currentAction = "parsing input data";
-        $("#results .status").text("parsing data...").show();
+        $("#results > .status").text("parsing data...").show();
         let inputData = await this.Caches.inputData.refresh(); // need prefixes for ShapeMap
         // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
         currentAction = "parsing shape map";
@@ -5299,7 +5299,7 @@ class ShExBaseApp {
         }
 
         currentAction = "creating validator";
-        $("#results .status").text("creating validator...").show();
+        $("#results > .status").text("creating validator...").show();
         try {
           // shex-node loads IMPORTs and tests the schema for structural faults.
           const alreadLoaded = {
@@ -5325,7 +5325,7 @@ class ShExBaseApp {
             inputData.setSchema(loaded.schema);
 
           currentAction = "validating";
-          $("#results .status").text("validating...").show();
+          $("#results > .status").text("validating...").show();
           time = new Date();
           const validationTracker = LOG_PROGRESS ? this.makeConsoleTracker() : undefined; // undefined to trigger default parameter assignment
 
@@ -5337,7 +5337,7 @@ class ShExBaseApp {
         }
       } else {
         const outputLanguage = this.Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
-        $("#results .status").
+        $("#results > .status").
           text("parsed "+this.Caches.inputSchema.language+" schema, generated "+outputLanguage+" ").
           append($("<button>(copy to input)</button>").
                  css("border-radius", ".5em").
@@ -5355,7 +5355,7 @@ class ShExBaseApp {
           }
           new ShExWebApp.Writer(opts).writeSchema(this.Caches.inputSchema.parsed, (error, text) => {
             if (error) {
-              $("#results .status").text("unwritable ShExJ schema:\n" + error).show();
+              $("#results > .status").text("unwritable ShExJ schema:\n" + error).show();
               // res.addClass("error");
             } else {
               this.resultsWidget.append($("<pre/>").text(text).addClass("passes"));
@@ -5550,7 +5550,7 @@ class ShExBaseApp {
   reportValidationError (validationError, currentAction) {
     if (validationError instanceof FlowControlError)
       return { validationError };
-    $("#results .status").text("validation errors:").show();
+    $("#results > .status").text("validation errors:").show();
     this.resultsWidget.failMessage(validationError, currentAction);
     return { validationError };
   }
@@ -6007,7 +6007,7 @@ w  /**
         on("drop", (evt) => {
           evt.preventDefault();
           droparea.removeClass("droppable");
-          $("#results .status").removeClass("error");
+          $("#results > .status").removeClass("error");
           this.resultsWidget.clear();
           let xfer = evt.originalEvent.dataTransfer;
           const prefTypes = [
@@ -6020,14 +6020,14 @@ w  /**
           if (prefTypes.find(l => {
             if (l.type.indexOf("/") === -1) {
               if (l.type in xfer && xfer[l.type].length > 0) {
-                $("#results .status").text("handling "+xfer[l.type].length+" files...").show();
+                $("#results > .status").text("handling "+xfer[l.type].length+" files...").show();
                 promises.push(readfiles(xfer[l.type], desc.targets));
                 return true;
               }
             } else {
               if (xfer.getData(l.type)) {
                 const val = xfer.getData(l.type);
-                $("#results .status").text("handling "+l.type+"...").show();
+                $("#results > .status").text("handling "+l.type+"...").show();
                 if (l.type === "application/json") {
                   if (desc.location.get(0) === $("body").get(0)) {
                     let parsed = JSON.parse(val);
@@ -6065,7 +6065,7 @@ w  /**
                 } else if (l.type === "text/plain") {
                   promises.push(inject(desc.targets, DefaultBase, val, l.type));
                 }
-                $("#results .status").text("").hide();
+                $("#results > .status").text("").hide();
                 // desc.targets.text(xfer.getData(l.type));
                 return true;
                 async function inject (targets, url, data, mediaType) {
@@ -6132,7 +6132,7 @@ w  /**
         }
       }
       return Promise.all(promises).then(() => {
-        $("#results .status").text("loaded "+successes+" files.").show();
+        $("#results > .status").text("loaded "+successes+" files.").show();
       })
     }
   }

@@ -41,7 +41,12 @@ function run (shexc, turtle, actions, node = B + "x", shape = B + "S", options =
   Reduce.register(validator);
   const res = validator.validateShapeMap([{node, shape}]);
   expect(res[0].status, JSON.stringify(res[0].appinfo)).to.equal("conformant");
-  return Reduce.reduce(res, Object.assign({evaluate, prefixes: PREFIXES}, options))[0];
+  const opts = Object.assign({evaluate, prefixes: PREFIXES}, options);
+  // `schema: true` asks for the arity rule: the schema is what says whether
+  // an arc reference is a value or a list of them
+  if (opts.schema === true)
+    opts.schema = schema;
+  return Reduce.reduce(res, opts)[0];
 }
 
 const ONE_ARC = "<http://a.example/S> { :p1 . }";
@@ -166,6 +171,15 @@ describe("reduce", function () {
         .to.deep.equal([42, B + "o1"]);
     });
 
+    /* All of them, without naming any: what `Object.assign({}, ...$*)` is
+     * for.  yacc counts ($1, $2) and has no word for the lot; make(1)
+     * spells the whole right-hand side `$^` and the shell spells "all the
+     * arguments" `$*`, which is what a production's values are here. */
+    it("should take $* for every value the body matched, in match order", function () {
+      expect(run("<http://a.example/S> { :p1 . ; :p2 . }", ":x :p1 :o1 ; :p2 :o2 .",
+                 {S: "$*"})).to.deep.equal([B + "o1", B + "o2"]);
+    });
+
     it("should count from $1, as yacc does", function () {
       expect(() => run(TWO, ONE_TRIPLE, {S: "$0"})).to.throw(/numbered from \$1/);
     });
@@ -181,6 +195,53 @@ describe("reduce", function () {
         "S-p1": "$ = {p1: local($1)}",
         "S-p2": "$ = {p2: local($1)}",
       })).to.deep.equal({type: "S", p1: "o1"});
+    });
+
+    /* How many values a name stands for is the schema's to say: an arc
+     * that can only match once is the value, and every other arc is the
+     * list of what matched -- which is what lets a shape's action write
+     * `Object.assign($rdf:type, $:left, $:right)` rather than counting. */
+    describe("one value or a list of them", function () {
+      const ONE_EACH = "<http://a.example/S> { :p1 . ; :p2 . * }";
+      const SOME = ":x :p1 :o1 ; :p2 :o2, :o3 .";
+
+      it("should be the value itself where the schema allows one", function () {
+        expect(run(ONE_EACH, SOME, {S: "$:p1"}, undefined, undefined, {schema: true}))
+          .to.equal(B + "o1");
+      });
+
+      it("should be the list of them where it allows more", function () {
+        expect(run(ONE_EACH, SOME, {S: "$:p2.slice().sort()"},
+                   undefined, undefined, {schema: true}))
+          .to.deep.equal([B + "o2", B + "o3"]);
+      });
+
+      it("should be a list when no schema said otherwise", function () {
+        expect(run(ONE_EACH, SOME, {S: "$:p1"})).to.deep.equal([B + "o1"]);
+      });
+
+      /* Two ways for one predicate to arrive, and a constraint under a
+       * group that repeats: both can match more than once however small
+       * their own cardinality is. */
+      it("should be a list where two constraints share a predicate", function () {
+        expect(run("<http://a.example/S> { :p1 IRI ; :p1 IRI }", ":x :p1 :o1, :o2 .",
+                   {S: "$:p1.length"}, undefined, undefined, {schema: true}))
+          .to.equal(2);
+      });
+
+      it("should be a list where the group it is in repeats", function () {
+        expect(run("<http://a.example/S> { ( :p1 . ; :p2 . ) * }", ":x :p1 :o1 ; :p2 :o2 .",
+                   {S: "$:p1"}, undefined, undefined, {schema: true}))
+          .to.deep.equal([B + "o1"]);
+      });
+
+      /* An arc that didn't match is absent either way: `$:p2 || []` is
+       * still how an action asks for however many there were. */
+      it("should be undefined for an arc that isn't there", function () {
+        expect(run(ONE_EACH, ":x :p1 :o1 .", {S: "[$:p1, $:p2]"},
+                   undefined, undefined, {schema: true}))
+          .to.deep.equal([B + "o1", undefined]);
+      });
     });
 
     /* A substitution with no lexer for the action language has to leave

@@ -199,9 +199,11 @@ the kind of result it holds, so a plugin has no reason to write over the
 results area as a whole -- ShExMap used to head it "materialization results"
 where the tab beside it said "materialization".  What it has to say that is
 more particular than the label ("stepped through", "alternative 3") it says
-on its own tab's status line.  The one thing over the results a plugin may
-have is `resultsTabsAside()`: the right-hand end of the tab strip, for a
-control *about* the results, which put among them would push them.
+on its own tab's status line.  That line is the plugin's: the app writes its
+own progress and its own errors to `#results > .status`, above the tabs, and
+leaves what a plugin put in its tab alone.  The one thing over the results a
+plugin may have is `resultsTabsAside()`: the right-hand end of the tab strip,
+for a control *about* the results, which put among them would push them.
 
 ### Pointing at what made something
 
@@ -315,7 +317,7 @@ happens.
 | --- | --- |
 | `register(validator, api)` | install the semantic-action extensions the schema dispatches on.  `api` is the `ShExWebApp` global.  Called for a page validator and in the worker |
 | `schema(schema, app)` | a turn at what is about to be validated, before it reaches a validator or crosses a `postMessage`.  Return the schema (ShExReduce hangs an overlay's actions on it) |
-| `results: base => class extends base { … }` | compose the results renderer.  Two plugins compose rather than the second replacing the first |
+| `results: base => class extends base { … }` | compose the results renderer.  Two plugins compose rather than the second replacing the first.  `entry(entry)` is each result; `failure(e, action, text)` is a validation that failed, wherever it ran -- an error from the worker arrives with its `name`, which is how a plugin knows one of its own (ShExReduce shows an action that threw in the pane the actions build) |
 | `onStartingValidation(app)` | a validation is starting: whatever the last one produced is about to be replaced |
 
 ### In the worker

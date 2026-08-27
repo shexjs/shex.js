@@ -82,6 +82,11 @@ if (!TEST_browser) {
 
     const ast = () => JSON.parse($("#reduceAst textarea").first().val());
 
+    /** Past the app's guard against a second validate on the heels of a
+     * failed one ("see shape map errors above"): a reader takes longer than
+     * this to read the message, and a test doesn't. */
+    const afterAFailure = () => new Promise(res => setTimeout(res, 150));
+
     it("should build its panes and its verb, and fetch the module they need", function () {
       expect(dom.window.ShExPlugins.all().map(e => e.label)).to.deep.equal(["ShExReduce"]);
       const screen = $("#screens > .screen[data-plugin]");
@@ -164,6 +169,49 @@ if (!TEST_browser) {
       expect($("#reduceAst textarea").first().val()).to.equal("");
       expect($("#validationResults > div").text(), "and the validation still there")
         .to.equal(validation);
+    });
+
+    /* An action that throws is a bug in the action, and it takes the
+     * validation it was steering with it.  That goes where validation
+     * errors go; it also goes in the pane the actions build, which is where
+     * a reader who is working on the actions is looking. */
+    it("should say in the AST pane when an action throws", async function () {
+      await open("calc, actions guide", "sums");
+      const good = shared.Caches.inputSchema.get();
+      const base = shared.Caches.inputSchema.meta.base;
+      try {
+        await shared.Caches.inputSchema.set(
+          good.replace("Object.assign($rdf:type, $:left, $:right)",
+                       "Object.assign(nope($rdf:type), $:left)"), base);
+        $("#validate").trigger("click");
+        await shared.promise;
+
+        const said = $("#reduceAst .status");
+        expect(said.text(), "the action, and what it said about it")
+          .to.match(/nope is not defined/);
+        expect(said.text(), "and where it was").to.include("BinOp");
+        expect(said.hasClass("threw")).to.equal(true);
+        expect($("#reduceAst textarea").first().val(), "no AST: this is not one")
+          .to.equal("");
+        // ...and the validation says so where it says everything else
+        expect($("#validationResults > div .error").text()).to.include("nope is not defined");
+        // the app's status line is its own: it says what it always says,
+        // and a plugin's tab keeps what the plugin put there
+        expect($("#results > .status").text(), "not the plugin's news")
+          .to.not.include("nope");
+        // ...and the next validation clears it: it is about that parse
+        await shared.Caches.inputSchema.set(good, base);
+        await afterAFailure();
+        $("#validate").trigger("click");
+        await shared.promise;
+        expect($("#reduceAst .status").hasClass("threw"), "a validation clears it")
+          .to.equal(false);
+      } finally {
+        // leave the manifest as it was found: picking the picked entry
+        // un-picks it, which is what the next test's open() expects
+        $("#inputSchema .manifest li.selected").trigger("click");
+        await shared.promise;
+      }
     });
 
     /* Having folded, it brings up what it folded into: the AST is a tab
@@ -303,19 +351,25 @@ if (!TEST_browser) {
          // the range in the AST is a node of the AST, marked as its own
          // text: the braces it opens and closes with, and the members that
          // are its own -- one holding another node is that node's to mark
-         const at = links[0].panes.ast[0];
+         // a shape's action, which is the one that made a whole node: an
+         // arc's action made whatever its own arc contributed
+         const whole = links.find(l => l.shape !== undefined);
+         expect(whole, "a shape's action among them").to.exist;
+         const at = whole.panes.ast[0];
          const node = JSON.parse(astText.substring(at.from, at.to));
          expect(node, "a node of the AST").to.have.property("op");
          const marks = (at.parts || []).map(p => astText.substring(p.from, p.to));
          expect(marks, "its braces").to.include.members(["{", "}"]);
          expect(marks.some(m => /^"\w+": /.test(m)), "and its own members: " + marks)
            .to.equal(true);
-         expect(marks.some(m => /^"(left|right)"/.test(m)),
-                "and none of what it holds: " + marks).to.equal(false);
+         // a member holding a node of its own is marked by its name and
+         // that node's opening delimiter; what is inside is that node's
+         expect(marks.filter(m => /^"\w+": [{[]/.test(m)).every(m => /[{[]$/.test(m)),
+                "and nothing inside what it holds: " + marks).to.equal(true);
 
          // ...and it is about where its `$` was assigned: the shape's own
          // text, the action among it, and the node that was the focus
-         const places = es.resolveLink(links[0]);
+         const places = es.resolveLink(whole);
          const primary = places.find(l => !l.secondary);
          expect(schemaText.substring(primary.schema.from, primary.schema.to),
                 "the shape it was assigned in").to.match(/^<#\w+>/);
@@ -540,6 +594,25 @@ if (!TEST_browser) {
       // ...and it points back at what made it, as it does on the other page
       const links = (shared.Caches.editorSupport.linkSets || {})[REDUCE_ID] || [];
       expect(links.length, "a link per node of it").to.be.above(0);
+    });
+
+    /* The action threw over there, so what comes back is a message rather
+     * than an Error -- with its name on it, which is how this side knows
+     * whose failure it is and puts it where the other page puts it. */
+    it("should bring an action's exception home from the worker", async function () {
+      const good = shared.Caches.inputSchema.get();
+      const base = shared.Caches.inputSchema.meta.base;
+      try {
+        await shared.Caches.inputSchema.set(
+          good.replace("Object.assign($rdf:type, $:left, $:right)",
+                       "Object.assign(nope($rdf:type), $:left)"), base);
+        $("#validate").trigger("click");
+        await shared.promise;
+        expect($("#reduceAst .status").text()).to.match(/nope is not defined/);
+        expect($("#reduceAst .status").hasClass("threw")).to.equal(true);
+      } finally {
+        await shared.Caches.inputSchema.set(good, base);
+      }
     });
   });
 }

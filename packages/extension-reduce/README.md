@@ -77,9 +77,16 @@ production can be written as its sub-expressions:
 
 | | |
 | --- | --- |
-| `$sx:nodeKind` `$<http://…#nodeKind>` `$:local` | what the arc on that predicate reduced to, as an array — and `undefined` if the arc didn't match, so `\|\| []` reads as "however many of these there were" |
+| `$sx:nodeKind` `$<http://…#nodeKind>` `$:local` | what the arc on that predicate reduced to — the value itself where the schema gives that shape at most one such arc, and the array of them where it may have several. `undefined` if the arc didn't match, so `\|\| []` reads as "however many of these there were" |
 | `$1` `$2` | the values in the order the body matched them, numbered from 1 as in yacc. This is for the sub-productions that share a name, which is the case a name can't address; on a triple constraint, `$1` is its object |
+| `$*` | all of them, in the order the body matched them — `Object.assign({}, ...$*)` is a production written as its sub-expressions without naming any of them |
 | `$` `$$` | this production's value, which the action may assign to |
+
+An arc reference is an array unless the schema says it cannot be: a constraint
+that may match more than once, two constraints on one predicate, or a repeated
+group around either. Reading it takes the schema, which `registerEager` has (it
+is the validator's) and `reduce()` takes as the `schema` option — without one
+every arc reference is an array, since nothing has said otherwise.
 
 This is *this module's* doing rather than the evaluator's: the code is rewritten
 to ordinary names — `_nodeKind`, `_1`, `_ret` — and the values arrive beside it
@@ -96,6 +103,12 @@ knows what C is; this doesn't know what your actions are written in, so:
   template literal, the end of a regular expression, or a dollar sign in a
   string than a reference.
 - Anywhere else, `$1` is a reference — inside a string literal too.
+
+`$` and `$$` are the same thing: yacc's left-hand side is
+`$$`, so an action ported from one reads unchanged, and `$` alone is what is
+left when there is only one of them to name. (make(1)'s `$@` is the *target* —
+the left-hand side — and `$^` is the whole right-hand side; the shell's `$*`
+is "all the arguments", which is what a production's values are here.)
 
 ## Using it
 
@@ -198,6 +211,12 @@ Reduce.registerEager(validator, {evaluate, prefixes, rejects});
 
 `rejects(value)` defaults to "a value with a `failure` key". Everything else is
 a value, and becomes what that production reduced to.
+
+A *rejection* is a value; an **exception** is a bug in the action, and it takes
+the fold (or the validation it was steering) with it. What it throws says which
+production, which node and what the action said, and an `onError` option is
+told about it before the throw goes on — a caller with somewhere to show it
+gets to, without having to catch what it cannot usefully continue from.
 
 `examples/calc-semact/` is the worked pair, two schemas over the same data and
 the same rule — *the number that ends an expression is the sum of the numbers

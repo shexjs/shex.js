@@ -36,6 +36,9 @@ const ShExReduce = {
     "/* the actions a schema was written apart from, and what they built */",
     "#reduceOverlay textarea { background-color: #fff4f4; border-color: #fc561c }",
     "#reduceAst textarea { background-color: #f4fff4; border-color: #1cfc56 }",
+    "/* ...and what an action said instead of building any of it */",
+    "#reduceAst .status.threw { color: #a00 }",
+    "#reduceAst .status.threw pre { margin: 0; white-space: pre-wrap; font-size: 80% }",
     "#inputarea { overflow-x: auto; }",
   ].join("\n"),
 
@@ -75,6 +78,10 @@ const ShExReduce = {
   /** every conformant result of the last validation, for `reduce` to fold */
   parsed: [],
 
+  /** ...and the schema it was matched against, which says how many values
+   * an arc reference stands for */
+  validated: null,
+
   init (app) {
     this.app = app;
   },
@@ -84,12 +91,32 @@ const ShExReduce = {
   unload () {
     this.app = null;
     this.parsed = [];
+    this.validated = null;
+  },
+
+  /**
+   * What the AST pane's own status line says, and how it says an action
+   * threw: with the code and what it said, where the reader is looking for
+   * what the actions built.  A validation error also goes where every
+   * validation error goes -- this is beside that, not instead of it.
+   */
+  say (text) {
+    $("#reduceAst .status").removeClass("threw").text(text).show();
+  },
+
+  threw (e, app) {
+    $("#reduceAst .status").addClass("threw").empty()
+      .append($("<pre/>").text(e.message)).show();
+    if (app && app.Caches.ast)
+      app.Caches.ast.set("");             // no AST: what there was is not it
+    if (app)
+      app.linkPanes(REDUCE_ID, []);
   },
 
   /** a validation replaces the parse the last AST was folded from */
   onStartingValidation (app) {
     this.parsed = [];
-    $("#reduceAst .status").text("\u00a0");
+    this.say("\u00a0");
     if (app.Caches.ast)
       app.Caches.ast.set("");
     // ...and what the last fold linked was about the last parse
@@ -104,6 +131,11 @@ const ShExReduce = {
    * calc-semact pair) leaves this pane empty and nothing happens here.
    */
   schema (schema, app) {
+    // ...and the last thing through here is what the validation will match
+    // against, which the fold wants for a reason of its own: the schema
+    // says whether `$:left` is a value or a list of them.  In a worker the
+    // actions run over there, so this is where this side gets to see it.
+    this.validated = schema;
     const text = app.Caches.overlay ? app.Caches.overlay.selection.val() : "";
     if (typeof ShExWebApp.SemActOverlay !== "function" && !ShExWebApp.SemActOverlay)
       return schema;
@@ -113,8 +145,9 @@ const ShExReduce = {
     overlay.addQuads(new RdfJs.Parser({
       baseIRI: app.Caches.overlay.meta.base, format: "text/turtle"
     }).parse(text));
-    return ShExWebApp.SemActOverlay.applyOverlay(schema, overlay,
-                                                 {prefixes: schema._prefixes || {}});
+    this.validated = ShExWebApp.SemActOverlay.applyOverlay(
+      schema, overlay, {prefixes: schema._prefixes || {}});
+    return this.validated;
   },
 
   /**
@@ -135,6 +168,10 @@ const ShExReduce = {
     api.Reduce.registerEager(validator, {
       evaluate: api.ReduceJs,
       prefixes: (validator.schema && validator.schema._prefixes) || {},
+      // an action that throws is a bug in the action, and the validation it
+      // was steering dies of it.  It dies with a message about a shape and
+      // a node, which belongs where the actions' work is shown.
+      onError: e => ShExReduce.threw(e, ShExReduce.app),
     });
   },
 
@@ -144,6 +181,17 @@ const ShExReduce = {
       await super.entry(entry);
       if (entry.status === "conformant")
         ShExReduce.parsed.push(entry);
+    }
+
+    /* An action that threw took the validation with it.  Where the match
+     * ran here, `onError` above has already said so in the AST pane; where
+     * it ran in a worker, this is the message coming home -- an Error with
+     * its name still on it -- and this is the only place this side hears
+     * about it. */
+    failure (e, action, text) {
+      if (e && e.name === "ReduceError")
+        ShExReduce.threw(e, ShExReduce.app);
+      return super.failure(e, action, text);
     }
   },
 
@@ -231,21 +279,32 @@ const ShExReduce = {
      */
     reduce () {
       const ext = ShExPlugins.byId(REDUCE_ID);
-      const said = text => $("#reduceAst .status").text(text).show();
       this.showResultsTab("reduceAstResults");
       if (!ShExWebApp.Reduce)
         throw Error("ShExReduce's module is not loaded on this page: nothing to fold with");
       if (ext.parsed.length === 0) {
-        said("validate conformant data against a schema with Reduce actions first: " +
-             "the fold is over the parse a validation found");
+        ext.say("validate conformant data against a schema with Reduce actions first: " +
+                "the fold is over the parse a validation found");
         return this.Caches.ast.set("");
       }
-      // {}: an eager run stored every value as it computed it, so the fold
-      // has nothing left to evaluate.  `provenance` is what it fills in on
-      // the way: which action made each value, and what it ran over.
+      // no evaluator: an eager run stored every value as it computed it, so
+      // the fold has nothing left to run.  `provenance` is what it fills in
+      // on the way -- which action made each value, and what it ran over --
+      // and `schema` is what says how many values `$:left` stands for.
       const provenance = [];
-      const asts = ShExWebApp.Reduce.reduce(ext.parsed, {provenance});
-      said("reduced " + asts.length + (asts.length === 1 ? " parse" : " parses"));
+      let asts;
+      try {
+        asts = ShExWebApp.Reduce.reduce(
+          ext.parsed, {provenance, schema: ext.validated, onError: e => ext.threw(e, this)});
+      } catch (e) {
+        // `threw` has already said so in this pane, which is where the
+        // reader is looking; the validation results this folded stay as
+        // they are, since they are what the AST would have been about
+        if (!(e instanceof Error) || e.name !== "ReduceError")
+          ext.threw(e, this);
+        return this.Caches.ast.set("");
+      }
+      ext.say("reduced " + asts.length + (asts.length === 1 ? " parse" : " parses"));
       // written with offsets rather than JSON.stringify, so every node of
       // the AST is a range the reader can point at
       const {text, ranges} = ShExWebApp.EditorServices.stringifyWithOffsets(

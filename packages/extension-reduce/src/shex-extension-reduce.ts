@@ -121,6 +121,16 @@ interface ReduceProvenance {
 interface ReduceOptions {
   /** what runs an action; required, since this module has no language */
   evaluate?: Evaluator;
+  /**
+   * The schema the result was matched against, which says how many values a
+   * reference to an arc can stand for.
+   *
+   * With it, `$:left` is *the* value where the schema gives a shape at most
+   * one `:left`, and the list of them where it may have several.  Without
+   * it every arc reference is a list, since nothing has said otherwise.
+   * `registerEager` takes the validator's.
+   */
+  schema?: any;
   /** somewhere to record where each value came from; see ReduceProvenance.
    * Given an array, the fold pushes one record per action that ran. */
   provenance?: ReduceProvenance[];
@@ -130,6 +140,14 @@ interface ReduceOptions {
   api?: {[name: string]: any};
   /** the extension IRI to read actions for (default: this module's) */
   url?: string;
+  /**
+   * Told about an action that threw, and then the throw goes on to whoever
+   * asked for the fold (or, for `registerEager`, for the validation): a
+   * caller with somewhere to show it -- the app shows it in the pane the
+   * actions build -- gets to, without having to catch what it cannot
+   * usefully continue from.
+   */
+  onError?: (error: Error) => void;
   /**
    * What a cycle in the data reduces to, when the value it needs is still
    * being computed:
@@ -195,7 +213,9 @@ function registerEager (validator: any, options: EagerOptions = {}): any {
   if (typeof options.evaluate !== 'function')
     throw Error('registerEager() needs an `evaluate` option -- (code, scope) => value. '
                 + 'For actions written in JavaScript that is @shexjs/extension-reduce-js.');
-  const f = foldFor(options);
+  // the validator's schema, unless the caller brought one: it is what says
+  // whether `$:left` is a value or a list of them (arityOf)
+  const f = foldFor(Object.assign({schema: validator.schema}, options), 'matching');
   const rejects = options.rejects || refused;
   validator.semActHandler.results[f.url] = [];
   return validator.semActHandler.register(f.url, {
@@ -267,8 +287,8 @@ function done (validator: any): void {
 
 /** where an action was, when it goes wrong */
 class ReduceError extends Error {
-  constructor (where: string, code: string, cause: any) {
-    super(`reducing ${where}:\n  ${code}\n${indent(String(cause && cause.message || cause))}`);
+  constructor (verb: string, where: string, code: string, cause: any) {
+    super(`${verb} ${where}:\n  ${code}\n${indent(String(cause && cause.message || cause))}`);
     this.name = 'ReduceError';
   }
 }
@@ -293,9 +313,15 @@ interface Fold {
   seen: Map<string, any>;
   /** where each value came from, when the caller asked to be told */
   provenance: ReduceProvenance[] | null;
+  /** may this shape have more than one arc on this predicate? */
+  many: (shape: string | undefined, predicate: string) => boolean;
+  /** what was going on when an action ran, for what it says when one throws */
+  verb: string;
+  /** told about an action that threw, before the throw goes on */
+  onError: ((error: Error) => void) | null;
 }
 
-function foldFor (options: ReduceOptions): Fold {
+function foldFor (options: ReduceOptions, verb: string = 'reducing'): Fold {
   return {
     runner: typeof options.evaluate === 'function'
       ? {evaluate: options.evaluate, prefixes: options.prefixes || {},
@@ -305,6 +331,9 @@ function foldFor (options: ReduceOptions): Fold {
     onRecursion: options.onRecursion || 'node',
     seen: new Map<string, any>(),
     provenance: Array.isArray(options.provenance) ? options.provenance : null,
+    many: arityOf(options.schema),
+    verb,
+    onError: typeof options.onError === 'function' ? options.onError : null,
   };
 }
 
@@ -317,6 +346,59 @@ function foldFor (options: ReduceOptions): Fold {
  */
 function reduce (result: any, options: ReduceOptions = {}): any {
   return reduceResult(foldFor(options), result);
+}
+
+/**
+ * How many values a reference to an arc stands for.
+ *
+ * `$:left` is one value where the schema gives a shape at most one `:left`,
+ * and the list of them where it may have several -- which is what lets an
+ * action say `Object.assign($rdf:type, $:left, $:right)` rather than
+ * counting its own arcs.  A constraint inside a repeated group can match
+ * more than once however small its own cardinality, so what counts is the
+ * whole path's; and two constraints on one predicate are two ways for it to
+ * arrive, so that is a list too.  Anything this cannot read -- a tripleExpr
+ * by reference, a shape it has never heard of -- is a list, which is what
+ * every arc reference was before this.
+ */
+function arityOf (schema: any): (shape: string | undefined, predicate: string) => boolean {
+  const decls = (schema && schema.shapes) || [];
+  const shapeOf = (expr: any): any =>
+    expr === null || typeof expr !== 'object' ? null
+    : expr.type === 'ShapeDecl' ? shapeOf(expr.shapeExpr)
+    : expr.type === 'Shape' ? expr
+    : null;
+  const once = new Map<string, Set<string>>();
+
+  (Array.isArray(decls) ? decls : Object.values(decls)).forEach((decl: any) => {
+    const label = decl && (decl.id || decl.label);
+    const shape = shapeOf(decl);
+    if (typeof label !== 'string' || shape === null)
+      return;
+    const single = new Set<string>();
+    const seen = new Set<string>();
+    walk(shape.expression, true);
+    once.set(label, single);
+
+    function walk (expr: any, alone: boolean): void {
+      if (expr === null || typeof expr !== 'object')
+        return;                           // a tripleExpr by reference: unknown
+      const solo = alone && (expr.max === undefined || expr.max === 1);
+      if (expr.type === 'TripleConstraint') {
+        if (seen.has(expr.predicate))     // a second way for it to arrive
+          single.delete(expr.predicate);
+        else if (solo)
+          single.add(expr.predicate);
+        seen.add(expr.predicate);
+        return;
+      }
+      (expr.expressions || []).forEach((e: any) => walk(e, solo));
+    }
+  });
+  return (shape, predicate) => {
+    const single = shape === undefined ? undefined : once.get(shape);
+    return single === undefined || !single.has(predicate);
+  };
 }
 
 function reduceResult (f: Fold, res: any): any {
@@ -493,14 +575,28 @@ function runAction (f: Fold, code: string, where: string, scope: any, values: an
     bound.refs.forEach(({id, ref}) => {
       bindings[id] = ref.kind === 'ret' ? undefined
         : ref.kind === 'pos' ? values[ref.at - 1]
-        : (scope.arcs || {})[ref.iri];
+        : ref.kind === 'all' ? values.slice()
+        : arcRef(f, scope, ref.iri!);
     });
     return runner.evaluate(bound.code, Object.assign(
       {where, prefixes: runner.prefixes, api: runner.api, state: runner.state}, scope,
       bound.ret === undefined ? {bindings} : {bindings, ret: bound.ret}) as ReduceScope);
   } catch (e) {
-    throw new ReduceError(where, code, e);
+    const error = e instanceof ReduceError ? e : new ReduceError(f.verb, where, code, e);
+    if (f.onError !== null)
+      f.onError(error);
+    throw error;
   }
+}
+
+/**
+ * What `$<predicate>` stands for: the list of values the arc reduced to, or
+ * the one value where the schema allows only one (arityOf).  An arc that
+ * didn't match is undefined either way -- absent rather than empty.
+ */
+function arcRef (f: Fold, scope: any, iri: string): any {
+  const got = (scope.arcs || {})[iri];
+  return f.many(scope.shape, iri) || got === undefined ? got : got[0];
 }
 
 // ## $-references: naming what a production's sub-productions reduced to
@@ -509,6 +605,7 @@ function runAction (f: Fold, code: string, where: string, scope: any, values: an
 type Ref =
   | {kind: 'ret'}                    // `$`  -- this production's value
   | {kind: 'pos', at: number}        // `$1` -- the first value the body matched
+  | {kind: 'all'}                    // `$*` -- all of them, in match order
   | {kind: 'arc', iri: string};      // `$sx:nodeKind` -- what that arc reduced to
 
 /** an action, with every reference in it replaced by an ordinary name */
@@ -520,15 +617,15 @@ interface Bound {
 }
 
 /**
- * `$$` or `$`, `$1`, `$<iri>`, `$prefix:local`, `$:local` -- and `$name`,
- * which is deliberately none of them: `$` starts an identifier in several
- * action languages, and a name with no prefix is not a predicate.
+ * `$$` or `$`, `$1`, `$*`, `$<iri>`, `$prefix:local`, `$:local` --
+ * and `$name`, which is deliberately none of them: `$` starts an identifier
+ * in several action languages, and a name with no prefix is not a predicate.
  *
  * The last alternative is the bare `$`, which is not read as a reference
  * before `{`, `/` or a quote -- much more likely a template literal, the end
  * of a regular expression, or a dollar sign in a string than a reference.
  */
-const REF = /\$(\$|\d+|<[^\s<>"{}|^`\\]*>|[A-Za-z_][\w-]*:[\w-]*|:[\w-]*|[A-Za-z_][\w-]*)|\$(?![{/'"`])/g;
+const REF = /\$(\$|\*|\d+|<[^\s<>"{}|^`\\]*>|[A-Za-z_][\w-]*:[\w-]*|:[\w-]*|[A-Za-z_][\w-]*)|\$(?![{/'"`])/g;
 
 /**
  * The action as the evaluator should see it: every reference rewritten to a
@@ -574,6 +671,8 @@ function bindRefs (code: string, prefixes: {[prefix: string]: string},
 function parseRef (text: string, prefixes: {[prefix: string]: string}): Ref {
   if (text === '')
     return {kind: 'ret'};
+  if (text === '*')
+    return {kind: 'all'};
   if (/^\d+$/.test(text)) {
     const at = Number(text);
     if (at === 0)
@@ -600,6 +699,7 @@ function expandName (name: string, prefixes: {[prefix: string]: string}): string
 function idFor (ref: Ref, code: string, refs: {id: string, ref: Ref}[]): string {
   const base = '_' + (ref.kind === 'ret' ? 'ret'
                       : ref.kind === 'pos' ? ref.at
+                      : ref.kind === 'all' ? 'all'
                       : localOf(ref.iri).replace(/[^A-Za-z0-9_]/g, '_') || 'arc');
   let id = base;
   for (let n = 1; refs.some(r => r.id === id) || mentions(code, id); ++n)
