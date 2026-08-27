@@ -27,6 +27,11 @@ const ShExReduce = {
   // the fold, its JavaScript action language, and the overlay reader
   scripts: ["./webpacks/shexreduce-webapp.js"],
 
+  // ...and the same handler where the matcher is, when that is a worker:
+  // these actions run during the match, so a validation over there has to
+  // have them over there or the fold has nothing to fold
+  worker: "./ShExReduceWorkerThread.js",
+
   css: [
     "/* the actions a schema was written apart from, and what they built */",
     "#reduceOverlay textarea { background-color: #fff4f4; border-color: #fc561c }",
@@ -156,13 +161,43 @@ const ShExReduce = {
    * validation's own highlighting: a constraint lights the triple that
    * matched it and what the fold made of that match.
    */
-  link (app, provenance, ranges) {
+  link (app, provenance, ranges, text) {
     const overlay = app.Caches.overlay ? app.Caches.overlay.selection.val() : "";
+    /* What a node of the tree marks as its own: its frame.
+     *
+     * The delimiters it opens and closes with, its scalar members whole,
+     * and -- for a member holding something with delimiters of its own --
+     * the member's name with that thing's opening delimiter, and its
+     * closing one.  So the shape of the node reads at a glance while what
+     * is *inside* those delimiters is left to whatever is inside them,
+     * which is the same bargain a bnode's property list strikes in the data
+     * pane.  (Its own delimiters alone are two single characters, which is
+     * nothing to see.)
+     */
+    const own = (at, value) => {
+      const opens = {"{": "}", "[": "]"};
+      if (opens[text[at.from]] !== text[at.to - 1])
+        return undefined;                 // a bare value: mark it whole
+      const parts = [{from: at.from, to: at.from + 1}, {from: at.to - 1, to: at.to}];
+      Object.keys(at.fields || {}).forEach(member => {
+        const held = value[member];
+        const field = at.fields[member];
+        // the value starts after the `"member": ` this was written with
+        const holds = field.from + JSON.stringify(member).length + 2;
+        if (held === null || typeof held !== "object" || opens[text[holds]] === undefined) {
+          parts.push(field);              // `"value": 5`
+        } else {
+          parts.push({from: field.from, to: holds + 1});   // `"left": {`
+          parts.push({from: field.to - 1, to: field.to});  // ...and its `}`
+        }
+      });
+      return parts;
+    };
     const links = provenance.map(made => {
       const at = ranges.find(r => r.target === made.value);
       if (at === undefined)
         return null;                      // a value that isn't a node of the AST
-      const panes = {ast: [{from: at.from, to: at.to}]};
+      const panes = {ast: [{from: at.from, to: at.to, parts: own(at, made.value)}]};
       // an action written in an overlay is written nowhere else: its code
       // is the sa:code literal, so that is where it is in that document
       const wrote = overlay.indexOf(made.code);
@@ -216,7 +251,7 @@ const ShExReduce = {
       const {text, ranges} = ShExWebApp.EditorServices.stringifyWithOffsets(
         asts.length === 1 ? asts[0] : asts, o => o !== null && typeof o === "object");
       const written = this.Caches.ast.set(text);
-      ext.link(this, provenance, ranges);
+      ext.link(this, provenance, ranges, text);
       return written;
     },
   },

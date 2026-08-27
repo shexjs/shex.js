@@ -468,13 +468,19 @@ class NeighborhoodConfig {
     return out;
   }
 
-  /** the document a tab is showing, with the textarea's text in it */
+  /** The document a tab is showing, with the textarea's text in it.
+   *
+   * ...while a document is showing: with the settings tab up the textarea
+   * is holding whatever was there last, which belongs to no document.
+   * Reading it as one wrote it over the page a slurp had just put there. */
   docAt (n) {
     const docs = this.documents();
     if (n < 0 || n >= docs.length)
       return null;
     const doc = docs[n];
-    return Object.assign({}, doc, n === this.showing ? {text: this.textarea.val()} : {});
+    return Object.assign({}, doc,
+                         n === this.showing && !this.onSettings
+                         ? {text: this.textarea.val()} : {});
   }
 
   /** the parameter whose document is showing (for its language) */
@@ -489,7 +495,7 @@ class NeighborhoodConfig {
     if (!name)
       return [];
     const texts = (this.panes[name] || []).slice();
-    const doc = this.docAt(this.showing);
+    const doc = this.onSettings ? null : this.docAt(this.showing);
     if (doc && doc.param.name === name) {
       while (texts.length <= doc.index)
         texts.push("");
@@ -2939,6 +2945,8 @@ class EditorSupport {
     try {
       const located = ShExWebApp.EditorServices.locateInParsed(
         inputSchema.selection.val(), inputSchema.parsed);
+      // ...kept, so a link resolved later can ask it where a shape is
+      this.located = located;
       // Where the data was written is the data source's to say: its
       // document is Turtle, or an entity page, or whatever it reads.  A
       // source that doesn't offer to locate its own leaves the Turtle
@@ -3081,7 +3089,7 @@ class EditorSupport {
     return Object.keys(this.linkSets || {}).reduce(
       (acc, id) => acc.concat(id === "validation"
                               ? (this.linkSets[id] || [])
-                              : (this.linkSets[id] || []).map(l => this.resolveLink(l))), []);
+                              : (this.linkSets[id] || []).flatMap(l => this.resolveLink(l))), []);
   }
 
   /**
@@ -3096,32 +3104,81 @@ class EditorSupport {
    */
   resolveLink (link) {
     if (link.schema || link.anchors)
-      return link;                        // it said where for itself
+      return [link];                      // it said where for itself
     const pairs = (this.lastMapped || {}).pairs || [];
     const sameTerm = (l, r) => l === r ||
           (!!l && !!r && (l.value !== undefined ? l.value : l) === (r.value !== undefined ? r.value : r));
+    const where = p => ({
+      schema: p.schema, schemaParts: p.schemaParts, schemaPath: p.schemaPath,
+      anchors: p.anchors, doc: p.doc,
+    });
     if (link.triple) {
       const found = pairs.find(p => p.triple === link.triple);
-      return found === undefined ? link : Object.assign({}, link, {
-        schema: found.schema, schemaParts: found.schemaParts,
-        schemaPath: found.schemaPath, anchors: found.anchors, doc: found.doc,
-      });
+      return [found === undefined ? link : Object.assign({}, link, where(found))];
     }
     if (link.node !== undefined) {
-      // a shape's action: the node is where its arcs are written from, and
-      // the shape it matched is a label in the schema -- both of which the
-      // pairs for those arcs are carrying
-      const lead = pairs.find(p => p.triple && p.anchors && p.anchors.subject &&
-                              sameTerm(p.triple.subject, link.node));
-      if (lead === undefined)
-        return link;
-      return Object.assign({}, link, {
-        schema: lead.anchors.shapeLabel || undefined,
+      // A `$` is assigned at a production, with a focus: an action on a
+      // shape is about that shape's own text -- what it says before its
+      // body and after it, the code among it -- and about the node that
+      // was the focus.  That is what this link says, and what hovering it
+      // lights up.
+      const about = pairs.filter(p => p.triple && p.anchors &&
+                                 sameTerm(p.triple.subject, link.node));
+      if (about.length === 0)
+        return [link];
+      const lead = about.find(p => p.anchors.subject) || about[0];
+      const parts = this.shapeParts(link.shape, about);
+      const primary = Object.assign({}, link, {
+        schema: parts ? parts.whole : lead.anchors.shapeLabel,
+        schemaParts: parts ? parts.parts : undefined,
         anchors: {subject: lead.anchors.subject, subjectParts: lead.anchors.subjectParts},
         doc: lead.doc,
       });
+      // ...and the other way round it reaches further: hovering any of the
+      // constraints that shape matched, or any of the triples they matched,
+      // lights what the fold made of them.  Those are the same link said
+      // again at each of those places -- `secondary`, since they are ways
+      // *in* rather than things this link is about.
+      return [primary].concat(about.map(
+        p => Object.assign({}, link, where(p), {secondary: true})));
     }
-    return link;
+    return [link];
+  }
+
+  /**
+   * A shape's own text: what it says before its body and after it.
+   *
+   * `<#MidNum> {` and `} %Reduce:{ … %}` -- the shape and the action that
+   * ran when it matched -- leaving the constraints between them to light up
+   * on their own, the way a constraint with an inline shape does.  The body
+   * is where its constraints are, which the pairs for them are carrying.
+   */
+  shapeParts (label, pairs) {
+    const located = this.located;
+    const whole = located && label && located.locate ? located.locate.shape(label) : null;
+    if (!whole)
+      return null;
+    const inner = pairs.reduce((acc, p) => {
+      const r = p.schema;
+      return !r || r.from < whole.from || r.to > whole.to ? acc
+        : {from: Math.min(acc ? acc.from : r.from, r.from),
+           to: Math.max(acc ? acc.to : r.to, r.to)};
+    }, null);
+    if (inner === null)
+      return {whole, parts: [whole]};
+    const text = located.text || "";
+    let headTo = inner.from;
+    while (headTo > whole.from && /\s/.test(text[headTo - 1]))
+      --headTo;
+    let tailFrom = inner.to;
+    while (tailFrom < whole.to && /\s/.test(text[tailFrom]))
+      ++tailFrom;
+    const parts = [];
+    if (headTo > whole.from)
+      parts.push({from: whole.from, to: headTo});
+    if (tailFrom < whole.to)
+      parts.push({from: tailFrom, to: whole.to});
+    return {whole, parts: parts.length ? parts : [whole]};
   }
 
   /**
@@ -3244,8 +3301,18 @@ class EditorSupport {
       // the app's own two are merged above rather than highlighted twice,
       // since highlighting a pane replaces what it was showing
       const named = new Map();
+      const seen = new Set();
       group.forEach(p => Object.keys(p.panes || {}).forEach(name => {
-        const ranges = (p.panes[name] || []).filter(r => r);
+        // a range may say which parts of itself to paint -- a node of a JSON
+        // tree is marked at its braces, leaving the inside to the nodes
+        // inside it -- and several links may be about the same one
+        const ranges = (p.panes[name] || []).filter(r => r).filter(r => {
+          const key = name + " " + r.from + "-" + r.to;
+          if (seen.has(key))
+            return false;
+          seen.add(key);
+          return true;
+        }).flatMap(r => r.parts || [r]);
         if (ranges.length)
           named.set(name, (named.get(name) || []).concat(ranges));
       }));
@@ -3337,13 +3404,22 @@ class EditorSupport {
       const pane = this.panes[name];
       if (!pane.setHoverRegions)
         return;
+      // ...by range, the way the schema side groups by constraint: several
+      // links may be about one node of a tree, and hovering it is asking
+      // about all of them
+      const byRange = new Map();
+      pairs.filter(p => !p.secondary).forEach(p => ((p.panes || {})[name] || []).filter(r => r).forEach(r => {
+        const key = r.from + "-" + r.to;
+        if (!byRange.has(key))
+          byRange.set(key, {range: r, group: []});
+        byRange.get(key).group.push(p);
+      }));
       pane.setHoverRegions(
-        pairs.filter(p => (p.panes || {})[name])
-          .flatMap(p => (p.panes[name] || []).filter(r => r).map(r => ({
-            from: r.from, to: r.to,
-            enter: () => show([p], name),
-            click: freeze([p], name),
-          }))),
+        [...byRange.values()].map(({range, group}) => ({
+          from: range.from, to: range.to,
+          enter: () => show(group, name),
+          click: freeze(group, name),
+        })),
         clearAll);
     });
     // hovering a TestedTriple in an appinfo results pane highlights its

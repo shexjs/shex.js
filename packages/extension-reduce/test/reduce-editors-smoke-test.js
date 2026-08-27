@@ -25,6 +25,9 @@ const [[GitRootServer]] = require("../../../tools/testServer")
       );
 
 const PAGE = "packages/shex-webapp/doc/shex-simple.html";
+const WORKER_PAGE = "packages/shex-webapp/doc/shex-worker.html";
+const PLUGIN = "../../extension-reduce/doc/ShExReducePlugin.js";
+const MANIFEST = "../../extension-reduce/examples/manifest.yaml";
 const REDUCE_ID = "http://shex.io/extensions/Reduce/";
 
 if (!TEST_browser) {
@@ -293,23 +296,43 @@ if (!TEST_browser) {
          const es = shared.Caches.editorSupport;
          const links = (es.linkSets || {})[REDUCE_ID] || [];
          expect(links.length, "a link per node of the AST").to.be.above(0);
-         const resolved = links.map(l => es.resolveLink(l));
          const astText = $("#reduceAst textarea").first().val();
          const schemaText = $("#inputSchema textarea").first().val();
          const dataText = $("#inputData textarea").first().val();
 
-         const one = resolved.find(l => l.schema && l.anchors && l.anchors.subject);
-         expect(one, "one of them says all three").to.exist;
-         // the range in the AST is a node of the AST
-         const at = one.panes.ast[0];
-         expect(JSON.parse(astText.substring(at.from, at.to)), "a node of the AST")
-           .to.have.property("op");
-         // ...the schema range is the shape whose action made it...
-         expect(schemaText.substring(one.schema.from, one.schema.to),
-                "the production it hangs on").to.match(/^<#\w+>$/);
-         // ...and the data range is the node that matched
-         expect(dataText.substring(one.anchors.subject.from, one.anchors.subject.to),
-                "and the node it ran over").to.match(/^<#e\d+>$/);
+         // the range in the AST is a node of the AST, marked as its own
+         // text: the braces it opens and closes with, and the members that
+         // are its own -- one holding another node is that node's to mark
+         const at = links[0].panes.ast[0];
+         const node = JSON.parse(astText.substring(at.from, at.to));
+         expect(node, "a node of the AST").to.have.property("op");
+         const marks = (at.parts || []).map(p => astText.substring(p.from, p.to));
+         expect(marks, "its braces").to.include.members(["{", "}"]);
+         expect(marks.some(m => /^"\w+": /.test(m)), "and its own members: " + marks)
+           .to.equal(true);
+         expect(marks.some(m => /^"(left|right)"/.test(m)),
+                "and none of what it holds: " + marks).to.equal(false);
+
+         // ...and it is about where its `$` was assigned: the shape's own
+         // text, the action among it, and the node that was the focus
+         const places = es.resolveLink(links[0]);
+         const primary = places.find(l => !l.secondary);
+         expect(schemaText.substring(primary.schema.from, primary.schema.to),
+                "the shape it was assigned in").to.match(/^<#\w+>/);
+         const said = primary.schemaParts.map(
+           r => schemaText.substring(r.from, r.to).replace(/\s+/g, " "));
+         expect(said[0], "what the shape says before its body").to.match(/^<#\w+> \{$/);
+         expect(said[said.length - 1], "and after it, the action among it: " + said)
+           .to.include("%Reduce:");
+         expect(dataText.substring(primary.anchors.subject.from, primary.anchors.subject.to),
+                "and the focus it had").to.match(/^<#e\d+>$/);
+
+         // ...and the ways back in: hovering any constraint that shape
+         // matched, or any triple, lights what the fold made of it
+         expect(places.filter(l => l.secondary).length, "one per place")
+           .to.be.above(0);
+         const carrying = es.allPairs().filter(p => (p.panes || {}).ast && p.schema);
+         expect(carrying.length, "pairs that light the AST").to.be.above(links.length);
        });
 
     /* An action written in a document of its own is written nowhere else,
@@ -329,9 +352,10 @@ if (!TEST_browser) {
         .to.match(/^\{op:/);
       // ...and the schema, which says nothing of actions, still says which
       // production this was
-      const resolved = es.resolveLink(inOverlay[0]);
-      expect($("#inputSchema textarea").first().val()
-             .substring(resolved.schema.from, resolved.schema.to)).to.match(/^<#\w+>$/);
+      const schemaText = $("#inputSchema textarea").first().val();
+      const said = es.resolveLink(inOverlay[0]).filter(l => l.schema)
+            .map(l => schemaText.substring(l.schema.from, l.schema.to));
+      expect(said.some(s => /^<#\w+>/.test(s)), "which production: " + said).to.equal(true);
     });
 
     /* The validation's own highlighting is wired from the same list, so a
@@ -366,6 +390,42 @@ if (!TEST_browser) {
       await shared.promise;
       expect(((es.linkSets || {})[REDUCE_ID] || []).length, "gone with the parse")
         .to.equal(0);
+    });
+
+    /* A node's frame is what it marks: its own delimiters, its scalar
+     * members whole, and for a member that holds something with delimiters
+     * of its own, the member's name with that thing's opening delimiter and
+     * its closing one.  What is inside those is left to what is inside. */
+    it("should mark a node of the AST by its frame", async function () {
+      await shared.Caches.manifest.set([{
+        schemaLabel: "frames", schema: [
+          "PREFIX : <http://a.example/>",
+          "PREFIX Reduce: <http://shex.io/extensions/Reduce/>",
+          "BASE <http://a.example/>",
+          "<#S> { :p . } %Reduce:{ $ = {op: 'x', xs: [1, 2], sub: {y: 1}} %}",
+        ].join("\n"),
+        dataLabel: "one arc", data: "PREFIX : <http://a.example/>\nBASE <http://a.example/>\n<#n1> :p 1 .",
+        queryMap: "<http://a.example/#n1>@<http://a.example/#S>",
+      }], "http://localhost/manifest.json");
+      $("#inputSchema .manifest li").last().trigger("click");
+      await shared.promise;
+      $("#inputData .indeterminant li").last().trigger("click");
+      await shared.promise;
+      $("#validate").trigger("click");
+      await shared.promise;
+      expect($("#results .error").length, $("#results").text().substring(0, 200)).to.equal(0);
+      $("#reduce").trigger("click");
+      await shared.promise;
+
+      const es = shared.Caches.editorSupport;
+      const links = (es.linkSets || {})[REDUCE_ID] || [];
+      expect(links.length, "the node the action made").to.equal(1);
+      const astText = $("#reduceAst textarea").first().val();
+      const at = links[0].panes.ast[0];
+      expect(JSON.parse(astText.substring(at.from, at.to)))
+        .to.deep.equal({op: "x", xs: [1, 2], sub: {y: 1}});
+      expect((at.parts || []).map(p => astText.substring(p.from, p.to)))
+        .to.have.members(["{", "}", '"op": "x"', '"xs": [', "]", '"sub": {', "}"]);
     });
 
     /* ...and the × on its tab takes it back off, from the screen it is on:
@@ -406,6 +466,80 @@ if (!TEST_browser) {
         expect(page, "the page leaves " + id + " to the extension")
           .to.not.include('id="' + id + '"');
       expect(page).to.not.include("Reduce");
+    });
+  });
+
+  /* The actions run *during* the match, so they run where the matcher is.
+   * On this page that is the worker, which needs a half of this plugin over
+   * there or a validation comes back with no actions in it -- and the fold
+   * of a parse with no actions is the node it started from. */
+  describe("shex-worker, told where ShExReduce is", function () {
+    this.timeout(60000);
+    let dom, $, shared;
+
+    before(async function () {
+      const base = Path.join(__dirname, "../../..", WORKER_PAGE);
+      const search = "?plugin=" + encodeURIComponent(PLUGIN) +
+            "&manifestURL=" + encodeURIComponent(MANIFEST);
+      const virtualConsole = new VirtualConsole().forwardTo(console, {jsdomErrors: "none"});
+      const {makeWorkerClass} = require("../../shex-webapp/test/fakeWorker");
+      dom = new JSDOM(Fs.readFileSync(base, "utf8"), {
+        url: GitRootServer.urlFor(WORKER_PAGE + search),
+        runScripts: "dangerously",
+        resources: "usable",
+        pretendToBeVisual: true,
+        virtualConsole,
+        beforeParse (window) {
+          window.Worker = makeWorkerClass(Path.dirname(base), {}, [
+            // the app names a plugin's worker half by URL
+            {prefix: GitRootServer.urlFor(""), dir: Path.join(__dirname, "../../..")},
+          ]);
+        },
+      });
+      dom.window.fetch = node_fetch;
+      if (!dom.window.CSS)
+        dom.window.CSS = { escape: s => String(s).replace(/[^a-zA-Z0-9_ -\uffff-]/g, c => `\\${c}`) };
+      dom.window.Range.prototype.getClientRects = function () { return []; };
+      dom.window.Range.prototype.getBoundingClientRect =
+        function () { return {x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0, width: 0, height: 0}; };
+      shared = await new Promise((resolve, reject) => {
+        dom.window._testCallback = parm => parm instanceof Error ? reject(parm) : resolve(parm);
+      });
+      await shared.promise;
+      $ = dom.window.$;
+    });
+
+    after(function () { if (dom) dom.window.close(); });
+
+    it("should fold what the worker matched, actions and all", async function () {
+      expect(shared.app.remote, "this app validates over there").to.equal(true);
+      const ext = dom.window.ShExPlugins.byId(REDUCE_ID);
+      expect(ext.worker, "and says where its half of it is").to.equal("./ShExReduceWorkerThread.js");
+
+      $("#inputSchema .manifest li").filter((i, li) => $(li).text() === "calc, actions guide")
+        .first().trigger("click");
+      await shared.promise;
+      $("#inputData .passes li").filter((i, li) => $(li).text() === "sums").first().trigger("click");
+      await shared.promise;
+      $("#validate").trigger("click");
+      await shared.promise;
+      expect($("#results .error").length, $("#results").text().substring(0, 300)).to.equal(0);
+
+      $("#reduce").trigger("click");
+      await shared.promise;
+      // the tree the actions built, rather than the node a parse with no
+      // actions in it reduces to
+      const ast = JSON.parse($("#reduceAst textarea").first().val());
+      expect(ast).to.deep.equal({
+        op: "Mul",
+        left: {op: "num", value: 10},
+        right: {op: "Sub",
+                left: {op: "Mul", left: {op: "num", value: 5}, right: {op: "num", value: 45}},
+                right: {op: "last", value: 60}},
+      });
+      // ...and it points back at what made it, as it does on the other page
+      const links = (shared.Caches.editorSupport.linkSets || {})[REDUCE_ID] || [];
+      expect(links.length, "a link per node of it").to.be.above(0);
     });
   });
 }

@@ -63,9 +63,11 @@ module.exports = {
   resolve: {
     fallback: {
       // shape-path-core reaches for node's path to find its grammar file,
-      // and only when there is no window -- so in here there is nothing to
-      // resolve it to, and nothing that asks
-      path: false,
+      // and only when there is no window -- which is a page's question, not
+      // a Web Worker's: a worker hasn't got one, takes that branch, and
+      // needs something with a `join` on it or the bundle throws on the way
+      // in.  It gets a path it never uses (path-in-a-browser.js).
+      path: Path.resolve(__dirname, "path-in-a-browser.js"),
       // fs: false,
       // net: 'empty',
       // tls: 'empty',

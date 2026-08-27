@@ -1139,7 +1139,6 @@ function alignBnodesBySubtree(generated, rendered) {
     }
     return pairing;
 }
-const TERM_MEMBERS = ["subject", "predicate", "object"];
 /** stringifyWithOffsets - JSON.stringify(value, null, indent)-identical
  * serialization that also records the {from, to} character range of every
  * object `isTarget` accepts (e.g. TestedTriples in validation results), so
@@ -1184,8 +1183,9 @@ function stringifyWithOffsets(value, isTarget, indent = 2) {
                     const kFrom = len + pad.length;
                     push(pad + JSON.stringify(k) + ": ");
                     ser(v[k], depth + 1);
-                    if (TERM_MEMBERS.indexOf(k) !== -1)
-                        fields[k] = { from: kFrom, to: len };
+                    // every member, key and value: a caller marking one of them is
+                    // pointing at `"value": 10` rather than at the 10
+                    fields[k] = { from: kFrom, to: len };
                     push(i < keys.length - 1 ? ",\n" : "\n");
                 });
                 push(padEnd + "}");

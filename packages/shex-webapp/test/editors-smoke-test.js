@@ -527,6 +527,26 @@ if (!TEST_browser) {
         expect(source().params().pages).to.deep.equal(['{"entities": {"Q42": {"id": "Q42"}}}']);
       });
 
+      /* A page a slurp brings back lands in the pane list, and the next one
+       * must not take it with it.  The textarea holds the showing document
+       * -- while a document is showing: with the settings tab up (which is
+       * where a source with no pages sits) it is holding whatever was there
+       * last, and stashing that wrote it over the page just brought back. */
+      it("should keep the pages a slurp brings back, one after another", function () {
+        source().select("wikibase");
+        source().forgetDocuments();       // whatever the tests before opened
+        expect(source().onSettings, "no documents, so the settings are up").to.equal(true);
+        $("#inputData textarea").first().val("not a document of this source's");
+
+        source().addPageDocument("Q42", '{"entities": {"Q42": {"id": "Q42"}}}');
+        source().addPageDocument("Q5", '{"entities": {"Q5": {"id": "Q5"}}}');
+        source().render();
+
+        expect(source().params().pages.length, "both of them").to.equal(2);
+        expect(tabs(), "a tab each, named by the page in it")
+          .to.deep.equal(["settings", "Q42", "Q5"]);
+      });
+
       it("should give each pane the language its source says it is in", function () {
         source().select("rdfjs");
         expect(source().paneEditor().language).to.equal("turtle");

@@ -229,6 +229,39 @@ validation's rather than replacing them, and a link that lands on a
 constraint's range lights up with that constraint.  A pane of yours that is
 one of a tabbed set comes forward when something in it is pointed at.
 
+A range may carry `parts` — what to paint of it, where painting the whole of
+it would say too much.  The extent is what the reader can hover; the parts
+are what lights up.  A node of a JSON tree marks its *frame*: the delimiters
+it opens and closes with, its scalar members whole, and for a member holding
+something with delimiters of its own, that member's name with the opening
+delimiter and its closing one —
+
+``` js
+>>{<<
+  >>"op": "num"<<,
+  >>"sub": {<<
+    "y": 1
+  >>}<<,
+  >>"xs": [<<
+    1
+  >>]<<
+>>}<<
+```
+
+— so the shape of the node reads at a glance and what is *inside* those
+delimiters is left to whatever is inside them, which is the same bargain a
+bnode's property list strikes in the data pane.
+
+**What a link is about, and what reaches it, need not be the same.**  Say
+`{node, shape}` and the app answers with the shape's own text — what it says
+before its body and after it, the action among it — and the focus node: one
+level, which is where a value was produced.  Hovering *into* it reaches
+further: the app also attaches your link, marked `secondary`, at every
+constraint that shape matched and every triple those constraints matched, so
+a reader pointing at any of them sees what you made of it.  Those attachments
+are ways in rather than things the link is about, so hovering your own pane
+does not drag them back.
+
 Call it again to replace what you linked, or with nothing to take it back; a
 new validation clears it, since what you linked was about the last one.
 (ShExReduce links each node of the AST it folds to the action that made it,
