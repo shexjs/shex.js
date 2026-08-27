@@ -236,6 +236,18 @@ if (!TEST_browser) {
         expect(pane.css("flex-direction")).to.equal("column");
         expect($("#reduceOverlay textarea").attr("rows"),
                "with a row count to fall back on").to.equal("25");
+
+        // ...and the column beside it, which is the app's own data pane on
+        // loan: the slot it is lent to has to be the box it fills, or the
+        // pane is as tall as what is in it and the column stops short of
+        // the results
+        const slot = columns.children("[data-borrow]");
+        expect(slot.length, "the data pane is here on loan").to.equal(1);
+        expect(slot.css("display"), "and the slot is a column").to.equal("flex");
+        expect(slot.css("flex-direction")).to.equal("column");
+        expect(slot.css("flex"), "taking its half of the row").to.include("1 1");
+        expect($("#inputData").parent().is(slot), "with the pane in it").to.equal(true);
+        expect($("#inputData").css("flex"), "and filling it").to.include("1 1");
       } finally {
         // whatever happened, the next test starts where it expects to
         $("#screenTabs button[data-screen='']").trigger("click");

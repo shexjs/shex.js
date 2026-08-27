@@ -183,6 +183,12 @@ body {
     white-space: nowrap;
     text-align: right;
     font-size: .9em;
+    /* ...and none of the rule that separates one result from the next:
+       this is beside the tabs rather than under them, and the separator's
+       margin and padding are what dropped it half a line */
+    margin: 0;
+    padding: 0;
+    border-top: none;
 }
 /* the tab set and the document share one box, whose height the app
    fixes to what a document needs once it has measured one (see
@@ -301,7 +307,14 @@ label {
    and the statusbar wrap to lines of their own underneath. */
 .screen { display: flex; flex-direction: column; height: 100%; }
 .screenColumns { display: flex; align-items: stretch; flex: 1 1 auto; min-height: 0; }
-.screenColumns > .panel, .screenColumns [data-borrow] > .panel { flex: 1 1 0; }
+/* 0px rather than 0: the same length, and the one a test's document
+   parser will accept -- a `flex` shorthand with a unitless basis is dropped
+   whole there, so a rule written that way is a rule no test can see. */
+.screenColumns > .panel, .screenColumns [data-borrow] > .panel { flex: 1 1 0px; }
+/* A borrowed pane is a column of the screen like any other: the slot it is
+   lent to has to be the box the pane fills, or the pane is as tall as what
+   is in it and the column ends short of the results. */
+.screenColumns > [data-borrow] { flex: 1 1 0px; display: flex; flex-direction: column; min-height: 0; }
 /* A screen's panes fill it the way the validator's do: a column shares its
    height among the panes in it -- in proportion to the rows each asked for,
    which the app writes on the pane -- each pane's document takes what its

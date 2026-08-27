@@ -3686,7 +3686,32 @@ class ShExBaseApp {
     let aside = tabs.children(".resultsTabsAside").first();
     if (aside.length === 0)
       aside = $("<div/>").addClass("resultsTabsAside").appendTo(tabs);
+    // What it says is about the results that are up when it is written --
+    // the materializations this materialization could have been -- so it
+    // is about that tab, and shows while that tab shows.  It used to stay
+    // over whatever the reader turned to next.
+    aside.attr("data-for", this.showingResultsTab());
+    this.syncResultsTabsAside();
     return aside;
+  }
+
+  /** which results tab is up, by the id of its panel */
+  showingResultsTab () {
+    const tabs = $("#resultsTabs");
+    if (tabs.length === 0 || !tabs.data("ui-tabs"))
+      return APP_RESULTS_TAB;
+    const at = tabs.tabs("option", "active");
+    const href = at === false ? "" :
+          (tabs.find("> ul > li").eq(at).children("a").attr("href") || "");
+    return href.replace(/^#/, "") || APP_RESULTS_TAB;
+  }
+
+  /** ...and the corner of the strip shows only over the tab it is about */
+  syncResultsTabsAside () {
+    const aside = $("#resultsTabs > .resultsTabsAside");
+    if (aside.length === 0)
+      return;
+    aside.toggle(aside.attr("data-for") === this.showingResultsTab());
   }
 
   /** A results tab's own status line, for what a plugin has to say about
@@ -3755,6 +3780,10 @@ class ShExBaseApp {
       tabs.tabs("refresh");
     else
       tabs.tabs();
+    if (!tabs.data("shexjsAsideWired")) {
+      tabs.data("shexjsAsideWired", true);
+      tabs.on("tabsactivate", () => this.syncResultsTabsAside());
+    }
     return panel;
   }
 

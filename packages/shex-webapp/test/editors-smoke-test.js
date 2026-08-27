@@ -1019,6 +1019,40 @@ if (!TEST_browser) {
         expect(tabs()[1]).to.equal("Q42");
       });
 
+      /* The corner of the results strip is about the results that are up
+       * when it is written -- ShExMap's "5 viable materializations" is
+       * about the materialization -- so it goes away when they do.  It used
+       * to sit over whatever the reader turned to next. */
+      it("should keep the results-strip corner over the tab it is about", function () {
+        const app = shared.app;
+        app.resultsTabFor("asideTestResults", "aside test");
+        app.showResultsTab("asideTestResults");
+        const aside = app.resultsTabsAside();
+        aside.text("5 viable materializations");
+        expect(aside.attr("data-for"), "written about the tab that is up")
+          .to.equal("asideTestResults");
+        expect(aside.css("display"), "and showing over it").to.not.equal("none");
+
+        app.showResultsTab("validationResults");
+        expect($(".resultsTabsAside").css("display"), "not over the validation")
+          .to.equal("none");
+        app.showResultsTab("asideTestResults");
+        expect($(".resultsTabsAside").css("display"), "and back with its own")
+          .to.not.equal("none");
+
+        // ...and it sits on the tab strip rather than half a line under it:
+        // the rule that separates one result from the next is not about a
+        // corner beside the tabs
+        expect(aside.css("position")).to.equal("absolute");
+        expect(aside.css("margin-top"), "no separator margin").to.match(/^0/);
+        expect(aside.css("padding-top"), "nor its padding").to.match(/^0/);
+
+        $("#asideTestResults").remove();
+        $('#resultsTabs > ul > li > a[href="#asideTestResults"]').closest("li").remove();
+        $("#resultsTabs").tabs("refresh");
+        app.showResultsTab("validationResults");
+      });
+
       /* The Fixed Map tab says what it is doing while it does it, and has
        * to stop saying it however that ends.  A query map the source cannot
        * answer -- a SPARQL SELECT asked of a local store, which is what a
