@@ -1,15 +1,30 @@
 /**
- * Test doubles for HTTP resources, e.g.
+ * Test doubles for HTTP resources.
  *
- const [[GitRootServer]] = require('../../../tools/testServer')
-   .startServer([{ url: 'http://localhost:9999/shex.js/', fromDir: Path.join(__dirname, '../../..') }])
- fetch(GitRootServer.urlFor('getSomethingOrItsA404'))
+ *   const [[GitRootServer]] = require('../../../tools/testServer')
+ *     .startServer([{url: 'http://localhost:9999/shex.js/', fromDir: Path.join(__dirname, '../../..')}]);
+ *   fetch(GitRootServer.urlFor('getSomethingOrItsA404'))
  *
- * URLs on localhost get a real node:http server, visible to any HTTP stack
- * (including jsdom's undici-based resource loader and spawned child
- * processes).  URLs on other (pretend) hosts are intercepted in-process with
- * nock, which only works for clients built on http.ClientRequest (e.g.
- * node-fetch@2).
+ * `startServer(paths, files)` returns `[pathScopes, fileScopes]`, one entry
+ * per argument in order: a path scope maps a URL prefix onto a directory
+ * and answers `urlFor(page)` with the URL of a page under it; a file scope
+ * serves one file at one URL.  Which double you get is decided by the host
+ * in the URL:
+ *
+ * - **localhost** (`localhost`, `127.0.0.1`, `[::1]`): a real node:http
+ *   server on that port, shared by every scope that names the port and left
+ *   running (unref'd) for the process.  Any HTTP stack can reach it -- jsdom's
+ *   undici resource loader, a spawned CLI, a Worker -- and it sends the
+ *   `Access-Control-Allow-Origin: *` a cross-origin plugin load needs.  Use
+ *   `127.0.0.1` rather than `localhost` where a client might race Happy
+ *   Eyeballs (node-fetch on Linux CI).
+ * - **any other host** (`http://a.example/`): intercepted in-process with
+ *   nock, so only clients built on http.ClientRequest see it (node-fetch@2
+ *   yes; undici, jsdom and child processes no).  For pretending to be a
+ *   remote site the library code fetches from.
+ *
+ * A file under a path scope is looked up as written, then with `.shex` and
+ * `.ttl` appended, so a manifest may name `schemas/1dot` and mean the file.
  */
 const Fs = require('fs')
 const Path = require('path')

@@ -8,6 +8,7 @@ const ShExUtil = require("@shexjs/util");
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
 const ShExTerm = require("@shexjs/term");
 const RdfJs = require("n3");
+const {graphEquals, graphToString} = require("./graphEquals.js");
 const {DataFactory} = RdfJs;
 const ShExNode = require("@shexjs/node")({
   rdfjs: RdfJs,
@@ -239,103 +240,6 @@ async function parseTurtle (text, url) {
               }
             })
   })
-}
-
-function graphToString (g) {
-  var output = '';
-  var w = new (require("n3")).Writer({
-      write: function (chunk, encoding, done) { output += chunk; done && done(); },
-  });
-  w.addQuads([... g.match(null, null, null, null)]); // is this kosher with no end method?
-  return "{\n" + output + "\n}";
-}
-
-/** graphEquals: test if two graphs are isomorphic through some bnode mapping.
- *
- * left: one of the graphs to test.
- * right: the other graph to test.
- * leftToRight: (optional) writable mapping from left bnodes to right bnodes.
- * returns: true or false
- * side effects: m is populated with a working mapping.
- */
-function graphEquals (left, right, leftToRight) {
-  if (left.size !== right.size)
-    return false;
-
-  leftToRight = leftToRight || {};                                    // Left→right mappings (optional argument).
-  var rightToLeft = Object.keys(leftToRight).reduce(function (ret, from) { // Right→left mappings
-    ret[leftToRight[from]] = from;                                  //  populated if m was passed in.
-    return ret;
-  }, {});
-
-  return findIsomorphism([... left.match(null, null, null, null)],    // Start with all triples.
-                         right, leftToRight, rightToLeft);
-}
-
-/**
-  * recursive function to find a consistent mapping of left bnodes to right bnodes.
-  * @param {*} g RdfJs graph
-  * @returns true if a mapping was found
-  */
-function findIsomorphism (g, right, l2r, r2l) {
-  if (g.length == 0)                              // Success if there's nothing left to match.
-    return true;
-  var matchTarget = g.pop();                      // Take the first triple in left.
-
-  var rights = [... right.match(                  // Find candidates in the right.
-    mapppedTo(matchTarget.subject, l2r),
-    matchTarget.predicate,
-    mapppedTo(matchTarget.object, l2r),
-    null
-  )];
-
-  const ret = !!rights.find(function (triple) {   // Walk through candidates in right.
-    var trialMappings = [];                          // List of candidate mappings.
-    function add (from, to) {
-      if (mapppedTo(from, l2r) === null) {   // If there's no binding from tₗ to tᵣ,
-        if (mapppedTo(to, r2l) === null) {   //   If we can bind to to the object
-          const leftKey = ShExTerm.rdfJsTerm2Turtle(from);
-          const rightKey = ShExTerm.rdfJsTerm2Turtle(to);
-          l2r[leftKey] = to;                 //      add a candidate binding.
-          r2l[rightKey] = from;
-          trialMappings.push({from, leftKey, rightKey});
-          return true;
-        } else {                                     //   Otherwise,
-          return false;                              //     it's not a viable mapping.
-        }
-      } else {                                       // Otherwise,
-        return true;                                 //   there's no new binding.
-      }
-    }
-
-    if (!add(matchTarget.subject, triple.subject) || // If the bindings for tₗ.s→tᵣ.s fail
-        !add(matchTarget.object, triple.object) ||   // or the bindings for tₗ.o→tᵣ.o fail
-        !findIsomorphism(g, right, l2r, r2l)) {      // of the remaining triples fail,
-      for (let {leftKey, rightKey} of trialMappings) {
-        delete r2l[rightKey];
-        delete l2r[leftKey];
-      };
-      return false;
-    } else
-      return true;
-  });
-
-  if (!ret) {
-    g.push(matchTarget);                           // No binding so leave as a failure.
-  }
-
-  return ret;
-}
-
-function mapppedTo (term, mapping) {
-  if (!mapping) throw Error('1');
-  mapping = mapping || leftToRight;                     // Mostly used for left→right mappings.
-  if (term.termType === "BlankNode") {
-    const key = ShExTerm.rdfJsTerm2Turtle(term);
-    return (key in mapping) ? mapping[key] : null // Bnodes get current binding or null.
-  } else {
-    return term;                              // Other terms evaluate to themselves.
-  }
 }
 
 /**

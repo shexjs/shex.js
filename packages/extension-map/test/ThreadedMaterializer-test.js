@@ -13,6 +13,7 @@ const JsYaml = require("js-yaml");
 const RdfJs = require("n3");
 const ShExParser = require("@shexjs/parser");
 const ShExTerm = require("@shexjs/term");
+const {graphEquals, graphToString} = require("./graphEquals.js");
 
 const {ThreadedMaterializer, normalizeBindingTree, MaterializationError} = require("../lib/ThreadedMaterializer");
 
@@ -345,87 +346,3 @@ describe("ThreadedMaterializer", function () {
     });
   });
 });
-
-/* graphEquals/findIsomorphism/mapppedTo/graphToString copied from
- * ./Map-test.js -- candidates for a shared test util. */
-function graphToString (g) {
-  let output = "";
-  const w = new RdfJs.Writer({
-    write: function (chunk, encoding, done) { output += chunk; done && done(); },
-  });
-  w.addQuads([...g.match(null, null, null, null)]);
-  return "{\n" + output + "\n}";
-}
-
-function graphEquals (left, right, leftToRight) {
-  if (left.size !== right.size)
-    return false;
-
-  leftToRight = leftToRight || {};
-  const rightToLeft = Object.keys(leftToRight).reduce(function (ret, from) {
-    ret[leftToRight[from]] = from;
-    return ret;
-  }, {});
-
-  return findIsomorphism([...left.match(null, null, null, null)],
-                         right, leftToRight, rightToLeft);
-}
-
-function findIsomorphism (g, right, l2r, r2l) {
-  if (g.length === 0)
-    return true;
-  const matchTarget = g.pop();
-
-  const rights = [...right.match(
-    mapppedTo(matchTarget.subject, l2r),
-    matchTarget.predicate,
-    mapppedTo(matchTarget.object, l2r),
-    null
-  )];
-
-  const ret = !!rights.find(function (triple) {
-    const trialMappings = [];
-    function add (from, to) {
-      if (mapppedTo(from, l2r) === null) {
-        if (mapppedTo(to, r2l) === null) {
-          const leftKey = ShExTerm.rdfJsTerm2Turtle(from);
-          const rightKey = ShExTerm.rdfJsTerm2Turtle(to);
-          l2r[leftKey] = to;
-          r2l[rightKey] = from;
-          trialMappings.push({from, leftKey, rightKey});
-          return true;
-        } else {
-          return false;
-        }
-      } else {
-        return true;
-      }
-    }
-
-    if (!add(matchTarget.subject, triple.subject) ||
-        !add(matchTarget.object, triple.object) ||
-        !findIsomorphism(g, right, l2r, r2l)) {
-      for (const {leftKey, rightKey} of trialMappings) {
-        delete r2l[rightKey];
-        delete l2r[leftKey];
-      }
-      return false;
-    } else
-      return true;
-  });
-
-  if (!ret) {
-    g.push(matchTarget);
-  }
-
-  return ret;
-}
-
-function mapppedTo (term, mapping) {
-  if (term.termType === "BlankNode") {
-    const key = ShExTerm.rdfJsTerm2Turtle(term);
-    return (key in mapping) ? mapping[key] : null;
-  } else {
-    return term;
-  }
-}

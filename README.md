@@ -333,7 +333,7 @@ npm run test-all                          # the meta-package tests check version
 git commit -am 'chore(release): publish'
 git tag v1.0.0-alpha.NN
 git push --follow-tags
-npm publish --workspaces                  # publish every packages/* package
+node tools/publish-ordered.js            # publish every packages/* package, in dependency order
 ```
 
-`npm publish --workspaces` publishes each workspace package; per-package `publishConfig` already grants public access.
+`tools/publish-ordered.js` publishes each workspace package after the ones it depends on (`--list` shows the order, `--dry-run` rehearses it); per-package `publishConfig` already grants public access.

@@ -44,20 +44,6 @@ first.  Items are numbered so a commit or a conversation can name one.
 | [error-reporting.md](error-reporting.md), [error-normalization.md](error-normalization.md), [error-reporting-comparison.md](error-reporting-comparison.md) | structured errors, repairs | F0–F6 done and merged; one decision left, §G |
 | [../packages/extension-map/doc/threaded-materializer.md](../packages/extension-map/doc/threaded-materializer.md) | the NFA materializer | design; leftovers in §F |
 
-## A. Start here: small and independent
-
-Each is an hour or so and touches nothing another item depends on.
-
-- **A1 (S)** One `graphEquals` (copied in `Map-test.js` and
-  `ThreadedMaterializer-test.js`) and a documented `tools/testServer.js`
-  nock/real-server split.
-- **A2 (S)** `bin/validate --extension` takes bare package names
-  (`LoadExtensions` takes file globs only).
-- **A3 (S)** `shex-serve` content negotiation honours q-values (substring
-  matching today).
-- **A4 (S)** An ordered publish script: `npm publish --workspaces` is not
-  topological, so there is a window of unsatisfiable ranges.
-
 ## B. Web app: the factoring plan
 
 `packages/shex-webapp/doc/ShExBaseApp.js` is 6,140 lines of classic-script

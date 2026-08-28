@@ -6,7 +6,7 @@
  *   node tools/bumpVersions.js [--dry-run] 1.0.0-alpha.30
  *
  * Follow with `npm install` (to sync package-lock.json), run the tests,
- * commit, tag v<version>, and `npm publish --workspaces`.
+ * commit, tag v<version>, and `node tools/publish-ordered.js`.
  */
 "use strict";
 
@@ -54,4 +54,4 @@ manifestPaths.forEach(manifestPath => {
 
 console.log(dryRun
   ? "\n(dry run: nothing written)"
-  : "\nNow run: npm install && npm run test-all, then commit, tag, and `npm publish --workspaces`.");
+  : "\nNow run: npm install && npm run test-all, then commit, tag, and `node tools/publish-ordered.js`.");
