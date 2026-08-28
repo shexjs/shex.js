@@ -44,60 +44,37 @@ first.  Items are numbered so a commit or a conversation can name one.
 | [error-reporting.md](error-reporting.md), [error-normalization.md](error-normalization.md), [error-reporting-comparison.md](error-reporting-comparison.md) | structured errors, repairs | F0–F6 done and merged; one decision left, §G |
 | [../packages/extension-map/doc/threaded-materializer.md](../packages/extension-map/doc/threaded-materializer.md) | the NFA materializer | design; leftovers in §F |
 
-## B. Web app: the factoring plan
+## B. Web app
 
-`packages/shex-webapp/doc/ShExBaseApp.js` is 6,140 lines of classic-script
-JavaScript: 16 classes, an 83-method `ShExBaseApp`, 223 `$("#…")`
-selectors over 62 ids.  The plugin work exposed its seams; cut along them.
+The split, the harness, the manifest runner, `app.settled()`, WorkerTask,
+the one page, the dependency cleanup and plugin-borne data sources are
+done (B1–B8, 2026-08-28).  What is left:
 
-- **B1 (M) Split ShExBaseApp.js**, mechanically and without behaviour
-  change, into files the pages load in order: the caches
-  (`InterfaceCache` … `ShapeMapCache`, a model layer); `PluginHost`
-  (`applyPlugin`/`unloadPlugin`, screens, results tabs, `linkPanes` — the
-  code that implements plugins.md); permalink/manifest/gist (`Getables`,
-  `QueryParams`); validation running (`callValidator`, `getValidator`,
-  reporting) with `NeighborhoodConfig`; `EditorSupport` and layout.
-  Done when no file is over ~1,500 lines and every suite is green unchanged.
-- **B2 (M) One jsdom harness.**  Each of the eight browser suites boots the
-  page with its own copy of the same ~40 lines (JSDOM options, `CSS.escape`
-  shim, `Range` stubs, `_testCallback`), and the copies have drifted.
-  `packages/shex-webapp/test/harness.js`: `boot(page, search, {worker})` →
-  `{dom, $, shared, open(schemaLabel, dataLabel), validate()}`;
-  `fakeWorker.js` is the precedent.  Pair with D4.
-- **B3 (S–M) One manifest-entry runner** for node: `examples-test.js`,
-  `extension-reduce/test/Examples-test.js`, `Map-test.js` and
-  `tools/aggregate-manifests.js` each interpret entries their own way.
-- **B4 (M) `app.settled()`** — replace the `SharedForTests.promise = …`
-  assignments scattered through ~10 handlers with one promise registered at
-  the dispatch level; a click a test author forgot to instrument then
-  cannot hang a test.  Done when tests await it and the global is a thin
-  alias or gone.
-- **B5 (M–L) One worker task.**  `DirectShExValidator`/`RemoteShExValidator`
-  (app) and `DirectShExMaterializer`/`RemoteShExMaterializer` (map plugin)
-  are the same shape — run here or in the worker, relay progress, parse
-  results — over `ShExWorkerThread.js` + `RemoteShExValidator.js` +
-  `WorkerMarshalling.js`.  The plugin `requests:` hook already
-  half-generalizes it.
-- **B6 (S–M) One app page.**  `shex-worker.html` differs from
-  `shex-simple.html` by 28 lines; make it `?worker=` or a redirect, as the
-  ShExMap pages became.
-- **B7 (M) Plugin packaging.**
-  `ShExMapPlugin.js` (1,423 lines) as a built bundle; plugin file + bundle
-  entry + webpack config out of the library packages, so
-  `extension-reduce` stops depending on `@shexjs/webapp` and
-  `extension-reduce-js` at runtime for its bundle's sake, `extension-map`
-  sheds the app-era dependencies it carries (14 packages), and
-  `shex-shape-path-query` stops depending on `extension-map`.
-- **B8 (M) Neighborhoods registered like plugins.**  They are already
-  descriptor-shaped (`name/label/capabilities/dbParams/fromParams/…`) but
-  hard-wired in `shex-webapp.js`.
-- **B9 (L) TypeScript for the app** — after B1, one file at a time through
-  `src/` and the existing webpack path (`shex-webapp/src` holds only
-  `shex-serve` today).  Same for `shex-cli/bin/validate` (1,448 lines of
-  JS) and `extension-wasi*`, the last JS-only packages.
-- **B10 (decision)** Committed `lib/` + `.map`: every source change doubles
-  its diff.  Build in CI/prepublish instead, or at least stop committing
-  `.map`.
+- **B1 (M, then S each) TypeScript for the app's page scripts.**  The path
+  exists: `packages/shex-webapp/src/app/*.ts` compiles as scripts into
+  `doc/` (`tsconfig.app.json`, run by `npm run build`), and
+  `WorkerMarshalling.ts` is through it.  Next, smallest first:
+  `ShExPlugins.js` (113 lines), `WorkerTask.js` (95), `ShExApp.js`,
+  `ShExInWorkerApp.js`, `RemoteShExValidator.js` (150), then the ten app
+  files — each wants a `declare` for the globals it reads (`$`,
+  `ShExWebApp`, `ShExWorker`, the app's own constants) in a shared
+  `src/app/globals.d.ts`, and its `any`s narrowed afterwards.  The same
+  for `shex-cli/bin/validate` (1,448 lines of JS) and `extension-wasi*`.
+- **B2 (M) Plugin packaging** (extension-ui-plan's phase 3 leftover):
+  `ShExMapPlugin.js` (1,423 lines) as a built bundle, and the plugin file
+  + bundle entry + webpack config as packages of their own.  The
+  dependency graph no longer forces this — the library packages declare
+  only what their `lib/` requires — so it is tidiness, to be done when
+  something else touches those files.
+- **B3 (decision) Committed `lib/` and `.map`.**  CI runs `npm ci` and the
+  tests with no build step, so `lib/` must stay committed unless CI (and
+  `npm install` from git) learns to build; that is one line in `ci.yml`
+  and a `prepare` script, and would take `lib/` out of every diff (about five per cent of
+  this branch's changed lines; more on a branch that works in the
+  TypeScript packages).  The 48 `.map`
+  files have no consumer in the repository and can stop being tracked
+  today — a `.gitignore` line and `git rm --cached` — which is the
+  recommendation either way.
 
 ## C. Plugins
 
@@ -242,5 +219,5 @@ Larger, design conversation first:
 
 ## Decisions wanted
 
-B10 (committed `lib/`), C2 (trust prompt), C3 (redirect screen), C4 (panel
+B3 (committed `lib/`), C2 (trust prompt), C3 (redirect screen), C4 (panel
 default), G1 (repairs replace errors), I1 (the perf corpus).
