@@ -22,11 +22,12 @@ const expect = require("chai").expect;
 const shared = "shex-app.css";
 const pages = [
   {file: "../doc/shex-simple.html", href: shared},
-  {file: "../doc/shex-worker.html", href: shared},
 ];
+// the map pages, redirecting to the app page with ShExMap; the worker one
+// says worker=1, as the app's own old worker page does
 const redirects = [
   {file: "../../extension-map/doc/shexmap-simple.html", to: "shex-simple.html"},
-  {file: "../../extension-map/doc/shexmap-worker.html", to: "shex-worker.html"},
+  {file: "../../extension-map/doc/shexmap-worker.html", to: "shex-simple.html", worker: true},
 ];
 const read = f => Fs.readFileSync(Path.join(__dirname, f), "utf8");
 
@@ -90,13 +91,32 @@ describe("the app pages", () => {
    * were asked for.  A parameter is relative to the page it was written
    * for, so the redirect makes URLs absolute on the way. */
   it("should redirect the map pages to an app page with the plugin", () => {
-    for (const {file, to} of redirects) {
+    for (const {file, to, worker} of redirects) {
       const text = read(file);
       expect(text, file).to.include('redirectToPlugin("../../shex-webapp/doc/' + to + '"');
       expect(text, file + " names ShExMap").to.include('"./ShExMapPlugin.js"');
       expect(text, file + " keeps the manifest it always opened with")
         .to.include('"../examples/manifest.json"');
+      expect(text.includes('{worker: "1"}'), file + (worker ? " asks for the worker" : " does not"))
+        .to.equal(!!worker);
     }
+  });
+
+  /* shex-worker.html is a published URL too; the worker app is the one
+   * page with ?worker=1, and whatever the old page was asked for carries. */
+  it("should redirect the old worker page to the app page with worker=1", () => {
+    const from = "http://x.example/packages/shex-webapp/doc/shex-worker.html";
+    const search = "?editors=1&manifestURL=..%2Fexamples%2Fmanifest.yaml";
+    const sandbox = {URL, URLSearchParams,
+                     location: {href: from + search, search, replace (to) { sandbox.went = to; }}};
+    vm.createContext(sandbox);
+    const script = read("../doc/shex-worker.html").match(/<script>([\s\S]*?)<\/script>/)[1];
+    vm.runInContext(script, sandbox);
+    const to = new URL(sandbox.went);
+    expect(to.pathname).to.equal("/packages/shex-webapp/doc/shex-simple.html");
+    expect(to.searchParams.get("worker")).to.equal("1");
+    expect(to.searchParams.get("editors"), "carried").to.equal("1");
+    expect(to.searchParams.get("manifestURL"), "as written: same directory").to.equal("../examples/manifest.yaml");
   });
 
   /** where shexmap-simple.html sends a reader who arrived with `search` */

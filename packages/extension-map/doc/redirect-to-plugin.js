@@ -11,7 +11,7 @@
  * `extension` -- the parameter's old name, still honoured -- and anything
  * named `<something>URL`) is made absolute on the way.
  */
-function redirectToPlugin (appPage, pluginUrl, defaultManifestUrl) {
+function redirectToPlugin (appPage, pluginUrl, defaultManifestUrl, extra = {}) {
   const asked = new URLSearchParams(location.search);
   const parms = new URLSearchParams();
   asked.forEach((value, key) => {
@@ -26,5 +26,7 @@ function redirectToPlugin (appPage, pluginUrl, defaultManifestUrl) {
   // the manifest this page has always opened with, unless one was asked for
   if (defaultManifestUrl && !asked.has("manifest") && !asked.has("manifestURL"))
     parms.append("manifestURL", new URL(defaultManifestUrl, location.href).href);
+  // ...and whatever this page stands for beyond the plugin (worker=1)
+  Object.entries(extra).forEach(([key, value]) => parms.set(key, value));
   location.replace(new URL(appPage, location.href).href + "?" + parms);
 }

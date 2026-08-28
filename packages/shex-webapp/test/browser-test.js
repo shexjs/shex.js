@@ -9,7 +9,7 @@ const SHEX_IO_TESTS = "https://shex.io/shexTest/main/";
 const STARTUP_TIMEOUT = 10000
 const SCRIPT_CALLBACK_TIMEOUT = 40000
 const SHEX_SIMPLE = 'packages/shex-webapp/doc/shex-simple.html'
-const SHEX_WORKER = 'packages/shex-webapp/doc/shex-worker.html'
+const SHEX_WORKER = 'packages/shex-webapp/doc/shex-simple.html?worker=1'
 // ShExMap is an extension of those pages now, and shexmap-simple.html is a
 // redirect that opens one with these -- so this is what it opens (§5 phase 2)
 const SHEXMAP_PARMS = "?plugin=" + encodeURIComponent("../../extension-map/doc/ShExMapPlugin.js")

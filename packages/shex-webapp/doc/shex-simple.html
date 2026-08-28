@@ -2,7 +2,7 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>ShEx - Simple Online Validator</title>
+    <title>ShEx — Online Validator</title>
     <meta name="description" content="simple ShEx2 demo" />
     <link rel="icon" href="ShEx-bones-min.svg" />
     <script src="webpacks/jquery-components.min.js"></script>
@@ -13,6 +13,12 @@
          which is not a valid value and so already meant this) */
       #inputarea { overflow-x: visible; }
     </style>
+    <script>
+      // ?worker=1 validates in a Web Worker; started early, and named once so
+      // a plugin with a worker half can restart it (see unloadPlugin)
+      const WorkerUrl = "ShExWorkerThread.js";
+      var ShExWorker = new URLSearchParams(location.search).has("worker") ? new Worker(WorkerUrl) : null;
+    </script>
   </head>
 
   <body xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -27,10 +33,10 @@
     </svg>
 
     <div id="title">
-      <img src="ShEx-bones-min.svg" class="ShExLogo" alt="ShEx Icon"/><h1 style="float:left;">ShEx - <span class="screenName">Validator</span><span id="screenTabs" role="tablist" aria-label="screen" style="display:none;"></span></h1><input type="hidden" id="screen" value=""/>
+      <img src="ShEx-bones-min.svg" class="ShExLogo" alt="ShEx Icon"/><h1 style="float:left;">ShEx — <span class="screenName">Validator</span><span id="screenTabs" role="tablist" aria-label="screen" style="display:none;"></span></h1><input type="hidden" id="screen" value=""/>
       <span id="dataSource" style="float:right; padding-right:1em;"><label for="neighborhood">data source: </label><select id="neighborhood" title="where the data to validate comes from"></select></span>
       <!-- <ul id="navlist" style="float:left; padding-left: 1em;"> -->
-      <!--   <li>â£ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
+      <!--   <li>‣ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
       <!-- </ul> -->
       <form id="menuForm">
           <button id="menu-button" title="click for menu">
@@ -136,7 +142,7 @@
 
     <div id="inputarea">
       <div id="inputSchema" class="panel">
-        <h2 class="status">Â </h2>
+        <h2 class="status"> </h2>
         <div id="schemaDocument"><textarea rows="25" class="schema droparea" style="width: 100%" spellcheck="false"></textarea></div>
         <div>
           <div id="manifestDrop" class="droparea">
@@ -180,7 +186,7 @@
         </div>
       </div>
       <div id="inputData" class="panel">
-        <h2 class="status">Â </h2>
+        <h2 class="status"> </h2>
         <div id="dataArea">
           <div id="dataSource-tabs" style="width: 100%">
             <span id="dataPaneControls"><button type="button" id="addDataPane" title="another document">+</button><button type="button" id="removeDataPane" title="close this document">&#8722;</button></span>
@@ -218,7 +224,7 @@
     </div>
     <div id="resultsGrip" title="drag to divide the page between the panes and the results"></div>
     <div id="results">
-      <h2 class="status">Â </h2>
+      <h2 class="status"> </h2>
       <div></div>
     </div>
     <script src="webpacks/n3js.js"></script>
@@ -245,12 +251,15 @@
     <script src="./ShExBaseApp-links.js"></script>
     <script src="./ShExBaseApp-layout.js"></script>
     <script src="./ShExApp.js"></script>
+    <script src="./ShExInWorkerApp.js"></script>
+    <script src="./RemoteShExValidator.js"></script>
+    <script src="./WorkerMarshalling.js"></script>
     <script>
-      const shExAppInstance = new ShExApp(DefaultBase);
+      const shExAppInstance = new (ShExWorker ? ShExInWorkerApp : ShExApp)(DefaultBase);
       shExAppInstance.start();
       const isRealBrowser = Object.getOwnPropertyDescriptor(globalThis, 'window')?.get?.toString().includes('[native code]') ?? false;
       if (isRealBrowser) // quiet in tests
-        console.log('ShExApp instance:', shExAppInstance);
+        console.log(ShExWorker ? 'ShExApp with worker instance:' : 'ShExApp instance:', shExAppInstance);
     </script>
   </body>
 </html>

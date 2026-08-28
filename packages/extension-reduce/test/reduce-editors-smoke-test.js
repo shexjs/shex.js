@@ -25,7 +25,7 @@ const [[GitRootServer]] = require("../../../tools/testServer")
       );
 
 const PAGE = "packages/shex-webapp/doc/shex-simple.html";
-const WORKER_PAGE = "packages/shex-webapp/doc/shex-worker.html";
+const WORKER_PAGE = "packages/shex-webapp/doc/shex-simple.html";   // with ?worker=1
 const PLUGIN = "../../extension-reduce/doc/ShExReducePlugin.js";
 const MANIFEST = "../../extension-reduce/examples/manifest.yaml";
 const REDUCE_ID = "http://shex.io/extensions/Reduce/";
@@ -541,7 +541,7 @@ if (!TEST_browser) {
     let dom, $, shared;
 
     before(async function () {
-      const search = "?plugin=" + encodeURIComponent(PLUGIN) +
+      const search = "?worker=1&plugin=" + encodeURIComponent(PLUGIN) +
             "&manifestURL=" + encodeURIComponent(MANIFEST);
       ({dom, $, shared} = await Harness.boot(WORKER_PAGE, search, {worker: true}));
     });

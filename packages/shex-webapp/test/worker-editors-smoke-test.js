@@ -30,11 +30,11 @@ if (!TEST_browser) {
   Harness = require("./harness");
   describe("shex-worker with ?editors=1", function () {
     this.timeout(20000);
-    const page = "packages/shex-webapp/doc/shex-worker.html";
+    const page = "packages/shex-webapp/doc/shex-simple.html";
 
     let dom, $, shared;
     before(async function () {
-      ({dom, $, shared} = await Harness.boot(page, "?editors=1", {worker: true}));
+      ({dom, $, shared} = await Harness.boot(page, "?editors=1&worker=1", {worker: true}));
     });
 
     after(function () {

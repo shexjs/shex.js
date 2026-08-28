@@ -179,7 +179,7 @@ applyPluginNow (ext) {
     // (the page's own globals, not window's: `const WorkerUrl` in a classic
     // script is a lexical binding the scripts after it see and window does
     // not, which is how RemoteShExValidator reaches the same two)
-    if (ext.worker && typeof ShExWorker !== "undefined" && typeof WorkerUrl !== "undefined") {
+    if (ext.worker && typeof ShExWorker !== "undefined" && ShExWorker && typeof WorkerUrl !== "undefined") {
       ShExWorker.terminate();
       ShExWorker = new Worker(WorkerUrl);
     }

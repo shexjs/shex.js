@@ -118,14 +118,14 @@ if (!TEST_browser) {
    * copy. */
   describe("a plugin whose worker half is on another origin", function () {
     this.timeout(20000);
-    const page = "packages/shex-webapp/doc/shex-worker.html";
+    const page = "packages/shex-webapp/doc/shex-simple.html";
     const MAP_ELSEWHERE = ElsewhereRepoServer.urlFor("packages/extension-map/doc/ShExMapPlugin.js");
     let dom, $, shared;
 
     before(async function () {
       // the only served URLs this worker can resolve are the second
       // origin's, which is the point
-      ({dom, $, shared} = await Harness.boot(page, "?editors=1&plugin=" + encodeURIComponent(MAP_ELSEWHERE),
+      ({dom, $, shared} = await Harness.boot(page, "?editors=1&worker=1&plugin=" + encodeURIComponent(MAP_ELSEWHERE),
                                             {worker: [{prefix: ElsewhereRepoServer.urlFor(""), dir: ROOT}]}));
     });
     after(function () { if (dom) dom.window.close(); });
