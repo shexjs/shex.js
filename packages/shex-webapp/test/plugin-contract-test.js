@@ -53,7 +53,7 @@ describe("the plugin contract", () => {
   it("should read no descriptor field the contract does not name", () => {
     const known = new Set(Object.keys(CONTRACT).concat(BOOKKEEPING));
     const unknown = new Set();
-    for (const file of ["packages/shex-webapp/doc/ShExBaseApp.js",
+    for (const file of ["packages/shex-webapp/doc/ShExAppCommon.js", "packages/shex-webapp/doc/ShExCaches.js", "packages/shex-webapp/doc/ShExShapeMapCache.js", "packages/shex-webapp/doc/ShExNeighborhoodConfig.js", "packages/shex-webapp/doc/ShExEditorSupport.js", "packages/shex-webapp/doc/ShExBaseApp.js", "packages/shex-webapp/doc/ShExBaseApp-plugins.js", "packages/shex-webapp/doc/ShExBaseApp-validation.js", "packages/shex-webapp/doc/ShExBaseApp-links.js", "packages/shex-webapp/doc/ShExBaseApp-layout.js",
                         "packages/shex-webapp/doc/ShExPlugins.js"])
       for (const m of read(file).matchAll(/\b(?:ext|descriptor)\.([A-Za-z_$][\w$]*)/g))
         if (!known.has(m[1]))

@@ -11,6 +11,9 @@
  */
 "use strict";
 
+/** the app, as the pages load it: one classic script per concern, in order */
+const APP_FILES = ["ShExAppCommon.js", "ShExCaches.js", "ShExShapeMapCache.js", "ShExNeighborhoodConfig.js", "ShExEditorSupport.js", "ShExBaseApp.js", "ShExBaseApp-plugins.js", "ShExBaseApp-validation.js", "ShExBaseApp-links.js", "ShExBaseApp-layout.js"];
+
 const Fs = require("fs");
 const Path = require("path");
 const vm = require("vm");
@@ -145,7 +148,7 @@ describe("the app pages", () => {
         ids.add(m[1]);
     // ids the apps create as they go count as had -- including the ones a
     // plugin declares, which is where a page's controls come from now
-    for (const js of ["../doc/ShExBaseApp.js",
+    for (const js of [...APP_FILES.map(f => "../doc/" + f),
                       "../../extension-map/doc/ShExMapPlugin.js"])
       // including the ones written into markup the app builds as strings
       for (const m of read(js).matchAll(/\b(?:id|contentId): ?"([^"]+)"|attr\("id", ?"([^"]+)"|id=\\?"([^"\\]+)/g))
