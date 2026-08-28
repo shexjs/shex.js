@@ -605,7 +605,7 @@ applyPluginNow (ext) {
    * message where the results go than a stack trace in the console.
    */
   runPluginAction (control) {
-    const tracked = SharedForTests && SharedForTests.promise;
+    const before = this.settledPromise;
     try {
       const ret = control.run(this);
       if (ret && typeof ret.then === "function") {
@@ -615,8 +615,8 @@ applyPluginNow (ext) {
         const handled = ret.catch(e => this.resultsWidget.failMessage(e, control.id));
         // an action that hands over its own work keeps what it handed over:
         // materialize's click resolves at once, the materialization doesn't
-        if (SharedForTests && SharedForTests.promise === tracked)
-          SharedForTests.promise = handled;
+        if (this.settledPromise === before)
+          this.track(handled);
       }
     } catch (e) {
       this.resultsWidget.failMessage(e, control.id);

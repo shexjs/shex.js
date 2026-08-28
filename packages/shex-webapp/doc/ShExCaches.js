@@ -519,7 +519,7 @@ class ManifestCache extends InterfaceCache {
 
       function textLoaded () {
         li.on("click", async () => {
-          SharedForTests.promise = func(entry.name, entry, li, listItems, side);
+          SharedForTests.app.track(func(entry.name, entry, li, listItems, side));
         });
         listItems[side][ManifestCache.sum(entry.text)] = li;
         // enable and get rid of the "..." in the label now that it's loaded

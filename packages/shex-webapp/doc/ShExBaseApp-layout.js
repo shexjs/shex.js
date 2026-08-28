@@ -357,7 +357,7 @@ async prepareDragAndDrop () {
                   })
                 }, null, 2)
             ));
-          SharedForTests.promise = Promise.all(promises);
+          this.track(Promise.all(promises));
         });
     });
     const readfiles = /*async*/ (files, targets) => { // returns promise but doesn't use await

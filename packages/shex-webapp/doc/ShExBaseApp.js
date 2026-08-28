@@ -141,11 +141,44 @@ constructor (base) {
     pluginDescriptors().forEach(ext => this.applyPlugin(ext));
     if (typeof ShExPlugins !== "undefined")
       ShExPlugins.onRegister(ext => this.applyPlugin(ext));
+    // what the app has started and not finished: see track()
+    this.inFlight = new Set();
+    this.settledPromise = Promise.resolve();
+  }
+
+  /**
+   * Something the app has started -- a validation, a load, a plugin's verb
+   * -- whose finishing anyone may wait for.  Every handler that starts
+   * asynchronous work hands its promise here, and `settled()` is the one
+   * place to wait on it, which is what lets a test click and then await
+   * without knowing which handler the click reached.  A verb that starts
+   * work it does not itself await (ShExMap's materialize hands over the
+   * materialization, not the click) tracks that work explicitly.
+   */
+  track (promise) {
+    const p = Promise.resolve(promise);
+    this.inFlight.add(p);
+    const done = () => this.inFlight.delete(p);
+    p.then(done, done);
+    // a new promise each time something starts, so a waiter can tell that
+    // it did; it answers with the newest thing's value once everything in
+    // flight is over, and rejects the way that thing rejected
+    this.settledPromise = Promise.allSettled([...this.inFlight]).then(() => p);
+    return p;
+  }
+
+  /** everything the app has started, finished: the promise of the most
+   * recently tracked action, after all in flight have settled */
+  settled () {
+    return this.settledPromise;
   }
 
 async start () {
     SharedForTests = {Caches: this.Caches, neighborhoods: this.neighborhoods, app: this,
                       HighlightMode, isPinGesture, PIN_WITH_META}
+    // `shared.promise` in a test is the app's settled(); writing to it tracks
+    Object.defineProperty(SharedForTests, "promise", {
+      get: () => this.settled(), set: p => this.track(p), enumerable: true});
     this.neighborhoods.init(); // before ?neighborhood=… reaches the picklist
     this.prepareControls();
     this.prepareResultsGrip();
@@ -158,7 +191,7 @@ async start () {
       return resolved;
     });
     if ('_testCallback' in window) {
-      SharedForTests.promise = ready.then(ab => ({drop: ab[0], loads: ab[1]}));
+      this.track(ready.then(ab => ({drop: ab[0], loads: ab[1]})));
       window._testCallback(SharedForTests);
     }
     ready.then(resolves => {
@@ -212,14 +245,14 @@ onDataLoad () {
     $(window).on("hashchange", () =>
       this.resultsWidget.scrollToResult(window.location.hash.substring(1)));
     $("#validate").on("click", this.disableResultsAndValidate.bind(this));
-    $("#debugValidate").on("click", () => { SharedForTests.promise = this.startValidationDebugSession(); });
+    $("#debugValidate").on("click", () => { this.track(this.startValidationDebugSession()); });
     $("#valDbgInto").on("click", () => this.valDebugStep("stepInto"));
     $("#valDbgOver").on("click", () => this.valDebugStep("stepOver"));
     $("#valDbgContinue").on("click", () => this.valDebugStep("continue"));
     $("#valDbgStop").on("click", () => this.endValidationDebugSession());
     $("#download-results-button").on("click", this.downloadResults.bind(this));
-    $("#createGist").on("click", (evt) => { SharedForTests.promise = this.createGist(evt); });
-    $("#updateGist").on("click", (evt) => { SharedForTests.promise = this.updateGist(evt); });
+    $("#createGist").on("click", (evt) => { this.track(this.createGist(evt)); });
+    $("#updateGist").on("click", (evt) => { this.track(this.updateGist(evt)); });
 
     $("#loadForm").dialog({
       autoOpen: false,
@@ -244,14 +277,14 @@ onDataLoad () {
             return;
           }
           tips.removeClass("ui-state-highlight").text();
-          SharedForTests.promise = target.cache.asyncGet(url)
+          this.track(target.cache.asyncGet(url)
             // .then(ret => {
             //   this.toggleControls();
             //   return ret;
             // })
             .catch((e) => {
               updateTips(e.message);
-            });
+            }));
         },
         "Cancel": () => {
           $("#loadInput").removeClass("ui-state-error");
@@ -316,7 +349,7 @@ onDataLoad () {
     });
     $("#queryMap").on("change", evt => {
       this.resultsWidget.clear();
-      SharedForTests.promise = this.Caches.shapeMap.copyQueryMapToEditMap();
+      this.track(this.Caches.shapeMap.copyQueryMapToEditMap());
     });
     this.Caches.inputData.selection.on("change", this.dataInputHandler.bind(this)); // input + paste?
     // $("#copyEditMapToFixedMap").on("click", copyEditMapToFixedMap); // may add this button to tutorial

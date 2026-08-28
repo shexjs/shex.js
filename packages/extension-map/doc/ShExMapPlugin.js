@@ -206,7 +206,9 @@ const ShExMapVerbs = {
     this.showMaterialization();
     this.resultsWidget.clear();
     this.resultsWidget.start();
-    SharedForTests.promise = this.materializeAsync();
+    // the click's own promise resolves at once; the materialization is
+    // what a waiter wants, so hand it to the app
+    this.track(this.materializeAsync());
   },
 
   async materializeAsync () {

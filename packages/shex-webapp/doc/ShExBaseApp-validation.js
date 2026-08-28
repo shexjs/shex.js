@@ -58,7 +58,7 @@ disableResultsAndValidate (evt) {
     // rather than counted up during -- see doc/ShExBaseApp.js's
     // startValidation.)
     this.startValidation();
-    SharedForTests.promise = new Promise((resolve, reject) => {
+    this.track(new Promise((resolve, reject) => {
       setTimeout(async () => {
         const began = new Date().getTime();
         try {
@@ -69,7 +69,7 @@ disableResultsAndValidate (evt) {
           this.endValidation(new Date().getTime() - began);
         }
       }, 0);
-    })
+    }));
   },
 
   /** the validate button while a validation is running: it is the only

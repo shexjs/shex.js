@@ -178,7 +178,11 @@ Applied in this order, once per app:
    rather than declares.
 
 `run` may return a promise; a failure is reported where the results go
-rather than thrown into the console.
+rather than thrown into the console, and the app tracks the promise so that
+whoever waits on `app.settled()` -- a test that clicked the button, say --
+waits for the verb.  A verb that starts work it does not itself await
+(ShExMap's materialize returns at once and the materialization runs on)
+hands that work to `app.track(promise)` for the same reason.
 
 ### Where a plugin writes
 
