@@ -53,3 +53,7 @@ packages/extension-reduce/doc/webpacks/
 
 # perf corpora: fetched with perf/fhir/fetch.sh, never committed
 perf/*/corpus/
+
+# editor droppings
+*~
+\#*\#

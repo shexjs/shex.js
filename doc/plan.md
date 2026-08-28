@@ -49,27 +49,31 @@ first.  Items are numbered so a commit or a conversation can name one.
 
 Each is an hour or so and touches nothing another item depends on.
 
-- **A1 (S)** Remove the two tracked editor droppings —
-  `packages/neighborhood-wikibase/test/fixtures/#Q42.ttl#` and
-  `packages/shex-webapp/examples/wikidata-Q42.json~` — and ignore `*~` and
-  `#*#`.
-- **A2 (S)** Delete `TODO/` (a 2016 REST server, a ShExR writer draft, an
-  old client); its two notes are G5 below.
-- **A3 (S)** Delete `packages/shex-webapp/doc/extensionIndex.html` (2018) and
-  decide the fate of `doc/editor.{html,js}`, `doc/micro-tutorial.html`,
-  `doc/shex-simple.html` (2019–2021, nothing links them) — check gh-pages
-  before deleting.
-- **A4 (S)** Remove the stale raw-source loader blocks
-  (`<!-- #if USING_WEBPACK -->`) from `shex-simple.html` / `shex-worker.html`.
-- **A5 (S)** One `graphEquals` (copied in `Map-test.js` and
+- **A1 (S)** Retire the raw-source loader path.  The `<!-- #else -->`
+  blocks in `shex-simple.html` / `shex-worker.html` name per-package
+  browserify bundles that no longer exist; with them go
+  `packages/shex-webapp/doc/require.js`, `tools/browserify-all.js` and its
+  npm script, the eleven per-package `"browser": "browserify …"` scripts,
+  and the `browserify`/`uglify-js` devDependencies.  webpack is the bundler.
+- **A2 (S)** One `graphEquals` (copied in `Map-test.js` and
   `ThreadedMaterializer-test.js`) and a documented `tools/testServer.js`
   nock/real-server split.
-- **A6 (S)** `bin/validate --extension` takes bare package names
+- **A3 (S)** `bin/validate --extension` takes bare package names
   (`LoadExtensions` takes file globs only).
-- **A7 (S)** `shex-serve` content negotiation honours q-values (substring
+- **A4 (S)** `shex-serve` content negotiation honours q-values (substring
   matching today).
-- **A8 (S)** An ordered publish script: `npm publish --workspaces` is not
+- **A5 (S)** An ordered publish script: `npm publish --workspaces` is not
   topological, so there is a window of unsatisfiable ranges.
+- **A6 (S)** One copy of ShExR.shex.  `packages/shex-webapp/doc/ShExRSchema.js`
+  (a JS string), `packages/shex-cli/lib/ShExR.cjs.js` and
+  `packages/extension-reduce/examples/shexr/ShExR.shex` are three copies of
+  shexTest's `doc/ShExR.shex`; keep the `.shex` (a test already checks it
+  against the spec's) and generate or load the other two from it.
+- **A7 (decision)** The old spellings — `?extension=`, `?extensionURL=`,
+  `extensions:` on a manifest entry, the `ShExExtensions` global — are
+  five lines of alias kept for links written before the rename.  With no
+  other users of the app yet, they can go (and plugins.md's paragraph with
+  them).
 
 ## B. Web app: the factoring plan
 
