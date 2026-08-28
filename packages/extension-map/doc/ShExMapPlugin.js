@@ -120,11 +120,11 @@ class RemoteShExMaterializer {
     // the worker names constraints by their index in this same schema (see
     // ShExMapWorkerThread's "materialize"), which object identity can't cross
     this.schemaTcs = mapModule.tripleConstraints(schema);
-    this.created = new Canceleable(
-      $("#materialize"),
+    this.created = new WorkerTask({
+      button: $("#materialize"),
       onCancel,
-      "materialization aborted, re-start from validation",
-      {
+      abortText: "materialization aborted, re-start from validation",
+      request: {
         request: "materialize",
         queryMap: shapeMap,
         outputSchema: schema,
@@ -132,50 +132,46 @@ class RemoteShExMaterializer {
         staticVars: staticVars,
         options: {track: LOG_PROGRESS},
       },
-      this.parseUpdatesAndResults.bind(this),
-      workerUrl
-    ).ready();
+      handlers: {
+        update: msg => this.update(msg),
+        // a node's errors are reported and the materialization goes on
+        error: msg => this.error(msg),
+        done: (msg, task) => task.resolve({materializionResults: this.generatedGraph}),
+      },
+      workerUrl,
+    }).ready();
   }
   async invoke (fixedMap, validationTracker, time, done, currentAction) {
     const materialized = await this.created;
     return this.generatedGraph;
   }
 
-  parseUpdatesAndResults (msg, workerUICleanup, resolve, reject) {
-    switch (msg.data.response) {
-    case "update": {
-      // the ThreadedMaterializer in the worker ships quads, not a val structure
-      const quads = msg.data.quads.map(
-        q => WorkerMarshalling.jsonTripleToRdfjsTriple(q, RdfJs.DataFactory));
-      this.generatedGraph.addQuads(quads);
-      // ... plus each quad's origin, with its constraint index resolved
-      // against this thread's schema so the editor panes can locate it
-      (msg.data.provenance || []).forEach((p, i) => {
-        if (quads[i])
-          this.provenance.push({quad: quads[i], predicate: p.predicate, src: p.src,
-                                tc: p.tcOrdinal === null ? null : this.schemaTcs[p.tcOrdinal]});
+  update (msg) {
+    // the ThreadedMaterializer in the worker ships quads, not a val structure
+    const quads = msg.data.quads.map(
+      q => WorkerMarshalling.jsonTripleToRdfjsTriple(q, RdfJs.DataFactory));
+    this.generatedGraph.addQuads(quads);
+    // ... plus each quad's origin, with its constraint index resolved
+    // against this thread's schema so the editor panes can locate it
+    (msg.data.provenance || []).forEach((p, i) => {
+      if (quads[i])
+        this.provenance.push({quad: quads[i], predicate: p.predicate, src: p.src,
+                              tc: p.tcOrdinal === null ? null : this.schemaTcs[p.tcOrdinal]});
+    });
+  }
+
+  error (msg) {
+    if ("exception" in msg.data) {
+      this.resultsWidget.replace("error materializing:\n" + msg.data.exception).
+        removeClass("passes fails").addClass("error");
+    } else {
+      this.renderEntry({
+        node: msg.data.node,
+        shape: msg.data.shape,
+        status: "errors" in msg.data.results ? "nonconformant" : "conformant",
+        appinfo: msg.data.results,
+        elapsed: -1
       });
-      break;
-    }
-
-    case "error":
-      if ("exception" in msg.data) {
-        this.resultsWidget.replace("error materializing:\n" + msg.data.exception).
-          removeClass("passes fails").addClass("error");
-      } else {
-        this.renderEntry({
-          node: msg.data.node,
-          shape: msg.data.shape,
-          status: "errors" in msg.data.results ? "nonconformant" : "conformant",
-          appinfo: msg.data.results,
-          elapsed: -1
-        });
-      }
-      break;
-
-    case "done":
-      workerUICleanup();
-      resolve({ materializionResults: this.generatedGraph });
     }
   }
 }
