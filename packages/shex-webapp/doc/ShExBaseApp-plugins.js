@@ -65,6 +65,8 @@ applyPluginNow (ext) {
     this.buildPluginStatusbar(ext);
     this.bindPluginKeys(ext);
     this.mixinPluginMethods(ext);
+    // data sources it brings: in the picklist beside the page's own
+    (ext.neighborhoods || []).forEach(module => this.neighborhoods.add(module));
     if (typeof ext.init === "function" && !ext.initialized) {
       ext.initialized = true;
       try {
@@ -114,6 +116,9 @@ applyPluginNow (ext) {
 
     // its panes: the editor over each, the cache under it, and the results
     // tab a pane that lives there was given
+    (ext.neighborhoods || []).forEach(module =>
+      this.neighborhoods.remove(ShExWebApp.NeighborhoodApi.moduleId(module)));
+
     const caches = new Set();
     (ext.panes || []).forEach(pane => {
       if (pane.borrow)

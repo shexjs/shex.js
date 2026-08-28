@@ -38,15 +38,14 @@
   },
   "homepage": "https://github.com/shexjs/shex.js#readme",
   "types": "./src/shex-extension-reduce.ts",
-  "dependencies": {
-    "@shexjs/extension-reduce-js": "^1.0.0-alpha.29",
-    "@shexjs/semact-overlay": "^1.0.0-alpha.29",
-    "@shexjs/webapp": "^1.0.0-alpha.29"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "@shexjs/extension-reduce-js": "^1.0.0-alpha.29",
     "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.29",
     "@shexjs/parser": "^1.0.0-alpha.28",
+    "@shexjs/semact-overlay": "^1.0.0-alpha.29",
     "@shexjs/validator": "^1.0.0-alpha.29",
+    "@shexjs/webapp": "^1.0.0-alpha.29",
     "n3": "^1.20.4"
   }
 }

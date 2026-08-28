@@ -199,10 +199,13 @@ function postSlurpedPages () {
 /** the neighborhood module the app named, by the id both ends know it by */
 function neighborhoodModule (id) {
   const {moduleId} = ShExWebApp.NeighborhoodApi;
-  const found = (ShExWebApp.NeighborhoodModules || []).find(m => moduleId(m) === id);
+  // the bundle's own, and any a plugin's worker half brought
+  const modules = (ShExWebApp.NeighborhoodModules || [])
+        .concat(WorkerPlugins.flatMap(ext => ext.neighborhoods || []));
+  const found = modules.find(m => moduleId(m) === id);
   if (found === undefined)
     throw Error(`no neighborhood module ${JSON.stringify(id)} in this worker;`
-                + ` there are ${(ShExWebApp.NeighborhoodModules || []).map(moduleId).join(", ")}`);
+                + ` there are ${modules.map(moduleId).join(", ")}`);
   return found;
 }
 

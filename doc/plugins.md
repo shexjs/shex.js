@@ -311,6 +311,12 @@ bookkeeping on the way out so that a second registration builds everything
 afresh.  Selecting a manifest entry that names your plugin is one way it
 happens.
 
+### Data sources
+
+| | |
+| --- | --- |
+| `neighborhoods: [module…]` | data sources for the picklist, beside the page's own: a neighborhood module as `@shexjs/neighborhood-api` defines one (`name`, `label`, `dbParams`, `fromParams`, …).  In the picklist while the plugin is loaded; a page with a worker names the module in the worker half too (below), since that is where a validation asks it |
+
 ### Validation
 
 | | |
@@ -331,6 +337,7 @@ importScripts(pluginBase + "webpacks/my-bundle.js");   // pluginBase: where this
 
 registerWorkerPlugin({
   register (validator, api) { … },        // the extensions, as on the page
+  neighborhoods: [module…],               // the data sources, as on the page
   requests: {                             // request types the app may send
     materialize (msg) { … self.postMessage({response: "done"}) },
   },

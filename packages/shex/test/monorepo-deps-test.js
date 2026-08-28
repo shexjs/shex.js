@@ -28,6 +28,15 @@ const isTracked = (path) =>
 // not part of the shipped runtime code:
 const SKIP_DIRS = new Set(["test", "node_modules", "doc", "examples", "browser", "webpacks", "coverage", "tools"]);
 const isBuildConfig = (name) => /\.config\.js$/.test(name);
+/** a package's webpack entry files: build inputs like the config, unless one is also the package's main */
+const bundleEntries = (dir, manifest) => {
+  const config = Path.join(dir, "webpack.config.js");
+  if (!Fs.existsSync(config))
+    return new Set();
+  const entry = (Fs.readFileSync(config, "utf8").match(/entry:\s*\{[^}]*\}/) || [""])[0];
+  const main = Path.basename(manifest.main || "");
+  return new Set([...entry.matchAll(/"\.\/([\w.-]+\.js)"/g)].map(m => m[1]).filter(f => f !== main));
+};
 
 describe("workspace packages", function () {
   Fs.readdirSync(packagesDir).forEach(dir => {
@@ -44,13 +53,15 @@ describe("workspace packages", function () {
         manifest.name,
       ]);
       const missing = new Set();
+      const entries = bundleEntries(Path.join(packagesDir, dir), manifest);
       (function walk (d) {
         Fs.readdirSync(d, {withFileTypes: true}).forEach(entry => {
           if (entry.isDirectory()) {
             if (!SKIP_DIRS.has(entry.name))
               walk(Path.join(d, entry.name));
-          } else if (isBuildConfig(entry.name)) {
-            // webpack et al. run from the repo root with root devDependencies
+          } else if (isBuildConfig(entry.name) || (d === Path.join(packagesDir, dir) && entries.has(entry.name))) {
+            // webpack et al. run from the repo root with root devDependencies;
+            // a bundle's entry file is read by webpack, not required by anyone
           } else if (/\.(js|cjs)$/.test(entry.name) || (d.endsWith(Path.sep + "bin") && !/\./.test(entry.name))) {
             if (!isTracked(Path.join(d, entry.name)))
               return;

@@ -32,6 +32,7 @@ const CONTRACT = {
   register: "the handler a schema dispatches",
   schema: "a turn at what is validated",
   results: "composing the renderer",
+  neighborhoods: "data sources it brings",
   onStartingValidation: "the last results are about to go",
   worker: "its half in the worker",
 };

@@ -379,6 +379,55 @@ if (!TEST_browser) {
     });
   });
 
+  /* A data source is a module like the ones the bundle carries; a plugin
+   * may bring one, and it sits in the picklist beside the page's own for
+   * as long as the plugin is loaded. */
+  describe("shex-simple, given a plugin that brings a data source", function () {
+    this.timeout(20000);
+    let dom, $, shared;
+    const ECHO = "http://x.example/echo-plugin";
+    const set = (selector, value) => { const e = $(selector).first(); e.val(value); e.trigger("change"); };
+    before(async function () { ({dom, $, shared} = await boot("")); });
+    after(function () { if (dom) dom.window.close(); });
+
+    const labels = () => $("#neighborhood option").map((i, o) => $(o).text()).get();
+
+    it("should put the source in the picklist", async function () {
+      const rdfjs = dom.window.ShExWebApp.NeighborhoodModules.find(m => m.name.endsWith("rdfjs"));
+      const before = labels();
+      dom.window.ShExPlugins.register({
+        id: ECHO, label: "Echo",
+        // the local store's module under another name, which is all a source
+        // has to be to the picklist
+        neighborhoods: [Object.assign({}, rdfjs, {name: "neighborhood-echo", label: "Echo source",
+                                                 description: "the local store, again"})],
+      });
+      await dom.window.ShExPlugins.byId(ECHO).applied;
+      expect(labels()).to.deep.equal(before.concat(["Echo source"]));
+      expect($("#neighborhood option:last").attr("title")).to.equal("the local store, again");
+    });
+
+    it("should validate through it once picked", async function () {
+      $("#neighborhood").val("echo").trigger("change");
+      await shared.promise;
+      expect(shared.neighborhoods.module.name).to.equal("neighborhood-echo");
+      set("#inputSchema textarea", "PREFIX : <http://a.example/>\n:S { :p . }");
+      set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .");
+      set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
+      $("#validate").trigger("click");
+      await shared.promise;
+      expect($("#results .passes").length, "conformant, through the plugin's source").to.be.above(0);
+    });
+
+    it("should take the source away with the plugin", async function () {
+      const before = labels();
+      shared.app.unloadPlugin(ECHO);
+      expect(labels()).to.deep.equal(before.slice(0, -1));
+      expect($("#neighborhood").val(), "back on the page's first source").to.equal(before.length ? $("#neighborhood option:first").val() : null);
+      expect(shared.neighborhoods.module.name, "and the app agrees").to.not.equal("neighborhood-echo");
+    });
+  });
+
   describe("shex-simple, given a semantic-action extension module", function () {
     this.timeout(20000);
     let dom, $, shared;

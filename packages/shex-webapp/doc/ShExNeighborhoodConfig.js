@@ -518,15 +518,51 @@ class NeighborhoodConfig {
     return spec ? spec.pane.label : (this.module.label || this.module.name);
   }
 
-  /** Fill the picklist and draw the starting source's configuration. */
-  init () {
+  /** the picklist, from the modules: one option each, the current one kept */
+  fillPicklist () {
     const {moduleId} = ShExWebApp.NeighborhoodApi;
-    const select = $("#neighborhood").empty();
+    const select = $("#neighborhood");
+    const was = select.val();
+    select.empty();
     for (const module of this.modules)
       select.append($("<option/>", {value: moduleId(module)})
                     .text(module.label || module.name)
                     .attr("title", module.description || ""));
-    select.on("change", () => this.select(select.val()));
+    if (was !== null && this.modules.some(m => moduleId(m) === was))
+      select.val(was);
+  }
+
+  /**
+   * A data source a plugin brought: in the picklist from now on, and gone
+   * from it when the plugin goes.  A module the page already has (by id)
+   * is left as it is.  Removing the source the reader is on falls back to
+   * the first one, as a page that never had it would have opened.
+   */
+  add (module) {
+    const {moduleId} = ShExWebApp.NeighborhoodApi;
+    if (this.modules.some(m => moduleId(m) === moduleId(module)))
+      return false;
+    this.modules.push(module);
+    this.fillPicklist();
+    return true;
+  }
+
+  remove (id) {
+    const {moduleId} = ShExWebApp.NeighborhoodApi;
+    const at = this.modules.findIndex(m => moduleId(m) === id);
+    if (at === -1)
+      return false;
+    this.modules.splice(at, 1);
+    this.fillPicklist();
+    if (this.moduleId === id)
+      this.select(moduleId(this.modules[0]));
+    return true;
+  }
+
+  /** Fill the picklist and draw the starting source's configuration. */
+  init () {
+    this.fillPicklist();
+    $("#neighborhood").on("change", () => this.select($("#neighborhood").val()));
     this.initTabs();
     this.render();
   }
