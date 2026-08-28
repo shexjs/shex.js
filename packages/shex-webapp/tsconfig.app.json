@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    "module": "none",
+    "outDir": "./doc",
+    "rootDir": "./src/app",
+    "target": "ES2022",
+    "sourceMap": false,
+    "skipLibCheck": true,
+    "strict": true,
+    "noUnusedParameters": true,
+    "types": [],
+    "lib": ["ES2022", "DOM"]
+  },
+  "include": ["src/app/**/*.ts"]
+}

@@ -118,3 +118,7 @@ packages/shex-editor-services/lib/editor-services.js: packages/shex-editor-servi
 # @shexjs/webapp shex-serve
 packages/shex-webapp/lib/shex-serve.js: packages/shex-webapp/src/shex-serve.ts packages/shex-webapp/package.json packages/shex-webapp/tsconfig.json
 	(cd packages/shex-webapp && npm run build)
+
+# @shexjs/webapp: the app's page scripts written in TypeScript (src/app/ -> doc/)
+packages/shex-webapp/doc/WorkerMarshalling.js: packages/shex-webapp/src/app/WorkerMarshalling.ts packages/shex-webapp/tsconfig.app.json
+	(cd packages/shex-webapp && npx tsc -p tsconfig.app.json)
