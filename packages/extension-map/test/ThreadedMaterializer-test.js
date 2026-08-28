@@ -14,6 +14,7 @@ const RdfJs = require("n3");
 const ShExParser = require("@shexjs/parser");
 const ShExTerm = require("@shexjs/term");
 const {graphEquals, graphToString} = require("./graphEquals.js");
+const {textOf} = require("../../../tools/manifest-runner");
 
 const {ThreadedMaterializer, normalizeBindingTree, MaterializationError} = require("../lib/ThreadedMaterializer");
 
@@ -40,10 +41,7 @@ describe("ThreadedMaterializer", function () {
       if (TESTS !== null && !TESTS.find(pat => label.indexOf(pat) !== -1 || label.match(RegExp(pat))))
         return;
       it(label + " should materialize " + entry.expectedBindingsURL + " to " + entry.expectedOutputDataURL, function () {
-        const schemaText = "outputSchema" in entry
-              ? entry.outputSchema
-              : Fs.readFileSync(Path.join(examplesDir, entry.outputSchemaURL), "utf8");
-        const schema = parseSchema(schemaText);
+        const schema = parseSchema(textOf(entry, "outputSchema", examplesDir));
         const bindings = JSON.parse(Fs.readFileSync(Path.join(examplesDir, entry.expectedBindingsURL), "utf8"));
         const createRootLex = entry.outputShapeMap.match(/^(<[^>]*>|[^@]*)@/)[1]; // node part of "node@shape"
         const createRoot = createRootLex.startsWith("_:")

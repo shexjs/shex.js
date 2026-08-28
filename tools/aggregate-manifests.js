@@ -39,11 +39,9 @@ const SOURCES = [
    what: "ShExReduce: the same, for the calculator"},
 ];
 
-/** the keys whose value is a document reference (ManifestCache resolves the
- * first four against the manifest; loadExtraInputs the `…URL` rest, and
- * loadEntryPlugins the plugins) */
-const isReference = key => /URL$/.test(key) || key === "sitematrix"
-      || key === "plugins" || key === "extensions";
+/** the keys whose value is a document reference: what the runner and the
+ * app resolve against the manifest */
+const {isReference} = require("./manifest-runner");
 
 const isAbsolute = value => /^[a-z][a-z0-9+.-]*:/i.test(value) || value.startsWith("/");
 

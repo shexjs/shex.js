@@ -188,13 +188,8 @@ function loadManifest() {
   const examplesManifest = JsYaml.load(Fs.readFileSync(Path.join(examplesDir, 'manifest.yaml'), 'utf8'));
   const jsonManifest = JSON.parse(Fs.readFileSync(Path.join(examplesDir, 'manifest.json'), 'utf8'));
   expect(jsonManifest).to.deep.equal(examplesManifest);
-  examplesManifest.forEach(entry => {
-    for (const [key, value] of Object.entries(entry))
-      if (key.endsWith("URL"))
-        entry[key.substring(0, key.length - 3)] = Fs.readFileSync(Path.join(examplesDir, value), 'utf-8');
-  });
-
-  return examplesManifest
+  const {resolveTexts} = require("../../../tools/manifest-runner");
+  return examplesManifest.map(entry => resolveTexts(entry, examplesDir))
     .filter(e => e.status === "conformant" && !(e.queryMap.startsWith("_:")))
     .map((manifest) => {
 
