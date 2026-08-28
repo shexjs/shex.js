@@ -46,7 +46,6 @@
   },
   "scripts": {
     "make": "(cd test/ && make test)",
-    "browserify-n3": "mkdir -p node_modules/n3/browser ; npx browserify -s N3 -o node_modules/n3/browser/n3-browserify.js node_modules/n3/lib/index.js ; npx uglifyjs node_modules/n3/browser/n3-browserify.js -o node_modules/n3/browser/n3-browserify.min.js -c",
     "test": "mocha -C -R dot",
     "webpack": "webpack --config webpack.config.js --mode production",
     "webpack-analyzer": "webpack --config webpack.config.js --mode production --profile --json > ./doc/webpacks/shex-webapp-stats.json && webpack-bundle-analyzer ./doc/webpacks/shex-webapp-stats.json",

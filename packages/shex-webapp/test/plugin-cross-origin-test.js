@@ -1,4 +1,4 @@
-/** An extension from somewhere else (doc/extension-ui-plan.md §5 phase 5).
+/** An extension from somewhere else (doc/plugins.md, From another origin).
  *
  * The two extensions in this repository are served from the same host as
  * the page, which proves nothing about the case the contract is for: an

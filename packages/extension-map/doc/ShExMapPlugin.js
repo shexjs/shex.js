@@ -5,8 +5,8 @@
  * styles, the row of controls and the keys that reach them, the Map
  * semantic-action extension the schema's %Map:{...%} dispatches on, the
  * materialize verb, what it does to the results, the graph it renders and
- * the debugger that steps it -- doc/extension-ui-plan.md's inventory rows
- * 1-6 and 9-14.
+ * the debugger that steps it -- everything shexmap-simple.html used to
+ * hold itself.
  *
  * The verbs are mixed into the app rather than living on a subclass of it,
  * so `this` is the app and they call each other as they always did.  Which

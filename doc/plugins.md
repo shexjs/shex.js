@@ -32,12 +32,6 @@ So the words, as this codebase now uses them:
 | **plugin** | a module the web app loads by URL: descriptors, `ShExPlugins`, `?plugin=`, this document.  The ordinary industry word for exactly this |
 | **query-map extension** | unrelated to either: a shape-map term like `SPARQL "SELECT …"`, resolved by a data source.  The shape-map grammar's word, unchanged |
 
-The old spellings still answer where a URL might carry them: `?extension=`
-and `?extensionURL=` load plugins exactly as `?plugin=` and `?pluginURL=`
-do, a manifest entry's `extensions:` is read where `plugins:` is, and the
-`ShExExtensions` global is an alias of `ShExPlugins`.  New links get the
-new words; old links keep working.
-
 > Why one parameter rather than one per kind: loading and *selecting* are
 > different acts.  A plugin **contributes** an extension, panes, a data
 > source; what *uses* one is unchanged -- a schema dispatches an extension
@@ -109,6 +103,8 @@ panes still load from the query string and from manifest entries, its keys
 still answer, and hooks like `schema` still read it -- ShExReduce's overlay
 steers a validation from wherever the reader happens to be looking.  The
 current screen rides in permalinks as `screen=<plugin id>`.
+`?interface=minimal` hides the screen tabs with the rest of the title bar;
+keys and `screen=` still reach the screens.
 
 Applied in this order, once per app:
 

@@ -39,7 +39,6 @@ first.  Items are numbered so a commit or a conversation can name one.
 | note | about | where it stands |
 | --- | --- | --- |
 | [plugins.md](plugins.md) | the plugin contract | normative; keep current |
-| [extension-ui-plan.md](extension-ui-plan.md) | how ShExMap became a plugin; screens | history: every phase done; leftovers in §C |
 | [editor-integration-plan.md](editor-integration-plan.md) | editors, source ranges, error anchoring | phases 0–4 done; leftovers in §D |
 | [debugger-design.md](debugger-design.md) | stepping, breakpoints, capture + replay | phases 1–5 and half of 6 done; leftovers in §E |
 | [error-reporting.md](error-reporting.md), [error-normalization.md](error-normalization.md), [error-reporting-comparison.md](error-reporting-comparison.md) | structured errors, repairs | F0–F6 done and merged; one decision left, §G |
@@ -49,31 +48,15 @@ first.  Items are numbered so a commit or a conversation can name one.
 
 Each is an hour or so and touches nothing another item depends on.
 
-- **A1 (S)** Retire the raw-source loader path.  The `<!-- #else -->`
-  blocks in `shex-simple.html` / `shex-worker.html` name per-package
-  browserify bundles that no longer exist; with them go
-  `packages/shex-webapp/doc/require.js`, `tools/browserify-all.js` and its
-  npm script, the eleven per-package `"browser": "browserify …"` scripts,
-  and the `browserify`/`uglify-js` devDependencies.  webpack is the bundler.
-- **A2 (S)** One `graphEquals` (copied in `Map-test.js` and
+- **A1 (S)** One `graphEquals` (copied in `Map-test.js` and
   `ThreadedMaterializer-test.js`) and a documented `tools/testServer.js`
   nock/real-server split.
-- **A3 (S)** `bin/validate --extension` takes bare package names
+- **A2 (S)** `bin/validate --extension` takes bare package names
   (`LoadExtensions` takes file globs only).
-- **A4 (S)** `shex-serve` content negotiation honours q-values (substring
+- **A3 (S)** `shex-serve` content negotiation honours q-values (substring
   matching today).
-- **A5 (S)** An ordered publish script: `npm publish --workspaces` is not
+- **A4 (S)** An ordered publish script: `npm publish --workspaces` is not
   topological, so there is a window of unsatisfiable ranges.
-- **A6 (S)** One copy of ShExR.shex.  `packages/shex-webapp/doc/ShExRSchema.js`
-  (a JS string), `packages/shex-cli/lib/ShExR.cjs.js` and
-  `packages/extension-reduce/examples/shexr/ShExR.shex` are three copies of
-  shexTest's `doc/ShExR.shex`; keep the `.shex` (a test already checks it
-  against the spec's) and generate or load the other two from it.
-- **A7 (decision)** The old spellings — `?extension=`, `?extensionURL=`,
-  `extensions:` on a manifest entry, the `ShExExtensions` global — are
-  five lines of alias kept for links written before the rename.  With no
-  other users of the app yet, they can go (and plugins.md's paragraph with
-  them).
 
 ## B. Web app: the factoring plan
 
@@ -112,7 +95,7 @@ selectors over 62 ids.  The plugin work exposed its seams; cut along them.
 - **B6 (S–M) One app page.**  `shex-worker.html` differs from
   `shex-simple.html` by 28 lines; make it `?worker=` or a redirect, as the
   ShExMap pages became.
-- **B7 (M) Plugin packaging** (extension-ui-plan phase 3's leftover).
+- **B7 (M) Plugin packaging.**
   `ShExMapPlugin.js` (1,423 lines) as a built bundle; plugin file + bundle
   entry + webpack config out of the library packages, so
   `extension-reduce` stops depending on `@shexjs/webapp` and
@@ -130,14 +113,14 @@ selectors over 62 ids.  The plugin work exposed its seams; cut along them.
   its diff.  Build in CI/prepublish instead, or at least stop committing
   `.map`.
 
-## C. Plugins: what the UI plan left open
+## C. Plugins
 
 - **C1 (S, external)** Publish the skeleton (`doc/plugin-skeleton/`) as a
   repository of its own.
 - **C2 (decision)** A trust prompt for off-origin plugins — above all a
   manifest fetched by `?manifestURL=` whose entries name plugins.
-  Recommendation in extension-ui-plan §7: ask once per session before the
-  first plugin from another origin; same-origin stays silent.
+  Recommendation: ask once per session before the first plugin from
+  another origin; same-origin stays silent.
 - **C3 (decision)** Should the map redirects open on ShExMap's screen?
   Recommendation: no; a link can say `&screen=`.
 - **C4 (decision)** Panes share a column unless `panel:` says otherwise.

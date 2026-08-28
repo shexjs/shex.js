@@ -26,8 +26,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "cd .. && mocha -C -R dot",
-    "browser999": "browserify shex.js -s ShEx -o browser/shex-visitor-browserify.js && uglifyjs browser/shex-visitor-browserify.js --comments -mco browser/shex-visitor-browserify.min.js"
+    "test": "cd .. && mocha -C -R dot"
   },
   "publishConfig": {
     "access": "public"

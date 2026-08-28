@@ -91,7 +91,7 @@ if (!TEST_browser) {
         dom.window.close();
     });
 
-    /* The other half of doc/extension-ui-plan.md §5: a page that registers
+    /* The other half of doc/plugins.md: a page that registers
      * no plugin gets nothing from one -- no sheet, and #inputarea keeps
      * what this page says about it. */
     it("should add nothing where no plugin is registered", function () {
@@ -702,7 +702,7 @@ if (!TEST_browser) {
         }
       });
 
-      /* Inventory row 7 of doc/extension-ui-plan.md, which had no test.
+      /* The `- materialize -` menu item, which had no test.
        * A query map names its nodes by asking the source, so an edit map
        * over one has a cell nobody can point at.  Right-clicking it offers
        * the nodes the question answered with, and "- materialize -" at the

@@ -15,11 +15,11 @@ function redirectToPlugin (appPage, pluginUrl, defaultManifestUrl) {
   const asked = new URLSearchParams(location.search);
   const parms = new URLSearchParams();
   asked.forEach((value, key) => {
-    parms.append(key, key === "plugin" || key === "extension" || /URL$/.test(key)
+    parms.append(key, key === "plugin" || /URL$/.test(key)
                  ? new URL(value, location.href).href
                  : value);
   });
-  const namesPlugin = ["plugin", "pluginURL", "extension", "extensionURL"]
+  const namesPlugin = ["plugin", "pluginURL"]
         .some(key => asked.has(key));
   if (!namesPlugin)
     parms.append("plugin", new URL(pluginUrl, location.href).href);

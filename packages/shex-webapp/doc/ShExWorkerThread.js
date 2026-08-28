@@ -13,7 +13,7 @@ let slurping = false;
 const postedPages = new Set();
 
 /**
- * The worker half of a plugin (doc/extension-ui-plan.md §3).
+ * The worker half of a plugin (doc/plugins.md, In the worker).
  *
  * A classic worker can importScripts any URL it can fetch, which is what
  * "load a plugin by URL" means on this side.  The app names its plugins'

@@ -67,7 +67,6 @@
     "earl": "cd test && make Parser-Writer-test && make Validation-test",
     "lint": "eslint packages/shex-cli/test/findPath.js",
     "check-branch-deps": "./tools/checkBranchDeps.sh",
-    "browserify-all": "./tools/browserify-all.js #; npm run n3-browserify",
     "coverage": "nyc npm run test-all",
     "parser-all": "(cd packages/shex-parser/ && npm run parser) && (cd packages/shape-map/ && npm run parser)",
     "webpack": "(cd packages/shex-webapp/ && npm run webpack) && (cd packages/extension-map/ && npm run webpack) && (cd packages/extension-reduce/ && npm run webpack)",

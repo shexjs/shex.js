@@ -1,5 +1,5 @@
-/** ShExReduce as an extension of the app page (doc/extension-ui-plan.md §5
- * phase 4): the second extension, and the one that says whether the contract
+/** ShExReduce as an extension of the app page (doc/plugins.md): the
+ * second extension, and the one that says whether the contract
  * is a contract or just ShExMap's shape written out.
  *
  * shex-simple.html has never heard of folding actions over a parse.  Told

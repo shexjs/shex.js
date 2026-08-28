@@ -224,37 +224,7 @@
     <script src="webpacks/n3js.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.21/jquery.csv.js"></script>
 
-    <!-- #if USING_WEBPACK -->
-<!-- -->
     <script src="webpacks/shex-webapp.js"></script>
-<!-- -->
-
-    <!-- #else -->
-<!--
-    <script src="../doc/require.js"                              ></script>
-    <script src="../node_modules/hierarchy-closure/hierarchy-closure.js"
-                                                                 ></script><script>modules["hierarchy-closure"         ] = module.exports;</script>
-    <script src="../../shape-map/lib/ShapeMapSymbols.js"         ></script><script>modules["./lib/ShapeMapSymbols"     ] = modules["./ShapeMapSymbols"] = module.exports;</script>
-    <script>module.exports = exports;</script>
-    <script src="../../shape-map/lib/ShapeMapJison.js"           ></script><script>modules["./ShapeMapJison"           ] = module.exports;</script>
-    <script src="../../shape-map/lib/ShapeMapParser.js"          ></script><script>modules["./lib/ShapeMapParser"      ] = module.exports;</script>
-    <script src="../../shape-map/shape-map.js"                   ></script><script>modules["shape-map"                 ] = module.exports;</script>
-    <script src="../../shex-term/shex-term.js"                   ></script><script>modules["@shexjs/term"              ] = module.exports;</script>
-    <script src="../../shex-visitor/shex-visitor.js"             ></script><script>modules["@shexjs/visitor"           ] = module.exports;</script>
-    <script src="../../shex-util/shex-util.js"                   ></script><script>modules["@shexjs/util"              ] = module.exports;</script>
-    <script src="../../shex-loader/shex-loader.js"               ></script><script>modules["@shexjs/loader"               ] = module.exports;</script>
-    <script src="../../eval-threaded-nerr/eval-threaded-nerr.js" ></script><script>modules["@shexjs/eval-threaded-nerr"] = module.exports;</script>
-    <script src="../../eval-simple-1err/eval-simple-1err.js"     ></script><script>modules["@shexjs/eval-simple-1err"  ] = module.exports;</script>
-    <script src="../../shex-validator/shex-validator.js"         ></script><script>modules["@shexjs/validator"         ] = module.exports;</script>
-    <script src="../../shex-writer/shex-writer.js"               ></script><script>modules["@shexjs/writer"            ] = module.exports;</script>
-    <script>module.exports = exports;</script>
-    <script src="../../shex-parser/lib/ShExJison.js"             ></script><script>modules["./lib/ShExJison"           ] = module.exports;</script>
-    <script src="../../shex-parser/shex-parser.js"               ></script><script>modules["@shexjs/parser"            ] = module.exports;</script>
-
-    <script src="../shex-webapp.js"></script>
- -->
-
-    <!-- #endif -->
 
     <script>
       const RdfJs = N3js;
@@ -266,7 +236,6 @@
     <script src="./ShExPlugins.js"></script>
     <script src="./ShExBaseApp.js"></script>
     <script src="./ShExApp.js"></script>
-    <script src="../doc/ShExRSchema.js"></script>
     <script>
       const shExAppInstance = new ShExApp(DefaultBase);
       shExAppInstance.start();

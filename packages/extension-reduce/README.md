@@ -327,9 +327,9 @@ you decide to run it — and which language you run.
 schema for ShEx schemas written as RDF, and `shexr-actions.ttl` is one action
 per production saying what that production means in ShExJ. Together they read
 ShExR, which `ShExUtil.valuesToSchema` does in about 280 lines of hand-written
-walking. (`ShExR.shex` there is a copy of shexTest's `doc/ShExR.shex`, so that
-the example — and the manifest entry that opens it in the app — carries what
-it needs; `ShExR-test` checks the copy against the original.)
+walking. (The `ShExR.shex` it reads is `@shexjs/util`'s copy of shexTest's
+`doc/ShExR.shex` — the one the app and the CLIs read too, and a test there
+checks it against the original.)
 
 The actions bring their own helper rather than asking the caller for one: the
 merging productions below are written with `state.merge`, and a **start

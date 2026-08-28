@@ -30,7 +30,6 @@
   "scripts": {
     "parser": "ts-jison -n ShExJison -t javascript -p lr -o ./lib/ShExJison.js ./lib/ShExJison.jison",
     "test": "cd .. && mocha -C -R dot",
-    "browser": "browserify shex.js -s ShEx -o browser/shex-parser-browserify.js && uglifyjs browser/shex-parser-browserify.js --comments -mco browser/shex-parser-browserify.min.js",
     "build": "tsc"
   },
   "publishConfig": {

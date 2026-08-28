@@ -22,7 +22,6 @@
   "scripts": {
     "parser": "ts-jison -n ShapeMapJison -t javascript -p lalr -o ./lib/ShapeMapJison.js ./lib/ShapeMapJison.jison",
     "test": "cd .. && mocha -C -R dot",
-    "browser": "browserify shex.js -s ShEx -o browser/shape-map-browserify.js && uglifyjs browser/shape-map-browserify.js --comments -mco browser/shape-map-browserify.min.js",
     "build": "tsc"
   },
   "publishConfig": {

@@ -1,6 +1,6 @@
 /**
  * The ShExReduce plugin: what ShExReduce adds to a page
- * (doc/extension-ui-plan.md §5 phase 4).
+ * (doc/plugins.md).
  *
  * The second plugin, and the one that says whether the contract is a
  * contract or just ShExMap's shape written out.  It wants what ShExMap

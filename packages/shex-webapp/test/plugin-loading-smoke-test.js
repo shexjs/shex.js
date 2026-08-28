@@ -1,4 +1,4 @@
-/** Loading a plugin by URL (doc/extension-ui-plan.md §5 phase 2).
+/** Loading a plugin by URL (doc/plugins.md).
  *
  * shex-simple.html has no ShExMap in it.  Told where one is -- in the query
  * string, or by the manifest entry that needs it -- it fetches the module,
@@ -77,9 +77,7 @@ if (!TEST_browser) {
     let dom, $, shared;
 
     before(async function () {
-      // ?extension= rather than ?plugin=: the parameter's old name, which
-      // published links carry, so this describe is also the alias's test
-      ({dom, $, shared} = await boot("?editors=1&extension=" + encodeURIComponent(MAP_PLUGIN)));
+      ({dom, $, shared} = await boot("?editors=1&plugin=" + encodeURIComponent(MAP_PLUGIN)));
     });
     after(function () { if (dom) dom.window.close(); });
 
@@ -220,9 +218,6 @@ if (!TEST_browser) {
       expect($("#screens > .screen").css("display"), "the map's screen is up")
         .to.not.equal("none");
       expect($("#inputSchema").css("display"), "the schema panel is away").to.equal("none");
-      // the old global's name still answers, for modules written against it
-      expect(dom.window.ShExExtensions, "ShExExtensions is an alias now")
-        .to.equal(dom.window.ShExPlugins);
     });
   });
 

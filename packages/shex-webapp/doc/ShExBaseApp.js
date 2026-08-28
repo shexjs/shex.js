@@ -307,7 +307,7 @@ class SchemaCache extends InterfaceCache {
   async parse (text, base) {
     const parseShExR = () => {
       const graphParser = new ShExWebApp.Validator(
-        this.shexcParser.parseString(ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
+        this.shexcParser.parseString(ShExWebApp.Util.ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
         ShExWebApp.RdfJsDb(this.graph),
         {}
       );
@@ -1505,11 +1505,9 @@ class ManifestCache extends InterfaceCache {
    * outputShapeMap; nothing in shex-simple.  <key>URL values resolve against
    * the manifest's base, and their fetched text memoizes into the entry. */
   /** the plugin modules an entry names, resolved against the manifest.
-   * `plugins` is the key; `extensions` is what it was called before the
-   * word was split from the semantic-action kind, and still answers. */
+   * `plugins` is the key. */
   async loadEntryPlugins (dataTest) {
-    const named = dataTest.entry.plugins !== undefined
-          ? dataTest.entry.plugins : dataTest.entry.extensions;
+    const named = dataTest.entry.plugins;
     if (named === undefined)
       return;
     for (const url of Array.isArray(named) ? named : [named]) {
@@ -4873,13 +4871,8 @@ class ShExBaseApp {
     // parameters and manifest keys that fill them -- has to be in
     // QueryParams before the walk below reads QueryParams.  ?plugin= and
     // ?pluginURL= are the same thing said two ways; a permalink writes the
-    // second, and a person writes whichever they remember.  ?extension= and
-    // ?extensionURL= are what both were called before "extension" was left
-    // to the semantic-action kind, and links wrote them, so they still
-    // answer.
-    await this.loadPlugins([].concat(
-      iface.pluginURL || [], iface.plugin || [],
-      iface.extensionURL || [], iface.extension || []));
+    // second, and a person writes whichever they remember.
+    await this.loadPlugins([].concat(iface.pluginURL || [], iface.plugin || []));
 
     const loadedAsArray = await Promise.all(this.QueryParams.map(async input => {
       const label = input.queryStringParm;

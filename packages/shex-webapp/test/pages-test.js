@@ -4,7 +4,7 @@
  * made once, in the page whose author noticed.
  *
  * They are two now: ShExMap is a plugin, and the map pages are the
- * redirects that open a page with it (doc/extension-ui-plan.md §5 phase 2).
+ * redirects that open a page with it (doc/plugins.md).
  * This checks that the two share the stylesheet, that a page's own <style>
  * holds only what is actually its own, and that the redirects still answer
  * for the URLs they published.
@@ -64,7 +64,7 @@ describe("the app pages", () => {
     }
   });
 
-  /* doc/extension-ui-plan.md: what ShExMap adds to a page is ShExMap's to
+  /* What ShExMap adds to a page is ShExMap's to
    * say, so no page says any of it -- no panes, no controls, no results
    * panel, no app class, no worker script.  This is the check that the port
    * did not quietly leave something behind in the markup. */
@@ -134,15 +134,6 @@ describe("the app pages", () => {
       "http://x.example/packages/extension-map/doc/ShExMapPlugin.js");
   });
 
-  /* A bookmark from when the parameter was called `extension` names its
-   * plugin by the old word; the redirect carries it, absolutized, and does
-   * not name ShExMap a second time -- the app reads both spellings. */
-  it("should honour a bookmark that says extension= the old way", () => {
-    const to = redirected("?extension=./MyExtension.js");
-    expect(to.searchParams.get("extension"), "carried and absolutized").to.equal(
-      "http://x.example/packages/extension-map/doc/MyExtension.js");
-    expect(to.searchParams.get("plugin"), "and ShExMap not added over it").to.equal(null);
-  });
 
   /* A dead rule is worse than no rule: `#shapeMap { padding-left: .25em }
    * sat here commented "doesn't exist" until an id was renamed to match,

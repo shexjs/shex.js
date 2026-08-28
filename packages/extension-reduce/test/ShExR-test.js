@@ -23,8 +23,8 @@ const findPath = require("./findPath.js");
 const BASE = "http://a.example/application/base/";
 const schemasPath = findPath("schemas");
 const HERE = Path.join(__dirname, "..", "examples", "shexr");
-// the copy the example ships, so what is tested is what a reader opens
-const SHEXR = Path.join(HERE, "ShExR.shex");
+// the repository's one copy of the spec's ShExR.shex (shex-util checks it)
+const SHEXR = Path.join(__dirname, "..", "..", "shex-util", "ShExR.shex");
 const ACTIONS = Path.join(HERE, "shexr-actions.ttl");
 
 const reader = makeReader(Fs.readFileSync(SHEXR, "utf8"),
@@ -40,16 +40,6 @@ const stable = o =>
       : "{" + Object.keys(o).sort().map(k => JSON.stringify(k) + ":" + stable(o[k])).join(",") + "}";
 
 describe("ShExR, read by ShEx", function () {
-
-  /* The example carries its own ShExR.shex so that it -- and the manifest
-   * entry that opens it in the app -- needs nothing but this repository.
-   * A copy that has drifted from the spec's is a copy that reads a language
-   * nobody else is writing. */
-  it("should ship the ShExR.shex the spec has", function () {
-    expect(Fs.readFileSync(SHEXR, "utf8"),
-           "out of date: cp " + findPath("doc") + "ShExR.shex " + SHEXR)
-      .to.equal(Fs.readFileSync(findPath("doc") + "ShExR.shex", "utf8"));
-  });
 
   /* ...and what the manifest entry validates: a schema, written as RDF,
    * that reads as the ShExC in its own header. */

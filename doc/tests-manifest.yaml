@@ -758,7 +758,7 @@
 # generates rather than one anybody hand-wrote (packages/extension-reduce/
 # examples/shexr/, and ShExR-test runs it over the whole shexTest corpus).
 - schemaLabel: ShExR, read by ShEx
-  schemaURL: ../packages/extension-reduce/examples/shexr/ShExR.shex
+  schemaURL: ../packages/shex-util/ShExR.shex
   dataLabel: an issue schema
   dataURL: ../packages/extension-reduce/examples/shexr/issue-schema.ttl
   overlayURL: ../packages/extension-reduce/examples/shexr/shexr-actions.ttl

@@ -242,7 +242,12 @@ class SchemaStructureValidator extends ShExVisitor {
   }
 }
 
+import {ShExRSchema} from './ShExRSchema';
+
 const ShExUtil = {
+  /** ShExR.shex, the schema for ShEx schemas written as RDF: what a
+   * ShExR document is validated against before it is read */
+  ShExRSchema,
 
   SX: SX,
   RDF: RDF,

@@ -26,8 +26,7 @@
     "@shexjs/term": "^1.0.0-alpha.27"
   },
   "scripts": {
-    "test": "cd .. && mocha -C -R dot",
-    "browser999": "browserify shex.js -s ShEx -o browser/eval-simple-1err-browserify.js && uglifyjs browser/eval-simple-1err-browserify.js --comments -mco browser/eval-simple-1err-browserify.min.js"
+    "test": "cd .. && mocha -C -R dot"
   },
   "publishConfig": {
     "access": "public"

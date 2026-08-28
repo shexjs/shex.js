@@ -11,8 +11,7 @@
  * page and the app class, which is how shexmap-simple.html came to be a
  * fork of shex-simple.html; this is the register it hands them to instead.
  *
- * See doc/plugins.md for the contract and doc/extension-ui-plan.md for how
- * it got here.  A descriptor may carry kinds the app does not read yet, and
+ * See doc/plugins.md for the contract.  A descriptor may carry kinds the app does not read yet, and
  * the app reads kinds no descriptor carries.  Both are fine.
  */
 const ShExPlugins = (function () {
@@ -102,12 +101,8 @@ const ShExPlugins = (function () {
 
 // A `const` in a classic script is reachable from the scripts after it but
 // is not a property of the window, and a plugin fetched at runtime is a
-// script like any other -- so say it both ways.  `ShExExtensions` is the
-// name this register had while it and the handlers shared a word: a module
-// written against that contract still finds it.
-if (typeof window !== "undefined") {
+// script like any other -- so say it both ways.
+if (typeof window !== "undefined")
   window.ShExPlugins = ShExPlugins;
-  window.ShExExtensions = ShExPlugins;
-}
 if (typeof module !== "undefined" && module.exports)
   module.exports = ShExPlugins;

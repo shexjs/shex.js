@@ -1,7 +1,7 @@
 /**
  * ShExMap in the worker: the handler a %Map:{...%} dispatches on, and the
  * `materialize` request the app sends when it has bindings to build from
- * (doc/extension-ui-plan.md inventory rows 15 and 16).
+ * (doc/plugins.md, In the worker).
  *
  * Imported by ShExWorkerThread on the app's say-so, which is why this is
  * not a worker script of its own any more -- it used to be a copy of that

@@ -257,7 +257,11 @@ class SchemaStructureValidator extends visitor_1.ShExVisitor {
             throw visitor.firstError(Error("Structural error: circular negative dependencies on " + negCirc.join(',') + "."), negCirc[0]);
     }
 }
+const ShExRSchema_1 = require("./ShExRSchema");
 const ShExUtil = {
+    /** ShExR.shex, the schema for ShEx schemas written as RDF: what a
+     * ShExR document is validated against before it is read */
+    ShExRSchema: ShExRSchema_1.ShExRSchema,
     SX: SX,
     RDF: RDF,
     version: function () {

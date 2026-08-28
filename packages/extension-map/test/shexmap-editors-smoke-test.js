@@ -101,7 +101,7 @@ if (!TEST_browser) {
 
     /* Inventory row 6, and the first contribution to move: the bindings
      * pane's colours were three rules in each map page's <style>, and are
-     * now one descriptor the page registers (doc/extension-ui-plan.md §5). */
+     * now one descriptor the page registers (doc/plugins.md). */
     it("should take its pane colours from the plugin, not from the page", function () {
       const sheet = $("head style[data-plugin]");
       expect(sheet.length, "the register put a sheet on the page").to.equal(1);
