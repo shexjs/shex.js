@@ -290,8 +290,11 @@ npm run serve           # prints the shex-simple / shexmap-simple URLs
                         # (npx shex-serve [--port N] [--root DIR] [--coi] outside the repo)
 ```
 
-Add `?editors=1` to either app URL for the language-aware CodeMirror editors
-(see [doc/editor-integration-plan.md](doc/editor-integration-plan.md)).
+The app URLs open with language-aware CodeMirror editors; add
+`?editors=textarea` for plain textareas (see
+[doc/editor-integration-plan.md](doc/editor-integration-plan.md)).
+What is still to do, across the whole repository, is in
+[doc/plan.md](doc/plan.md); the design notes it links hold the rationale.
 With the editors on, the 🐞 buttons step through a materialization
 (shexmap-simple) or any of a validation's triple-expression matches (both
 apps) with schema-gutter breakpoints and a live threads pane;

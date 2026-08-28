@@ -24,16 +24,10 @@
 >   worker materializer still ships only a message).  Autocomplete offers
 >   prefixes, shape labels (plain and @ref) and constraint predicates in the
 >   ShExC and Turtle panes.
-> - Still open: `RdfJsDb(MillanDataset)` as the validation store (blocked on
->   the app's N3-specific API surface — getQuads/removeQuad in proof-graph,
->   remainder and slurp flows — and N3 internalization dropping term
->   sources), Lezer/tree-sitter ShExC mode, shape-map text as a managed
->   editor, worker-side materialization-failure ranges, and the millan
->   subject-source trailing-whitespace nit (upstream).
-> - **Needs manual browser testing**: jsdom verifies the proxy contract and
->   services, but nobody has clicked `?editors=1` in a real browser yet.
->   `npm run serve` (the zero-dependency `shex-serve` in `@shexjs/webapp`)
->   serves the repo root and prints the `?editors=1` URLs.
+> - What is still open (millan as the validation store, a Lezer/tree-sitter
+>   mode, the shape map as a managed editor, tooltips, autocomplete tuning)
+>   is tracked in [plan.md](plan.md) §D.  The editors are the default now;
+>   `?editors=textarea` is the plain-textarea fallback.
 > - `@shexjs/editor-services` is TypeScript (`src/*.ts` → committed `lib/`,
 >   built by `npm run compile` / per-package `npm run build`), as is
 >   `shex-serve`.

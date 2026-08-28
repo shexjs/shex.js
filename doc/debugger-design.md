@@ -23,6 +23,8 @@ node**.
 > `ShExValidator`'s options), and `shex-debug` steps into them --
 > `b LINE` prefers the constraint on the line, `bp PRED` breaks on a
 > predicate.
+> What remains — phase 6's live stepping, a unified panel, worker-app
+> debugging and the polish items — is tracked in [plan.md](plan.md) §E.
 > Browser validation debugging shipped as **capture + replay** (see §1):
 > the validate-side 🐞 in shex-simple/shexmap-simple reruns the
 > validation with `capturingRegexModule` recording every

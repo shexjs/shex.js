@@ -376,8 +376,6 @@ shex-simple.html?plugin=https://your.example/hello-plugin.js
 
 ## What is not in the contract
 
-- **Unloading.**  Plugins are additive for the session; a page that has
-  loaded one keeps it.  Reload to be rid of it.
 - **Ordering between plugins.**  They are applied in the order they
   registered.  Two that fight over the same id are one plugin; two that
   fight over the same DOM id are a bug in one of them.

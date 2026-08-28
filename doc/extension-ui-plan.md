@@ -1,6 +1,11 @@
 # Extensions that reach the UI — implementation plan
 
-> **Status (2026-08-23): phase 0 done; phases 1–5 proposed.**
+> **Status (2026-08-28): history.**  Every phase below is done; what it
+> left open (publishing the skeleton, three decisions, plugin packaging) is
+> tracked in [plan.md](plan.md) §B–§C, and [plugins.md](plugins.md) is the
+> contract.  The rest of this document is the record of how it went.
+>
+> **Status as first written (2026-08-23): phase 0 done; phases 1–5 proposed.**
 > The inventory in §2 is the part that does the work: it is the list a port
 > is done against, so that a feature that moves can be told from one that
 > was dropped.  Phase 0 pinned it, wrote the missing test, and fixed the two
