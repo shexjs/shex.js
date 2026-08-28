@@ -12,7 +12,7 @@ const expect = require("chai").expect;
 const node_fetch = require("node-fetch");
 // jsdom's engines outpace the packages' own; required lazily under
 // TEST_browser (c.f. browser-test.js)
-let JSDOM, VirtualConsole, nock;
+let Harness, nock;
 
 const [[GitRootServer]] = require("../../../tools/testServer")
       .startServer(
@@ -39,7 +39,7 @@ const bindingsJson = JSON.stringify({
 if (!TEST_browser) {
   console.warn("Skipping shexmap-editors-smoke-tests; to activate these tests, set environment variable TEST_browser=true");
 } else {
-  ({JSDOM, VirtualConsole} = require("jsdom"));
+  Harness = require("../../shex-webapp/test/harness");
   nock = require("nock");
   describe("shexmap-simple with ?editors=1", function () {
     this.timeout(20000);
@@ -51,40 +51,7 @@ if (!TEST_browser) {
 
     let dom, $, shared, app;
     before(async function () {
-      const base = Path.join(__dirname, "../../..", page);
-      // forward page console traffic, muting only jsdom's "Not implemented:
-      // navigation" from the gist test's post-create reload (c.f. browser-test.js)
-      const virtualConsole = new VirtualConsole().forwardTo(console, {jsdomErrors: "none"});
-      virtualConsole.on("jsdomError", e => {
-        if (!String(e.message).includes("Not implemented: navigation"))
-          console.error(e.type === "unhandled-exception" ? e.cause.stack : e.message);
-      });
-      dom = new JSDOM(Fs.readFileSync(base, "utf8"), {
-        url: GitRootServer.urlFor(page + "?editors=1" + asShExMap),
-        runScripts: "dangerously",
-        resources: "usable",
-        pretendToBeVisual: true,
-        virtualConsole,
-      });
-      dom.window.fetch = node_fetch;
-      // jsdom lacks the CSS namespace; jquery-ui ≥1.14 calls CSS.escape.
-      if (!dom.window.CSS)
-        dom.window.CSS = { escape: s => String(s).replace(/[^a-zA-Z0-9_\u00A0-\uFFFF-]/g, c => `\\${c}`) };
-      // jsdom does no layout and omits these Range methods; CodeMirror's
-      // measure loop calls them on every frame and handles empty results.
-      dom.window.Range.prototype.getClientRects = function () { return []; };
-      dom.window.Range.prototype.getBoundingClientRect =
-        function () { return {x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0, width: 0, height: 0}; };
-      shared = await new Promise((resolve, reject) => {
-        dom.window._testCallback = (parm) => {
-          if (parm instanceof Error)
-            reject(parm);
-          else
-            resolve(parm);
-        };
-      });
-      await shared.promise;
-      $ = dom.window.$;
+      ({dom, $, shared} = await Harness.boot(page, "?editors=1" + asShExMap));
     });
 
     after(function () {

@@ -18,7 +18,7 @@ const Fs = require("fs");
 const Path = require("path");
 const expect = require("chai").expect;
 const node_fetch = require("node-fetch");
-let JSDOM, VirtualConsole;
+let Harness;
 
 const [[GitRootServer]] = require("../../../tools/testServer")
       .startServer(
@@ -43,29 +43,11 @@ const ALL_MANIFEST = "../../../doc/tests-manifest.yaml";
 if (!TEST_browser) {
   console.warn("Skipping plugin-loading-smoke-tests; to activate these tests, set environment variable TEST_browser=true");
 } else {
-  ({JSDOM, VirtualConsole} = require("jsdom"));
+  Harness = require("./harness");
 
   /** shex-simple.html, booted with this query string */
   async function boot (search) {
-    const virtualConsole = new VirtualConsole().forwardTo(console, {jsdomErrors: "none"});
-    const dom = new JSDOM(Fs.readFileSync(Path.join(__dirname, "../../..", PAGE), "utf8"), {
-      url: GitRootServer.urlFor(PAGE + search),
-      runScripts: "dangerously",
-      resources: "usable",
-      pretendToBeVisual: true,
-      virtualConsole,
-    });
-    dom.window.fetch = node_fetch;
-    if (!dom.window.CSS)
-      dom.window.CSS = { escape: s => String(s).replace(/[^a-zA-Z0-9_ -￿-]/g, c => `\\${c}`) };
-    dom.window.Range.prototype.getClientRects = function () { return []; };
-    dom.window.Range.prototype.getBoundingClientRect =
-      function () { return {x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0, width: 0, height: 0}; };
-    const shared = await new Promise((resolve, reject) => {
-      dom.window._testCallback = parm => parm instanceof Error ? reject(parm) : resolve(parm);
-    });
-    await shared.promise;
-    return {dom, $: dom.window.$, shared};
+    return Harness.boot(PAGE, search);
   }
 
   /** what the three ShExMap panes hold, or null where there is no such pane */

@@ -18,10 +18,9 @@ const Fs = require("fs");
 const Path = require("path");
 const expect = require("chai").expect;
 const node_fetch = require("node-fetch");
-let JSDOM, VirtualConsole;
+let Harness;
 
 const ROOT = Path.join(__dirname, "../../..");
-const {makeWorkerClass} = require("./fakeWorker");
 const [[GitRootServer, ElsewhereServer, ElsewhereRepoServer]] = require("../../../tools/testServer")
       .startServer(
         [ { url: "http://localhost:9999/shex.js/", fromDir: ROOT },
@@ -39,32 +38,14 @@ const ELSEWHERE = ElsewhereServer.urlFor("hello-plugin.js");
 if (!TEST_browser) {
   console.warn("Skipping plugin-cross-origin-tests; to activate these tests, set environment variable TEST_browser=true");
 } else {
-  ({JSDOM, VirtualConsole} = require("jsdom"));
+  Harness = require("./harness");
 
   describe("a plugin from another origin", function () {
     this.timeout(20000);
     let dom, $, shared;
 
     before(async function () {
-      const virtualConsole = new VirtualConsole().forwardTo(console, {jsdomErrors: "none"});
-      dom = new JSDOM(Fs.readFileSync(Path.join(ROOT, PAGE), "utf8"), {
-        url: GitRootServer.urlFor(PAGE + "?editors=1&plugin=" + encodeURIComponent(ELSEWHERE)),
-        runScripts: "dangerously",
-        resources: "usable",
-        pretendToBeVisual: true,
-        virtualConsole,
-      });
-      dom.window.fetch = node_fetch;
-      if (!dom.window.CSS)
-        dom.window.CSS = { escape: s => String(s).replace(/[^a-zA-Z0-9_ -￿-]/g, c => `\\${c}`) };
-      dom.window.Range.prototype.getClientRects = function () { return []; };
-      dom.window.Range.prototype.getBoundingClientRect =
-        function () { return {x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0, width: 0, height: 0}; };
-      shared = await new Promise((resolve, reject) => {
-        dom.window._testCallback = parm => parm instanceof Error ? reject(parm) : resolve(parm);
-      });
-      await shared.promise;
-      $ = dom.window.$;
+      ({dom, $, shared} = await Harness.boot(PAGE, "?editors=1&plugin=" + encodeURIComponent(ELSEWHERE)));
     });
 
     after(function () { if (dom) dom.window.close(); });
@@ -142,34 +123,10 @@ if (!TEST_browser) {
     let dom, $, shared;
 
     before(async function () {
-      const base = Path.join(ROOT, page);
-      const virtualConsole = new VirtualConsole().forwardTo(console, {jsdomErrors: "none"});
-      dom = new JSDOM(Fs.readFileSync(base, "utf8"), {
-        url: GitRootServer.urlFor(page + "?editors=1&plugin=" + encodeURIComponent(MAP_ELSEWHERE)),
-        runScripts: "dangerously",
-        resources: "usable",
-        pretendToBeVisual: true,
-        virtualConsole,
-        beforeParse (window) {
-          // the page's head script runs new Worker("ShExWorkerThread.js");
-          // the only served URLs this worker can resolve are the second
-          // origin's, which is the point
-          window.Worker = makeWorkerClass(Path.dirname(base), {}, [
-            {prefix: ElsewhereRepoServer.urlFor(""), dir: ROOT},
-          ]);
-        },
-      });
-      dom.window.fetch = node_fetch;
-      if (!dom.window.CSS)
-        dom.window.CSS = { escape: s => String(s).replace(/[^a-zA-Z0-9_ -￿-]/g, c => `\\${c}`) };
-      dom.window.Range.prototype.getClientRects = function () { return []; };
-      dom.window.Range.prototype.getBoundingClientRect =
-        function () { return {x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0, width: 0, height: 0}; };
-      shared = await new Promise((resolve, reject) => {
-        dom.window._testCallback = parm => parm instanceof Error ? reject(parm) : resolve(parm);
-      });
-      await shared.promise;
-      $ = dom.window.$;
+      // the only served URLs this worker can resolve are the second
+      // origin's, which is the point
+      ({dom, $, shared} = await Harness.boot(page, "?editors=1&plugin=" + encodeURIComponent(MAP_ELSEWHERE),
+                                            {worker: [{prefix: ElsewhereRepoServer.urlFor(""), dir: ROOT}]}));
     });
     after(function () { if (dom) dom.window.close(); });
 

@@ -12,10 +12,9 @@ const Fs = require("fs");
 const Path = require("path");
 const expect = require("chai").expect;
 const node_fetch = require("node-fetch");
-const {makeWorkerClass} = require("../../shex-webapp/test/fakeWorker");
 // jsdom's engines outpace the packages' own; required lazily under
 // TEST_browser (c.f. browser-test.js)
-let JSDOM;
+let Harness;
 
 const [[GitRootServer]] = require("../../../tools/testServer")
       .startServer(
@@ -27,8 +26,7 @@ const [[GitRootServer]] = require("../../../tools/testServer")
 if (!TEST_browser) {
   console.warn("Skipping shexmap-worker-editors-smoke-tests; to activate these tests, set environment variable TEST_browser=true");
 } else {
-  const jsdom = require("jsdom");
-  ({JSDOM} = jsdom);
+  Harness = require("../../shex-webapp/test/harness");
   describe("shexmap-worker with ?editors=1", function () {
     this.timeout(20000);
     // ShExMap is a plugin of this page now; shexmap-worker.html is a
@@ -39,44 +37,7 @@ if (!TEST_browser) {
 
     let dom, $, shared;
     before(async function () {
-      const base = Path.join(__dirname, "../../..", page);
-      // forward page console traffic except console.debug, the app's channel
-      // for reporting user-input errors (e.g. mid-edit parse failures)
-      const virtualConsole = new jsdom.VirtualConsole().forwardTo(console);
-      virtualConsole.removeAllListeners("debug");
-      dom = new JSDOM(Fs.readFileSync(base, "utf8"), {
-        url: GitRootServer.urlFor(page + "?editors=1" + asShExMap),
-        runScripts: "dangerously",
-        resources: "usable",
-        pretendToBeVisual: true, // CodeMirror needs rAF etc.
-        virtualConsole,
-        beforeParse (window) {
-          // the page's head script runs new Worker("ShExWorkerThread.js")
-          window.Worker = makeWorkerClass(Path.dirname(base), {}, [
-            // the app names its plugins' worker halves by URL
-            {prefix: GitRootServer.urlFor(""), dir: Path.join(__dirname, "../../..")},
-          ]);
-        },
-      });
-      dom.window.fetch = node_fetch;
-      // jsdom lacks the CSS namespace; jquery-ui ≥1.14 calls CSS.escape.
-      if (!dom.window.CSS)
-        dom.window.CSS = { escape: s => String(s).replace(/[^a-zA-Z0-9_\u00A0-\uFFFF-]/g, c => `\\${c}`) };
-      // jsdom does no layout and omits these Range methods; CodeMirror's
-      // measure loop calls them on every frame and handles empty results.
-      dom.window.Range.prototype.getClientRects = function () { return []; };
-      dom.window.Range.prototype.getBoundingClientRect =
-        function () { return {x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0, width: 0, height: 0}; };
-      shared = await new Promise((resolve, reject) => {
-        dom.window._testCallback = (parm) => {
-          if (parm instanceof Error)
-            reject(parm);
-          else
-            resolve(parm);
-        };
-      });
-      await shared.promise; // drag-and-drop init + search-parameter loads
-      $ = dom.window.$;
+      ({dom, $, shared} = await Harness.boot(page, "?editors=1" + asShExMap, {worker: true}));
     });
 
     after(function () {
