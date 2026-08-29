@@ -57,3 +57,6 @@ perf/*/corpus/
 # editor droppings
 *~
 \#*\#
+
+# TypeScript source maps: built beside lib/*.js, read by nothing in the repository
+packages/*/lib/*.map
