@@ -471,6 +471,23 @@ ul {
     white-space: nowrap;
     font-size: small;
 }
+/* the breakpoints, one chip each, the × taking it away */
+#valDbgBreakpoints .dbgBreakpoint {
+    display: inline-block;
+    margin-left: .4em;
+    padding: 0 .3em;
+    border: thin solid #c22;
+    border-radius: .5em;
+    font-size: small;
+}
+#valDbgBreakpoints .dbgBreakpoint button {
+    border: none;
+    background: none;
+    padding: 0 0 0 .2em;
+    cursor: pointer;
+}
+table.dbgThreadState th { text-align: left; padding-right: .6em; vertical-align: top; }
+table.dbgThreadState caption { text-align: left; font-weight: bold; }
 /* the status is a sentence, so let it wrap rather than run off the edge */
 #valDbgStatus {
     display: inline-block;

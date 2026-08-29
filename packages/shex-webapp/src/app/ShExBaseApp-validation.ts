@@ -137,17 +137,22 @@ endValidation (elapsed) {
           .removeClass("passes fails").addClass("error");
         return null;
       }
-      this.valDebugSession = {captures, located, pane, schema, results};
+      // breakpoints beyond the gutter's: by predicate, and by node (which
+      // is which recorded matches to offer)
+      const breakpoints = this.valDebugSession && this.valDebugSession.breakpoints
+            || {predicates: new Set(), nodes: new Set()};
+      this.valDebugSession = {captures, located, pane, schema, results, breakpoints};
       const select = $("#valDbgMatches").empty();
       captures.forEach((cap, i) =>
         select.append($("<option/>", {value: i}).text(this.matchCaptureLabel(cap, schema))));
       select.off("change").on("change", () => this.pickValidationMatch(parseInt(select.val(), 10)));
+      this.renderValDebugBreakpoints();
       // the step buttons, the match picker and the status line are three
       // rows of one control; 🐞 started this session, and pressing it again
       // would only start another over the same results
       $("#valDebugControls, .valDbgRow").show();
       $("#debugValidate").hide();
-      this.pickValidationMatch(0);
+      this.pickValidationMatch(this.offeredMatches()[0] || 0);
       return this.valDebugSession;
     } catch (e) {
       this.reportValidationError(e, currentAction);
@@ -165,11 +170,110 @@ matchCaptureLabel (cap, schema) {
     return node + "@" + (label || "?");
   },
 
+  /** the node a recorded match is about, as a breakpoint names it */
+  captureNodeLex (cap) {
+    return cap.node.termType === "BlankNode" ? "_:" + cap.node.value : cap.node.value;
+  },
+
+  /** the recorded matches a node breakpoint leaves on offer (all, with
+   * none set); the picker shows only these */
+  offeredMatches () {
+    const session = this.valDebugSession;
+    if (!session)
+      return [];
+    const nodes = session.breakpoints.nodes;
+    const offered = [];
+    session.captures.forEach((cap, i) => {
+      const on = nodes.size === 0 || nodes.has(this.captureNodeLex(cap));
+      $("#valDbgMatches option[value='" + i + "']").toggle(on);
+      if (on)
+        offered.push(i);
+    });
+    return offered;
+  },
+
+  /**
+   * A breakpoint said in words, as shex-debug takes them: `bp PREDICATE`
+   * pauses at every constraint with that predicate, `bn NODE` keeps only
+   * the recorded matches on that node.  Prefixed names read against the
+   * schema's prefixes (a predicate) or the data's (a node).
+   */
+  addValDebugBreakpoint (text) {
+    const session = this.valDebugSession;
+    const m = (text || "").trim().match(/^(bp|bn)\s+(\S+)$/);
+    if (!session || !m) {
+      $("#valDbgStatus").text("a breakpoint is bp PREDICATE or bn NODE");
+      return false;
+    }
+    const [, kind, lex] = m;
+    try {
+      if (kind === "bp") {
+        const iri = this.Caches.inputSchema.meta.lexToTerm(lex);
+        session.breakpoints.predicates.add(typeof iri === "string" ? iri : lex);
+      } else {
+        const term = lex.startsWith("_:") ? lex : this.Caches.inputData.meta.lexToTerm(lex);
+        session.breakpoints.nodes.add(typeof term === "string" ? term : lex);
+      }
+    } catch (e) {
+      $("#valDbgStatus").text("no such " + (kind === "bp" ? "predicate" : "node") + ": " + e.message);
+      return false;
+    }
+    this.renderValDebugBreakpoints();
+    // re-arm, on a match still on offer
+    const offered = this.offeredMatches();
+    const current = parseInt($("#valDbgMatches").val(), 10);
+    this.pickValidationMatch(offered.indexOf(current) === -1 ? (offered[0] || 0) : current);
+    return true;
+  },
+
+  removeValDebugBreakpoint (kind, value) {
+    const session = this.valDebugSession;
+    if (!session)
+      return;
+    session.breakpoints[kind === "bp" ? "predicates" : "nodes"].delete(value);
+    this.renderValDebugBreakpoints();
+    const offered = this.offeredMatches();
+    const current = parseInt($("#valDbgMatches").val(), 10);
+    this.pickValidationMatch(offered.indexOf(current) === -1 ? (offered[0] || 0) : current);
+  },
+
+  /** the breakpoints as chips, each with its × */
+  renderValDebugBreakpoints () {
+    const session = this.valDebugSession;
+    const list = $("#valDbgBreakpoints").empty();
+    if (!session)
+      return;
+    const lex = (iri, meta) => { try { return meta.termToLex(iri); } catch (e) { return iri; } };
+    [["bp", session.breakpoints.predicates, this.Caches.inputSchema.meta],
+     ["bn", session.breakpoints.nodes, this.Caches.inputData.meta]].forEach(([kind, set, meta]) => {
+      set.forEach(value => {
+        list.append($("<span/>", {class: "dbgBreakpoint", "data-kind": kind, "data-value": value})
+                    .text(kind + " " + (typeof value === "string" && !value.startsWith("_:") ? lex(value, meta) : value))
+                    .append($("<button/>", {title: "remove this breakpoint"}).text("×")
+                            .on("click", () => this.removeValDebugBreakpoint(kind, value))));
+      });
+    });
+  },
+
+  /** ctrl-alt-b: a breakpoint on the constraint at the schema pane's
+   * cursor -- for a line that holds several, whose gutter can name only
+   * the first */
+  toggleBreakpointAtCursor () {
+    const pane = this.editorSupport && this.editorSupport.panes.inputSchema;
+    if (!pane || !pane.view)
+      return false;
+    pane.toggleBreakpointAt(pane.view.state.selection.main.head);
+    if (this.valDebugSession)   // re-arm, so it counts from here on
+      this.pickValidationMatch(parseInt($("#valDbgMatches").val(), 10) || 0);
+    return true;
+  },
+
   /** (re)arm the debugger on one recorded match */
   pickValidationMatch (captureNo) {
     const session = this.valDebugSession;
     if (!session)
       return null;
+    $("#valDbgMatches").val(String(captureNo));
     const cap = session.captures[captureNo];
     // only eval-simple-1err's engine steps: a match another engine ran is
     // replayed by a fresh one over the same inputs
@@ -178,19 +282,29 @@ matchCaptureLabel (cap, schema) {
           : stepper.compile(session.schema, cap.shape, session.schema._index);
     const dbg = new ShExWebApp.MatchDebugger(engine, cap.node, cap.constraintToTripleMapping,
                                              ShExWebApp.replayingSemActHandler(cap.semActLog, cap.semActHandler));
-    // gutter breakpoints (line starts) -> the first constraint on the line
+    // A breakpoint set in the gutter sits at its line's start and means
+    // the first constraint the line *begins* -- not one that started
+    // above and continues across it -- falling back to whatever the line
+    // is inside of where it begins none.  One set at a position (ctrl-alt-b)
+    // means the constraint there.
     const schemaText = this.Caches.inputSchema.selection.val();
     const lineStarts = ShExWebApp.EditorServices.lineOffsets(schemaText);
     session.pane.listBreakpoints().forEach(pos => {
-      const lineEnd = lineStarts.find(start => start > pos) || schemaText.length;
-      for (let offset = pos; offset < lineEnd; ++offset) {
-        const hit = session.located.locate.exprAt(offset);
-        if (hit) {
-          dbg.addBreakpoint({tc: hit.expr});
-          break;
-        }
+      const next = lineStarts.findIndex(start => start > pos);
+      const lineFrom = lineStarts[(next === -1 ? lineStarts.length : next) - 1];
+      const lineEnd = next === -1 ? schemaText.length : lineStarts[next];
+      let hit = null;
+      if (pos === lineFrom) {
+        hit = session.located.locate.exprsStartingIn(lineFrom, lineEnd)[0] || null;
+        for (let offset = lineFrom; offset < lineEnd && !hit; ++offset)
+          hit = session.located.locate.exprAt(offset);
+      } else {
+        hit = session.located.locate.exprAt(pos);
       }
+      if (hit)
+        dbg.addBreakpoint({tc: hit.expr});
     });
+    session.breakpoints.predicates.forEach(predicate => dbg.addBreakpoint({predicate}));
     session.dbg = dbg;
     session.capture = cap;
     $("#valDbgStatus").text("paused before matching " + $("#valDbgMatches option:selected").text() +
@@ -284,17 +398,23 @@ showValDebugEvent (event) {
             .flatMap(a => [a.object, a.subject, a.predicate].filter(r => r));
       dataPane.highlight(ranges, "shexjs-debug-current");
     }
-    const lines = [label];
+    // ...and a table of the rest: where it is, its repeat counts, the
+    // partition it has committed to, constraint by constraint
+    const lex = (iri) => { try { return this.Caches.inputSchema.meta.termToLex(iri); } catch (e) { return "<" + iri + ">"; } };
+    const row = (th, td) => $("<tr/>").append($("<th/>").text(th), $("<td/>").text(td));
+    const table = $("<table/>", {class: "dbgThreadState"}).append($("<caption/>").text(label));
+    table.append(row("state", "s" + t.stateNo + " " + (t.tc ? lex(t.tc.predicate) : "(" + t.at + ")")));
     if (Object.keys(t.repeats).length)
-      lines.push("repeat counts (by Rept state): " +
-                 Object.entries(t.repeats).map(([s, n]) => "s" + s + "×" + n).join(", "));
-    lines.push(t.matched.length === 0 ? "matched partition: (empty)" : "matched partition:");
-    t.matched.forEach(m => m.triples.forEach(tr => lines.push("  " + tr + "  -> <" + m.predicate + ">")));
+      table.append(row("repeats", Object.entries(t.repeats).map(([s, n]) => "s" + s + "×" + n).join(", ")));
+    table.append($("<tr/>").append($("<th/>", {colspan: 2}).text(
+      "matched partition" + (t.matched.length === 0 ? " (empty)" : ""))));
+    t.matched.forEach(m => m.triples.forEach((tr, i) =>
+      table.append(row(i === 0 ? lex(m.predicate) : "", tr))));
     if (t.errors)
-      lines.push("errors: " + t.errors);
+      table.append(row("errors", String(t.errors)));
     $("#results div").empty();
     $("#results > .status").text("validation thread").show();
-    this.resultsWidget.append($("<pre/>", {class: "dbgThreadState"}).text(lines.join("\n")));
+    this.resultsWidget.append(table);
   },
 
 endValidationDebugSession () {
@@ -303,10 +423,13 @@ endValidationDebugSession () {
       return;
     this.valDebugSession = null;
     session.pane.clearHighlights();
+    if (this.editorSupport && this.editorSupport.panes.inputData)
+      this.editorSupport.panes.inputData.clearHighlights();
     $("#valDebugControls, .valDbgRow").hide();
     $("#debugValidate").show();
     $("#valDbgStatus").text("");
-    $("#valDbgThreads").empty();
+    $("#valDbgThreads, #valDbgBreakpoints").empty();
+    $("#valDbgMatches option").show();
   },
 
 async callValidator (done) {

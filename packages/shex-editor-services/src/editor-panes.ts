@@ -170,10 +170,14 @@ export interface Pane {
   /** replace the set of mouse-over-sensitive ranges; `leave` fires when the
    * mouse leaves them all */
   setHoverRegions (regions: HoverRegion[], leave?: () => void): void;
-  /** character offsets of gutter breakpoints (line starts) */
+  /** character offsets of the breakpoints: a line's start for one set in
+   * the gutter, the position itself for one set at a position */
   listBreakpoints (): number[];
   /** toggle a gutter breakpoint at a character offset's line */
   toggleBreakpoint (pos: number): void;
+  /** toggle a breakpoint at the position itself -- the constraint there,
+   * for a line that holds several (the gutter marks the line either way) */
+  toggleBreakpointAt (pos: number): void;
   /** Re-measure the editor.
    *
    * CodeMirror measures when it is created and when its own observers fire.
@@ -933,6 +937,9 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
     },
     toggleBreakpoint (pos: number): void {
       toggleBreakpoint(view, view.state.doc.lineAt(pos).from);
+    },
+    toggleBreakpointAt (pos: number): void {
+      toggleBreakpoint(view, Math.max(0, Math.min(pos, view.state.doc.length)));
     },
     destroy (): void {
       if (changeTimer !== null) {

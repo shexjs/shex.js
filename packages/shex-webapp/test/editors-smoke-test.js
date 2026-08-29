@@ -2158,6 +2158,89 @@ if (!TEST_browser) {
       }
     });
 
+    /* A gutter breakpoint is the constraint its line begins -- :y on a line
+     * inside :p's inline shape, not :p -- and ctrl-alt-b puts one on the
+     * constraint at the cursor, for a line that holds several. */
+    it("should read a gutter breakpoint as the constraint the line begins, and ctrl-alt-b as the one at the cursor", async function () {
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      set("#inputSchema textarea", [
+        "PREFIX : <http://a.example/>",
+        ":S {",
+        "  :p { :x . ;",
+        "       :y . } ;",
+        "  :q . ; :r .",
+        "}",
+      ].join("\n"));
+      set("#inputData textarea", "PREFIX : <http://a.example/>\n:a :p [ :x 1 ; :y 2 ] ; :q 3 ; :r 4 .");
+      set("#queryMap", "<http://a.example/a>@<http://a.example/S>");
+      await shared.promise;
+      const pane = shared.Caches.editorSupport.panes.inputSchema;
+      const schemaText = $("#inputSchema textarea").first().val();
+      pane.toggleBreakpoint(schemaText.indexOf(":y . }"));           // the gutter, on :y's line
+      pane.view.dispatch({selection: {anchor: schemaText.indexOf(":r .") + 1}});
+      $("body").trigger($.Event("keydown", {ctrlKey: true, altKey: true, key: "b", keyCode: 66}));
+      expect(pane.listBreakpoints().length, "a line and a position").to.equal(2);
+      try {
+        $("#debugValidate").trigger("click");
+        const session = await shared.promise;
+        expect(session, "session started: " + $("#results").text().substring(0, 120)).to.exist;
+        const predicates = [...session.dbg.breakpoints.tcs].map(tc => tc.predicate.replace("http://a.example/", ":")).sort();
+        expect(predicates).to.deep.equal([":r", ":y"]);
+        $("#valDbgStop").trigger("click");
+      } finally {
+        pane.listBreakpoints().forEach(pos => pane.toggleBreakpointAt(pos));   // clean the gutter
+      }
+    });
+
+    /* Breakpoints said in words, as shex-debug takes them: bp PREDICATE
+     * pauses at every constraint on it; bn NODE keeps only the recorded
+     * matches on that node.  And a thread's state is a table. */
+    it("should take breakpoints by predicate and by node, and show a thread as a table", async function () {
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      set("#inputSchema textarea", "PREFIX : <http://a.example/>\n:S { :p . ; :q . }");
+      set("#inputData textarea", "PREFIX : <http://a.example/>\n:a :p 1 ; :q 2 .\n:b :p 3 ; :q 4 .");
+      set("#queryMap", "<http://a.example/a>@<http://a.example/S>,\n<http://a.example/b>@<http://a.example/S>");
+      await shared.promise;
+      $("#debugValidate").trigger("click");
+      const session = await shared.promise;
+      expect(session, "session started: " + $("#results").text().substring(0, 120)).to.exist;
+      expect($("#valDbgMatches option").length, "two recorded matches").to.equal(2);
+
+      $("#valDbgBreak").val("bp :q").trigger($.Event("keydown", {key: "Enter"}));
+      expect([...session.dbg.breakpoints.predicates]).to.deep.equal(["http://a.example/q"]);
+      expect($("#valDbgBreakpoints .dbgBreakpoint").text()).to.include("bp :q");
+      expect($("#valDbgBreak").val(), "the field is clear for the next").to.equal("");
+      $("#valDbgContinue").trigger("click");
+      expect($("#valDbgStatus").text()).to.include("at <http://a.example/q>");
+
+      $("#valDbgBreak").val("bn :b").trigger($.Event("keydown", {key: "Enter"}));
+      const offered = () => $("#valDbgMatches option").filter((i, o) => $(o).css("display") !== "none");
+      expect(offered().length, "only b's match on offer").to.equal(1);
+      expect(offered().text()).to.include("b@");
+      expect($("#valDbgMatches").val(), "re-armed on it").to.equal(offered().attr("value"));
+      expect($("#valDbgBreakpoints .dbgBreakpoint").length).to.equal(2);
+
+      $("#valDbgInto").trigger("click");
+      $("#valDbgThreads button").first().trigger("mouseenter");
+      expect($("#results table.dbgThreadState").length, "a table, not a text dump").to.equal(1);
+      expect($("#results table.dbgThreadState").text()).to.include("matched partition");
+
+      $("#valDbgBreakpoints .dbgBreakpoint[data-kind='bn'] button").trigger("click");
+      expect(offered().length, "× took the node breakpoint away").to.equal(2);
+      expect($("#valDbgBreak").val("nonsense").trigger($.Event("keydown", {key: "Enter"})) && $("#valDbgStatus").text())
+        .to.include("bp PREDICATE or bn NODE");
+      $("#valDbgStop").trigger("click");
+      expect($("#valDbgBreakpoints").children().length, "gone with the session").to.equal(0);
+    });
+
     /* Validating again is not "continue, ignoring breakpoints" -- that is ▶.
      * It re-runs the whole validation and replaces the results the session's
      * recorded matches were taken from, so the session goes with them rather

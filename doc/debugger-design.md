@@ -117,7 +117,10 @@ validation:
    maps both directions — `schema._exprLocations` (TC → range) and now
    `locate.exprAt(offset)` / `shapeAt(offset)` (editor position → object).
    A CodeMirror breakpoint gutter (a small `gutter()` extension beside the
-   lint gutter) resolves clicks to constraint objects; identity holds
+   lint gutter) resolves clicks to constraint objects: a gutter click means
+   the first constraint the line *begins* (`locate.exprsStartingIn`), not
+   one continuing across it, and ctrl-alt-b sets one at the cursor
+   (`toggleBreakpointAt`) for a line that holds several.  Identity holds
    in-process, and `{shapeLabel, predicate}` pairs are the clone-safe
    fallback for worker-side engines (the same dual strategy the
    error-anchoring uses).
@@ -127,6 +130,10 @@ validation:
    quad → subject) to offer the node's lexical form.
 3. **Predicate breakpoints** (free extra): break on every constraint for a
    property IRI.
+
+The web validator debugger takes the last two in words, as `shex-debug`
+does (`bp PREDICATE`, `bn NODE`); there a node breakpoint means which of
+the recorded matches are on offer.
 
 ## 4. Validation-side engine work (the unimplemented half)
 

@@ -497,6 +497,17 @@ function locateInParsed(text, schema, opts = {}) {
                     ? yyllocToRange(schema._exprLocations.get(obj), starts) : null;
                 return range ? { parts: highlightParts(obj, range) } : null;
             },
+            exprsStartingIn: (from, to) => {
+                if (!schema || !schema._exprLocations)
+                    return [];
+                const found = [];
+                for (const [expr, loc] of schema._exprLocations) {
+                    const range = yyllocToRange(loc, starts);
+                    if (range && range.from >= from && range.from < to)
+                        found.push({ expr, range });
+                }
+                return found.sort((l, r) => l.range.from - r.range.from);
+            },
             exprAt: (offset) => {
                 if (!schema || !schema._exprLocations)
                     return null;

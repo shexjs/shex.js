@@ -222,8 +222,8 @@
           </div>
         </div>
         <div style="clear:both; padding-top: .5em;">
-            <button id="validate">validate (ctl-enter)</button> <button id="debugValidate" title="step through a triple-expression match (enable the language-aware editors; gutter clicks in the schema set breakpoints)">🐞</button><span id="valDebugControls" style="display:none"><button id="valDbgContinue" title="continue">▶</button><button id="valDbgInto" title="step">⤵</button><button id="valDbgOver" title="run to the next generation">⏭</button><button id="valDbgStop" title="stop">⏹</button><span id="valDbgThreads" title="this generation's threads (• = already advanced); hover or click for a thread's state"></span></span>
-            <div id="valDbgMatchesRow" class="valDbgRow" style="display:none"><select id="valDbgMatches" title="which recorded node@shape match to step through"></select></div>
+            <button id="validate">validate (ctl-enter)</button> <button id="debugValidate" title="step through a triple-expression match (enable the language-aware editors; a gutter click in the schema sets a breakpoint on the constraint the line begins, ctrl-alt-b one at the cursor)">🐞</button><span id="valDebugControls" style="display:none"><button id="valDbgContinue" title="continue">▶</button><button id="valDbgInto" title="step">⤵</button><button id="valDbgOver" title="run to the next generation">⏭</button><button id="valDbgStop" title="stop">⏹</button><span id="valDbgThreads" title="this generation's threads (• = already advanced); hover or click for a thread's state"></span></span>
+            <div id="valDbgMatchesRow" class="valDbgRow" style="display:none"><select id="valDbgMatches" title="which recorded node@shape match to step through"></select> <input id="valDbgBreak" size="26" placeholder="bp predicate | bn node" title="a breakpoint (enter): bp PREDICATE pauses at every constraint with that predicate; bn NODE keeps only the recorded matches on that node"/><span id="valDbgBreakpoints"></span></div>
             <div id="valDbgStatusRow" class="valDbgRow" style="display:none"><span id="valDbgStatus"></span></div>
         </div>
       </div>

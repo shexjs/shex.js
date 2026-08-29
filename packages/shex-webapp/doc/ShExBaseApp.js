@@ -124,6 +124,12 @@ class ShExBaseApp {
         this.keyDownHandlers = [
             this.validateKeyDown.bind(this),
             this.navigateManifestKeyDown.bind(this),
+            // ctrl-alt-b: a breakpoint on the constraint at the schema pane's cursor
+            (e) => {
+                if (!((e.ctrlKey || e.metaKey) && e.altKey && (e.key === "b" || e.key === "B" || e.code === "KeyB")))
+                    return false;
+                return this.toggleBreakpointAtCursor();
+            },
         ];
         ShExWebApp.ShapeMap.Start = ShExWebApp.Validator.Start;
         // what registered before this app existed, and whatever registers after
@@ -236,6 +242,13 @@ class ShExBaseApp {
         $("#valDbgOver").on("click", () => this.valDebugStep("stepOver"));
         $("#valDbgContinue").on("click", () => this.valDebugStep("continue"));
         $("#valDbgStop").on("click", () => this.endValidationDebugSession());
+        $("#valDbgBreak").on("keydown", (e) => {
+            if (e.key !== "Enter")
+                return true;
+            this.addValDebugBreakpoint($("#valDbgBreak").val());
+            $("#valDbgBreak").val("");
+            return false;
+        });
         $("#download-results-button").on("click", this.downloadResults.bind(this));
         $("#createGist").on("click", (evt) => { this.track(this.createGist(evt)); });
         $("#updateGist").on("click", (evt) => { this.track(this.updateGist(evt)); });

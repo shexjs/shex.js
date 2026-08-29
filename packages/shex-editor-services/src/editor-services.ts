@@ -87,9 +87,13 @@ export interface Locate {
    * per-triple provenance) */
   exprAnchors (obj: object): {parts: Range[]} | null;
   /** the innermost expression (e.g. TripleConstraint) whose source range
-   * contains `offset` -- editor gutter clicks resolve to schema objects
-   * (e.g. debugger breakpoints) through this */
+   * contains `offset` -- a breakpoint set at a position resolves to a
+   * schema object through this */
   exprAt (offset: number): {expr: object, range: Range} | null;
+  /** the expressions whose source range starts in [from, to), earliest
+   * first -- what a gutter click on a line means: the constraints the
+   * line begins, not one that merely continues across it */
+  exprsStartingIn (from: number, to: number): {expr: object, range: Range}[];
   /** the shape whose declaration contains `offset` */
   shapeAt (offset: number): {label: string, range: Range} | null;
 }
@@ -672,6 +676,17 @@ export function locateInParsed (text: string, schema: SchemaWithMeta | null,
         const range = schema && schema._exprLocations
               ? yyllocToRange(schema._exprLocations.get(obj), starts) : null;
         return range ? {parts: highlightParts(obj, range)} : null;
+      },
+      exprsStartingIn: (from: number, to: number) => {
+        if (!schema || !schema._exprLocations)
+          return [];
+        const found: {expr: object, range: Range}[] = [];
+        for (const [expr, loc] of schema._exprLocations) {
+          const range = yyllocToRange(loc, starts);
+          if (range && range.from >= from && range.from < to)
+            found.push({expr, range});
+        }
+        return found.sort((l, r) => l.range.from - r.range.from);
       },
       exprAt: (offset: number) => {
         if (!schema || !schema._exprLocations)

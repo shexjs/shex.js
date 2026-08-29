@@ -135,16 +135,14 @@ validator's tracker is the typed shape-level event source (E8,
 hooks say which thread asks and what came of each constraint (E7,
 `ConstraintThreadView`, `onConstraintResult`); hovering a thread in the
 web debugger lights its matched partition in the data pane (E2,
-`quadRanges`) -- all 2026-08-29.
+`quadRanges`); the web debugger takes `bp PREDICATE` and `bn NODE`
+breakpoints as shex-debug does and shows a thread's state as a table
+(E4); a gutter breakpoint is the constraint its line begins and
+ctrl-alt-b sets one at the cursor (E5, `toggleBreakpointAt`,
+`exprsStartingIn`) -- all 2026-08-29.
 
 Short, high value:
 
-- **E4 (M)** Web UI for node/predicate breakpoints (the CLIs' `bn`/`bp`) and
-  a rendered call-stack/binding-frame snapshot (`bindingsToTable` renders
-  frames) instead of the text status.
-- **E5 (M)** Column-precise gutter breakpoints: a click resolves to the
-  first constraint whose range starts on the line; offer a per-line picker
-  or breakpoint-on-selection for one-line shapes.
 - **E6 (M)** A common REPL skeleton for `ShExDebugRepl` (`shex-cli`) and
   `ShExMapDebugRepl` (`extension-map`) before a third debugger appears;
   both suites stay green unchanged.

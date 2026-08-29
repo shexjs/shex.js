@@ -231,4 +231,20 @@ describe("EditorServices: located query maps and non-ShExC schemas", function ()
       expect(EditorServices.synthesizeLocations("<S> { <p> . }", {shapes: parsed.schema.shapes})).to.equal(false);
     });
   });
+
+  describe("exprsStartingIn", function () {
+    const text = "PREFIX : <http://a.example/>\n:S {\n  :p { :x . ;\n       :y . } ;\n  :q . ; :r .\n}\n";
+    const parsed = EditorServices.parseShExC(text, {base});
+    const starts = EditorServices.lineOffsets(text);
+    const line = n => [starts[n - 1], starts[n] === undefined ? text.length : starts[n]];
+
+    it("should name the constraints a line begins, earliest first", function () {
+      expect(parsed.locate.exprsStartingIn(...line(4)).map(h => h.expr.predicate)).to.deep.equal([base + "y"]);
+      expect(parsed.locate.exprsStartingIn(...line(5)).map(h => h.expr.predicate)).to.deep.equal([base + "q", base + "r"]);
+      expect(parsed.locate.exprsStartingIn(...line(6))).to.deep.equal([]);
+      // ...where the innermost expression at the line's start is the one
+      // the line is inside of
+      expect(parsed.locate.exprAt(line(4)[0] + 2).expr.predicate).to.equal(base + "p");
+    });
+  });
 });

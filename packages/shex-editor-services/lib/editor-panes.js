@@ -791,6 +791,9 @@ function makePane(textarea, opts = {}) {
         toggleBreakpoint(pos) {
             toggleBreakpoint(view, view.state.doc.lineAt(pos).from);
         },
+        toggleBreakpointAt(pos) {
+            toggleBreakpoint(view, Math.max(0, Math.min(pos, view.state.doc.length)));
+        },
         destroy() {
             if (changeTimer !== null) {
                 clearTimeout(changeTimer);
