@@ -42,13 +42,37 @@ export type ConstraintToTripleResults = MapArray<TripleConstraint, TripleResult>
 
 export type T2TcPartition = Map<RdfJsQuad, TripleConstraint>;
 
+/** What a match thread has committed to when a constraint comes up.
+ * (An engine's own, fuller snapshot -- eval-simple-1err's MatchThreadView
+ * -- is what its stepper shows; this is the part every engine has.) */
+export interface ConstraintThreadView {
+  /** the triples matched so far, by the constraint that took them */
+  matched: {predicate: string, triples: RdfJsQuad[]}[];
+  /** errors carried so far */
+  errors: number;
+  /** repetition counters, where the engine keeps any */
+  repeats?: {[key: string]: number};
+  /** the engine's position marker for the thread, where it has one */
+  state?: number;
+}
+
 /** RegexDebugHooks - optional callbacks a debugger hangs inside the match
- * loop (doc/debugger-design.md §4).  onConstraint fires each time the
- * engine (re)considers a TripleConstraint -- including re-visits while
- * backtracking -- with the candidate triples it matches against. */
+ * loop (doc/debugger-design.md §4). */
 export interface RegexDebugHooks {
+  /** each time the engine (re)considers a TripleConstraint -- including
+   * re-visits while backtracking -- with the candidate triples it matches
+   * against, and the thread that is asking */
   onConstraint?: (constraint: TripleConstraint,
-                  ctx: {node: RdfJs.Term, triples: RdfJsQuad[]}) => void;
+                  ctx: {node: RdfJs.Term, triples: RdfJsQuad[], thread?: ConstraintThreadView}) => void;
+  /** ...and what came of it: the candidates the thread took, which of them
+   * passed and which failed (a semantic action, where the engine runs them
+   * here -- eval-threaded-nerr; eval-simple-1err runs them at the end, and
+   * reports everything it took as passed), and how many threads the
+   * constraint spawned -- none, and the thread died here */
+  onConstraintResult?: (constraint: TripleConstraint,
+                        ctx: {node: RdfJs.Term, taken: RdfJsQuad[], passed: RdfJsQuad[],
+                              failed: {triple: RdfJsQuad, errors: any[]}[], spawned: number,
+                              thread?: ConstraintThreadView}) => void;
 }
 
 export interface ValidatorRegexModule {

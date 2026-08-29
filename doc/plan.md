@@ -131,14 +131,14 @@ stepper, the status saying so when they differ (E1), and a replay runs no
 semantic action: they answer from what was recorded at capture (E3,
 `recordingSemActHandler`/`replayingSemActHandler` in validator-api); the
 validator's tracker is the typed shape-level event source (E8,
-`ShapeDebugEvent`/`eventTracker`, which `shex-debug` rides) -- all
-2026-08-29.
+`ShapeDebugEvent`/`eventTracker`, which `shex-debug` rides); the regex
+hooks say which thread asks and what came of each constraint (E7,
+`ConstraintThreadView`, `onConstraintResult`); hovering a thread in the
+web debugger lights its matched partition in the data pane (E2,
+`quadRanges`) -- all 2026-08-29.
 
 Short, high value:
 
-- **E2 (M)** Highlight a thread's matched partition in the data pane
-  (`previewValThread` renders it as text; use the millan ranges the
-  error anchoring uses).
 - **E4 (M)** Web UI for node/predicate breakpoints (the CLIs' `bn`/`bp`) and
   a rendered call-stack/binding-frame snapshot (`bindingsToTable` renders
   frames) instead of the text status.
@@ -148,8 +148,6 @@ Short, high value:
 - **E6 (M)** A common REPL skeleton for `ShExDebugRepl` (`shex-cli`) and
   `ShExMapDebugRepl` (`extension-map`) before a third debugger appears;
   both suites stay green unchanged.
-- **E7 (S–M)** Richer `debugHooks`: thread/backtracking state and
-  per-candidate pass/fail on `onConstraint`, plus an `onConstraintResult`.
 
 Larger, design conversation first:
 

@@ -243,7 +243,8 @@ mixin(ShExBaseApp, {
     },
     /** the aspects specific to a validation thread: position in the state
      * machine (highlighted in the schema pane), repeat counts, and the
-     * partition of matched triples */
+     * partition of matched triples (highlighted in the data pane, and
+     * listed) */
     previewValThread(t, label) {
         const session = this.valDebugSession;
         if (!session)
@@ -251,6 +252,15 @@ mixin(ShExBaseApp, {
         if (t.tc) {
             const range = session.located.locate.expr(t.tc);
             session.pane.highlight(range ? [range] : [], "shexjs-debug-current");
+        }
+        const dataPane = this.editorSupport && this.editorSupport.panes.inputData;
+        if (dataPane) {
+            const located = this.editorSupport.locateData(this.Caches.inputData.selection.val());
+            const ranges = !located ? [] : t.matched.flatMap(m => m.quads || [])
+                .map(q => ShExWebApp.EditorServices.quadRanges(located, q))
+                .filter(a => a)
+                .flatMap(a => [a.object, a.subject, a.predicate].filter(r => r));
+            dataPane.highlight(ranges, "shexjs-debug-current");
         }
         const lines = [label];
         if (Object.keys(t.repeats).length)

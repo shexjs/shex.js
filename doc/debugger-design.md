@@ -133,12 +133,14 @@ validation:
 - ✅ **Shape-level events come almost free**: `ShExValidator` accepts a
   `tracker` (`{enter, exit, recurse, known}`); it is the debug event
   source, typed as `ShapeDebugEvent` and emitted by `eventTracker` (§2).
-- **TripleConstraint-level events need one hook in the regex engines**:
-  both `eval-threaded-nerr` and `eval-simple-1err` are ours and pluggable
-  (`options.regexModule`).  Add an optional `debugHooks.onConstraint(tc,
-  triples)` callback threaded into their match loops; the wrapper
-  regexModule pattern (wrap the configured engine, forward + emit) keeps the
-  engines clean if we prefer no core changes.
+- ✅ **TripleConstraint-level events are one hook in the regex engines**:
+  `debugHooks.onConstraint(tc, {node, triples, thread})` as the engine
+  (re)considers a constraint -- `thread` is what the asking thread has
+  matched so far (`ConstraintThreadView`) -- and
+  `debugHooks.onConstraintResult(tc, {taken, passed, failed, spawned,
+  thread})` for what came of it: the candidates taken, which passed and
+  which a semantic action refused (eval-threaded-nerr runs them there;
+  eval-simple-1err at the end), and how many threads it spawned.
 - **Suspension**: in the worker, the tracker/hook callbacks call
   `controller.gate(event)`, which `postMessage`s the event and
   `Atomics.wait`s on the command cell; the UI writes

@@ -444,11 +444,27 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
   matchTripleConstraint (constraint: ShExJ.TripleConstraint, min: number, max: number,
                          thread: RegexpThread, constraintToTripleMapping: ConstraintToTripleResults,
                          semActHandler: SemActDispatcher): RegexpThread[] {
+    // the debugger's view of the thread as it asks; and what came of it
+    const threadView = () => ({
+      matched: thread.matched.map(m => ({
+        predicate: m.triples.length ? m.triples[0].predicate.value : "",
+        triples: m.triples.slice(),
+      })),
+      errors: thread.errors.length,
+    });
     if (this.debugHooks && this.debugHooks.onConstraint)
       this.debugHooks.onConstraint(constraint, {
         node: this.node!,
         triples: constraintToTripleMapping.get(constraint)!.map(pair => pair.triple),
+        thread: threadView(),
       });
+    const report = (taken: RdfJsQuad[], passed: RdfJsQuad[],
+                    failed: {triple: RdfJsQuad, errors: any[]}[], spawned: number): void => {
+      if (this.debugHooks && this.debugHooks.onConstraintResult)
+        this.debugHooks.onConstraintResult(constraint, {
+          node: this.node!, taken: taken.slice(), passed, failed, spawned, thread: threadView(),
+        });
+    };
     if (thread.avail.get(constraint) === undefined)
       thread.avail.set(constraint, constraintToTripleMapping.get(constraint)!.map(pair => pair.triple));
     // all of them at once where nothing else could want them (takesAllItCan),
@@ -457,10 +473,13 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
     const wanted = greedy ? Math.min(thread.avail.get(constraint)!.length, max) : min;
     const taken = thread.avail.get(constraint)!.splice(0, Math.max(wanted, min));
 
-    if (!(taken.length >= min)) // Early return
+    if (!(taken.length >= min)) { // Early return
+      report(taken, [], [], 0);
       return [thread.makeMissingPropertyThread(constraint, thread.matched)];
+    }
 
     const ret: RegexpThread[] = [];
+    let lastPassFail: { pass: TripleTestedErrors[], fail: TripleTestedErrors[] } = {pass: [], fail: []};
     const minmax = {} as GroupAttrs;
     if (constraint.min !== undefined && constraint.min !== 1 || constraint.max !== undefined && constraint.max !== 1) {
       minmax.min = constraint.min;
@@ -494,6 +513,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
           acc.pass.push(<TripleTestedErrors>{triple, tested, semActErrors})
         return acc
       }, {pass: [], fail: []})
+      lastPassFail = passFail;
 
       // return an empty solution if min card was 0
       if (passFail.fail.length === 0) {
@@ -518,6 +538,8 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
       }
     })());
 
+    report(taken, lastPassFail.pass.map(p => p.triple),
+           lastPassFail.fail.map(f => ({triple: f.triple, errors: f.semActErrors})), ret.length);
     return ret;
   }
 

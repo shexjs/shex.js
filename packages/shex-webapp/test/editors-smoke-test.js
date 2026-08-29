@@ -2104,8 +2104,21 @@ if (!TEST_browser) {
       expect($("#valDbgStatus").text()).to.include("at <http://a.example/q>");
 
       // a thread's aspects: state-machine position, repeats, matched partition
-      $("#valDbgThreads button").first().trigger("mouseenter");
+      // -- and the partition lit in the data pane
+      const dataPane = shared.Caches.editorSupport.panes.inputData;
+      const lit = [];
+      const origHighlight = dataPane.highlight;
+      dataPane.highlight = (rs, cls) => lit.push({rs, cls});
+      try {
+        $("#valDbgThreads button").first().trigger("mouseenter");
+      } finally {
+        dataPane.highlight = origHighlight;
+      }
       expect($("#results").text()).to.include("matched partition");
+      const dataText = $("#inputData textarea").first().val();
+      expect(lit.length, "the data pane was painted").to.equal(1);
+      expect(lit[0].cls).to.equal("shexjs-debug-current");
+      expect(lit[0].rs.map(r => dataText.slice(r.from, r.to)), "the :p triple it took").to.include("0");
 
       // run past the remaining breakpoint hits to the end of the match
       for (let i = 0; i < 10 && !$("#valDbgStatus").text().includes("match finished"); ++i)

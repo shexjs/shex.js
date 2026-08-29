@@ -58,6 +58,7 @@ exports.schemaLanguage = schemaLanguage;
 exports.lintSchema = lintSchema;
 exports.scanCsv = scanCsv;
 exports.synthesizeLocations = synthesizeLocations;
+exports.quadRanges = quadRanges;
 exports.nodeRange = nodeRange;
 exports.mapValidationErrors = mapValidationErrors;
 exports.mapMaterialization = mapMaterialization;
@@ -1006,6 +1007,18 @@ function rangeOfNode(parsed, node, bnodes) {
                 return uttRange(utt.subject);
         }
     return null;
+}
+/** quadRanges - where an RDF/JS quad is written in a document: its term
+ * ranges, or null where it isn't there.  A debugger's thread pointing at
+ * the triples it has matched. */
+function quadRanges(parsed, quad) {
+    const ld = (t) => t.termType === "Literal"
+        ? { value: t.value,
+            type: t.datatype && t.datatype.value !== XSD_STRING && t.datatype.value !== RDF_LANGSTRING
+                ? t.datatype.value : undefined,
+            language: t.language || undefined }
+        : t.termType === "BlankNode" ? "_:" + t.value : t.value;
+    return tripleAnchors(parsed, { subject: ld(quad.subject), predicate: quad.predicate.value, object: ld(quad.object) }, parsed.text, { toProv: new Map(), used: new Set() });
 }
 /** nodeRange - where a node is written in a document: the first statement
  * it is the subject of.  What the query map pane points at in the data. */

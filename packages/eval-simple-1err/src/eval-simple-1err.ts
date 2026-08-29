@@ -307,7 +307,9 @@ export interface MatchThreadView {
   at: string; // the constraint's predicate, "match", or "control"
   tc?: ShExJ.TripleConstraint;
   repeats: Repeats;
-  matched: {predicate: string, triples: string[]}[];
+  /** the partition so far: each constraint's triples, spelled out and as
+   * quads (for a pane to point at) */
+  matched: {predicate: string, triples: string[], quads: RdfJsQuad[]}[];
   errors: number;
   next?: boolean; // true: already stepped into the coming generation
 }
@@ -479,6 +481,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
             this.debugHooks.onConstraint(tripleConstraint, {
               node,
               triples: constraintToTripleMapping.get(tripleConstraint)!.map(pair => pair.triple),
+              thread: this.constraintThreadView(thread),
             });
           let min = state.c.min !== undefined ? state.c.min : 1;
           let max = state.c.max !== undefined ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
@@ -510,6 +513,13 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
             })());
             thread.matched = matched0;
           }
+          // the actions run at the end here (matchedToResult), so what was
+          // taken is what passed; a thread that spawned nothing died
+          if (this.debugHooks && this.debugHooks.onConstraintResult)
+            this.debugHooks.onConstraintResult(tripleConstraint, {
+              node, taken: taken.slice(), passed: taken.length >= min ? taken.slice() : [], failed: [],
+              spawned: nlist.length - nlistlen, thread: this.constraintThreadView(thread),
+            });
           if (nlist.length === nlistlen)
             yield {type: "fail", tc: tripleConstraint, generation,
                    thread: this.threadView(thread)};
@@ -640,8 +650,19 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
       matched: thread.matched.map(m => ({
         predicate: m.c.predicate,
         triples: m.triples.map(t => term(t.subject) + " " + term(t.predicate) + " " + term(t.object)),
+        quads: m.triples.slice(),
       })),
       errors: thread.errors.length,
+    };
+  }
+
+  /** the part of a thread every engine reports to a debug hook */
+  constraintThreadView (thread: RegExpThread) {
+    return {
+      matched: thread.matched.map(m => ({predicate: m.c.predicate, triples: m.triples.slice()})),
+      errors: thread.errors.length,
+      repeats: Object.assign({}, thread.repeats),
+      state: thread.state,
     };
   }
 

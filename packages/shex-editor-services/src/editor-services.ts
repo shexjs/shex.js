@@ -1215,6 +1215,21 @@ function rangeOfNode (parsed: ParsedTurtle, node: LdTerm, bnodes: BnodeAlignment
   return null;
 }
 
+/** quadRanges - where an RDF/JS quad is written in a document: its term
+ * ranges, or null where it isn't there.  A debugger's thread pointing at
+ * the triples it has matched. */
+export function quadRanges (parsed: ParsedTurtle, quad: any):
+    Pick<PairAnchors, "subject" | "predicate" | "object" | "subjectParts" | "objectParts"> | null {
+  const ld = (t: any): LdTerm => t.termType === "Literal"
+    ? {value: t.value,
+       type: t.datatype && t.datatype.value !== XSD_STRING && t.datatype.value !== RDF_LANGSTRING
+         ? t.datatype.value : undefined,
+       language: t.language || undefined}
+    : t.termType === "BlankNode" ? "_:" + t.value : t.value;
+  return tripleAnchors(parsed, {subject: ld(quad.subject), predicate: quad.predicate.value, object: ld(quad.object)},
+                       parsed.text, {toProv: new Map(), used: new Set()});
+}
+
 /** nodeRange - where a node is written in a document: the first statement
  * it is the subject of.  What the query map pane points at in the data. */
 export function nodeRange (parsed: ParsedTurtle, node: LdTerm): Range | null {

@@ -265,10 +265,10 @@ class ShExDebugRepl {
   showInfo () {
     if (this.current)
       this.write("at: " + (this.current.type || "?") + " " +
-                 this.pointStr(this.current.point) + "@" +
+                 this.pointStr(this.current.node) + "@" +
                  (this.current.type === "constraint"
                   ? this.lex(this.current.tc.predicate)
-                  : this.lex(this.current.label)) + "\n");
+                  : this.lex(this.current.shape)) + "\n");
     this.write(this.breakpointDescriptions.length
       ? this.breakpointDescriptions.map(b => "  " + b).join("\n") + "\n"
       : "no breakpoints\n");
