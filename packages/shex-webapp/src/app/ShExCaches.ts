@@ -785,7 +785,9 @@ class ManifestCache extends InterfaceCache {
   }
 
   renderErrorMessage (response, what) {
-    const message = "failed to load " + what + " from <" + response.url + ">, got: " + response.status + " " + response.statusText;
+    const message = response instanceof Error
+          ? "failed to load " + what + ": " + response.message
+          : "failed to load " + what + " from <" + response.url + ">, got: " + response.status + " " + response.statusText;
     this.resultsWidget.append($("<pre/>").text(message).addClass("error"));
     return message;
   }
@@ -847,10 +849,70 @@ const ShExJsUrl = 'https://github.com/shexSpec/shex.js'
  */
 class PluginCache extends InterfaceCache {
   [key: string]: any;
+  /** sessionStorage: the origins the reader said may keep loading, for the tab */
+  static TRUSTED_ORIGINS_KEY = "shex-plugin-origins";
+
   constructor (selection, resultsWidget) {
     super(selection, null);
     this.resultsWidget = resultsWidget;
     this.urls = []; // every plugin loaded, for the permalink
+    // the question a plugin from another origin raises, hidden until asked
+    $("#trustForm").dialog({autoOpen: false, modal: true, width: 520});
+  }
+
+  /** what InterfaceCache does, once the reader has said it may (doc/plugins.md, Trust) */
+  async asyncGet (url) {
+    await this.permission(new URL(url, window.location.href).href);
+    return super.asyncGet(url);
+  }
+
+  /**
+   * Whether a plugin from `url` may run in this page.  The page's own
+   * origin may -- it came with the page.  Another may once the reader has
+   * said so, for this once or for the life of the tab, and may not once
+   * they have said not; closing the question says not.  One question at
+   * a time: a link that names two plugins asks twice, in turn.
+   */
+  permission (url) {
+    const origin = new URL(url).origin;
+    if (origin === window.location.origin || PluginCache.trustedOrigins().indexOf(origin) !== -1)
+      return Promise.resolve();
+    const form = $("#trustForm");
+    if (form.length === 0) // a page with no way to ask does not load
+      return Promise.reject(Error(`plugin <${url}> not loaded: this page cannot ask whether it may`));
+    const ask = () => new Promise<void>((resolve, reject) => {
+      form.find(".origin").text(origin);
+      form.find(".url").text(url);
+      form.dialog({
+        buttons: [ // resolve before closing: closing declines
+          {text: "Load", id: "trustOnce", click: () => { resolve(); form.dialog("close"); }},
+          {text: "Load, and any more from this site this session", id: "trustOrigin",
+           click: () => { PluginCache.trust(origin); resolve(); form.dialog("close"); }},
+          {text: "Don't load", id: "trustNot", click: () => form.dialog("close")},
+        ],
+        close: () => reject(Error(`plugin <${url}> not loaded: declined`)),
+      });
+      form.dialog("open");
+    });
+    this.asking = (this.asking || Promise.resolve()).then(ask, ask);
+    return this.asking;
+  }
+
+  static trustedOrigins () {
+    try {
+      return JSON.parse(window.sessionStorage.getItem(PluginCache.TRUSTED_ORIGINS_KEY) || "[]");
+    } catch (e) {
+      return []; // no storage here (an opaque origin): nothing remembered
+    }
+  }
+
+  static trust (origin) {
+    try {
+      window.sessionStorage.setItem(PluginCache.TRUSTED_ORIGINS_KEY,
+                                    JSON.stringify(PluginCache.trustedOrigins().concat(origin)));
+    } catch (e) {
+      // no storage: this once, then
+    }
   }
 
   async set (code, url, source, mediaType) {

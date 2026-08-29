@@ -13,6 +13,8 @@
  * built itself.  `options.worker` gives the page a fake Worker
  * (fakeWorker.js): `true` for one that resolves URLs against this repo's
  * server, or the `[{prefix, dir}]` list it should resolve against.
+ * `options.trust` names the origins whose plugins may load without the
+ * page asking (doc/plugins.md, "Trust").
  *
  * Console traffic is forwarded except `console.debug` (the app's channel
  * for user-input errors) and jsdom's "Not implemented: navigation" (a test
@@ -50,6 +52,7 @@ const ResourceConfig = {
  * @param page repo-relative path of the page (packages/shex-webapp/doc/shex-simple.html)
  * @param search the query string, "?" included
  * @param options.worker `true` or `[{prefix, dir}]`: give the page a fake Worker
+ * @param options.trust origins whose plugins load without asking
  * @param options.server what `urlFor` the page's URL is made with (default: this repo's)
  * @returns {dom, window, $, shared, app, errors}
  */
@@ -73,13 +76,18 @@ async function boot (page, search = "", options = {}) {
     pretendToBeVisual: true,          // CodeMirror needs rAF etc.
     virtualConsole,
   };
-  if (options.worker)
-    jsdomOptions.beforeParse = window => {
+  jsdomOptions.beforeParse = window => {
+    if (options.worker)
       // the page's head script runs new Worker("ShExWorkerThread.js"); the
       // fake resolves a plugin's worker half, named by URL, through this map
       window.Worker = makeWorkerClass(Path.dirname(base), {}, options.worker === true
         ? [{prefix: server.urlFor(""), dir: ROOT}] : options.worker);
-    };
+    // a plugin from another origin is put to the reader before it loads;
+    // a suite that boots with one has answered, the way a reader who said
+    // "and any more from this site" has
+    if (options.trust)
+      window.sessionStorage.setItem("shex-plugin-origins", JSON.stringify(options.trust));
+  };
   const dom = new jsdom.JSDOM(Fs.readFileSync(base, "utf8"), jsdomOptions);
   dom.window.fetch = node_fetch;
   // jsdom lacks the CSS namespace; jquery-ui >= 1.14 calls CSS.escape

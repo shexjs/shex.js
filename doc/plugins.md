@@ -102,7 +102,9 @@ screens.  A screen that is not showing is hidden and nothing else: its
 panes still load from the query string and from manifest entries, its keys
 still answer, and hooks like `schema` still read it -- ShExReduce's overlay
 steers a validation from wherever the reader happens to be looking.  The
-current screen rides in permalinks as `screen=<plugin id>`.
+current screen rides in permalinks as `screen=<plugin id>`.  A link that
+names a plugin and no screen opens on the validator's, the map pages
+included.
 `?interface=minimal` hides the screen tabs with the rest of the title bar;
 keys and `screen=` still reach the screens.
 
@@ -370,6 +372,22 @@ module loads do enforce it.
 `doc/plugin-skeleton/` from a second port and loads it from there, which is
 the case this contract is for.
 
+## Trust
+
+Loading a plugin runs its author's JavaScript in the page, with everything
+the page can reach.  A plugin from the page's own origin loads without
+comment: it came with the page, as did one a page `<script>` registers.
+One from anywhere else -- named by `?plugin=`, by a manifest entry's
+`plugins`, or in the load form -- is put to the reader first, in a dialog
+naming the site and the URL, with three answers: load it; load it and any
+more from that site for the life of the tab (`sessionStorage`); don't.
+Closing the dialog is "don't".  A declined plugin is reported in the
+results area and nothing else happens; a link that named two asks twice,
+in turn.  The answer never rides in a link: a link can name a plugin but
+cannot answer for the reader.  The tests that load from a second origin
+answer up front (`Harness.boot(page, search, {trust: [origin]})`), and
+the last suite in `plugin-cross-origin-test.js` answers at the dialog.
+
 ## Starting from the skeleton
 
 `doc/plugin-skeleton/hello-plugin.js` is a working plugin in about forty
@@ -386,6 +404,3 @@ shex-simple.html?plugin=https://your.example/hello-plugin.js
 - **Ordering between plugins.**  They are applied in the order they
   registered.  Two that fight over the same id are one plugin; two that
   fight over the same DOM id are a bug in one of them.
-- **Trust.**  Loading a plugin runs its author's JavaScript in the page,
-  with everything the page can reach.  A URL in a manifest is a URL somebody
-  wrote down; treat it as you would a script tag.

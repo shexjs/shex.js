@@ -34,6 +34,7 @@ const [[GitRootServer, ElsewhereServer, ElsewhereRepoServer]] = require("../../.
 const PAGE = "packages/shex-webapp/doc/shex-simple.html";
 const HELLO_ID = "http://example.org/extensions/Hello/";
 const ELSEWHERE = ElsewhereServer.urlFor("hello-plugin.js");
+const ELSEWHERE_ORIGIN = new URL(ELSEWHERE).origin;
 
 if (!TEST_browser) {
   console.warn("Skipping plugin-cross-origin-tests; to activate these tests, set environment variable TEST_browser=true");
@@ -45,7 +46,9 @@ if (!TEST_browser) {
     let dom, $, shared;
 
     before(async function () {
-      ({dom, $, shared} = await Harness.boot(PAGE, "?editors=1&plugin=" + encodeURIComponent(ELSEWHERE)));
+      // trusted up front; the question itself is the last suite in this file
+      ({dom, $, shared} = await Harness.boot(PAGE, "?editors=1&plugin=" + encodeURIComponent(ELSEWHERE),
+                                            {trust: [ELSEWHERE_ORIGIN]}));
     });
 
     after(function () { if (dom) dom.window.close(); });
@@ -126,7 +129,8 @@ if (!TEST_browser) {
       // the only served URLs this worker can resolve are the second
       // origin's, which is the point
       ({dom, $, shared} = await Harness.boot(page, "?editors=1&worker=1&plugin=" + encodeURIComponent(MAP_ELSEWHERE),
-                                            {worker: [{prefix: ElsewhereRepoServer.urlFor(""), dir: ROOT}]}));
+                                            {worker: [{prefix: ElsewhereRepoServer.urlFor(""), dir: ROOT}],
+                                             trust: [new URL(MAP_ELSEWHERE).origin]}));
     });
     after(function () { if (dom) dom.window.close(); });
 
@@ -166,6 +170,73 @@ if (!TEST_browser) {
       const resp = await node_fetch(new URL(ext.worker, ext.baseUrl).href);
       expect(resp.ok).to.equal(true);
       expect(resp.headers.get("content-type")).to.equal("text/javascript");
+    });
+  });
+
+  /* Before any of the above: a plugin from another origin is put to the
+   * reader (doc/plugins.md, "Trust").  The suites above answered up front
+   * by trusting the origin; this one answers at the dialog. */
+  describe("the question a plugin from another origin raises", function () {
+    this.timeout(20000);
+    let dom, $, shared, app;
+    const asking = () => $("#trustForm").dialog("isOpen");
+    // the question is asked a microtask after the load is asked for
+    const tick = () => new Promise(resolve => dom.window.setTimeout(resolve, 0));
+
+    before(async function () {
+      ({dom, $, shared, app} = await Harness.boot(PAGE, "?editors=1"));
+    });
+    after(function () { if (dom) dom.window.close(); });
+
+    it("should ask, naming the site, and not load when the reader declines", async function () {
+      const loading = app.loadPlugins([ELSEWHERE]);
+      await tick();
+      expect(asking(), "asked").to.equal(true);
+      expect($("#trustForm .origin").text()).to.equal(ELSEWHERE_ORIGIN);
+      expect($("#trustForm .url").text()).to.equal(ELSEWHERE);
+      $("#trustNot").trigger("click");
+      await loading;
+      expect(asking(), "answered").to.equal(false);
+      expect(dom.window.ShExPlugins.byId(HELLO_ID), "not loaded").to.not.exist;
+      expect($("#results .error").last().text()).to.include("declined");
+    });
+
+    it("should load when the reader says so, and ask again next time", async function () {
+      let loading = app.loadPlugins([ELSEWHERE]);
+      await tick();
+      expect(asking()).to.equal(true);
+      $("#trustOnce").trigger("click");
+      await loading;
+      expect(dom.window.ShExPlugins.byId(HELLO_ID), "loaded").to.exist;
+      expect(dom.window.sessionStorage.getItem("shex-plugin-origins"), "not remembered").to.equal(null);
+
+      loading = app.loadPlugins([ELSEWHERE + "?again"]);
+      await tick();
+      expect(asking(), "asked again").to.equal(true);
+      $("#trustNot").trigger("click");
+      await loading;
+    });
+
+    it("should remember a site the reader said may keep loading, for the tab", async function () {
+      let loading = app.loadPlugins([ELSEWHERE + "?third"]);
+      await tick();
+      expect(asking()).to.equal(true);
+      $("#trustOrigin").trigger("click");
+      await loading;
+      expect(JSON.parse(dom.window.sessionStorage.getItem("shex-plugin-origins")))
+        .to.deep.equal([ELSEWHERE_ORIGIN]);
+
+      loading = app.loadPlugins([ELSEWHERE + "?fourth"]);
+      await tick();
+      expect(asking(), "not asked").to.equal(false);
+      await loading;
+    });
+
+    it("should not ask about the page's own origin", async function () {
+      const loading = app.loadPlugins([GitRootServer.urlFor("doc/plugin-skeleton/hello-plugin.js")]);
+      await tick();
+      expect(asking()).to.equal(false);
+      await loading;
     });
   });
 }
