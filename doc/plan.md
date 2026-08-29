@@ -177,25 +177,28 @@ Larger, design conversation first:
 
 ## G. Errors and validation
 
+A closed shape's refusals are repairs (G2, 2026-08-29): "remove it",
+added to every way the bag has, or alone where the bag was fine.  The
+feasibility layer was checked where it looks away (G4,
+`FeasibilityCoupling-test`): over every small bag of five coupled
+expressions it never refutes one the language accepts; what the check
+found wrong was elsewhere, and is fixed -- the parser copied a group's
+cardinality onto a single constraint over the constraint's own
+(`( :a . {2} ){1,3}` became `:a . {1,3}`; it is a one-element EachOf
+now), and both engines mishandled a group taken zero times over a node
+with none of its arcs (the threaded one answered nothing and the
+validator fell over it; the stepper reported a missing property).  The
+old notes are settled (G5): the EXTENDS-over-a-twice-constrained-
+predicate question is a test (`ExtendsRepeatedPredicate-test`), the
+ShEx-1-era CLI cases are gone already, and the writer rename is in §I3.
+
 - **G1 (decision)** Replace the classic errors with repairs once the
   repairs have been read in anger for a while, and rewrite the failure
   fixtures once (error-normalization §4, step 4).  Repairs are on by
   default everywhere now, so this is a question of use, not code.
-- **G2 (S–M)** A closed-shape `ClosedShapeViolation` can carry a
-  "remove it" repair — the arcs it complains about are in no bag, so the
-  DP never sees them.
 - **G3 (L)** Assignment when several constraints could take a triple
   (`EXTRA`, one predicate constrained twice): a min-cost bipartite
   assignment inside the repair DP.
-- **G4 (verify)** `feasibility.ts` deliberately ignores the coupling of a
-  repeated group with an unbounded inner cardinality; the matchers are
-  fixed for it (`c018dc49`, `e526b191`, `c1ea5d18`) — check what the
-  refutation layer still gets wrong there, if anything.
-- **G5 (triage)** Old notes (formerly `TODO/notes`): is
-  `<#Base> { <p1> [1]; <p1> [2] } <#Leaf> EXTENDS @<#Base> { <p1> [3] }`
-  covered by `Extend3G-pass`?; two "should fail" CLI cases written in a
-  ShEx-1-era `$:gn < $:fn` syntax, probably obsolete; "rename
-  `ShEx{,C}Writer`" for a major.
 
 ## H. Data sources
 
@@ -205,13 +208,15 @@ Larger, design conversation first:
 
 ## I. Toolchain and repo hygiene
 
+The Makefile is hand-maintained; the generator it grew out of
+(`tools/makeMake.js`) had stopped running and is gone (I2, 2026-08-29).
+
 - **I1 (decision)** `perf/fhir/corpus/examples`: 2,172 tracked files,
   33 MB of an 82 MB pack.  git-lfs, a fetch script, or a fixture repo.
-- **I2 (M)** `tools/makeMake.js` no longer generates the hand-amended
-  `Makefile`; teach it the parser and TypeScript targets, or drop it.
 - **I3 (on request)** Majors deliberately not taken: chai 5+, n3 2.x,
   eslint 10, jquery 4, node-fetch 3, koa 3, jsonld 9, glob 13, js-yaml 5,
-  pre-commit→husky.  Remaining `npm audit` findings are in pre-commit's
+  pre-commit→husky; and, of this repo's own, renaming `ShExWriter` (it
+  writes ShExC) to `ShExCWriter`.  Remaining `npm audit` findings are in pre-commit's
   transitive chains.
 
 ## Decisions wanted

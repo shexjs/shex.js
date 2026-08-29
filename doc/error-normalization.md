@@ -234,11 +234,16 @@ repairs on, against 52 ms without — the search is not what costs.
 - **Repeated groups with unbounded inner cardinalities** — the coupling
   `feasibility.ts` deliberately ignores, and the corner where §1 found both
   engines already wrong.  A repair story is only as good as the matcher
-  underneath it.
-- **Arcs the expression never mentions.**  The rest of those 16 are
-  `ClosedShapeViolation`s: a triple whose predicate is nowhere in the shape
-  is not in the bag at all, so the DP cannot see it.  "Remove it" is a
-  repair, and a caller with the closed-shape error in hand could add it.
+  underneath it.  (`FeasibilityCoupling-test` now checks the layer never
+  refutes a bag the engines accept, over every small bag of five such
+  expressions; the engines' own wrongs it turned up -- a cardinality on a
+  group overwriting the constraint's, a group taken zero times -- are
+  fixed.)
+- **Arcs the expression never mentions** are not the DP's to see: a
+  triple whose predicate is nowhere in the shape is in no bag.  A closed
+  shape's refusal of one is still a repair -- "remove it" -- and the
+  validator adds it to every way the bag has (or reports it alone, where
+  the bag was fine): the rest of those 16 carry one now.
 - **Which repair to prefer** when several tie.  Report the set; picking one
   is a UI decision, not a semantic one.  The set is capped (8 bags carried
   through the DP, 64 deals of a repeated arc) because ties multiply; a schema
