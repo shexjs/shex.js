@@ -13,7 +13,7 @@
  */
 
 import {basicSetup} from "codemirror";
-import {EditorView, Decoration, DecorationSet, gutter, GutterMarker} from "@codemirror/view";
+import {EditorView, Decoration, DecorationSet, gutter, GutterMarker, Tooltip, showTooltip} from "@codemirror/view";
 import {StateField, StateEffect, Extension, RangeSet, EditorState, Annotation} from "@codemirror/state";
 import {StreamLanguage, StreamParser, LRLanguage} from "@codemirror/language";
 import {linter, setDiagnostics, lintGutter, LintSource} from "@codemirror/lint";
@@ -23,7 +23,7 @@ import {parser as lezerTurtleParser} from "lezer-turtle";
 import * as EditorServices from "./editor-services";
 import {Diagnostic, Range} from "./editor-services";
 
-export type PaneLanguage = "shexc" | "turtle" | "json";
+export type PaneLanguage = "shexc" | "turtle" | "json" | "shapemap";
 
 /** A language described by something that isn't this package -- a
  * neighborhood module saying how the text that configures it should be
@@ -46,6 +46,8 @@ export interface CompletionSets {
   prefixes?: {[prefix: string]: string};
   shapeLabels?: string[];
   predicates?: string[];
+  /** the data's subjects, for the node side of a query map pair */
+  nodes?: string[];
 }
 
 export interface MakePaneOptions {
@@ -71,6 +73,9 @@ export interface MakePaneOptions {
   supplied?: (text: string) => SuppliedEditor | null;
   /** context handed to the supplied editor's functions, e.g. {db} */
   suppliedContext?: () => any;
+  /** for a shape-map pane: the base and the schema's and data's metas the
+   * two sides of each pair resolve against (see parseShapeMap) */
+  shapeMap?: () => EditorServices.ParseShapeMapOptions;
 }
 
 /** lexicalize - shortest lexical form for an IRI under the given prefixes */
@@ -107,6 +112,9 @@ export function completionSource (getSets: () => CompletionSets) {
     });
     (sets.predicates || []).forEach(iri =>
       options.push({label: lexicalize(iri, prefixes), type: "property"}));
+    (sets.nodes || []).forEach(term =>
+      options.push({label: term.startsWith("_:") ? term : lexicalize(term, prefixes),
+                    type: "variable", detail: "node"}));
     return options.length
       ? {from: word ? word.from : context.pos, options, validFor: /^@?[<A-Za-z_:][^\s]*$/}
       : null;
@@ -117,6 +125,11 @@ export function completionSource (getSets: () => CompletionSets) {
  * being clicked -- which is how a transient highlight is made to stay */
 export interface HoverRegion extends Range {
   enter (): void;
+  /** What to say about the range while the mouse is in it, in a tooltip
+   * above it: the constraint's text over the triple it matched, say.
+   * A function is asked when the mouse arrives, so it can read what is
+   * current; null or empty shows nothing. */
+  title?: string | (() => string | null);
   /** Handle a click on this range.  Return true to consume it: the event is
    * then stopped before the editor sees it, so the gesture doesn't also move
    * the caret or drag out a selection.  Return false and the click is an
@@ -221,10 +234,50 @@ export const shexcStreamParser: StreamParser<ShExCState> = {
  * (RDF 1.2; the same parse tree that powers provenance tracking). */
 const turtleLanguage = LRLanguage.define({parser: lezerTurtleParser});
 
+/** Shape maps (the query map pane): nodes and shapes as ShExC and Turtle
+ * write terms, `@` with a status between each pair's two sides, `{FOCUS
+ * ...}` triple patterns, a reason and appinfo after.  Approximate, like the
+ * ShExC tokenizer; the parser's diagnostics are the truth. */
+export const shapeMapStreamParser: StreamParser<ShExCState> = {
+  name: "shapemap",
+  startState: () => ({inString: null}),
+  token (stream, state) {
+    if (state.inString) {
+      while (!stream.eol()) {
+        if (stream.match(state.inString)) { state.inString = null; break; }
+        if (stream.next() === "\\") stream.next();
+      }
+      return "string";
+    }
+    if (stream.eatSpace()) return null;
+    if (stream.match(/^#.*/)) return "comment";
+    if (stream.match(/^<[^<>"{}|^`\\ ]*>/)) return "link";
+    if (stream.match(/^('''|""")/)) { state.inString = stream.current(); return "string"; }
+    if (stream.match(/^"(?:[^"\\\n]|\\.)*"/) || stream.match(/^'(?:[^'\\\n]|\\.)*'/)) {
+      stream.match(/^\^\^/) || stream.match(/^@[a-zA-Z-]+/);
+      return "string";
+    }
+    // the shape side: @shape, @START, or a bare @ with a status to follow
+    if (stream.match(/^@(?:START\b|<[^>]*>|[A-Za-z_][A-Za-z0-9_.-]*:[A-Za-z0-9_.:%\\-]*)/i)) return "typeName";
+    if (stream.match(/^@/)) return "operator";
+    if (stream.match(/^(?:START|FOCUS|SPARQL)\b/i)) return "keyword";
+    if (stream.match(/^\$\s*appinfo\s*:/i)) return "meta";
+    if (stream.match(/^_:[A-Za-z0-9_.-]+/)) return "variableName";      // blank node
+    if (stream.match(/^[A-Za-z_][A-Za-z0-9_.-]*:[A-Za-z0-9_.:%\\-]*/)) return "variableName"; // pname
+    if (stream.match(/^(?:true|false|null)\b/)) return "atom";
+    if (stream.match(/^[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/)) return "number";
+    if (stream.match(/^[!?]/)) return "operator";                      // status
+    if (stream.match(/^[{}[\],/_]/)) return "punctuation";
+    stream.next();
+    return null;
+  },
+};
+
 export const languages: {[lang in PaneLanguage]: () => Extension} = {
   shexc: () => StreamLanguage.define(shexcStreamParser),
   turtle: () => turtleLanguage,
   json: () => json(),
+  shapemap: () => StreamLanguage.define(shapeMapStreamParser),
 };
 
 export interface ResultPane {
@@ -278,6 +331,7 @@ export function makeResultPane (text: string, language: PaneLanguage = "json",
     languages[language](),
     highlightField,
     annotationField,
+    tooltipField,
     paneTheme,
     ...dressing,
     EditorView.editable.of(false),
@@ -366,6 +420,7 @@ function attachHoverRegions (view: EditorView): (regions: HoverRegion[], leave?:
   const clearHover = () => {
     if (currentRegion) {
       currentRegion = null;
+      regionTooltip(view, null);
       if (hoverLeave)
         hoverLeave();
     }
@@ -380,6 +435,7 @@ function attachHoverRegions (view: EditorView): (regions: HoverRegion[], leave?:
                 ? r : best, null);
     if (hit !== currentRegion) {
       currentRegion = hit;
+      regionTooltip(view, hit);
       if (hit)
         hit.enter();
       else if (hoverLeave)
@@ -487,7 +543,54 @@ function annotateOn (view: EditorView, marks: PaneAnnotation[] | null): void {
   view.dispatch({effects: setAnnotationsEffect.of(Decoration.set(decos, true))});
 }
 
+/** The tooltip a hover region asked for (HoverRegion.title): one at a time,
+ * shown while the mouse is in the region and withdrawn when it leaves.  An
+ * edit withdraws it too -- it was about text that has moved. */
+const setTooltipEffect = StateEffect.define<Tooltip | null>();
+const tooltipField = StateField.define<Tooltip | null>({
+  create: () => null,
+  update (tip, tr) {
+    if (tr.docChanged)
+      tip = null;
+    for (const e of tr.effects)
+      if (e.is(setTooltipEffect))
+        tip = e.value;
+    return tip;
+  },
+  provide: f => showTooltip.from(f),
+});
+
+/** show what a region has to say, or (null) take it back */
+function regionTooltip (view: EditorView, region: HoverRegion | null): void {
+  if (view.state.field(tooltipField, false) === undefined)
+    return;
+  let text: string | null = null;
+  if (region && region.title) {
+    try {
+      text = typeof region.title === "function" ? region.title() : region.title;
+    } catch (e) {
+      text = null;                     // a host's bug must not break hovering
+    }
+  }
+  if (!text && !view.state.field(tooltipField))
+    return;
+  view.dispatch({effects: setTooltipEffect.of(!text ? null : {
+    pos: region!.from,
+    end: region!.to,
+    above: true,
+    create: () => {
+      const dom = document.createElement("div");
+      dom.className = "shexjs-tooltip";
+      dom.textContent = text;
+      return {dom};
+    },
+  })});
+}
+
 const paneTheme = EditorView.baseTheme({
+  ".cm-tooltip.shexjs-tooltip": {whiteSpace: "pre-wrap", fontFamily: "monospace", fontSize: "12px",
+                                 padding: "2px 6px", maxWidth: "48em", backgroundColor: "#ffffe8",
+                                 border: "1px solid #bbb"},
   ".shexjs-annotation": {borderBottom: "2px solid #7a86c8"},
   ".shexjs-binding-consumed": {backgroundColor: "#e6f0d8", borderBottom: "2px solid #6a9a3a"},
   ".shexjs-binding-cursor": {borderBottom: "2px dashed #a8620a"},
@@ -549,9 +652,15 @@ const breakpointExtension: Extension = [
 function lintSourceFor (language: PaneLanguage | undefined, opts: MakePaneOptions): LintSource | null {
   switch (language) {
   case "shexc":
-    return view => EditorServices.parseShExC(
+    // the schema pane holds ShExC, or ShExJ, ShExR or a DCTAP table: each
+    // is linted in its own language (see lintSchema)
+    return view => EditorServices.lintSchema(
       view.state.doc.toString(),
-      {base: opts.getBase ? opts.getBase() : undefined}).diagnostics;
+      {base: opts.getBase ? opts.getBase() : undefined});
+  case "shapemap":
+    return view => EditorServices.parseShapeMap(
+      view.state.doc.toString(),
+      opts.shapeMap ? opts.shapeMap() : {base: opts.getBase ? opts.getBase() : undefined}).diagnostics;
   case "turtle":
     return view => EditorServices.parseTurtle(
       view.state.doc.toString(),
@@ -681,6 +790,7 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
     breakpointExtension,
     highlightField,
     annotationField,
+    tooltipField,
     paneTheme,
     EditorView.updateListener.of(update => {
       if (update.docChanged) {
@@ -719,8 +829,10 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
   const language = opts.language
         || (supplied && languages[supplied.language as PaneLanguage] ? supplied.language as PaneLanguage : undefined);
 
-  if (language === "shexc" || language === "turtle") {
-    const lang = language === "shexc" ? StreamLanguage.define(shexcStreamParser) : turtleLanguage;
+  if (language === "shexc" || language === "turtle" || language === "shapemap") {
+    const lang = language === "shexc" ? StreamLanguage.define(shexcStreamParser)
+          : language === "shapemap" ? StreamLanguage.define(shapeMapStreamParser)
+          : turtleLanguage;
     extensions.push(lang);
     const autocompletes = [];
     if (opts.completions) // basicSetup's autocompletion() reads languageData

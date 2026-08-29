@@ -46,7 +46,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CHANGE_DEBOUNCE_MS = exports.languages = exports.shexcStreamParser = void 0;
+exports.CHANGE_DEBOUNCE_MS = exports.languages = exports.shapeMapStreamParser = exports.shexcStreamParser = void 0;
 exports.lexicalize = lexicalize;
 exports.completionSource = completionSource;
 exports.makeResultPane = makeResultPane;
@@ -93,6 +93,8 @@ function completionSource(getSets) {
             options.push({ label: "@" + lex, type: "class", detail: "shape ref" });
         });
         (sets.predicates || []).forEach(iri => options.push({ label: lexicalize(iri, prefixes), type: "property" }));
+        (sets.nodes || []).forEach(term => options.push({ label: term.startsWith("_:") ? term : lexicalize(term, prefixes),
+            type: "variable", detail: "node" }));
         return options.length
             ? { from: word ? word.from : context.pos, options, validFor: /^@?[<A-Za-z_:][^\s]*$/ }
             : null;
@@ -159,10 +161,69 @@ exports.shexcStreamParser = {
 /** Turtle via the incremental, error-recovering lezer-turtle grammar
  * (RDF 1.2; the same parse tree that powers provenance tracking). */
 const turtleLanguage = language_1.LRLanguage.define({ parser: lezer_turtle_1.parser });
+/** Shape maps (the query map pane): nodes and shapes as ShExC and Turtle
+ * write terms, `@` with a status between each pair's two sides, `{FOCUS
+ * ...}` triple patterns, a reason and appinfo after.  Approximate, like the
+ * ShExC tokenizer; the parser's diagnostics are the truth. */
+exports.shapeMapStreamParser = {
+    name: "shapemap",
+    startState: () => ({ inString: null }),
+    token(stream, state) {
+        if (state.inString) {
+            while (!stream.eol()) {
+                if (stream.match(state.inString)) {
+                    state.inString = null;
+                    break;
+                }
+                if (stream.next() === "\\")
+                    stream.next();
+            }
+            return "string";
+        }
+        if (stream.eatSpace())
+            return null;
+        if (stream.match(/^#.*/))
+            return "comment";
+        if (stream.match(/^<[^<>"{}|^`\\ ]*>/))
+            return "link";
+        if (stream.match(/^('''|""")/)) {
+            state.inString = stream.current();
+            return "string";
+        }
+        if (stream.match(/^"(?:[^"\\\n]|\\.)*"/) || stream.match(/^'(?:[^'\\\n]|\\.)*'/)) {
+            stream.match(/^\^\^/) || stream.match(/^@[a-zA-Z-]+/);
+            return "string";
+        }
+        // the shape side: @shape, @START, or a bare @ with a status to follow
+        if (stream.match(/^@(?:START\b|<[^>]*>|[A-Za-z_][A-Za-z0-9_.-]*:[A-Za-z0-9_.:%\\-]*)/i))
+            return "typeName";
+        if (stream.match(/^@/))
+            return "operator";
+        if (stream.match(/^(?:START|FOCUS|SPARQL)\b/i))
+            return "keyword";
+        if (stream.match(/^\$\s*appinfo\s*:/i))
+            return "meta";
+        if (stream.match(/^_:[A-Za-z0-9_.-]+/))
+            return "variableName"; // blank node
+        if (stream.match(/^[A-Za-z_][A-Za-z0-9_.-]*:[A-Za-z0-9_.:%\\-]*/))
+            return "variableName"; // pname
+        if (stream.match(/^(?:true|false|null)\b/))
+            return "atom";
+        if (stream.match(/^[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/))
+            return "number";
+        if (stream.match(/^[!?]/))
+            return "operator"; // status
+        if (stream.match(/^[{}[\],/_]/))
+            return "punctuation";
+        stream.next();
+        return null;
+    },
+};
 exports.languages = {
     shexc: () => language_1.StreamLanguage.define(exports.shexcStreamParser),
     turtle: () => turtleLanguage,
     json: () => (0, lang_json_1.json)(),
+    shapemap: () => language_1.StreamLanguage.define(exports.shapeMapStreamParser),
 };
 /** paintedLike - dress a pane in an element's colours, so an editor looks
  * like the thing it stands in for (or, for a result pane, like the place it
@@ -198,6 +259,7 @@ function makeResultPane(text, language = "json", opts = {}) {
             exports.languages[language](),
             highlightField,
             annotationField,
+            tooltipField,
             paneTheme,
             ...dressing,
             view_1.EditorView.editable.of(false),
@@ -281,6 +343,7 @@ function attachHoverRegions(view) {
     const clearHover = () => {
         if (currentRegion) {
             currentRegion = null;
+            regionTooltip(view, null);
             if (hoverLeave)
                 hoverLeave();
         }
@@ -294,6 +357,7 @@ function attachHoverRegions(view) {
                 ? r : best, null);
         if (hit !== currentRegion) {
             currentRegion = hit;
+            regionTooltip(view, hit);
             if (hit)
                 hit.enter();
             else if (hoverLeave)
@@ -395,7 +459,53 @@ function annotateOn(view, marks) {
     }).range(m.from, m.to));
     view.dispatch({ effects: setAnnotationsEffect.of(view_1.Decoration.set(decos, true)) });
 }
+/** The tooltip a hover region asked for (HoverRegion.title): one at a time,
+ * shown while the mouse is in the region and withdrawn when it leaves.  An
+ * edit withdraws it too -- it was about text that has moved. */
+const setTooltipEffect = state_1.StateEffect.define();
+const tooltipField = state_1.StateField.define({
+    create: () => null,
+    update(tip, tr) {
+        if (tr.docChanged)
+            tip = null;
+        for (const e of tr.effects)
+            if (e.is(setTooltipEffect))
+                tip = e.value;
+        return tip;
+    },
+    provide: f => view_1.showTooltip.from(f),
+});
+/** show what a region has to say, or (null) take it back */
+function regionTooltip(view, region) {
+    if (view.state.field(tooltipField, false) === undefined)
+        return;
+    let text = null;
+    if (region && region.title) {
+        try {
+            text = typeof region.title === "function" ? region.title() : region.title;
+        }
+        catch (e) {
+            text = null; // a host's bug must not break hovering
+        }
+    }
+    if (!text && !view.state.field(tooltipField))
+        return;
+    view.dispatch({ effects: setTooltipEffect.of(!text ? null : {
+            pos: region.from,
+            end: region.to,
+            above: true,
+            create: () => {
+                const dom = document.createElement("div");
+                dom.className = "shexjs-tooltip";
+                dom.textContent = text;
+                return { dom };
+            },
+        }) });
+}
 const paneTheme = view_1.EditorView.baseTheme({
+    ".cm-tooltip.shexjs-tooltip": { whiteSpace: "pre-wrap", fontFamily: "monospace", fontSize: "12px",
+        padding: "2px 6px", maxWidth: "48em", backgroundColor: "#ffffe8",
+        border: "1px solid #bbb" },
     ".shexjs-annotation": { borderBottom: "2px solid #7a86c8" },
     ".shexjs-binding-consumed": { backgroundColor: "#e6f0d8", borderBottom: "2px solid #6a9a3a" },
     ".shexjs-binding-cursor": { borderBottom: "2px dashed #a8620a" },
@@ -451,7 +561,11 @@ const breakpointExtension = [
 function lintSourceFor(language, opts) {
     switch (language) {
         case "shexc":
-            return view => EditorServices.parseShExC(view.state.doc.toString(), { base: opts.getBase ? opts.getBase() : undefined }).diagnostics;
+            // the schema pane holds ShExC, or ShExJ, ShExR or a DCTAP table: each
+            // is linted in its own language (see lintSchema)
+            return view => EditorServices.lintSchema(view.state.doc.toString(), { base: opts.getBase ? opts.getBase() : undefined });
+        case "shapemap":
+            return view => EditorServices.parseShapeMap(view.state.doc.toString(), opts.shapeMap ? opts.shapeMap() : { base: opts.getBase ? opts.getBase() : undefined }).diagnostics;
         case "turtle":
             return view => EditorServices.parseTurtle(view.state.doc.toString(), { baseIRI: opts.getBase ? opts.getBase() : undefined }).diagnostics;
         case "json":
@@ -564,6 +678,7 @@ function makePane(textarea, opts = {}) {
         breakpointExtension,
         highlightField,
         annotationField,
+        tooltipField,
         paneTheme,
         view_1.EditorView.updateListener.of(update => {
             if (update.docChanged) {
@@ -601,8 +716,10 @@ function makePane(textarea, opts = {}) {
     const supplied = getSupplied(textarea.value);
     const language = opts.language
         || (supplied && exports.languages[supplied.language] ? supplied.language : undefined);
-    if (language === "shexc" || language === "turtle") {
-        const lang = language === "shexc" ? language_1.StreamLanguage.define(exports.shexcStreamParser) : turtleLanguage;
+    if (language === "shexc" || language === "turtle" || language === "shapemap") {
+        const lang = language === "shexc" ? language_1.StreamLanguage.define(exports.shexcStreamParser)
+            : language === "shapemap" ? language_1.StreamLanguage.define(exports.shapeMapStreamParser)
+                : turtleLanguage;
         extensions.push(lang);
         const autocompletes = [];
         if (opts.completions) // basicSetup's autocompletion() reads languageData
