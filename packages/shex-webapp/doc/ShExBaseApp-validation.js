@@ -232,7 +232,7 @@ mixin(ShExBaseApp, {
         } };
         [["bp", session.breakpoints.predicates, this.Caches.inputSchema.meta],
             ["bn", session.breakpoints.nodes, this.Caches.inputData.meta]].forEach(([kind, set, meta]) => {
-            set.forEach(value => {
+            set.forEach((value) => {
                 list.append($("<span/>", { class: "dbgBreakpoint", "data-kind": kind, "data-value": value })
                     .text(kind + " " + (typeof value === "string" && !value.startsWith("_:") ? lex(value, meta) : value))
                     .append($("<button/>", { title: "remove this breakpoint" }).text("×")
@@ -272,8 +272,8 @@ mixin(ShExBaseApp, {
         // means the constraint there.
         const schemaText = this.Caches.inputSchema.selection.val();
         const lineStarts = ShExWebApp.EditorServices.lineOffsets(schemaText);
-        session.pane.listBreakpoints().forEach(pos => {
-            const next = lineStarts.findIndex(start => start > pos);
+        session.pane.listBreakpoints().forEach((pos) => {
+            const next = lineStarts.findIndex((start) => start > pos);
             const lineFrom = lineStarts[(next === -1 ? lineStarts.length : next) - 1];
             const lineEnd = next === -1 ? schemaText.length : lineStarts[next];
             let hit = null;
@@ -288,7 +288,7 @@ mixin(ShExBaseApp, {
             if (hit)
                 dbg.addBreakpoint({ tc: hit.expr });
         });
-        session.breakpoints.predicates.forEach(predicate => dbg.addBreakpoint({ predicate }));
+        session.breakpoints.predicates.forEach((predicate) => dbg.addBreakpoint({ predicate }));
         session.dbg = dbg;
         session.capture = cap;
         $("#valDbgStatus").text("paused before matching " + $("#valDbgMatches option:selected").text() +
@@ -349,7 +349,7 @@ mixin(ShExBaseApp, {
         const list = $("#valDbgThreads").empty();
         if (!session || !session.dbg)
             return;
-        session.dbg.threads().forEach(t => {
+        session.dbg.threads().forEach((t) => {
             const label = (t.next ? "advanced" : "current") + " thread at state " + t.stateNo +
                 (t.tc ? " <" + t.tc.predicate + ">" : " (" + t.at + ")");
             list.append($("<button/>", { class: "dbgThread", title: label + " -- click for its state" })
@@ -372,10 +372,10 @@ mixin(ShExBaseApp, {
         const dataPane = this.editorSupport && this.editorSupport.panes.inputData;
         if (dataPane) {
             const located = this.editorSupport.locateData(this.Caches.inputData.selection.val());
-            const ranges = !located ? [] : t.matched.flatMap(m => m.quads || [])
-                .map(q => ShExWebApp.EditorServices.quadRanges(located, q))
-                .filter(a => a)
-                .flatMap(a => [a.object, a.subject, a.predicate].filter(r => r));
+            const ranges = !located ? [] : t.matched.flatMap((m) => m.quads || [])
+                .map((q) => ShExWebApp.EditorServices.quadRanges(located, q))
+                .filter((a) => a)
+                .flatMap((a) => [a.object, a.subject, a.predicate].filter(r => r));
             dataPane.highlight(ranges, "shexjs-debug-current");
         }
         // ...and a table of the rest: where it is, its repeat counts, the
@@ -392,7 +392,7 @@ mixin(ShExBaseApp, {
         if (Object.keys(t.repeats).length)
             table.append(row("repeats", Object.entries(t.repeats).map(([s, n]) => "s" + s + "×" + n).join(", ")));
         table.append($("<tr/>").append($("<th/>", { colspan: 2 }).text("matched partition" + (t.matched.length === 0 ? " (empty)" : ""))));
-        t.matched.forEach(m => m.triples.forEach((tr, i) => table.append(row(i === 0 ? lex(m.predicate) : "", tr))));
+        t.matched.forEach((m) => m.triples.forEach((tr, i) => table.append(row(i === 0 ? lex(m.predicate) : "", tr))));
         if (t.errors)
             table.append(row("errors", String(t.errors)));
         $("#results div").empty();
@@ -526,7 +526,7 @@ mixin(ShExBaseApp, {
         function hasFocusNode() {
             return $(".focus").map((idx, elt) => {
                 return $(elt).val();
-            }).get().some(str => {
+            }).get().some((str) => {
                 return str.length > 0;
             });
         }
@@ -639,11 +639,11 @@ mixin(ShExBaseApp, {
             return "";
         const base = this.dataBase;
         const factory = RdfJs.DataFactory;
-        const under = term => term.termType === "NamedNode" && base && term.value.startsWith(base)
+        const under = (term) => term.termType === "NamedNode" && base && term.value.startsWith(base)
             ? factory.namedNode(term.value.substring(base.length))
             : term;
         const writer = new RdfJs.Writer({ prefixes: this.Caches.inputSchema.meta.prefixes });
-        writer.addQuads(quads.map(q => factory.quad(under(q.subject), under(q.predicate), under(q.object))));
+        writer.addQuads(quads.map((q) => factory.quad(under(q.subject), under(q.predicate), under(q.object))));
         let text = "";
         writer.end((e, out) => { text = out || ""; }); // a writer with no stream answers here
         return this.slurpPrefixes && text.startsWith(this.slurpPrefixes)
@@ -659,12 +659,12 @@ mixin(ShExBaseApp, {
     },
     makeConsoleTracker() {
         function padding(depth) { return (new Array(depth + 1)).join("  "); } // AKA "  ".repeat(depth)
-        function sm(node, shape) {
-            return `${this.Caches.inputData.meta.termToLex(node)}@${this.Caches.inputSchema.meta.termToLex(shape)}`;
-        }
+        // an arrow: as a nested function its `this` was undefined, so the trace
+        // threw on its first line whenever LOG_PROGRESS was on
+        const sm = (node, shape) => `${this.Caches.inputData.meta.termToLex(node)}@${this.Caches.inputSchema.meta.termToLex(shape)}`;
         const logger = {
-            recurse: x => { console.log(`${padding(logger.depth)}↻ ${sm(x.node, x.shape)}`); return x; },
-            known: x => { console.log(`${padding(logger.depth)}↵ ${sm(x.node, x.shape)}`); return x; },
+            recurse: (x) => { console.log(`${padding(logger.depth)}↻ ${sm(x.node, x.shape)}`); return x; },
+            known: (x) => { console.log(`${padding(logger.depth)}↵ ${sm(x.node, x.shape)}`); return x; },
             enter: (point, label) => { console.log(`${padding(logger.depth)}→ ${sm(point, label)}`); ++logger.depth; },
             exit: (point, label, ret) => { --logger.depth; console.log(`${padding(logger.depth)}← ${sm(point, label)}`); },
             depth: 0

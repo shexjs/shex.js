@@ -13,7 +13,7 @@
 /** Methods for a class, from a file of their own.  Defined the way a class
  * body defines them (non-enumerable, writable), so a method reads the same
  * to the app and to a plugin whichever file it is in. */
-function mixin (cls, methods) {
+function mixin<T> (cls: {prototype: T}, methods: ThisType<T> & {[name: string]: any}): void {
   Object.getOwnPropertyNames(methods).forEach(name =>
     Object.defineProperty(cls.prototype, name,
                           {value: methods[name], writable: true, configurable: true, enumerable: false}));
@@ -51,21 +51,21 @@ const DefaultBase = location.origin + location.pathname;
 // this app's own results, once a plugin's results sit beside them
 const APP_RESULTS_TAB = "validationResults";
 
-let SharedForTests = null;
+let SharedForTests: any = null;
 
 /** what is registered, or nothing where a page loaded no register */
-function pluginDescriptors () {
+function pluginDescriptors (): PluginDescriptor[] {
   return typeof ShExPlugins === "undefined" ? [] : ShExPlugins.all();
 }
 
 /** every registered plugin's worker half, absolute: a worker resolves a
  * relative importScripts against its own script, not against the page */
-function pluginWorkerUrls () {
+function pluginWorkerUrls (): string[] {
   return pluginDescriptors().filter(ext => ext.worker)
-    .map(ext => new URL(ext.worker, ext.baseUrl || DefaultBase).href);
+    .map(ext => new URL(ext.worker!, ext.baseUrl || DefaultBase).href);
 }
 
-function ldToTurtle (ld, termToLex) {
+function ldToTurtle (ld: any, termToLex: (term: any) => string): string {
   return typeof ld === "object"
     ? lit(ld)
     : termToLex(
@@ -73,9 +73,9 @@ function ldToTurtle (ld, termToLex) {
         ? RdfJs.DataFactory.blankNode(ld.substr(2))
         : RdfJs.DataFactory.namedNode(ld)
     );
-  function lit (o) {
-    let ret = "\""+o["@value"].replace(/["\r\n\t]/g, (c) => {
-      return {'"': "\\\"", "\r": "\\r", "\n": "\\n", "\t": "\\t"}[c];
+  function lit (o: any): string {
+    let ret = "\""+o["@value"].replace(/["\r\n\t]/g, (c: any) => {
+      return ({'"': "\\\"", "\r": "\\r", "\n": "\\n", "\t": "\\t"} as {[c: string]: string})[c];
     }) +"\"";
     if ("@type" in o)
       ret += "^^<" + o["@type"] + ">";
@@ -86,9 +86,12 @@ function ldToTurtle (ld, termToLex) {
 }
 
 /** Which spelling the messages use: see the `spelling` control. */
-function termSpelling () {
+function termSpelling (): "explicit" | "document" {
   return $("#spelling").val() === "explicit" ? "explicit" : "document";
 }
+
+/** how a report spells a term, or null for "as it is" */
+type TermLexer = (term: any, role?: string) => string | null;
 
 /**
  * How to spell a term in a report that isn't tied to a document range: the
@@ -100,13 +103,13 @@ function termSpelling () {
  * of text has only the document's prefixes and base to go on, which is what
  * a data cache's meta is.  Shapes are named by the schema and left to it.
  */
-function termLexerFor (dataCache) {
+function termLexerFor (dataCache: any): TermLexer | undefined {
   if (termSpelling() !== "document")
     return undefined;
   const meta = dataCache && dataCache.meta;
   if (!meta || typeof meta.termToLex !== "function")
     return undefined;
-  return (term, role) => {
+  return (term: any, role?: string) => {
     if (role === "shape")
       return null;
     try {
@@ -117,7 +120,7 @@ function termLexerFor (dataCache) {
              : RdfJs.DataFactory.namedNode(term))
           : term);
       return typeof said === "string" && said !== "" ? said : null;
-    } catch (e) {
+    } catch (e: any) {
       return null;   // a term this document has no better name for
     }
   };
@@ -152,28 +155,28 @@ function termLexerFor (dataCache) {
 const PIN_WITH_META = /Mac|iPhone|iPad|iPod/.test(
   (typeof navigator === "undefined" ? "" : (navigator.platform || navigator.userAgent)));
 
-function isPinGesture (evt) {
+function isPinGesture (evt: any): boolean {
   const meta = !!(evt && evt.metaKey), ctrl = !!(evt && evt.ctrlKey);
   return PIN_WITH_META ? (meta && !ctrl) : (ctrl && !meta);
 }
 
 const HighlightMode = {
   ORDER: ["on", "hold", "off"],
-  state: "on",              // discoverable by default; see the note above
+  state: "on" as string,    // discoverable by default; see the note above
   held: false,              // the momentary key is down
-  pinned: null,             // a frozen group, or null
-  listeners: [],
+  pinned: null as any,      // a frozen group, or null
+  listeners: [] as ((mode: any) => void)[],
 
   /** does a hover paint right now? */
-  live () {
+  live (): boolean {
     if (this.state === "off")
       return false;
     return this.state === "hold" ? this.held : !this.held;
   },
   /** ...and is what is painted allowed to change? */
-  frozen () { return this.pinned !== null; },
+  frozen (): boolean { return this.pinned !== null; },
 
-  set (state) {
+  set (state: string) {
     if (this.ORDER.indexOf(state) === -1 || state === this.state)
       return;
     this.state = state;
@@ -182,19 +185,19 @@ const HighlightMode = {
   cycle () {
     this.set(this.ORDER[(this.ORDER.indexOf(this.state) + 1) % this.ORDER.length]);
   },
-  setHeld (held) {
+  setHeld (held: boolean) {
     if (held === this.held)
       return;
     this.held = held;
     this.changed();
   },
-  pin (group) { this.pinned = group || null; this.changed(); },
+  pin (group: any) { this.pinned = group || null; this.changed(); },
   unpin () { if (this.pinned !== null) { this.pinned = null; this.changed(); } },
 
-  onChange (fn) { this.listeners.push(fn); },
+  onChange (fn: (mode: any) => void) { this.listeners.push(fn); },
   changed () {
     this.render();
-    this.listeners.forEach(fn => { try { fn(this); } catch (e) { console.warn(e); } });
+    this.listeners.forEach(fn => { try { fn(this); } catch (e: any) { console.warn(e); } });
   },
 
   /** the chip: what the switch is set to, and whether anything is frozen */
@@ -222,7 +225,7 @@ const HighlightMode = {
   /** the chip, the keystroke, and the momentary key */
   wire () {
     $("#highlightMode").off("click").on("click", () => this.cycle());
-    $(document).on("keydown.highlightMode", evt => {
+    $(document).on("keydown.highlightMode", (evt: any) => {
       if (evt.key === "Shift")
         this.setHeld(true);
       // ctrl-alt-h: rare in browsers, and the app already speaks ctrl-<key>
@@ -233,7 +236,7 @@ const HighlightMode = {
       if (evt.key === "Escape" && this.frozen())
         this.unpin();
     });
-    $(document).on("keyup.highlightMode", evt => {
+    $(document).on("keyup.highlightMode", (evt: any) => {
       if (evt.key === "Shift")
         this.setHeld(false);
     });
@@ -246,13 +249,13 @@ const HighlightMode = {
 /** attempt to disable scrolling if not at bottom of target.
  * tried both selectionState and scrollTop.
  */
-function noScrollAppend (target, toAdd) {
+function noScrollAppend (target: any, toAdd: string): void {
   var e = target.get(0);
   // var oldLen = target.val().length
   // var oldSel = target.prop("selectionStart");
   // var oldScrollTop = e.scrollTop;
   // var oldScrollHeight = e.scrollHeight;
-  target.val((i, text) => {
+  target.val((i: number, text: string) => {
     return text + toAdd;
   });
   // console.log(oldScrollTop, oldScrollHeight);
@@ -273,24 +276,25 @@ function noScrollAppend (target, toAdd) {
 /** mark an exception as caused by user input (ShExC/Turtle/ShapeMap text):
  * it renders in the results widget and editor diagnostics but stays off
  * console.error, which is reserved for programming errors. */
-function asInputError (e) {
+function asInputError (e: any): any {
   e.inputError = true;
   return e;
 }
 
 class ShExCParser {
-  [key: string]: any;
+  shexParserOptions: {index: boolean, duplicateShape: string};
+  shexParser: any;                 // @shexjs/parser, from the bundle
   constructor () {
     this.shexParserOptions = {index: true, duplicateShape: "abort"};
     this.shexParser = ShExWebApp.Parser.construct(DefaultBase, null, this.shexParserOptions);
   }
-  parseString (text, meta, base) {
+  parseString (text: string, meta: any, base: string): any {
     this.shexParserOptions.duplicateShape = $("#duplicateShape").val();
     this.shexParser._setBase(base);
     let ret;
     try {
       ret = this.shexParser.parse(text);
-    } catch (e) {
+    } catch (e: any) {
       throw asInputError(e);
     }
     // ret = ShExWebApp.Util.canonicalize(ret, DefaultBase);
@@ -301,14 +305,14 @@ class ShExCParser {
 }
 
 class TurtleParser {
-  [key: string]: any;
+  blankNodeId!: number;            // the next unnamed blank node's number, per parse (set by parseString)
   constructor () {
     this.blankNodeId;
     // Re-use BNode IDs for good(-enough) user experience. Recipe from:
     // https://github.com/rdfjs/N3.js/blob/520054a9fb45ef48b5b58851449942493c57dace/test/N3Parser-test.js#L6-L11
-    RdfJs.Parser.prototype._blankNode = name => RdfJs.DataFactory.blankNode(name || `b${this.blankNodeId++}`);
+    RdfJs.Parser.prototype._blankNode = (name: any) => RdfJs.DataFactory.blankNode(name || `b${this.blankNodeId++}`);
   }
-  parseString (text, meta, base) {
+  parseString (text: string, meta: any, base?: string): any {
     const ret = new RdfJs.Store();
     this.blankNodeId = 0;
     RdfJs.Parser._resetBlankNodePrefix();
@@ -320,7 +324,7 @@ class TurtleParser {
     let quads;
     try {
       quads = parser.parse(text);
-    } catch (e) {
+    } catch (e: any) {
       throw asInputError(e);
     }
     if (quads !== undefined)
@@ -336,20 +340,20 @@ class TurtleParser {
    * nodes, which two documents may both call _:x without meaning the same
    * node.  So later documents' blank nodes are renamed apart.
    */
-  parseDocuments (texts, meta, base) {
+  parseDocuments (texts: string[], meta: any, base: string): any {
     if (texts.length <= 1)
       return this.parseString(texts[0] || "", meta, base);
     const ret = new RdfJs.Store();
-    const prefixes = {};
+    const prefixes: {[prefix: string]: string} = {};
     texts.forEach((text, index) => {
       const one: any = {};
       const store = this.parseString(text, one, base);
-      const scope = (term) => term.termType !== "BlankNode" ? term
+      const scope = (term: any) => term.termType !== "BlankNode" ? term
             : RdfJs.DataFactory.blankNode("d" + index + "_" + term.value);
-      ret.addQuads(store.getQuads().map(q => index === 0 ? q : RdfJs.DataFactory.quad(
+      ret.addQuads(store.getQuads().map((q: any) => index === 0 ? q : RdfJs.DataFactory.quad(
         scope(q.subject), q.predicate, scope(q.object), q.graph)));
       // the first declaration of a prefix wins, as it would in one document
-      for (const [prefix, iri] of Object.entries(one.prefixes || {}))
+      for (const [prefix, iri] of Object.entries(one.prefixes || {}) as [string, string][])
         if (!(prefix in prefixes))
           prefixes[prefix] = iri;
       if (index === 0)
@@ -359,11 +363,11 @@ class TurtleParser {
     return ret;
   }
 
-  termToLd (lex, resolver) { // returns ShExJ objectValue
+  termToLd (lex: string, resolver: any): any { // returns ShExJ objectValue
     let nz;
     try {
       nz = new RdfJs.Lexer().tokenize(lex + " ");
-    } catch (e) {
+    } catch (e: any) {
       throw asInputError(e);
     }
     switch (nz[0].type) {
@@ -383,7 +387,7 @@ class TurtleParser {
     default: throw Error(`unknow N3Lexer term type ${nz[0].type}`);
     }
 
-    function expand (token) {
+    function expand (token: any): string {
       if (!(token.prefix in resolver.meta.prefixes))
         throw Error(`unknown prefix ${token.prefix} in ${lex}`);
       return resolver.meta.prefixes[token.prefix] + token.value;
@@ -392,8 +396,9 @@ class TurtleParser {
 }
 
 class DirectShExValidator {
-  [key: string]: any;
-  constructor (loaded, inputData, renderer) {
+  validator: any;                  // @shexjs/validator's, over the page's data
+  renderer: ShExResultsRenderer;
+  constructor (loaded: any, inputData: any, renderer: ShExResultsRenderer) {
     this.validator = new ShExWebApp.Validator(
       loaded.schema,
       inputData,
@@ -409,7 +414,7 @@ class DirectShExValidator {
     // each: the element is the argument, and an arrow function's `this`
     // is this constructor's -- so this read `undefined.register` for as
     // long as anyone has been able to load one
-    $(".pluginControl:checked").each((i, elt) => {
+    $(".pluginControl:checked").each((i: any, elt: any) => {
       $(elt).data("code").register(this.validator, ShExWebApp);
     });
     // ...and a plugin that is on the page rather than in the menu says the
@@ -420,13 +425,14 @@ class DirectShExValidator {
         return;
       try {
         ext.register(this.validator, ShExWebApp);
-      } catch (e) {
+      } catch (e: any) {
         console.error(e); // a handler that won't register is not a validation error
       }
     });
     this.renderer = renderer;
   }
-  async invoke (fixedMap, validationTracker, time, _done, _currentAction) {
+  async invoke (fixedMap: {node: any, shape: any}[], validationTracker: ValidationTracker | undefined, time: any,
+                _done?: (error?: Error) => void, _currentAction?: string): Promise<ValidationOutcome> {
     // ...async: a db that fetches answers with a promise, and the search
     // stops at the fetch rather than blocking on it.  Given a db that
     // doesn't, this is one traversal and one await, so it is right either
@@ -436,7 +442,7 @@ class DirectShExValidator {
     $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms");
     $("#results > .status").text("rendering results...").show();
 
-    await Promise.all(ret.map(entry => this.renderer.entry(entry)));
+    await Promise.all(ret.map((entry: any) => this.renderer.entry(entry)));
     this.renderer.finish();
     return {validationResults: ret}; // for tester or whoever is awaiting this promise
   }
@@ -448,9 +454,18 @@ class FlowControlError extends Error {  }
 // Control results area content.
 let LastFailTime = 0;
 
+/** a rendered results editor and where each result starts in it */
+interface ResultPane {
+  pane: any;                            // an EditorPanes JSON pane
+  ranges: any[];                        // TestedTriple objects to their {from, to} in the text
+  offsets: {[anchor: string]: number};  // a check mark's anchor to its result's offset
+}
+
 class ResultsWidget {
-  [key: string]: any;
-  constructor (target = "#results > div") {
+  resultsSel: any;                 // jQuery: where results are written
+  resultsElt!: HTMLElement;         // ...set by setTarget
+  resultPanes: ResultPane[];
+  constructor (target: string = "#results > div") {
     this.setTarget(target);
     // appinfo renderings: [{pane, ranges}] linking TestedTriple objects (by
     // identity) to their {from, to} in the rendered results JSON
@@ -460,7 +475,7 @@ class ResultsWidget {
   /** Where results are written.  An app with two kinds of results -- a
    * validation and a materialization of it -- gives each its own panel and
    * points the widget at whichever it is filling. */
-  setTarget (target) {
+  setTarget (target: string): this {
     this.resultsSel = $(target);
     this.resultsElt = this.resultsSel.get(0);
     return this;
@@ -470,7 +485,7 @@ class ResultsWidget {
    * for that now -- panes above, results below, the reader dragging the
    * line between them -- and a results tab is what scrolls, so a pane
    * measured against the window overshoots the box it is in. */
-  fitPaneToWindow (paneDom) {
+  fitPaneToWindow (paneDom: HTMLElement): void {
     paneDom.style.height = "";
   }
 
@@ -478,13 +493,13 @@ class ResultsWidget {
    * editor.  Returns false if nothing here knows that anchor, leaving the
    * browser to scroll to an element with that id -- which is how results
    * that are each their own element have always worked. */
-  scrollToResult (anchor) {
+  scrollToResult (anchor: string): boolean {
     // a browser may hand back the fragment as it was written or percent-
     // decoded, and these anchors are node@shape with both encoded
     const spellings = [anchor];
     try {
       spellings.push(decodeURIComponent(anchor));
-    } catch (e) { /* not valid percent-encoding: the one spelling, then */ }
+    } catch (e: any) { /* not valid percent-encoding: the one spelling, then */ }
     for (const {pane, offsets} of this.resultPanes)
       for (const spelling of spellings)
         if (offsets && spelling in offsets) {
@@ -497,27 +512,27 @@ class ResultsWidget {
   /** Every result pane was built before it was in the document and has just
    * been given a height, so none of them has measured anything real yet.
    * Left alone they draw a gutter for a viewport that never existed. */
-  remeasurePanes () {
+  remeasurePanes (): void {
     this.resultPanes.forEach(({pane}) => pane.requestMeasure && pane.requestMeasure());
   }
-  replace (text) {
+  replace (text: string): any {
     return this.resultsSel.text(text);
   }
-  append (text) {
+  append (text: any): any {
     return this.resultsSel.append(text);
   }
-  clear () {
+  clear (): any {
     this.resultPanes = [];
     this.resultsSel.removeClass("passes fails error");
     $("#results > .status").text("").hide();
     $("#shapeMap-tabs").removeAttr("title");
     return this.resultsSel.text("");
   }
-  start () {
+  start (): void {
     this.resultsSel.removeClass("passes fails error");
     $("#results").addClass("running");
   }
-  finish () {
+  finish (): void {
     $("#results").removeClass("running");
     const height = this.resultsSel.height();
     this.resultsSel.height(1);
@@ -526,14 +541,14 @@ class ResultsWidget {
     this.resultsSel.animate({height: height}, 100,
                             () => this.resultsSel.css("height", ""));
   }
-  text () {
+  text (): string {
     // CodeMirror virtualizes long documents, so read appinfo panes' raw text
     return $(this.resultsElt).children().map(
-      (_, el) => $(el).data("rawText") !== undefined ? $(el).data("rawText") : el.textContent
+      (_: number, el: HTMLElement) => $(el).data("rawText") !== undefined ? $(el).data("rawText") : el.textContent
     ).get().join("\n");
   }
 
-  failMessage (e, action, text) {
+  failMessage (e: any, action: string, text?: string): void {
     if (e instanceof FlowControlError)
       return;
     if (e.inputError) // user-input (ShExC/Turtle/ShapeMap) problems render in
@@ -551,16 +566,27 @@ class ResultsWidget {
   }
 }
 
+/** a result held back for the one editor renderAppinfo fills */
+interface HeldResult {
+  renderMe: any;
+  klass: string;                   // "passes" or "fails"
+  entry: any;
+  anchor?: string;                 // what its check mark links to
+}
+
 class ShExResultsRenderer {
-  [key: string]: any;
-  constructor (resultsWidget, caches) {
+  resultsWidget: ResultsWidget;
+  caches: any;                     // the app's caches (ShExBaseApp.Caches)
+  entries: any[];
+  appinfo: HeldResult[];
+  constructor (resultsWidget: ResultsWidget, caches: any) {
     this.resultsWidget = resultsWidget;
     this.caches = caches;
     this.entries = []; // collected for editor diagnostics (EditorSupport)
     this.appinfo = []; // results held back to share one editor
   }
 
-  async entry (entry) {
+  async entry (entry: any): Promise<void> {
     this.entries.push(entry);
     const fails = entry.status === "nonconformant";
 
@@ -583,7 +609,7 @@ class ShExResultsRenderer {
       if ($("#success").val() === "remainder") {
         const remainder = new RdfJs.Store();
         remainder.addQuads((await this.caches.inputData.refresh()).getQuads());
-        entry.graph.forEach(q => remainder.removeQuad(q));
+        entry.graph.forEach((q: any) => remainder.removeQuad(q));
         entry.graph = remainder.getQuads();
       }
     }
@@ -591,7 +617,7 @@ class ShExResultsRenderer {
     if (entry.graph) {
       const wr = new RdfJs.Writer(this.caches.inputData.meta);
       wr.addQuads(entry.graph);
-      wr.end((error, results) => {
+      wr.end((error: any, results: string) => {
         if (error)
           throw error;
         entry.turtle = ""
@@ -623,7 +649,7 @@ class ShExResultsRenderer {
             entry.appinfo, this.caches.inputSchema.meta.prefixes,
             {lex: termLexerFor(this.caches.inputData),
              base: this.caches.inputSchema.meta.base}).join("\n");
-        renderMe = Object.keys(entry).reduce((acc, key) => {
+        renderMe = Object.keys(entry).reduce((acc: any, key) => {
           if (key !== "appinfo")
             acc[key] = entry[key];
           return acc
@@ -663,7 +689,7 @@ class ShExResultsRenderer {
   /** are the language-aware editors on?  They are what the app is unless
    * the reader asked for textareas, and the results follow the rest of the
    * interface: editors everywhere, or textareas and <pre>s everywhere. */
-  editorsOn () {
+  editorsOn (): boolean {
     return "EditorPanes" in ShExWebApp && $("#editors").val() !== "textarea";
   }
 
@@ -674,13 +700,13 @@ class ShExResultsRenderer {
    * scrolled to.  Now the array is the editor's document, and a check mark
    * scrolls to its result's offset within it.
    */
-  renderAppinfo () {
+  renderAppinfo (): void {
     if (this.appinfo.length === 0)
       return;
     const results = this.appinfo.map(({renderMe}) => renderMe);
     try {
       const {text, ranges} = ShExWebApp.EditorServices.stringifyWithOffsets(
-        results, o => o && (o.type === "TestedTriple" || results.indexOf(o) !== -1));
+        results, (o: any) => o && (o.type === "TestedTriple" || results.indexOf(o) !== -1));
       // the pane takes its colours from where it is put, so put it there
       // first: an unattached div has no computed style to read
       const klass = this.appinfo.every(({klass}) => klass === "passes") ? "passes" : "fails";
@@ -692,18 +718,18 @@ class ShExResultsRenderer {
       pane.requestMeasure();   // now that it is attached and sized
 
       // where each result starts, by the anchor its check mark links to
-      const offsets = {};
+      const offsets: {[anchor: string]: number} = {};
       this.appinfo.forEach(({renderMe, anchor}) => {
-        const range = ranges.find(r => r.target === renderMe);
+        const range = ranges.find((r: any) => r.target === renderMe);
         if (range && anchor !== undefined)
           offsets[anchor] = range.from;
       });
       this.resultsWidget.resultPanes.push({
         pane,
-        ranges: ranges.filter(r => r.target && r.target.type === "TestedTriple"),
+        ranges: ranges.filter((r: any) => r.target && r.target.type === "TestedTriple"),
         offsets,
       });
-    } catch (e) {
+    } catch (e: any) {
       console.warn("falling back to plain results JSON:", e);
       this.appinfo.forEach(({renderMe, klass, anchor}) =>
         this.resultsWidget.append(
@@ -711,7 +737,7 @@ class ShExResultsRenderer {
     }
   }
 
-  finish (done) {
+  finish (done?: any): void {
     // a source that read documents to answer with hands them back, so a
     // slurp leaves the entity pages it visited as panes to edit
     const neighborhoods = this.caches.inputData.neighborhoods;
@@ -753,7 +779,7 @@ class ShExResultsRenderer {
     this.resultsWidget.finish();
   }
 
-  failure (e, action, text) {
+  failure (e: any, action: string, text?: string): void {
     this.resultsWidget.failMessage(e, action, text);
   }
 }

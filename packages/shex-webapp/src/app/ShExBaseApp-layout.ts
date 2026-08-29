@@ -8,6 +8,22 @@
  * doc/); edit here and run `npm run build`.
  */
 
+/** What this file adds to the app, declared here since the methods are
+ * mixed in rather than written in the class body. */
+interface ShExBaseApp {
+  prepareResultsGrip (): any;
+  screenColumns (screen: string): any[];
+  paneTabset (pane: any, screen: any, columns: any): any;
+  setEditors (): void;
+  addEditorPanes (): void;
+  refreshDataPaneEditor (): void;
+  toggleControls (evt?: any): Promise<any>;
+  toggleControlsArrow (which: any): any;
+  setInterface (evt?: any): void;
+  customizeInterface (): any;
+  prepareDragAndDrop (): Promise<any>;
+}
+
 mixin(ShExBaseApp, {
   /**
    * The top edge of the results is a handle.
@@ -23,7 +39,7 @@ mixin(ShExBaseApp, {
       return;
     const least = 48; // px: the tab strip, and enough result to know it is there
     let dragging = false;
-    const divideAt = y => {
+    const divideAt = (y: any) => {
       // innerHeight rather than $(window).height(): the latter reads a
       // layout, and asks it of a document that may not have one
       const page = window.innerHeight || 0;
@@ -33,17 +49,17 @@ mixin(ShExBaseApp, {
       // a pane that just changed size measures again, editors included
       this.remeasureScreenPanes(this.currentScreen());
     };
-    grip.on("mousedown", evt => {
+    grip.on("mousedown", (evt: any) => {
       dragging = true;
       evt.preventDefault(); // or the drag selects the page instead
     });
-    $(document).on("mousemove.shexjsGrip", evt => { if (dragging) divideAt(evt.clientY); });
+    $(document).on("mousemove.shexjsGrip", (evt: any) => { if (dragging) divideAt(evt.clientY); });
     $(document).on("mouseup.shexjsGrip", () => { dragging = false; });
   },
 
   /** the row of columns a screen's panes lay out in: the toolbar and the
    * statusbar are the screen's other children, and go under it */
-  screenColumns (screen) {
+  screenColumns (screen: any) {
     let row = screen.children(".screenColumns").first();
     if (row.length === 0)
       row = $("<div/>").addClass("screenColumns").prependTo(screen);
@@ -60,7 +76,7 @@ mixin(ShExBaseApp, {
    * the tab, and the panes that share a set share a column in declaration
    * order.
    */
-  paneTabset (pane, screen, columns) {
+  paneTabset (pane: any, screen: any, columns: any) {
     const key = pane.panel === undefined ? "" : pane.panel;
     if (!columns.has(key))
       columns.set(key, $("<div/>").addClass("panel").attr("data-panel", key || null)
@@ -113,18 +129,18 @@ mixin(ShExBaseApp, {
    * with the editors off, from a module that describes nothing.
    */
   addEditorPanes () {
-    this.editorSupport.addPane("inputSchema", this.Caches.inputSchema, "shexc");
+    this.editorSupport!.addPane("inputSchema", this.Caches.inputSchema, "shexc");
     // the data pane's language is whatever the showing document is in, and
     // that is the selected source's to say
-    this.editorSupport.addPane("inputData", this.Caches.inputData, null,
+    this.editorSupport!.addPane("inputData", this.Caches.inputData, null,
                                () => this.neighborhoods.paneEditor());
     // the query map: its pairs point at the two panes above
-    this.editorSupport.addPane("shapeMap", this.Caches.shapeMap, "shapemap");
+    this.editorSupport!.addPane("shapeMap", this.Caches.shapeMap, "shapemap");
     pluginDescriptors().forEach(ext => (ext.panes || []).forEach(pane => {
       if (pane.editor)
-        this.editorSupport.addPane(pane.name, this.Caches[pane.name], pane.editor);
+        this.editorSupport!.addPane(pane.name, this.Caches[pane.name], pane.editor);
     }));
-    this.editorSupport.wireShapeMapHovers();
+    this.editorSupport!.wireShapeMapHovers();
   },
 
   /** The showing document may have changed language (a different source, or
@@ -141,7 +157,7 @@ mixin(ShExBaseApp, {
       pane.destroy();          // hands its text back to the textarea
       delete this.editorSupport.panes.inputData;
     }
-    this.editorSupport.addPane("inputData", this.Caches.inputData, null,
+    this.editorSupport!.addPane("inputData", this.Caches.inputData, null,
                                () => this.neighborhoods.paneEditor());
     // destroying a pane restores the textarea it hid, so say again what
     // should be showing
@@ -149,7 +165,7 @@ mixin(ShExBaseApp, {
   },
 
   /* controls menu */
-  async toggleControls (evt) {
+  async toggleControls (evt: any) {
     // don't use `return false` 'cause the browser doesn't wait around for a promise before looking at return false to decide the event is handled
     if (evt) evt.preventDefault();
 
@@ -176,13 +192,13 @@ mixin(ShExBaseApp, {
     }
   },
 
-toggleControlsArrow (which) {
+toggleControlsArrow (which: any) {
     // jQuery can't find() a prefixed attribute (xlink:href); fall back to DOM:
     if (document.getElementById("menu-button") === null)
       return;
-    const down = $(document.getElementById("menu-button").
+    const down = $(document.getElementById("menu-button")!.
                    querySelectorAll('use[*|href="#down-arrow"]'));
-    const up = $(document.getElementById("menu-button").
+    const up = $(document.getElementById("menu-button")!.
                  querySelectorAll('use[*|href="#up-arrow"]'));
 
     switch (which) {
@@ -199,7 +215,7 @@ toggleControlsArrow (which) {
     }
   },
 
-setInterface (evt) {
+setInterface (evt: any) {
     this.toggleControls();
     this.customizeInterface();
   },
@@ -238,7 +254,7 @@ customizeInterface () {
 async prepareDragAndDrop () {
     this.QueryParams.filter(q => {
       return "cache" in q;
-    }).map(q => {
+    }).map((q): {location: any, targets: {ext?: string, media: string, target: any}[]} => {
       return {
         location: q.location,
         targets: [{
@@ -259,21 +275,23 @@ async prepareDragAndDrop () {
       const droparea = desc.location;
       // kudos to http://html5demos.com/dnd-upload
       desc.location.
-        on("drag dragstart dragend dragover dragenter dragleave drop", (e) => {
+        on("drag dragstart dragend dragover dragenter dragleave drop", (e: any) => {
           e.preventDefault();
           e.stopPropagation();
         }).
-        on("dragover dragenter", (evt) => {
+        on("dragover dragenter", (evt: any) => {
           desc.location.addClass("hover");
         }).
-        on("dragend dragleave drop", (evt) => {
+        on("dragend dragleave drop", (evt: any) => {
           desc.location.removeClass("hover");
         }).
-        on("drop", (evt) => {
+        on("drop", (evt: any) => {
           evt.preventDefault();
           droparea.removeClass("droppable");
           $("#results > .status").removeClass("error");
           this.resultsWidget.clear();
+          // for inject below: a hoisted function, whose own `this` is nothing
+          const app = this;
           let xfer = evt.originalEvent.dataTransfer;
           const prefTypes = [
             {type: "files"},
@@ -281,7 +299,7 @@ async prepareDragAndDrop () {
             {type: "text/uri-list"},
             {type: "text/plain"}
           ];
-          const promises = [];
+          const promises: Promise<any>[] = [];
           if (prefTypes.find(l => {
             if (l.type.indexOf("/") === -1) {
               if (l.type in xfer && xfer[l.type].length > 0) {
@@ -299,12 +317,12 @@ async prepareDragAndDrop () {
                     if (!(Array.isArray(parsed))) {
                       parsed = [parsed];
                     }
-                    parsed.map(elt => {
+                    parsed.map((elt: any) => {
                       const action = "action" in elt ? elt.action: elt;
                       action.schemaURL = action.schema; delete action.schema;
                       action.dataURL = action.data; delete action.data;
                     });
-                    promises.push(this.Caches.manifest.set(parsed, DefaultBase, "drag and drop"));
+                    promises.push(this.Caches.manifest!.set(parsed, DefaultBase, "drag and drop"));
                   } else {
                     promises.push(inject(desc.targets, DefaultBase, val, l.type));
                   }
@@ -315,15 +333,15 @@ async prepareDragAndDrop () {
                     },
                     url: val,
                     dataType: "text"
-                  }).fail((jqXHR, textStatus) => {
+                  }).fail((jqXHR: any, textStatus: any) => {
                     const error = jqXHR.statusText === "OK" ? textStatus : jqXHR.statusText;
                     this.resultsWidget.append($("<pre/>").text("GET <" + val + "> failed: " + error));
-                  }).done((data, status, jqXhr) => {
+                  }).done((data: any, status: any, jqXhr: any) => {
                     try {
                       promises.push(inject(desc.targets, val, data, (jqXhr.getResponseHeader("Content-Type") || "unknown-media-type").split(/[ ;,]/)[0]));
                       $("#loadForm").dialog("close");
                       this.toggleControls();
-                    } catch (e) {
+                    } catch (e: any) {
                       this.resultsWidget.append($("<pre/>").text("unable to evaluate <" + val + ">: " + (e.stack || e)));
                     }
                   });
@@ -333,7 +351,7 @@ async prepareDragAndDrop () {
                 $("#results > .status").text("").hide();
                 // desc.targets.text(xfer.getData(l.type));
                 return true;
-                async function inject (targets, url, data, mediaType) {
+                async function inject (targets: any[], url: string, data: string, mediaType: string) {
                   const target =
                         targets.length === 1 ? targets[0].target :
                         targets.reduce((ret, elt) => {
@@ -345,7 +363,7 @@ async prepareDragAndDrop () {
                     const appendTo = $("#append").is(":checked") ? target.get() : "";
                     await target.set(appendTo + data, url, 'drag and drop', mediaType);
                   } else {
-                    this.resultsWidget.append("don't know what to do with " + mediaType + "\n");
+                    app.resultsWidget.append("don't know what to do with " + mediaType + "\n");
                   }
                 }
               }
@@ -358,7 +376,7 @@ async prepareDragAndDrop () {
                   dropEffect: xfer.dropEffect,
                   effectAllowed: xfer.effectAllowed,
                   files: xfer.files.length,
-                  items: [].slice.call(xfer.items).map(i => {
+                  items: ([] as any[]).slice.call(xfer.items).map((i: any) => {
                     return {kind: i.kind, type: i.type};
                   })
                 }, null, 2)
@@ -366,14 +384,14 @@ async prepareDragAndDrop () {
           this.track(Promise.all(promises));
         });
     });
-    const readfiles = /*async*/ (files, targets) => { // returns promise but doesn't use await
+    const readfiles = /*async*/ (files: any, targets: any) => { // returns promise but doesn't use await
       const formData = new FormData();
       let successes = 0;
       const promises = [];
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i], name = file.name;
-        const target = targets.reduce((ret, elt) => {
+        const target = targets.reduce((ret: any, elt: any) => {
           return ret ? ret :
             name.endsWith(elt.ext) ? elt.target :
             null;
@@ -385,7 +403,7 @@ async prepareDragAndDrop () {
             reader.onload = ((target) => {
               return async (event) => {
                 const appendTo = $("#append").is(":checked") ? target.get() : "";
-                await target.set(appendTo + event.target.result, DefaultBase);
+                await target.set(appendTo + event.target!.result, DefaultBase);
                 ++successes;
                 resolve()
               };

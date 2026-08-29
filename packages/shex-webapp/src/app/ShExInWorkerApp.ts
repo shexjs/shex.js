@@ -5,11 +5,10 @@
   doc/); edit here and run `npm run build`.
  */
 class ShExInWorkerApp extends ShExApp {
-  [key: string]: any;
   /** a plugin with a worker half has one thing to do here, another there */
-  get remote () { return true; }
+  get remote (): boolean { return true; }
 
-  getValidator (loaded, base, inputData) {
+  getValidator (loaded: any, base: string, inputData: any): RemoteShExValidator {
     // What the worker needs to have the same data source over there.  A db
     // that fetches its answers cannot be marshalled, so it is named and
     // rebuilt: the module, and the values it takes.  A source that is
@@ -17,7 +16,7 @@ class ShExInWorkerApp extends ShExApp {
     // what `source: null` means below.
     const {moduleId} = ShExWebApp.NeighborhoodApi;
     const module = this.neighborhoods.module;
-    const source = (module.capabilities || []).length > 0
+    const source: RemoteSource | null = (module.capabilities || []).length > 0
           ? {neighborhood: moduleId(module), params: this.neighborhoods.params()}
           : null;
     // WorkerUrl: the page said it when it started the worker, and a cancel

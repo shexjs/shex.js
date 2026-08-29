@@ -3,16 +3,17 @@
     "forceConsistentCasingInFileNames": true,
     "module": "none",
     "outDir": "./doc",
-    "rootDir": "./src/app",
+    "rootDir": "./src/plugin",
     "target": "ES2022",
     "useDefineForClassFields": false,
     "sourceMap": false,
     "removeComments": false,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": false,
     "alwaysStrict": false,
     "types": [],
     "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
-  "include": ["src/app/**/*.ts"]
+  "include": ["src/plugin/**/*.ts"]
 }

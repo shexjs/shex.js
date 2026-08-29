@@ -36,11 +36,26 @@ interface DataFactoryLike {
   quad (subject: any, predicate: any, object: any): any;
 }
 
-/** one entry of a results shape map */
-interface ResultEntry { node: string; shape: string; status?: string; [key: string]: any; }
+/** one entry of a results shape map.  `shape` is START_SHAPE_INDEX_ENTRY
+ * over the wire where it is Validator.Start on the page. */
+interface ResultEntry {
+  node: string;
+  shape: string;
+  status?: string;      // "conformant" or "nonconformant"
+  appinfo?: any;        // the validator's proof, or its errors
+  elapsed?: number;     // ms
+  [key: string]: any;
+}
+
+/** the results a validation has so far, merged by node@shape (createResults) */
+interface ResultsAccumulator {
+  /** null for none, the one entry for one, else a FailureList or SolutionList of them */
+  getShapeMap (): any;
+  merge (toAdd: ResultEntry[]): ResultsAccumulator;
+  has (ent: ResultEntry): boolean;
+}
 
 class WorkerMarshalling {
-  [key: string]: any;
   static indexKey (node: string, shape: string): string {
     return node + '@' + shape;
   }
@@ -53,7 +68,7 @@ class WorkerMarshalling {
   }
 
   /** a results shape map that merges by node@shape, as the worker accumulates one */
-  static createResults () {
+  static createResults (): ResultsAccumulator {
     const shapeMap: ResultEntry[] = [];
     const known: {[key: string]: ResultEntry} = {};
     return {
@@ -102,7 +117,7 @@ class WorkerMarshalling {
     return ret;
   }
 
-  static jsonTripleToRdfjsTriple (jsonTriple: JsonTriple, dataFactory: DataFactoryLike) {
+  static jsonTripleToRdfjsTriple (jsonTriple: JsonTriple, dataFactory: DataFactoryLike): any {
     return dataFactory.quad(
       WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.subject, dataFactory),
       WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.predicate, dataFactory),
@@ -110,7 +125,7 @@ class WorkerMarshalling {
     );
   }
 
-  static jsonTermToRdfjsTerm (jsonTerm: JsonTerm, dataFactory: DataFactoryLike) {
+  static jsonTermToRdfjsTerm (jsonTerm: JsonTerm, dataFactory: DataFactoryLike): any {
     switch (jsonTerm.termType) {
     case "NamedNode": return dataFactory.namedNode(jsonTerm.value);
     case "BlankNode": return dataFactory.blankNode(jsonTerm.value);

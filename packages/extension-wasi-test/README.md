@@ -27,7 +27,7 @@ Anywhere `@shexjs/extension-test` works. With the
 ```sh
 ./node_modules/.bin/shex-validate \
     -x doc.shex -d doc.ttl -n tag:node123 \
-    --extension node_modules/@shexjs/extension-wasi-test/shex-extension-wasi-test.js
+    --extension node_modules/@shexjs/extension-wasi-test/lib/shex-extension-wasi-test.js
 ```
 
 or via the API:

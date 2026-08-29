@@ -22,7 +22,7 @@ mixin(ShExBaseApp, {
             return;
         const least = 48; // px: the tab strip, and enough result to know it is there
         let dragging = false;
-        const divideAt = y => {
+        const divideAt = (y) => {
             // innerHeight rather than $(window).height(): the latter reads a
             // layout, and asks it of a document that may not have one
             const page = window.innerHeight || 0;
@@ -32,11 +32,11 @@ mixin(ShExBaseApp, {
             // a pane that just changed size measures again, editors included
             this.remeasureScreenPanes(this.currentScreen());
         };
-        grip.on("mousedown", evt => {
+        grip.on("mousedown", (evt) => {
             dragging = true;
             evt.preventDefault(); // or the drag selects the page instead
         });
-        $(document).on("mousemove.shexjsGrip", evt => { if (dragging)
+        $(document).on("mousemove.shexjsGrip", (evt) => { if (dragging)
             divideAt(evt.clientY); });
         $(document).on("mouseup.shexjsGrip", () => { dragging = false; });
     },
@@ -223,7 +223,7 @@ mixin(ShExBaseApp, {
     async prepareDragAndDrop() {
         this.QueryParams.filter(q => {
             return "cache" in q;
-        }).map(q => {
+        }).map((q) => {
             return {
                 location: q.location,
                 targets: [{
@@ -260,6 +260,8 @@ mixin(ShExBaseApp, {
                 droparea.removeClass("droppable");
                 $("#results > .status").removeClass("error");
                 this.resultsWidget.clear();
+                // for inject below: a hoisted function, whose own `this` is nothing
+                const app = this;
                 let xfer = evt.originalEvent.dataTransfer;
                 const prefTypes = [
                     { type: "files" },
@@ -286,7 +288,7 @@ mixin(ShExBaseApp, {
                                     if (!(Array.isArray(parsed))) {
                                         parsed = [parsed];
                                     }
-                                    parsed.map(elt => {
+                                    parsed.map((elt) => {
                                         const action = "action" in elt ? elt.action : elt;
                                         action.schemaURL = action.schema;
                                         delete action.schema;
@@ -338,7 +340,7 @@ mixin(ShExBaseApp, {
                                     await target.set(appendTo + data, url, 'drag and drop', mediaType);
                                 }
                                 else {
-                                    this.resultsWidget.append("don't know what to do with " + mediaType + "\n");
+                                    app.resultsWidget.append("don't know what to do with " + mediaType + "\n");
                                 }
                             }
                         }
@@ -350,7 +352,7 @@ mixin(ShExBaseApp, {
                             dropEffect: xfer.dropEffect,
                             effectAllowed: xfer.effectAllowed,
                             files: xfer.files.length,
-                            items: [].slice.call(xfer.items).map(i => {
+                            items: [].slice.call(xfer.items).map((i) => {
                                 return { kind: i.kind, type: i.type };
                             })
                         }, null, 2)));

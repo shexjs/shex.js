@@ -8,8 +8,19 @@
  */
 
 class ShapeMapCache extends InterfaceCache {
-  [key: string]: any;
-  constructor (selection, caches, turtleParser, resultsWidget) {
+  tabsElement: any;                  // jQuery: the tab set over the three maps
+  editMapSelector: string;
+  editMap: any;                      // jQuery: the pairs the reader edits
+  queryMap: any;                     // jQuery: the textarea the reader writes
+  fixedMap: any;                     // jQuery: the pairs the validator is asked
+  fixedMapTab: any;
+  caches: {inputSchema: SchemaCache, inputData: TurtleCache};
+  resultsWidget: ResultsWidget;
+  fixedMapRuns?: number;             // rebuilds of the fixed map in flight
+  fixedMapLabel?: string;            // what its tab said before "resolving Fixed Map"
+  fixedMapGeneration?: number;       // which rebuild's rows are the ones to show
+  constructor (selection: any, caches: {inputSchema: SchemaCache, inputData: TurtleCache},
+               turtleParser: TurtleParser, resultsWidget: ResultsWidget) {
     super(selection, null);
     this.tabsElement = $("#shapeMap-tabs");
     this.editMapSelector = "#editMap";
@@ -19,27 +30,27 @@ class ShapeMapCache extends InterfaceCache {
     this.fixedMapTab = this.tabsElement.find('[href="#fixedMap-tab"]');
     this.caches = caches;
     this.resultsWidget = resultsWidget;
-    this.meta.termToLex = (trm) => ShExWebApp.ShExTerm.rdfJsTerm2Turtle(trm, this.meta);
-    this.meta.lexToTerm = (lex) => turtleParser.termToLd(lex, new IRIResolver(this.meta));
+    this.meta.termToLex = (trm: any) => ShExWebApp.ShExTerm.rdfJsTerm2Turtle(trm, this.meta);
+    this.meta.lexToTerm = (lex: string) => turtleParser.termToLd(lex, new IRIResolver(this.meta));
   }
 
-  async parse (text) {
+  async parse (text: string): Promise<void> {
     this.removeEditMapPair(null);
     this.queryMap.val(text);
     this.copyQueryMapToEditMap();
     await this.copyEditMapToFixedMap();
   };
 
-  async getItems () {
+  async getItems (): Promise<any[]> {
     throw Error("should not try to get manifest cache items");
   }
 
   /**
    * @return list of errors encountered
    */
-  async copyEditMapToQueryMap () {
+  async copyEditMapToQueryMap (): Promise<any[]> {
     if (this.editMap.attr("data-dirty") === "true") {
-      const text = this.editMap.find(".pair").get().reduce((acc, queryPair) => {
+      const text = this.editMap.find(".pair").get().reduce((acc: string[], queryPair: any) => {
         const node = $(queryPair).find(".focus").val();
         const shape = $(queryPair).find(".inputShape").val();
         if (!node || !shape)
@@ -60,7 +71,7 @@ class ShapeMapCache extends InterfaceCache {
    * Parse query map to populate editMap and fixedMap.
    * @returns list of errors. ([] means everything was good.)
    */
-  async copyQueryMapToEditMap () {
+  async copyQueryMapToEditMap (): Promise<any[]> {
     this.queryMap.removeClass("error");
     const written = this.queryMap.val();
     this.resultsWidget.clear();
@@ -75,7 +86,7 @@ class ShapeMapCache extends InterfaceCache {
       let sm;
       try {
         sm = smparser.parse(written);
-      } catch (e) {
+      } catch (e: any) {
         e.inputError = true;
         throw e;
       }
@@ -85,7 +96,7 @@ class ShapeMapCache extends InterfaceCache {
       this.markEditMapClean();
       this.resultsWidget.clear();
       return ret;
-    } catch (e) {
+    } catch (e: any) {
       this.queryMap.addClass("error");
       this.resultsWidget.failMessage(e, currentAction);
       this.makeFreshEditMap()
@@ -93,21 +104,21 @@ class ShapeMapCache extends InterfaceCache {
     }
   }
 
-  makeFreshEditMap () {
+  makeFreshEditMap (): any[] {
     this.removeEditMapPair(null);
     this.addEditMapPairs(null, null);
     this.markEditMapClean();
     return [];
   }
 
-  addEmptyEditMapPair (evt) {
+  addEmptyEditMapPair (evt: any): boolean {
     this.addEditMapPairs(null, $(evt.target).parent().parent());
     this.markEditMapDirty();
     return false;
   }
 
-  addEditMapPairs (pairs, target?) {
-    const renderTP = (tp) => {
+  addEditMapPairs (pairs: any[] | null, target?: any): boolean {
+    const renderTP = (tp: any) => {
       const ret = ["subject", "predicate", "object"].map(k => {
         const ld = tp[k];
         if (ld === ShExWebApp.ShapeMap.Focus)
@@ -119,11 +130,11 @@ class ShapeMapCache extends InterfaceCache {
       return "{" + ret.join(" ") + "}";
     }
 
-    const startOrLdToTurtle = (term) => {
+    const startOrLdToTurtle = (term: any) => {
       return term === ShExWebApp.Validator.Start ? START_SHAPE_LABEL : ShExWebApp.ShExTerm.shExJsTerm2Turtle(term, this.caches.inputSchema.meta);
     }
 
-    (pairs || [{node: {type: "empty"}}]).forEach(pair => {
+    (pairs || [{node: {type: "empty"}}]).forEach((pair: any) => {
       const nodeType = (typeof pair.node !== "object" || "@value" in pair.node)
             ? "node"
             : pair.node.type;
@@ -159,7 +170,7 @@ class ShapeMapCache extends InterfaceCache {
           class: 'shapeMap-joiner'
         }).append("@").addClass(pair.status);
         joinerElt.append(
-          $("<input>", {style: "border: none; width: .2em;", readonly: "readonly"}).val(pair.status === "nonconformant" ? "!" : " ").on("click", (evt) => {
+          $("<input>", {style: "border: none; width: .2em;", readonly: "readonly"}).val(pair.status === "nonconformant" ? "!" : " ").on("click", (evt: any) => {
             const parent = $(evt.target).parent();
             const status = parent.hasClass("nonconformant") ? "conformant" : "nonconformant";
             parent.removeClass("conformant nonconformant");
@@ -183,9 +194,9 @@ class ShapeMapCache extends InterfaceCache {
         const removeElt = $("<button/>", {
           class: "removePair",
           title: "remove this node/shape pair"}).text("-");
-        addElt.on("click", evt => this.addEmptyEditMapPair(evt));
-        removeElt.on("click", evt => this.removeEditMapPair(evt));
-        spanElt.append([focusElt, joinerElt, shapeElt, addElt, removeElt].map(elt => {
+        addElt.on("click", (evt: any) => this.addEmptyEditMapPair(evt));
+        removeElt.on("click", (evt: any) => this.removeEditMapPair(evt));
+        spanElt.append([focusElt, joinerElt, shapeElt, addElt, removeElt].map((elt: any) => {
           return $("<td/>").append(elt);
         }));
         if (target) {
@@ -199,14 +210,14 @@ class ShapeMapCache extends InterfaceCache {
       this.editMap.find(".removePair").css("visibility", "hidden");
     else
       this.editMap.find(".removePair").css("visibility", "visible");
-    this.editMap.find(".pair").each(idx => {
+    this.editMap.find(".pair").each((idx: number) => {
       this.addContextMenus(this.editMapSelector + " .pair:nth("+idx+") .focus", this.caches.inputData);
       this.addContextMenus(".pair:nth("+idx+") .inputShape", this.caches.inputSchema);
     });
     return false;
   }
 
-  removeEditMapPair (evt) {
+  removeEditMapPair (evt: any): boolean {
     this.markEditMapDirty();
     if (evt) {
       $(evt.target).parent().parent().remove();
@@ -218,11 +229,11 @@ class ShapeMapCache extends InterfaceCache {
     return false;
   }
 
-  markEditMapDirty () {
+  markEditMapDirty (): void {
     this.editMap.attr("data-dirty", true);
   }
 
-  markEditMapClean () {
+  markEditMapClean (): void {
     this.editMap.attr("data-dirty", false);
   }
 
@@ -232,22 +243,22 @@ class ShapeMapCache extends InterfaceCache {
    * opts.menuPosition ($input, offset) => {x, y}: where to pop the menu up
    *   (default: just inside the input's top-left corner).
    */
-  addContextMenus (inputSelector, cache, opts: any = {}) {
+  addContextMenus (inputSelector: string, cache: InterfaceCache, opts: any = {}): void {
     const _ShapeMapCache = this;
     // !!! terribly stateful; only one context menu at a time!
     const DATA_HANDLE = 'runCallbackThingie'
-    let terms = null, nodeLex = null, target, scrollLeft, m, addSpace = "";
+    let terms: any = null, nodeLex: any = null, target: any, scrollLeft: any, m: any, addSpace = "";
     $(inputSelector).on('contextmenu', rightClickHandler)
     $.contextMenu({
       trigger: 'none',
       selector: inputSelector,
-      build: ($trigger, e) => {
+      build: ($trigger: any, e: any) => {
         // return callback set by the mouseup handler
         return $trigger.data(DATA_HANDLE)();
       }
     });
 
-    async function buildMenuItemsPromise (elt, evt) {
+    async function buildMenuItemsPromise (elt: any, evt: any): Promise<any> {
       if (elt.hasClass("data")) {
         nodeLex = elt.val();
         const shapeLex = elt.parent().parent().find(".schema").val()
@@ -265,7 +276,7 @@ class ShapeMapCache extends InterfaceCache {
           target = evt.target;
           const selStart = target.selectionStart;
           scrollLeft = target.scrollLeft;
-          terms = [0, 1, 2].reduce((acc, ord) => {
+          terms = [0, 1, 2].reduce((acc: any, ord: number) => {
             if (m[(ord+1)*2-1] !== undefined) {
               const at = acc.start + m[(ord+1)*2-1].length;
               const len = m[(ord+1)*2] ? m[(ord+1)*2].length : 0;
@@ -280,8 +291,8 @@ class ShapeMapCache extends InterfaceCache {
               return acc;
             }
           }, {start: 0, tz: [], match: null });
-          function norm (tz) {
-            return tz.map(t => {
+          function norm (tz: any[]) {
+            return tz.map((t: any) => {
               return typeof t === "string" && t.startsWith('!')
                 ? "- " + t.substr(1) + " -"
                 : _ShapeMapCache.caches.inputData.meta.termToLex(t); // !!check
@@ -303,20 +314,20 @@ class ShapeMapCache extends InterfaceCache {
               _ShapeMapCache.meta.base, _ShapeMapCache.caches.inputSchema.meta, _ShapeMapCache.caches.inputData.meta);
             var sm = smparser.parse(nodeLex + '@' + shapeLex)[0];
             if (sm.node.type === "Extension") {
-              const obj = {}
+              const obj: {[name: string]: any} = {}
               obj[MENU_ITEM_materialize] = { name: MENU_ITEM_materialize };
               const nodes = await _ShapeMapCache.caches.inputData.resolveQueryMapExtension(
                 sm.node.language, sm.node.lexical);
               // the flat hash every other branch returns: an {items: ...}
               // around it is one menu entry called "items", which is what
               // the query map's menu used to offer
-              return nodes.reduce((ret, term) => {
+              return nodes.reduce((ret: any, term: any) => {
                 const name = _ShapeMapCache.caches.inputData.meta.termToLex(term);
                 ret[name] = { name: name };
                 return ret;
               }, obj)
             }
-          } catch (e) {
+          } catch (e: any) {
             _ShapeMapCache.resultsWidget.failMessage(e, "query");
             return false
           }
@@ -324,10 +335,12 @@ class ShapeMapCache extends InterfaceCache {
       }
       terms = nodeLex = null;
       try {
-        return listToCTHash(await cache.getItems())
-      } catch (e) {
-        this.resultsWidget.failMessage(e, cache === _ShapeMapCache.caches.inputSchema ? "parsing schema" : "parsing data");
-        let items = {};
+        return listToCTHash(await cache.getItems!())
+      } catch (e: any) {
+        // _ShapeMapCache, as everywhere in this function: `this` is undefined
+        // here, so a pane that would not parse threw instead of saying so
+        _ShapeMapCache.resultsWidget.failMessage(e, cache === _ShapeMapCache.caches.inputSchema ? "parsing schema" : "parsing data");
+        let items: any = {};
         const failContent = "no choices found";
         items[failContent] = failContent;
         return items
@@ -348,7 +361,7 @@ class ShapeMapCache extends InterfaceCache {
       */
     }
 
-    function ParseTriplePattern () {
+    function ParseTriplePattern (): string {
       const uri = "<[^>]*>|[a-zA-Z0-9_-]*:[a-zA-Z0-9_-]*";
       const literal = "((?:" +
             "'(?:[^'\\\\]|\\\\')*'" + "|" +
@@ -366,14 +379,14 @@ class ShapeMapCache extends InterfaceCache {
         uriOrKey+"|" + literal + ")?(\\s*)(})?(\\s*)";
     };
 
-    function rightClickHandler (e) {
+    function rightClickHandler (this: any, e: any) {
       e.preventDefault();
       const $this = $(this);
       $this.off('contextmenu', rightClickHandler);
 
       // when the items are ready,
       const p = buildMenuItemsPromise($this, e)
-      p.then(items => {
+      p.then((items: any) => {
 
         // store a callback on the trigger
         $this.data(DATA_HANDLE, () => {
@@ -392,17 +405,17 @@ class ShapeMapCache extends InterfaceCache {
       });
     }
 
-    const menuCallback = (key, options) => {
+    const menuCallback = (key: string, options: any) => {
       if (cache.onLoad)
         cache.onLoad();
       if (key === MENU_ITEM_materialize) {
-        var toAdd = Object.keys(options.items).filter(k => {
+        var toAdd = Object.keys(options.items).filter((k: string) => {
           return k !== MENU_ITEM_materialize;
         });
         $(options.selector).val(toAdd.shift());
         var shape = $(options.selector.replace(/focus/, "inputShape")).val();
         this.addEditMapPairs(toAdd.map(
-          node => {
+          (node: string) => {
             return {
               node: _ShapeMapCache.caches.inputData.meta.lexToTerm(node),
               shape: _ShapeMapCache.caches.inputSchema.meta.lexToTerm(shape)
@@ -427,8 +440,8 @@ class ShapeMapCache extends InterfaceCache {
       }
     }
 
-    function listToCTHash (items) {
-      return items.reduce((acc, item) => {
+    function listToCTHash (items: string[]) {
+      return items.reduce((acc: any, item: string) => {
         acc[item] = { name: item }
         return acc
       }, {})
@@ -461,7 +474,7 @@ class ShapeMapCache extends InterfaceCache {
    * asked of a local store) left the tab running for the rest of the
    * session.
    */
-  async copyEditMapToFixedMap () {
+  async copyEditMapToFixedMap (): Promise<any[]> {
     if ((this.fixedMapRuns = (this.fixedMapRuns || 0) + 1) === 1) {
       this.fixedMapLabel = this.fixedMapTab.text();
       this.fixedMapTab.text("resolving Fixed Map").addClass("running");
@@ -474,21 +487,21 @@ class ShapeMapCache extends InterfaceCache {
     }
   }
 
-  async resolveFixedMap () {
+  async resolveFixedMap (): Promise<any[]> {
     const generation = this.fixedMapGeneration = (this.fixedMapGeneration || 0) + 1;
-    const getQuads = async (s, p, o) => {
+    const getQuads = async (s: any, p: any, o: any) => {
       const get = s === ShExWebApp.ShapeMap.Focus ? "subject" : "object";
-      return (await this.caches.inputData.refresh()).getQuads(mine(s), mine(p), mine(o)).map(t => {
+      return (await this.caches.inputData.refresh()).getQuads(mine(s), mine(p), mine(o)).map((t: any) => {
         return this.caches.inputData.meta.termToLex(t[get]); // count on unpublished N3.js id API
       });
-      function mine (term) {
+      function mine (term: any) {
         return term === ShExWebApp.ShapeMap.Focus || term === ShExWebApp.ShapeMap.Wildcard
           ? null
           : term;
       }
     }
 
-    const nodeShapePromises = this.editMap.find(".pair").get().reduce((acc, queryPair) => {
+    const nodeShapePromises = this.editMap.find(".pair").get().reduce((acc: any[], queryPair: any) => {
       $(queryPair).find(".error").removeClass("error"); // remove previous error markers
       const node = $(queryPair).find(".focus").val();
       const shape = $(queryPair).find(".inputShape").val();
@@ -503,16 +516,16 @@ class ShapeMapCache extends InterfaceCache {
               ? Promise.resolve({nodes: [node], shape: shape, status: status})
               : sm.node.type === "Extension"
               ? this.caches.inputData.resolveQueryMapExtension(sm.node.language, sm.node.lexical)
-                .then(terms => ({nodes: terms.map(term => this.caches.inputData.meta.termToLex(term)), shape: shape}))
+                .then((terms: any[]) => ({nodes: terms.map((term: any) => this.caches.inputData.meta.termToLex(term)), shape: shape}))
               : getQuads(sm.node.subject, sm.node.predicate, sm.node.object)
-              .then(nodes => Promise.resolve({nodes: nodes, shape: shape, status: status}));
+              .then((nodes: string[]) => Promise.resolve({nodes: nodes, shape: shape, status: status}));
         return acc.concat(added);
-      } catch (e) {
+      } catch (e: any) {
         // find which cell was broken
-        try { smparser.parse(node + '@' + "START"); } catch (e) {
+        try { smparser.parse(node + '@' + "START"); } catch (e: any) {
           $(queryPair).find(".focus").addClass("error");
         }
-        try { smparser.parse("<>" + '@' + shape); } catch (e) {
+        try { smparser.parse("<>" + '@' + shape); } catch (e: any) {
           $(queryPair).find(".inputShape").addClass("error");
         }
         this.resultsWidget.failMessage(e, "parsing Edit Map", node + '@' + shape);
@@ -520,7 +533,7 @@ class ShapeMapCache extends InterfaceCache {
       }
     }, []);
 
-    const createEntry = (node, nodeTerm, shape, shapeTerm, status) => {
+    const createEntry = (node: string, nodeTerm: any, shape: string, shapeTerm: any, status: string) => {
       const spanElt = $("<tr/>", {class: "pair"
                                   ,"data-node": nodeTerm
                                   ,"data-shape": shapeTerm
@@ -547,7 +560,7 @@ class ShapeMapCache extends InterfaceCache {
       const removeElt = $("<button/>", {
         class: "removePair",
         title: "remove this node/shape pair"}).text("-");
-      removeElt.on("click", evt => {
+      removeElt.on("click", (evt: any) => {
         // Remove related result.
         let href, result;
         if ((href = $(evt.target).closest("tr").find("a").attr("href"))
@@ -556,7 +569,7 @@ class ShapeMapCache extends InterfaceCache {
         // Remove FixedMap entry.
         $(evt.target).closest("tr").remove();
       });
-      spanElt.append([focusElt, joinerElt, shapeElt, removeElt, $("<a/>")].map(elt => {
+      spanElt.append([focusElt, joinerElt, shapeElt, removeElt, $("<a/>")].map((elt: any) => {
         return $("<td/>").append(elt);
       }));
 
@@ -568,8 +581,8 @@ class ShapeMapCache extends InterfaceCache {
     if (generation !== this.fixedMapGeneration)
       return []; // a later edit is already resolving; its rows are the ones to show
     this.fixedMap.find("tbody").empty();
-    pairs.reduce((acc, pair) => {
-      pair.nodes.forEach(node => {
+    pairs.reduce((acc: any, pair: any) => {
+      pair.nodes.forEach((node: string) => {
         const nodeTerm = this.caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
         let shapeTerm = this.caches.inputSchema.meta.lexToTerm(pair.shape);
         if (shapeTerm === ShExWebApp.Validator.Start)
@@ -585,7 +598,7 @@ class ShapeMapCache extends InterfaceCache {
       return acc;
     }, {})
     // scroll inputs to right
-    this.fixedMap.find("input").each((idx, focusElt) => {
+    this.fixedMap.find("input").each((idx: number, focusElt: any) => {
       focusElt.scrollLeft = focusElt.scrollWidth;
     });
     return []; // no errors

@@ -8,13 +8,47 @@
  * doc/); edit here and run `npm run build`.
  */
 
+/** What this file adds to the app, declared here since the methods are
+ * mixed in rather than written in the class body. */
+interface ShExBaseApp {
+  /** what the concrete app provides (ShExApp, ShExInWorkerApp): the validator to run */
+  // TODO(B1): callValidator passes a renderer too, which no getValidator reads (each makes its own)
+  getValidator (loaded: any, base: string, inputData: any, _renderer?: ShExResultsRenderer): DirectShExValidator | RemoteShExValidator;
+  fixValidationShapeMapEntry (node: any, shape: any): any;
+  startingValidation (): any;
+  disableResultsAndValidate (evt?: any): any;
+  startValidation (): any;
+  endValidation (elapsed: any): any;
+  startValidationDebugSession (): Promise<any>;
+  matchCaptureLabel (cap: any, schema: any): any;
+  captureNodeLex (cap: any): any;
+  offeredMatches (): any;
+  addValDebugBreakpoint (text: string): void;
+  removeValDebugBreakpoint (kind: any, value: any): any;
+  renderValDebugBreakpoints (): any;
+  toggleBreakpointAtCursor (): boolean;
+  pickValidationMatch (captureNo: any): any;
+  valDebugStep (command: string): void;
+  showValDebugEvent (event: any): any;
+  updateValThreadList (): any;
+  previewValThread (t: any, label: any): any;
+  endValidationDebugSession (): void;
+  callValidator (done?: (error?: Error) => void): Promise<any>;
+  setDataBase (base: string): string;
+  makeQueryTracker (): any;
+  startSlurp (): any;
+  slurpTurtle (quads: any[]): string;
+  reportValidationError (validationError: any, currentAction: any): any;
+  makeConsoleTracker (): any;
+}
+
 mixin(ShExBaseApp, {
   // abstract getValidator (_validator) { } // overriden for ShExMap
 
   /**
    * resolve node and shape against input data and schema base and prefixes
    */
-  fixValidationShapeMapEntry (node, shape) {
+  fixValidationShapeMapEntry (node: any, shape: any) {
     return {
       node: this.Caches.inputData.meta.lexToTerm(node),
       shape: this.Caches.inputSchema.meta.lexToTerm(shape) // resolve with this.Caches.outputSchema
@@ -33,7 +67,7 @@ mixin(ShExBaseApp, {
     });
   },
 
-disableResultsAndValidate (evt) {
+disableResultsAndValidate (evt: any) {
     if (new Date().getTime() - LastFailTime < 100) {
       this.resultsWidget.append(
         $("<div/>").addClass("warning").append(
@@ -82,7 +116,7 @@ disableResultsAndValidate (evt) {
       .text("validating\u2026").attr("title", "");
   },
 
-endValidation (elapsed) {
+endValidation (elapsed: any) {
     $("#validate").removeClass("running").prop("disabled", false)
       .text(VALIDATE_LABEL)
       .attr("title", "last validation: " + elapsed + " ms");
@@ -114,7 +148,7 @@ endValidation (elapsed) {
       currentAction = "parsing input data";
       const inputData = await this.Caches.inputData.refresh();
       currentAction = "parsing shape map";
-      const fixedMap = $("#fixedMap tr").map((idx, tr) =>
+      const fixedMap = $("#fixedMap tr").map((idx: any, tr: any) =>
         this.fixValidationShapeMapEntry($(tr).find("input.focus").val(), $(tr).find("input.inputShape").val())
       ).get();
       if (fixedMap.length === 0) {
@@ -143,7 +177,7 @@ endValidation (elapsed) {
             || {predicates: new Set(), nodes: new Set()};
       this.valDebugSession = {captures, located, pane, schema, results, breakpoints};
       const select = $("#valDbgMatches").empty();
-      captures.forEach((cap, i) =>
+      captures.forEach((cap: any, i: any) =>
         select.append($("<option/>", {value: i}).text(this.matchCaptureLabel(cap, schema))));
       select.off("change").on("change", () => this.pickValidationMatch(parseInt(select.val(), 10)));
       this.renderValDebugBreakpoints();
@@ -154,13 +188,13 @@ endValidation (elapsed) {
       $("#debugValidate").hide();
       this.pickValidationMatch(this.offeredMatches()[0] || 0);
       return this.valDebugSession;
-    } catch (e) {
+    } catch (e: any) {
       this.reportValidationError(e, currentAction);
       return null;
     }
   },
 
-matchCaptureLabel (cap, schema) {
+matchCaptureLabel (cap: any, schema: any) {
     const index = schema._index || {};
     const label = Object.keys(index.shapeExprs || {}).find(l => {
       const decl = index.shapeExprs[l];
@@ -171,7 +205,7 @@ matchCaptureLabel (cap, schema) {
   },
 
   /** the node a recorded match is about, as a breakpoint names it */
-  captureNodeLex (cap) {
+  captureNodeLex (cap: any) {
     return cap.node.termType === "BlankNode" ? "_:" + cap.node.value : cap.node.value;
   },
 
@@ -182,8 +216,8 @@ matchCaptureLabel (cap, schema) {
     if (!session)
       return [];
     const nodes = session.breakpoints.nodes;
-    const offered = [];
-    session.captures.forEach((cap, i) => {
+    const offered: any[] = [];
+    session.captures.forEach((cap: any, i: any) => {
       const on = nodes.size === 0 || nodes.has(this.captureNodeLex(cap));
       $("#valDbgMatches option[value='" + i + "']").toggle(on);
       if (on)
@@ -198,7 +232,7 @@ matchCaptureLabel (cap, schema) {
    * the recorded matches on that node.  Prefixed names read against the
    * schema's prefixes (a predicate) or the data's (a node).
    */
-  addValDebugBreakpoint (text) {
+  addValDebugBreakpoint (text: any) {
     const session = this.valDebugSession;
     const m = (text || "").trim().match(/^(bp|bn)\s+(\S+)$/);
     if (!session || !m) {
@@ -214,7 +248,7 @@ matchCaptureLabel (cap, schema) {
         const term = lex.startsWith("_:") ? lex : this.Caches.inputData.meta.lexToTerm(lex);
         session.breakpoints.nodes.add(typeof term === "string" ? term : lex);
       }
-    } catch (e) {
+    } catch (e: any) {
       $("#valDbgStatus").text("no such " + (kind === "bp" ? "predicate" : "node") + ": " + e.message);
       return false;
     }
@@ -226,7 +260,7 @@ matchCaptureLabel (cap, schema) {
     return true;
   },
 
-  removeValDebugBreakpoint (kind, value) {
+  removeValDebugBreakpoint (kind: any, value: any) {
     const session = this.valDebugSession;
     if (!session)
       return;
@@ -243,10 +277,10 @@ matchCaptureLabel (cap, schema) {
     const list = $("#valDbgBreakpoints").empty();
     if (!session)
       return;
-    const lex = (iri, meta) => { try { return meta.termToLex(iri); } catch (e) { return iri; } };
+    const lex = (iri: any, meta: any) => { try { return meta.termToLex(iri); } catch (e: any) { return iri; } };
     [["bp", session.breakpoints.predicates, this.Caches.inputSchema.meta],
      ["bn", session.breakpoints.nodes, this.Caches.inputData.meta]].forEach(([kind, set, meta]) => {
-      set.forEach(value => {
+      set.forEach((value: any) => {
         list.append($("<span/>", {class: "dbgBreakpoint", "data-kind": kind, "data-value": value})
                     .text(kind + " " + (typeof value === "string" && !value.startsWith("_:") ? lex(value, meta) : value))
                     .append($("<button/>", {title: "remove this breakpoint"}).text("×")
@@ -269,7 +303,7 @@ matchCaptureLabel (cap, schema) {
   },
 
   /** (re)arm the debugger on one recorded match */
-  pickValidationMatch (captureNo) {
+  pickValidationMatch (captureNo: any) {
     const session = this.valDebugSession;
     if (!session)
       return null;
@@ -289,8 +323,8 @@ matchCaptureLabel (cap, schema) {
     // means the constraint there.
     const schemaText = this.Caches.inputSchema.selection.val();
     const lineStarts = ShExWebApp.EditorServices.lineOffsets(schemaText);
-    session.pane.listBreakpoints().forEach(pos => {
-      const next = lineStarts.findIndex(start => start > pos);
+    session.pane.listBreakpoints().forEach((pos: any) => {
+      const next = lineStarts.findIndex((start: any) => start > pos);
       const lineFrom = lineStarts[(next === -1 ? lineStarts.length : next) - 1];
       const lineEnd = next === -1 ? schemaText.length : lineStarts[next];
       let hit = null;
@@ -304,7 +338,7 @@ matchCaptureLabel (cap, schema) {
       if (hit)
         dbg.addBreakpoint({tc: hit.expr});
     });
-    session.breakpoints.predicates.forEach(predicate => dbg.addBreakpoint({predicate}));
+    session.breakpoints.predicates.forEach((predicate: any) => dbg.addBreakpoint({predicate}));
     session.dbg = dbg;
     session.capture = cap;
     $("#valDbgStatus").text("paused before matching " + $("#valDbgMatches option:selected").text() +
@@ -315,7 +349,7 @@ matchCaptureLabel (cap, schema) {
     return dbg;
   },
 
-valDebugStep (command) {
+valDebugStep (command: any) {
     const session = this.valDebugSession;
     if (!session || !session.dbg)
       return null;
@@ -325,13 +359,13 @@ valDebugStep (command) {
     return event;
   },
 
-showValDebugEvent (event) {
+showValDebugEvent (event: any) {
     const session = this.valDebugSession;
     if (!event || !session)
       return;
     const threadStr = event.thread
           ? " [state:" + event.thread.stateNo +
-            " matched:" + event.thread.matched.reduce((n, m) => n + m.triples.length, 0) +
+            " matched:" + event.thread.matched.reduce((n: any, m: any) => n + m.triples.length, 0) +
             (Object.keys(event.thread.repeats).length
              ? " repeats:" + JSON.stringify(event.thread.repeats) : "") + "]"
           : "";
@@ -368,7 +402,7 @@ showValDebugEvent (event) {
     const list = $("#valDbgThreads").empty();
     if (!session || !session.dbg)
       return;
-    session.dbg.threads().forEach(t => {
+    session.dbg.threads().forEach((t: any) => {
       const label = (t.next ? "advanced" : "current") + " thread at state " + t.stateNo +
             (t.tc ? " <" + t.tc.predicate + ">" : " (" + t.at + ")");
       list.append($("<button/>", {class: "dbgThread", title: label + " -- click for its state"})
@@ -381,7 +415,7 @@ showValDebugEvent (event) {
    * machine (highlighted in the schema pane), repeat counts, and the
    * partition of matched triples (highlighted in the data pane, and
    * listed) */
-  previewValThread (t, label) {
+  previewValThread (t: any, label: any) {
     const session = this.valDebugSession;
     if (!session)
       return;
@@ -391,24 +425,24 @@ showValDebugEvent (event) {
     }
     const dataPane = this.editorSupport && this.editorSupport.panes.inputData;
     if (dataPane) {
-      const located = this.editorSupport.locateData(this.Caches.inputData.selection.val());
-      const ranges = !located ? [] : t.matched.flatMap(m => m.quads || [])
-            .map(q => ShExWebApp.EditorServices.quadRanges(located, q))
-            .filter(a => a)
-            .flatMap(a => [a.object, a.subject, a.predicate].filter(r => r));
+      const located = this.editorSupport!.locateData(this.Caches.inputData.selection.val());
+      const ranges = !located ? [] : t.matched.flatMap((m: any) => m.quads || [])
+            .map((q: any) => ShExWebApp.EditorServices.quadRanges(located, q))
+            .filter((a: any) => a)
+            .flatMap((a: any) => [a.object, a.subject, a.predicate].filter(r => r));
       dataPane.highlight(ranges, "shexjs-debug-current");
     }
     // ...and a table of the rest: where it is, its repeat counts, the
     // partition it has committed to, constraint by constraint
-    const lex = (iri) => { try { return this.Caches.inputSchema.meta.termToLex(iri); } catch (e) { return "<" + iri + ">"; } };
-    const row = (th, td) => $("<tr/>").append($("<th/>").text(th), $("<td/>").text(td));
+    const lex = (iri: any) => { try { return this.Caches.inputSchema.meta.termToLex(iri); } catch (e: any) { return "<" + iri + ">"; } };
+    const row = (th: any, td: any) => $("<tr/>").append($("<th/>").text(th), $("<td/>").text(td));
     const table = $("<table/>", {class: "dbgThreadState"}).append($("<caption/>").text(label));
     table.append(row("state", "s" + t.stateNo + " " + (t.tc ? lex(t.tc.predicate) : "(" + t.at + ")")));
     if (Object.keys(t.repeats).length)
       table.append(row("repeats", Object.entries(t.repeats).map(([s, n]) => "s" + s + "×" + n).join(", ")));
     table.append($("<tr/>").append($("<th/>", {colspan: 2}).text(
       "matched partition" + (t.matched.length === 0 ? " (empty)" : ""))));
-    t.matched.forEach(m => m.triples.forEach((tr, i) =>
+    t.matched.forEach((m: any) => m.triples.forEach((tr: any, i: any) =>
       table.append(row(i === 0 ? lex(m.predicate) : "", tr))));
     if (t.errors)
       table.append(row("errors", String(t.errors)));
@@ -432,7 +466,7 @@ endValidationDebugSession () {
     $("#valDbgMatches option").show();
   },
 
-async callValidator (done) {
+async callValidator (done: any) {
     $("#fixedMap .pair").removeClass("passes fails");
     $("#results > .status").hide();
     let currentAction = "parsing input schema";
@@ -445,7 +479,7 @@ async callValidator (done) {
         let inputData = await this.Caches.inputData.refresh(); // need prefixes for ShapeMap
         // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
         currentAction = "parsing shape map";
-        const fixedMap = $("#fixedMap tr").map((idx, tr) =>
+        const fixedMap = $("#fixedMap tr").map((idx: any, tr: any) =>
           this.fixValidationShapeMapEntry($(tr).find("input.focus").val(), $(tr).find("input.inputShape").val())
         ).get();
         // What records this validation's fetches, or nothing when it is not
@@ -474,7 +508,7 @@ async callValidator (done) {
             url: this.Caches.inputSchema.url || DefaultBase
           };
           const loaded = await ShExLoader.load({shexc: [alreadLoaded]}, null, {
-            collisionPolicy: (type, left, right) => {
+            collisionPolicy: (type: any, left: any, right: any) => {
               const lStr = JSON.stringify(left);
               const rStr = JSON.stringify(right);
               if (lStr === rStr)
@@ -499,7 +533,7 @@ async callValidator (done) {
           // invoke can throw an asynchronous error. Using .catch instead of await so callValidator is usefully async.
           return validator.invoke(fixedMap, validationTracker, time, done, currentAction)
             .catch(e => this.reportValidationError(e, currentAction));
-        } catch (e) {
+        } catch (e: any) {
           return this.reportValidationError(e, currentAction);
         }
       } else {
@@ -520,7 +554,7 @@ async callValidator (done) {
             base: this.Caches.inputSchema.meta.base,
             prefixes: this.Caches.inputSchema.meta.prefixes
           }
-          new ShExWebApp.Writer(opts).writeSchema(this.Caches.inputSchema.parsed, (error, text) => {
+          new ShExWebApp.Writer(opts).writeSchema(this.Caches.inputSchema.parsed, (error: any, text: any) => {
             if (error) {
               $("#results > .status").text("unwritable ShExJ schema:\n" + error).show();
               // res.addClass("error");
@@ -539,15 +573,15 @@ async callValidator (done) {
           to: outputLanguage
         } }
       }
-    } catch (e) {
+    } catch (e: any) {
       this.resultsWidget.failMessage(e, currentAction); // decides console policy
       return { inputError: e };
     }
 
     function hasFocusNode () {
-      return $(".focus").map((idx, elt) => {
+      return $(".focus").map((idx: any, elt: any) => {
         return $(elt).val();
-      }).get().some(str => {
+      }).get().some((str: any) => {
         return str.length > 0;
       });
     }
@@ -573,7 +607,7 @@ async callValidator (done) {
   /** The base the data pane's documents are written against, when it is not
    * the URL they came from (?data-base=, a manifest entry's `dataBase`).
    * Sticky: documents come and go in that pane and this outlasts them. */
-  setDataBase (base) {
+  setDataBase (base: any) {
     this.dataBase = base || "";
     const cache = this.Caches.inputData;
     cache.baseOverride = this.dataBase;
@@ -592,7 +626,7 @@ makeQueryTracker () {
       return null;
     const asked = new Map();
     let minted = 0;
-    const said = (token, tail) => {
+    const said = (token: any, tail: any) => {
       const about = asked.get(token) || {arrow: "→", what: "(untracked request)"};
       asked.delete(token);
       this.neighborhoods.appendToLocalTurtle("# " + about.arrow + " " + about.what + " " + tail);
@@ -601,7 +635,7 @@ makeQueryTracker () {
       // a db reports in RDF/JS terms and quads (DbQueryTracker); what
       // comes back from the worker is marshalled JSON, and is turned back
       // into these at that boundary (RemoteShExValidator's startQuery)
-      start: (isIncoming, term, shapeLabel, token) => {
+      start: (isIncoming: any, term: any, shapeLabel: any, token: any) => {
         const id = token === undefined ? ++minted : token;
         asked.set(id, {
           arrow: isIncoming ? "←" : "→",
@@ -612,13 +646,13 @@ makeQueryTracker () {
         });
         return id;
       },
-      end: (triples, time, token) => {
+      end: (triples: any, time: any, token: any) => {
         said(token, triples.length + " triples (" + time + " ms)\n"
              + this.slurpTurtle(triples));
       },
       // a request that timed out, was refused, or asked for a page that
       // isn't there: the walk stops, and this is the line that says where
-      fail: (error, time, token) => {
+      fail: (error: any, time: any, token: any) => {
         const why = String((error && error.message) || error).split("\n")[0];
         said(token, "nothing back after " + time + " ms: " + why + "\n");
       },
@@ -640,7 +674,7 @@ makeQueryTracker () {
     // what the per-response writer will declare, so it can be taken off
     // again: N3 says the prefixes it was given every time it is ended
     this.slurpPrefixes = "";
-    new RdfJs.Writer({prefixes}).end((e, text) => { this.slurpPrefixes = text || ""; });
+    new RdfJs.Writer({prefixes}).end((e: any, text: any) => { this.slurpPrefixes = text || ""; });
     // what was asked for (?data-base=), not whatever URL the pane's last
     // document came from: this is declared in the document, and only a
     // declared base may be written relative to
@@ -659,25 +693,25 @@ makeQueryTracker () {
    * handing the writer a base, which would relativize the predicates too
    * (`<../prop/P1748>` where `p:P1748` is what anyone would write).
    */
-  slurpTurtle (quads) {
+  slurpTurtle (quads: any) {
     if (quads.length === 0)
       return "";
     const base = this.dataBase;
     const factory = RdfJs.DataFactory;
-    const under = term => term.termType === "NamedNode" && base && term.value.startsWith(base)
+    const under = (term: any) => term.termType === "NamedNode" && base && term.value.startsWith(base)
           ? factory.namedNode(term.value.substring(base.length))
           : term;
     const writer = new RdfJs.Writer({prefixes: this.Caches.inputSchema.meta.prefixes});
     writer.addQuads(quads.map(
-      q => factory.quad(under(q.subject), under(q.predicate), under(q.object))));
+      (q: any) => factory.quad(under(q.subject), under(q.predicate), under(q.object))));
     let text = "";
-    writer.end((e, out) => { text = out || ""; }); // a writer with no stream answers here
+    writer.end((e: any, out: any) => { text = out || ""; }); // a writer with no stream answers here
     return this.slurpPrefixes && text.startsWith(this.slurpPrefixes)
       ? text.substring(this.slurpPrefixes.length)
       : text;
   },
 
-reportValidationError (validationError, currentAction) {
+reportValidationError (validationError: any, currentAction: any) {
     if (validationError instanceof FlowControlError)
       return { validationError };
     $("#results > .status").text("validation errors:").show();
@@ -686,15 +720,16 @@ reportValidationError (validationError, currentAction) {
   },
 
 makeConsoleTracker () {
-    function padding (depth) { return (new Array(depth + 1)).join("  "); } // AKA "  ".repeat(depth)
-    function sm (node, shape) {
-      return `${this.Caches.inputData.meta.termToLex(node)}@${this.Caches.inputSchema.meta.termToLex(shape)}`;
-    }
+    function padding (depth: number) { return (new Array(depth + 1)).join("  "); } // AKA "  ".repeat(depth)
+    // an arrow: as a nested function its `this` was undefined, so the trace
+    // threw on its first line whenever LOG_PROGRESS was on
+    const sm = (node: any, shape: any) =>
+      `${this.Caches.inputData.meta.termToLex(node)}@${this.Caches.inputSchema.meta.termToLex(shape)}`;
     const logger = {
-      recurse: x => { console.log(`${padding(logger.depth)}↻ ${sm(x.node, x.shape)}`); return x; },
-      known: x => { console.log(`${padding(logger.depth)}↵ ${sm(x.node, x.shape)}`); return x; },
-      enter: (point, label) => { console.log(`${padding(logger.depth)}→ ${sm(point, label)}`); ++logger.depth; },
-      exit: (point, label, ret) => { --logger.depth; console.log(`${padding(logger.depth)}← ${sm(point, label)}`); },
+      recurse: (x: any) => { console.log(`${padding(logger.depth)}↻ ${sm(x.node, x.shape)}`); return x; },
+      known: (x: any) => { console.log(`${padding(logger.depth)}↵ ${sm(x.node, x.shape)}`); return x; },
+      enter: (point: any, label: any) => { console.log(`${padding(logger.depth)}→ ${sm(point, label)}`); ++logger.depth; },
+      exit: (point: any, label: any, ret: any) => { --logger.depth; console.log(`${padding(logger.depth)}← ${sm(point, label)}`); },
       depth: 0
     };
     return logger;

@@ -51,24 +51,78 @@
  *     temporary file (proves the same .wasm runs under a stock WASI host).
  * Select with configure({impl: "shim"|"wasi"}).
  */
+import Fs = require("fs");
+import Os = require("os");
+import Path = require("path");
+import type wabtFactory from "wabt"; // type only: wabt itself loads in ready()
+
 const WasiExt = "http://shex.io/extensions/WASI/";
 const XsdString = "http://www.w3.org/2001/XMLSchema#string";
 
-let wabtPromise = null;
-let wabt = null;
-function ready () {
+/** what wabt() resolves to */
+type WabtModule = Awaited<ReturnType<typeof wabtFactory>>;
+
+/** the RDFJS term shapes read here (structurally, @rdfjs/types' Term) */
+interface RdfJsLiteral { termType: "Literal"; value: string; datatype: {value: string}; language: string }
+interface RdfJsNonLiteral { termType: "NamedNode" | "BlankNode" | "Variable" | "DefaultGraph"; value: string }
+type RdfJsTerm = RdfJsNonLiteral | RdfJsLiteral;
+
+/** what a host run returns */
+interface RunResult { exitCode: number; stdout: Buffer }
+
+/** the subset of node:wasi's WASI used here (typed locally: the tree's
+ * @types/node predates the module) */
+interface WasiHost {
+  getImportObject?: () => WebAssembly.Imports;
+  wasiImport: WebAssembly.ModuleImports;
+  start: (instance: WebAssembly.Instance) => number;
+}
+interface WasiHostOptions { version?: string; args?: string[]; stdout?: number; returnOnExit?: boolean }
+type WasiHostCtor = new (options: WasiHostOptions) => WasiHost;
+
+/** one failure as SemActHandler.dispatch reports it */
+interface SemActFailure { type: "SemActFailure"; errors: string[] }
+
+/** host options: which WASI implementation runs the modules */
+interface WasiExtensionOptions {
+  /** "shim" (default): the self-contained host below; "wasi": node:wasi */
+  impl?: "shim" | "wasi";
+}
+
+/** the extension: what require("@shexjs/extension-wasi") yields */
+interface WasiExtension {
+  name: string;
+  description: string;
+  register: (validator: any, api: any) => string[];
+  done: (validator: any) => void;
+  url: string;
+  ready: () => Promise<void>;
+  configure: (overrides: WasiExtensionOptions) => WasiExtension;
+  _internals: {
+    compile: typeof compile;
+    composeWat: typeof composeWat;
+    prelude: typeof prelude;
+    runShim: typeof runShim;
+    runNodeWasi: typeof runNodeWasi;
+    ctxArgs: typeof ctxArgs;
+    moduleCache: typeof moduleCache;
+  };
+}
+
+let wabtPromise: Promise<void> | null = null;
+let wabt: WabtModule | null = null;
+function ready (): Promise<void> {
   if (wabtPromise === null)
-    wabtPromise = require("wabt")().then(w => { wabt = w; });
+    wabtPromise = (require("wabt") as typeof wabtFactory)().then(w => { wabt = w; });
   return wabtPromise;
 }
 
-const moduleCache = new Map(); // WAT text -> WebAssembly.Module
+const moduleCache = new Map<string, WebAssembly.Module>(); // WAT text -> WebAssembly.Module
 
-let preludeText = null;
-function prelude () {
+let preludeText: string | null = null;
+function prelude (): string {
   if (preludeText === null)
-    preludeText = require("fs").readFileSync(
-      require("path").join(__dirname, "lib", "prelude.wat"), "utf8");
+    preludeText = Fs.readFileSync(Path.join(__dirname, "prelude.wat"), "utf8"); // beside this file in lib/
   return preludeText;
 }
 
@@ -78,26 +132,28 @@ function prelude () {
  * The prelude comes first — WAT requires imports before other definitions —
  * so wabt error line numbers are offset by its length.
  */
-function composeWat (code) {
+function composeWat (code: string): string {
   return code.trimStart().startsWith("(module")
     ? code
     : "(module\n" + prelude() + code + "\n)\n";
 }
 
-function compile (code) {
+function compile (code: string): WebAssembly.Module {
   if (moduleCache.has(code))
-    return moduleCache.get(code);
+    return moduleCache.get(code)!;
   if (wabt === null)
     throw Error("Invocation error: " + WasiExt + " not initialized; `await extension.ready()` before validating");
   let parsed;
   try {
     parsed = wabt.parseWat("semact.wat", composeWat(code), {});
   } catch (e) {
-    throw Error("Invocation error: " + WasiExt + " WAT didn't compile: " + e.message);
+    throw Error("Invocation error: " + WasiExt + " WAT didn't compile: " + (e as Error).message);
   }
   const bin = parsed.toBinary({});
   parsed.destroy();
-  const mod = new WebAssembly.Module(bin.buffer);
+  // (the casts to BufferSource/Uint8Array[] here and in runShim: the tree's
+  // @types/node 10 Buffer predates TypeScript's generic typed arrays)
+  const mod = new WebAssembly.Module(bin.buffer as BufferSource);
   moduleCache.set(code, mod);
   return mod;
 }
@@ -105,24 +161,24 @@ function compile (code) {
 /** run a compiled module under the ~5-call WASI shim, capturing fd 1.
  * @return {object} {exitCode, stdout: Buffer}
  */
-function runShim (mod, args) {
+function runShim (mod: WebAssembly.Module, args: string[]): RunResult {
   const encoder = new TextEncoder();
   const argBufs = args.map(a => encoder.encode(a + "\0"));
-  const chunks = [];
-  let memory = null;
+  const chunks: Buffer[] = [];
+  let memory: WebAssembly.Memory | null = null;
   const ExitSentinel = {};
   let exitCode = 0;
   const importObject = {
     wasi_snapshot_preview1: {
-      args_sizes_get: function (argcPtr, argvBufSizePtr) {
-        const view = new DataView(memory.buffer);
+      args_sizes_get: function (argcPtr: number, argvBufSizePtr: number): number {
+        const view = new DataView(memory!.buffer);
         view.setUint32(argcPtr, argBufs.length, true);
         view.setUint32(argvBufSizePtr, argBufs.reduce((sum, b) => sum + b.length, 0), true);
         return 0;
       },
-      args_get: function (argvPtr, argvBufPtr) {
-        const view = new DataView(memory.buffer);
-        const mem = new Uint8Array(memory.buffer);
+      args_get: function (argvPtr: number, argvBufPtr: number): number {
+        const view = new DataView(memory!.buffer);
+        const mem = new Uint8Array(memory!.buffer);
         let cursor = argvBufPtr;
         argBufs.forEach((b, i) => {
           view.setUint32(argvPtr + 4 * i, cursor, true);
@@ -131,58 +187,55 @@ function runShim (mod, args) {
         });
         return 0;
       },
-      environ_sizes_get: function (countPtr, bufSizePtr) {
-        const view = new DataView(memory.buffer);
+      environ_sizes_get: function (countPtr: number, bufSizePtr: number): number {
+        const view = new DataView(memory!.buffer);
         view.setUint32(countPtr, 0, true);
         view.setUint32(bufSizePtr, 0, true);
         return 0;
       },
-      environ_get: function (_environPtr, _environBufPtr) { return 0; },
-      fd_write: function (fd, iovs, iovsLen, nwrittenPtr) {
+      environ_get: function (_environPtr: number, _environBufPtr: number): number { return 0; },
+      fd_write: function (fd: number, iovs: number, iovsLen: number, nwrittenPtr: number): number {
         if (fd !== 1 && fd !== 2)
           return 8; // WASI errno badf
-        const view = new DataView(memory.buffer);
+        const view = new DataView(memory!.buffer);
         let total = 0;
         for (let i = 0; i < iovsLen; ++i) {
           const base = view.getUint32(iovs + 8 * i, true);
           const len = view.getUint32(iovs + 8 * i + 4, true);
           if (fd === 1)
-            chunks.push(Buffer.from(new Uint8Array(memory.buffer, base, len))); // copy; buffer may move
+            chunks.push(Buffer.from(new Uint8Array(memory!.buffer, base, len))); // copy; buffer may move
           total += len;
         }
         view.setUint32(nwrittenPtr, total, true);
         return 0;
       },
-      proc_exit: function (code) {
+      proc_exit: function (code: number): void {
         exitCode = code;
         throw ExitSentinel;
       },
     }
   };
   const instance = new WebAssembly.Instance(mod, importObject);
-  memory = instance.exports.memory;
+  memory = instance.exports.memory as WebAssembly.Memory;
   try {
-    instance.exports._start();
+    (instance.exports._start as () => void)();
   } catch (e) {
     if (e !== ExitSentinel)
-      throw Error("Invocation error: " + WasiExt + " module trapped: " + e.message);
+      throw Error("Invocation error: " + WasiExt + " module trapped: " + (e as Error).message);
   }
-  return {exitCode: exitCode, stdout: Buffer.concat(chunks)};
+  return {exitCode: exitCode, stdout: Buffer.concat(chunks as Uint8Array[])};
 }
 
 /** run a compiled module under Node's built-in node:wasi, capturing fd 1
  * through a temporary file.
  * @return {object} {exitCode, stdout: Buffer}
  */
-function runNodeWasi (mod, args) {
-  const {WASI} = require("node:wasi");
-  const Fs = require("fs");
-  const Os = require("os");
-  const Path = require("path");
+function runNodeWasi (mod: WebAssembly.Module, args: string[]): RunResult {
+  const {WASI} = require("node:wasi") as {WASI: WasiHostCtor};
   const tmp = Path.join(Os.tmpdir(), "shex-wasi-" + process.pid + "-" + Math.random().toString(36).slice(2));
   const fd = Fs.openSync(tmp, "w+");
   try {
-    let wasi;
+    let wasi: WasiHost;
     try {
       wasi = new WASI({version: "preview1", args: args, stdout: fd, returnOnExit: true});
     } catch (e) {
@@ -201,19 +254,21 @@ function runNodeWasi (mod, args) {
 }
 
 /** serialize an RDFJS term as the Test extension does */
-function termValue (term) {
+function termValue (term: RdfJsTerm): string {
   return term.termType === "Literal" && term.datatype.value !== XsdString
     ? rdfJsTerm2TurtleLiteral(term)
     : term.value;
 }
-function rdfJsTerm2TurtleLiteral (term) { // matches @shexjs/term rdfJsTerm2Turtle's Literal case
+function rdfJsTerm2TurtleLiteral (term: RdfJsLiteral): string { // matches @shexjs/term rdfJsTerm2Turtle's Literal case
   const RdfLangString = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
   return "\"" + term.value.replace(/"/g, '\\"') + "\"" + (
     term.datatype.value === RdfLangString ? "@" + term.language : "^^" + term.datatype.value);
 }
 
-/** assemble WASI argv from a dispatch ctx */
-function ctxArgs (ctx) {
+/** assemble WASI argv from a dispatch ctx: null for startActs, else the
+ * result under construction plus `node` (Shape and NodeConstraint) and/or
+ * `triples` (Shape and TripleConstraint) — only those two are read */
+function ctxArgs (ctx: any): string[] {
   const args = [WasiExt];
   if (ctx !== null && typeof ctx === "object") {
     if (Array.isArray(ctx.triples) && ctx.triples.length > 0) {
@@ -226,9 +281,9 @@ function ctxArgs (ctx) {
   return args;
 }
 
-function makeModule (opts) {
+function makeModule (opts: WasiExtensionOptions): WasiExtension {
 
-  function register (validator, api) {
+  function register (validator: any, api: any): string[] {
     if (api === undefined || !('ShExTerm' in api))
       throw Error('SemAct extensions must be called with register(validator, {ShExTerm, ...)')
 
@@ -246,12 +301,12 @@ function makeModule (opts) {
          * @param {object} _extensionStorage - place where the extension writes into the result structure.
          * @return {object[]} SemActFailure list — [] reports success.
          */
-        dispatch: function (code, ctx, _extensionStorage) {
+        dispatch: function (code: string | null, ctx: any, _extensionStorage: any): SemActFailure[] {
           if (typeof code !== "string")
             throw Error("Invocation error: " + WasiExt + " expected WAT code to dispatch, got: " + code);
           const res = run(compile(code), ctxArgs(ctx));
           const lines = res.stdout.toString("utf8").split("\n");
-          const tail = lines.pop(); // "" after a final "\n", else an unterminated tail
+          const tail = lines.pop()!; // "" after a final "\n", else an unterminated tail
           if (tail !== "")
             lines.push(tail);
           lines.forEach(line => validator.semActHandler.results[WasiExt].push(line));
@@ -266,7 +321,7 @@ function makeModule (opts) {
     return validator.semActHandler.results[WasiExt];
   }
 
-  function done (validator) {
+  function done (validator: any): void {
     if (validator.semActHandler.results[WasiExt].length === 0)
       delete validator.semActHandler.results[WasiExt];
   }
@@ -284,11 +339,11 @@ url: ${WasiExt}`,
      *
      * @param {object} overrides - {impl: "shim"|"wasi"}.
      */
-    configure: function (overrides) {
+    configure: function (overrides: WasiExtensionOptions): WasiExtension {
       return makeModule(Object.assign({}, opts, overrides));
     },
     _internals: {compile, composeWat, prelude, runShim, runNodeWasi, ctxArgs, moduleCache},
   };
 }
 
-module.exports = makeModule({});
+export = makeModule({});

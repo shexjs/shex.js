@@ -339,7 +339,7 @@ class NeighborhoodConfig {
         for (const module of this.modules) {
             // the registered source that holds an RDF document -- the "Turtle
             // data" pane -- found by what it takes rather than by its name
-            const spec = paneParams(module.dbParams || []).find(p => ((p.schema.items || {}).contentMediaType || "") === "text/turtle");
+            const spec = paneParams(module.dbParams || []).find((p) => ((p.schema.items || {}).contentMediaType || "") === "text/turtle");
             if (spec)
                 return { id: moduleId(module), name: spec.name };
         }
@@ -564,7 +564,7 @@ class NeighborhoodConfig {
                     queryStringParm: param.name, deflt: "", manifest: { key: param.name },
                     location: stub(() => {
                         // only the selected source's parameters describe this state
-                        const mine = fieldParams(this.module.dbParams || []).some(p => p.name === param.name);
+                        const mine = fieldParams(this.module.dbParams || []).some((p) => p.name === param.name);
                         const value = mine ? this.fields[param.name] : undefined;
                         return value === undefined || value === false ? "" : String(value);
                     }, v => {

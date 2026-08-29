@@ -18,18 +18,57 @@ const ShExLoader = ShExWebApp.Loader({
   fetch: window.fetch.bind(window), rdfjs: RdfJs, jsonld: null
 })
 
+/** an input a URL can fill: its query parameter, where its value lives
+ * (a jQuery selection, or a stand-in with val()), and what else the app
+ * knows about it */
+interface AppInput {
+  queryStringParm: string;
+  location: any;
+  cache?: InterfaceCache;            // the pane it fills, where it is a document
+  deflt?: string;
+  manifest?: any;                    // how it corresponds to a manifest entry (see the constructor)
+  normalize?: (v: string) => string; // bring a value into the range its control accepts
+  earlyLoad?: boolean;               // loaded before the list is walked (plugins)
+  fail?: (e: any) => void;           // told when its value could not be set (loadSearchParameters)
+  // TODO(B1): read by the load dialog's prefill but never assigned on an input
+  url?: string;
+}
+
+/** answers a keydown it recognizes with true; a plugin's is tagged with
+ * the plugin, so unloading it takes the handler away (bindPluginKeys) */
+type KeyDownHandler = ((e: any, code?: number) => boolean) & {plugin?: string};
+
 class ShExBaseApp {
-  [key: string]: any;
+  base: string;                      // the page's URL, for relative references
+  resultsTargetSel: string;          // where this app's results are written (a selector)
+  paneHomes: {[name: string]: any};  // where a pane a screen borrowed came from, so it can go back
+  resultsWidget: ResultsWidget;
+  shexcParser: ShExCParser;
+  turtleParser: TurtleParser;
+  queryTrackerController: {queryTracker: any};   // the tracker a slurp writes through, when one is on
+  Caches: AppCaches;
+  neighborhoods: NeighborhoodConfig;
+  Getables: AppInput[];              // the inputs a URL can fill
+  QueryParams: AppInput[];           // ...and every query parameter, those first
+  keyDownHandlers: KeyDownHandler[];
+  inFlight: Set<Promise<any>>;       // what the app has started and not finished (track)
+  settledPromise: Promise<any>;
+  editorSupport?: EditorSupport | null;   // the editors over the textareas, while they are on
+  dataBase?: string;                 // ?data-base=: what the data is written against
+  loadedGist?: any;                  // the gist a permalink loaded, for updateGist
+  valDebugSession?: any;             // the validation debug session, while one runs
+  screenTabsLive?: boolean;          // the screen tabs are wired
+  slurpPrefixes?: string;            // the prefix block a slurp wrote, to strip from later chunks
   /** whether this app validates in a worker: a plugin with a worker half
    * has one thing to do here and another there */
-  get remote () { return false; }
+  get remote (): boolean { return false; }
 
   /** where this app's results are written.  A plugin with results of its
    * own puts them in a tab beside these, and this becomes the first of
    * them (buildPluginResultsTabs). */
-  get resultsTarget () { return this.resultsTargetSel; }
+  get resultsTarget (): string { return this.resultsTargetSel; }
 
-constructor (base) {
+constructor (base: string) {
     this.base = base;
     this.resultsTargetSel = "#results > div";
     // where a pane a screen borrowed came from, so it can go back
@@ -108,7 +147,7 @@ constructor (base) {
       // answers to quietly means the validator, since there is nothing to
       // switch to.  start() shows what this lands on.
       {queryStringParm: "screen",       location: $("#screen"),          deflt: "",
-       normalize: v => $("#screenTabs button").filter((i, b) => $(b).attr("data-screen") === v).length
+       normalize: v => $("#screenTabs button").filter((i: any, b: any) => $(b).attr("data-screen") === v).length
                        ? v : ""},
       // The data source and whatever it wants configured.  A parameter is
       // named for what it means, not for the module that declares it, so a
@@ -129,7 +168,7 @@ constructor (base) {
       // needs has to be there before this list moves on.
       {queryStringParm: "data-base",    deflt: "",  manifest: {key: "dataBase"},
        location: {
-         val: (v) => v === undefined ? (this.dataBase || "") : this.setDataBase(v),
+         val: (v: any) => v === undefined ? (this.dataBase || "") : this.setDataBase(v),
          prop: () => undefined,
        }},
     ]);
@@ -165,7 +204,7 @@ constructor (base) {
    * work it does not itself await (ShExMap's materialize hands over the
    * materialization, not the click) tracks that work explicitly.
    */
-  track (promise) {
+  track (promise: any): Promise<any> {
     const p = Promise.resolve(promise);
     this.inFlight.add(p);
     const done = () => this.inFlight.delete(p);
@@ -179,11 +218,11 @@ constructor (base) {
 
   /** everything the app has started, finished: the promise of the most
    * recently tracked action, after all in flight have settled */
-  settled () {
+  settled (): Promise<any> {
     return this.settledPromise;
   }
 
-async start () {
+async start (): Promise<void> {
     SharedForTests = {Caches: this.Caches, neighborhoods: this.neighborhoods, app: this,
                       HighlightMode, isPinGesture, PIN_WITH_META}
     // `shared.promise` in a test is the app's settled(); writing to it tracks
@@ -214,7 +253,7 @@ async start () {
     });
   }
 
-onDataLoad () {
+onDataLoad (): void {
     this.Caches.shapeMap.markEditMapDirty();
   }
 
@@ -222,7 +261,7 @@ onDataLoad () {
   /**
    * set up UI buttons handlers
    */
-  prepareControls () {
+  prepareControls (): void {
     // re-log a just-created gist's address: the post-create navigation
     // cleared the console it was first printed to
     try {
@@ -231,7 +270,7 @@ onDataLoad () {
         sessionStorage.removeItem(GIST_CREATED_KEY);
         console.log(gistTrace);
       }
-    } catch (e) { /* private mode */ }
+    } catch (e: any) { /* private mode */ }
     $("#menu-button").on("click", this.toggleControls.bind(this));
     HighlightMode.wire();   // the chip, ctrl-alt-h, and the momentary key
     $("#interface").on("change", this.setInterface.bind(this));
@@ -250,7 +289,7 @@ onDataLoad () {
      * makes clicking the same check mark twice work (the location doesn't
      * change, so no hashchange follows); the location is what makes Back,
      * Forward, and a pasted link work. */
-    $("#fixedMap").on("click", "a[href^='#']", evt =>
+    $("#fixedMap").on("click", "a[href^='#']", (evt: any) =>
       this.resultsWidget.scrollToResult($(evt.currentTarget).attr("href").substring(1)));
     $(window).on("hashchange", () =>
       this.resultsWidget.scrollToResult(window.location.hash.substring(1)));
@@ -260,7 +299,7 @@ onDataLoad () {
     $("#valDbgOver").on("click", () => this.valDebugStep("stepOver"));
     $("#valDbgContinue").on("click", () => this.valDebugStep("continue"));
     $("#valDbgStop").on("click", () => this.endValidationDebugSession());
-    $("#valDbgBreak").on("keydown", (e) => {
+    $("#valDbgBreak").on("keydown", (e: any) => {
       if (e.key !== "Enter")
         return true;
       this.addValDebugBreakpoint($("#valDbgBreak").val());
@@ -268,19 +307,19 @@ onDataLoad () {
       return false;
     });
     $("#download-results-button").on("click", this.downloadResults.bind(this));
-    $("#createGist").on("click", (evt) => { this.track(this.createGist(evt)); });
-    $("#updateGist").on("click", (evt) => { this.track(this.updateGist(evt)); });
+    $("#createGist").on("click", (evt: any) => { this.track(this.createGist(evt)); });
+    $("#updateGist").on("click", (evt: any) => { this.track(this.updateGist(evt)); });
 
     $("#loadForm").dialog({
       autoOpen: false,
       modal: true,
       buttons: {
-        "GET": (evt, ui) => {
+        "GET": (evt: any, ui: any) => {
           this.resultsWidget.clear();
           const target = this.Getables.find(g => g.queryStringParm === $("#loadForm span.whatToLoad").text());
           const url = $("#loadInput").val();
           const tips = $(".validateTips");
-          function updateTips (t) {
+          function updateTips (t: string) {
             tips
               .text( t )
               .addClass( "ui-state-highlight" );
@@ -294,7 +333,7 @@ onDataLoad () {
             return;
           }
           tips.removeClass("ui-state-highlight").text();
-          this.track(target.cache.asyncGet(url)
+          this.track(target!.cache!.asyncGet(url)
             // .then(ret => {
             //   this.toggleControls();
             //   return ret;
@@ -317,9 +356,9 @@ onDataLoad () {
     });
     this.Getables.forEach(target => {
       const type = target.queryStringParm
-      $("#load-"+type+"-button").click(evt => {
+      $("#load-"+type+"-button").click((evt: any) => {
         const prefillURL = target.url ? target.url :
-              target.cache.meta.base && target.cache.meta.base !== DefaultBase ? target.cache.meta.base :
+              target.cache!.meta.base && target.cache!.meta.base !== DefaultBase ? target.cache!.meta.base :
               "";
         $("#loadInput").val(prefillURL);
         $("#loadForm").attr("class", type).find("span.whatToLoad").text(type);
@@ -337,7 +376,7 @@ onDataLoad () {
       close: dismissModal
     });
 
-    $("#about-button").click(evt => {
+    $("#about-button").click((evt: any) => {
       $("#about").dialog("open");
     });
 
@@ -346,32 +385,32 @@ onDataLoad () {
       modal: true,
       width: "50%",
       buttons: {
-        "Dismiss": function () { $(this).dialog("close"); }
+        "Dismiss": function (this: any) { $(this).dialog("close"); }
       },
     });
 
-    $("#gistInstructions").on("click", evt => {
+    $("#gistInstructions").on("click", (evt: any) => {
       evt.preventDefault();
       this.toggleControls(); // close the menu; the dialog replaces it
       $("#gistHelp").dialog("open");
     });
 
     $("#shapeMap-tabs").tabs({
-      activate: async (event, ui) => {
+      activate: async (event: any, ui: any) => {
         if (ui.oldPanel.get(0) === $("#editMap-tab").get(0))
           await this.Caches.shapeMap.copyEditMapToQueryMap();
         else if (ui.oldPanel.get(0) === $("#queryMap").get(0))
           await this.Caches.shapeMap.copyQueryMapToEditMap()
       }
     });
-    $("#queryMap").on("change", evt => {
+    $("#queryMap").on("change", (evt: any) => {
       this.resultsWidget.clear();
       this.track(this.Caches.shapeMap.copyQueryMapToEditMap());
     });
     this.Caches.inputData.selection.on("change", this.dataInputHandler.bind(this)); // input + paste?
     // $("#copyEditMapToFixedMap").on("click", copyEditMapToFixedMap); // may add this button to tutorial
 
-    function dismissModal (evt) {
+    function dismissModal (this: any, evt?: any) {
       // $.unblockUI();
       $("#about").dialog("close");
       this.toggleControls();
@@ -379,17 +418,17 @@ onDataLoad () {
     }
 
     // Prepare file uploads
-    $("input.inputfile").each((idx, elt) => {
-      $(elt).on("change", (evt) => {
+    $("input.inputfile").each((idx: any, elt: any) => {
+      $(elt).on("change", (evt: any) => {
         const reader = new FileReader();
 
         reader.onload = (evt) => {
-          if(evt.target.readyState != 2) return;
-          if(evt.target.error) {
+          if(evt.target!.readyState != 2) return;
+          if(evt.target!.error) {
             alert("Error while reading file");
             return;
           }
-          $($(elt).attr("data-target")).val(evt.target.result);
+          $($(elt).attr("data-target")).val(evt.target!.result);
         };
 
         reader.readAsText(evt.target.files[0]);
@@ -399,7 +438,7 @@ onDataLoad () {
 
   /* Mouse events */
 
-  async dataInputHandler (evt?) {
+  async dataInputHandler (evt?: any): Promise<any[]> {
     const active = $('#shapeMap-tabs ul li.ui-tabs-active a').attr('href');
     if (active === "#editMap-tab")
       return await this.Caches.shapeMap.copyEditMapToQueryMap();
@@ -408,7 +447,7 @@ onDataLoad () {
   }
 
   /* Keyboard events */
-  validateKeyDown (e, code) {
+  validateKeyDown (e: any, code?: number): boolean {
     if (!e.ctrlKey || (code !== 10 && code !== 13)) // ctrl-enter
       return false;
     // const at = $(":focus");
@@ -419,7 +458,7 @@ onDataLoad () {
     return true;
   }
 
-navigateManifestKeyDown (e, code) {
+navigateManifestKeyDown (e: any, code?: number): boolean {
     if (!e.ctrlKey || ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].indexOf(e.code) === -1) // ctrl-arrow
       return false;
     let newLi = null;
@@ -432,12 +471,12 @@ navigateManifestKeyDown (e, code) {
       $(newLi).find('button').focus();
     return true;
 
-    function navFrom (keyCode, fromLi) {
+    function navFrom (keyCode: string, fromLi: any): any {
       const fromColumn = fromLi.parent();
       const fromLiNo = fromLi.index();
       const lis = fromColumn.children();
       const columns = $('ul[data-navColumn]:visible').get().sort(
-        (l, r) =>
+        (l: any, r: any) =>
         parseInt($(l).attr('data-navColumn')) - parseInt($(r).attr('data-navColumn'))
       );
       const fromColumnNo = columns.indexOf(fromColumn.get(0)); // index in visible columns
@@ -469,7 +508,7 @@ navigateManifestKeyDown (e, code) {
       }
     }
 
-    function firstOf (node, ...selectors) { // return first successful selector. gotta be an idiom for this in jquery
+    function firstOf (node: any, ...selectors: string[]): any { // return first successful selector. gotta be an idiom for this in jquery
       for (let i = 0; i < selectors.length; ++i) {
         const ret = node.find(selectors[i]);
         if (ret.length > 0) {
@@ -479,6 +518,5 @@ navigateManifestKeyDown (e, code) {
     }
   }
 
-  /* drag and drop */
-w
+  /* drag and drop: ShExBaseApp-layout */
 }

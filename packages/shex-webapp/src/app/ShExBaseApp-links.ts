@@ -7,6 +7,20 @@
  * doc/); edit here and run `npm run build`.
  */
 
+/** What this file adds to the app, declared here since the methods are
+ * mixed in rather than written in the class body. */
+interface ShExBaseApp {
+  loadSearchParameters (): Promise<any>;
+  parseQueryString (query: any): any;
+  getPermalink (): Promise<string>;
+  createGist (evt: any): Promise<any>;
+  updateGist (evt: any): Promise<any>;
+  getGistToken (): string | null;
+  ghApi (token: any, url: any, method: any, body?: any): Promise<any>;
+  assembleGistFiles (): Promise<any>;
+  downloadResults (evt: any): any;
+}
+
 mixin(ShExBaseApp, {
   /**
    * Load URL search parameters
@@ -55,13 +69,13 @@ mixin(ShExBaseApp, {
         const url = iface[parm + "URL"][0];
         if (url.length > 0) { // manifest= loads no manifest
           // !!! set anyways in asyncGet?
-          input.cache.url = url; // all fooURL query parms are caches.
+          input.cache!.url = url; // all fooURL query parms are caches.
           try {
-            const got = await input.cache.asyncGet(url);
+            const got = await input.cache!.asyncGet(url);
             return [label, {fromUrl: got}]
-          } catch(e) {
+          } catch (e: any) {
             if ("fail" in input) {
-              input.fail(e);
+              input.fail!(e);
             } else {
               input.location.val(e.message);
             }
@@ -80,17 +94,17 @@ mixin(ShExBaseApp, {
 
         try {
           if ("cache" in input) {
-            await input.cache.set(value, location.href);
+            await input.cache!.set(value, location.href);
           } else {
             input.location.val(prepend + value);
             if (input.location.val() === null)
               throw Error(`Unable to set value to ${prepend + value}`)
           }
           return [label, { literal: value }]
-        } catch (e) {
+        } catch (e: any) {
           input.location.val(origValue);
           if ("fail" in input) {
-            input.fail(e);
+            input.fail!(e);
           }
           this.resultsWidget.append($("<pre/>").text(
             "error setting " + label + ":\n" + e + "\n" + value
@@ -106,7 +120,7 @@ mixin(ShExBaseApp, {
     // convert loaded array into Object:
     /* { "data": { "skipped": "skipped" },
        "manifest": { "fromUrl": { "url": "http://...", "data": "..." } }, } */
-    const loaded = loadedAsArray.reduce((acc, fromArray) => {
+    const loaded = loadedAsArray.reduce((acc: {[label: string]: any}, fromArray: any[]) => {
       acc[fromArray[0]] = fromArray[1]
       return acc
     }, {});
@@ -123,7 +137,7 @@ mixin(ShExBaseApp, {
       this.Caches.shapeMap.makeFreshEditMap();
 
     this.customizeInterface();
-    $("body").keydown(e => { // keydown because we need to preventDefault
+    $("body").keydown((e: any) => { // keydown because we need to preventDefault
       const code = e.keyCode || e.charCode; // standards anyone?
       return !this.keyDownHandlers.find(h => h(e, code)); // if we find a handler, stop propagation
     });
@@ -137,10 +151,10 @@ mixin(ShExBaseApp, {
     return loaded;
   },
 
-parseQueryString (query) {
+parseQueryString (query: any) {
     if (query[0]==='?') query=query.substr(1); // optional leading '?'
-    const map   = {};
-    query.replace(/([^&,=]+)=?([^&,]*)(?:[&,]+|$)/g, (match, key, value) => {
+    const map: {[key: string]: string[]} = {};
+    query.replace(/([^&,=]+)=?([^&,]*)(?:[&,]+|$)/g, (match: any, key: any, value: any) => {
       key=decodeURIComponent(key);value=decodeURIComponent(value);
       (map[key] = map[key] || []).push(value);
     });
@@ -151,7 +165,7 @@ parseQueryString (query) {
    * update location with a current values of some inputs
    */
   async getPermalink () {
-    let parms = [];
+    let parms: string[] = [];
     // The map as it stands, whether or not the source can still answer it:
     // a link is about what is on screen, and a query map this source cannot
     // resolve -- a `SPARQL '''…'''` after a slurp handed the reader the
@@ -159,16 +173,16 @@ parseQueryString (query) {
     // one leaves the menu with no link and says nothing about why.
     try {
       await this.Caches.shapeMap.copyEditMapToQueryMap();
-    } catch (e) {
+    } catch (e: any) {
       // the query map keeps what it says, which is what goes in the link
     }
-    parms = parms.concat(this.QueryParams.reduce((acc, input) => {
+    parms = parms.concat(this.QueryParams.reduce((acc: string[], input) => {
       let parm = input.queryStringParm;
       let val = input.location.val();
       // more than one plugin may be loaded, and the link has to bring
       // them all back
-      if (input.cache && Array.isArray(input.cache.urls))
-        return acc.concat(input.cache.urls.map(u => parm + "URL=" + encodeURIComponent(u)));
+      if (input.cache && Array.isArray((input.cache as PluginCache).urls))
+        return acc.concat((input.cache as PluginCache).urls.map(u => parm + "URL=" + encodeURIComponent(u)));
       if (input.cache && input.cache.url &&
           // Specifically avoid loading from DefaultBase?schema=blah
           // because that will load the HTML page.
@@ -192,7 +206,7 @@ parseQueryString (query) {
    * and reload this page with ?manifestURL= pointing at the gist's
    * .manifest.yaml.  Texts over GIST_INLINE_LINES lines become separate
    * files (each descriptor's spillName) referenced by relative <key>URLs. */
-  async createGist (evt) {
+  async createGist (evt: any) {
     if (evt) evt.preventDefault();
     this.toggleControls();
     const title = prompt("Title for this gist:", "");
@@ -234,10 +248,10 @@ parseQueryString (query) {
       // navigation clears the console
       const trace = `created gist: ${created.html_url} manifest: ${manifestURL}`;
       console.log(trace);
-      try { sessionStorage.setItem(GIST_CREATED_KEY, trace); } catch (e) { /* private mode */ }
+      try { sessionStorage.setItem(GIST_CREATED_KEY, trace); } catch (e: any) { /* private mode */ }
       location.search = search; // navigates: reload from the gist manifest
       return search; // for tests, which can't navigate
-    } catch (e) {
+    } catch (e: any) {
       this.resultsWidget.failMessage(e, "creating gist");
       return null;
     }
@@ -248,7 +262,7 @@ parseQueryString (query) {
    * loadSearchParameters), nulling spill-over files the new revision no
    * longer references, then reload pinned to the new revision (sha-less raw
    * URLs are CDN-cached, so reloading unpinned could show stale content). */
-  async updateGist (evt) {
+  async updateGist (evt: any) {
     if (evt) evt.preventDefault();
     this.toggleControls();
     if (!this.loadedGist)
@@ -286,10 +300,10 @@ parseQueryString (query) {
       const search = "?" + parms.join("&");
       const trace = `updated gist: ${current.html_url} manifest: ${manifestURL}`;
       console.log(trace);
-      try { sessionStorage.setItem(GIST_CREATED_KEY, trace); } catch (e) { /* private mode */ }
+      try { sessionStorage.setItem(GIST_CREATED_KEY, trace); } catch (e: any) { /* private mode */ }
       location.search = search; // navigates: reload from the updated manifest
       return search; // for tests, which can't navigate
-    } catch (e) {
+    } catch (e: any) {
       if (/ 404 /.test(e.message))
         e.message += " (is this your gist? updating needs its owner's token)";
       this.resultsWidget.failMessage(e, "updating gist");
@@ -306,7 +320,7 @@ parseQueryString (query) {
                     + "remembered in this browser's localStorage):");
   },
 
-async ghApi (token, url, method, body) {
+async ghApi (token: any, url: any, method: any, body: any) {
     const resp = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json",
@@ -328,14 +342,14 @@ async ghApi (token, url, method, body) {
   async assembleGistFiles () {
     await this.Caches.shapeMap.copyEditMapToQueryMap();
     const status = $("#results .fails").length ? "nonconformant" : "conformant";
-    const files = {};
-    const part = (parm, fileName, text) => {
+    const files: {[name: string]: {content: string}} = {};
+    const part = (parm: any, fileName: any, text: any) => {
       if (text.split("\n").length > GIST_INLINE_LINES) {
         files[fileName] = {content: text};
         return `  ${parm}URL: ${fileName}\n`;
       }
       return `  ${parm}: |\n` + text.replace(/\n+$/, "").split("\n")
-        .map(l => l.length ? "    " + l : "").join("\n") + "\n";
+        .map((l: any) => l.length ? "    " + l : "").join("\n") + "\n";
     };
     // each QueryParams entry with a manifest descriptor contributes to the
     // manifest entry, so each app's input registry declares what a gist records
@@ -360,7 +374,7 @@ async ghApi (token, url, method, body) {
     return files;
   },
 
-downloadResults (evt) {
+downloadResults (evt: any) {
     const typed = [
       { type: "text/plain", name: "results.txt" },
       { type: "application/json", name: "results.json" }

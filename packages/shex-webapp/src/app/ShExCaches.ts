@@ -9,30 +9,70 @@
  * doc/); edit here and run `npm run build`.
  */
 
+/** what a pane's parse learns about its document -- prefixes and base --
+ * and the spellers built on them */
+interface CacheMeta {
+  prefixes: {[prefix: string]: string};
+  base: string;
+  // set by every cache that lexifies (the schema, the data, the shape map);
+  // a manifest, plugin or JSON pane never asks
+  termToLex: (term: any, ...rest: any[]) => string;    // a term as this document would write it
+  lexToTerm: (lex: string) => any;                     // ...and back
+}
+
+/** the app's panes by name (ShExBaseApp.Caches): the four every page has,
+ * what the editors add, and whatever panes a plugin brings */
+interface AppCaches {
+  inputSchema: SchemaCache;
+  inputData: TurtleCache;
+  plugin: PluginCache;
+  shapeMap: ShapeMapCache;
+  manifest?: ManifestCache;
+  editorSupport?: EditorSupport;
+  [name: string]: any;
+}
+
+/** what every cache answers, each kind its own way */
+interface InterfaceCache {
+  parse (text: string, base?: string): Promise<any>;
+  getItems? (): Promise<any[]>;
+}
+
 class InterfaceCache {
-  [key: string]: any;
+  _dirty: boolean;
+  selection: any;                    // jQuery: the textarea (or drop target) this pane is
+  onLoad: (() => void) | null;
+  parsed: any;                       // what parse answered: a schema, a db, a store...
+  url: string | undefined;           // where the document was GOT from, while it is unedited
+  meta: CacheMeta;
+  // TODO(B1): read by set() and tryN3() but never assigned (the @@crappyHack1
+  // comparisons read undefined)
+  base?: string;
+  baseOverride?: string;             // a base this pane was given (?data-base=), outlasting its documents
+  // TODO(B1): read by asyncGet's error message but never assigned on a cache
+  queryStringParm?: string;
   // caches for textarea parsers
-  constructor (selection, onLoad) {
+  constructor (selection: any, onLoad: (() => void) | null) {
     this._dirty = true;
     this.selection = selection;
     this.onLoad = onLoad;
     this.parsed = null; // a Promise
     this.url = undefined; // only set if inputarea caches some web resource.
-    this.meta = { prefixes: {}, base: DefaultBase };
+    this.meta = { prefixes: {}, base: DefaultBase } as CacheMeta;
   }
 
-  dirty (newVal) {
+  dirty (newVal: boolean): boolean {
     const ret = this._dirty;
     this._dirty = newVal;
     return ret;
   }
 
-  get () {
+  get (): string {
     return this.selection.val();
   }
 
   // (a manifest or a plugin is also told where it came from and what it is)
-  async set (text, base, _source?, _mediaType?) {
+  async set (text: any, base: string, _source?: any, _mediaType?: string): Promise<void> {
     this._dirty = true;
     this.selection.val(text);
     // a base this pane was given (?data-base=) outlasts the documents that
@@ -46,7 +86,7 @@ class InterfaceCache {
     }
   }
 
-  async refresh () {
+  async refresh (): Promise<any> {
     if (!this._dirty)
       return this.parsed;
     this.parsed = await this.parse(this.selection.val(), this.meta.base);
@@ -55,7 +95,7 @@ class InterfaceCache {
     return this.parsed;
   }
 
-  async asyncGet (url) {
+  async asyncGet (url: string): Promise<{url: string, data: string}> {
     url = new URL(url, window.location.href).href
     const _cache = this;
     let resp
@@ -64,7 +104,7 @@ class InterfaceCache {
         accept: 'text/shex,text/turtle,*/*;q=0.9, test/html;q=0.8',
         // cache: 'no-cache' -- breaks CORS, so user has to open in new page and force reload there
       }})
-    } catch (e) {
+    } catch (e: any) {
       throw Error("unable to fetch <" + url + ">: " + '\n' + e.message);
     }
     if (!resp.ok)
@@ -72,38 +112,41 @@ class InterfaceCache {
     const data = await resp.text();
     _cache.meta.base = url;
     try {
-      await _cache.set(data, url, undefined, resp.headers.get('content-type'));
-    } catch (e) {
+      await _cache.set(data, url, undefined, resp.headers.get('content-type')!);
+    } catch (e: any) {
       throw Error("error setting " + this.queryStringParm + " with <" + url + ">: " + '\n' + e.message);
     }
     $("#loadForm").dialog("close");
     return { url: url, data: data };
   }
 
-  callOnLoad () {
+  callOnLoad (): void {
     if (this.onLoad)
       this.onLoad();
   }
 }
 
 class SchemaCache extends InterfaceCache {
-  [key: string]: any;
-  constructor (selection, onLoad, shexcParser, turtleParser) {
+  shexcParser: ShExCParser;
+  turtleParser: TurtleParser;
+  graph: any;                        // the schema as RDF, when it was written as ShExR
+  language: string | null;           // "ShExC", "ShExJ", "ShExR" or "DCTAP", once parsed
+  constructor (selection: any, onLoad: (() => void) | null, shexcParser: ShExCParser, turtleParser: TurtleParser) {
     super(selection, onLoad);
     this.shexcParser = shexcParser;
     this.turtleParser = turtleParser;
     this.graph = null;
     this.language = null;
 
-    this.meta.termToLex = (trm) => trm === ShExWebApp.Validator.Start
+    this.meta.termToLex = (trm: any) => trm === ShExWebApp.Validator.Start
       ? START_SHAPE_LABEL
       : ShExWebApp.ShExTerm.shExJsTerm2Turtle(trm, this.meta, true);
-    this.meta.lexToTerm = (lex) => lex === START_SHAPE_LABEL
+    this.meta.lexToTerm = (lex: string) => lex === START_SHAPE_LABEL
       ? ShExWebApp.Validator.Start
       : turtleParser.termToLd(lex, new IRIResolver(this.meta));
   }
 
-  async parse (text, base) {
+  async parse (text: string, base: string): Promise<any> {
     const parseShExR = () => {
       const graphParser = new ShExWebApp.Validator(
         this.shexcParser.parseString(ShExWebApp.Util.ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
@@ -133,10 +176,10 @@ class SchemaCache extends InterfaceCache {
     this.callOnLoad();
     return schema;
 
-    async function parseDcTap (text) {
+    async function parseDcTap (text: string): Promise<any> {
       const dctap = new ShExWebApp.DcTap();
       return await new Promise((resolve, reject) => {
-        $.csv.toArrays(text, {}, (err, data) => {
+        $.csv.toArrays(text, {}, (err: any, data: any) => {
           if (err) reject(err)
           dctap.parseRows(data, base)
           resolve(dctap.toShEx())
@@ -145,14 +188,14 @@ class SchemaCache extends InterfaceCache {
     }
   }
 
-  async getItems () {
+  async getItems (): Promise<string[]> {
     const obj = await this.refresh();
     const start = "start" in obj ? [START_SHAPE_LABEL] : [];
-    const rest = "shapes" in obj ? obj.shapes.map(se => this.meta.termToLex(se.id)) : [];
+    const rest = "shapes" in obj ? obj.shapes.map((se: any) => this.meta.termToLex(se.id)) : [];
     return start.concat(rest);
   }
 
-  tryN3 (text) {
+  tryN3 (text: string): any {
     try {
       if (text.match(/^\s*$/))
         return null;
@@ -160,20 +203,24 @@ class SchemaCache extends InterfaceCache {
       if (db.getQuads().length === 0)
         return null;
       return db;
-    } catch (e) {
+    } catch (e: any) {
       return null; // signal caller that text isn't Turtle
     }
   }
 }
 
 class TurtleCache extends InterfaceCache {
-  [key: string]: any;
-  constructor (selection, onLoad, turtleParser, queryTrackerController?) {
+  turtleParser: TurtleParser;
+  queryTrackerController: any;       // the app's (ShExBaseApp-validation): its queryTracker records a slurp
+  neighborhoods!: NeighborhoodConfig; // the data source picker, assigned by the app (ShExBaseApp)
+  endpoint?: string;                 // the selected source's, while it has one
+  dbSignature?: string;              // what the db was last built from, so a fetching one isn't rebuilt for nothing
+  constructor (selection: any, onLoad: (() => void) | null, turtleParser: TurtleParser, queryTrackerController?: any) {
     super(selection, onLoad);
     this.turtleParser = turtleParser;
     this.queryTrackerController = queryTrackerController;
-    this.meta.termToLex = (trm) => ShExWebApp.ShExTerm.rdfJsTerm2Turtle(trm, this.meta);
-    this.meta.lexToTerm = (lex) => turtleParser.termToLd(lex, new IRIResolver(this.meta));
+    this.meta.termToLex = (trm: any) => ShExWebApp.ShExTerm.rdfJsTerm2Turtle(trm, this.meta);
+    this.meta.lexToTerm = (lex: string) => turtleParser.termToLd(lex, new IRIResolver(this.meta));
   }
 
   /** Which neighborhood serves this pane is the modules' business, not this
@@ -183,7 +230,7 @@ class TurtleCache extends InterfaceCache {
    * gets the parsed store, since the Turtle parser and this pane's
    * prefixes and base live here.
    */
-  async parse (text, base) {
+  async parse (text: string, base: string): Promise<any> {
     const module = this.neighborhoods.module;
     const params = this.neighborhoods.params();
 
@@ -217,7 +264,7 @@ class TurtleCache extends InterfaceCache {
     // prefixes and base it finds are what the rest of the app lexifies
     // nodes with.  Panes of anything else go to the module as text.
     const turtlePane = ShExWebApp.NeighborhoodApi.paneParams(module.dbParams || [])
-          .find(p => ((p.schema.items || {}).contentMediaType || "") === "text/turtle");
+          .find((p: any) => ((p.schema.items || {}).contentMediaType || "") === "text/turtle");
     if (turtlePane)
       params.store = this.turtleParser.parseDocuments(
         params[turtlePane.name] || [], this.meta, base);
@@ -240,7 +287,7 @@ class TurtleCache extends InterfaceCache {
    * extension says so by name, rather than failing obscurely or running the
    * question against something that was never configured.
    */
-  async resolveQueryMapExtension (language, lexical) {
+  async resolveQueryMapExtension (language: string, lexical: string): Promise<any[]> {
     const {queryMapResolverFor, extensionName, moduleId} = ShExWebApp.NeighborhoodApi;
     const module = this.neighborhoods.module;
     const resolver = queryMapResolverFor(module, language);
@@ -253,7 +300,7 @@ class TurtleCache extends InterfaceCache {
 
   /** how a query map extension is written back out: by the name the source
    * knows it as */
-  writeQueryMapExtension (language, lexical) {
+  writeQueryMapExtension (language: string, lexical: string): string {
     const {queryMapResolverFor, extensionName} = ShExWebApp.NeighborhoodApi;
     const resolver = queryMapResolverFor(this.neighborhoods.module, language);
     return (resolver ? resolver.name : extensionName(language)) +
@@ -268,11 +315,11 @@ class TurtleCache extends InterfaceCache {
    * which for the wikidata neighborhood would offer statement and value
    * nodes alongside the entities anyone would actually validate.
    */
-  async getItems () {
+  async getItems (): Promise<string[]> {
     const data = await this.refresh();
     if (typeof data.suggestFocusNodes === "function")
       return data.suggestFocusNodes("", SPARQL_get_items_limit)
-        .map(suggestion => this.meta.termToLex(RdfJs.DataFactory.namedNode(suggestion.label)));
+        .map((suggestion: any) => this.meta.termToLex(RdfJs.DataFactory.namedNode(suggestion.label)));
     if (this.endpoint) {
       const q = "SELECT DISTINCT ?s { ?s ?p ?o } LIMIT " + SPARQL_get_items_limit;
       // (this read ShEx.Util, which is not a thing in this file: the menu
@@ -281,30 +328,44 @@ class TurtleCache extends InterfaceCache {
       // typing into the menu it fills, which is the worst possible moment
       const rows = await ShExWebApp.Util.executeQueryPromise(
         q, this.endpoint, RdfJs.DataFactory);
-      return [MENU_ITEM_materialize].concat(rows.map(row => this.lexifyFirstColumn(row)));
+      return [MENU_ITEM_materialize].concat(rows.map((row: any[]) => this.lexifyFirstColumn(row)));
     }
-    return data.getQuads().map(t => this.meta.termToLex(t.subject));
+    return data.getQuads().map((t: any) => this.meta.termToLex(t.subject));
   }
 
-  lexifyFirstColumn (row) {
+  lexifyFirstColumn (row: any[]): string {
     return this.meta.termToLex(row[0]); // row[0] is the first column.
   }
 }
 
+/** a manifest entry's data half as the data menu lists it: the first
+ * document is the entry's as far as every existing path is concerned, the
+ * rest come along at pick time (makeDataEntry) */
+interface DataEntry {
+  label: string;
+  text: string | undefined;          // undefined: fetch it from url
+  url: string | undefined;
+  moreTexts: string[];
+  moreUrls: string[];
+  entry: any;                        // the manifest entry itself
+}
+
 class ManifestCache extends InterfaceCache {
-  [key: string]: any;
+  caches: AppCaches;
+  resultsWidget: ResultsWidget;
+  queryParams: any[] | null;         // the app's QueryParams registry, assigned post-construction
   // manifest-descriptor keys pickSchema/pickData/queryMapLoaded handle
   // themselves; loadExtraInputs loads the rest
-  static pickLoadedKeys = ["schema", "data", "queryMap"];
+  static pickLoadedKeys: string[] = ["schema", "data", "queryMap"];
 
-  constructor (selection, caches, resultsWidget) {
+  constructor (selection: any, caches: AppCaches, resultsWidget: ResultsWidget) {
     super(selection, null);
     this.caches = caches;
     this.resultsWidget = resultsWidget;
     this.queryParams = null; // the app's QueryParams registry, assigned post-construction
   }
 
-  async set (textOrObj, url, source) {
+  async set (textOrObj: any, url: string, source?: any): Promise<void> {
     $("#inputSchema .manifest li").remove();
     $("#inputData .passes li, #inputData .fails li").remove();
     if (typeof textOrObj !== "object") {
@@ -315,16 +376,16 @@ class ManifestCache extends InterfaceCache {
         // exceptions pass through to caller (asyncGet)
         try {
           textOrObj = JSON.parse(textOrObj);
-        } catch (eJson) {
+        } catch (eJson: any) {
           try {
             textOrObj = ShExWebApp.JsYaml.load(textOrObj);
-          } catch (eYaml) {
+          } catch (eYaml: any) {
             throw url.endsWith(".yaml")
               ? eYaml
               : eJson;
           }
         }
-      } catch (e) {
+      } catch (e: any) {
         $("#inputSchema .manifest").append($("<li/>").text(NO_MANIFEST_LOADED));
         const throwMe: any = Error(e + '\n' + textOrObj);
         throwMe.action = 'load manifest'
@@ -351,7 +412,7 @@ class ManifestCache extends InterfaceCache {
     }
     if (!Array.isArray(textOrObj))
       textOrObj = [textOrObj];
-    const demos = textOrObj.reduce((acc, elt) => {
+    const demos = textOrObj.reduce((acc: any[], elt: any) => {
       if ("action" in elt) { // TODO: move to ShExUtil
         // compatibility with test suite structure.
 
@@ -405,7 +466,7 @@ class ManifestCache extends InterfaceCache {
           // an entry may name several documents under one key; each is a
           // reference of its own, not one comma-joined reference
           elt[parm] = Array.isArray(elt[parm])
-            ? elt[parm].map(each => new URL(each, url).href)
+            ? elt[parm].map((each: string) => new URL(each, url).href)
             : new URL(elt[parm], url).href;
         } else {
           delete elt[parm];
@@ -417,15 +478,15 @@ class ManifestCache extends InterfaceCache {
     $("#manifestDrop").show(); // may have been hidden if no manifest loaded.
   }
 
-  async parse (text, base) {
+  async parse (text: string, base: string): Promise<any> {
     throw Error("should not try to parse manifest cache");
   }
 
-  async getItems () {
+  async getItems (): Promise<any[]> {
     throw Error("should not try to get manifest cache items");
   }
 
-  maybeGET (obj, base, key, accept) { // !!not used
+  maybeGET (obj: any, base: string, key: string, accept: string): void { // !!not used
     if (obj[key] != null) {
       // Take the passed data, guess base if not provided.
       if (!(key + "URL" in obj))
@@ -442,9 +503,9 @@ class ManifestCache extends InterfaceCache {
           },
           url: this.meta.lexToTerm("<"+obj[key + "URL"]+">"),
           dataType: "text"
-        }).then(text => {
+        }).then((text: string) => {
           resolve(text);
-        }).fail(e => {
+        }).fail((e: any) => {
           this.resultsWidget.append($("<pre/>").text(
             "Error " + e.status + " " + e.statusText + " on GET " + obj[key + "URL"]
           ).addClass("error"));
@@ -457,12 +518,12 @@ class ManifestCache extends InterfaceCache {
     }
   }
 
-  async prepareManifest (demoList, base) {
-    const listItems = Object.keys(this.caches).reduce((acc, k) => {
+  async prepareManifest (demoList: any[], base: string): Promise<void> {
+    const listItems = Object.keys(this.caches).reduce((acc: any, k) => {
       acc[k] = {};
       return acc;
     }, {});
-    const nesting = demoList.reduce((acc, elt, idx) => {
+    const nesting = demoList.reduce((acc: any, elt: any, idx: number) => {
       const defaultLabel = "title" in elt
             ? elt.title
             : `manifest[${idx}]`;
@@ -504,15 +565,15 @@ class ManifestCache extends InterfaceCache {
 
 
   // controls for manifest buttons
-  async paintManifest (selector, list, func, listItems, side) {
+  async paintManifest (selector: string, list: any[], func: (...args: any[]) => any, listItems: any, side: string): Promise<void> {
     $(selector).empty();
-    await Promise.all(list.map(async entry => {
+    await Promise.all(list.map(async (entry: any) => {
       // build button disabled and with leading "..." to indicate that it's being loaded
       const button = $("<button/>").text("..." + entry.label.substr(3)).attr("disabled", "disabled");
       const li = $("<li/>").append(button);
       $(selector).append(li);
       if (entry.text === undefined) {
-        entry.text = await this.fetchOK(entry.url).catch(responseOrError => {
+        entry.text = await this.fetchOK(entry.url).catch((responseOrError: any) => {
           // leave a message in the schema or data block
           return "# " + this.renderErrorMessage(
             responseOrError instanceof Error
@@ -537,14 +598,14 @@ class ManifestCache extends InterfaceCache {
     this.setTextAreaHandlers(listItems);
   }
 
-  setTextAreaHandlers (listItems) {
-    const timeouts = Object.keys(this.caches).reduce((acc, k) => {
+  setTextAreaHandlers (listItems: any): void {
+    const timeouts = Object.keys(this.caches).reduce((acc: any, k) => {
       acc[k] = undefined;
       return acc;
     }, {});
 
     Object.keys(this.caches).forEach((cache) => {
-      this.caches[cache].selection.keyup((e) => { // keyup to capture backspace
+      this.caches[cache].selection.keyup((e: any) => { // keyup to capture backspace
         const code = e.keyCode || e.charCode;
         // if (!(e.ctrlKey)) {
         //   this.resultsWidget.clear();
@@ -571,7 +632,7 @@ class ManifestCache extends InterfaceCache {
       });
     });
 
-    function later (target, side, cache) {
+    function later (target: any, side: string, cache: InterfaceCache) {
       cache.dirty(true);
       if (timeouts[side])
         clearTimeout(timeouts[side]);
@@ -593,7 +654,7 @@ class ManifestCache extends InterfaceCache {
    * keys one document uses.  The first is the entry's document as far as
    * every existing path is concerned (the pick machinery, `.selected`
    * matching, the load dialog); the rest are fetched at pick time. */
-  makeDataEntry (dataLabel, idx, elt, base) {
+  makeDataEntry (dataLabel: string, idx: number, elt: any, base: string): DataEntry {
     const texts = elt.data === undefined ? [] : [].concat(elt.data);
     const urls = elt.dataURL === undefined ? [] : [].concat(elt.dataURL);
     return {
@@ -609,7 +670,7 @@ class ManifestCache extends InterfaceCache {
     };
   }
 
-  async pickSchema (name, schemaTest, elt, listItems, side) {
+  async pickSchema (name: string, schemaTest: any, elt: any, listItems: any, side: string): Promise<void> {
     if ($(elt).hasClass("selected")) {
       await this.clearAll();
     } else {
@@ -618,7 +679,7 @@ class ManifestCache extends InterfaceCache {
       $("#inputSchema .status").text(name);
 
       this.clearData();
-      const headings = {
+      const headings: {[key: string]: string} = {
         "passes": "Passing:",
         "fails": "Failing:",
         "indeterminant": "Data:"
@@ -637,13 +698,13 @@ class ManifestCache extends InterfaceCache {
       $(elt).addClass("selected");
       try {
         await this.caches.inputSchema.refresh();
-      } catch (e) {
+      } catch (e: any) {
         this.resultsWidget.failMessage(e, "parsing schema");
       }
     }
   }
 
-  async pickData (name, dataTest, elt, listItems, side) {
+  async pickData (name: string, dataTest: DataEntry, elt: any, listItems: any, side: string): Promise<void> {
     this.clearData();
     if ($(elt).hasClass("selected")) {
       $(elt).removeClass("selected");
@@ -677,7 +738,7 @@ class ManifestCache extends InterfaceCache {
       $(elt).addClass("selected");
       try {
         await this.caches.inputData.refresh();
-      } catch (e) {
+      } catch (e: any) {
         this.resultsWidget.failMessage(e, "parsing data");
       }
 
@@ -689,7 +750,7 @@ class ManifestCache extends InterfaceCache {
         try {
           const resp = await this.fetchOK(dataTest.entry.queryMapURL)
           await this.queryMapLoaded(dataTest, resp);
-        } catch (e) {
+        } catch (e: any) {
           this.renderErrorMessage(e, "queryMap");
         }
       } else {
@@ -705,7 +766,7 @@ class ManifestCache extends InterfaceCache {
    * the manifest's base, and their fetched text memoizes into the entry. */
   /** the plugin modules an entry names, resolved against the manifest.
    * `plugins` is the key. */
-  async loadEntryPlugins (dataTest) {
+  async loadEntryPlugins (dataTest: DataEntry): Promise<void> {
     const named = dataTest.entry.plugins;
     if (named === undefined)
       return;
@@ -713,13 +774,13 @@ class ManifestCache extends InterfaceCache {
       const absolute = new URL(url, this.url || dataTest.url || DefaultBase).href;
       try {
         await this.caches.plugin.asyncGet(absolute);
-      } catch (e) {
+      } catch (e: any) {
         this.renderErrorMessage(e, "plugin");
       }
     }
   }
 
-  async loadExtraInputs (dataTest) {
+  async loadExtraInputs (dataTest: DataEntry): Promise<void> {
     for (const q of this.queryParams || []) {
       const m = q.manifest;
       if (m === undefined || ManifestCache.pickLoadedKeys.indexOf(m.key) !== -1)
@@ -734,7 +795,7 @@ class ManifestCache extends InterfaceCache {
           new URL(dataTest.entry[m.key + "URL"], this.url || dataTest.url || DefaultBase).href;
         try {
           value = dataTest.entry[m.key] = await this.fetchOK(url);
-        } catch (e) {
+        } catch (e: any) {
           this.renderErrorMessage(e, m.key);
           continue;
         }
@@ -751,31 +812,31 @@ class ManifestCache extends InterfaceCache {
   }
 
   /** the entry's documents after the first, fetched if it named them by URL */
-  async extraDataDocuments (dataTest) {
+  async extraDataDocuments (dataTest: DataEntry): Promise<string[]> {
     const texts = (dataTest.moreTexts || []).slice();
     for (const url of dataTest.moreUrls || []) {
       const absolute = new URL(url, dataTest.url || DefaultBase).href;
       try {
         texts.push(await this.fetchOK(absolute));
-      } catch (e) {
+      } catch (e: any) {
         this.renderErrorMessage(e, "data");
       }
     }
     return texts;
   }
 
-  async queryMapLoaded (dataTest, text) {
+  async queryMapLoaded (dataTest: DataEntry, text: string): Promise<void> {
     dataTest.entry.queryMap = text;
     try {
-      $("#queryMap").val(JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
-    } catch (e) {
+      $("#queryMap").val(JSON.parse(dataTest.entry.queryMap).map((entry: any) => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
+    } catch (e: any) {
       $("#queryMap").val(dataTest.entry.queryMap);
     }
     await this.caches.shapeMap.copyQueryMapToEditMap();
     // callValidator();
   }
 
-  fetchOK (url) {
+  fetchOK (url: string): Promise<string> {
     return fetch(url).then(responseOrError => {
       if (!responseOrError.ok) {
         throw responseOrError;
@@ -784,7 +845,7 @@ class ManifestCache extends InterfaceCache {
     });
   }
 
-  renderErrorMessage (response, what) {
+  renderErrorMessage (response: any, what: string): string {
     const message = response instanceof Error
           ? "failed to load " + what + ": " + response.message
           : "failed to load " + what + " from <" + response.url + ">, got: " + response.status + " " + response.statusText;
@@ -792,7 +853,7 @@ class ManifestCache extends InterfaceCache {
     return message;
   }
 
-  async clearData () {
+  async clearData (): Promise<void> {
     // Clear out data textarea.
     await this.caches.inputData.set("", DefaultBase);
     $("#inputData .status").text(" ");
@@ -814,7 +875,7 @@ class ManifestCache extends InterfaceCache {
     this.resultsWidget.clear();
   }
 
-  async clearAll () {
+  async clearAll (): Promise<void> {
     $("#results > .status").hide();
     await this.caches.inputSchema.set("", DefaultBase);
     $(".inputShape").val("");
@@ -827,8 +888,8 @@ class ManifestCache extends InterfaceCache {
     $("#inputData .passes ul, #inputData .fails ul").empty();
   }
 
-  static sum (s) { // cheap way to identify identical strings
-    return s.replace(/\s/g, "").split("").reduce((a,b) => {
+  static sum (s: string): number { // cheap way to identify identical strings
+    return s.replace(/\s/g, "").split("").reduce((a: number, b: string) => {
       a = ((a << 5) - a) + b.charCodeAt(0);
       return a & a
     }, 0);
@@ -848,11 +909,13 @@ const ShExJsUrl = 'https://github.com/shexSpec/shex.js'
  * does neither is not a plugin, and says so.
  */
 class PluginCache extends InterfaceCache {
-  [key: string]: any;
+  resultsWidget: ResultsWidget;
+  urls: string[];                    // every plugin loaded, for the permalink
+  asking?: Promise<void>;            // the trust question now being asked, so the next waits its turn
   /** sessionStorage: the origins the reader said may keep loading, for the tab */
-  static TRUSTED_ORIGINS_KEY = "shex-plugin-origins";
+  static TRUSTED_ORIGINS_KEY: string = "shex-plugin-origins";
 
-  constructor (selection, resultsWidget) {
+  constructor (selection: any, resultsWidget: ResultsWidget) {
     super(selection, null);
     this.resultsWidget = resultsWidget;
     this.urls = []; // every plugin loaded, for the permalink
@@ -861,7 +924,7 @@ class PluginCache extends InterfaceCache {
   }
 
   /** what InterfaceCache does, once the reader has said it may (doc/plugins.md, Trust) */
-  async asyncGet (url) {
+  async asyncGet (url: string): Promise<{url: string, data: string}> {
     await this.permission(new URL(url, window.location.href).href);
     return super.asyncGet(url);
   }
@@ -873,7 +936,7 @@ class PluginCache extends InterfaceCache {
    * they have said not; closing the question says not.  One question at
    * a time: a link that names two plugins asks twice, in turn.
    */
-  permission (url) {
+  permission (url: string): Promise<void> {
     const origin = new URL(url).origin;
     if (origin === window.location.origin || PluginCache.trustedOrigins().indexOf(origin) !== -1)
       return Promise.resolve();
@@ -898,24 +961,24 @@ class PluginCache extends InterfaceCache {
     return this.asking;
   }
 
-  static trustedOrigins () {
+  static trustedOrigins (): string[] {
     try {
       return JSON.parse(window.sessionStorage.getItem(PluginCache.TRUSTED_ORIGINS_KEY) || "[]");
-    } catch (e) {
+    } catch (e: any) {
       return []; // no storage here (an opaque origin): nothing remembered
     }
   }
 
-  static trust (origin) {
+  static trust (origin: string): void {
     try {
       window.sessionStorage.setItem(PluginCache.TRUSTED_ORIGINS_KEY,
                                     JSON.stringify(PluginCache.trustedOrigins().concat(origin)));
-    } catch (e) {
+    } catch (e: any) {
       // no storage: this once, then
     }
   }
 
-  async set (code, url, source, mediaType) {
+  async set (code: string, url: string, source: any, mediaType: string): Promise<void> {
     this.url = url; // @@crappyHack1 -- parms should differntiate:
     try {
       // exceptions pass through to caller (asyncGet)
@@ -992,7 +1055,7 @@ return module.exports;
       this.resultsWidget.append($("<div/>").append(
         $("<span/>").text(`plugin ${name} loaded from <${url}>`)
       ));
-    } catch (e) {
+    } catch (e: any) {
       // $("#inputSchema .plugin").append($("<li/>").text(NO_PLUGIN_LOADED));
       const throwMe: any = Error(e + '\n' + code);
       throwMe.action = 'load plugin'
@@ -1007,7 +1070,7 @@ return module.exports;
      <td><a property="shex:package" href="PACKAGE"/>...</td>...
      </table>
   */
-  async grepHtmlIndexForPackage (code, url, source)  {
+  async grepHtmlIndexForPackage (code: string, url: string, source: any): Promise<void> {
     const jq = $(code);
     const impls = $(jq.find('table.implementations'))
     if (impls.length !== 1) {
@@ -1040,15 +1103,15 @@ return module.exports;
       // href, not url: the module's own files (`scripts`, `worker`) resolve
       // against where the module is, and the index that pointed at it is
       // somewhere else
-      await this.set(code, href, source, refd.headers.get('content-type'));
+      await this.set(code, href, source, refd.headers.get('content-type')!);
     }
   }
 
-  async parse (text, base) {
+  async parse (text: string, base: string): Promise<any> {
     throw Error("should not try to parse plugin cache");
   }
 
-  async getItems () {
+  async getItems (): Promise<any[]> {
     throw Error("should not try to get plugin cache items");
   }
 }
@@ -1056,12 +1119,11 @@ return module.exports;
 /** a pane holding JSON: bindings, static variables, anything a plugin
  * wants read back as data rather than as a document */
 class JSONCache extends InterfaceCache {
-  [key: string]: any;
-  constructor (selection) {
+  constructor (selection: any) {
     super(selection, null);
   }
 
-  async parse (text) {
+  async parse (text: string): Promise<any> {
     return Promise.resolve(JSON.parse(text));
   }
 }

@@ -69,7 +69,7 @@ class EditorSupport {
     dataNodes() {
         const db = this.app.Caches.inputData.parsed;
         const subjects = db && typeof db.getSubjects === "function" ? db.getSubjects() : [];
-        return subjects.slice(0, 500).map(term => term.termType === "BlankNode" ? "_:" + term.value : term.value);
+        return subjects.slice(0, 500).map((term) => term.termType === "BlankNode" ? "_:" + term.value : term.value);
     }
     /** the base and the two metas a query map resolves against.  A pane's
      * meta is filled by a parse; until the schema or the data has been
@@ -135,7 +135,7 @@ class EditorSupport {
             // locateData).  Locating the data is worth doing whether or not it
             // is showing in an editor: the results widget anchors to these
             // ranges too.
-            const locate = text => this.locateData(text);
+            const locate = (text) => this.locateData(text);
             // A source can hold several documents -- an entity page each, and
             // later a named graph each -- and a validation reaches all of them,
             // so locate them all.  The showing one comes first: its diagnostics
@@ -156,7 +156,7 @@ class EditorSupport {
             // data ranges are offsets into one document, so they are kept per
             // document: whichever is showing gets its own (see reaimAtShowingDocument)
             const merged = { schema: [], data: [], pairs: [], dataByDoc: new Map() };
-            const dataOf = at => {
+            const dataOf = (at) => {
                 if (!merged.dataByDoc.has(at))
                     merged.dataByDoc.set(at, []);
                 return merged.dataByDoc.get(at);
@@ -183,7 +183,7 @@ class EditorSupport {
                         pair.doc = elsewhere.at;
                     }
                 });
-                mapped.pairs.forEach(p => { p.id += merged.pairs.length; });
+                mapped.pairs.forEach((p) => { p.id += merged.pairs.length; });
                 merged.pairs.push.apply(merged.pairs, mapped.pairs);
                 const actualFail = entry.status === "nonconformant";
                 if (!this.expectsNonconformant(entry)) {
@@ -203,7 +203,7 @@ class EditorSupport {
                     if (shapeRange)
                         merged.schema.push(Object.assign({ severity: "error", message }, shapeRange));
                     perDocument.forEach(d => {
-                        const anchored = d.mapped.pairs.find(p => p.anchors && p.anchors.subject);
+                        const anchored = d.mapped.pairs.find((p) => p.anchors && p.anchors.subject);
                         if (anchored)
                             // a bnode subject is a whole [ property list ]; mark where it
                             // opens rather than every triple written inside it
@@ -277,12 +277,12 @@ class EditorSupport {
         const pairs = (this.lastMapped || {}).pairs || [];
         const sameTerm = (l, r) => l === r ||
             (!!l && !!r && (l.value !== undefined ? l.value : l) === (r.value !== undefined ? r.value : r));
-        const where = p => ({
+        const where = (p) => ({
             schema: p.schema, schemaParts: p.schemaParts, schemaPath: p.schemaPath,
             anchors: p.anchors, doc: p.doc,
         });
         if (link.triple) {
-            const found = pairs.find(p => p.triple === link.triple);
+            const found = pairs.find((p) => p.triple === link.triple);
             return [found === undefined ? link : Object.assign({}, link, where(found))];
         }
         if (link.node !== undefined) {
@@ -291,11 +291,11 @@ class EditorSupport {
             // body and after it, the code among it -- and about the node that
             // was the focus.  That is what this link says, and what hovering it
             // lights up.
-            const about = pairs.filter(p => p.triple && p.anchors &&
+            const about = pairs.filter((p) => p.triple && p.anchors &&
                 sameTerm(p.triple.subject, link.node));
             if (about.length === 0)
                 return [link];
-            const lead = about.find(p => p.anchors.subject) || about[0];
+            const lead = about.find((p) => p.anchors.subject) || about[0];
             const parts = this.shapeParts(link.shape, about);
             const primary = Object.assign({}, link, {
                 schema: parts ? parts.whole : lead.anchors.shapeLabel,
@@ -308,7 +308,7 @@ class EditorSupport {
             // lights what the fold made of them.  Those are the same link said
             // again at each of those places -- `secondary`, since they are ways
             // *in* rather than things this link is about.
-            return [primary].concat(about.map(p => Object.assign({}, link, where(p), { secondary: true })));
+            return [primary].concat(about.map((p) => Object.assign({}, link, where(p), { secondary: true })));
         }
         return [link];
     }
@@ -470,17 +470,17 @@ class EditorSupport {
                 // a range may say which parts of itself to paint -- a node of a JSON
                 // tree is marked at its braces, leaving the inside to the nodes
                 // inside it -- and several links may be about the same one
-                const ranges = (p.panes[name] || []).filter(r => r).filter(r => {
+                const ranges = (p.panes[name] || []).filter((r) => r).filter((r) => {
                     const key = name + " " + r.from + "-" + r.to;
                     if (seen.has(key))
                         return false;
                     seen.add(key);
                     return true;
-                }).flatMap(r => r.parts || [r]);
+                }).flatMap((r) => r.parts || [r]);
                 if (ranges.length)
                     named.set(name, (named.get(name) || []).concat(ranges));
             }));
-            const alsoIn = name => named.get(name) || [];
+            const alsoIn = (name) => named.get(name) || [];
             schemaRanges.push.apply(schemaRanges, alsoIn("inputSchema"));
             dataRanges.push.apply(dataRanges, alsoIn("inputData"));
             named.forEach((ranges, name) => {
@@ -522,7 +522,7 @@ class EditorSupport {
         // to its counterpart -- the navigation half.  Clicking the frozen thing
         // again releases it.  (ctrl-click is the context menu on a Mac, so the
         // Mac spelling is cmd, which is what every IDE does for the same reason.)
-        const freeze = (group, side) => evt => {
+        const freeze = (group, side) => (evt) => {
             if (!isPinGesture(evt))
                 return false; // an ordinary click: let the editor have it
             if (HighlightMode.frozen() && HighlightMode.pinned === group) {
@@ -540,7 +540,7 @@ class EditorSupport {
             else
                 wipe();
         };
-        schemaPane.setHoverRegions([...bySchemaRange.values()].flatMap(group => constraintRanges(group[0]).map(r => ({
+        schemaPane.setHoverRegions([...bySchemaRange.values()].flatMap(group => constraintRanges(group[0]).map((r) => ({
             from: r.from, to: r.to,
             enter: () => show(group, "schema"),
             click: freeze(group, "schema"),
@@ -568,7 +568,7 @@ class EditorSupport {
             // links may be about one node of a tree, and hovering it is asking
             // about all of them
             const byRange = new Map();
-            pairs.filter(p => !p.secondary).forEach(p => ((p.panes || {})[name] || []).filter(r => r).forEach(r => {
+            pairs.filter(p => !p.secondary).forEach(p => ((p.panes || {})[name] || []).filter((r) => r).forEach((r) => {
                 const key = r.from + "-" + r.to;
                 if (!byRange.has(key))
                     byRange.set(key, { range: r, group: [] });
@@ -640,7 +640,7 @@ class EditorSupport {
     constraintText(p) {
         const text = this.located ? this.located.text : this.app.Caches.inputSchema.selection.val();
         const parts = p.schemaParts || (p.schema ? [p.schema] : []);
-        const said = parts.map(r => text.slice(r.from, r.to).trim()).filter(s => s);
+        const said = parts.map((r) => text.slice(r.from, r.to).trim()).filter((s) => s);
         return said.length ? said.join(" … ") : null;
     }
     /** a pair's triple as written in its document; a nested subject or

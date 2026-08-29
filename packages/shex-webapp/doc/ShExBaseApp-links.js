@@ -119,7 +119,7 @@ mixin(ShExBaseApp, {
         else
             this.Caches.shapeMap.makeFreshEditMap();
         this.customizeInterface();
-        $("body").keydown(e => {
+        $("body").keydown((e) => {
             const code = e.keyCode || e.charCode; // standards anyone?
             return !this.keyDownHandlers.find(h => h(e, code)); // if we find a handler, stop propagation
         });
@@ -335,7 +335,7 @@ mixin(ShExBaseApp, {
                 return `  ${parm}URL: ${fileName}\n`;
             }
             return `  ${parm}: |\n` + text.replace(/\n+$/, "").split("\n")
-                .map(l => l.length ? "    " + l : "").join("\n") + "\n";
+                .map((l) => l.length ? "    " + l : "").join("\n") + "\n";
         };
         // each QueryParams entry with a manifest descriptor contributes to the
         // manifest entry, so each app's input registry declares what a gist records

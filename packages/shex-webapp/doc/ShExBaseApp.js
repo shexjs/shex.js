@@ -234,7 +234,7 @@ class ShExBaseApp {
          * makes clicking the same check mark twice work (the location doesn't
          * change, so no hashchange follows); the location is what makes Back,
          * Forward, and a pasted link work. */
-        $("#fixedMap").on("click", "a[href^='#']", evt => this.resultsWidget.scrollToResult($(evt.currentTarget).attr("href").substring(1)));
+        $("#fixedMap").on("click", "a[href^='#']", (evt) => this.resultsWidget.scrollToResult($(evt.currentTarget).attr("href").substring(1)));
         $(window).on("hashchange", () => this.resultsWidget.scrollToResult(window.location.hash.substring(1)));
         $("#validate").on("click", this.disableResultsAndValidate.bind(this));
         $("#debugValidate").on("click", () => { this.track(this.startValidationDebugSession()); });
@@ -298,7 +298,7 @@ class ShExBaseApp {
         });
         this.Getables.forEach(target => {
             const type = target.queryStringParm;
-            $("#load-" + type + "-button").click(evt => {
+            $("#load-" + type + "-button").click((evt) => {
                 const prefillURL = target.url ? target.url :
                     target.cache.meta.base && target.cache.meta.base !== DefaultBase ? target.cache.meta.base :
                         "";
@@ -316,7 +316,7 @@ class ShExBaseApp {
             },
             close: dismissModal
         });
-        $("#about-button").click(evt => {
+        $("#about-button").click((evt) => {
             $("#about").dialog("open");
         });
         $("#gistHelp").dialog({
@@ -327,7 +327,7 @@ class ShExBaseApp {
                 "Dismiss": function () { $(this).dialog("close"); }
             },
         });
-        $("#gistInstructions").on("click", evt => {
+        $("#gistInstructions").on("click", (evt) => {
             evt.preventDefault();
             this.toggleControls(); // close the menu; the dialog replaces it
             $("#gistHelp").dialog("open");
@@ -340,7 +340,7 @@ class ShExBaseApp {
                     await this.Caches.shapeMap.copyQueryMapToEditMap();
             }
         });
-        $("#queryMap").on("change", evt => {
+        $("#queryMap").on("change", (evt) => {
             this.resultsWidget.clear();
             this.track(this.Caches.shapeMap.copyQueryMapToEditMap());
         });

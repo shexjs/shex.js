@@ -132,7 +132,7 @@ class SchemaCache extends InterfaceCache {
     async getItems() {
         const obj = await this.refresh();
         const start = "start" in obj ? [START_SHAPE_LABEL] : [];
-        const rest = "shapes" in obj ? obj.shapes.map(se => this.meta.termToLex(se.id)) : [];
+        const rest = "shapes" in obj ? obj.shapes.map((se) => this.meta.termToLex(se.id)) : [];
         return start.concat(rest);
     }
     tryN3(text) {
@@ -195,7 +195,7 @@ class TurtleCache extends InterfaceCache {
         // prefixes and base it finds are what the rest of the app lexifies
         // nodes with.  Panes of anything else go to the module as text.
         const turtlePane = ShExWebApp.NeighborhoodApi.paneParams(module.dbParams || [])
-            .find(p => ((p.schema.items || {}).contentMediaType || "") === "text/turtle");
+            .find((p) => ((p.schema.items || {}).contentMediaType || "") === "text/turtle");
         if (turtlePane)
             params.store = this.turtleParser.parseDocuments(params[turtlePane.name] || [], this.meta, base);
         const res = module.fromParams(params, this.queryTrackerController.queryTracker);
@@ -245,7 +245,7 @@ class TurtleCache extends InterfaceCache {
         const data = await this.refresh();
         if (typeof data.suggestFocusNodes === "function")
             return data.suggestFocusNodes("", SPARQL_get_items_limit)
-                .map(suggestion => this.meta.termToLex(RdfJs.DataFactory.namedNode(suggestion.label)));
+                .map((suggestion) => this.meta.termToLex(RdfJs.DataFactory.namedNode(suggestion.label)));
         if (this.endpoint) {
             const q = "SELECT DISTINCT ?s { ?s ?p ?o } LIMIT " + SPARQL_get_items_limit;
             // (this read ShEx.Util, which is not a thing in this file: the menu
@@ -253,9 +253,9 @@ class TurtleCache extends InterfaceCache {
             // ...Promise: a blocking request here freezes the tab while someone is
             // typing into the menu it fills, which is the worst possible moment
             const rows = await ShExWebApp.Util.executeQueryPromise(q, this.endpoint, RdfJs.DataFactory);
-            return [MENU_ITEM_materialize].concat(rows.map(row => this.lexifyFirstColumn(row)));
+            return [MENU_ITEM_materialize].concat(rows.map((row) => this.lexifyFirstColumn(row)));
         }
-        return data.getQuads().map(t => this.meta.termToLex(t.subject));
+        return data.getQuads().map((t) => this.meta.termToLex(t.subject));
     }
     lexifyFirstColumn(row) {
         return this.meta.termToLex(row[0]); // row[0] is the first column.
@@ -375,7 +375,7 @@ class ManifestCache extends InterfaceCache {
                     // an entry may name several documents under one key; each is a
                     // reference of its own, not one comma-joined reference
                     elt[parm] = Array.isArray(elt[parm])
-                        ? elt[parm].map(each => new URL(each, url).href)
+                        ? elt[parm].map((each) => new URL(each, url).href)
                         : new URL(elt[parm], url).href;
                 }
                 else {
@@ -411,9 +411,9 @@ class ManifestCache extends InterfaceCache {
                     },
                     url: this.meta.lexToTerm("<" + obj[key + "URL"] + ">"),
                     dataType: "text"
-                }).then(text => {
+                }).then((text) => {
                     resolve(text);
-                }).fail(e => {
+                }).fail((e) => {
                     this.resultsWidget.append($("<pre/>").text("Error " + e.status + " " + e.statusText + " on GET " + obj[key + "URL"]).addClass("error"));
                     reject(e);
                 });
@@ -478,7 +478,7 @@ class ManifestCache extends InterfaceCache {
             const li = $("<li/>").append(button);
             $(selector).append(li);
             if (entry.text === undefined) {
-                entry.text = await this.fetchOK(entry.url).catch(responseOrError => {
+                entry.text = await this.fetchOK(entry.url).catch((responseOrError) => {
                     // leave a message in the schema or data block
                     return "# " + this.renderErrorMessage(responseOrError instanceof Error
                         ? { url: entry.url, status: -1, statusText: responseOrError.message }
@@ -728,7 +728,7 @@ class ManifestCache extends InterfaceCache {
     async queryMapLoaded(dataTest, text) {
         dataTest.entry.queryMap = text;
         try {
-            $("#queryMap").val(JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
+            $("#queryMap").val(JSON.parse(dataTest.entry.queryMap).map((entry) => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
         }
         catch (e) {
             $("#queryMap").val(dataTest.entry.queryMap);

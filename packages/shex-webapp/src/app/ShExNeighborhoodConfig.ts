@@ -7,6 +7,13 @@
  * doc/); edit here and run `npm run build`.
  */
 
+/** one of the selected source's documents, as the tabs list them */
+interface PaneDocument {
+  param: any;                        // the pane parameter (dbParams) it is a document of
+  index: number;                     // which of that parameter's documents
+  text: string;
+}
+
 /** The data source picker and the configuration it draws.
  *
  * Where the data comes from is the user's choice, made from a list of the
@@ -23,14 +30,24 @@
  * editors keep working -- and the panes not showing live here as text.
  */
 class NeighborhoodConfig {
-  [key: string]: any;
+  modules: any[];                    // the loaded neighborhood modules, in picklist order
+  textarea: any;                     // jQuery: the data pane's textarea
+  onChange: (what?: {language?: boolean}) => void;
+  onShown: (() => void) | undefined;
+  moduleId: string;                  // the selected source
+  fieldsByModule: {[moduleId: string]: {[name: string]: any}};
+  panesByModule: {[moduleId: string]: {[name: string]: string[]}};
+  showing: number;                   // index into documents(); -1: the textarea holds no document
+  onSettings: boolean;               // the settings tab is up
+  showingPane?: boolean;             // show() is moving the tab set: not a new choice
+  rendering?: boolean;               // render() is moving the tabs, not the reader
   /**
    * @param modules  the loaded neighborhood modules, in picklist order
    * @param textarea the data pane's textarea (jQuery selection)
    * @param onChange called when the user changes anything the db is built from
    * @param onShown  called when the document area becomes visible again
    */
-  constructor (modules, textarea, onChange, onShown) {
+  constructor (modules: any[], textarea: any, onChange: (what?: {language?: boolean}) => void, onShown?: () => void) {
     this.modules = modules;
     this.textarea = textarea;
     this.onChange = onChange;
@@ -49,32 +66,32 @@ class NeighborhoodConfig {
   }
 
   /** the selected source's fields: parameter name -> value */
-  get fields () {
+  get fields (): {[name: string]: any} {
     return this.fieldsByModule[this.moduleId] || (this.fieldsByModule[this.moduleId] = {});
   }
 
   /** the selected source's documents: parameter name -> [text, ...] */
-  get panes () {
+  get panes (): {[name: string]: string[]} {
     return this.panesFor(this.moduleId);
   }
 
-  panesFor (moduleId) {
+  panesFor (moduleId: string): {[name: string]: string[]} {
     return this.panesByModule[moduleId] || (this.panesByModule[moduleId] = {});
   }
 
-  get module () {
+  get module (): any {
     const {moduleId} = ShExWebApp.NeighborhoodApi;
     return this.modules.find(m => moduleId(m) === this.moduleId) || this.modules[0];
   }
 
-  get paneParams () { return ShExWebApp.NeighborhoodApi.paneParams(this.module.dbParams || []); }
-  get fieldParams () { return ShExWebApp.NeighborhoodApi.fieldParams(this.module.dbParams || []); }
+  get paneParams (): any[] { return ShExWebApp.NeighborhoodApi.paneParams(this.module.dbParams || []); }
+  get fieldParams (): any[] { return ShExWebApp.NeighborhoodApi.fieldParams(this.module.dbParams || []); }
 
   /** Every document the selected source takes, in declaration order: a
    * flat list, because that is what the tabs are.  A parameter that must
    * have a document always shows one, even before anything is in it. */
-  documents () {
-    const out = [];
+  documents (): PaneDocument[] {
+    const out: PaneDocument[] = [];
     for (const param of this.paneParams) {
       const texts = this.panes[param.name] || (param.pane.min ? [""] : []);
       texts.forEach((text, index) => out.push({param, index, text}));
@@ -87,7 +104,7 @@ class NeighborhoodConfig {
    * ...while a document is showing: with the settings tab up the textarea
    * is holding whatever was there last, which belongs to no document.
    * Reading it as one wrote it over the page a slurp had just put there. */
-  docAt (n) {
+  docAt (n: number): PaneDocument | null {
     const docs = this.documents();
     if (n < 0 || n >= docs.length)
       return null;
@@ -98,13 +115,13 @@ class NeighborhoodConfig {
   }
 
   /** the parameter whose document is showing (for its language) */
-  get paneParam () {
+  get paneParam (): any {
     const doc = this.docAt(this.showing);
     return doc ? doc.param : (this.paneParams[0] || null);
   }
 
   /** texts of one parameter's documents, the showing one included */
-  texts (paramName) {
+  texts (paramName?: string): string[] {
     const name = paramName || (this.paneParam || {}).name;
     if (!name)
       return [];
@@ -120,8 +137,8 @@ class NeighborhoodConfig {
 
   /** what to hand the module's fromParams: a pane nobody has written in is
    * not a document, however much room it is taking up */
-  params () {
-    const params = Object.assign({}, this.fields);
+  params (): {[name: string]: any} {
+    const params: {[name: string]: any} = Object.assign({}, this.fields);
     for (const param of this.paneParams)
       params[param.name] = this.texts(param.name).filter(text => text.trim() !== "");
     return params;
@@ -129,7 +146,7 @@ class NeighborhoodConfig {
 
   /** the text a permalink or manifest means by "data": the first document
    * of the first parameter, whichever pane happens to be showing */
-  primaryText () {
+  primaryText (): string {
     const texts = this.texts((this.paneParams[0] || {}).name);
     return texts.length > 0 ? texts[0] : "";
   }
@@ -138,7 +155,7 @@ class NeighborhoodConfig {
    * its own documents out (a Wikibase, told an entity page, knows it is a
    * page and which ids it is about) does; otherwise they are documents of
    * the first parameter, which is what a data pane has always meant. */
-  setDocuments (texts) {
+  setDocuments (texts: string[]): void {
     const first = this.paneParams[0];
     if (!first)
       return;
@@ -157,14 +174,14 @@ class NeighborhoodConfig {
    * insists on (`pane.min`).  Every source's, not just the selected one:
    * this is what "there is no data now" means, and a stash left under a
    * source nobody is looking at reappears the moment they choose it. */
-  forgetDocuments () {
+  forgetDocuments (): void {
     this.panesByModule = {};
     this.showing = 0;
     this.textarea.val("");
     this.render();
   }
 
-  select (moduleId) {
+  select (moduleId: string): void {
     if (this.moduleId === moduleId)
       return;
     this.stash();
@@ -178,13 +195,13 @@ class NeighborhoodConfig {
   }
 
   /** keep the showing document's text before something replaces it */
-  stash () {
+  stash (): void {
     const doc = this.docAt(this.showing);
     if (doc)
       this.panes[doc.param.name] = this.texts(doc.param.name);
   }
 
-  show (n) {
+  show (n: number): void {
     if (this.showingPane)
       return;                 // render() moved the tab set; not a new choice
     // one source's panes need not share a language -- wikidata's list of
@@ -207,11 +224,11 @@ class NeighborhoodConfig {
   }
 
   /** the parameter a new document would be added to */
-  get creatableParam () {
+  get creatableParam (): any {
     return this.paneParams.find(p => p.pane.creatable) || null;
   }
 
-  addPane (text?) {
+  addPane (text?: string): void {
     const spec = this.creatableParam;
     if (!spec)
       return;
@@ -233,7 +250,7 @@ class NeighborhoodConfig {
     this.show(at);
   }
 
-  removePane (n) {
+  removePane (n: number): void {
     const doc = this.docAt(n);
     if (!doc)
       return;
@@ -256,7 +273,7 @@ class NeighborhoodConfig {
    * textarea" -- drag and drop, dirty tracking, permalinks, the editors --
    * goes on talking to one element.
    */
-  render () {
+  render (): void {
     const {moduleId} = ShExWebApp.NeighborhoodApi;
     const spec = this.paneParam;
     const container = $("#dataSource-tabs");
@@ -320,7 +337,7 @@ class NeighborhoodConfig {
   }
 
   /** one labelled input for a parameter, remembering what's typed into it */
-  fieldFor (param) {
+  fieldFor (param: any): any {
     const id = "nbhd-" + param.name;
     const value = this.fields[param.name];
     const input = param.schema.type === "boolean"
@@ -344,7 +361,7 @@ class NeighborhoodConfig {
    * validation fetched is the host's doing, and it only means anything for
    * a source that fetches -- which is why it used to hide inside the "load
    * data" menu item and appear only once an endpoint was named. */
-  hostParams () {
+  hostParams (): any[] {
     // any source that fetches its answers -- by querying a service or by
     // translating some other representation -- has something to record
     return (this.module.capabilities || []).length > 0
@@ -355,7 +372,7 @@ class NeighborhoodConfig {
   }
 
   /** Is this app recording what a validation fetches? */
-  slurping () {
+  slurping (): boolean {
     return this.fields.slurp === true || this.fields.slurp === "true";
   }
 
@@ -364,13 +381,13 @@ class NeighborhoodConfig {
    * without the service.  (They used to go into the pane that held the
    * `# Endpoint:` header, which came to the same thing once you deleted
    * the header.) */
-  localTurtle () {
+  localTurtle (): {id: string, name: string} | null {
     const {paneParams, moduleId} = ShExWebApp.NeighborhoodApi;
     for (const module of this.modules) {
       // the registered source that holds an RDF document -- the "Turtle
       // data" pane -- found by what it takes rather than by its name
       const spec = paneParams(module.dbParams || []).find(
-        p => ((p.schema.items || {}).contentMediaType || "") === "text/turtle");
+        (p: any) => ((p.schema.items || {}).contentMediaType || "") === "text/turtle");
       if (spec)
         return {id: moduleId(module), name: spec.name};
     }
@@ -380,7 +397,7 @@ class NeighborhoodConfig {
   /** Record a page a translating source read, as one of its own documents:
    * a tab per entity, named by the id in it.  Slurping a Wikibase leaves
    * you the pages it visited, to edit and validate again. */
-  addPageDocument (id, text) {
+  addPageDocument (id: string, text: string): void {
     const spec = this.paneParams.find(p => p.pane.creatable);
     if (!spec)
       return;
@@ -404,7 +421,7 @@ class NeighborhoodConfig {
 
   /** Append to that document, and to the textarea too when it is the one
    * showing (so a slurp scrolls by as it happens, as it always has). */
-  appendToLocalTurtle (text) {
+  appendToLocalTurtle (text: string): void {
     const target = this.localTurtle();
     if (!target)
       return;
@@ -431,7 +448,7 @@ class NeighborhoodConfig {
    * the one now holding what it read.  A Wikibase, whose slurp leaves a pane
    * per entity page it visited, keeps those instead.
    */
-  showSlurped () {
+  showSlurped (): void {
     // It has its own to show -- the entity pages a Wikibase walk read, a tab
     // each, named after the entity in them.  Left in their tabs rather than
     // opened: a fetched page is half a megabyte of JSON, and opening one is
@@ -449,7 +466,7 @@ class NeighborhoodConfig {
     this.show(at);
   }
 
-  setLocalTurtle (text) {
+  setLocalTurtle (text: string): void {
     const target = this.localTurtle();
     if (!target)
       return;
@@ -460,9 +477,9 @@ class NeighborhoodConfig {
   }
 
   /** Wire the tab set up once the DOM is in place. */
-  initTabs () {
+  initTabs (): void {
     $("#dataSource-tabs").tabs({
-      activate: (event, ui) => {
+      activate: (event: any, ui: any) => {
         if (this.rendering)
           return;                        // render() moving the tabs, not the user
         const panel = ui.newPanel.attr("id") || "";
@@ -498,7 +515,7 @@ class NeighborhoodConfig {
    * than inside a panel: the panels are empty placeholders, which keeps the
    * one textarea (and whatever editor has taken it over) in one place.
    */
-  showDocumentArea () {
+  showDocumentArea (): void {
     const showing = this.documents().length > 0 && !this.onSettings;
     const area = $("#dataArea");
     $("#dataDocument").toggle(showing);
@@ -518,19 +535,19 @@ class NeighborhoodConfig {
   }
 
   /** the language of the pane now showing, for the editors */
-  paneEditor () {
+  paneEditor (): any {
     const spec = this.paneParam;
     return spec ? (spec.pane.editor || null) : null;
   }
 
   /** what the data pane is showing, for its heading */
-  dialect () {
+  dialect (): string {
     const spec = this.paneParam;
     return spec ? spec.pane.label : (this.module.label || this.module.name);
   }
 
   /** the picklist, from the modules: one option each, the current one kept */
-  fillPicklist () {
+  fillPicklist (): void {
     const {moduleId} = ShExWebApp.NeighborhoodApi;
     const select = $("#neighborhood");
     const was = select.val();
@@ -549,7 +566,7 @@ class NeighborhoodConfig {
    * is left as it is.  Removing the source the reader is on falls back to
    * the first one, as a page that never had it would have opened.
    */
-  add (module) {
+  add (module: any): boolean {
     const {moduleId} = ShExWebApp.NeighborhoodApi;
     if (this.modules.some(m => moduleId(m) === moduleId(module)))
       return false;
@@ -558,7 +575,7 @@ class NeighborhoodConfig {
     return true;
   }
 
-  remove (id) {
+  remove (id: string): boolean {
     const {moduleId} = ShExWebApp.NeighborhoodApi;
     const at = this.modules.findIndex(m => moduleId(m) === id);
     if (at === -1)
@@ -571,7 +588,7 @@ class NeighborhoodConfig {
   }
 
   /** Fill the picklist and draw the starting source's configuration. */
-  init () {
+  init (): void {
     this.fillPicklist();
     $("#neighborhood").on("change", () => this.select($("#neighborhood").val()));
     this.initTabs();
@@ -586,13 +603,13 @@ class NeighborhoodConfig {
    * The locations are stand-ins rather than DOM elements: the field for a
    * parameter exists only while the source that declares it is selected,
    * but its value has to survive the picklist either way. */
-  queryParams () {
+  queryParams (): any[] {
     const {moduleId, fieldParams} = ShExWebApp.NeighborhoodApi;
-    const stub = (get, set) => ({
-      val: function (v) { return v === undefined ? get() : set(v); },
+    const stub = (get: () => any, set: (v: any) => any) => ({
+      val: function (v: any) { return v === undefined ? get() : set(v); },
       prop: () => undefined,
     });
-    const params = [
+    const params: any[] = [
       {queryStringParm: "neighborhood", deflt: moduleId(this.modules[0]),
        manifest: {key: "neighborhood"},
        location: stub(() => this.moduleId, v => this.select(v || moduleId(this.modules[0])))},
@@ -608,7 +625,7 @@ class NeighborhoodConfig {
           location: stub(
             () => {
               // only the selected source's parameters describe this state
-              const mine = fieldParams(this.module.dbParams || []).some(p => p.name === param.name);
+              const mine = fieldParams(this.module.dbParams || []).some((p: any) => p.name === param.name);
               const value = mine ? this.fields[param.name] : undefined;
               return value === undefined || value === false ? "" : String(value);
             },

@@ -5,7 +5,7 @@ const Fs = require("fs");
 const Os = require("os");
 const Path = require("path");
 
-const WasiTest = require("../shex-extension-wasi-test");
+const WasiTest = require("../lib/shex-extension-wasi-test");
 // The reference implementation this package mirrors.
 const TestJs = require("@shexjs/extension-test");
 

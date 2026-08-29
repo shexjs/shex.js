@@ -13,8 +13,16 @@
  * See doc/editor-integration-plan.md in the repository root.
  */
 class EditorSupport {
-  [key: string]: any;
-  constructor (app) {
+  app: ShExBaseApp;
+  panes: {[name: string]: any};      // an EditorPanes pane per pane name, where one was made
+  located?: any;                     // the schema pane's text located over the last parse, for links resolved later
+  lastMapped?: any;                  // the last validation's ranges by pane and document; introspection for tests
+  mappedDoc?: number;                // the document lastMapped.data's offsets are into
+  linkSets?: {[id: string]: any[]};  // what a validation linked ("validation"), and what each plugin did
+  pairHoverPaint?: () => void;       // repaint after a switch flip or a released pin
+  _repaintWired?: boolean;
+  shapeMapRegions?: any[];           // the query map's hover regions; introspection for tests
+  constructor (app: ShExBaseApp) {
     this.app = app;
     this.panes = {};
   }
@@ -23,7 +31,7 @@ class EditorSupport {
    * a pane whose language comes from whichever neighborhood module claims
    * its text (see moduleEditorFor).  Without either -- editors off, or a
    * module that describes no language -- the textarea is what stays. */
-  addPane (name, cache, language, supplied) {
+  addPane (name: string, cache: InterfaceCache, language?: string | null, supplied?: any): any {
     const textarea = cache.selection[0];
     if (!textarea)
       return null;
@@ -47,7 +55,7 @@ class EditorSupport {
    * labels and constraint predicates from the relevant schema -- as last
    * parsed for a validation *and* as the pane holds it now, so a label
    * typed since the last validation completes too */
-  completionSets (language, cache) {
+  completionSets (language: string, cache: InterfaceCache): any {
     const {inputSchema, inputData} = this.app.Caches;
     // a ShExC pane completes from its own schema (e.g. shexmap's
     // outputSchema); the data pane completes from the input schema
@@ -68,7 +76,7 @@ class EditorSupport {
 
   /** the schema pane's text as it parses now (the live linter's parse,
    * memoized by the parser), or null while it doesn't */
-  liveSchema (cache) {
+  liveSchema (cache: InterfaceCache): any {
     const text = cache.selection && cache.selection.val();
     if (!text)
       return null;
@@ -76,24 +84,24 @@ class EditorSupport {
   }
 
   /** the data's subjects, for the node side of a query map pair */
-  dataNodes () {
+  dataNodes (): string[] {
     const db = this.app.Caches.inputData.parsed;
     const subjects = db && typeof db.getSubjects === "function" ? db.getSubjects() : [];
-    return subjects.slice(0, 500).map(term => term.termType === "BlankNode" ? "_:" + term.value : term.value);
+    return subjects.slice(0, 500).map((term: any) => term.termType === "BlankNode" ? "_:" + term.value : term.value);
   }
 
   /** the base and the two metas a query map resolves against.  A pane's
    * meta is filled by a parse; until the schema or the data has been
    * parsed for a validation, what its text declares now stands in. */
-  shapeMapMetas (cache) {
+  shapeMapMetas (cache: InterfaceCache): {base: string, schemaMeta: any, dataMeta: any} {
     const {inputSchema, inputData} = this.app.Caches;
     return {base: cache.meta && cache.meta.base,
             schemaMeta: this.liveMeta(inputSchema, "shexc"),
             dataMeta: this.liveMeta(inputData, "turtle")};
   }
 
-  liveMeta (cache, language) {
-    const meta = cache.meta || {};
+  liveMeta (cache: InterfaceCache, language: string): any {
+    const meta: any = cache.meta || {};
     if (meta.prefixes && Object.keys(meta.prefixes).length)
       return meta;
     const text = cache.selection && cache.selection.val();
@@ -106,7 +114,7 @@ class EditorSupport {
   }
 
   /** the schema pane's text, located over the schema as last parsed */
-  locateSchema () {
+  locateSchema (): any {
     const {inputSchema} = this.app.Caches;
     if (!inputSchema.parsed || typeof inputSchema.parsed !== "object")
       return null;
@@ -116,7 +124,7 @@ class EditorSupport {
 
   /** where the data is written: the source's own locator (an entity page,
    * whatever it reads), else the Turtle parser's */
-  locateData (text) {
+  locateData (text: string): any {
     const {inputData} = this.app.Caches;
     if (!text)
       return null;
@@ -127,7 +135,7 @@ class EditorSupport {
 
   /** does the fixed shape map expect this entry to be nonconformant
    * (node@!shape)?  Same lookup the results renderer uses for ✓/✗. */
-  expectsNonconformant (entry) {
+  expectsNonconformant (entry: any): boolean {
     const shapeString = entry.shape === ShExWebApp.Validator.Start ? START_SHAPE_INDEX_ENTRY : entry.shape;
     return $("#fixedMap .pair" +
              "[data-node='" + entry.node + "']" +
@@ -140,7 +148,7 @@ class EditorSupport {
    * node@!shape that duly fails gets no error marks (its failure pairs stay
    * hoverable in red to show why it failed), while one that unexpectedly
    * conforms gets an error on the shape declaration. */
-  reportValidation (entries) {
+  reportValidation (entries: any[]): void {
     const {inputSchema, inputData} = this.app.Caches;
     if (!this.panes.inputSchema || !inputSchema.parsed)
       return;
@@ -152,7 +160,7 @@ class EditorSupport {
       // locateData).  Locating the data is worth doing whether or not it
       // is showing in an editor: the results widget anchors to these
       // ranges too.
-      const locate = text => this.locateData(text);
+      const locate = (text: string) => this.locateData(text);
       // A source can hold several documents -- an entity page each, and
       // later a named graph each -- and a validation reaches all of them,
       // so locate them all.  The showing one comes first: its diagnostics
@@ -173,11 +181,11 @@ class EditorSupport {
         dataDocuments.push({at: -1, parsed: null});
       // data ranges are offsets into one document, so they are kept per
       // document: whichever is showing gets its own (see reaimAtShowingDocument)
-      const merged = {schema: [], data: [], pairs: [], dataByDoc: new Map()};
-      const dataOf = at => {
+      const merged = {schema: [] as any[], data: [] as any[], pairs: [] as any[], dataByDoc: new Map<number, any[]>()};
+      const dataOf = (at: number) => {
         if (!merged.dataByDoc.has(at))
           merged.dataByDoc.set(at, []);
-        return merged.dataByDoc.get(at);
+        return merged.dataByDoc.get(at)!;
       };
       entries.forEach(entry => {
         // one mapping per document; a pair takes the anchors of whichever
@@ -191,7 +199,7 @@ class EditorSupport {
             entry.appinfo, located, d.parsed, {spelling: termSpelling()}),
         }));
         const mapped = perDocument[0].mapped;
-        mapped.pairs.forEach((pair, i) => {
+        mapped.pairs.forEach((pair: any, i: any) => {
           pair.doc = perDocument[0].at;
           if (pair.anchors && pair.anchors.object)
             return;
@@ -203,7 +211,7 @@ class EditorSupport {
             pair.doc = elsewhere.at;
           }
         });
-        mapped.pairs.forEach(p => { p.id += merged.pairs.length; });
+        mapped.pairs.forEach((p: any) => { p.id += merged.pairs.length; });
         merged.pairs.push.apply(merged.pairs, mapped.pairs);
         const actualFail = entry.status === "nonconformant";
         if (!this.expectsNonconformant(entry)) {
@@ -222,7 +230,7 @@ class EditorSupport {
           if (shapeRange)
             merged.schema.push(Object.assign({severity: "error", message}, shapeRange));
           perDocument.forEach(d => {
-            const anchored = d.mapped.pairs.find(p => p.anchors && p.anchors.subject);
+            const anchored = d.mapped.pairs.find((p: any) => p.anchors && p.anchors.subject);
             if (anchored)
               // a bnode subject is a whole [ property list ]; mark where it
               // opens rather than every triple written inside it
@@ -239,7 +247,7 @@ class EditorSupport {
       if (this.panes.inputData)
         this.panes.inputData.setDiagnostics(merged.data);
       this.setPairHovers(merged.pairs);
-    } catch (e) {
+    } catch (e: any) {
       console.warn("editor diagnostics failed:", e);
     }
   }
@@ -250,7 +258,7 @@ class EditorSupport {
    * one schema against one document, and editing either makes the claim
    * about text that has moved or gone.  The hovers go with them, for the
    * same reason -- they point at ranges in both panes at once. */
-  clearValidationMarks () {
+  clearValidationMarks (): void {
     this.lastMapped = null;
     // what a plugin linked was about the validation these marks were about
     this.linkSets = {};
@@ -267,7 +275,7 @@ class EditorSupport {
    * holding.  It used to have only the mapping for whichever document the
    * validation ran under, so moving off that one took the marks away and
    * the document that actually contained the bad triple never showed one. */
-  reaimAtShowingDocument () {
+  reaimAtShowingDocument (): void {
     if (!this.lastMapped)
       return;
     const showing = this.app.neighborhoods ? this.app.neighborhoods.showing : -1;
@@ -280,11 +288,11 @@ class EditorSupport {
   }
 
   /** what a validation says is linked, and what each plugin says is */
-  allPairs () {
+  allPairs (): any[] {
     return Object.keys(this.linkSets || {}).reduce(
-      (acc, id) => acc.concat(id === "validation"
-                              ? (this.linkSets[id] || [])
-                              : (this.linkSets[id] || []).flatMap(l => this.resolveLink(l))), []);
+      (acc: any[], id: string) => acc.concat(id === "validation"
+                              ? (this.linkSets![id] || [])
+                              : (this.linkSets![id] || []).flatMap(l => this.resolveLink(l))), []);
   }
 
   /**
@@ -297,18 +305,18 @@ class EditorSupport {
    * `triple` (a TestedTriple from the last results) or `node`/`shape`, and
    * gets the schema and data ranges the validation found for it.
    */
-  resolveLink (link) {
+  resolveLink (link: any): any[] {
     if (link.schema || link.anchors)
       return [link];                      // it said where for itself
     const pairs = (this.lastMapped || {}).pairs || [];
-    const sameTerm = (l, r) => l === r ||
+    const sameTerm = (l: any, r: any) => l === r ||
           (!!l && !!r && (l.value !== undefined ? l.value : l) === (r.value !== undefined ? r.value : r));
-    const where = p => ({
+    const where = (p: any) => ({
       schema: p.schema, schemaParts: p.schemaParts, schemaPath: p.schemaPath,
       anchors: p.anchors, doc: p.doc,
     });
     if (link.triple) {
-      const found = pairs.find(p => p.triple === link.triple);
+      const found = pairs.find((p: any) => p.triple === link.triple);
       return [found === undefined ? link : Object.assign({}, link, where(found))];
     }
     if (link.node !== undefined) {
@@ -317,11 +325,11 @@ class EditorSupport {
       // body and after it, the code among it -- and about the node that
       // was the focus.  That is what this link says, and what hovering it
       // lights up.
-      const about = pairs.filter(p => p.triple && p.anchors &&
+      const about = pairs.filter((p: any) => p.triple && p.anchors &&
                                  sameTerm(p.triple.subject, link.node));
       if (about.length === 0)
         return [link];
-      const lead = about.find(p => p.anchors.subject) || about[0];
+      const lead = about.find((p: any) => p.anchors.subject) || about[0];
       const parts = this.shapeParts(link.shape, about);
       const primary = Object.assign({}, link, {
         schema: parts ? parts.whole : lead.anchors.shapeLabel,
@@ -335,7 +343,7 @@ class EditorSupport {
       // again at each of those places -- `secondary`, since they are ways
       // *in* rather than things this link is about.
       return [primary].concat(about.map(
-        p => Object.assign({}, link, where(p), {secondary: true})));
+        (p: any) => Object.assign({}, link, where(p), {secondary: true})));
     }
     return [link];
   }
@@ -348,12 +356,12 @@ class EditorSupport {
    * on their own, the way a constraint with an inline shape does.  The body
    * is where its constraints are, which the pairs for them are carrying.
    */
-  shapeParts (label, pairs) {
+  shapeParts (label: string, pairs: any[]): {whole: any, parts: any[]} | null {
     const located = this.located;
     const whole = located && label && located.locate ? located.locate.shape(label) : null;
     if (!whole)
       return null;
-    const inner = pairs.reduce((acc, p) => {
+    const inner = pairs.reduce((acc: any, p: any) => {
       const r = p.schema;
       return !r || r.from < whole.from || r.to > whole.to ? acc
         : {from: Math.min(acc ? acc.from : r.from, r.from),
@@ -368,7 +376,7 @@ class EditorSupport {
     let tailFrom = inner.to;
     while (tailFrom < whole.to && /\s/.test(text[tailFrom]))
       ++tailFrom;
-    const parts = [];
+    const parts: any[] = [];
     if (headTo > whole.from)
       parts.push({from: whole.from, to: headTo});
     if (tailFrom < whole.to)
@@ -386,7 +394,7 @@ class EditorSupport {
    * sharing it, which is what lets hovering a constraint light both the
    * triple that matched it and what a plugin made of that match.
    */
-  setLinks (id, pairs) {
+  setLinks (id: string, pairs: any[]): void {
     this.linkSets = this.linkSets || {};
     if (pairs && pairs.length)
       this.linkSets[id] = pairs;
@@ -404,7 +412,7 @@ class EditorSupport {
    * A pair may name ranges in panes of its own (`panes: {name: [range…]}`),
    * which is how a plugin's pane joins in: ShExReduce's AST, the action
    * that built each node of it, and the triple that action ran over. */
-  setPairHovers (validationPairs) {
+  setPairHovers (validationPairs: any[]): void {
     this.linkSets = this.linkSets || {};
     this.linkSets.validation = validationPairs || [];
     const pairs = this.allPairs();
@@ -454,10 +462,10 @@ class EditorSupport {
     // object first: the pane scrolls to the first range it is given, and the
     // object is the answer -- the subject and predicate are what the reader
     // asked with
-    const termRanges = (r) => r.fields
+    const termRanges = (r: any) => r.fields
           ? ["object", "subject", "predicate"].map(k => r.fields[k]).filter(f => f)
           : [{from: r.from, to: r.to}];
-    const showInResults = (group, cls, scroll) => {
+    const showInResults = (group: any[], cls: string, scroll: boolean) => {
       resultPanes.forEach(({pane, ranges}) => {
         const hits = ranges.filter(r => group.some(p => p.triple === r.target));
         if (hits.length)
@@ -469,11 +477,11 @@ class EditorSupport {
     // a constraint's highlight is its parts (e.g. ":s {" and "}", skipping
     // an inline-shape body); a bnode subject/object highlights as its
     // [ ] delimiters rather than the whole property list
-    const constraintRanges = (p) => p.schemaParts || (p.schema ? [p.schema] : []);
+    const constraintRanges = (p: any) => p.schemaParts || (p.schema ? [p.schema] : []);
     // a pair whose triple isn't in any showing document has no anchors at all
-    const anchorRanges = (p, term) => !p.anchors ? []
+    const anchorRanges = (p: any, term: string) => !p.anchors ? []
           : p.anchors[term + "Parts"] || (p.anchors[term] ? [p.anchors[term]] : []);
-    const show = (group, hoveredSide, pinning?) => {
+    const show = (group: any[], hoveredSide: string | null, pinning?: boolean) => {
       // the switch says whether the mouse paints at all; a pin says the
       // mouse may no longer change what is painted
       if (!pinning && (!HighlightMode.live() || HighlightMode.frozen()))
@@ -501,17 +509,17 @@ class EditorSupport {
         // a range may say which parts of itself to paint -- a node of a JSON
         // tree is marked at its braces, leaving the inside to the nodes
         // inside it -- and several links may be about the same one
-        const ranges = (p.panes[name] || []).filter(r => r).filter(r => {
+        const ranges = (p.panes[name] || []).filter((r: any) => r).filter((r: any) => {
           const key = name + " " + r.from + "-" + r.to;
           if (seen.has(key))
             return false;
           seen.add(key);
           return true;
-        }).flatMap(r => r.parts || [r]);
+        }).flatMap((r: any) => r.parts || [r]);
         if (ranges.length)
           named.set(name, (named.get(name) || []).concat(ranges));
       }));
-      const alsoIn = name => named.get(name) || [];
+      const alsoIn = (name: string) => named.get(name) || [];
       schemaRanges.push.apply(schemaRanges, alsoIn("inputSchema"));
       dataRanges.push.apply(dataRanges, alsoIn("inputData"));
       named.forEach((ranges, name) => {
@@ -553,7 +561,7 @@ class EditorSupport {
     // to its counterpart -- the navigation half.  Clicking the frozen thing
     // again releases it.  (ctrl-click is the context menu on a Mac, so the
     // Mac spelling is cmd, which is what every IDE does for the same reason.)
-    const freeze = (group, side) => evt => {
+    const freeze = (group: any[], side: string) => (evt: any) => {
       if (!isPinGesture(evt))
         return false;            // an ordinary click: let the editor have it
       if (HighlightMode.frozen() && HighlightMode.pinned === group) {
@@ -573,7 +581,7 @@ class EditorSupport {
     };
     schemaPane.setHoverRegions(
       [...bySchemaRange.values()].flatMap(group =>
-        constraintRanges(group[0]).map(r => ({
+        constraintRanges(group[0]).map((r: any) => ({
           from: r.from, to: r.to,
           enter: () => show(group, "schema"),
           click: freeze(group, "schema"),
@@ -585,11 +593,11 @@ class EditorSupport {
     // into the document it was located in, so a pair from another document
     // would light up whatever text happens to sit at those offsets here.
     const showingDoc = this.app.neighborhoods ? this.app.neighborhoods.showing : -1;
-    const shownHere = (p) => p.doc === undefined || p.doc < 0 || p.doc === showingDoc;
+    const shownHere = (p: any) => p.doc === undefined || p.doc < 0 || p.doc === showingDoc;
     if (dataPane)
       dataPane.setHoverRegions(
         pairs.filter(shownHere).flatMap(
-          p => [].concat(anchorRanges(p, "object"), anchorRanges(p, "predicate"))
+          p => ([] as any[]).concat(anchorRanges(p, "object"), anchorRanges(p, "predicate"))
             .map(r => ({from: r.from, to: r.to,
                         enter: () => show([p], "data"),
                         click: freeze([p], "data"),
@@ -605,7 +613,7 @@ class EditorSupport {
       // links may be about one node of a tree, and hovering it is asking
       // about all of them
       const byRange = new Map();
-      pairs.filter(p => !p.secondary).forEach(p => ((p.panes || {})[name] || []).filter(r => r).forEach(r => {
+      pairs.filter(p => !p.secondary).forEach(p => ((p.panes || {})[name] || []).filter((r: any) => r).forEach((r: any) => {
         const key = r.from + "-" + r.to;
         if (!byRange.has(key))
           byRange.set(key, {range: r, group: []});
@@ -626,7 +634,7 @@ class EditorSupport {
       if (!pane.setHoverRegions)
         return;
       pane.setHoverRegions(
-        ranges.reduce((acc, r) => {
+        ranges.reduce((acc: any[], r: any) => {
           const pair = pairs.find(p => p.triple === r.target);
           return pair
             ? acc.concat(termRanges(r).map(f => (
@@ -656,10 +664,10 @@ class EditorSupport {
    * first.  Text is read from the documents the ranges are in, so it is
    * spelled as the reader wrote it.
    */
-  pairTitle (group, side) {
-    const lines = [];
+  pairTitle (group: any[], side: string | null): string | null {
+    const lines: string[] = [];
     const said = new Set();
-    const add = (line) => {
+    const add = (line: string | null) => {
       if (line && !said.has(line)) {
         said.add(line);
         lines.push(line);
@@ -681,23 +689,23 @@ class EditorSupport {
 
   /** a pair's constraint as written: its parts, where an inline shape's
    * body is left out (":s {" … "}") */
-  constraintText (p) {
+  constraintText (p: any): string | null {
     const text = this.located ? this.located.text : this.app.Caches.inputSchema.selection.val();
     const parts = p.schemaParts || (p.schema ? [p.schema] : []);
-    const said = parts.map(r => text.slice(r.from, r.to).trim()).filter(s => s);
+    const said = parts.map((r: any) => text.slice(r.from, r.to).trim()).filter((s: string) => s);
     return said.length ? said.join(" … ") : null;
   }
 
   /** a pair's triple as written in its document; a nested subject or
    * object ([ … ]) is shown as its delimiters rather than its contents */
-  tripleText (p) {
+  tripleText (p: any): string | null {
     const anchors = p.anchors;
     if (!anchors || !anchors.subject && !anchors.object)
       return null;
     const text = this.docText(p.doc);
     if (text === null)
       return null;
-    const term = (name) => {
+    const term = (name: string) => {
       const parts = anchors[name + "Parts"];
       if (parts && parts.length > 1)
         return text.slice(parts[0].from, parts[0].to) + " … " + text.slice(parts[1].from, parts[1].to);
@@ -710,7 +718,7 @@ class EditorSupport {
 
   /** the text of one of the data source's documents: the showing one from
    * the pane, which holds edits the stashed copy hasn't seen */
-  docText (doc) {
+  docText (doc: number | undefined): string | null {
     const neighborhoods = this.app.neighborhoods;
     const showing = neighborhoods ? neighborhoods.showing : -1;
     if (doc === undefined || doc < 0 || doc === showing)
@@ -724,7 +732,7 @@ class EditorSupport {
    * A plugin may put two panes in one column with a tab each -- ShExReduce's
    * schema and the overlay hung on it -- and only one of them is showing.
    * Pointing at something in the other one has to say which one. */
-  showPaneTab (name) {
+  showPaneTab (name: string): void {
     const cache = this.app.Caches[name];
     if (!cache || !cache.selection)
       return;
@@ -740,7 +748,7 @@ class EditorSupport {
   }
 
   /** highlight a shape's declaration in the schema pane */
-  highlightShape (label) {
+  highlightShape (label: string): void {
     const located = this.panes.inputSchema ? this.locateSchema() : null;
     if (!located)
       return;
@@ -748,13 +756,13 @@ class EditorSupport {
     this.panes.inputSchema.highlight(range ? [range] : []);
   }
 
-  clearShapeHighlight () {
+  clearShapeHighlight (): void {
     if (this.panes.inputSchema)
       this.panes.inputSchema.clearHighlights();
   }
 
   /** the shape's declaration as written, for a tooltip: its first lines */
-  shapeTitle (label) {
+  shapeTitle (label: string): string | null {
     const located = this.locateSchema();
     const range = located ? located.locate.shape(label) : null;
     return range ? firstLines(located.text.slice(range.from, range.to), 8) : null;
@@ -762,7 +770,7 @@ class EditorSupport {
 
   /** where a node is written in the data pane: the first statement it is
    * the subject of (a shape-map parser's term, string or literal object) */
-  nodeRange (node) {
+  nodeRange (node: any): any {
     const {inputData} = this.app.Caches;
     const located = this.locateData(inputData.selection.val());
     if (!located)
@@ -773,7 +781,7 @@ class EditorSupport {
     return ld === null ? null : ShExWebApp.EditorServices.nodeRange(located, ld);
   }
 
-  highlightNode (node) {
+  highlightNode (node: any): void {
     const pane = this.panes.inputData;
     if (!pane)
       return;
@@ -781,13 +789,13 @@ class EditorSupport {
     pane.highlight(range ? [range] : []);
   }
 
-  clearNodeHighlight () {
+  clearNodeHighlight (): void {
     if (this.panes.inputData)
       this.panes.inputData.clearHighlights();
   }
 
   /** the statement a node opens, as written, for a tooltip */
-  nodeTitle (node) {
+  nodeTitle (node: any): string | null {
     const range = this.nodeRange(node);
     if (!range)
       return null;
@@ -801,14 +809,14 @@ class EditorSupport {
    * is written in the data pane, and each says what it points at.
    * Re-read whenever the map changes (enableShapeHover).
    */
-  wireShapeMapHovers () {
+  wireShapeMapHovers (): void {
     const pane = this.panes.shapeMap;
     if (!pane || !pane.setHoverRegions)
       return;
     const cache = this.app.Caches.shapeMap;
     const parsed = ShExWebApp.EditorServices.parseShapeMap(cache.selection.val() || "", this.shapeMapMetas(cache));
-    const regions = [];
-    (parsed.pairs || []).forEach((pair, i) => {
+    const regions: any[] = [];
+    (parsed.pairs || []).forEach((pair: any, i: number) => {
       const shape = parsed.locate.shape(i), node = parsed.locate.node(i);
       if (shape && typeof pair.shape === "string")
         regions.push({from: shape.from, to: shape.to,
@@ -829,16 +837,16 @@ class EditorSupport {
 
   /** hovering a shape lexical form (fixed-map inputs, result entries)
    * highlights its declaration */
-  enableShapeHover () {
-    const lexToLabel = (lex) => {
+  enableShapeHover (): void {
+    const lexToLabel = (lex: string) => {
       try {
         const term = this.app.Caches.inputSchema.meta.lexToTerm(lex.trim());
         return typeof term === "string" ? term : null; // skip Start et al.
-      } catch (e) {
+      } catch (e: any) {
         return null;
       }
     };
-    $(document).on("mouseenter.shexjsEditors", ".inputShape, .shapeMap .schema", (evt) => {
+    $(document).on("mouseenter.shexjsEditors", ".inputShape, .shapeMap .schema", (evt: any) => {
       const elt = $(evt.currentTarget);
       const label = lexToLabel(elt.is("input") ? elt.val() : elt.text());
       if (label)
@@ -852,7 +860,7 @@ class EditorSupport {
   }
 
   /** tear down every pane (restoring the textareas) and the hover handlers */
-  destroy () {
+  destroy (): void {
     $(document).off(".shexjsEditors");
     Object.values(this.panes).forEach((pane: any) => pane && pane.destroy());
     this.panes = {};
@@ -862,9 +870,9 @@ class EditorSupport {
 /** the first `max` lines of a text, for a tooltip; `stopAt` ends it early
  * at the first line matching (a statement's closing " ."), and an ellipsis
  * says when there was more */
-function firstLines (text, max, stopAt?) {
+function firstLines (text: string, max: number, stopAt?: RegExp): string {
   const lines = text.split("\n");
-  const out = [];
+  const out: string[] = [];
   for (const line of lines) {
     if (out.length >= max) {
       out.push("…");

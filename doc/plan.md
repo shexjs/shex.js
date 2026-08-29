@@ -55,22 +55,33 @@ the one page, the dependency cleanup, plugin-borne data sources, the page
 scripts' move to TypeScript and the untracked `.map`s are done (B1–B10,
 2026-08-28).  What is left:
 
-- **B1 (S each) Narrowing the app's TypeScript.**  All sixteen page
-  scripts compile from `packages/shex-webapp/src/app/*.ts` into `doc/`
-  (`tsconfig.app.json`, run by `npm run build`), with `strict` off, a
-  `[key: string]: any` index signature on every class, and a
-  `globals.d.ts` of `any`s for what the page provides.  Left is the
-  narrowing, one class at a time, smallest first (`WorkerTask`,
-  `ShExPlugins`, the caches): declare its fields, drop its index
-  signature, type what it takes; then type `globals.d.ts` and turn
-  `strict` on.  Still JS, and the same conversion to do:
-  `shex-cli/bin/validate` (1,448 lines) and `extension-wasi*`.
-- **B2 (M) Plugin packaging** (extension-ui-plan's phase 3 leftover):
-  `ShExMapPlugin.js` (1,423 lines) as a built bundle, and the plugin file
-  + bundle entry + webpack config as packages of their own.  The
-  dependency graph no longer forces this — the library packages declare
-  only what their `lib/` requires — so it is tidiness, to be done when
-  something else touches those files.
+- **B1 (done 2026-08-29) The app's TypeScript, narrowed.**  Every class in
+  `packages/shex-webapp/src/app/*.ts` declares its fields and takes typed
+  parameters; the index signatures are gone (the few left are on
+  interfaces for genuinely open records: a worker message's payload, a
+  plugin descriptor's own keys); the mixin files declare what they add
+  (`interface ShExBaseApp {…}` merged per file, `mixin()` typed with
+  `ThisType`); `tsconfig.app.json` is `strict: true` with
+  `useDefineForClassFields: false` (a declared field must not emit).
+  `noImplicitThis` found three nested functions reading `this` as the
+  app -- the drag-and-drop `inject`, the LOG_PROGRESS trace's `sm`, the
+  shape-map menu's failure report -- each a TypeError waiting; fixed.
+  Left `any`, honestly: what arrives through the bundles' globals
+  (jQuery, ShExWebApp.*, RdfJs, the editor panes) -- typing
+  `globals.d.ts` against the packages' own types is the next narrowing.
+  `extension-wasi*` are TypeScript too (same day); `shex-cli/bin/validate`
+  is the last JS conversion.
+- **B2 (part done 2026-08-29) Plugin packaging.**  `ShExMapPlugin.js` is
+  built from `packages/extension-map/src/plugin/ShExMapPlugin.ts`
+  (`tsconfig.plugin.json`, the app's page-script arrangement: classic
+  script, declared fields, no index signatures; `npm run build` there
+  compiles both the library and the plugin).  Not a webpack bundle: the
+  plugin has no dependencies of its own to pack -- it runs on the app's
+  globals -- and `doc/webpacks/` is gitignored and CI-built, which would
+  leave a fresh checkout without its plugin.  **Decision wanted:** moving
+  the plugin, the bundle entry and the webpack config into a package of
+  their own changes `packages/extension-map/doc/` URLs (the gh-pages
+  site's shexmap-simple.html lives there).
 - **B3 (decision) Committed `lib/` and `.map`.**  CI runs `npm ci` and the
   tests with no build step, so `lib/` must stay committed unless CI (and
   `npm install` from git) learns to build; that is one line in `ci.yml`
@@ -222,4 +233,4 @@ The Makefile is hand-maintained; the generator it grew out of
 
 ## Decisions wanted
 
-B3 (committed `lib/`), G1 (repairs replace errors), I1 (the perf corpus).
+B2 (a package of its own, at the cost of the plugin's URLs), B3 (committed `lib/`), G1 (repairs replace errors), I1 (the perf corpus).

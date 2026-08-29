@@ -31,7 +31,7 @@ class RemoteShExValidator {
             // is handed its data hands it over
             source
                 ? source
-                : { data: inputData.getQuads().map(t => WorkerMarshalling.rdfjsTripleToJsonTriple(t)) }),
+                : { data: inputData.getQuads().map((t) => WorkerMarshalling.rdfjsTripleToJsonTriple(t)) }),
             // `created` resolves with the worker's results; `error` rejects
             workerUrl,
         }).ready();
@@ -67,7 +67,7 @@ class RemoteShExValidator {
                         if (res.shape === START_SHAPE_INDEX_ENTRY)
                             res.shape = ShExWebApp.Validator.Start;
                     });
-                    msg.data.results.forEach(entry => this.renderer.entry(entry));
+                    msg.data.results.forEach((entry) => this.renderer.entry(entry));
                 },
                 recurse: msg => validationTracker.recurse(msg.data.x),
                 known: msg => validationTracker.known(msg.data.x),
@@ -125,7 +125,7 @@ class RemoteShExValidator {
                 },
                 finishQuery: msg => {
                     if (tracker())
-                        tracker().end(msg.data.quads.map(t => WorkerMarshalling.jsonTripleToRdfjsTriple(t, RdfJs.DataFactory)), msg.data.time, msg.data.token);
+                        tracker().end(msg.data.quads.map((t) => WorkerMarshalling.jsonTripleToRdfjsTriple(t, RdfJs.DataFactory)), msg.data.time, msg.data.token);
                 },
                 failedQuery: msg => {
                     if (tracker() && tracker().fail)

@@ -18,7 +18,7 @@
     "wasi"
   ],
   "license": "MIT",
-  "main": "./shex-extension-wasi-test.js",
+  "main": "./lib/shex-extension-wasi-test.js",
   "engines": {
     "node": ">=12"
   },
@@ -47,5 +47,6 @@
   },
   "bugs": {
     "url": "https://github.com/shexSpec/grammar/issues"
-  }
+  },
+  "types": "./src/shex-extension-wasi-test.ts"
 }

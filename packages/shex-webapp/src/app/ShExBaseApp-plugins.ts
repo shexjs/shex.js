@@ -8,6 +8,46 @@
  * doc/); edit here and run `npm run build`.
  */
 
+/** What this file adds to the app, declared here since the methods are
+ * mixed in rather than written in the class body. */
+interface ShExBaseApp {
+  applyPlugin (ext: any): any;
+  loadPluginScripts (ext: any): any;
+  applyPluginNow (ext: any): any;
+  unloadPlugin (id: string): void;
+  removeResultsTab (id: string): void;
+  collapseResultsTabs (): any;
+  dropScreenTabs (): any;
+  mixinPluginMethods (ext: any): any;
+  linkPanes (id: string, links: any[]): void;
+  buildPluginResultsTabs (ext: any): any;
+  resultsTabsAside (): any;
+  showingResultsTab (): string | null;
+  syncResultsTabsAside (): any;
+  resultsTabStatus (id: string): any;
+  showResultsTab (id: string): void;
+  resultsTabFor (id: any, label: any, options?: any): any;
+  pluginScreen (ext: any): any;
+  addScreenTab (ext: any): any;
+  addScreenTabFor (id: string, label: string): any;
+  currentScreen (): string;
+  showScreen (id: string): void;
+  lendBorrowedPanes (id: any): any;
+  returnBorrowedPanes (): any;
+  borrowablePane (name: any, what: any): any;
+  remeasureScreenPanes (id: any): any;
+  runPluginAction (control: any): any;
+  buildPluginToolbar (ext: any): any;
+  buildPluginStatusbar (ext: any): any;
+  buildPluginControl (control: any, into: any): any;
+  bindPluginKeys (ext: any): any;
+  paneCache (kind: string, selection: any): InterfaceCache;
+  buildPluginPanes (ext: any): any;
+  loadPlugins (urls: string[]): Promise<void>;
+  extendSchema (schema: any): any;
+  makeRenderer (): ShExResultsRenderer;
+}
+
 mixin(ShExBaseApp, {
   /**
    * Put on the page what one plugin adds to it: styles, panes, controls,
@@ -24,7 +64,7 @@ mixin(ShExBaseApp, {
    * constructor immediately, so a descriptor with nothing to fetch must be
    * on the page before either returns.
    */
-  applyPlugin (ext) {
+  applyPlugin (ext: any) {
     // What it runs on, if the page hasn't got it: a module of its own,
     // fetched before anything of it is built.
     const pending = this.loadPluginScripts(ext);
@@ -42,14 +82,14 @@ mixin(ShExBaseApp, {
    * rather than against the page, since the plugin knows where its own
    * bundle sits and the page has never heard of it.
    */
-  loadPluginScripts (ext) {
+  loadPluginScripts (ext: any) {
     const urls = (ext.scripts || [])
-          .map(src => new URL(src, ext.baseUrl || DefaultBase).href)
-          .filter(url => $("head script, body script").filter(
-            (i, s) => s.src === url).length === 0);
+          .map((src: any) => new URL(src, ext.baseUrl || DefaultBase).href)
+          .filter((url: any) => $("head script, body script").filter(
+            (i: any, s: any) => s.src === url).length === 0);
     if (urls.length === 0)
       return null;
-    return urls.reduce((sofar, url) => sofar.then(() => new Promise<void>((resolve, reject) => {
+    return urls.reduce((sofar: any, url: any) => sofar.then(() => new Promise<void>((resolve, reject) => {
       const script = document.createElement("script");
       script.src = url;
       script.onload = () => resolve();
@@ -58,9 +98,9 @@ mixin(ShExBaseApp, {
     })), Promise.resolve());
   },
 
-applyPluginNow (ext) {
+applyPluginNow (ext: any) {
     if (typeof ext.css === "string" && ext.css.trim().length > 0
-        && $("head style[data-plugin]").filter((i, e) => $(e).attr("data-plugin") === ext.id).length === 0)
+        && $("head style[data-plugin]").filter((i: any, e: any) => $(e).attr("data-plugin") === ext.id).length === 0)
       $("<style/>").attr("data-plugin", ext.id).text(ext.css).appendTo("head");
     this.buildPluginPanes(ext);
     this.buildPluginResultsTabs(ext);
@@ -69,12 +109,12 @@ applyPluginNow (ext) {
     this.bindPluginKeys(ext);
     this.mixinPluginMethods(ext);
     // data sources it brings: in the picklist beside the page's own
-    (ext.neighborhoods || []).forEach(module => this.neighborhoods.add(module));
+    (ext.neighborhoods || []).forEach((module: any) => this.neighborhoods.add(module));
     if (typeof ext.init === "function" && !ext.initialized) {
       ext.initialized = true;
       try {
         ext.init(this);
-      } catch (e) {
+      } catch (e: any) {
         this.resultsWidget.failMessage(e, "loading " + (ext.label || ext.id));
       }
     }
@@ -101,7 +141,7 @@ applyPluginNow (ext) {
    *
    * @returns true if there was such a plugin
    */
-  unloadPlugin (id) {
+  unloadPlugin (id: any) {
     const ext = typeof ShExPlugins === "undefined" ? null : ShExPlugins.byId(id);
     if (!ext)
       return false;
@@ -112,7 +152,7 @@ applyPluginNow (ext) {
     if (typeof ext.unload === "function") {
       try {
         ext.unload(this);
-      } catch (e) {
+      } catch (e: any) {
         this.resultsWidget.failMessage(e, "unloading " + (ext.label || ext.id));
       }
     }
@@ -142,7 +182,7 @@ applyPluginNow (ext) {
     // ...and what said how to fill them: a pane's entry is known by the
     // cache it holds, a control's by the parameter it named
     const parms = new Set();
-    const readControls = controls => (controls || []).forEach(control => {
+    const readControls = (controls: any) => (controls || []).forEach((control: any) => {
       if (control.queryStringParm)
         parms.add(control.queryStringParm);
       readControls(control.controls);
@@ -157,9 +197,9 @@ applyPluginNow (ext) {
     });
 
     // the page: screen, tab, sheet
-    $("#screens > .screen").filter((i, e) => $(e).attr("data-plugin") === id).remove();
-    $("#screenTabs button").filter((i, b) => $(b).attr("data-screen") === id).remove();
-    $("head style[data-plugin]").filter((i, e) => $(e).attr("data-plugin") === id).remove();
+    $("#screens > .screen").filter((i: any, e: any) => $(e).attr("data-plugin") === id).remove();
+    $("#screenTabs button").filter((i: any, b: any) => $(b).attr("data-screen") === id).remove();
+    $("head style[data-plugin]").filter((i: any, e: any) => $(e).attr("data-plugin") === id).remove();
 
     // the keys it answered and the verbs it lent
     for (let i = this.keyDownHandlers.length; i-- > 0;)
@@ -167,7 +207,7 @@ applyPluginNow (ext) {
         this.keyDownHandlers.splice(i, 1);
     (ext.toolbar || []).filter(c => c.key).concat(ext.keys || [])
       .forEach(binding => { delete binding.bound; });
-    (ext.mixedIn || []).forEach(name => { delete this[name]; });
+    (ext.mixedIn || []).forEach(name => { delete (this as any)[name]; });
     delete ext.mixedIn;
     delete ext.initialized;
     delete ext.panesBuilt;
@@ -201,12 +241,12 @@ applyPluginNow (ext) {
 
   /** one results tab, gone: the strip loses its <li> and the page the
    * panel.  jquery-ui picks another tab if this was the one showing. */
-  removeResultsTab (id) {
+  removeResultsTab (id: any) {
     const tabs = $("#resultsTabs");
     if (tabs.length === 0)
       return;
     tabs.find("> ul > li").filter(
-      (i, li) => $(li).children("a").attr("href") === "#" + id).remove();
+      (i: any, li: any) => $(li).children("a").attr("href") === "#" + id).remove();
     $("#" + id).remove();
     if (tabs.data("ui-tabs"))
       tabs.tabs("refresh");
@@ -219,7 +259,7 @@ applyPluginNow (ext) {
     const tabs = $("#resultsTabs");
     if (tabs.length === 0)
       return;
-    if (tabs.children("div[id]").filter((i, e) => e.id !== APP_RESULTS_TAB).length > 0)
+    if (tabs.children("div[id]").filter((i: any, e: any) => e.id !== APP_RESULTS_TAB).length > 0)
       return;
     const mine = $("#" + APP_RESULTS_TAB).children("div").first();
     if (tabs.data("ui-tabs"))
@@ -255,12 +295,12 @@ applyPluginNow (ext) {
    * not replace them, and the app it is mixed into may already have one
    * (the worker app had its own materializer, until rows 15 and 16).
    */
-  mixinPluginMethods (ext) {
+  mixinPluginMethods (ext: any) {
     ext.mixedIn = ext.mixedIn || [];
     Object.keys(ext.methods || {}).forEach(name => {
       if (name in this)
         return;
-      this[name] = ext.methods[name].bind(this);
+      (this as any)[name] = ext.methods[name].bind(this);
       ext.mixedIn.push(name); // what to take back on unloadPlugin
     });
   },
@@ -286,7 +326,7 @@ applyPluginNow (ext) {
    * linked, or with nothing to take it back; a new validation clears it,
    * since what you linked was about the last one.
    */
-  linkPanes (id, links) {
+  linkPanes (id: any, links: any) {
     if (this.editorSupport)
       this.editorSupport.setLinks(id, links);
   },
@@ -301,9 +341,9 @@ applyPluginNow (ext) {
    * ones follow, and the widget is re-pointed at the first.  A page needs
    * no markup for any of it.
    */
-  buildPluginResultsTabs (ext) {
+  buildPluginResultsTabs (ext: any) {
     (ext.resultsTabs || []).forEach(
-      panel => this.resultsTabFor(panel.id, panel.label, {empty: true}));
+      (panel: any) => this.resultsTabFor(panel.id, panel.label, {empty: true}));
   },
 
   /**
@@ -353,7 +393,7 @@ applyPluginNow (ext) {
    * what is in it.  In it: a tab says what kind of result it holds, and
    * anything more particular than that belongs where the results are
    * rather than over the whole results area. */
-  resultsTabStatus (id) {
+  resultsTabStatus (id: any) {
     const panel = $("#" + id);
     if (panel.length === 0)
       return $();
@@ -366,11 +406,11 @@ applyPluginNow (ext) {
   /** Bring a results tab up, if the results are tabs at all.  A plugin
    * that has just filled one says so rather than leaving the reader to
    * find it. */
-  showResultsTab (id) {
+  showResultsTab (id: any) {
     const tabs = $("#resultsTabs");
     if (tabs.length === 0 || !tabs.data("ui-tabs"))
       return;
-    const at = tabs.find("> ul > li > a").map((i, a) => $(a).attr("href")).get()
+    const at = tabs.find("> ul > li > a").map((i: any, a: any) => $(a).attr("href")).get()
           .indexOf("#" + id);
     if (at !== -1)
       tabs.tabs("option", "active", at);
@@ -386,7 +426,7 @@ applyPluginNow (ext) {
    * itself, and a pane that says `tab:`, for one that is a pane like any
    * other and happens to belong here.
    */
-  resultsTabFor (id, label, {empty = false} = {}) {
+  resultsTabFor (id: any, label: any, {empty = false} = {}) {
     let tabs = $("#resultsTabs");
     if (tabs.length === 0) {
       const mine = $("#results > div").first();
@@ -435,11 +475,11 @@ applyPluginNow (ext) {
    * ShExReduce's overlay steers one -- so a screen is beside validation,
    * never downstream of it.
    */
-  pluginScreen (ext) {
+  pluginScreen (ext: any) {
     let slot = $("#screens");
     if (slot.length === 0)
       slot = $("<div/>").attr("id", "screens").appendTo("#inputarea");
-    const already = slot.children().filter((i, e) => $(e).attr("data-plugin") === ext.id);
+    const already = slot.children().filter((i: any, e: any) => $(e).attr("data-plugin") === ext.id);
     if (already.length)
       return already;
     const screen = $("<div/>").addClass("screen").attr("data-plugin", ext.id).appendTo(slot);
@@ -466,7 +506,7 @@ applyPluginNow (ext) {
    * (which jquery-ui does own) are a different set of tabs about a
    * different thing.
    */
-  addScreenTab (ext) {
+  addScreenTab (ext: any) {
     const tabs = $("#screenTabs");
     if (tabs.length === 0)
       return false;
@@ -494,9 +534,9 @@ applyPluginNow (ext) {
    * A plugin's tab carries an × : the plugin came from a URL and can go
    * back where it came from (unloadPlugin).  The validator's does not --
    * it is the page, not a guest on it. */
-  addScreenTabFor (id, label) {
+  addScreenTabFor (id: any, label: any) {
     const tabs = $("#screenTabs");
-    if (tabs.children().filter((i, b) => $(b).attr("data-screen") === id).length > 0)
+    if (tabs.children().filter((i: any, b: any) => $(b).attr("data-screen") === id).length > 0)
       return;
     const tab = $("<button/>", {type: "button", role: "tab",
                     "data-screen": id, "aria-selected": String(id === this.currentScreen())})
@@ -509,7 +549,7 @@ applyPluginNow (ext) {
         .text("\u00d7")
         // the × is inside the tab, so pressing it would otherwise also
         // switch to the screen it is about to remove
-        .on("click", evt => { evt.stopPropagation(); this.unloadPlugin(id); })
+        .on("click", (evt: any) => { evt.stopPropagation(); this.unloadPlugin(id); })
         .appendTo(tab);
   },
 
@@ -525,17 +565,17 @@ applyPluginNow (ext) {
    * validation's tab and a materialization's sit side by side whichever
    * screen is up.
    */
-  showScreen (id) {
+  showScreen (id: any) {
     if ($("#screen").length === 0)
       return;
     $("#screen").val(id);
     $("#screenTabs button").each(
-      (i, b) => $(b).attr("aria-selected", String($(b).attr("data-screen") === id)));
+      (i: any, b: any) => $(b).attr("aria-selected", String($(b).attr("data-screen") === id)));
     // home first: a screen that borrows one of the app's panes has it on
     // loan, and the next screen (or the validator) wants it back
     this.returnBorrowedPanes();
     $("#inputSchema, #inputData").toggle(id === "");
-    $("#screens > .screen").each((i, e) => $(e).toggle($(e).attr("data-plugin") === id));
+    $("#screens > .screen").each((i: any, e: any) => $(e).toggle($(e).attr("data-plugin") === id));
     this.lendBorrowedPanes(id);
     this.remeasureScreenPanes(id);
   },
@@ -549,11 +589,11 @@ applyPluginNow (ext) {
    * at.  A copy would be a second thing to keep in step, which is what
    * panes are for in the first place.
    */
-  lendBorrowedPanes (id) {
+  lendBorrowedPanes (id: any) {
     if (id === "")
       return;
-    $("#screens > .screen").filter((i, e) => $(e).attr("data-plugin") === id)
-      .find("[data-borrow]").each((i, slot) => {
+    $("#screens > .screen").filter((i: any, e: any) => $(e).attr("data-plugin") === id)
+      .find("[data-borrow]").each((i: any, slot: any) => {
         const name = $(slot).attr("data-borrow");
         const pane = this.borrowablePane(name, $(slot).attr("data-borrow-what"));
         if (pane.length === 0)
@@ -581,7 +621,7 @@ applyPluginNow (ext) {
 
   /** what a screen borrows for a pane: the element the descriptor named,
    * or the whole column the pane's textarea sits in */
-  borrowablePane (name, what) {
+  borrowablePane (name: any, what: any) {
     if (what)
       return $(what);
     const cache = this.Caches[name];
@@ -591,14 +631,14 @@ applyPluginNow (ext) {
   /** A CodeMirror pane measures nothing while it is display:none, so a
    * pane that just came on screen is asked to measure again -- the same
    * treatment the data pane gets when another document swaps in. */
-  remeasureScreenPanes (id) {
+  remeasureScreenPanes (id: any) {
     if (!this.editorSupport)
       return;
     const names = id === ""
           ? ["inputSchema", "inputData"]
           : ((pluginDescriptors().find(d => d.id === id) || {}).panes || []).map(p => p.name);
     names.forEach(name => {
-      const pane = this.editorSupport.panes[name];
+      const pane = this.editorSupport!.panes[name];
       if (pane && pane.requestMeasure)
         pane.requestMeasure();
     });
@@ -612,7 +652,7 @@ applyPluginNow (ext) {
    * told to load ShExMap gets the button and not the verb.  Better a
    * message where the results go than a stack trace in the console.
    */
-  runPluginAction (control) {
+  runPluginAction (control: any) {
     const before = this.settledPromise;
     try {
       const ret = control.run(this);
@@ -620,13 +660,13 @@ applyPluginNow (ext) {
         // whoever waits on this waits for the verb to finish, whether it
         // worked or was reported -- an async verb's failure is a rejected
         // promise, not a throw
-        const handled = ret.catch(e => this.resultsWidget.failMessage(e, control.id));
+        const handled = ret.catch((e: any) => this.resultsWidget.failMessage(e, control.id));
         // an action that hands over its own work keeps what it handed over:
         // materialize's click resolves at once, the materialization doesn't
         if (this.settledPromise === before)
           this.track(handled);
       }
-    } catch (e) {
+    } catch (e: any) {
       this.resultsWidget.failMessage(e, control.id);
     }
   },
@@ -640,7 +680,7 @@ applyPluginNow (ext) {
    * the way a pane does.  They go in the plugin's own card, under its
    * panes -- the verb beside the things it consumes.
    */
-  buildPluginToolbar (ext) {
+  buildPluginToolbar (ext: any) {
     const toolbar = ext.toolbar || [];
     if (toolbar.length === 0)
       return;
@@ -652,7 +692,7 @@ applyPluginNow (ext) {
     // screen's edge without escaping it
     const row = $("<div/>").addClass("pluginToolbar").appendTo(screen);
     const inner = $("<div/>").addClass("pluginToolbarInner").appendTo(row);
-    toolbar.forEach(control => this.buildPluginControl(control, inner));
+    toolbar.forEach((control: any) => this.buildPluginControl(control, inner));
   },
 
   /**
@@ -664,7 +704,7 @@ applyPluginNow (ext) {
    * it out from under the mouse.  This grows rightward from an edge that
    * doesn't move.
    */
-  buildPluginStatusbar (ext) {
+  buildPluginStatusbar (ext: any) {
     const items = ext.statusbar || [];
     if (items.length === 0)
       return;
@@ -672,10 +712,10 @@ applyPluginNow (ext) {
     if (screen.children(".pluginStatusbar").length > 0)
       return;
     const row = $("<div/>").addClass("pluginStatusbar").appendTo(screen);
-    items.forEach(control => this.buildPluginControl(control, row));
+    items.forEach((control: any) => this.buildPluginControl(control, row));
   },
 
-buildPluginControl (control, into) {
+buildPluginControl (control: any, into: any) {
     switch (control.kind) {
     case "button": {
       const button = $("<button/>").attr({id: control.id, title: control.title || null})
@@ -704,7 +744,7 @@ buildPluginControl (control, into) {
       const group = $("<span/>").attr("id", control.id).appendTo(into);
       if (control.hidden)
         group.css("display", "none");
-      (control.controls || []).forEach(c => this.buildPluginControl(c, group));
+      (control.controls || []).forEach((c: any) => this.buildPluginControl(c, group));
       return group;
     }
     case "status": {
@@ -730,14 +770,14 @@ buildPluginControl (control, into) {
    * keyDownHandlers is read on each keydown, so a binding may arrive at any
    * time -- which is what a plugin loaded mid-session does.
    */
-  bindPluginKeys (ext) {
-    const keys = (ext.toolbar || []).filter(c => c.key).concat(ext.keys || []);
-    keys.forEach(binding => {
+  bindPluginKeys (ext: any) {
+    const keys = (ext.toolbar || []).filter((c: any) => c.key).concat(ext.keys || []);
+    keys.forEach((binding: any) => {
       if (binding.bound)
         return; // this descriptor was applied before
       binding.bound = true;
       // tagged with whose it is: unloadPlugin has to find it again
-      const handler = e => {
+      const handler = (e: any) => {
         if (!!binding.key.ctrl !== e.ctrlKey || e.key !== binding.key.key)
           return false;
         this.runPluginAction(binding);
@@ -749,7 +789,7 @@ buildPluginControl (control, into) {
   },
 
   /** the cache a pane of this kind wants */
-  paneCache (kind, selection) {
+  paneCache (kind: any, selection: any) {
     switch (kind) {
     case "json":   return new JSONCache(selection);
     case "schema": return new SchemaCache(selection, null, this.shexcParser, this.turtleParser);
@@ -774,20 +814,20 @@ buildPluginControl (control, into) {
    * plugin, so two of them are two screens rather than a fight over the
    * same column.
    */
-  buildPluginPanes (ext) {
+  buildPluginPanes (ext: any) {
     const panes = ext.panes || [];
     if (panes.length === 0 || ext.panesBuilt)
       return;
     ext.panesBuilt = true;
     // A screen, if anything is going to be on it: a pane in a results tab
     // and a pane the screen borrows are both located elsewhere.
-    const screen = panes.some(pane => !pane.tab) ? this.pluginScreen(ext) : $();
+    const screen = panes.some((pane: any) => !pane.tab) ? this.pluginScreen(ext) : $();
     // The screen's columns.  Panes share one unless `panel:` groups them
     // otherwise, so a descriptor written before screens renders as it did
     // -- one column -- and ShExMap says its output schema is a column of
     // its own, which is the two-column layout its own page had.
     const columns = new Map();
-    panes.forEach(pane => {
+    panes.forEach((pane: any) => {
       // a pane of the app's, shown on this screen too: a slot to move it
       // into, and nothing else -- it is built, filled and cached already
       if (pane.borrow) {
@@ -850,7 +890,7 @@ buildPluginControl (control, into) {
       if (this.editorSupport && pane.editor)
         this.editorSupport.addPane(pane.name, cache, pane.editor);
     });
-    screen.find("[data-tabset]").each((i, set) => $(set).tabs());
+    screen.find("[data-tabset]").each((i: any, set: any) => $(set).tabs());
   },
 
   /**
@@ -858,13 +898,13 @@ buildPluginControl (control, into) {
    * location.search: e.g. "?schema=asdf&data=qwer&shape-map=ab%5Ecd%5E%5E_ef%5Egh"
    */
   /** the plugin modules named by URL, loaded in the order they were named */
-  async loadPlugins (urls) {
+  async loadPlugins (urls: any) {
     for (const url of urls) {
       if (url.length === 0)
         continue;
       try {
         await this.Caches.plugin.asyncGet(new URL(url, DefaultBase).href);
-      } catch (e) {
+      } catch (e: any) {
         this.resultsWidget.append($("<pre/>").text(e).addClass("error"));
       }
     }
@@ -887,13 +927,13 @@ buildPluginControl (control, into) {
    * which is the point: a hook that only one plugin needs is still a hook
    * the app doesn't have to know the reason for.
    */
-  extendSchema (schema) {
+  extendSchema (schema: any) {
     return pluginDescriptors().reduce((sofar, ext) => {
       if (typeof ext.schema !== "function")
         return sofar;
       try {
         return ext.schema(sofar, this) || sofar;
-      } catch (e) {
+      } catch (e: any) {
         this.resultsWidget.failMessage(e, (ext.label || ext.id) + "'s schema");
         return sofar;
       }

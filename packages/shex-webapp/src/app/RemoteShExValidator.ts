@@ -10,9 +10,40 @@
  */
 const USE_INCREMENTAL_RESULTS = true;
 
+/** a data source the worker rebuilds rather than receives: the neighborhood
+ * module's id, and what its fromParams takes (ShExInWorkerApp.getValidator) */
+interface RemoteSource {
+  neighborhood: string;
+  params: {[key: string]: any};
+}
+
+/** what a validation reports as it goes (makeConsoleTracker); the worker
+ * relays each as a message, and the handlers below hand them on */
+interface ValidationTracker {
+  recurse (x: any): any;
+  known (x: any): any;
+  enter (point: any, label: any): void;
+  exit (point: any, label: any, ret: any): void;
+}
+
+/** what invoke answers with: the results, or the error the validation was
+ * over with (DirectShExValidator and reportValidationError answer the same) */
+interface ValidationOutcome {
+  validationResults?: ResultEntry[];
+  validationError?: Error;
+}
+
 class RemoteShExValidator {
-  [key: string]: any;
-  constructor (loaded, schemaURL, inputData, renderer, onCancel, source, workerUrl) {
+  // TODO(B1): invoke's `time` is the Date callValidator took (DirectShExValidator
+  // takes the same), reassigned to the ms since: `any` until the two agree on a number.
+  // TODO(B1): the done handler's !USE_INCREMENTAL_RESULTS branch calls a renderEntry
+  // no class defines (dead: USE_INCREMENTAL_RESULTS is const true); cast to any there.
+  renderer: ShExResultsRenderer;   // where each result goes as it arrives, and a failure
+  onCancel: (evt: any) => any;     // the validate button's click handler between tasks
+  workerUrl: string;               // where a cancel starts the next worker from
+  created: Promise<any>;           // the "create" task: the worker has a validator once it resolves
+  constructor (loaded: any, schemaURL: string, inputData: any, renderer: ShExResultsRenderer,
+               onCancel: (evt: any) => any, source: RemoteSource | null, workerUrl: string) {
     this.renderer = renderer;
     this.onCancel = onCancel;
     this.workerUrl = workerUrl;
@@ -35,7 +66,7 @@ class RemoteShExValidator {
         source
           ? source
           : { data: inputData.getQuads().map(
-              t => WorkerMarshalling.rdfjsTripleToJsonTriple(t)
+              (t: any) => WorkerMarshalling.rdfjsTripleToJsonTriple(t)
             ) }
       ),
       // `created` resolves with the worker's results; `error` rejects
@@ -43,7 +74,8 @@ class RemoteShExValidator {
     }).ready();
   }
 
-  async invoke (fixedMap, validationTracker, time, done, currentAction) {
+  async invoke (fixedMap: {node: any, shape: any}[], validationTracker: ValidationTracker | undefined, time: any,
+                done: ((error?: Error) => void) | undefined, currentAction: string): Promise<ValidationOutcome> {
     await this.created;
     const transportMap = fixedMap.map(function (ent) {
       return {
@@ -53,7 +85,7 @@ class RemoteShExValidator {
           ent.shape
       };
     });
-    const results = [];
+    const results: ResultEntry[] = [];
     const caches = this.renderer.caches;
     const tracker = () => caches.inputData.queryTrackerController.queryTracker;
     return new WorkerTask({
@@ -70,23 +102,23 @@ class RemoteShExValidator {
           if (!USE_INCREMENTAL_RESULTS)
             throw Error('fix this code path; probably results=msg.data.(all?)results');
           results.push(...msg.data.results);
-          msg.data.results.forEach(function (res) {
+          msg.data.results.forEach(function (res: any) {
             if (res.shape === START_SHAPE_INDEX_ENTRY)
               res.shape = ShExWebApp.Validator.Start;
           });
-          msg.data.results.forEach(entry => this.renderer.entry(entry));
+          msg.data.results.forEach((entry: any) => this.renderer.entry(entry));
         },
-        recurse: msg => validationTracker.recurse(msg.data.x),
-        known: msg => validationTracker.known(msg.data.x),
-        enter: msg => validationTracker.enter(msg.data.point, msg.data.label),
-        exit: msg => validationTracker.exit(msg.data.point, msg.data.label, msg.data.ret),
+        recurse: msg => validationTracker!.recurse(msg.data.x),
+        known: msg => validationTracker!.known(msg.data.x),
+        enter: msg => validationTracker!.enter(msg.data.point, msg.data.label),
+        exit: msg => validationTracker!.exit(msg.data.point, msg.data.label, msg.data.ret),
         done: (msg, task) => {
           $("#results > .status").text("rendering results...").show();
           if (!USE_INCREMENTAL_RESULTS) {
             if ("solutions" in msg.data.results)
-              msg.data.results.solutions.forEach(this.renderEntry);
+              msg.data.results.solutions.forEach((this as any).renderEntry);
             else
-              this.renderEntry(msg.data.results);
+              (this as any).renderEntry(msg.data.results);
           }
           time = Date.now() - time;
           $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
@@ -113,7 +145,7 @@ class RemoteShExValidator {
         slurpedPages: msg => {
           const neighborhoods = caches.inputData.neighborhoods;
           (msg.data.pages || []).forEach(
-            ({id, text}) => neighborhoods.addPageDocument(id, text));
+            ({id, text}: {id: string, text: string}) => neighborhoods.addPageDocument(id, text));
           if ((msg.data.pages || []).length)
             neighborhoods.render();
         },
@@ -134,7 +166,7 @@ class RemoteShExValidator {
         finishQuery: msg => {
           if (tracker())
             tracker().end(
-              msg.data.quads.map(t => WorkerMarshalling.jsonTripleToRdfjsTriple(t, RdfJs.DataFactory)),
+              msg.data.quads.map((t: any) => WorkerMarshalling.jsonTripleToRdfjsTriple(t, RdfJs.DataFactory)),
               msg.data.time, msg.data.token);
         },
         failedQuery: msg => {

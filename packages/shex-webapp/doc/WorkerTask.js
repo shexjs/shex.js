@@ -40,8 +40,8 @@ class WorkerTask {
             this.settle = { resolve, reject };
             this.button.addClass("stoppable").text("abort (ctl-enter)");
             this.button.off();
-            this.button.on("click", evt => this.cancel(evt));
-            ShExWorker.onmessage = msg => this.receive(msg);
+            this.button.on("click", (evt) => this.cancel(evt));
+            ShExWorker.onmessage = (msg) => this.receive(msg);
             ShExWorker.postMessage(Object.assign({ plugins: pluginWorkerUrls() }, this.request));
         });
     }

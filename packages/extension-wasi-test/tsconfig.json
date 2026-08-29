@@ -5,7 +5,7 @@
         "esModuleInterop": true,
         "outDir": "./lib",
         "rootDir": "./src",
-        "target": "es2020",
+        "target": "es6",
         "sourceMap": true,
         "skipLibCheck": true,
         "strict": true,
@@ -16,7 +16,6 @@
         ]
     },
     "exclude": [
-        "node_modules",
-        "src/plugin"
+        "node_modules"
     ]
 }

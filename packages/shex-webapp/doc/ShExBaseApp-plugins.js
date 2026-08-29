@@ -42,8 +42,8 @@ mixin(ShExBaseApp, {
      */
     loadPluginScripts(ext) {
         const urls = (ext.scripts || [])
-            .map(src => new URL(src, ext.baseUrl || DefaultBase).href)
-            .filter(url => $("head script, body script").filter((i, s) => s.src === url).length === 0);
+            .map((src) => new URL(src, ext.baseUrl || DefaultBase).href)
+            .filter((url) => $("head script, body script").filter((i, s) => s.src === url).length === 0);
         if (urls.length === 0)
             return null;
         return urls.reduce((sofar, url) => sofar.then(() => new Promise((resolve, reject) => {
@@ -65,7 +65,7 @@ mixin(ShExBaseApp, {
         this.bindPluginKeys(ext);
         this.mixinPluginMethods(ext);
         // data sources it brings: in the picklist beside the page's own
-        (ext.neighborhoods || []).forEach(module => this.neighborhoods.add(module));
+        (ext.neighborhoods || []).forEach((module) => this.neighborhoods.add(module));
         if (typeof ext.init === "function" && !ext.initialized) {
             ext.initialized = true;
             try {
@@ -135,7 +135,7 @@ mixin(ShExBaseApp, {
         // ...and what said how to fill them: a pane's entry is known by the
         // cache it holds, a control's by the parameter it named
         const parms = new Set();
-        const readControls = controls => (controls || []).forEach(control => {
+        const readControls = (controls) => (controls || []).forEach((control) => {
             if (control.queryStringParm)
                 parms.add(control.queryStringParm);
             readControls(control.controls);
@@ -283,7 +283,7 @@ mixin(ShExBaseApp, {
      * no markup for any of it.
      */
     buildPluginResultsTabs(ext) {
-        (ext.resultsTabs || []).forEach(panel => this.resultsTabFor(panel.id, panel.label, { empty: true }));
+        (ext.resultsTabs || []).forEach((panel) => this.resultsTabFor(panel.id, panel.label, { empty: true }));
     },
     /**
      * The corner of the results tab strip.
@@ -480,7 +480,7 @@ mixin(ShExBaseApp, {
                 .text("\u00d7")
                 // the × is inside the tab, so pressing it would otherwise also
                 // switch to the screen it is about to remove
-                .on("click", evt => { evt.stopPropagation(); this.unloadPlugin(id); })
+                .on("click", (evt) => { evt.stopPropagation(); this.unloadPlugin(id); })
                 .appendTo(tab);
     },
     /** which screen is up: the hidden input is the one place it is written */
@@ -583,7 +583,7 @@ mixin(ShExBaseApp, {
                 // whoever waits on this waits for the verb to finish, whether it
                 // worked or was reported -- an async verb's failure is a rejected
                 // promise, not a throw
-                const handled = ret.catch(e => this.resultsWidget.failMessage(e, control.id));
+                const handled = ret.catch((e) => this.resultsWidget.failMessage(e, control.id));
                 // an action that hands over its own work keeps what it handed over:
                 // materialize's click resolves at once, the materialization doesn't
                 if (this.settledPromise === before)
@@ -615,7 +615,7 @@ mixin(ShExBaseApp, {
         // screen's edge without escaping it
         const row = $("<div/>").addClass("pluginToolbar").appendTo(screen);
         const inner = $("<div/>").addClass("pluginToolbarInner").appendTo(row);
-        toolbar.forEach(control => this.buildPluginControl(control, inner));
+        toolbar.forEach((control) => this.buildPluginControl(control, inner));
     },
     /**
      * What a plugin says under its controls, across the card (§4's
@@ -634,7 +634,7 @@ mixin(ShExBaseApp, {
         if (screen.children(".pluginStatusbar").length > 0)
             return;
         const row = $("<div/>").addClass("pluginStatusbar").appendTo(screen);
-        items.forEach(control => this.buildPluginControl(control, row));
+        items.forEach((control) => this.buildPluginControl(control, row));
     },
     buildPluginControl(control, into) {
         switch (control.kind) {
@@ -665,7 +665,7 @@ mixin(ShExBaseApp, {
                 const group = $("<span/>").attr("id", control.id).appendTo(into);
                 if (control.hidden)
                     group.css("display", "none");
-                (control.controls || []).forEach(c => this.buildPluginControl(c, group));
+                (control.controls || []).forEach((c) => this.buildPluginControl(c, group));
                 return group;
             }
             case "status": {
@@ -691,13 +691,13 @@ mixin(ShExBaseApp, {
      * time -- which is what a plugin loaded mid-session does.
      */
     bindPluginKeys(ext) {
-        const keys = (ext.toolbar || []).filter(c => c.key).concat(ext.keys || []);
-        keys.forEach(binding => {
+        const keys = (ext.toolbar || []).filter((c) => c.key).concat(ext.keys || []);
+        keys.forEach((binding) => {
             if (binding.bound)
                 return; // this descriptor was applied before
             binding.bound = true;
             // tagged with whose it is: unloadPlugin has to find it again
-            const handler = e => {
+            const handler = (e) => {
                 if (!!binding.key.ctrl !== e.ctrlKey || e.key !== binding.key.key)
                     return false;
                 this.runPluginAction(binding);
@@ -739,13 +739,13 @@ mixin(ShExBaseApp, {
         ext.panesBuilt = true;
         // A screen, if anything is going to be on it: a pane in a results tab
         // and a pane the screen borrows are both located elsewhere.
-        const screen = panes.some(pane => !pane.tab) ? this.pluginScreen(ext) : $();
+        const screen = panes.some((pane) => !pane.tab) ? this.pluginScreen(ext) : $();
         // The screen's columns.  Panes share one unless `panel:` groups them
         // otherwise, so a descriptor written before screens renders as it did
         // -- one column -- and ShExMap says its output schema is a column of
         // its own, which is the two-column layout its own page had.
         const columns = new Map();
-        panes.forEach(pane => {
+        panes.forEach((pane) => {
             // a pane of the app's, shown on this screen too: a slot to move it
             // into, and nothing else -- it is built, filled and cached already
             if (pane.borrow) {

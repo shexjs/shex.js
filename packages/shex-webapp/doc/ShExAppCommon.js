@@ -196,7 +196,7 @@ const HighlightMode = {
     /** the chip, the keystroke, and the momentary key */
     wire() {
         $("#highlightMode").off("click").on("click", () => this.cycle());
-        $(document).on("keydown.highlightMode", evt => {
+        $(document).on("keydown.highlightMode", (evt) => {
             if (evt.key === "Shift")
                 this.setHeld(true);
             // ctrl-alt-h: rare in browsers, and the app already speaks ctrl-<key>
@@ -207,7 +207,7 @@ const HighlightMode = {
             if (evt.key === "Escape" && this.frozen())
                 this.unpin();
         });
-        $(document).on("keyup.highlightMode", evt => {
+        $(document).on("keyup.highlightMode", (evt) => {
             if (evt.key === "Shift")
                 this.setHeld(false);
         });
@@ -275,7 +275,7 @@ class TurtleParser {
         this.blankNodeId;
         // Re-use BNode IDs for good(-enough) user experience. Recipe from:
         // https://github.com/rdfjs/N3.js/blob/520054a9fb45ef48b5b58851449942493c57dace/test/N3Parser-test.js#L6-L11
-        RdfJs.Parser.prototype._blankNode = name => RdfJs.DataFactory.blankNode(name || `b${this.blankNodeId++}`);
+        RdfJs.Parser.prototype._blankNode = (name) => RdfJs.DataFactory.blankNode(name || `b${this.blankNodeId++}`);
     }
     parseString(text, meta, base) {
         const ret = new RdfJs.Store();
@@ -316,7 +316,7 @@ class TurtleParser {
             const store = this.parseString(text, one, base);
             const scope = (term) => term.termType !== "BlankNode" ? term
                 : RdfJs.DataFactory.blankNode("d" + index + "_" + term.value);
-            ret.addQuads(store.getQuads().map(q => index === 0 ? q : RdfJs.DataFactory.quad(scope(q.subject), q.predicate, scope(q.object), q.graph)));
+            ret.addQuads(store.getQuads().map((q) => index === 0 ? q : RdfJs.DataFactory.quad(scope(q.subject), q.predicate, scope(q.object), q.graph)));
             // the first declaration of a prefix wins, as it would in one document
             for (const [prefix, iri] of Object.entries(one.prefixes || {}))
                 if (!(prefix in prefixes))
@@ -405,7 +405,7 @@ class DirectShExValidator {
         time = Date.now() - time;
         $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms");
         $("#results > .status").text("rendering results...").show();
-        await Promise.all(ret.map(entry => this.renderer.entry(entry)));
+        await Promise.all(ret.map((entry) => this.renderer.entry(entry)));
         this.renderer.finish();
         return { validationResults: ret }; // for tester or whoever is awaiting this promise
     }
@@ -537,7 +537,7 @@ class ShExResultsRenderer {
             if ($("#success").val() === "remainder") {
                 const remainder = new RdfJs.Store();
                 remainder.addQuads((await this.caches.inputData.refresh()).getQuads());
-                entry.graph.forEach(q => remainder.removeQuad(q));
+                entry.graph.forEach((q) => remainder.removeQuad(q));
                 entry.graph = remainder.getQuads();
             }
         }
@@ -621,7 +621,7 @@ class ShExResultsRenderer {
             return;
         const results = this.appinfo.map(({ renderMe }) => renderMe);
         try {
-            const { text, ranges } = ShExWebApp.EditorServices.stringifyWithOffsets(results, o => o && (o.type === "TestedTriple" || results.indexOf(o) !== -1));
+            const { text, ranges } = ShExWebApp.EditorServices.stringifyWithOffsets(results, (o) => o && (o.type === "TestedTriple" || results.indexOf(o) !== -1));
             // the pane takes its colours from where it is put, so put it there
             // first: an unattached div has no computed style to read
             const klass = this.appinfo.every(({ klass }) => klass === "passes") ? "passes" : "fails";
@@ -634,13 +634,13 @@ class ShExResultsRenderer {
             // where each result starts, by the anchor its check mark links to
             const offsets = {};
             this.appinfo.forEach(({ renderMe, anchor }) => {
-                const range = ranges.find(r => r.target === renderMe);
+                const range = ranges.find((r) => r.target === renderMe);
                 if (range && anchor !== undefined)
                     offsets[anchor] = range.from;
             });
             this.resultsWidget.resultPanes.push({
                 pane,
-                ranges: ranges.filter(r => r.target && r.target.type === "TestedTriple"),
+                ranges: ranges.filter((r) => r.target && r.target.type === "TestedTriple"),
                 offsets,
             });
         }
