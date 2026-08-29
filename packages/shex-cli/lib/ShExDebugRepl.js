@@ -29,6 +29,7 @@
 const EditorServices = require("@shexjs/editor-services");
 const {ShExValidator} = require("@shexjs/validator");
 const {ctor: RdfJsDb} = require("@shexjs/neighborhood-rdfjs");
+const {eventTracker} = require("@shexjs/eval-validator-api");
 
 class DebugQuit extends Error {}
 
@@ -45,7 +46,6 @@ class ShExDebugRepl {
     this.breakpoints = {shapes: new Set(), nodes: new Set(), constraints: new Set(), predicates: new Set()};
     this.breakpointDescriptions = [];
     this.mode = {kind: "into"}; // pause at the first event
-    this.depth = 0;
   }
 
   /** validate node (an absolute IRI or _:label) against shapeLabel (default:
@@ -53,28 +53,23 @@ class ShExDebugRepl {
    * 2 aborted */
   run (node, shapeLabel) {
     this.write("shex-debug -- s(tep) n(ext) o(ut) c(ontinue) b LINE[:COL] bs SHAPE bp PRED bn NODE info l h q\n");
+    // the shape-level events are the validator's tracker, typed
+    // (validator-api's ShapeDebugEvent); an answer from the cache is not
+    // a place to pause
+    const tracker = eventTracker(event => {
+      if (event.type !== "known")
+        this.gate(event);
+    });
     const validator = new ShExValidator(this.schema, RdfJsDb(this.graph), {
       noCache: true,
       debugHooks: {
         // one level below the shape whose evaluation ran the engine
         onConstraint: (tc, ctx) => this.gate({
-          type: "constraint", tc, point: ctx.node, triples: ctx.triples,
-          depth: this.depth + 1,
+          type: "constraint", tc, node: ctx.node, triples: ctx.triples,
+          depth: tracker.depth + 1,
         }),
       },
     });
-    const tracker = {
-      recurse: x => { this.gate({type: "recurse", node: x.node, shape: x.shape, depth: this.depth + 1}); return x; },
-      known: x => x,
-      enter: (point, label) => {
-        ++this.depth;
-        this.gate({type: "enter", point, label, depth: this.depth});
-      },
-      exit: (point, label, ret) => {
-        this.gate({type: "exit", point, label, ret, depth: this.depth});
-        --this.depth;
-      },
-    };
     let results;
     try {
       results = validator.validateShapeMap(
@@ -128,12 +123,12 @@ class ShExDebugRepl {
 
   shouldPause (event) {
     if (event.type === "enter" &&
-        (this.breakpoints.shapes.has(event.label) || this.matchesNodeBreakpoint(event.point)))
+        (this.breakpoints.shapes.has(event.shape) || this.matchesNodeBreakpoint(event.node)))
       return true;
     if (event.type === "constraint" &&
         (this.breakpoints.constraints.has(event.tc) ||
          this.breakpoints.predicates.has(event.tc.predicate) ||
-         this.matchesNodeBreakpoint(event.point)))
+         this.matchesNodeBreakpoint(event.node)))
       return true;
     switch (this.mode.kind) {
     case "into": return true;
@@ -240,21 +235,21 @@ class ShExDebugRepl {
 
   showEvent (event, sourceOnly = false) {
     const where = event.type === "constraint" ? this.located.locate.expr(event.tc)
-          : typeof event.label === "string" ? this.located.locate.shape(event.label) : null;
+          : typeof event.shape === "string" ? this.located.locate.shape(event.shape) : null;
     if (!sourceOnly)
       switch (event.type) {
       case "constraint":
-        this.write("at " + this.lex(event.tc.predicate) + " for " + this.pointStr(event.point) +
+        this.write("at " + this.lex(event.tc.predicate) + " for " + this.pointStr(event.node) +
                    " (" + event.triples.length + " candidate triple" + (event.triples.length === 1 ? "" : "s") + ")" +
                    "  [depth " + event.depth + "]\n");
         break;
       case "enter":
-        this.write("enter " + this.pointStr(event.point) + "@" + this.lex(event.label) +
+        this.write("enter " + this.pointStr(event.node) + "@" + this.lex(event.shape) +
                    "  [depth " + event.depth + "]\n");
         break;
       case "exit":
-        this.write("exit  " + this.pointStr(event.point) + "@" + this.lex(event.label) +
-                   " -> " + (event.ret && "errors" in event.ret ? "fail" : "ok") +
+        this.write("exit  " + this.pointStr(event.node) + "@" + this.lex(event.shape) +
+                   " -> " + (event.result && "errors" in event.result ? "fail" : "ok") +
                    "  [depth " + event.depth + "]\n");
         break;
       case "recurse":

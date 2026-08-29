@@ -19,6 +19,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@shexjs/eval-validator-api": "^1.0.0-alpha.29",
     "@shexjs/editor-services": "^1.0.0-alpha.29",
     "@shexjs/extension-eval": "^1.0.0-alpha.28",
     "@shexjs/extension-map": "^1.0.0-alpha.29",

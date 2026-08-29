@@ -129,8 +129,10 @@ parsers depend on it and `tripleConstraint` takes its merged `@$` as is
 The capture is by the selected engine and the replay by eval-simple-1err's
 stepper, the status saying so when they differ (E1), and a replay runs no
 semantic action: they answer from what was recorded at capture (E3,
-`recordingSemActHandler`/`replayingSemActHandler` in validator-api) --
-both 2026-08-29.
+`recordingSemActHandler`/`replayingSemActHandler` in validator-api); the
+validator's tracker is the typed shape-level event source (E8,
+`ShapeDebugEvent`/`eventTracker`, which `shex-debug` rides) -- all
+2026-08-29.
 
 Short, high value:
 
@@ -148,8 +150,6 @@ Short, high value:
   both suites stay green unchanged.
 - **E7 (S–M)** Richer `debugHooks`: thread/backtracking state and
   per-candidate pass/fail on `onConstraint`, plus an `onConstraintResult`.
-- **E8 (S)** Formalize the validator `tracker` as the shape-level debug
-  event source (payload types in `validator-api`, a doc section).
 
 Larger, design conversation first:
 

@@ -2,7 +2,7 @@ import * as ShExJ from 'shexj';
 import * as RdfJs from '@rdfjs/types/data-model';
 import {shapeExprTest, Recursion, SemActFailure} from "@shexjs/term/shexv";
 // import {NeighborhoodDb} from "@shexjs/neighborhood-api";
-import {SchemaIndex} from "@shexjs/term";
+import {SchemaIndex, ld2RdfJsTerm} from "@shexjs/term";
 import {Quad as RdfJsQuad} from "@rdfjs/types";
 import {TripleConstraint} from "shexj";
 
@@ -175,11 +175,53 @@ export interface ValidatorRegexEngine {
   ): shapeExprTest;
 }
 
+/** What ShExValidator reports as it goes: a focus node entering a shape
+ * and leaving it with its result, a recursion cut off, an answer it
+ * already had.  eventTracker turns these into ShapeDebugEvents. */
 export interface QueryTracker {
   enter (term: RdfJs.Term, shapeLabel: string): void;
   exit (term: RdfJs.Term, shapeLabel: string, res: shapeExprTest): void;
   recurse (rec: Recursion): void;
   known (res: shapeExprTest): void;
+}
+
+/**
+ * The shape-level debug events: one vocabulary over what the validator's
+ * tracker sees (doc/debugger-design.md §2, §4).  `depth` is the nesting of
+ * enter/exit -- what a debugger steps over and out by; a recursion or a
+ * cached answer is reported one deeper than the shape that asked.  The
+ * constraint-level events under these come from the regex engines'
+ * RegexDebugHooks.
+ */
+export type ShapeDebugEvent =
+    {type: "enter", node: RdfJs.Term, shape: string, depth: number}
+  | {type: "exit", node: RdfJs.Term, shape: string, result: shapeExprTest, depth: number}
+  | {type: "recurse", node: RdfJs.Term, shape: string, depth: number}
+  | {type: "known", result: shapeExprTest, depth: number};
+
+/** eventTracker - the tracker ShExValidator takes, as a stream of
+ * ShapeDebugEvents to `onEvent`.  `depth` is readable between events, for
+ * a constraint-level hook that nests under the current shape. */
+export function eventTracker (onEvent: (event: ShapeDebugEvent) => void): QueryTracker & {depth: number} {
+  const tracker = {
+    depth: 0,
+    enter (node: RdfJs.Term, shape: string): void {
+      ++tracker.depth;
+      onEvent({type: "enter", node, shape, depth: tracker.depth});
+    },
+    exit (node: RdfJs.Term, shape: string, result: shapeExprTest): void {
+      onEvent({type: "exit", node, shape, result, depth: tracker.depth});
+      --tracker.depth;
+    },
+    recurse (rec: Recursion): void {
+      onEvent({type: "recurse", node: ld2RdfJsTerm(rec.node) as RdfJs.Term, shape: rec.shape as string,
+               depth: tracker.depth + 1});
+    },
+    known (result: shapeExprTest): void {
+      onEvent({type: "known", result, depth: tracker.depth + 1});
+    },
+  };
+  return tracker;
 }
 
 export interface SemActDispatcher {

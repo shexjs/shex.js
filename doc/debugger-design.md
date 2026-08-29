@@ -86,6 +86,12 @@ One vocabulary for both engines (materializer emits the first three today):
                                          alternatives choosers / thread lists
 ```
 
+The validation side's shape-level events are its tracker, typed:
+`ShapeDebugEvent` in `@shexjs/eval-validator-api` (`enter`, `exit` with the
+result, `recurse`, `known`, each with its `depth`), and `eventTracker(onEvent)`
+is the tracker `ShExValidator` takes, emitting them.  `shex-debug` rides it;
+the browser's capture/replay steps below it, inside one match.
+
 `thread` is the inspectable snapshot: for the materializer
 `{subject, depth, frame, consumed, emitted}` — watching `frame`/`consumed`
 move through the binding tree is the ShExMap "variables view".  For
@@ -124,10 +130,9 @@ validation:
 
 ## 4. Validation-side engine work (the unimplemented half)
 
-- **Shape-level events come almost free**: `ShExValidator` already accepts a
-  `tracker` (`{enter, exit, recurse, known}` — used by `LOG_PROGRESS`).
-  Formalize it as the debug event source (add `node`/`shape` payloads it
-  already passes) — that alone gives shape-granularity stepping.
+- ✅ **Shape-level events come almost free**: `ShExValidator` accepts a
+  `tracker` (`{enter, exit, recurse, known}`); it is the debug event
+  source, typed as `ShapeDebugEvent` and emitted by `eventTracker` (§2).
 - **TripleConstraint-level events need one hook in the regex engines**:
   both `eval-threaded-nerr` and `eval-simple-1err` are ours and pluggable
   (`options.regexModule`).  Add an optional `debugHooks.onConstraint(tc,

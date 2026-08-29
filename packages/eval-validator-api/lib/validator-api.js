@@ -4,6 +4,9 @@ exports.MapArray = void 0;
 exports.capturingRegexModule = capturingRegexModule;
 exports.recordingSemActHandler = recordingSemActHandler;
 exports.replayingSemActHandler = replayingSemActHandler;
+exports.eventTracker = eventTracker;
+// import {NeighborhoodDb} from "@shexjs/neighborhood-api";
+const term_1 = require("@shexjs/term");
 class MapArray {
     constructor() {
         this.data = new Map(); // public 'cause I don't know how to fix reduce to use this.data
@@ -110,4 +113,28 @@ function replayingSemActHandler(log, inner) {
         return [];
     };
     return handler;
+}
+/** eventTracker - the tracker ShExValidator takes, as a stream of
+ * ShapeDebugEvents to `onEvent`.  `depth` is readable between events, for
+ * a constraint-level hook that nests under the current shape. */
+function eventTracker(onEvent) {
+    const tracker = {
+        depth: 0,
+        enter(node, shape) {
+            ++tracker.depth;
+            onEvent({ type: "enter", node, shape, depth: tracker.depth });
+        },
+        exit(node, shape, result) {
+            onEvent({ type: "exit", node, shape, result, depth: tracker.depth });
+            --tracker.depth;
+        },
+        recurse(rec) {
+            onEvent({ type: "recurse", node: (0, term_1.ld2RdfJsTerm)(rec.node), shape: rec.shape,
+                depth: tracker.depth + 1 });
+        },
+        known(result) {
+            onEvent({ type: "known", result, depth: tracker.depth + 1 });
+        },
+    };
+    return tracker;
 }
