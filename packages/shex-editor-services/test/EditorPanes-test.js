@@ -11,7 +11,7 @@ const expect = require("chai").expect;
 let jsdom;
 
 describe("EditorPanes", function () {
-  let dom, saved, makePane, shexcStreamParser;
+  let dom, saved, makePane, languages;
 
   before(function () {
     try {
@@ -33,7 +33,7 @@ describe("EditorPanes", function () {
         Object.defineProperty(global, key, {configurable: true, value: dom.window[key === "window" ? "window" : key] || dom.window[key]});
       } catch (e) { /* navigator may be read-only; jsdom's is compatible */ }
     }
-    ({makePane, shexcStreamParser} = require("../lib/editor-panes"));
+    ({makePane, languages} = require("../lib/editor-panes"));
   });
 
   after(function () {
@@ -489,21 +489,18 @@ describe("EditorPanes", function () {
     });
   });
 
-  it("should tokenize ShExC approximately", function () {
-    const {StringStream} = require("@codemirror/language");
-    const kinds = [];
-    const state = shexcStreamParser.startState();
-    const stream = new StringStream("PREFIX ex: <http://a.example/> # cmt", 2, 2);
-    while (!stream.eol()) {
-      stream.start = stream.pos;
-      const kind = shexcStreamParser.token(stream, state);
-      if (kind)
-        kinds.push(kind);
-      if (stream.pos === stream.start)
-        stream.next();
-    }
-    expect(kinds).to.include("keyword"); // PREFIX
-    expect(kinds).to.include("link");    // the IRI
-    expect(kinds).to.include("comment"); // # cmt
+  /* The schema pane parses ShExC exactly (lezer-shexc): the tree names
+   * the constructs, and a broken schema still parses around the break. */
+  it("should parse ShExC exactly, and tolerantly", function () {
+    const text = "PREFIX ex: <http://a.example/> # cmt\nex:S { ex:p . ; ex:q }\nex:T { ex:r IRI }\n";
+    const tree = languages.shexc().parser.parse(text);
+    const names = [];
+    let errors = 0;
+    tree.iterate({enter (node) { names.push(node.name); if (node.type.isError) ++errors; }});
+    expect(names).to.include("PrefixDecl");
+    expect(names).to.include("Comment");
+    expect(names).to.include("TripleConstraint");
+    expect(errors, "ex:q has no value: one error").to.be.above(0);
+    expect(names.filter(n => n === "ShapeExprDecl").length, "both declarations still there").to.equal(2);
   });
 });

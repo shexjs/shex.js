@@ -10,3 +10,7 @@ declare module "lezer-turtle/emit" {
   export function quadKey (quad: any): string;
   export function resolveIri (iri: string, base: string | null): string;
 }
+declare module "lezer-shexc" {
+  export const parser: any;
+  export const highlighting: any;
+}

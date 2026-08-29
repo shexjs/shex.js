@@ -15,11 +15,13 @@
 import {basicSetup} from "codemirror";
 import {EditorView, Decoration, DecorationSet, gutter, GutterMarker, Tooltip, showTooltip} from "@codemirror/view";
 import {StateField, StateEffect, Extension, RangeSet, EditorState, Annotation} from "@codemirror/state";
-import {StreamLanguage, StreamParser, LRLanguage} from "@codemirror/language";
+import {StreamLanguage, StreamParser, LRLanguage, foldNodeProp, foldInside,
+        indentNodeProp, delimitedIndent} from "@codemirror/language";
 import {linter, setDiagnostics, lintGutter, LintSource} from "@codemirror/lint";
 import {autocompletion, CompletionContext, CompletionResult, Completion} from "@codemirror/autocomplete";
 import {json, jsonParseLinter} from "@codemirror/lang-json";
 import {parser as lezerTurtleParser} from "lezer-turtle";
+import {parser as lezerShExCParser} from "lezer-shexc";
 import * as EditorServices from "./editor-services";
 import {Diagnostic, Range} from "./editor-services";
 
@@ -186,49 +188,34 @@ export interface Pane {
 }
 
 // ---------------------------------------------------------------------------
-// ShExC stream tokenizer: approximate colors; semantic truth (diagnostics,
-// shape/error ranges) comes from the real parser via editor-services.
+// ShExC via lezer-shexc: the grammar the validator's parser has, in the
+// editor's parser model -- exact colours, incremental, and tolerant of the
+// half-typed (a schema with an error still parses around it).  The
+// semantic truth (diagnostics, shape/error ranges) still comes from the
+// real parser via editor-services.
+const shexcLanguage = LRLanguage.define({
+  parser: lezerShExCParser.configure({
+    props: [
+      foldNodeProp.add({
+        InlineShapeDefinition: foldInside,
+        ValueSet: foldInside,
+        BracketedTripleExpr: foldInside,
+      }),
+      indentNodeProp.add({
+        InlineShapeDefinition: delimitedIndent({closing: "}"}),
+        ValueSet: delimitedIndent({closing: "]"}),
+        BracketedTripleExpr: delimitedIndent({closing: ")"}),
+      }),
+    ],
+  }),
+  languageData: {commentTokens: {line: "#", block: {open: "/*", close: "*/"}}},
+});
 
-interface ShExCState {
+/** the state a stream tokenizer keeps: the closing quote of the string it
+ * is in, if it is in one */
+interface StringState {
   inString: string | null;
 }
-
-const shexcKeywords = /^(?:PREFIX|BASE|IMPORT|START|EXTERNAL|ABSTRACT|CLOSED|EXTRA|NOT|AND|OR|IF|MININCLUSIVE|MAXINCLUSIVE|MINEXCLUSIVE|MAXEXCLUSIVE|LENGTH|MINLENGTH|MAXLENGTH|TOTALDIGITS|FRACTIONDIGITS|IRI|BNODE|NONLITERAL|LITERAL)\b/i;
-
-export const shexcStreamParser: StreamParser<ShExCState> = {
-  name: "shexc",
-  startState: () => ({inString: null}),
-  token (stream, state) {
-    if (state.inString) {
-      while (!stream.eol()) {
-        if (stream.match(state.inString)) { state.inString = null; break; }
-        if (stream.next() === "\\") stream.next();
-      }
-      return "string";
-    }
-    if (stream.eatSpace()) return null;
-    if (stream.match(/^#.*/)) return "comment";
-    if (stream.match(/^<[^<>"{}|^`\\ ]*>/)) return "link"; // IRIs
-    if (stream.match(/^('''|""")/)) { state.inString = stream.current(); return "string"; }
-    if (stream.match(/^"(?:[^"\\\n]|\\.)*"/) || stream.match(/^'(?:[^'\\\n]|\\.)*'/)) {
-      stream.match(/^\^\^/) || stream.match(/^@[a-zA-Z-]+/);
-      return "string";
-    }
-    if (stream.match(/^@[A-Za-z_][A-Za-z0-9_.-]*:?[^\s;|)}?*+]*/)) return "typeName"; // @<shapeRef>, @pname
-    if (stream.match(/^@</)) { stream.match(/^[^>]*>/); return "typeName"; }
-    if (stream.match(shexcKeywords)) return "keyword";
-    if (stream.match(/^(?:true|false)\b/)) return "atom";
-    if (stream.match(/^[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/)) return "number";
-    if (stream.match(/^\{\s*\d+\s*(?:,\s*(?:\d+|\*)?\s*)?\}/)) return "number"; // {m,n}
-    if (stream.match(/^%[^%]*/)) return "meta"; // semantic actions
-    if (stream.match(/^[A-Za-z_][A-Za-z0-9_.-]*:[A-Za-z0-9_.:%\\-]*/)) return "variableName"; // pname
-    if (stream.match(/^a\b/)) return "keyword";
-    if (stream.match(/^[*+?]/)) return "number"; // cardinalities
-    if (stream.match(/^[$&^]/)) return "operator";
-    stream.next();
-    return null;
-  },
-};
 
 /** Turtle via the incremental, error-recovering lezer-turtle grammar
  * (RDF 1.2; the same parse tree that powers provenance tracking). */
@@ -238,7 +225,7 @@ const turtleLanguage = LRLanguage.define({parser: lezerTurtleParser});
  * write terms, `@` with a status between each pair's two sides, `{FOCUS
  * ...}` triple patterns, a reason and appinfo after.  Approximate, like the
  * ShExC tokenizer; the parser's diagnostics are the truth. */
-export const shapeMapStreamParser: StreamParser<ShExCState> = {
+export const shapeMapStreamParser: StreamParser<StringState> = {
   name: "shapemap",
   startState: () => ({inString: null}),
   token (stream, state) {
@@ -274,7 +261,7 @@ export const shapeMapStreamParser: StreamParser<ShExCState> = {
 };
 
 export const languages: {[lang in PaneLanguage]: () => Extension} = {
-  shexc: () => StreamLanguage.define(shexcStreamParser),
+  shexc: () => shexcLanguage,
   turtle: () => turtleLanguage,
   json: () => json(),
   shapemap: () => StreamLanguage.define(shapeMapStreamParser),
@@ -830,7 +817,7 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
         || (supplied && languages[supplied.language as PaneLanguage] ? supplied.language as PaneLanguage : undefined);
 
   if (language === "shexc" || language === "turtle" || language === "shapemap") {
-    const lang = language === "shexc" ? StreamLanguage.define(shexcStreamParser)
+    const lang = language === "shexc" ? shexcLanguage
           : language === "shapemap" ? StreamLanguage.define(shapeMapStreamParser)
           : turtleLanguage;
     extensions.push(lang);

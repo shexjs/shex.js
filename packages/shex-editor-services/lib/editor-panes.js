@@ -46,7 +46,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CHANGE_DEBOUNCE_MS = exports.languages = exports.shapeMapStreamParser = exports.shexcStreamParser = void 0;
+exports.CHANGE_DEBOUNCE_MS = exports.languages = exports.shapeMapStreamParser = void 0;
 exports.lexicalize = lexicalize;
 exports.completionSource = completionSource;
 exports.makeResultPane = makeResultPane;
@@ -61,6 +61,7 @@ const lint_1 = require("@codemirror/lint");
 const autocomplete_1 = require("@codemirror/autocomplete");
 const lang_json_1 = require("@codemirror/lang-json");
 const lezer_turtle_1 = require("lezer-turtle");
+const lezer_shexc_1 = require("lezer-shexc");
 const EditorServices = __importStar(require("./editor-services"));
 /** lexicalize - shortest lexical form for an IRI under the given prefixes */
 function lexicalize(iri, prefixes) {
@@ -100,64 +101,29 @@ function completionSource(getSets) {
             : null;
     };
 }
-const shexcKeywords = /^(?:PREFIX|BASE|IMPORT|START|EXTERNAL|ABSTRACT|CLOSED|EXTRA|NOT|AND|OR|IF|MININCLUSIVE|MAXINCLUSIVE|MINEXCLUSIVE|MAXEXCLUSIVE|LENGTH|MINLENGTH|MAXLENGTH|TOTALDIGITS|FRACTIONDIGITS|IRI|BNODE|NONLITERAL|LITERAL)\b/i;
-exports.shexcStreamParser = {
-    name: "shexc",
-    startState: () => ({ inString: null }),
-    token(stream, state) {
-        if (state.inString) {
-            while (!stream.eol()) {
-                if (stream.match(state.inString)) {
-                    state.inString = null;
-                    break;
-                }
-                if (stream.next() === "\\")
-                    stream.next();
-            }
-            return "string";
-        }
-        if (stream.eatSpace())
-            return null;
-        if (stream.match(/^#.*/))
-            return "comment";
-        if (stream.match(/^<[^<>"{}|^`\\ ]*>/))
-            return "link"; // IRIs
-        if (stream.match(/^('''|""")/)) {
-            state.inString = stream.current();
-            return "string";
-        }
-        if (stream.match(/^"(?:[^"\\\n]|\\.)*"/) || stream.match(/^'(?:[^'\\\n]|\\.)*'/)) {
-            stream.match(/^\^\^/) || stream.match(/^@[a-zA-Z-]+/);
-            return "string";
-        }
-        if (stream.match(/^@[A-Za-z_][A-Za-z0-9_.-]*:?[^\s;|)}?*+]*/))
-            return "typeName"; // @<shapeRef>, @pname
-        if (stream.match(/^@</)) {
-            stream.match(/^[^>]*>/);
-            return "typeName";
-        }
-        if (stream.match(shexcKeywords))
-            return "keyword";
-        if (stream.match(/^(?:true|false)\b/))
-            return "atom";
-        if (stream.match(/^[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/))
-            return "number";
-        if (stream.match(/^\{\s*\d+\s*(?:,\s*(?:\d+|\*)?\s*)?\}/))
-            return "number"; // {m,n}
-        if (stream.match(/^%[^%]*/))
-            return "meta"; // semantic actions
-        if (stream.match(/^[A-Za-z_][A-Za-z0-9_.-]*:[A-Za-z0-9_.:%\\-]*/))
-            return "variableName"; // pname
-        if (stream.match(/^a\b/))
-            return "keyword";
-        if (stream.match(/^[*+?]/))
-            return "number"; // cardinalities
-        if (stream.match(/^[$&^]/))
-            return "operator";
-        stream.next();
-        return null;
-    },
-};
+// ---------------------------------------------------------------------------
+// ShExC via lezer-shexc: the grammar the validator's parser has, in the
+// editor's parser model -- exact colours, incremental, and tolerant of the
+// half-typed (a schema with an error still parses around it).  The
+// semantic truth (diagnostics, shape/error ranges) still comes from the
+// real parser via editor-services.
+const shexcLanguage = language_1.LRLanguage.define({
+    parser: lezer_shexc_1.parser.configure({
+        props: [
+            language_1.foldNodeProp.add({
+                InlineShapeDefinition: language_1.foldInside,
+                ValueSet: language_1.foldInside,
+                BracketedTripleExpr: language_1.foldInside,
+            }),
+            language_1.indentNodeProp.add({
+                InlineShapeDefinition: (0, language_1.delimitedIndent)({ closing: "}" }),
+                ValueSet: (0, language_1.delimitedIndent)({ closing: "]" }),
+                BracketedTripleExpr: (0, language_1.delimitedIndent)({ closing: ")" }),
+            }),
+        ],
+    }),
+    languageData: { commentTokens: { line: "#", block: { open: "/*", close: "*/" } } },
+});
 /** Turtle via the incremental, error-recovering lezer-turtle grammar
  * (RDF 1.2; the same parse tree that powers provenance tracking). */
 const turtleLanguage = language_1.LRLanguage.define({ parser: lezer_turtle_1.parser });
@@ -220,7 +186,7 @@ exports.shapeMapStreamParser = {
     },
 };
 exports.languages = {
-    shexc: () => language_1.StreamLanguage.define(exports.shexcStreamParser),
+    shexc: () => shexcLanguage,
     turtle: () => turtleLanguage,
     json: () => (0, lang_json_1.json)(),
     shapemap: () => language_1.StreamLanguage.define(exports.shapeMapStreamParser),
@@ -717,7 +683,7 @@ function makePane(textarea, opts = {}) {
     const language = opts.language
         || (supplied && exports.languages[supplied.language] ? supplied.language : undefined);
     if (language === "shexc" || language === "turtle" || language === "shapemap") {
-        const lang = language === "shexc" ? language_1.StreamLanguage.define(exports.shexcStreamParser)
+        const lang = language === "shexc" ? shexcLanguage
             : language === "shapemap" ? language_1.StreamLanguage.define(exports.shapeMapStreamParser)
                 : turtleLanguage;
         extensions.push(lang);
