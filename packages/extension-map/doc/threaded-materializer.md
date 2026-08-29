@@ -135,7 +135,15 @@ discovery order).  The full list is exposed as `materializer.accepts`
 winner, and `lastReport.alternatives` counts them, so UIs can hand the
 choice to the user when the materialization is ambiguous (the `ambiguous`
 example; shexmap-simple renders the alternatives as buttons, and
-`shexmap-debug`'s `t` command lists them).
+`shexmap-debug`'s `t` command lists them).  A caller with its own weighing
+-- of which bindings were forfeited, of shape coverage -- hands in
+`options.prefer(a, b)`, a comparator over accepts, and that order is used
+instead.
+
+An optional subshape whose constraints are all constants or staticVars
+consumes nothing and emits an island anyway (the vacuous-descend rule
+drops only a subshape that emitted nothing).  `options.requireBindingsInSubshapes`
+drops those too: islands only where the bindings asked for one.
 
 This DFS scheduling makes the prototype equivalent to a backtracking regex
 engine. Nothing in the thread structure depends on that choice: stepping all
@@ -144,7 +152,9 @@ needs a dedup key of `(stateNo, callStack, cursor)` — which would also
 subsume the exploration budget below.
 
 Guards: unbounded cardinalities clamp at `maxRepeat` (50, like
-`MAX_MAX_CARD`), cyclic shape references die at `maxCallDepth`, a global
+`MAX_MAX_CARD`), cyclic shape references die at `maxCallDepth` -- and a
+cycle through And/Or references, which would compile forever, is refused
+by name (`cycle in shape expressions: A -> B -> A`) -- a global
 `maxSteps` bounds pathological fan-out, and once one thread has accepted,
 `exploreSteps` (default 10000) bounds how long the search keeps hunting for
 better/alternative materializations before settling for the best so far

@@ -343,4 +343,66 @@ describe("ThreadedMaterializer", function () {
       expect(store.size).to.equal(2); // both TCs see the static
     });
   });
+
+  describe("shape expressions it cannot synthesize", function () {
+    it("should refuse a cycle of references, naming it", function () {
+      const schema = parseSchema("PREFIX : <http://a.example/>\n<A> @<B> OR { :p [1] }\n<B> @<A> OR { :q [2] }\n");
+      expect(() => new ThreadedMaterializer(schema).materialize({}, "_:x", schemaBase + "A"))
+        .to.throw(MaterializationError, "cycle in shape expressions: " + schemaBase + "A -> " + schemaBase + "B -> " + schemaBase + "A");
+    });
+
+    it("should refuse a ShapeNot, plainly", function () {
+      const schema = parseSchema("PREFIX : <http://a.example/>\n<A> NOT { :p [1] }\n");
+      expect(() => new ThreadedMaterializer(schema).materialize({}, "_:x", schemaBase + "A"))
+        .to.throw(MaterializationError, /ShapeNot synthesis not supported/);
+    });
+  });
+
+  /* An optional subshape whose constraints are all constants consumes no
+   * binding and emits an island anyway; a caller who wants islands only
+   * where the bindings asked for one says so. */
+  describe("a static-only optional subshape", function () {
+    const schema = parseSchema([
+      "PREFIX : <http://a.example/>",
+      "PREFIX Map: <http://shex.io/extensions/Map/#>",
+      "<S> { :name . %Map:{ :n %} ; :seen @<T> ? }",
+      "<T> { :kind [:fixed] }",
+    ].join("\n"));
+    const bindings = {"http://a.example/n": {value: "Bob"}};
+    const predicates = quads => quads.map(q => q.predicate.value.replace("http://a.example/", ":"));
+
+    it("should emit its island by default", function () {
+      const quads = new ThreadedMaterializer(schema).materialize(bindings, "_:x", schemaBase + "S");
+      expect(predicates(quads).sort()).to.deep.equal([":kind", ":name", ":seen"]);
+    });
+
+    it("should leave it out where every island must consume a binding", function () {
+      const quads = new ThreadedMaterializer(schema, {requireBindingsInSubshapes: true})
+            .materialize(bindings, "_:x", schemaBase + "S");
+      expect(predicates(quads)).to.deep.equal([":name"]);
+    });
+  });
+
+  /* Where several accepts are viable, the default order stands -- and a
+   * caller with a different weighing of what was forfeited, or of coverage,
+   * hands in a comparator. */
+  describe("choosing among accepts", function () {
+    const schema = parseSchema(Fs.readFileSync(Path.join(examplesDir, "card-flat-schema.shex"), "utf8"));
+    const bindings = JSON.parse(Fs.readFileSync(Path.join(examplesDir, "ambiguous-bindings.json"), "utf8"));
+    const has = (accept, local) => accept.quads.some(q => q.predicate.value.endsWith("#" + local));
+
+    it("should take the first disjunct's accept by default", function () {
+      const m = new ThreadedMaterializer(schema);
+      const quads = m.materialize(bindings, "_:c");
+      expect(m.accepts.length, "both disjuncts accepted").to.equal(2);
+      expect(has({quads}, "phone")).to.equal(true);
+    });
+
+    it("should take whichever the caller's comparator prefers", function () {
+      const m = new ThreadedMaterializer(schema, {prefer: (a, b) => (has(b, "mbox") ? 1 : 0) - (has(a, "mbox") ? 1 : 0)});
+      const quads = m.materialize(bindings, "_:c");
+      expect(has({quads}, "mbox")).to.equal(true);
+      expect(m.chosen.quads).to.equal(quads);
+    });
+  });
 });

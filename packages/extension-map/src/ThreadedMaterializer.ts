@@ -183,7 +183,10 @@ function cursorGet (frames: any, globals: any, cursor: any, varName: any) {
 class ThreadedMaterializer {
   schema: any; index: any; prefixes: any; globals: any;
   maxRepeat: number; maxCallDepth: number; maxSteps: number; maxAccepts: number; exploreSteps: number;
+  prefer: ((a: any, b: any) => number) | null;
+  requireBindingsInSubshapes: boolean;
   _nfaCache: Map<any, any>;
+  _compiling: {se: any, label: string}[];
   accepts: any; chosen: any; provenance: any; lastReport: any; frames?: any;
   frameOrigins?: any; failures?: any; _live?: any;
 
@@ -199,7 +202,17 @@ class ThreadedMaterializer {
     // once one thread has accepted, how many more steps to spend looking for
     // better/alternative materializations before settling for the best so far
     this.exploreSteps = options.exploreSteps || 10000;
+    // which accept to return, where several are viable: a comparator over
+    // {quads, consumed, skipped, thread}, negative when its first argument
+    // is the better -- the caller's own weighing of what was forfeited, or
+    // of shape coverage.  Default: most bindings consumed, then fewest
+    // forfeited by advances, then most quads emitted, then discovery order.
+    this.prefer = typeof options.prefer === "function" ? options.prefer : null;
+    // an optional subshape that consumed no frame binding (a static-only
+    // island: constants and staticVars) is dropped rather than emitted
+    this.requireBindingsInSubshapes = options.requireBindingsInSubshapes === true;
     this._nfaCache = new Map();
+    this._compiling = [];
   }
 
   /** materialize - synthesize a graph instance of shapeLabel (default: start)
@@ -356,7 +369,10 @@ class ThreadedMaterializer {
           // the skip arm already queued yields the same content without it.
           // (A REQUIRED constraint keeps its empty island, as the old
           // materializer did.)
-          if (frame.skippable && th.quads === frame.quadsMark && th.cursor.n === frame.consumedMark)
+          // (...or, with requireBindingsInSubshapes, emitted only statics:
+          // an island nothing in the bindings asked for.)
+          if (frame.skippable && th.cursor.n === frame.consumedMark
+              && (th.quads === frame.quadsMark || this.requireBindingsInSubshapes))
             break;
           frame.outs.forEach((out: any) => stack.push(Object.assign({}, th, {
             nfa: frame.nfa, stateNo: out,
@@ -423,13 +439,17 @@ class ThreadedMaterializer {
       throw finishReport(new MaterializationError("no thread reached an accepting state", failures));
     finishReport(null);
     // most bindings consumed; ties: fewest forfeited by advances, then most
-    // emitted, then discovery (greedy) order
+    // emitted, then discovery (greedy) order -- unless the caller weighs
+    // them otherwise (options.prefer)
+    const better = this.prefer
+          ? (a: any, b: any) => this.prefer!(a, b) < 0
+          : (a: any, b: any) => a.consumed > b.consumed
+            || (a.consumed === b.consumed
+                && (a.skipped < b.skipped
+                    || (a.skipped === b.skipped && a.quads.length > b.quads.length)));
     let best = accepts[0];
     for (const a of accepts)
-      if (a.consumed > best.consumed
-          || (a.consumed === best.consumed
-              && (a.skipped < best.skipped
-                  || (a.skipped === best.skipped && a.quads.length > best.quads.length))))
+      if (better(a, best))
         best = a;
     this.chosen = best;
     // provenance of the returned graph, parallel to its quads
@@ -622,19 +642,31 @@ class ThreadedMaterializer {
     const se = this._resolveShapeExpr(shapeExpr);
     if (this._nfaCache.has(se))
       return this._nfaCache.get(se);
+    // An And/Or that reaches itself through its references (<A> @<B> OR
+    // ..., <B> @<A> OR ...) would compile forever: the cache is written
+    // only once a compilation is through.  Say which loop, and stop.
+    const label = typeof shapeExpr === "string" ? shapeExpr : "(inline " + se.type + ")";
+    const already = this._compiling.findIndex(c => c.se === se);
+    if (already !== -1)
+      runtimeError("cycle in shape expressions: ",
+                   this._compiling.slice(already).map(c => c.label).concat(label).join(" -> "));
+    this._compiling.push({se, label});
     let nfa;
-    if (se.type === "Shape") {
-      nfa = this._nfaFor(se);
-    } else if (se.type === "ShapeAnd" || se.type === "ShapeOr") {
-      const parts = se.shapeExprs
-            .map((nested: any) => this._resolveShapeExpr(nested))
-            .filter((nested: any) => nested.type !== "NodeConstraint")
-            .map((nested: any) => this._compileShapeExprNFA(nested));
-      nfa = se.type === "ShapeAnd" ? concatNFAs(parts) : splitNFAs(parts);
-    } else if (se.type === "NodeConstraint") {
-      nfa = {states: [{type: "Match"}], start: 0};
-    } else {
-      runtimeError(se.type + " synthesis not supported by this prototype");
+    try {
+      if (se.type === "Shape") {
+        nfa = this._nfaFor(se);
+      } else if (se.type === "ShapeAnd" || se.type === "ShapeOr") {
+        const parts = se.shapeExprs
+              .filter((nested: any) => this._resolveShapeExpr(nested).type !== "NodeConstraint")
+              .map((nested: any) => this._compileShapeExprNFA(nested)); // by reference, so a cycle can be named
+        nfa = se.type === "ShapeAnd" ? concatNFAs(parts) : splitNFAs(parts);
+      } else if (se.type === "NodeConstraint") {
+        nfa = {states: [{type: "Match"}], start: 0};
+      } else {
+        runtimeError(se.type + " synthesis not supported by this prototype");
+      }
+    } finally {
+      this._compiling.pop();
     }
     this._nfaCache.set(se, nfa);
     return nfa;

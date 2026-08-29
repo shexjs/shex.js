@@ -164,16 +164,17 @@ Larger, design conversation first:
 
 ## F. Materializer (`ThreadedMaterializer`)
 
+The acceptance order is pluggable (F2, `options.prefer`: a caller weighs
+forfeited bindings or coverage as it likes; the default order stands), a
+cycle through And/Or references is refused by name rather than
+overflowing the stack and ShapeNot stays a clean error (F3), and
+`options.requireBindingsInSubshapes` drops the islands a static-only
+optional subshape would emit unasked (F4) -- all 2026-08-29.
+
 - **F1 (L)** PikeVM worklist dedup on (state, callStack, cursor); subsumes
   the post-accept `exploreSteps` budget that can settle for a suboptimal
   accept (`lastReport.explorationTruncated`).  The design note sketches it
   and the lazy-DFA beyond.
-- **F2 (S–M)** Acceptance heuristic: weigh which bindings were forfeited,
-  or shape coverage.  Alternatives are already offered to the user.
-- **F3 (M)** Cycle guard in `_compileShapeExprNFA` for And/Or reference
-  cycles; `ShapeNot` synthesis (clean error today).
-- **F4 (S)** Static-only optional subshapes emit one island per repetition
-  window; a "must consume ≥ 1 frame binding" mode.
 
 ## G. Errors and validation
 
