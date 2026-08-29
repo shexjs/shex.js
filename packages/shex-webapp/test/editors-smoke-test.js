@@ -563,6 +563,46 @@ if (!TEST_browser) {
         expect(source().params().pages.length).to.equal(2);
       });
 
+      /* A data entry is marked `.selected` when the pane holds its document
+       * (found by a checksum of the text, so an edited pane finds its entry
+       * again).  An entry with no document -- a query service is the data
+       * -- used to be filed under the checksum of "", so an empty pane
+       * claimed it: pick another schema and its data button lit up 300ms
+       * later, unasked; type a character and it went out again. */
+      it("should not take an empty pane for an entry that has no document", async function () {
+        await shared.Caches.manifest.set([{
+          schemaLabel: "s", schema: "PREFIX : <http://a.example/>\n<#S> {}",
+          dataLabel: "a service", neighborhood: "sparql", endpoint: "http://sparql.example/",
+          queryMap: '<http://a.example/x>@<#S>',
+        }, {
+          schemaLabel: "s", schema: "PREFIX : <http://a.example/>\n<#S> {}",
+          dataLabel: "a document", data: "PREFIX : <http://a.example/>\n:x :p 1 .\n",
+          queryMap: '<http://a.example/x>@<#S>',
+        }], "http://localhost/manifest.json");
+        const settle = () => new Promise(resolve => setTimeout(resolve, 400));   // past INPUTAREA_TIMEOUT
+        const button = label => $("#inputData .indeterminant li").filter((i, li) => $(li).text() === label);
+
+        $("#inputSchema .manifest li").last().trigger("click");
+        await shared.promise;
+        $("#inputData textarea").first().trigger("keyup");    // as the pane's editor does when written
+        await settle();
+        expect(button("a service").hasClass("selected"), "an empty pane is nobody's").to.equal(false);
+
+        button("a service").trigger("click");
+        await shared.promise;
+        expect(button("a service").hasClass("selected"), "picked").to.equal(true);
+        $("#inputData textarea").first().val("# a note").trigger("keyup");
+        await settle();
+        expect(button("a service").hasClass("selected"), "the pane was never its: still picked").to.equal(true);
+
+        button("a document").trigger("click");
+        await shared.promise;
+        expect(button("a document").hasClass("selected"), "picked").to.equal(true);
+        $("#inputData textarea").first().val("# edited").trigger("keyup");
+        await settle();
+        expect(button("a document").hasClass("selected"), "its document is gone from the pane").to.equal(false);
+      });
+
       /* `slurp` used to hide inside the "load data" menu item, appearing
        * only once the pane's text named an endpoint.  It is a setting of the
        * data source -- one this app carries out rather than the module -- so
@@ -794,6 +834,57 @@ if (!TEST_browser) {
         expect(asked[0].endpoint, "with the endpoint the entry named")
           .to.equal("https://query.wikidata.org/sparql");
         expect(asked[0].canQuery, "and a db that can run it").to.equal(true);
+      });
+
+      /* Switching to the Fixed Map tab re-read the query map every time,
+       * and a query map that asks the source a question (SPARQL, QENTITIES)
+       * asked it again -- of whichever source was selected by then.  After
+       * a slurp that is the local store (showSlurped hands over to it), which
+       * cannot run SPARQL, so the tab raised "not supported by the
+       * neighborhood rdfjs" over a fixed map that was already there.  The
+       * map is rebuilt only from a query map that changed. */
+      it("should keep a resolved fixed map across a tab switch, whatever source is selected now", async function () {
+        const sparql = dom.window.ShExWebApp.NeighborhoodModules
+              .find(m => m.name === "neighborhood-sparql");
+        const resolver = sparql.queryMapResolvers[0];
+        const asked = [];
+        const wasResolve = resolver.resolve;
+        resolver.resolve = (lexical, db) => {
+          asked.push(lexical);
+          return [dom.window.N3js.DataFactory.namedNode("http://www.wikidata.org/entity/Q12078")];
+        };
+        const tabIndex = href => $("#shapeMap-tabs > ul > li > a").map((i, a) => $(a).attr("href")).get().indexOf(href);
+        try {
+          await shared.Caches.manifest.asyncGet(
+            new dom.window.URL("../examples/manifest.json", dom.window.location.href).href);
+          // from somewhere else: clicking a selected entry unselects it
+          const schemas = $("#inputSchema .manifest li");
+          schemas.filter((i, li) => $(li).text() !== "wikidata query").first().trigger("click");
+          await shared.promise;
+          schemas.filter((i, li) => $(li).text() === "wikidata query").first().trigger("click");
+          await shared.promise;
+          $("#inputData .passes li").first().trigger("click");
+          await shared.promise;
+          expect(asked.length, "resolved once, on loading the entry").to.equal(1);
+          expect($("#fixedMap tr.pair").length, "into a fixed map").to.equal(1);
+
+          source().select("rdfjs");           // as a slurp leaves the picker
+          $("#shapeMap-tabs").tabs("option", "active", tabIndex("#queryMap"));
+          $("#shapeMap-tabs").tabs("option", "active", tabIndex("#fixedMap-tab"));
+          await new Promise(resolve => setTimeout(resolve, 50));
+          expect(asked.length, "not asked again").to.equal(1);
+          expect($("#results .error").length, $("#results").text()).to.equal(0);
+          expect($("#fixedMap tr.pair").length, "the rows stay").to.equal(1);
+
+          // ...but a query map that changed is read again, and this source says no
+          $("#shapeMap-tabs").tabs("option", "active", tabIndex("#queryMap"));
+          $("#queryMap").val($("#queryMap").val().replace("LIMIT 10", "LIMIT 11"));
+          $("#shapeMap-tabs").tabs("option", "active", tabIndex("#fixedMap-tab"));
+          await new Promise(resolve => setTimeout(resolve, 50));
+          expect($("#results .error").text()).to.include("not supported by the neighborhood rdfjs");
+        } finally {
+          resolver.resolve = wasResolve;
+        }
       });
 
       /* What made these entries slow was a source rebuilt -- and

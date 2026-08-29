@@ -19,6 +19,7 @@ class ShapeMapCache extends InterfaceCache {
   fixedMapRuns?: number;             // rebuilds of the fixed map in flight
   fixedMapLabel?: string;            // what its tab said before "resolving Fixed Map"
   fixedMapGeneration?: number;       // which rebuild's rows are the ones to show
+  resolvedQueryMapText?: string | null;   // the query map the edit and fixed maps were last built from
   constructor (selection: any, caches: {inputSchema: SchemaCache, inputData: TurtleCache},
                turtleParser: TurtleParser, resultsWidget: ResultsWidget) {
     super(selection, null);
@@ -61,6 +62,7 @@ class ShapeMapCache extends InterfaceCache {
       this.queryMap.empty().val(text);
       const ret = await this.copyEditMapToFixedMap();
       this.markEditMapClean();
+      this.resolvedQueryMapText = text;
       return ret;
     } else {
       return []; // no errors
@@ -74,6 +76,13 @@ class ShapeMapCache extends InterfaceCache {
   async copyQueryMapToEditMap (): Promise<any[]> {
     this.queryMap.removeClass("error");
     const written = this.queryMap.val();
+    // Already turned into an edit map and a fixed map, and unchanged since:
+    // leave them.  Resolving asks the data source -- a SPARQL query, a
+    // Wikibase lookup -- and the source may have changed hands meanwhile
+    // (a slurp hands over to the local store, which cannot run the query)
+    // while the rows it produced are as good as they were.
+    if (written === this.resolvedQueryMapText)
+      return [];
     this.resultsWidget.clear();
     let currentAction = "parsing input schema";
     try {
@@ -95,6 +104,7 @@ class ShapeMapCache extends InterfaceCache {
       const ret = await this.copyEditMapToFixedMap();
       this.markEditMapClean();
       this.resultsWidget.clear();
+      this.resolvedQueryMapText = written;
       return ret;
     } catch (e: any) {
       this.queryMap.addClass("error");
@@ -105,6 +115,7 @@ class ShapeMapCache extends InterfaceCache {
   }
 
   makeFreshEditMap (): any[] {
+    this.resolvedQueryMapText = null;
     this.removeEditMapPair(null);
     this.addEditMapPairs(null, null);
     this.markEditMapClean();
@@ -223,6 +234,7 @@ class ShapeMapCache extends InterfaceCache {
       $(evt.target).parent().parent().remove();
     } else {
       this.editMap.find(".pair").remove();
+      this.resolvedQueryMapText = null;   // whatever the query map says, it is not built yet
     }
     if (this.editMap.find(".removePair").length === 1)
       this.editMap.find(".removePair").css("visibility", "hidden");

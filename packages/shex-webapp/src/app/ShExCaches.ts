@@ -590,7 +590,10 @@ class ManifestCache extends InterfaceCache {
         li.on("click", async () => {
           SharedForTests.app.track(func(entry.name, entry, li, listItems, side));
         });
-        listItems[side][ManifestCache.sum(entry.text)] = li;
+        // an entry with no document -- a query service is the data -- has
+        // nothing for the pane to hold, so an empty pane does not mean it
+        if (entry.text !== "")
+          listItems[side][ManifestCache.sum(entry.text)] = li;
         // enable and get rid of the "..." in the label now that it's loaded
         button.text(entry.label).removeAttr("disabled");
       }
@@ -642,8 +645,8 @@ class ManifestCache extends InterfaceCache {
         const curSum = ManifestCache.sum($(target).val());
         if (curSum in listItems[side])
           listItems[side][curSum].addClass("selected");
-        else
-          $("#"+side+" .selected").removeClass("selected");
+        else // ...and an entry with no document keeps its mark: the pane was never its
+          Object.keys(listItems[side]).forEach(sum => listItems[side][sum].removeClass("selected"));
         delete cache.url;
       }, INPUTAREA_TIMEOUT);
     }
