@@ -77,12 +77,15 @@ mixin(ShExBaseApp, {
     },
     /** startValidationDebugSession - step-through debugging of the
      * triple-expression matches in a validation (doc/debugger-design.md):
-     * the validation runs to completion with eval-simple-1err recording
-     * every regexEngine.match() invocation; any of them can then be
-     * replayed one NFA event at a time.  Gutter breakpoints in the schema
-     * pane become constraint breakpoints.  A validation thread's aspects
-     * are its position in the state machine, its repeat counts and its
-     * matched-triples partition -- previewValThread renders them. */
+     * the validation runs to completion with the selected regex engine
+     * recording every regexEngine.match() invocation; any of them can then
+     * be replayed one NFA event at a time by eval-simple-1err's stepper (a
+     * fresh one per match where the selected engine is another), the
+     * semantic actions answering from the recording rather than running
+     * again.  Gutter breakpoints in the schema pane become constraint
+     * breakpoints.  A validation thread's aspects are its position in the
+     * state machine, its repeat counts and its matched-triples partition --
+     * previewValThread renders them. */
     async startValidationDebugSession() {
         const pane = this.editorSupport && this.editorSupport.panes.inputSchema;
         if (!pane) {
@@ -107,7 +110,8 @@ mixin(ShExBaseApp, {
             currentAction = "validating (recording matches)";
             const schemaText = this.Caches.inputSchema.selection.val();
             const located = ShExWebApp.EditorServices.locateInParsed(schemaText, schema);
-            const { module, captures } = ShExWebApp.capturingRegexModule(ShExWebApp["eval-simple-1err"]);
+            const selected = ShExWebApp[$("#regexpEngine").val()] || ShExWebApp["eval-threaded-nerr"];
+            const { module, captures } = ShExWebApp.capturingRegexModule(selected);
             const validator = new ShExWebApp.Validator(schema, inputData, {
                 results: "api", regexModule: module,
                 ignoreClosed: $("#ignoreClosed").is(":checked"),
@@ -150,7 +154,12 @@ mixin(ShExBaseApp, {
         if (!session)
             return null;
         const cap = session.captures[captureNo];
-        const dbg = new ShExWebApp.MatchDebugger(cap.engine, cap.node, cap.constraintToTripleMapping, cap.semActHandler);
+        // only eval-simple-1err's engine steps: a match another engine ran is
+        // replayed by a fresh one over the same inputs
+        const stepper = ShExWebApp["eval-simple-1err"];
+        const engine = cap.regexModule === stepper.name ? cap.engine
+            : stepper.compile(session.schema, cap.shape, session.schema._index);
+        const dbg = new ShExWebApp.MatchDebugger(engine, cap.node, cap.constraintToTripleMapping, ShExWebApp.replayingSemActHandler(cap.semActLog, cap.semActHandler));
         // gutter breakpoints (line starts) -> the first constraint on the line
         const schemaText = this.Caches.inputSchema.selection.val();
         const lineStarts = ShExWebApp.EditorServices.lineOffsets(schemaText);
@@ -167,7 +176,9 @@ mixin(ShExBaseApp, {
         session.dbg = dbg;
         session.capture = cap;
         $("#valDbgStatus").text("paused before matching " + $("#valDbgMatches option:selected").text() +
-            "; step or continue");
+            "; step or continue" +
+            (cap.regexModule === stepper.name ? ""
+                : " (captured with " + cap.regexModule + ", replayed with " + stepper.name + ")"));
         $("#valDbgThreads").empty();
         return dbg;
     },

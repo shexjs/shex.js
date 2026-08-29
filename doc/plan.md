@@ -126,21 +126,17 @@ parsers depend on it and `tripleConstraint` takes its merged `@$` as is
 
 ## E. Debugger
 
+The capture is by the selected engine and the replay by eval-simple-1err's
+stepper, the status saying so when they differ (E1), and a replay runs no
+semantic action: they answer from what was recorded at capture (E3,
+`recordingSemActHandler`/`replayingSemActHandler` in validator-api) --
+both 2026-08-29.
+
 Short, high value:
 
-- **E1 (M)** Capture with the user's selected engine.
-  `startValidationDebugSession` forces `eval-simple-1err`
-  (`ShExBaseApp.js`, `capturingRegexModule(ShExWebApp["eval-simple-1err"])`);
-  capture with `ShExWebApp[$("#regexpEngine").val()]` and compile a fresh
-  eval-simple-1err stepper per captured shape for replay, saying in
-  `#valDbgStatus` when the replay engine differs.  Done when the smoke test
-  passes with `#regexpEngine` on eval-threaded-nerr before clicking 🐞.
 - **E2 (M)** Highlight a thread's matched partition in the data pane
   (`previewValThread` renders it as text; use the millan ranges the
   error anchoring uses).
-- **E3 (S)** Side-effect-free replay: a recording `semActHandler` shim
-  beside `capturingRegexModule` (`eval-validator-api`), so replay returns
-  the recorded `SemActFailure[]` instead of re-dispatching.
 - **E4 (M)** Web UI for node/predicate breakpoints (the CLIs' `bn`/`bp`) and
   a rendered call-stack/binding-frame snapshot (`bindingsToTable` renders
   frames) instead of the text status.

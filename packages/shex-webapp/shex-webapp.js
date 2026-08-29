@@ -52,6 +52,7 @@ ShExWebApp = (function () {
     "eval-threaded-nerr": modules["@shexjs/eval-threaded-nerr"].RegexpModule,
     MatchDebugger:        modules["@shexjs/eval-simple-1err"].MatchDebugger,
     capturingRegexModule: modules["@shexjs/eval-validator-api"].capturingRegexModule,
+    replayingSemActHandler: modules["@shexjs/eval-validator-api"].replayingSemActHandler,
     ShapeMap:             modules["shape-map"],
     ShapeMapParser:       modules["shape-map"].Parser,
     JsYaml:               modules["js-yaml"],

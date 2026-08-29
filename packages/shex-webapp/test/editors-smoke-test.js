@@ -2074,6 +2074,11 @@ if (!TEST_browser) {
       expect($("#valDebugControls").css("display")).not.to.equal("none");
       expect($("#valDbgMatches option").length, "one recorded match").to.equal(1);
       expect($("#valDbgMatches option").first().text()).to.include("x@");
+      // captured with the selected engine (the default, eval-threaded-nerr),
+      // replayed by the one that steps
+      expect($("#regexpEngine").val()).to.equal("eval-threaded-nerr");
+      expect(session.captures[0].regexModule).to.equal("eval-threaded-nerr");
+      expect($("#valDbgStatus").text()).to.include("captured with eval-threaded-nerr, replayed with eval-simple-1err");
 
       // three rows, and the button that started this stands down: pressing
       // it again would open a second session over the same results
@@ -2113,6 +2118,31 @@ if (!TEST_browser) {
         expect($(e).css("display"), e.id).to.equal("none"));
       expect($("#debugValidate").css("display"), "the bug button is back").to.not.equal("none");
       pane.toggleBreakpoint(schemaText.indexOf(":q .")); // clean up the gutter
+    });
+
+    it("should step a match the stepper's own engine captured, without the note", async function () {
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      set("#inputSchema textarea", "PREFIX : <http://a.example/>\n:S { :p . }");
+      set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .");
+      set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
+      await shared.promise;
+      $("#regexpEngine").val("eval-simple-1err");
+      try {
+        $("#debugValidate").trigger("click");
+        const session = await shared.promise;
+        expect(session, "session started").to.exist;
+        expect(session.captures[0].regexModule).to.equal("eval-simple-1err");
+        expect($("#valDbgStatus").text()).to.not.include("captured with");
+        $("#valDbgInto").trigger("click");
+        expect($("#valDbgStatus").text()).to.include("at <http://a.example/p>");
+        $("#valDbgStop").trigger("click");
+      } finally {
+        $("#regexpEngine").val("eval-threaded-nerr");
+      }
     });
 
     /* Validating again is not "continue, ignoring breakpoints" -- that is ▶.

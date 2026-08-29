@@ -185,7 +185,12 @@ single-threaded) — `shexmap-debug` can ship first.
 6. Browser validation debugging:
    - ✅ triple-expression matches via capture + replay
      (`capturingRegexModule` + `MatchDebugger`) with per-thread
-     state-machine position / repeats / matched-partition views;
+     state-machine position / repeats / matched-partition views; the
+     capture is by whichever engine is selected and the replay by
+     eval-simple-1err's stepper (compiled afresh per match when they
+     differ, and the status says so); the semantic actions run once, at
+     capture, and a replay answers from the recording
+     (`recordingSemActHandler` / `replayingSemActHandler`);
    - live whole-validation stepping (worker gate + Atomics) and a
      unified panel over both engines remain.
 

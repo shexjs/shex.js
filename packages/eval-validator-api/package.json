@@ -24,7 +24,7 @@
     "@shexjs/term": "^1.0.0-alpha.27"
   },
   "scripts": {
-    "test": "echo 'no tests for validator-api'"
+    "test": "cd ../.. && mocha packages/eval-validator-api/test/*test.js"
   },
   "publishConfig": {
     "access": "public"
