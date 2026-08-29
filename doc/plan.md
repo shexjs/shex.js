@@ -69,8 +69,14 @@ scripts' move to TypeScript and the untracked `.map`s are done (B1–B10,
   Left `any`, honestly: what arrives through the bundles' globals
   (jQuery, ShExWebApp.*, RdfJs, the editor panes) -- typing
   `globals.d.ts` against the packages' own types is the next narrowing.
-  `extension-wasi*` are TypeScript too (same day); `shex-cli/bin/validate`
-  is the last JS conversion.
+  `extension-wasi*` are TypeScript too (same day), and so is the CLI:
+  `shex-cli/src/validate.ts` -> `lib/validate.js` behind a two-line
+  `bin/validate` (`module: node16`, which keeps the script's native
+  `import()`); `ShExUtil.warnDuplicates`, which did not exist, is
+  `Merger.warnDuplicates` now, and `--invocation`/`--dry-run` have their
+  help text back (`desc` was never read).  Nothing in the app or the CLI
+  is JS by accident any more: the two worker threads and the vendored
+  iri.js are, on purpose.
 - **B2 (part done 2026-08-29) Plugin packaging.**  `ShExMapPlugin.js` is
   built from `packages/extension-map/src/plugin/ShExMapPlugin.ts`
   (`tsconfig.plugin.json`, the app's page-script arrangement: classic
