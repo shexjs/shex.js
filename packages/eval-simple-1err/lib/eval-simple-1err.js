@@ -297,6 +297,7 @@ function merging(names, nodes, semActHandler) {
 }
 class EvalSimple1ErrRegexEngine {
     constructor(shape, index, states, startNo, matchstate, debugHooks) {
+        this.index = index;
         this._live = null;
         this.shape = shape;
         this.semActNames = new Set((shape.semActs || []).map(sa => sa.name));
@@ -342,6 +343,17 @@ class EvalSimple1ErrRegexEngine {
         let chosen = null;
         // console.log(new NfaToString().dumpNFA(this.states, this.start));
         this.addstate(clist, this.start, new RegExpThread());
+        // The start's closure may already reach the end -- a group taken zero
+        // times -- and that is the match where there is nothing to match.
+        // The generations below look for the end only among the threads they
+        // make, so the first generation has to be looked at here.
+        if (allTriples.size === 0) {
+            const emptyAccept = clist.find(elt => elt.state === thisEvalSimple1ErrRegexEngine.end);
+            if (emptyAccept) {
+                chosen = emptyAccept;
+                yield { type: "accept", generation, thread: this.threadView(emptyAccept) };
+            }
+        }
         while (clist.length) {
             nlist = [];
             if (trace)
@@ -628,7 +640,32 @@ class EvalSimple1ErrRegexEngine {
         }).join(",");
         return rs.length ? state + "-" + rs : "" + state;
     }
+    /** the solution of an expression matched zero times: no solutions,
+     * with the cardinality that let it be zero */
+    emptySolution(expr) {
+        const resolved = typeof expr === "string" ? this.index.tripleExprs[expr] : expr;
+        const attrs = {};
+        if (resolved.min !== undefined && resolved.min !== 1 || resolved.max !== undefined && resolved.max !== 1) {
+            attrs.min = resolved.min;
+            attrs.max = resolved.max;
+        }
+        if (resolved.semActs !== undefined)
+            attrs.semActs = resolved.semActs;
+        if (resolved.annotations !== undefined)
+            attrs.annotations = resolved.annotations;
+        switch (resolved.type) {
+            case "TripleConstraint":
+                return Object.assign({ type: "TripleConstraintSolutions", predicate: resolved.predicate }, resolved.valueExpr !== undefined ? { valueExpr: resolved.valueExpr } : {}, attrs, { solutions: [] });
+            case "OneOf":
+                return Object.assign({ type: "OneOfSolutions", solutions: [] }, attrs);
+            default:
+                return Object.assign({ type: "EachOfSolutions", solutions: [] }, attrs);
+        }
+    }
     matchedToResult(matched, constraintToTripleMapping, semActHandler) {
+        // nothing matched: a group taken zero times, which is a solution too
+        if (matched.length === 0)
+            return this.emptySolution(this.shape.expression);
         let last = [];
         const errors = [];
         const skips = [];

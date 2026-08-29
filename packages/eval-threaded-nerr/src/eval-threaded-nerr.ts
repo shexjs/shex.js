@@ -328,7 +328,11 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
         }, null);
 
     if (longerChosen !== null) {
-      let fromValidationPoint: tripleExprSolutions = longerChosen.expression!;
+      // A thread that matched nothing -- a group taken zero times, over a
+      // node with none of its arcs -- built no solution on the way; the
+      // empty one is what it stands for.
+      let fromValidationPoint: tripleExprSolutions = longerChosen.expression
+            || this.emptySolution(this.outerExpression);
       if (this.shape.semActs !== undefined)
         fromValidationPoint.semActs = this.shape.semActs;
       return fromValidationPoint;
@@ -438,6 +442,31 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
         }, []));
       }, [th]);
     }, semActHandler, this.mayMerge));
+  }
+
+  /** the solution of an expression matched zero times: no solutions, with
+   * the cardinality that let it be zero */
+  emptySolution (expr: ShExJ.tripleExprOrRef): tripleExprSolutions {
+    const resolved: ShExJ.tripleExpr = typeof expr === "string" ? this.index.tripleExprs[expr] : expr;
+    const minmax = {} as GroupAttrs;
+    if (resolved.min !== undefined && resolved.min !== 1 || resolved.max !== undefined && resolved.max !== 1) {
+      minmax.min = resolved.min;
+      minmax.max = resolved.max;
+    }
+    if (resolved.semActs !== undefined)
+      minmax.semActs = resolved.semActs;
+    if (resolved.annotations !== undefined)
+      minmax.annotations = resolved.annotations;
+    switch (resolved.type) {
+    case "TripleConstraint":
+      return Object.assign({type: "TripleConstraintSolutions", predicate: resolved.predicate},
+                           resolved.valueExpr !== undefined ? {valueExpr: resolved.valueExpr} : {},
+                           minmax, {solutions: []}) as unknown as tripleExprSolutions;
+    case "OneOf":
+      return Object.assign({type: "OneOfSolutions", solutions: []}, minmax) as unknown as tripleExprSolutions;
+    default:
+      return Object.assign({type: "EachOfSolutions", solutions: []}, minmax) as unknown as tripleExprSolutions;
+    }
   }
 
   // Early return in case of insufficient matching triples

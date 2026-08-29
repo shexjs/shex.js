@@ -1054,6 +1054,14 @@ bracketedTripleExpr:
       '(' tripleExpression ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // t: open1dotOr1dot, !openopen1dotcloseCode1closeCode2
         $$ = $2;
+        // A cardinality on the group over a constraint that has one of its
+        // own -- `( :a . {2} ){1,3}` -- composes with it (2, 4 or 6 :a),
+        // so the group has to stay a group: a one-element EachOf, which
+        // is what the cardinality then goes on.  Copying it onto the
+        // constraint, as the attributes below are copied, would have
+        // overwritten the constraint's.
+        if (("min" in $4 || "max" in $4) && $$.type === "TripleConstraint" && ("min" in $$ || "max" in $$))
+          $$ = { type: "EachOf", expressions: [$$] };
         // Copy all of the new attributes into the encapsulated shape -- or,
         // if there is nothing to copy them onto, say so.  t: includeWithCardinality
         if (!(("min" in $4 || "max" in $4 || $5.length || $6)

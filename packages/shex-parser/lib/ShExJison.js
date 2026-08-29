@@ -739,6 +739,14 @@ case 173:
 
         // t: open1dotOr1dot, !openopen1dotcloseCode1closeCode2
         this.$ = $$[$0-4];
+        // A cardinality on the group over a constraint that has one of its
+        // own -- `( :a . {2} ){1,3}` -- composes with it (2, 4 or 6 :a),
+        // so the group has to stay a group: a one-element EachOf, which
+        // is what the cardinality then goes on.  Copying it onto the
+        // constraint, as the attributes below are copied, would have
+        // overwritten the constraint's.
+        if (("min" in $$[$0-2] || "max" in $$[$0-2]) && this.$.type === "TripleConstraint" && ("min" in this.$ || "max" in this.$))
+          this.$ = { type: "EachOf", expressions: [this.$] };
         // Copy all of the new attributes into the encapsulated shape -- or,
         // if there is nothing to copy them onto, say so.  t: includeWithCardinality
         if (!(("min" in $$[$0-2] || "max" in $$[$0-2] || $$[$0-1].length || $$[$0])
