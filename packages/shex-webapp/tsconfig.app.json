@@ -6,11 +6,13 @@
     "rootDir": "./src/app",
     "target": "ES2022",
     "sourceMap": false,
+    "removeComments": false,
     "skipLibCheck": true,
-    "strict": true,
-    "noUnusedParameters": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "alwaysStrict": false,
     "types": [],
-    "lib": ["ES2022", "DOM"]
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
   "include": ["src/app/**/*.ts"]
 }

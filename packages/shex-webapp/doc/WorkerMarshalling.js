@@ -1,4 +1,3 @@
-"use strict";
 /**
  * What crosses between the page and its worker, said in JSON.
  *

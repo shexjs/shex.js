@@ -179,7 +179,7 @@ Branch polish list found while prototyping:
   port (tree-sitter → Lezer is mechanical-ish), not a prerequisite.
 - The apps' `InterfaceCache` touches its textarea through a tiny surface
   (`selection.val()`, `.val(v)`, change events — see
-  `packages/shex-webapp/doc/ShExBaseApp.js:37`). An `EditorPane` adapter
+  `packages/shex-webapp/src/app/ShExBaseApp.ts`). An `EditorPane` adapter
   implementing that same surface over an `EditorView` swaps in per-pane,
   keeping every cache/manifest/permalink behavior; textareas stay as the
   no-JS/webdriver fallback behind a query flag while stabilizing.

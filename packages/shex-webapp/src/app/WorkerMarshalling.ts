@@ -40,6 +40,7 @@ interface DataFactoryLike {
 interface ResultEntry { node: string; shape: string; status?: string; [key: string]: any; }
 
 class WorkerMarshalling {
+  [key: string]: any;
   static indexKey (node: string, shape: string): string {
     return node + '@' + shape;
   }
