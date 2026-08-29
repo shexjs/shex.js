@@ -19,8 +19,9 @@ first.  Items are numbered so a commit or a conversation can name one.
 - The browser bundles in `packages/*/doc/webpacks/` are **gitignored and
   built on demand**: `npm run webpack` (all three) or `npm run webpacks-all`
   (n3js too).  Rebuild after changing any bundled package, or the browser
-  tests run stale code.  `doc/*.js` app files (ShExBaseApp.js and friends)
-  are served raw, not bundled.
+  tests run stale code.  The app's page scripts
+  are TypeScript, `packages/shex-webapp/src/app/*.ts` compiled into `doc/`
+  by `npm run build` there; served raw, not bundled.
 - `doc/tests-manifest.yaml` is generated: `node tools/aggregate-manifests.js`
   after editing any of the three package manifests (a test checks it).
   `manifest.json` and `manifest.yaml` must stay deep-equal where both exist.
@@ -47,19 +48,20 @@ first.  Items are numbered so a commit or a conversation can name one.
 ## B. Web app
 
 The split, the harness, the manifest runner, `app.settled()`, WorkerTask,
-the one page, the dependency cleanup and plugin-borne data sources are
-done (B1–B8, 2026-08-28).  What is left:
+the one page, the dependency cleanup, plugin-borne data sources, the page
+scripts' move to TypeScript and the untracked `.map`s are done (B1–B10,
+2026-08-28).  What is left:
 
-- **B1 (M, then S each) TypeScript for the app's page scripts.**  The path
-  exists: `packages/shex-webapp/src/app/*.ts` compiles as scripts into
-  `doc/` (`tsconfig.app.json`, run by `npm run build`), and
-  `WorkerMarshalling.ts` is through it.  Next, smallest first:
-  `ShExPlugins.js` (113 lines), `WorkerTask.js` (95), `ShExApp.js`,
-  `ShExInWorkerApp.js`, `RemoteShExValidator.js` (150), then the ten app
-  files — each wants a `declare` for the globals it reads (`$`,
-  `ShExWebApp`, `ShExWorker`, the app's own constants) in a shared
-  `src/app/globals.d.ts`, and its `any`s narrowed afterwards.  The same
-  for `shex-cli/bin/validate` (1,448 lines of JS) and `extension-wasi*`.
+- **B1 (S each) Narrowing the app's TypeScript.**  All sixteen page
+  scripts compile from `packages/shex-webapp/src/app/*.ts` into `doc/`
+  (`tsconfig.app.json`, run by `npm run build`), with `strict` off, a
+  `[key: string]: any` index signature on every class, and a
+  `globals.d.ts` of `any`s for what the page provides.  Left is the
+  narrowing, one class at a time, smallest first (`WorkerTask`,
+  `ShExPlugins`, the caches): declare its fields, drop its index
+  signature, type what it takes; then type `globals.d.ts` and turn
+  `strict` on.  Still JS, and the same conversion to do:
+  `shex-cli/bin/validate` (1,448 lines) and `extension-wasi*`.
 - **B2 (M) Plugin packaging** (extension-ui-plan's phase 3 leftover):
   `ShExMapPlugin.js` (1,423 lines) as a built bundle, and the plugin file
   + bundle entry + webpack config as packages of their own.  The
@@ -78,16 +80,16 @@ done (B1–B8, 2026-08-28).  What is left:
 
 ## C. Plugins
 
-- **C1 (S, external)** Publish the skeleton (`doc/plugin-skeleton/`) as a
-  repository of its own.
-- **C2 (decision)** A trust prompt for off-origin plugins — above all a
-  manifest fetched by `?manifestURL=` whose entries name plugins.
-  Recommendation: ask once per session before the first plugin from
-  another origin; same-origin stays silent.
-- **C3 (decision)** Should the map redirects open on ShExMap's screen?
-  Recommendation: no; a link can say `&screen=`.
-- **C4 (decision)** Panes share a column unless `panel:` says otherwise.
-  Recommendation: keep.
+The trust prompt for a plugin from another origin is in (C2, 2026-08-28;
+plugins.md, "Trust"), and the two layout decisions are recorded there: a
+link that names a plugin opens on the validator's screen unless it says
+`screen=` (C3), and panes share a column unless `panel:` says otherwise
+(C4).
+
+- **C1 (S, external)** Publish the skeleton as a repository of its own.
+  `doc/plugin-skeleton/` carries the README and package.json it needs
+  (2026-08-28); the repository is yours to create, and its `repository`
+  field to fill in.
 - **C5 (note)** The worker is classic; an ESM worker (`type: "module"`)
   would need a different loader.  Not now.
 
@@ -219,5 +221,4 @@ Larger, design conversation first:
 
 ## Decisions wanted
 
-B3 (committed `lib/`), C2 (trust prompt), C3 (redirect screen), C4 (panel
-default), G1 (repairs replace errors), I1 (the perf corpus).
+B3 (committed `lib/`), G1 (repairs replace errors), I1 (the perf corpus).
