@@ -776,14 +776,7 @@ case 176:
         ); // t: 1dot, 1inversedot
         if ($$[$0-1].length)
           this.$["annotations"] = $$[$0-1]; // t: 1dotAnnot3, 1inversedotAnnot3 : 1dot
-        // editors anchor validation errors here; an empty senseFlags
-        // production would pull the merged @\$ start back to the token
-        // before the constraint, so start from senseFlags/predicate instead
-        const tcStart = _$[_$.length - ($$[$0-5] !== undefined ? 6 : 5)];
-        yy.addExprLocation(this.$, {
-          first_line: tcStart.first_line, first_column: tcStart.first_column,
-          last_line: this._$.last_line, last_column: this._$.last_column
-        });
+        yy.addExprLocation(this.$, this._$); // editors anchor validation errors here
       
 break;
 case 179:

@@ -1094,14 +1094,7 @@ tripleConstraint:
         ); // t: 1dot, 1inversedot
         if ($5.length)
           $$["annotations"] = $5; // t: 1dotAnnot3, 1inversedotAnnot3 : 1dot
-        // editors anchor validation errors here; an empty senseFlags
-        // production would pull the merged @\$ start back to the token
-        // before the constraint, so start from senseFlags/predicate instead
-        const tcStart = _$[_$.length - ($1 !== undefined ? 6 : 5)];
-        yy.addExprLocation($$, {
-          first_line: tcStart.first_line, first_column: tcStart.first_column,
-          last_line: this._$.last_line, last_column: this._$.last_column
-        });
+        yy.addExprLocation($$, this._$); // editors anchor validation errors here
       }
     ;
 

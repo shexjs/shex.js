@@ -118,18 +118,11 @@ its error -- exact colours by role (a shape's label, a reference, a
 predicate, a datatype), folding, bracket matching, incremental re-parse.
 `@shexjs/parser` still makes the schema; the tree is the editor's.
 
-ts-jison's empty-production location wart (D8) is fixed upstream: in
-`~/checkouts/ericprud/ts-jison`, branch `empty-production-locations`
-(`parser: an empty production contributes no location`), tests green,
-shex.js's parsers and editor suites green against the patched runtime.
-What is left:
-
-- **D8 (S, after publishing)** Publish `@ts-jison/parser` from that
-  branch, bump `@ts-jison/parser` in `packages/shex-parser` and
-  `packages/shape-map`, and drop the `senseFlags` anchor in
-  `ShExJison.jison`'s `tripleConstraint` (the merged `@$` is right on its
-  own then).  Until the publish, the anchor stays and is correct either
-  way.
+ts-jison's empty-production location wart (D8) is fixed upstream and
+published: `@ts-jison/parser` and `@ts-jison/common` 0.4.1-alpha.3
+(ts-jison branch `empty-production-locations`, tag `v0.4.1-alpha.3`); the
+parsers depend on it and `tripleConstraint` takes its merged `@$` as is
+(2026-08-29).  Nothing is left in this section.
 
 ## E. Debugger
 
