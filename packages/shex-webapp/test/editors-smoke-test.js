@@ -315,6 +315,38 @@ if (!TEST_browser) {
         await shared.promise;
       });
 
+      /* "explain failures": what a failure's report leads with -- the
+       * repairs with the errors under them, the repairs alone, or the errors
+       * alone -- a menu item, ?explain=, and a manifest key (plan.md G1). */
+      it("should explain a failure the way the menu says", async function () {
+        set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :q 1 .");
+        shared.Caches.shapeMap.removeEditMapPair(null);
+        set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
+        await shared.promise;
+        $("#interface").val("human").trigger("change");
+        const explained = async (how) => {
+          $("#explain").val(how).trigger("change");
+          $("#validate").trigger("click");
+          await shared.promise;
+          return $("#results").text();
+        };
+        try {
+          const both = await explained("both");
+          expect(both, "leads with the repair").to.include("to conform: add 1");
+          expect(both, "and says why").to.include("missing property");
+          const repairs = await explained("repairs");
+          expect(repairs).to.include("to conform: add 1");
+          expect(repairs).to.not.include("missing property");
+          const errors = await explained("errors");
+          expect(errors).to.not.include("to conform");
+          expect(errors).to.include("missing property");
+          expect(shared.app.QueryParams.find(q => q.queryStringParm === "explain").manifest.key,
+                 "an entry may say so too").to.equal("explain");
+        } finally {
+          $("#explain").val("both").trigger("change");
+        }
+      });
+
       it("should put every result in one editor, as the array they are", async function () {
         $("#validate").trigger("click");
         await shared.promise;

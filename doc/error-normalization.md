@@ -278,6 +278,13 @@ this, done at the refutation layer:
    repeated group with an unbounded cardinality inside it (§1's "a bug found
    on the way", filed as F0 in [error-reporting.md](error-reporting.md)).  A
    repair is only as good as the matcher it is computed from.
+   Meanwhile the reader chooses (2026-08-29): `explain` -- the writer's
+   option, `validate --human --explain`, the app's "explain failures"
+   menu item, `?explain=` and a manifest key -- leads a failure with the
+   repairs and the errors under them (`both`, the default), the repairs
+   alone, or the errors alone; a failure the validator put no repair to
+   keeps its errors whatever was asked.  Reading with `repairs` for a
+   while is how the replacement earns its turn.
 
 ## 5. Implementation note: the pruned state is not the node
 

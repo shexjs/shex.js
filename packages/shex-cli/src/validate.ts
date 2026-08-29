@@ -102,6 +102,7 @@ interface Cmds {
   quiet?: boolean;
   terse?: boolean;
   human?: boolean;
+  explain?: string;
   query?: boolean;
   remainder?: boolean;
   grep?: boolean;
@@ -241,6 +242,8 @@ const CommandLineOptions: CliOption[] = [
   { name: "skipCycleCheck",        type: Boolean, description: "don't look for cycles in schema" },
   { name: "coverage",              type: String, typeLabel: covgChoices, multiple: false, defaultValue: undefined, description: "whether to collect all errors or stop on the first one" },
   { name: "repairs",               type: Boolean, description: "say what would make a failing node conform: arcs to add, arcs to take away (the default)" },
+  { name: "explain",               type: String, typeLabel: "both|repairs|errors", multiple: false, defaultValue: undefined,
+    description: "what --human leads a failure with: the repairs and the errors under them (both, the default), the repairs alone, or the errors alone" },
   { name: "no-repairs",            type: Boolean, description: "leave out what would make a failing node conform" },
   { name: "yaml-manifest",         type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON manifest" },
   { name: "json-manifest",         type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON manifest" },
@@ -327,6 +330,8 @@ async function main () {
   // it; --no-repairs is how a caller declines the search.
   if (cmds["no-repairs"])
     ValidatorOptions.repairs = false;
+  if (cmds.explain !== undefined && ["both", "repairs", "errors"].indexOf(cmds.explain) === -1)
+    abort("--explain takes both, repairs or errors, not " + cmds.explain, ExitCode.bad_argument);
 
   if (cmds.coverage) {
     if (!(cmds.coverage in ShExValidator.InterfaceOptions.coverage))
@@ -791,7 +796,8 @@ async function loadSchemaAndData (valParms: any, validatorOptions: any, schemaOp
               // lines, not an array literal; the schema's own prefixes so a
               // quoted fragment reads as the schema spells it
               : ShExUtil.errsToSimple(
-                res, (schemaAndData.schemaMeta[0] || {}).prefixes).join("\n")
+                res, (schemaAndData.schemaMeta[0] || {}).prefixes,
+                {explain: cmds.explain as "both" | "repairs" | "errors" | undefined}).join("\n")
               : JSON.stringify(res, null, "  ")
           );
           return passed ? ExitCode.shape_test_pass : ExitCode.shape_test_fail;

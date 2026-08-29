@@ -54,6 +54,10 @@ export interface ErrorContext {
   base?: string;
   /** how the host spells terms, where it can do better than the full IRI */
   lex?: TermLexer;
+  /** what a failure's report leads with: the repairs with the errors under
+   * them ("both", the default), the repairs alone ("repairs"; a failure the
+   * validator put no repair to keeps its errors), or the errors alone */
+  explain?: "both" | "repairs" | "errors";
 }
 
 /** a leaf error, said once, with whatever a host needs to point at it */

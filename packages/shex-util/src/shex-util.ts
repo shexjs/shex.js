@@ -1711,10 +1711,11 @@ const ShExUtil = {
    * fragments it quotes read as the schema spells them; give it a `lex` as
    * well and the terms read as the reader's document writes them. */
   errsToSimple: function (val: any, prefixes?: { [prefix: string]: string },
-                          opts: {lex?: TermLexer, base?: string} = {}): string[] {
-    const ctx: {lex?: TermLexer, base?: string} = {};
+                          opts: {lex?: TermLexer, base?: string, explain?: "both" | "repairs" | "errors"} = {}): string[] {
+    const ctx: {lex?: TermLexer, base?: string, explain?: "both" | "repairs" | "errors"} = {};
     if (opts.lex) ctx.lex = opts.lex;
     if (opts.base !== undefined) ctx.base = opts.base;
+    if (opts.explain) ctx.explain = opts.explain;
     return new ShExHumanErrorWriter().write(val, prefixes || {}, ctx);
   },
 

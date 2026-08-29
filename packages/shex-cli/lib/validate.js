@@ -159,6 +159,8 @@ const CommandLineOptions = [
     { name: "skipCycleCheck", type: Boolean, description: "don't look for cycles in schema" },
     { name: "coverage", type: String, typeLabel: covgChoices, multiple: false, defaultValue: undefined, description: "whether to collect all errors or stop on the first one" },
     { name: "repairs", type: Boolean, description: "say what would make a failing node conform: arcs to add, arcs to take away (the default)" },
+    { name: "explain", type: String, typeLabel: "both|repairs|errors", multiple: false, defaultValue: undefined,
+        description: "what --human leads a failure with: the repairs and the errors under them (both, the default), the repairs alone, or the errors alone" },
     { name: "no-repairs", type: Boolean, description: "leave out what would make a failing node conform" },
     { name: "yaml-manifest", type: String, typeLabel: "file|URL", multiple: true, defaultValue: [], description: "JSON manifest" },
     { name: "json-manifest", type: String, typeLabel: "file|URL", multiple: true, defaultValue: [], description: "JSON manifest" },
@@ -237,6 +239,8 @@ function main() {
         // it; --no-repairs is how a caller declines the search.
         if (cmds["no-repairs"])
             ValidatorOptions.repairs = false;
+        if (cmds.explain !== undefined && ["both", "repairs", "errors"].indexOf(cmds.explain) === -1)
+            abort("--explain takes both, repairs or errors, not " + cmds.explain, ExitCode.bad_argument);
         if (cmds.coverage) {
             if (!(cmds.coverage in validator_1.ShExValidator.InterfaceOptions.coverage))
                 throw Error("unknown coverage option \"" + cmds.coverage + "\" - expected one of " + Object.keys(validator_1.ShExValidator.InterfaceOptions.coverage).join(", ") + "\".");
@@ -665,7 +669,7 @@ function loadSchemaAndData(valParms, validatorOptions, schemaOptions, cmds) {
                                 ? (res.solutions || [res]).map((s) => `${s.node}@${s.shape}`).join("\n")
                                 // lines, not an array literal; the schema's own prefixes so a
                                 // quoted fragment reads as the schema spells it
-                                : ShExUtil.errsToSimple(res, (schemaAndData.schemaMeta[0] || {}).prefixes).join("\n")
+                                : ShExUtil.errsToSimple(res, (schemaAndData.schemaMeta[0] || {}).prefixes, { explain: cmds.explain }).join("\n")
                             : JSON.stringify(res, null, "  "));
                         return passed ? ExitCode.shape_test_pass : ExitCode.shape_test_fail;
                     }

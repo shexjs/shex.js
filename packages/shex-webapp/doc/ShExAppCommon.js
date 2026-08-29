@@ -562,12 +562,14 @@ class ShExResultsRenderer {
                     elt = $("<div class='human'/>").append($("<span/>").text(resultStr), $("<span/>").text(`${ldToTurtle(entry.node, this.caches.inputData.meta.termToLex)}@${fails ? "!" : ""}${this.caches.inputSchema.meta.termToLex(entry.shape)}`)).addClass(klass);
                     if (fails)
                         elt.append($("<pre>").text(ShExWebApp.Util.errsToSimple(entry.appinfo, this.caches.inputSchema.meta.prefixes, { lex: termLexerFor(this.caches.inputData),
-                            base: this.caches.inputSchema.meta.base }).join("\n")));
+                            base: this.caches.inputSchema.meta.base,
+                            explain: $("#explain").val() }).join("\n")));
                     break;
                 case "minimal":
                     if (fails)
                         entry.reason = ShExWebApp.Util.errsToSimple(entry.appinfo, this.caches.inputSchema.meta.prefixes, { lex: termLexerFor(this.caches.inputData),
-                            base: this.caches.inputSchema.meta.base }).join("\n");
+                            base: this.caches.inputSchema.meta.base,
+                            explain: $("#explain").val() }).join("\n");
                     renderMe = Object.keys(entry).reduce((acc, key) => {
                         if (key !== "appinfo")
                             acc[key] = entry[key];

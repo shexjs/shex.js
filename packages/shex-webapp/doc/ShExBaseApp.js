@@ -78,6 +78,11 @@ class ShExBaseApp {
             // how a term is written in a message: as the document the reader is
             // being pointed at writes it, or in full (see mapValidationErrors)
             { queryStringParm: "spelling", location: $("#spelling"), deflt: "document" },
+            // what a failure's report leads with: the repairs and the errors under
+            // them, the repairs alone, or the errors alone (error-normalization §4)
+            { queryStringParm: "explain", location: $("#explain"), deflt: "both",
+                manifest: { key: "explain" },
+                normalize: (v) => /^(repairs|errors)$/.test(v) ? v : "both" },
             // an entry may ask for an engine: the thorough one enumerates every
             // way a shape could match, which some real data makes impractical
             { queryStringParm: "regexpEngine", location: $("#regexpEngine"), deflt: "eval-threaded-nerr",
@@ -220,6 +225,7 @@ class ShExBaseApp {
         HighlightMode.wire(); // the chip, ctrl-alt-h, and the momentary key
         $("#interface").on("change", this.setInterface.bind(this));
         $("#success").on("change", this.setInterface.bind(this));
+        $("#explain").on("change", this.setInterface.bind(this));
         $("#regexpEngine").on("change", this.toggleControls.bind(this));
         $("#editors").on("change", () => this.setEditors());
         /* A Fixed Map check mark links to its result, and a link to a fragment

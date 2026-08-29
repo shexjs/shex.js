@@ -77,26 +77,27 @@ scripts' move to TypeScript and the untracked `.map`s are done (B1–B10,
   help text back (`desc` was never read).  Nothing in the app or the CLI
   is JS by accident any more: the two worker threads and the vendored
   iri.js are, on purpose.
-- **B2 (part done 2026-08-29) Plugin packaging.**  `ShExMapPlugin.js` is
+- **B2 (done 2026-08-29) Plugin packaging.**  `ShExMapPlugin.js` is
   built from `packages/extension-map/src/plugin/ShExMapPlugin.ts`
   (`tsconfig.plugin.json`, the app's page-script arrangement: classic
   script, declared fields, no index signatures; `npm run build` there
-  compiles both the library and the plugin).  Not a webpack bundle: the
-  plugin has no dependencies of its own to pack -- it runs on the app's
-  globals -- and `doc/webpacks/` is gitignored and CI-built, which would
-  leave a fresh checkout without its plugin.  **Decision wanted:** moving
-  the plugin, the bundle entry and the webpack config into a package of
-  their own changes `packages/extension-map/doc/` URLs (the gh-pages
-  site's shexmap-simple.html lives there).
-- **B3 (decision) Committed `lib/` and `.map`.**  CI runs `npm ci` and the
-  tests with no build step, so `lib/` must stay committed unless CI (and
-  `npm install` from git) learns to build; that is one line in `ci.yml`
-  and a `prepare` script, and would take `lib/` out of every diff (about five per cent of
-  this branch's changed lines; more on a branch that works in the
-  TypeScript packages).  The 48 `.map`
-  files have no consumer in the repository and can stop being tracked
-  today — a `.gitignore` line and `git rm --cached` — which is the
-  recommendation either way.
+  compiles both the library and the plugin).  Not a webpack bundle, and
+  not a package of its own -- decided (2026-08-29): the plugin has no
+  dependencies to pack, `doc/webpacks/` is gitignored and CI-built so a
+  bundled plugin would be missing from a fresh checkout, and a package
+  move would change the `packages/extension-map/doc/` URLs the site and
+  the permalinks use.  Revisit only if the plugin grows dependencies of
+  its own.
+- **B3 (decision: `lib/`)** CI runs `npm ci` and the tests with no build
+  step, so `lib/` stays committed unless CI (and `npm install` from git)
+  learns to build; that is one line in `ci.yml` and a `prepare` script,
+  and would take `lib/` out of every diff.  The `.map` files are untracked
+  (`.gitignore`: `packages/*/lib/*.map`) and are not what debugging a
+  minified bundle needs: that is the *bundle's* map, which webpack would
+  write beside `doc/webpacks/*.min.js` (`devtool: "source-map"`, not set
+  today) and chain back to the `.ts` through `source-map-loader` reading
+  the `lib/*.js.map` tsc leaves on disk at bundle time -- present after
+  `npm run build`, never committed.
 
 ## C. Plugins
 
@@ -210,10 +211,15 @@ old notes are settled (G5): the EXTENDS-over-a-twice-constrained-
 predicate question is a test (`ExtendsRepeatedPredicate-test`), the
 ShEx-1-era CLI cases are gone already, and the writer rename is in §I3.
 
-- **G1 (decision)** Replace the classic errors with repairs once the
-  repairs have been read in anger for a while, and rewrite the failure
-  fixtures once (error-normalization §4, step 4).  Repairs are on by
-  default everywhere now, so this is a question of use, not code.
+- **G1 (decided 2026-08-29)** Rather than replace the classic errors
+  with the repairs outright, the reader chooses: `explain` = `both`
+  (repairs, then the errors under them; the default), `repairs` or
+  `errors` -- `errsToSimple`'s option, `validate --human --explain`, the
+  app's "explain failures" menu item, `?explain=` and a manifest key.  A
+  failure the validator put no repair to keeps its errors whatever was
+  asked.  Replacing for good, and rewriting the failure fixtures once,
+  waits on the repairs having been read in anger (error-normalization
+  §4, step 4).
 - **G3 (L)** Assignment when several constraints could take a triple
   (`EXTRA`, one predicate constrained twice): a min-cost bipartite
   assignment inside the repair DP.
@@ -230,7 +236,18 @@ The Makefile is hand-maintained; the generator it grew out of
 (`tools/makeMake.js`) had stopped running and is gone (I2, 2026-08-29).
 
 - **I1 (decision)** `perf/fhir/corpus/examples`: 2,172 tracked files,
-  33 MB of an 82 MB pack.  git-lfs, a fetch script, or a fixture repo.
+  33 MB of an 82 MB pack -- tracked from before `.gitignore` got
+  `perf/*/corpus/` and `perf/fhir/fetch.sh` was written to fetch the
+  published FHIR build, which is what `bench.js` means to run against.
+  Recommendation (2026-08-29): `git rm -r --cached perf/fhir/corpus` and
+  nothing else -- the fetch script is the corpus's source of truth; a
+  fresh clone runs `perf/fhir/fetch.sh` once.  The 33 MB stays in history
+  (the pack shrinks only with a history rewrite, which a public repository
+  with forks should not do for 33 MB; `git clone --depth 1` is the cheap
+  clone).  Not git-lfs: quota and bandwidth on GitHub, `git lfs install`
+  for every contributor, and a corpus that is an upstream artifact anyway.
+  Not a fixture repository: a submodule's friction buys nothing for files
+  nobody hand-edits.
 - **I3 (on request)** Majors deliberately not taken: chai 5+, n3 2.x,
   eslint 10, jquery 4, node-fetch 3, koa 3, jsonld 9, glob 13, js-yaml 5,
   pre-commit→husky; and, of this repo's own, renaming `ShExWriter` (it
@@ -239,4 +256,4 @@ The Makefile is hand-maintained; the generator it grew out of
 
 ## Decisions wanted
 
-B2 (a package of its own, at the cost of the plugin's URLs), B3 (committed `lib/`), G1 (repairs replace errors), I1 (the perf corpus).
+B3 (committed `lib/`), I1 (untrack the perf corpus, as recommended).

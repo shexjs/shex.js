@@ -640,7 +640,8 @@ class ShExResultsRenderer {
           elt.append($("<pre>").text(ShExWebApp.Util.errsToSimple(
             entry.appinfo, this.caches.inputSchema.meta.prefixes,
             {lex: termLexerFor(this.caches.inputData),
-             base: this.caches.inputSchema.meta.base}).join("\n")));
+             base: this.caches.inputSchema.meta.base,
+             explain: $("#explain").val()}).join("\n")));
         break;
 
       case "minimal":
@@ -648,7 +649,8 @@ class ShExResultsRenderer {
           entry.reason = ShExWebApp.Util.errsToSimple(
             entry.appinfo, this.caches.inputSchema.meta.prefixes,
             {lex: termLexerFor(this.caches.inputData),
-             base: this.caches.inputSchema.meta.base}).join("\n");
+             base: this.caches.inputSchema.meta.base,
+             explain: $("#explain").val()}).join("\n");
         renderMe = Object.keys(entry).reduce((acc: any, key) => {
           if (key !== "appinfo")
             acc[key] = entry[key];

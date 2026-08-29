@@ -1718,6 +1718,8 @@ const ShExUtil = {
             ctx.lex = opts.lex;
         if (opts.base !== undefined)
             ctx.base = opts.base;
+        if (opts.explain)
+            ctx.explain = opts.explain;
         return new ShExHumanErrorWriter().write(val, prefixes || {}, ctx);
     },
     // static
