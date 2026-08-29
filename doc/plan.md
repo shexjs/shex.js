@@ -15,7 +15,9 @@ first.  Items are numbered so a commit or a conversation can name one.
   their own fixtures, so a green ungated run says less than it looks.
 - TypeScript packages compile per package: `cd packages/<p> && npx tsc`.
   The compiled `lib/` is committed, so a source change is a `lib/` change
-  in the same commit.
+  in the same commit.  `packages/lezer-shexc/src/parser.js` is generated
+  the same way (`npm run build` there, after editing `shexc.grammar`);
+  `make ALL` covers both.
 - The browser bundles in `packages/*/doc/webpacks/` are **gitignored and
   built on demand**: `npm run webpack` (all three) or `npm run webpacks-all`
   (n3js too).  Rebuild after changing any bundled package, or the browser
@@ -106,18 +108,28 @@ ShExR or DCTAP schema is located in the text it was written in (D5,
 `parseShExC`/`parseTurtle` key their memo on every option (D9) -- all
 2026-08-28.  millan (D6) had been superseded by lezer-turtle before this
 list was written; the data pane's two parses (lezer for provenance, N3
-for validation) are memoized and stay.  What is left:
+for validation) are memoized and stay.
 
-- **D7 (L)** tree-sitter-shexc (or a Lezer port) for exact incremental
-  highlighting and error-tolerant parsing; `../../ericprud/tree-sitter-shexc`
-  is the asset.  Wants a conversation first: tree-sitter's WASM runtime in
-  the page against a Lezer port (the editor's own parser model,
-  incremental and error-tolerant by design), and who maintains which.
-- **D8 (S, upstream)** ts-jison stretches an empty trailing production's
-  `@$` to the lookahead; the ShExC grammar dodges it per production
-  (`senseFlags` anchor) and the ShapeMap grammar locates a pair by its
-  parts instead.  Skipping empty productions when merging `@$` in
-  `@ts-jison/parser` would let both stop.
+The schema pane parses ShExC with a Lezer grammar of its own (D7,
+2026-08-29): `packages/lezer-shexc` ports the specification's grammar in
+the LALR shape `ShExJison.jison` gives it, every schema in the ShEx test
+suite parses without an error node, and a half-typed schema parses around
+its error -- exact colours by role (a shape's label, a reference, a
+predicate, a datatype), folding, bracket matching, incremental re-parse.
+`@shexjs/parser` still makes the schema; the tree is the editor's.
+
+ts-jison's empty-production location wart (D8) is fixed upstream: in
+`~/checkouts/ericprud/ts-jison`, branch `empty-production-locations`
+(`parser: an empty production contributes no location`), tests green,
+shex.js's parsers and editor suites green against the patched runtime.
+What is left:
+
+- **D8 (S, after publishing)** Publish `@ts-jison/parser` from that
+  branch, bump `@ts-jison/parser` in `packages/shex-parser` and
+  `packages/shape-map`, and drop the `senseFlags` anchor in
+  `ShExJison.jison`'s `tripleConstraint` (the merged `@$` is right on its
+  own then).  Until the publish, the anchor stays and is correct either
+  way.
 
 ## E. Debugger
 
