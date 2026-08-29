@@ -5,6 +5,7 @@
     "outDir": "./doc",
     "rootDir": "./src/app",
     "target": "ES2022",
+    "useDefineForClassFields": false,
     "sourceMap": false,
     "removeComments": false,
     "skipLibCheck": true,

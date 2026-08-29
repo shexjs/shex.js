@@ -264,7 +264,7 @@ class TurtleCache extends InterfaceCache {
 class ManifestCache extends InterfaceCache {
     // manifest-descriptor keys pickSchema/pickData/queryMapLoaded handle
     // themselves; loadExtraInputs loads the rest
-    static pickLoadedKeys = ["schema", "data", "queryMap"];
+    static { this.pickLoadedKeys = ["schema", "data", "queryMap"]; }
     constructor(selection, caches, resultsWidget) {
         super(selection, null);
         this.caches = caches;
@@ -802,7 +802,7 @@ const ShExJsUrl = 'https://github.com/shexSpec/shex.js';
  */
 class PluginCache extends InterfaceCache {
     /** sessionStorage: the origins the reader said may keep loading, for the tab */
-    static TRUSTED_ORIGINS_KEY = "shex-plugin-origins";
+    static { this.TRUSTED_ORIGINS_KEY = "shex-plugin-origins"; }
     constructor(selection, resultsWidget) {
         super(selection, null);
         this.resultsWidget = resultsWidget;

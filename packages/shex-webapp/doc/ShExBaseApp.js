@@ -442,6 +442,4 @@ class ShExBaseApp {
             }
         }
     }
-    /* drag and drop */
-    w;
 }
