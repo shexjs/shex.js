@@ -62,7 +62,7 @@ import {
 } from "shexj";
 import {getNumericDatatype, testFacets, testKnownTypes} from "./shex-xsd";
 import {TripleExprFeasibility, TcCounts} from "./feasibility";
-import {NearestAcceptedBag, Repair} from "./repairs";
+import {NearestAcceptedBag, Repair, RepairArc} from "./repairs";
 import * as RdfJs from "@rdfjs/types/data-model";
 import {Literal as RdfJsLiteral} from "@rdfjs/types/data-model";
 import {ShExVisitor, ShExIndexVisitor} from "@shexjs/visitor";
@@ -1085,10 +1085,16 @@ export class ShExValidator {
     // that would take it; which of two indistinguishable constraints gets it
     // doesn't matter, since the repair search deals them out again.
     const observedBag: TcCounts = new Map();
-    t2tcs.reduce<null>((_ret, _triple, tcs) => {
+    // ...and the arcs no constraint could take at all -- not one with a
+    // bad value, which is a value failure and reported as such -- counted
+    // here too, before the search prunes: a closed shape refuses them
+    const homeless: Quad[] = [];
+    t2tcs.reduce<null>((_ret, triple, tcs) => {
       const local = tcs.filter(tc => extendsTCs.indexOf(tc) === -1);
       if (local.length > 0)
         observedBag.set(local[0], (observedBag.get(local[0]) || 0) + 1);
+      if (tcs.length === 0 && !t2tcErrors.has(triple))
+        homeless.push(triple);
       return null;
     }, null);
     const {missErrors, matchedExtras} = this.whatsMissing(t2tcs, t2tcErrors, shape.extra || [])
@@ -1181,13 +1187,43 @@ export class ShExValidator {
     // eager one, and a bag with nothing to repair yields undefined, which
     // JSON.stringify omits.  The first read replaces the accessor with the
     // value, so nothing recomputes.
+    // ...and the arcs a closed shape refused.  A triple whose predicate is
+    // nowhere in the shape is in no bag, so the search above never sees
+    // it: "remove it" is its repair, part of every way the bag has -- or
+    // the whole repair, where the bag was fine or there is no expression.
+    // Which arcs those are: the ones no constraint could take (known
+    // before any partition is tried, and a search every partition of which
+    // was refuted never reports them), and the ones the reported partition
+    // left unassigned (its ClosedShapeViolation) -- each counted once.
+    const refused: {[property: string]: number} = {};
+    const refusedTriples = new Set<string>();
+    const refuse = (s: any, p: any, o: any): void => {
+      const seenAs = JSON.stringify([s, p, o]);
+      if (refusedTriples.has(seenAs))
+        return;
+      refusedTriples.add(seenAs);
+      const property = typeof p === "string" ? p : p.value;
+      refused[property] = (refused[property] || 0) + 1;
+    };
+    if ((shape.closed || ctx.partitionClosed) && !this.options.ignoreClosed)
+      homeless.filter(triple => matchedExtras.indexOf(triple) === -1).forEach(triple =>
+        refuse(rdfJsTerm2Ld(triple.subject), rdfJsTerm2Ld(triple.predicate), rdfJsTerm2Ld(triple.object)));
+    errors.forEach((e: any) => {
+      if (e.type === "ClosedShapeViolation")
+        (e.unexpectedTriples || []).forEach((tr: any) => refuse(tr.subject, tr.predicate, tr.object));
+    });
+    const removals: RepairArc[] = Object.entries(refused).map(([property, n]) => ({property, delta: -n}));
+    const removed = removals.reduce((n, arc) => n - arc.delta, 0);
     if (this.options.repairs !== false && ret !== null && (ret as any).type === "Failure"
-        && shape.expression !== undefined) {
+        && (shape.expression !== undefined || removals.length > 0)) {
       const expression = shape.expression, bag = observedBag, validator = this;
       Object.defineProperty(ret, "repairs", {
         enumerable: true, configurable: true,
         get () {
-          const repairs = validator.nearestBagRepairs(expression, bag);
+          const ofBag = expression !== undefined ? validator.nearestBagRepairs(expression, bag) : [];
+          const repairs: Repair[] = removals.length === 0 ? ofBag
+                : ofBag.length === 0 ? [{type: "NearestBag", cost: removed, arcs: removals}]
+                : ofBag.map(r => ({type: r.type, cost: r.cost + removed, arcs: r.arcs.concat(removals)}));
           // nothing to say beats an empty list to read
           const value = repairs.length > 0 ? repairs : undefined;
           Object.defineProperty(this, "repairs",

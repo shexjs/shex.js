@@ -133,18 +133,16 @@ describe("nearest-bag repairs", function () {
    * about belong to no triple constraint, so the bag search never sees
    * them.  Saying nothing is the right answer until it can. */
   it("should say nothing where the arcs were never the problem", function () {
+    // the bag is right for { :a . }; what fails is the NOT around { :b . }
     const schema = ShExParser.construct(base, {}, {index: true})
-          .parse(PRE + "start = @<S>\n<S> CLOSED { :a . }");
+          .parse(PRE + "start = @<S>\n<S> { :a . } AND NOT { :b . }");
     const graph = new N3.Store();
     graph.addQuads(new N3.Parser({baseIRI: base, format: "text/turtle"})
       .parse(PRE + ":x :a 1 ; :b 2 ."));
     const result = new ShExValidator(schema, RdfJsDb(graph), {})
           .validateShapeMap([{node: base + "x", shape: ShExValidator.Start}])[0];
     expect(result.status).to.equal("nonconformant");
-    // `repairs` is answered on read, so the property is there to be asked;
-    // what it says is that there is nothing to say, and JSON leaves it out.
-    expect(result.appinfo.repairs, "the bag is already one the shape accepts")
-      .to.equal(undefined);
+    expect(result.appinfo.repairs, "no bag to repair").to.equal(undefined);
     expect(JSON.stringify(result.appinfo)).to.not.include("repairs");
   });
 
@@ -207,5 +205,46 @@ describe("nearest-bag repairs", function () {
     // ...and with the schema's prefixes, as the schema writes it
     expect(ShExUtil.errsToSimple(result.appinfo, {foaf: FOAF}).join("\n"))
       .to.include("to conform: add 1 foaf:mbox");
+  });
+
+  /* A closed shape refuses arcs the expression never mentions; those are
+   * in no bag, so the search can't see them -- but "remove it" is their
+   * repair, and it comes with every way the bag has. */
+  describe("a closed shape's refusals", function () {
+    it("should say to remove the arc, where the bag was fine", function () {
+      const {status, ways, cost} = repairs("<S> CLOSED { foaf:name . }", ':x foaf:name "B" ; :other 1 .');
+      expect(status).to.equal("nonconformant");
+      expect(ways).to.deep.equal(["remove 1 :other"]);
+      expect(cost).to.equal(1);
+    });
+
+    it("should count the refused arcs", function () {
+      const {ways, cost} = repairs("<S> CLOSED { foaf:name . }", ':x foaf:name "B" ; :other 1, 2 ; :more 3 .');
+      expect(ways[0].split(" and ").sort()).to.deep.equal(["remove 1 :more", "remove 2 :other"]);
+      expect(cost).to.equal(3);
+    });
+
+    it("should add the removal to what the bag needs", function () {
+      const {ways, cost} = repairs("<S> CLOSED { foaf:name . ; foaf:mbox . }", ':x foaf:name "B" ; :other 1 .');
+      expect(ways).to.deep.equal(["add 1 foaf:mbox and remove 1 :other"]);
+      expect(cost).to.equal(2);
+    });
+
+    it("should add it to every way the bag has", function () {
+      const {ways} = repairs("<S> CLOSED { ( foaf:name . | foaf:mbox . ) }", ":x :other 1 .");
+      expect(ways.sort()).to.deep.equal(["add 1 foaf:mbox and remove 1 :other", "add 1 foaf:name and remove 1 :other"]);
+    });
+
+    it("should repair a closed shape with no expression", function () {
+      const {status, ways} = repairs("<S> CLOSED { }", ":x :other 1 .");
+      expect(status).to.equal("nonconformant");
+      expect(ways).to.deep.equal(["remove 1 :other"]);
+    });
+
+    it("should leave an open shape's extra arcs alone", function () {
+      const {status, ways} = repairs("<S> { foaf:name . }", ':x foaf:name "B" ; :other 1 .');
+      expect(status).to.equal("conformant");
+      expect(ways).to.deep.equal([]);
+    });
   });
 });
