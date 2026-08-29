@@ -500,6 +500,35 @@ if (!TEST_browser) {
           .to.deep.equal(["settings", "Q42", "Q5"]);
       });
 
+      /* ...and opening one of them afterwards must not lose it either.  The
+       * tab set's activate handler used to say "a document is showing" and
+       * then show(), whose stash took the textarea for that document's text
+       * -- the textarea that, with the settings up, belonged to nobody --
+       * and wrote it over the first page: "Q42" became "entity JSON 1",
+       * empty. */
+      [["Q42", "Q76"], ["Q76", "Q42"]].forEach(order =>
+        it("should open the pages a slurp brought back, " + order.join(" then "), function () {
+          source().select("wikibase");
+          source().forgetDocuments();
+          expect(source().onSettings, "no documents, so the settings are up").to.equal(true);
+          $("#inputData textarea").first().val("");
+
+          source().addPageDocument("Q42", '{"entities": {"Q42": {"id": "Q42"}}}');
+          source().addPageDocument("Q76", '{"entities": {"Q76": {"id": "Q76"}}}');
+          source().render();
+
+          for (const id of order) {
+            const at = tabs().indexOf(id);
+            expect(at, id + " has a tab").to.be.above(0);
+            $("#dataSource-tabs").tabs("option", "active", at);   // the reader clicks it
+            expect(source().onSettings, "a document is up").to.equal(false);
+            expect($("#inputData textarea").first().val(), "and it is that page").to.include('"' + id + '"');
+            expect(tabs(), "every page still there, and named").to.deep.equal(["settings", "Q42", "Q76"]);
+          }
+          expect(source().params().pages.map(p => JSON.parse(p).entities), "both pages, whole")
+            .to.deep.equal([{Q42: {id: "Q42"}}, {Q76: {id: "Q76"}}]);
+        }));
+
       it("should give each pane the language its source says it is in", function () {
         source().select("rdfjs");
         expect(source().paneEditor().language).to.equal("turtle");
@@ -595,7 +624,7 @@ if (!TEST_browser) {
           .first().trigger("click");
         await shared.promise;
         expect(dataItems().map((i, li) => $(li).text()).get()).to.deep.equal(
-          ["Q42 from the query service", "Q42 from the JSON API", "Q42 from a downloaded page"]);
+          ["Q42 from the query service", "Q42, Q76 from the JSON API", "Q42 from a downloaded page"]);
 
         const pick = async n => {
           dataItems().eq(n).trigger("click");

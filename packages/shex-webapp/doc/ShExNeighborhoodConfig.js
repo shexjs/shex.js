@@ -432,6 +432,13 @@ class NeighborhoodConfig {
                 const panel = ui.newPanel.attr("id") || "";
                 const m = panel.match(/^dataPanePanel-(\d+)$/);
                 if (m) {
+                    // Coming from the settings pane, the textarea is holding whatever
+                    // was there last, which is no document's (docAt): say so, or
+                    // show()'s stash writes it over the document `showing` names --
+                    // the first page a slurp had just brought back, which then read
+                    // as an empty "entity JSON 1".
+                    if (this.onSettings)
+                        this.showing = -1;
                     this.onSettings = false;
                     this.show(parseInt(m[1], 10));
                 }

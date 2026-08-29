@@ -125,13 +125,13 @@
   {
     "schemaLabel": "Wikidata person",
     "schemaURL": "wikidata-person.shex",
-    "dataLabel": "Q42 from the JSON API",
+    "dataLabel": "Q42, Q76 from the JSON API",
     "neighborhood": "wikibase",
     "dataBase": "http://www.wikidata.org/entity/",
     "base": "https://www.wikidata.org/wiki/Special:EntityData/",
     "queryMap": "QENTITIES \"42 76\"@START\n",
     "status": "conformant",
-    "comment": "The same entity from the JSON pages Wikidata is edited through, turned back into the RDF the query service would serve.  The QueryMap names entities by id and lets this source work out what they are called."
+    "comment": "The same entity, and Q76 with it, from the JSON pages Wikidata is edited through, turned back into the RDF the query service would serve.  The QueryMap names entities by id and lets this source work out what they are called."
   },
   {
     "schemaLabel": "Wikidata person",
