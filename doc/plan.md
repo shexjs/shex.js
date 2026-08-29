@@ -139,13 +139,13 @@ web debugger lights its matched partition in the data pane (E2,
 breakpoints as shex-debug does and shows a thread's state as a table
 (E4); a gutter breakpoint is the constraint its line begins and
 ctrl-alt-b sets one at the cursor (E5, `toggleBreakpointAt`,
-`exprsStartingIn`) -- all 2026-08-29.
+`exprsStartingIn`); the two CLI debuggers share one REPL skeleton (E6,
+`DebugRepl` in editor-services: I/O, located schema, prefixes,
+breakpoint records, the command loop), their transcripts unchanged --
+all 2026-08-29.
 
 Short, high value:
 
-- **E6 (M)** A common REPL skeleton for `ShExDebugRepl` (`shex-cli`) and
-  `ShExMapDebugRepl` (`extension-map`) before a third debugger appears;
-  both suites stay green unchanged.
 
 Larger, design conversation first:
 

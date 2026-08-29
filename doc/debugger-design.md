@@ -183,6 +183,15 @@ the recorded matches are on offer.
 variant needs no worker at all (the generator is synchronous and
 single-threaded) — `shexmap-debug` can ship first.
 
+Both REPLs extend `DebugRepl` (`@shexjs/editor-services/lib/debug-repl`):
+injected `write`/`prompt`, the located schema, `expand`/`lex`/`termStr`
+over the schema's prefixes, `b LINE[:COL]` resolution (the constraint the
+line begins, else what it is inside of), the breakpoint record and
+`commandLoop` (a line read, split, dispatched to a table).  What each keeps
+for itself is its engine and how it drives it: the materializer's is
+pulled, the validator's gates in the engine's callbacks.  A third debugger
+starts from the same base.
+
 ## 7. Phasing
 
 1. ✅ Materializer: `run()` generator + `MaterializerDebugger` + offset

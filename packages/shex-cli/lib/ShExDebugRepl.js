@@ -9,6 +9,11 @@
  * engine (re)considers a TripleConstraint, one level deeper than the
  * enclosing shape, so `s` descends into constraints and `n` skips them.
  *
+ * The I/O, the located schema, the prefixes and the command loop are
+ * DebugRepl's (@shexjs/editor-services), shared with shexmap-debug; what
+ * is this REPL's own is the engine it drives and how: a gate in the
+ * validator's callbacks that reads commands until one lets it go.
+ *
  * Commands:
  *   s              step into (pause at the next enter/exit/constraint)
  *   n              step over (skip nested shape evaluations and constraints)
@@ -26,25 +31,20 @@
  */
 "use strict";
 
-const EditorServices = require("@shexjs/editor-services");
+const {DebugRepl} = require("@shexjs/editor-services/lib/debug-repl");
 const {ShExValidator} = require("@shexjs/validator");
 const {ctor: RdfJsDb} = require("@shexjs/neighborhood-rdfjs");
 const {eventTracker} = require("@shexjs/eval-validator-api");
 
 class DebugQuit extends Error {}
 
-class ShExDebugRepl {
+const noBreakpoints = () => ({shapes: new Set(), nodes: new Set(), constraints: new Set(), predicates: new Set()});
+
+class ShExDebugRepl extends DebugRepl {
   constructor (schemaText, schema, graph, opts = {}) {
-    this.write = opts.write || (s => process.stdout.write(s));
-    this.prompt = opts.prompt;
-    this.schemaText = schemaText;
-    this.schema = schema;
+    super(schemaText, schema, opts);
     this.graph = graph;
-    this.located = EditorServices.locateInParsed(schemaText, schema);
-    this.lineStarts = EditorServices.lineOffsets(schemaText);
-    this.prefixes = schema._prefixes || {};
-    this.breakpoints = {shapes: new Set(), nodes: new Set(), constraints: new Set(), predicates: new Set()};
-    this.breakpointDescriptions = [];
+    this.breakpoints = noBreakpoints();
     this.mode = {kind: "into"}; // pause at the first event
   }
 
@@ -86,39 +86,31 @@ class ShExDebugRepl {
     return status === "conformant" ? 0 : 1;
   }
 
+  /** an event the engine reports: pause here if the mode or a breakpoint
+   * says so, and read commands until one resumes */
   gate (event) {
     this.current = event;
     if (!this.shouldPause(event))
       return;
     this.showEvent(event);
-    while (true) {
-      const line = this.prompt("(sxdb) ");
-      if (line === null) { // EOF: run free
-        this.mode = {kind: "continue"};
-        this.breakpoints = {shapes: new Set(), nodes: new Set(), constraints: new Set(), predicates: new Set()};
-        return;
-      }
-      const [cmd, ...args] = line.trim().split(/\s+/);
-      switch (cmd) {
-      case "": break;
-      case "s": this.mode = {kind: "into"}; return;
-      case "n": this.mode = {kind: "over", depth: event.depth}; return;
-      case "o": this.mode = {kind: "out", depth: event.depth}; return;
-      case "c": this.mode = {kind: "continue"}; return;
-      case "b": this.setPositionBreakpoint(args[0]); break;
-      case "bs": this.setShapeBreakpoint(args[0]); break;
-      case "bp": this.setPredicateBreakpoint(args[0]); break;
-      case "bn": this.setNodeBreakpoint(args[0]); break;
-      case "info": this.showInfo(); break;
-      case "l": this.showEvent(event, true); break;
-      case "h":
-        this.write("s=into n=over o=out c=continue b LINE[:COL] bs SHAPE bp PRED bn NODE info l q\n");
-        break;
-      case "q": throw new DebugQuit();
-      default:
-        this.write("unknown command " + JSON.stringify(cmd) + "; h for help\n");
-      }
-    }
+    this.commandLoop("(sxdb) ", {
+      s: () => { this.mode = {kind: "into"}; return "return"; },
+      n: () => { this.mode = {kind: "over", depth: event.depth}; return "return"; },
+      o: () => { this.mode = {kind: "out", depth: event.depth}; return "return"; },
+      c: () => { this.mode = {kind: "continue"}; return "return"; },
+      b: args => this.setPositionBreakpoint(args[0]),
+      bs: args => this.setShapeBreakpoint(args[0]),
+      bp: args => this.setPredicateBreakpoint(args[0]),
+      bn: args => this.setNodeBreakpoint(args[0]),
+      info: () => this.showInfo(),
+      l: () => this.showEvent(event, true),
+      h: () => this.write("s=into n=over o=out c=continue b LINE[:COL] bs SHAPE bp PRED bn NODE info l q\n"),
+      q: () => { throw new DebugQuit(); },
+    }, () => { // EOF: run free
+      this.mode = {kind: "continue"};
+      this.breakpoints = noBreakpoints();
+      return "return";
+    });
   }
 
   shouldPause (event) {
@@ -145,65 +137,21 @@ class ShExDebugRepl {
     return this.breakpoints.nodes.has(lex);
   }
 
-  expand (lex) {
-    if (!lex)
-      return lex;
-    if (lex.startsWith("<") && lex.endsWith(">")) {
-      const iri = lex.slice(1, -1);
-      try { // resolve relative IRIs the way the parser resolved the schema's
-        return new URL(iri, this.schema._base || undefined).href;
-      } catch (e) {
-        return iri;
-      }
-    }
-    const m = lex.match(/^([A-Za-z_][\w.-]*)?:(.*)$/);
-    return m && this.prefixes[m[1] || ""] !== undefined
-      ? this.prefixes[m[1] || ""] + m[2]
-      : lex;
-  }
-
-  lex (iri) {
-    if (typeof iri !== "string")
-      return "START";
-    for (const [prefix, ns] of Object.entries(this.prefixes))
-      if (ns.length && iri.startsWith(ns))
-        return prefix + ":" + iri.substring(ns.length);
-    return "<" + iri + ">";
-  }
-
-  pointStr (point) {
-    return !point ? "?"
-      : point.termType === "BlankNode" ? "_:" + point.value
-      : point.termType === "Literal" ? JSON.stringify(point.value)
-      : this.lex(point.value);
-  }
-
+  /** b LINE[:COL]: the constraint there, or, failing that, the shape */
   setPositionBreakpoint (arg) {
-    const m = (arg || "").match(/^(\d+)(?::(\d+))?$/);
-    if (!m)
-      return this.write("usage: b LINE[:COL] (1-based)\n");
-    const lineNo = parseInt(m[1], 10);
-    if (lineNo < 1 || lineNo > this.lineStarts.length)
-      return this.write("no line " + lineNo + "\n");
-    const from = this.lineStarts[lineNo - 1] + (m[2] ? parseInt(m[2], 10) - 1 : 0);
-    const to = lineNo < this.lineStarts.length ? this.lineStarts[lineNo] : this.schemaText.length;
-    // a bare line number matches the first constraint on the line;
-    // a line with no constraint falls back to its enclosing shape
-    let tcHit = null;
-    for (let offset = from; offset < to && !tcHit; ++offset)
-      tcHit = this.located.locate.exprAt(offset);
-    if (tcHit) {
-      this.breakpoints.constraints.add(tcHit.expr);
-      const label = EditorServices.sourceExcerpt(this.schemaText, tcHit.range).trim();
-      this.breakpointDescriptions.push("b " + arg + " -> " + label);
-      return this.write("breakpoint on " + label + "\n");
+    const at = this.positionHit(arg);
+    if (!at)
+      return;
+    if (at.hit) {
+      this.breakpoints.constraints.add(at.hit.expr);
+      const label = this.excerpt(at.hit.range).trim();
+      return this.noteBreakpoint("b " + arg + " -> " + label, label);
     }
-    const hit = this.located.locate.shapeAt(from);
+    const hit = this.located.locate.shapeAt(at.from);
     if (!hit)
       return this.write("no constraint or shape at " + arg + "\n");
     this.breakpoints.shapes.add(hit.label);
-    this.breakpointDescriptions.push("b " + arg + " -> " + this.lex(hit.label));
-    this.write("breakpoint on shape " + this.lex(hit.label) + "\n");
+    this.noteBreakpoint("b " + arg + " -> " + this.lex(hit.label), "shape " + this.lex(hit.label));
   }
 
   setPredicateBreakpoint (arg) {
@@ -211,8 +159,7 @@ class ShExDebugRepl {
       return this.write("usage: bp PREDICATE\n");
     const iri = this.expand(arg);
     this.breakpoints.predicates.add(iri);
-    this.breakpointDescriptions.push("bp " + this.lex(iri));
-    this.write("breakpoint on predicate " + this.lex(iri) + "\n");
+    this.noteBreakpoint("bp " + this.lex(iri), "predicate " + this.lex(iri));
   }
 
   setShapeBreakpoint (arg) {
@@ -220,8 +167,7 @@ class ShExDebugRepl {
       return this.write("usage: bs SHAPE\n");
     const iri = this.expand(arg);
     this.breakpoints.shapes.add(iri);
-    this.breakpointDescriptions.push("bs " + this.lex(iri));
-    this.write("breakpoint on shape " + this.lex(iri) + "\n");
+    this.noteBreakpoint("bs " + this.lex(iri), "shape " + this.lex(iri));
   }
 
   setNodeBreakpoint (arg) {
@@ -229,8 +175,7 @@ class ShExDebugRepl {
       return this.write("usage: bn NODE (lexical form: <IRI>, pname or _:label)\n");
     const lex = arg.startsWith("_:") ? arg : this.expand(arg);
     this.breakpoints.nodes.add(lex);
-    this.breakpointDescriptions.push("bn " + arg);
-    this.write("breakpoint on node " + arg + "\n");
+    this.noteBreakpoint("bn " + arg, "node " + arg);
   }
 
   showEvent (event, sourceOnly = false) {
@@ -239,16 +184,16 @@ class ShExDebugRepl {
     if (!sourceOnly)
       switch (event.type) {
       case "constraint":
-        this.write("at " + this.lex(event.tc.predicate) + " for " + this.pointStr(event.node) +
+        this.write("at " + this.lex(event.tc.predicate) + " for " + this.termStr(event.node) +
                    " (" + event.triples.length + " candidate triple" + (event.triples.length === 1 ? "" : "s") + ")" +
                    "  [depth " + event.depth + "]\n");
         break;
       case "enter":
-        this.write("enter " + this.pointStr(event.node) + "@" + this.lex(event.shape) +
+        this.write("enter " + this.termStr(event.node) + "@" + this.lex(event.shape) +
                    "  [depth " + event.depth + "]\n");
         break;
       case "exit":
-        this.write("exit  " + this.pointStr(event.node) + "@" + this.lex(event.shape) +
+        this.write("exit  " + this.termStr(event.node) + "@" + this.lex(event.shape) +
                    " -> " + (event.result && "errors" in event.result ? "fail" : "ok") +
                    "  [depth " + event.depth + "]\n");
         break;
@@ -259,19 +204,17 @@ class ShExDebugRepl {
         this.write(event.type + "\n");
       }
     if (where)
-      this.write(EditorServices.sourceExcerpt(this.schemaText, where));
+      this.write(this.excerpt(where));
   }
 
   showInfo () {
     if (this.current)
       this.write("at: " + (this.current.type || "?") + " " +
-                 this.pointStr(this.current.node) + "@" +
+                 this.termStr(this.current.node) + "@" +
                  (this.current.type === "constraint"
                   ? this.lex(this.current.tc.predicate)
                   : this.lex(this.current.shape)) + "\n");
-    this.write(this.breakpointDescriptions.length
-      ? this.breakpointDescriptions.map(b => "  " + b).join("\n") + "\n"
-      : "no breakpoints\n");
+    this.showBreakpoints();
   }
 }
 
