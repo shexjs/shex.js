@@ -29,7 +29,8 @@ first.  Items are numbered so a commit or a conversation can name one.
   names in fixtures (relative IRIs resolve against the page URL); drive a
   click, then `await shared.promise`; the app refuses a second validate
   within 100 ms of a failure ("see shape map errors above"); gutter
-  breakpoints are line-granular.
+  breakpoints are line-granular; `Harness.expectClean(errors)` in an
+  `after` fails on console errors the suite did not expect.
 - ShExC gotcha: cardinality precedes semActs (`:p . ? %Map:{ :v %}`).
 - CLIs: `--help`/usage exits 1; a status-0 run leaves stderr empty.
 - HTTP test fixtures serve on literal `127.0.0.1`, never `localhost`.
@@ -95,31 +96,28 @@ link that names a plugin opens on the validator's screen unless it says
 
 ## D. Editors
 
-- **D1 (M)** `#textMap` as a third managed editor (the ShapeMap parser is
-  ts-jison and can grow `_locations`).
-- **D2 (S)** Hover tooltips showing the constraint's text over its
-  data-side counterpart (highlights only, today).
-- **D3 (S)** Autocomplete: fall back to the live linter's last parse for
-  labels not yet in `cache.parsed`; tune eagerness after real use.
-- **D4 (S–M)** A fail-on-unexpected-console-error option in the smoke
-  harness (whitelist jsdom/CM6 `getClientRects` noise).  Build into B2.
-- **D5 (M)** ShExR and DCTAP inputs bypass ShExC locations; synthesize
-  locations from the generated ShExC.
-- **D6 (varies) millan upstream** (`github:ericprud/millan#rdfjs-interface`):
-  subject `source` ranges include a trailing whitespace character
-  (`trimRange` works around it); a publish plan (`@shexjs/millan`?);
-  `RdfJsDb(MillanDataset)` as the validation store — blocked on the apps'
-  N3-specific surface (`getQuads`/`removeQuad` in proof-graph, remainder
-  and slurp) and on N3 dropping term `source`s when quads are copied in.
+The query map is the third managed editor (D1: the shape-map grammar
+records where each pair was written, `parseShapeMap` lints and locates it,
+its pairs point at the schema and the data), hovers say what they point at
+(D2, `HoverRegion.title`), completion reads the schema pane as it stands
+(D3), the harness checks consoles (D4, `Harness.expectClean`), a ShExJ,
+ShExR or DCTAP schema is located in the text it was written in (D5,
+`synthesizeLocations`; `lintSchema` lints each in its own language), and
+`parseShExC`/`parseTurtle` key their memo on every option (D9) -- all
+2026-08-28.  millan (D6) had been superseded by lezer-turtle before this
+list was written; the data pane's two parses (lezer for provenance, N3
+for validation) are memoized and stay.  What is left:
+
 - **D7 (L)** tree-sitter-shexc (or a Lezer port) for exact incremental
   highlighting and error-tolerant parsing; `../../ericprud/tree-sitter-shexc`
-  is the asset.  Talk to Eric first — he maintains the grammar.
-- **D8 (S, upstream)** ts-jison's empty-production location wart is dodged
-  per production (`senseFlags` anchor); skipping empty productions when
-  merging `@$` would clean it up.
-- **D9 (S)** `memoLast` keys for `parseShExC`/`parseTurtle` ignore
-  `prefixes`/`schemaOptions` — fine for today's callers; key them or
-  document the edge.
+  is the asset.  Wants a conversation first: tree-sitter's WASM runtime in
+  the page against a Lezer port (the editor's own parser model,
+  incremental and error-tolerant by design), and who maintains which.
+- **D8 (S, upstream)** ts-jison stretches an empty trailing production's
+  `@$` to the lookahead; the ShExC grammar dodges it per production
+  (`senseFlags` anchor) and the ShapeMap grammar locates a pair by its
+  parts instead.  Skipping empty productions when merging `@$` in
+  `@ts-jison/parser` would let both stop.
 
 ## E. Debugger
 

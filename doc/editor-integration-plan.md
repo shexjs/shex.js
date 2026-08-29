@@ -31,6 +31,13 @@
 > - `@shexjs/editor-services` is TypeScript (`src/*.ts` → committed `lib/`,
 >   built by `npm run compile` / per-package `npm run build`), as is
 >   `shex-serve`.
+> - 2026-08-28: the query map is a managed editor too (the shape-map
+>   grammar records where each pair was written; `parseShapeMap`), hover
+>   regions carry tooltips, completion reads the schema pane as it stands,
+>   and a ShExJ, ShExR or DCTAP schema pane is located in its own text
+>   (`synthesizeLocations`) and linted in its own language (`lintSchema`).
+>   The data side parses with lezer-turtle, not millan.  What remains is a
+>   Lezer/tree-sitter ShExC mode (plan.md D7).
 > - Validation results drive cross-pane hover highlighting: matched (green)
 >   and failed (red) constraint↔triple pairs; hovering a TripleConstraint
 >   also lights its shape's label, hovering a triple's object also lights

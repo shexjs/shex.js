@@ -32,12 +32,13 @@ if (!TEST_browser) {
     this.timeout(20000);
     const page = "packages/shex-webapp/doc/shex-simple.html";
 
-    let dom, $, shared;
+    let dom, $, shared, errors;
     before(async function () {
-      ({dom, $, shared} = await Harness.boot(page, "?editors=1&worker=1", {worker: true}));
+      ({dom, $, shared, errors} = await Harness.boot(page, "?editors=1&worker=1", {worker: true}));
     });
 
     after(function () {
+      Harness.expectClean(errors);
       if (dom)
         dom.window.close();
     });
@@ -54,7 +55,7 @@ if (!TEST_browser) {
     });
 
     it("should replace the schema and data textareas with editor panes", function () {
-      expect($("#inputSchema .shexjs-editor-pane").length, "schema pane").to.equal(1);
+      expect($("#schemaDocument .shexjs-editor-pane").length, "schema pane").to.equal(1);
       expect($("#inputData .shexjs-editor-pane").length, "data pane").to.equal(1);
       // the textarea proxy: jQuery .val() writes reach the editor document
       $("#inputSchema textarea").first().val("PREFIX : <http://a.example/>");

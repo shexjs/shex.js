@@ -43,15 +43,18 @@ if (!TEST_browser) {
 
   describe("a plugin from another origin", function () {
     this.timeout(20000);
-    let dom, $, shared;
+    let dom, $, shared, errors;
 
     before(async function () {
       // trusted up front; the question itself is the last suite in this file
-      ({dom, $, shared} = await Harness.boot(PAGE, "?editors=1&plugin=" + encodeURIComponent(ELSEWHERE),
-                                            {trust: [ELSEWHERE_ORIGIN]}));
+      ({dom, $, shared, errors} = await Harness.boot(PAGE, "?editors=1&plugin=" + encodeURIComponent(ELSEWHERE),
+                                                    {trust: [ELSEWHERE_ORIGIN]}));
     });
 
-    after(function () { if (dom) dom.window.close(); });
+    after(function () {
+      if (dom) dom.window.close();
+      Harness.expectClean(errors);
+    });
 
     /* Two origins, or the rest of this proves nothing. */
     it("should have been fetched from a host that is not the page's", function () {
@@ -178,15 +181,18 @@ if (!TEST_browser) {
    * by trusting the origin; this one answers at the dialog. */
   describe("the question a plugin from another origin raises", function () {
     this.timeout(20000);
-    let dom, $, shared, app;
+    let dom, $, shared, app, errors;
     const asking = () => $("#trustForm").dialog("isOpen");
     // the question is asked a microtask after the load is asked for
     const tick = () => new Promise(resolve => dom.window.setTimeout(resolve, 0));
 
     before(async function () {
-      ({dom, $, shared, app} = await Harness.boot(PAGE, "?editors=1"));
+      ({dom, $, shared, app, errors} = await Harness.boot(PAGE, "?editors=1"));
     });
-    after(function () { if (dom) dom.window.close(); });
+    after(function () {
+      if (dom) dom.window.close();
+      Harness.expectClean(errors);
+    });
 
     it("should ask, naming the site, and not load when the reader declines", async function () {
       const loading = app.loadPlugins([ELSEWHERE]);

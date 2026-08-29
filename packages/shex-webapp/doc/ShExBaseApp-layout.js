@@ -112,10 +112,13 @@ mixin(ShExBaseApp, {
         // the data pane's language is whatever the showing document is in, and
         // that is the selected source's to say
         this.editorSupport.addPane("inputData", this.Caches.inputData, null, () => this.neighborhoods.paneEditor());
+        // the query map: its pairs point at the two panes above
+        this.editorSupport.addPane("shapeMap", this.Caches.shapeMap, "shapemap");
         pluginDescriptors().forEach(ext => (ext.panes || []).forEach(pane => {
             if (pane.editor)
                 this.editorSupport.addPane(pane.name, this.Caches[pane.name], pane.editor);
         }));
+        this.editorSupport.wireShapeMapHovers();
     },
     /** The showing document may have changed language (a different source, or
      * a different pane of it), and a pane's grammar is fixed when it is

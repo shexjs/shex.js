@@ -19,7 +19,12 @@
  * Console traffic is forwarded except `console.debug` (the app's channel
  * for user-input errors) and jsdom's "Not implemented: navigation" (a test
  * that sets location).  Every `console.error` and jsdom error is also kept
- * in the returned `errors`, for a suite that wants to assert it made none.
+ * in the returned `errors`, for a suite that wants to assert it made none:
+ * `Harness.expectClean(errors)` fails on any it does not know to be noise
+ * -- jsdom's "Not implemented" for what it does not do, CodeMirror's
+ * measure loop asking a layout-less document for getClientRects -- and
+ * takes the patterns a suite expects on top (`expectClean(errors,
+ * [/no such thing/])`).
  */
 "use strict";
 
@@ -122,4 +127,30 @@ async function validate ($, shared) {
   await shared.promise;
 }
 
-module.exports = {boot, pick, validate, RepoServer, StaticResources};
+/** what jsdom and CodeMirror say under jsdom that no browser would */
+const NOISE = [
+  /Not implemented:/,                 // jsdom, for what it does not do
+  /getClientRects/,                   // CodeMirror's measure loop, with no layout to measure
+];
+
+/** the text of one entry of `errors`: a jsdom error or console.error's arguments */
+function errorText (entry) {
+  if (Array.isArray(entry))
+    return entry.map(a => a instanceof Error ? (a.stack || a.message) : String(a)).join(" ");
+  return entry instanceof Error ? (entry.stack || entry.message) : String(entry);
+}
+
+/** the errors a boot or a test left that neither jsdom's noise nor `allow` accounts for */
+function unexpectedErrors (errors, allow = []) {
+  return (errors || []).map(errorText)
+    .filter(text => !NOISE.concat(allow).some(pattern => pattern.test(text)));
+}
+
+/** fail on any error that was not expected; the failure lists them */
+function expectClean (errors, allow = []) {
+  const unexpected = unexpectedErrors(errors, allow);
+  if (unexpected.length)
+    throw new Error("unexpected console errors:\n  " + unexpected.map(e => e.split("\n")[0]).join("\n  "));
+}
+
+module.exports = {boot, pick, validate, expectClean, unexpectedErrors, RepoServer, StaticResources};

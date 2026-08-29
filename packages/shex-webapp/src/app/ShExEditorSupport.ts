@@ -37,28 +37,92 @@ class EditorSupport {
       // completions a module can only make from a live db: wikidata
       // completing entity IRIs from the labels it has loaded
       suppliedContext: () => ({db: cache.parsed}),
+      // a query map's two sides resolve against the schema's and the
+      // data's prefixes
+      shapeMap: language === "shapemap" ? () => this.shapeMapMetas(cache) : undefined,
     });
   }
 
   /** live autocomplete vocabulary: prefixes from the panes' metas, shape
-   * labels and constraint predicates from the relevant parsed schema */
+   * labels and constraint predicates from the relevant schema -- as last
+   * parsed for a validation *and* as the pane holds it now, so a label
+   * typed since the last validation completes too */
   completionSets (language, cache) {
     const {inputSchema, inputData} = this.app.Caches;
     // a ShExC pane completes from its own schema (e.g. shexmap's
     // outputSchema); the data pane completes from the input schema
     const schemaCache = language === "shexc" ? cache : inputSchema;
-    const schema = schemaCache.parsed;
+    const schemas = [schemaCache.parsed, this.liveSchema(schemaCache)].filter(s => s && typeof s === "object");
     const prefixes = Object.assign({},
                                    inputData.meta && inputData.meta.prefixes,
                                    inputSchema.meta && inputSchema.meta.prefixes,
-                                   cache.meta && cache.meta.prefixes);
-    const predicates = schema && schema._exprLocations
-          ? [...new Set([...schema._exprLocations.keys()].map(tc => tc.predicate))]
-          : [];
-    const shapeLabels = schema && schema._index ? Object.keys(schema._index.shapeExprs) : [];
-    return language === "turtle"
-      ? {prefixes, predicates}
+                                   cache.meta && cache.meta.prefixes,
+                                   ...schemas.map(s => s._prefixes || {}));
+    const predicates = [...new Set(schemas.flatMap(s => s._exprLocations
+      ? [...s._exprLocations.keys()].map(tc => tc.predicate) : []))];
+    const shapeLabels = [...new Set(schemas.flatMap(s => s._index ? Object.keys(s._index.shapeExprs) : []))];
+    return language === "turtle" ? {prefixes, predicates}
+      : language === "shapemap" ? {prefixes, shapeLabels, nodes: this.dataNodes()}
       : {prefixes, predicates, shapeLabels};
+  }
+
+  /** the schema pane's text as it parses now (the live linter's parse,
+   * memoized by the parser), or null while it doesn't */
+  liveSchema (cache) {
+    const text = cache.selection && cache.selection.val();
+    if (!text)
+      return null;
+    return ShExWebApp.EditorServices.parseShExC(text, {base: cache.meta && cache.meta.base}).schema;
+  }
+
+  /** the data's subjects, for the node side of a query map pair */
+  dataNodes () {
+    const db = this.app.Caches.inputData.parsed;
+    const subjects = db && typeof db.getSubjects === "function" ? db.getSubjects() : [];
+    return subjects.slice(0, 500).map(term => term.termType === "BlankNode" ? "_:" + term.value : term.value);
+  }
+
+  /** the base and the two metas a query map resolves against.  A pane's
+   * meta is filled by a parse; until the schema or the data has been
+   * parsed for a validation, what its text declares now stands in. */
+  shapeMapMetas (cache) {
+    const {inputSchema, inputData} = this.app.Caches;
+    return {base: cache.meta && cache.meta.base,
+            schemaMeta: this.liveMeta(inputSchema, "shexc"),
+            dataMeta: this.liveMeta(inputData, "turtle")};
+  }
+
+  liveMeta (cache, language) {
+    const meta = cache.meta || {};
+    if (meta.prefixes && Object.keys(meta.prefixes).length)
+      return meta;
+    const text = cache.selection && cache.selection.val();
+    if (!text)
+      return meta;
+    const parsed = language === "shexc"
+          ? ShExWebApp.EditorServices.parseShExC(text, {base: meta.base}).schema
+          : ShExWebApp.EditorServices.parseTurtle(text, {baseIRI: meta.base});
+    return {base: meta.base, prefixes: (parsed && (parsed._prefixes || parsed.prefixes)) || {}};
+  }
+
+  /** the schema pane's text, located over the schema as last parsed */
+  locateSchema () {
+    const {inputSchema} = this.app.Caches;
+    if (!inputSchema.parsed || typeof inputSchema.parsed !== "object")
+      return null;
+    return ShExWebApp.EditorServices.locateInParsed(
+      inputSchema.selection.val(), inputSchema.parsed, {base: inputSchema.meta && inputSchema.meta.base});
+  }
+
+  /** where the data is written: the source's own locator (an entity page,
+   * whatever it reads), else the Turtle parser's */
+  locateData (text) {
+    const {inputData} = this.app.Caches;
+    if (!text)
+      return null;
+    const db = inputData.parsed;
+    return (db && typeof db.locateDocument === "function" && db.locateDocument(text))
+      || ShExWebApp.EditorServices.parseTurtle(text, {baseIRI: inputData.meta && inputData.meta.base});
   }
 
   /** does the fixed shape map expect this entry to be nonconformant
@@ -81,21 +145,14 @@ class EditorSupport {
     if (!this.panes.inputSchema || !inputSchema.parsed)
       return;
     try {
-      const located = ShExWebApp.EditorServices.locateInParsed(
-        inputSchema.selection.val(), inputSchema.parsed);
+      const located = this.locateSchema();
       // ...kept, so a link resolved later can ask it where a shape is
       this.located = located;
-      // Where the data was written is the data source's to say: its
-      // document is Turtle, or an entity page, or whatever it reads.  A
-      // source that doesn't offer to locate its own leaves the Turtle
-      // parser, which is what a data pane has always held.
-      // Locating the data is worth doing whether or not it is showing in an
-      // editor: the results widget anchors to these ranges too.
-      const db = inputData.parsed;
-      const locate = text => !text ? null
-            : (db && typeof db.locateDocument === "function" && db.locateDocument(text))
-            || ShExWebApp.EditorServices.parseTurtle(
-              text, {baseIRI: inputData.meta && inputData.meta.base});
+      // Where the data was written is the data source's to say (see
+      // locateData).  Locating the data is worth doing whether or not it
+      // is showing in an editor: the results widget anchors to these
+      // ranges too.
+      const locate = text => this.locateData(text);
       // A source can hold several documents -- an entity page each, and
       // later a named graph each -- and a validation reaches all of them,
       // so locate them all.  The showing one comes first: its diagnostics
@@ -520,6 +577,7 @@ class EditorSupport {
           from: r.from, to: r.to,
           enter: () => show(group, "schema"),
           click: freeze(group, "schema"),
+          title: () => this.pairTitle(group, "schema"),
         }))),
       clearAll);
     // Both the object and the predicate trigger data-side hovers -- but
@@ -534,7 +592,8 @@ class EditorSupport {
           p => [].concat(anchorRanges(p, "object"), anchorRanges(p, "predicate"))
             .map(r => ({from: r.from, to: r.to,
                         enter: () => show([p], "data"),
-                        click: freeze([p], "data")}))),
+                        click: freeze([p], "data"),
+                        title: () => this.pairTitle([p], "data")}))),
         clearAll);
     // A pane a pair named is somewhere to hover from as well as somewhere
     // to light up: the reader may start at the AST and ask what made it.
@@ -557,6 +616,7 @@ class EditorSupport {
           from: range.from, to: range.to,
           enter: () => show(group, name),
           click: freeze(group, name),
+          title: () => this.pairTitle(group, name),
         })),
         clearAll);
     });
@@ -572,7 +632,8 @@ class EditorSupport {
             ? acc.concat(termRanges(r).map(f => (
                 {from: f.from, to: f.to,
                  enter: () => show([pair], "results"),
-                 click: freeze([pair], "results")})))
+                 click: freeze([pair], "results"),
+                 title: () => this.pairTitle([pair], "results")})))
             : acc;
         }, []),
         clearAll);
@@ -586,6 +647,76 @@ class EditorSupport {
           this.pairHoverPaint();
       });
     }
+  }
+
+  /**
+   * What a hover has to say for itself, in a tooltip: over a constraint,
+   * the triples it matched or failed; over a triple, the constraint it was
+   * held to; over a result or a plugin's pane, both.  A failure says why
+   * first.  Text is read from the documents the ranges are in, so it is
+   * spelled as the reader wrote it.
+   */
+  pairTitle (group, side) {
+    const lines = [];
+    const said = new Set();
+    const add = (line) => {
+      if (line && !said.has(line)) {
+        said.add(line);
+        lines.push(line);
+      }
+    };
+    const shown = group.slice(0, 6);
+    shown.forEach(p => {
+      if (p.status === "nonconformant" && p.message)
+        add(p.message);
+      if (side !== "schema")
+        add(this.constraintText(p));
+      if (side !== "data")
+        add(this.tripleText(p));
+    });
+    if (group.length > shown.length)
+      add("… and " + (group.length - shown.length) + " more");
+    return lines.length ? lines.join("\n") : null;
+  }
+
+  /** a pair's constraint as written: its parts, where an inline shape's
+   * body is left out (":s {" … "}") */
+  constraintText (p) {
+    const text = this.located ? this.located.text : this.app.Caches.inputSchema.selection.val();
+    const parts = p.schemaParts || (p.schema ? [p.schema] : []);
+    const said = parts.map(r => text.slice(r.from, r.to).trim()).filter(s => s);
+    return said.length ? said.join(" … ") : null;
+  }
+
+  /** a pair's triple as written in its document; a nested subject or
+   * object ([ … ]) is shown as its delimiters rather than its contents */
+  tripleText (p) {
+    const anchors = p.anchors;
+    if (!anchors || !anchors.subject && !anchors.object)
+      return null;
+    const text = this.docText(p.doc);
+    if (text === null)
+      return null;
+    const term = (name) => {
+      const parts = anchors[name + "Parts"];
+      if (parts && parts.length > 1)
+        return text.slice(parts[0].from, parts[0].to) + " … " + text.slice(parts[1].from, parts[1].to);
+      const r = anchors[name];
+      return r ? text.slice(r.from, r.to) : null;
+    };
+    const said = ["subject", "predicate", "object"].map(term).filter(s => s);
+    return said.length ? said.join(" ") : null;
+  }
+
+  /** the text of one of the data source's documents: the showing one from
+   * the pane, which holds edits the stashed copy hasn't seen */
+  docText (doc) {
+    const neighborhoods = this.app.neighborhoods;
+    const showing = neighborhoods ? neighborhoods.showing : -1;
+    if (doc === undefined || doc < 0 || doc === showing)
+      return this.app.Caches.inputData.selection.val();
+    const documents = neighborhoods ? neighborhoods.documents() : [];
+    return documents[doc] ? documents[doc].text : null;
   }
 
   /** Bring a pane forward where it is one of a set that take turns.
@@ -610,11 +741,9 @@ class EditorSupport {
 
   /** highlight a shape's declaration in the schema pane */
   highlightShape (label) {
-    const {inputSchema} = this.app.Caches;
-    if (!this.panes.inputSchema || !inputSchema.parsed)
+    const located = this.panes.inputSchema ? this.locateSchema() : null;
+    if (!located)
       return;
-    const located = ShExWebApp.EditorServices.locateInParsed(
-      inputSchema.selection.val(), inputSchema.parsed);
     const range = located.locate.shape(label);
     this.panes.inputSchema.highlight(range ? [range] : []);
   }
@@ -622,6 +751,80 @@ class EditorSupport {
   clearShapeHighlight () {
     if (this.panes.inputSchema)
       this.panes.inputSchema.clearHighlights();
+  }
+
+  /** the shape's declaration as written, for a tooltip: its first lines */
+  shapeTitle (label) {
+    const located = this.locateSchema();
+    const range = located ? located.locate.shape(label) : null;
+    return range ? firstLines(located.text.slice(range.from, range.to), 8) : null;
+  }
+
+  /** where a node is written in the data pane: the first statement it is
+   * the subject of (a shape-map parser's term, string or literal object) */
+  nodeRange (node) {
+    const {inputData} = this.app.Caches;
+    const located = this.locateData(inputData.selection.val());
+    if (!located)
+      return null;
+    const ld = typeof node === "string" ? node
+          : node && "@value" in node ? {value: node["@value"], type: node["@type"], language: node["@language"]}
+          : null;
+    return ld === null ? null : ShExWebApp.EditorServices.nodeRange(located, ld);
+  }
+
+  highlightNode (node) {
+    const pane = this.panes.inputData;
+    if (!pane)
+      return;
+    const range = this.nodeRange(node);
+    pane.highlight(range ? [range] : []);
+  }
+
+  clearNodeHighlight () {
+    if (this.panes.inputData)
+      this.panes.inputData.clearHighlights();
+  }
+
+  /** the statement a node opens, as written, for a tooltip */
+  nodeTitle (node) {
+    const range = this.nodeRange(node);
+    if (!range)
+      return null;
+    const text = this.app.Caches.inputData.selection.val();
+    return firstLines(text.slice(range.from), 6, /(^|\s)\.\s*$/);
+  }
+
+  /**
+   * The query map's pairs as hover regions: the shape side lights the
+   * shape's declaration in the schema pane, the node side where the node
+   * is written in the data pane, and each says what it points at.
+   * Re-read whenever the map changes (enableShapeHover).
+   */
+  wireShapeMapHovers () {
+    const pane = this.panes.shapeMap;
+    if (!pane || !pane.setHoverRegions)
+      return;
+    const cache = this.app.Caches.shapeMap;
+    const parsed = ShExWebApp.EditorServices.parseShapeMap(cache.selection.val() || "", this.shapeMapMetas(cache));
+    const regions = [];
+    (parsed.pairs || []).forEach((pair, i) => {
+      const shape = parsed.locate.shape(i), node = parsed.locate.node(i);
+      if (shape && typeof pair.shape === "string")
+        regions.push({from: shape.from, to: shape.to,
+                      enter: () => this.highlightShape(pair.shape),
+                      title: () => this.shapeTitle(pair.shape)});
+      // a term, not a triple pattern or an extension: those name a set
+      if (node && (typeof pair.node === "string" || (pair.node && "@value" in pair.node)))
+        regions.push({from: node.from, to: node.to,
+                      enter: () => this.highlightNode(pair.node),
+                      title: () => this.nodeTitle(pair.node)});
+    });
+    this.shapeMapRegions = regions;     // introspection for tests
+    pane.setHoverRegions(regions, () => {
+      this.clearShapeHighlight();
+      this.clearNodeHighlight();
+    });
   }
 
   /** hovering a shape lexical form (fixed-map inputs, result entries)
@@ -643,6 +846,9 @@ class EditorSupport {
     }).on("mouseleave.shexjsEditors", ".inputShape, .shapeMap .schema", () => {
       this.clearShapeHighlight();
     });
+    // the query map's own hovers follow its text: a pane raises keyup for
+    // every change, the app's writes included
+    $(document).on("keyup.shexjsEditors", "#queryMap", () => this.wireShapeMapHovers());
   }
 
   /** tear down every pane (restoring the textareas) and the hover handlers */
@@ -651,4 +857,22 @@ class EditorSupport {
     Object.values(this.panes).forEach((pane: any) => pane && pane.destroy());
     this.panes = {};
   }
+}
+
+/** the first `max` lines of a text, for a tooltip; `stopAt` ends it early
+ * at the first line matching (a statement's closing " ."), and an ellipsis
+ * says when there was more */
+function firstLines (text, max, stopAt?) {
+  const lines = text.split("\n");
+  const out = [];
+  for (const line of lines) {
+    if (out.length >= max) {
+      out.push("…");
+      break;
+    }
+    out.push(line);
+    if (stopAt && stopAt.test(line))
+      break;
+  }
+  return out.join("\n");
 }

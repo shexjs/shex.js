@@ -193,7 +193,7 @@ if (!TEST_browser) {
     });
 
     it("should replace the schema and data textareas with editor panes", function () {
-      expect($("#inputSchema .shexjs-editor-pane").length, "schema pane").to.equal(1);
+      expect($("#schemaDocument .shexjs-editor-pane").length, "schema pane").to.equal(1);
       expect($("#inputData .shexjs-editor-pane").length, "data pane").to.equal(1);
       // the textarea proxy: jQuery .val() writes reach the editor document
       $("#inputSchema textarea").first().val("PREFIX : <http://a.example/>");
@@ -2161,7 +2161,7 @@ if (!TEST_browser) {
       expect(shared.Caches.editorSupport, "stash removed").to.equal(undefined);
 
       $("#editors").val("").trigger("change");
-      expect($("#inputSchema .shexjs-editor-pane").length, "schema pane back").to.equal(1);
+      expect($("#schemaDocument .shexjs-editor-pane").length, "schema pane back").to.equal(1);
       expect($("#inputSchema textarea").first().val(), "text survived the round trip").to.equal(before);
     });
   });
@@ -2187,7 +2187,7 @@ if (!TEST_browser) {
     it("should open with the editors when nothing is asked for", async function () {
       const {$} = await boot("");
       expect($("#editors").val(), "the select agrees").to.equal("");
-      expect($("#inputSchema .shexjs-editor-pane").length, "schema pane").to.equal(1);
+      expect($("#schemaDocument .shexjs-editor-pane").length, "schema pane").to.equal(1);
       expect($("#inputData .shexjs-editor-pane").length, "data pane").to.equal(1);
       expect($("#inputSchema textarea").first()[0].style.display, "textarea stood down")
         .to.equal("none");
@@ -2225,6 +2225,175 @@ if (!TEST_browser) {
       const {$} = await boot("?editors=false");
       expect($("#editors").val(), "?editors=false means the textareas").to.equal("textarea");
       expect($(".shexjs-editor-pane").length, "so no panes").to.equal(0);
+    });
+  });
+
+  /* The query map is the third managed editor (plan.md D1): its pairs
+   * point at the schema and the data and say what they point at (D2); the
+   * schema pane completes what it holds now, validated or not (D3); and a
+   * schema not written in ShExC is located in what it was written in
+   * (D5). */
+  describe("the query map as an editor, and what the panes say", function () {
+    this.timeout(30000);
+    const page = "packages/shex-webapp/doc/shex-simple.html";
+    let dom, $, shared, errors, es;
+    const set = (selector, value) => {
+      const elt = $(selector).first();
+      elt.val(value);
+      elt.trigger("change");
+    };
+    const SCHEMA = [
+      "PREFIX : <http://a.example/>",
+      "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>",
+      ":S {",
+      "  :p xsd:integer",
+      "}",
+    ].join("\n");
+    const DATA = [
+      "PREFIX : <http://a.example/>",
+      ':x :p "not a number" .',
+      ":y :p 2 .",
+    ].join("\n");
+    const MAP = "<http://a.example/x>@<http://a.example/S>,\n:y @ :S";
+
+    before(async function () {
+      ({dom, $, shared, errors} = await Harness.boot(page, "?editors=1"));
+      es = shared.Caches.editorSupport;
+      set("#inputSchema textarea", SCHEMA);
+      set("#inputData textarea", DATA);
+      set("#queryMap", MAP);
+      await shared.promise;
+    });
+    after(function () {
+      if (dom)
+        dom.window.close();
+      Harness.expectClean(errors);
+    });
+
+    it("should manage the query map as a pane of its own", function () {
+      expect(es.panes.shapeMap, "a pane over #queryMap").to.exist;
+      expect(es.panes.shapeMap.textarea.id).to.equal("queryMap");
+      expect(es.panes.shapeMap.language).to.equal("shapemap");
+      expect($("#queryMap").val(), "the proxy still answers").to.equal(MAP);
+    });
+
+    it("should point each pair at the shape and the node it names, and say what they are", function () {
+      const regions = es.shapeMapRegions;
+      const slices = regions.map(r => MAP.slice(r.from, r.to));
+      expect(slices).to.have.members(["<http://a.example/x>", "@<http://a.example/S>", ":y", "@ :S"]);
+      const regionFor = (text) => regions[slices.indexOf(text)];
+      const calls = {schema: [], data: []};
+      const origSchema = es.panes.inputSchema.highlight, origData = es.panes.inputData.highlight;
+      es.panes.inputSchema.highlight = (rs) => calls.schema.push(rs);
+      es.panes.inputData.highlight = (rs) => calls.data.push(rs);
+      try {
+        regionFor("@ :S").enter();
+        expect(calls.schema.length, "the schema pane lit").to.equal(1);
+        expect(calls.schema[0].map(r => SCHEMA.slice(r.from, r.to))).to.deep.equal([":S {\n  :p xsd:integer\n}"]);
+        regionFor(":y").enter();
+        expect(calls.data.length, "the data pane lit").to.equal(1);
+        expect(calls.data[0].map(r => DATA.slice(r.from, r.to))).to.deep.equal([":y"]);
+        expect(regionFor("@ :S").title(), "the shape side says the declaration").to.equal(":S {\n  :p xsd:integer\n}");
+        expect(regionFor(":y").title(), "the node side says the statement").to.equal(":y :p 2 .");
+        expect(regionFor("<http://a.example/x>").title()).to.equal(':x :p "not a number" .');
+      } finally {
+        es.panes.inputSchema.highlight = origSchema;
+        es.panes.inputData.highlight = origData;
+      }
+    });
+
+    it("should follow the map as it changes", async function () {
+      $("#queryMap").val(":y @ :S");   // as the app writes it: through the proxy
+      await new Promise(resolve => setTimeout(resolve, 20));
+      expect(es.shapeMapRegions.map(r => ":y @ :S".slice(r.from, r.to))).to.have.members([":y", "@ :S"]);
+      $("#queryMap").val(MAP);
+      await new Promise(resolve => setTimeout(resolve, 20));
+      expect(es.shapeMapRegions.length).to.equal(4);
+    });
+
+    it("should lint the query map with the shape-map parser", async function () {
+      const pane = es.panes.shapeMap;
+      $("#queryMap").val("<http://a.example/x>@ , :y @ :S");   // a comma where the shape was due
+      await new Promise(resolve => setTimeout(resolve, 1200));   // the linter's delay
+      expect(pane.view.dom.querySelectorAll(".cm-lintRange-error, .cm-lint-marker-error").length, "a squiggle").to.be.above(0);
+      set("#queryMap", MAP);
+      await shared.promise;
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      expect(pane.view.dom.querySelectorAll(".cm-lintRange-error, .cm-lint-marker-error").length, "gone with the error").to.equal(0);
+    });
+
+    it("should complete a shape typed since the last validation, and the data's nodes", function () {
+      const {inputSchema, shapeMap} = shared.Caches;
+      $("#inputSchema textarea").first().val(SCHEMA + "\n:New { :q . }");   // typed, not validated
+      try {
+        const sets = es.completionSets("shexc", inputSchema);
+        expect(sets.shapeLabels).to.include("http://a.example/New");
+        expect(sets.shapeLabels, "the validated one too").to.include("http://a.example/S");
+        expect(sets.predicates).to.include("http://a.example/q");
+        const map = es.completionSets("shapemap", shapeMap);
+        expect(map.shapeLabels).to.include("http://a.example/New");
+        expect(map.nodes).to.include("http://a.example/x");
+        expect(map.nodes).to.include("http://a.example/y");
+      } finally {
+        $("#inputSchema textarea").first().val(SCHEMA);
+      }
+    });
+
+    it("should say, over a triple, the constraint it was held to, and over a constraint, the triples", async function () {
+      $("#validate").trigger("click");
+      await shared.promise;
+      expect(es.lastMapped, "mapped").to.exist;
+      const captured = {};
+      const capture = (name) => {
+        const pane = es.panes[name];
+        const orig = pane.setHoverRegions;
+        pane.setHoverRegions = (regions, leave) => { captured[name] = regions; orig.call(pane, regions, leave); };
+        return () => { pane.setHoverRegions = orig; };
+      };
+      const restore = [capture("inputSchema"), capture("inputData")];
+      try {
+        es.setPairHovers(es.lastMapped.pairs);
+        const titles = (name) => captured[name].map(r => r.title && r.title()).filter(t => t);
+        const overData = titles("inputData");
+        expect(overData.join("\n"), "the constraint, over the triple").to.include(":p xsd:integer");
+        expect(overData.some(t => t.split("\n").length >= 2), "and why it failed, first").to.equal(true);
+        const overSchema = titles("inputSchema");
+        expect(overSchema.join("\n"), "the triples, over the constraint").to.include(':x :p "not a number"');
+        expect(overSchema.join("\n")).to.include(":y :p 2");
+      } finally {
+        restore.forEach(f => f());
+      }
+    });
+
+    it("should anchor a validation in a ShExR schema at the triples that describe the constraint", async function () {
+      const SHEXR = [
+        "PREFIX : <http://a.example/>",
+        "PREFIX sx: <http://www.w3.org/ns/shex#>",
+        "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>",
+        "[] a sx:Schema ; sx:shapes ( :S ) .",
+        ":S a sx:ShapeDecl ; sx:shapeExpr [",
+        "  a sx:Shape ; sx:expression [",
+        "    a sx:TripleConstraint ; sx:predicate :p ;",
+        "    sx:valueExpr [ a sx:NodeConstraint ; sx:datatype xsd:integer ]",
+        "  ] ] .",
+      ].join("\n");
+      set("#inputSchema textarea", SHEXR);
+      set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
+      await shared.promise;
+      expect(shared.Caches.inputSchema.language, "read as ShExR").to.equal("ShExR");
+      $("#validate").trigger("click");
+      await shared.promise;
+      expect($("#results .fails").length, "nonconformant; results: " + $("#results").text().substring(0, 200)).to.be.above(0);
+      const mapped = es.lastMapped;
+      expect(mapped, "mapped").to.exist;
+      const said = mapped.schema.map(d => SHEXR.slice(d.from, d.to));
+      expect(said.some(s => s.includes("sx:predicate :p")), "the constraint's description: " + JSON.stringify(said)).to.equal(true);
+      // ...and the schema pane's linter reads it as Turtle: nothing to squiggle
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      expect(es.panes.inputSchema.view.dom.querySelectorAll(".cm-lintRange-error").length,
+             "no ShExC errors over Turtle").to.equal(0);
+      set("#inputSchema textarea", SCHEMA);
+      await shared.promise;
     });
   });
 }

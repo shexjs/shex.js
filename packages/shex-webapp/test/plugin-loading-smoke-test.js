@@ -321,7 +321,7 @@ if (!TEST_browser) {
       expect(Object.keys(shared.Caches).sort(), "the caches it declared, gone")
         .to.deep.equal(["inputData", "inputSchema", "manifest", "plugin", "shapeMap"]);
       expect(Object.keys(shared.Caches.editorSupport.panes).sort(),
-             "and the editors over them").to.deep.equal(["inputData", "inputSchema"]);
+             "and the editors over them").to.deep.equal(["inputData", "inputSchema", "shapeMap"]);
       expect(shared.app.QueryParams.filter(
         p => ["bindings", "statics", "outSchema", "output-map"].includes(p.queryStringParm)),
              "nothing left to fill them from").to.deep.equal([]);

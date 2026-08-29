@@ -64,7 +64,8 @@ if (!TEST_browser) {
 
     it("should boot with editor panes on the ShExMap caches", function () {
       expect($("#results .error").length, $("#results .error").text()).to.equal(0);
-      ["#inputSchema", "#inputData", "#outputSchema", "#bindings1", "#staticVars"].forEach(sel => {
+      // the schema's own box: #inputSchema also holds the query map's pane
+      ["#schemaDocument", "#inputData", "#outputSchema", "#bindings1", "#staticVars"].forEach(sel => {
         expect($(sel + " .shexjs-editor-pane").length, sel + " pane").to.equal(1);
       });
     });
