@@ -1,0 +1,353 @@
+// ShEx Compact Syntax (ShExC) for Lezer: an incremental, error-tolerant
+// parse of a schema, for the editor.
+//
+// Productions follow the ShExC grammar in the ShEx specification
+// (https://shex.io/shex-semantics/#shexc), in the LALR shape shex.js's own
+// parser gives them (packages/shex-parser/lib/ShExJison.jison) -- so what
+// this accepts is what the validator accepts, and the two stay comparable
+// production by production.  Names are the spec's, capitalized where a
+// node is worth having in the tree; the tree-sitter grammar
+// (github.com/ericprud/tree-sitter-shexc) is the other port of the same
+// text.
+
+@top ShExDoc { directive* ((notStartAction | StartActions) statement*)? }
+
+directive { BaseDecl | PrefixDecl | ImportDecl }
+BaseDecl { BaseKw IRIREF }
+PrefixDecl { PrefixKw PNAME_NS iri }
+ImportDecl { ImportKw iri }
+
+notStartAction { Start | ShapeExprDecl }
+statement { directive | notStartAction }
+
+Start { StartKw "=" shapeExpression }
+StartActions { CodeDecl+ }
+
+// ── shape expression declarations ───────────────────────────────────────
+ShapeExprDecl {
+  AbstractKw? ShapeExprLabel Restriction* (shapeExpression | ExternalKw)
+}
+Restriction { (RestrictsKw | "-") shapeOrRef }
+
+// ── shape expressions: OR over AND over NOT over atoms ──────────────────
+shapeExpression { shapeOrExpr }
+shapeOrExpr { shapeAndExpr | ShapeOr }
+ShapeOr { shapeAndExpr (OrKw shapeAndExpr)+ }
+shapeAndExpr { shapeNotExpr | ShapeAnd }
+ShapeAnd { shapeNotExpr (AndKw shapeNotExpr)+ }
+shapeNotExpr { shapeAtom | ShapeNot }
+ShapeNot { NotKw shapeAtom }
+
+// A non-literal node constraint and a shape definition or reference may sit
+// back to back, shorthand for their conjunction (`IRI {…}`, `@<S> LENGTH 3`);
+// a literal one stands alone.  Splitting them keeps one token of lookahead
+// enough, as in the reference grammar.
+shapeAtom {
+  NonLitNodeConstraint shapeOrRef? |
+  LitNodeConstraint |
+  shapeOrRef NonLitNodeConstraint? |
+  "(" shapeExpression ")" |
+  ShapeAny
+}
+ShapeAny { "." }
+
+// ...and the inline variants, inside a triple constraint: no annotations or
+// semantic actions of their own (those belong to the constraint)
+inlineShapeExpression { inlineShapeOrExpr }
+inlineShapeOrExpr { inlineShapeAndExpr | InlineShapeOr }
+InlineShapeOr[@name=ShapeOr] { inlineShapeAndExpr (OrKw inlineShapeAndExpr)+ }
+inlineShapeAndExpr { inlineShapeNotExpr | InlineShapeAnd }
+InlineShapeAnd[@name=ShapeAnd] { inlineShapeNotExpr (AndKw inlineShapeNotExpr)+ }
+inlineShapeNotExpr { inlineShapeAtom | InlineShapeNot }
+InlineShapeNot[@name=ShapeNot] { NotKw inlineShapeAtom }
+
+inlineShapeAtom {
+  NonLitInlineNodeConstraint inlineShapeOrRef? |
+  LitInlineNodeConstraint |
+  inlineShapeOrRef NonLitInlineNodeConstraint? |
+  "(" shapeExpression ")" |
+  ShapeAny
+}
+
+// ...and what EXTENDS takes: as inline, but a node kind must bring a shape,
+// so the body that follows is the extending shape's own
+extendsShapeExpression { extendsShapeOrExpr }
+extendsShapeOrExpr { extendsShapeAndExpr | ExtendsShapeOr }
+ExtendsShapeOr[@name=ShapeOr] { extendsShapeAndExpr (OrKw extendsShapeAndExpr)+ }
+extendsShapeAndExpr { extendsShapeNotExpr | ExtendsShapeAnd }
+ExtendsShapeAnd[@name=ShapeAnd] { extendsShapeNotExpr (AndKw extendsShapeNotExpr)+ }
+extendsShapeNotExpr { extendsShapeAtom | ExtendsShapeNot }
+ExtendsShapeNot[@name=ShapeNot] { NotKw extendsShapeAtom }
+
+extendsShapeAtom {
+  NonLitInlineNodeConstraint inlineShapeOrRef |
+  LitInlineNodeConstraint |
+  inlineShapeOrRef NonLitInlineNodeConstraint? |
+  "(" shapeExpression ")" |
+  ShapeAny
+}
+
+shapeOrRef { ShapeDefinition | ShapeRef }
+inlineShapeOrRef { InlineShapeDefinition | ShapeRef }
+
+// `@<S>`, `@:S`, `@ _:b`: a reference to a labeled shape.  Written
+// without a space, the `@` and the label are one token, so that `@ex:S`
+// is never read as the language tag `@ex` -- what the reference lexer's
+// ATPNAME_LN/ATPNAME_NS do
+ShapeRef { ATIRIREF | ATPNAME_LN | ATPNAME_NS | ATBLANK_NODE_LABEL | "@" ShapeExprLabel }
+
+// ── node constraints ────────────────────────────────────────────────────
+NonLitNodeConstraint[@name=NodeConstraint] { nonLitInlineNodeConstraint Annotation* CodeDecl* }
+LitNodeConstraint[@name=NodeConstraint] { litInlineNodeConstraint Annotation* CodeDecl* }
+NonLitInlineNodeConstraint[@name=NodeConstraint] { nonLitInlineNodeConstraint }
+LitInlineNodeConstraint[@name=NodeConstraint] { litInlineNodeConstraint }
+
+litInlineNodeConstraint {
+  LiteralKw xsFacet* |
+  Datatype xsFacet* |
+  ValueSet xsFacet* |
+  NumericFacet+
+}
+
+nonLitInlineNodeConstraint {
+  NodeKind StringFacet* |
+  StringFacet+
+}
+
+NodeKind { IriKw | BnodeKw | NonLiteralKw }
+
+xsFacet { StringFacet | NumericFacet }
+
+StringFacet {
+  StringLength INTEGER |
+  REGEXP
+}
+StringLength { LengthKw | MinLengthKw | MaxLengthKw }
+
+NumericFacet {
+  NumericRange rawNumeric |
+  NumericLength INTEGER
+}
+rawNumeric { INTEGER | DECIMAL | DOUBLE | String "^^" Datatype }
+NumericRange { MinInclusiveKw | MinExclusiveKw | MaxInclusiveKw | MaxExclusiveKw }
+NumericLength { TotalDigitsKw | FractionDigitsKw }
+
+Datatype { iri }
+
+// ── value sets ──────────────────────────────────────────────────────────
+ValueSet { "[" valueSetValue* "]" }
+
+valueSetValue { IriRange | LiteralRange | LanguageRange | WildcardRange }
+
+WildcardRange { "." (IriExclusion+ | LiteralExclusion+ | LanguageExclusion+) }
+
+IriRange { iri ("~" IriExclusion*)? }
+IriExclusion { "-" iri "~"? }
+
+LiteralRange { Literal ("~" LiteralExclusion*)? }
+LiteralExclusion { "-" Literal "~"? }
+
+// `@~`: a stem of every language.  One token with its tilde, so the
+// value set's `@` never has to be told from a shape reference's
+LanguageRange {
+  LANGTAG ("~" LanguageExclusion*)? |
+  LANG_WILDCARD LanguageExclusion*
+}
+LanguageExclusion { "-" LANGTAG "~"? }
+
+// ── shape definitions ───────────────────────────────────────────────────
+ShapeDefinition { InlineShapeDefinition Annotation* CodeDecl* }
+
+InlineShapeDefinition {
+  (Extension | ExtraPropertySet | ClosedKw)* "{" TripleExpression? "}"
+}
+
+Extension { (ExtendsKw | "&") extendsShapeExpression }
+ExtraPropertySet { ExtraKw Predicate+ }
+
+// ── triple expressions ──────────────────────────────────────────────────
+// `|` between groups is a OneOf, `;` (or `,`) between elements an EachOf;
+// the tree keeps the elements flat under TripleExpression, with the
+// separators between them saying which.
+TripleExpression { groupTripleExpr ("|" groupTripleExpr)* }
+
+groupTripleExpr { unaryTripleExpr ((";" | ",") unaryTripleExpr)* (";" | ",")? }
+
+unaryTripleExpr {
+  ("$" TripleExprLabel)? (TripleConstraint | BracketedTripleExpr) |
+  Include
+}
+
+BracketedTripleExpr {
+  "(" TripleExpression ")" Cardinality? Annotation* CodeDecl*
+}
+
+TripleConstraint {
+  SenseFlags? Predicate inlineShapeExpression Cardinality? Annotation* CodeDecl*
+}
+SenseFlags { "^" }
+
+Cardinality { "*" | "+" | "?" | REPEAT_RANGE }
+
+Include { "&" TripleExprLabel }
+
+// ── annotations and semantic actions ────────────────────────────────────
+Annotation { "//" Predicate (iri | Literal) }
+
+CodeDecl { "%" iri (CODE | "%") }
+
+// ── labels, predicates, IRIs, literals ──────────────────────────────────
+ShapeExprLabel { iri | BlankNode }
+TripleExprLabel { iri | BlankNode }
+
+Predicate { iri | RdfTypeKw }
+
+iri { IRIREF | PrefixedName }
+PrefixedName { PNAME_LN | PNAME_NS }
+BlankNode { BLANK_NODE_LABEL }
+
+Literal { RdfLiteral | NumericLiteral | BooleanLiteral }
+
+RdfLiteral {
+  LangString |
+  String ("^^" Datatype)?
+}
+
+LangString {
+  LANG_STRING_LITERAL_LONG1 | LANG_STRING_LITERAL_LONG2 |
+  LANG_STRING_LITERAL1 | LANG_STRING_LITERAL2
+}
+
+String {
+  STRING_LITERAL_LONG1 | STRING_LITERAL_LONG2 |
+  STRING_LITERAL1 | STRING_LITERAL2
+}
+
+NumericLiteral { INTEGER | DECIMAL | DOUBLE }
+BooleanLiteral { TrueKw | FalseKw }
+
+// ── tokens ──────────────────────────────────────────────────────────────
+@skip { space | Comment }
+
+@tokens {
+  space { $[ \t\r\n]+ }
+  Comment { "#" ![\n\r]* | "/*" blockCommentRest }
+  blockCommentRest { ![*] blockCommentRest | "*" blockCommentAfterStar }
+  blockCommentAfterStar { "/" | "*" blockCommentAfterStar | ![/*] blockCommentRest }
+
+  hex { $[0-9a-fA-F] }
+  uchar { "\\u" hex hex hex hex | "\\U" hex hex hex hex hex hex hex hex }
+
+  IRIREF { "<" (![\u{0}-\u{20}<>"{}|^`\\] | uchar)* ">" }
+
+  pnCharsBase {
+    $[A-Za-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}] |
+    $[\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}] |
+    $[\u{10000}-\u{EFFFF}]
+  }
+  pnCharsU { pnCharsBase | "_" }
+  pnChars { pnCharsU | "-" | $[0-9\u{B7}\u{300}-\u{36F}\u{203F}-\u{2040}] }
+
+  PNAME_NS { pnPrefix? ":" }
+  pnPrefix { pnCharsBase ((pnChars | ".")* pnChars)? }
+
+  PNAME_LN { pnPrefix? ":" pnLocal }
+  pnLocal { (pnCharsU | ":" | $[0-9] | plx) ((pnChars | "." | ":" | plx)* (pnChars | ":" | plx))? }
+  plx { "%" hex hex | "\\" $[_~.\-!$&'()*+,;=/?#@%] }
+
+  BLANK_NODE_LABEL { "_:" (pnCharsU | $[0-9]) ((pnChars | ".")* pnChars)? }
+
+  ATIRIREF { "@" IRIREF }
+  ATPNAME_LN { "@" PNAME_LN }
+  ATPNAME_NS { "@" PNAME_NS }
+  ATBLANK_NODE_LABEL { "@" BLANK_NODE_LABEL }
+
+  langtag { "@" $[a-zA-Z]+ ("-" $[a-zA-Z0-9]+)* }
+  LANGTAG { langtag }
+  LANG_WILDCARD { "@" $[ \t\r\n]* "~" }
+
+  INTEGER { $[+\-]? $[0-9]+ }
+  DECIMAL { $[+\-]? $[0-9]* "." $[0-9]+ }
+  DOUBLE {
+    $[+\-]? ($[0-9]+ "." $[0-9]* exponent | "." $[0-9]+ exponent | $[0-9]+ exponent)
+  }
+  exponent { $[eE] $[+\-]? $[0-9]+ }
+
+  REPEAT_RANGE { "{" $[0-9]+ ("," ($[0-9]+ | "*")?)? "}" }
+
+  echar { "\\" $[tbnrf"'\\] }
+  string1 { "'" (!['\\\n\r] | echar | uchar)* "'" }
+  string2 { '"' (!["\\\n\r] | echar | uchar)* '"' }
+  stringLong1 { "'''" longSingleBody "'''" }
+  longSingleBody { (!['\\] | "'" !['] | "''" !['] | echar | uchar)* }
+  stringLong2 { '"""' longQuoteBody '"""' }
+  longQuoteBody { (!["\\] | '"' !["] | '""' !["] | echar | uchar)* }
+
+  STRING_LITERAL1 { string1 }
+  STRING_LITERAL2 { string2 }
+  STRING_LITERAL_LONG1 { stringLong1 }
+  STRING_LITERAL_LONG2 { stringLong2 }
+
+  // a language tag glued to its string is one token, as the reference
+  // lexer has it: in a value set, `"x"@en` is a literal and `"x" @en` two
+  // values
+  LANG_STRING_LITERAL1 { string1 langtag }
+  LANG_STRING_LITERAL2 { string2 langtag }
+  LANG_STRING_LITERAL_LONG1 { stringLong1 langtag }
+  LANG_STRING_LITERAL_LONG2 { stringLong2 langtag }
+
+  REGEXP { "/" (![/\\\n\r] | "\\" $[nrt\\|.?*+(){}$\-\[\]^/] | uchar)+ "/" $[smix]* }
+
+  CODE { "{" (![%\\] | "\\" $[%\\] | uchar)* "%}" }
+
+  // case-insensitive keywords
+  BaseKw { $[Bb] $[Aa] $[Ss] $[Ee] }
+  PrefixKw { $[Pp] $[Rr] $[Ee] $[Ff] $[Ii] $[Xx] }
+  ImportKw { $[Ii] $[Mm] $[Pp] $[Oo] $[Rr] $[Tt] }
+  StartKw { $[Ss] $[Tt] $[Aa] $[Rr] $[Tt] }
+  ExternalKw { $[Ee] $[Xx] $[Tt] $[Ee] $[Rr] $[Nn] $[Aa] $[Ll] }
+  AbstractKw { $[Aa] $[Bb] $[Ss] $[Tt] $[Rr] $[Aa] $[Cc] $[Tt] }
+  RestrictsKw { $[Rr] $[Ee] $[Ss] $[Tt] $[Rr] $[Ii] $[Cc] $[Tt] $[Ss] }
+  ExtendsKw { $[Ee] $[Xx] $[Tt] $[Ee] $[Nn] $[Dd] $[Ss] }
+  ClosedKw { $[Cc] $[Ll] $[Oo] $[Ss] $[Ee] $[Dd] }
+  ExtraKw { $[Ee] $[Xx] $[Tt] $[Rr] $[Aa] }
+  LiteralKw { $[Ll] $[Ii] $[Tt] $[Ee] $[Rr] $[Aa] $[Ll] }
+  BnodeKw { $[Bb] $[Nn] $[Oo] $[Dd] $[Ee] }
+  IriKw { $[Ii] $[Rr] $[Ii] }
+  NonLiteralKw { $[Nn] $[Oo] $[Nn] $[Ll] $[Ii] $[Tt] $[Ee] $[Rr] $[Aa] $[Ll] }
+  AndKw { $[Aa] $[Nn] $[Dd] }
+  OrKw { $[Oo] $[Rr] }
+  NotKw { $[Nn] $[Oo] $[Tt] }
+  MinInclusiveKw { $[Mm] $[Ii] $[Nn] $[Ii] $[Nn] $[Cc] $[Ll] $[Uu] $[Ss] $[Ii] $[Vv] $[Ee] }
+  MinExclusiveKw { $[Mm] $[Ii] $[Nn] $[Ee] $[Xx] $[Cc] $[Ll] $[Uu] $[Ss] $[Ii] $[Vv] $[Ee] }
+  MaxInclusiveKw { $[Mm] $[Aa] $[Xx] $[Ii] $[Nn] $[Cc] $[Ll] $[Uu] $[Ss] $[Ii] $[Vv] $[Ee] }
+  MaxExclusiveKw { $[Mm] $[Aa] $[Xx] $[Ee] $[Xx] $[Cc] $[Ll] $[Uu] $[Ss] $[Ii] $[Vv] $[Ee] }
+  LengthKw { $[Ll] $[Ee] $[Nn] $[Gg] $[Tt] $[Hh] }
+  MinLengthKw { $[Mm] $[Ii] $[Nn] $[Ll] $[Ee] $[Nn] $[Gg] $[Tt] $[Hh] }
+  MaxLengthKw { $[Mm] $[Aa] $[Xx] $[Ll] $[Ee] $[Nn] $[Gg] $[Tt] $[Hh] }
+  TotalDigitsKw { $[Tt] $[Oo] $[Tt] $[Aa] $[Ll] $[Dd] $[Ii] $[Gg] $[Ii] $[Tt] $[Ss] }
+  FractionDigitsKw { $[Ff] $[Rr] $[Aa] $[Cc] $[Tt] $[Ii] $[Oo] $[Nn] $[Dd] $[Ii] $[Gg] $[Ii] $[Tt] $[Ss] }
+  RdfTypeKw { "a" }
+  TrueKw { "true" }
+  FalseKw { "false" }
+
+  "=" "//" "{" "}" "&" "|" "," "(" ")" "[" "]" "$" "^^" "^" "." "~" ";" "*" "+" "?" "-" "%" "@"
+
+  @precedence {
+    LANG_STRING_LITERAL_LONG1, LANG_STRING_LITERAL_LONG2, LANG_STRING_LITERAL1, LANG_STRING_LITERAL2,
+    STRING_LITERAL_LONG1, STRING_LITERAL_LONG2, STRING_LITERAL1, STRING_LITERAL2,
+    DOUBLE, DECIMAL, INTEGER, ".", "-", "+",
+    REPEAT_RANGE, CODE, "{",
+    Comment, REGEXP, "//",
+    ATIRIREF, ATPNAME_LN, ATPNAME_NS, ATBLANK_NODE_LABEL, LANGTAG, LANG_WILDCARD, "@",
+    "^^", "^",
+    IRIREF, BLANK_NODE_LABEL, PNAME_LN, PNAME_NS,
+    BaseKw, PrefixKw, ImportKw, StartKw, ExternalKw, AbstractKw, RestrictsKw, ExtendsKw,
+    ClosedKw, ExtraKw, LiteralKw, BnodeKw, IriKw, NonLiteralKw, AndKw, OrKw, NotKw,
+    MinInclusiveKw, MinExclusiveKw, MaxInclusiveKw, MaxExclusiveKw,
+    LengthKw, MinLengthKw, MaxLengthKw, TotalDigitsKw, FractionDigitsKw,
+    RdfTypeKw, TrueKw, FalseKw
+  }
+}
+
+@detectDelim
