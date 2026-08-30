@@ -233,7 +233,7 @@ ShEx-1-era CLI cases are gone already, and the writer rename is in §I3.
 The Makefile is hand-maintained; the generator it grew out of
 (`tools/makeMake.js`) had stopped running and is gone (I2, 2026-08-29).
 
-- **I1 (decision)** `perf/fhir/corpus/examples`: 2,172 tracked files,
+- **I1 (done 2026-08-29)** `perf/fhir/corpus/examples`: 2,172 tracked files,
   33 MB of an 82 MB pack -- tracked from before `.gitignore` got
   `perf/*/corpus/` and `perf/fhir/fetch.sh` was written to fetch the
   published FHIR build, which is what `bench.js` means to run against.
