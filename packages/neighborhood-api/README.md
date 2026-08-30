@@ -15,7 +15,7 @@ npm install --save @shexjs/neighborhood-api
 
 Each neighborhood implementation needs different things to come to life — an
 rdfjs store wants files (with media types), a SPARQL db wants an endpoint and
-query-strategy flags, a wikidata db wants the page base it appends entity ids
+query-strategy flags, a Wikibase db wants the page base it appends entity ids
 to. A host that offers several implementations (the CLI, the WebApp)
 shouldn't hard-code each one's needs, so a module may *declare* them by
 exporting, alongside the longstanding `{name, description, ctor}`:
@@ -47,7 +47,7 @@ OpenAPI can't (`alias`, `defaultOption`, `lazyMultiple`, `group`), which is
 why `DbParamSpec` carries a `cli` hint rather than pretending OpenAPI covers
 a command line. `bin/validate` in [`@shexjs/cli`](../shex-cli#readme)
 appends the declared options of its registered modules (`--endpoint …`,
-`--wikidata …`) and constructs whichever module's selector appears.
+`--wikibase …`) and constructs whichever module's selector appears.
 
 ## fields and panes (STRAWMAN)
 
@@ -108,7 +108,7 @@ header line of its own says `language: "turtle"` for the body and describes
 just the header; the host overlays the module's tokens and diagnostics on
 the grammar it named. `complete` receives an `EditorContext` carrying the
 live db, which is how a completion no host could compute gets made — the
-wikidata module completes entity IRIs from the labels of the pages its db
+Wikibase module completes entity IRIs from the labels of the pages its db
 has actually loaded.
 
 **The fallback is the textarea.** A module that describes no language gets
@@ -158,7 +158,7 @@ with only *optional* affordances (`suggestFocusNodes`, `labelOf`) — the app
 feature-tests and falls back to its generic UI, and a plain
 `NeighborhoodDb` loads fine. The shape-map's focus-node menu asks
 `suggestFocusNodes` first, because a db knows what its nodes are where the
-app can only guess from whatever triples are loaded (over the wikidata
+app can only guess from whatever triples are loaded (over the Wikibase
 neighborhood, guessing offers statement and value nodes alongside the
 entities anyone would actually validate). Construction is covered by
 `dbParams`/`fromParams` above, rendered as a form rather than command line

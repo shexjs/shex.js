@@ -65,9 +65,38 @@ export function repoRoot (from: string): string {
   }
 }
 
+/**
+ * How much an Accept header wants a media type: its q, from the most
+ * specific range that matches (`text/shex` over `text/*` over `*\/*`), and
+ * 0 for a type nothing in it covers.  An empty header wants everything.
+ */
+export function qualityOf (type: string, accept: string): number {
+  if (accept.trim() === "")
+    return 1;
+  let best: {specificity: number, q: number} | null = null;
+  for (const range of accept.split(",")) {
+    const [media, ...params] = range.trim().split(";");
+    const [rType, rSub] = media.trim().toLowerCase().split("/");
+    const [type1, sub1] = type.toLowerCase().split("/");
+    const specificity = rType === type1 && rSub === sub1 ? 2
+      : rType === type1 && rSub === "*" ? 1
+      : rType === "*" && (rSub === "*" || rSub === undefined) ? 0
+      : -1;
+    if (specificity === -1)
+      continue;
+    const qParam = params.map(p => p.trim()).find(p => /^q=/i.test(p));
+    const q = qParam === undefined ? 1 : Math.max(0, Math.min(1, parseFloat(qParam.slice(2)) || 0));
+    if (best === null || specificity > best.specificity)
+      best = {specificity, q};
+  }
+  return best === null ? 0 : best.q;
+}
+
 /** negotiate - when `filePath` has no extension and doesn't exist, pick an
- * extension sibling (filePath + ".*"), preferring types the Accept header
- * asks for; ties break alphabetically for determinism. */
+ * extension sibling (filePath + ".*"), preferring the type the Accept
+ * header wants most (its q-values, RFC 7231 §5.3.2); a sibling the header
+ * rules out with q=0 is never picked while another will do, and ties break
+ * alphabetically for determinism. */
 export function negotiate (filePath: string, accept: string): string | null {
   const dir = Path.dirname(filePath);
   const base = Path.basename(filePath);
@@ -78,16 +107,14 @@ export function negotiate (filePath: string, accept: string): string | null {
                 Fs.statSync(Path.join(dir, name)).isFile());
   if (candidates.length === 0)
     return null;
-  const rank = (name: string): number => {
-    const type = (ContentTypes[Path.extname(name).toLowerCase()] || "application/octet-stream")
-          .replace(/;.*$/, "");
-    return accept.includes(type) ? 0                                 // text/html
-      : accept.includes(type.replace(/\/.*$/, "/*")) ? 1             // text/*
-      : accept.includes("*/*") || accept === "" ? 2                  // anything
-      : 3;
-  };
-  candidates.sort((a, b) => rank(a) - rank(b) || (a < b ? -1 : 1));
-  return Path.join(dir, candidates[0]);
+  const typeOf = (name: string): string =>
+    (ContentTypes[Path.extname(name).toLowerCase()] || "application/octet-stream").replace(/;.*$/, "");
+  const wanted = candidates.map(name => ({name, q: qualityOf(typeOf(name), accept)}));
+  // ...and if the header rules out every sibling, any of them rather than
+  // nothing: a 406 helps nobody who asked for a file by name
+  const acceptable = wanted.some(c => c.q > 0) ? wanted.filter(c => c.q > 0) : wanted;
+  acceptable.sort((a, b) => b.q - a.q || (a.name < b.name ? -1 : 1));
+  return Path.join(dir, acceptable[0].name);
 }
 
 export function makeServer (root: string, options: ServeOptions = {}): Http.Server {
@@ -170,7 +197,7 @@ SharedArrayBuffer, e.g. for debugger worker suspension).`);
     console.log(`serving ${root} on http://localhost:${port}/${opts.coi ? " (cross-origin isolated)" : ""}`);
     KnownPages.filter(page => Fs.existsSync(Path.join(root, page))).forEach(page => {
       console.log(`  http://localhost:${port}/${page}`);
-      console.log(`  http://localhost:${port}/${page}?editors=1   (language-aware editors)`);
+      console.log(`  http://localhost:${port}/${page}?editors=textarea   (plain textareas)`);
     });
   });
 }

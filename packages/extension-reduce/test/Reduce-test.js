@@ -18,8 +18,8 @@ const B = "http://a.example/";
 const PREFIXES = {"": B, xsd: "http://www.w3.org/2001/XMLSchema#"};
 const EXT = Reduce.url;
 
-/** parse ShExC, hang `actions` (label -> code) on the shapes, validate, reduce */
-function run (shexc, turtle, actions, node = B + "x", shape = B + "S", options = {}) {
+/** parse ShExC and hang `actions` (label -> code) on the shapes it names */
+function compile (shexc, actions) {
   const schema = ShExParser.construct(B, null, {index: true})
         .parse("PREFIX : <http://a.example/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n"
                + shexc, B, undefined, "reduce-test");
@@ -34,14 +34,30 @@ function run (shexc, turtle, actions, node = B + "x", shape = B + "S", options =
     elt.semActs = (elt.semActs || []).concat(
       [{type: "SemAct", name: EXT, code: actions[label]}]);
   });
+  return schema;
+}
+
+/** ...and the graph to read against it */
+function load (turtle) {
   const graph = new N3.Store();
   graph.addQuads(new N3.Parser({baseIRI: B, format: "text/turtle"})
                  .parse("PREFIX : <http://a.example/>\n" + turtle));
-  const validator = new ShExValidator(schema, RdfJsDb(graph), {});
+  return RdfJsDb(graph);
+}
+
+/** compile, validate, reduce: the actions run over what the match found */
+function run (shexc, turtle, actions, node = B + "x", shape = B + "S", options = {}) {
+  const schema = compile(shexc, actions);
+  const validator = new ShExValidator(schema, load(turtle), {});
   Reduce.register(validator);
   const res = validator.validateShapeMap([{node, shape}]);
   expect(res[0].status, JSON.stringify(res[0].appinfo)).to.equal("conformant");
-  return Reduce.reduce(res, Object.assign({evaluate, prefixes: PREFIXES}, options))[0];
+  const opts = Object.assign({evaluate, prefixes: PREFIXES}, options);
+  // `schema: true` asks for the arity rule: the schema is what says whether
+  // an arc reference is a value or a list of them
+  if (opts.schema === true)
+    opts.schema = schema;
+  return Reduce.reduce(res, opts)[0];
 }
 
 const ONE_ARC = "<http://a.example/S> { :p1 . }";
@@ -166,6 +182,15 @@ describe("reduce", function () {
         .to.deep.equal([42, B + "o1"]);
     });
 
+    /* All of them, without naming any: what `Object.assign({}, ...$*)` is
+     * for.  yacc counts ($1, $2) and has no word for the lot; make(1)
+     * spells the whole right-hand side `$^`; the shell spells "all the
+     * arguments" `$*`, which is what a production's values are here. */
+    it("should take $* for every value the body matched, in match order", function () {
+      expect(run("<http://a.example/S> { :p1 . ; :p2 . }", ":x :p1 :o1 ; :p2 :o2 .",
+                 {S: "$$ = $*"})).to.deep.equal([B + "o1", B + "o2"]);
+    });
+
     it("should count from $1, as yacc does", function () {
       expect(() => run(TWO, ONE_TRIPLE, {S: "$0"})).to.throw(/numbered from \$1/);
     });
@@ -181,6 +206,53 @@ describe("reduce", function () {
         "S-p1": "$ = {p1: local($1)}",
         "S-p2": "$ = {p2: local($1)}",
       })).to.deep.equal({type: "S", p1: "o1"});
+    });
+
+    /* How many values a name stands for is the schema's to say: an arc
+     * that can only match once is the value, and every other arc is the
+     * list of what matched -- which is what lets a shape's action write
+     * `Object.assign($rdf:type, $:left, $:right)` rather than counting. */
+    describe("one value or a list of them", function () {
+      const ONE_EACH = "<http://a.example/S> { :p1 . ; :p2 . * }";
+      const SOME = ":x :p1 :o1 ; :p2 :o2, :o3 .";
+
+      it("should be the value itself where the schema allows one", function () {
+        expect(run(ONE_EACH, SOME, {S: "$:p1"}, undefined, undefined, {schema: true}))
+          .to.equal(B + "o1");
+      });
+
+      it("should be the list of them where it allows more", function () {
+        expect(run(ONE_EACH, SOME, {S: "$:p2.slice().sort()"},
+                   undefined, undefined, {schema: true}))
+          .to.deep.equal([B + "o2", B + "o3"]);
+      });
+
+      it("should be a list when no schema said otherwise", function () {
+        expect(run(ONE_EACH, SOME, {S: "$:p1"})).to.deep.equal([B + "o1"]);
+      });
+
+      /* Two ways for one predicate to arrive, and a constraint under a
+       * group that repeats: both can match more than once however small
+       * their own cardinality is. */
+      it("should be a list where two constraints share a predicate", function () {
+        expect(run("<http://a.example/S> { :p1 IRI ; :p1 IRI }", ":x :p1 :o1, :o2 .",
+                   {S: "$:p1.length"}, undefined, undefined, {schema: true}))
+          .to.equal(2);
+      });
+
+      it("should be a list where the group it is in repeats", function () {
+        expect(run("<http://a.example/S> { ( :p1 . ; :p2 . ) * }", ":x :p1 :o1 ; :p2 :o2 .",
+                   {S: "$:p1"}, undefined, undefined, {schema: true}))
+          .to.deep.equal([B + "o1"]);
+      });
+
+      /* An arc that didn't match is absent either way: `$:p2 || []` is
+       * still how an action asks for however many there were. */
+      it("should be undefined for an arc that isn't there", function () {
+        expect(run(ONE_EACH, ":x :p1 :o1 .", {S: "[$:p1, $:p2]"},
+                   undefined, undefined, {schema: true}))
+          .to.deep.equal([B + "o1", undefined]);
+      });
     });
 
     /* A substitution with no lexer for the action language has to leave
@@ -200,6 +272,42 @@ describe("reduce", function () {
       it("should not shadow a name the action is already using", function () {
         expect(run(TWO, ONE_TRIPLE, {S: "const _1 = 'mine'; $ = [_1, $1];"}))
           .to.deep.equal(["mine", B + "o1"]);
+      });
+
+      it("should read a bare $ wherever a value ends", function () {
+        expect(run(TWO, ONE_TRIPLE, {S: "$ = one(':p1')"})).to.equal(B + "o1");
+        expect(run(TWO, ONE_TRIPLE, {S: "$ = [one(':p1')]; $.push('and'); return $;"}))
+          .to.deep.equal([B + "o1", "and"]);
+        expect(run(TWO, ONE_TRIPLE, {S: "$ = one(':p1'); return str($)"}))
+          .to.equal(B + "o1");
+      });
+    });
+
+    /* A `$` with something after it that this doesn't recognize is a
+     * mistake now, rather than a dollar sign passed through: `$@` means
+     * whatever the action language makes of it today and would mean a
+     * reference the day `$@` got one, which is the way Perl's `\q` went. */
+    describe("what it refuses", function () {
+
+      it("should refuse a sigil it doesn't know", function () {
+        ["$@", "$&", "$#", "$!", "$?", "$^", "$~", "$%", "$|"].forEach(bad =>
+          expect(() => run(TWO, ONE_TRIPLE, {S: bad + " = 1"}), bad)
+            .to.throw(/is not a reference/));
+      });
+
+      it("should say what to write instead", function () {
+        expect(() => run(TWO, ONE_TRIPLE, {S: "$@ = 1"})).to.throw(/write \$\$/);
+        expect(() => run(TWO, ONE_TRIPLE, {S: "$+1"}), "an operator wants a space")
+          .to.throw(/\$\+ is not a reference/);
+      });
+
+      it("should say which production it was reading", function () {
+        expect(() => run(TWO, ONE_TRIPLE, {S: "$@ = 1"})).to.throw(B + "S");
+      });
+
+      it("should refuse what looks like an IRI and isn't", function () {
+        expect(() => run(TWO, ONE_TRIPLE, {S: "$<not an iri>"}))
+          .to.throw(/\$< is not a reference/);
       });
     });
 
@@ -435,6 +543,108 @@ describe("reduce", function () {
                  {S: '{"left": "$p1", "right": "$p2"}'}, undefined, undefined,
                  {evaluate: template}))
         .to.deep.equal({left: B + "o1", right: B + "o2"});
+    });
+  });
+
+  /* An action that runs while the matcher matches gets to say no, which is
+   * what registerEager is for.  There are two noes: this one doesn't fit,
+   * and nothing will. */
+  describe("saying no", function () {
+    /* <#S> is <#Mid> or <#Last>, alike but for their actions: the same
+     * shape written twice, so what the node is is the actions' to say. */
+    const EITHER = `<http://a.example/S> @<http://a.example/Mid> OR @<http://a.example/Last>
+<http://a.example/Mid>  { :p1 . }
+<http://a.example/Last> { :p1 . }`;
+
+    /** compile, register eagerly, validate: the entry, status and all */
+    function match (shexc, turtle, actions, node = B + "x", shape = B + "S", options = {}) {
+      const validator = new ShExValidator(compile(shexc, actions), load(turtle), {});
+      Reduce.registerEager(validator, Object.assign({evaluate, prefixes: PREFIXES}, options));
+      return validator.validateShapeMap([{node, shape}]);
+    }
+    const errorsOf = entry => JSON.stringify(entry.appinfo);
+
+    it("should take the next branch when an action rejects", function () {
+      const res = match(EITHER, ONE_TRIPLE,
+                        {Mid: "reject('not this one')", Last: "'last'"});
+      expect(res[0].status).to.equal("conformant");
+      expect(Reduce.reduce(res)[0], "...and the branch that took it").to.equal("last");
+    });
+
+    it("should read reject('why') as the value it could have returned", function () {
+      const res = match(EITHER, ONE_TRIPLE,
+                        {Mid: "reject('not this one')", Last: "({failure: 'nor this'})"});
+      expect(res[0].status).to.equal("nonconformant");
+      expect(errorsOf(res[0]), "both branches, and why each said no")
+        .to.match(/not this one/).and.to.match(/nor this/);
+    });
+
+    /* The difference: a rejection is about this shape, and the OR goes on
+     * to the next one; a cut is about the node, and there is nowhere left
+     * to go -- <#Last> would have matched, and is never tried. */
+    it("should stop the whole pair when an action cuts", function () {
+      const res = match(EITHER, ONE_TRIPLE, {Mid: "cut('no reading of this will do')",
+                                             Last: "'last'"});
+      expect(res[0].status).to.equal("nonconformant");
+      expect(errorsOf(res[0])).to.include("no reading of this will do");
+      expect(errorsOf(res[0]), "the branch it didn't try").to.not.include("last");
+    });
+
+    it("should take a cut as a value, for a language without exceptions", function () {
+      const res = match(EITHER, ONE_TRIPLE,
+                        {Mid: "({failure: 'nor by hand', cut: true})", Last: "'last'"});
+      expect(res[0].status).to.equal("nonconformant");
+      expect(errorsOf(res[0])).to.include("nor by hand");
+    });
+
+    it("should say where the action that cut was", function () {
+      const res = match(EITHER, ONE_TRIPLE, {Mid: "cut('enough')", Last: "'last'"});
+      expect(errorsOf(res[0])).to.include(B + "Mid");
+    });
+
+    /* A cut unwinds whatever the matcher was in the middle of -- a nested
+     * shape, a partition, a fork -- and lands at the pair it was asked
+     * about.  The pairs beside it are none of its business. */
+    it("should cut from inside a nested shape", function () {
+      const res = match(`<http://a.example/S> { :p1 @<http://a.example/T> }
+<http://a.example/T> { :p2 . }`,
+                        ":x :p1 :y . :y :p2 :o2 .", {T: "cut('deep')"});
+      expect(res[0].status).to.equal("nonconformant");
+      expect(errorsOf(res[0])).to.include("deep");
+    });
+
+    it("should leave the other pairs of the shape map alone", function () {
+      const validator = new ShExValidator(
+        compile(EITHER, {Mid: "node === ':x'.replace(':', 'http://a.example/') "
+                              + "? cut('not x') : 'mid'", Last: "'last'"}),
+        load(":x :p1 :o1 . :y :p1 :o1 ."), {});
+      Reduce.registerEager(validator, {evaluate, prefixes: PREFIXES});
+      const res = validator.validateShapeMap([
+        {node: B + "x", shape: B + "S"}, {node: B + "y", shape: B + "S"}]);
+      expect(res.map(e => e.status), "the cut is about the node it was on")
+        .to.deep.equal(["nonconformant", "conformant"]);
+    });
+
+    it("should cut a validation that is waiting on its data", async function () {
+      const validator = new ShExValidator(
+        compile(EITHER, {Mid: "cut('not even asynchronously')", Last: "'last'"}),
+        load(ONE_TRIPLE), {});
+      Reduce.registerEager(validator, {evaluate, prefixes: PREFIXES});
+      const res = await validator.validateShapeMapAsync([{node: B + "x", shape: B + "S"}]);
+      expect(res[0].status).to.equal("nonconformant");
+      expect(errorsOf(res[0])).to.include("not even asynchronously");
+    });
+
+    /* Folding a parse that already happened, there is no match to refuse:
+     * what reject() says is a value like the one it could have returned. */
+    it("should be a value when the fold is after the match", function () {
+      expect(run(ONE_ARC, ONE_TRIPLE, {S: "reject('too late')"}))
+        .to.deep.equal({failure: "too late"});
+    });
+
+    it("should let an action say more than a reason", function () {
+      expect(run(ONE_ARC, ONE_TRIPLE, {S: "reject({failure: 'nope', code: ':tooFew'})"}))
+        .to.deep.equal({failure: "nope", code: ":tooFew"});
     });
   });
 

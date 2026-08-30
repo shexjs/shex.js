@@ -132,14 +132,34 @@ class ShapeMapParserState {
         this.schemaMeta = new ResourceMetadata();
         this.dataMeta = new ResourceMetadata();
         this._fileName = undefined; // for debugging
+        /** where each pair was written, in order (see PairLocation) */
+        this.locations = [];
+        // the parts of the pair being reduced, recorded as each reduces
+        this.nodeLoc = null;
+        this.shapeLoc = null;
+        this.reasonLoc = null;
+        this.jsonLoc = null;
     }
     reset() {
         this.schemaMeta.reset();
         this.dataMeta.reset();
+        this.locations = [];
+        this.nodeLoc = this.shapeLoc = this.reasonLoc = this.jsonLoc = null;
     }
     _setFileName(fn) { this._fileName = fn; }
+    /** a pair has reduced: keep where its parts were */
+    addLocation() {
+        this.locations.push({ node: this.nodeLoc, shape: this.shapeLoc,
+            reason: this.reasonLoc, appinfo: this.jsonLoc });
+        this.reasonLoc = this.jsonLoc = null;
+    }
+    /** the parsed pairs, carrying their locations without showing them */
+    locate(pairs) {
+        Object.defineProperty(pairs, "_locations", { value: this.locations, enumerable: false,
+            writable: true, configurable: true });
+        return pairs;
+    }
     error(e) {
-        debugger; // !!
         const hash = {
             text: this.lexer.match,
             // token: this.terminals_[symbol] || symbol,
@@ -191,6 +211,11 @@ const prepareParser = function (baseIRI, schemaMeta, dataMeta) {
             const pos = "lexer" in parser.yy ? parser.yy.lexer.showPosition() : "";
             const t = Error(`${baseIRI}(${lineNo}): ${e.message}\n${pos}`);
             Error.captureStackTrace(t, runParser);
+            // where it went wrong, for an editor to mark: the parser's own
+            // location of the offending token, else the lexer's
+            const loc = (e.hash && e.hash.loc) || ("lexer" in parser.yy && parser.yy.lexer.yylloc) || null;
+            if (loc)
+                t.location = loc;
             parserState.reset();
             throw t;
         }

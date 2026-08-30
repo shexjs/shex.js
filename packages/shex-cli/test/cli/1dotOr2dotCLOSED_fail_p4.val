@@ -9,7 +9,21 @@
         {
           "subject": "x",
           "predicate": "http://a.example/p4",
-          "object": { "value": "p4-0" }
+          "object": {
+            "value": "p4-0"
+          }
+        }
+      ]
+    }
+  ],
+  "repairs": [
+    {
+      "type": "NearestBag",
+      "cost": 1,
+      "arcs": [
+        {
+          "property": "http://a.example/p4",
+          "delta": -1
         }
       ]
     }

@@ -22,7 +22,6 @@
   "scripts": {
     "parser": "ts-jison -n ShapeMapJison -t javascript -p lalr -o ./lib/ShapeMapJison.js ./lib/ShapeMapJison.jison",
     "test": "cd .. && mocha -C -R dot",
-    "browser": "browserify shex.js -s ShEx -o browser/shape-map-browserify.js && uglifyjs browser/shape-map-browserify.js --comments -mco browser/shape-map-browserify.min.js",
     "build": "tsc"
   },
   "publishConfig": {
@@ -38,7 +37,7 @@
   "dependencies": {
     "@shexjs/util": "^1.0.0-alpha.28",
     "@ts-jison/lexer": "^0.4.1-alpha.1",
-    "@ts-jison/parser": "^0.4.1-alpha.1"
+    "@ts-jison/parser": "^0.4.1-alpha.3"
   },
   "devDependencies": {
     "@ts-jison/parser-generator": "^0.4.1-alpha.2"

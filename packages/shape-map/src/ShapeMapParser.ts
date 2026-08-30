@@ -19,6 +19,25 @@ export interface ShapeMapParser {
   yy: any;
 }
 
+/** a jison lexer location: 1-based lines, 0-based columns */
+export interface Location {
+  first_line: number;
+  first_column: number;
+  last_line: number;
+  last_column: number;
+}
+
+/** Where one pair of a shape map was written: its node and its shape side
+ * (`@`, status and shape), and its reason and appinfo where it has them.
+ * A parsed shape map carries one per pair, in order, as its non-enumerable
+ * `_locations` -- so a deep-equal of the pairs is still just the pairs. */
+export interface PairLocation {
+  node: Location;
+  shape: Location;
+  reason: Location | null;
+  appinfo: Location | null;
+}
+
 export class ResourceMetadata {
   prefixes: { [prefix: string]: string } | null = null;
   base: string | null = null;
@@ -156,15 +175,38 @@ export class ShapeMapParserState {
   _fileName: string | null | undefined = undefined; // for debugging
   lexer: any;
   recoverable: ((e: Error) => void) | undefined;
+  /** where each pair was written, in order (see PairLocation) */
+  locations: PairLocation[] = [];
+  // the parts of the pair being reduced, recorded as each reduces
+  nodeLoc: Location | null = null;
+  shapeLoc: Location | null = null;
+  reasonLoc: Location | null = null;
+  jsonLoc: Location | null = null;
 
   reset () {
     this.schemaMeta.reset();
     this.dataMeta.reset();
+    this.locations = [];
+    this.nodeLoc = this.shapeLoc = this.reasonLoc = this.jsonLoc = null;
   }
 
   _setFileName (fn: string | null | undefined) { this._fileName = fn; }
 
-  error (e: Error & { hash?: any }) {debugger; // !!
+  /** a pair has reduced: keep where its parts were */
+  addLocation () {
+    this.locations.push({node: this.nodeLoc!, shape: this.shapeLoc!,
+                         reason: this.reasonLoc, appinfo: this.jsonLoc});
+    this.reasonLoc = this.jsonLoc = null;
+  }
+
+  /** the parsed pairs, carrying their locations without showing them */
+  locate (pairs: any[]): any[] {
+    Object.defineProperty(pairs, "_locations", {value: this.locations, enumerable: false,
+                                                writable: true, configurable: true});
+    return pairs;
+  }
+
+  error (e: Error & { hash?: any }) {
     const hash = {
       text: this.lexer.match,
       // token: this.terminals_[symbol] || symbol,
@@ -214,8 +256,13 @@ const prepareParser = function (baseIRI: string | null, schemaMeta: ResourceMeta
       // use the lexer's pretty-printing
       const lineNo = "lexer" in parser.yy ? parser.yy.lexer.yylineno + 1 : 1;
       const pos = "lexer" in parser.yy ? parser.yy.lexer.showPosition() : "";
-      const t = Error(`${baseIRI}(${lineNo}): ${e.message}\n${pos}`);
+      const t: Error & {location?: Location} = Error(`${baseIRI}(${lineNo}): ${e.message}\n${pos}`);
       Error.captureStackTrace(t, runParser);
+      // where it went wrong, for an editor to mark: the parser's own
+      // location of the offending token, else the lexer's
+      const loc = (e.hash && e.hash.loc) || ("lexer" in parser.yy && parser.yy.lexer.yylloc) || null;
+      if (loc)
+        t.location = loc;
       parserState.reset();
       throw t;
     }

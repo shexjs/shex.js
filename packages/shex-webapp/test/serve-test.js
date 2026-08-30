@@ -50,6 +50,20 @@ describe("shex-serve", function () {
     expect(asJson.headers.get("content-type")).to.include("application/json");
   });
 
+  /* RFC 7231 §5.3.2: the header says how much it wants each type, and a
+   * more specific range outranks a wildcard at any q. */
+  it("should weigh Accept's q-values", async function () {
+    const page = "/packages/shex-cli/test/cli/1dotOr2dot";
+    expect((await get(page, "application/json;q=0.5, text/shex")).headers.get("content-type"))
+      .to.include("text/shex");
+    expect((await get(page, "text/*;q=0.2, application/json;q=0.9")).headers.get("content-type"))
+      .to.include("application/json");
+    expect((await get(page, "text/shex;q=0, */*")).headers.get("content-type"),
+           "q=0 rules a sibling out").to.include("application/json");
+    expect((await get(page, "text/shex;q=0.1, */*")).headers.get("content-type"),
+           "the specific range's q is the one that counts, however low").to.include("application/json");
+  });
+
   it("should 404 when nothing matches", async function () {
     expect((await get("/packages/shex-webapp/doc/no-such-page")).status).to.equal(404);
   });

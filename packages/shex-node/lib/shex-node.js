@@ -106,12 +106,20 @@ function ShExNodeCjsModule(config = {}) {
         });
     };
     return newLoader;
+    /**
+     * Extensions by file glob (`../extensions/*.js`) or by package name
+     * (`@shexjs/extension-test`): a glob that matches nothing is taken for a
+     * name and handed to node's resolver, which finds a package installed
+     * beside this one.
+     */
     function LoadExtensions(globs) {
-        return (globs || []).reduce((list, glob) => list.concat(Glob.sync(glob)), []).
+        return (globs || []).reduce((list, glob) => {
+            const matched = Glob.sync(glob);
+            return list.concat(matched.length ? matched.map((p) => Path.resolve(p)) : [glob]);
+        }, []).
             reduce(function (ret, extPath) {
             try {
-                const absPath = Path.resolve(extPath);
-                const rawModule = require(absPath);
+                const rawModule = require(extPath);
                 const t = typeof rawModule === 'function' ? rawModule(Object.assign({ Validator: {} }, config)) : rawModule;
                 ret[t.url] = t;
                 return ret;

@@ -1,147 +1,58 @@
-importScripts("../../shex-webapp/doc/webpacks/n3js.js");
-importScripts("../../shex-webapp/doc/webpacks/shex-webapp.js");
-importScripts("./webpacks/shexmap-webapp.js");
-importScripts("../../shex-webapp/doc/WorkerMarshalling.js");
+/**
+ * ShExMap in the worker: the handler a %Map:{...%} dispatches on, and the
+ * `materialize` request the app sends when it has bindings to build from
+ * (doc/plugins.md, In the worker).
+ *
+ * Imported by ShExWorkerThread on the app's say-so, which is why this is
+ * not a worker script of its own any more -- it used to be a copy of that
+ * file with these two things added, and the copy went stale: the base one
+ * has since learned to ask an endpoint asynchronously and to marshal the
+ * terms a query tracker reports.
+ */
+importScripts(pluginBase + "webpacks/shexmap-webapp.js");
 
-const ShExLoader = ShExWebApp.Loader({
-  fetch, rdfjs: N3js, jsonld: null
-})
 const MapModule = ShExWebApp.Map({rdfjs: N3js, Validator: ShExWebApp.Validator});
-const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
-let validator = null;
-let Mapper = null;
-self.onmessage = async function (msg) {
-let errorText = undefined;
-let time;
-// await wait(1000); // play with delays in response
-try {
-  switch (msg.data.request) {
-  case "create":
-    errorText = "creating validator";
-    const inputData = "endpoint" in msg.data
-          ? ShExWebApp.SparqlDb(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
-          : ShExWebApp.RdfJsDb(makeStaticDB(msg.data.data.map(t => WorkerMarshalling.jsonTripleToRdfjsTriple(t, N3js.DataFactory))));
 
-    let createOpts = msg.data.options;
-    // an unknown (or absent) name leaves it to the validator's own default
-    createOpts.regexModule = ShExWebApp[createOpts.regexModule];
-    // Object.assign, not Object.create: the second argument of Object.create
-    // is a map of property *descriptors*, so every option arrived undefined
-    // -- the chosen regex engine among them -- and a plain `true` threw.
-    createOpts = Object.assign({ results: "api" }, createOpts); // default to API results
-    validator = new ShExWebApp.Validator(
-      msg.data.schema,
-      inputData,
-      createOpts
-    );
-    Mapper = MapModule.register(validator, ShExWebApp);
-    // extensions.each(ext => ext.register(validator, ShExWebApp);
-    self.postMessage({ response: "created", results: {timestamp: new Date()} });
-    break;
+registerWorkerPlugin({
+  /** row 9's worker half: what the schema's %Map:{...%} dispatches on */
+  register (validator, api) {
+    MapModule.register(validator, api);
+  },
 
-  case "validate":
-    const queryMap = msg.data.queryMap;
-    const currentEntry = 0, options = msg.data.options || {};
-    const results = WorkerMarshalling.createResults();
-    for (let currentEntry = 0; currentEntry < queryMap.length; ) {
-      const singletonMap = [queryMap[currentEntry++]]; // ShapeMap with single entry.
-      errorText = "validating " + JSON.stringify(singletonMap[0], null, 2);
-      if (singletonMap[0].shape === START_SHAPE_INDEX_ENTRY)
-        singletonMap[0].shape = ShExWebApp.Validator.Start;
-      time = new Date();
-      const newResults = validator.validateShapeMap(singletonMap, options.track ? makeRelayTracker() : undefined); // undefined to trigger default parameter assignment
-      time = new Date() - time;
-      newResults.forEach(function (res) {
-        if (res.shape === ShExWebApp.Validator.Start)
-          res.shape = START_SHAPE_INDEX_ENTRY;
+  requests: {
+    /** rows 15 and 16: materialize the bindings into quads, and post them
+     * back with the provenance the app's editor panes hang hovers on.
+     * staticVars travel with the request. */
+    materialize (msg) {
+      const materializeMap = msg.data.queryMap;
+      const outputSchema = ShExWebApp.Util.ShExJtoAS(msg.data.outputSchema);
+      // NFA-thread materializer (see extension-map/doc/threaded-materializer.md):
+      // needs no registered validator/Mapper state -- each materialization
+      // thread carries its own binding-tree cursor.  Emitted quads are
+      // marshalled back to the app, which rebuilds them with its DataFactory.
+      const materializer = new MapModule.ThreadedMaterializer(outputSchema, {staticVars: msg.data.staticVars || {}});
+      // per-quad provenance travels as constraint INDEXES: structured clone
+      // breaks object identity, but the app walks its own copy of this schema
+      // the same way to recover its own TripleConstraints
+      const ordinalOf = new Map(MapModule.tripleConstraints(outputSchema).map((tc, i) => [tc, i]));
+      materializeMap.forEach(pair => {
+        try {
+          // a structured-cloned Start marker arrives as a plain object; labels are strings
+          const shape = !pair.shape || typeof pair.shape === "object" ? undefined : pair.shape;
+          const quads = materializer.materialize(msg.data.resultBindings, pair.node, shape);
+          const provenance = (materializer.provenance || []).map(p => ({
+            tcOrdinal: p.tc !== undefined && ordinalOf.has(p.tc) ? ordinalOf.get(p.tc) : null,
+            predicate: p.predicate,
+            src: p.src,
+          }));
+          self.postMessage({ response: "update", provenance,
+                             quads: quads.map(q => WorkerMarshalling.rdfjsTripleToJsonTriple(q)) });
+        } catch (e) {
+          console.dir(e);
+          self.postMessage({ response: "error", exception: `Exception when materializing ${pair.node}@${pair.shape}: ${typeof e === 'object' && e instanceof Error ? e.message : e}` });
+        }
       });
-      // Merge into results.
-      results.merge(newResults);
-
-      // Notify caller.
-      self.postMessage({ response: "update", results: newResults });
-
-      // Skip entries that were already processed.
-      while (currentEntry < queryMap.length &&
-             results.has(queryMap[currentEntry]))
-        ++currentEntry;
-    }
-    // Done -- show results and restore interface.
-    if (options.includeDoneResults)
-      self.postMessage({ response: "done", results: results.getShapeMap() });
-    else
       self.postMessage({ response: "done" });
-    break;
-
-  case "materialize":
-    const materializeMap = msg.data.queryMap;
-    const outputSchema = ShExWebApp.Util.ShExJtoAS(msg.data.outputSchema);
-    // NFA-thread materializer (see extension-map/doc/threaded-materializer.md):
-    // needs no registered validator/Mapper state -- each materialization
-    // thread carries its own binding-tree cursor.  Emitted quads are
-    // marshalled back to the app, which rebuilds them with its DataFactory.
-    const materializer = new MapModule.ThreadedMaterializer(outputSchema, {staticVars: msg.data.staticVars || {}});
-    // per-quad provenance travels as constraint INDEXES: structured clone
-    // breaks object identity, but the app walks its own copy of this schema
-    // the same way to recover its own TripleConstraints
-    const ordinalOf = new Map(MapModule.tripleConstraints(outputSchema).map((tc, i) => [tc, i]));
-    materializeMap.forEach(pair => {
-      try {
-        // a structured-cloned Start marker arrives as a plain object; labels are strings
-        const shape = !pair.shape || typeof pair.shape === "object" ? undefined : pair.shape;
-        const quads = materializer.materialize(msg.data.resultBindings, pair.node, shape);
-        const provenance = (materializer.provenance || []).map(p => ({
-          tcOrdinal: p.tc !== undefined && ordinalOf.has(p.tc) ? ordinalOf.get(p.tc) : null,
-          predicate: p.predicate,
-          src: p.src,
-        }));
-        self.postMessage({ response: "update", provenance,
-                           quads: quads.map(q => WorkerMarshalling.rdfjsTripleToJsonTriple(q)) });
-      } catch (e) {
-        console.dir(e);
-        self.postMessage({ response: "error", exception: `Exception when materializing ${pair.node}@${pair.shape}: ${typeof e === 'object' && e instanceof Error ? e.message : e}` });
-      }
-    });
-    self.postMessage({ response: "done" });
-    break;
-
-  default:
-    throw "unknown request: " + JSON.stringify(msg.data);
-  }
-} catch (e) {
-self.postMessage({ response: "error", message: e.message, stack: e.stack, text: errorText });
-}
-}
-
-async function wait (ms) {
-  await new Promise((resolve, reject) => {
-    setTimeout(() => resolve(ms), ms)
-  })
-}
-
-function makeStaticDB (quads) {
-  const ret = new N3js.Store();
-  ret.addQuads(quads);
-  return ret;
-}
-
-  function makeRelayTracker () {
-    const logger = {
-      recurse: x => { self.postMessage({ response: "recurse", x: x }); return x; },
-      known: x => { self.postMessage({ response: "known", x: x }); return x; },
-      enter: (point, label) => { self.postMessage({ response: "enter", point: point, label: label }); },
-      exit: (point, label, ret) => { self.postMessage({ response: "exit", point: point, label: label, ret: null }); }, /* don't ship big ret structures */
-    };
-    return logger;
-  }
-
-function queryTracker () {
-  return {
-    start: function (isOut, term, shapeLabel) {
-      self.postMessage ({ response: "startQuery", isOut: isOut, term: term, shape: shapeLabel });
     },
-    end: function (quads, time) {
-      self.postMessage({ response: "finishQuery", quads: quads, time: time });
-    }
-  }
-}
+  },
+});

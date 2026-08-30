@@ -50,7 +50,6 @@
     "webpack-cli": "^5.1.4"
   },
   "scripts": {
-    "makemake": "node tools/makeMake.js > Makefile",
     "clean-all": "find . -maxdepth 3 -name node_modules -exec rm -r {} \\; ; find . -maxdepth 3 -name package-lock.json -exec rm -r {} \\; || true",
     "compile": "make ALL",
     "rebuild": "npm run clean-all && npm ci",
@@ -67,12 +66,12 @@
     "earl": "cd test && make Parser-Writer-test && make Validation-test",
     "lint": "eslint packages/shex-cli/test/findPath.js",
     "check-branch-deps": "./tools/checkBranchDeps.sh",
-    "browserify-all": "./tools/browserify-all.js #; npm run n3-browserify",
     "coverage": "nyc npm run test-all",
     "parser-all": "(cd packages/shex-parser/ && npm run parser) && (cd packages/shape-map/ && npm run parser)",
-    "webpack": "(cd packages/shex-webapp/ && npm run webpack) && (cd packages/extension-map/ && npm run webpack)",
-    "webpacks-all": "(cd packages/shex-webapp/ && npm run webpack-n3js && npm run webpack) && (cd packages/extension-map/ && npm run webpack)",
+    "webpack": "(cd packages/shex-webapp/ && npm run webpack) && (cd packages/extension-map/ && npm run webpack) && (cd packages/extension-reduce/ && npm run webpack)",
+    "webpacks-all": "(cd packages/shex-webapp/ && npm run webpack-n3js && npm run webpack) && (cd packages/extension-map/ && npm run webpack) && (cd packages/extension-reduce/ && npm run webpack)",
     "webpacks-fetch": "tools/sync-webpacks.sh",
+    "publish-ordered": "node tools/publish-ordered.js",
     "webpack-analyzer": "cd packages/shex-webapp && npm run webpack-analyzer",
     "webpack-monitor": "if [ -d ./node_modules/webpack-monitor ]; then (cd packages/shex-webapp && npm run webpack-monitor) else echo \"You need to install webpack-monitor\"; fi",
     "serve": "node packages/shex-webapp/bin/shex-serve"

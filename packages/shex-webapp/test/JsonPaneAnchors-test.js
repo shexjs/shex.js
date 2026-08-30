@@ -19,7 +19,7 @@ const ShExParser = require("@shexjs/parser");
 const {ShExValidator} = require("@shexjs/validator");
 const {ctor: RdfJsDb} = require("@shexjs/neighborhood-rdfjs");
 const EditorServices = require("@shexjs/editor-services");
-const Wikidata = require("@shexjs/neighborhood-wikidata");
+const Wikibase = require("@shexjs/neighborhood-wikibase");
 
 const WD = "http://www.wikidata.org/entity/";
 const SCHEMA_BASE = "http://s.example/";
@@ -57,7 +57,7 @@ ${shapes}
   const schema = ShExParser.construct(SCHEMA_BASE, {}, {index: true}).parse(schemaText);
   const located = EditorServices.locateInParsed(schemaText, schema);
   // the source locates its own document; nothing here goes to the network
-  const db = Wikidata.wikidataDB(undefined, {
+  const db = Wikibase.wikibaseDB(undefined, {
     fetchDoc: url => { throw Error("this test asks for no page: " + url); },
   });
   const parsed = db.locateDocument(page);

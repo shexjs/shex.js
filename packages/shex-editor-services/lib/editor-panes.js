@@ -46,7 +46,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CHANGE_DEBOUNCE_MS = exports.languages = exports.shexcStreamParser = void 0;
+exports.CHANGE_DEBOUNCE_MS = exports.languages = exports.shapeMapStreamParser = void 0;
 exports.lexicalize = lexicalize;
 exports.completionSource = completionSource;
 exports.makeResultPane = makeResultPane;
@@ -61,6 +61,7 @@ const lint_1 = require("@codemirror/lint");
 const autocomplete_1 = require("@codemirror/autocomplete");
 const lang_json_1 = require("@codemirror/lang-json");
 const lezer_turtle_1 = require("lezer-turtle");
+const lezer_shexc_1 = require("lezer-shexc");
 const EditorServices = __importStar(require("./editor-services"));
 /** lexicalize - shortest lexical form for an IRI under the given prefixes */
 function lexicalize(iri, prefixes) {
@@ -93,14 +94,45 @@ function completionSource(getSets) {
             options.push({ label: "@" + lex, type: "class", detail: "shape ref" });
         });
         (sets.predicates || []).forEach(iri => options.push({ label: lexicalize(iri, prefixes), type: "property" }));
+        (sets.nodes || []).forEach(term => options.push({ label: term.startsWith("_:") ? term : lexicalize(term, prefixes),
+            type: "variable", detail: "node" }));
         return options.length
             ? { from: word ? word.from : context.pos, options, validFor: /^@?[<A-Za-z_:][^\s]*$/ }
             : null;
     };
 }
-const shexcKeywords = /^(?:PREFIX|BASE|IMPORT|START|EXTERNAL|ABSTRACT|CLOSED|EXTRA|NOT|AND|OR|IF|MININCLUSIVE|MAXINCLUSIVE|MINEXCLUSIVE|MAXEXCLUSIVE|LENGTH|MINLENGTH|MAXLENGTH|TOTALDIGITS|FRACTIONDIGITS|IRI|BNODE|NONLITERAL|LITERAL)\b/i;
-exports.shexcStreamParser = {
-    name: "shexc",
+// ---------------------------------------------------------------------------
+// ShExC via lezer-shexc: the grammar the validator's parser has, in the
+// editor's parser model -- exact colours, incremental, and tolerant of the
+// half-typed (a schema with an error still parses around it).  The
+// semantic truth (diagnostics, shape/error ranges) still comes from the
+// real parser via editor-services.
+const shexcLanguage = language_1.LRLanguage.define({
+    parser: lezer_shexc_1.parser.configure({
+        props: [
+            language_1.foldNodeProp.add({
+                InlineShapeDefinition: language_1.foldInside,
+                ValueSet: language_1.foldInside,
+                BracketedTripleExpr: language_1.foldInside,
+            }),
+            language_1.indentNodeProp.add({
+                InlineShapeDefinition: (0, language_1.delimitedIndent)({ closing: "}" }),
+                ValueSet: (0, language_1.delimitedIndent)({ closing: "]" }),
+                BracketedTripleExpr: (0, language_1.delimitedIndent)({ closing: ")" }),
+            }),
+        ],
+    }),
+    languageData: { commentTokens: { line: "#", block: { open: "/*", close: "*/" } } },
+});
+/** Turtle via the incremental, error-recovering lezer-turtle grammar
+ * (RDF 1.2; the same parse tree that powers provenance tracking). */
+const turtleLanguage = language_1.LRLanguage.define({ parser: lezer_turtle_1.parser });
+/** Shape maps (the query map pane): nodes and shapes as ShExC and Turtle
+ * write terms, `@` with a status between each pair's two sides, `{FOCUS
+ * ...}` triple patterns, a reason and appinfo after.  Approximate, like the
+ * ShExC tokenizer; the parser's diagnostics are the truth. */
+exports.shapeMapStreamParser = {
+    name: "shapemap",
     startState: () => ({ inString: null }),
     token(stream, state) {
         if (state.inString) {
@@ -119,7 +151,7 @@ exports.shexcStreamParser = {
         if (stream.match(/^#.*/))
             return "comment";
         if (stream.match(/^<[^<>"{}|^`\\ ]*>/))
-            return "link"; // IRIs
+            return "link";
         if (stream.match(/^('''|""")/)) {
             state.inString = stream.current();
             return "string";
@@ -128,41 +160,36 @@ exports.shexcStreamParser = {
             stream.match(/^\^\^/) || stream.match(/^@[a-zA-Z-]+/);
             return "string";
         }
-        if (stream.match(/^@[A-Za-z_][A-Za-z0-9_.-]*:?[^\s;|)}?*+]*/))
-            return "typeName"; // @<shapeRef>, @pname
-        if (stream.match(/^@</)) {
-            stream.match(/^[^>]*>/);
+        // the shape side: @shape, @START, or a bare @ with a status to follow
+        if (stream.match(/^@(?:START\b|<[^>]*>|[A-Za-z_][A-Za-z0-9_.-]*:[A-Za-z0-9_.:%\\-]*)/i))
             return "typeName";
-        }
-        if (stream.match(shexcKeywords))
+        if (stream.match(/^@/))
+            return "operator";
+        if (stream.match(/^(?:START|FOCUS|SPARQL)\b/i))
             return "keyword";
-        if (stream.match(/^(?:true|false)\b/))
+        if (stream.match(/^\$\s*appinfo\s*:/i))
+            return "meta";
+        if (stream.match(/^_:[A-Za-z0-9_.-]+/))
+            return "variableName"; // blank node
+        if (stream.match(/^[A-Za-z_][A-Za-z0-9_.-]*:[A-Za-z0-9_.:%\\-]*/))
+            return "variableName"; // pname
+        if (stream.match(/^(?:true|false|null)\b/))
             return "atom";
         if (stream.match(/^[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/))
             return "number";
-        if (stream.match(/^\{\s*\d+\s*(?:,\s*(?:\d+|\*)?\s*)?\}/))
-            return "number"; // {m,n}
-        if (stream.match(/^%[^%]*/))
-            return "meta"; // semantic actions
-        if (stream.match(/^[A-Za-z_][A-Za-z0-9_.-]*:[A-Za-z0-9_.:%\\-]*/))
-            return "variableName"; // pname
-        if (stream.match(/^a\b/))
-            return "keyword";
-        if (stream.match(/^[*+?]/))
-            return "number"; // cardinalities
-        if (stream.match(/^[$&^]/))
-            return "operator";
+        if (stream.match(/^[!?]/))
+            return "operator"; // status
+        if (stream.match(/^[{}[\],/_]/))
+            return "punctuation";
         stream.next();
         return null;
     },
 };
-/** Turtle via the incremental, error-recovering lezer-turtle grammar
- * (RDF 1.2; the same parse tree that powers provenance tracking). */
-const turtleLanguage = language_1.LRLanguage.define({ parser: lezer_turtle_1.parser });
 exports.languages = {
-    shexc: () => language_1.StreamLanguage.define(exports.shexcStreamParser),
+    shexc: () => shexcLanguage,
     turtle: () => turtleLanguage,
     json: () => (0, lang_json_1.json)(),
+    shapemap: () => language_1.StreamLanguage.define(exports.shapeMapStreamParser),
 };
 /** paintedLike - dress a pane in an element's colours, so an editor looks
  * like the thing it stands in for (or, for a result pane, like the place it
@@ -198,6 +225,7 @@ function makeResultPane(text, language = "json", opts = {}) {
             exports.languages[language](),
             highlightField,
             annotationField,
+            tooltipField,
             paneTheme,
             ...dressing,
             view_1.EditorView.editable.of(false),
@@ -281,6 +309,7 @@ function attachHoverRegions(view) {
     const clearHover = () => {
         if (currentRegion) {
             currentRegion = null;
+            regionTooltip(view, null);
             if (hoverLeave)
                 hoverLeave();
         }
@@ -294,6 +323,7 @@ function attachHoverRegions(view) {
                 ? r : best, null);
         if (hit !== currentRegion) {
             currentRegion = hit;
+            regionTooltip(view, hit);
             if (hit)
                 hit.enter();
             else if (hoverLeave)
@@ -395,7 +425,53 @@ function annotateOn(view, marks) {
     }).range(m.from, m.to));
     view.dispatch({ effects: setAnnotationsEffect.of(view_1.Decoration.set(decos, true)) });
 }
+/** The tooltip a hover region asked for (HoverRegion.title): one at a time,
+ * shown while the mouse is in the region and withdrawn when it leaves.  An
+ * edit withdraws it too -- it was about text that has moved. */
+const setTooltipEffect = state_1.StateEffect.define();
+const tooltipField = state_1.StateField.define({
+    create: () => null,
+    update(tip, tr) {
+        if (tr.docChanged)
+            tip = null;
+        for (const e of tr.effects)
+            if (e.is(setTooltipEffect))
+                tip = e.value;
+        return tip;
+    },
+    provide: f => view_1.showTooltip.from(f),
+});
+/** show what a region has to say, or (null) take it back */
+function regionTooltip(view, region) {
+    if (view.state.field(tooltipField, false) === undefined)
+        return;
+    let text = null;
+    if (region && region.title) {
+        try {
+            text = typeof region.title === "function" ? region.title() : region.title;
+        }
+        catch (e) {
+            text = null; // a host's bug must not break hovering
+        }
+    }
+    if (!text && !view.state.field(tooltipField))
+        return;
+    view.dispatch({ effects: setTooltipEffect.of(!text ? null : {
+            pos: region.from,
+            end: region.to,
+            above: true,
+            create: () => {
+                const dom = document.createElement("div");
+                dom.className = "shexjs-tooltip";
+                dom.textContent = text;
+                return { dom };
+            },
+        }) });
+}
 const paneTheme = view_1.EditorView.baseTheme({
+    ".cm-tooltip.shexjs-tooltip": { whiteSpace: "pre-wrap", fontFamily: "monospace", fontSize: "12px",
+        padding: "2px 6px", maxWidth: "48em", backgroundColor: "#ffffe8",
+        border: "1px solid #bbb" },
     ".shexjs-annotation": { borderBottom: "2px solid #7a86c8" },
     ".shexjs-binding-consumed": { backgroundColor: "#e6f0d8", borderBottom: "2px solid #6a9a3a" },
     ".shexjs-binding-cursor": { borderBottom: "2px dashed #a8620a" },
@@ -451,7 +527,11 @@ const breakpointExtension = [
 function lintSourceFor(language, opts) {
     switch (language) {
         case "shexc":
-            return view => EditorServices.parseShExC(view.state.doc.toString(), { base: opts.getBase ? opts.getBase() : undefined }).diagnostics;
+            // the schema pane holds ShExC, or ShExJ, ShExR or a DCTAP table: each
+            // is linted in its own language (see lintSchema)
+            return view => EditorServices.lintSchema(view.state.doc.toString(), { base: opts.getBase ? opts.getBase() : undefined });
+        case "shapemap":
+            return view => EditorServices.parseShapeMap(view.state.doc.toString(), opts.shapeMap ? opts.shapeMap() : { base: opts.getBase ? opts.getBase() : undefined }).diagnostics;
         case "turtle":
             return view => EditorServices.parseTurtle(view.state.doc.toString(), { baseIRI: opts.getBase ? opts.getBase() : undefined }).diagnostics;
         case "json":
@@ -564,6 +644,7 @@ function makePane(textarea, opts = {}) {
         breakpointExtension,
         highlightField,
         annotationField,
+        tooltipField,
         paneTheme,
         view_1.EditorView.updateListener.of(update => {
             if (update.docChanged) {
@@ -601,8 +682,10 @@ function makePane(textarea, opts = {}) {
     const supplied = getSupplied(textarea.value);
     const language = opts.language
         || (supplied && exports.languages[supplied.language] ? supplied.language : undefined);
-    if (language === "shexc" || language === "turtle") {
-        const lang = language === "shexc" ? language_1.StreamLanguage.define(exports.shexcStreamParser) : turtleLanguage;
+    if (language === "shexc" || language === "turtle" || language === "shapemap") {
+        const lang = language === "shexc" ? shexcLanguage
+            : language === "shapemap" ? language_1.StreamLanguage.define(exports.shapeMapStreamParser)
+                : turtleLanguage;
         extensions.push(lang);
         const autocompletes = [];
         if (opts.completions) // basicSetup's autocompletion() reads languageData
@@ -650,8 +733,18 @@ function makePane(textarea, opts = {}) {
     // back to its rows attribute where there's no layout (e.g. jsdom)
     view.dom.style.width = textarea.offsetWidth ? textarea.offsetWidth + "px"
         : (textarea.style.width || "100%");
-    view.dom.style.height = textarea.offsetHeight ? textarea.offsetHeight + "px"
-        : `calc(${textarea.rows || 20} * 1.4em)`;
+    // ...and its height, unless the box it goes into says otherwise: a pane
+    // in a column that fills the page takes the column's height, where a
+    // pixel height measured from the textarea would hold it to the rows the
+    // textarea asked for (shex-app.css: #schemaDocument, .fillsColumn)
+    const box = textarea.parentNode;
+    const styles = box && box.ownerDocument && box.ownerDocument.defaultView;
+    const fills = !!(styles && styles.getComputedStyle
+        && styles.getComputedStyle(box).flexDirection === "column");
+    view.dom.style.height =
+        fills ? ""
+            : textarea.offsetHeight ? textarea.offsetHeight + "px"
+                : `calc(${textarea.rows || 20} * 1.4em)`;
     textarea.parentNode.insertBefore(view.dom, textarea);
     textarea.style.display = "none";
     // hover regions (validation match/failure cross-highlighting)
@@ -697,6 +790,9 @@ function makePane(textarea, opts = {}) {
         },
         toggleBreakpoint(pos) {
             toggleBreakpoint(view, view.state.doc.lineAt(pos).from);
+        },
+        toggleBreakpointAt(pos) {
+            toggleBreakpoint(view, Math.max(0, Math.min(pos, view.state.doc.length)));
         },
         destroy() {
             if (changeTimer !== null) {

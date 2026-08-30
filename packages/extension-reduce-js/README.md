@@ -47,8 +47,29 @@ the object reduced to. What the action returns stands in for that arc.
 
 In both: `str` `num` `iri` `local` `lang` `datatype` `isBnode` for reading a
 term, `key` for using one as a key, `RDF` `XSD` `nil` `expand`, `state` for
-what an action wants the next one to know, and whatever the caller passed as
-`api`.
+what an action wants the next one to know, `reject` and `cut` for saying no,
+and whatever the caller passed as `api`.
+
+`reject(why)` refuses the production the action is on — the match goes on to
+whatever else that node could be — and `cut(why)` says no other reading will
+do either, so the node/shape pair fails where the action stood. Both work from
+wherever the action found out, a loop or a helper included:
+
+```js
+if (num($1) === state.before(subject))
+  reject('the sum of the numbers before it, so it ends the expression');
+$$ = state.note(subject, num($1));
+```
+
+They are this package's rather than
+[extension-reduce's](../extension-reduce#registereager--while-matching):
+exceptions are a fact about *this* action language, and the scope that crosses
+between the two is plain data. What they throw is caught here and handed back
+as the value an action could have returned instead — `{failure: why}` or
+`{failure: why, cut: true}` — which is what an evaluator for another language
+would produce with whatever that language has. Refusing only means anything
+while the matcher is matching (`registerEager`); folding a parse that already
+happened, the value is a value like any other.
 
 `key(term)` earns its place because an IRI and a blank node reach an action as
 strings and a literal reaches it as `{value, type?, language?}` — and an object
@@ -58,13 +79,13 @@ used as a key is `"[object Object]"`, the same key for every literal there is.
 A predicate is written as a full IRI, as `a` (always `rdf:type`), or with a
 prefix from `reduce`'s `prefixes` option.
 
-`$sx:nodeKind`, `$1` and `$` are
+`$sx:nodeKind`, `$1` and `$$` are
 [extension-reduce's](../extension-reduce#naming-what-a-production-matched) —
 they are ordinary names by the time the code gets here. All this does about
 them is put `scope.bindings` in scope and, when `scope.ret` says the action
 assigns to a name, answer with what that name ended up holding rather than
 with the code's own value. `with` writes an assignment through to the object
-when the name is one of its own, so `$ = ...` needs nothing else.
+when the name is one of its own, so `$$ = ...` needs nothing else.
 
 ## Writing another one
 

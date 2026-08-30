@@ -46,6 +46,39 @@ describe("errsToSimple", function () {
     expect(text).to.include("missing property <" + P + "b>");
   });
 
+  /* What a failure leads with is the reader's to choose (plan.md G1): the
+   * repairs with the errors under them, the repairs alone, or the errors
+   * alone.  A failure the validator put no repair to keeps its errors
+   * whatever was asked. */
+  describe("explain", function () {
+    const repaired = Object.assign(failure([missing("a")]),
+      {repairs: [{type: "NearestBag", cost: 1, arcs: [{property: P + "a", delta: 1}]}]});
+
+    it("should lead with the repairs and follow with the errors", function () {
+      const text = ShExUtil.errsToSimple(repaired).join("\n");
+      expect(text).to.include("to conform: add 1 <" + P + "a>");
+      expect(text).to.include("missing property <" + P + "a>");
+      expect(text.indexOf("to conform"), "repairs first").to.be.below(text.indexOf("missing property"));
+    });
+
+    it("should say only the repairs when asked", function () {
+      const text = ShExUtil.errsToSimple(repaired, {}, {explain: "repairs"}).join("\n");
+      expect(text).to.include("to conform: add 1 <" + P + "a>");
+      expect(text).to.not.include("missing property");
+    });
+
+    it("should say only the errors when asked", function () {
+      const text = ShExUtil.errsToSimple(repaired, {}, {explain: "errors"}).join("\n");
+      expect(text).to.not.include("to conform");
+      expect(text).to.include("missing property <" + P + "a>");
+    });
+
+    it("should keep the errors of a failure that has no repair, whatever was asked", function () {
+      const text = ShExUtil.errsToSimple(failure([missing("a")]), {}, {explain: "repairs"}).join("\n");
+      expect(text).to.include("missing property <" + P + "a>");
+    });
+  });
+
   it("should join alternative readings with OR", function () {
     const text = ShExUtil.errsToSimple({
       type: "Alternatives",

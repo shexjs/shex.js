@@ -20,7 +20,8 @@
 remote=${1:-origin}
 cd "$(dirname "$0")/.."
 
-dirs="packages/shex-webapp/doc/webpacks packages/extension-map/doc/webpacks"
+dirs="packages/shex-webapp/doc/webpacks packages/extension-map/doc/webpacks
+      packages/extension-reduce/doc/webpacks"
 
 # FETCH_HEAD works even in single-branch clones that track only main.
 git fetch "$remote" gh-pages

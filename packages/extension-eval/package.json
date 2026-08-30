@@ -21,7 +21,6 @@
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
-    "browser": "../../node_modules/.bin/browserify shex-extension-eval.js -s jsExtension -o browser/shex-extension-eval-browserify.js && ../../node_modules/.bin/uglifyjs browser/shex-extension-eval-browserify.js --comments -mco browser/shex-extension-eval-browserify.min.js",
     "build": "tsc"
   },
   "publishConfig": {

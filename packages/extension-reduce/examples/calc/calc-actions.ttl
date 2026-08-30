@@ -15,5 +15,19 @@ BASE <http://a.example/calc-actions>
     sa:code "{op: 'num', value: num(one(':value'))}" ] ,
 
   [ sa:ref <http://a.example/calc#BinOp> ;
-    sa:code "{op: local(one('a')), left: one(':left'), right: one(':right')}" ]
+    sa:code """
+      // A grammar can say that :right is an expression.  It cannot say that
+      // the expression isn't zero when the operator is :Div -- that is a
+      // fact about two of the production's parts at once, which is what an
+      // action is for.
+      //
+      // And it cuts rather than rejects: a rejection means "this production
+      // is not it", and the match would go on to ask whether <#e1> is a
+      // <#Num> instead.  It isn't, and it was never going to be.  So the
+      // reader gets this reason rather than the last branch's.
+      const op = local(one('a')), right = one(':right');
+      if (op === 'Div' && right.op === 'num' && right.value === 0)
+        cut('division by zero');
+      $$ = {op, left: one(':left'), right};
+    """ ]
 .

@@ -104,15 +104,21 @@ function ShExNodeCjsModule (config: ShExNodeCjsModule.Config = {}): ShExLoader.L
 
   return newLoader
 
+  /**
+   * Extensions by file glob (`../extensions/*.js`) or by package name
+   * (`@shexjs/extension-test`): a glob that matches nothing is taken for a
+   * name and handed to node's resolver, which finds a package installed
+   * beside this one.
+   */
   function LoadExtensions (globs: string[]): Record<string, ShExLoader.ShExExtension> {
     return (globs || []).reduce(
-      (list: string[], glob) =>
-        list.concat(Glob.sync(glob))
-      , []).
+      (list: string[], glob) => {
+        const matched: string[] = Glob.sync(glob)
+        return list.concat(matched.length ? matched.map((p: string) => Path.resolve(p)) : [glob])
+      }, []).
       reduce(function (ret: Record<string, ShExLoader.ShExExtension>, extPath) {
         try {
-	  const absPath = Path.resolve(extPath)
-	  const rawModule = require(absPath)
+	  const rawModule = require(extPath)
 	  const t = typeof rawModule === 'function' ? rawModule(Object.assign({Validator: {}}, config)) : rawModule
 	  ret[t.url] = t
 	  return ret

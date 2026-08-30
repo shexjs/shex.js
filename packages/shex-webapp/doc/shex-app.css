@@ -1,11 +1,12 @@
-/* Styles for the ShEx web apps -- shex-simple and shex-worker here, and
- * shexmap-simple and shexmap-worker in @shexjs/extension-map, which link
- * this file rather than keeping a copy.  Four copies is how the shape map
- * lost its left padding on three pages: the fix was made once, in the page
- * whose author noticed, and the others quietly did without.
+/* Styles for the ShEx web apps -- shex-simple and shex-worker.  The map
+ * pages in @shexjs/extension-map are redirects to these now, and ShExMap's
+ * own rules (the bindings pane) ride in its plugin descriptor's css.  Four
+ * copies is how the shape map lost its left padding on three pages: the
+ * fix was made once, in the page whose author noticed, and the others
+ * quietly did without.
  *
  * A page keeps a <style> of its own for what is actually its own: how its
- * input area scrolls, and, for the map apps, the bindings pane.
+ * input area scrolls.
  *
  * The palette, so it stays a family:
  *   schema  #f4f4ff   data  #f4fff4   results  #fffff4   bindings #fffff4
@@ -64,7 +65,7 @@ ul[data-navColumn] button:focus::after  { content: " <"; color: #730; margin-rig
 .results { background-color: #fffff4; color: #000000; }
 #manifestDrop { border-color: white; width: 100%; }
 #manifestDrop div.manifest { overflow: auto; max-height: 10ex; }
-#extensionDrop { border-color: #00ffff; width: 88%; border-width: thin; }
+#pluginDrop { border-color: #00ffff; width: 88%; border-width: thin; }
 #inputSchema li button, #inputData li button {
   font-size: .7em;
   padding: 0em 2ex;
@@ -76,7 +77,119 @@ ul[data-navColumn] button:focus::after  { content: " <"; color: #730; margin-rig
 #inputSchema li button.disabled, #inputData li button.disabled {
   color: #777;
 }
-body { border-width: .25em; border-style: solid; border-color: white; }
+/* The page is the window: the title, as much of the middle as is left,
+   and the results pinned to the bottom.  Which is what puts #results in one
+   place whichever screen is up -- the validator's screen is the tall one,
+   since only it has the manifest and the shape map under the schema, and
+   the results used to ride up and down with whatever was above them.  The
+   panes take the slack instead.
+   (margin: the window's height is the budget, so the gap around the page is
+   padding inside it rather than margin outside.) */
+/* height, not min-height: the window's height has to be the budget rather
+   than the floor, or nothing is ever obliged to give anything up -- a
+   document taller than its pane simply made the page taller, and the panes
+   grew with what was in them instead of being what was left of the page.
+   What does not fit scrolls where it is; nothing is lost by the page
+   staying the size of the window. */
+html { height: 100%; }
+body {
+    box-sizing: border-box;
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: .4em;
+    display: flex;
+    flex-direction: column;
+    border-width: .25em; border-style: solid; border-color: white;
+}
+#title { flex: 0 0 auto; }
+#inputarea { flex: 1 1 auto; min-height: 0; overflow: auto; }
+#results { flex: 0 0 40vh; display: flex; flex-direction: column; min-height: 0; }
+
+/* ...and the slack goes to the panes rather than to the space around them.
+   The columns are as tall as the middle is; in each, the document is what
+   grows -- the manifest under the schema, the source's tabs and the buttons
+   under the data, are as tall as they are.  Without this the middle grew
+   and the panes didn't, which put a band of nothing between the panes and
+   the results.
+
+   A column is the height of the middle because it is *stretched* to it, not
+   because it asks for a percentage of it: a flex item's height is only
+   definite once it has been laid out, and a column that asks too early gets
+   its content's height and leaves that band under itself. */
+#inputarea { display: flex; align-items: stretch; }
+#inputarea > .panel { flex: 0 0 48.5%; }
+#inputarea > #screens { flex: 1 1 auto; min-width: 0; }
+#screens { display: flex; flex-direction: column; min-height: 0; }
+#screens > .screen { flex: 1 1 auto; min-height: 0; }
+#inputSchema, #inputData { display: flex; flex-direction: column; min-height: 0; }
+#schemaDocument, #dataArea, #dataDocument {
+    flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
+}
+#dataSource-tabs { flex: 0 0 auto; }
+/* What is under the document is anchored to the foot of the column, which
+   is the top of the results: the validate row never moves.  The example
+   lists are what gives way when there are more of them than there is room
+   for -- they take what they need up to that, and scroll past it -- so
+   picking a schema with a dozen examples resizes the document rather than
+   pushing everything below it down the page. */
+#inputSchema > div:not(#schemaDocument),
+#inputData > div:not(#dataArea):not(#dataExamples) { flex: 0 0 auto; }
+#dataExamples { flex: 0 0 auto; max-height: 30%; overflow: auto; }
+/* a document is its box: a textarea sized in rows, or an editor that takes
+   its height from what it was given rather than from what is in it */
+#schemaDocument > textarea, #dataDocument > textarea,
+.fillsColumn > textarea { height: 100%; box-sizing: border-box; }
+#schemaDocument > .shexjs-editor-pane, #dataDocument > .shexjs-editor-pane,
+.screen .panel > div[id] > .shexjs-editor-pane { flex: 1 1 auto; min-height: 0; }
+.shexjs-editor-pane > .cm-editor { height: 100%; }
+/* ...and inside the results, the tab strip is fixed and the panel takes the
+   rest, so what is in it scrolls rather than the page growing.
+
+   Whichever box holds the results is the one that scrolls: a tab's panel
+   where there are tabs, and #results' own div where there are none -- which
+   is every page with no plugin on it.  Without that the results ran past
+   the foot of the page with nothing to scroll them, and a hover that
+   scrolled a result into view took the whole page with it, the body being
+   the nearest thing that would move. */
+#results > div, #resultsTabs { flex: 1 1 auto; min-height: 0; }
+#results > div:not(#resultsTabs) { overflow: auto; }
+/* Between the two: a handle to drag, to say how much of the page is what
+   you are working on and how much is what came of it.  Outside #results,
+   because "#results > div" is where results are written. */
+#resultsGrip {
+    flex: 0 0 auto;
+    height: .45em;
+    margin: .15em 0;
+    border-radius: .2em;
+    background-color: #ddd;
+    cursor: row-resize;
+}
+#resultsGrip:hover { background-color: #bbb; }
+#resultsTabs { display: flex; flex-direction: column; }
+#resultsTabs > ul { flex: 0 0 auto; }
+/* something about the results as a whole rather than in them: ShExMap's
+   list of viable materializations, at the right-hand end of the strip of
+   tabs, out of the flow so that it cannot push the results it is about */
+#resultsTabs { position: relative; }
+/* width: the sheet gives every div in #results 99% of it, which made this
+   a full-width box anchored to the right with its text at the left -- over
+   the tabs it is supposed to sit beside.  It is as wide as what it says. */
+#resultsTabs > .resultsTabsAside {
+    position: absolute;
+    top: .4em;
+    right: .6em;
+    width: auto;
+    white-space: nowrap;
+    text-align: right;
+    font-size: .9em;
+    /* ...and none of the rule that separates one result from the next:
+       this is beside the tabs rather than under them, and the separator's
+       margin and padding are what dropped it half a line */
+    margin: 0;
+    padding: 0;
+    border-top: none;
+}
 /* the tab set and the document share one box, whose height the app
    fixes to what a document needs once it has measured one (see
    showDocumentArea) so the buttons below don't move when the settings
@@ -146,6 +259,100 @@ label {
 .heading {
   font-weight: bold;
 }
+/* Screens: the validator's two panels are the app's own screen, and each
+   plugin's panes land in a .screen of its own inside #screens, one showing
+   at a time (ShExBaseApp.showScreen).  A screen is a block the full width
+   of the page; the .panels inside it are its columns. */
+/* The screen tabs stand in for the part of the title that named what is
+   showing: "ShEx - " stays, "Validator" becomes the first tab.  They sit in
+   the heading, so they are told the type a button does not inherit, and
+   they are tabs on the page's own terms rather than jquery-ui's -- what
+   they switch is elsewhere on the page, which jquery-ui tabs cannot do. */
+#screenTabs { margin-left: .2em; vertical-align: baseline; }
+#screenTabs button {
+    font: inherit;
+    font-size: .6em;
+    padding: .15em .6em;
+    margin-right: .15em;
+    border: 1px solid #bbb;
+    border-bottom: none;
+    border-radius: .4em .4em 0 0;
+    background-color: #eee;
+    color: #444;
+    cursor: pointer;
+}
+#screenTabs button[aria-selected="true"] {
+    background-color: #fff;
+    color: #000;
+    font-weight: bold;
+}
+/* The × that unloads the plugin whose tab it is.  Quiet until the tab is
+   under the mouse: a reader switching screens should not keep finding a
+   button that takes one away. */
+#screenTabs .unloadPlugin {
+    margin-left: .5em;
+    padding: 0 .15em;
+    border-radius: .2em;
+    color: #999;
+    opacity: 0;
+    cursor: pointer;
+}
+#screenTabs button:hover .unloadPlugin,
+#screenTabs button:focus-within .unloadPlugin { opacity: 1; }
+#screenTabs .unloadPlugin:hover { color: #a00; background-color: #f4dede; }
+/* A screen's columns stand side by side and stretch to the tallest of
+   them, so a pane that is alone in its column may have all of it: the
+   overlay ShExReduce puts where the schema stands gets the height that
+   column gets, rather than the dozen rows a textarea asks for.  The toolbar
+   and the statusbar wrap to lines of their own underneath. */
+.screen { display: flex; flex-direction: column; height: 100%; }
+.screenColumns { display: flex; align-items: stretch; flex: 1 1 auto; min-height: 0; }
+/* 0px rather than 0: the same length, and the one a test's document
+   parser will accept -- a `flex` shorthand with a unitless basis is dropped
+   whole there, so a rule written that way is a rule no test can see. */
+.screenColumns > .panel, .screenColumns [data-borrow] > .panel { flex: 1 1 0px; }
+/* A borrowed pane is a column of the screen like any other: the slot it is
+   lent to has to be the box the pane fills, or the pane is as tall as what
+   is in it and the column ends short of the results. */
+.screenColumns > [data-borrow] { flex: 1 1 0px; display: flex; flex-direction: column; min-height: 0; }
+/* A screen's panes fill it the way the validator's do: a column shares its
+   height among the panes in it -- in proportion to the rows each asked for,
+   which the app writes on the pane -- each pane's document takes what its
+   pane has left, and what doesn't fit scrolls where it is.  A pane that says
+   `fill` is one that happens to be alone in its column. */
+.screenColumns > .panel { display: flex; flex-direction: column; min-height: 0; }
+.screenColumns > .panel > div[id],
+.screen [data-tabset] > div[id],
+.screen [data-tabset] > [data-borrow] {
+    flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
+}
+.screen div[id] > textarea,
+.screen div[id] > .shexjs-editor-pane { flex: 1 1 auto; min-height: 0; }
+.screen > .pluginToolbar, .screen > .pluginStatusbar { flex: 0 0 auto; }
+/* ...and a pane that asked for its box takes what is left of it once the
+   status line above has had its share.  Used on a screen's column and in a
+   results tab, which are the two boxes a pane can be given whole. */
+.fillsColumn { display: flex; flex-direction: column; height: 100%; }
+.fillsColumn > textarea,
+.fillsColumn > .shexjs-editor-pane { flex: 1 1 auto; }
+
+/* Every kind of result gets the same box.  Two reasons: a reader switching
+   between a validation and what was made of it should not have the page
+   change size underneath them, and a long result used to push the rest of
+   the page off the bottom -- a results pane measured while its tab was
+   hidden can come back taller than the window, and a tab that scrolls keeps
+   that between its own edges. */
+#resultsTabs > div[id] { flex: 1 1 auto; min-height: 0; overflow: auto; }
+
+/* the slot a screen keeps for a pane it borrows: as a column of the
+   screen the pane is a .panel already, so the slot lays nothing out; in a
+   tab set the slot is the tab's panel, and what it holds fills it */
+.screen > [data-borrow] { display: contents; }
+.screen [data-tabset] .panel,
+.screen [data-tabset] > [data-borrow] > * { width: auto; margin: 0; }
+/* a set of panes taking turns is as much the column as one pane is */
+.screen [data-tabset] { display: flex; flex-direction: column; height: 100%; }
+.screen [data-tabset] > div[id] { flex: 1 1 auto; }
 .panel {
   width: 48.5%;
   display: inline-block;
@@ -264,6 +471,23 @@ ul {
     white-space: nowrap;
     font-size: small;
 }
+/* the breakpoints, one chip each, the × taking it away */
+#valDbgBreakpoints .dbgBreakpoint {
+    display: inline-block;
+    margin-left: .4em;
+    padding: 0 .3em;
+    border: thin solid #c22;
+    border-radius: .5em;
+    font-size: small;
+}
+#valDbgBreakpoints .dbgBreakpoint button {
+    border: none;
+    background: none;
+    padding: 0 0 0 .2em;
+    cursor: pointer;
+}
+table.dbgThreadState th { text-align: left; padding-right: .6em; vertical-align: top; }
+table.dbgThreadState caption { text-align: left; font-weight: bold; }
 /* the status is a sentence, so let it wrap rather than run off the edge */
 #valDbgStatus {
     display: inline-block;
@@ -272,46 +496,19 @@ ul {
     overflow-wrap: anywhere;
 }
 
-/* The materializer's controls, arranged like the validator's above.
+/* A plugin's row of controls, arranged like the validator's above.
  *
- * #outactions floats right so it sits at the panel's edge, and its wrapper
- * held nothing else -- so the wrapper collapsed to no height at all, the
- * float escaped it, and what came next in the page laid out over the top of
- * the buttons.  A block formatting context contains its floats. */
-#outactionsRow {
+ * The inner box floats right so it sits at the panel's edge, and its
+ * wrapper held nothing else -- so the wrapper collapsed to no height at
+ * all, the float escaped it, and what came next in the page laid out over
+ * the top of the buttons.  A block formatting context contains its floats. */
+.pluginToolbar {
     display: flow-root;
 }
-#outactions {
+.pluginToolbarInner {
     float: right;
     margin-right: .1em;
     text-align: right;
-}
-#debugControls {
-    margin-left: .6em;
-    white-space: nowrap;
-}
-/* The materializer's thread list, at the left edge of the target schema
- * pane rather than in the right-floating controls.
- *
- * There it shared a right edge with the bindings pane, so every thread that
- * appeared or died changed the width of the block the step buttons sit in
- * and moved them out from under the mouse.  Here it grows rightward from an
- * edge that doesn't move. */
-#dbgThreadsRow {
-    min-height: 1.6em;
-    padding-top: .5em;   /* level with the controls under the bindings pane */
-    overflow-x: auto;
-    white-space: nowrap;
-    text-align: left;
-}
-#dbgThreads {
-    font-size: small;
-}
-#dbgStatus {
-    display: inline-block;
-    max-width: 100%;
-    white-space: normal;
-    overflow-wrap: anywhere;
 }
 
 /* The highlight switch's chip: centred above the validate/materialize

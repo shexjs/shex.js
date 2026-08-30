@@ -48,6 +48,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.repoRoot = repoRoot;
+exports.qualityOf = qualityOf;
 exports.negotiate = negotiate;
 exports.makeServer = makeServer;
 exports.main = main;
@@ -90,9 +91,37 @@ function repoRoot(from) {
             return Path.resolve(from);
     }
 }
+/**
+ * How much an Accept header wants a media type: its q, from the most
+ * specific range that matches (`text/shex` over `text/*` over `*\/*`), and
+ * 0 for a type nothing in it covers.  An empty header wants everything.
+ */
+function qualityOf(type, accept) {
+    if (accept.trim() === "")
+        return 1;
+    let best = null;
+    for (const range of accept.split(",")) {
+        const [media, ...params] = range.trim().split(";");
+        const [rType, rSub] = media.trim().toLowerCase().split("/");
+        const [type1, sub1] = type.toLowerCase().split("/");
+        const specificity = rType === type1 && rSub === sub1 ? 2
+            : rType === type1 && rSub === "*" ? 1
+                : rType === "*" && (rSub === "*" || rSub === undefined) ? 0
+                    : -1;
+        if (specificity === -1)
+            continue;
+        const qParam = params.map(p => p.trim()).find(p => /^q=/i.test(p));
+        const q = qParam === undefined ? 1 : Math.max(0, Math.min(1, parseFloat(qParam.slice(2)) || 0));
+        if (best === null || specificity > best.specificity)
+            best = { specificity, q };
+    }
+    return best === null ? 0 : best.q;
+}
 /** negotiate - when `filePath` has no extension and doesn't exist, pick an
- * extension sibling (filePath + ".*"), preferring types the Accept header
- * asks for; ties break alphabetically for determinism. */
+ * extension sibling (filePath + ".*"), preferring the type the Accept
+ * header wants most (its q-values, RFC 7231 §5.3.2); a sibling the header
+ * rules out with q=0 is never picked while another will do, and ties break
+ * alphabetically for determinism. */
 function negotiate(filePath, accept) {
     const dir = Path.dirname(filePath);
     const base = Path.basename(filePath);
@@ -103,16 +132,13 @@ function negotiate(filePath, accept) {
         Fs.statSync(Path.join(dir, name)).isFile());
     if (candidates.length === 0)
         return null;
-    const rank = (name) => {
-        const type = (ContentTypes[Path.extname(name).toLowerCase()] || "application/octet-stream")
-            .replace(/;.*$/, "");
-        return accept.includes(type) ? 0 // text/html
-            : accept.includes(type.replace(/\/.*$/, "/*")) ? 1 // text/*
-                : accept.includes("*/*") || accept === "" ? 2 // anything
-                    : 3;
-    };
-    candidates.sort((a, b) => rank(a) - rank(b) || (a < b ? -1 : 1));
-    return Path.join(dir, candidates[0]);
+    const typeOf = (name) => (ContentTypes[Path.extname(name).toLowerCase()] || "application/octet-stream").replace(/;.*$/, "");
+    const wanted = candidates.map(name => ({ name, q: qualityOf(typeOf(name), accept) }));
+    // ...and if the header rules out every sibling, any of them rather than
+    // nothing: a 406 helps nobody who asked for a file by name
+    const acceptable = wanted.some(c => c.q > 0) ? wanted.filter(c => c.q > 0) : wanted;
+    acceptable.sort((a, b) => b.q - a.q || (a.name < b.name ? -1 : 1));
+    return Path.join(dir, acceptable[0].name);
 }
 function makeServer(root, options = {}) {
     const always = { "Cache-Control": "no-store" };
@@ -193,7 +219,7 @@ SharedArrayBuffer, e.g. for debugger worker suspension).`);
         console.log(`serving ${root} on http://localhost:${port}/${opts.coi ? " (cross-origin isolated)" : ""}`);
         KnownPages.filter(page => Fs.existsSync(Path.join(root, page))).forEach(page => {
             console.log(`  http://localhost:${port}/${page}`);
-            console.log(`  http://localhost:${port}/${page}?editors=1   (language-aware editors)`);
+            console.log(`  http://localhost:${port}/${page}?editors=textarea   (plain textareas)`);
         });
     });
 }

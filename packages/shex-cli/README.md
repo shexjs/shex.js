@@ -163,7 +163,7 @@ Extensions needn't be implemented in Javascript:
 [Test extension](http://shex.io/extensions/Test/) in hand-written WebAssembly,
 printing through WASI's `fd_write`:
 ```sh
-    --extension node_modules/@shexjs/extension-wasi-test/shex-extension-wasi-test.js
+    --extension node_modules/@shexjs/extension-wasi-test/lib/shex-extension-wasi-test.js
 ```
 
 ## conversion

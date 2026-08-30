@@ -24,19 +24,24 @@
 >   worker materializer still ships only a message).  Autocomplete offers
 >   prefixes, shape labels (plain and @ref) and constraint predicates in the
 >   ShExC and Turtle panes.
-> - Still open: `RdfJsDb(MillanDataset)` as the validation store (blocked on
->   the app's N3-specific API surface — getQuads/removeQuad in proof-graph,
->   remainder and slurp flows — and N3 internalization dropping term
->   sources), Lezer/tree-sitter ShExC mode, shape-map text as a managed
->   editor, worker-side materialization-failure ranges, and the millan
->   subject-source trailing-whitespace nit (upstream).
-> - **Needs manual browser testing**: jsdom verifies the proxy contract and
->   services, but nobody has clicked `?editors=1` in a real browser yet.
->   `npm run serve` (the zero-dependency `shex-serve` in `@shexjs/webapp`)
->   serves the repo root and prints the `?editors=1` URLs.
+> - What is still open (millan as the validation store, a Lezer/tree-sitter
+>   mode, the shape map as a managed editor, tooltips, autocomplete tuning)
+>   is tracked in [plan.md](plan.md) §D.  The editors are the default now;
+>   `?editors=textarea` is the plain-textarea fallback.
 > - `@shexjs/editor-services` is TypeScript (`src/*.ts` → committed `lib/`,
 >   built by `npm run compile` / per-package `npm run build`), as is
 >   `shex-serve`.
+> - 2026-08-28: the query map is a managed editor too (the shape-map
+>   grammar records where each pair was written; `parseShapeMap`), hover
+>   regions carry tooltips, completion reads the schema pane as it stands,
+>   and a ShExJ, ShExR or DCTAP schema pane is located in its own text
+>   (`synthesizeLocations`) and linted in its own language (`lintSchema`).
+>   The data side parses with lezer-turtle, not millan.
+> - 2026-08-29: the schema pane parses with a Lezer ShExC grammar
+>   (`packages/lezer-shexc`, a port of the specification's grammar in
+>   `ShExJison.jison`'s LALR shape): exact colours by role, folding,
+>   incremental and error-tolerant.  The stream tokenizer is gone.  The
+>   ts-jison `@$` wart is fixed on a branch of ts-jison (plan.md D8).
 > - Validation results drive cross-pane hover highlighting: matched (green)
 >   and failed (red) constraint↔triple pairs; hovering a TripleConstraint
 >   also lights its shape's label, hovering a triple's object also lights
@@ -185,7 +190,7 @@ Branch polish list found while prototyping:
   port (tree-sitter → Lezer is mechanical-ish), not a prerequisite.
 - The apps' `InterfaceCache` touches its textarea through a tiny surface
   (`selection.val()`, `.val(v)`, change events — see
-  `packages/shex-webapp/doc/ShExBaseApp.js:37`). An `EditorPane` adapter
+  `packages/shex-webapp/src/app/ShExBaseApp.ts`). An `EditorPane` adapter
   implementing that same surface over an `EditorView` swaps in per-pane,
   keeping every cache/manifest/permalink behavior; textareas stay as the
   no-JS/webdriver fallback behind a query flag while stabilizing.

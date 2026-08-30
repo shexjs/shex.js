@@ -217,7 +217,11 @@ class EvalThreadedNErrRegexEngine {
                 unmatchedTriples.size > 0 ? null : elt;
         }, null);
         if (longerChosen !== null) {
-            let fromValidationPoint = longerChosen.expression;
+            // A thread that matched nothing -- a group taken zero times, over a
+            // node with none of its arcs -- built no solution on the way; the
+            // empty one is what it stands for.
+            let fromValidationPoint = longerChosen.expression
+                || this.emptySolution(this.outerExpression);
             if (this.shape.semActs !== undefined)
                 fromValidationPoint.semActs = this.shape.semActs;
             return fromValidationPoint;
@@ -311,13 +315,50 @@ class EvalThreadedNErrRegexEngine {
             }, [th]);
         }, semActHandler, this.mayMerge));
     }
+    /** the solution of an expression matched zero times: no solutions, with
+     * the cardinality that let it be zero */
+    emptySolution(expr) {
+        const resolved = typeof expr === "string" ? this.index.tripleExprs[expr] : expr;
+        const minmax = {};
+        if (resolved.min !== undefined && resolved.min !== 1 || resolved.max !== undefined && resolved.max !== 1) {
+            minmax.min = resolved.min;
+            minmax.max = resolved.max;
+        }
+        if (resolved.semActs !== undefined)
+            minmax.semActs = resolved.semActs;
+        if (resolved.annotations !== undefined)
+            minmax.annotations = resolved.annotations;
+        switch (resolved.type) {
+            case "TripleConstraint":
+                return Object.assign({ type: "TripleConstraintSolutions", predicate: resolved.predicate }, resolved.valueExpr !== undefined ? { valueExpr: resolved.valueExpr } : {}, minmax, { solutions: [] });
+            case "OneOf":
+                return Object.assign({ type: "OneOfSolutions", solutions: [] }, minmax);
+            default:
+                return Object.assign({ type: "EachOfSolutions", solutions: [] }, minmax);
+        }
+    }
     // Early return in case of insufficient matching triples
     matchTripleConstraint(constraint, min, max, thread, constraintToTripleMapping, semActHandler) {
+        // the debugger's view of the thread as it asks; and what came of it
+        const threadView = () => ({
+            matched: thread.matched.map(m => ({
+                predicate: m.triples.length ? m.triples[0].predicate.value : "",
+                triples: m.triples.slice(),
+            })),
+            errors: thread.errors.length,
+        });
         if (this.debugHooks && this.debugHooks.onConstraint)
             this.debugHooks.onConstraint(constraint, {
                 node: this.node,
                 triples: constraintToTripleMapping.get(constraint).map(pair => pair.triple),
+                thread: threadView(),
             });
+        const report = (taken, passed, failed, spawned) => {
+            if (this.debugHooks && this.debugHooks.onConstraintResult)
+                this.debugHooks.onConstraintResult(constraint, {
+                    node: this.node, taken: taken.slice(), passed, failed, spawned, thread: threadView(),
+                });
+        };
         if (thread.avail.get(constraint) === undefined)
             thread.avail.set(constraint, constraintToTripleMapping.get(constraint).map(pair => pair.triple));
         // all of them at once where nothing else could want them (takesAllItCan),
@@ -325,9 +366,12 @@ class EvalThreadedNErrRegexEngine {
         const greedy = this.greedy.has(constraint);
         const wanted = greedy ? Math.min(thread.avail.get(constraint).length, max) : min;
         const taken = thread.avail.get(constraint).splice(0, Math.max(wanted, min));
-        if (!(taken.length >= min)) // Early return
+        if (!(taken.length >= min)) { // Early return
+            report(taken, [], [], 0);
             return [thread.makeMissingPropertyThread(constraint, thread.matched)];
+        }
         const ret = [];
+        let lastPassFail = { pass: [], fail: [] };
         const minmax = {};
         if (constraint.min !== undefined && constraint.min !== 1 || constraint.max !== undefined && constraint.max !== 1) {
             minmax.min = constraint.min;
@@ -358,6 +402,7 @@ class EvalThreadedNErrRegexEngine {
                     acc.pass.push({ triple, tested, semActErrors });
                 return acc;
             }, { pass: [], fail: [] });
+            lastPassFail = passFail;
             // return an empty solution if min card was 0
             if (passFail.fail.length === 0) {
                 // If we didn't take anything, fall back to old errors.
@@ -380,6 +425,7 @@ class EvalThreadedNErrRegexEngine {
                 return false;
             }
         })());
+        report(taken, lastPassFail.pass.map(p => p.triple), lastPassFail.fail.map(f => ({ triple: f.triple, errors: f.semActErrors })), ret.length);
         return ret;
     }
     /*

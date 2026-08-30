@@ -1,0 +1,17 @@
+{
+  "name": "shex-plugin-skeleton",
+  "version": "0.1.0",
+  "description": "The smallest thing that is a shex.js webapp plugin",
+  "main": "hello-plugin.js",
+  "files": [
+    "hello-plugin.js",
+    "README.md"
+  ],
+  "keywords": [
+    "shex",
+    "shexjs",
+    "plugin",
+    "webapp"
+  ],
+  "license": "MIT"
+}

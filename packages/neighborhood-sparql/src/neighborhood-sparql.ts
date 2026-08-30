@@ -42,6 +42,9 @@ import {DbParamSpec, DbQueryTracker, Neighborhood, NeighborhoodDb, ParamEditor, 
 import * as ShExUtil from "@shexjs/util";
 import {ShExIndexVisitor} from "@shexjs/visitor";
 import * as N3 from "n3"; // TODO: set global externally
+import {RateLimiter, RateLimitOptions} from "./rate-limit";
+
+export {RateLimiter, RateLimitOptions} from "./rate-limit";
 
 export interface SparqlDbOptions {
   /** slurp all outgoing arcs rather than only those needed by the shape under test */
@@ -76,12 +79,24 @@ export interface SparqlDbOptions {
   /** the same over fetch(), for the asynchronous db.  Defaults to
    * ShExUtil.executeQueryPromise.  This is the one to want. */
   executeQueryAsync?: (query: string, endpoint: string, dataFactory: any) => Promise<any[][]>;
+  /** How fast to ask, and what to do when the service says "not that fast".
+   *
+   * A walk is one request per node it reaches, and a public endpoint meters
+   * that -- Wikidata answers 429 and the validation stops on whichever query
+   * was in flight.  Give it `{rate: 2}` to ask no more than twice a second,
+   * and it will drop below that and feel its way back up when a service
+   * refuses anyway (see rate-limit.ts).  Two dbs against one endpoint should
+   * share a RateLimiter, since it is the *service* that is being paced. */
+  rateLimit?: RateLimitOptions | RateLimiter;
 }
 
 /** A NeighborhoodDb which also needs the schema in order to calculate the
  * relevant neighborhood (i.e. which predicates to query).
  */
 export interface SparqlNeighborhoodDb extends NeighborhoodDb {
+  /** the pace this db asks at, and what it has learned about the pace the
+   * service will bear (rate-limit.ts) */
+  rateLimit: RateLimiter;
   setSchema (schema: InternalSchema): void;
   /** rows of a SELECT against this DB's endpoint -- what a shape map's
    * SPARQL extension is asking for, run where this DB is pointed */
@@ -173,10 +188,20 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
   const startDepth = options.bnodeDepth === undefined ? 4 : options.bnodeDepth;
   const maxDepth = options.maxBnodeDepth === undefined ? 64 : options.maxBnodeDepth;
   const verify = options.verifyBnodeDescriptions !== false;
-  const execute = options.executeQuery ||
+  const askSync = options.executeQuery ||
         ((q: string, ep: string, df: any) => ShExUtil.executeQuery(q, ep, df));
-  const executeAsync = options.executeQueryAsync ||
+  const askAsync = options.executeQueryAsync ||
         ((q: string, ep: string, df: any) => ShExUtil.executeQueryPromise(q, ep, df));
+  // ...through the pace the service will bear.  Every request this db makes
+  // goes through here, whichever face is driving and whether the query is a
+  // neighborhood's or a shape map's.
+  const rateLimit = options.rateLimit instanceof RateLimiter
+        ? options.rateLimit
+        : new RateLimiter(options.rateLimit || {});
+  const execute = (q: string, ep: string, df: any) =>
+        rateLimit.runSync(() => askSync(q, ep, df));
+  const executeAsync = (q: string, ep: string, df: any) =>
+        rateLimit.run(() => askAsync(q, ep, df));
   const queryCache: Map<string, any[][]> | null = options.cacheQueries === false ? null : new Map();
 
   /**
@@ -444,7 +469,7 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
   function contentKey (label: string, bySubject: Map<string, { p: string, o: RdfJs.Term }[]>): string {
     return (bySubject.get(label) || []).map(
       t => `${t.p} ${t.o.termType === "BlankNode" ? "[]" : turtlifyRdfJs(t.o)}`
-    ).sort().join(" ");
+    ).sort().join("\u0000");
   }
 
   function dedupeTerms (terms: RdfJs.Term[]): RdfJs.Term[] {
@@ -804,22 +829,37 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
     const outPreds: string[] | null = wantEverything ? null : arcs.out;
 
     let startTime = Date.now();
-    if (queryTracker) queryTracker.start(false, point, shapeLabel);
+    let token: unknown = queryTracker ? queryTracker.start(false, point, shapeLabel) : null;
     const cached = cachedOutgoing(point, outPreds);
-    const outgoing = (wantEverything || outPreds!.length > 0)
-          ? (cached !== null ? cached : yield* fetch(point, outPreds, false))
-          : [];
+    let outgoing: RdfJs.Quad[];
+    try {
+      outgoing = (wantEverything || outPreds!.length > 0)
+        ? (cached !== null ? cached : yield* fetch(point, outPreds, false))
+        : [];
+    } catch (e) {
+      // an endpoint that refused, timed out or broke: what the walk was
+      // asking for when it happened is the useful half of that news
+      if (queryTracker && queryTracker.fail)
+        queryTracker.fail(e, Date.now() - startTime, token);
+      throw e;
+    }
     if (queryTracker) {
       const now = Date.now();
-      queryTracker.end(outgoing, now - startTime);
+      queryTracker.end(outgoing, now - startTime, token);
       startTime = now;
     }
 
     let incoming: RdfJs.Quad[] = [];
     if (arcs.anyInverse) {
-      if (queryTracker) queryTracker.start(true, point, shapeLabel);
-      incoming = yield* fetch(point, null, true);
-      if (queryTracker) queryTracker.end(incoming, Date.now() - startTime);
+      token = queryTracker ? queryTracker.start(true, point, shapeLabel) : null;
+      try {
+        incoming = yield* fetch(point, null, true);
+      } catch (e) {
+        if (queryTracker && queryTracker.fail)
+          queryTracker.fail(e, Date.now() - startTime, token);
+        throw e;
+      }
+      if (queryTracker) queryTracker.end(incoming, Date.now() - startTime, token);
     }
     return {outgoing, incoming};
   }
@@ -862,6 +902,7 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
     setSchema: function (schema: InternalSchema) { schemaIndex = schema._index || ShExIndexVisitor.index(schema) },
     executeSelect: (query: string) => driveSync(runQuery(query)),
     executeSelectAsync: (query: string) => driveAsync(runQuery(query)),
+    rateLimit,
   };
 }
 
@@ -917,6 +958,17 @@ export const dbParams: DbParamSpec[] = [
     description: "have the endpoint confirm each blank node description picks out the node it should",
     schema: {type: "boolean", default: true},
     cli: {option: "sparql-verify-bnodes"} },
+  { name: "rate",
+    description: "how many requests a second to make of this service at most; " +
+      "0 asks as fast as the walk can.  A service that refuses (429) lowers it " +
+      "anyway, and this db feels its way back up toward whatever is set here",
+    schema: {type: "number", default: 0},
+    cli: {option: "sparql-rate", typeLabel: "per second"} },
+  { name: "retries",
+    description: "how many times to ask again when a service refuses a request " +
+      "as too frequent, before reporting the refusal",
+    schema: {type: "integer", default: 4},
+    cli: {option: "sparql-retries", typeLabel: "integer"} },
 ];
 
 export function fromParams (params: { [name: string]: any }, queryTracker?: DbQueryTracker): SparqlNeighborhoodDb {
@@ -926,6 +978,7 @@ export function fromParams (params: { [name: string]: any }, queryTracker?: DbQu
     bnodeDepth: params.bnodeDepth,
     maxBnodeDepth: params.maxBnodeDepth,
     verifyBnodeDescriptions: params.verifyBnodeDescriptions,
+    rateLimit: {rate: params.rate, retries: params.retries},
   });
 }
 

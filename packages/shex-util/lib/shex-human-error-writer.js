@@ -59,8 +59,11 @@ class ShExHumanErrorWriter {
                 // What would make the node conform leads, where the validator worked
                 // it out: it is the part of a report a reader can act on.  The errors
                 // are the detail under it -- why it doesn't, arc by arc.
-                const ways = (0, error_messages_1.repairText)(val.repairs, said);
-                const detail = this.joined(errorList(val.errors), "AND", said).map(s => "  " + s);
+                // ...or one or the other, as the reader asked (ctx.explain)
+                const explain = said.explain || "both";
+                const ways = explain === "errors" ? [] : (0, error_messages_1.repairText)(val.repairs, said);
+                const detail = explain === "repairs" && ways.length > 0 ? []
+                    : this.joined(errorList(val.errors), "AND", said).map(s => "  " + s);
                 return ["validating " + (0, error_messages_1.dataTerm)(val.node, said, "node")
                         + " as " + (0, error_messages_1.schemaIri)(val.shape, said, "shape") + ":"]
                     .concat(ways.length === 0 ? [] : ["  to conform: " + ways.join(", or ")])

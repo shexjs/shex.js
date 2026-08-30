@@ -23,6 +23,8 @@ node**.
 > `ShExValidator`'s options), and `shex-debug` steps into them --
 > `b LINE` prefers the constraint on the line, `bp PRED` breaks on a
 > predicate.
+> What remains — phase 6's live stepping, a unified panel, worker-app
+> debugging and the polish items — is tracked in [plan.md](plan.md) §E.
 > Browser validation debugging shipped as **capture + replay** (see §1):
 > the validate-side 🐞 in shex-simple/shexmap-simple reruns the
 > validation with `capturingRegexModule` recording every
@@ -84,6 +86,12 @@ One vocabulary for both engines (materializer emits the first three today):
                                          alternatives choosers / thread lists
 ```
 
+The validation side's shape-level events are its tracker, typed:
+`ShapeDebugEvent` in `@shexjs/eval-validator-api` (`enter`, `exit` with the
+result, `recurse`, `known`, each with its `depth`), and `eventTracker(onEvent)`
+is the tracker `ShExValidator` takes, emitting them.  `shex-debug` rides it;
+the browser's capture/replay steps below it, inside one match.
+
 `thread` is the inspectable snapshot: for the materializer
 `{subject, depth, frame, consumed, emitted}` — watching `frame`/`consumed`
 move through the binding tree is the ShExMap "variables view".  For
@@ -109,7 +117,10 @@ validation:
    maps both directions — `schema._exprLocations` (TC → range) and now
    `locate.exprAt(offset)` / `shapeAt(offset)` (editor position → object).
    A CodeMirror breakpoint gutter (a small `gutter()` extension beside the
-   lint gutter) resolves clicks to constraint objects; identity holds
+   lint gutter) resolves clicks to constraint objects: a gutter click means
+   the first constraint the line *begins* (`locate.exprsStartingIn`), not
+   one continuing across it, and ctrl-alt-b sets one at the cursor
+   (`toggleBreakpointAt`) for a line that holds several.  Identity holds
    in-process, and `{shapeLabel, predicate}` pairs are the clone-safe
    fallback for worker-side engines (the same dual strategy the
    error-anchoring uses).
@@ -120,18 +131,23 @@ validation:
 3. **Predicate breakpoints** (free extra): break on every constraint for a
    property IRI.
 
+The web validator debugger takes the last two in words, as `shex-debug`
+does (`bp PREDICATE`, `bn NODE`); there a node breakpoint means which of
+the recorded matches are on offer.
+
 ## 4. Validation-side engine work (the unimplemented half)
 
-- **Shape-level events come almost free**: `ShExValidator` already accepts a
-  `tracker` (`{enter, exit, recurse, known}` — used by `LOG_PROGRESS`).
-  Formalize it as the debug event source (add `node`/`shape` payloads it
-  already passes) — that alone gives shape-granularity stepping.
-- **TripleConstraint-level events need one hook in the regex engines**:
-  both `eval-threaded-nerr` and `eval-simple-1err` are ours and pluggable
-  (`options.regexModule`).  Add an optional `debugHooks.onConstraint(tc,
-  triples)` callback threaded into their match loops; the wrapper
-  regexModule pattern (wrap the configured engine, forward + emit) keeps the
-  engines clean if we prefer no core changes.
+- ✅ **Shape-level events come almost free**: `ShExValidator` accepts a
+  `tracker` (`{enter, exit, recurse, known}`); it is the debug event
+  source, typed as `ShapeDebugEvent` and emitted by `eventTracker` (§2).
+- ✅ **TripleConstraint-level events are one hook in the regex engines**:
+  `debugHooks.onConstraint(tc, {node, triples, thread})` as the engine
+  (re)considers a constraint -- `thread` is what the asking thread has
+  matched so far (`ConstraintThreadView`) -- and
+  `debugHooks.onConstraintResult(tc, {taken, passed, failed, spawned,
+  thread})` for what came of it: the candidates taken, which passed and
+  which a semantic action refused (eval-threaded-nerr runs them there;
+  eval-simple-1err at the end), and how many threads it spawned.
 - **Suspension**: in the worker, the tracker/hook callbacks call
   `controller.gate(event)`, which `postMessage`s the event and
   `Atomics.wait`s on the command cell; the UI writes
@@ -167,6 +183,15 @@ validation:
 variant needs no worker at all (the generator is synchronous and
 single-threaded) — `shexmap-debug` can ship first.
 
+Both REPLs extend `DebugRepl` (`@shexjs/editor-services/lib/debug-repl`):
+injected `write`/`prompt`, the located schema, `expand`/`lex`/`termStr`
+over the schema's prefixes, `b LINE[:COL]` resolution (the constraint the
+line begins, else what it is inside of), the breakpoint record and
+`commandLoop` (a line read, split, dispatched to a table).  What each keeps
+for itself is its engine and how it drives it: the materializer's is
+pulled, the validator's gates in the engine's callbacks.  A third debugger
+starts from the same base.
+
 ## 7. Phasing
 
 1. ✅ Materializer: `run()` generator + `MaterializerDebugger` + offset
@@ -183,7 +208,12 @@ single-threaded) — `shexmap-debug` can ship first.
 6. Browser validation debugging:
    - ✅ triple-expression matches via capture + replay
      (`capturingRegexModule` + `MatchDebugger`) with per-thread
-     state-machine position / repeats / matched-partition views;
+     state-machine position / repeats / matched-partition views; the
+     capture is by whichever engine is selected and the replay by
+     eval-simple-1err's stepper (compiled afresh per match when they
+     differ, and the status says so); the semantic actions run once, at
+     capture, and a replay answers from the recording
+     (`recordingSemActHandler` / `replayingSemActHandler`);
    - live whole-validation stepping (worker gate + Atomics) and a
      unified panel over both engines remain.
 

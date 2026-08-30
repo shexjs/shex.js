@@ -45,6 +45,7 @@ packages/shex-webapp/doc/webpacks/n3js*.js
 packages/shex-webapp/doc/webpacks/shex-webapp*.js
 packages/shex-webapp/doc/webpacks/*.LICENSE.txt
 packages/extension-map/doc/webpacks/
+packages/extension-reduce/doc/webpacks/
 
 .coveralls.yml
 .nyc_output/
@@ -52,3 +53,10 @@ packages/extension-map/doc/webpacks/
 
 # perf corpora: fetched with perf/fhir/fetch.sh, never committed
 perf/*/corpus/
+
+# editor droppings
+*~
+\#*\#
+
+# TypeScript source maps: built beside lib/*.js, read by nothing in the repository
+packages/*/lib/*.map

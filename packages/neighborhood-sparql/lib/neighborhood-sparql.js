@@ -42,7 +42,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.paneEditor = exports.dbParams = exports.ctor = exports.queryMapResolvers = exports.capabilities = exports.description = exports.label = exports.name = exports.BNodeIdentityError = void 0;
+exports.paneEditor = exports.dbParams = exports.ctor = exports.queryMapResolvers = exports.capabilities = exports.description = exports.label = exports.name = exports.BNodeIdentityError = exports.RateLimiter = void 0;
 exports.asAsyncDb = asAsyncDb;
 exports.sparqlDB = sparqlDB;
 exports.fromParams = fromParams;
@@ -51,6 +51,9 @@ const neighborhood_api_1 = require("@shexjs/neighborhood-api");
 const ShExUtil = __importStar(require("@shexjs/util"));
 const visitor_1 = require("@shexjs/visitor");
 const N3 = __importStar(require("n3")); // TODO: set global externally
+const rate_limit_1 = require("./rate-limit");
+var rate_limit_2 = require("./rate-limit");
+Object.defineProperty(exports, "RateLimiter", { enumerable: true, get: function () { return rate_limit_2.RateLimiter; } });
 /**
  * The asynchronous face of one of these, for ShExValidator.validateShapeMapAsync.
  *
@@ -83,10 +86,18 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
     const startDepth = options.bnodeDepth === undefined ? 4 : options.bnodeDepth;
     const maxDepth = options.maxBnodeDepth === undefined ? 64 : options.maxBnodeDepth;
     const verify = options.verifyBnodeDescriptions !== false;
-    const execute = options.executeQuery ||
+    const askSync = options.executeQuery ||
         ((q, ep, df) => ShExUtil.executeQuery(q, ep, df));
-    const executeAsync = options.executeQueryAsync ||
+    const askAsync = options.executeQueryAsync ||
         ((q, ep, df) => ShExUtil.executeQueryPromise(q, ep, df));
+    // ...through the pace the service will bear.  Every request this db makes
+    // goes through here, whichever face is driving and whether the query is a
+    // neighborhood's or a shape map's.
+    const rateLimit = options.rateLimit instanceof rate_limit_1.RateLimiter
+        ? options.rateLimit
+        : new rate_limit_1.RateLimiter(options.rateLimit || {});
+    const execute = (q, ep, df) => rateLimit.runSync(() => askSync(q, ep, df));
+    const executeAsync = (q, ep, df) => rateLimit.run(() => askAsync(q, ep, df));
     const queryCache = options.cacheQueries === false ? null : new Map();
     /**
      * Ask the endpoint, without saying how to wait for it.
@@ -332,7 +343,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
     }
     /** A label-independent fingerprint of a blank node's arcs. */
     function contentKey(label, bySubject) {
-        return (bySubject.get(label) || []).map(t => `${t.p} ${t.o.termType === "BlankNode" ? "[]" : turtlifyRdfJs(t.o)}`).sort().join(" ");
+        return (bySubject.get(label) || []).map(t => `${t.p} ${t.o.termType === "BlankNode" ? "[]" : turtlifyRdfJs(t.o)}`).sort().join("\u0000");
     }
     function dedupeTerms(terms) {
         const seen = new Set();
@@ -657,24 +668,39 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         const wantEverything = !!shape.closed || !!options.allOutgoing;
         const outPreds = wantEverything ? null : arcs.out;
         let startTime = Date.now();
-        if (queryTracker)
-            queryTracker.start(false, point, shapeLabel);
+        let token = queryTracker ? queryTracker.start(false, point, shapeLabel) : null;
         const cached = cachedOutgoing(point, outPreds);
-        const outgoing = (wantEverything || outPreds.length > 0)
-            ? (cached !== null ? cached : yield* fetch(point, outPreds, false))
-            : [];
+        let outgoing;
+        try {
+            outgoing = (wantEverything || outPreds.length > 0)
+                ? (cached !== null ? cached : yield* fetch(point, outPreds, false))
+                : [];
+        }
+        catch (e) {
+            // an endpoint that refused, timed out or broke: what the walk was
+            // asking for when it happened is the useful half of that news
+            if (queryTracker && queryTracker.fail)
+                queryTracker.fail(e, Date.now() - startTime, token);
+            throw e;
+        }
         if (queryTracker) {
             const now = Date.now();
-            queryTracker.end(outgoing, now - startTime);
+            queryTracker.end(outgoing, now - startTime, token);
             startTime = now;
         }
         let incoming = [];
         if (arcs.anyInverse) {
+            token = queryTracker ? queryTracker.start(true, point, shapeLabel) : null;
+            try {
+                incoming = yield* fetch(point, null, true);
+            }
+            catch (e) {
+                if (queryTracker && queryTracker.fail)
+                    queryTracker.fail(e, Date.now() - startTime, token);
+                throw e;
+            }
             if (queryTracker)
-                queryTracker.start(true, point, shapeLabel);
-            incoming = yield* fetch(point, null, true);
-            if (queryTracker)
-                queryTracker.end(incoming, Date.now() - startTime);
+                queryTracker.end(incoming, Date.now() - startTime, token);
         }
         return { outgoing, incoming };
     }
@@ -710,6 +736,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         setSchema: function (schema) { schemaIndex = schema._index || visitor_1.ShExIndexVisitor.index(schema); },
         executeSelect: (query) => driveSync(runQuery(query)),
         executeSelectAsync: (query) => driveAsync(runQuery(query)),
+        rateLimit,
     };
 }
 exports.name = "neighborhood-sparql";
@@ -762,6 +789,17 @@ exports.dbParams = [
         description: "have the endpoint confirm each blank node description picks out the node it should",
         schema: { type: "boolean", default: true },
         cli: { option: "sparql-verify-bnodes" } },
+    { name: "rate",
+        description: "how many requests a second to make of this service at most; " +
+            "0 asks as fast as the walk can.  A service that refuses (429) lowers it " +
+            "anyway, and this db feels its way back up toward whatever is set here",
+        schema: { type: "number", default: 0 },
+        cli: { option: "sparql-rate", typeLabel: "per second" } },
+    { name: "retries",
+        description: "how many times to ask again when a service refuses a request " +
+            "as too frequent, before reporting the refusal",
+        schema: { type: "integer", default: 4 },
+        cli: { option: "sparql-retries", typeLabel: "integer" } },
 ];
 function fromParams(params, queryTracker) {
     return sparqlDB(params.endpoint, queryTracker, {
@@ -770,6 +808,7 @@ function fromParams(params, queryTracker) {
         bnodeDepth: params.bnodeDepth,
         maxBnodeDepth: params.maxBnodeDepth,
         verifyBnodeDescriptions: params.verifyBnodeDescriptions,
+        rateLimit: { rate: params.rate, retries: params.retries },
     });
 }
 /** `# Endpoint: <url>` on the first line means "query this rather than

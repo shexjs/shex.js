@@ -32,6 +32,57 @@ is what keeps the queries narrow.
   (EXTENDS alone revisits nodes once per extended shape), and the graph does
   not change under a validation
 - `executeQuery`: replace the SPARQL transport, e.g. to log queries
+- `rateLimit`: how fast to ask, and what to do when the service says not that
+  fast — see below
+
+
+## How fast to ask
+
+A validation is a walk, and a walk over a query service is one request per
+node it reaches. Public endpoints meter that: ask Wikidata for a few hundred
+neighborhoods as fast as it will answer them and it starts returning **429
+Too Many Requests**, which used to stop the validation on whichever query
+happened to be in flight.
+
+```js
+sparqlDB(endpoint, tracker, {rateLimit: {rate: 2}})   // twice a second, at most
+```
+
+`rate` is in **requests per second**, because that is how a service states
+its policy; `0` (the default) asks as fast as the walk can. It is a pace
+rather than a bucket — the db awaits each answer before it knows what to ask
+next, so spacing the requests is the whole of it.
+
+Whatever the rate, a **429 is answered rather than reported**: the db waits
+(`Retry-After` if the service named one, otherwise a second, doubling), drops
+to a slower rate, and asks the same query again — `retries` times (default 4)
+before it gives the refusal back to you.
+
+Then it searches. The rate the service will bear is somewhere between the
+fastest it has accepted and the slowest it has refused, and the only
+measurements available are yes and no, so: halve on the first refusal (with
+nothing known to work yet), double when nothing has been refused above the
+current rate (there is no halfway to a bound that hasn't been found), and
+otherwise take the geometric middle of the two bounds. Each probe replaces a
+bound, the gap halves, and the search stops once they are within `tolerance`
+(default 10%) of each other. After `relaxAfter` untroubled requests (default
+64) it doubts the refused bound and looks again — a service that was busy an
+hour ago may not be now.
+
+The knobs, all optional: `rate`, `backoffRate` (where an unlimited db drops
+to on its first refusal, default 1/s), `retries`, `tolerance`, `probeAfter`
+(successes before a faster rate is tried, default 8), `relaxAfter`,
+`cooldown`, `maxCooldown`. `db.rateLimit.state()` says what it has settled
+on. From the CLI it is `--sparql-rate` and `--sparql-retries`; in the WebApp
+they are fields of the SPARQL source.
+
+Two dbs pointed at one service should share a limiter — pass a `RateLimiter`
+as `rateLimit` — since it is the service being paced, not the db.
+
+The synchronous face paces too, which means blocking without an `await`:
+`Atomics.wait` where there is a `SharedArrayBuffer` (node always; a browser
+only when the page is cross-origin isolated), and a spin where there isn't.
+Prefer the asynchronous db, which is what the WebApp uses.
 
 
 ## Blank nodes

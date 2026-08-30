@@ -13,10 +13,9 @@ const Fs = require("fs");
 const Path = require("path");
 const expect = require("chai").expect;
 const node_fetch = require("node-fetch");
-const {makeWorkerClass} = require("./fakeWorker");
 // jsdom's engines outpace the packages' own; required lazily under
 // TEST_browser (c.f. browser-test.js)
-let jsdom, JSDOM, StaticResourceConfig;
+let Harness;
 
 const [[GitRootServer]] = require("../../../tools/testServer")
       .startServer(
@@ -25,71 +24,21 @@ const [[GitRootServer]] = require("../../../tools/testServer")
         ]
       );
 
-// jsdom fetches <script src> subresources itself; serve the pinned cdnjs
-// script from the local copy (c.f. browser-test.js)
-const StaticResources = {
-  "https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.21/jquery.csv.js":
-    Path.join(__dirname, "static/jquery.csv-1.0.21.js")
-};
 if (!TEST_browser) {
   console.warn("Skipping worker-editors-smoke-tests; to activate these tests, set environment variable TEST_browser=true");
 } else {
-  jsdom = require("jsdom");
-  ({JSDOM} = jsdom);
-  StaticResourceConfig = {
-    interceptors: [
-      jsdom.requestInterceptor((request, _context) => {
-        if (request.url in StaticResources)
-          return new Response(Fs.readFileSync(StaticResources[request.url], "utf8"), {
-            headers: { "Content-Type": "text/javascript" }
-          });
-      })
-    ]
-  };
+  Harness = require("./harness");
   describe("shex-worker with ?editors=1", function () {
     this.timeout(20000);
-    const page = "packages/shex-webapp/doc/shex-worker.html";
+    const page = "packages/shex-webapp/doc/shex-simple.html";
 
-    let dom, $, shared;
+    let dom, $, shared, errors;
     before(async function () {
-      const base = Path.join(__dirname, "../../..", page);
-      // forward page console traffic except console.debug, the app's channel
-      // for reporting user-input errors (e.g. mid-edit parse failures)
-      const virtualConsole = new jsdom.VirtualConsole().forwardTo(console);
-      virtualConsole.removeAllListeners("debug");
-      dom = new JSDOM(Fs.readFileSync(base, "utf8"), {
-        url: GitRootServer.urlFor(page + "?editors=1"),
-        runScripts: "dangerously",
-        resources: StaticResourceConfig,
-        pretendToBeVisual: true, // CodeMirror needs rAF etc.
-        virtualConsole,
-        beforeParse (window) {
-          // the page's head script runs new Worker("ShExWorkerThread.js")
-          window.Worker = makeWorkerClass(Path.dirname(base));
-        },
-      });
-      dom.window.fetch = node_fetch;
-      // jsdom lacks the CSS namespace; jquery-ui ≥1.14 calls CSS.escape.
-      if (!dom.window.CSS)
-        dom.window.CSS = { escape: s => String(s).replace(/[^a-zA-Z0-9_\u00A0-\uFFFF-]/g, c => `\\${c}`) };
-      // jsdom does no layout and omits these Range methods; CodeMirror's
-      // measure loop calls them on every frame and handles empty results.
-      dom.window.Range.prototype.getClientRects = function () { return []; };
-      dom.window.Range.prototype.getBoundingClientRect =
-        function () { return {x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0, width: 0, height: 0}; };
-      shared = await new Promise((resolve, reject) => {
-        dom.window._testCallback = (parm) => {
-          if (parm instanceof Error)
-            reject(parm);
-          else
-            resolve(parm);
-        };
-      });
-      await shared.promise; // drag-and-drop init + search-parameter loads
-      $ = dom.window.$;
+      ({dom, $, shared, errors} = await Harness.boot(page, "?editors=1&worker=1", {worker: true}));
     });
 
     after(function () {
+      Harness.expectClean(errors);
       if (dom)
         dom.window.close();
     });
@@ -106,7 +55,7 @@ if (!TEST_browser) {
     });
 
     it("should replace the schema and data textareas with editor panes", function () {
-      expect($("#inputSchema .shexjs-editor-pane").length, "schema pane").to.equal(1);
+      expect($("#schemaDocument .shexjs-editor-pane").length, "schema pane").to.equal(1);
       expect($("#inputData .shexjs-editor-pane").length, "data pane").to.equal(1);
       // the textarea proxy: jQuery .val() writes reach the editor document
       $("#inputSchema textarea").first().val("PREFIX : <http://a.example/>");
@@ -155,14 +104,89 @@ if (!TEST_browser) {
         .to.include('"not a number"');
     });
 
-    it("should carry editors=1 into the permalink", async function () {
-      expect($("#editors").val(), "menu select set from ?editors=1").to.equal("1");
-      $("#menu-button").trigger("click"); // permalink is built when the menu opens
+    /* A data source that fetches its answers cannot cross a postMessage:
+     * the worker has to build one of its own.  It used to be told only
+     * "endpoint" or a list of triples, so a Wikibase source arrived over
+     * there as whatever triples the app happened to have -- none, before a
+     * walk -- and the validation failed with nothing fetched and nothing
+     * said. */
+    it("should validate over a source the worker builds for itself", async function () {
+      this.timeout(60000);
+      const fixtures = GitRootServer.urlFor(
+        "packages/neighborhood-wikibase/test/fixtures/");
+      await shared.Caches.manifest.set([{
+        schemaLabel: "person", schema: Fs.readFileSync(
+          Path.join(__dirname, "../examples/wikidata-person.shex"), "utf8"),
+        dataLabel: "Q42, fetched over there", neighborhood: "wikibase",
+        base: fixtures, sitematrix: fixtures + "sitematrix.json",
+        dataBase: "http://www.wikidata.org/entity/",
+        regexpEngine: "eval-simple-1err",
+        queryMap: 'QENTITIES "42"@START',
+      }], "http://localhost/manifest.json");
+      $("#inputSchema .manifest li").last().trigger("click");
+      await shared.promise;
+      $("#inputData .indeterminant li").last().trigger("click");
+      await shared.promise;
+      expect($("#neighborhood").val(), "the entry named a source that fetches")
+        .to.equal("wikibase");
+
+      $("#validate").trigger("click");
+      await shared.promise;
+
+      expect($("#results .error").length, $("#results").text().substring(0, 300))
+        .to.equal(0);
+      expect($("#results").text(), "Q42 is a person")
+        .to.match(/\u2713|ShapeTest|conformant/);
+    });
+
+    /* ...and what it fetched is what a slurp records, from over there: the
+     * worker's tracker posts each answer back to this side, which is where
+     * the document being written lives. */
+    it("should record what the worker fetched when slurp is on", async function () {
+      this.timeout(60000);
+      expect($("#nbhd-slurp").length, "a source that fetches offers it").to.equal(1);
+      $("#nbhd-slurp").prop("checked", true).trigger("change");
+      try {
+        $("#validate").trigger("click");
+        await shared.promise;
+        let turtle = "";
+        for (let i = 0; i < 100 && !/triples/.test(turtle); ++i) {
+          await new Promise(resolve => setTimeout(resolve, 20));
+          turtle = (shared.neighborhoods.panesFor("rdfjs").data || [""])[0] || "";
+        }
+        expect(turtle, "the walk it made over there")
+          .to.match(/^# [\u2192\u2190] \S+@\S+ \d+ triples \(\d+ ms\)$/m);
+        // ...written against the base the entry named, which is why an
+        // entity reads as <Q42> rather than as its whole URL
+        expect(turtle.split("\n")[0]).to.equal("BASE <http://www.wikidata.org/entity/>");
+        expect(turtle, "and what it read").to.match(/^<Q42> wdt:/m);
+
+        // ...and the pages that walk read, which are over there: a slurp
+        // leaves them here as panes to edit and validate again
+        const pages = shared.neighborhoods.panesFor("wikibase").pages || [];
+        expect(pages.length, "the pages the walk read, carried back").to.be.above(0);
+        expect(pages.some(page => /"Q42"/.test(page)), "Q42 among them").to.equal(true);
+        expect(pages[0], "an entity page, as JSON").to.include('"entities"');
+        expect($("#dataPaneTabs > li > a").map((i, a) => $(a).text()).get(),
+               "each one a pane of its own").to.include("Q42");
+      } finally {
+        $("#nbhd-slurp").prop("checked", false).trigger("change");
+        // the slurp handed the reader the local store, whose query map is
+        // the one the next test validates with
+        $("#queryMap").val("<http://a.example/x>@<http://a.example/S>");
+        await shared.Caches.shapeMap.copyQueryMapToEditMap();
+      }
+    });
+
+    it("should leave the editors out of the permalink", async function () {
+      expect($("#editors").val(), "the editors are what the app is").to.equal("");
+      $("#permalink a").removeAttr("href"); // built afresh when the menu opens
+      $("#menu-button").trigger("click");
       let href;
       for (let i = 0; i < 100 && !(href = $("#permalink a").attr("href")); ++i)
         await new Promise(resolve => setTimeout(resolve, 20));
       $("#menu-button").trigger("click"); // close it again
-      expect(href, "permalink: " + href).to.include("editors=1");
+      expect(href, "permalink: " + href).to.not.include("editors=");
     });
   });
 }

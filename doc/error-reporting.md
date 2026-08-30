@@ -8,11 +8,10 @@ It is a companion to [error-normalization.md](error-normalization.md), which
 is about *what* to report (the nearest bag the schema accepts). This one is
 about *how a report is shaped and said*.
 
-F0–F6 are done; each section below says what landed.  F0 was a matcher
-fix rather than a reporting one, so it sits on `main` with the
-eval-simple-1err fix that followed it; F1–F5 are the `error-repair`
-branch.  [error-reporting-comparison.md](error-reporting-comparison.md)
-shows what the structures and the sentences look like either side of it.
+F0–F6 are done and on `main`; each section below says what landed.
+[error-reporting-comparison.md](error-reporting-comparison.md) shows what
+the structures and the sentences look like either side of it.  What is
+still open around errors is in [plan.md](plan.md) §G.
 
 ## What was wrong
 
@@ -100,8 +99,8 @@ a requirement to do both.
 
 ## The plan
 
-Sized as in [sonnet-task-list.md](sonnet-task-list.md): **S** ≈ an hour,
-**M** ≈ a day, **L** = needs design review first.
+Sized as in [plan.md](plan.md): **S** ≈ an hour, **M** ≈ a day, **L** =
+needs design review first.
 
 ### F1. One renderer (S) — done
 

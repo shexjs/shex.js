@@ -307,7 +307,9 @@ export interface MatchThreadView {
   at: string; // the constraint's predicate, "match", or "control"
   tc?: ShExJ.TripleConstraint;
   repeats: Repeats;
-  matched: {predicate: string, triples: string[]}[];
+  /** the partition so far: each constraint's triples, spelled out and as
+   * quads (for a pane to point at) */
+  matched: {predicate: string, triples: string[], quads: RdfJsQuad[]}[];
   errors: number;
   next?: boolean; // true: already stepped into the coming generation
 }
@@ -412,7 +414,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
   private readonly debugHooks?: RegexDebugHooks;
   private _live: (() => {clist: RegExpThread[], nlist: RegExpThread[]}) | null = null;
 
-  constructor(shape: ShExJ.Shape, index: SchemaIndex, states: RegExpState[], startNo: number, matchstate: number, debugHooks?: RegexDebugHooks) {
+  constructor(shape: ShExJ.Shape, public index: SchemaIndex, states: RegExpState[], startNo: number, matchstate: number, debugHooks?: RegexDebugHooks) {
     this.shape = shape;
     this.semActNames = new Set((shape.semActs || []).map(sa => sa.name));
     this.semActNodes = new Set([shape as object]);
@@ -460,6 +462,17 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
     let chosen = null;
     // console.log(new NfaToString().dumpNFA(this.states, this.start));
     this.addstate(clist, this.start, new RegExpThread());
+    // The start's closure may already reach the end -- a group taken zero
+    // times -- and that is the match where there is nothing to match.
+    // The generations below look for the end only among the threads they
+    // make, so the first generation has to be looked at here.
+    if (allTriples.size === 0) {
+      const emptyAccept = clist.find(elt => elt.state === thisEvalSimple1ErrRegexEngine.end);
+      if (emptyAccept) {
+        chosen = emptyAccept;
+        yield {type: "accept", generation, thread: this.threadView(emptyAccept)};
+      }
+    }
     while (clist.length) {
       nlist = [];
       if (trace)
@@ -479,6 +492,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
             this.debugHooks.onConstraint(tripleConstraint, {
               node,
               triples: constraintToTripleMapping.get(tripleConstraint)!.map(pair => pair.triple),
+              thread: this.constraintThreadView(thread),
             });
           let min = state.c.min !== undefined ? state.c.min : 1;
           let max = state.c.max !== undefined ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
@@ -510,6 +524,13 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
             })());
             thread.matched = matched0;
           }
+          // the actions run at the end here (matchedToResult), so what was
+          // taken is what passed; a thread that spawned nothing died
+          if (this.debugHooks && this.debugHooks.onConstraintResult)
+            this.debugHooks.onConstraintResult(tripleConstraint, {
+              node, taken: taken.slice(), passed: taken.length >= min ? taken.slice() : [], failed: [],
+              spawned: nlist.length - nlistlen, thread: this.constraintThreadView(thread),
+            });
           if (nlist.length === nlistlen)
             yield {type: "fail", tc: tripleConstraint, generation,
                    thread: this.threadView(thread)};
@@ -640,8 +661,19 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
       matched: thread.matched.map(m => ({
         predicate: m.c.predicate,
         triples: m.triples.map(t => term(t.subject) + " " + term(t.predicate) + " " + term(t.object)),
+        quads: m.triples.slice(),
       })),
       errors: thread.errors.length,
+    };
+  }
+
+  /** the part of a thread every engine reports to a debug hook */
+  constraintThreadView (thread: RegExpThread) {
+    return {
+      matched: thread.matched.map(m => ({predicate: m.c.predicate, triples: m.triples.slice()})),
+      errors: thread.errors.length,
+      repeats: Object.assign({}, thread.repeats),
+      state: thread.state,
     };
   }
 
@@ -757,7 +789,35 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
       return rs.length ? state + "-" + rs : ""+state;
     }
 
+    /** the solution of an expression matched zero times: no solutions,
+     * with the cardinality that let it be zero */
+    emptySolution (expr: ShExJ.tripleExprOrRef): tripleExprSolutions {
+      const resolved: ShExJ.tripleExpr = typeof expr === "string" ? this.index.tripleExprs[expr] : expr;
+      const attrs: {[key: string]: any} = {};
+      if (resolved.min !== undefined && resolved.min !== 1 || resolved.max !== undefined && resolved.max !== 1) {
+        attrs.min = resolved.min;
+        attrs.max = resolved.max;
+      }
+      if (resolved.semActs !== undefined)
+        attrs.semActs = resolved.semActs;
+      if (resolved.annotations !== undefined)
+        attrs.annotations = resolved.annotations;
+      switch (resolved.type) {
+      case "TripleConstraint":
+        return Object.assign({type: "TripleConstraintSolutions", predicate: resolved.predicate},
+                             resolved.valueExpr !== undefined ? {valueExpr: resolved.valueExpr} : {},
+                             attrs, {solutions: []}) as unknown as tripleExprSolutions;
+      case "OneOf":
+        return Object.assign({type: "OneOfSolutions", solutions: []}, attrs) as unknown as tripleExprSolutions;
+      default:
+        return Object.assign({type: "EachOfSolutions", solutions: []}, attrs) as unknown as tripleExprSolutions;
+      }
+    }
+
     matchedToResult(matched: TriplesMatch[], constraintToTripleMapping: ConstraintToTripleResults, semActHandler: SemActDispatcher): tripleExprSolutions | SemActFailure {
+      // nothing matched: a group taken zero times, which is a solution too
+      if (matched.length === 0)
+        return this.emptySolution(this.shape.expression!);
       let last: StackEntry[] = [];
       const errors: SemActFailure[] = [];
       const skips: ((tripleExprSolutions | null)[])[] = [];

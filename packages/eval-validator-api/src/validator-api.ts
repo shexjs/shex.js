@@ -2,7 +2,7 @@ import * as ShExJ from 'shexj';
 import * as RdfJs from '@rdfjs/types/data-model';
 import {shapeExprTest, Recursion, SemActFailure} from "@shexjs/term/shexv";
 // import {NeighborhoodDb} from "@shexjs/neighborhood-api";
-import {SchemaIndex} from "@shexjs/term";
+import {SchemaIndex, ld2RdfJsTerm} from "@shexjs/term";
 import {Quad as RdfJsQuad} from "@rdfjs/types";
 import {TripleConstraint} from "shexj";
 
@@ -42,13 +42,37 @@ export type ConstraintToTripleResults = MapArray<TripleConstraint, TripleResult>
 
 export type T2TcPartition = Map<RdfJsQuad, TripleConstraint>;
 
+/** What a match thread has committed to when a constraint comes up.
+ * (An engine's own, fuller snapshot -- eval-simple-1err's MatchThreadView
+ * -- is what its stepper shows; this is the part every engine has.) */
+export interface ConstraintThreadView {
+  /** the triples matched so far, by the constraint that took them */
+  matched: {predicate: string, triples: RdfJsQuad[]}[];
+  /** errors carried so far */
+  errors: number;
+  /** repetition counters, where the engine keeps any */
+  repeats?: {[key: string]: number};
+  /** the engine's position marker for the thread, where it has one */
+  state?: number;
+}
+
 /** RegexDebugHooks - optional callbacks a debugger hangs inside the match
- * loop (doc/debugger-design.md §4).  onConstraint fires each time the
- * engine (re)considers a TripleConstraint -- including re-visits while
- * backtracking -- with the candidate triples it matches against. */
+ * loop (doc/debugger-design.md §4). */
 export interface RegexDebugHooks {
+  /** each time the engine (re)considers a TripleConstraint -- including
+   * re-visits while backtracking -- with the candidate triples it matches
+   * against, and the thread that is asking */
   onConstraint?: (constraint: TripleConstraint,
-                  ctx: {node: RdfJs.Term, triples: RdfJsQuad[]}) => void;
+                  ctx: {node: RdfJs.Term, triples: RdfJsQuad[], thread?: ConstraintThreadView}) => void;
+  /** ...and what came of it: the candidates the thread took, which of them
+   * passed and which failed (a semantic action, where the engine runs them
+   * here -- eval-threaded-nerr; eval-simple-1err runs them at the end, and
+   * reports everything it took as passed), and how many threads the
+   * constraint spawned -- none, and the thread died here */
+  onConstraintResult?: (constraint: TripleConstraint,
+                        ctx: {node: RdfJs.Term, taken: RdfJsQuad[], passed: RdfJsQuad[],
+                              failed: {triple: RdfJsQuad, errors: any[]}[], spawned: number,
+                              thread?: ConstraintThreadView}) => void;
 }
 
 export interface ValidatorRegexModule {
@@ -66,12 +90,19 @@ export interface MatchCapture {
   semActHandler: SemActDispatcher;
   engine: ValidatorRegexEngine;
   result: shapeExprTest;
+  /** the module that ran the match: a debugger replaying with another
+   * (only eval-simple-1err's engine steps) compiles that one afresh */
+  regexModule: string;
+  /** what the semantic actions answered as the match ran, for a replay
+   * that must not run them again (replayingSemActHandler) */
+  semActLog: SemActLog;
 }
 
 /** capturingRegexModule - wrap a regex module so every match() run during a
  * validation is recorded with its inputs; a debugger can then replay any of
- * them step by step (doc/debugger-design.md).  Note that replay re-dispatches
- * the match's semantic actions. */
+ * them step by step (doc/debugger-design.md).  The semantic actions run
+ * once, here: their answers go into the capture's log, and a replay reads
+ * them back rather than dispatching again. */
 export function capturingRegexModule (inner: ValidatorRegexModule): {module: ValidatorRegexModule, captures: MatchCapture[]} {
   const captures: MatchCapture[] = [];
   const module: ValidatorRegexModule = {
@@ -81,14 +112,82 @@ export function capturingRegexModule (inner: ValidatorRegexModule): {module: Val
       const engine = inner.compile(schema, shape, index, debugHooks);
       return {
         match: (node, constraintToTripleMapping, semActHandler, trace) => {
-          const result = engine.match(node, constraintToTripleMapping, semActHandler, trace);
-          captures.push({shape, node, constraintToTripleMapping, semActHandler, engine, result});
+          const recorder = recordingSemActHandler(semActHandler);
+          const result = engine.match(node, constraintToTripleMapping, recorder.handler, trace);
+          captures.push({shape, node, constraintToTripleMapping, semActHandler, engine, result,
+                         regexModule: inner.name, semActLog: recorder.log});
           return result;
         }
       };
     }
   };
   return {module, captures};
+}
+
+/** one recorded dispatch: which actions over which triples, and what they answered */
+export interface SemActDispatchRecord {
+  key: string;
+  failures: SemActFailure[];
+}
+export type SemActLog = SemActDispatchRecord[];
+
+function termKey (t: any): string {
+  return t && t.termType
+    ? t.termType + ":" + t.value + (t.datatype ? "^^" + t.datatype.value : "") + (t.language ? "@" + t.language : "")
+    : String(t);
+}
+function quadKey (q: any): string {
+  return q ? [q.subject, q.predicate, q.object].map(termKey).join(" ") : "";
+}
+
+/** The key a dispatch is recorded and replayed under: the actions, by name
+ * and code, and the triples they ran over -- not the order they ran in.
+ * A replay by another engine dispatches the same actions over the same
+ * triples in an order of its own, and still finds each answer. */
+function semActDispatchKey (semActs: ShExJ.SemAct[] | undefined, ctx: any): string {
+  const acts = (semActs || []).map(a => a.name + "\u0001" + (a.code === undefined || a.code === null ? "" : a.code));
+  const triples = ctx && Array.isArray(ctx.triples) ? ctx.triples.map(quadKey) : [];
+  const node = ctx && ctx.node ? termKey(ctx.node) : "";
+  return JSON.stringify([acts, node, triples]);
+}
+
+/** recordingSemActHandler - a dispatcher that answers as `inner` does and
+ * keeps what it answered, for replayingSemActHandler. */
+export function recordingSemActHandler (inner: SemActDispatcher): {handler: SemActDispatcher, log: SemActLog} {
+  const log: SemActLog = [];
+  const handler: SemActDispatcher = Object.create(inner);
+  handler.dispatchAll = (semActs, ctx, resultsArtifact) => {
+    const failures = inner.dispatchAll(semActs, ctx, resultsArtifact);
+    log.push({key: semActDispatchKey(semActs, ctx), failures});
+    return failures;
+  };
+  return {handler, log};
+}
+
+/** replayingSemActHandler - a dispatcher that answers from a log and runs
+ * nothing: a side-effect-free replay.  What it is asked that the log
+ * doesn't hold (a replay that took another path) it answers "no failures",
+ * and lists in `unrecorded`.  Everything but dispatching -- which actions
+ * apply, which are registered -- is still `inner`'s to answer. */
+export function replayingSemActHandler (log: SemActLog, inner: SemActDispatcher): SemActDispatcher & {unrecorded: string[]} {
+  const queues = new Map<string, SemActFailure[][]>();
+  log.forEach(({key, failures}) => {
+    if (!queues.has(key))
+      queues.set(key, []);
+    queues.get(key)!.push(failures);
+  });
+  const handler = Object.create(inner) as SemActDispatcher & {unrecorded: string[]};
+  handler.unrecorded = [];
+  handler.register = () => { /* nothing runs here */ };
+  handler.dispatchAll = (semActs, ctx, _resultsArtifact) => {
+    const queue = queues.get(semActDispatchKey(semActs, ctx));
+    if (queue && queue.length)
+      return queue.shift()!;
+    if (semActs && semActs.length)
+      handler.unrecorded.push(semActDispatchKey(semActs, ctx));
+    return [];
+  };
+  return handler;
 }
 
 export interface ValidatorRegexEngine {
@@ -100,11 +199,53 @@ export interface ValidatorRegexEngine {
   ): shapeExprTest;
 }
 
+/** What ShExValidator reports as it goes: a focus node entering a shape
+ * and leaving it with its result, a recursion cut off, an answer it
+ * already had.  eventTracker turns these into ShapeDebugEvents. */
 export interface QueryTracker {
   enter (term: RdfJs.Term, shapeLabel: string): void;
   exit (term: RdfJs.Term, shapeLabel: string, res: shapeExprTest): void;
   recurse (rec: Recursion): void;
   known (res: shapeExprTest): void;
+}
+
+/**
+ * The shape-level debug events: one vocabulary over what the validator's
+ * tracker sees (doc/debugger-design.md §2, §4).  `depth` is the nesting of
+ * enter/exit -- what a debugger steps over and out by; a recursion or a
+ * cached answer is reported one deeper than the shape that asked.  The
+ * constraint-level events under these come from the regex engines'
+ * RegexDebugHooks.
+ */
+export type ShapeDebugEvent =
+    {type: "enter", node: RdfJs.Term, shape: string, depth: number}
+  | {type: "exit", node: RdfJs.Term, shape: string, result: shapeExprTest, depth: number}
+  | {type: "recurse", node: RdfJs.Term, shape: string, depth: number}
+  | {type: "known", result: shapeExprTest, depth: number};
+
+/** eventTracker - the tracker ShExValidator takes, as a stream of
+ * ShapeDebugEvents to `onEvent`.  `depth` is readable between events, for
+ * a constraint-level hook that nests under the current shape. */
+export function eventTracker (onEvent: (event: ShapeDebugEvent) => void): QueryTracker & {depth: number} {
+  const tracker = {
+    depth: 0,
+    enter (node: RdfJs.Term, shape: string): void {
+      ++tracker.depth;
+      onEvent({type: "enter", node, shape, depth: tracker.depth});
+    },
+    exit (node: RdfJs.Term, shape: string, result: shapeExprTest): void {
+      onEvent({type: "exit", node, shape, result, depth: tracker.depth});
+      --tracker.depth;
+    },
+    recurse (rec: Recursion): void {
+      onEvent({type: "recurse", node: ld2RdfJsTerm(rec.node) as RdfJs.Term, shape: rec.shape as string,
+               depth: tracker.depth + 1});
+    },
+    known (result: shapeExprTest): void {
+      onEvent({type: "known", result, depth: tracker.depth + 1});
+    },
+  };
+  return tracker;
 }
 
 export interface SemActDispatcher {

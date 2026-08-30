@@ -29,11 +29,43 @@ const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
 const RDF_type = RDF + 'type';
 const XSD = 'http://www.w3.org/2001/XMLSchema#';
 /** run one action, with the scope's data in scope as names */
+/**
+ * What reject() and cut() throw, on its way to being a value again.
+ *
+ * The scope extension-reduce hands an evaluator is plain data -- no
+ * functions cross that line, so the fold ports to an implementation in
+ * another language -- which is why refusing by exception is *this* side's
+ * business: exceptions are a fact about the action language, and the value
+ * an action returns is what the two sides agreed on.  Another evaluator in
+ * another language does the same with whatever its language has.
+ */
+class Refusal extends Error {
+    constructor(why, cut) {
+        const said = why !== null && typeof why === 'object' && 'failure' in why
+            ? why.failure : why;
+        super('the action ' + (cut ? 'cut' : 'rejected') + ' the match'
+            + (said === undefined || said === '' ? '' : ': ' + String(said)));
+        this.name = 'ReduceRefusal';
+        // what you passed if it already reads as a refusal, the reason for one
+        // otherwise -- so reject('why') and reject({failure, code}) both work
+        const value = why !== null && typeof why === 'object' && 'failure' in why
+            ? Object.assign({}, why) : { failure: why };
+        this.value = cut ? Object.assign(value, { cut: true }) : value;
+    }
+}
 function evaluate(code, scope) {
     const names = namesFor(scope);
-    const value = compile(code)(names);
+    let value;
+    try {
+        value = compile(code)(names);
+    }
+    catch (e) {
+        if (!(e instanceof Refusal))
+            throw e;
+        return e.value; // a refusal is an answer, not a fault
+    }
     // `with` writes an assignment through to the object when the name is one
-    // of its own, so `$ = ...` lands on the binding extension-reduce made
+    // of its own, so `$$ = ...` lands on the binding extension-reduce made
     return scope.ret === undefined ? value : names[scope.ret];
 }
 /**
@@ -74,6 +106,14 @@ function namesFor(scope) {
                         : ''));
             return found[0];
         },
+        // ...and saying no, from wherever the action found out rather than by
+        // arranging for a value to be returned: `reject('why')` refuses this
+        // production and the match goes on to whatever else the node could be;
+        // `cut('why')` says no other reading will do either.  They throw, and
+        // `evaluate` below turns what they throw into the value extension-
+        // reduce reads -- which is the value an action can return instead.
+        reject: (why) => { throw new Refusal(why, false); },
+        cut: (why) => { throw new Refusal(why, true); },
         // reading a term
         str, num, iri, local, lang, datatype, isBnode, key,
         expand, RDF, XSD, nil: RDF + 'nil',
@@ -188,4 +228,5 @@ module.exports.lang = lang;
 module.exports.datatype = datatype;
 module.exports.isBnode = isBnode;
 module.exports.key = key;
+module.exports.Refusal = Refusal;
 //# sourceMappingURL=shex-extension-reduce-js.js.map

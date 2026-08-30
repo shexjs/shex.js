@@ -1,15 +1,30 @@
 /**
- * Test doubles for HTTP resources, e.g.
+ * Test doubles for HTTP resources.
  *
- const [[GitRootServer]] = require('../../../tools/testServer')
-   .startServer([{ url: 'http://localhost:9999/shex.js/', fromDir: Path.join(__dirname, '../../..') }])
- fetch(GitRootServer.urlFor('getSomethingOrItsA404'))
+ *   const [[GitRootServer]] = require('../../../tools/testServer')
+ *     .startServer([{url: 'http://localhost:9999/shex.js/', fromDir: Path.join(__dirname, '../../..')}]);
+ *   fetch(GitRootServer.urlFor('getSomethingOrItsA404'))
  *
- * URLs on localhost get a real node:http server, visible to any HTTP stack
- * (including jsdom's undici-based resource loader and spawned child
- * processes).  URLs on other (pretend) hosts are intercepted in-process with
- * nock, which only works for clients built on http.ClientRequest (e.g.
- * node-fetch@2).
+ * `startServer(paths, files)` returns `[pathScopes, fileScopes]`, one entry
+ * per argument in order: a path scope maps a URL prefix onto a directory
+ * and answers `urlFor(page)` with the URL of a page under it; a file scope
+ * serves one file at one URL.  Which double you get is decided by the host
+ * in the URL:
+ *
+ * - **localhost** (`localhost`, `127.0.0.1`, `[::1]`): a real node:http
+ *   server on that port, shared by every scope that names the port and left
+ *   running (unref'd) for the process.  Any HTTP stack can reach it -- jsdom's
+ *   undici resource loader, a spawned CLI, a Worker -- and it sends the
+ *   `Access-Control-Allow-Origin: *` a cross-origin plugin load needs.  Use
+ *   `127.0.0.1` rather than `localhost` where a client might race Happy
+ *   Eyeballs (node-fetch on Linux CI).
+ * - **any other host** (`http://a.example/`): intercepted in-process with
+ *   nock, so only clients built on http.ClientRequest see it (node-fetch@2
+ *   yes; undici, jsdom and child processes no).  For pretending to be a
+ *   remote site the library code fetches from.
+ *
+ * A file under a path scope is looked up as written, then with `.shex` and
+ * `.ttl` appended, so a manifest may name `schemas/1dot` and mean the file.
  */
 const Fs = require('fs')
 const Path = require('path')
@@ -23,6 +38,12 @@ function log200 (url, filePath, length) {
 function log404 (url) {
   // console.warn(404, url)
 }
+
+/* A host that serves extensions to other origins has to say so: the app
+ * fetches a module before it runs it, and a browser will not hand over a
+ * cross-origin response that doesn't permit the reader.  A real host does
+ * this deliberately; this one does it always, being a test double. */
+const Cors = {'Access-Control-Allow-Origin': '*'};
 
 const ContentTypes = {
   '.js': 'text/javascript',
@@ -58,7 +79,7 @@ function realServer (port) {
       const reqPath = req.url.replace(/\?.*$/, '');
       const file = entry.files.find(f => f.path === reqPath);
       if (file) {
-        res.writeHead(200, {'Content-Type': contentTypeFor(file.file)});
+        res.writeHead(200, Object.assign({'Content-Type': contentTypeFor(file.file)}, Cors));
         res.end(Fs.readFileSync(file.file));
         return;
       }
@@ -68,7 +89,7 @@ function realServer (port) {
       const [status, body, headers] = route
             ? readFromFilesystem(req.url, route.fromDir, route.webroot)
             : [404, `${reqPath} not found`, {}];
-      res.writeHead(status, Object.assign({'Content-Type': contentTypeFor(reqPath)}, headers));
+      res.writeHead(status, Object.assign({'Content-Type': contentTypeFor(reqPath)}, Cors, headers));
       res.end(body);
     });
     entry.server.listen(port);

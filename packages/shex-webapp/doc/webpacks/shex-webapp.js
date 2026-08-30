@@ -501,15 +501,39 @@ var JisonParser = /** @class */ (function () {
                     len = this.productions_[action[1]][1];
                     // perform semantic action
                     yyval.$ = vstack[vstack.length - len]; // default to $$ = $1
-                    // default location, uses first token for firsts, last for lasts
-                    yyval._$ = {
-                        first_line: lstack[lstack.length - (len || 1)].first_line,
-                        last_line: lstack[lstack.length - 1].last_line,
-                        first_column: lstack[lstack.length - (len || 1)].first_column,
-                        last_column: lstack[lstack.length - 1].last_column
-                    };
-                    if (ranges) {
-                        yyval._$.range = [lstack[lstack.length - (len || 1)].range[0], lstack[lstack.length - 1].range[1]];
+                    // Default location: from the first symbol that is really there to
+                    // the last.  An empty production has no extent, so it must not
+                    // lend one: reduced, it is placed just before the lookahead (zero
+                    // width) and marked empty, and a production merging its symbols'
+                    // locations skips the empty ones -- otherwise `Opt predicate`
+                    // would start at the token before Opt, and `predicate Opt` end
+                    // there too.  A production of nothing but empties is itself empty.
+                    var children = len ? lstack.slice(lstack.length - len) : [];
+                    var present = children.filter(function (l) { return !l.empty; });
+                    if (present.length) {
+                        var first = present[0], last = present[present.length - 1];
+                        yyval._$ = {
+                            first_line: first.first_line,
+                            last_line: last.last_line,
+                            first_column: first.first_column,
+                            last_column: last.last_column
+                        };
+                        if (ranges) {
+                            yyval._$.range = [first.range[0], last.range[1]];
+                        }
+                    }
+                    else {
+                        var at = lexer.yylloc;
+                        yyval._$ = {
+                            first_line: at.first_line,
+                            last_line: at.first_line,
+                            first_column: at.first_column,
+                            last_column: at.first_column,
+                            empty: true
+                        };
+                        if (ranges) {
+                            yyval._$.range = [at.range[0], at.range[0]];
+                        }
                     }
                     // @ts-ignore
                     r = this.performAction.apply(yyval, [yytext, yyleng, yylineno, sharedState.yy, action[1], vstack, lstack].concat(args));
@@ -20414,6 +20438,7 @@ function merging(names, nodes, semActHandler) {
 }
 class EvalSimple1ErrRegexEngine {
     constructor(shape, index, states, startNo, matchstate, debugHooks) {
+        this.index = index;
         this._live = null;
         this.shape = shape;
         this.semActNames = new Set((shape.semActs || []).map(sa => sa.name));
@@ -20459,6 +20484,17 @@ class EvalSimple1ErrRegexEngine {
         let chosen = null;
         // console.log(new NfaToString().dumpNFA(this.states, this.start));
         this.addstate(clist, this.start, new RegExpThread());
+        // The start's closure may already reach the end -- a group taken zero
+        // times -- and that is the match where there is nothing to match.
+        // The generations below look for the end only among the threads they
+        // make, so the first generation has to be looked at here.
+        if (allTriples.size === 0) {
+            const emptyAccept = clist.find(elt => elt.state === thisEvalSimple1ErrRegexEngine.end);
+            if (emptyAccept) {
+                chosen = emptyAccept;
+                yield { type: "accept", generation, thread: this.threadView(emptyAccept) };
+            }
+        }
         while (clist.length) {
             nlist = [];
             if (trace)
@@ -20478,6 +20514,7 @@ class EvalSimple1ErrRegexEngine {
                         this.debugHooks.onConstraint(tripleConstraint, {
                             node,
                             triples: constraintToTripleMapping.get(tripleConstraint).map(pair => pair.triple),
+                            thread: this.constraintThreadView(thread),
                         });
                     let min = state.c.min !== undefined ? state.c.min : 1;
                     let max = state.c.max !== undefined ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
@@ -20510,6 +20547,13 @@ class EvalSimple1ErrRegexEngine {
                         })());
                         thread.matched = matched0;
                     }
+                    // the actions run at the end here (matchedToResult), so what was
+                    // taken is what passed; a thread that spawned nothing died
+                    if (this.debugHooks && this.debugHooks.onConstraintResult)
+                        this.debugHooks.onConstraintResult(tripleConstraint, {
+                            node, taken: taken.slice(), passed: taken.length >= min ? taken.slice() : [], failed: [],
+                            spawned: nlist.length - nlistlen, thread: this.constraintThreadView(thread),
+                        });
                     if (nlist.length === nlistlen)
                         yield { type: "fail", tc: tripleConstraint, generation,
                             thread: this.threadView(thread) };
@@ -20635,8 +20679,18 @@ class EvalSimple1ErrRegexEngine {
             matched: thread.matched.map(m => ({
                 predicate: m.c.predicate,
                 triples: m.triples.map(t => term(t.subject) + " " + term(t.predicate) + " " + term(t.object)),
+                quads: m.triples.slice(),
             })),
             errors: thread.errors.length,
+        };
+    }
+    /** the part of a thread every engine reports to a debug hook */
+    constraintThreadView(thread) {
+        return {
+            matched: thread.matched.map(m => ({ predicate: m.c.predicate, triples: m.triples.slice() })),
+            errors: thread.errors.length,
+            repeats: Object.assign({}, thread.repeats),
+            state: thread.state,
         };
     }
     /** snapshot of the worklist for debugger UIs: this generation's threads,
@@ -20727,7 +20781,32 @@ class EvalSimple1ErrRegexEngine {
         }).join(",");
         return rs.length ? state + "-" + rs : "" + state;
     }
+    /** the solution of an expression matched zero times: no solutions,
+     * with the cardinality that let it be zero */
+    emptySolution(expr) {
+        const resolved = typeof expr === "string" ? this.index.tripleExprs[expr] : expr;
+        const attrs = {};
+        if (resolved.min !== undefined && resolved.min !== 1 || resolved.max !== undefined && resolved.max !== 1) {
+            attrs.min = resolved.min;
+            attrs.max = resolved.max;
+        }
+        if (resolved.semActs !== undefined)
+            attrs.semActs = resolved.semActs;
+        if (resolved.annotations !== undefined)
+            attrs.annotations = resolved.annotations;
+        switch (resolved.type) {
+            case "TripleConstraint":
+                return Object.assign({ type: "TripleConstraintSolutions", predicate: resolved.predicate }, resolved.valueExpr !== undefined ? { valueExpr: resolved.valueExpr } : {}, attrs, { solutions: [] });
+            case "OneOf":
+                return Object.assign({ type: "OneOfSolutions", solutions: [] }, attrs);
+            default:
+                return Object.assign({ type: "EachOfSolutions", solutions: [] }, attrs);
+        }
+    }
     matchedToResult(matched, constraintToTripleMapping, semActHandler) {
+        // nothing matched: a group taken zero times, which is a solution too
+        if (matched.length === 0)
+            return this.emptySolution(this.shape.expression);
         let last = [];
         const errors = [];
         const skips = [];
@@ -21156,7 +21235,11 @@ class EvalThreadedNErrRegexEngine {
                 unmatchedTriples.size > 0 ? null : elt;
         }, null);
         if (longerChosen !== null) {
-            let fromValidationPoint = longerChosen.expression;
+            // A thread that matched nothing -- a group taken zero times, over a
+            // node with none of its arcs -- built no solution on the way; the
+            // empty one is what it stands for.
+            let fromValidationPoint = longerChosen.expression
+                || this.emptySolution(this.outerExpression);
             if (this.shape.semActs !== undefined)
                 fromValidationPoint.semActs = this.shape.semActs;
             return fromValidationPoint;
@@ -21250,13 +21333,50 @@ class EvalThreadedNErrRegexEngine {
             }, [th]);
         }, semActHandler, this.mayMerge));
     }
+    /** the solution of an expression matched zero times: no solutions, with
+     * the cardinality that let it be zero */
+    emptySolution(expr) {
+        const resolved = typeof expr === "string" ? this.index.tripleExprs[expr] : expr;
+        const minmax = {};
+        if (resolved.min !== undefined && resolved.min !== 1 || resolved.max !== undefined && resolved.max !== 1) {
+            minmax.min = resolved.min;
+            minmax.max = resolved.max;
+        }
+        if (resolved.semActs !== undefined)
+            minmax.semActs = resolved.semActs;
+        if (resolved.annotations !== undefined)
+            minmax.annotations = resolved.annotations;
+        switch (resolved.type) {
+            case "TripleConstraint":
+                return Object.assign({ type: "TripleConstraintSolutions", predicate: resolved.predicate }, resolved.valueExpr !== undefined ? { valueExpr: resolved.valueExpr } : {}, minmax, { solutions: [] });
+            case "OneOf":
+                return Object.assign({ type: "OneOfSolutions", solutions: [] }, minmax);
+            default:
+                return Object.assign({ type: "EachOfSolutions", solutions: [] }, minmax);
+        }
+    }
     // Early return in case of insufficient matching triples
     matchTripleConstraint(constraint, min, max, thread, constraintToTripleMapping, semActHandler) {
+        // the debugger's view of the thread as it asks; and what came of it
+        const threadView = () => ({
+            matched: thread.matched.map(m => ({
+                predicate: m.triples.length ? m.triples[0].predicate.value : "",
+                triples: m.triples.slice(),
+            })),
+            errors: thread.errors.length,
+        });
         if (this.debugHooks && this.debugHooks.onConstraint)
             this.debugHooks.onConstraint(constraint, {
                 node: this.node,
                 triples: constraintToTripleMapping.get(constraint).map(pair => pair.triple),
+                thread: threadView(),
             });
+        const report = (taken, passed, failed, spawned) => {
+            if (this.debugHooks && this.debugHooks.onConstraintResult)
+                this.debugHooks.onConstraintResult(constraint, {
+                    node: this.node, taken: taken.slice(), passed, failed, spawned, thread: threadView(),
+                });
+        };
         if (thread.avail.get(constraint) === undefined)
             thread.avail.set(constraint, constraintToTripleMapping.get(constraint).map(pair => pair.triple));
         // all of them at once where nothing else could want them (takesAllItCan),
@@ -21264,9 +21384,12 @@ class EvalThreadedNErrRegexEngine {
         const greedy = this.greedy.has(constraint);
         const wanted = greedy ? Math.min(thread.avail.get(constraint).length, max) : min;
         const taken = thread.avail.get(constraint).splice(0, Math.max(wanted, min));
-        if (!(taken.length >= min)) // Early return
+        if (!(taken.length >= min)) { // Early return
+            report(taken, [], [], 0);
             return [thread.makeMissingPropertyThread(constraint, thread.matched)];
+        }
         const ret = [];
+        let lastPassFail = { pass: [], fail: [] };
         const minmax = {};
         if (constraint.min !== undefined && constraint.min !== 1 || constraint.max !== undefined && constraint.max !== 1) {
             minmax.min = constraint.min;
@@ -21297,6 +21420,7 @@ class EvalThreadedNErrRegexEngine {
                     acc.pass.push({ triple, tested, semActErrors });
                 return acc;
             }, { pass: [], fail: [] });
+            lastPassFail = passFail;
             // return an empty solution if min card was 0
             if (passFail.fail.length === 0) {
                 // If we didn't take anything, fall back to old errors.
@@ -21319,6 +21443,7 @@ class EvalThreadedNErrRegexEngine {
                 return false;
             }
         })());
+        report(taken, lastPassFail.pass.map(p => p.triple), lastPassFail.fail.map(f => ({ triple: f.triple, errors: f.semActErrors })), ret.length);
         return ret;
     }
     /*
@@ -21451,13 +21576,18 @@ class EvalThreadedNErrRegexEngine {
 /***/ },
 
 /***/ 4085
-(__unused_webpack_module, exports) {
+(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MapArray = void 0;
 exports.capturingRegexModule = capturingRegexModule;
+exports.recordingSemActHandler = recordingSemActHandler;
+exports.replayingSemActHandler = replayingSemActHandler;
+exports.eventTracker = eventTracker;
+// import {NeighborhoodDb} from "@shexjs/neighborhood-api";
+const term_1 = __webpack_require__(2130);
 class MapArray {
     constructor() {
         this.data = new Map(); // public 'cause I don't know how to fix reduce to use this.data
@@ -21487,8 +21617,9 @@ class MapArray {
 exports.MapArray = MapArray;
 /** capturingRegexModule - wrap a regex module so every match() run during a
  * validation is recorded with its inputs; a debugger can then replay any of
- * them step by step (doc/debugger-design.md).  Note that replay re-dispatches
- * the match's semantic actions. */
+ * them step by step (doc/debugger-design.md).  The semantic actions run
+ * once, here: their answers go into the capture's log, and a replay reads
+ * them back rather than dispatching again. */
 function capturingRegexModule(inner) {
     const captures = [];
     const module = {
@@ -21498,14 +21629,95 @@ function capturingRegexModule(inner) {
             const engine = inner.compile(schema, shape, index, debugHooks);
             return {
                 match: (node, constraintToTripleMapping, semActHandler, trace) => {
-                    const result = engine.match(node, constraintToTripleMapping, semActHandler, trace);
-                    captures.push({ shape, node, constraintToTripleMapping, semActHandler, engine, result });
+                    const recorder = recordingSemActHandler(semActHandler);
+                    const result = engine.match(node, constraintToTripleMapping, recorder.handler, trace);
+                    captures.push({ shape, node, constraintToTripleMapping, semActHandler, engine, result,
+                        regexModule: inner.name, semActLog: recorder.log });
                     return result;
                 }
             };
         }
     };
     return { module, captures };
+}
+function termKey(t) {
+    return t && t.termType
+        ? t.termType + ":" + t.value + (t.datatype ? "^^" + t.datatype.value : "") + (t.language ? "@" + t.language : "")
+        : String(t);
+}
+function quadKey(q) {
+    return q ? [q.subject, q.predicate, q.object].map(termKey).join(" ") : "";
+}
+/** The key a dispatch is recorded and replayed under: the actions, by name
+ * and code, and the triples they ran over -- not the order they ran in.
+ * A replay by another engine dispatches the same actions over the same
+ * triples in an order of its own, and still finds each answer. */
+function semActDispatchKey(semActs, ctx) {
+    const acts = (semActs || []).map(a => a.name + "\u0001" + (a.code === undefined || a.code === null ? "" : a.code));
+    const triples = ctx && Array.isArray(ctx.triples) ? ctx.triples.map(quadKey) : [];
+    const node = ctx && ctx.node ? termKey(ctx.node) : "";
+    return JSON.stringify([acts, node, triples]);
+}
+/** recordingSemActHandler - a dispatcher that answers as `inner` does and
+ * keeps what it answered, for replayingSemActHandler. */
+function recordingSemActHandler(inner) {
+    const log = [];
+    const handler = Object.create(inner);
+    handler.dispatchAll = (semActs, ctx, resultsArtifact) => {
+        const failures = inner.dispatchAll(semActs, ctx, resultsArtifact);
+        log.push({ key: semActDispatchKey(semActs, ctx), failures });
+        return failures;
+    };
+    return { handler, log };
+}
+/** replayingSemActHandler - a dispatcher that answers from a log and runs
+ * nothing: a side-effect-free replay.  What it is asked that the log
+ * doesn't hold (a replay that took another path) it answers "no failures",
+ * and lists in `unrecorded`.  Everything but dispatching -- which actions
+ * apply, which are registered -- is still `inner`'s to answer. */
+function replayingSemActHandler(log, inner) {
+    const queues = new Map();
+    log.forEach(({ key, failures }) => {
+        if (!queues.has(key))
+            queues.set(key, []);
+        queues.get(key).push(failures);
+    });
+    const handler = Object.create(inner);
+    handler.unrecorded = [];
+    handler.register = () => { };
+    handler.dispatchAll = (semActs, ctx, _resultsArtifact) => {
+        const queue = queues.get(semActDispatchKey(semActs, ctx));
+        if (queue && queue.length)
+            return queue.shift();
+        if (semActs && semActs.length)
+            handler.unrecorded.push(semActDispatchKey(semActs, ctx));
+        return [];
+    };
+    return handler;
+}
+/** eventTracker - the tracker ShExValidator takes, as a stream of
+ * ShapeDebugEvents to `onEvent`.  `depth` is readable between events, for
+ * a constraint-level hook that nests under the current shape. */
+function eventTracker(onEvent) {
+    const tracker = {
+        depth: 0,
+        enter(node, shape) {
+            ++tracker.depth;
+            onEvent({ type: "enter", node, shape, depth: tracker.depth });
+        },
+        exit(node, shape, result) {
+            onEvent({ type: "exit", node, shape, result, depth: tracker.depth });
+            --tracker.depth;
+        },
+        recurse(rec) {
+            onEvent({ type: "recurse", node: (0, term_1.ld2RdfJsTerm)(rec.node), shape: rec.shape,
+                depth: tracker.depth + 1 });
+        },
+        known(result) {
+            onEvent({ type: "known", result, depth: tracker.depth + 1 });
+        },
+    };
+    return tracker;
 }
 
 
@@ -21650,22 +21862,21 @@ function rdfjsDB(db, queryTracker) {
     function getNeighborhood(point, shapeLabel, _shape) {
         // I'm guessing a local DB doesn't benefit from shape optimization.
         let startTime = null;
+        let token = null;
         if (queryTracker) {
             startTime = new Date();
-            queryTracker.start(false, point, shapeLabel);
+            token = queryTracker.start(false, point, shapeLabel);
         }
         const outgoing = [...db.match(point, null, null, null)].sort((l, r) => (0, neighborhood_api_1.sparqlOrder)(l.object, r.object));
         if (queryTracker) {
             const time = new Date();
-            queryTracker.end(outgoing, time.valueOf() - startTime.valueOf());
+            queryTracker.end(outgoing, time.valueOf() - startTime.valueOf(), token);
             startTime = time;
-        }
-        if (queryTracker) {
-            queryTracker.start(true, point, shapeLabel);
+            token = queryTracker.start(true, point, shapeLabel);
         }
         const incoming = [...db.match(null, null, point, null)].sort((l, r) => (0, neighborhood_api_1.sparqlOrder)(l.object, r.object));
         if (queryTracker) {
-            queryTracker.end(incoming, new Date().valueOf() - startTime.valueOf());
+            queryTracker.end(incoming, new Date().valueOf() - startTime.valueOf(), token);
         }
         return {
             outgoing: outgoing,
@@ -21801,7 +22012,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.paneEditor = exports.dbParams = exports.ctor = exports.queryMapResolvers = exports.capabilities = exports.description = exports.label = exports.name = exports.BNodeIdentityError = void 0;
+exports.paneEditor = exports.dbParams = exports.ctor = exports.queryMapResolvers = exports.capabilities = exports.description = exports.label = exports.name = exports.BNodeIdentityError = exports.RateLimiter = void 0;
 exports.asAsyncDb = asAsyncDb;
 exports.sparqlDB = sparqlDB;
 exports.fromParams = fromParams;
@@ -21810,6 +22021,9 @@ const neighborhood_api_1 = __webpack_require__(7682);
 const ShExUtil = __importStar(__webpack_require__(5590));
 const visitor_1 = __webpack_require__(2818);
 const N3 = __importStar(__webpack_require__(4957)); // TODO: set global externally
+const rate_limit_1 = __webpack_require__(6006);
+var rate_limit_2 = __webpack_require__(6006);
+Object.defineProperty(exports, "RateLimiter", ({ enumerable: true, get: function () { return rate_limit_2.RateLimiter; } }));
 /**
  * The asynchronous face of one of these, for ShExValidator.validateShapeMapAsync.
  *
@@ -21842,10 +22056,18 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
     const startDepth = options.bnodeDepth === undefined ? 4 : options.bnodeDepth;
     const maxDepth = options.maxBnodeDepth === undefined ? 64 : options.maxBnodeDepth;
     const verify = options.verifyBnodeDescriptions !== false;
-    const execute = options.executeQuery ||
+    const askSync = options.executeQuery ||
         ((q, ep, df) => ShExUtil.executeQuery(q, ep, df));
-    const executeAsync = options.executeQueryAsync ||
+    const askAsync = options.executeQueryAsync ||
         ((q, ep, df) => ShExUtil.executeQueryPromise(q, ep, df));
+    // ...through the pace the service will bear.  Every request this db makes
+    // goes through here, whichever face is driving and whether the query is a
+    // neighborhood's or a shape map's.
+    const rateLimit = options.rateLimit instanceof rate_limit_1.RateLimiter
+        ? options.rateLimit
+        : new rate_limit_1.RateLimiter(options.rateLimit || {});
+    const execute = (q, ep, df) => rateLimit.runSync(() => askSync(q, ep, df));
+    const executeAsync = (q, ep, df) => rateLimit.run(() => askAsync(q, ep, df));
     const queryCache = options.cacheQueries === false ? null : new Map();
     /**
      * Ask the endpoint, without saying how to wait for it.
@@ -22091,7 +22313,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
     }
     /** A label-independent fingerprint of a blank node's arcs. */
     function contentKey(label, bySubject) {
-        return (bySubject.get(label) || []).map(t => `${t.p} ${t.o.termType === "BlankNode" ? "[]" : turtlifyRdfJs(t.o)}`).sort().join(" ");
+        return (bySubject.get(label) || []).map(t => `${t.p} ${t.o.termType === "BlankNode" ? "[]" : turtlifyRdfJs(t.o)}`).sort().join("\u0000");
     }
     function dedupeTerms(terms) {
         const seen = new Set();
@@ -22416,24 +22638,39 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         const wantEverything = !!shape.closed || !!options.allOutgoing;
         const outPreds = wantEverything ? null : arcs.out;
         let startTime = Date.now();
-        if (queryTracker)
-            queryTracker.start(false, point, shapeLabel);
+        let token = queryTracker ? queryTracker.start(false, point, shapeLabel) : null;
         const cached = cachedOutgoing(point, outPreds);
-        const outgoing = (wantEverything || outPreds.length > 0)
-            ? (cached !== null ? cached : yield* fetch(point, outPreds, false))
-            : [];
+        let outgoing;
+        try {
+            outgoing = (wantEverything || outPreds.length > 0)
+                ? (cached !== null ? cached : yield* fetch(point, outPreds, false))
+                : [];
+        }
+        catch (e) {
+            // an endpoint that refused, timed out or broke: what the walk was
+            // asking for when it happened is the useful half of that news
+            if (queryTracker && queryTracker.fail)
+                queryTracker.fail(e, Date.now() - startTime, token);
+            throw e;
+        }
         if (queryTracker) {
             const now = Date.now();
-            queryTracker.end(outgoing, now - startTime);
+            queryTracker.end(outgoing, now - startTime, token);
             startTime = now;
         }
         let incoming = [];
         if (arcs.anyInverse) {
+            token = queryTracker ? queryTracker.start(true, point, shapeLabel) : null;
+            try {
+                incoming = yield* fetch(point, null, true);
+            }
+            catch (e) {
+                if (queryTracker && queryTracker.fail)
+                    queryTracker.fail(e, Date.now() - startTime, token);
+                throw e;
+            }
             if (queryTracker)
-                queryTracker.start(true, point, shapeLabel);
-            incoming = yield* fetch(point, null, true);
-            if (queryTracker)
-                queryTracker.end(incoming, Date.now() - startTime);
+                queryTracker.end(incoming, Date.now() - startTime, token);
         }
         return { outgoing, incoming };
     }
@@ -22469,6 +22706,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         setSchema: function (schema) { schemaIndex = schema._index || visitor_1.ShExIndexVisitor.index(schema); },
         executeSelect: (query) => driveSync(runQuery(query)),
         executeSelectAsync: (query) => driveAsync(runQuery(query)),
+        rateLimit,
     };
 }
 exports.name = "neighborhood-sparql";
@@ -22521,6 +22759,17 @@ exports.dbParams = [
         description: "have the endpoint confirm each blank node description picks out the node it should",
         schema: { type: "boolean", default: true },
         cli: { option: "sparql-verify-bnodes" } },
+    { name: "rate",
+        description: "how many requests a second to make of this service at most; " +
+            "0 asks as fast as the walk can.  A service that refuses (429) lowers it " +
+            "anyway, and this db feels its way back up toward whatever is set here",
+        schema: { type: "number", default: 0 },
+        cli: { option: "sparql-rate", typeLabel: "per second" } },
+    { name: "retries",
+        description: "how many times to ask again when a service refuses a request " +
+            "as too frequent, before reporting the refusal",
+        schema: { type: "integer", default: 4 },
+        cli: { option: "sparql-retries", typeLabel: "integer" } },
 ];
 function fromParams(params, queryTracker) {
     return sparqlDB(params.endpoint, queryTracker, {
@@ -22529,6 +22778,7 @@ function fromParams(params, queryTracker) {
         bnodeDepth: params.bnodeDepth,
         maxBnodeDepth: params.maxBnodeDepth,
         verifyBnodeDescriptions: params.verifyBnodeDescriptions,
+        rateLimit: { rate: params.rate, retries: params.retries },
     });
 }
 /** `# Endpoint: <url>` on the first line means "query this rather than
@@ -22591,7 +22841,305 @@ function isEndpointUrl(url) {
 
 /***/ },
 
-/***/ 1434
+/***/ 6006
+(__unused_webpack_module, exports) {
+
+"use strict";
+
+/**
+ * How fast this db may ask, and what to do when the service says "not that
+ * fast".
+ *
+ * A validation is a walk, and a walk over a query service is one request per
+ * node it reaches -- hundreds of them, as fast as the service will answer.
+ * Public endpoints meter that: Wikidata's answers 429 (Too Many Requests)
+ * and the walk stops with whichever query happened to be in flight.
+ *
+ * Two halves, then:
+ *
+ * **A limit.**  Requests per second, because that is how a service states
+ * its policy ("no more than N per second"); 0 means as fast as the walk can
+ * ask, which is what a local store wants.  It is a *pace* rather than a
+ * bucket: requests here are serial (the db awaits each answer before it
+ * knows what to ask next), so spacing them is the whole of it, and a burst
+ * allowance would only let a walk sprint into the same 429.
+ *
+ * **A search.**  A 429 is the service telling you what it will bear, so the
+ * limit answers to it: drop to a rate that works, and then feel back up
+ * toward the one you asked for.  It is a binary search between the fastest
+ * rate known to work and the slowest known to be refused -- which is what
+ * "an optimum" means when the only measurements are yes and no -- with two
+ * ends to reach first: the first refusal halves (nothing is known to work
+ * yet, and a walk should not spend a hundred requests finding out), and a
+ * rate with nothing above it doubles (there is no halfway to a bound that
+ * hasn't been found).  Then each probe replaces one of the two bounds and
+ * the gap halves, until they are within `tolerance` of each other.
+ *
+ * It settles rather than stopping: after `relaxAfter` requests have gone
+ * through untroubled, the refused bound is doubted -- a service that was
+ * busy an hour ago may not be now -- and the search opens again.
+ *
+ * The rates are geometric means rather than arithmetic ones, since what the
+ * search halves and doubles is a *rate*: the midpoint between 1/s and 4/s is
+ * 2/s, not 2.5/s.
+ *
+ * Nothing here knows about SPARQL: it takes a thunk, and the caller says
+ * which errors mean "too fast" (`is429`) and how long the service asked to
+ * be left alone (`retryAfter`).
+ */
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RateLimiter = void 0;
+exports.looksLike429 = looksLike429;
+exports.retryAfterOf = retryAfterOf;
+const DEFAULTS = {
+    rate: 0,
+    backoffRate: 1,
+    retries: 4,
+    tolerance: 1.1,
+    probeAfter: 8,
+    relaxAfter: 64,
+    cooldown: 1000,
+    maxCooldown: 60000,
+};
+/** "SPARQL endpoint <…> returned 429 Too Many Requests" and anything else
+ * that says the number where a status belongs */
+const SAYS_429 = /\b429\b/;
+function looksLike429(e) {
+    if (!e)
+        return false;
+    if (typeof e.status === "number")
+        return e.status === 429;
+    return SAYS_429.test(String(e.message || e));
+}
+/** Retry-After is either a number of seconds or an HTTP date; a transport
+ * that read the header hands it over as `retryAfter`. */
+function retryAfterOf(e) {
+    const said = e && (e.retryAfter !== undefined ? e.retryAfter : e.retryAfterHeader);
+    if (said === undefined || said === null || said === "")
+        return null;
+    if (typeof said === "number")
+        return said > 0 ? said * 1000 : null;
+    const seconds = Number(said);
+    if (!Number.isNaN(seconds))
+        return seconds > 0 ? seconds * 1000 : null;
+    const when = Date.parse(String(said));
+    return Number.isNaN(when) ? null : Math.max(0, when - Date.now());
+}
+/** sleep without an await, for the synchronous transport.
+ *
+ * Atomics.wait is the only way to hold a thread without spinning it, and it
+ * needs a SharedArrayBuffer -- which node always has and a browser has only
+ * when the page is cross-origin isolated.  Where there is none, waiting
+ * costs a spin: the synchronous face already blocks whatever thread it is
+ * on (that is what makes it synchronous), and hammering a service that has
+ * just said "too fast" is the worse of the two.
+ */
+function defaultSleepSync(ms) {
+    if (ms <= 0)
+        return;
+    const SAB = globalThis.SharedArrayBuffer;
+    if (SAB && typeof Atomics !== "undefined" && typeof Atomics.wait === "function") {
+        try {
+            Atomics.wait(new Int32Array(new SAB(4)), 0, 0, ms);
+            return;
+        }
+        catch (e) {
+            // a context that has the constructor but not the wait (a main browser
+            // thread): fall through and spin
+        }
+    }
+    const until = Date.now() + ms;
+    while (Date.now() < until)
+        ; // eslint-disable-line no-empty
+}
+/**
+ * A pace, and a search for the pace a service will bear.
+ *
+ * One of these belongs to one endpoint: two dbs pointed at the same service
+ * should share one (pass it in) or they will each discover the limit
+ * separately, and each other's requests will be what refuses them.
+ */
+class RateLimiter {
+    constructor(options = {}) {
+        /** fastest rate known to work (0: nothing refused yet, so nothing learned) */
+        this.good = 0;
+        /** slowest rate known to be refused */
+        this.bad = Infinity;
+        /** requests made, and how many came back refused */
+        this.requests = 0;
+        this.refusals = 0;
+        /** how many have succeeded since the rate last changed */
+        this.sinceChange = 0;
+        /** ...and since anything was refused */
+        this.sinceRefusal = 0;
+        /** when the last request was let through */
+        this.last = -Infinity;
+        this.opts = Object.assign({}, DEFAULTS, {
+            rate: options.rate === undefined ? DEFAULTS.rate : Number(options.rate),
+            backoffRate: options.backoffRate === undefined ? DEFAULTS.backoffRate : Number(options.backoffRate),
+            retries: options.retries === undefined ? DEFAULTS.retries : Number(options.retries),
+            tolerance: options.tolerance === undefined ? DEFAULTS.tolerance : Number(options.tolerance),
+            probeAfter: options.probeAfter === undefined ? DEFAULTS.probeAfter : Number(options.probeAfter),
+            relaxAfter: options.relaxAfter === undefined ? DEFAULTS.relaxAfter : Number(options.relaxAfter),
+            cooldown: options.cooldown === undefined ? DEFAULTS.cooldown : Number(options.cooldown),
+            maxCooldown: options.maxCooldown === undefined ? DEFAULTS.maxCooldown : Number(options.maxCooldown),
+        });
+        this.is429 = options.is429 || looksLike429;
+        this.retryAfter = options.retryAfter || retryAfterOf;
+        this.now = options.now || (() => Date.now());
+        this.sleep = options.sleep || (ms => new Promise(resolve => setTimeout(resolve, ms)));
+        this.sleepSync = options.sleepSync || defaultSleepSync;
+        this.rate = this.opts.rate > 0 ? this.opts.rate : 0;
+        this.ceiling = this.rate > 0 ? this.rate : Infinity;
+        this.cooldown = this.opts.cooldown;
+    }
+    /** what it has worked out so far */
+    state() {
+        return {
+            rate: this.rate, ceiling: this.ceiling, good: this.good, bad: this.bad,
+            requests: this.requests, refusals: this.refusals, searching: this.searching(),
+        };
+    }
+    /** Is there a faster rate worth trying?
+     *
+     * Room below whichever comes first: the rate the caller asked for, and the
+     * slowest rate the service has refused.  With neither -- unlimited, and
+     * nothing refused yet -- there is always room, which is what makes the
+     * first probe a doubling: the upper bound has to be found before it can be
+     * searched between. */
+    searching() {
+        if (!(this.rate > 0))
+            return false; // already as fast as it can ask
+        const target = Math.min(this.bad, this.ceiling);
+        return target > this.rate * this.opts.tolerance;
+    }
+    /** how long until this request may go, in ms */
+    delay() {
+        if (!(this.rate > 0))
+            return 0;
+        const gap = 1000 / this.rate;
+        return Math.max(0, this.last + gap - this.now());
+    }
+    /** ...and the same when a service has just said to wait longer than that */
+    refused(e) {
+        ++this.refusals;
+        this.sinceRefusal = 0;
+        const asked = this.retryAfter(e);
+        // What it will bear is below where we are: remember that, and drop.
+        this.bad = Math.min(this.bad, this.rate > 0 ? this.rate : Infinity);
+        // a rate that worked before and doesn't now was never the answer
+        if (this.good >= this.rate)
+            this.good = 0;
+        const dropped = 
+        // nothing known: somewhere to start from, and work up
+        !(this.rate > 0) ? this.opts.backoffRate
+            // between what has worked and what has just been refused, which is the
+            // same step the search takes upward
+            : this.good > 0 ? Math.sqrt(this.good * this.rate)
+                // nothing is known to work: halve, because the first refusal has no
+                // idea how far off it is and a walk should not spend a hundred
+                // requests finding out
+                : this.rate / 2;
+        this.setRate(Math.max(dropped, 0.001));
+        const wait = asked === null ? this.cooldown : Math.min(asked, this.opts.maxCooldown);
+        if (asked === null)
+            this.cooldown = Math.min(this.cooldown * 2, this.opts.maxCooldown);
+        return wait;
+    }
+    setRate(rate) {
+        this.rate = Math.min(rate, this.ceiling);
+        this.sinceChange = 0;
+    }
+    /** A request got through.  If enough of them have at this rate, and there
+     * is room between here and the rate that was refused, try the middle:
+     * success moves the floor up, another refusal brings the ceiling down, and
+     * either way the gap halves. */
+    succeeded() {
+        if (this.rate > 0)
+            this.good = Math.max(this.good, this.rate);
+        ++this.sinceRefusal;
+        ++this.sinceChange;
+        if (!this.searching()) {
+            // Settled -- until the service has been letting requests through for
+            // long enough that what it refused before is worth doubting.  Relaxing
+            // the bound is what re-opens the search.
+            if (this.bad < Infinity && this.sinceRefusal >= this.opts.relaxAfter) {
+                this.bad = this.bad * 2;
+                this.sinceRefusal = 0;
+            }
+            return;
+        }
+        if (this.sinceChange < this.opts.probeAfter)
+            return;
+        const ceiling = Math.min(this.bad, this.ceiling);
+        // Halfway between here and there, geometrically: what is between one per
+        // second and four is two, not two and a half.  With no upper bound yet
+        // there is no halfway, so double until one turns up.
+        this.setRate(ceiling === Infinity ? this.rate * 2 : Math.sqrt(this.rate * ceiling));
+    }
+    /** Make one request, waiting for its turn and answering a refusal by
+     * slowing down and asking again.  Anything else is the caller's. */
+    run(attempt) {
+        return __awaiter(this, void 0, void 0, function* () {
+            for (let tries = 0;; ++tries) {
+                const wait = this.delay();
+                if (wait > 0)
+                    yield this.sleep(wait);
+                this.last = this.now();
+                ++this.requests;
+                try {
+                    const answer = yield attempt();
+                    this.succeeded();
+                    return answer;
+                }
+                catch (e) {
+                    if (!this.is429(e) || tries >= this.opts.retries)
+                        throw e;
+                    const cool = this.refused(e);
+                    if (cool > 0)
+                        yield this.sleep(cool);
+                }
+            }
+        });
+    }
+    /** the same, for the transport that blocks */
+    runSync(attempt) {
+        for (let tries = 0;; ++tries) {
+            const wait = this.delay();
+            if (wait > 0)
+                this.sleepSync(wait);
+            this.last = this.now();
+            ++this.requests;
+            try {
+                const answer = attempt();
+                this.succeeded();
+                return answer;
+            }
+            catch (e) {
+                if (!this.is429(e) || tries >= this.opts.retries)
+                    throw e;
+                const cool = this.refused(e);
+                if (cool > 0)
+                    this.sleepSync(cool);
+            }
+        }
+    }
+}
+exports.RateLimiter = RateLimiter;
+//# sourceMappingURL=rate-limit.js.map
+
+/***/ },
+
+/***/ 6069
 (__unused_webpack_module, exports) {
 
 "use strict";
@@ -22720,7 +23268,7 @@ function locateJson(text) {
 
 /***/ },
 
-/***/ 17
+/***/ 7780
 (__unused_webpack_module, exports) {
 
 "use strict";
@@ -22835,7 +23383,7 @@ function md5(text) {
 
 /***/ },
 
-/***/ 2906
+/***/ 3314
 (__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -22887,7 +23435,7 @@ exports.paneEditor = exports.dbParams = exports.ctor = exports.queryMapResolvers
 exports.forgetPages = forgetPages;
 exports.bcp47 = bcp47;
 exports.siteInfoFromSitematrix = siteInfoFromSitematrix;
-exports.wikidataDB = wikidataDB;
+exports.wikibaseDB = wikibaseDB;
 exports.asEntityDoc = asEntityDoc;
 exports.fromParams = fromParams;
 exports.distributeDocuments = distributeDocuments;
@@ -22895,11 +23443,11 @@ exports.claimPaneText = claimPaneText;
 exports.asAsyncDb = asAsyncDb;
 const neighborhood_api_1 = __webpack_require__(7682);
 const N3 = __importStar(__webpack_require__(4957));
-const fs = __importStar(__webpack_require__(6478));
-const path = __importStar(__webpack_require__(8726));
-const url_1 = __webpack_require__(2286);
-const wikibase_rdf_1 = __webpack_require__(4157);
-const json_locations_1 = __webpack_require__(1434);
+const fs = __importStar(__webpack_require__(7955));
+const path = __importStar(__webpack_require__(2159));
+const url_1 = __webpack_require__(4797);
+const wikibase_rdf_1 = __webpack_require__(1438);
+const json_locations_1 = __webpack_require__(6069);
 /** Thrown when a focus node can't be tied to an entity page. */
 class EntityResolutionError extends Error {
     constructor(message) {
@@ -22911,7 +23459,7 @@ exports.EntityResolutionError = EntityResolutionError;
 const DataFactory = N3.DataFactory;
 /** Who this is, for hosts that ask (see fetchDoc): a tool and where to
  * read about it, which is what Wikimedia's robot policy wants. */
-const USER_AGENT = "@shexjs/neighborhood-wikidata (https://github.com/shexjs/shex.js)";
+const USER_AGENT = "@shexjs/neighborhood-wikibase (https://github.com/shexjs/shex.js)";
 /** Pages fetched by this process, by URL.
  *
  * A DB is rebuilt whenever its configuration changes -- a host that offers
@@ -22931,7 +23479,11 @@ function forgetPages() {
  * who may set it? */
 function inBrowser() {
     const global = globalThis;
-    return typeof global.window !== "undefined" && typeof global.window.document !== "undefined";
+    // ...or a worker, which is a browser context with no `window`: it has a
+    // User-Agent of its own and the same refusal to let anyone set it, so a
+    // request made from one must not ask.
+    return (typeof global.window !== "undefined" && typeof global.window.document !== "undefined")
+        || typeof global.WorkerGlobalScope !== "undefined";
 }
 // ── site languages ──────────────────────────────────────────────────────────
 // The sitematrix names each wiki's language by its subdomain-ish code;
@@ -22995,7 +23547,7 @@ function siteInfoFromSitematrix(doc) {
     }
     return siteId => map.get(siteId);
 }
-function wikidataDB(queryTracker, options = {}) {
+function wikibaseDB(queryTracker, options = {}) {
     const conceptBase = options.conceptBase || "http://www.wikidata.org/";
     const dataBase = options.dataBase || "https://www.wikidata.org/wiki/Special:EntityData/";
     const entityDataUrl = options.entityDataUrl || ((id) => `${dataBase}${id}.json`);
@@ -23172,12 +23724,25 @@ function wikidataDB(queryTracker, options = {}) {
      * values -- is already in the page that was fetched for it, so this awaits
      * only where the validation crosses from one entity to another.
      */
-    function getNeighborhoodAsync(point, shapeLabel, shape) {
+    function getNeighborhoodAsync(point, shapeLabel, _shape) {
         return __awaiter(this, void 0, void 0, function* () {
-            const id = entityOf(point);
-            if (id !== null)
-                yield ensureLoadedAsync(id);
-            return getNeighborhood(point, shapeLabel, shape);
+            const startTime = Date.now();
+            const token = queryTracker ? queryTracker.start(false, point, shapeLabel) : null;
+            try {
+                const id = entityOf(point);
+                if (id !== null)
+                    yield ensureLoadedAsync(id);
+                else
+                    refuseUnknownNode(point);
+            }
+            catch (e) {
+                // fetching the page is what this costs and what can fail, so it is
+                // inside the window: a host recording the walk hears about both
+                if (queryTracker && queryTracker.fail)
+                    queryTracker.fail(e, Date.now() - startTime, token);
+                throw e;
+            }
+            return neighborhoodFromStore(point, shapeLabel, startTime, token);
         });
     }
     function ensureLoaded(id) {
@@ -23226,32 +23791,46 @@ function wikidataDB(queryTracker, options = {}) {
                 (point.value.startsWith(NS.wdv) || point.value.startsWith(NS.wdref)));
     }
     function getNeighborhood(point, shapeLabel, _shape) {
-        const id = entityOf(point);
-        if (id !== null)
-            ensureLoaded(id);
-        else if (mintedHere(point) &&
+        const startTime = Date.now();
+        const token = queryTracker ? queryTracker.start(false, point, shapeLabel) : null;
+        try {
+            const id = entityOf(point);
+            if (id !== null)
+                ensureLoaded(id);
+            else
+                refuseUnknownNode(point);
+        }
+        catch (e) {
+            if (queryTracker && queryTracker.fail)
+                queryTracker.fail(e, Date.now() - startTime, token);
+            throw e;
+        }
+        return neighborhoodFromStore(point, shapeLabel, startTime, token);
+    }
+    /** A node this DB never loaded a page for and cannot name one from. */
+    function refuseUnknownNode(point) {
+        if (mintedHere(point) &&
             store.countQuads(point, null, null, null) === 0 &&
             store.countQuads(null, null, point, null) === 0)
             throw new EntityResolutionError(`${point.termType === "BlankNode" ? "_:" + point.value : "<" + point.value + ">"} ` +
                 `is not in any entity page this DB has loaded, and its name doesn't say ` +
                 `which page to fetch; walk in through the entity's statements instead`);
-        let startTime = null;
-        if (queryTracker) {
-            startTime = Date.now();
-            queryTracker.start(false, point, shapeLabel);
-        }
+    }
+    /** The arcs, once the page they are in is here: both faces do this half
+     * the same way, and report it under the request that opened it. */
+    function neighborhoodFromStore(point, shapeLabel, startTime, token) {
         const outgoing = store.getQuads(point, null, null, null)
             .sort((l, r) => (0, neighborhood_api_1.sparqlOrder)(l.object, r.object));
         if (queryTracker) {
             const now = Date.now();
-            queryTracker.end(outgoing, now - startTime);
+            queryTracker.end(outgoing, now - startTime, token);
             startTime = now;
-            queryTracker.start(true, point, shapeLabel);
+            token = queryTracker.start(true, point, shapeLabel);
         }
         const incoming = store.getQuads(null, null, point, null)
             .sort((l, r) => (0, neighborhood_api_1.sparqlOrder)(l.object, r.object));
         if (queryTracker)
-            queryTracker.end(incoming, Date.now() - startTime);
+            queryTracker.end(incoming, Date.now() - startTime, token);
         return { outgoing, incoming };
     }
     /** Entities this DB could offer a WebApp's focus-node input, matched by
@@ -23379,9 +23958,9 @@ function labelIn(doc, id, language) {
         || Object.values(labels)[0];
     return found ? found.value : null;
 }
-exports.name = "neighborhood-wikidata";
-exports.label = "Wikidata";
-exports.description = "Implementation of @shexjs/neighborhood-api which synthesizes Wikidata's RDF from entity JSON pages";
+exports.name = "neighborhood-wikibase";
+exports.label = "Wikibase JSON";
+exports.description = "Implementation of @shexjs/neighborhood-api which synthesizes a Wikibase's RDF from entity JSON pages";
 exports.capabilities = ["query", "translate"];
 /** A shape map may name the entities to validate rather than their IRIs:
  *
@@ -23408,7 +23987,7 @@ exports.queryMapResolvers = [{
             });
         },
     }];
-exports.ctor = wikidataDB;
+exports.ctor = wikibaseDB;
 /** What it takes to construct this DB, declared for hosts that offer several
  * neighborhood implementations (STRAWMAN, see @shexjs/neighborhood-api). */
 /** What an entity page opened from scratch starts as: the shape of the
@@ -23428,23 +24007,17 @@ exports.dbParams = [
         description: "where entity pages live: <base><id>.json names each page " +
             "(e.g. https://www.wikidata.org/wiki/Special:EntityData/ or a file: directory of captured pages)",
         schema: { type: "string", format: "uri" },
-        cli: { option: "wikidata", typeLabel: "IRI" } },
+        cli: { option: "wikibase", typeLabel: "IRI" } },
     { name: "sitematrix",
         description: "where the site matrix lives (site id -> URL/language/group, needed for sitelink RDF); " +
             "defaults to the wikidata API",
         schema: { type: "string", format: "uri" },
-        cli: { option: "wikidata-sitematrix", typeLabel: "IRI" } },
+        cli: { option: "wikibase-sitematrix", typeLabel: "IRI" } },
     { name: "cacheDir",
         description: "keep fetched entity pages on disk here",
         schema: { type: "string", format: "file-path" },
         ui: { hidden: true }, // a browser has no disk to cache on
-        cli: { option: "wikidata-cache", typeLabel: "dir" } },
-    { name: "data", selector: true,
-        description: "the entities to look at, by id, separated by whitespace",
-        schema: { type: "array", items: { type: "string", contentMediaType: "text/plain" } },
-        // one list, so one pane: which entities are in play is a single thought
-        pane: { label: "entity ids", min: 1, max: 1 },
-        cli: { option: "wikidata-entities", typeLabel: "Q42 Q5 ..." } },
+        cli: { option: "wikibase-cache", typeLabel: "dir" } },
     { name: "pages", selector: true,
         description: "entity pages to believe instead of what the site serves, " +
             "so an edit can be validated before it is made",
@@ -23465,24 +24038,23 @@ exports.dbParams = [
                 }
             },
         },
-        cli: { option: "wikidata-page", typeLabel: "file|URL" } },
+        cli: { option: "wikibase-page", typeLabel: "file|URL" } },
 ];
 function fromParams(params, queryTracker) {
-    return wikidataDB(queryTracker, {
+    return wikibaseDB(queryTracker, {
         entityDataUrl: params.base === undefined ? undefined : (id) => `${params.base}${id}.json`,
         siteMatrixUrl: params.sitematrix,
         cacheDir: params.cacheDir,
         pages: params.pages,
-        entities: (params.data || []).join(" ").split(/\s+/).filter((id) => id !== ""),
     });
 }
-/** Sort documents a host was handed into the panes they belong in: an
- * entity page is a page, anything else is a list of ids -- and a page also
- * says which entities it is about, so dropping one in fills the id list
- * too.  A host with documents and no idea which parameter they are for
- * (a manifest entry's `data`, a dropped file) asks this. */
+/** Sort documents a host was handed into the panes they belong in.  This
+ * source has one pane, so what that comes to is: an entity page is a page,
+ * and anything else is not a document of this source's at all -- which
+ * entities to visit is the query map's to say.  A host with documents and
+ * no idea which parameter they are for (a manifest entry's `data`, a
+ * dropped file) asks this. */
 function distributeDocuments(texts) {
-    const ids = [];
     const pages = [];
     for (const text of texts) {
         let doc = null;
@@ -23490,29 +24062,28 @@ function distributeDocuments(texts) {
             doc = asEntityDoc(JSON.parse(text));
         }
         catch (e) {
-            doc = null; // not a page: a list of ids, then
+            continue; // not a page: nothing here holds it
         }
-        if (doc === null)
-            ids.push(...text.split(/\s+/).filter(id => id !== ""));
-        else {
-            // re-serialized so a downloaded page arrives readable rather than as
-            // one enormous line
-            pages.push(JSON.stringify(doc, null, 2) + "\n");
-            ids.push(...Object.keys(doc.entities));
-        }
+        // re-serialized so a downloaded page arrives readable rather than as
+        // one enormous line
+        pages.push(JSON.stringify(doc, null, 2) + "\n");
     }
-    return { data: [ids.join(" ")], pages };
+    return { pages };
 }
-/** `# Wikidata` on the first line means "synthesize entity pages rather
- * than parsing me"; a URL after it points at another Wikibase instance. */
-const WIKIDATA_HEADER = /^([ \t]*#?[ \t]*Wikidata[ \t]*:?[ \t]*)(\S*)(.*)$/im;
+/** `# Wikibase` on the first line means "synthesize entity pages rather
+ * than parsing me"; a URL after it says which Wikibase.
+ *
+ * `# Wikidata` too, which is what this source was called when Wikidata was
+ * the only instance it knew: a document saved with that header still names
+ * this source, and is still read by it. */
+const WIKIBASE_HEADER = /^([ \t]*#?[ \t]*Wiki(?:base|data)[ \t]*:?[ \t]*)(\S*)(.*)$/im;
 const KNOWN_BASES = [
     { label: "https://www.wikidata.org/wiki/Special:EntityData/", detail: "Wikidata" },
     { label: "https://test.wikidata.org/wiki/Special:EntityData/", detail: "Wikidata test instance" },
     { label: "https://commons.wikimedia.org/wiki/Special:EntityData/", detail: "Wikimedia Commons" },
 ];
 function claimPaneText(text) {
-    const m = text.match(WIKIDATA_HEADER);
+    const m = text.match(WIKIBASE_HEADER);
     if (!m || m.index !== 0)
         return null;
     return m[2] === "" ? {} : { base: m[2] }; // bare header: the default base
@@ -23524,7 +24095,7 @@ function claimPaneText(text) {
 exports.paneEditor = {
     language: "turtle",
     tokens(text) {
-        const m = text.match(WIKIDATA_HEADER);
+        const m = text.match(WIKIBASE_HEADER);
         if (!m || m.index !== 0)
             return [];
         const base = m[2];
@@ -23535,7 +24106,7 @@ exports.paneEditor = {
         return tokens;
     },
     lint(text) {
-        const m = text.match(WIKIDATA_HEADER);
+        const m = text.match(WIKIBASE_HEADER);
         if (!m || m.index !== 0)
             return [];
         const [from, to] = [m[1].length, m[1].length + m[2].length];
@@ -23550,11 +24121,11 @@ exports.paneEditor = {
         const claimed = claimPaneText(text) !== null;
         if (lineStart === 0 && !claimed)
             return { from: 0, to: pos,
-                options: [{ label: "# Wikidata: ", type: "keyword",
+                options: [{ label: "# Wikibase: ", type: "keyword",
                         detail: "synthesize entity pages instead of parsing this pane" }] };
         if (lineStart === 0 && claimed) {
             // completing the base on the header line
-            const m = text.match(WIKIDATA_HEADER);
+            const m = text.match(WIKIBASE_HEADER);
             if (pos >= m[1].length)
                 return { from: m[1].length, to: m[1].length + m[2].length,
                     options: KNOWN_BASES.map(b => (Object.assign(Object.assign({}, b), { type: "namespace" }))) };
@@ -23596,11 +24167,11 @@ function asAsyncDb(db) {
         },
     });
 }
-//# sourceMappingURL=neighborhood-wikidata.js.map
+//# sourceMappingURL=neighborhood-wikibase.js.map
 
 /***/ },
 
-/***/ 4157
+/***/ 1438
 (__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -23615,7 +24186,7 @@ __webpack_unused_export__ = utf8Length;
 __webpack_unused_export__ = valueNodeHash;
 __webpack_unused_export__ = cleanTimeValue;
 exports.wikibaseRdfConverter = wikibaseRdfConverter;
-const md5_1 = __webpack_require__(17);
+const md5_1 = __webpack_require__(7780);
 exports.Xc = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 exports.YH = "http://www.w3.org/2001/XMLSchema#";
 exports.kl = "http://www.w3.org/2000/01/rdf-schema#";
@@ -24387,13 +24958,13 @@ class ShapeMapJisonParser extends JisonParser {
         switch (yystate) {
 case 1:
 
-          return []
+          return yy.locate([])
         
 // removed by dead control flow
 
 case 2:
 
-          return [$$[$0-3]].concat($$[$0-2])
+          return yy.locate([$$[$0-3]].concat($$[$0-2]))
         
 // removed by dead control flow
 
@@ -24407,21 +24978,25 @@ case 5: case 62:
 this.$ = $$[$0-1].concat($$[$0]);
 break;
 case 8:
-this.$ = extend({ node: $$[$0-3] }, $$[$0-2], $$[$0-1], $$[$0]);
+
+        this.$ = extend({ node: $$[$0-3] }, $$[$0-2], $$[$0-1], $$[$0]);
+        yy.addLocation();
+      
 break;
 case 9: case 11: case 53: case 56: case 75:
 this.$ = {  };
 break;
 case 13:
-this.$ = extend({ shape: $$[$0] }, $$[$0-1]);
+ this.$ = extend({ shape: $$[$0] }, $$[$0-1]); yy.shapeLoc = this._$; 
 break;
 case 14:
-this.$ = { shape: ShapeMap.Start };
+ this.$ = { shape: ShapeMap.Start }; yy.shapeLoc = this._$; 
 break;
 case 15:
 
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
         this.$ = { shape: yy.schemaMeta.expandPrefix($$[$0].substr(0, $$[$0].length - 1), yy) };
+        yy.shapeLoc = this._$;
       
 break;
 case 16:
@@ -24429,6 +25004,7 @@ case 16:
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
         const namePos = $$[$0].indexOf(':');
         this.$ = { shape: yy.schemaMeta.expandPrefix($$[$0].substr(0, namePos), yy) + $$[$0].substr(namePos + 1) };
+        yy.shapeLoc = this._$;
       
 break;
 case 17:
@@ -24437,14 +25013,17 @@ break;
 case 18:
 this.$ = { status: $$[$0] };
 break;
+case 19: case 20:
+ this.$ = $$[$0]; yy.nodeLoc = this._$; 
+break;
 case 21:
-this.$ = { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-sparql", lexical: $$[$0]["@value"] };
+ this.$ = { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-sparql", lexical: $$[$0]["@value"] }; yy.nodeLoc = this._$; 
 break;
 case 22:
-this.$ = { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-" + $$[$0-1].toLowerCase(), lexical: $$[$0]["@value"] };
+ this.$ = { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-" + $$[$0-1].toLowerCase(), lexical: $$[$0]["@value"] }; yy.nodeLoc = this._$; 
 break;
 case 23:
-this.$ = { type: "Extension", language: $$[$0-1], lexical: $$[$0]["@value"] };
+ this.$ = { type: "Extension", language: $$[$0-1], lexical: $$[$0]["@value"] }; yy.nodeLoc = this._$; 
 break;
 case 25:
 this.$ = ShapeMap.Start;
@@ -24465,10 +25044,10 @@ case 37:
 this.$ = 'unknown';
 break;
 case 38:
-this.$ = { reason: $$[$0] };
+ this.$ = { reason: $$[$0] }; yy.reasonLoc = this._$; 
 break;
 case 39:
-this.$ = { appinfo: $$[$0] };
+ this.$ = { appinfo: $$[$0] }; yy.jsonLoc = this._$; 
 break;
 case 42:
 this.$ = false;
@@ -24893,14 +25472,34 @@ class ShapeMapParserState {
         this.schemaMeta = new ResourceMetadata();
         this.dataMeta = new ResourceMetadata();
         this._fileName = undefined; // for debugging
+        /** where each pair was written, in order (see PairLocation) */
+        this.locations = [];
+        // the parts of the pair being reduced, recorded as each reduces
+        this.nodeLoc = null;
+        this.shapeLoc = null;
+        this.reasonLoc = null;
+        this.jsonLoc = null;
     }
     reset() {
         this.schemaMeta.reset();
         this.dataMeta.reset();
+        this.locations = [];
+        this.nodeLoc = this.shapeLoc = this.reasonLoc = this.jsonLoc = null;
     }
     _setFileName(fn) { this._fileName = fn; }
+    /** a pair has reduced: keep where its parts were */
+    addLocation() {
+        this.locations.push({ node: this.nodeLoc, shape: this.shapeLoc,
+            reason: this.reasonLoc, appinfo: this.jsonLoc });
+        this.reasonLoc = this.jsonLoc = null;
+    }
+    /** the parsed pairs, carrying their locations without showing them */
+    locate(pairs) {
+        Object.defineProperty(pairs, "_locations", { value: this.locations, enumerable: false,
+            writable: true, configurable: true });
+        return pairs;
+    }
     error(e) {
-        debugger; // !!
         const hash = {
             text: this.lexer.match,
             // token: this.terminals_[symbol] || symbol,
@@ -24952,6 +25551,11 @@ const prepareParser = function (baseIRI, schemaMeta, dataMeta) {
             const pos = "lexer" in parser.yy ? parser.yy.lexer.showPosition() : "";
             const t = Error(`${baseIRI}(${lineNo}): ${e.message}\n${pos}`);
             Error.captureStackTrace(t, runParser);
+            // where it went wrong, for an editor to mark: the parser's own
+            // location of the offending token, else the lexer's
+            const loc = (e.hash && e.hash.loc) || ("lexer" in parser.yy && parser.yy.lexer.yylloc) || null;
+            if (loc)
+                t.location = loc;
             parserState.reset();
             throw t;
         }
@@ -25097,7 +25701,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CHANGE_DEBOUNCE_MS = exports.languages = exports.shexcStreamParser = void 0;
+exports.CHANGE_DEBOUNCE_MS = exports.languages = exports.shapeMapStreamParser = void 0;
 exports.lexicalize = lexicalize;
 exports.completionSource = completionSource;
 exports.makeResultPane = makeResultPane;
@@ -25111,7 +25715,8 @@ const language_1 = __webpack_require__(734);
 const lint_1 = __webpack_require__(6793);
 const autocomplete_1 = __webpack_require__(9912);
 const lang_json_1 = __webpack_require__(5533);
-const lezer_turtle_1 = __webpack_require__(1799);
+const lezer_turtle_1 = __webpack_require__(7559);
+const lezer_shexc_1 = __webpack_require__(3752);
 const EditorServices = __importStar(__webpack_require__(9017));
 /** lexicalize - shortest lexical form for an IRI under the given prefixes */
 function lexicalize(iri, prefixes) {
@@ -25144,14 +25749,45 @@ function completionSource(getSets) {
             options.push({ label: "@" + lex, type: "class", detail: "shape ref" });
         });
         (sets.predicates || []).forEach(iri => options.push({ label: lexicalize(iri, prefixes), type: "property" }));
+        (sets.nodes || []).forEach(term => options.push({ label: term.startsWith("_:") ? term : lexicalize(term, prefixes),
+            type: "variable", detail: "node" }));
         return options.length
             ? { from: word ? word.from : context.pos, options, validFor: /^@?[<A-Za-z_:][^\s]*$/ }
             : null;
     };
 }
-const shexcKeywords = /^(?:PREFIX|BASE|IMPORT|START|EXTERNAL|ABSTRACT|CLOSED|EXTRA|NOT|AND|OR|IF|MININCLUSIVE|MAXINCLUSIVE|MINEXCLUSIVE|MAXEXCLUSIVE|LENGTH|MINLENGTH|MAXLENGTH|TOTALDIGITS|FRACTIONDIGITS|IRI|BNODE|NONLITERAL|LITERAL)\b/i;
-exports.shexcStreamParser = {
-    name: "shexc",
+// ---------------------------------------------------------------------------
+// ShExC via lezer-shexc: the grammar the validator's parser has, in the
+// editor's parser model -- exact colours, incremental, and tolerant of the
+// half-typed (a schema with an error still parses around it).  The
+// semantic truth (diagnostics, shape/error ranges) still comes from the
+// real parser via editor-services.
+const shexcLanguage = language_1.LRLanguage.define({
+    parser: lezer_shexc_1.parser.configure({
+        props: [
+            language_1.foldNodeProp.add({
+                InlineShapeDefinition: language_1.foldInside,
+                ValueSet: language_1.foldInside,
+                BracketedTripleExpr: language_1.foldInside,
+            }),
+            language_1.indentNodeProp.add({
+                InlineShapeDefinition: (0, language_1.delimitedIndent)({ closing: "}" }),
+                ValueSet: (0, language_1.delimitedIndent)({ closing: "]" }),
+                BracketedTripleExpr: (0, language_1.delimitedIndent)({ closing: ")" }),
+            }),
+        ],
+    }),
+    languageData: { commentTokens: { line: "#", block: { open: "/*", close: "*/" } } },
+});
+/** Turtle via the incremental, error-recovering lezer-turtle grammar
+ * (RDF 1.2; the same parse tree that powers provenance tracking). */
+const turtleLanguage = language_1.LRLanguage.define({ parser: lezer_turtle_1.parser });
+/** Shape maps (the query map pane): nodes and shapes as ShExC and Turtle
+ * write terms, `@` with a status between each pair's two sides, `{FOCUS
+ * ...}` triple patterns, a reason and appinfo after.  Approximate, like the
+ * ShExC tokenizer; the parser's diagnostics are the truth. */
+exports.shapeMapStreamParser = {
+    name: "shapemap",
     startState: () => ({ inString: null }),
     token(stream, state) {
         if (state.inString) {
@@ -25170,7 +25806,7 @@ exports.shexcStreamParser = {
         if (stream.match(/^#.*/))
             return "comment";
         if (stream.match(/^<[^<>"{}|^`\\ ]*>/))
-            return "link"; // IRIs
+            return "link";
         if (stream.match(/^('''|""")/)) {
             state.inString = stream.current();
             return "string";
@@ -25179,41 +25815,36 @@ exports.shexcStreamParser = {
             stream.match(/^\^\^/) || stream.match(/^@[a-zA-Z-]+/);
             return "string";
         }
-        if (stream.match(/^@[A-Za-z_][A-Za-z0-9_.-]*:?[^\s;|)}?*+]*/))
-            return "typeName"; // @<shapeRef>, @pname
-        if (stream.match(/^@</)) {
-            stream.match(/^[^>]*>/);
+        // the shape side: @shape, @START, or a bare @ with a status to follow
+        if (stream.match(/^@(?:START\b|<[^>]*>|[A-Za-z_][A-Za-z0-9_.-]*:[A-Za-z0-9_.:%\\-]*)/i))
             return "typeName";
-        }
-        if (stream.match(shexcKeywords))
+        if (stream.match(/^@/))
+            return "operator";
+        if (stream.match(/^(?:START|FOCUS|SPARQL)\b/i))
             return "keyword";
-        if (stream.match(/^(?:true|false)\b/))
+        if (stream.match(/^\$\s*appinfo\s*:/i))
+            return "meta";
+        if (stream.match(/^_:[A-Za-z0-9_.-]+/))
+            return "variableName"; // blank node
+        if (stream.match(/^[A-Za-z_][A-Za-z0-9_.-]*:[A-Za-z0-9_.:%\\-]*/))
+            return "variableName"; // pname
+        if (stream.match(/^(?:true|false|null)\b/))
             return "atom";
         if (stream.match(/^[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/))
             return "number";
-        if (stream.match(/^\{\s*\d+\s*(?:,\s*(?:\d+|\*)?\s*)?\}/))
-            return "number"; // {m,n}
-        if (stream.match(/^%[^%]*/))
-            return "meta"; // semantic actions
-        if (stream.match(/^[A-Za-z_][A-Za-z0-9_.-]*:[A-Za-z0-9_.:%\\-]*/))
-            return "variableName"; // pname
-        if (stream.match(/^a\b/))
-            return "keyword";
-        if (stream.match(/^[*+?]/))
-            return "number"; // cardinalities
-        if (stream.match(/^[$&^]/))
-            return "operator";
+        if (stream.match(/^[!?]/))
+            return "operator"; // status
+        if (stream.match(/^[{}[\],/_]/))
+            return "punctuation";
         stream.next();
         return null;
     },
 };
-/** Turtle via the incremental, error-recovering lezer-turtle grammar
- * (RDF 1.2; the same parse tree that powers provenance tracking). */
-const turtleLanguage = language_1.LRLanguage.define({ parser: lezer_turtle_1.parser });
 exports.languages = {
-    shexc: () => language_1.StreamLanguage.define(exports.shexcStreamParser),
+    shexc: () => shexcLanguage,
     turtle: () => turtleLanguage,
     json: () => (0, lang_json_1.json)(),
+    shapemap: () => language_1.StreamLanguage.define(exports.shapeMapStreamParser),
 };
 /** paintedLike - dress a pane in an element's colours, so an editor looks
  * like the thing it stands in for (or, for a result pane, like the place it
@@ -25249,6 +25880,7 @@ function makeResultPane(text, language = "json", opts = {}) {
             exports.languages[language](),
             highlightField,
             annotationField,
+            tooltipField,
             paneTheme,
             ...dressing,
             view_1.EditorView.editable.of(false),
@@ -25332,6 +25964,7 @@ function attachHoverRegions(view) {
     const clearHover = () => {
         if (currentRegion) {
             currentRegion = null;
+            regionTooltip(view, null);
             if (hoverLeave)
                 hoverLeave();
         }
@@ -25345,6 +25978,7 @@ function attachHoverRegions(view) {
                 ? r : best, null);
         if (hit !== currentRegion) {
             currentRegion = hit;
+            regionTooltip(view, hit);
             if (hit)
                 hit.enter();
             else if (hoverLeave)
@@ -25446,7 +26080,53 @@ function annotateOn(view, marks) {
     }).range(m.from, m.to));
     view.dispatch({ effects: setAnnotationsEffect.of(view_1.Decoration.set(decos, true)) });
 }
+/** The tooltip a hover region asked for (HoverRegion.title): one at a time,
+ * shown while the mouse is in the region and withdrawn when it leaves.  An
+ * edit withdraws it too -- it was about text that has moved. */
+const setTooltipEffect = state_1.StateEffect.define();
+const tooltipField = state_1.StateField.define({
+    create: () => null,
+    update(tip, tr) {
+        if (tr.docChanged)
+            tip = null;
+        for (const e of tr.effects)
+            if (e.is(setTooltipEffect))
+                tip = e.value;
+        return tip;
+    },
+    provide: f => view_1.showTooltip.from(f),
+});
+/** show what a region has to say, or (null) take it back */
+function regionTooltip(view, region) {
+    if (view.state.field(tooltipField, false) === undefined)
+        return;
+    let text = null;
+    if (region && region.title) {
+        try {
+            text = typeof region.title === "function" ? region.title() : region.title;
+        }
+        catch (e) {
+            text = null; // a host's bug must not break hovering
+        }
+    }
+    if (!text && !view.state.field(tooltipField))
+        return;
+    view.dispatch({ effects: setTooltipEffect.of(!text ? null : {
+            pos: region.from,
+            end: region.to,
+            above: true,
+            create: () => {
+                const dom = document.createElement("div");
+                dom.className = "shexjs-tooltip";
+                dom.textContent = text;
+                return { dom };
+            },
+        }) });
+}
 const paneTheme = view_1.EditorView.baseTheme({
+    ".cm-tooltip.shexjs-tooltip": { whiteSpace: "pre-wrap", fontFamily: "monospace", fontSize: "12px",
+        padding: "2px 6px", maxWidth: "48em", backgroundColor: "#ffffe8",
+        border: "1px solid #bbb" },
     ".shexjs-annotation": { borderBottom: "2px solid #7a86c8" },
     ".shexjs-binding-consumed": { backgroundColor: "#e6f0d8", borderBottom: "2px solid #6a9a3a" },
     ".shexjs-binding-cursor": { borderBottom: "2px dashed #a8620a" },
@@ -25502,7 +26182,11 @@ const breakpointExtension = [
 function lintSourceFor(language, opts) {
     switch (language) {
         case "shexc":
-            return view => EditorServices.parseShExC(view.state.doc.toString(), { base: opts.getBase ? opts.getBase() : undefined }).diagnostics;
+            // the schema pane holds ShExC, or ShExJ, ShExR or a DCTAP table: each
+            // is linted in its own language (see lintSchema)
+            return view => EditorServices.lintSchema(view.state.doc.toString(), { base: opts.getBase ? opts.getBase() : undefined });
+        case "shapemap":
+            return view => EditorServices.parseShapeMap(view.state.doc.toString(), opts.shapeMap ? opts.shapeMap() : { base: opts.getBase ? opts.getBase() : undefined }).diagnostics;
         case "turtle":
             return view => EditorServices.parseTurtle(view.state.doc.toString(), { baseIRI: opts.getBase ? opts.getBase() : undefined }).diagnostics;
         case "json":
@@ -25615,6 +26299,7 @@ function makePane(textarea, opts = {}) {
         breakpointExtension,
         highlightField,
         annotationField,
+        tooltipField,
         paneTheme,
         view_1.EditorView.updateListener.of(update => {
             if (update.docChanged) {
@@ -25652,8 +26337,10 @@ function makePane(textarea, opts = {}) {
     const supplied = getSupplied(textarea.value);
     const language = opts.language
         || (supplied && exports.languages[supplied.language] ? supplied.language : undefined);
-    if (language === "shexc" || language === "turtle") {
-        const lang = language === "shexc" ? language_1.StreamLanguage.define(exports.shexcStreamParser) : turtleLanguage;
+    if (language === "shexc" || language === "turtle" || language === "shapemap") {
+        const lang = language === "shexc" ? shexcLanguage
+            : language === "shapemap" ? language_1.StreamLanguage.define(exports.shapeMapStreamParser)
+                : turtleLanguage;
         extensions.push(lang);
         const autocompletes = [];
         if (opts.completions) // basicSetup's autocompletion() reads languageData
@@ -25701,8 +26388,18 @@ function makePane(textarea, opts = {}) {
     // back to its rows attribute where there's no layout (e.g. jsdom)
     view.dom.style.width = textarea.offsetWidth ? textarea.offsetWidth + "px"
         : (textarea.style.width || "100%");
-    view.dom.style.height = textarea.offsetHeight ? textarea.offsetHeight + "px"
-        : `calc(${textarea.rows || 20} * 1.4em)`;
+    // ...and its height, unless the box it goes into says otherwise: a pane
+    // in a column that fills the page takes the column's height, where a
+    // pixel height measured from the textarea would hold it to the rows the
+    // textarea asked for (shex-app.css: #schemaDocument, .fillsColumn)
+    const box = textarea.parentNode;
+    const styles = box && box.ownerDocument && box.ownerDocument.defaultView;
+    const fills = !!(styles && styles.getComputedStyle
+        && styles.getComputedStyle(box).flexDirection === "column");
+    view.dom.style.height =
+        fills ? ""
+            : textarea.offsetHeight ? textarea.offsetHeight + "px"
+                : `calc(${textarea.rows || 20} * 1.4em)`;
     textarea.parentNode.insertBefore(view.dom, textarea);
     textarea.style.display = "none";
     // hover regions (validation match/failure cross-highlighting)
@@ -25748,6 +26445,9 @@ function makePane(textarea, opts = {}) {
         },
         toggleBreakpoint(pos) {
             toggleBreakpoint(view, view.state.doc.lineAt(pos).from);
+        },
+        toggleBreakpointAt(pos) {
+            toggleBreakpoint(view, Math.max(0, Math.min(pos, view.state.doc.length)));
         },
         destroy() {
             if (changeTimer !== null) {
@@ -25819,17 +26519,25 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.parseTurtle = exports.parseShExC = void 0;
+exports.parseTurtle = exports.parseShapeMap = exports.parseShExC = void 0;
 exports.lineOffsets = lineOffsets;
 exports.yyllocToRange = yyllocToRange;
+exports.rangeToYylloc = rangeToYylloc;
 exports.sourceExcerpt = sourceExcerpt;
 exports.commentRanges = commentRanges;
 exports.locateJsonText = locateJsonText;
 exports.locateInParsed = locateInParsed;
+exports.schemaLanguage = schemaLanguage;
+exports.lintSchema = lintSchema;
+exports.scanCsv = scanCsv;
+exports.synthesizeLocations = synthesizeLocations;
+exports.quadRanges = quadRanges;
+exports.nodeRange = nodeRange;
 exports.mapValidationErrors = mapValidationErrors;
 exports.mapMaterialization = mapMaterialization;
 exports.stringifyWithOffsets = stringifyWithOffsets;
 const ShExParser = __importStar(__webpack_require__(4822));
+const ShapeMap = __importStar(__webpack_require__(234));
 const emit_1 = __webpack_require__(2388);
 const RdfJs = __importStar(__webpack_require__(4957));
 const lang_json_1 = __webpack_require__(5533);
@@ -25854,6 +26562,24 @@ function yyllocToRange(loc, starts) {
         from: starts[loc.first_line - 1] + loc.first_column,
         to: starts[Math.min(loc.last_line, starts.length) - 1] + loc.last_column,
     };
+}
+/** rangeToYylloc - the inverse: {from, to} character offsets to a jison
+ * yylloc, for locations found some way other than by the ShExC parser. */
+function rangeToYylloc(range, starts) {
+    const lineOf = (offset) => {
+        let lo = 0, hi = starts.length - 1;
+        while (lo < hi) {
+            const mid = (lo + hi + 1) >> 1;
+            if (starts[mid] <= offset)
+                lo = mid;
+            else
+                hi = mid - 1;
+        }
+        return lo;
+    };
+    const first = lineOf(range.from), last = lineOf(range.to);
+    return { first_line: first + 1, first_column: range.from - starts[first],
+        last_line: last + 1, last_column: range.to - starts[last] };
 }
 /** sourceExcerpt - a gutter-numbered source line with a caret underline for
  * `range` (clipped to the range's first line), e.g. for CLI debuggers:
@@ -25896,9 +26622,11 @@ function memoLast(fn, keyOf, size = 4) {
 /** parseShExC - parse a ShExC document, returning the schema (when it
  * parses), diagnostics for parse errors, and range lookups for shapes,
  * expressions (e.g. TripleConstraints) and shape references.
- * Memoized on (text, base): repeated calls with unchanged text are free.
+ * Memoized on the text and every option -- the base, the prefixes and the
+ * schema options all change what the same text means -- so repeated calls
+ * with unchanged text are free.
  */
-exports.parseShExC = memoLast(parseShExCUncached, opts => (opts && opts.base) || "");
+exports.parseShExC = memoLast(parseShExCUncached, opts => JSON.stringify([opts && opts.base, opts && opts.prefixes, opts && opts.schemaOptions]));
 function parseShExCUncached(text, opts = {}) {
     const starts = lineOffsets(text);
     const parser = ShExParser.construct(opts.base || "urn:editor:schema", opts.prefixes || {}, Object.assign({ index: true }, opts.schemaOptions));
@@ -25981,6 +26709,63 @@ function commentRanges(text) {
     }
     return out;
 }
+const metaKey = (meta) => meta ? [meta.base, meta.prefixes] : null;
+/** parseShapeMap - parse a shape map (a query map, as the reader writes
+ * it), returning its pairs, diagnostics for a parse error, and where each
+ * pair, its node and its shape side were written.  Memoized like
+ * parseShExC. */
+exports.parseShapeMap = memoLast(parseShapeMapUncached, opts => JSON.stringify([opts && opts.base, metaKey(opts && opts.schemaMeta), metaKey(opts && opts.dataMeta)]));
+/** the line of a jison message that says what was expected, without the
+ * base and the caret picture around it */
+function shapeMapErrorMessage(e) {
+    const lines = String(e.message).split("\n");
+    return lines.find(l => /^(Expecting|Unexpected|Parse error; unknown prefix)/.test(l))
+        || lines[0].replace(/^.*?\(\d+\): /, "");
+}
+function parseShapeMapUncached(text, opts = {}) {
+    const starts = lineOffsets(text);
+    const parser = ShapeMap.Parser.construct(opts.base || null, opts.schemaMeta || {}, opts.dataMeta || {});
+    let pairs = null;
+    const diagnostics = [];
+    let locations = [];
+    try {
+        pairs = parser.parse(text);
+        locations = pairs._locations || [];
+    }
+    catch (e) {
+        const at = yyllocToRange(e.location, starts) || { from: text.length, to: text.length };
+        // a token, or at least a character, to hang the mark on
+        const from = Math.min(at.from, text.length);
+        const to = at.to > from ? at.to : Math.min(text.length, from + 1);
+        diagnostics.push({ from, to, severity: "error", message: shapeMapErrorMessage(e) });
+    }
+    const rangeOf = (loc) => loc ? yyllocToRange(loc, starts) : null;
+    const pair = (i) => {
+        const l = locations[i];
+        const node = l && rangeOf(l.node);
+        if (!node)
+            return null;
+        const ends = [l.shape, l.reason, l.appinfo].map(rangeOf)
+            .filter((r) => r !== null).map(r => r.to);
+        return { from: node.from, to: Math.max(node.to, ...ends) };
+    };
+    return {
+        text, pairs, diagnostics,
+        locate: {
+            pair,
+            node: (i) => locations[i] ? rangeOf(locations[i].node) : null,
+            shape: (i) => locations[i] ? rangeOf(locations[i].shape) : null,
+            pairAt: (offset) => {
+                for (let i = 0; i < locations.length; ++i) {
+                    const range = pair(i);
+                    if (range && range.from <= offset && offset < range.to)
+                        return { index: i, range };
+                }
+                return null;
+            },
+        },
+    };
+}
 /** the tokens Lezer's JSON grammar emits for punctuation, which are nodes
  * like any other and are not what a path step means */
 const JSON_PUNCTUATION = new Set(["[", "]", "{", "}", ",", ":"]);
@@ -25991,7 +26776,7 @@ const JSON_PUNCTUATION = new Set(["[", "]", "{", "}", ",", ":"]);
  * exactly the text the reader is looking at -- and stays right through
  * whatever they type, since it is re-read from the pane's own text.
  *
- * (neighborhood-wikidata has a hand-written locator of its own for entity
+ * (neighborhood-wikibase has a hand-written locator of its own for entity
  * pages.  It predates this and serves a package that must not depend on an
  * editor: a CLI reading Wikibase JSON should not be pulling in CodeMirror.)
  */
@@ -26059,7 +26844,11 @@ function locateJsonText(text) {
  * errors reference by identity -- @shexjs/loader's import-merging makes a
  * new top-level Schema but shares the inner objects).
  */
-function locateInParsed(text, schema) {
+function locateInParsed(text, schema, opts = {}) {
+    // a schema not written in ShExC (ShExJ, ShExR, a DCTAP table) has no
+    // parser locations; find them in what it was written in
+    if (schema && !schema._locations && !schema._exprLocations && text)
+        synthesizeLocations(text, schema, opts.base);
     const starts = lineOffsets(text);
     // Whitespace and comments are both trivia: an anchor that keeps a
     // constraint's delimiters and drops its nested constraints has no more
@@ -26181,6 +26970,17 @@ function locateInParsed(text, schema) {
                     ? yyllocToRange(schema._exprLocations.get(obj), starts) : null;
                 return range ? { parts: highlightParts(obj, range) } : null;
             },
+            exprsStartingIn: (from, to) => {
+                if (!schema || !schema._exprLocations)
+                    return [];
+                const found = [];
+                for (const [expr, loc] of schema._exprLocations) {
+                    const range = yyllocToRange(loc, starts);
+                    if (range && range.from >= from && range.from < to)
+                        found.push({ expr, range });
+                }
+                return found.sort((l, r) => l.range.from - r.range.from);
+            },
             exprAt: (offset) => {
                 if (!schema || !schema._exprLocations)
                     return null;
@@ -26282,8 +27082,8 @@ function nestedConstraintExtent(tc, locations, starts) {
     })(tc.valueExpr && typeof tc.valueExpr === "object" ? tc.valueExpr : null);
     return min === null ? null : { from: min, to: max };
 }
-/** Memoized on (text, baseIRI); see parseShExC. */
-exports.parseTurtle = memoLast(parseTurtleUncached, opts => (opts && opts.baseIRI) || "");
+/** Memoized on the text and every option; see parseShExC. */
+exports.parseTurtle = memoLast(parseTurtleUncached, opts => JSON.stringify([opts && opts.baseIRI, opts && opts.sourceURL]));
 function parseTurtleUncached(text, opts = {}) {
     const { quads, provenance, diagnostics: lezerDiagnostics, prefixes, base } = (0, emit_1.parseTurtle)(text, {
         factory: RdfJs.DataFactory,
@@ -26297,6 +27097,278 @@ function parseTurtleUncached(text, opts = {}) {
     }));
     return { text, dataset: new RdfJs.Store(quads), quads, provenance, diagnostics,
         prefixes: prefixes || {}, base: base || opts.baseIRI };
+}
+const SX = "http://www.w3.org/ns/shex#";
+const RDF_FIRST = "http://www.w3.org/1999/02/22-rdf-syntax-ns#first";
+const RDF_REST = "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest";
+const RDF_NIL = "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil";
+/**
+ * Which schema language a text is in, by the tests the app applies to its
+ * schema pane: JSON is ShExJ, a table headed `shapeID` (or opening with a
+ * DCTAP prefix table) is DCTAP, and anything else is ShExC -- unless it
+ * fails as ShExC and reads as Turtle about the ShEx vocabulary, which is
+ * ShExR.  A half-typed ShExR document is still ShExR: its own parser's
+ * word is the one to show, not ShExC's.
+ */
+function schemaLanguage(text, opts = {}) {
+    if (/^﻿?\s*\{/.test(text))
+        return "ShExJ";
+    if (/^﻿?\s*(shapeID\s*,|prefix\s*,\s*namespace)/i.test(text))
+        return "DCTAP";
+    if ((0, exports.parseShExC)(text, opts).diagnostics.length === 0)
+        return "ShExC";
+    const turtle = (0, exports.parseTurtle)(text, { baseIRI: opts.base });
+    return turtle.quads.some(q => q.predicate.value.startsWith(SX)) ? "ShExR" : "ShExC";
+}
+/** lintSchema - what the schema pane's linter shows: the diagnostics of
+ * whichever parser the text is for (see schemaLanguage). */
+function lintSchema(text, opts = {}) {
+    switch (schemaLanguage(text, opts)) {
+        case "ShExJ":
+            try {
+                JSON.parse(text);
+                return [];
+            }
+            catch (e) {
+                // V8 says where: "Unexpected token } in JSON at position 12"
+                const at = /position (\d+)/.exec(String(e.message));
+                const from = at ? Math.min(Number(at[1]), text.length) : 0;
+                return [{ from, to: Math.min(text.length, from + 1), severity: "error", message: firstLine(e.message) }];
+            }
+        case "DCTAP":
+            return [];
+        case "ShExR":
+            return (0, exports.parseTurtle)(text, { baseIRI: opts.base }).diagnostics;
+        default:
+            return (0, exports.parseShExC)(text, opts).diagnostics;
+    }
+}
+/** scanCsv - the rows of a CSV text with character offsets, RFC 4180
+ * quoting (a `""` inside quotes is a quote), CR/LF or LF line ends. */
+function scanCsv(text) {
+    const rows = [];
+    let i = 0;
+    const n = text.length;
+    while (i < n) {
+        const row = { from: i, to: i, cells: [] };
+        for (;;) {
+            const cellFrom = i;
+            let value = "";
+            if (text[i] === '"') {
+                ++i;
+                for (;;) {
+                    if (i >= n)
+                        break;
+                    if (text[i] === '"') {
+                        if (text[i + 1] === '"') {
+                            value += '"';
+                            i += 2;
+                            continue;
+                        }
+                        ++i;
+                        break;
+                    }
+                    value += text[i++];
+                }
+                while (i < n && text[i] !== "," && text[i] !== "\n" && text[i] !== "\r")
+                    value += text[i++]; // anything after the closing quote, kept as written
+            }
+            else {
+                while (i < n && text[i] !== "," && text[i] !== "\n" && text[i] !== "\r")
+                    value += text[i++];
+            }
+            row.cells.push({ from: cellFrom, to: i, text: value });
+            if (i < n && text[i] === ",") {
+                ++i;
+                continue;
+            }
+            break;
+        }
+        row.to = i;
+        if (i < n && text[i] === "\r")
+            ++i;
+        if (i < n && text[i] === "\n")
+            ++i;
+        rows.push(row);
+    }
+    return rows;
+}
+/**
+ * Locations for a schema that was not written in ShExC, found in the text
+ * it was written in: a ShExJ document by JSON path, a ShExR document by
+ * the triples that describe each shape and each constraint, a DCTAP table
+ * by its rows.  They are attached to the schema the way the ShExC parser
+ * attaches its own (`_locations`, `_exprLocations`), so every lookup over
+ * a located schema -- anchoring, hovers, breakpoints -- works unchanged.
+ * Returns whether anything was found.
+ */
+function synthesizeLocations(text, schema, base) {
+    const starts = lineOffsets(text);
+    const locations = {};
+    const exprLocations = new Map();
+    const found = (range) => range ? rangeToYylloc(range, starts) : null;
+    const shapes = schema.shapes || [];
+    /** the TripleConstraints under a shape expression, in declaration order */
+    const constraintsOf = (expr, out = []) => {
+        if (!expr || typeof expr !== "object")
+            return out;
+        if (expr.type === "TripleConstraint")
+            out.push(expr);
+        else if (expr.expressions)
+            expr.expressions.forEach((e) => constraintsOf(e, out));
+        else if (expr.expression)
+            constraintsOf(expr.expression, out);
+        else if (expr.shapeExpr)
+            constraintsOf(expr.shapeExpr, out);
+        else if (expr.shapeExprs)
+            expr.shapeExprs.forEach((e) => constraintsOf(e, out));
+        return out;
+    };
+    switch (schemaLanguage(text)) {
+        case "ShExJ": {
+            const json = locateJsonText(text);
+            const at = (path) => found(json.at(path));
+            const walk = (expr, path) => {
+                if (!expr || typeof expr !== "object")
+                    return;
+                if (expr.type === "TripleConstraint") {
+                    const loc = at(path);
+                    if (loc)
+                        exprLocations.set(expr, loc);
+                    if (expr.valueExpr && typeof expr.valueExpr === "object")
+                        walk(expr.valueExpr, path.concat("valueExpr"));
+                }
+                else if (expr.expressions)
+                    expr.expressions.forEach((e, i) => walk(e, path.concat("expressions", i)));
+                else if (expr.expression)
+                    walk(expr.expression, path.concat("expression"));
+                else if (expr.shapeExpr)
+                    walk(expr.shapeExpr, path.concat("shapeExpr"));
+                else if (expr.shapeExprs)
+                    expr.shapeExprs.forEach((e, i) => walk(e, path.concat("shapeExprs", i)));
+            };
+            shapes.forEach((decl, i) => {
+                const path = ["shapes", i];
+                const loc = at(path);
+                if (loc && typeof decl.id === "string")
+                    locations[decl.id] = loc;
+                // a 2.1 document writes the shape where 2.2 writes a ShapeDecl around
+                // it, and ShExJtoAS wraps it: the object has a shapeExpr the text lacks
+                walk(decl.shapeExpr, json.at(path.concat("shapeExpr")) ? path.concat("shapeExpr") : path);
+            });
+            break;
+        }
+        case "ShExR": {
+            // the base the schema's labels were resolved against, where the
+            // document does not declare its own
+            const parsed = (0, exports.parseTurtle)(text, { baseIRI: base });
+            const store = parsed.dataset;
+            const F = RdfJs.DataFactory;
+            /** a node's description: from where it is first written as a subject
+             * to the end of the last thing said about it */
+            const describedAt = (node) => {
+                let from = null, to = null;
+                for (const q of store.getQuads(node, null, null, null))
+                    for (const utt of parsed.provenance.get(q)) {
+                        const s = uttRange(utt.subject), o = uttRange(utt.object);
+                        if (s && (from === null || s.from < from))
+                            from = s.from;
+                        for (const r of [s, o])
+                            if (r && (to === null || r.to > to))
+                                to = r.to;
+                    }
+                return from === null || to === null ? null : found({ from, to });
+            };
+            const objectOf = (node, predicate) => node ? (store.getQuads(node, F.namedNode(predicate), null, null)[0] || {}).object || null : null;
+            const listOf = (head) => {
+                const items = [];
+                for (let at = head; at && at.value !== RDF_NIL && items.length < 10000; at = objectOf(at, RDF_REST))
+                    items.push(objectOf(at, RDF_FIRST));
+                return items;
+            };
+            const walkTripleExpr = (te, node) => {
+                if (!te || typeof te !== "object" || !node)
+                    return;
+                if (te.type === "TripleConstraint") {
+                    const loc = describedAt(node);
+                    if (loc)
+                        exprLocations.set(te, loc);
+                    if (te.valueExpr && typeof te.valueExpr === "object")
+                        walkShapeExpr(te.valueExpr, objectOf(node, SX + "valueExpr"));
+                }
+                else if (te.expressions) {
+                    const items = listOf(objectOf(node, SX + "expressions"));
+                    te.expressions.forEach((e, i) => walkTripleExpr(e, items[i]));
+                }
+            };
+            const walkShapeExpr = (se, node) => {
+                if (!se || typeof se !== "object" || !node)
+                    return;
+                if (se.type === "Shape")
+                    walkTripleExpr(se.expression, objectOf(node, SX + "expression"));
+                else if (se.shapeExprs) {
+                    const items = listOf(objectOf(node, SX + "shapeExprs"));
+                    se.shapeExprs.forEach((e, i) => walkShapeExpr(e, items[i]));
+                }
+                else if (se.shapeExpr)
+                    walkShapeExpr(se.shapeExpr, objectOf(node, SX + "shapeExpr"));
+            };
+            shapes.forEach((decl) => {
+                if (typeof decl.id !== "string" || decl.id.startsWith("_:"))
+                    return; // a blank node's label is nobody's to match
+                const node = F.namedNode(decl.id);
+                const loc = describedAt(node);
+                if (!loc)
+                    return;
+                locations[decl.id] = loc;
+                // a ShapeDecl describes its shape expression; an older document says
+                // the shape at the label itself
+                walkShapeExpr(decl.shapeExpr, objectOf(node, SX + "shapeExpr") || node);
+            });
+            break;
+        }
+        case "DCTAP": {
+            // as dctap reads it: a row naming a shapeID starts a shape, and every
+            // row that is neither a header, blank nor a prefix declaration is a
+            // constraint of the current shape
+            const regular = scanCsv(text).filter(row => {
+                const cells = row.cells.map(c => c.text.trim().toLowerCase());
+                if (cells.length <= 2)
+                    return false;
+                return !(cells[0] === "shapeid" && cells[1] === "shapelabel")
+                    && !(cells[0] === "prefix" && cells[1] === "namespace");
+            });
+            let shape = -1, constraints = [], next = 0;
+            const extents = [];
+            regular.forEach(row => {
+                if (row.cells[0].text.replace(/^﻿/, "").trim()) {
+                    ++shape;
+                    constraints = shape < shapes.length ? constraintsOf(shapes[shape].shapeExpr) : [];
+                    next = 0;
+                    extents[shape] = { from: row.from, to: row.to };
+                }
+                else if (extents[shape])
+                    extents[shape].to = row.to;
+                const tc = constraints[next++];
+                if (tc) {
+                    const loc = found({ from: row.from, to: row.to });
+                    if (loc)
+                        exprLocations.set(tc, loc);
+                }
+            });
+            extents.forEach((extent, i) => {
+                const loc = found(extent);
+                if (loc && shapes[i] && typeof shapes[i].id === "string")
+                    locations[shapes[i].id] = loc;
+            });
+            break;
+        }
+        default:
+            return false;
+    }
+    schema._locations = locations;
+    schema._exprLocations = exprLocations;
+    return Object.keys(locations).length > 0 || exprLocations.size > 0;
 }
 // ---------------------------------------------------------------------------
 // validation-error mapping
@@ -26419,6 +27491,24 @@ function rangeOfNode(parsed, node, bnodes) {
                 return uttRange(utt.subject);
         }
     return null;
+}
+/** quadRanges - where an RDF/JS quad is written in a document: its term
+ * ranges, or null where it isn't there.  A debugger's thread pointing at
+ * the triples it has matched. */
+function quadRanges(parsed, quad) {
+    const ld = (t) => t.termType === "Literal"
+        ? { value: t.value,
+            type: t.datatype && t.datatype.value !== XSD_STRING && t.datatype.value !== RDF_LANGSTRING
+                ? t.datatype.value : undefined,
+            language: t.language || undefined }
+        : t.termType === "BlankNode" ? "_:" + t.value : t.value;
+    return tripleAnchors(parsed, { subject: ld(quad.subject), predicate: quad.predicate.value, object: ld(quad.object) }, parsed.text, { toProv: new Map(), used: new Set() });
+}
+/** nodeRange - where a node is written in a document: the first statement
+ * it is the subject of.  What the query map pane points at in the data. */
+function nodeRange(parsed, node) {
+    const range = rangeOfNode(parsed, node, { toProv: new Map(), used: new Set() });
+    return trimRange(range, parsed.text, commentsOf(parsed));
 }
 // error types that anchor a diagnostic (as opposed to containers to recurse
 // through); each entry renders a message and picks its anchors
@@ -26912,7 +28002,6 @@ function alignBnodesBySubtree(generated, rendered) {
     }
     return pairing;
 }
-const TERM_MEMBERS = ["subject", "predicate", "object"];
 /** stringifyWithOffsets - JSON.stringify(value, null, indent)-identical
  * serialization that also records the {from, to} character range of every
  * object `isTarget` accepts (e.g. TestedTriples in validation results), so
@@ -26957,8 +28046,9 @@ function stringifyWithOffsets(value, isTarget, indent = 2) {
                     const kFrom = len + pad.length;
                     push(pad + JSON.stringify(k) + ": ");
                     ser(v[k], depth + 1);
-                    if (TERM_MEMBERS.indexOf(k) !== -1)
-                        fields[k] = { from: kFrom, to: len };
+                    // every member, key and value: a caller marking one of them is
+                    // pointing at `"value": 10` rather than at the 10
+                    fields[k] = { from: kFrom, to: len };
                     push(i < keys.length - 1 ? ",\n" : "\n");
                 });
                 push(padEnd + "}");
@@ -28147,6 +29237,14 @@ case 173:
 
         // t: open1dotOr1dot, !openopen1dotcloseCode1closeCode2
         this.$ = $$[$0-4];
+        // A cardinality on the group over a constraint that has one of its
+        // own -- `( :a . {2} ){1,3}` -- composes with it (2, 4 or 6 :a),
+        // so the group has to stay a group: a one-element EachOf, which
+        // is what the cardinality then goes on.  Copying it onto the
+        // constraint, as the attributes below are copied, would have
+        // overwritten the constraint's.
+        if (("min" in $$[$0-2] || "max" in $$[$0-2]) && this.$.type === "TripleConstraint" && ("min" in this.$ || "max" in this.$))
+          this.$ = { type: "EachOf", expressions: [this.$] };
         // Copy all of the new attributes into the encapsulated shape -- or,
         // if there is nothing to copy them onto, say so.  t: includeWithCardinality
         if (!(("min" in $$[$0-2] || "max" in $$[$0-2] || $$[$0-1].length || $$[$0])
@@ -28184,14 +29282,7 @@ case 176:
         ); // t: 1dot, 1inversedot
         if ($$[$0-1].length)
           this.$["annotations"] = $$[$0-1]; // t: 1dotAnnot3, 1inversedotAnnot3 : 1dot
-        // editors anchor validation errors here; an empty senseFlags
-        // production would pull the merged @\$ start back to the token
-        // before the constraint, so start from senseFlags/predicate instead
-        const tcStart = _$[_$.length - ($$[$0-5] !== undefined ? 6 : 5)];
-        yy.addExprLocation(this.$, {
-          first_line: tcStart.first_line, first_column: tcStart.first_column,
-          last_line: this._$.last_line, last_column: this._$.last_column
-        });
+        yy.addExprLocation(this.$, this._$); // editors anchor validation errors here
       
 break;
 case 179:
@@ -29396,6 +30487,21 @@ __webpack_unused_export__ = StoreDuplicates;
 
 /***/ },
 
+/***/ 6236
+(__unused_webpack_module, exports) {
+
+"use strict";
+var __webpack_unused_export__;
+
+__webpack_unused_export__ = ({ value: true });
+exports.ShExRSchema = void 0;
+// GENERATED from ../ShExR.shex by tools/gen-shexr-schema.js -- edit that, not this.
+/** ShExR.shex: the ShEx schema for ShEx schemas written as RDF (ShExR). */
+exports.ShExRSchema = "PREFIX sx: <http://www.w3.org/ns/shex#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nBASE <http://www.w3.org/ns/shex>\nstart=@<#Schema>\n\n<#Schema> CLOSED {\n  a [sx:Schema] ;\n  sx:imports @<#IriList1Plus> ? ;\n  sx:startActs @<#SemActList1Plus> ? ;\n  sx:start @<#shapeDeclOrExpr> ? ;\n  sx:shapes @<#ShapeDeclList1Plus> ?\n}\n\n<#shapeDeclOrExpr> @<#ShapeDecl> OR @<#shapeExpr>\n\n<#ShapeDecl> CLOSED {\n  a [sx:ShapeDecl] ;\n  sx:abstract [true false] ? ;\n  sx:shapeExpr @<#shapeExpr>\n}\n\n<#shapeExpr> @<#ShapeOr> OR @<#ShapeAnd> OR @<#ShapeNot> OR @<#NodeConstraint> OR @<#Shape> OR @<#ShapeExternal>\n\n<#ShapeOr> CLOSED {\n  a [sx:ShapeOr] ;\n  sx:shapeExprs @<#shapeDeclOrExprList2Plus>\n}\n\n<#ShapeAnd> CLOSED {\n  a [sx:ShapeAnd] ;\n  sx:shapeExprs @<#shapeDeclOrExprList2Plus>\n}\n\n<#ShapeNot> CLOSED {\n  a [sx:ShapeNot] ;\n  sx:shapeExpr @<#shapeDeclOrExpr>\n}\n\n<#NodeConstraint> CLOSED {\n  a [sx:NodeConstraint] ;\n  sx:nodeKind [sx:iri sx:bnode sx:literal sx:nonliteral] ? ;\n  sx:datatype IRI ? ;\n  &<#xsFacets> ;\n  sx:values @<#valueSetValueList1Plus> ? ;\n  sx:semActs @<#SemActList1Plus> ? ;\n  sx:annotation @<#AnnotationList1Plus> ?\n}\n\n<#Shape> CLOSED {\n  a [sx:Shape] ;\n  sx:extends @<#shapeDeclOrExprList1Plus>? ;\n  sx:closed [true false] ? ;\n  sx:extra IRI * ;\n  sx:expression @<#tripleExpression> ? ;\n  sx:semActs @<#SemActList1Plus> ? ;\n  sx:annotation @<#AnnotationList1Plus> ?\n}\n\n<#ShapeExternal> CLOSED {\n  a [sx:ShapeExternal]\n}\n\n<#SemAct> CLOSED {\n  a [sx:SemAct] ;\n  sx:name IRI ;\n  sx:code xsd:string ?\n}\n\n<#Annotation> CLOSED {\n  a [sx:Annotation] ;\n  sx:predicate IRI ;\n  sx:object @<#objectValue>\n}\n\n<#facet_holder> { # hold labeled productions\n  $<#xsFacets> ( &<#stringFacet> | &<#numericFacet> ) * ;\n  $<#stringFacet> (\n      sx:length xsd:integer\n    | sx:minlength xsd:integer\n    | sx:maxlength xsd:integer\n    | sx:pattern xsd:string ; sx:flags xsd:string ?\n  ) ;\n  $<#numericFacet> (\n      sx:mininclusive   @<#numericLiteral>\n    | sx:minexclusive   @<#numericLiteral>\n    | sx:maxinclusive   @<#numericLiteral>\n    | sx:maxexclusive   @<#numericLiteral>\n    | sx:totaldigits    xsd:integer\n    | sx:fractiondigits xsd:integer\n  )\n}\n<#numericLiteral> xsd:integer OR xsd:decimal OR xsd:double\n\n<#valueSetValue> @<#objectValue> OR @<#IriStem> OR @<#IriStemRange>\n                               OR @<#LiteralStem> OR @<#LiteralStemRange>\n                OR @<#Language> OR @<#LanguageStem> OR @<#LanguageStemRange>\n<#objectValue> IRI OR LITERAL # rdf:langString breaks on Annotation.object\n\n<#IriStem> CLOSED { a [sx:IriStem] ; sx:stem xsd:string }\n<#IriStemRange> CLOSED {\n  a [sx:IriStemRange] ;\n  sx:stem xsd:string OR @<#Wildcard> ;\n  sx:exclusion @<#IriStemExclusionList1Plus>\n}\n\n<#LiteralStem> CLOSED { a [sx:LiteralStem] ; sx:stem xsd:string }\n<#LiteralStemRange> CLOSED {\n  a [sx:LiteralStemRange] ;\n  sx:stem xsd:string OR @<#Wildcard> ;\n  sx:exclusion @<#LiteralStemExclusionList1Plus>\n}\n\n<#Language> CLOSED { a [sx:Language] ; sx:languageTag xsd:string }\n<#LanguageStem> CLOSED { a [sx:LanguageStem] ; sx:stem xsd:string }\n<#LanguageStemRange> CLOSED {\n  a [sx:LanguageStemRange] ;\n  sx:stem xsd:string OR @<#Wildcard> ;\n  sx:exclusion @<#LanguageStemExclusionList1Plus>\n}\n\n<#Wildcard> BNODE CLOSED {\n  a [sx:Wildcard]\n}\n\n<#tripleExpression>\n     @<#NotYetResolvedInclusion>\n  OR @<#TripleConstraint>\n  OR @<#OneOf>\n  OR @<#EachOf>\n\n<#NotYetResolvedInclusion> CLOSED {} # will have 1 incoming, 0 outgoing arcs\n\n<#OneOf> CLOSED {\n  a [sx:OneOf] ;\n  sx:min xsd:integer ? ;\n  sx:max xsd:integer ? ;\n  sx:expressions @<#tripleExpressionList2Plus> ;\n  sx:semActs @<#SemActList1Plus> ? ;\n  sx:annotation @<#AnnotationList1Plus> ?\n}\n\n<#EachOf> CLOSED {\n  a [sx:EachOf] ;\n  sx:min xsd:integer ? ;\n  sx:max xsd:integer ? ;\n  sx:expressions @<#tripleExpressionList2Plus> ;\n  sx:semActs @<#SemActList1Plus> ? ;\n  sx:annotation @<#AnnotationList1Plus> ?\n}\n\n<#TripleConstraint> CLOSED {\n  a [sx:TripleConstraint] ;\n  sx:inverse [true false] ? ;\n  sx:negated [true false] ? ;\n  sx:min xsd:integer ? ;\n  sx:max xsd:integer ? ;\n  sx:predicate IRI ;\n  sx:valueExpr @<#shapeDeclOrExpr> ? ;\n  sx:semActs @<#SemActList1Plus> ? ;\n  sx:annotation @<#AnnotationList1Plus> ?\n}\n\n# RDF Lists\n\n<#tripleExpressionList2Plus> CLOSED {\n  rdf:first @<#tripleExpression> ;\n  rdf:rest @<#tripleExpressionList1Plus>\n}\n<#tripleExpressionList1Plus> CLOSED {\n  rdf:first @<#tripleExpression> ;\n  rdf:rest  [rdf:nil] OR @<#tripleExpressionList1Plus>\n}\n\n<#IriList1Plus> CLOSED {\n  rdf:first IRI ;\n  rdf:rest  [rdf:nil] OR @<#IriList1Plus>\n}\n\n<#SemActList1Plus> CLOSED {\n  rdf:first @<#SemAct> ;\n  rdf:rest  [rdf:nil] OR @<#SemActList1Plus>\n}\n\n<#ShapeDeclList1Plus> CLOSED {\n  rdf:first @<#ShapeDecl> ;\n  rdf:rest  [rdf:nil] OR @<#ShapeDeclList1Plus>\n}\n\n<#shapeDeclOrExprList2Plus> CLOSED {\n  rdf:first @<#shapeDeclOrExpr> ;\n  rdf:rest  @<#shapeDeclOrExprList1Plus>\n}\n<#shapeDeclOrExprList1Plus> CLOSED {\n  rdf:first @<#shapeDeclOrExpr> ;\n  rdf:rest  [rdf:nil] OR @<#shapeDeclOrExprList1Plus>\n}\n\n<#valueSetValueList1Plus> CLOSED {\n  rdf:first @<#valueSetValue> ;\n  rdf:rest  [rdf:nil] OR @<#valueSetValueList1Plus>\n}\n\n<#AnnotationList1Plus> CLOSED {\n  rdf:first @<#Annotation> ;\n  rdf:rest  [rdf:nil] OR @<#AnnotationList1Plus>\n}\n\n<#IriStemExclusionList1Plus> CLOSED {\n  rdf:first IRI OR @<#IriStem> ;\n  rdf:rest  [rdf:nil] OR @<#IriStemExclusionList1Plus>\n}\n\n<#LiteralStemExclusionList1Plus> CLOSED {\n  rdf:first xsd:string OR @<#LiteralStem> ;\n  rdf:rest  [rdf:nil] OR @<#LiteralStemExclusionList1Plus>\n}\n\n<#LanguageStemExclusionList1Plus> CLOSED {\n  rdf:first xsd:string OR @<#LanguageStem> ;\n  rdf:rest  [rdf:nil] OR @<#LanguageStemExclusionList1Plus>\n}\n";
+//# sourceMappingURL=ShExRSchema.js.map
+
+/***/ },
+
 /***/ 546
 (__unused_webpack_module, exports, __webpack_require__) {
 
@@ -29745,8 +30851,11 @@ class ShExHumanErrorWriter {
                 // What would make the node conform leads, where the validator worked
                 // it out: it is the part of a report a reader can act on.  The errors
                 // are the detail under it -- why it doesn't, arc by arc.
-                const ways = (0, error_messages_1.repairText)(val.repairs, said);
-                const detail = this.joined(errorList(val.errors), "AND", said).map(s => "  " + s);
+                // ...or one or the other, as the reader asked (ctx.explain)
+                const explain = said.explain || "both";
+                const ways = explain === "errors" ? [] : (0, error_messages_1.repairText)(val.repairs, said);
+                const detail = explain === "repairs" && ways.length > 0 ? []
+                    : this.joined(errorList(val.errors), "AND", said).map(s => "  " + s);
                 return ["validating " + (0, error_messages_1.dataTerm)(val.node, said, "node")
                         + " as " + (0, error_messages_1.schemaIri)(val.shape, said, "shape") + ":"]
                     .concat(ways.length === 0 ? [] : ["  to conform: " + ways.join(", or ")])
@@ -30159,7 +31268,11 @@ class SchemaStructureValidator extends visitor_1.ShExVisitor {
             throw visitor.firstError(Error("Structural error: circular negative dependencies on " + negCirc.join(',') + "."), negCirc[0]);
     }
 }
+const ShExRSchema_1 = __webpack_require__(6236);
 const ShExUtil = {
+    /** ShExR.shex, the schema for ShEx schemas written as RDF: what a
+     * ShExR document is validated against before it is read */
+    ShExRSchema: ShExRSchema_1.ShExRSchema,
     SX: SX,
     RDF: RDF,
     version: function () {
@@ -31616,6 +32729,8 @@ const ShExUtil = {
             ctx.lex = opts.lex;
         if (opts.base !== undefined)
             ctx.base = opts.base;
+        if (opts.explain)
+            ctx.explain = opts.explain;
         return new ShExHumanErrorWriter().write(val, prefixes || {}, ctx);
     },
     // static
@@ -31678,7 +32793,11 @@ const ShExUtil = {
     /** is there a browser here, with a User-Agent of its own? */
     inBrowser: function () {
         const global = globalThis;
-        return typeof global.window !== "undefined" && typeof global.window.document !== "undefined";
+        // ...or a worker, which is a browser context with no `window`: it has a
+        // User-Agent of its own and the same refusal to let anyone set it, so a
+        // request made from one must not ask.
+        return (typeof global.window !== "undefined" && typeof global.window.document !== "undefined")
+            || typeof global.WorkerGlobalScope !== "undefined";
     },
     /** the given headers, plus who we are where that can be said */
     requestHeaders: function (headers) {
@@ -31706,12 +32825,19 @@ const ShExUtil = {
      * HTML, and parsing that as JSON used to be the whole of the report: a bare
      * "Unexpected end of JSON input", naming neither the service, nor what it
      * said, nor which of a walk's hundred queries it was. */
-    sparqlHttpError: function (endpoint, status, statusText, body, query) {
+    sparqlHttpError: function (endpoint, status, statusText, body, query, retryAfter) {
         const said = body.trim().slice(0, 200);
-        return Error(`SPARQL endpoint <${endpoint}> returned ${status}`
+        const e = Error(`SPARQL endpoint <${endpoint}> returned ${status}`
             + (statusText ? " " + statusText : "")
             + (said ? ":\n" + said : "")
             + `\n\nquery was:\n${query}`);
+        // what refused, and for how long: 429 is a service saying "not that
+        // fast", which is a thing to answer rather than only to report
+        // (@shexjs/neighborhood-sparql's RateLimiter)
+        e.status = status;
+        if (retryAfter)
+            e.retryAfter = retryAfter;
+        return e;
     },
     executeQueryPromise: function (query, endpoint, dataFactory) {
         if (!endpoint)
@@ -31733,7 +32859,7 @@ const ShExUtil = {
             });
         return request.then((resp) => __awaiter(this, void 0, void 0, function* () {
             if (!resp.ok)
-                throw this.sparqlHttpError(endpoint, resp.status, resp.statusText, yield resp.text().catch(() => ""), query);
+                throw this.sparqlHttpError(endpoint, resp.status, resp.statusText, yield resp.text().catch(() => ""), query, resp.headers && resp.headers.get("retry-after"));
             return resp.json();
         })).then(jsonObject => {
             return this.parseSparqlJsonResults(jsonObject, dataFactory);
@@ -31766,7 +32892,7 @@ const ShExUtil = {
         // const selectsBlock = query.match(/SELECT\s*(.*?)\s*{/)[1];
         // const selects = selectsBlock.match(/\?[^\s?]+/g);
         if (xhr.status < 200 || xhr.status >= 300)
-            throw this.sparqlHttpError(endpoint, xhr.status, xhr.statusText, xhr.responseText || "", query);
+            throw this.sparqlHttpError(endpoint, xhr.status, xhr.statusText, xhr.responseText || "", query, xhr.getResponseHeader && xhr.getResponseHeader("Retry-After"));
         const jsonObject = JSON.parse(xhr.responseText);
         return this.parseSparqlJsonResults(jsonObject, dataFactory);
     },
@@ -32705,6 +33831,27 @@ function collectSemActNames(v, into) {
         if (key !== "_index" && key !== "_prefixes")
             collectSemActNames(o[key], into);
 }
+/**
+ * A semantic action's cut, if that is what was thrown.
+ *
+ * The protocol is the failure a handler would have returned, thrown
+ * instead and marked `cut`: returned, it fails the shape the action was on
+ * and the search goes on to the alternatives; thrown, it fails the whole
+ * node/shape pair.  Anything else thrown by an action is a bug in the
+ * action and goes where exceptions go.
+ */
+function semActCut(e) {
+    const said = e;
+    if (said === null || typeof said !== "object"
+        || said.type !== "SemActFailure" || said.cut !== true)
+        return null;
+    return {
+        type: "SemActFailure",
+        cut: true,
+        errors: Array.isArray(said.errors) ? said.errors
+            : [String(said.message === undefined ? said : said.message)]
+    };
+}
 /** is this a validation that may stop, rather than a finished answer? */
 function isResumable(x) {
     return x !== null && typeof x === "object"
@@ -32716,10 +33863,20 @@ function driveSync(task, db) {
     let step = task.next(undefined);
     while (!step.done) {
         const request = step.value;
-        step = task.next(isFork(request)
-            // nothing to overlap when the data is already here: run them in order
-            ? request.fork.map(sub => driveSync(sub, db))
-            : db.getNeighborhood(request.point, request.shapeLabel, request.shape));
+        try {
+            step = task.next(isFork(request)
+                // nothing to overlap when the data is already here: run them in order
+                ? request.fork.map(sub => driveSync(sub, db))
+                : db.getNeighborhood(request.point, request.shapeLabel, request.shape));
+        }
+        catch (e) {
+            // ...to the code that asked for it, rather than past it: what went
+            // wrong servicing a request went wrong *in* the search, and a
+            // traversal that wants to answer for it (or clean up after it) is
+            // suspended at the yield.  Nothing catching means the same throw,
+            // from the same place, having run the finallys on the way out.
+            step = task.throw(e);
+        }
     }
     return step.value;
 }
@@ -32843,15 +34000,21 @@ class ShExValidator {
                 while (!step.done) {
                     const request = step.value;
                     let answer;
-                    if (isFork(request)) {
-                        ++stats.forks;
-                        stats.branches += request.fork.length;
-                        // every branch starts before any of them waits, so their fetches
-                        // overlap and duplicates meet each other in `inFlight`
-                        answer = yield Promise.all(request.fork.map(sub => run(sub)));
+                    try {
+                        if (isFork(request)) {
+                            ++stats.forks;
+                            stats.branches += request.fork.length;
+                            // every branch starts before any of them waits, so their fetches
+                            // overlap and duplicates meet each other in `inFlight`
+                            answer = yield Promise.all(request.fork.map(sub => run(sub)));
+                        }
+                        else {
+                            answer = yield demand(request);
+                        }
                     }
-                    else {
-                        answer = yield demand(request);
+                    catch (e) {
+                        step = task.throw(e); // see driveSync: into the search
+                        continue;
                     }
                     step = task.next(answer);
                 }
@@ -32885,7 +34048,27 @@ class ShExValidator {
                     errors: semActErrors
                 }; // some semAct aborted !! return a better error
         }
-        const ret = yield* this.validateShapeLabel(focus, ctx);
+        let ret;
+        try {
+            ret = yield* this.validateShapeLabel(focus, ctx);
+        }
+        catch (e) {
+            // A semantic action that cut: it didn't merely refuse the shape it
+            // was on, it said no other reading of this node will do -- so the
+            // search for one stops here rather than going on to the alternatives
+            // that would otherwise be tried, and this pair is nonconformant for
+            // the reason the action gave.  Other pairs of the shape map are none
+            // of its business and go on being validated.
+            const cut = semActCut(e);
+            if (cut === null)
+                throw e;
+            return {
+                type: "Failure",
+                node: (0, term_1.rdfJsTerm2Ld)(focus),
+                shape: ctx.label,
+                errors: [cut]
+            };
+        }
         if ("startActs" in this.schema) {
             ret.startActs = this.schema.startActs;
         }
@@ -33180,10 +34363,16 @@ class ShExValidator {
         // that would take it; which of two indistinguishable constraints gets it
         // doesn't matter, since the repair search deals them out again.
         const observedBag = new Map();
-        t2tcs.reduce((_ret, _triple, tcs) => {
+        // ...and the arcs no constraint could take at all -- not one with a
+        // bad value, which is a value failure and reported as such -- counted
+        // here too, before the search prunes: a closed shape refuses them
+        const homeless = [];
+        t2tcs.reduce((_ret, triple, tcs) => {
             const local = tcs.filter(tc => extendsTCs.indexOf(tc) === -1);
             if (local.length > 0)
                 observedBag.set(local[0], (observedBag.get(local[0]) || 0) + 1);
+            if (tcs.length === 0 && !t2tcErrors.has(triple))
+                homeless.push(triple);
             return null;
         }, null);
         const { missErrors, matchedExtras } = this.whatsMissing(t2tcs, t2tcErrors, shape.extra || []);
@@ -33265,13 +34454,42 @@ class ShExValidator {
         // eager one, and a bag with nothing to repair yields undefined, which
         // JSON.stringify omits.  The first read replaces the accessor with the
         // value, so nothing recomputes.
+        // ...and the arcs a closed shape refused.  A triple whose predicate is
+        // nowhere in the shape is in no bag, so the search above never sees
+        // it: "remove it" is its repair, part of every way the bag has -- or
+        // the whole repair, where the bag was fine or there is no expression.
+        // Which arcs those are: the ones no constraint could take (known
+        // before any partition is tried, and a search every partition of which
+        // was refuted never reports them), and the ones the reported partition
+        // left unassigned (its ClosedShapeViolation) -- each counted once.
+        const refused = {};
+        const refusedTriples = new Set();
+        const refuse = (s, p, o) => {
+            const seenAs = JSON.stringify([s, p, o]);
+            if (refusedTriples.has(seenAs))
+                return;
+            refusedTriples.add(seenAs);
+            const property = typeof p === "string" ? p : p.value;
+            refused[property] = (refused[property] || 0) + 1;
+        };
+        if ((shape.closed || ctx.partitionClosed) && !this.options.ignoreClosed)
+            homeless.filter(triple => matchedExtras.indexOf(triple) === -1).forEach(triple => refuse((0, term_1.rdfJsTerm2Ld)(triple.subject), (0, term_1.rdfJsTerm2Ld)(triple.predicate), (0, term_1.rdfJsTerm2Ld)(triple.object)));
+        errors.forEach((e) => {
+            if (e.type === "ClosedShapeViolation")
+                (e.unexpectedTriples || []).forEach((tr) => refuse(tr.subject, tr.predicate, tr.object));
+        });
+        const removals = Object.entries(refused).map(([property, n]) => ({ property, delta: -n }));
+        const removed = removals.reduce((n, arc) => n - arc.delta, 0);
         if (this.options.repairs !== false && ret !== null && ret.type === "Failure"
-            && shape.expression !== undefined) {
+            && (shape.expression !== undefined || removals.length > 0)) {
             const expression = shape.expression, bag = observedBag, validator = this;
             Object.defineProperty(ret, "repairs", {
                 enumerable: true, configurable: true,
                 get() {
-                    const repairs = validator.nearestBagRepairs(expression, bag);
+                    const ofBag = expression !== undefined ? validator.nearestBagRepairs(expression, bag) : [];
+                    const repairs = removals.length === 0 ? ofBag
+                        : ofBag.length === 0 ? [{ type: "NearestBag", cost: removed, arcs: removals }]
+                            : ofBag.map(r => ({ type: r.type, cost: r.cost + removed, arcs: r.arcs.concat(removals) }));
                     // nothing to say beats an empty list to read
                     const value = repairs.length > 0 ? repairs : undefined;
                     Object.defineProperty(this, "repairs", { value, enumerable: true, configurable: true, writable: true });
@@ -35559,7 +36777,7 @@ ShExWebApp = (function () {
     "@shexjs/neighborhood-api":    __webpack_require__(7682),
     "@shexjs/neighborhood-rdfjs":  __webpack_require__(2932),
     "@shexjs/neighborhood-sparql": __webpack_require__(1238),
-    "@shexjs/neighborhood-wikidata": __webpack_require__(2906),
+    "@shexjs/neighborhood-wikibase": __webpack_require__(3314),
     "@shexjs/validator":           __webpack_require__(8006),
     "@shexjs/writer":              __webpack_require__(6526),
     "@shexjs/loader":              __webpack_require__(2482),
@@ -35590,7 +36808,7 @@ ShExWebApp = (function () {
     NeighborhoodModules: [
       modules["@shexjs/neighborhood-rdfjs"],
       modules["@shexjs/neighborhood-sparql"],
-      modules["@shexjs/neighborhood-wikidata"],
+      modules["@shexjs/neighborhood-wikibase"],
     ],
     Validator:            modules["@shexjs/validator"].ShExValidator,
     Writer:               modules["@shexjs/writer"],
@@ -35600,6 +36818,7 @@ ShExWebApp = (function () {
     "eval-threaded-nerr": modules["@shexjs/eval-threaded-nerr"].RegexpModule,
     MatchDebugger:        modules["@shexjs/eval-simple-1err"].MatchDebugger,
     capturingRegexModule: modules["@shexjs/eval-validator-api"].capturingRegexModule,
+    replayingSemActHandler: modules["@shexjs/eval-validator-api"].replayingSemActHandler,
     ShapeMap:             modules["shape-map"],
     ShapeMapParser:       modules["shape-map"].Parser,
     JsYaml:               modules["js-yaml"],
@@ -35615,21 +36834,21 @@ if (true)
 
 /***/ },
 
-/***/ 6478
+/***/ 7955
 () {
 
 /* (ignored) */
 
 /***/ },
 
-/***/ 8726
+/***/ 2159
 () {
 
 /* (ignored) */
 
 /***/ },
 
-/***/ 2286
+/***/ 4797
 () {
 
 /* (ignored) */
@@ -68554,510 +69773,16 @@ function enterFragments(mounts, ranges) {
 
 /***/ },
 
-/***/ 2388
+/***/ 9913
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseTurtle: () => (/* binding */ parseTurtle)
+/* harmony export */   pn: () => (/* binding */ styleTags)
 /* harmony export */ });
-/* unused harmony exports termKey, quadKey, ProvenanceIndex, resolveIri */
-/* harmony import */ var _parser_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3881);
-/**
- * RDF/JS quad emitter for the lezer-turtle parse tree, with source
- * provenance tracked on the side.
- *
- * parseTurtle(text, {baseIRI, factory, dialect, blankNodePrefix}) returns
- *   {quads, provenance, diagnostics, prefixes, base, tree}
- * where provenance is a ProvenanceIndex: a multiset of quad *utterances*
- * layered over the set of quads.  Quads stay plain RDF/JS objects (equality
- * via .equals()); each utterance records the source ranges of the syntax
- * that gave rise to each position:
- *
- *   {quad, subject: Range[], predicate: Range[], object: Range[], graph: Range[]}
- *
- * Ranges are {start, end} character offsets (UTF-16, as Lezer counts).
- * Ranges come in arrays because a position's provenance can be split or
- * synthetic: a blank node property list's subject is its whole  [ … ]
- * bracket span, collection cell quads (rdf:first/rest) carry item and
- * collection spans, and annotation-derived reification quads point at the
- * ~reifier / {| … |} syntax.
- *
- * The index is keyed canonically (an N-Quads-shaped string), NOT by object
- * identity — RDF/JS makes no same-object guarantee, and stores like
- * N3.Store reconstruct quads on read — so looking up a quad you got back
- * from a store works.
- */
-
-
-
-const RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-const XSD = "http://www.w3.org/2001/XMLSchema#";
-
-// ── canonical keys ─────────────────────────────────────────────────────────
-function termKey (term) {
-  switch (term.termType) {
-  case "NamedNode": return `<${term.value}>`;
-  case "BlankNode": return `_:${term.value}`;
-  case "Literal": {
-    const val = `"${term.value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\r/g, "\\r")}"`;
-    if (term.language)
-      return val + "@" + term.language + (term.direction ? "--" + term.direction : "");
-    if (term.datatype && term.datatype.value !== XSD + "string")
-      return val + "^^<" + term.datatype.value + ">";
-    return val;
-  }
-  case "DefaultGraph": return "";
-  case "Variable": return "?" + term.value;
-  case "Quad": return `<<(${termKey(term.subject)} ${termKey(term.predicate)} ${termKey(term.object)})>>`;
-  default: throw Error("termKey: unknown termType " + term.termType);
-  }
-}
-
-function quadKey (quad) {
-  return `${termKey(quad.subject)} ${termKey(quad.predicate)} ${termKey(quad.object)} ${termKey(quad.graph)}`;
-}
-
-class ProvenanceIndex {
-  constructor () { this._map = new Map(); }
-
-  _add (quad, utterance) {
-    const key = quadKey(quad);
-    if (!this._map.has(key))
-      this._map.set(key, []);
-    this._map.get(key).push(utterance);
-  }
-
-  /** utterances of a quad (empty array if never uttered) */
-  get (quad) { return this._map.get(quadKey(quad)) || []; }
-
-  /** number of distinct quads uttered */
-  get size () { return this._map.size; }
-
-  [Symbol.iterator] () { return this._map.values(); }
-}
-
-// ── IRI resolution (RFC 3986, without WHATWG normalization) ───────────────
-function resolveIri (iri, base) {
-  if (/^[A-Za-z][A-Za-z0-9+.-]*:/.test(iri) || !base)
-    return iri;
-  const b = splitIri(base);
-  if (iri === "") return base;
-  if (iri.startsWith("#")) return b.scheme + b.authority + b.path + iri;
-  if (iri.startsWith("?")) return b.scheme + b.authority + b.path.replace(/\?.*/, "") + iri;
-  if (iri.startsWith("//")) return b.scheme + iri;
-  if (iri.startsWith("/")) return b.scheme + b.authority + removeDotSegments(iri);
-  const dir = b.path.replace(/\?.*/, "").replace(/[^/]*$/, "");
-  return b.scheme + b.authority + removeDotSegments(dir + iri);
-}
-function splitIri (iri) {
-  const m = iri.match(/^([A-Za-z][A-Za-z0-9+.-]*:)(\/\/[^/?#]*)?([^#]*)/);
-  return {scheme: m[1], authority: m[2] || "", path: m[3] || ""};
-}
-function removeDotSegments (path) {
-  const out = [];
-  for (const seg of path.split("/")) {
-    if (seg === ".") continue;
-    else if (seg === "..") { if (out.length > 1) out.pop(); }
-    else out.push(seg);
-  }
-  let ret = out.join("/");
-  if ((path.endsWith("/.") || path.endsWith("/..")) && !ret.endsWith("/")) ret += "/";
-  return ret;
-}
-
-// ── string unescaping ─────────────────────────────────────────────────────
-const echars = {t: "\t", b: "\b", n: "\n", r: "\r", f: "\f", '"': '"', "'": "'", "\\": "\\"};
-function unescapeString (s) {
-  return s.replace(/\\(?:u([0-9a-fA-F]{4})|U([0-9a-fA-F]{8})|(.))/g,
-                   (_, u4, u8, e) => u4 || u8
-                     ? String.fromCodePoint(parseInt(u4 || u8, 16))
-                     : echars[e] !== undefined ? echars[e] : e);
-}
-function unescapeIri (s) {
-  return s.replace(/\\(?:u([0-9a-fA-F]{4})|U([0-9a-fA-F]{8}))/g,
-                   (_, u4, u8) => String.fromCodePoint(parseInt(u4 || u8, 16)));
-}
-function unescapePnLocal (s) {
-  return s.replace(/\\([_~.\-!$&'()*+,;=/?#@%])/g, "$1");
-}
-
-// ── the emitter ────────────────────────────────────────────────────────────
-function parseTurtle (text, options = {}) {
-  if (!options.factory)
-    throw Error("parseTurtle: supply options.factory (an RDF/JS DataFactory, e.g. N3.DataFactory)");
-  const factory = options.factory;
-  const state = {
-    text,
-    factory,
-    base: options.baseIRI || null,
-    prefixes: Object.create(null),
-    bnodeN: 0,
-    bnodePrefix: options.blankNodePrefix !== undefined ? options.blankNodePrefix : "df_",
-    quads: [],
-    prov: new ProvenanceIndex(),
-    diagnostics: [],
-    graph: factory.defaultGraph(),
-    graphRanges: [],
-  };
-  const tree = _parser_js__WEBPACK_IMPORTED_MODULE_0__/* .parser */ .K.configure(options.dialect ? {dialect: options.dialect} : {}).parse(text);
-
-  // one tree-wide scan catches every error-recovery point, however nested
-  tree.iterate({enter: n => {
-    if (n.type.isError)
-      state.diagnostics.push({start: n.from, end: n.to, message: "syntax error"});
-  }});
-
-  for (let child = tree.topNode.firstChild; child; child = child.nextSibling) {
-    switch (child.name) {
-    case "Directive": directive(child.firstChild, state); break;
-    case "Triples": triples(child, state); break;
-    case "Block": block(child, state); break;
-    default:
-      if (child.type.isError) diagnose(state, child, "syntax error");
-    }
-  }
-
-  return {
-    quads: state.quads,
-    provenance: state.prov,
-    diagnostics: state.diagnostics,
-    prefixes: state.prefixes,
-    base: state.base,
-    tree,
-  };
-}
-
-function src (state, node) { return state.text.slice(node.from, node.to); }
-function range (node) { return {start: node.from, end: node.to}; }
-function freshBnode (state) { return state.factory.blankNode(state.bnodePrefix + state.bnodeN++); }
-
-function diagnose (state, node, message) {
-  state.diagnostics.push({start: node.from, end: node.to, message});
-}
-
-function directive (node, state) {
-  if (!node) return;
-  const iriNode = node.getChild("IRIREF");
-  switch (node.name) {
-  case "PrefixID": case "SparqlPrefix": {
-    const ns = node.getChild("PNAME_NS");
-    if (ns && iriNode)
-      state.prefixes[src(state, ns).slice(0, -1)] =
-        resolveIri(unescapeIri(src(state, iriNode).slice(1, -1)), state.base);
-    break;
-  }
-  case "Base": case "SparqlBase":
-    if (iriNode) {
-      const raw = unescapeIri(src(state, iriNode).slice(1, -1));
-      if (!/^[A-Za-z][A-Za-z0-9+.-]*:/.test(raw) && /^[^/?#]*:/.test(raw))
-        diagnose(state, iriNode, "colon in first path segment of relative IRI");
-      state.base = resolveIri(raw, state.base);
-    }
-    break;
-  case "Version": case "SparqlVersion": {
-    const spec = node.getChild("VersionSpecifier");
-    if (spec) {
-      const v = src(state, spec.firstChild).slice(1, -1);
-      if (!/^[0-9]+\.[0-9]+$/.test(v))
-        diagnose(state, spec, `unrecognized version "${v}"`);
-    }
-    break;
-  }
-  }
-}
-
-// names of nodes that evaluate to a term (the inlined `iri`, `literal` etc.
-// rules expose these directly)
-const termNodes = new Set([
-  "IRIREF", "PrefixedName", "BlankNode", "Collection", "BlankNodePropertyList",
-  "RDFLiteral", "NumericLiteral", "BooleanLiteral", "TripleTerm", "ReifiedTriple",
-]);
-
-/** evaluate any term-producing node to {term, ranges} */
-function term (node, state) {
-  const r = [range(node)];
-  switch (node.name) {
-  case "IRIREF": {
-    const raw = unescapeIri(src(state, node).slice(1, -1));
-    // RFC 3986: a relative reference's first path segment may not contain ":"
-    if (!/^[A-Za-z][A-Za-z0-9+.-]*:/.test(raw) && /^[^/?#]*:/.test(raw))
-      diagnose(state, node, "colon in first path segment of relative IRI");
-    return {term: state.factory.namedNode(resolveIri(raw, state.base)), ranges: r};
-  }
-  case "PrefixedName": {
-    const s = src(state, node);
-    const colon = s.indexOf(":");
-    const prefix = s.slice(0, colon), local = s.slice(colon + 1);
-    if (!(prefix in state.prefixes)) {
-      diagnose(state, node, `undefined prefix "${prefix}:"`);
-      return {term: state.factory.namedNode("urn:error:undefined-prefix:" + prefix), ranges: r};
-    }
-    return {term: state.factory.namedNode(state.prefixes[prefix] + unescapePnLocal(local)), ranges: r};
-  }
-  case "BlankNode": {
-    const label = node.getChild("BLANK_NODE_LABEL");
-    if (label)
-      return {term: state.factory.blankNode(src(state, label).slice(2)), ranges: r};
-    return {term: freshBnode(state), ranges: r}; // Anon
-  }
-  case "Collection": return collection(node, state);
-  case "BlankNodePropertyList": return blankNodePropertyList(node, state);
-  case "RDFLiteral": return rdfLiteral(node, state);
-  case "NumericLiteral": {
-    const tok = node.firstChild;
-    const dt = {INTEGER: "integer", DECIMAL: "decimal", DOUBLE: "double"}[tok.name];
-    return {term: state.factory.literal(src(state, tok), state.factory.namedNode(XSD + dt)), ranges: r};
-  }
-  case "BooleanLiteral":
-    return {term: state.factory.literal(src(state, node), state.factory.namedNode(XSD + "boolean")), ranges: r};
-  case "TripleTerm": return tripleTerm(node, state);
-  case "ReifiedTriple": return reifiedTriple(node, state);
-  default:
-    diagnose(state, node, `expected term, got ${node.name}`);
-    return {term: freshBnode(state), ranges: r};
-  }
-}
-
-function firstTermChild (node) {
-  for (let child = node.firstChild; child; child = child.nextSibling)
-    if (termNodes.has(child.name))
-      return child;
-  return null;
-}
-
-function emit (state, s, p, o, g) {
-  const quad = state.factory.quad(s.term, p.term, o.term, (g || {term: state.graph}).term);
-  state.quads.push(quad);
-  state.prov._add(quad, {
-    quad,
-    subject: s.ranges,
-    predicate: p.ranges,
-    object: o.ranges,
-    graph: g ? g.ranges : state.graphRanges,
-  });
-}
-
-function block (node, state) { // TriG
-  const wrapped = node.getChild("WrappedGraph");
-  const labelNode = firstTermChild(node); // labelOrSubject is inlined
-  const outerGraph = state.graph, outerRanges = state.graphRanges;
-  if (labelNode) {
-    const label = term(labelNode, state);
-    state.graph = label.term;
-    state.graphRanges = label.ranges;
-  }
-  if (wrapped)
-    for (let child = wrapped.firstChild; child; child = child.nextSibling)
-      if (child.name === "Triples")
-        triples(child, state);
-      else if (child.type.isError)
-        diagnose(state, child, "syntax error in graph block");
-  state.graph = outerGraph;
-  state.graphRanges = outerRanges;
-}
-
-function triples (node, state) {
-  let subject = null;
-  for (let child = node.firstChild; child; child = child.nextSibling) {
-    switch (child.name) {
-    case "Subject":
-      subject = term(child.firstChild, state);
-      break;
-    case "BlankNodePropertyList":
-    case "ReifiedTriple":
-      subject = term(child, state);
-      break;
-    case "PredicateObjectList":
-      predicateObjectList(child, state, subject);
-      break;
-    default:
-      if (child.type.isError) diagnose(state, child, "syntax error in triples");
-    }
-  }
-}
-
-function predicateObjectList (node, state, subject) {
-  let verb = null;
-  for (let child = node.firstChild; child; child = child.nextSibling) {
-    switch (child.name) {
-    case "Verb": verb = readVerb(child, state); break;
-    case "ObjectList": objectList(child, state, subject, verb); break;
-    default:
-      if (child.type.isError) diagnose(state, child, "syntax error in predicate-object list");
-    }
-  }
-}
-
-function readVerb (node, state) {
-  const type = node.getChild("RdfTypeKw");
-  if (type)
-    return {term: state.factory.namedNode(RDF + "type"), ranges: [range(type)]};
-  const pred = node.getChild("Predicate");
-  return term((pred || node).firstChild, state);
-}
-
-function objectList (node, state, subject, verb) {
-  let lastObject = null;
-  let lastReifier = null; // reifier available for a following annotation block
-  for (let child = node.firstChild; child; child = child.nextSibling) {
-    switch (child.name) {
-    case "Object":
-      lastObject = term(child.firstChild, state);
-      lastReifier = null;
-      emit(state, subject, verb, lastObject);
-      break;
-    case "Annotation":
-      for (let a = child.firstChild; a; a = a.nextSibling) {
-        if (a.name === "Reifier") {
-          lastReifier = annotationReifier(a, state, subject, verb, lastObject);
-        } else if (a.name === "AnnotationBlock") {
-          const reifier = lastReifier || annotationReifier(a, state, subject, verb, lastObject);
-          const pol = a.getChild("PredicateObjectList");
-          if (pol)
-            predicateObjectList(pol, state, reifier);
-          lastReifier = null;
-        }
-      }
-      break;
-    default:
-      if (child.type.isError) diagnose(state, child, "syntax error in object list");
-    }
-  }
-}
-
-/** emit `reifier rdf:reifies <<(s p o)>>` for a ~reifier or bare {| block */
-function annotationReifier (node, state, subject, verb, obj) {
-  const explicit = node.name === "Reifier" ? firstTermChild(node) : null;
-  const reifier = explicit
-        ? Object.assign(term(explicit, state), {ranges: [range(node)]})
-        : {term: freshBnode(state), ranges: [range(node)]};
-  const tt = {term: state.factory.quad(subject.term, verb.term, obj.term), ranges: obj.ranges};
-  emit(state, reifier,
-       {term: state.factory.namedNode(RDF + "reifies"), ranges: [range(node)]},
-       tt);
-  return reifier;
-}
-
-function blankNodePropertyList (node, state) {
-  const bnode = {term: freshBnode(state), ranges: [range(node)]};
-  const pol = node.getChild("PredicateObjectList");
-  if (pol)
-    predicateObjectList(pol, state, bnode);
-  return bnode;
-}
-
-function collection (node, state) {
-  const items = [];
-  for (let child = node.firstChild; child; child = child.nextSibling)
-    if (child.name === "Object")
-      items.push({node: child, value: term(child.firstChild, state)});
-  const nil = {term: state.factory.namedNode(RDF + "nil"), ranges: [range(node)]};
-  if (items.length === 0)
-    return nil;
-  let head = null, prev = null;
-  for (const item of items) {
-    const cell = {term: freshBnode(state), ranges: [range(item.node)]};
-    if (prev)
-      emit(state, prev, {term: state.factory.namedNode(RDF + "rest"), ranges: [range(node)]}, cell);
-    else
-      head = cell;
-    emit(state, cell, {term: state.factory.namedNode(RDF + "first"), ranges: [range(item.node)]}, item.value);
-    prev = cell;
-  }
-  emit(state, prev, {term: state.factory.namedNode(RDF + "rest"), ranges: [range(node)]}, nil);
-  return {term: head.term, ranges: [range(node)]};
-}
-
-function rdfLiteral (node, state) {
-  const r = [range(node)];
-  const str = node.getChild("String").firstChild;
-  const raw = src(state, str);
-  const long = str.name.includes("LONG");
-  const value = unescapeString(raw.slice(long ? 3 : 1, long ? -3 : -1));
-  const lang = node.getChild("LANG_DIR");
-  if (lang)
-    return {term: state.factory.literal(value, src(state, lang).slice(1)), ranges: r};
-  const dt = firstTermChild(node); // the ^^ iri
-  if (dt)
-    return {term: state.factory.literal(value, term(dt, state).term), ranges: r};
-  return {term: state.factory.literal(value), ranges: r};
-}
-
-/** collect [subjectTermNode, Verb, objectTermNode] of a TripleTerm/ReifiedTriple */
-function ttParts (node, state) {
-  let s = null, v = null, o = null;
-  for (let child = node.firstChild; child; child = child.nextSibling) {
-    if (child.name === "Verb")
-      v = readVerb(child, state);
-    else if (child.name === "Reifier")
-      continue;
-    else if (termNodes.has(child.name)) {
-      if (s === null && v === null) s = term(child, state);
-      else if (o === null) o = term(child, state);
-    }
-  }
-  return [s, v, o];
-}
-
-function tripleTerm (node, state) {
-  const [s, v, o] = ttParts(node, state);
-  if (s === null || v === null || o === null) {
-    diagnose(state, node, "incomplete triple term");
-    return {term: freshBnode(state), ranges: [range(node)]};
-  }
-  return {term: state.factory.quad(s.term, v.term, o.term), ranges: [range(node)]};
-}
-
-/** `<< s v o ~r? >>` evaluates to the reifier; emits r rdf:reifies <<(s v o)>> */
-function reifiedTriple (node, state) {
-  const reifierNode = node.getChild("Reifier");
-  // evaluate s/v/o first, but the Reifier's explicit term (if any) separately
-  let s = null, v = null, o = null;
-  for (let child = node.firstChild; child; child = child.nextSibling) {
-    if (child.name === "Verb")
-      v = readVerb(child, state);
-    else if (child.name === "Reifier")
-      break; // s v o precede the reifier
-    else if (termNodes.has(child.name)) {
-      if (v === null) s = term(child, state);
-      else o = term(child, state);
-    }
-  }
-  if (s === null || v === null || o === null) {
-    diagnose(state, node, "incomplete reified triple");
-    return {term: freshBnode(state), ranges: [range(node)]};
-  }
-  const explicit = reifierNode && firstTermChild(reifierNode);
-  const reifier = explicit
-        ? Object.assign(term(explicit, state), {ranges: [range(reifierNode)]})
-        : {term: freshBnode(state), ranges: [range(node)]};
-  const tt = {term: state.factory.quad(s.term, v.term, o.term), ranges: [range(node)]};
-  emit(state, reifier,
-       {term: state.factory.namedNode(RDF + "reifies"), ranges: [range(reifierNode || node)]},
-       tt);
-  return {term: reifier.term, ranges: [range(node)]};
-}
-
-
-/***/ },
-
-/***/ 1799
-(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-
-// EXPORTS
-__webpack_require__.d(__webpack_exports__, {
-  parser: () => (/* binding */ src_parser)
-});
-
-// UNUSED EXPORTS: ProvenanceIndex, parseTurtle, quadKey, resolveIri, termKey
-
-// EXTERNAL MODULE: ../../node_modules/@lezer/common/dist/index.js
-var dist = __webpack_require__(9066);
-;// ../../node_modules/@lezer/highlight/dist/index.js
+/* unused harmony exports Tag, classHighlighter, getStyleTags, highlightCode, highlightTree, tagHighlighter */
 /* unused harmony import specifier */ var NodeProp;
+/* harmony import */ var _lezer_common__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9066);
 
 
 let nextTagID = 0;
@@ -69279,7 +70004,7 @@ function styleTags(spec) {
     }
     return ruleNodeProp.add(byName);
 }
-const ruleNodeProp = new dist/* NodeProp */.uY({
+const ruleNodeProp = new _lezer_common__WEBPACK_IMPORTED_MODULE_0__/* .NodeProp */ .uY({
     combine(a, b) {
         let cur, root, take;
         while (a || b) {
@@ -69511,7 +70236,7 @@ function getStyleTags(node) {
     return rule || null;
 }
 const t = Tag.define;
-const comment = t(), dist_name = t(), typeName = t(dist_name), propertyName = t(dist_name), literal = t(), string = t(literal), number = t(literal), content = t(), heading = t(content), keyword = t(), operator = t(), punctuation = t(), bracket = t(punctuation), meta = t();
+const comment = t(), name = t(), typeName = t(name), propertyName = t(name), literal = t(), string = t(literal), number = t(literal), content = t(), heading = t(content), keyword = t(), operator = t(), punctuation = t(), bracket = t(punctuation), meta = t();
 /**
 The default set of highlighting [tags](#highlight.Tag).
 
@@ -69552,11 +70277,11 @@ const tags = {
     /**
     Any kind of identifier.
     */
-    name: dist_name,
+    name,
     /**
     The [name](#highlight.tags.name) of a variable.
     */
-    variableName: t(dist_name),
+    variableName: t(name),
     /**
     A type [name](#highlight.tags.name).
     */
@@ -69576,19 +70301,19 @@ const tags = {
     /**
     The [name](#highlight.tags.name) of a class.
     */
-    className: t(dist_name),
+    className: t(name),
     /**
     A label [name](#highlight.tags.name).
     */
-    labelName: t(dist_name),
+    labelName: t(name),
     /**
     A namespace [name](#highlight.tags.name).
     */
-    namespace: t(dist_name),
+    namespace: t(name),
     /**
     The [name](#highlight.tags.name) of a macro.
     */
-    macroName: t(dist_name),
+    macroName: t(name),
     /**
     A literal value.
     */
@@ -69986,56 +70711,22 @@ const classHighlighter = tagHighlighter([
 
 
 
-// EXTERNAL MODULE: ../../node_modules/lezer-turtle/src/parser.js + 1 modules
-var parser = __webpack_require__(3881);
-// EXTERNAL MODULE: ../../node_modules/lezer-turtle/src/emit.js
-var emit = __webpack_require__(2388);
-;// ../../node_modules/lezer-turtle/src/index.js
-/**
- * lezer-turtle — incremental Lezer grammar for RDF 1.2 Turtle and TriG
- * (dialect "trig"), plus an RDF/JS quad emitter with source provenance
- * (see ./emit.js).
- */
-
-
-
-const src_parser = parser/* parser */.K.configure({
-  props: [
-    styleTags({
-      IRIREF: tags.url,
-      PrefixedName: tags.namespace,
-      BLANK_NODE_LABEL: tags.variableName,
-      "STRING_LITERAL_QUOTE STRING_LITERAL_SINGLE_QUOTE STRING_LITERAL_LONG_QUOTE STRING_LITERAL_LONG_SINGLE_QUOTE": tags.string,
-      "INTEGER DECIMAL DOUBLE": tags.number,
-      "TrueKw FalseKw": tags.bool,
-      LANG_DIR: tags.modifier,
-      "AtPrefixKw AtBaseKw AtVersionKw PrefixKw BaseKw VersionKw GraphKw": tags.definitionKeyword,
-      RdfTypeKw: tags.keyword,
-      Comment: tags.lineComment,
-      "( )": tags.paren,
-      "[ ]": tags.squareBracket,
-    }),
-  ],
-});
-
-
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "_A", 0, /* binding */ tags
+/* harmony export */ ]);
 
 
 /***/ },
 
-/***/ 3881
+/***/ 3643
 (__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-
-// EXPORTS
-__webpack_require__.d(__webpack_exports__, {
-  K: () => (/* binding */ parser)
-});
-
-// EXTERNAL MODULE: ../../node_modules/@lezer/common/dist/index.js
-var dist = __webpack_require__(9066);
-;// ../../node_modules/@lezer/lr/dist/index.js
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   U1: () => (/* binding */ LRParser)
+/* harmony export */ });
+/* unused harmony exports ContextTracker, ExternalTokenizer, InputStream, LocalTokenGroup, Stack */
+/* harmony import */ var _lezer_common__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9066);
 
 
 /**
@@ -71081,7 +71772,7 @@ function overrides(token, prev, tableData, tableOffset) {
 const verbose = typeof process != "undefined" && process.env && /\bparse\b/.test(process.env.LOG);
 let stackIDs = null;
 function cutAt(tree, pos, side) {
-    let cursor = tree.cursor(dist/* IterMode */.Qj.IncludeAnonymous);
+    let cursor = tree.cursor(_lezer_common__WEBPACK_IMPORTED_MODULE_0__/* .IterMode */ .Qj.IncludeAnonymous);
     cursor.moveTo(pos);
     for (;;) {
         if (!(side < 0 ? cursor.childBefore(pos) : cursor.childAfter(pos)))
@@ -71155,13 +71846,13 @@ class FragmentCursor {
                 this.nextStart = start;
                 return null;
             }
-            if (next instanceof dist/* Tree */.PH) {
+            if (next instanceof _lezer_common__WEBPACK_IMPORTED_MODULE_0__/* .Tree */ .PH) {
                 if (start == pos) {
                     if (start < this.safeFrom)
                         return null;
                     let end = start + next.length;
                     if (end <= this.safeTo) {
-                        let lookAhead = next.prop(dist/* NodeProp */.uY.lookAhead);
+                        let lookAhead = next.prop(_lezer_common__WEBPACK_IMPORTED_MODULE_0__/* .NodeProp */ .uY.lookAhead);
                         if (!lookAhead || end + lookAhead < this.fragment.to)
                             return next;
                     }
@@ -71450,16 +72141,16 @@ class Parse {
             let strictCx = stack.curContext && stack.curContext.tracker.strict, cxHash = strictCx ? stack.curContext.hash : 0;
             for (let cached = this.fragments.nodeAt(start); cached;) {
                 let match = this.parser.nodeSet.types[cached.type.id] == cached.type ? parser.getGoto(stack.state, cached.type.id) : -1;
-                if (match > -1 && cached.length && (!strictCx || (cached.prop(dist/* NodeProp */.uY.contextHash) || 0) == cxHash)) {
+                if (match > -1 && cached.length && (!strictCx || (cached.prop(_lezer_common__WEBPACK_IMPORTED_MODULE_0__/* .NodeProp */ .uY.contextHash) || 0) == cxHash)) {
                     stack.useNode(cached, match);
                     if (verbose)
                         console.log(base + this.stackID(stack) + ` (via reuse of ${parser.getName(cached.type.id)})`);
                     return true;
                 }
-                if (!(cached instanceof dist/* Tree */.PH) || cached.children.length == 0 || cached.positions[0] > 0)
+                if (!(cached instanceof _lezer_common__WEBPACK_IMPORTED_MODULE_0__/* .Tree */ .PH) || cached.children.length == 0 || cached.positions[0] > 0)
                     break;
                 let inner = cached.children[0];
-                if (inner instanceof dist/* Tree */.PH && cached.positions[0] == 0)
+                if (inner instanceof _lezer_common__WEBPACK_IMPORTED_MODULE_0__/* .Tree */ .PH && cached.positions[0] == 0)
                     cached = inner;
                 else
                     break;
@@ -71558,7 +72249,7 @@ class Parse {
     // Convert the stack's buffer to a syntax tree.
     stackToTree(stack) {
         stack.close();
-        return dist/* Tree */.PH.build({ buffer: StackBufferCursor.create(stack),
+        return _lezer_common__WEBPACK_IMPORTED_MODULE_0__/* .Tree */ .PH.build({ buffer: StackBufferCursor.create(stack),
             nodeSet: this.parser.nodeSet,
             topID: this.topTerm,
             maxBufferLength: this.parser.bufferLength,
@@ -71624,7 +72315,7 @@ Holds the parse tables for a given grammar, as generated by
 `lezer-generator`, and provides [methods](#common.Parser) to parse
 content with.
 */
-class LRParser extends dist/* Parser */.iX {
+class LRParser extends _lezer_common__WEBPACK_IMPORTED_MODULE_0__/* .Parser */ .iX {
     /**
     @internal
     */
@@ -71651,7 +72342,7 @@ class LRParser extends dist/* Parser */.iX {
             for (let propSpec of spec.nodeProps) {
                 let prop = propSpec[0];
                 if (typeof prop == "string")
-                    prop = dist/* NodeProp */.uY[prop];
+                    prop = _lezer_common__WEBPACK_IMPORTED_MODULE_0__/* .NodeProp */ .uY[prop];
                 for (let i = 1; i < propSpec.length;) {
                     let next = propSpec[i++];
                     if (next >= 0) {
@@ -71665,7 +72356,7 @@ class LRParser extends dist/* Parser */.iX {
                     }
                 }
             }
-        this.nodeSet = new dist/* NodeSet */.fI(nodeNames.map((name, i) => dist/* NodeType */.Z6.define({
+        this.nodeSet = new _lezer_common__WEBPACK_IMPORTED_MODULE_0__/* .NodeSet */ .fI(nodeNames.map((name, i) => _lezer_common__WEBPACK_IMPORTED_MODULE_0__/* .NodeType */ .Z6.define({
             name: i >= this.minRepeatTerm ? undefined : name,
             id: i,
             props: nodeProps[i],
@@ -71926,10 +72617,548 @@ function getSpecializer(spec) {
 
 
 
-;// ../../node_modules/lezer-turtle/src/parser.js
+
+/***/ },
+
+/***/ 2388
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   parseTurtle: () => (/* binding */ parseTurtle)
+/* harmony export */ });
+/* unused harmony exports termKey, quadKey, ProvenanceIndex, resolveIri */
+/* harmony import */ var _parser_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9064);
+/**
+ * RDF/JS quad emitter for the lezer-turtle parse tree, with source
+ * provenance tracked on the side.
+ *
+ * parseTurtle(text, {baseIRI, factory, dialect, blankNodePrefix}) returns
+ *   {quads, provenance, diagnostics, prefixes, base, tree}
+ * where provenance is a ProvenanceIndex: a multiset of quad *utterances*
+ * layered over the set of quads.  Quads stay plain RDF/JS objects (equality
+ * via .equals()); each utterance records the source ranges of the syntax
+ * that gave rise to each position:
+ *
+ *   {quad, subject: Range[], predicate: Range[], object: Range[], graph: Range[]}
+ *
+ * Ranges are {start, end} character offsets (UTF-16, as Lezer counts).
+ * Ranges come in arrays because a position's provenance can be split or
+ * synthetic: a blank node property list's subject is its whole  [ … ]
+ * bracket span, collection cell quads (rdf:first/rest) carry item and
+ * collection spans, and annotation-derived reification quads point at the
+ * ~reifier / {| … |} syntax.
+ *
+ * The index is keyed canonically (an N-Quads-shaped string), NOT by object
+ * identity — RDF/JS makes no same-object guarantee, and stores like
+ * N3.Store reconstruct quads on read — so looking up a quad you got back
+ * from a store works.
+ */
+
+
+
+const RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+const XSD = "http://www.w3.org/2001/XMLSchema#";
+
+// ── canonical keys ─────────────────────────────────────────────────────────
+function termKey (term) {
+  switch (term.termType) {
+  case "NamedNode": return `<${term.value}>`;
+  case "BlankNode": return `_:${term.value}`;
+  case "Literal": {
+    const val = `"${term.value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\r/g, "\\r")}"`;
+    if (term.language)
+      return val + "@" + term.language + (term.direction ? "--" + term.direction : "");
+    if (term.datatype && term.datatype.value !== XSD + "string")
+      return val + "^^<" + term.datatype.value + ">";
+    return val;
+  }
+  case "DefaultGraph": return "";
+  case "Variable": return "?" + term.value;
+  case "Quad": return `<<(${termKey(term.subject)} ${termKey(term.predicate)} ${termKey(term.object)})>>`;
+  default: throw Error("termKey: unknown termType " + term.termType);
+  }
+}
+
+function quadKey (quad) {
+  return `${termKey(quad.subject)} ${termKey(quad.predicate)} ${termKey(quad.object)} ${termKey(quad.graph)}`;
+}
+
+class ProvenanceIndex {
+  constructor () { this._map = new Map(); }
+
+  _add (quad, utterance) {
+    const key = quadKey(quad);
+    if (!this._map.has(key))
+      this._map.set(key, []);
+    this._map.get(key).push(utterance);
+  }
+
+  /** utterances of a quad (empty array if never uttered) */
+  get (quad) { return this._map.get(quadKey(quad)) || []; }
+
+  /** number of distinct quads uttered */
+  get size () { return this._map.size; }
+
+  [Symbol.iterator] () { return this._map.values(); }
+}
+
+// ── IRI resolution (RFC 3986, without WHATWG normalization) ───────────────
+function resolveIri (iri, base) {
+  if (/^[A-Za-z][A-Za-z0-9+.-]*:/.test(iri) || !base)
+    return iri;
+  const b = splitIri(base);
+  if (iri === "") return base;
+  if (iri.startsWith("#")) return b.scheme + b.authority + b.path + iri;
+  if (iri.startsWith("?")) return b.scheme + b.authority + b.path.replace(/\?.*/, "") + iri;
+  if (iri.startsWith("//")) return b.scheme + iri;
+  if (iri.startsWith("/")) return b.scheme + b.authority + removeDotSegments(iri);
+  const dir = b.path.replace(/\?.*/, "").replace(/[^/]*$/, "");
+  return b.scheme + b.authority + removeDotSegments(dir + iri);
+}
+function splitIri (iri) {
+  const m = iri.match(/^([A-Za-z][A-Za-z0-9+.-]*:)(\/\/[^/?#]*)?([^#]*)/);
+  return {scheme: m[1], authority: m[2] || "", path: m[3] || ""};
+}
+function removeDotSegments (path) {
+  const out = [];
+  for (const seg of path.split("/")) {
+    if (seg === ".") continue;
+    else if (seg === "..") { if (out.length > 1) out.pop(); }
+    else out.push(seg);
+  }
+  let ret = out.join("/");
+  if ((path.endsWith("/.") || path.endsWith("/..")) && !ret.endsWith("/")) ret += "/";
+  return ret;
+}
+
+// ── string unescaping ─────────────────────────────────────────────────────
+const echars = {t: "\t", b: "\b", n: "\n", r: "\r", f: "\f", '"': '"', "'": "'", "\\": "\\"};
+function unescapeString (s) {
+  return s.replace(/\\(?:u([0-9a-fA-F]{4})|U([0-9a-fA-F]{8})|(.))/g,
+                   (_, u4, u8, e) => u4 || u8
+                     ? String.fromCodePoint(parseInt(u4 || u8, 16))
+                     : echars[e] !== undefined ? echars[e] : e);
+}
+function unescapeIri (s) {
+  return s.replace(/\\(?:u([0-9a-fA-F]{4})|U([0-9a-fA-F]{8}))/g,
+                   (_, u4, u8) => String.fromCodePoint(parseInt(u4 || u8, 16)));
+}
+function unescapePnLocal (s) {
+  return s.replace(/\\([_~.\-!$&'()*+,;=/?#@%])/g, "$1");
+}
+
+// ── the emitter ────────────────────────────────────────────────────────────
+function parseTurtle (text, options = {}) {
+  if (!options.factory)
+    throw Error("parseTurtle: supply options.factory (an RDF/JS DataFactory, e.g. N3.DataFactory)");
+  const factory = options.factory;
+  const state = {
+    text,
+    factory,
+    base: options.baseIRI || null,
+    prefixes: Object.create(null),
+    bnodeN: 0,
+    bnodePrefix: options.blankNodePrefix !== undefined ? options.blankNodePrefix : "df_",
+    quads: [],
+    prov: new ProvenanceIndex(),
+    diagnostics: [],
+    graph: factory.defaultGraph(),
+    graphRanges: [],
+  };
+  const tree = _parser_js__WEBPACK_IMPORTED_MODULE_0__/* .parser */ .K.configure(options.dialect ? {dialect: options.dialect} : {}).parse(text);
+
+  // one tree-wide scan catches every error-recovery point, however nested
+  tree.iterate({enter: n => {
+    if (n.type.isError)
+      state.diagnostics.push({start: n.from, end: n.to, message: "syntax error"});
+  }});
+
+  for (let child = tree.topNode.firstChild; child; child = child.nextSibling) {
+    switch (child.name) {
+    case "Directive": directive(child.firstChild, state); break;
+    case "Triples": triples(child, state); break;
+    case "Block": block(child, state); break;
+    default:
+      if (child.type.isError) diagnose(state, child, "syntax error");
+    }
+  }
+
+  return {
+    quads: state.quads,
+    provenance: state.prov,
+    diagnostics: state.diagnostics,
+    prefixes: state.prefixes,
+    base: state.base,
+    tree,
+  };
+}
+
+function src (state, node) { return state.text.slice(node.from, node.to); }
+function range (node) { return {start: node.from, end: node.to}; }
+function freshBnode (state) { return state.factory.blankNode(state.bnodePrefix + state.bnodeN++); }
+
+function diagnose (state, node, message) {
+  state.diagnostics.push({start: node.from, end: node.to, message});
+}
+
+function directive (node, state) {
+  if (!node) return;
+  const iriNode = node.getChild("IRIREF");
+  switch (node.name) {
+  case "PrefixID": case "SparqlPrefix": {
+    const ns = node.getChild("PNAME_NS");
+    if (ns && iriNode)
+      state.prefixes[src(state, ns).slice(0, -1)] =
+        resolveIri(unescapeIri(src(state, iriNode).slice(1, -1)), state.base);
+    break;
+  }
+  case "Base": case "SparqlBase":
+    if (iriNode) {
+      const raw = unescapeIri(src(state, iriNode).slice(1, -1));
+      if (!/^[A-Za-z][A-Za-z0-9+.-]*:/.test(raw) && /^[^/?#]*:/.test(raw))
+        diagnose(state, iriNode, "colon in first path segment of relative IRI");
+      state.base = resolveIri(raw, state.base);
+    }
+    break;
+  case "Version": case "SparqlVersion": {
+    const spec = node.getChild("VersionSpecifier");
+    if (spec) {
+      const v = src(state, spec.firstChild).slice(1, -1);
+      if (!/^[0-9]+\.[0-9]+$/.test(v))
+        diagnose(state, spec, `unrecognized version "${v}"`);
+    }
+    break;
+  }
+  }
+}
+
+// names of nodes that evaluate to a term (the inlined `iri`, `literal` etc.
+// rules expose these directly)
+const termNodes = new Set([
+  "IRIREF", "PrefixedName", "BlankNode", "Collection", "BlankNodePropertyList",
+  "RDFLiteral", "NumericLiteral", "BooleanLiteral", "TripleTerm", "ReifiedTriple",
+]);
+
+/** evaluate any term-producing node to {term, ranges} */
+function term (node, state) {
+  const r = [range(node)];
+  switch (node.name) {
+  case "IRIREF": {
+    const raw = unescapeIri(src(state, node).slice(1, -1));
+    // RFC 3986: a relative reference's first path segment may not contain ":"
+    if (!/^[A-Za-z][A-Za-z0-9+.-]*:/.test(raw) && /^[^/?#]*:/.test(raw))
+      diagnose(state, node, "colon in first path segment of relative IRI");
+    return {term: state.factory.namedNode(resolveIri(raw, state.base)), ranges: r};
+  }
+  case "PrefixedName": {
+    const s = src(state, node);
+    const colon = s.indexOf(":");
+    const prefix = s.slice(0, colon), local = s.slice(colon + 1);
+    if (!(prefix in state.prefixes)) {
+      diagnose(state, node, `undefined prefix "${prefix}:"`);
+      return {term: state.factory.namedNode("urn:error:undefined-prefix:" + prefix), ranges: r};
+    }
+    return {term: state.factory.namedNode(state.prefixes[prefix] + unescapePnLocal(local)), ranges: r};
+  }
+  case "BlankNode": {
+    const label = node.getChild("BLANK_NODE_LABEL");
+    if (label)
+      return {term: state.factory.blankNode(src(state, label).slice(2)), ranges: r};
+    return {term: freshBnode(state), ranges: r}; // Anon
+  }
+  case "Collection": return collection(node, state);
+  case "BlankNodePropertyList": return blankNodePropertyList(node, state);
+  case "RDFLiteral": return rdfLiteral(node, state);
+  case "NumericLiteral": {
+    const tok = node.firstChild;
+    const dt = {INTEGER: "integer", DECIMAL: "decimal", DOUBLE: "double"}[tok.name];
+    return {term: state.factory.literal(src(state, tok), state.factory.namedNode(XSD + dt)), ranges: r};
+  }
+  case "BooleanLiteral":
+    return {term: state.factory.literal(src(state, node), state.factory.namedNode(XSD + "boolean")), ranges: r};
+  case "TripleTerm": return tripleTerm(node, state);
+  case "ReifiedTriple": return reifiedTriple(node, state);
+  default:
+    diagnose(state, node, `expected term, got ${node.name}`);
+    return {term: freshBnode(state), ranges: r};
+  }
+}
+
+function firstTermChild (node) {
+  for (let child = node.firstChild; child; child = child.nextSibling)
+    if (termNodes.has(child.name))
+      return child;
+  return null;
+}
+
+function emit (state, s, p, o, g) {
+  const quad = state.factory.quad(s.term, p.term, o.term, (g || {term: state.graph}).term);
+  state.quads.push(quad);
+  state.prov._add(quad, {
+    quad,
+    subject: s.ranges,
+    predicate: p.ranges,
+    object: o.ranges,
+    graph: g ? g.ranges : state.graphRanges,
+  });
+}
+
+function block (node, state) { // TriG
+  const wrapped = node.getChild("WrappedGraph");
+  const labelNode = firstTermChild(node); // labelOrSubject is inlined
+  const outerGraph = state.graph, outerRanges = state.graphRanges;
+  if (labelNode) {
+    const label = term(labelNode, state);
+    state.graph = label.term;
+    state.graphRanges = label.ranges;
+  }
+  if (wrapped)
+    for (let child = wrapped.firstChild; child; child = child.nextSibling)
+      if (child.name === "Triples")
+        triples(child, state);
+      else if (child.type.isError)
+        diagnose(state, child, "syntax error in graph block");
+  state.graph = outerGraph;
+  state.graphRanges = outerRanges;
+}
+
+function triples (node, state) {
+  let subject = null;
+  for (let child = node.firstChild; child; child = child.nextSibling) {
+    switch (child.name) {
+    case "Subject":
+      subject = term(child.firstChild, state);
+      break;
+    case "BlankNodePropertyList":
+    case "ReifiedTriple":
+      subject = term(child, state);
+      break;
+    case "PredicateObjectList":
+      predicateObjectList(child, state, subject);
+      break;
+    default:
+      if (child.type.isError) diagnose(state, child, "syntax error in triples");
+    }
+  }
+}
+
+function predicateObjectList (node, state, subject) {
+  let verb = null;
+  for (let child = node.firstChild; child; child = child.nextSibling) {
+    switch (child.name) {
+    case "Verb": verb = readVerb(child, state); break;
+    case "ObjectList": objectList(child, state, subject, verb); break;
+    default:
+      if (child.type.isError) diagnose(state, child, "syntax error in predicate-object list");
+    }
+  }
+}
+
+function readVerb (node, state) {
+  const type = node.getChild("RdfTypeKw");
+  if (type)
+    return {term: state.factory.namedNode(RDF + "type"), ranges: [range(type)]};
+  const pred = node.getChild("Predicate");
+  return term((pred || node).firstChild, state);
+}
+
+function objectList (node, state, subject, verb) {
+  let lastObject = null;
+  let lastReifier = null; // reifier available for a following annotation block
+  for (let child = node.firstChild; child; child = child.nextSibling) {
+    switch (child.name) {
+    case "Object":
+      lastObject = term(child.firstChild, state);
+      lastReifier = null;
+      emit(state, subject, verb, lastObject);
+      break;
+    case "Annotation":
+      for (let a = child.firstChild; a; a = a.nextSibling) {
+        if (a.name === "Reifier") {
+          lastReifier = annotationReifier(a, state, subject, verb, lastObject);
+        } else if (a.name === "AnnotationBlock") {
+          const reifier = lastReifier || annotationReifier(a, state, subject, verb, lastObject);
+          const pol = a.getChild("PredicateObjectList");
+          if (pol)
+            predicateObjectList(pol, state, reifier);
+          lastReifier = null;
+        }
+      }
+      break;
+    default:
+      if (child.type.isError) diagnose(state, child, "syntax error in object list");
+    }
+  }
+}
+
+/** emit `reifier rdf:reifies <<(s p o)>>` for a ~reifier or bare {| block */
+function annotationReifier (node, state, subject, verb, obj) {
+  const explicit = node.name === "Reifier" ? firstTermChild(node) : null;
+  const reifier = explicit
+        ? Object.assign(term(explicit, state), {ranges: [range(node)]})
+        : {term: freshBnode(state), ranges: [range(node)]};
+  const tt = {term: state.factory.quad(subject.term, verb.term, obj.term), ranges: obj.ranges};
+  emit(state, reifier,
+       {term: state.factory.namedNode(RDF + "reifies"), ranges: [range(node)]},
+       tt);
+  return reifier;
+}
+
+function blankNodePropertyList (node, state) {
+  const bnode = {term: freshBnode(state), ranges: [range(node)]};
+  const pol = node.getChild("PredicateObjectList");
+  if (pol)
+    predicateObjectList(pol, state, bnode);
+  return bnode;
+}
+
+function collection (node, state) {
+  const items = [];
+  for (let child = node.firstChild; child; child = child.nextSibling)
+    if (child.name === "Object")
+      items.push({node: child, value: term(child.firstChild, state)});
+  const nil = {term: state.factory.namedNode(RDF + "nil"), ranges: [range(node)]};
+  if (items.length === 0)
+    return nil;
+  let head = null, prev = null;
+  for (const item of items) {
+    const cell = {term: freshBnode(state), ranges: [range(item.node)]};
+    if (prev)
+      emit(state, prev, {term: state.factory.namedNode(RDF + "rest"), ranges: [range(node)]}, cell);
+    else
+      head = cell;
+    emit(state, cell, {term: state.factory.namedNode(RDF + "first"), ranges: [range(item.node)]}, item.value);
+    prev = cell;
+  }
+  emit(state, prev, {term: state.factory.namedNode(RDF + "rest"), ranges: [range(node)]}, nil);
+  return {term: head.term, ranges: [range(node)]};
+}
+
+function rdfLiteral (node, state) {
+  const r = [range(node)];
+  const str = node.getChild("String").firstChild;
+  const raw = src(state, str);
+  const long = str.name.includes("LONG");
+  const value = unescapeString(raw.slice(long ? 3 : 1, long ? -3 : -1));
+  const lang = node.getChild("LANG_DIR");
+  if (lang)
+    return {term: state.factory.literal(value, src(state, lang).slice(1)), ranges: r};
+  const dt = firstTermChild(node); // the ^^ iri
+  if (dt)
+    return {term: state.factory.literal(value, term(dt, state).term), ranges: r};
+  return {term: state.factory.literal(value), ranges: r};
+}
+
+/** collect [subjectTermNode, Verb, objectTermNode] of a TripleTerm/ReifiedTriple */
+function ttParts (node, state) {
+  let s = null, v = null, o = null;
+  for (let child = node.firstChild; child; child = child.nextSibling) {
+    if (child.name === "Verb")
+      v = readVerb(child, state);
+    else if (child.name === "Reifier")
+      continue;
+    else if (termNodes.has(child.name)) {
+      if (s === null && v === null) s = term(child, state);
+      else if (o === null) o = term(child, state);
+    }
+  }
+  return [s, v, o];
+}
+
+function tripleTerm (node, state) {
+  const [s, v, o] = ttParts(node, state);
+  if (s === null || v === null || o === null) {
+    diagnose(state, node, "incomplete triple term");
+    return {term: freshBnode(state), ranges: [range(node)]};
+  }
+  return {term: state.factory.quad(s.term, v.term, o.term), ranges: [range(node)]};
+}
+
+/** `<< s v o ~r? >>` evaluates to the reifier; emits r rdf:reifies <<(s v o)>> */
+function reifiedTriple (node, state) {
+  const reifierNode = node.getChild("Reifier");
+  // evaluate s/v/o first, but the Reifier's explicit term (if any) separately
+  let s = null, v = null, o = null;
+  for (let child = node.firstChild; child; child = child.nextSibling) {
+    if (child.name === "Verb")
+      v = readVerb(child, state);
+    else if (child.name === "Reifier")
+      break; // s v o precede the reifier
+    else if (termNodes.has(child.name)) {
+      if (v === null) s = term(child, state);
+      else o = term(child, state);
+    }
+  }
+  if (s === null || v === null || o === null) {
+    diagnose(state, node, "incomplete reified triple");
+    return {term: freshBnode(state), ranges: [range(node)]};
+  }
+  const explicit = reifierNode && firstTermChild(reifierNode);
+  const reifier = explicit
+        ? Object.assign(term(explicit, state), {ranges: [range(reifierNode)]})
+        : {term: freshBnode(state), ranges: [range(node)]};
+  const tt = {term: state.factory.quad(s.term, v.term, o.term), ranges: [range(node)]};
+  emit(state, reifier,
+       {term: state.factory.namedNode(RDF + "reifies"), ranges: [range(reifierNode || node)]},
+       tt);
+  return {term: reifier.term, ranges: [range(node)]};
+}
+
+
+/***/ },
+
+/***/ 7559
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var _lezer_highlight__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9913);
+/* harmony import */ var _parser_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9064);
+/* harmony import */ var _emit_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(2388);
+/**
+ * lezer-turtle — incremental Lezer grammar for RDF 1.2 Turtle and TriG
+ * (dialect "trig"), plus an RDF/JS quad emitter with source provenance
+ * (see ./emit.js).
+ */
+
+
+
+const parser = _parser_js__WEBPACK_IMPORTED_MODULE_1__/* .parser */ .K.configure({
+  props: [
+    (0,_lezer_highlight__WEBPACK_IMPORTED_MODULE_0__/* .styleTags */ .pn)({
+      IRIREF: _lezer_highlight__WEBPACK_IMPORTED_MODULE_0__/* .tags */ ._A.url,
+      PrefixedName: _lezer_highlight__WEBPACK_IMPORTED_MODULE_0__/* .tags */ ._A.namespace,
+      BLANK_NODE_LABEL: _lezer_highlight__WEBPACK_IMPORTED_MODULE_0__/* .tags */ ._A.variableName,
+      "STRING_LITERAL_QUOTE STRING_LITERAL_SINGLE_QUOTE STRING_LITERAL_LONG_QUOTE STRING_LITERAL_LONG_SINGLE_QUOTE": _lezer_highlight__WEBPACK_IMPORTED_MODULE_0__/* .tags */ ._A.string,
+      "INTEGER DECIMAL DOUBLE": _lezer_highlight__WEBPACK_IMPORTED_MODULE_0__/* .tags */ ._A.number,
+      "TrueKw FalseKw": _lezer_highlight__WEBPACK_IMPORTED_MODULE_0__/* .tags */ ._A.bool,
+      LANG_DIR: _lezer_highlight__WEBPACK_IMPORTED_MODULE_0__/* .tags */ ._A.modifier,
+      "AtPrefixKw AtBaseKw AtVersionKw PrefixKw BaseKw VersionKw GraphKw": _lezer_highlight__WEBPACK_IMPORTED_MODULE_0__/* .tags */ ._A.definitionKeyword,
+      RdfTypeKw: _lezer_highlight__WEBPACK_IMPORTED_MODULE_0__/* .tags */ ._A.keyword,
+      Comment: _lezer_highlight__WEBPACK_IMPORTED_MODULE_0__/* .tags */ ._A.lineComment,
+      "( )": _lezer_highlight__WEBPACK_IMPORTED_MODULE_0__/* .tags */ ._A.paren,
+      "[ ]": _lezer_highlight__WEBPACK_IMPORTED_MODULE_0__/* .tags */ ._A.squareBracket,
+    }),
+  ],
+});
+
+
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "parser", 0, /* binding */ parser
+/* harmony export */ ]);
+
+
+/***/ },
+
+/***/ 9064
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var _lezer_lr__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3643);
 // This file was generated by lezer-generator. You probably shouldn't edit it.
 
-const parser = LRParser.deserialize({
+const parser = _lezer_lr__WEBPACK_IMPORTED_MODULE_0__/* .LRParser */ .U1.deserialize({
   version: 14,
   states: "/YQYQPOOO!ZQPO'#CaO!`QPO'#CeO!eQPO'#CgO!mQPO'#ClO!rQPO'#CnO!eQPO'#CpOOQO'#C_'#C_OOQO'#Ct'#CtOOQO'#EO'#EOO!wQPO'#CzOOQO'#Cv'#CvO#YQPO'#DqO$uQPO'#C}O$|QPO'#CsOOQO'#Cs'#CsO%_QPO'#CrO%mQPO'#CrOOQO'#D}'#D}O&RQPO'#D}O&oQPO'#DtO&vQPO'#DrO!UQPO'#DrOOQO'#Dr'#DrOOQO'#Du'#DuQYQPOOO'XQPO,58{O'^QPO,59POOQO'#Ci'#CiO'cQPO,59RO'hQPO,59WOOQO,59Y,59YOOQO,59[,59[OOQO,59f,59fOOQO'#DS'#DSOOQO'#DR'#DRO#nQPO'#DQO'mQPO,59kO'rQPO'#CzOOQO'#ER'#ERO%_QPO,5:]OOQO'#D`'#D`O'wQPO'#D_OOQO'#De'#DeOOQO'#Di'#DiOOQO'#EP'#EPOOQO'#DO'#DOOOQO'#Dv'#DvO)_QPO,59iOOQO,59i,59iO&vQPO'#DnOOQO,59^,59^OOQO,5:i,5:iO)fQPO'#EWOOQO,5:`,5:`O)nQPO,5:`OOQO'#ET'#ETO!UQPO,5:^OOQO,5:^,5:^OOQO-E7s-E7sO)sQPO1G.gOOQO1G.k1G.kOOQO1G.m1G.mOOQO1G.r1G.rO)xQQO'#DUO*dQPO,59lO*uQQO'#D_OOQO1G/V1G/VO+jQPO1G/wOOQO,59y,59yO,^QPO,59yOOQO-E7t-E7tOOQO1G/T1G/TO%_QPO,5:YO,iQPO,5:rOOQO1G/z1G/zOOQO1G/x1G/xOOQO7+$R7+$RO,pQQO'#DWO%_QPO'#D[OOQO'#Dw'#DwO-^QQO'#DVO-xQPO,59pO.^QPO'#DyO.{QPO1G/WOOQO'#ES'#ESO/^QPO7+%cOOQO1G/e1G/eO/fQPO1G/tOOQO1G0^1G0^OOQO,59r,59rO0YQPO,59vOOQO-E7u-E7uO#nQPO'#DxO0_QPO1G/[O#nQPO,5:eOOQO-E7w-E7wO0sQPO'#DWOOQO<<H}<<H}O0zQPO<<H}OOQO'#EQ'#EQO1PQQO7+%`OOQO1G/b1G/bO)xQQO,5:dOOQO-E7v-E7vOOQO1G0P1G0POOQOAN>iAN>iOOQO<<Hz<<HzOOQO1G0O1G0O",
   stateData: "1t~O!pOSPOS~OUPOVWOWXOYQO[ROaSOcTOeUOiWOkZOmYOp]O!d[O!geO!ydO~OVjO~OWkO~O^lO_lO~OVnO~OWoO~OVWOWXOiWOlqOwsO~OVWOWXOiWOkZOmvO!d[O~OVWOWXO^yO_yOiWOkZOmYOp]O!TyO!UyO!Y{O!Z{O![{O!^|O!_|O!a!SO!d[O~Oo!RO~P#nOVgXWgXigXwgX!y!wX~OVWOWXOiWOwsO~OVWOWXOiWOwsOSfX!xfX~OS!UO~OVWOWXOiWOkZOmYOp]O!d[O~O!x!WO~P&WOVWOWXOiWOkZOmvO~OW!^O~OS!_O~OS!`O~OW!aO~Ol!eO~OlqO~O!V!gO!W!hOV!RXW!RX^!RX_!RXi!RXk!RXm!RXo!RXp!RX!T!RX!U!RX!Y!RX!Z!RX![!RX!^!RX!_!RX!a!RX!d!RX{!RX!c!RX~Oo!jO~P#nOS!lO!x!zX~O!x!mO~OS!oO~O{!pO}!qOlyP!PyP!QyPSyP!xyP|yP~O!Q!uOltaSta!xta|ta~O!V!gO!W!hOl!RX{!RX}!RX!P!RX!Q!RXS!RX!x!RX!`!RX|!RX~O^yO_yO!TyO!UyO!Y{O!Z{O![{O!^|O!_|O!a!SO~P#YOVWOWXOiWO~O!x!za~P&WOlzX{zX}zX!PzX!QzXSzX!xzX|zX~P&vO{!pO}!qOlyX!PyX!QyXSyX!xyX|yX~O!P#POlxa!QxaSxa!xxa|xa~OVWOWXOiWOwsOl!mX!Q!mXS!mX!x!mX|!mX~O!Q!uOltiSti!xti|ti~O{#TO!c#UO~O^yO_yO!TyO!UyO!Y{O!Z{O![{O!^|O!_|O!a!SO~P&vO|#YO~O!P#POlxi!QxiSxi!xxi|xi~O!czX~P&vO!c#^O~O!`#_O~O!g!x!y~UY[!V!a!dW![!Z!YS!T^!U_iV!gacew!^!_^~",
@@ -71948,6 +73177,109 @@ const parser = LRParser.deserialize({
   dialects: {trig: 742},
   tokenPrec: 746
 })
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, [
+/* harmony export */   "K", 0, /* binding */ parser
+/* harmony export */ ]);
+
+
+/***/ },
+
+/***/ 3752
+(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  parser: () => (/* binding */ src_parser)
+});
+
+// UNUSED EXPORTS: highlighting
+
+// EXTERNAL MODULE: ../../node_modules/@lezer/highlight/dist/index.js
+var dist = __webpack_require__(9913);
+// EXTERNAL MODULE: ../../node_modules/@lezer/lr/dist/index.js
+var lr_dist = __webpack_require__(3643);
+;// ../lezer-shexc/src/parser.js
+// This file was generated by lezer-generator. You probably shouldn't edit it.
+
+const parser = lr_dist/* LRParser */.U1.deserialize({
+  version: 14,
+  states: "DYQYQPOOOzQPO'#C_OOQO'#Ce'#CeOOQO'#Fw'#FwO!PQPO'#CbO!UQPO'#CgOOQO'#Fv'#FvOOQO'#F]'#F]QYQPOOO!UQPO'#DbOOQO'#F`'#F`O!aQPO'#F[OOQO'#Ds'#DsOOQO'#Dr'#DrO%_QPO'#FVO%fQPO'#FVOOQO'#Fx'#FxQ%tQPOOO&cQPO'#CiOOQO,58y,58yO!UQPO,58|OOQO,59R,59ROOQO-E9Z-E9ZO&hQPO,59|OOQO-E9^-E9^OOQO'#Cm'#CmOOQO'#Cr'#CrO&pQPO'#CqOOQO'#Cq'#CqOOQO'#F^'#F^O&uQPO'#F}O&uQPO'#F}OOQO'#DZ'#DZO)[QPO'#ClOOQO'#Dl'#DlO%fQPO'#DlOOQO'#Dx'#DxOOQO'#D}'#D}O*{QPO'#DwO+dQPO'#DwO,vQPO'#ESOOQO'#Fg'#FgO,}QPO'#GUO/ZQPO'#GUOOQO'#Ec'#EcO/kQPO'#EjOOQO'#Fa'#FaO/yQPO'#DgO0vQPO'#DgO0}QPO'#DeOOQO'#GO'#GOO4PQPO'#FRO5{QPO'#F|OOQO'#F|'#F|O6oQPO'#F|O7YQPO'#FSOOQO'#F{'#F{O9YQPO'#FzOOQO'#Fz'#FzO:TQPO'#FyOOQO'#Fy'#FyO:{QPO'#FXOOQO'#Fq'#FqO;mQPO,5;qOOQO,5;q,5;qO;tQPO'#DhO=ZQPO'#F|O;mQPO,5;qOOQO'#G`'#G`OOQO'#Fr'#FrQ%tQPOOO=ZQPO,59TOOQO1G.h1G.hOOQO1G/h1G/hOOQO,59],59]OOQO-E9[-E9[O=bQPO,5<iO/kQPO'#CxOOQO'#F_'#F_OAeQPO,59WO?wQPO,59WOOQO,5:W,5:WOOQO'#DT'#DTOOQO'#GW'#GWOAlQPO'#GWOOQO,5:c,5:cOOQO'#DO'#DOOOQO'#C}'#C}OAqQPO'#C}OOQO'#D['#D[OOQO'#D_'#D_OOQO'#C|'#C|OFXQPO'#ETOGlQPO'#EXOJaQPO'#EZOJhQPO'#EZOJoQPO'#E_OOQO'#GX'#GXOOQO'#Fc'#FcOJtQPO,5:nOOQO,5:n,5:nOOQO-E9e-E9eOOQO'#GV'#GVOOQO'#Fb'#FbOKmQPO,5<pOOQO'#Cz'#CzOOQO'#Fj'#FjOMiQPO,5;UOOQO-E9_-E9_ONWQPO,5:ROOQO'#Er'#ErO0[QPO'#E|O%fQPO'#E}OOQO'#GZ'#GZO%fQPO'#GZON_QPO'#GYONpQPO'#EnOOQO,5:R,5:RON{QPO,5:RO! QQPO'#EqO/kQPO'#EqO!%fQPO,5:PO!!gQPO,5:PO!&kQPO,5;mO!%mQPO,5;mOOQO,5<h,5<hOOQO,5;n,5;nO=ZQPO'#FoO!&rQPO,5;oO=ZQPO'#FpO!'mQPO,5;pOOQO,5;s,5;sOOQO-E9o-E9oOOQO1G1]1G1]OOQO'#Dk'#DkOOQO'#GT'#GTOOQO'#Du'#DuO:{QPO'#GSOOQO'#GS'#GSO!(|QPO'#GSO!)gQPO'#EdOOQO'#GR'#GRO!*yQPO'#GQOOQO'#GQ'#GQO!+bQPO'#GPOOQO'#GP'#GPO=ZQPO'#GSOOQO,5:S,5:SO!+vQPO,5<hO!+{QPO1G1]OOQO-E9p-E9pOOQO1G.o1G.oO!,SQPO,59dOOQO-E9]-E9]O!-WQPO1G.rO!UQPO,5<rO!UQPO,59iO!.tQPO,5:oO!0XQPO,5:sO!1lQPO,5:uO!3PQPO'#E]OOQO'#Ff'#FfO!1lQPO,5:uO!3UQPO'#EVOOQO'#Fd'#FdO!4mQPO,5:yOOQO'#Fe'#FeO!4tQPO,5:yO!4{QPO,5:yOOQO-E9a-E9aOOQO1G0Y1G0YOOQO-E9`-E9`OOQO-E9h-E9hOOQO1G/m1G/mO!5SQPO1G/mO!5XQPO,5;hOOQO'#Ep'#EpOOQO,5;i,5;iO!5^QPO,5<uO!5rQPO,5<tO!6PQPO,5<tO0[QPO'#FnO!6bQPO,5;YO!6mQPO'#G_OOQO'#G_'#G_O!7jQPO'#G_O!8gQPO'#EtOOQO'#G^'#G^O!9yQPO'#G]OOQO'#G]'#G]O!:tQPO'#G[OOQO'#G['#G[O=ZQPO'#G_O!<QQPO,5;]O! QQPO,5;]O!<eQPO1G/kO!?dQPO1G1XOOQO,5<Z,5<ZOOQO-E9m-E9mOOQO,5<[,5<[OOQO-E9n-E9nOOQO,5<n,5<nOOQO,5;O,5;OO;tQPO'#FhO!@bQPO,5;QO;tQPO'#FiO!@yQPO,5;SO!A_QPO,5<nOOQO1G2S1G2SOOQO7+&w7+&wOOQO1G/O1G/OOOQO1G2^1G2^OOQO1G/T1G/TO!UQPO'#EVO!AdQPO1G0ZO!,]QPO'#EYO!BwQPO1G0_O!D[QPO1G0aO!EoQPO,5:wOOQO-E9d-E9dO!GVQPO,5:qO!HmQPO,5:tOOQO-E9b-E9bOOQO-E9c-E9cOOQO7+%X7+%XO!JTQPO1G1SOOQO1G2a1G2aOOQO,5<X,5<XO!JhQPO1G2`OOQO-E9k-E9kOOQO,5<Y,5<YOOQO-E9l-E9lOOQO,5<y,5<yOOQO,5;`,5;`O! QQPO'#FkO!JuQPO,5;aO! QQPO'#FlO!KpQPO,5;bO!LhQPO,5<yO!LmQPO1G0wO!LpQPO1G0wOOQO'#Ew'#EwO!LmQPO1G0wO!MUQPO1G0wOOQO,5<S,5<SOOQO-E9f-E9fOOQO,5<T,5<TOOQO-E9g-E9gOOQO1G2Y1G2YOOQO1G0c1G0cOOQO1G0]1G0]OOQO1G0`1G0`O!MfQPO7+&nO!MiQPO7+&nO!MfQPO7+&nP0[QPO'#FmOOQO,5<V,5<VOOQO-E9i-E9iOOQO,5<W,5<WOOQO-E9j-E9jOOQO1G2e1G2eO!M}QPO7+&cO!NcQPO7+&cO!NcQPO7+&cO!NjQPO<<JYO# OQPO<<JYO# VQPO<<I}O# kQPO<<I}O# rQPOAN?tO#!WQPOAN?i",
+  stateData: "#$O~O$iOSPOS~OSPOTROVSOWQOYQO[TO^bO!VXO!h[O#z_O~OTcO~OWdO~OTROWQOYQO~O!VXOS$OXT$OXV$OXW$OXY$OX[$OX^$OX!h$OX#z$OX$g$OX~OTROWQOYQObiOciOdiOgjOhjOijOklO!]!cO!^!cO!arO!brO!crO!drO!esO!j{O!mtO!ntO!otO!ptO!ruO!suO!uxO!z!_O#S|O#T!dO#X!XO#_}O#`!OO#a!QO#|!_O~O#}!bO~P#UOTROWQOYQO!h[O~OSPOTROVSOWQOYQO[TO^bO!h[O#z_O~O_!iO~O!V!kO!W!kO~Oj!lO~OgjOhjOijOklOS$qXT$qXV$qXW$qXY$qX[$qX^$qXm$qX!V$qX!]$qX!^$qX!a$qX!b$qX!c$qX!d$qX!e$qX!h$qX#Z$qX#]$qX#_$qX#`$qX#a$qX#z$qX$g$qX#U$qX!Y$qX#l$qX#m$qX#n$qX#o$qX#r$qX#s$qX#t$qX~Om!oO!VXOS`XT`XV`XW`XY`X[`X^`X!]`X!^`X!a`X!b`X!c`X!d`X!e`X!h`X#Z`X#]`X#_`X#``X#a`X#z`X$g`X#U`X~Oj!uOx!tOy!tOz!tO{!tO!P!uO!Q!uO~Oj!wO~OTROWQOYQOj!{Os!xOt!xOu!xOv!xOx!tOy!tOz!tO{!tO!P!{O!Q!{O!S!|O!T!|O#O#QO#Q#RO#S#SO~O!t#WO~P+iO!mtO!ntO!otO!ptO!ruO!suOS$xXT$xXV$xXW$xXY$xX[$xX^$xXm$xX!V$xX!h$xX#Z$xX#]$xX#z$xX$g$xX!]$xX!^$xX#_$xX#`$xX#a$xX#U$xX!Y$xX#l$xX#m$xX#n$xX#o$xX#r$xX#s$xX#t$xX~OgjOhjOijOklO~P,}OTROWQOYQOo#]O~O!]!cO!^!cO#_}O#`!OO#a#aO~OTROWQOYQOo#]O!^#dO#T#cO#c#fO#g#bO~O!Y#iO~P0[Om!oO!VXOS!XXT!XXV!XXW!XXY!XX[!XX^!XXb!XXc!XXd!XXg!XXh!XXi!XXk!XX!h!XX#Z!XX#]!XX#z!XX$g!XX!]!XX!^!XX!a!XX!b!XX!c!XX!d!XX!e!XX!j!XX!m!XX!n!XX!o!XX!p!XX!r!XX!s!XX!u!XX!z!XX#S!XX#T!XX#X!XX#_!XX#`!XX#a!XX#|!XX#}!XX#U!XX~Om!oO!VXOS#uXT#uXV#uXW#uXY#uX[#uX^#uX!h#uX#Z#uX#]#uX#z#uX$g#uX#U#uX~OS$pXT$pXV$pXW$pXY$pX[$pX^$pX!h$pX#Z$pX#]$pX#z$pX$g$pX#U$pX~O!]!cO!^!cO!arO!brO!crO!drO!esO#_}O#`!OO#a!QO~P5QObiOciOdiOgjOhjOijOklO~P5QOTROWQOYQObiOciOdiOgjOhjOijOklO!]!cO!^!cO!arO!brO!crO!drO!esO!j{O!mtO!ntO!otO!ptO!ruO!suO!uxO#S|O#T!dO#_}O#`!OO#a!QO~O#Z#sOS$nXT$nXV$nXW$nXY$nX[$nX^$nX!h$nX#]$nX#z$nX$g$nX#U$nX~O#]#uOS$mXT$mXV$mXW$mXY$mX[$mX^$mX!h$mX#z$mX$g$mX#U$mX~O!]!cO!^!cO!arO!brO!crO!drO!esO#_}O#`!OO#a!QO~O#}#yO~P#UOTROWQOYQObiOciOdiOgjOhjOijOklO!j{O!mtO!ntO!otO!ptO!ruO!suO!uxO#S|O#T$WO#X$QO~P:{O#X!XO~P7YOgjOhjOijOklOS$qaT$qaV$qaW$qaY$qa[$qa^$qam$qa!V$qa!]$qa!^$qa!a$qa!b$qa!c$qa!d$qa!e$qa!h$qa#Z$qa#]$qa#_$qa#`$qa#a$qa#z$qa$g$qa#U$qa!Y$qa#l$qa#m$qa#n$qa#o$qa#r$qa#s$qa#t$qa~O!VXOS`aT`aV`aW`aY`a[`a^`a!]`a!^`a!a`a!b`a!c`a!d`a!e`a!h`a#Z`a#]`a#_`a#``a#a`a#z`a$g`a#U`a~Om!oO~P?wO|$aO~O|$bOTqXWqXYqXjqXsqXtqXuqXvqXxqXyqXzqX{qX!PqX!QqX!SqX!TqX!tqX!xqX#OqX#QqX#SqXSqXVqX[qX^qXmqX!VqX!]qX!^qX!aqX!bqX!cqX!dqX!eqX!hqX#ZqX#]qX#_qX#`qX#aqX#zqX$gqX!zqXbqXcqXdqXgqXhqXiqXkqX!jqX!mqX!nqX!oqX!pqX!rqX!sqX!uqX#TqX#XqX#|qX#}qX#UqX!YqX#rqX#sqX#tqX~O!x$cOT!wXW!wXY!wXj!wXs!wXt!wXu!wXv!wXx!wXy!wXz!wX{!wX!P!wX!Q!wX!S!wX!T!wX!t!wX#O!wX#Q!wX#S!wX~O!x$dOT!{XW!{XY!{Xj!{Xs!{Xt!{Xu!{Xv!{Xx!{Xy!{Xz!{X{!{X!P!{X!Q!{X!S!{X!T!{X!t!{X#O!{X#Q!{X#S!{X~OT!}XW!}XY!}Xj!}Xs!}Xt!}Xu!}Xv!}Xx!}Xy!}Xz!}X{!}X!P!}X!Q!}X!S!}X!T!}X!t!}X#O!}X#Q!}X#S!}X~O!x$eO~PIPO!z$fO~PIPO!z$iO~O!t$pO~P+iOgjOhjOijOklO!mtO!ntO!otO!ptO!ruO!suO~OS$xaT$xaV$xaW$xaY$xa[$xa^$xam$xa!V$xa!h$xa#Z$xa#]$xa#z$xa$g$xa!]$xa!^$xa#_$xa#`$xa#a$xa#U$xa!Y$xa#l$xa#m$xa#n$xa#o$xa#r$xa#s$xa#t$xa~PJ{OTROWQOYQOo#]O!]#^a!^#^a#_#^a#`#^a#a#^a~O!Y$sO~P0[O#r$yO#s$yO!Y$|X#t$|X#U$|X~O#t${O!Y#bX#U#bX~O!Y$sO~OTROWQOYQObiOciOdiOgjOhjOijOklO!j{O!mtO!ntO!otO!ptO!ruO!suO!uxO#S|O#T%WO#X%QO~P:{O!VXOS!XaT!XaV!XaW!XaY!Xa[!Xa^!Xab!Xac!Xad!Xag!Xah!Xai!Xak!Xa!h!Xa#Z!Xa#]!Xa#z!Xa$g!Xa!]!Xa!^!Xa!a!Xa!b!Xa!c!Xa!d!Xa!e!Xa!j!Xa!m!Xa!n!Xa!o!Xa!p!Xa!r!Xa!s!Xa!u!Xa!z!Xa#S!Xa#T!Xa#X!Xa#_!Xa#`!Xa#a!Xa#|!Xa#}!Xa#U!Xa~Om!oO~P!!gO!VXOS#uaT#uaV#uaW#uaY#ua[#ua^#ua!h#ua#Z#ua#]#ua#z#ua$g#ua#U#ua~Om!oO~P!%mO#Z#sOS#waT#waV#waW#waY#wa[#wa^#wa!h#wa#]#wa#z#wa$g#wa#U#wa~O#]#uOS#xaT#xaV#xaW#xaY#xa[#xa^#xa!h#xa#z#xa$g#xa#U#xa~ObiOciOdiOgjOhjOijOklO~O!]$vX!^$vX#Z$vX#]$vX#_$vX#`$vX#a$vX~P!(eOTROWQOYQObiOciOdiOgjOhjOijOklO!j{O!mtO!ntO!otO!ptO!ruO!suO!uxO#S|O#T$WO~P:{O#Z%cO!]$tX!^$tX#]$tX#_$tX#`$tX#a$tX~O#]%eO!]$sX!^$sX#_$sX#`$sX#a$sX~O#U%hO~O#}%iO~P#UOTROWQOYQOj!{Os!xOt!xOu!xOv!xOx!tOy!tOz!tO{!tO!P!{O!Q!{O!S!|O!T!|O~O!VXOS`iT`iV`iW`iY`i[`i^`i!]`i!^`i!a`i!b`i!c`i!d`i!e`i!h`i#Z`i#]`i#_`i#``i#a`i#z`i$g`i#U`i~O!z%mOT!waW!waY!waj!was!wat!wau!wav!wax!way!waz!wa{!wa!P!wa!Q!wa!S!wa!T!wa!t!wa#O!wa#Q!wa#S!wa~O!z%oOT!{aW!{aY!{aj!{as!{at!{au!{av!{ax!{ay!{az!{a{!{a!P!{a!Q!{a!S!{a!T!{a!t!{a#O!{a#Q!{a#S!{a~O!z$fOT!}aW!}aY!}aj!}as!}at!}au!}av!}ax!}ay!}az!}a{!}a!P!}a!Q!}a!S!}a!T!}a!t!}a#O!}a#Q!}a#S!}a~O#O%rO~O#O%rO~P!,SOT#RaW#RaY#Raj#Ras#Rat#Rau#Rav#Rax#Ray#Raz#Ra{#Ra!P#Ra!Q#Ra!S#Ra!T#Ra!t#Ra#O#Ra#Q#Ra#S#Ra~O!z%mO~P!3]O!z%oO~P!3]O!z$fO~P!3]O!Y%xO~O#U%yO~OTROWQOYQOo#]O#T#cO#g#bO~O!Y$|a#t$|a#U$|a~P0[O#r%|O#s%|O!Y$|a#t$|a#U$|a~O#t${O!Y#ba#U#ba~Om%RX!V%RX!Y%RX#Z%RX#]%RX#l%RX#m%RX#n%RX#o%RX#r%RX#s%RX#t%RX#U%RX~P:{Om%RX!V%RX!Y%RX#Z%RX#]%RX#l%RX#m%RX#n%RX#o%RX#r%RX#s%RX#t%RX#U%RX~P!(eOTROWQOYQObiOciOdiOgjOhjOijOklO!j{O!mtO!ntO!otO!ptO!ruO!suO!uxO#S|O#T%WO~P:{O#Z&SOm%PX!V%PX!Y%PX#]%PX#l%PX#m%PX#n%PX#o%PX#r%PX#s%PX#t%PX#U%PX~O#]&UOm%OX!V%OX!Y%OX#l%OX#m%OX#n%OX#o%OX#r%OX#s%OX#t%OX#U%OX~Om!oO!VXO#l&ZO#m&ZO#n&ZO#o&ZO~O!Y#ea#r#ea#s#ea#t#ea#U#ea~P!;lO!VXOS!XiT!XiV!XiW!XiY!Xi[!Xi^!Xib!Xic!Xid!Xig!Xih!Xii!Xik!Xi!h!Xi#Z!Xi#]!Xi#z!Xi$g!Xi!]!Xi!^!Xi!a!Xi!b!Xi!c!Xi!d!Xi!e!Xi!j!Xi!m!Xi!n!Xi!o!Xi!p!Xi!r!Xi!s!Xi!u!Xi!z!Xi#S!Xi#T!Xi#X!Xi#_!Xi#`!Xi#a!Xi#|!Xi#}!Xi#U!Xi~O!VXOS#uiT#uiV#uiW#uiY#ui[#ui^#ui!h#ui#Z#ui#]#ui#z#ui$g#ui#U#ui~O#Z%cO!]#Ya!^#Ya#]#Ya#_#Ya#`#Ya#a#Ya~O#]%eO!]#[a!^#[a#_#[a#`#[a#a#[a~O#U&bO~O!z%mOT!wiW!wiY!wij!wis!wit!wiu!wiv!wix!wiy!wiz!wi{!wi!P!wi!Q!wi!S!wi!T!wi!t!wi#O!wi#Q!wi#S!wi~O!z%oOT!{iW!{iY!{ij!{is!{it!{iu!{iv!{ix!{iy!{iz!{i{!{i!P!{i!Q!{i!S!{i!T!{i!t!{i#O!{i#Q!{i#S!{i~O!z$fOT!}iW!}iY!}ij!}is!}it!}iu!}iv!}ix!}iy!}iz!}i{!}i!P!}i!Q!}i!S!}i!T!}i!t!}i#O!}i#Q!}i#S!}i~O!x&cOT#PaW#PaY#Paj#Pas#Pat#Pau#Pav#Pax#Pay#Paz#Pa{#Pa!P#Pa!Q#Pa!S#Pa!T#Pa!t#Pa!z#Pa#O#Pa#Q#Pa#S#Pa~O!x&dOT!yaW!yaY!yaj!yas!yat!yau!yav!yax!yay!yaz!ya{!ya!P!ya!Q!ya!S!ya!T!ya!t!ya!z!ya#O!ya#Q!ya#S!ya~O!x&eOT!|aW!|aY!|aj!|as!|at!|au!|av!|ax!|ay!|az!|a{!|a!P!|a!Q!|a!S!|a!T!|a!t!|a!z!|a#O!|a#Q!|a#S!|a~O!Y#pi#r#pi#s#pi#t#pi#U#pi~P!;lO!Y$|i#t$|i#U$|i~P0[O#Z&SOm#ia!V#ia!Y#ia#]#ia#l#ia#m#ia#n#ia#o#ia#r#ia#s#ia#t#ia#U#ia~O#]&UOm#ja!V#ja!Y#ja#l#ja#m#ja#n#ja#o#ja#r#ja#s#ja#t#ja#U#ja~O#U&nO~Om!oO!VXO!Y#ei#r#ei#s#ei#t#ei#U#ei~O#l&ZO#m&ZO#n&ZO#o&ZO~P!LmOm!oO!VXO!Y#pq#r#pq#s#pq#t#pq#U#pq~O!VXO!Y#eq#r#eq#s#eq#t#eq#U#eq~Om!oO~P!M}O!VXO!Y#py#r#py#s#py#t#py#U#py~Om!oO~P!NjO!VXO!Y#ey#r#ey#s#ey#t#ey#U#ey~Om!oO~P# VO!VXO!Y#p!R#r#p!R#s#p!R#t#p!R#U#p!R~O!VXO!Y#e!R#r#e!R#s#e!R#t#e!R#U#e!R~Ostuvxyz{!Q!Pj#S!z#m#o!W#aPkm!a!b!c!d#O#Q!e|#gT!hYWSV[^#}#z#|!]#`#_!jcbd#Z#]#X!m!n!o!pghi!r!so!S!TY~",
+  goto: "CS%TPPP%UPP%UPP%[P%UP&bPP&h&xPPP'c(TPPPPP(sP)WP)l)w*OPPPP*VPPPPP*a)wPP)wPP*}PP+rP,R,oPP-[-oPPPPP.].iP.uP/S/oPPPP0YPPPP0s1ZP1_P1Z1e1ZP1kP1ZPPP1s2_P2dP2hP,oPPP2kP2t2z3WP3b3h3m3qPPPP2z3zPPP4T4b4n4y&bP5TPP5Z5_5e6V6z8]8z9Q9W9b9l9z:e:k:q:w:};T;Z;a;g;m;wPPP;}<V=o=w>_>l>z?Z?v@Z@^@d@k@sAWApAtAwA{BTB`BfBmBuCOXUOWa!h#XROTWX^_adsx}!Q!X!a!c!d!e!h!i!o#V#_#a#c#d#f#k#l#s#u$Q$W$Z$^$a$b$i$x$y${%Q%W%Y%c%e%m%|&S&U&iX`OWa!hf!U^!X!a!d!e!i#s#u$W$Z%WR#q!W!Po^!W!X!a!c!d!e!i#k#s#u$P$Q$W$Z%P%Q%W%Y%c%e&S&U!Um^no!W!X!a!c!d!e!i!n#k#s#u$P$Q$W$Z%P%Q%W%Y%c%e&S&UT#Y{#[!Zk^no{!W!X!a!c!d!e!i!n#[#k#s#u$P$Q$W$Z%P%Q%W%Y%c%e&S&Us!pq!R!T!q#m#o%X%y&X&[&]&f&h&p&q&s&uS#^}#_`#k!Q#a#c$x$y${%|&iQ$^!oR%Y#lS#Px#VQ%j$^T%u$i%oZ!}x#V$^$i%oZ!yx#V$^$i%oQ!vvZ!zx#V$^$i%ox{^!X!a!c!d!e!i#k#s#u$Q$W$Z%Q%W%Y%c%e&S&UQ%k$aR%l$b!eYOWZq!R!T!q!r#m#n#o#p$`%X%Z%[%y&X&Y&[&]&f&g&h&o&p&q&r&s&t&u&v&wk!S^!U!X!_!a!d!e!i#s#u$W$Z%Wj!R^!U!X!_!a!d!e!i#s#u$W$Z%Wg#{!c#k#}$Q$}%Q%Y%c%e&S&U!T!O^!P!U!X!_!a!c!d!e!i#k#s#u#}$Q$W$Z$}%Q%W%Y%c%e&S&UW#}!c$Q%c%eY$}#k%Q%Y&S&UQ%a$PR&Q%Pj!S^!U!X!_!a!d!e!i#s#u$W$Z%Wg#{!c#k#}$Q$}%Q%Y%c%e&S&UW^OWa!hQ!e_R!ss[]OW_as!hT$v#d#fW$O!c$Q%c%eZ%O#k%Q%Y&S&Uzy^z!X!a!c!d!e!i#k#s#u$Q$W$Z%Q%W%Y%c%e&S&UT#Y{#[!Pv^z{!X!a!c!d!e!i#[#k#s#u$Q$W$Z%Q%W%Y%c%e&S&U!Pw^z{!X!a!c!d!e!i#[#k#s#u$Q$W$Z%Q%W%Y%c%e&S&Uy{^!X!a!c!d!e!i#k#s#u$Q$W$Z%Q%W%Y%c%e&S&UT#Tx#VX$j#S$c$k%nX$l#S$d$m%p]$g#R#S$e$h$n%qf!V^!X!a!d!e!i#s#u$W$Z%WW$O!c$Q%c%eZ%O#k%Q%Y&S&UV$R!c%c%eT$T!c%eR$V!cQ#j!QQ$t#aR$u#cQ$w#dR$x#f^#e!Q#a#c$y${%|&iR%z$xa#l!Q#a#c$x$y${%|&iX%R#k%Y&S&UV%T#k%Y&UT%V#k%YQ&[%XQ&h%yR&q&]_#e!Q#a#c$y${%|&ig!V^!X!a!d!e!i#s#u$W$Z%We!Y^!a!d!e!i#s#u$W$Z%Wc![^!a!d!e!i#u$W$Z%Wa!^^!a!d!e!i$W$Z%WX!`^!a!e$ZTaOWQWORfW!On^!W!X!a!c!d!e!i#k#s#u$P$Q$W$Z%P%Q%W%Y%c%e&S&US!mn!nR!noQ!qqQ#m!RQ#o!T`$_!q#m#o&X&f&p&s&uQ&X%XQ&f%yS&p&[&]Q&s&hR&u&qSZOWlhZ!r#n#p$`%Z%[&Y&g&o&r&t&v&wQ!rqQ#n!RQ#p!TQ$`!qQ%Z#mQ%[#oQ&Y%XQ&g%yU&o&X&[&]S&r&f&hS&t&p&qQ&v&sR&w&u!Q!P^!U!X!_!a!c!d!e!i#k#s#u#}$Q$W$Z$}%Q%W%Y%c%e&S&UR#`!PQ#[{R$q#[Q#VxR$o#VQ$k#SQ%n$cT%v$k%nQ$m#SQ%p$dT%w$m%pQ$h#RQ$n#SQ%q$eV%s$h$n%qxz^!X!a!c!d!e!i#k#s#u$Q$W$Z%Q%W%Y%c%e&S&UR#XzQ%d$SR&_%dQ%f$UR&a%fQ#_}R$r#_Q&T%SR&k&TQ&V%UR&m&VQ$z#gR%}$zQ$|#hR&P$|Q#t!ZR%^#tQ#v!]R%`#vQ!a^S#x!a$ZR$Z!eQ!haR$[!hSVOWT!fa!h[]OW_as!hQeTQgX|p^!X!a!c!d!e!i#k#s#u$Q$W$Z$a$b%Q%W%Y%c%e&S&UQ!jdS#Ox#Vh#]}!Q!o#_#a#c#l$x$y${%|&iS$v#d#fQ%j$^T%t$i%mSaOWT!fa!hQ!b^S#y!a!eQ$Y!dQ$]!iQ%g$WQ%i$ZR&W%W`!]^!a!d!e!i$W$Z%WR%_#ub!Z^!a!d!e!i#u$W$Z%WR%]#sd!Y^!a!d!e!i#s#u$W$Z%WR#r!Xhq^!W!X!a!d!e!i#s#u$W$Z%Wg#z!c#k$P$Q%P%Q%Y%c%e&S&Uf!W^!X!a!d!e!i#s#u$W$Z%WQ#q!UR#w!_R$X!cQ$U!cR&`%eS$S!c%eR&^%cU$R!c%c%eR%b$QW$P!c$Q%c%eY%P#k%Q%Y&S&UQ%a#}R&Q$}f!T^!X!a!d!e!i#s#u$W$Z%Wc#|!c#k$Q%Q%Y%c%e&S&UT#Z{#[R!wvT#Ux#VU#h!Q#a#cR&O${W#g!Q#a#c${V%{$y%|&iQ%X#kR&]%YS%U#k%YR&l&UU%S#k%Y&UR&j&SW%R#k%Y&S&UR&R%QT!ga!h",
+  nodeNames: "⚠ Comment ShExDoc BaseDecl BaseKw IRIREF PrefixDecl PrefixKw PNAME_NS PrefixedName PNAME_LN ImportDecl ImportKw Start StartKw = NodeConstraint NodeKind IriKw BnodeKw NonLiteralKw StringFacet StringLength LengthKw MinLengthKw MaxLengthKw INTEGER REGEXP Annotation // Predicate RdfTypeKw Literal RdfLiteral LangString LANG_STRING_LITERAL_LONG1 LANG_STRING_LITERAL_LONG2 LANG_STRING_LITERAL1 LANG_STRING_LITERAL2 String STRING_LITERAL_LONG1 STRING_LITERAL_LONG2 STRING_LITERAL1 STRING_LITERAL2 ^^ Datatype NumericLiteral DECIMAL DOUBLE BooleanLiteral TrueKw FalseKw CodeDecl % CODE ShapeDefinition } InlineShapeDefinition Extension ExtendsKw & NodeConstraint ShapeRef ATIRIREF ATPNAME_LN ATPNAME_NS ATBLANK_NODE_LABEL @ ShapeExprLabel BlankNode BLANK_NODE_LABEL NodeConstraint LiteralKw NumericFacet NumericRange MinInclusiveKw MinExclusiveKw MaxInclusiveKw MaxExclusiveKw NumericLength TotalDigitsKw FractionDigitsKw ] [ ValueSet IriRange ~ IriExclusion - LiteralRange LiteralExclusion LanguageRange LANGTAG LanguageExclusion LANG_WILDCARD WildcardRange . ( ) ShapeAny ShapeNot NotKw ShapeAnd AndKw ShapeOr OrKw ExtraPropertySet ExtraKw ClosedKw { TripleExpression $ TripleExprLabel TripleConstraint SenseFlags ^ ShapeNot ShapeAnd ShapeOr Cardinality * + ? REPEAT_RANGE BracketedTripleExpr Include ; , | NodeConstraint ShapeNot ShapeAnd ShapeOr ShapeExprDecl AbstractKw Restriction RestrictsKw ExternalKw StartActions",
+  maxTerm: 188,
+  nodeProps: [
+    ["openedBy", 82,"["],
+    ["closedBy", 83,"]"]
+  ],
+  skippedNodes: [0,1],
+  repeatNodeCount: 22,
+  tokenData: ")KT~R!uXY&fYZ&f]^&fpq&frs&wst2Wtu2ruv2wvw2|wx3Rxy>byz>gz{>l{|>q|}@k}!O@p!O!P@{!P!QAT!Q![?|![!]!%p!]!^!,a!^!_!,f!_!`!/w!a!b!/|!b!c!0R!c!d!HS!d!e#.e!e!f#<Z!f!g!JT!g!h#Fk!h!i$/S!i!k!JT!k!l$Gb!l!n!JT!n!o%'^!o!p%<U!p!q'=_!q!r(!b!r!s(%p!s!t!JT!t!u(0Q!u!v(?o!v!w(HU!w!}!JT!}#O)-V#P#Q)-[#Q#R)-a#R#S)-n#T#U)1{#U#V#.e#V#W#<Z#W#X!JT#X#Y#Fk#Y#Z)4O#Z#]!JT#]#^$Gb#^#`!JT#`#a%'^#a#b%<U#b#c'=_#c#d(!b#d#e(%p#e#f!JT#f#g(0Q#g#h(?o#h#i)<[#i#o!JT#o#p)B|#p#q)Jt#q#r)Jy#r#s)KO%W%o!JT%p&a!JT&b1p!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&kS$i~XY&fYZ&f]^&fpq&f~&zXOY'gZ]'g^r'grs,bs#O'g#O#P)e#P;'S'g;'S;=`,[<%lO'g~'jXOY'gZ]'g^r'grs(Vs#O'g#O#P)e#P;'S'g;'S;=`,[<%lO'g~([P{~!b!c(_~(bQ!c!}(h#T#o(h~(mRv~}!O(v!c!}(h#T#o(h~(yR!Q![)S!c!})S#T#o)S~)XSv~}!O(v!Q![)S!c!})S#T#o)S~)hYrs'gwx'g!w!x*W#O#P'g#U#V'g#Y#Z'g#b#c'g#f#g'g#h#i'g#i#j+Y~*ZR!Q![*d!c!i*d#T#Z*d~*gR!Q![*p!c!i*p#T#Z*p~*sR!Q![*|!c!i*|#T#Z*|~+PR!Q![+Y!c!i+Y#T#Z+Y~+]R!Q![+f!c!i+f#T#Z+f~+iR!Q![+r!c!i+r#T#Z+r~+uR!Q![,O!c!i,O#T#Z,O~,RR!Q!['g!c!i'g#T#Z'g~,_P;=`<%l'g~,gQ{~rs,m!b!c(_~,pVOr,mrs-Vs#O,m#O#P/a#P;'S,m;'S;=`/Z<%lO,m~-YTOr,mrs-is;'S,m;'S;=`/Z<%lO,m~-lTOr,mrs-{s;'S,m;'S;=`/Z<%lO,m~.QPy~!b!c.T~.WQ!c!}.^#T#o.^~.cRt~}!O.l!c!}.^#T#o.^~.oR!Q![.x!c!}.x#T#o.x~.}St~}!O.l!Q![.x!c!}.x#T#o.x~/^P;=`<%l,m~/dYrs,mwx,m!w!x0S#O#P,m#U#V,m#Y#Z,m#b#c,m#f#g,m#h#i,m#i#j1U~0VR!Q![0`!c!i0`#T#Z0`~0cR!Q![0l!c!i0l#T#Z0l~0oR!Q![0x!c!i0x#T#Z0x~0{R!Q![1U!c!i1U#T#Z1U~1XR!Q![1b!c!i1b#T#Z1b~1eR!Q![1n!c!i1n#T#Z1n~1qR!Q![1z!c!i1z#T#Z1z~1}R!Q![,m!c!i,m#T#Z,m~2]TP~OY2WZ]2W^;'S2W;'S;=`2l<%lO2W~2oP;=`<%l2W~2wO#c~~2|O!V~~3RO!^~~3UXOY3qZ]3q^w3qwx8lx#O3q#O#P5o#P;'S3q;'S;=`8f<%lO3q~3tXOY3qZ]3q^w3qwx4ax#O3q#O#P5o#P;'S3q;'S;=`8f<%lO3q~4fPz~!b!c4i~4lQ!c!}4r#T#o4r~4wRu~}!O5Q!c!}4r#T#o4r~5TR!Q![5^!c!}5^#T#o5^~5cSu~}!O5Q!Q![5^!c!}5^#T#o5^~5rYrs3qwx3q!w!x6b#O#P3q#U#V3q#Y#Z3q#b#c3q#f#g3q#h#i3q#i#j7d~6eR!Q![6n!c!i6n#T#Z6n~6qR!Q![6z!c!i6z#T#Z6z~6}R!Q![7W!c!i7W#T#Z7W~7ZR!Q![7d!c!i7d#T#Z7d~7gR!Q![7p!c!i7p#T#Z7p~7sR!Q![7|!c!i7|#T#Z7|~8PR!Q![8Y!c!i8Y#T#Z8Y~8]R!Q![3q!c!i3q#T#Z3q~8iP;=`<%l3q~8qQz~wx8w!b!c4i~8zVOw8wwx9ax#O8w#O#P;k#P;'S8w;'S;=`;e<%lO8w~9dTOw8wwx9sx;'S8w;'S;=`;e<%lO8w~9vTOw8wwx:Vx;'S8w;'S;=`;e<%lO8w~:[Px~!b!c:_~:bQ!c!}:h#T#o:h~:mRs~}!O:v!c!}:h#T#o:h~:yR!Q![;S!c!};S#T#o;S~;XSs~}!O:v!Q![;S!c!};S#T#o;S~;hP;=`<%l8w~;nYrs8wwx8w!w!x<^#O#P8w#U#V8w#Y#Z8w#b#c8w#f#g8w#h#i8w#i#j=`~<aR!Q![<j!c!i<j#T#Z<j~<mR!Q![<v!c!i<v#T#Z<v~<yR!Q![=S!c!i=S#T#Z=S~=VR!Q![=`!c!i=`#T#Z=`~=cR!Q![=l!c!i=l#T#Z=l~=oR!Q![=x!c!i=x#T#Z=x~={R!Q![>U!c!i>U#T#Z>U~>XR!Q![8w!c!i8w#T#Z8w~>gO#T~~>lO#U~~>qO#l~~>vQ#m~!O!P>|!Q![?|~?PP!Q![?S~?XR!P~!Q![?S!g!h?b#X#Y?b~?eR{|?n}!O?n!Q![?t~?qP!Q![?t~?yP!Q~!Q![?t~@RSj~!O!P@_!Q![?|!g!h?b#X#Y?b~@bR!Q![?S!g!h?b#X#Y?b~@pO#s~~@uQ!z~!O!P>|!Q![?|~AQP#S~!Q![?S~AWZOYAyZ]Ay^zAyz{Fj{!PAy!P!Q!%k!Q#OAy#O#PBz#P;'SAy;'S;=`Fd<%lOAy~A|XOYAyZ]Ay^!PAy!P!QBi!Q#OAy#O#PBz#P;'SAy;'S;=`Fd<%lOAy~BnSk~#]#^Bi#a#bBi#g#hBi#l#mBi~B}etuAyxyAyyzAyz{Ay{|Ay}!OAy!O!PAy!P!QAy!a!bAy!w!xD`!}#OAy#O#PAy#P#QAy#Q#RAy#b#cAy#f#gAy#h#iAy#i#jEb#o#pAy#p#qAy#q#rAy~DcR!Q![Dl!c!iDl#T#ZDl~DoR!Q![Dx!c!iDx#T#ZDx~D{R!Q![EU!c!iEU#T#ZEU~EXR!Q![Eb!c!iEb#T#ZEb~EeR!Q![En!c!iEn#T#ZEn~EqR!Q![Ez!c!iEz#T#ZEz~E}R!Q![FW!c!iFW#T#ZFW~FZR!Q![Ay!c!iAy#T#ZAy~FgP;=`<%lAy~Fm]OYFjYZGfZ]Fj]^Gf^zFjz{Hm{!PFj!P!Q!$m!Q#OFj#O#PI|#P;'SFj;'S;=`!$g<%lOFj~GiTOzGfz{Gx{;'SGf;'S;=`Hg<%lOGf~G{VOzGfz{Gx{!PGf!P!QHb!Q;'SGf;'S;=`Hg<%lOGf~HgOP~~HjP;=`<%lGf~Hp]OYFjYZGfZ]Fj]^Gf^zFjz{Hm{!PFj!P!QIi!Q#OFj#O#PI|#P;'SFj;'S;=`!$g<%lOFj~IpSP~k~#]#^Bi#a#bBi#g#hBi#l#mBi~JPrOtGftuFjuxGfxyFjyzFjz{Hm{|Fj|}Gf}!OFj!O!PFj!P!QFj!Q!aGf!a!bFj!b!wGf!w!xLZ!x!}Gf!}#OFj#O#PFj#P#QFj#Q#RFj#R#bGf#b#cFj#c#fGf#f#gFj#g#hGf#h#iFj#i#j! a#j#oGf#o#pFj#p#qFj#q#rFj#r;'SGf;'S;=`Hg<%lOGf~L^ZOzGfz{Gx{!QGf!Q![MP![!cGf!c!iMP!i#TGf#T#ZMP#Z;'SGf;'S;=`Hg<%lOGf~MSZOzGfz{Gx{!QGf!Q![Mu![!cGf!c!iMu!i#TGf#T#ZMu#Z;'SGf;'S;=`Hg<%lOGf~MxZOzGfz{Gx{!QGf!Q![Nk![!cGf!c!iNk!i#TGf#T#ZNk#Z;'SGf;'S;=`Hg<%lOGf~NnZOzGfz{Gx{!QGf!Q![! a![!cGf!c!i! a!i#TGf#T#Z! a#Z;'SGf;'S;=`Hg<%lOGf~! dZOzGfz{Gx{!QGf!Q![!!V![!cGf!c!i!!V!i#TGf#T#Z!!V#Z;'SGf;'S;=`Hg<%lOGf~!!YZOzGfz{Gx{!QGf!Q![!!{![!cGf!c!i!!{!i#TGf#T#Z!!{#Z;'SGf;'S;=`Hg<%lOGf~!#OZOzGfz{Gx{!QGf!Q![!#q![!cGf!c!i!#q!i#TGf#T#Z!#q#Z;'SGf;'S;=`Hg<%lOGf~!#tZOzGfz{Gx{!QGf!Q![Fj![!cGf!c!iFj!i#TGf#T#ZFj#Z;'SGf;'S;=`Hg<%lOGf~!$jP;=`<%lFj~!$r]k~OzGfz{Gx{#]Gf#]#^!$m#^#aGf#a#b!$m#b#gGf#g#h!$m#h#lGf#l#m!$m#m;'SGf;'S;=`Hg<%lOGf~!%pOm~~!%ucW~uv!'Q!Q![!'j![!]!'j!c!}!'j#O#P!*x#R#S!'j#T#o!'j%W%o!'j%p&a!'j&b1p!'j4U4d!'j4e$IS!'j$I`$Ib!'j$Kh%#t!'j&/x&Et!'j&FV;'S!'j;'S;:j!,Z?&r?Ah!'j?BY?Mn!'j~!'TR!Q![!'^!c!i!'^#T#Z!'^~!'aR!Q![!'j!c!i!'j#T#Z!'j~!'ohY~uv!'Q}!O!'j!O!P!)Z!Q![!'j![!]!'j!c!}!'j#O#P!*x#R#S!'j#T#o!'j$}%O!'j%W%o!'j%p&a!'j&b1p!'j1p4U!'j4U4d!'j4e$IS!'j$I`$Ib!'j$Je$Jg!'j$Kh%#t!'j&/x&Et!'j&FV;'S!'j;'S;:j!,Z?&r?Ah!'j?BY?Mn!'j~!)^huv!'Q}!O!'j!O!P!)Z!Q![!'j![!]!'j!c!}!'j#O#P!*x#R#S!'j#T#o!'j$}%O!'j%W%o!'j%p&a!'j&b1p!'j1p4U!'j4U4d!'j4e$IS!'j$I`$Ib!'j$Je$Jg!'j$Kh%#t!'j&/x&Et!'j&FV;'S!'j;'S;:j!,Z?&r?Ah!'j?BY?Mn!'j~!*{dqr!'jst!'jtu!'juv!'jvw!'jwx!'jxy!'jyz!'jz{!'j{|!'j|}!'j}!O!'j!O!P!'j!P!Q!'j!]!^!'j!_!`!'j!a!b!'j!b!c!'j#R#S!'j#r#s!'j~!,^P;=`<%l!'j~!,fO#r~~!,i[qr!,fs!^!,f!_!`!,f!`!a!-_!a#O!,f#O#P!-d#P#Q!,f#R#S!,f#T#o!,f#r;'S!,f;'S;=`!/q<%lO!,f~!-dOT~~!-gQ!w!x!-m#i#j!.o~!-pR!Q![!-y!c!i!-y#T#Z!-y~!-|R!Q![!.V!c!i!.V#T#Z!.V~!.YR!Q![!.c!c!i!.c#T#Z!.c~!.fR!Q![!.o!c!i!.o#T#Z!.o~!.rR!Q![!.{!c!i!.{#T#Z!.{~!/OR!Q![!/X!c!i!/X#T#Z!/X~!/[R!Q![!/e!c!i!/e#T#Z!/e~!/hR!Q![!,f!c!i!,f#T#Z!,f~!/tP;=`<%l!,f~!/|O_~~!0RO#n~~!0Wf!e~XY!1lYZ!1l]^!1lpq!1l![!]!2T!^!_!8t!c!}!<V#R#S!Cu#T#o!<V#r#s!2O%W%o!?X%p&a!?X&b1p!?X4U4d!?X4e$IS!?X$I`$Ib!?X$Kh%#t!?X&/x&Et!?X&FV;'S!?X;'S;:j!BU?&r?Ah!?X?BY?Mn!?X~!1oTXY!1lYZ!1l]^!1lpq!1l#r#s!2O~!2TO#Q~~!2Yc!c~uv!3e!Q![!3}![!]!3}!c!}!3}#O#P!7]#R#S!3}#T#o!3}%W%o!3}%p&a!3}&b1p!3}4U4d!3}4e$IS!3}$I`$Ib!3}$Kh%#t!3}&/x&Et!3}&FV;'S!3};'S;:j!8n?&r?Ah!3}?BY?Mn!3}~!3hR!Q![!3q!c!i!3q#T#Z!3q~!3tR!Q![!3}!c!i!3}#T#Z!3}~!4Sh!b~uv!3e}!O!3}!O!P!5n!Q![!3}![!]!3}!c!}!3}#O#P!7]#R#S!3}#T#o!3}$}%O!3}%W%o!3}%p&a!3}&b1p!3}1p4U!3}4U4d!3}4e$IS!3}$I`$Ib!3}$Je$Jg!3}$Kh%#t!3}&/x&Et!3}&FV;'S!3};'S;:j!8n?&r?Ah!3}?BY?Mn!3}~!5qhuv!3e}!O!3}!O!P!5n!Q![!3}![!]!3}!c!}!3}#O#P!7]#R#S!3}#T#o!3}$}%O!3}%W%o!3}%p&a!3}&b1p!3}1p4U!3}4U4d!3}4e$IS!3}$I`$Ib!3}$Je$Jg!3}$Kh%#t!3}&/x&Et!3}&FV;'S!3};'S;:j!8n?&r?Ah!3}?BY?Mn!3}~!7`dqr!3}st!3}tu!3}uv!3}vw!3}wx!3}xy!3}yz!3}z{!3}{|!3}|}!3}}!O!3}!O!P!3}!P!Q!3}!]!^!3}!_!`!3}!a!b!3}!b!c!3}#R#S!3}#r#s!3}~!8qP;=`<%l!3}~!8w[qr!8ts!^!8t!_!`!8t!`!a!9m!a#O!8t#O#P!9r#P#Q!8t#R#S!8t#T#o!8t#r;'S!8t;'S;=`!<P<%lO!8t~!9rO!a~~!9uQ!w!x!9{#i#j!:}~!:OR!Q![!:X!c!i!:X#T#Z!:X~!:[R!Q![!:e!c!i!:e#T#Z!:e~!:hR!Q![!:q!c!i!:q#T#Z!:q~!:tR!Q![!:}!c!i!:}#T#Z!:}~!;QR!Q![!;Z!c!i!;Z#T#Z!;Z~!;^R!Q![!;g!c!i!;g#T#Z!;g~!;jR!Q![!;s!c!i!;s#T#Z!;s~!;vR!Q![!8t!c!i!8t#T#Z!8t~!<SP;=`<%l!8t~!<[f#O~}!O!=p!O!P!@p!Q![!?X![!]!2T!c!}!<V#R#S!?X#T#o!<V$}%O!?X%W%o!?X%p&a!?X&b1p!?X1p4U!?X4U4d!?X4e$IS!?X$I`$Ib!?X$Je$Jg!?X$Kh%#t!?X&/x&Et!?X&FV;'S!?X;'S;:j!BU?&r?Ah!?X?BY?Mn!?X~!=sf}!O!?X!O!P!@p!Q![!B[![!]!2T!c!}!B[#R#S!?X#T#o!B[$}%O!?X%W%o!?X%p&a!?X&b1p!?X1p4U!?X4U4d!?X4e$IS!?X$I`$Ib!?X$Je$Jg!?X$Kh%#t!?X&/x&Et!?X&FV;'S!?X;'S;:j!BU?&r?Ah!?X?BY?Mn!?X~!?[f}!O!?X!O!P!@p!Q![!?X![!]!2T!c!}!?X#R#S!?X#T#o!?X$}%O!?X%W%o!?X%p&a!?X&b1p!?X1p4U!?X4U4d!?X4e$IS!?X$I`$Ib!?X$Je$Jg!?X$Kh%#t!?X&/x&Et!?X&FV;'S!?X;'S;:j!BU?&r?Ah!?X?BY?Mn!?X~!@se}!O!?X!O!P!@p!Q![!?X!c!}!?X#R#S!?X#T#o!?X$}%O!?X%W%o!?X%p&a!?X&b1p!?X1p4U!?X4U4d!?X4e$IS!?X$I`$Ib!?X$Je$Jg!?X$Kh%#t!?X&/x&Et!?X&FV;'S!?X;'S;:j!BU?&r?Ah!?X?BY?Mn!?X~!BXP;=`<%l!?X~!Baf#O~}!O!=p!O!P!@p!Q![!B[![!]!2T!c!}!B[#R#S!?X#T#o!B[$}%O!?X%W%o!?X%p&a!?X&b1p!?X1p4U!?X4U4d!?X4e$IS!?X$I`$Ib!?X$Je$Jg!?X$Kh%#t!?X&/x&Et!?X&FV;'S!?X;'S;:j!BU?&r?Ah!?X?BY?Mn!?X~!CxP![!]!C{~!DO`!Q![!EQ!c!}!EQ#R#S!EQ#T#o!EQ%W%o!EQ%p&a!EQ&b1p!EQ4U4d!EQ4e$IS!EQ$I`$Ib!EQ$Kh%#t!EQ&/x&Et!EQ&FV;'S!EQ;'S;:j!G|?&r?Ah!EQ?BY?Mn!EQ~!EVe!d~}!O!EQ!O!P!Fh!Q![!EQ!c!}!EQ#R#S!EQ#T#o!EQ$}%O!EQ%W%o!EQ%p&a!EQ&b1p!EQ1p4U!EQ4U4d!EQ4e$IS!EQ$I`$Ib!EQ$Je$Jg!EQ$Kh%#t!EQ&/x&Et!EQ&FV;'S!EQ;'S;:j!G|?&r?Ah!EQ?BY?Mn!EQ~!Fke}!O!EQ!O!P!Fh!Q![!EQ!c!}!EQ#R#S!EQ#T#o!EQ$}%O!EQ%W%o!EQ%p&a!EQ&b1p!EQ1p4U!EQ4U4d!EQ4e$IS!EQ$I`$Ib!EQ$Je$Jg!EQ$Kh%#t!EQ&/x&Et!EQ&FV;'S!EQ;'S;:j!G|?&r?Ah!EQ?BY?Mn!EQ~!HPP;=`<%l!EQ~!HVn}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!d!JT!d!e!MW!e!p!JT!p!q#+V!q!}!JT#R#S!JT#T#U!JT#U#V!MW#V#b!JT#b#c#+V#c#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~!JWf}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~!Koe}!O!JT!O!P!Kl!Q![!JT!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~!MTP;=`<%l!JT~!MZj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!u!JT!u!v!N{!v!}!JT#R#S!JT#T#g!JT#g#h!N{#h#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~# Oj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!v!JT!v!w#!p!w!}!JT#R#S!JT#T#h!JT#h#i#!p#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#!sj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!t!JT!t!u#$e!u!}!JT#R#S!JT#T#f!JT#f#g#$e#g#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#$hh}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!d#&S!d!}!JT#R#S!JT#T#U#&S#U#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#&Vj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!e!JT!e!f#'w!f!}!JT#R#S!JT#T#V!JT#V#W#'w#W#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#'zj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!v!JT!v!w#)l!w!}!JT#R#S!JT#T#h!JT#h#i#)l#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#)qf#z~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#+Yj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!f!JT!f!g#,z!g!}!JT#R#S!JT#T#W!JT#W#X#,z#X#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#-Pf#Z~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#.hl}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!d#0`!d!p!JT!p!q#5c!q!}!JT#R#S!JT#T#U#0`#U#b!JT#b#c#5c#c#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#0cj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!u!JT!u!v#2T!v!}!JT#R#S!JT#T#g!JT#g#h#2T#h#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#2Wj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!g!JT!g!h#3x!h!}!JT#R#S!JT#T#X!JT#X#Y#3x#Y#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#3}fS~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#5fj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!q!JT!q!r#7W!r!}!JT#R#S!JT#T#c!JT#c#d#7W#d#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#7Zj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!f!JT!f!g#8{!g!}!JT#R#S!JT#T#W!JT#W#X#8{#X#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#9Oj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!g!JT!g!h#:p!h!}!JT#R#S!JT#T#X!JT#X#Y#:p#Y#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#:ufc~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#<^j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!n!JT!n!o#>O!o!}!JT#R#S!JT#T#`!JT#`#a#>O#a#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#>Rj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!q!JT!q!r#?s!r!}!JT#R#S!JT#T#c!JT#c#d#?s#d#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#?vj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!u!JT!u!v#Ah!v!}!JT#R#S!JT#T#g!JT#g#h#Ah#h#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#Akj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!g!JT!g!h#C]!h!}!JT#R#S!JT#T#X!JT#X#Y#C]#Y#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#C`j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!f!JT!f!g#EQ!g!}!JT#R#S!JT#T#W!JT#W#X#EQ#X#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#EVf#`~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#Fnj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!z!JT!z!{#H`!{!}!JT#R#S!JT#T#l!JT#l#m#H`#m#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#Hcj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!v!JT!v!w#JT!w!}!JT#R#S!JT#T#h!JT#h#i#JT#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#JWn}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!g!JT!g!h#LU!h!t!JT!t!u$+z!u!}!JT#R#S!JT#T#X!JT#X#Y#LU#Y#f!JT#f#g$+z#g#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#LXn}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!p!JT!p!q#NV!q!t!JT!t!u$%Y!u!}!JT#R#S!JT#T#b!JT#b#c#NV#c#f!JT#f#g$%Y#g#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~#NYj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!f!JT!f!g$ z!g!}!JT#R#S!JT#T#W!JT#W#X$ z#X#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$ }j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!u!JT!u!v$#o!v!}!JT#R#S!JT#T#g!JT#g#h$#o#h#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$#tf!]~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$%]j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!p!JT!p!q$&}!q!}!JT#R#S!JT#T#b!JT#b#c$&}#c#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$'Qh}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!d$(l!d!}!JT#R#S!JT#T#U$(l#U#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$(oj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!n!JT!n!o$*a!o!}!JT#R#S!JT#T#`!JT#`#a$*a#a#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$*ff#}~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$+}h}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!d$-i!d!}!JT#R#S!JT#T#U$-i#U#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$-nf#_~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$/Vj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!t!JT!t!u$0w!u!}!JT#R#S!JT#T#f!JT#f#g$0w#g#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$0zh}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!d$2f!d!}!JT#R#S!JT#T#U$2f#U#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$2ij}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!e!JT!e!f$4Z!f!}!JT#R#S!JT#T#V!JT#V#W$4Z#W#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$4^j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!v!JT!v!w$6O!w!}!JT#R#S!JT#T#h!JT#h#i$6O#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$6Rj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!k!JT!k!l$7s!l!}!JT#R#S!JT#T#]!JT#]#^$7s#^#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$7vj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!q!JT!q!r$9h!r!}!JT#R#S!JT#T#c!JT#c#d$9h#d#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$9kj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!p!JT!p!q$;]!q!}!JT#R#S!JT#T#b!JT#b#c$;]#c#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$;`j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!f!JT!f!g$=Q!g!}!JT#R#S!JT#T#W!JT#W#X$=Q#X#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$=Tj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!k!JT!k!l$>u!l!}!JT#R#S!JT#T#]!JT#]#^$>u#^#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$>xj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!i!JT!i!j$@j!j!}!JT#R#S!JT#T#Z!JT#Z#[$@j#[#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$@mj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!k!JT!k!l$B_!l!}!JT#R#S!JT#T#]!JT#]#^$B_#^#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$Bbj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!v!JT!v!w$DS!w!}!JT#R#S!JT#T#h!JT#h#i$DS#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$DVj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!u!JT!u!v$Ew!v!}!JT#R#S!JT#T#g!JT#g#h$Ew#h#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$E|f!s~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$Gen}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!o!JT!o!p$Ic!p!t!JT!t!u%$O!u!}!JT#R#S!JT#T#a!JT#a#b$Ic#b#f!JT#f#g%$O#g#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$Ifj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!r!JT!r!s$KW!s!}!JT#R#S!JT#T#d!JT#d#e$KW#e#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$KZj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!q!JT!q!r$L{!r!}!JT#R#S!JT#T#c!JT#c#d$L{#d#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$MOj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!t!JT!t!u$Np!u!}!JT#R#S!JT#T#f!JT#f#g$Np#g#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~$Nsj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!v!JT!v!w%!e!w!}!JT#R#S!JT#T#h!JT#h#i%!e#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%!jf[~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%$Rj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!k!JT!k!l%%s!l!}!JT#R#S!JT#T#]!JT#]#^%%s#^#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%%xfb~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%'an}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!g!JT!g!h%)_!h!k!JT!k!l%1z!l!}!JT#R#S!JT#T#X!JT#X#Y%)_#Y#]!JT#]#^%1z#^#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%)bj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!p!JT!p!q%+S!q!}!JT#R#S!JT#T#b!JT#b#c%+S#c#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%+Vj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!i!JT!i!j%,w!j!}!JT#R#S!JT#T#Z!JT#Z#[%,w#[#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%,zj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!v!JT!v!w%.l!w!}!JT#R#S!JT#T#h!JT#h#i%.l#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%.oj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!j!JT!j!k%0a!k!}!JT#R#S!JT#T#[!JT#[#]%0a#]#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%0ffg~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%1}j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!v!JT!v!w%3o!w!}!JT#R#S!JT#T#h!JT#h#i%3o#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%3rj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!g!JT!g!h%5d!h!}!JT#R#S!JT#T#X!JT#X#Y%5d#Y#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%5gj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!t!JT!t!u%7X!u!}!JT#R#S!JT#T#f!JT#f#g%7X#g#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%7[h}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!d%8v!d!}!JT#R#S!JT#T#U%8v#U#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%8yj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!n!JT!n!o%:k!o!}!JT#R#S!JT#T#`!JT#`#a%:k#a#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%:pf!j~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%<Xl}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!d%>P!d!k!JT!k!l&=o!l!}!JT#R#S!JT#T#U%>P#U#]!JT#]#^&=o#^#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%>Sj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!z!JT!z!{%?t!{!}!JT#R#S!JT#T#l!JT#l#m%?t#m#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%?wr}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!g!JT!g!h%BR!h!k!JT!k!l&#p!l!n!JT!n!o&3_!o!}!JT#R#S!JT#T#X!JT#X#Y%BR#Y#]!JT#]#^&#p#^#`!JT#`#a&3_#a#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%BUj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!z!JT!z!{%Cv!{!}!JT#R#S!JT#T#l!JT#l#m%Cv#m#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%Cyj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!e!JT!e!f%Ek!f!}!JT#R#S!JT#T#V!JT#V#W%Ek#W#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%Enj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!n!JT!n!o%G`!o!}!JT#R#S!JT#T#`!JT#`#a%G`#a#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%Gcj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!w!JT!w!x%IT!x!}!JT#R#S!JT#T#i!JT#i#j%IT#j#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%IWj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!u!JT!u!v%Jx!v!}!JT#R#S!JT#T#g!JT#g#h%Jx#h#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%J{j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!k!JT!k!l%Lm!l!}!JT#R#S!JT#T#]!JT#]#^%Lm#^#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%Lpj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!x!JT!x!y%Nb!y!}!JT#R#S!JT#T#j!JT#j#k%Nb#k#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~%Nej}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!g!JT!g!h&!V!h!}!JT#R#S!JT#T#X!JT#X#Y&!V#Y#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&![f!p~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&#sj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!p!JT!p!q&%e!q!}!JT#R#S!JT#T#b!JT#b#c&%e#c#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&%hj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!e!JT!e!f&'Y!f!}!JT#R#S!JT#T#V!JT#V#W&'Y#W#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&']j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!n!JT!n!o&(}!o!}!JT#R#S!JT#T#`!JT#`#a&(}#a#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&)Qj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!w!JT!w!x&*r!x!}!JT#R#S!JT#T#i!JT#i#j&*r#j#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&*uj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!u!JT!u!v&,g!v!}!JT#R#S!JT#T#g!JT#g#h&,g#h#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&,jj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!k!JT!k!l&.[!l!}!JT#R#S!JT#T#]!JT#]#^&.[#^#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&._j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!x!JT!x!y&0P!y!}!JT#R#S!JT#T#j!JT#j#k&0P#k#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&0Sj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!g!JT!g!h&1t!h!}!JT#R#S!JT#T#X!JT#X#Y&1t#Y#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&1yf!o~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&3bj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!g!JT!g!h&5S!h!}!JT#R#S!JT#T#X!JT#X#Y&5S#Y#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&5Vj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!p!JT!p!q&6w!q!}!JT#R#S!JT#T#b!JT#b#c&6w#c#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&6zj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!i!JT!i!j&8l!j!}!JT#R#S!JT#T#Z!JT#Z#[&8l#[#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&8oj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!v!JT!v!w&:a!w!}!JT#R#S!JT#T#h!JT#h#i&:a#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&:dj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!j!JT!j!k&<U!k!}!JT#R#S!JT#T#[!JT#[#]&<U#]#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&<Zfi~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&=rj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!p!JT!p!q&?d!q!}!JT#R#S!JT#T#b!JT#b#c&?d#c#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&?gr}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!g!JT!g!h&Aq!h!k!JT!k!l'#`!l!n!JT!n!o'2}!o!}!JT#R#S!JT#T#X!JT#X#Y&Aq#Y#]!JT#]#^'#`#^#`!JT#`#a'2}#a#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&Atj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!z!JT!z!{&Cf!{!}!JT#R#S!JT#T#l!JT#l#m&Cf#m#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&Cij}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!e!JT!e!f&EZ!f!}!JT#R#S!JT#T#V!JT#V#W&EZ#W#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&E^j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!n!JT!n!o&GO!o!}!JT#R#S!JT#T#`!JT#`#a&GO#a#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&GRj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!w!JT!w!x&Hs!x!}!JT#R#S!JT#T#i!JT#i#j&Hs#j#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&Hvj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!u!JT!u!v&Jh!v!}!JT#R#S!JT#T#g!JT#g#h&Jh#h#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&Jkj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!k!JT!k!l&L]!l!}!JT#R#S!JT#T#]!JT#]#^&L]#^#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&L`j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!x!JT!x!y&NQ!y!}!JT#R#S!JT#T#j!JT#j#k&NQ#k#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~&NTj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!g!JT!g!h' u!h!}!JT#R#S!JT#T#X!JT#X#Y' u#Y#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~' zf!n~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'#cj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!p!JT!p!q'%T!q!}!JT#R#S!JT#T#b!JT#b#c'%T#c#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'%Wj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!e!JT!e!f'&x!f!}!JT#R#S!JT#T#V!JT#V#W'&x#W#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'&{j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!n!JT!n!o'(m!o!}!JT#R#S!JT#T#`!JT#`#a'(m#a#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'(pj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!w!JT!w!x'*b!x!}!JT#R#S!JT#T#i!JT#i#j'*b#j#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'*ej}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!u!JT!u!v',V!v!}!JT#R#S!JT#T#g!JT#g#h',V#h#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~',Yj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!k!JT!k!l'-z!l!}!JT#R#S!JT#T#]!JT#]#^'-z#^#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'-}j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!x!JT!x!y'/o!y!}!JT#R#S!JT#T#j!JT#j#k'/o#k#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'/rj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!g!JT!g!h'1d!h!}!JT#R#S!JT#T#X!JT#X#Y'1d#Y#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'1if!m~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'3Qj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!g!JT!g!h'4r!h!}!JT#R#S!JT#T#X!JT#X#Y'4r#Y#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'4uj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!p!JT!p!q'6g!q!}!JT#R#S!JT#T#b!JT#b#c'6g#c#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'6jj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!i!JT!i!j'8[!j!}!JT#R#S!JT#T#Z!JT#Z#['8[#[#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'8_j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!v!JT!v!w':P!w!}!JT#R#S!JT#T#h!JT#h#i':P#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~':Sj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!j!JT!j!k';t!k!}!JT#R#S!JT#T#[!JT#[#]';t#]#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~';yfh~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'=bj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!q!JT!q!r'?S!r!}!JT#R#S!JT#T#c!JT#c#d'?S#d#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'?Vn}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!p!JT!p!q'AT!q!v!JT!v!w'Nw!w!}!JT#R#S!JT#T#b!JT#b#c'AT#c#h!JT#h#i'Nw#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'AWj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!n!JT!n!o'Bx!o!}!JT#R#S!JT#T#`!JT#`#a'Bx#a#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'B{j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!k!JT!k!l'Dm!l!}!JT#R#S!JT#T#]!JT#]#^'Dm#^#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'Dpj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!v!JT!v!w'Fb!w!}!JT#R#S!JT#T#h!JT#h#i'Fb#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'Fej}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!g!JT!g!h'HV!h!}!JT#R#S!JT#T#X!JT#X#Y'HV#Y#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'HYj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!t!JT!t!u'Iz!u!}!JT#R#S!JT#T#f!JT#f#g'Iz#g#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'I}h}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!d'Ki!d!}!JT#R#S!JT#T#U'Ki#U#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'Klj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!n!JT!n!o'M^!o!}!JT#R#S!JT#T#`!JT#`#a'M^#a#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'Mcfd~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~'N|f#X~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(!ej}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!t!JT!t!u($V!u!}!JT#R#S!JT#T#f!JT#f#g($V#g#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~($[f#]~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(%sj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!t!JT!t!u('e!u!}!JT#R#S!JT#T#f!JT#f#g('e#g#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~('hj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!g!JT!g!h()Y!h!}!JT#R#S!JT#T#X!JT#X#Y()Y#Y#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~()]j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!h!JT!h!i(*}!i!}!JT#R#S!JT#T#Y!JT#Y#Z(*}#Z#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(+Qj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!k!JT!k!l(,r!l!}!JT#R#S!JT#T#]!JT#]#^(,r#^#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(,uj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!z!JT!z!{(.g!{!}!JT#R#S!JT#T#l!JT#l#m(.g#m#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(.lfV~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(0Tj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!g!JT!g!h(1u!h!}!JT#R#S!JT#T#X!JT#X#Y(1u#Y#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(1xj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!u!JT!u!v(3j!v!}!JT#R#S!JT#T#g!JT#g#h(3j#h#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(3mj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!v!JT!v!w(5_!w!}!JT#R#S!JT#T#h!JT#h#i(5_#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(5bj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!t!JT!t!u(7S!u!}!JT#R#S!JT#T#f!JT#f#g(7S#g#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(7Vj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!k!JT!k!l(8w!l!}!JT#R#S!JT#T#]!JT#]#^(8w#^#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(8zj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!e!JT!e!f(:l!f!}!JT#R#S!JT#T#V!JT#V#W(:l#W#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(:oj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!v!JT!v!w(<a!w!}!JT#R#S!JT#T#h!JT#h#i(<a#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(<dj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!u!JT!u!v(>U!v!}!JT#R#S!JT#T#g!JT#g#h(>U#h#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(>Zf#|~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(?rj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!v!JT!v!w(Ad!w!}!JT#R#S!JT#T#h!JT#h#i(Ad#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(Agh}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!d(CR!d!}!JT#R#S!JT#T#U(CR#U#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(CUj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!t!JT!t!u(Dv!u!}!JT#R#S!JT#T#f!JT#f#g(Dv#g#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(Dyj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!v!JT!v!w(Fk!w!}!JT#R#S!JT#T#h!JT#h#i(Fk#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(Fpf^~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(HXj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!q!JT!q!r(Iy!r!}!JT#R#S!JT#T#c!JT#c#d(Iy#d#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(I|j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!v!JT!v!w(Kn!w!}!JT#R#S!JT#T#h!JT#h#i(Kn#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(Kqh}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!d(M]!d!}!JT#R#S!JT#T#U(M]#U#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~(M`j}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!n!JT!n!o) Q!o!}!JT#R#S!JT#T#`!JT#`#a) Q#a#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~) Tj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!f!JT!f!g)!u!g!}!JT#R#S!JT#T#W!JT#W#X)!u#X#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~)!xj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!k!JT!k!l)$j!l!}!JT#R#S!JT#T#]!JT#]#^)$j#^#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~)$mj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!i!JT!i!j)&_!j!}!JT#R#S!JT#T#Z!JT#Z#[)&_#[#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~)&bj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!k!JT!k!l)(S!l!}!JT#R#S!JT#T#]!JT#]#^)(S#^#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~)(Vj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!v!JT!v!w))w!w!}!JT#R#S!JT#T#h!JT#h#i))w#i#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~))zj}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!u!JT!u!v)+l!v!}!JT#R#S!JT#T#g!JT#g#h)+l#h#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~)+qf!r~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~)-[O!u~~)-aO!t~~)-fP#g~#Q#R)-i~)-nO|~~)-qP![!])-t~)-w`!Q![).y!c!}).y#R#S).y#T#o).y%W%o).y%p&a).y&b1p).y4U4d).y4e$IS).y$I`$Ib).y$Kh%#t).y&/x&Et).y&FV;'S).y;'S;:j)1u?&r?Ah).y?BY?Mn).y~)/Oe!h~}!O).y!O!P)0a!Q![).y!c!}).y#R#S).y#T#o).y$}%O).y%W%o).y%p&a).y&b1p).y1p4U).y4U4d).y4e$IS).y$I`$Ib).y$Je$Jg).y$Kh%#t).y&/x&Et).y&FV;'S).y;'S;:j)1u?&r?Ah).y?BY?Mn).y~)0de}!O).y!O!P)0a!Q![).y!c!}).y#R#S).y#T#o).y$}%O).y%W%o).y%p&a).y&b1p).y1p4U).y4U4d).y4e$IS).y$I`$Ib).y$Je$Jg).y$Kh%#t).y&/x&Et).y&FV;'S).y;'S;:j)1u?&r?Ah).y?BY?Mn).y~)1xP;=`<%l).y~)2Qno~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!d!JT!d!e!MW!e!p!JT!p!q#+V!q!}!JT#R#S!JT#T#U!JT#U#V!MW#V#b!JT#b#c#+V#c#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~)4Rk}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!t!JT!t!u$0w!u!}!JT#R#S!JT#T#U)5v#U#f!JT#f#g$0w#g#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~)5yh}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#`!JT#`#a)7e#a#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~)7hh}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#g!JT#g#h)9S#h#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~)9Vh}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#X!JT#X#Y):q#Y#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~):vf!T~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~)<_l}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!q!JT!q!r(Iy!r!}!JT#R#S!JT#T#c!JT#c#d(Iy#d#f!JT#f#g)>V#g#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~)>Yh}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#i!JT#i#j)?t#j#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~)?wh}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#X!JT#X#Y)Ac#Y#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~)Ahf!S~}!O!JT!O!P!Kl!Q![!JT![!]!%p!c!}!JT#R#S!JT#T#o!JT$}%O!JT%W%o!JT%p&a!JT&b1p!JT1p4U!JT4U4d!JT4e$IS!JT$I`$Ib!JT$Je$Jg!JT$Kh%#t!JT&/x&Et!JT&FV;'S!JT;'S;:j!MQ?&r?Ah!JT?BY?Mn!JT~)CRX#a~Ou)Cnuv)DWv!Q)Cn!Q![)F|![#O)Cn#O#P)Dc#P;'S)Cn;'S;=`)Fv<%lO)Cn~)CqVOu)Cnuv)DWv#O)Cn#O#P)Dc#P;'S)Cn;'S;=`)Fv<%lO)Cn~)DZP#q#r)D^~)DcO!W~~)DfSuv)Cn!w!x)Dr#O#P)Cn#i#j)Et~)DuR!Q![)EO!c!i)EO#T#Z)EO~)ERR!Q![)E[!c!i)E[#T#Z)E[~)E_R!Q![)Eh!c!i)Eh#T#Z)Eh~)EkR!Q![)Et!c!i)Et#T#Z)Et~)EwR!Q![)FQ!c!i)FQ#T#Z)FQ~)FTR!Q![)F^!c!i)F^#T#Z)F^~)FaR!Q![)Fj!c!i)Fj#T#Z)Fj~)FmR!Q![)Cn!c!i)Cn#T#Z)Cn~)FyP;=`<%l)Cn~)GP]Ou)Cnuv)DWv|)Cn|})Gx}!Q)Cn!Q![)F|![#O)Cn#O#P)Dc#P#q)Cn#q#r)Id#r;'S)Cn;'S;=`)Fv<%lO)Cn~)G{]Ou)Cnuv)DWvz)Cnz{)Ht{!Q)Cn!Q![)JO![#O)Cn#O#P)Dc#P#q)Cn#q#r)Id#r;'S)Cn;'S;=`)Fv<%lO)Cn~)HwXOu)Cnuv)DWv#O)Cn#O#P)Dc#P#q)Cn#q#r)Id#r;'S)Cn;'S;=`)Fv<%lO)Cn~)IiV#o~Ou)Cnuv)DWv#O)Cn#O#P)Dc#P;'S)Cn;'S;=`)Fv<%lO)Cn~)JRZOu)Cnuv)DWv!Q)Cn!Q![)JO![#O)Cn#O#P)Dc#P#q)Cn#q#r)Id#r;'S)Cn;'S;=`)Fv<%lO)Cn~)JyO#t~~)KOO!Y~~)KTO!x~",
+  tokenizers: [0],
+  topRules: {"ShExDoc":[0,2]},
+  tokenPrec: 4306
+})
+
+;// ../lezer-shexc/src/index.js
+/**
+ * lezer-shexc -- an incremental, error-tolerant Lezer grammar for ShEx
+ * Compact Syntax (ShExC), with highlighting tags for CodeMirror.
+ *
+ *   import {parser} from "lezer-shexc";
+ *   const tree = parser.parse(text);        // a @lezer/common Tree
+ *
+ * The parse is what the ShEx specification's grammar (as shex.js's parser
+ * has it) accepts, so a schema the validator takes parses without error
+ * nodes here, and one it refuses shows where -- and, being Lezer, a
+ * half-typed schema still parses around the error, and an edit re-parses
+ * only what it touched.  This is the editor's parse, for colour, folding
+ * and structure; the schema itself still comes from @shexjs/parser.
+ */
+
+
+
+/** the highlighting: what each token is, and what an IRI is *for* */
+const highlighting = (0,dist/* styleTags */.pn)({
+  // an IRI is coloured by its role: a shape's label where it is declared,
+  // a reference to one, a predicate, a datatype; anything else as an IRI
+  "ShapeExprDecl/ShapeExprLabel/IRIREF ShapeExprDecl/ShapeExprLabel/PrefixedName/...": dist/* tags */._A.definition(dist/* tags */._A.className),
+  "ShapeRef/ShapeExprLabel/IRIREF ShapeRef/ShapeExprLabel/PrefixedName/...": dist/* tags */._A.className,
+  "ATIRIREF ATPNAME_LN ATPNAME_NS ATBLANK_NODE_LABEL": dist/* tags */._A.className,
+  "Predicate/IRIREF Predicate/PrefixedName/...": dist/* tags */._A.propertyName,
+  "Datatype/IRIREF Datatype/PrefixedName/...": dist/* tags */._A.typeName,
+  "TripleExprLabel/IRIREF TripleExprLabel/PrefixedName/...": dist/* tags */._A.labelName,
+  IRIREF: dist/* tags */._A.url,
+  "PNAME_LN PNAME_NS": dist/* tags */._A.namespace,
+  BLANK_NODE_LABEL: dist/* tags */._A.variableName,
+  "STRING_LITERAL1 STRING_LITERAL2 STRING_LITERAL_LONG1 STRING_LITERAL_LONG2": dist/* tags */._A.string,
+  "LANG_STRING_LITERAL1 LANG_STRING_LITERAL2 LANG_STRING_LITERAL_LONG1 LANG_STRING_LITERAL_LONG2": dist/* tags */._A.string,
+  LANGTAG: dist/* tags */._A.modifier,
+  "INTEGER DECIMAL DOUBLE": dist/* tags */._A.number,
+  "TrueKw FalseKw": dist/* tags */._A.bool,
+  REGEXP: dist/* tags */._A.regexp,
+  REPEAT_RANGE: dist/* tags */._A.number,
+  CODE: dist/* tags */._A.meta,
+  "BaseKw PrefixKw ImportKw StartKw": dist/* tags */._A.definitionKeyword,
+  "AbstractKw ExternalKw RestrictsKw ExtendsKw ClosedKw ExtraKw": dist/* tags */._A.modifier,
+  "LiteralKw IriKw BnodeKw NonLiteralKw": dist/* tags */._A.typeName,
+  "AndKw OrKw NotKw": dist/* tags */._A.logicOperator,
+  "MinInclusiveKw MinExclusiveKw MaxInclusiveKw MaxExclusiveKw LengthKw MinLengthKw MaxLengthKw TotalDigitsKw FractionDigitsKw": dist/* tags */._A.keyword,
+  RdfTypeKw: dist/* tags */._A.keyword,
+  ShapeAny: dist/* tags */._A.atom,
+  Comment: dist/* tags */._A.comment,
+  'Cardinality/"*" Cardinality/"+" Cardinality/"?"': dist/* tags */._A.arithmeticOperator,
+  'SenseFlags/"^"': dist/* tags */._A.operator,
+  '"//" ^^ ~ = $ & | @ %': dist/* tags */._A.operator,
+  "( )": dist/* tags */._A.paren,
+  "[ ]": dist/* tags */._A.squareBracket,
+  "{ }": dist/* tags */._A.brace,
+  ", ;": dist/* tags */._A.separator,
+});
+
+const src_parser = parser.configure({props: [highlighting]});
 
 
 /***/ }

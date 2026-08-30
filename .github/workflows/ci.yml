@@ -53,7 +53,8 @@ jobs:
       - run: npm run check-branch-deps
 
   webpack:
-    # the doc/webpacks bundles are checked in; make sure they still build
+    # the doc/webpacks bundles are gitignored and built on demand; make sure
+    # every package that has one still builds it
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

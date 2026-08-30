@@ -6,6 +6,7 @@
 # itself so they must be executed as a SemAct.
 PREFIX : <http://a.example/calc#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX Reduce: <http://shex.io/extensions/Reduce/>
 BASE <http://a.example/calc>
 
@@ -24,28 +25,47 @@ BASE <http://a.example/calc>
 
 <#Expr> @<#BinOp> OR @<#MidNum> OR @<#LastNum>
 
+# Each arc says what it contributes, and the shape puts the contributions
+# together: `$rdf:type` is what the `a` arc's action returned -- the value
+# itself, not a list of them, because the schema gives a <#BinOp> at most one
+# rdf:type.  (`$*` is all three in match order, so this could equally be
+# written `Object.assign({}, ...$*)`.)
 <#BinOp> {
-  a       [:Add :Sub :Mul :Div] ;
-  :left   @<#Expr> ;
-  :right  @<#Expr>
-} %Reduce:{ $ = {op: local(one('a')), left: one(':left'), right: one(':right')} %}
+  a       [:Add :Sub :Mul :Div] %Reduce:{ $$ = {op: local($1)} %} ;
+  :left   @<#Expr> %Reduce:{ $$ = {left: $1} %};
+  :right  @<#Expr> %Reduce:{ $$ = {right: $1} %}
+} %Reduce:{ $$ = Object.assign($rdf:type, $:left, $:right) %}
 
 # A number with more to come: not the sum, and noted so the sum grows.
+#
+# `reject(why)` refuses the production the action is on, and the OR above
+# goes on to the next branch -- which is `<#LastNum>`, and is the whole
+# point.  It is a guard: the action says who this number isn't and then gets
+# on with what it is.  (`$$ = {failure: why}` says the same thing as a value,
+# which is what <#LastNum> below does; either reads better in its place.)
 <#MidNum> {
   a       [:Num] ;
   :value  xsd:integer %Reduce:{
-    $ = num($1) === state.before(subject)
-      ? {failure: 'the sum of the numbers before it, so it ends the expression'}
-      : state.note(subject, num($1))
+    if (num($1) === state.before(subject))
+      reject('the sum of the numbers before it, so it ends the expression');
+    $$ = state.note(subject, num($1));
   %}
-} %Reduce:{ $ = {op: 'num', value: one(':value')} %}
+} %Reduce:{ $$ = {op: 'num', value: $:value} %}
 
 # ...and the one that ends it: the sum, with nothing after it to note.
+#
+# `$:value` is the value rather than a list of them because the schema gives
+# a <#LastNum> at most one :value -- so the fold has to know the schema, and
+# it does: registerEager takes the validator's.  `one(':value')` says the
+# same thing without asking (falsify.shex is written that way), and is what
+# to write where the schema allows more than one, where the predicate is
+# computed rather than written, or where "exactly one, and say what I did
+# match" is the point.
 <#LastNum> {
   a       [:Num] ;
   :value  xsd:integer %Reduce:{
-    $ = num($1) === state.before(subject)
+    $$ = num($1) === state.before(subject)
       ? num($1)
       : {failure: 'not the sum of the numbers before it'}
   %}
-} %Reduce:{ $ = {op: 'last', value: one(':value')} %}
+} %Reduce:{ $$ = {op: 'last', value: $:value} %}

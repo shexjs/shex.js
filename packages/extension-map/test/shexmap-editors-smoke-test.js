@@ -12,7 +12,7 @@ const expect = require("chai").expect;
 const node_fetch = require("node-fetch");
 // jsdom's engines outpace the packages' own; required lazily under
 // TEST_browser (c.f. browser-test.js)
-let JSDOM, VirtualConsole, nock;
+let Harness, nock;
 
 const [[GitRootServer]] = require("../../../tools/testServer")
       .startServer(
@@ -39,48 +39,19 @@ const bindingsJson = JSON.stringify({
 if (!TEST_browser) {
   console.warn("Skipping shexmap-editors-smoke-tests; to activate these tests, set environment variable TEST_browser=true");
 } else {
-  ({JSDOM, VirtualConsole} = require("jsdom"));
+  Harness = require("../../shex-webapp/test/harness");
   nock = require("nock");
   describe("shexmap-simple with ?editors=1", function () {
     this.timeout(20000);
-    const page = "packages/extension-map/doc/shexmap-simple.html";
+    // ShExMap is a plugin of this page now; shexmap-simple.html is a
+    // redirect that opens it with exactly these parameters (§5 phase 2)
+    const page = "packages/shex-webapp/doc/shex-simple.html";
+    const asShExMap = "&plugin=" + encodeURIComponent("../../extension-map/doc/ShExMapPlugin.js")
+          + "&manifestURL=" + encodeURIComponent("../../extension-map/examples/manifest.json");
 
     let dom, $, shared, app;
     before(async function () {
-      const base = Path.join(__dirname, "../../..", page);
-      // forward page console traffic, muting only jsdom's "Not implemented:
-      // navigation" from the gist test's post-create reload (c.f. browser-test.js)
-      const virtualConsole = new VirtualConsole().forwardTo(console, {jsdomErrors: "none"});
-      virtualConsole.on("jsdomError", e => {
-        if (!String(e.message).includes("Not implemented: navigation"))
-          console.error(e.type === "unhandled-exception" ? e.cause.stack : e.message);
-      });
-      dom = new JSDOM(Fs.readFileSync(base, "utf8"), {
-        url: GitRootServer.urlFor(page + "?editors=1"),
-        runScripts: "dangerously",
-        resources: "usable",
-        pretendToBeVisual: true,
-        virtualConsole,
-      });
-      dom.window.fetch = node_fetch;
-      // jsdom lacks the CSS namespace; jquery-ui ≥1.14 calls CSS.escape.
-      if (!dom.window.CSS)
-        dom.window.CSS = { escape: s => String(s).replace(/[^a-zA-Z0-9_\u00A0-\uFFFF-]/g, c => `\\${c}`) };
-      // jsdom does no layout and omits these Range methods; CodeMirror's
-      // measure loop calls them on every frame and handles empty results.
-      dom.window.Range.prototype.getClientRects = function () { return []; };
-      dom.window.Range.prototype.getBoundingClientRect =
-        function () { return {x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0, width: 0, height: 0}; };
-      shared = await new Promise((resolve, reject) => {
-        dom.window._testCallback = (parm) => {
-          if (parm instanceof Error)
-            reject(parm);
-          else
-            resolve(parm);
-        };
-      });
-      await shared.promise;
-      $ = dom.window.$;
+      ({dom, $, shared} = await Harness.boot(page, "?editors=1" + asShExMap));
     });
 
     after(function () {
@@ -90,9 +61,180 @@ if (!TEST_browser) {
 
     it("should boot with editor panes on the ShExMap caches", function () {
       expect($("#results .error").length, $("#results .error").text()).to.equal(0);
-      ["#inputSchema", "#inputData", "#outputSchema", "#bindings1", "#staticVars"].forEach(sel => {
+      // the schema's own box: #inputSchema also holds the query map's pane
+      ["#schemaDocument", "#inputData", "#outputSchema", "#bindings1", "#staticVars"].forEach(sel => {
         expect($(sel + " .shexjs-editor-pane").length, sel + " pane").to.equal(1);
       });
+    });
+
+    /* Inventory row 6, and the first contribution to move: the bindings
+     * pane's colours were three rules in each map page's <style>, and are
+     * now one descriptor the page registers (doc/plugins.md). */
+    it("should take its pane colours from the plugin, not from the page", function () {
+      const sheet = $("head style[data-plugin]");
+      expect(sheet.length, "the register put a sheet on the page").to.equal(1);
+      expect(sheet.attr("data-plugin"), "whose").to.equal("http://shex.io/extensions/Map/#");
+      expect($("#bindings1 textarea").first().css("background-color"),
+             "and the bindings pane wears its colour").to.equal("rgb(255, 255, 244)");
+      expect($("#inputarea").css("overflow-x"),
+             "a map app's inputs scroll where a validator's overflow").to.equal("auto");
+      expect(dom.window.ShExPlugins.all().map(e => e.label)).to.deep.equal(["ShExMap"]);
+    });
+
+    /* Inventory rows 1-3, and the second contribution to move: bindings,
+     * static variables and the output schema were markup in each map page
+     * plus caches and parameter entries in ShExMapBaseApp, and are now three
+     * pane declarations.  The page supplies the slot; the plugin says
+     * what goes in it and the base app makes all four parts agree. */
+    it("should build its panes from the plugin, not from the page", function () {
+      const screen = $("#screens > .screen[data-plugin]");
+      expect(screen.length, "one screen for the one plugin").to.equal(1);
+      expect(screen.attr("data-plugin")).to.equal("http://shex.io/extensions/Map/#");
+      expect(screen.find(".panel > div[id]").map((_, elt) => elt.id).get(), "in declared order")
+        .to.deep.equal(["bindings1", "staticVars", "outputSchema"]);
+      // two columns, the layout the map page had: bindings and statics
+      // share one, the output schema declared a `panel` of its own
+      expect(screen.children(".screenColumns").children(".panel").length, "two columns")
+        .to.equal(2);
+      /* A screen is stretched to what holds it rather than asking for its
+       * height, so what is under its panes -- the toolbar, the statusbar --
+       * lands on the foot of the screen rather than under the panes. */
+      expect($("#screens").css("display"), "the screens are a column").to.equal("flex");
+      expect($("#inputarea > #screens").css("flex"), "taking the middle")
+        .to.include("1 1");
+      expect(screen.css("flex"), "and the screen showing takes that")
+        .to.include("1 1");
+      expect(screen.children().last().hasClass("pluginToolbar")
+             || screen.children().last().hasClass("pluginStatusbar"),
+             "with the controls at the foot of it").to.equal(true);
+
+      /* ...and they fill the screen the way the validator's columns fill
+       * the page: the column shares its height among its panes, and each
+       * pane's document takes what its pane has left. */
+      const columns = screen.children(".screenColumns");
+      expect(columns.css("flex"), "the row takes what the controls leave")
+        .to.include("1 1");
+      expect(columns.children(".panel").first().css("display"), "a column of panes")
+        .to.equal("flex");
+      // ...and they share it in the proportion they asked for: the bindings
+      // pane declared 19 rows and the statics 5, so the column is 19:5
+      expect($("#bindings1").css("flex-grow"), "the bindings pane's share")
+        .to.equal("19");
+      expect($("#staticVars").css("flex-grow"), "and the statics'").to.equal("5");
+      expect($("#bindings1").css("flex-basis"), "shares, not content sizes")
+        .to.equal("0px");
+      expect($("#outputSchema").css("flex-grow"), "alone in its column, and still asking")
+        .to.equal("25");
+      expect($("#bindings1 textarea, #bindings1 .shexjs-editor-pane").first().css("flex"),
+             "and the document taking the pane").to.include("1 1");
+      expect($("#outputSchema").closest(".panel").attr("data-panel"),
+             "the output schema in its own").to.equal("output");
+      expect($("#bindings1 textarea").first().attr("rows"), "as tall as it asked")
+        .to.equal("19");
+      expect($("#staticVars textarea").first().hasClass("vars"),
+             "wearing the class it asked for").to.be.true;
+      // a declaration makes four things that have to agree: the cache, the
+      // pane over it, the query parameter and the manifest key that fill it
+      expect(Object.keys(shared.Caches))
+        .to.include.members(["bindings", "statics", "outputSchema"]);
+      const parms = shared.app.QueryParams.filter(
+        p => ["bindings", "statics", "outSchema"].includes(p.queryStringParm));
+      expect(parms.map(p => p.queryStringParm))
+        .to.deep.equal(["bindings", "statics", "outSchema"]);
+      expect(parms.map(p => p.manifest && p.manifest.key), "bindings are a product")
+        .to.deep.equal([undefined, "staticVars", "outputSchema"]);
+    });
+
+    /* §4: a plugin's panes are a screen of their own, and the switch
+     * between screens stands where the page title stood.  Every other test
+     * in this file runs with the map's screen *hidden* -- the panes still
+     * fill from the manifest, the bindings still fill from a validation,
+     * ctl-\ still materializes -- which is the rule that hiding is display
+     * and nothing else. */
+    it("should stand a screen switch where the title stood", function () {
+      const tabs = $("#screenTabs");
+      expect(tabs.length, "the tabs are in the title bar").to.equal(1);
+      expect(tabs.css("display"), "and showing").to.not.equal("none");
+      // it stands in for the part of the title that named what is showing;
+      // the rest of the heading stays, and says what the page is
+      expect($("#title h1").css("display"), "the heading stays").to.not.equal("none");
+      expect($("#title h1").text(), "with its name in it").to.include("ShEx");
+      expect($("#title h1 .screenName").css("display"), "and the switch in the rest's place")
+        .to.equal("none");
+      expect(tabs.find("button").first().text(), "which is what the first tab says")
+        .to.equal("Validator"); // and no ×: the validator is the page, not a guest
+      expect(tabs.find("button").map((i, b) => $(b).attr("data-screen")).get())
+        .to.deep.equal(["", "http://shex.io/extensions/Map/#"]);
+      expect(tabs.find("button").last().find(".screenTabLabel").text()).to.equal("ShExMap");
+      expect(tabs.find("button").last().find(".unloadPlugin").length,
+             "and an × to unload it by").to.equal(1);
+      expect(tabs.find("button[aria-selected='true']").attr("data-screen"),
+             "the validator's is the one pressed").to.equal("");
+      expect($("#screens > .screen").css("display"), "and the map's is away").to.equal("none");
+    });
+
+    it("should switch screens without unloading the one that hides", function () {
+      $("#screenTabs button[data-screen='http://shex.io/extensions/Map/#']").trigger("click");
+      expect($("#inputSchema").css("display"), "the schema panel went away").to.equal("none");
+      expect($("#screens > .screen").css("display"), "the map's screen is up")
+        .to.not.equal("none");
+      $("#screenTabs button[data-screen='']").trigger("click");
+      expect($("#inputSchema").css("display"), "and back").to.not.equal("none");
+      expect($("#screens > .screen").css("display")).to.equal("none");
+    });
+
+    /* Screens are what you are working on; the results are what came of
+     * it, and they belong to the app rather than to any one screen -- a
+     * materialization's tab sits beside a validation's whichever screen is
+     * showing, in the same place at the bottom of the page. */
+    /* The tab is called "materialization"; a line over the results saying
+     * "materialization results" said it twice.  What ShExMap has to say
+     * about a particular materialization -- which alternative, that it was
+     * stepped through -- it says inside that tab. */
+    it("should say what it has to say inside its own tab", async function () {
+      $("#screenTabs button[data-screen='']").trigger("click");
+      $("#validate").trigger("click");
+      await shared.promise;
+      $("#materialize").trigger("click");
+      await shared.promise;
+
+      expect($("#results > .status").css("display"), "nothing over the results")
+        .to.equal("none");
+      expect($("#materializationResults > .status").length,
+             "the tab has a line of its own to use").to.equal(1);
+      expect($("#materializationResults > .status").text(),
+             "and says nothing the tab label says").to.not.include("materialization results");
+    });
+
+    it("should keep the results below, across screens", async function () {
+      $("#screenTabs button[data-screen='']").trigger("click");
+      $("#validate").trigger("click");
+      await shared.promise;
+      $("#materialize").trigger("click");
+      await shared.promise;
+      const tabs = () => $("#resultsTabs > ul > li > a").map((i, a) => $(a).text()).get();
+      expect(tabs(), "both kinds of result").to.deep.equal(["validation", "materialization"]);
+
+      $("#screenTabs button[data-screen='http://shex.io/extensions/Map/#']").trigger("click");
+      expect($("#results").css("display"), "still showing").to.not.equal("none");
+      expect($("#results").prev().attr("id"), "still under the inputs, past the handle")
+        .to.equal("resultsGrip");
+      expect($("#resultsGrip").prev().attr("id")).to.equal("inputarea");
+      expect($("#results").closest("#screens, .screen").length, "and in no screen").to.equal(0);
+      expect(tabs(), "with both tabs still in it").to.deep.equal(["validation", "materialization"]);
+      $("#screenTabs button[data-screen='']").trigger("click");
+      expect(tabs(), "and back").to.deep.equal(["validation", "materialization"]);
+    });
+
+    it("should carry the screen in the permalink", async function () {
+      $("#screenTabs button[data-screen='http://shex.io/extensions/Map/#']").trigger("click");
+      const parms = (await shared.app.getPermalink()).split(/[?&]/);
+      expect(parms).to.include(
+        "screen=" + encodeURIComponent("http://shex.io/extensions/Map/#"));
+      $("#screenTabs button[data-screen='']").trigger("click");
+      const back = (await shared.app.getPermalink()).split(/[?&]/);
+      expect(back.filter(p => p.startsWith("screen=")), "the default rides free")
+        .to.deep.equal([]);
     });
 
     it("should load a picked manifest entry's materialization inputs", async function () {
@@ -212,20 +354,84 @@ if (!TEST_browser) {
      * buttons.  jsdom does no layout, so what is checkable here is the shape
      * that avoids it: the float has a container that establishes a block
      * formatting context. */
+    /* Inventory rows 4 and 5, the third contribution to move: the row of
+     * controls was markup in both map pages and click handlers in
+     * ShExMapBaseApp.prepareControls, and is now `toolbar` in the
+     * descriptor.  It builds into the plugin's own screen, under the panes
+     * it consumes. */
     it("should keep the materialize buttons inside a box that contains them", function () {
-      const row = $("#outactionsRow");
-      expect(row.length, "#outactions has a named wrapper").to.equal(1);
-      expect(row.find("#outactions").length, "which holds it").to.equal(1);
+      const row = $("#screens .screen[data-plugin] > .pluginToolbar");
+      expect(row.length, "the toolbar has a wrapper").to.equal(1);
+      expect(row.find(".pluginToolbarInner").length, "which holds it").to.equal(1);
       expect(row.css("display"), "a block formatting context contains its floats")
         .to.equal("flow-root");
       // and the float is styled from the sheet, not from an inline style
       // that only this page would carry
-      expect($("#outactions").attr("style") || "", "no inline float").to.not.include("float");
-      expect($("#outactions").css("float")).to.equal("right");
+      expect(row.find(".pluginToolbarInner").attr("style") || "", "no inline float")
+        .to.not.include("float");
+      expect(row.find(".pluginToolbarInner").css("float")).to.equal("right");
       ["#materialize", "#debugMaterialize", "#outputShapeMap"].forEach(sel => {
         expect($(sel).length, sel).to.equal(1);
-        expect($(sel).closest("#outactions").length, sel + " is in the row").to.equal(1);
+        expect($(sel).closest(".pluginToolbarInner").length, sel + " is in the row").to.equal(1);
       });
+      // the step buttons wait inside it, hidden until a session starts
+      expect($("#debugControls").css("display")).to.equal("none");
+      expect($("#dbgStatusRow").closest(".pluginToolbarInner").length,
+             "and the status line is outside them, so hiding them keeps it").to.equal(1);
+      expect($("#dbgStatus").closest("#debugControls").length).to.equal(0);
+    });
+
+    /* Two of ShExMap's verbs are only a keystroke, so nothing else on the
+     * page notices when they stop working: ctl-\\ is the materialize button,
+     * and ctl-[ / ctl-] swap the bindings pane for a table of the same
+     * bindings and back.  The table is the only reader those bindings have
+     * that isn't the pane itself. */
+    it("should reach materialize on ctl-\\ and the bindings table on ctl-[ / ctl-]", async function () {
+      this.timeout(60000);
+      const key = k => dom.window.document.body.dispatchEvent(
+        new dom.window.KeyboardEvent("keydown", {key: k, ctrlKey: true, bubbles: true}));
+
+      if (!$("#queryMap").val().trim()) {   // a preceding test may have deselected
+        $("#inputSchema .manifest li").filter((_, e) => $(e).text() === "BP").trigger("click");
+        await shared.promise;
+        $("#inputData .passes li").filter((_, e) => $(e).text() === "simple").trigger("click");
+        await shared.promise;
+      }
+      $("#validate").trigger("click");
+      await shared.promise;
+
+      // the key runs the verb rather than pressing the button, so this
+      // counts the verb: one declaration, and both ways in reach it
+      const app = shared.app, real = app.materialize.bind(app);
+      let ran = 0;
+      app.materialize = () => { ++ran; return real(); };
+      try {
+        key("\\");
+        await shared.promise;
+        expect(ran, "ctl-\\ runs materialize").to.equal(1);
+        expect($("#resultsTabs > ul > li > a").map((i, a) => $(a).text()).get(),
+               "and materializing shows in the tabs").to.deep.equal(["validation", "materialization"]);
+        $("#materialize").trigger("click");
+        await shared.promise;
+        expect(ran, "and so does the button").to.equal(2);
+      } finally {
+        app.materialize = real;
+      }
+
+      // the table is built from whatever the pane holds
+      const pane = $("#bindings1 textarea").first();
+      pane.val(bindingsJson);
+      key("[");
+      expect($("#bindings1 table thead th").map((i, th) => $(th).text()).get(),
+             "a column per variable").to.include("http://a.example/v1");
+      expect($("#bindings1 table tbody tr").length, "a row per binding").to.be.above(0);
+      // jsdom lays nothing out, so :visible is no help; hide() writes the
+      // inline style this reads
+      expect(pane.css("display"), "the textarea steps aside").to.equal("none");
+
+      key("]");
+      expect($("#bindings1 table").length, "and comes back").to.equal(0);
+      expect(pane.css("display"), "with the textarea in front again").to.not.equal("none");
     });
 
     it("should stop a session on demand", async function () {
@@ -275,7 +481,8 @@ if (!TEST_browser) {
       // changed the width of the block the step buttons sit in and moved
       // them out from under the mouse
       expect($("#dbgThreads").closest("#debugControls").length, "not in the controls").to.equal(0);
-      expect($("#dbgThreads").closest("#output").length, "in the target schema panel").to.equal(1);
+      expect($("#dbgThreads").closest(".pluginStatusbar").length,
+             "under the controls, in a row whose width nothing else depends on").to.equal(1);
       expect($("#dbgThreads").closest("#dbgThreadsRow").length, "on a row of its own").to.equal(1);
       $("#dbgThreads button").first().trigger("mouseenter"); // partial preview
       // ...and that preview is written the way the finished graph is.  A
@@ -299,6 +506,20 @@ if (!TEST_browser) {
       expect($("#results").text()).to.include('"+1"'); // chosen: first disjunct
 
       // pick the other accepted thread
+      // at the right-hand end of the tab strip, out of the flow: it is
+      // about the results, and putting it in with them pushed them down
+      const aside = $(".resultsTabsAside");
+      expect(aside.find(".dbgAlternatives").length, "in the strip's own corner")
+        .to.equal(1);
+      expect(aside.closest("#resultsTabs").length).to.equal(1);
+      expect(aside.css("position"), "out of the flow").to.equal("absolute");
+      expect(aside.css("right"), "at the right-hand end").to.not.equal("auto");
+      // ...and as wide as what it says: #results' own rule makes every div
+      // in there 99% wide, and a 99%-wide box anchored right puts its text
+      // at the left, over the tabs it is supposed to sit beside
+      expect(aside.css("width"), "not the width of the strip").to.not.equal("99%");
+      expect($(".dbgAlternatives").closest("#materializationResults").length,
+             "and not among the results it is about").to.equal(0);
       $("#results .dbgAlternatives button").last().trigger("click");
       expect($("#results").text()).to.include('"bob@x"');
       expect($("#results").text()).to.include("2 viable materializations"); // chooser re-rendered
@@ -358,7 +579,12 @@ if (!TEST_browser) {
 
       const paneDom = $("#results .shexjs-turtle-pane");
       expect(paneDom.length, "materialization renders in a Turtle pane").to.equal(1);
-      expect(paneDom[0].style.height, "pane fills the remaining height").to.match(/^\d+px$/);
+      // no height of its own: the page is divided for this now -- panes
+      // above, results below -- and the results tab is what scrolls
+      expect(paneDom[0].style.height, "no height measured against the window")
+        .to.equal("");
+      expect($("#resultsTabs > div[id]").first().css("overflow"),
+             "the tab it is in is what scrolls").to.equal("auto");
       expect($("#results").text()).to.include('"one"');
     });
 

@@ -123,12 +123,12 @@ class ShapeMapJisonParser extends JisonParser {
         switch (yystate) {
 case 1:
 
-          return []
+          return yy.locate([])
         
 break;
 case 2:
 
-          return [$$[$0-3]].concat($$[$0-2])
+          return yy.locate([$$[$0-3]].concat($$[$0-2]))
         
 break;
 case 3: case 52: case 60:
@@ -141,21 +141,25 @@ case 5: case 62:
 this.$ = $$[$0-1].concat($$[$0]);
 break;
 case 8:
-this.$ = extend({ node: $$[$0-3] }, $$[$0-2], $$[$0-1], $$[$0]);
+
+        this.$ = extend({ node: $$[$0-3] }, $$[$0-2], $$[$0-1], $$[$0]);
+        yy.addLocation();
+      
 break;
 case 9: case 11: case 53: case 56: case 75:
 this.$ = {  };
 break;
 case 13:
-this.$ = extend({ shape: $$[$0] }, $$[$0-1]);
+ this.$ = extend({ shape: $$[$0] }, $$[$0-1]); yy.shapeLoc = this._$; 
 break;
 case 14:
-this.$ = { shape: ShapeMap.Start };
+ this.$ = { shape: ShapeMap.Start }; yy.shapeLoc = this._$; 
 break;
 case 15:
 
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
         this.$ = { shape: yy.schemaMeta.expandPrefix($$[$0].substr(0, $$[$0].length - 1), yy) };
+        yy.shapeLoc = this._$;
       
 break;
 case 16:
@@ -163,6 +167,7 @@ case 16:
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
         const namePos = $$[$0].indexOf(':');
         this.$ = { shape: yy.schemaMeta.expandPrefix($$[$0].substr(0, namePos), yy) + $$[$0].substr(namePos + 1) };
+        yy.shapeLoc = this._$;
       
 break;
 case 17:
@@ -171,14 +176,17 @@ break;
 case 18:
 this.$ = { status: $$[$0] };
 break;
+case 19: case 20:
+ this.$ = $$[$0]; yy.nodeLoc = this._$; 
+break;
 case 21:
-this.$ = { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-sparql", lexical: $$[$0]["@value"] };
+ this.$ = { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-sparql", lexical: $$[$0]["@value"] }; yy.nodeLoc = this._$; 
 break;
 case 22:
-this.$ = { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-" + $$[$0-1].toLowerCase(), lexical: $$[$0]["@value"] };
+ this.$ = { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-" + $$[$0-1].toLowerCase(), lexical: $$[$0]["@value"] }; yy.nodeLoc = this._$; 
 break;
 case 23:
-this.$ = { type: "Extension", language: $$[$0-1], lexical: $$[$0]["@value"] };
+ this.$ = { type: "Extension", language: $$[$0-1], lexical: $$[$0]["@value"] }; yy.nodeLoc = this._$; 
 break;
 case 25:
 this.$ = ShapeMap.Start;
@@ -199,10 +207,10 @@ case 37:
 this.$ = 'unknown';
 break;
 case 38:
-this.$ = { reason: $$[$0] };
+ this.$ = { reason: $$[$0] }; yy.reasonLoc = this._$; 
 break;
 case 39:
-this.$ = { appinfo: $$[$0] };
+ this.$ = { appinfo: $$[$0] }; yy.jsonLoc = this._$; 
 break;
 case 42:
 this.$ = false;

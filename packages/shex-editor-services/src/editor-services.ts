@@ -13,6 +13,7 @@
  */
 
 import * as ShExParser from "@shexjs/parser";
+import * as ShapeMap from "shape-map";
 import {parseTurtle as lezerTurtle} from "lezer-turtle/emit";
 import * as RdfJs from "n3";
 import {jsonLanguage} from "@codemirror/lang-json";
@@ -86,9 +87,13 @@ export interface Locate {
    * per-triple provenance) */
   exprAnchors (obj: object): {parts: Range[]} | null;
   /** the innermost expression (e.g. TripleConstraint) whose source range
-   * contains `offset` -- editor gutter clicks resolve to schema objects
-   * (e.g. debugger breakpoints) through this */
+   * contains `offset` -- a breakpoint set at a position resolves to a
+   * schema object through this */
   exprAt (offset: number): {expr: object, range: Range} | null;
+  /** the expressions whose source range starts in [from, to), earliest
+   * first -- what a gutter click on a line means: the constraints the
+   * line begins, not one that merely continues across it */
+  exprsStartingIn (from: number, to: number): {expr: object, range: Range}[];
   /** the shape whose declaration contains `offset` */
   shapeAt (offset: number): {label: string, range: Range} | null;
 }
@@ -194,6 +199,22 @@ export function yyllocToRange (loc: Yylloc | undefined, starts: number[]): Range
   };
 }
 
+/** rangeToYylloc - the inverse: {from, to} character offsets to a jison
+ * yylloc, for locations found some way other than by the ShExC parser. */
+export function rangeToYylloc (range: Range, starts: number[]): Yylloc {
+  const lineOf = (offset: number): number => {
+    let lo = 0, hi = starts.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (starts[mid] <= offset) lo = mid; else hi = mid - 1;
+    }
+    return lo;
+  };
+  const first = lineOf(range.from), last = lineOf(range.to);
+  return {first_line: first + 1, first_column: range.from - starts[first],
+          last_line: last + 1, last_column: range.to - starts[last]};
+}
+
 /** sourceExcerpt - a gutter-numbered source line with a caret underline for
  * `range` (clipped to the range's first line), e.g. for CLI debuggers:
  *
@@ -247,9 +268,12 @@ function memoLast<A, R> (fn: (text: string, opts?: A) => R, keyOf: (opts?: A) =>
 /** parseShExC - parse a ShExC document, returning the schema (when it
  * parses), diagnostics for parse errors, and range lookups for shapes,
  * expressions (e.g. TripleConstraints) and shape references.
- * Memoized on (text, base): repeated calls with unchanged text are free.
+ * Memoized on the text and every option -- the base, the prefixes and the
+ * schema options all change what the same text means -- so repeated calls
+ * with unchanged text are free.
  */
-export const parseShExC = memoLast(parseShExCUncached, opts => (opts && opts.base) || "");
+export const parseShExC = memoLast(parseShExCUncached, opts => JSON.stringify(
+  [opts && opts.base, opts && opts.prefixes, opts && opts.schemaOptions]));
 
 function parseShExCUncached (text: string, opts: ParseShExCOptions = {}): ParsedShExC {
   const starts = lineOffsets(text);
@@ -327,6 +351,106 @@ export function commentRanges (text: string): Range[] {
 }
 
 // ---------------------------------------------------------------------------
+// shape maps (the query map pane)
+
+/** the prefixes and base one side of a shape map resolves against */
+export interface MetaLike {
+  base?: string | null;
+  prefixes?: {[prefix: string]: string} | null;
+}
+
+export interface ParseShapeMapOptions {
+  base?: string | null;
+  /** the schema's, for the shape side of each pair */
+  schemaMeta?: MetaLike | null;
+  /** the data's, for the node side */
+  dataMeta?: MetaLike | null;
+}
+
+export interface LocateShapeMap {
+  /** the whole pair: from its node to the end of whatever it says last */
+  pair (i: number): Range | null;
+  node (i: number): Range | null;
+  /** the shape side: `@`, the status and the shape */
+  shape (i: number): Range | null;
+  /** the pair written at `offset` */
+  pairAt (offset: number): {index: number, range: Range} | null;
+}
+
+export interface ParsedShapeMap {
+  text: string;
+  /** the pairs as the shape-map parser makes them; null where the text
+   * does not parse */
+  pairs: any[] | null;
+  diagnostics: Diagnostic[];
+  locate: LocateShapeMap;
+}
+
+const metaKey = (meta: MetaLike | null | undefined) =>
+  meta ? [meta.base, meta.prefixes] : null;
+
+/** parseShapeMap - parse a shape map (a query map, as the reader writes
+ * it), returning its pairs, diagnostics for a parse error, and where each
+ * pair, its node and its shape side were written.  Memoized like
+ * parseShExC. */
+export const parseShapeMap = memoLast(parseShapeMapUncached, opts => JSON.stringify(
+  [opts && opts.base, metaKey(opts && opts.schemaMeta), metaKey(opts && opts.dataMeta)]));
+
+/** the line of a jison message that says what was expected, without the
+ * base and the caret picture around it */
+function shapeMapErrorMessage (e: any): string {
+  const lines = String(e.message).split("\n");
+  return lines.find(l => /^(Expecting|Unexpected|Parse error; unknown prefix)/.test(l))
+    || lines[0].replace(/^.*?\(\d+\): /, "");
+}
+
+function parseShapeMapUncached (text: string, opts: ParseShapeMapOptions = {}): ParsedShapeMap {
+  const starts = lineOffsets(text);
+  const parser = (ShapeMap as any).Parser.construct(
+    opts.base || null, opts.schemaMeta || {}, opts.dataMeta || {});
+  let pairs: any[] | null = null;
+  const diagnostics: Diagnostic[] = [];
+  let locations: any[] = [];
+  try {
+    pairs = parser.parse(text);
+    locations = (pairs as any)._locations || [];
+  } catch (e: any) {
+    const at = yyllocToRange(e.location, starts) || {from: text.length, to: text.length};
+    // a token, or at least a character, to hang the mark on
+    const from = Math.min(at.from, text.length);
+    const to = at.to > from ? at.to : Math.min(text.length, from + 1);
+    diagnostics.push({from, to, severity: "error", message: shapeMapErrorMessage(e)});
+  }
+  const rangeOf = (loc: Yylloc | null | undefined): Range | null =>
+    loc ? yyllocToRange(loc, starts) : null;
+  const pair = (i: number): Range | null => {
+    const l = locations[i];
+    const node = l && rangeOf(l.node);
+    if (!node)
+      return null;
+    const ends = [l.shape, l.reason, l.appinfo].map(rangeOf)
+          .filter((r): r is Range => r !== null).map(r => r.to);
+    return {from: node.from, to: Math.max(node.to, ...ends)};
+  };
+  return {
+    text, pairs, diagnostics,
+    locate: {
+      pair,
+      node: (i: number) => locations[i] ? rangeOf(locations[i].node) : null,
+      shape: (i: number) => locations[i] ? rangeOf(locations[i].shape) : null,
+      pairAt: (offset: number) => {
+        for (let i = 0; i < locations.length; ++i) {
+          const range = pair(i);
+          if (range && range.from <= offset && offset < range.to)
+            return {index: i, range};
+        }
+        return null;
+      },
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
 // JSON, by path
 
 /** A path into a JSON document: member names and array indices, outermost
@@ -351,7 +475,7 @@ const JSON_PUNCTUATION = new Set(["[", "]", "{", "}", ",", ":"]);
  * exactly the text the reader is looking at -- and stays right through
  * whatever they type, since it is re-read from the pane's own text.
  *
- * (neighborhood-wikidata has a hand-written locator of its own for entity
+ * (neighborhood-wikibase has a hand-written locator of its own for entity
  * pages.  It predates this and serves a package that must not depend on an
  * editor: a CLI reading Wikibase JSON should not be pulling in CodeMirror.)
  */
@@ -424,7 +548,12 @@ export function locateJsonText (text: string): LocatedJsonText {
  * errors reference by identity -- @shexjs/loader's import-merging makes a
  * new top-level Schema but shares the inner objects).
  */
-export function locateInParsed (text: string, schema: SchemaWithMeta | null): LocatedSchema {
+export function locateInParsed (text: string, schema: SchemaWithMeta | null,
+                                opts: {base?: string} = {}): LocatedSchema {
+  // a schema not written in ShExC (ShExJ, ShExR, a DCTAP table) has no
+  // parser locations; find them in what it was written in
+  if (schema && !schema._locations && !schema._exprLocations && text)
+    synthesizeLocations(text, schema, opts.base);
   const starts = lineOffsets(text);
   // Whitespace and comments are both trivia: an anchor that keeps a
   // constraint's delimiters and drops its nested constraints has no more
@@ -548,6 +677,17 @@ export function locateInParsed (text: string, schema: SchemaWithMeta | null): Lo
               ? yyllocToRange(schema._exprLocations.get(obj), starts) : null;
         return range ? {parts: highlightParts(obj, range)} : null;
       },
+      exprsStartingIn: (from: number, to: number) => {
+        if (!schema || !schema._exprLocations)
+          return [];
+        const found: {expr: object, range: Range}[] = [];
+        for (const [expr, loc] of schema._exprLocations) {
+          const range = yyllocToRange(loc, starts);
+          if (range && range.from >= from && range.from < to)
+            found.push({expr, range});
+        }
+        return found.sort((l, r) => l.range.from - r.range.from);
+      },
       exprAt: (offset: number) => {
         if (!schema || !schema._exprLocations)
           return null;
@@ -662,8 +802,9 @@ export interface ParseTurtleOptions {
   sourceURL?: string;
 }
 
-/** Memoized on (text, baseIRI); see parseShExC. */
-export const parseTurtle = memoLast(parseTurtleUncached, opts => (opts && opts.baseIRI) || "");
+/** Memoized on the text and every option; see parseShExC. */
+export const parseTurtle = memoLast(parseTurtleUncached, opts => JSON.stringify(
+  [opts && opts.baseIRI, opts && opts.sourceURL]));
 
 function parseTurtleUncached (text: string, opts: ParseTurtleOptions = {}): ParsedTurtle {
   const {quads, provenance, diagnostics: lezerDiagnostics, prefixes, base} = lezerTurtle(text, {
@@ -678,6 +819,275 @@ function parseTurtleUncached (text: string, opts: ParseTurtleOptions = {}): Pars
   }));
   return {text, dataset: new RdfJs.Store(quads), quads, provenance, diagnostics,
           prefixes: prefixes || {}, base: base || opts.baseIRI};
+}
+
+// ---------------------------------------------------------------------------
+// schemas not written in ShExC
+
+export type SchemaLanguage = "ShExC" | "ShExJ" | "ShExR" | "DCTAP";
+
+const SX = "http://www.w3.org/ns/shex#";
+const RDF_FIRST = "http://www.w3.org/1999/02/22-rdf-syntax-ns#first";
+const RDF_REST = "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest";
+const RDF_NIL = "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil";
+
+/**
+ * Which schema language a text is in, by the tests the app applies to its
+ * schema pane: JSON is ShExJ, a table headed `shapeID` (or opening with a
+ * DCTAP prefix table) is DCTAP, and anything else is ShExC -- unless it
+ * fails as ShExC and reads as Turtle about the ShEx vocabulary, which is
+ * ShExR.  A half-typed ShExR document is still ShExR: its own parser's
+ * word is the one to show, not ShExC's.
+ */
+export function schemaLanguage (text: string, opts: ParseShExCOptions = {}): SchemaLanguage {
+  if (/^﻿?\s*\{/.test(text))
+    return "ShExJ";
+  if (/^﻿?\s*(shapeID\s*,|prefix\s*,\s*namespace)/i.test(text))
+    return "DCTAP";
+  if (parseShExC(text, opts).diagnostics.length === 0)
+    return "ShExC";
+  const turtle = parseTurtle(text, {baseIRI: opts.base});
+  return turtle.quads.some(q => q.predicate.value.startsWith(SX)) ? "ShExR" : "ShExC";
+}
+
+/** lintSchema - what the schema pane's linter shows: the diagnostics of
+ * whichever parser the text is for (see schemaLanguage). */
+export function lintSchema (text: string, opts: ParseShExCOptions = {}): Diagnostic[] {
+  switch (schemaLanguage(text, opts)) {
+  case "ShExJ":
+    try {
+      JSON.parse(text);
+      return [];
+    } catch (e: any) {
+      // V8 says where: "Unexpected token } in JSON at position 12"
+      const at = /position (\d+)/.exec(String(e.message));
+      const from = at ? Math.min(Number(at[1]), text.length) : 0;
+      return [{from, to: Math.min(text.length, from + 1), severity: "error", message: firstLine(e.message)}];
+    }
+  case "DCTAP":
+    return [];
+  case "ShExR":
+    return parseTurtle(text, {baseIRI: opts.base}).diagnostics;
+  default:
+    return parseShExC(text, opts).diagnostics;
+  }
+}
+
+/** one row of a CSV text and where its cells are */
+interface CsvRow { from: number; to: number; cells: {from: number, to: number, text: string}[]; }
+
+/** scanCsv - the rows of a CSV text with character offsets, RFC 4180
+ * quoting (a `""` inside quotes is a quote), CR/LF or LF line ends. */
+export function scanCsv (text: string): CsvRow[] {
+  const rows: CsvRow[] = [];
+  let i = 0;
+  const n = text.length;
+  while (i < n) {
+    const row: CsvRow = {from: i, to: i, cells: []};
+    for (;;) {
+      const cellFrom = i;
+      let value = "";
+      if (text[i] === '"') {
+        ++i;
+        for (;;) {
+          if (i >= n) break;
+          if (text[i] === '"') {
+            if (text[i + 1] === '"') { value += '"'; i += 2; continue; }
+            ++i;
+            break;
+          }
+          value += text[i++];
+        }
+        while (i < n && text[i] !== "," && text[i] !== "\n" && text[i] !== "\r")
+          value += text[i++];      // anything after the closing quote, kept as written
+      } else {
+        while (i < n && text[i] !== "," && text[i] !== "\n" && text[i] !== "\r")
+          value += text[i++];
+      }
+      row.cells.push({from: cellFrom, to: i, text: value});
+      if (i < n && text[i] === ",") { ++i; continue; }
+      break;
+    }
+    row.to = i;
+    if (i < n && text[i] === "\r") ++i;
+    if (i < n && text[i] === "\n") ++i;
+    rows.push(row);
+  }
+  return rows;
+}
+
+/**
+ * Locations for a schema that was not written in ShExC, found in the text
+ * it was written in: a ShExJ document by JSON path, a ShExR document by
+ * the triples that describe each shape and each constraint, a DCTAP table
+ * by its rows.  They are attached to the schema the way the ShExC parser
+ * attaches its own (`_locations`, `_exprLocations`), so every lookup over
+ * a located schema -- anchoring, hovers, breakpoints -- works unchanged.
+ * Returns whether anything was found.
+ */
+export function synthesizeLocations (text: string, schema: SchemaWithMeta, base?: string): boolean {
+  const starts = lineOffsets(text);
+  const locations: {[label: string]: Yylloc} = {};
+  const exprLocations = new Map<object, Yylloc>();
+  const found = (range: Range | null): Yylloc | null => range ? rangeToYylloc(range, starts) : null;
+  const shapes: any[] = schema.shapes || [];
+  /** the TripleConstraints under a shape expression, in declaration order */
+  const constraintsOf = (expr: any, out: any[] = []): any[] => {
+    if (!expr || typeof expr !== "object")
+      return out;
+    if (expr.type === "TripleConstraint")
+      out.push(expr);
+    else if (expr.expressions)
+      expr.expressions.forEach((e: any) => constraintsOf(e, out));
+    else if (expr.expression)
+      constraintsOf(expr.expression, out);
+    else if (expr.shapeExpr)
+      constraintsOf(expr.shapeExpr, out);
+    else if (expr.shapeExprs)
+      expr.shapeExprs.forEach((e: any) => constraintsOf(e, out));
+    return out;
+  };
+
+  switch (schemaLanguage(text)) {
+  case "ShExJ": {
+    const json = locateJsonText(text);
+    const at = (path: JsonPath): Yylloc | null => found(json.at(path));
+    const walk = (expr: any, path: JsonPath): void => {
+      if (!expr || typeof expr !== "object")
+        return;
+      if (expr.type === "TripleConstraint") {
+        const loc = at(path);
+        if (loc)
+          exprLocations.set(expr, loc);
+        if (expr.valueExpr && typeof expr.valueExpr === "object")
+          walk(expr.valueExpr, path.concat("valueExpr"));
+      } else if (expr.expressions)
+        expr.expressions.forEach((e: any, i: number) => walk(e, path.concat("expressions", i)));
+      else if (expr.expression)
+        walk(expr.expression, path.concat("expression"));
+      else if (expr.shapeExpr)
+        walk(expr.shapeExpr, path.concat("shapeExpr"));
+      else if (expr.shapeExprs)
+        expr.shapeExprs.forEach((e: any, i: number) => walk(e, path.concat("shapeExprs", i)));
+    };
+    shapes.forEach((decl: any, i: number) => {
+      const path: JsonPath = ["shapes", i];
+      const loc = at(path);
+      if (loc && typeof decl.id === "string")
+        locations[decl.id] = loc;
+      // a 2.1 document writes the shape where 2.2 writes a ShapeDecl around
+      // it, and ShExJtoAS wraps it: the object has a shapeExpr the text lacks
+      walk(decl.shapeExpr, json.at(path.concat("shapeExpr")) ? path.concat("shapeExpr") : path);
+    });
+    break;
+  }
+  case "ShExR": {
+    // the base the schema's labels were resolved against, where the
+    // document does not declare its own
+    const parsed = parseTurtle(text, {baseIRI: base});
+    const store = parsed.dataset!;
+    const F = RdfJs.DataFactory;
+    /** a node's description: from where it is first written as a subject
+     * to the end of the last thing said about it */
+    const describedAt = (node: any): Yylloc | null => {
+      let from: number | null = null, to: number | null = null;
+      for (const q of store.getQuads(node, null, null, null))
+        for (const utt of parsed.provenance.get(q)) {
+          const s = uttRange(utt.subject), o = uttRange(utt.object);
+          if (s && (from === null || s.from < from)) from = s.from;
+          for (const r of [s, o])
+            if (r && (to === null || r.to > to)) to = r.to;
+        }
+      return from === null || to === null ? null : found({from, to});
+    };
+    const objectOf = (node: any, predicate: string): any =>
+      node ? (store.getQuads(node, F.namedNode(predicate), null, null)[0] || {}).object || null : null;
+    const listOf = (head: any): any[] => {
+      const items: any[] = [];
+      for (let at = head; at && at.value !== RDF_NIL && items.length < 10000; at = objectOf(at, RDF_REST))
+        items.push(objectOf(at, RDF_FIRST));
+      return items;
+    };
+    const walkTripleExpr = (te: any, node: any): void => {
+      if (!te || typeof te !== "object" || !node)
+        return;
+      if (te.type === "TripleConstraint") {
+        const loc = describedAt(node);
+        if (loc)
+          exprLocations.set(te, loc);
+        if (te.valueExpr && typeof te.valueExpr === "object")
+          walkShapeExpr(te.valueExpr, objectOf(node, SX + "valueExpr"));
+      } else if (te.expressions) {
+        const items = listOf(objectOf(node, SX + "expressions"));
+        te.expressions.forEach((e: any, i: number) => walkTripleExpr(e, items[i]));
+      }
+    };
+    const walkShapeExpr = (se: any, node: any): void => {
+      if (!se || typeof se !== "object" || !node)
+        return;
+      if (se.type === "Shape")
+        walkTripleExpr(se.expression, objectOf(node, SX + "expression"));
+      else if (se.shapeExprs) {
+        const items = listOf(objectOf(node, SX + "shapeExprs"));
+        se.shapeExprs.forEach((e: any, i: number) => walkShapeExpr(e, items[i]));
+      } else if (se.shapeExpr)
+        walkShapeExpr(se.shapeExpr, objectOf(node, SX + "shapeExpr"));
+    };
+    shapes.forEach((decl: any) => {
+      if (typeof decl.id !== "string" || decl.id.startsWith("_:"))
+        return;                          // a blank node's label is nobody's to match
+      const node = F.namedNode(decl.id);
+      const loc = describedAt(node);
+      if (!loc)
+        return;
+      locations[decl.id] = loc;
+      // a ShapeDecl describes its shape expression; an older document says
+      // the shape at the label itself
+      walkShapeExpr(decl.shapeExpr, objectOf(node, SX + "shapeExpr") || node);
+    });
+    break;
+  }
+  case "DCTAP": {
+    // as dctap reads it: a row naming a shapeID starts a shape, and every
+    // row that is neither a header, blank nor a prefix declaration is a
+    // constraint of the current shape
+    const regular = scanCsv(text).filter(row => {
+      const cells = row.cells.map(c => c.text.trim().toLowerCase());
+      if (cells.length <= 2)
+        return false;
+      return !(cells[0] === "shapeid" && cells[1] === "shapelabel")
+        && !(cells[0] === "prefix" && cells[1] === "namespace");
+    });
+    let shape = -1, constraints: any[] = [], next = 0;
+    const extents: {from: number, to: number}[] = [];
+    regular.forEach(row => {
+      if (row.cells[0].text.replace(/^﻿/, "").trim()) {
+        ++shape;
+        constraints = shape < shapes.length ? constraintsOf(shapes[shape].shapeExpr) : [];
+        next = 0;
+        extents[shape] = {from: row.from, to: row.to};
+      } else if (extents[shape])
+        extents[shape].to = row.to;
+      const tc = constraints[next++];
+      if (tc) {
+        const loc = found({from: row.from, to: row.to});
+        if (loc)
+          exprLocations.set(tc, loc);
+      }
+    });
+    extents.forEach((extent, i) => {
+      const loc = found(extent);
+      if (loc && shapes[i] && typeof shapes[i].id === "string")
+        locations[shapes[i].id] = loc;
+    });
+    break;
+  }
+  default:
+    return false;
+  }
+  schema._locations = locations;
+  schema._exprLocations = exprLocations;
+  return Object.keys(locations).length > 0 || exprLocations.size > 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -818,6 +1228,28 @@ function rangeOfNode (parsed: ParsedTurtle, node: LdTerm, bnodes: BnodeAlignment
         return uttRange(utt.subject);
     }
   return null;
+}
+
+/** quadRanges - where an RDF/JS quad is written in a document: its term
+ * ranges, or null where it isn't there.  A debugger's thread pointing at
+ * the triples it has matched. */
+export function quadRanges (parsed: ParsedTurtle, quad: any):
+    Pick<PairAnchors, "subject" | "predicate" | "object" | "subjectParts" | "objectParts"> | null {
+  const ld = (t: any): LdTerm => t.termType === "Literal"
+    ? {value: t.value,
+       type: t.datatype && t.datatype.value !== XSD_STRING && t.datatype.value !== RDF_LANGSTRING
+         ? t.datatype.value : undefined,
+       language: t.language || undefined}
+    : t.termType === "BlankNode" ? "_:" + t.value : t.value;
+  return tripleAnchors(parsed, {subject: ld(quad.subject), predicate: quad.predicate.value, object: ld(quad.object)},
+                       parsed.text, {toProv: new Map(), used: new Set()});
+}
+
+/** nodeRange - where a node is written in a document: the first statement
+ * it is the subject of.  What the query map pane points at in the data. */
+export function nodeRange (parsed: ParsedTurtle, node: LdTerm): Range | null {
+  const range = rangeOfNode(parsed, node, {toProv: new Map(), used: new Set()});
+  return trimRange(range, parsed.text, commentsOf(parsed));
 }
 
 interface ErrorLeaf {
@@ -1445,7 +1877,6 @@ export interface OffsetRange {
   fields?: {[member: string]: {from: number, to: number}};
 }
 
-const TERM_MEMBERS = ["subject", "predicate", "object"];
 
 /** stringifyWithOffsets - JSON.stringify(value, null, indent)-identical
  * serialization that also records the {from, to} character range of every
@@ -1491,8 +1922,9 @@ export function stringifyWithOffsets (value: any, isTarget: (o: any) => boolean,
           const kFrom = len + pad.length;
           push(pad + JSON.stringify(k) + ": ");
           ser(v[k], depth + 1);
-          if (TERM_MEMBERS.indexOf(k) !== -1)
-            fields[k] = {from: kFrom, to: len};
+          // every member, key and value: a caller marking one of them is
+          // pointing at `"value": 10` rather than at the 10
+          fields[k] = {from: kFrom, to: len};
           push(i < keys.length - 1 ? ",\n" : "\n");
         });
         push(padEnd + "}");

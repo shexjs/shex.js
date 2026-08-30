@@ -12,10 +12,9 @@ const Fs = require("fs");
 const Path = require("path");
 const expect = require("chai").expect;
 const node_fetch = require("node-fetch");
-const {makeWorkerClass} = require("../../shex-webapp/test/fakeWorker");
 // jsdom's engines outpace the packages' own; required lazily under
 // TEST_browser (c.f. browser-test.js)
-let JSDOM;
+let Harness;
 
 const [[GitRootServer]] = require("../../../tools/testServer")
       .startServer(
@@ -27,49 +26,18 @@ const [[GitRootServer]] = require("../../../tools/testServer")
 if (!TEST_browser) {
   console.warn("Skipping shexmap-worker-editors-smoke-tests; to activate these tests, set environment variable TEST_browser=true");
 } else {
-  const jsdom = require("jsdom");
-  ({JSDOM} = jsdom);
+  Harness = require("../../shex-webapp/test/harness");
   describe("shexmap-worker with ?editors=1", function () {
     this.timeout(20000);
-    const page = "packages/extension-map/doc/shexmap-worker.html";
+    // ShExMap is a plugin of this page now; shexmap-worker.html is a
+    // redirect that opens it with exactly these parameters (§5 phase 2)
+    const page = "packages/shex-webapp/doc/shex-simple.html";
+    const asShExMap = "&plugin=" + encodeURIComponent("../../extension-map/doc/ShExMapPlugin.js")
+          + "&manifestURL=" + encodeURIComponent("../../extension-map/examples/manifest.json");
 
     let dom, $, shared;
     before(async function () {
-      const base = Path.join(__dirname, "../../..", page);
-      // forward page console traffic except console.debug, the app's channel
-      // for reporting user-input errors (e.g. mid-edit parse failures)
-      const virtualConsole = new jsdom.VirtualConsole().forwardTo(console);
-      virtualConsole.removeAllListeners("debug");
-      dom = new JSDOM(Fs.readFileSync(base, "utf8"), {
-        url: GitRootServer.urlFor(page + "?editors=1"),
-        runScripts: "dangerously",
-        resources: "usable",
-        pretendToBeVisual: true, // CodeMirror needs rAF etc.
-        virtualConsole,
-        beforeParse (window) {
-          // the page's head script runs new Worker("ShExMapWorkerThread.js")
-          window.Worker = makeWorkerClass(Path.dirname(base));
-        },
-      });
-      dom.window.fetch = node_fetch;
-      // jsdom lacks the CSS namespace; jquery-ui ≥1.14 calls CSS.escape.
-      if (!dom.window.CSS)
-        dom.window.CSS = { escape: s => String(s).replace(/[^a-zA-Z0-9_\u00A0-\uFFFF-]/g, c => `\\${c}`) };
-      // jsdom does no layout and omits these Range methods; CodeMirror's
-      // measure loop calls them on every frame and handles empty results.
-      dom.window.Range.prototype.getClientRects = function () { return []; };
-      dom.window.Range.prototype.getBoundingClientRect =
-        function () { return {x: 0, y: 0, top: 0, right: 0, bottom: 0, left: 0, width: 0, height: 0}; };
-      shared = await new Promise((resolve, reject) => {
-        dom.window._testCallback = (parm) => {
-          if (parm instanceof Error)
-            reject(parm);
-          else
-            resolve(parm);
-        };
-      });
-      await shared.promise; // drag-and-drop init + search-parameter loads
-      $ = dom.window.$;
+      ({dom, $, shared} = await Harness.boot(page, "?editors=1&worker=1" + asShExMap, {worker: true}));
     });
 
     after(function () {
@@ -77,9 +45,27 @@ if (!TEST_browser) {
         dom.window.close();
     });
 
+
+    /* Inventory rows 15 and 16.  This page's worker is the plain one; what
+     * makes it a ShExMap worker is the extension's own worker half, named
+     * by URL on every request and imported once -- which is why
+     * ShExMapWorkerThread.js is no longer a copy of ShExWorkerThread.js
+     * with materialize bolted on, and why the copy's staleness (a
+     * synchronous SPARQL db, unmarshalled query-tracker terms) went with
+     * it. */
+    it("should validate in the plain worker, with ShExMap named as a plugin", function () {
+      expect(shared.app.remote, "this app validates over there").to.equal(true);
+      const ext = dom.window.ShExPlugins.byId("http://shex.io/extensions/Map/#");
+      expect(ext.worker, "and says where its worker half is, relative to itself")
+        .to.equal("./ShExMapWorkerThread.js");
+      expect(new dom.window.URL(ext.worker, ext.baseUrl).href)
+        .to.equal(GitRootServer.urlFor("packages/extension-map/doc/ShExMapWorkerThread.js"));
+    });
+
     it("should boot with editor panes on the ShExMap caches", function () {
       expect($("#results .error").length, $("#results .error").text()).to.equal(0);
-      ["#inputSchema", "#inputData", "#outputSchema", "#bindings1", "#staticVars"].forEach(sel => {
+      // the schema's own box: #inputSchema also holds the query map's pane
+      ["#schemaDocument", "#inputData", "#outputSchema", "#bindings1", "#staticVars"].forEach(sel => {
         expect($(sel + " .shexjs-editor-pane").length, sel + " pane").to.equal(1);
       });
     });
@@ -119,14 +105,15 @@ if (!TEST_browser) {
         .to.include('"not a number"');
     });
 
-    it("should carry editors=1 into the permalink", async function () {
-      expect($("#editors").val(), "menu select set from ?editors=1").to.equal("1");
-      $("#menu-button").trigger("click"); // permalink is built when the menu opens
+    it("should leave the editors out of the permalink", async function () {
+      expect($("#editors").val(), "the editors are what the app is").to.equal("");
+      $("#permalink a").removeAttr("href"); // built afresh when the menu opens
+      $("#menu-button").trigger("click");
       let href;
       for (let i = 0; i < 100 && !(href = $("#permalink a").attr("href")); ++i)
         await new Promise(resolve => setTimeout(resolve, 20));
       $("#menu-button").trigger("click"); // close it again
-      expect(href, "permalink: " + href).to.include("editors=1");
+      expect(href, "permalink: " + href).to.not.include("editors=");
     });
 
     // the materialization runs in the worker, so its provenance crosses a
@@ -160,7 +147,12 @@ if (!TEST_browser) {
 
       const paneDom = $("#results .shexjs-turtle-pane");
       expect(paneDom.length, "materialization renders in a Turtle pane").to.equal(1);
-      expect(paneDom[0].style.height, "pane fills the remaining height").to.match(/^\d+px$/);
+      // no height of its own: the page is divided for this now -- panes
+      // above, results below -- and the results tab is what scrolls
+      expect(paneDom[0].style.height, "no height measured against the window")
+        .to.equal("");
+      expect($("#resultsTabs > div[id]").first().css("overflow"),
+             "the tab it is in is what scrolls").to.equal("auto");
 
       const [{pairs, text: resultText}] = shared.Caches.editorSupport.lastMaterialized;
       expect(pairs.length, "one pair per generated triple").to.equal(2);
@@ -228,6 +220,41 @@ if (!TEST_browser) {
         expect(units[i].quad.subject.value, "units " + i + "'s subject")
           .to.equal(value.quad.subject.value);
       });
+    });
+
+    /* The × on the screen tab, on the page that has a worker: the worker
+     * imported ShExMap's half and cannot un-import it, so the page gets a
+     * fresh one -- otherwise the handler over there would still answer a
+     * schema that named it after the plugin had gone.  Last, since nothing
+     * of ShExMap is left afterwards. */
+    it("should give the page a worker that never heard of it, on unload", async function () {
+      const set = (selector, value) => {
+        const elt = $(selector).first();
+        elt.val(value);
+        elt.trigger("change");
+      };
+      const before = dom.window.ShExWorker;
+
+      $("#screenTabs .unloadPlugin").first().trigger("click");
+
+      expect(dom.window.ShExPlugins.all(), "out of the register").to.deep.equal([]);
+      expect($("#screens > .screen").length, "and off the page").to.equal(0);
+      expect(dom.window.ShExWorker, "a worker of its own").to.not.equal(before);
+
+      // ...and the page still validates over there, which is the thing a
+      // fresh worker has to still be able to do
+      set("#inputSchema textarea", [
+        "PREFIX : <http://a.example/>",
+        "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>",
+        ":S { :p xsd:integer }",
+      ].join("\n"));
+      set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .");
+      set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
+      await shared.promise;
+      $("#validate").trigger("click");
+      await shared.promise;
+      expect($("#results .error").text(), "no complaint").to.equal("");
+      expect($("#results .passes").length, "it validated in the new worker").to.be.above(0);
     });
   });
 }

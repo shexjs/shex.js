@@ -290,8 +290,11 @@ npm run serve           # prints the shex-simple / shexmap-simple URLs
                         # (npx shex-serve [--port N] [--root DIR] [--coi] outside the repo)
 ```
 
-Add `?editors=1` to either app URL for the language-aware CodeMirror editors
-(see [doc/editor-integration-plan.md](doc/editor-integration-plan.md)).
+The app URLs open with language-aware CodeMirror editors; add
+`?editors=textarea` for plain textareas (see
+[doc/editor-integration-plan.md](doc/editor-integration-plan.md)).
+What is still to do, across the whole repository, is in
+[doc/plan.md](doc/plan.md); the design notes it links hold the rationale.
 With the editors on, the 🐞 buttons step through a materialization
 (shexmap-simple) or any of a validation's triple-expression matches (both
 apps) with schema-gutter breakpoints and a live threads pane;
@@ -330,7 +333,7 @@ npm run test-all                          # the meta-package tests check version
 git commit -am 'chore(release): publish'
 git tag v1.0.0-alpha.NN
 git push --follow-tags
-npm publish --workspaces                  # publish every packages/* package
+node tools/publish-ordered.js            # publish every packages/* package, in dependency order
 ```
 
-`npm publish --workspaces` publishes each workspace package; per-package `publishConfig` already grants public access.
+`tools/publish-ordered.js` publishes each workspace package after the ones it depends on (`--list` shows the order, `--dry-run` rehearses it); per-package `publishConfig` already grants public access.

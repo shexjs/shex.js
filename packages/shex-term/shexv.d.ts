@@ -56,6 +56,14 @@ export interface NodeConstraintViolation extends NestedFailure {
 
 export interface SemActFailure extends NestedFailure {
   type: "SemActFailure";
+  /**
+   * Set when the action didn't merely refuse this shape but said that no
+   * other reading of this node will do either -- a cut, in the sense
+   * parser combinators use: the validation of this node/shape pair stops
+   * where the action said so rather than going on to the alternatives.
+   * A handler asks for one by *throwing* a failure with this set.
+   */
+  cut?: boolean;
 }
 
 export interface ShapeOrFailure extends NestedFailure {

@@ -4,10 +4,11 @@
   "description": "generic WASI semantic-action extension: the action code is a WebAssembly (WAT) WASI command run per invocation",
   "author": "ericP <eric@w3.org> (http://www.w3.org/People/Eric/)",
   "license": "MIT",
-  "main": "shex-extension-wasi.js",
+  "main": "./lib/shex-extension-wasi.js",
   "scripts": {
     "test": "cd ../.. && mocha -C -R dot packages/extension-wasi/test/*test.js",
-    "gen-tests": "node tools/gen-tests.js"
+    "gen-tests": "node tools/gen-tests.js",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
@@ -16,5 +17,6 @@
   },
   "dependencies": {
     "wabt": "^1.0.36"
-  }
+  },
+  "types": "./src/shex-extension-wasi.ts"
 }

@@ -242,7 +242,12 @@ class SchemaStructureValidator extends ShExVisitor {
   }
 }
 
+import {ShExRSchema} from './ShExRSchema';
+
 const ShExUtil = {
+  /** ShExR.shex, the schema for ShEx schemas written as RDF: what a
+   * ShExR document is validated against before it is read */
+  ShExRSchema,
 
   SX: SX,
   RDF: RDF,
@@ -1706,10 +1711,11 @@ const ShExUtil = {
    * fragments it quotes read as the schema spells them; give it a `lex` as
    * well and the terms read as the reader's document writes them. */
   errsToSimple: function (val: any, prefixes?: { [prefix: string]: string },
-                          opts: {lex?: TermLexer, base?: string} = {}): string[] {
-    const ctx: {lex?: TermLexer, base?: string} = {};
+                          opts: {lex?: TermLexer, base?: string, explain?: "both" | "repairs" | "errors"} = {}): string[] {
+    const ctx: {lex?: TermLexer, base?: string, explain?: "both" | "repairs" | "errors"} = {};
     if (opts.lex) ctx.lex = opts.lex;
     if (opts.base !== undefined) ctx.base = opts.base;
+    if (opts.explain) ctx.explain = opts.explain;
     return new ShExHumanErrorWriter().write(val, prefixes || {}, ctx);
   },
 
@@ -1777,7 +1783,11 @@ const ShExUtil = {
   /** is there a browser here, with a User-Agent of its own? */
   inBrowser: function (): boolean {
     const global = globalThis as any;
-    return typeof global.window !== "undefined" && typeof global.window.document !== "undefined";
+    // ...or a worker, which is a browser context with no `window`: it has a
+    // User-Agent of its own and the same refusal to let anyone set it, so a
+    // request made from one must not ask.
+    return (typeof global.window !== "undefined" && typeof global.window.document !== "undefined")
+      || typeof global.WorkerGlobalScope !== "undefined";
   },
 
   /** the given headers, plus who we are where that can be said */
@@ -1810,12 +1820,21 @@ const ShExUtil = {
    * "Unexpected end of JSON input", naming neither the service, nor what it
    * said, nor which of a walk's hundred queries it was. */
   sparqlHttpError: function (endpoint: string, status: number, statusText: string,
-                             body: string, query: string): Error {
+                             body: string, query: string, retryAfter?: string | null): Error {
     const said = body.trim().slice(0, 200);
-    return Error(`SPARQL endpoint <${endpoint}> returned ${status}`
+    const e = Error(`SPARQL endpoint <${endpoint}> returned ${status}`
                  + (statusText ? " " + statusText : "")
                  + (said ? ":\n" + said : "")
-                 + `\n\nquery was:\n${query}`);
+                 + `\n\nquery was:\n${query}`) as Error & {
+                   status: number; retryAfter?: string | null;
+                 };
+    // what refused, and for how long: 429 is a service saying "not that
+    // fast", which is a thing to answer rather than only to report
+    // (@shexjs/neighborhood-sparql's RateLimiter)
+    e.status = status;
+    if (retryAfter)
+      e.retryAfter = retryAfter;
+    return e;
   },
 
   executeQueryPromise: function (query: string, endpoint: string, dataFactory: any): Promise<any[][]> {
@@ -1840,7 +1859,8 @@ const ShExUtil = {
     return request.then(async resp => {
       if (!resp.ok)
         throw this.sparqlHttpError(endpoint, resp.status, resp.statusText,
-                                   await resp.text().catch(() => ""), query);
+                                   await resp.text().catch(() => ""), query,
+                                   resp.headers && resp.headers.get("retry-after"));
       return resp.json();
     }).then(jsonObject => {
         return this.parseSparqlJsonResults(jsonObject, dataFactory);
@@ -1875,7 +1895,8 @@ const ShExUtil = {
     // const selects = selectsBlock.match(/\?[^\s?]+/g);
     if (xhr.status < 200 || xhr.status >= 300)
       throw this.sparqlHttpError(endpoint, xhr.status, xhr.statusText,
-                                 xhr.responseText || "", query);
+                                 xhr.responseText || "", query,
+                                 xhr.getResponseHeader && xhr.getResponseHeader("Retry-After"));
     const jsonObject = JSON.parse(xhr.responseText);
     return this.parseSparqlJsonResults(jsonObject, dataFactory);
   },

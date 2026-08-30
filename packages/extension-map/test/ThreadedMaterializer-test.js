@@ -13,6 +13,8 @@ const JsYaml = require("js-yaml");
 const RdfJs = require("n3");
 const ShExParser = require("@shexjs/parser");
 const ShExTerm = require("@shexjs/term");
+const {graphEquals, graphToString} = require("./graphEquals.js");
+const {textOf} = require("../../../tools/manifest-runner");
 
 const {ThreadedMaterializer, normalizeBindingTree, MaterializationError} = require("../lib/ThreadedMaterializer");
 
@@ -39,10 +41,7 @@ describe("ThreadedMaterializer", function () {
       if (TESTS !== null && !TESTS.find(pat => label.indexOf(pat) !== -1 || label.match(RegExp(pat))))
         return;
       it(label + " should materialize " + entry.expectedBindingsURL + " to " + entry.expectedOutputDataURL, function () {
-        const schemaText = "outputSchema" in entry
-              ? entry.outputSchema
-              : Fs.readFileSync(Path.join(examplesDir, entry.outputSchemaURL), "utf8");
-        const schema = parseSchema(schemaText);
+        const schema = parseSchema(textOf(entry, "outputSchema", examplesDir));
         const bindings = JSON.parse(Fs.readFileSync(Path.join(examplesDir, entry.expectedBindingsURL), "utf8"));
         const createRootLex = entry.outputShapeMap.match(/^(<[^>]*>|[^@]*)@/)[1]; // node part of "node@shape"
         const createRoot = createRootLex.startsWith("_:")
@@ -344,88 +343,66 @@ describe("ThreadedMaterializer", function () {
       expect(store.size).to.equal(2); // both TCs see the static
     });
   });
+
+  describe("shape expressions it cannot synthesize", function () {
+    it("should refuse a cycle of references, naming it", function () {
+      const schema = parseSchema("PREFIX : <http://a.example/>\n<A> @<B> OR { :p [1] }\n<B> @<A> OR { :q [2] }\n");
+      expect(() => new ThreadedMaterializer(schema).materialize({}, "_:x", schemaBase + "A"))
+        .to.throw(MaterializationError, "cycle in shape expressions: " + schemaBase + "A -> " + schemaBase + "B -> " + schemaBase + "A");
+    });
+
+    it("should refuse a ShapeNot, plainly", function () {
+      const schema = parseSchema("PREFIX : <http://a.example/>\n<A> NOT { :p [1] }\n");
+      expect(() => new ThreadedMaterializer(schema).materialize({}, "_:x", schemaBase + "A"))
+        .to.throw(MaterializationError, /ShapeNot synthesis not supported/);
+    });
+  });
+
+  /* An optional subshape whose constraints are all constants consumes no
+   * binding and emits an island anyway; a caller who wants islands only
+   * where the bindings asked for one says so. */
+  describe("a static-only optional subshape", function () {
+    const schema = parseSchema([
+      "PREFIX : <http://a.example/>",
+      "PREFIX Map: <http://shex.io/extensions/Map/#>",
+      "<S> { :name . %Map:{ :n %} ; :seen @<T> ? }",
+      "<T> { :kind [:fixed] }",
+    ].join("\n"));
+    const bindings = {"http://a.example/n": {value: "Bob"}};
+    const predicates = quads => quads.map(q => q.predicate.value.replace("http://a.example/", ":"));
+
+    it("should emit its island by default", function () {
+      const quads = new ThreadedMaterializer(schema).materialize(bindings, "_:x", schemaBase + "S");
+      expect(predicates(quads).sort()).to.deep.equal([":kind", ":name", ":seen"]);
+    });
+
+    it("should leave it out where every island must consume a binding", function () {
+      const quads = new ThreadedMaterializer(schema, {requireBindingsInSubshapes: true})
+            .materialize(bindings, "_:x", schemaBase + "S");
+      expect(predicates(quads)).to.deep.equal([":name"]);
+    });
+  });
+
+  /* Where several accepts are viable, the default order stands -- and a
+   * caller with a different weighing of what was forfeited, or of coverage,
+   * hands in a comparator. */
+  describe("choosing among accepts", function () {
+    const schema = parseSchema(Fs.readFileSync(Path.join(examplesDir, "card-flat-schema.shex"), "utf8"));
+    const bindings = JSON.parse(Fs.readFileSync(Path.join(examplesDir, "ambiguous-bindings.json"), "utf8"));
+    const has = (accept, local) => accept.quads.some(q => q.predicate.value.endsWith("#" + local));
+
+    it("should take the first disjunct's accept by default", function () {
+      const m = new ThreadedMaterializer(schema);
+      const quads = m.materialize(bindings, "_:c");
+      expect(m.accepts.length, "both disjuncts accepted").to.equal(2);
+      expect(has({quads}, "phone")).to.equal(true);
+    });
+
+    it("should take whichever the caller's comparator prefers", function () {
+      const m = new ThreadedMaterializer(schema, {prefer: (a, b) => (has(b, "mbox") ? 1 : 0) - (has(a, "mbox") ? 1 : 0)});
+      const quads = m.materialize(bindings, "_:c");
+      expect(has({quads}, "mbox")).to.equal(true);
+      expect(m.chosen.quads).to.equal(quads);
+    });
+  });
 });
-
-/* graphEquals/findIsomorphism/mapppedTo/graphToString copied from
- * ./Map-test.js -- candidates for a shared test util. */
-function graphToString (g) {
-  let output = "";
-  const w = new RdfJs.Writer({
-    write: function (chunk, encoding, done) { output += chunk; done && done(); },
-  });
-  w.addQuads([...g.match(null, null, null, null)]);
-  return "{\n" + output + "\n}";
-}
-
-function graphEquals (left, right, leftToRight) {
-  if (left.size !== right.size)
-    return false;
-
-  leftToRight = leftToRight || {};
-  const rightToLeft = Object.keys(leftToRight).reduce(function (ret, from) {
-    ret[leftToRight[from]] = from;
-    return ret;
-  }, {});
-
-  return findIsomorphism([...left.match(null, null, null, null)],
-                         right, leftToRight, rightToLeft);
-}
-
-function findIsomorphism (g, right, l2r, r2l) {
-  if (g.length === 0)
-    return true;
-  const matchTarget = g.pop();
-
-  const rights = [...right.match(
-    mapppedTo(matchTarget.subject, l2r),
-    matchTarget.predicate,
-    mapppedTo(matchTarget.object, l2r),
-    null
-  )];
-
-  const ret = !!rights.find(function (triple) {
-    const trialMappings = [];
-    function add (from, to) {
-      if (mapppedTo(from, l2r) === null) {
-        if (mapppedTo(to, r2l) === null) {
-          const leftKey = ShExTerm.rdfJsTerm2Turtle(from);
-          const rightKey = ShExTerm.rdfJsTerm2Turtle(to);
-          l2r[leftKey] = to;
-          r2l[rightKey] = from;
-          trialMappings.push({from, leftKey, rightKey});
-          return true;
-        } else {
-          return false;
-        }
-      } else {
-        return true;
-      }
-    }
-
-    if (!add(matchTarget.subject, triple.subject) ||
-        !add(matchTarget.object, triple.object) ||
-        !findIsomorphism(g, right, l2r, r2l)) {
-      for (const {leftKey, rightKey} of trialMappings) {
-        delete r2l[rightKey];
-        delete l2r[leftKey];
-      }
-      return false;
-    } else
-      return true;
-  });
-
-  if (!ret) {
-    g.push(matchTarget);
-  }
-
-  return ret;
-}
-
-function mapppedTo (term, mapping) {
-  if (term.termType === "BlankNode") {
-    const key = ShExTerm.rdfJsTerm2Turtle(term);
-    return (key in mapping) ? mapping[key] : null;
-  } else {
-    return term;
-  }
-}

@@ -45,7 +45,10 @@ function compile (data, {node = E(1), shape = CALC + "Expr", eager = true, ran =
   const validator = new ShExValidator(schema, RdfJsDb(graph), {});
   const evaluate = ran === null ? jsActions
     : (code, scope) => { ran.push(code); return jsActions(code, scope); };
-  const options = {evaluate, prefixes: PREFIXES};
+  // the schema's own prefixes and the schema itself: what an action writes
+  // (`:left`, `$rdf:type`) is in the schema's terms, and the schema is what
+  // says whether an arc reference is a value or a list of them
+  const options = {evaluate, prefixes: schema._prefixes || PREFIXES, schema};
   if (eager)
     Reduce.registerEager(validator, options);
   else
@@ -56,7 +59,7 @@ function compile (data, {node = E(1), shape = CALC + "Expr", eager = true, ran =
     errors: JSON.stringify(res[0].appinfo),
     // an eager run stored every value, so the fold needs no evaluator
     ast: res[0].status === "conformant"
-      ? Reduce.reduce(res, eager ? {} : options)[0]
+      ? Reduce.reduce(res, eager ? {schema} : options)[0]
       : undefined,
   };
 }
@@ -104,7 +107,8 @@ describe("calc, where the actions steer the parse", function () {
    * nowhere to keep it and nothing to read. */
   it("should have nowhere to keep the sum without the start action", function () {
     const withoutStart = read("guide.shex").replace(/%Reduce:\{[\s\S]*?%\}\n/, "");
-    expect(withoutStart, "the shapes' own actions are still there").to.include("$ = num($1)");
+    expect(withoutStart, "the shapes' own actions are still there")
+      .to.include("state.note(subject, num($1))");
     expect(() => compile("sums.ttl", {schemaText: withoutStart}))
       .to.throw(/state/);
   });

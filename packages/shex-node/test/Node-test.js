@@ -376,3 +376,19 @@ describe("@shexjs/node", function () {
     });
   });
 });
+
+describe("loadExtensions", function () {
+  const ShExNode = require("..")({});
+  const TEST = "http://shex.io/extensions/Test/";
+
+  it("should take a file glob", function () {
+    const glob = Path.join(__dirname, "../../extension-test/lib/shex-extension-test.js");
+    expect(Object.keys(ShExNode.loadExtensions([glob]))).to.deep.equal([TEST]);
+  });
+
+  /* A glob that matches no file is a package name, which reads better in
+   * a document than a path into node_modules. */
+  it("should take a package name", function () {
+    expect(Object.keys(ShExNode.loadExtensions(["@shexjs/extension-test"]))).to.deep.equal([TEST]);
+  });
+});

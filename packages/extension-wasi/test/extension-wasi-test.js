@@ -22,7 +22,7 @@ const {ShExValidator} = require("@shexjs/validator");
 const {ctor: RdfJsDb} = require("@shexjs/neighborhood-rdfjs");
 const ShExTerm = require("@shexjs/term");
 const TestExtension = require("@shexjs/extension-test");
-const WasiExtension = require("../shex-extension-wasi");
+const WasiExtension = require("../lib/shex-extension-wasi");
 
 const TestUrl = "http://shex.io/extensions/Test/";
 const WasiUrl = "http://shex.io/extensions/WASI/";

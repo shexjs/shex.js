@@ -53,7 +53,9 @@ if (cmds.help)
   abort("", ExitCode.help);
 if (cmds.turtle.length > 0) {
   const validator = require("@shexjs/validator");
-  const schema = require(/*"shexr-schema"*/ "../lib/ShExR.cjs.js");
+  // ShExR.shex, the schema for schemas written as RDF, parsed on demand
+  const schema = require("@shexjs/parser").construct("http://www.w3.org/ns/shex", null, {index: true})
+        .parse(require("@shexjs/util").ShExRSchema);
   const rdfjsdb = require("@shexjs/neighborhood-rdfjs").ctor;
   SchemaOptions.graphParser = { validator, schema, rdfjsdb };
 } else if ([].concat(cmds.shex).concat(cmds.json).length === 0) {

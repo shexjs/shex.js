@@ -28,7 +28,7 @@
     "@shexjs/neighborhood-api": "^1.0.0-alpha.28",
     "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.29",
     "@shexjs/neighborhood-sparql": "^1.0.0-alpha.29",
-    "@shexjs/neighborhood-wikidata": "^1.0.0-alpha.29",
+    "@shexjs/neighborhood-wikibase": "^1.0.0-alpha.29",
     "@shexjs/parser": "^1.0.0-alpha.28",
     "@shexjs/term": "^1.0.0-alpha.27",
     "@shexjs/util": "^1.0.0-alpha.28",
@@ -46,14 +46,13 @@
   },
   "scripts": {
     "make": "(cd test/ && make test)",
-    "browserify-n3": "mkdir -p node_modules/n3/browser ; npx browserify -s N3 -o node_modules/n3/browser/n3-browserify.js node_modules/n3/lib/index.js ; npx uglifyjs node_modules/n3/browser/n3-browserify.js -o node_modules/n3/browser/n3-browserify.min.js -c",
     "test": "mocha -C -R dot",
     "webpack": "webpack --config webpack.config.js --mode production",
     "webpack-analyzer": "webpack --config webpack.config.js --mode production --profile --json > ./doc/webpacks/shex-webapp-stats.json && webpack-bundle-analyzer ./doc/webpacks/shex-webapp-stats.json",
     "webpack-jquery-components": "webpack --config webpack-jquery-components.config.js --mode development",
     "webpack-monitor": "WEBPACK_MONITOR=true webpack --config webpack.config.js --mode production",
     "webpack-n3js": "webpack --config webpack-n3js.config.js --mode development",
-    "build": "tsc"
+    "build": "tsc && tsc -p tsconfig.app.json"
   },
   "devDependencies": {
     "jquery": "^3.7.1",

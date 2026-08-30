@@ -23,7 +23,7 @@
  *
  * An action names what its sub-productions reduced to the way yacc does:
  * `$sx:nodeKind` is what the arc on that predicate reduced to, `$1` is the
- * first value the body matched, and `$` is the value of this production.
+ * first value the body matched, and `$$` is the value of this production.
  *
  * This module has no action language: `reduce()` takes an `evaluate(code,
  * scope)` and hands it plain data.  Running code that arrived with a document
@@ -73,7 +73,9 @@ function registerEager(validator, options = {}) {
     if (typeof options.evaluate !== 'function')
         throw Error('registerEager() needs an `evaluate` option -- (code, scope) => value. '
             + 'For actions written in JavaScript that is @shexjs/extension-reduce-js.');
-    const f = foldFor(options);
+    // the validator's schema, unless the caller brought one: it is what says
+    // whether `$:left` is a value or a list of them (arityOf)
+    const f = foldFor(Object.assign({ schema: validator.schema }, options), 'matching');
     const rejects = options.rejects || refused;
     validator.semActHandler.results[f.url] = [];
     return validator.semActHandler.register(f.url, {
@@ -88,9 +90,13 @@ function registerEager(validator, options = {}) {
             const value = runAction(f, code, where, scope, values);
             storage.code = code;
             storage.value = value; // what the fold will take
-            return rejects(value)
-                ? [{ type: 'SemActFailure', errors: [rejection(value, where)] }]
-                : [];
+            if (!rejects(value))
+                return [];
+            // ...and a refusal that says `cut` is the value spelling of cut():
+            // an action language without exceptions can still say it
+            if (value !== null && typeof value === 'object' && value.cut)
+                throw new SemActCut(value, where);
+            return [{ type: 'SemActFailure', errors: [rejection(value, where)] }];
         },
         api: options.api,
     });
@@ -137,14 +143,38 @@ function done(validator) {
         delete validator.semActHandler.results[ReduceExt];
 }
 // ## the fold
+/**
+ * "Not this one, and not any of the others either": a cut.
+ *
+ * A rejection fails the shape the action was on and the match goes on to
+ * whatever else that node could be.  Sometimes the action knows there is no
+ * point -- the number is not the sum however you read the expression -- and
+ * every alternative left is work whose only result is to bury the reason
+ * this one failed under the last one's.  Thrown, this fails the node/shape
+ * pair where the action stood: the validator reads `type` and `cut` (see
+ * SemActFailure) and reports it as that pair's failure.
+ */
+class SemActCut extends Error {
+    constructor(why, where) {
+        const gave = refused(why) ? why.failure : why;
+        const text = 'the action' + (where === undefined ? '' : ' on ' + where)
+            + ' cut the match'
+            + (gave === undefined || gave === '' ? '' : ': ' + String(gave));
+        super(text);
+        this.type = 'SemActFailure';
+        this.cut = true;
+        this.name = 'SemActCut';
+        this.errors = [text];
+    }
+}
 /** where an action was, when it goes wrong */
 class ReduceError extends Error {
-    constructor(where, code, cause) {
-        super(`reducing ${where}:\n  ${code}\n${indent(String(cause && cause.message || cause))}`);
+    constructor(verb, where, code, cause) {
+        super(`${verb} ${where}:\n  ${code}\n${indent(String(cause && cause.message || cause))}`);
         this.name = 'ReduceError';
     }
 }
-function foldFor(options) {
+function foldFor(options, verb = 'reducing') {
     return {
         runner: typeof options.evaluate === 'function'
             ? { evaluate: options.evaluate, prefixes: options.prefixes || {},
@@ -153,6 +183,10 @@ function foldFor(options) {
         url: options.url || ReduceExt,
         onRecursion: options.onRecursion || 'node',
         seen: new Map(),
+        provenance: Array.isArray(options.provenance) ? options.provenance : null,
+        many: arityOf(options.schema),
+        verb,
+        onError: typeof options.onError === 'function' ? options.onError : null,
     };
 }
 /**
@@ -164,6 +198,55 @@ function foldFor(options) {
  */
 function reduce(result, options = {}) {
     return reduceResult(foldFor(options), result);
+}
+/**
+ * How many values a reference to an arc stands for.
+ *
+ * `$:left` is one value where the schema gives a shape at most one `:left`,
+ * and the list of them where it may have several -- which is what lets an
+ * action say `Object.assign($rdf:type, $:left, $:right)` rather than
+ * counting its own arcs.  A constraint inside a repeated group can match
+ * more than once however small its own cardinality, so what counts is the
+ * whole path's; and two constraints on one predicate are two ways for it to
+ * arrive, so that is a list too.  Anything this cannot read -- a tripleExpr
+ * by reference, a shape it has never heard of -- is a list, which is what
+ * every arc reference was before this.
+ */
+function arityOf(schema) {
+    const decls = (schema && schema.shapes) || [];
+    const shapeOf = (expr) => expr === null || typeof expr !== 'object' ? null
+        : expr.type === 'ShapeDecl' ? shapeOf(expr.shapeExpr)
+            : expr.type === 'Shape' ? expr
+                : null;
+    const once = new Map();
+    (Array.isArray(decls) ? decls : Object.values(decls)).forEach((decl) => {
+        const label = decl && (decl.id || decl.label);
+        const shape = shapeOf(decl);
+        if (typeof label !== 'string' || shape === null)
+            return;
+        const single = new Set();
+        const seen = new Set();
+        walk(shape.expression, true);
+        once.set(label, single);
+        function walk(expr, alone) {
+            if (expr === null || typeof expr !== 'object')
+                return; // a tripleExpr by reference: unknown
+            const solo = alone && (expr.max === undefined || expr.max === 1);
+            if (expr.type === 'TripleConstraint') {
+                if (seen.has(expr.predicate)) // a second way for it to arrive
+                    single.delete(expr.predicate);
+                else if (solo)
+                    single.add(expr.predicate);
+                seen.add(expr.predicate);
+                return;
+            }
+            (expr.expressions || []).forEach((e) => walk(e, solo));
+        }
+    });
+    return (shape, predicate) => {
+        const single = shape === undefined ? undefined : once.get(shape);
+        return single === undefined || !single.has(predicate);
+    };
 }
 function reduceResult(f, res) {
     // a results ShapeMap: [{node, shape, status, appinfo}, ...]
@@ -211,7 +294,7 @@ function reduceNode(f, node) {
             return reduceNode(f, node.solution);
         case 'ShapeTest': {
             const key = keyOf(node.node, node.shape);
-            const { arcs, values } = arcsOf(f, node.solution);
+            const { arcs, values } = arcsOf(f, node.solution, node.shape);
             const value = run(f, node, { kind: 'shape', node: node.node, shape: node.shape, arcs }, values, () => node.node);
             f.seen.set(key, value);
             return value;
@@ -244,7 +327,7 @@ function reduceNode(f, node) {
  * action names a sub-production, and in match order, which is how `$1`
  * reaches one whose name it shares with another.
  */
-function arcsOf(f, solution) {
+function arcsOf(f, solution, inShape) {
     const arcs = {};
     const values = [];
     collect(solution);
@@ -269,9 +352,12 @@ function arcsOf(f, solution) {
                         ? tested.object
                         : reduceNode(f, tested.referenced);
                     // the object is this production's one sub-production, so it is $1
+                    // which of this predicate's constraints in this shape: with the
+                    // shape, that is which constraint in the schema (provenance)
+                    const occurrence = (arcs[s.predicate] || []).length;
                     const value = run(f, tested, { kind: 'tripleConstraint', subject: tested.subject,
                         predicate: tested.predicate, object: tested.object,
-                        value: bare, arcs: {} }, [bare], () => bare);
+                        value: bare, arcs: {} }, [bare], () => bare, { inShape, occurrence });
                     (arcs[s.predicate] = arcs[s.predicate] || []).push(value);
                     values.push(value);
                 });
@@ -295,13 +381,18 @@ function extOn(f, node) {
     const ext = node && node.extensions && node.extensions[f.url];
     return ext && (typeof ext.code === 'string' || 'value' in ext) ? ext : undefined;
 }
-function run(f, node, scope, values, fallback) {
+function run(f, node, scope, values, fallback, where) {
     const ext = extOn(f, node);
     if (ext === undefined)
         return fallback();
-    if ('value' in ext)
-        return ext.value; // an eager action already ran here
-    return runAction(f, ext.code, describe(node), scope, values);
+    const value = 'value' in ext
+        ? ext.value // an eager action already ran here
+        : runAction(f, ext.code, describe(node), scope, values);
+    if (f.provenance !== null)
+        f.provenance.push(Object.assign({ value, code: ext.code, kind: scope.kind, at: node }, scope.kind === 'shape'
+            ? { node: scope.node, shape: scope.shape }
+            : { subject: scope.subject, predicate: scope.predicate, object: scope.object }, where || {}));
+    return value;
 }
 function runAction(f, code, where, scope, values) {
     const runner = f.runner;
@@ -314,24 +405,62 @@ function runAction(f, code, where, scope, values) {
         bound.refs.forEach(({ id, ref }) => {
             bindings[id] = ref.kind === 'ret' ? undefined
                 : ref.kind === 'pos' ? values[ref.at - 1]
-                    : (scope.arcs || {})[ref.iri];
+                    : ref.kind === 'all' ? values.slice()
+                        : arcRef(f, scope, ref.iri);
         });
         return runner.evaluate(bound.code, Object.assign({ where, prefixes: runner.prefixes, api: runner.api, state: runner.state }, scope, bound.ret === undefined ? { bindings } : { bindings, ret: bound.ret }));
     }
     catch (e) {
-        throw new ReduceError(where, code, e);
+        const error = e instanceof ReduceError ? e : new ReduceError(f.verb, where, code, e);
+        if (f.onError !== null)
+            f.onError(error);
+        throw error;
     }
 }
 /**
- * `$$` or `$`, `$1`, `$<iri>`, `$prefix:local`, `$:local` -- and `$name`,
- * which is deliberately none of them: `$` starts an identifier in several
- * action languages, and a name with no prefix is not a predicate.
- *
- * The last alternative is the bare `$`, which is not read as a reference
- * before `{`, `/` or a quote -- much more likely a template literal, the end
- * of a regular expression, or a dollar sign in a string than a reference.
+ * What `$<predicate>` stands for: the list of values the arc reduced to, or
+ * the one value where the schema allows only one (arityOf).  An arc that
+ * didn't match is undefined either way -- absent rather than empty.
  */
-const REF = /\$(\$|\d+|<[^\s<>"{}|^`\\]*>|[A-Za-z_][\w-]*:[\w-]*|:[\w-]*|[A-Za-z_][\w-]*)|\$(?![{/'"`])/g;
+function arcRef(f, scope, iri) {
+    const got = (scope.arcs || {})[iri];
+    return f.many(scope.shape, iri) || got === undefined ? got : got[0];
+}
+/**
+ * `$$` or `$`, `$1`, `$*`, `$<iri>`, `$prefix:local`, `$:local` -- and
+ * `$name`, which is deliberately none of them: `$` starts an identifier in
+ * several action languages, and a name with no prefix is not a predicate.
+ *
+ * The token, if there is one; `sigil` sorts out the `$`s with nothing after
+ * them that this recognizes.
+ */
+const REF = /\$(\$|\*|\d+|<[^\s<>"{}|^`\\]*>|[A-Za-z_][\w-]*:[\w-]*|:[\w-]*|[A-Za-z_][\w-]*)?/g;
+/**
+ * What a `$` with nothing this recognizes after it is: the production's
+ * value, a dollar sign that was never a reference, or a mistake.
+ *
+ * `${`, `$/` and a `$` before a quote are left alone -- far more likely a
+ * template literal, the end of a regular expression or a dollar sign in a
+ * string than a reference -- and a `$` that ends a value (`$ = ...`, `f($)`,
+ * `$.length`) is the production's value.
+ *
+ * Everything else is refused rather than passed through, which is the whole
+ * point of this function: a `$@` passed through means whatever the action
+ * language makes of it now, and means a reference the day someone gives
+ * `$@` a meaning here.  Perl learned this about `\q` in regular
+ * expressions the slow way.  So the sigils a syntax might one day want --
+ * `@ & ! ? # ^ ~ % |` and the rest -- are an error while they are free,
+ * and `$$` is the spelling that cannot be reinterpreted.
+ */
+function sigil(code, at) {
+    const next = code[at + 1];
+    if (next === undefined || /[\s=;,.)\]}([]/.test(next))
+        return 'ret'; // nothing binds to it: the value
+    if (/[{/'"`\\]/.test(next))
+        return 'text'; // a template, a regexp, a string
+    throw Error(`$${next} is not a reference; write $$ for the production's `
+        + `value (and a space, if what follows it is an operator)`);
+}
 /**
  * The action as the evaluator should see it: every reference rewritten to a
  * name, and a list of what those names stand for.
@@ -349,9 +478,11 @@ function bindRefs(code, prefixes, cache) {
     const refs = [];
     const seen = new Map();
     let ret;
-    const rewritten = code.replace(REF, (whole, text) => {
+    const rewritten = code.replace(REF, (whole, text, at) => {
         if (text !== undefined && /^[A-Za-z_]/.test(text) && text.indexOf(':') === -1)
             return whole; // `$name`: an identifier, not a reference
+        if (text === undefined && sigil(code, at) === 'text')
+            return whole; // a dollar sign that is not a reference
         const key = text === undefined || text === '$' ? '' : text;
         const before = seen.get(key);
         if (before !== undefined)
@@ -371,6 +502,8 @@ function bindRefs(code, prefixes, cache) {
 function parseRef(text, prefixes) {
     if (text === '')
         return { kind: 'ret' };
+    if (text === '*')
+        return { kind: 'all' };
     if (/^\d+$/.test(text)) {
         const at = Number(text);
         if (at === 0)
@@ -395,7 +528,8 @@ function expandName(name, prefixes) {
 function idFor(ref, code, refs) {
     const base = '_' + (ref.kind === 'ret' ? 'ret'
         : ref.kind === 'pos' ? ref.at
-            : localOf(ref.iri).replace(/[^A-Za-z0-9_]/g, '_') || 'arc');
+            : ref.kind === 'all' ? 'all'
+                : localOf(ref.iri).replace(/[^A-Za-z0-9_]/g, '_') || 'arc');
     let id = base;
     for (let n = 1; refs.some(r => r.id === id) || mentions(code, id); ++n)
         id = base + '_' + (n + 1);
@@ -463,8 +597,11 @@ and hands it plain data:
   subject, predicate,  for a constraint: the triple, and what its object
   object, value        reduced to
   bindings, ret        what each $... in the code was rewritten to, and the
-                       name the action assigns its value to, if it used $
+                       name the action assigns its value to, if it used $$
   prefixes, api, where the caller's prefixes and extras, and where this is
+An action refuses a match (registerEager) with a value: {failure: why} to say
+this production is not it, {failure: why, cut: true} to say no other reading
+of this node will do either.
 No functions cross that line, so the same fold ports to an implementation in
 another language.  @shexjs/extension-reduce-js is the JavaScript evaluator.
 

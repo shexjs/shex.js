@@ -95,14 +95,15 @@ describe("calc, where the actions can falsify the match", function () {
 
   /* Recording instead of running is the same schema and the same actions
    * with a different answer: nothing can fail a match, so the wrong sum
-   * conforms and the marker the action returned lands in the AST as if it
-   * were a value.  A check that cannot falsify is a comment. */
+   * conforms and what the action refused with lands in the AST as if it
+   * were a value -- which is what it is, `cut` and all, when there is no
+   * match left to cut.  A check that cannot falsify is a comment. */
   it("should falsify nothing when the actions only record", function () {
     const lazy = compile("doesnt-sum.ttl", {eager: false});
     expect(lazy.status).to.equal("conformant");
     expect(lazy.ast.right.right).to.deep.equal({
       op: "last",
-      value: {failure: "not the sum of the numbers before it"},
+      value: {failure: "not the sum of the numbers before it", cut: true},
     });
   });
 });

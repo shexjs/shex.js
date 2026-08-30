@@ -1,34 +1,3 @@
-- schemaLabel: repeated properties
-  schema: |
-    PREFIX : <http://hl7.org/fhir/>
-    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-    <#S1> {
-      :p xsd:integer ;
-      :p IRI ;
-      :p xsd:decimal ;
-      :p @<#S2>
-    }
-
-    <#S2> {
-      :q [5]
-    }
-  dataLabel: passing data
-  data: |
-    PREFIX : <http://hl7.org/fhir/>
-    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-    <#n1>
-      :p 1.1 ;
-      :p <#n3> ;
-      :p <#n2> ;
-      :p 4 ;
-    .
-
-    <#n3> :q 5 .
-  queryMap: |
-    <#n1>@<#S1>
-  status: conformant
 - schemaLabel: clinical observation
   schemaURL: ClinObs.shex
   dataLabel: the least an Observation can be
@@ -241,11 +210,13 @@
     } LIMIT 10'''@START
   status: conformant
   neighborhood: sparql
+  dataBase: http://www.wikidata.org/entity/
   endpoint: https://query.wikidata.org/sparql
 - schemaLabel: Wikidata person
   schemaURL: wikidata-person.shex
   dataLabel: Q42 from the query service
   neighborhood: sparql
+  dataBase: http://www.wikidata.org/entity/
   endpoint: https://query.wikidata.org/sparql
   queryMap: |
     <http://www.wikidata.org/entity/Q42>@START
@@ -253,19 +224,19 @@
   comment: Douglas Adams, validated by asking query.wikidata.org for each neighborhood as the walk needs it.
 - schemaLabel: Wikidata person
   schemaURL: wikidata-person.shex
-  dataLabel: Q42 from the JSON API
-  neighborhood: wikidata
+  dataLabel: Q42, Q76 from the JSON API
+  neighborhood: wikibase
+  dataBase: http://www.wikidata.org/entity/
   base: https://www.wikidata.org/wiki/Special:EntityData/
   queryMap: |
     QENTITIES "42 76"@START
   status: conformant
-  comment: The same entity from the JSON pages Wikidata is edited through, turned back into the RDF the query service would serve.  The QueryMap names entities by id and lets this source work out what they are called.
-  data: |
-    Q42
+  comment: The same entity, and Q76 with it, from the JSON pages Wikidata is edited through, turned back into the RDF the query service would serve.  The QueryMap names entities by id and lets this source work out what they are called.
 - schemaLabel: Wikidata person
   schemaURL: wikidata-person.shex
   dataLabel: Q42 from a downloaded page
-  neighborhood: wikidata
+  neighborhood: wikibase
+  dataBase: http://www.wikidata.org/entity/
   dataURL: wikidata-Q42.json
   queryMap: |
     <http://www.wikidata.org/entity/Q42>@START
@@ -275,11 +246,41 @@
 - schemaLabel: Wikidata human gene
   schemaURL: wikidata-human-gene.shex
   dataLabel: BRCA1, its chromosome and its assembly
-  neighborhood: wikidata
+  neighborhood: wikibase
+  dataBase: http://www.wikidata.org/entity/
   base: https://www.wikidata.org/wiki/Special:EntityData/
   queryMap: |
     QENTITIES "227339"@START
   status: conformant
   comment: 'GeneWiki''s human gene schema (EntitySchema:E37), with the two schemas it imports inlined: a gene''s chromosome is E109''s and the genome assembly its coordinates are given against is E108''s.  So validating BRCA1 (Q227339) walks from the gene to chromosome 17 (Q220677) and on to GRCh38 (Q20966585) -- three entities, three shapes, each page fetched as the walk reaches it.  Four constraints are relaxed here, each marked RELAXED IN THIS COPY where it stands: three are places where the data cites a source the schema enumerates without (a newer Ensembl release, the OMA browser), and one is a normalized value this source can''t derive from an entity page.'
+- schemaLabel: repeated properties
+  schema: |
+    PREFIX : <http://hl7.org/fhir/>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+    <#S1> {
+      :p xsd:integer ;
+      :p IRI ;
+      :p xsd:decimal ;
+      :p @<#S2>
+    }
+
+    <#S2> {
+      :q [5]
+    }
+  dataLabel: passing data
   data: |
-    Q227339
+    PREFIX : <http://hl7.org/fhir/>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+    <#n1>
+      :p 1.1 ;
+      :p <#n3> ;
+      :p <#n2> ;
+      :p 4 ;
+    .
+
+    <#n3> :q 5 .
+  queryMap: |
+    <#n1>@<#S1>
+  status: conformant

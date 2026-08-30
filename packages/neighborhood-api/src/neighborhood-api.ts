@@ -16,8 +16,16 @@ export interface Neighborhood {
  * e.g. to log or slurp the retrieved triples.
  */
 export interface DbQueryTracker {
-  start (isIncoming: boolean, term: RdfJsTerm, shapeLabel: string | typeof Start): void;
-  end (quads: RdfJs.Quad[], time: number): void;
+  /** A query is going out.  What this returns comes back to `end` or
+   * `fail`, so that an answer can be told from the question it answers: an
+   * asynchronous db has several in flight at once, and pairing them by
+   * arrival order files one request's answer under another's. */
+  start (isIncoming: boolean, term: RdfJsTerm, shapeLabel: string | typeof Start): unknown;
+  /** what came back, how long it took, and which question it answers */
+  end (quads: RdfJs.Quad[], time: number, token?: unknown): void;
+  /** ...and when nothing came back: a timeout, a refusal, a service that
+   * broke.  Optional, since a db that cannot fail need not say so. */
+  fail? (error: unknown, time: number, token?: unknown): void;
 }
 
 export interface NeighborhoodDb {
@@ -57,7 +65,7 @@ export interface AsyncNeighborhoodDb {
 // STRAWMAN (names and shapes negotiable).  Each neighborhood implementation
 // needs different things to come to life -- an rdfjs store wants files (with
 // media types), a SPARQL db wants an endpoint and query-strategy flags, a
-// wikidata db wants the page base it appends entity ids to.  A host that
+// Wikibase db wants the page base it appends entity ids to.  A host that
 // offers several implementations (the CLI, the WebApp) shouldn't hard-code
 // each one's needs, so a module may *declare* them.
 //
@@ -288,7 +296,7 @@ export interface NeighborhoodModule {
    * validation fetched (the WebApp's slurp).  A source that is handed its
    * data declares neither. */
   capabilities?: ("query" | "translate")[];
-  /** what to call this data source where a user picks one, e.g. "Wikidata".
+  /** what to call this data source where a user picks one, e.g. "Turtle".
    * A neighborhood is an implementation detail from inside; from outside it
    * is where the data comes from. */
   label?: string;
@@ -384,7 +392,7 @@ export function paramsToCommandLineArgs (specs: DbParamSpec[]): CliOptionDefinit
 // options).
 
 export interface NeighborhoodWebAppDb extends NeighborhoodDb {
-  /** typeahead for the focus node input, e.g. wikidata's label search.
+  /** typeahead for the focus node input, e.g. a Wikibase's label search.
    * Also what a module's ParamEditor completions can draw on, through the
    * EditorContext's `db`. */
   suggestFocusNodes?(prefix: string, limit: number): EditorCompletion[];

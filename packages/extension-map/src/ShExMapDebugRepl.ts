@@ -6,6 +6,11 @@
  * MaterializerDebugger underneath is a plain generator-driver, so blocking
  * on the prompt IS the suspension mechanism; no worker needed.
  *
+ * The I/O, the located schema, the prefixes and the command loop are
+ * DebugRepl's (@shexjs/editor-services), shared with shex-debug; what is
+ * this REPL's own is the engine it drives and how: pulled, an event per
+ * step, and a post-mortem over the accepted threads.
+ *
  * Commands:
  *   s              step into (next event, descending into subshape calls)
  *   n              step over (skip the interior of the current call)
@@ -23,118 +28,67 @@
  */
 "use strict";
 
-const EditorServices = require("@shexjs/editor-services");
+const {DebugRepl} = require("@shexjs/editor-services/lib/debug-repl");
 const {ThreadedMaterializer, MaterializerDebugger} = require("./ThreadedMaterializer");
 
-class ShExMapDebugRepl {
-  write: any; prompt: any; schemaText: any; located: any; lineStarts: any;
-  prefixes: any; dbg: any; breakpointDescriptions: any[];
+class ShExMapDebugRepl extends DebugRepl {
+  dbg: any;
 
   constructor (schemaText: any, schema: any, bindingTree: any, createRoot: any, opts: any = {}) {
-    this.write = opts.write || ((s: any) => process.stdout.write(s));
-    this.prompt = opts.prompt; // () => line or null on EOF
-    this.schemaText = schemaText;
-    this.located = EditorServices.locateInParsed(schemaText, schema);
-    this.lineStarts = EditorServices.lineOffsets(schemaText);
-    this.prefixes = schema._prefixes || {};
+    super(schemaText, schema, opts);
     this.dbg = new MaterializerDebugger(
       new ThreadedMaterializer(schema, {staticVars: opts.staticVars}),
       bindingTree, createRoot, opts.shapeLabel);
-    this.breakpointDescriptions = [];
   }
 
   /** run the command loop; returns 0 on completion, 1 on materialization
    * failure, 2 on quit-before-done */
   run () {
     this.write("shexmap-debug -- s(tep) n(ext) o(ut) c(ontinue) b LINE[:COL] bp PRED bn NODE t [N] info l h q\n");
-    while (!this.dbg.done) {
-      const line = this.prompt("(smdb) ");
-      if (line === null) { // EOF: run to completion
+    let quit = false;
+    // a step that finishes the materialization ends the loop
+    const step = (how: string) => {
+      this.showEvent(this.dbg[how]());
+      return this.dbg.done ? "return" : undefined;
+    };
+    if (!this.dbg.done)
+      this.commandLoop("(smdb) ", {
+        s: () => step("stepInto"),
+        n: () => step("stepOver"),
+        o: () => step("stepOut"),
+        c: () => step("continue"),
+        b: (args: string[]) => this.setPositionBreakpoint(args[0]),
+        bp: (args: string[]) => this.setPredicateBreakpoint(args[0]),
+        bn: (args: string[]) => this.setNodeBreakpoint(args[0]),
+        t: (args: string[]) => this.showThreads(args[0]),
+        info: () => this.showInfo(),
+        l: () => this.showEvent(this.dbg.current, true),
+        h: () => this.write("s=into n=over o=out c=continue b LINE[:COL] bp PRED bn NODE t [N] info l q\n"),
+        q: () => { quit = true; return "return"; },
+      }, () => { // EOF: run to completion
         this.showEvent(this.dbg.continue());
-        break;
-      }
-      const [cmd, ...args] = line.trim().split(/\s+/);
-      switch (cmd) {
-      case "": break;
-      case "s": this.showEvent(this.dbg.stepInto()); break;
-      case "n": this.showEvent(this.dbg.stepOver()); break;
-      case "o": this.showEvent(this.dbg.stepOut()); break;
-      case "c": this.showEvent(this.dbg.continue()); break;
-      case "b": this.setPositionBreakpoint(args[0]); break;
-      case "bp": this.setPredicateBreakpoint(args[0]); break;
-      case "bn": this.setNodeBreakpoint(args[0]); break;
-      case "t": this.showThreads(args[0]); break;
-      case "info": this.showInfo(); break;
-      case "l": this.showEvent(this.dbg.current, true); break;
-      case "h":
-        this.write("s=into n=over o=out c=continue b LINE[:COL] bp PRED bn NODE t [N] info l q\n");
-        break;
-      case "q": return 2;
-      default:
-        this.write("unknown command " + JSON.stringify(cmd) + "; h for help\n");
-      }
-    }
-    if (!this.dbg.error) { // post-mortem: inspect the accepted threads
-      while (true) {
-        const line = this.prompt("(smdb) ");
-        if (line === null)
-          break;
-        const [cmd, ...args] = line.trim().split(/\s+/);
-        if (cmd === "q")
-          break;
-        else if (cmd === "t")
-          this.showThreads(args[0]);
-        else if (cmd === "info")
-          this.showInfo();
-        else if (cmd !== "")
-          this.write("materialization finished; t [N] info q\n");
-      }
-    }
+        return "return";
+      });
+    if (quit)
+      return 2;
+    if (!this.dbg.error) // post-mortem: inspect the accepted threads
+      this.commandLoop("(smdb) ", {
+        q: () => "return",
+        t: (args: string[]) => this.showThreads(args[0]),
+        info: () => this.showInfo(),
+      }, () => "return", () => this.write("materialization finished; t [N] info q\n"));
     return this.dbg.error ? 1 : 0;
   }
 
-  expand (lex: any) {
-    if (!lex)
-      return lex;
-    if (lex.startsWith("<") && lex.endsWith(">")) {
-      const iri = lex.slice(1, -1);
-      try { // resolve relative IRIs the way the parser resolved the schema's
-        return new URL(iri, this.located.schema._base || undefined).href;
-      } catch (e) {
-        return iri;
-      }
-    }
-    const m = lex.match(/^([A-Za-z_][\w.-]*)?:(.*)$/);
-    return m && this.prefixes[m[1] || ""] !== undefined
-      ? this.prefixes[m[1] || ""] + m[2]
-      : lex;
-  }
-
-  lex (iri: any) {
-    for (const [prefix, ns] of Object.entries(this.prefixes) as [string, string][])
-      if (ns.length && iri.startsWith(ns))
-        return prefix + ":" + iri.substring(ns.length);
-    return "<" + iri + ">";
-  }
-
   setPositionBreakpoint (arg: any) {
-    const m = (arg || "").match(/^(\d+)(?::(\d+))?$/);
-    if (!m)
-      return this.write("usage: b LINE[:COL] (1-based)\n");
-    const lineNo = parseInt(m[1], 10);
-    if (lineNo < 1 || lineNo > this.lineStarts.length)
-      return this.write("no line " + lineNo + "\n");
-    const from = this.lineStarts[lineNo - 1] + (m[2] ? parseInt(m[2], 10) - 1 : 0);
-    const to = lineNo < this.lineStarts.length ? this.lineStarts[lineNo] : this.schemaText.length;
-    // a bare line number matches the first constraint on the line
-    let hit = null;
-    for (let offset = from; offset < to && !hit; ++offset)
-      hit = this.located.locate.exprAt(offset);
-    if (!hit)
+    const at = this.positionHit(arg);
+    if (!at)
+      return;
+    if (!at.hit)
       return this.write("no constraint at " + arg + "\n");
-    this.dbg.addBreakpoint({tc: hit.expr});
-    this.breakpointDescriptions.push("b " + arg + " -> " + this.excerpt(hit.range).trim());
-    this.write("breakpoint on " + this.excerpt(hit.range).trim() + "\n");
+    this.dbg.addBreakpoint({tc: at.hit.expr});
+    const label = this.excerpt(at.hit.range).trim();
+    this.noteBreakpoint("b " + arg + " -> " + label, label);
   }
 
   setPredicateBreakpoint (arg: any) {
@@ -142,8 +96,7 @@ class ShExMapDebugRepl {
       return this.write("usage: bp PREDICATE\n");
     const iri = this.expand(arg);
     this.dbg.addBreakpoint({predicate: iri});
-    this.breakpointDescriptions.push("bp " + this.lex(iri));
-    this.write("breakpoint on predicate " + this.lex(iri) + "\n");
+    this.noteBreakpoint("bp " + this.lex(iri), "predicate " + this.lex(iri));
   }
 
   setNodeBreakpoint (arg: any) {
@@ -151,12 +104,7 @@ class ShExMapDebugRepl {
       return this.write("usage: bn NODE (lexical form, e.g. _:tm0 or <http://...>)\n");
     const subject = arg.startsWith("<") && arg.endsWith(">") ? arg.slice(1, -1) : arg;
     this.dbg.addBreakpoint({subject});
-    this.breakpointDescriptions.push("bn " + arg);
-    this.write("breakpoint on node " + arg + "\n");
-  }
-
-  excerpt (range: any) {
-    return EditorServices.sourceExcerpt(this.schemaText, range);
+    this.noteBreakpoint("bn " + arg, "node " + arg);
   }
 
   showEvent (event: any, sourceOnly = false) {
@@ -173,10 +121,10 @@ class ShExMapDebugRepl {
     }
     case "fail":
       this.write("branch died" + (event.failure
-        ? ": " + (event.failure.variable
-          ? "no binding for " + this.lex(event.failure.variable)
-          : event.failure.error || "")
-        : "") + this.threadStr(event.thread) + "\n");
+                                  ? ": " + (event.failure.variable
+                                            ? "no binding for " + this.lex(event.failure.variable)
+                                            : event.failure.error || "")
+                                  : "") + this.threadStr(event.thread) + "\n");
       break;
     case "return":
       this.write("returned to " + event.thread.subject + this.threadStr(event.thread) + "\n");
@@ -247,19 +195,11 @@ class ShExMapDebugRepl {
     all.forEach((t: any, i: any) => this.write("T" + (i + 1) + " " + t.label + "\n"));
   }
 
-  termStr (term: any) {
-    return term.termType === "NamedNode" ? this.lex(term.value)
-      : term.termType === "BlankNode" ? "_:" + term.value
-      : JSON.stringify(term.value);
-  }
-
   showInfo () {
     if (this.dbg.current && this.dbg.current.thread)
       this.write("thread:" + this.threadStr(this.dbg.current.thread) + "\n");
-    this.write(this.breakpointDescriptions.length
-      ? this.breakpointDescriptions.map((b: any) => "  " + b).join("\n") + "\n"
-      : "no breakpoints\n");
+    this.showBreakpoints();
   }
 }
 
-export = {ShExMapDebugRepl};
+module.exports = {ShExMapDebugRepl};

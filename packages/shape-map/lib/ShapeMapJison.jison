@@ -208,10 +208,10 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 
 shapeMap:
       EOF	{
-          return []
+          return yy.locate([])
         }
     | pair _Q_O_QGT_COMMA_E_S_Qpair_E_C_E_Star _QGT_COMMA_E_Opt	EOF {
-          return [$1].concat($2)
+          return yy.locate([$1].concat($2))
         }
     ;
 
@@ -229,8 +229,15 @@ _QGT_COMMA_E_Opt:
     | GT_COMMA	
     ;
 
+// Where each pair was written (yy.locations, an editor's to read): the
+// node and the shape side record themselves as they reduce, so a pair is
+// located by its parts rather than by its own @$, which ts-jison stretches
+// to the lookahead when the trailing optionals are empty.
 pair:
-      nodeSelector statusAndShape _Qreason_E_Opt _QjsonAttributes_E_Opt	-> extend({ node: $1 }, $2, $3, $4)
+      nodeSelector statusAndShape _Qreason_E_Opt _QjsonAttributes_E_Opt	{
+        $$ = extend({ node: $1 }, $2, $3, $4);
+        yy.addLocation();
+      }
     ;
 
 _Qreason_E_Opt:
@@ -244,16 +251,18 @@ _QjsonAttributes_E_Opt:
     ;
 
 statusAndShape:
-      GT_AT _Qstatus_E_Opt shapeSelector	-> extend({ shape: $3 }, $2)
-    | ATSTART	-> { shape: ShapeMap.Start }
+      GT_AT _Qstatus_E_Opt shapeSelector	{ $$ = extend({ shape: $3 }, $2); yy.shapeLoc = this._$; }
+    | ATSTART	{ $$ = { shape: ShapeMap.Start }; yy.shapeLoc = this._$; }
     | ATPNAME_NS	{
         $1 = $1.substr(1, $1.length-1);
         $$ = { shape: yy.schemaMeta.expandPrefix($1.substr(0, $1.length - 1), yy) };
+        yy.shapeLoc = this._$;
       }
     | ATPNAME_LN	{
         $1 = $1.substr(1, $1.length-1);
         const namePos = $1.indexOf(':');
         $$ = { shape: yy.schemaMeta.expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1) };
+        yy.shapeLoc = this._$;
       }
     ;
 
@@ -263,15 +272,15 @@ _Qstatus_E_Opt:
     ;
 
 nodeSelector:
-      objectTerm	
-    | triplePattern	
+      objectTerm	{ $$ = $1; yy.nodeLoc = this._$; }
+    | triplePattern	{ $$ = $1; yy.nodeLoc = this._$; }
 //     | _O_QIT_SPARQL_E_Or_QnodeIri_E_C string	-> { type: "Extension", language: $1, lexical: $2["@value"] }
-    | IT_SPARQL string	-> { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-sparql", lexical: $2["@value"] }
+    | IT_SPARQL string	{ $$ = { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-sparql", lexical: $2["@value"] }; yy.nodeLoc = this._$; }
     /* Any bare NAME before a string is an extension, named the way SPARQL is:
        the resolver that knows what to do with it belongs to the data source,
        not to this grammar. */
-    | EXTENSION_NAME string	-> { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-" + $1.toLowerCase(), lexical: $2["@value"] }
-    | nodeIri string	-> { type: "Extension", language: $1, lexical: $2["@value"] }
+    | EXTENSION_NAME string	{ $$ = { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-" + $1.toLowerCase(), lexical: $2["@value"] }; yy.nodeLoc = this._$; }
+    | nodeIri string	{ $$ = { type: "Extension", language: $1, lexical: $2["@value"] }; yy.nodeLoc = this._$; }
     ;
 
 // _O_QIT_SPARQL_E_Or_QnodeIri_E_C:
@@ -315,11 +324,11 @@ status:
     ;
 
 reason:
-      GT_DIVIDE string	-> { reason: $2 }
+      GT_DIVIDE string	{ $$ = { reason: $2 }; yy.reasonLoc = this._$; }
     ;
 
 jsonAttributes:
-      GT_DOLLAR _O_QAPPINFO_COLON_E_Or_QAPPINFO_SPACE_COLON_E_C jsonValue	-> { appinfo: $3 }
+      GT_DOLLAR _O_QAPPINFO_COLON_E_Or_QAPPINFO_SPACE_COLON_E_C jsonValue	{ $$ = { appinfo: $3 }; yy.jsonLoc = this._$; }
     ;
 
 _O_QAPPINFO_COLON_E_Or_QAPPINFO_SPACE_COLON_E_C:
