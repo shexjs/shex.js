@@ -287,14 +287,15 @@ The Makefile is hand-maintained; the generator it grew out of
   not this monorepo.  It tests against `shex-test` as its own
   `github:` devDependency (or `SHEX_TEST=../shexTest`), commits the
   generated parser with a `prepare` build and a CI check that they agree.
-  Gone from `shexjs.independent`, the Makefile and the workspace; still
-  never published, so the sequence is: push the repository, `npm publish`
-  0.1.0 there, then `npm install` here so package-lock.json resolves
-  `lezer-shexc@^0.1.0` from the registry (until then
-  `node_modules/lezer-shexc` is a hand-made link to the sibling checkout,
-  `ln -s ../../lezer-shexc node_modules/lezer-shexc`, which an `npm ci`
-  from the stale lock silently replaces with a dangling workspace link --
-  `EditorPanes` then fails with "Cannot find module lezer-shexc").
+  Gone from `shexjs.independent`, the Makefile and the workspace;
+  published as 0.1.0 and pushed the same day, and package-lock.json
+  resolves editor-services' `^0.1.0` from the registry.  A wrinkle worth
+  knowing: with the old lock still declaring a `packages/lezer-shexc`
+  workspace, `npm install` was a no-op -- the range read as satisfied, and
+  `npm ci` re-made a dangling link to the missing directory (`EditorPanes`
+  then fails with "Cannot find module lezer-shexc") -- so the two
+  `lezer-shexc` entries had to be deleted from the lock by hand before
+  `npm install` would ask the registry.
   `semact-overlay` stays: it imports `@shexjs/visitor`, sits on the
   lockstep line and co-owns the validator's `semActIndex` contract with
   `extension-reduce`; a package leaves when its dependency on shex.js is
