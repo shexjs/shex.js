@@ -132,7 +132,7 @@ The RDF root IRI (`-r`, default `tag:eric@w3.org/2016/root`) names the node from
 - [`@shexjs/extension-eval`](https://github.com/shexjs/shex.js/tree/main/packages/extension-eval#readme), [`-test`](https://github.com/shexjs/shex.js/tree/main/packages/extension-test#readme), [`-reduce`](https://github.com/shexjs/shex.js/tree/main/packages/extension-reduce#readme), [`-reduce-js`](https://github.com/shexjs/shex.js/tree/main/packages/extension-reduce-js#readme), [`-wasi`](https://github.com/shexjs/shex.js/tree/main/packages/extension-wasi#readme), [`-wasi-test`](https://github.com/shexjs/shex.js/tree/main/packages/extension-wasi-test#readme) -- the other semantic-action extensions
 - [`@shexjs/semact-overlay`](https://github.com/shexjs/shex.js/tree/main/packages/semact-overlay#readme) -- semantic actions declared beside a schema
 - [`@shexjs/shape-path-query`](https://github.com/shexjs/shex.js/tree/main/packages/shex-shape-path-query#readme) -- ShapePath queries over a schema
-- [`@shexjs/editor-services`](https://github.com/shexjs/shex.js/tree/main/packages/shex-editor-services#readme) and [`lezer-shexc`](https://github.com/shexjs/shex.js/tree/main/packages/lezer-shexc#readme) -- what an editor needs: parsing with locations, diagnostics, results anchored in the text, a ShExC grammar for CodeMirror
+- [`@shexjs/editor-services`](https://github.com/shexjs/shex.js/tree/main/packages/shex-editor-services#readme) and [`lezer-shexc`](https://github.com/shexjs/lezer-shexc#readme) -- what an editor needs: parsing with locations, diagnostics, results anchored in the text, a ShExC grammar for CodeMirror
 - ... and [the repository](https://github.com/shexjs/shex.js#npm-workspaces-monorepo) for development instructions.
 
 Happy validating!

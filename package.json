@@ -111,8 +111,7 @@
   "shexjs": {
     "independent": [
       "@shexjs/term",
-      "shape-map",
-      "lezer-shexc"
+      "shape-map"
     ]
   }
 }

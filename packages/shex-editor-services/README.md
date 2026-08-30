@@ -12,7 +12,7 @@ npm install @shexjs/editor-services
 ```
 
 `@shexjs/editor-services/lib/editor-panes` builds CodeMirror 6 panes over
-textareas -- ShExC (highlighted by [`lezer-shexc`](../lezer-shexc)), Turtle,
+textareas -- ShExC (highlighted by [`lezer-shexc`](https://github.com/shexjs/lezer-shexc)), Turtle,
 ShapeMap, JSON -- with hover highlighting, tooltips and gutter breakpoints;
 the web app (`@shexjs/webapp`) is its main client.  Compiled from `src/`
 into `lib/` by `npm run build`.

@@ -15,9 +15,7 @@ first.  Items are numbered so a commit or a conversation can name one.
   their own fixtures, so a green ungated run says less than it looks.
 - TypeScript packages compile per package: `cd packages/<p> && npx tsc`.
   The compiled `lib/` is committed, so a source change is a `lib/` change
-  in the same commit.  `packages/lezer-shexc/src/parser.js` is generated
-  the same way (`npm run build` there, after editing `shexc.grammar`);
-  `make ALL` covers both.
+  in the same commit; `make ALL` covers them.
 - The browser bundles in `packages/*/doc/webpacks/` are **gitignored and
   built on demand**: `npm run webpack` (all three) or `npm run webpacks-all`
   (n3js too).  Rebuild after changing any bundled package, or the browser
@@ -278,6 +276,29 @@ The Makefile is hand-maintained; the generator it grew out of
   Their versions are theirs to move: `shape-map` is `1.0.0-alpha.26` on
   the registry and has changed (no util) -- `1.0.0` when it next publishes
   is the suggestion.
+- **I6 (staged 2026-08-30) `lezer-shexc` is its own repository**,
+  `shexjs/lezer-shexc` (the org, not a personal account: the rdfjs model,
+  where the same maintainers hold the implementation and its grammars --
+  as `rdfjs/N3.js` publishes `n3`, `shexjs/lezer-shexc` publishes unscoped
+  `lezer-shexc`).  It had no `@shexjs/*` dependency, one consumer
+  (`editor-services`, as `^0.1.0`, the way it already takes `lezer-turtle`),
+  an ESM/lezer-generator toolchain foreign to this repo, and a Lezer
+  contributor should need `npm i && npm test` on a grammar and a corpus,
+  not this monorepo.  It tests against `shex-test` as its own
+  `github:` devDependency (or `SHEX_TEST=../shexTest`), commits the
+  generated parser with a `prepare` build and a CI check that they agree.
+  Gone from `shexjs.independent`, the Makefile and the workspace; still
+  never published, so the sequence is: push the repository, `npm publish`
+  0.1.0 there, then `npm install` here so package-lock.json resolves
+  `lezer-shexc@^0.1.0` from the registry (until then
+  `node_modules/lezer-shexc` is a hand-made link to the sibling checkout,
+  `ln -s ../../lezer-shexc node_modules/lezer-shexc`, which an `npm ci`
+  from the stale lock silently replaces with a dangling workspace link --
+  `EditorPanes` then fails with "Cannot find module lezer-shexc").
+  `semact-overlay` stays: it imports `@shexjs/visitor`, sits on the
+  lockstep line and co-owns the validator's `semActIndex` contract with
+  `extension-reduce`; a package leaves when its dependency on shex.js is
+  on a released API rather than a co-developed one.
 - **I3 (on request)** Majors deliberately not taken: chai 5+, n3 2.x,
   eslint 10, jquery 4, node-fetch 3, koa 3, jsonld 9, glob 13, js-yaml 5,
   pre-commit→husky; and, of this repo's own, renaming `ShExWriter` (it
