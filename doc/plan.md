@@ -248,7 +248,21 @@ The Makefile is hand-maintained; the generator it grew out of
   for every contributor, and a corpus that is an upstream artifact anyway.
   Not a fixture repository: a submodule's friction buys nothing for files
   nobody hand-edits.
-- **I3 (on request)** Majors deliberately not taken: chai 5+, n3 2.x,
+- **I4 (before publishing; 2026-08-30)** What a `publish-ordered` run
+  needs first.  Never published: `lezer-shexc`, `@shexjs/editor-services`,
+  `@shexjs/neighborhood-wikibase`, `@shexjs/extension-wasi`,
+  `@shexjs/extension-wasi-test` (the order handles them; `extension-wasi`
+  now has `publishConfig.access: public`, without which a scoped publish
+  is refused, and `extension-wasi-test` no longer needs `wat2wasm` on the
+  publishing machine).  `lezer-turtle` is a `github:` dependency of
+  `editor-services` and `cli` -- publish it to npm and depend on a version,
+  or every consumer needs git.  `npm pack` includes whatever `doc/webpacks/`
+  holds on disk (the root `.gitignore` does not reach a workspace's
+  tarball), so `prepublishOnly` in `webapp`, `extension-map` and
+  `extension-reduce` builds the bundles first.  Then
+  `node tools/bumpVersions.js 1.0.0-alpha.30`, `npm install`, the suite,
+  tag, `node tools/publish-ordered.js`.
+ chai 5+, n3 2.x,
   eslint 10, jquery 4, node-fetch 3, koa 3, jsonld 9, glob 13, js-yaml 5,
   pre-commit→husky; and, of this repo's own, renaming `ShExWriter` (it
   writes ShExC) to `ShExCWriter`.  Remaining `npm audit` findings are in pre-commit's

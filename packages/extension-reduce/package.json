@@ -24,7 +24,8 @@
   "scripts": {
     "webpack": "webpack --config webpack.config.js --mode production",
     "test": "cd ../.. && mocha -C -R dot packages/extension-reduce/test/*test.js",
-    "build": "tsc"
+    "build": "tsc",
+    "prepublishOnly": "npm run webpack"
   },
   "publishConfig": {
     "access": "public"

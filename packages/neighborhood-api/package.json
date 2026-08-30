@@ -15,7 +15,7 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./lib/neighborhood-api",
+  "main": "./lib/neighborhood-api.js",
   "types": "./src/neighborhood-api.ts",
   "engines": {
     "node": ">=18"

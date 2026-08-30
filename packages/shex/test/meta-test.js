@@ -23,6 +23,23 @@ describe("shex meta-package", function () {
     expect(ShEx.Validator).to.have.property("ShExValidator");
   });
 
+  it("should reach the rest of the suite on first use", function () {
+    const ShEx = require("..");
+    expect(ShEx.Engines.Simple1Err).to.have.property("RegexpModule");
+    expect(ShEx.Engines.ThreadedNErr).to.have.property("RegexpModule");
+    expect(ShEx.ValidatorApi).to.have.property("eventTracker");
+    expect(ShEx.NeighborhoodApi).to.have.property("moduleId");
+    expect(ShEx.Neighborhoods.RdfJs).to.have.property("ctor");
+    expect(ShEx.Neighborhoods.Sparql).to.have.property("fromParams");
+    expect(ShEx.Neighborhoods.Wikibase).to.have.property("fromParams");
+    ["Map", "Eval", "Test", "Reduce", "Wasi", "WasiTest"].forEach(name =>
+      expect(ShEx.Extensions[name], name).to.have.property("register"));
+    expect(ShEx.Extensions.ReduceJs).to.have.property("evaluate");
+    expect(ShEx.EditorServices).to.have.property("parseShExC");
+    expect(ShEx.SemActOverlay).to.have.property("applyOverlay");
+    expect(ShEx.ShapePathQuery).to.have.property("shapePathQuery");
+  });
+
   it("should parse and validate through the aggregate API", function () {
     const ShEx = require("..");
     const N3 = require("n3");
@@ -61,10 +78,13 @@ describe("shex meta-package", function () {
         workspaceVersions[manifest.name] = manifest.version;
       }
     });
-    Object.entries(deps).forEach(([name, range]) => {
-      expect(workspaceVersions, `workspace package ${name}`).to.have.property(name);
-      expect(semver.satisfies(workspaceVersions[name], range, {includePrerelease: true}),
-             `${name}@${workspaceVersions[name]} should satisfy ${range}`).to.equal(true);
-    });
+    // (a dependency from the registry -- n3, for the ShExMap extension's
+    // RDF/JS implementation -- is not the workspace's to check)
+    Object.entries(deps).filter(([name]) => name.startsWith("@shexjs/") || name in workspaceVersions)
+      .forEach(([name, range]) => {
+        expect(workspaceVersions, `workspace package ${name}`).to.have.property(name);
+        expect(semver.satisfies(workspaceVersions[name], range, {includePrerelease: true}),
+               `${name}@${workspaceVersions[name]} should satisfy ${range}`).to.equal(true);
+      });
   });
 });
