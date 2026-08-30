@@ -29,7 +29,7 @@
     "@shexjs/eval-simple-1err": "^1.0.0-alpha.29",
     "@shexjs/node": "^1.0.0-alpha.28",
     "@shexjs/parser": "^1.0.0-alpha.28",
-    "@shexjs/term": "^1.0.0-alpha.27",
+    "@shexjs/term": "^1.0.0-alpha.28",
     "@shexjs/util": "^1.0.0-alpha.28",
     "@shexjs/visitor": "^1.0.0-alpha.27",
     "@shexjs/webapp": "^1.0.0-alpha.28",
@@ -53,7 +53,7 @@
     "jquery-contextmenu": "^2.9.2",
     "jquery-ui": "^1.14.0",
     "js-yaml": "^4.1.0",
-    "shape-map": "^1.0.0-alpha.26"
+    "shape-map": "^1.0.0"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",

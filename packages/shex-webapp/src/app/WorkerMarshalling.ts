@@ -36,8 +36,9 @@ interface DataFactoryLike {
   quad (subject: any, predicate: any, object: any): any;
 }
 
-/** one entry of a results shape map.  `shape` is START_SHAPE_INDEX_ENTRY
- * over the wire where it is Validator.Start on the page. */
+/** one entry of a results shape map.  `shape` crosses the worker boundary
+ * as a clone of Validator.Start, {term: "START"}, which the receiving side
+ * recognizes (ShExTerm.isStart) and replaces with its own. */
 interface ResultEntry {
   node: string;
   shape: string;

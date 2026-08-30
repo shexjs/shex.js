@@ -21,7 +21,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@shexjs/term": "^1.0.0-alpha.27"
+    "@shexjs/term": "^1.0.0-alpha.28"
   },
   "scripts": {
     "test": "cd ../.. && mocha packages/eval-validator-api/test/*test.js"

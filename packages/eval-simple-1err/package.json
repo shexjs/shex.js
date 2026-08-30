@@ -23,7 +23,7 @@
   "dependencies": {
     "@rdfjs/types": "^1.1.0",
     "@shexjs/eval-validator-api": "^1.0.0-alpha.29",
-    "@shexjs/term": "^1.0.0-alpha.27"
+    "@shexjs/term": "^1.0.0-alpha.28"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot"

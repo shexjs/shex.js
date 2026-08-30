@@ -31,7 +31,7 @@
     "@shexjs/extension-test": "^1.0.0-alpha.28",
     "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.29",
     "@shexjs/parser": "^1.0.0-alpha.28",
-    "@shexjs/term": "^1.0.0-alpha.27",
+    "@shexjs/term": "^1.0.0-alpha.28",
     "@shexjs/validator": "^1.0.0-alpha.29",
     "chai": "^4.5.0",
     "mocha": "^10.7.3",

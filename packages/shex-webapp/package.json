@@ -30,7 +30,7 @@
     "@shexjs/neighborhood-sparql": "^1.0.0-alpha.29",
     "@shexjs/neighborhood-wikibase": "^1.0.0-alpha.29",
     "@shexjs/parser": "^1.0.0-alpha.28",
-    "@shexjs/term": "^1.0.0-alpha.27",
+    "@shexjs/term": "^1.0.0-alpha.28",
     "@shexjs/util": "^1.0.0-alpha.28",
     "@shexjs/validator": "^1.0.0-alpha.29",
     "@shexjs/visitor": "^1.0.0-alpha.27",
@@ -42,7 +42,7 @@
     "jquery": "^3.7.1",
     "js-yaml": "^4.1.0",
     "n3": "^1.20.4",
-    "shape-map": "^1.0.0-alpha.26"
+    "shape-map": "^1.0.0"
   },
   "scripts": {
     "make": "(cd test/ && make test)",
