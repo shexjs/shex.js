@@ -469,9 +469,15 @@ function regionTooltip(view, region) {
         }) });
 }
 const paneTheme = view_1.EditorView.baseTheme({
+    // Transparent to the mouse: a tall tooltip (a multi-line schema
+    // production) can be flipped below the hovered line, under the pointer --
+    // hit-testing must pass through it, or contentDOM sees a mouseleave, the
+    // hover clears the tooltip, the pointer is back on the text, and the
+    // tooltip flickers in and out.  It is plain text shown only while the
+    // mouse stays, so it was never clickable anyway.
     ".cm-tooltip.shexjs-tooltip": { whiteSpace: "pre-wrap", fontFamily: "monospace", fontSize: "12px",
         padding: "2px 6px", maxWidth: "48em", backgroundColor: "#ffffe8",
-        border: "1px solid #bbb" },
+        border: "1px solid #bbb", pointerEvents: "none" },
     ".shexjs-annotation": { borderBottom: "2px solid #7a86c8" },
     ".shexjs-binding-consumed": { backgroundColor: "#e6f0d8", borderBottom: "2px solid #6a9a3a" },
     ".shexjs-binding-cursor": { borderBottom: "2px dashed #a8620a" },
