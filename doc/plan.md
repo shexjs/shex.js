@@ -259,7 +259,11 @@ The Makefile is hand-maintained; the generator it grew out of
   tarball), so `prepublishOnly` in `webapp`, `extension-map` and
   `extension-reduce` builds the bundles first.  Then
   `node tools/bumpVersions.js 1.0.0-alpha.30`, `npm install`, the suite,
-  tag, `node tools/publish-ordered.js`.
+  tag, `node tools/publish-ordered.js --tag latest` (npm 11 refuses a
+  prerelease with no dist-tag, and the alphas have always been `latest`;
+  the tool insists on one up front).  A dry run on 2026-08-30 (`--dry-run
+  --tag latest`, before the suite bump) published nine and skipped twenty
+  whose versions the registry already had.
 - **I5 (done 2026-08-30) Two version lines.**  Packages with an audience
   outside shex.js -- `shape-map`, `lezer-shexc`, `lezer-turtle` (its own
   repository, on npm as of today) -- are on version lines of their own;
