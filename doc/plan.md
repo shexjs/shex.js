@@ -262,7 +262,25 @@ The Makefile is hand-maintained; the generator it grew out of
   `extension-reduce` builds the bundles first.  Then
   `node tools/bumpVersions.js 1.0.0-alpha.30`, `npm install`, the suite,
   tag, `node tools/publish-ordered.js`.
- chai 5+, n3 2.x,
+- **I5 (proposal, 2026-08-30) Two version lines.**  Packages with an
+  audience outside shex.js -- `shape-map`, `lezer-shexc`, `lezer-turtle`
+  (its own repository) -- should not rev with the suite: every
+  `1.0.0-alpha.N` is a dependabot PR for nothing.  So: an *independent*
+  tier on its own semver, and the *suite* on the fixed line.  The tier's
+  shared base is `@shexjs/term` (terms as ShExJ, RDF/JS and Turtle spell
+  them; third-party deps only, slow already: alpha.27 while the suite is
+  at 29), made independent too.  Two moves make `shape-map` depend on
+  nothing in the suite: `unescapeText` (its only use of `@shexjs/util`,
+  fifteen lines) moves to term, util re-exporting it; and `Start` is
+  defined once, in term, with `neighborhood-api` and `ShapeMapSymbols`
+  importing it -- the `ShapeMap.Start = Validator.Start` assignment every
+  consumer makes today (cli, the app, Map-test) becomes a no-op and goes.
+  Tooling: `tools/bumpVersions.js` reads the tier from root package.json
+  (`"shexjs": {"independent": [...]}`), skips those packages and leaves
+  the `^` ranges pointing at them alone; `tools/publish-ordered.js` skips
+  a package whose version the registry already has.  Rule: suite -> tier
+  with `^`; tier -> tier; tier never -> suite.
+- **I3 (on request)** Majors deliberately not taken: chai 5+, n3 2.x,
   eslint 10, jquery 4, node-fetch 3, koa 3, jsonld 9, glob 13, js-yaml 5,
   pre-commit→husky; and, of this repo's own, renaming `ShExWriter` (it
   writes ShExC) to `ShExCWriter`.  Remaining `npm audit` findings are in pre-commit's
@@ -270,4 +288,4 @@ The Makefile is hand-maintained; the generator it grew out of
 
 ## Decisions wanted
 
-B3 (committed `lib/`), I1 (untrack the perf corpus, as recommended).
+B3 (committed `lib/` -- stays, for now), I5 (two version lines).
