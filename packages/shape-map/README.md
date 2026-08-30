@@ -36,7 +36,6 @@ const ShExLoader = require("@shexjs/loader")({
   // fetch: require('node-fetch'), // not needed with string arguments
 })
 const ShapeMap = require('shape-map')
-ShapeMap.start = ShExValidator.Start // ShapeMap parser can use Validators's start symbol
 
 main()
 async function main () {
@@ -146,7 +145,6 @@ const ShExLoader = require("@shexjs/loader")({
   // fetch: require('node-fetch'), // not needed with string arguments
 })
 const ShapeMap = require('shape-map')
-ShapeMap.start = ShExValidator.Start // ShapeMap parser can use Validators's start symbol
 
 main()
 async function main () {

@@ -10,7 +10,7 @@ const { JisonParser, o } = require('@ts-jison/parser');
 
   const UNBOUNDED = -1;
 
-  const ShExUtil = require("@shexjs/util");
+  const {unescapeText} = require("@shexjs/term");
 
   // Common namespaces and entities
   const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
@@ -139,7 +139,7 @@ const { JisonParser, o } = require('@ts-jison/parser');
   // Translates string escape codes in the string into their textual equivalent
   function unescapeString(string, trimLength) {
     string = string.substring(trimLength, string.length - trimLength);
-    return { value: ShExUtil.unescapeText(string, stringEscapeReplacements) };
+    return { value: unescapeText(string, stringEscapeReplacements) };
   }
 
   function unescapeLangString(string, trimLength) {
@@ -160,7 +160,7 @@ const { JisonParser, o } = require('@ts-jison/parser');
       '^': "\\^", '$': "\\$", '[': "\\[", ']': "\\]", '/': "\\/",
       't': '\\t', 'n': '\\n', 'r': '\\r', '-': "\\-", '/': '/'
     };
-    s = ShExUtil.unescapeText(s, regexpEscapeReplacements)
+    s = unescapeText(s, regexpEscapeReplacements)
     const ret = {
       pattern: s
     };
@@ -182,7 +182,7 @@ const { JisonParser, o } = require('@ts-jison/parser');
     return {
       type: "SemAct",
       name: key,
-      code: ShExUtil.unescapeText(string, semactEscapeReplacements)
+      code: unescapeText(string, semactEscapeReplacements)
     };
   }
 
@@ -1004,14 +1004,14 @@ this.$ = unescapeLangString($$[$0], 3)	// t: 1val1STRING_LITERAL_LONG2_with_LANG
 break;
 case 262:
  // t: 1dot
-        const unesc = ShExUtil.unescapeText($$[$0].slice(1,-1), {});
+        const unesc = unescapeText($$[$0].slice(1,-1), {});
         this.$ = yy._base === null || absoluteIRI.test(unesc) ? unesc : yy._resolveIRI(unesc)
       
 break;
 case 264:
  // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
         const namePos1 = $$[$0].indexOf(':');
-        this.$ = yy.expandPrefix($$[$0].substr(0, namePos1), yy) + ShExUtil.unescapeText($$[$0].substr(namePos1 + 1), pnameEscapeReplacements);
+        this.$ = yy.expandPrefix($$[$0].substr(0, namePos1), yy) + unescapeText($$[$0].substr(namePos1 + 1), pnameEscapeReplacements);
       
 break;
 case 265:

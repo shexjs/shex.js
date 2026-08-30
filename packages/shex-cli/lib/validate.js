@@ -110,7 +110,6 @@ const ShExNode = ShExNodeCjsModule({
 });
 const ExitCode = require('../lib/ExitCode');
 const ProgressLoadController = require('../lib/ProgressLoadController')(ShExNode);
-ShapeMap.Start = validator_1.ShExValidator.Start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 const ValidatorOptions = { diagnose: true };
 const SchemaOptions = {
     duplicateShape: "abort",

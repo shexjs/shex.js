@@ -255,31 +255,29 @@ The Makefile is hand-maintained; the generator it grew out of
   now has `publishConfig.access: public`, without which a scoped publish
   is refused, and `extension-wasi-test` no longer needs `wat2wasm` on the
   publishing machine).  `lezer-turtle` is a `github:` dependency of
-  `editor-services` and `cli` -- publish it to npm and depend on a version,
-  or every consumer needs git.  `npm pack` includes whatever `doc/webpacks/`
+  `editor-services` and `cli` -- published 2026-08-30, and depended on
+  as `^0.1.0`.  `npm pack` includes whatever `doc/webpacks/`
   holds on disk (the root `.gitignore` does not reach a workspace's
   tarball), so `prepublishOnly` in `webapp`, `extension-map` and
   `extension-reduce` builds the bundles first.  Then
   `node tools/bumpVersions.js 1.0.0-alpha.30`, `npm install`, the suite,
   tag, `node tools/publish-ordered.js`.
-- **I5 (proposal, 2026-08-30) Two version lines.**  Packages with an
-  audience outside shex.js -- `shape-map`, `lezer-shexc`, `lezer-turtle`
-  (its own repository) -- should not rev with the suite: every
-  `1.0.0-alpha.N` is a dependabot PR for nothing.  So: an *independent*
-  tier on its own semver, and the *suite* on the fixed line.  The tier's
-  shared base is `@shexjs/term` (terms as ShExJ, RDF/JS and Turtle spell
-  them; third-party deps only, slow already: alpha.27 while the suite is
-  at 29), made independent too.  Two moves make `shape-map` depend on
-  nothing in the suite: `unescapeText` (its only use of `@shexjs/util`,
-  fifteen lines) moves to term, util re-exporting it; and `Start` is
-  defined once, in term, with `neighborhood-api` and `ShapeMapSymbols`
-  importing it -- the `ShapeMap.Start = Validator.Start` assignment every
-  consumer makes today (cli, the app, Map-test) becomes a no-op and goes.
-  Tooling: `tools/bumpVersions.js` reads the tier from root package.json
-  (`"shexjs": {"independent": [...]}`), skips those packages and leaves
-  the `^` ranges pointing at them alone; `tools/publish-ordered.js` skips
-  a package whose version the registry already has.  Rule: suite -> tier
-  with `^`; tier -> tier; tier never -> suite.
+- **I5 (done 2026-08-30) Two version lines.**  Packages with an audience
+  outside shex.js -- `shape-map`, `lezer-shexc`, `lezer-turtle` (its own
+  repository, on npm as of today) -- are on version lines of their own;
+  their shared base is `@shexjs/term`, independent too.  `Start` is
+  defined once, in term (`Start`, `isStart` for a copy that came through
+  JSON or a worker), and `neighborhood-api`, the validator and the ShapeMap
+  parser all read that object -- the `ShapeMap.Start = Validator.Start`
+  assignments are gone.  `unescapeText` lives in term; util re-exports it;
+  `shape-map` and `shex-parser` depend on term, not util.  Root
+  package.json's `shexjs.independent` lists the tier: `bumpVersions.js`
+  leaves those versions and the ranges pointing at them alone, and
+  `publish-ordered.js` skips a package whose version the registry already
+  has.  Rule: suite -> tier with `^`; tier -> tier; tier never -> suite.
+  Their versions are theirs to move: `shape-map` is `1.0.0-alpha.26` on
+  the registry and has changed (no util) -- `1.0.0` when it next publishes
+  is the suggestion.
 - **I3 (on request)** Majors deliberately not taken: chai 5+, n3 2.x,
   eslint 10, jquery 4, node-fetch 3, koa 3, jsonld 9, glob 13, js-yaml 5,
   pre-commit→husky; and, of this repo's own, renaming `ShExWriter` (it
@@ -288,4 +286,4 @@ The Makefile is hand-maintained; the generator it grew out of
 
 ## Decisions wanted
 
-B3 (committed `lib/` -- stays, for now), I5 (two version lines).
+B3 (committed `lib/` -- stays, for now); the independent tier's versions (`shape-map` to `1.0.0`?).

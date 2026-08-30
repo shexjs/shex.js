@@ -148,7 +148,6 @@ describe('A ShEx Mapper', function () {
 */
 });
 const ShapeMap = require("shape-map");
-ShapeMap.Start = ShExValidator.Start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 
 const Awaiting = []
 const Examples = loadManifest()

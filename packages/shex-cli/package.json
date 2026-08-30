@@ -42,7 +42,7 @@
     "jsonld": "^9.0.0",
     "koa": "^2.15.3",
     "koa-body": "^6.0.1",
-    "lezer-turtle": "github:ericprud/lezer-turtle",
+    "lezer-turtle": "^0.1.0",
     "n3": "^1.20.4",
     "node-fetch": "^2.7.0",
     "shape-map": "^1.0.0-alpha.26",

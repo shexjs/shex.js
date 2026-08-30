@@ -8,7 +8,7 @@
     ShapeMap parser in the Jison parser generator format.
   */
 
-  const ShExUtil = require("@shexjs/util");
+  const {unescapeText} = require("@shexjs/term");
   const ShapeMap = require("./ShapeMapSymbols");
 
   // Common namespaces and entities
@@ -83,7 +83,7 @@
   // Translates string escape codes in the string into their textual equivalent
   function unescapeString(string, trimLength) {
     string = string.substring(trimLength, string.length - trimLength);
-    return obj("@value", ShExUtil.unescapeText(string, stringEscapeReplacements));
+    return obj("@value", unescapeText(string, stringEscapeReplacements));
   }
 
   function unescapeLangString(string, trimLength) {
@@ -97,7 +97,7 @@
   // Parse a prefix out of a PName or throw Error
   function parsePName (pname, meta, parserState) {
     const namePos = pname.indexOf(':');
-    return meta.expandPrefix(pname.substr(0, namePos), parserState) + ShExUtil.unescapeText(pname.substr(namePos + 1), pnameEscapeReplacements);
+    return meta.expandPrefix(pname.substr(0, namePos), parserState) + unescapeText(pname.substr(namePos + 1), pnameEscapeReplacements);
   }
 
   const EmptyObject = {  };
@@ -445,7 +445,7 @@ nodePredicate:
 
 nodeIri:
       IRIREF	{
-        const node = ShExUtil.unescapeText($1.slice(1,-1), {});
+        const node = unescapeText($1.slice(1,-1), {});
         $$ = yy.dataMeta.base === null || absoluteIRI.test(node) ? node : yy.dataMeta._resolveIRI(node)
       }
     | PNAME_LN	-> parsePName($1, yy.dataMeta, yy)
@@ -455,7 +455,7 @@ nodeIri:
 
 shapeIri:
       IRIREF	{
-        const shape = ShExUtil.unescapeText($1.slice(1,-1), {});
+        const shape = unescapeText($1.slice(1,-1), {});
         $$ = yy.schemaMeta.base === null || absoluteIRI.test(shape) ? shape : yy.schemaMeta._resolveIRI(shape)
       }
     | PNAME_LN	-> parsePName($1, yy.schemaMeta, yy)

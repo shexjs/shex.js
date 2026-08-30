@@ -25,7 +25,7 @@
 
   const UNBOUNDED = -1;
 
-  const ShExUtil = require("@shexjs/util");
+  const {unescapeText} = require("@shexjs/term");
 
   // Common namespaces and entities
   const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
@@ -154,7 +154,7 @@
   // Translates string escape codes in the string into their textual equivalent
   function unescapeString(string, trimLength) {
     string = string.substring(trimLength, string.length - trimLength);
-    return { value: ShExUtil.unescapeText(string, stringEscapeReplacements) };
+    return { value: unescapeText(string, stringEscapeReplacements) };
   }
 
   function unescapeLangString(string, trimLength) {
@@ -175,7 +175,7 @@
       '^': "\\^", '$': "\\$", '[': "\\[", ']': "\\]", '/': "\\/",
       't': '\\t', 'n': '\\n', 'r': '\\r', '-': "\\-", '/': '/'
     };
-    s = ShExUtil.unescapeText(s, regexpEscapeReplacements)
+    s = unescapeText(s, regexpEscapeReplacements)
     const ret = {
       pattern: s
     };
@@ -197,7 +197,7 @@
     return {
       type: "SemAct",
       name: key,
-      code: ShExUtil.unescapeText(string, semactEscapeReplacements)
+      code: unescapeText(string, semactEscapeReplacements)
     };
   }
 
@@ -1383,7 +1383,7 @@ langString:
 
 iri:
       IRIREF	{ // t: 1dot
-        const unesc = ShExUtil.unescapeText($1.slice(1,-1), {});
+        const unesc = unescapeText($1.slice(1,-1), {});
         $$ = yy._base === null || absoluteIRI.test(unesc) ? unesc : yy._resolveIRI(unesc)
       }
     | prefixedName	
@@ -1392,7 +1392,7 @@ iri:
 prefixedName:
       PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
         const namePos1 = $1.indexOf(':');
-        $$ = yy.expandPrefix($1.substr(0, namePos1), yy) + ShExUtil.unescapeText($1.substr(namePos1 + 1), pnameEscapeReplacements);
+        $$ = yy.expandPrefix($1.substr(0, namePos1), yy) + unescapeText($1.substr(namePos1 + 1), pnameEscapeReplacements);
       }
     | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
         $$ = yy.expandPrefix($1.substr(0, $1.length - 1), yy);

@@ -107,5 +107,12 @@
   },
   "overrides": {
     "brace-expansion": "5.0.8"
+  },
+  "shexjs": {
+    "independent": [
+      "@shexjs/term",
+      "shape-map",
+      "lezer-shexc"
+    ]
   }
 }

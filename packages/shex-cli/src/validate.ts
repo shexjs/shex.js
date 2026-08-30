@@ -190,7 +190,6 @@ interface ServerParms {
   [param: string]: any;
 }
 
-ShapeMap.Start = ShExValidator.Start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 
 const ValidatorOptions: ValidatorOpts = { diagnose: true };
 const SchemaOptions: SchemaOpts = {
