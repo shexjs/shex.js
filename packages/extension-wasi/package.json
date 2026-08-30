@@ -18,5 +18,11 @@
   "dependencies": {
     "wabt": "^1.0.36"
   },
-  "types": "./src/shex-extension-wasi.ts"
+  "types": "./src/shex-extension-wasi.ts",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

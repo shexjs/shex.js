@@ -244,3 +244,47 @@ function iri2Turtle (iri: string, meta: Meta = { base: "", prefixes: {}}, aForTy
   }
   return rel;
 }
+
+/** The start shape, where a shape map or a validation names a shape and
+ * means the schema's `start`: one object, defined here and imported by
+ * everything that compares against it -- the validator, the ShapeMap
+ * parser, the data sources.  (It used to be defined twice and kept equal
+ * by assignment.)  A copy that came through JSON or a worker is
+ * `{term: "START"}` without being this object; `isStart` knows it too. */
+export interface StartSymbol { readonly term: "START" }
+export const Start: StartSymbol = Object.freeze({ term: "START" });
+export function isStart (x: unknown): x is StartSymbol {
+  return x === Start || (typeof x === "object" && x !== null && (x as {term?: unknown}).term === "START");
+}
+
+/** Undo the escapes a Turtle-family lexer left in a string: `\uXXXX`,
+ * `\UXXXXXXXX`, and the one-character escapes `replacements` maps (a
+ * parser's own table: `n` to a newline, `'` to itself...).  An escape the
+ * table lacks is reported and the string answered as "", as the parsers
+ * have always had it. */
+export function unescapeText (string: string, replacements: { [key: string]: string }): string {
+  const regex = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\(.)/g;
+  try {
+    string = string.replace(regex, function (_sequence, unicode4, unicode8, escapedChar) {
+      let charCode;
+      if (unicode4) {
+        charCode = parseInt(unicode4, 16);
+        if (isNaN(charCode)) throw new Error(); // can never happen (regex), but helps performance
+        return String.fromCharCode(charCode);
+      }
+      else if (unicode8) {
+        charCode = parseInt(unicode8, 16);
+        if (isNaN(charCode)) throw new Error(); // can never happen (regex), but helps performance
+        if (charCode < 0xFFFF) return String.fromCharCode(charCode);
+        return String.fromCharCode(0xD800 + ((charCode -= 0x10000) >> 10), 0xDC00 + (charCode & 0x3FF));
+      }
+      else {
+        const replacement = replacements[escapedChar];
+        if (!replacement) throw new Error("no replacement found for '" + escapedChar + "'");
+        return replacement;
+      }
+    });
+    return string;
+  }
+  catch (error) { console.warn(error); return ''; }
+}

@@ -26,7 +26,7 @@
     "@shexjs/eval-threaded-nerr": "^1.0.0-alpha.29",
     "@shexjs/eval-validator-api": "^1.0.0-alpha.29",
     "@shexjs/neighborhood-api": "^1.0.0-alpha.28",
-    "@shexjs/term": "^1.0.0-alpha.27",
+    "@shexjs/term": "^1.0.0-alpha.28",
     "@shexjs/visitor": "^1.0.0-alpha.27",
     "@types/shexj": "^2.1.7",
     "hierarchy-closure": "^1.2.2"

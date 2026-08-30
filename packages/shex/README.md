@@ -47,6 +47,7 @@ ShExLoader.load({shexc: [shexc]}, {turtle: [data]})
 ```
 
 The exposed properties are `Parser`, `Writer`, `Validator`, `RdfJsDb`, `Loader`, `NodeLoader` (adds `file:` URL support), `Term`, `Util`, `Visitor` and `ShapeMap`.
+The rest of the suite is there too, loaded on first use: `Engines` (`Simple1Err`, `ThreadedNErr`), `ValidatorApi`, `NeighborhoodApi`, `Neighborhoods` (`RdfJs`, `Sparql`, `Wikibase`), `Extensions` (`Map`, `Eval`, `Test`, `Reduce`, `ReduceJs`, `Wasi`, `WasiTest`), `EditorServices`, `SemActOverlay` and `ShapePathQuery` -- so `new ShEx.Validator.ShExValidator(schema, ShEx.Neighborhoods.Sparql.fromParams({endpoint}))` asks a query service, and `ShEx.Extensions.Test.register(validator, ShEx)` installs a semantic-action handler.
 
 ## command line tools
 
@@ -120,7 +121,18 @@ The RDF root IRI (`-r`, default `tag:eric@w3.org/2016/root`) names the node from
 - [`@shexjs/node`](https://github.com/shexjs/shex.js/tree/main/packages/shex-node#readme) -- additional API functionality for a node environment
 - [`@shexjs/cli`](https://github.com/shexjs/shex.js/tree/main/packages/shex-cli#readme) -- command line tools for transforming and validating with schemas
 - [`@shexjs/webapp`](https://github.com/shexjs/shex.js/tree/main/packages/shex-webapp#readme) -- the shex-simple web app
-- [`@shexjs/extension-map`](https://github.com/shexjs/shex.js/tree/main/packages/extension-map#readme) -- transform data from one schema to another
-- ... and more; see [the repository](https://github.com/shexjs/shex.js#npm-workspaces-monorepo) for the full list and development instructions.
+- [`@shexjs/term`](https://github.com/shexjs/shex.js/tree/main/packages/shex-term#readme) -- RDF terms, as ShExJ and RDF/JS write them
+- [`@shexjs/util`](https://github.com/shexjs/shex.js/tree/main/packages/shex-util#readme) -- schema and result transformations, the human-readable error writer
+- [`@shexjs/visitor`](https://github.com/shexjs/shex.js/tree/main/packages/shex-visitor#readme) -- walk and index a schema
+- [`shape-map`](https://github.com/shexjs/shex.js/tree/main/packages/shape-map#readme) -- parse ShapeMaps
+- [`@shexjs/eval-simple-1err`](https://github.com/shexjs/shex.js/tree/main/packages/eval-simple-1err#readme) and [`@shexjs/eval-threaded-nerr`](https://github.com/shexjs/shex.js/tree/main/packages/eval-threaded-nerr#readme) -- the matching engines: the first error fast, or every way a shape could match
+- [`@shexjs/eval-validator-api`](https://github.com/shexjs/shex.js/tree/main/packages/eval-validator-api#readme) -- what an engine, a tracker and a semantic-action handler implement
+- [`@shexjs/neighborhood-api`](https://github.com/shexjs/shex.js/tree/main/packages/neighborhood-api#readme), [`-rdfjs`](https://github.com/shexjs/shex.js/tree/main/packages/neighborhood-rdfjs#readme), [`-sparql`](https://github.com/shexjs/shex.js/tree/main/packages/neighborhood-sparql#readme), [`-wikibase`](https://github.com/shexjs/shex.js/tree/main/packages/neighborhood-wikibase#readme) -- where the data comes from: an RDF/JS store, a SPARQL endpoint, a Wikibase's entity pages
+- [`@shexjs/extension-map`](https://github.com/shexjs/shex.js/tree/main/packages/extension-map#readme) -- ShExMap: transform data from one schema to another
+- [`@shexjs/extension-eval`](https://github.com/shexjs/shex.js/tree/main/packages/extension-eval#readme), [`-test`](https://github.com/shexjs/shex.js/tree/main/packages/extension-test#readme), [`-reduce`](https://github.com/shexjs/shex.js/tree/main/packages/extension-reduce#readme), [`-reduce-js`](https://github.com/shexjs/shex.js/tree/main/packages/extension-reduce-js#readme), [`-wasi`](https://github.com/shexjs/shex.js/tree/main/packages/extension-wasi#readme), [`-wasi-test`](https://github.com/shexjs/shex.js/tree/main/packages/extension-wasi-test#readme) -- the other semantic-action extensions
+- [`@shexjs/semact-overlay`](https://github.com/shexjs/shex.js/tree/main/packages/semact-overlay#readme) -- semantic actions declared beside a schema
+- [`@shexjs/shape-path-query`](https://github.com/shexjs/shex.js/tree/main/packages/shex-shape-path-query#readme) -- ShapePath queries over a schema
+- [`@shexjs/editor-services`](https://github.com/shexjs/shex.js/tree/main/packages/shex-editor-services#readme) and [`lezer-shexc`](https://github.com/shexjs/lezer-shexc#readme) -- what an editor needs: parsing with locations, diagnostics, results anchored in the text, a ShExC grammar for CodeMirror
+- ... and [the repository](https://github.com/shexjs/shex.js#npm-workspaces-monorepo) for development instructions.
 
 Happy validating!

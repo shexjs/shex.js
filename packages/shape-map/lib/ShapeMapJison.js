@@ -8,7 +8,7 @@ const { JisonParser, o } = require('@ts-jison/parser');
     ShapeMap parser in the Jison parser generator format.
   */
 
-  const ShExUtil = require("@shexjs/util");
+  const {unescapeText} = require("@shexjs/term");
   const ShapeMap = require("./ShapeMapSymbols");
 
   // Common namespaces and entities
@@ -83,7 +83,7 @@ const { JisonParser, o } = require('@ts-jison/parser');
   // Translates string escape codes in the string into their textual equivalent
   function unescapeString(string, trimLength) {
     string = string.substring(trimLength, string.length - trimLength);
-    return obj("@value", ShExUtil.unescapeText(string, stringEscapeReplacements));
+    return obj("@value", unescapeText(string, stringEscapeReplacements));
   }
 
   function unescapeLangString(string, trimLength) {
@@ -97,7 +97,7 @@ const { JisonParser, o } = require('@ts-jison/parser');
   // Parse a prefix out of a PName or throw Error
   function parsePName (pname, meta, parserState) {
     const namePos = pname.indexOf(':');
-    return meta.expandPrefix(pname.substr(0, namePos), parserState) + ShExUtil.unescapeText(pname.substr(namePos + 1), pnameEscapeReplacements);
+    return meta.expandPrefix(pname.substr(0, namePos), parserState) + unescapeText(pname.substr(namePos + 1), pnameEscapeReplacements);
   }
 
   const EmptyObject = {  };
@@ -272,7 +272,7 @@ this.$ = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 break;
 case 85:
 
-        const node = ShExUtil.unescapeText($$[$0].slice(1,-1), {});
+        const node = unescapeText($$[$0].slice(1,-1), {});
         this.$ = yy.dataMeta.base === null || absoluteIRI.test(node) ? node : yy.dataMeta._resolveIRI(node)
       
 break;
@@ -284,7 +284,7 @@ this.$ = yy.dataMeta.expandPrefix($$[$0].substr(0, $$[$0].length - 1), yy);;
 break;
 case 89:
 
-        const shape = ShExUtil.unescapeText($$[$0].slice(1,-1), {});
+        const shape = unescapeText($$[$0].slice(1,-1), {});
         this.$ = yy.schemaMeta.base === null || absoluteIRI.test(shape) ? shape : yy.schemaMeta._resolveIRI(shape)
       
 break;

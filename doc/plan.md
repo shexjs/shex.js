@@ -15,9 +15,7 @@ first.  Items are numbered so a commit or a conversation can name one.
   their own fixtures, so a green ungated run says less than it looks.
 - TypeScript packages compile per package: `cd packages/<p> && npx tsc`.
   The compiled `lib/` is committed, so a source change is a `lib/` change
-  in the same commit.  `packages/lezer-shexc/src/parser.js` is generated
-  the same way (`npm run build` there, after editing `shexc.grammar`);
-  `make ALL` covers both.
+  in the same commit; `make ALL` covers them.
 - The browser bundles in `packages/*/doc/webpacks/` are **gitignored and
   built on demand**: `npm run webpack` (all three) or `npm run webpacks-all`
   (n3js too).  Rebuild after changing any bundled package, or the browser
@@ -235,7 +233,7 @@ ShEx-1-era CLI cases are gone already, and the writer rename is in §I3.
 The Makefile is hand-maintained; the generator it grew out of
 (`tools/makeMake.js`) had stopped running and is gone (I2, 2026-08-29).
 
-- **I1 (decision)** `perf/fhir/corpus/examples`: 2,172 tracked files,
+- **I1 (done 2026-08-29)** `perf/fhir/corpus/examples`: 2,172 tracked files,
   33 MB of an 82 MB pack -- tracked from before `.gitignore` got
   `perf/*/corpus/` and `perf/fhir/fetch.sh` was written to fetch the
   published FHIR build, which is what `bench.js` means to run against.
@@ -248,6 +246,64 @@ The Makefile is hand-maintained; the generator it grew out of
   for every contributor, and a corpus that is an upstream artifact anyway.
   Not a fixture repository: a submodule's friction buys nothing for files
   nobody hand-edits.
+- **I4 (before publishing; 2026-08-30)** What a `publish-ordered` run
+  needs first.  Never published: `lezer-shexc`, `@shexjs/editor-services`,
+  `@shexjs/neighborhood-wikibase`, `@shexjs/extension-wasi`,
+  `@shexjs/extension-wasi-test` (the order handles them; `extension-wasi`
+  now has `publishConfig.access: public`, without which a scoped publish
+  is refused, and `extension-wasi-test` no longer needs `wat2wasm` on the
+  publishing machine).  `lezer-turtle` is a `github:` dependency of
+  `editor-services` and `cli` -- published 2026-08-30, and depended on
+  as `^0.1.0`.  `npm pack` includes whatever `doc/webpacks/`
+  holds on disk (the root `.gitignore` does not reach a workspace's
+  tarball), so `prepublishOnly` in `webapp`, `extension-map` and
+  `extension-reduce` builds the bundles first.  Then
+  `node tools/bumpVersions.js 1.0.0-alpha.30`, `npm install`, the suite,
+  tag, `node tools/publish-ordered.js --tag latest` (npm 11 refuses a
+  prerelease with no dist-tag, and the alphas have always been `latest`;
+  the tool insists on one up front).  A dry run on 2026-08-30 (`--dry-run
+  --tag latest`, before the suite bump) published nine and skipped twenty
+  whose versions the registry already had.
+- **I5 (done 2026-08-30) Two version lines.**  Packages with an audience
+  outside shex.js -- `shape-map`, `lezer-shexc`, `lezer-turtle` (its own
+  repository, on npm as of today) -- are on version lines of their own;
+  their shared base is `@shexjs/term`, independent too.  `Start` is
+  defined once, in term (`Start`, `isStart` for a copy that came through
+  JSON or a worker), and `neighborhood-api`, the validator and the ShapeMap
+  parser all read that object -- the `ShapeMap.Start = Validator.Start`
+  assignments are gone.  `unescapeText` lives in term; util re-exports it;
+  `shape-map` and `shex-parser` depend on term, not util.  Root
+  package.json's `shexjs.independent` lists the tier: `bumpVersions.js`
+  leaves those versions and the ranges pointing at them alone, and
+  `publish-ordered.js` skips a package whose version the registry already
+  has.  Rule: suite -> tier with `^`; tier -> tier; tier never -> suite.
+  Their versions are theirs to move: `shape-map` is `1.0.0-alpha.26` on
+  the registry and has changed (no util) -- `1.0.0` when it next publishes
+  is the suggestion.
+- **I6 (staged 2026-08-30) `lezer-shexc` is its own repository**,
+  `shexjs/lezer-shexc` (the org, not a personal account: the rdfjs model,
+  where the same maintainers hold the implementation and its grammars --
+  as `rdfjs/N3.js` publishes `n3`, `shexjs/lezer-shexc` publishes unscoped
+  `lezer-shexc`).  It had no `@shexjs/*` dependency, one consumer
+  (`editor-services`, as `^0.1.0`, the way it already takes `lezer-turtle`),
+  an ESM/lezer-generator toolchain foreign to this repo, and a Lezer
+  contributor should need `npm i && npm test` on a grammar and a corpus,
+  not this monorepo.  It tests against `shex-test` as its own
+  `github:` devDependency (or `SHEX_TEST=../shexTest`), commits the
+  generated parser with a `prepare` build and a CI check that they agree.
+  Gone from `shexjs.independent`, the Makefile and the workspace;
+  published as 0.1.0 and pushed the same day, and package-lock.json
+  resolves editor-services' `^0.1.0` from the registry.  A wrinkle worth
+  knowing: with the old lock still declaring a `packages/lezer-shexc`
+  workspace, `npm install` was a no-op -- the range read as satisfied, and
+  `npm ci` re-made a dangling link to the missing directory (`EditorPanes`
+  then fails with "Cannot find module lezer-shexc") -- so the two
+  `lezer-shexc` entries had to be deleted from the lock by hand before
+  `npm install` would ask the registry.
+  `semact-overlay` stays: it imports `@shexjs/visitor`, sits on the
+  lockstep line and co-owns the validator's `semActIndex` contract with
+  `extension-reduce`; a package leaves when its dependency on shex.js is
+  on a released API rather than a co-developed one.
 - **I3 (on request)** Majors deliberately not taken: chai 5+, n3 2.x,
   eslint 10, jquery 4, node-fetch 3, koa 3, jsonld 9, glob 13, js-yaml 5,
   pre-commit→husky; and, of this repo's own, renaming `ShExWriter` (it
@@ -256,4 +312,4 @@ The Makefile is hand-maintained; the generator it grew out of
 
 ## Decisions wanted
 
-B3 (committed `lib/`), I1 (untrack the perf corpus, as recommended).
+B3 (committed `lib/` -- stays, for now); the independent tier's versions (`shape-map` to `1.0.0`?).

@@ -136,7 +136,6 @@ class ShExBaseApp {
                 return this.toggleBreakpointAtCursor();
             },
         ];
-        ShExWebApp.ShapeMap.Start = ShExWebApp.Validator.Start;
         // what registered before this app existed, and whatever registers after
         // it: a plugin loaded by URL reaches the same code as one the page
         // loaded as a script

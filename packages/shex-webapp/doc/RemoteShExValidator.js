@@ -38,13 +38,11 @@ class RemoteShExValidator {
     }
     async invoke(fixedMap, validationTracker, time, done, currentAction) {
         await this.created;
+        // Start crosses as itself -- a structured clone of {term: "START"} --
+        // and each side recognizes the other's copy by shape (ShExTerm.isStart)
+        // and swaps in its own, so identity holds within a thread.
         const transportMap = fixedMap.map(function (ent) {
-            return {
-                node: ent.node,
-                shape: ent.shape === ShExWebApp.Validator.Start ?
-                    START_SHAPE_INDEX_ENTRY :
-                    ent.shape
-            };
+            return { node: ent.node, shape: ent.shape };
         });
         const results = [];
         const caches = this.renderer.caches;
@@ -64,7 +62,7 @@ class RemoteShExValidator {
                         throw Error('fix this code path; probably results=msg.data.(all?)results');
                     results.push(...msg.data.results);
                     msg.data.results.forEach(function (res) {
-                        if (res.shape === START_SHAPE_INDEX_ENTRY)
+                        if (ShExWebApp.ShExTerm.isStart(res.shape))
                             res.shape = ShExWebApp.Validator.Start;
                     });
                     msg.data.results.forEach((entry) => this.renderer.entry(entry));

@@ -3,7 +3,6 @@ importScripts("./webpacks/shex-webapp.js");
 importScripts("./WorkerMarshalling.js");
 // importScripts('promise-worker/register.js');
 
-const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 let validator = null;
 /** the db this validator asks, and what of it has been sent back: a source
  * that reads documents to answer with has them over here, and a slurp is on
@@ -97,7 +96,8 @@ try {
     for (let currentEntry = 0; currentEntry < queryMap.length; ) {
       const singletonMap = [queryMap[currentEntry++]]; // ShapeMap with single entry.
       errorText = "validating " + JSON.stringify(singletonMap[0], null, 2);
-      if (singletonMap[0].shape === START_SHAPE_INDEX_ENTRY)
+      // the page's Start arrives as a clone; this thread's own goes in its place
+      if (ShExWebApp.ShExTerm.isStart(singletonMap[0].shape))
         singletonMap[0].shape = ShExWebApp.Validator.Start;
       time = new Date();
       // ...Async: right for either db -- given one that doesn't fetch it is
@@ -105,8 +105,6 @@ try {
       const newResults = await validator.validateShapeMapAsync(singletonMap, options.track ? makeRelayTracker() : undefined); // undefined to trigger default parameter assignment
       time = new Date() - time;
       newResults.forEach(function (res) {
-        if (res.shape === ShExWebApp.Validator.Start)
-          res.shape = START_SHAPE_INDEX_ENTRY;
       });
       // Merge into results.
       results.merge(newResults);

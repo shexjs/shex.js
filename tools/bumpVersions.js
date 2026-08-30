@@ -5,6 +5,11 @@
  *
  *   node tools/bumpVersions.js [--dry-run] 1.0.0-alpha.30
  *
+ * Packages listed under `shexjs.independent` in the root package.json are on
+ * version lines of their own (an audience outside shex.js: shape-map, the
+ * grammars, the terms they share) and are left alone, as are the ranges
+ * pointing at them.
+ *
  * Follow with `npm install` (to sync package-lock.json), run the tests,
  * commit, tag v<version>, and `node tools/publish-ordered.js`.
  */
@@ -33,15 +38,21 @@ const manifestPaths = rootManifest.workspaces.packages
 // first pass: learn every workspace package name
 const workspaceNames = new Set(manifestPaths.map(
   p => JSON.parse(Fs.readFileSync(p, "utf8")).name));
+const independent = new Set((rootManifest.shexjs || {}).independent || []);
 
 // second pass: bump versions and cross-workspace ranges
 manifestPaths.forEach(manifestPath => {
   const manifest = JSON.parse(Fs.readFileSync(manifestPath, "utf8"));
-  const changes = [`version ${manifest.version} -> ${newVersion}`];
-  manifest.version = newVersion;
+  const changes = [];
+  if (independent.has(manifest.name)) {
+    changes.push(`version ${manifest.version} kept (independent)`);
+  } else {
+    changes.push(`version ${manifest.version} -> ${newVersion}`);
+    manifest.version = newVersion;
+  }
   ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"].forEach(section => {
     Object.keys(manifest[section] || {}).forEach(dep => {
-      if (workspaceNames.has(dep) && manifest[section][dep] !== "^" + newVersion) {
+      if (workspaceNames.has(dep) && !independent.has(dep) && manifest[section][dep] !== "^" + newVersion) {
         changes.push(`${dep} ${manifest[section][dep]} -> ^${newVersion}`);
         manifest[section][dep] = "^" + newVersion;
       }

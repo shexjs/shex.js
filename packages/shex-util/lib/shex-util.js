@@ -1914,39 +1914,7 @@ const ShExUtil = {
      * unescape numerics and allowed single-character escapes.
      * throws: if there are any unallowed sequences
      */
-    unescapeText: function (string, replacements) {
-        const regex = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\(.)/g;
-        try {
-            string = string.replace(regex, function (_sequence, unicode4, unicode8, escapedChar) {
-                let charCode;
-                if (unicode4) {
-                    charCode = parseInt(unicode4, 16);
-                    if (isNaN(charCode))
-                        throw new Error(); // can never happen (regex), but helps performance
-                    return String.fromCharCode(charCode);
-                }
-                else if (unicode8) {
-                    charCode = parseInt(unicode8, 16);
-                    if (isNaN(charCode))
-                        throw new Error(); // can never happen (regex), but helps performance
-                    if (charCode < 0xFFFF)
-                        return String.fromCharCode(charCode);
-                    return String.fromCharCode(0xD800 + ((charCode -= 0x10000) >> 10), 0xDC00 + (charCode & 0x3FF));
-                }
-                else {
-                    const replacement = replacements[escapedChar];
-                    if (!replacement)
-                        throw new Error("no replacement found for '" + escapedChar + "'");
-                    return replacement;
-                }
-            });
-            return string;
-        }
-        catch (error) {
-            console.warn(error);
-            return '';
-        }
-    },
+    unescapeText: ShExTerm.unescapeText, // lives in @shexjs/term now, where the parsers take it from
 };
 // Add the ShExUtil functions to the given object or its prototype
 function AddShExUtil(parent, toPrototype) {

@@ -20,18 +20,18 @@
   "license": "MIT",
   "main": "./lib/shex-extension-wasi-test.js",
   "engines": {
-    "node": ">=12"
+    "node": ">=18"
   },
   "scripts": {
     "build": "wat2wasm lib/extension-wasi-test.wat -o lib/extension-wasi-test.wasm",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "node -e \"require('fs').accessSync('lib/extension-wasi-test.wasm')\"",
     "test": "../../node_modules/.bin/mocha test/*test.js -C -R dot"
   },
   "devDependencies": {
     "@shexjs/extension-test": "^1.0.0-alpha.28",
     "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.29",
     "@shexjs/parser": "^1.0.0-alpha.28",
-    "@shexjs/term": "^1.0.0-alpha.27",
+    "@shexjs/term": "^1.0.0-alpha.28",
     "@shexjs/validator": "^1.0.0-alpha.29",
     "chai": "^4.5.0",
     "mocha": "^10.7.3",

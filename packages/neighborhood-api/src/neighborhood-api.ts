@@ -3,7 +3,9 @@
 import {Shape} from 'shexj';
 import * as RdfJs from "@rdfjs/types/data-model";
 import {Term as RdfJsTerm} from "@rdfjs/types/data-model";
-export const Start = { term: "START" }
+import {Start, isStart} from "@shexjs/term";
+/** the start shape's symbol, @shexjs/term's: one object everywhere */
+export {Start, isStart};
 
 export {};
 

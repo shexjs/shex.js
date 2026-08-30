@@ -20,7 +20,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@shexjs/term": "^1.0.0-alpha.27",
+    "@shexjs/term": "^1.0.0-alpha.28",
     "@shexjs/visitor": "^1.0.0-alpha.27",
     "@shexjs/writer": "^1.0.0-alpha.27",
     "@types/shexj": "^2.1.7",

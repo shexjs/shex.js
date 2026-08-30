@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Start = void 0;
+exports.isStart = exports.Start = void 0;
 exports.paneParams = paneParams;
 exports.fieldParams = fieldParams;
 exports.moduleId = moduleId;
@@ -10,7 +10,9 @@ exports.queryMapResolverFor = queryMapResolverFor;
 exports.claimPane = claimPane;
 exports.paramsToCommandLineArgs = paramsToCommandLineArgs;
 exports.sparqlOrder = sparqlOrder;
-exports.Start = { term: "START" };
+const term_1 = require("@shexjs/term");
+Object.defineProperty(exports, "Start", { enumerable: true, get: function () { return term_1.Start; } });
+Object.defineProperty(exports, "isStart", { enumerable: true, get: function () { return term_1.isStart; } });
 /** the parameters a host renders as document panes, and as form fields */
 function paneParams(specs) {
     return specs.filter(spec => !!spec.pane);
