@@ -241,6 +241,15 @@ describe("nearest-bag repairs", function () {
       expect(ways).to.deep.equal(["remove 1 :other"]);
     });
 
+    it("should refuse what the node says, not what is said of it", function () {
+      // a nested node always has its parent's arc coming in; CLOSED is about
+      // outgoing arcs, so that one is neither a violation nor a repair
+      const {status, ways, cost} = repairs("<S> CLOSED { foaf:name . }", ':y :parent :x . :x foaf:name "B" ; :other 1 .');
+      expect(status).to.equal("nonconformant");
+      expect(ways).to.deep.equal(["remove 1 :other"]);
+      expect(cost).to.equal(1);
+    });
+
     it("should leave an open shape's extra arcs alone", function () {
       const {status, ways} = repairs("<S> { foaf:name . }", ':x foaf:name "B" ; :other 1 .');
       expect(status).to.equal("conformant");

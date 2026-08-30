@@ -834,13 +834,18 @@ class ShExValidator {
         const observedBag = new Map();
         // ...and the arcs no constraint could take at all -- not one with a
         // bad value, which is a value failure and reported as such -- counted
-        // here too, before the search prunes: a closed shape refuses them
+        // here too, before the search prunes: a closed shape refuses them.
+        // Outgoing arcs only: CLOSED is about what the node says, not what is
+        // said of it -- an incoming arc no inverse constraint takes (every
+        // nested node has its parent's) is not the shape's to refuse, as
+        // ClosedShapeViolation already has it.
         const homeless = [];
+        const outgoingArcs = new Set(fromDB.outgoing);
         t2tcs.reduce((_ret, triple, tcs) => {
             const local = tcs.filter(tc => extendsTCs.indexOf(tc) === -1);
             if (local.length > 0)
                 observedBag.set(local[0], (observedBag.get(local[0]) || 0) + 1);
-            if (tcs.length === 0 && !t2tcErrors.has(triple))
+            if (tcs.length === 0 && !t2tcErrors.has(triple) && outgoingArcs.has(triple))
                 homeless.push(triple);
             return null;
         }, null);
