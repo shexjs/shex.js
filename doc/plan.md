@@ -140,8 +140,10 @@ link that names a plugin opens on the validator's screen unless it says
   finish before a manifest entry validates), and the repo test server
   read every file as utf8 -- a .wasm served as text is a CompileError.
   Each extension has a pass/fail manifest, aggregated (41 entries from 7
-  manifests).  Known wrinkle: a worker app's first validation can outrun
-  `ready()`/the wasm fetch and says so plainly; validate again.
+  manifests).  The worker race is closed too (same day): a worker plugin
+  hands `registerWorkerPlugin` a `ready` promise -- wabt, the wasm fetch --
+  and the worker thread awaits every plugin's `ready` before serving any
+  request, as the page awaits `init` through `applied`.
 - **C5 (note)** The worker is classic; an ESM worker (`type: "module"`)
   would need a different loader.  Not now.
 

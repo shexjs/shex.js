@@ -348,6 +348,10 @@ registerWorkerPlugin({
   },
 });
 ```
+A worker plugin with something to await -- a wasm toolchain, a fetched
+module -- hands `registerWorkerPlugin` a `ready` promise beside `register`;
+the worker thread awaits every plugin's `ready` before serving any request,
+as the page awaits a descriptor's `init` through `applied`.
 
 A worker resolves a relative `importScripts` against *its own* script and
 knows nothing of the page, which is why the app names plugins absolutely

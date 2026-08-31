@@ -38,14 +38,19 @@ if (!TEST_browser) {
     passes: "wasm Test prints the object", fails: "wasm Test can fail a match",
     inAppinfo: []},
   ].forEach(({ext, label, plugin, passes, fails, inAppinfo}) =>
-    describe(`shex-simple with the ${label} extension's manifest`, function () {
+   [{app: "shex-simple", search: "?editors=1", options: undefined},
+    // the worker flavour: the handler registers over there, and the worker
+    // thread awaits every plugin's `ready` before serving any request
+    {app: "shex-worker", search: "?editors=1&worker=1", options: {worker: true}},
+   ].forEach(({app, search, options}) =>
+    describe(`${app} with the ${label} extension's manifest`, function () {
       this.timeout(20000);
       let dom, $, shared;
 
       before(async function () {
         ({dom, $, shared} = await Harness.boot(
-          PAGE, "?editors=1&manifestURL=" + encodeURIComponent(
-            `../../extension-${ext}/examples/manifest.yaml`)));
+          PAGE, search + "&manifestURL=" + encodeURIComponent(
+            `../../extension-${ext}/examples/manifest.yaml`), options));
       });
       after(function () { if (dom) dom.window.close(); });
 
@@ -87,5 +92,38 @@ if (!TEST_browser) {
         await shared.promise;
         expect($("#fixedMap .pair a").first().text(), "the pair's mark").to.equal("\u2717");
       });
-    }));
+    })));
+
+  /* The WASI manifest's other tiers: an action with its own data segment,
+   * and a standalone (module ...) that loads argv itself -- no prelude. */
+  describe("the WASI manifest's other tiers", function () {
+    this.timeout(20000);
+    let dom, $, shared;
+
+    before(async function () {
+      ({dom, $, shared} = await Harness.boot(
+        PAGE, "?editors=1&manifestURL=" + encodeURIComponent(
+          "../../extension-wasi/examples/manifest.yaml")));
+    });
+    after(function () { if (dom) dom.window.close(); });
+
+    ["WASI writes its own data", "WASI standalone module"].forEach(schemaLabel =>
+      it(`should validate "${schemaLabel}"`, async function () {
+        const schemaLi = $("#inputSchema .manifest li")
+              .filter((i, li) => $(li).text() === schemaLabel).first();
+        expect(schemaLi.length, "the entry is listed").to.equal(1);
+        if (!schemaLi.hasClass("selected")) {
+          schemaLi.trigger("click");
+          await shared.promise;
+        }
+        const dataLi = $("#inputData .passes li").first();
+        if (!dataLi.hasClass("selected")) {
+          dataLi.trigger("click");
+          await shared.promise;
+        }
+        $("#validate").trigger("click");
+        await shared.promise;
+        expect($("#fixedMap .pair a").first().text(), "the pair's mark").to.equal("\u2713");
+      }));
+  });
 }

@@ -31,8 +31,8 @@
 
   if (typeof registerWorkerPlugin === "function") {
     importScripts(new URL(BUNDLE, pluginBase).href);
-    ShExWebApp.Wasi.ready();             // kicked here; a dispatch that outruns it says so plainly
     registerWorkerPlugin({
+      ready: ShExWebApp.Wasi.ready(),    // wabt, before anything validates
       register: function (validator, api) {
         if (api.Wasi)
           api.Wasi.register(validator, api);

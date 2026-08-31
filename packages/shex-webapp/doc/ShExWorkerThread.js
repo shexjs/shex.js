@@ -19,6 +19,11 @@ const postedPages = new Set();
  * worker scripts on every request; each is imported once, and what it
  * registers here is a handler for the validator and handlers for the
  * requests it adds.  ShExMap's `materialize` is the first.
+ *
+ * A plugin with something to await -- a wasm toolchain to load, a module
+ * to fetch -- says so with `ready`, a promise this thread awaits before
+ * serving any request: the page side has `init` riding `applied` for the
+ * same reason, and a validation must not outrun either.
  */
 const WorkerPlugins = [];
 const importedPlugins = new Set();
@@ -49,6 +54,7 @@ let time;
 try {
   errorText = "loading plugins";
   importPlugins(msg.data.plugins);
+  await Promise.all(WorkerPlugins.map(p => p.ready).filter(Boolean));
   switch (msg.data.request) {
   case "create":
     errorText = "creating validator";

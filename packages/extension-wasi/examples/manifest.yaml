@@ -37,3 +37,75 @@
   comment: exit(1) is a SemActFailure on the constraint, so the pair goes red.
   plugins:
   - ../doc/ShExWasiPlugin.js
+# The next tier down: the action brings its own data segment and prints it
+# with the prelude's $put(ptr, len) -- the author's segments start at 8192
+# (the prelude's memory map).  test/wasi/*.shex holds more of these.
+- schemaLabel: WASI writes its own data
+  schema: |
+    PREFIX : <http://a.example/>
+    PREFIX Wasi: <http://shex.io/extensions/WASI/>
+    start = @<S>
+    <S> { :p . %Wasi:{ (data (i32.const 8192) "from a data segment") (func $main (call $put (i32.const 8192) (i32.const 19)) (call $nl)) %} }
+  dataLabel: one triple
+  data: |
+    PREFIX : <http://a.example/>
+    :x :p "ignored here" .
+  queryMap: |
+    <http://a.example/x>@START
+  status: conformant
+  comment: The action's own bytes, placed and measured by the author; only the printing is the prelude's.
+  plugins:
+  - ../doc/ShExWasiPlugin.js
+# ...and all the way down: code beginning with (module ...) is compiled as
+# it stands, no prelude -- the action imports WASI itself, loads argv (the
+# bindings arrive as "letter=value" entries), finds o=, and prints its value.
+- schemaLabel: WASI standalone module
+  schema: |
+    PREFIX : <http://a.example/>
+    PREFIX Wasi: <http://shex.io/extensions/WASI/>
+    start = @<S>
+    <S> { :p . %Wasi:{ (module
+      (import "wasi_snapshot_preview1" "args_sizes_get" (func $args_sizes_get (param i32 i32) (result i32)))
+      (import "wasi_snapshot_preview1" "args_get" (func $args_get (param i32 i32) (result i32)))
+      (import "wasi_snapshot_preview1" "fd_write" (func $fd_write (param i32 i32 i32 i32) (result i32)))
+      (import "wasi_snapshot_preview1" "proc_exit" (func $proc_exit (param i32)))
+      (memory (export "memory") 1)
+      (func (export "_start")
+        (local $argc i32) (local $i i32) (local $p i32) (local $len i32)
+        ;; load the registers: argc at 0, byte size at 4, pointers at 48, text at 1024
+        (drop (call $args_sizes_get (i32.const 0) (i32.const 4)))
+        (drop (call $args_get (i32.const 48) (i32.const 1024)))
+        (local.set $argc (i32.load (i32.const 0)))
+        (block $done
+          (loop $next
+            (br_if $done (i32.ge_u (local.get $i) (local.get $argc)))
+            (local.set $p (i32.load (i32.add (i32.const 48) (i32.mul (local.get $i) (i32.const 4)))))
+            ;; an entry "o=<value>": print the value and exit 0
+            (if (i32.and (i32.eq (i32.load8_u (local.get $p)) (i32.const 111))
+                         (i32.eq (i32.load8_u (i32.add (local.get $p) (i32.const 1))) (i32.const 61)))
+              (then
+                (local.set $p (i32.add (local.get $p) (i32.const 2)))
+                (block $end
+                  (loop $scan
+                    (br_if $end (i32.eqz (i32.load8_u (i32.add (local.get $p) (local.get $len)))))
+                    (local.set $len (i32.add (local.get $len) (i32.const 1)))
+                    (br $scan)))
+                (i32.store (i32.const 16) (local.get $p))
+                (i32.store (i32.const 20) (local.get $len))
+                (drop (call $fd_write (i32.const 1) (i32.const 16) (i32.const 1) (i32.const 32)))
+                (call $proc_exit (i32.const 0))))
+            (local.set $i (i32.add (local.get $i) (i32.const 1)))
+            (br $next)))
+        ;; no o binding: invocation error
+        (call $proc_exit (i32.const 2)))
+    ) %} }
+  dataLabel: one triple
+  data: |
+    PREFIX : <http://a.example/>
+    :x :p "printed by a standalone module" .
+  queryMap: |
+    <http://a.example/x>@START
+  status: conformant
+  comment: No prelude at all -- the module does its own argv loading, printing and exit.
+  plugins:
+  - ../doc/ShExWasiPlugin.js

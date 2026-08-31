@@ -48,26 +48,16 @@
   if (typeof registerWorkerPlugin === "function") {
     importScripts(new URL(BUNDLE, pluginBase).href);
     let module = null;
-    const loading = fetchWasm(pluginBase)
-          .then(function (bytes) { module = ShExWebApp.WasiTest.configure({wasm: bytes, stdout: false}); });
     registerWorkerPlugin({
+      // the fetch, before anything validates (the worker thread awaits ready)
+      ready: fetchWasm(pluginBase)
+        .then(function (bytes) { module = ShExWebApp.WasiTest.configure({wasm: bytes, stdout: false}); }),
       register: function (validator, api) {
         if (!api.WasiTest)
           return;
-        if (module) {
-          module.register(validator, api);
-          return;
-        }
-        // the fetch is still in flight: register a stand-in that answers
-        // each dispatch plainly until the module lands
-        validator.semActHandler.register("http://shex.io/extensions/Test/", {
-          dispatch: function () {
-            if (module === null)
-              throw Error(PLUGIN_ID + ": still fetching the wasm module; validate again");
-            throw Error(PLUGIN_ID + ": registered before the module arrived; validate again");
-          },
-        });
-        loading.then(function () { module.register(validator, api); });
+        if (!module)   // ready was awaited, so only a thread that skipped it could get here
+          throw Error(PLUGIN_ID + ": the wasm module is not loaded");
+        module.register(validator, api);
       },
     });
   }
