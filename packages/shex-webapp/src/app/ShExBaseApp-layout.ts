@@ -172,6 +172,16 @@ mixin(ShExBaseApp, {
     const revealing = evt && $("#controls").css("display") !== "flex";
     $("#controls").css("display", revealing ? "flex" : "none");
     this.toggleControlsArrow(revealing ? "up" : "down");
+    // While the menu is up, a click anywhere else takes it down -- not one
+    // inside it, not the button (whose own click is the toggle), and not a
+    // dialog it opened (the load form works over the open menu; its Cancel
+    // closes both).  Escape and ctrl-g do the same, from keyDownHandlers.
+    $(document).off("click.shexjsControls");
+    if (revealing)
+      $(document).on("click.shexjsControls", (e: any) => {
+        if ($(e.target).closest("#controls, #menu-button, .ui-dialog").length === 0)
+          this.toggleControls();
+      });
     if (revealing) {
       let target = evt.target;
       while (target.tagName !== "BUTTON")

@@ -595,6 +595,31 @@ if (!TEST_browser) {
         expect(source().params().pages.length).to.equal(2);
       });
 
+      /* The menu: the button toggles it, and leaving it any natural way --
+       * a click somewhere else, Escape, ctrl-g -- takes it down. */
+      it("should take the menu down on a click outside it, Escape or ctrl-g", async function () {
+        const open = () => { $("#menu-button").trigger("click"); };
+        const shown = () => $("#controls").css("display") === "flex";
+
+        open();
+        expect(shown(), "the button opens it").to.equal(true);
+        $("#controls").trigger("click");
+        expect(shown(), "a click inside is nobody's business").to.equal(true);
+        $("#inputSchema").trigger("click");
+        expect(shown(), "a click outside takes it down").to.equal(false);
+
+        open();
+        $("body").trigger($.Event("keydown", {key: "Escape", keyCode: 27}));
+        expect(shown(), "Escape takes it down").to.equal(false);
+
+        open();
+        $("body").trigger($.Event("keydown", {key: "g", ctrlKey: true, keyCode: 71}));
+        expect(shown(), "ctrl-g takes it down").to.equal(false);
+
+        $("body").trigger($.Event("keydown", {key: "g", ctrlKey: true, keyCode: 71}));
+        expect(shown(), "...and closed is closed").to.equal(false);
+      });
+
       /* A data entry is marked `.selected` when the pane holds its document
        * (found by a checksum of the text, so an edited pane finds its entry
        * again).  An entry with no document -- a query service is the data

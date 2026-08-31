@@ -129,6 +129,15 @@ class ShExBaseApp {
         this.keyDownHandlers = [
             this.validateKeyDown.bind(this),
             this.navigateManifestKeyDown.bind(this),
+            // Escape or ctrl-g: the menu down, as a click outside it takes it
+            (e) => {
+                if ($("#controls").css("display") !== "flex")
+                    return false;
+                if (e.key !== "Escape" && !(e.ctrlKey && !e.metaKey && !e.altKey && (e.key === "g" || e.key === "G")))
+                    return false;
+                this.toggleControls();
+                return true;
+            },
             // ctrl-alt-b: a breakpoint on the constraint at the schema pane's cursor
             (e) => {
                 if (!((e.ctrlKey || e.metaKey) && e.altKey && (e.key === "b" || e.key === "B" || e.code === "KeyB")))
