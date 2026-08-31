@@ -74,10 +74,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/shexSpec/grammar.git"
+    "url": "https://github.com/shexjs/shex.js.git"
   },
   "bugs": {
-    "url": "https://github.com/shexSpec/grammar/issues"
+    "url": "https://github.com/shexjs/shex.js/issues"
   },
   "pre-commit": [
     "lint",
