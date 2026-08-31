@@ -178,6 +178,9 @@ Applied in this order, once per app:
    verb reads as a method of it.  A name the app already has is left alone.
 8. **`init(app)`** -- once, after all of the above, for what a plugin *does*
    rather than declares.
+   `init` may return a promise; it rides `applied`, so whoever loaded the
+   plugin (a manifest entry, `?plugin=`) waits for it before validating --
+   a wasm toolchain to load, a module to fetch.
 
 `run` may return a promise; a failure is reported where the results go
 rather than thrown into the console, and the app tracks the promise so that

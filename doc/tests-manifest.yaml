@@ -843,3 +843,84 @@
   comment: fail(...) is a SemActFailure on the constraint, so the pair goes red.
   plugins:
   - ../packages/extension-test/doc/ShExTestPlugin.js
+
+# --- packages/extension-wasi/examples/manifest.yaml
+# the WASI extension: WAT semantic actions, compiled in the page
+# The generic WASI extension (http://shex.io/extensions/WASI/): a semantic
+# action's code is the WAT source of a WASI command, composed with the
+# library prelude (lib/prelude.wat: $put_s/$put_p/$put_o/$put_n, $nl,
+# $fail...), compiled by wabt and run per invocation.  Each entry names the
+# plugin it needs; loading it brings wabt along (~700 KB), which is the
+# price of compiling WebAssembly in a page.
+- schemaLabel: WASI prints the object
+  schema: |
+    PREFIX : <http://a.example/>
+    PREFIX Wasi: <http://shex.io/extensions/WASI/>
+    start = @<S>
+    <S> { :p . %Wasi:{ (func $main (call $put_o) (call $nl)) %} }
+  dataLabel: one triple
+  data: |
+    PREFIX : <http://a.example/>
+    :x :p "printed by wasm" .
+  queryMap: |
+    <http://a.example/x>@START
+  status: conformant
+  comment: The module prints the matched object to WASI fd 1 and exits 0.
+  plugins:
+  - ../packages/extension-wasi/doc/ShExWasiPlugin.js
+- schemaLabel: WASI can fail a match
+  schema: |
+    PREFIX : <http://a.example/>
+    PREFIX Wasi: <http://shex.io/extensions/WASI/>
+    start = @<S>
+    <S> { :p . %Wasi:{ (func $main (call $put_o) (call $nl) (call $fail)) %} }
+  dataLabel: the failed value
+  data: |
+    PREFIX : <http://a.example/>
+    :x :p "999" .
+  queryMap: |
+    <http://a.example/x>@START
+  status: nonconformant
+  comment: exit(1) is a SemActFailure on the constraint, so the pair goes red.
+  plugins:
+  - ../packages/extension-wasi/doc/ShExWasiPlugin.js
+
+# --- packages/extension-wasi-test/examples/manifest.yaml
+# the Test extension in hand-written WebAssembly
+# The Test extension reimplemented in hand-written WebAssembly
+# (lib/extension-wasi-test.wat): same URL, same grammar, same protocol as
+# @shexjs/extension-test -- these entries are extension-test's pair, run
+# through wasm.  Each names the plugin it needs, which fetches the .wasm
+# from lib/ beside this package.
+- schemaLabel: wasm Test prints the object
+  schema: |
+    PREFIX : <http://a.example/>
+    PREFIX Test: <http://shex.io/extensions/Test/>
+    start = @<S>
+    <S> { :p . %Test:{ print(o) %} }
+  dataLabel: one triple
+  data: |
+    PREFIX : <http://a.example/>
+    :x :p "printed by wasm" .
+  queryMap: |
+    <http://a.example/x>@START
+  status: conformant
+  comment: The wasm module parses print(o), assembles the line and prints it through WASI fd_write.
+  plugins:
+  - ../packages/extension-wasi-test/doc/ShExWasiTestPlugin.js
+- schemaLabel: wasm Test can fail a match
+  schema: |
+    PREFIX : <http://a.example/>
+    PREFIX Test: <http://shex.io/extensions/Test/>
+    start = @<S>
+    <S> { :p . %Test:{ fail("unwelcome ", o) %} }
+  dataLabel: the failed value
+  data: |
+    PREFIX : <http://a.example/>
+    :x :p "999" .
+  queryMap: |
+    <http://a.example/x>@START
+  status: nonconformant
+  comment: fail(...) comes back as a SemActFailure from the wasm module, so the pair goes red.
+  plugins:
+  - ../packages/extension-wasi-test/doc/ShExWasiTestPlugin.js

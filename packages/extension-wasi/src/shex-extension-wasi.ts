@@ -52,6 +52,7 @@
  * Select with configure({impl: "shim"|"wasi"}).
  */
 import Fs = require("fs");
+import {preludeWat} from "./prelude-wat";
 import Os = require("os");
 import Path = require("path");
 import type wabtFactory from "wabt"; // type only: wabt itself loads in ready()
@@ -68,7 +69,7 @@ interface RdfJsNonLiteral { termType: "NamedNode" | "BlankNode" | "Variable" | "
 type RdfJsTerm = RdfJsNonLiteral | RdfJsLiteral;
 
 /** what a host run returns */
-interface RunResult { exitCode: number; stdout: Buffer }
+interface RunResult { exitCode: number; stdout: Uint8Array }  // Buffer under node:wasi, a plain array from the shim
 
 /** the subset of node:wasi's WASI used here (typed locally: the tree's
  * @types/node predates the module) */
@@ -119,11 +120,8 @@ function ready (): Promise<void> {
 
 const moduleCache = new Map<string, WebAssembly.Module>(); // WAT text -> WebAssembly.Module
 
-let preludeText: string | null = null;
 function prelude (): string {
-  if (preludeText === null)
-    preludeText = Fs.readFileSync(Path.join(__dirname, "prelude.wat"), "utf8"); // beside this file in lib/
-  return preludeText;
+  return preludeWat;   // generated from lib/prelude.wat, so no filesystem: the browser bundle has none
 }
 
 /** Complete a semantic action's WAT: code beginning with "(module" is a
@@ -164,7 +162,7 @@ function compile (code: string): WebAssembly.Module {
 function runShim (mod: WebAssembly.Module, args: string[]): RunResult {
   const encoder = new TextEncoder();
   const argBufs = args.map(a => encoder.encode(a + "\0"));
-  const chunks: Buffer[] = [];
+  const chunks: Uint8Array[] = [];
   let memory: WebAssembly.Memory | null = null;
   const ExitSentinel = {};
   let exitCode = 0;
@@ -203,7 +201,7 @@ function runShim (mod: WebAssembly.Module, args: string[]): RunResult {
           const base = view.getUint32(iovs + 8 * i, true);
           const len = view.getUint32(iovs + 8 * i + 4, true);
           if (fd === 1)
-            chunks.push(Buffer.from(new Uint8Array(memory!.buffer, base, len))); // copy; buffer may move
+            chunks.push(new Uint8Array(memory!.buffer, base, len).slice()); // copy; buffer may move
           total += len;
         }
         view.setUint32(nwrittenPtr, total, true);
@@ -223,7 +221,10 @@ function runShim (mod: WebAssembly.Module, args: string[]): RunResult {
     if (e !== ExitSentinel)
       throw Error("Invocation error: " + WasiExt + " module trapped: " + (e as Error).message);
   }
-  return {exitCode: exitCode, stdout: Buffer.concat(chunks as Uint8Array[])};
+  const total = chunks.reduce((sum, c) => sum + c.length, 0);
+  const stdout = new Uint8Array(total);
+  chunks.reduce((at, c) => { stdout.set(c, at); return at + c.length; }, 0);
+  return {exitCode: exitCode, stdout};   // no Buffer: this path runs in browsers too
 }
 
 /** run a compiled module under Node's built-in node:wasi, capturing fd 1
@@ -246,7 +247,7 @@ function runNodeWasi (mod: WebAssembly.Module, args: string[]): RunResult {
           : {wasi_snapshot_preview1: wasi.wasiImport};
     const instance = new WebAssembly.Instance(mod, importObject);
     const exitCode = wasi.start(instance);
-    return {exitCode: exitCode, stdout: Fs.readFileSync(tmp)};
+    return {exitCode: exitCode, stdout: Fs.readFileSync(tmp) as Uint8Array};  // (@types/node 10 again)
   } finally {
     Fs.closeSync(fd);
     Fs.unlinkSync(tmp);
@@ -305,7 +306,7 @@ function makeModule (opts: WasiExtensionOptions): WasiExtension {
           if (typeof code !== "string")
             throw Error("Invocation error: " + WasiExt + " expected WAT code to dispatch, got: " + code);
           const res = run(compile(code), ctxArgs(ctx));
-          const lines = res.stdout.toString("utf8").split("\n");
+          const lines = new TextDecoder().decode(res.stdout).split("\n");
           const tail = lines.pop()!; // "" after a final "\n", else an unterminated tail
           if (tail !== "")
             lines.push(tail);

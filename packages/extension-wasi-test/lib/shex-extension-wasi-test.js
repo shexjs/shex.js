@@ -24,7 +24,10 @@
 const Fs = require("fs");
 const Path = require("path");
 const TestExt = "http://shex.io/extensions/Test/";
-const WasmPath = Path.join(__dirname, "extension-wasi-test.wasm"); // beside this file in lib/
+// beside this file in lib/ -- computed lazily: the browser bundle
+// externalizes `path` to undefined and hands the bytes in with
+// configure({wasm}) instead of ever asking for a path
+function wasmPath() { return Path.join(__dirname, "extension-wasi-test.wasm"); }
 // dispatch() status codes — see the ABI comment in lib/extension-wasi-test.wat.
 const Statuses = {
     PASS: 1, // code matched "print"; line assembled and printed
@@ -36,11 +39,17 @@ const Statuses = {
 };
 const Grammar = "(print|fail) '(' term (',' term)* ')' where term is \"string\", 'string', s, p or o";
 let compiled = null;
-function getModule() {
+const compiledFor = new WeakMap(); // configure({wasm})'s, one each
+function getModule(opts) {
+    if (opts.wasm !== undefined) {
+        if (!compiledFor.has(opts.wasm))
+            compiledFor.set(opts.wasm, new WebAssembly.Module(opts.wasm));
+        return compiledFor.get(opts.wasm);
+    }
     if (compiled === null)
         // (the casts to BufferSource/Uint8Array[] here and in the shim: the tree's
         // @types/node 10 Buffer predates TypeScript's generic typed arrays)
-        compiled = new WebAssembly.Module(Fs.readFileSync(WasmPath));
+        compiled = new WebAssembly.Module(Fs.readFileSync(wasmPath()));
     return compiled;
 }
 /**
@@ -52,18 +61,18 @@ function getModule() {
 function makeInstance(opts) {
     const impl = opts.impl || "auto";
     const stdout = "stdout" in opts ? opts.stdout : 1;
-    if (impl === "wasi" || impl === "auto") {
+    if ((impl === "wasi" || impl === "auto") && stdout !== false) {
         try {
-            return makeNodeWasiInstance(stdout);
+            return makeNodeWasiInstance(opts, stdout);
         }
         catch (e) {
             if (impl === "wasi")
                 throw e;
         }
     }
-    return makeShimInstance(stdout);
+    return makeShimInstance(opts, stdout);
 }
-function makeNodeWasiInstance(stdout) {
+function makeNodeWasiInstance(opts, stdout) {
     const { WASI } = require("node:wasi"); // throws where absent or flag-gated
     let wasi;
     try {
@@ -75,18 +84,18 @@ function makeNodeWasiInstance(stdout) {
     const importObject = typeof wasi.getImportObject === "function"
         ? wasi.getImportObject()
         : { wasi_snapshot_preview1: wasi.wasiImport };
-    const instance = new WebAssembly.Instance(getModule(), importObject);
+    const instance = new WebAssembly.Instance(getModule(opts), importObject);
     wasi.initialize(instance);
     return { exports: instance.exports, impl: "wasi" };
 }
-function makeShimInstance(stdout) {
+function makeShimInstance(opts, stdout) {
     let memory = null;
     const importObject = {
         wasi_snapshot_preview1: {
             // fd_write(fd, *ciovecs, ciovec_count, *nwritten) -> errno
             fd_write: function (fd, iovs, iovsLen, nwrittenPtr) {
                 const hostFd = fd === 1 ? stdout : fd === 2 ? 2 : -1;
-                if (hostFd === -1)
+                if (hostFd === -1 && stdout !== false)
                     return 8; // WASI errno badf
                 try {
                     const view = new DataView(memory.buffer);
@@ -95,10 +104,14 @@ function makeShimInstance(stdout) {
                     for (let i = 0; i < iovsLen; ++i) {
                         const base = view.getUint32(iovs + 8 * i, true);
                         const len = view.getUint32(iovs + 8 * i + 4, true);
-                        chunks.push(Buffer.from(memory.buffer, base, len));
+                        if (stdout !== false)
+                            chunks.push(Buffer.from(memory.buffer, base, len));
                         total += len;
                     }
-                    const written = Fs.writeSync(hostFd, Buffer.concat(chunks, total));
+                    // stdout false: nowhere to mirror (a browser); the line still
+                    // reaches the results through linePtr/lineLen
+                    const written = stdout === false ? total
+                        : Fs.writeSync(hostFd, Buffer.concat(chunks, total));
                     view.setUint32(nwrittenPtr, written, true);
                     return 0;
                 }
@@ -108,7 +121,7 @@ function makeShimInstance(stdout) {
             }
         }
     };
-    const instance = new WebAssembly.Instance(getModule(), importObject);
+    const instance = new WebAssembly.Instance(getModule(opts), importObject);
     memory = instance.exports.memory;
     instance.exports._initialize();
     return { exports: instance.exports, impl: "shim" };
@@ -223,7 +236,7 @@ url: ${TestExt}`,
         configure: function (overrides) {
             return makeModule(Object.assign({}, opts, overrides));
         },
-        _internals: { WasmPath, Statuses, makeInstance, dispatchWasm },
+        _internals: { get WasmPath() { return wasmPath(); }, Statuses, makeInstance, dispatchWasm },
     };
 }
 module.exports = makeModule({});

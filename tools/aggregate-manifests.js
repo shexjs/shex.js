@@ -41,6 +41,10 @@ const SOURCES = [
    what: "the Eval extension: JavaScript semantic actions"},
   {file: "packages/extension-test/examples/manifest.yaml",
    what: "the Test extension: the suite's semantic-action probe"},
+  {file: "packages/extension-wasi/examples/manifest.yaml",
+   what: "the WASI extension: WAT semantic actions, compiled in the page"},
+  {file: "packages/extension-wasi-test/examples/manifest.yaml",
+   what: "the Test extension in hand-written WebAssembly"},
 ];
 
 /** the keys whose value is a document reference: what the runner and the

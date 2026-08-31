@@ -53,6 +53,7 @@
  * Select with configure({impl: "shim"|"wasi"}).
  */
 const Fs = require("fs");
+const prelude_wat_1 = require("./prelude-wat");
 const Os = require("os");
 const Path = require("path");
 const WasiExt = "http://shex.io/extensions/WASI/";
@@ -65,11 +66,8 @@ function ready() {
     return wabtPromise;
 }
 const moduleCache = new Map(); // WAT text -> WebAssembly.Module
-let preludeText = null;
 function prelude() {
-    if (preludeText === null)
-        preludeText = Fs.readFileSync(Path.join(__dirname, "prelude.wat"), "utf8"); // beside this file in lib/
-    return preludeText;
+    return prelude_wat_1.preludeWat; // generated from lib/prelude.wat, so no filesystem: the browser bundle has none
 }
 /** Complete a semantic action's WAT: code beginning with "(module" is a
  * standalone module; anything else is module fields (typically just
@@ -147,7 +145,7 @@ function runShim(mod, args) {
                     const base = view.getUint32(iovs + 8 * i, true);
                     const len = view.getUint32(iovs + 8 * i + 4, true);
                     if (fd === 1)
-                        chunks.push(Buffer.from(new Uint8Array(memory.buffer, base, len))); // copy; buffer may move
+                        chunks.push(new Uint8Array(memory.buffer, base, len).slice()); // copy; buffer may move
                     total += len;
                 }
                 view.setUint32(nwrittenPtr, total, true);
@@ -168,7 +166,10 @@ function runShim(mod, args) {
         if (e !== ExitSentinel)
             throw Error("Invocation error: " + WasiExt + " module trapped: " + e.message);
     }
-    return { exitCode: exitCode, stdout: Buffer.concat(chunks) };
+    const total = chunks.reduce((sum, c) => sum + c.length, 0);
+    const stdout = new Uint8Array(total);
+    chunks.reduce((at, c) => { stdout.set(c, at); return at + c.length; }, 0);
+    return { exitCode: exitCode, stdout }; // no Buffer: this path runs in browsers too
 }
 /** run a compiled module under Node's built-in node:wasi, capturing fd 1
  * through a temporary file.
@@ -191,7 +192,7 @@ function runNodeWasi(mod, args) {
             : { wasi_snapshot_preview1: wasi.wasiImport };
         const instance = new WebAssembly.Instance(mod, importObject);
         const exitCode = wasi.start(instance);
-        return { exitCode: exitCode, stdout: Fs.readFileSync(tmp) };
+        return { exitCode: exitCode, stdout: Fs.readFileSync(tmp) }; // (@types/node 10 again)
     }
     finally {
         Fs.closeSync(fd);
@@ -242,7 +243,7 @@ function makeModule(opts) {
                 if (typeof code !== "string")
                     throw Error("Invocation error: " + WasiExt + " expected WAT code to dispatch, got: " + code);
                 const res = run(compile(code), ctxArgs(ctx));
-                const lines = res.stdout.toString("utf8").split("\n");
+                const lines = new TextDecoder().decode(res.stdout).split("\n");
                 const tail = lines.pop(); // "" after a final "\n", else an unterminated tail
                 if (tail !== "")
                     lines.push(tail);

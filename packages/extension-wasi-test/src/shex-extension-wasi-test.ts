@@ -25,7 +25,10 @@ import Path = require("path");
 
 const TestExt = "http://shex.io/extensions/Test/";
 
-const WasmPath = Path.join(__dirname, "extension-wasi-test.wasm"); // beside this file in lib/
+// beside this file in lib/ -- computed lazily: the browser bundle
+// externalizes `path` to undefined and hands the bytes in with
+// configure({wasm}) instead of ever asking for a path
+function wasmPath (): string { return Path.join(__dirname, "extension-wasi-test.wasm"); }
 
 // dispatch() status codes — see the ABI comment in lib/extension-wasi-test.wat.
 const Statuses = {
@@ -44,8 +47,13 @@ interface WasiTestOptions {
   /** which WASI host to instantiate: Node's node:wasi, the built-in fd_write
    *  shim, or (default) node:wasi when loadable, the shim otherwise. */
   impl?: "auto" | "wasi" | "shim";
-  /** host file descriptor receiving WASI fd 1 (default 1: process stdout). */
-  stdout?: number;
+  /** host file descriptor receiving WASI fd 1 (default 1: process stdout);
+   *  false: count the bytes and keep them to the extension's own results --
+   *  a browser has no file descriptors */
+  stdout?: number | false;
+  /** the compiled module's bytes, for a host that cannot read WasmPath (a
+   *  browser fetches lib/extension-wasi-test.wasm and hands it here) */
+  wasm?: BufferSource;
 }
 
 /** the exports of lib/extension-wasi-test.wat — see its ABI comment */
@@ -91,7 +99,7 @@ interface WasiTestExtension {
   url: string;
   configure: (overrides: WasiTestOptions) => WasiTestExtension;
   _internals: {
-    WasmPath: string;
+    readonly WasmPath: string;
     Statuses: typeof Statuses;
     makeInstance: typeof makeInstance;
     dispatchWasm: typeof dispatchWasm;
@@ -99,11 +107,17 @@ interface WasiTestExtension {
 }
 
 let compiled: WebAssembly.Module | null = null;
-function getModule (): WebAssembly.Module {
+const compiledFor = new WeakMap<BufferSource, WebAssembly.Module>();  // configure({wasm})'s, one each
+function getModule (opts: WasiTestOptions): WebAssembly.Module {
+  if (opts.wasm !== undefined) {
+    if (!compiledFor.has(opts.wasm))
+      compiledFor.set(opts.wasm, new WebAssembly.Module(opts.wasm));
+    return compiledFor.get(opts.wasm)!;
+  }
   if (compiled === null)
     // (the casts to BufferSource/Uint8Array[] here and in the shim: the tree's
     // @types/node 10 Buffer predates TypeScript's generic typed arrays)
-    compiled = new WebAssembly.Module(Fs.readFileSync(WasmPath) as BufferSource);
+    compiled = new WebAssembly.Module(Fs.readFileSync(wasmPath()) as BufferSource);
   return compiled;
 }
 
@@ -116,18 +130,18 @@ function getModule (): WebAssembly.Module {
 function makeInstance (opts: WasiTestOptions): HostInstance {
   const impl = opts.impl || "auto";
   const stdout = "stdout" in opts ? opts.stdout! : 1;
-  if (impl === "wasi" || impl === "auto") {
+  if ((impl === "wasi" || impl === "auto") && stdout !== false) {
     try {
-      return makeNodeWasiInstance(stdout);
+      return makeNodeWasiInstance(opts, stdout);
     } catch (e) {
       if (impl === "wasi")
         throw e;
     }
   }
-  return makeShimInstance(stdout);
+  return makeShimInstance(opts, stdout);
 }
 
-function makeNodeWasiInstance (stdout: number): HostInstance {
+function makeNodeWasiInstance (opts: WasiTestOptions, stdout: number): HostInstance {
   const {WASI} = require("node:wasi") as {WASI: WasiHostCtor}; // throws where absent or flag-gated
   let wasi: WasiHost;
   try {
@@ -138,19 +152,19 @@ function makeNodeWasiInstance (stdout: number): HostInstance {
   const importObject = typeof wasi.getImportObject === "function"
         ? wasi.getImportObject()
         : {wasi_snapshot_preview1: wasi.wasiImport};
-  const instance = new WebAssembly.Instance(getModule(), importObject);
+  const instance = new WebAssembly.Instance(getModule(opts), importObject);
   wasi.initialize(instance);
   return {exports: instance.exports as unknown as WasiTestExports, impl: "wasi"};
 }
 
-function makeShimInstance (stdout: number): HostInstance {
+function makeShimInstance (opts: WasiTestOptions, stdout: number | false): HostInstance {
   let memory: WebAssembly.Memory | null = null;
   const importObject = {
     wasi_snapshot_preview1: {
       // fd_write(fd, *ciovecs, ciovec_count, *nwritten) -> errno
       fd_write: function (fd: number, iovs: number, iovsLen: number, nwrittenPtr: number): number {
-        const hostFd = fd === 1 ? stdout : fd === 2 ? 2 : -1;
-        if (hostFd === -1)
+        const hostFd = fd === 1 ? stdout as number : fd === 2 ? 2 : -1;
+        if (hostFd === -1 && stdout !== false)
           return 8; // WASI errno badf
         try {
           const view = new DataView(memory!.buffer);
@@ -159,10 +173,14 @@ function makeShimInstance (stdout: number): HostInstance {
           for (let i = 0; i < iovsLen; ++i) {
             const base = view.getUint32(iovs + 8 * i, true);
             const len = view.getUint32(iovs + 8 * i + 4, true);
-            chunks.push(Buffer.from(memory!.buffer, base, len));
+            if (stdout !== false)
+              chunks.push(Buffer.from(memory!.buffer, base, len));
             total += len;
           }
-          const written = Fs.writeSync(hostFd, Buffer.concat(chunks as Uint8Array[], total));
+          // stdout false: nowhere to mirror (a browser); the line still
+          // reaches the results through linePtr/lineLen
+          const written = stdout === false ? total
+                : Fs.writeSync(hostFd, Buffer.concat(chunks as Uint8Array[], total));
           view.setUint32(nwrittenPtr, written, true);
           return 0;
         } catch (e) {
@@ -171,7 +189,7 @@ function makeShimInstance (stdout: number): HostInstance {
       }
     }
   };
-  const instance = new WebAssembly.Instance(getModule(), importObject);
+  const instance = new WebAssembly.Instance(getModule(opts), importObject);
   memory = instance.exports.memory as WebAssembly.Memory;
   (instance.exports._initialize as () => void)();
   return {exports: instance.exports as unknown as WasiTestExports, impl: "shim"};
@@ -298,7 +316,7 @@ url: ${TestExt}`,
     configure: function (overrides: WasiTestOptions): WasiTestExtension {
       return makeModule(Object.assign({}, opts, overrides));
     },
-    _internals: {WasmPath, Statuses, makeInstance, dispatchWasm},
+    _internals: {get WasmPath () { return wasmPath(); }, Statuses, makeInstance, dispatchWasm},
   };
 }
 

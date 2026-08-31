@@ -31,6 +31,12 @@ if (!TEST_browser) {
    {ext: "test", label: "Test", plugin: "ShExTestPlugin.js",
     passes: "Test prints the object", fails: "Test can fail a match",
     inAppinfo: []},
+   {ext: "wasi", label: "Wasi", plugin: "ShExWasiPlugin.js",
+    passes: "WASI prints the object", fails: "WASI can fail a match",
+    inAppinfo: []},
+   {ext: "wasi-test", label: "Test (wasm)", plugin: "ShExWasiTestPlugin.js",
+    passes: "wasm Test prints the object", fails: "wasm Test can fail a match",
+    inAppinfo: []},
   ].forEach(({ext, label, plugin, passes, fails, inAppinfo}) =>
     describe(`shex-simple with the ${label} extension's manifest`, function () {
       this.timeout(20000);

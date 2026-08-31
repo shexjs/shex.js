@@ -123,16 +123,25 @@ link that names a plugin opens on the validator's screen unless it says
   normalized now (lib and plugin), and extension-eval has tests.  The
   stale `@shexjs/util` dependencies (neither extension requires anything)
   are gone.
-- **C7 (deferred) WASI in the WebApp.**  The pieces exist -- wabt has a
-  browser build, the extension's default host is its own shim (node:wasi
-  only behind `impl: "wasi"`) -- but `prelude()` reads prelude.wat with
-  Fs beside `__dirname`, `ready()` must complete before the first
-  validation on both threads, and extension-wasi-test reads its .wasm
-  from disk.  A browser plugin needs: the prelude as a generated module,
-  a webpack bundle (wabt included, ~2 MB), `init(app)` awaiting
-  `ready()`, the worker half awaiting it too, and a `configure({wasm})`
-  for wasi-test's bytes fetched beside the plugin.  Sized M; nothing
-  above blocks it.
+- **C7 (done 2026-08-31) WASI in the WebApp.**  A bundle
+  (`extension-wasi/doc/webpacks/shexwasi-webapp.js`, wabt and both WASI
+  extensions over the core bundle's global; `npm run webpack` builds it
+  beside the others) and two dual-face plugins: `ShExWasiPlugin.js` (WAT
+  semantic actions compiled by wabt in the page) and, in
+  extension-wasi-test/doc, `ShExWasiTestPlugin.js` (the wasm Test module,
+  its bytes fetched from lib/ and handed to `configure({wasm, stdout:
+  false})` -- both options new: a browser has no file descriptors and no
+  `__dirname`).  What it took: the prelude is a generated module
+  (`tools/gen-prelude.js`, so no Fs in `prelude()`), the shim paths speak
+  Uint8Array rather than Buffer, `WasmPath` is computed lazily (the
+  bundle externalizes the node builtins to undefined, and a top-level
+  `Path.join` was the whole bundle failing to evaluate), a plugin `init`
+  may return a promise that rides `applied` (wabt and the wasm fetch
+  finish before a manifest entry validates), and the repo test server
+  read every file as utf8 -- a .wasm served as text is a CompileError.
+  Each extension has a pass/fail manifest, aggregated (41 entries from 7
+  manifests).  Known wrinkle: a worker app's first validation can outrun
+  `ready()`/the wasm fetch and says so plainly; validate again.
 - **C5 (note)** The worker is classic; an ESM worker (`type: "module"`)
   would need a different loader.  Not now.
 
