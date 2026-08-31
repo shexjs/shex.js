@@ -1,6 +1,10 @@
 {
   "name": "@shexjs/neighborhood-api",
   "version": "1.0.0-alpha.28",
+  "files": [
+    "lib",
+    "src"
+  ],
   "description": "API called by @shexjs/validator to get a neighborhood (arcs in and out of a node)",
   "author": {
     "name": "Eric Prud'hommeaux",

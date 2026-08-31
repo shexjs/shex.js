@@ -1,6 +1,15 @@
 {
   "name": "@shexjs/webapp",
   "version": "1.0.0-alpha.29",
+  "files": [
+    "bin",
+    "doc",
+    "examples",
+    "lib",
+    "src",
+    "shex-webapp.js",
+    "shex-webapp.d.ts"
+  ],
   "description": "Shape Expressions command line interface",
   "author": {
     "name": "Eric Prud'hommeaux",

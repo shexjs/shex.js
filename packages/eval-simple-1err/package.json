@@ -1,6 +1,10 @@
 {
   "name": "@shexjs/eval-simple-1err",
   "version": "1.0.0-alpha.29",
+  "files": [
+    "lib",
+    "src"
+  ],
   "description": "Shape Expressions triple expression evaluator - simple regexp returning 1 error.",
   "author": {
     "name": "Eric Prud'hommeaux",

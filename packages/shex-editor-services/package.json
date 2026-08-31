@@ -1,6 +1,10 @@
 {
   "name": "@shexjs/editor-services",
   "version": "1.0.0-alpha.29",
+  "files": [
+    "lib",
+    "src"
+  ],
   "description": "range-aware parsing and validation-error mapping for language-sensitive ShEx editors",
   "author": {
     "name": "Eric Prud'hommeaux",

@@ -1,6 +1,10 @@
 {
   "name": "@shexjs/extension-wasi",
   "version": "1.0.0-alpha.1",
+  "files": [
+    "lib",
+    "src"
+  ],
   "description": "generic WASI semantic-action extension: the action code is a WebAssembly (WAT) WASI command run per invocation",
   "author": "ericP <eric@w3.org> (http://www.w3.org/People/Eric/)",
   "license": "MIT",

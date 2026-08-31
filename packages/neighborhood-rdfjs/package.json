@@ -1,6 +1,10 @@
 {
   "name": "@shexjs/neighborhood-rdfjs",
   "version": "1.0.0-alpha.29",
+  "files": [
+    "lib",
+    "src"
+  ],
   "description": "Implementation of @shexjs/neighborhood-api which gets data from an @rdfjs/dataset",
   "author": {
     "name": "Eric Prud'hommeaux",

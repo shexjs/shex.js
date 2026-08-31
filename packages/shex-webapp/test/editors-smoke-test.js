@@ -2643,6 +2643,67 @@ if (!TEST_browser) {
       }
     });
 
+    /* tripleText says a triple as its document wrote it.  In an entity
+     * page the predicate is a key, the subject is the statement object
+     * under it and the object a value within, so document order and
+     * containment are the truth: "P279" { … "Q186380" }, not the
+     * subject-predicate-object spelling { … } "P279" "Q186380". */
+    it("should say a triple in document order, a contained term inside its container", function () {
+      const range = (doc, s) => ({from: doc.indexOf(s), to: doc.indexOf(s) + s.length});
+      const delims = (doc, open, close) =>
+        [{from: doc.indexOf(open), to: doc.indexOf(open) + 1},
+         {from: doc.lastIndexOf(close), to: doc.lastIndexOf(close) + 1}];
+      const say = (doc, anchors) => {
+        const orig = es.docText;
+        es.docText = () => doc;
+        try { return es.tripleText({anchors}); } finally { es.docText = orig; }
+      };
+      // a wikibase statement: wds:… ps:P279 wd:Q186380
+      const page = '"P279": [ { "mainsnak": { "id": "Q186380" }, "rank": "normal" } ]';
+      expect(say(page, {
+        predicate: range(page, '"P279"'),
+        subject: {from: page.indexOf("{"), to: page.lastIndexOf("}") + 1},
+        subjectParts: delims(page, "{", "}"),
+        object: range(page, '"Q186380"'),
+      })).to.equal('"P279" { … "Q186380" }');
+      // Turtle stays as it was: flat triples in their own order...
+      const flat = ':x :p "not a number" .';
+      expect(say(flat, {
+        subject: range(flat, ":x"),
+        predicate: range(flat, ":p"),
+        object: range(flat, '"not a number"'),
+      })).to.equal(':x :p "not a number"');
+      // ...and a bnode object is still its delimiters
+      const bnode = ":x :p [ :q 1 ] .";
+      expect(say(bnode, {
+        subject: range(bnode, ":x"),
+        predicate: range(bnode, ":p"),
+        object: {from: bnode.indexOf("["), to: bnode.indexOf("]") + 1},
+        objectParts: delims(bnode, "[", "]"),
+      })).to.equal(":x :p [ … ]");
+      // a triple written inside its subject's brackets is said in them
+      expect(say(bnode, {
+        subject: {from: bnode.indexOf("["), to: bnode.indexOf("]") + 1},
+        subjectParts: delims(bnode, "[", "]"),
+        predicate: range(bnode, ":q"),
+        object: range(bnode, "1"),
+      })).to.equal("[ … :q 1 ]");
+      // a triple no document wrote -- a query service's data has no pane --
+      // is spelled from the validation result: prefixed by the data cache,
+      // with the schema's prefixes (xsd: here) filling in what data lacks
+      expect(es.tripleText({triple: {
+        subject: "http://a.example/x",
+        predicate: "http://a.example/p",
+        object: {value: "2", type: "http://www.w3.org/2001/XMLSchema#integer"},
+      }})).to.equal(':x :p "2"^^xsd:integer');
+      expect(es.tripleText({triple: {
+        subject: "http://a.example/x",
+        predicate: "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+        object: {value: "Douglas Adams", language: "en"},
+      }}), "a langString, and rdf:type said as a")
+        .to.equal(':x a "Douglas Adams"@en');
+    });
+
     it("should anchor a validation in a ShExR schema at the triples that describe the constraint", async function () {
       const SHEXR = [
         "PREFIX : <http://a.example/>",

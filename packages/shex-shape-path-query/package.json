@@ -1,6 +1,11 @@
 {
   "name": "@shexjs/shape-path-query",
   "version": "1.0.0-alpha.29",
+  "files": [
+    "bin",
+    "lib",
+    "src"
+  ],
   "description": "ShapePath query interface for ShEx.js",
   "author": {
     "name": "Eric Prud'hommeaux",

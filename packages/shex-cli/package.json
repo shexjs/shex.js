@@ -1,6 +1,12 @@
 {
   "name": "@shexjs/cli",
   "version": "1.0.0-alpha.29",
+  "files": [
+    "bin",
+    "lib",
+    "src",
+    "rest"
+  ],
   "description": "Shape Expressions command line interface",
   "author": {
     "name": "Eric Prud'hommeaux",

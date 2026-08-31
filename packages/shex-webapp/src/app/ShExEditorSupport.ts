@@ -696,24 +696,72 @@ class EditorSupport {
     return said.length ? said.join(" … ") : null;
   }
 
-  /** a pair's triple as written in its document; a nested subject or
-   * object ([ … ]) is shown as its delimiters rather than its contents */
+  /** a pair's triple as written in its document: the terms in document
+   * order, a nested subject or object ([ … ]) as its delimiters rather than
+   * its contents -- and a term written *inside* another's delimiters said
+   * inside them.  A wikibase statement is the shape that needs all of that:
+   * the predicate is a key, the subject the object under it, the object a
+   * value within -- "P279" { … "Q186380" }, the way the page reads.
+   * A triple no showing document wrote -- a query service's data has no
+   * pane -- is spelled from the validation result instead. */
   tripleText (p: any): string | null {
+    return this.anchoredTripleText(p) || this.resultTripleText(p);
+  }
+
+  /** the triple as its document wrote it, or null when no showing
+   * document did */
+  anchoredTripleText (p: any): string | null {
     const anchors = p.anchors;
     if (!anchors || !anchors.subject && !anchors.object)
       return null;
     const text = this.docText(p.doc);
     if (text === null)
       return null;
-    const term = (name: string) => {
+    const items = ["subject", "predicate", "object"].map(name => {
       const parts = anchors[name + "Parts"];
       if (parts && parts.length > 1)
-        return text.slice(parts[0].from, parts[0].to) + " … " + text.slice(parts[1].from, parts[1].to);
+        return {from: parts[0].from, to: parts[1].to, open: parts[0], close: parts[1]};
       const r = anchors[name];
-      return r ? text.slice(r.from, r.to) : null;
+      return r ? {from: r.from, to: r.to, range: r} : null;
+    }).filter(Boolean).sort((a: any, b: any) => a.from - b.from) as any[];
+    const say = (list: any[]): string[] => {
+      const out: string[] = [];
+      for (let i = 0; i < list.length; ++i) {
+        const it = list[i];
+        if (it.open) {
+          const inside: any[] = [];
+          while (i + 1 < list.length && list[i + 1].to <= it.close.from)
+            inside.push(list[++i]);
+          out.push([text.slice(it.open.from, it.open.to), "…"]
+            .concat(say(inside), text.slice(it.close.from, it.close.to)).join(" "));
+        } else
+          out.push(text.slice(it.range.from, it.range.to));
+      }
+      return out;
     };
-    const said = ["subject", "predicate", "object"].map(term).filter(s => s);
+    const said = say(items).filter(s => s);
     return said.length ? said.join(" ") : null;
+  }
+
+  /** the triple as the validation result says it, spelled the way the
+   * app spells nodes everywhere -- the data cache's prefixes and base, so
+   * prefixed or relative -- with the schema's prefixes filling in for a
+   * source that has no document to declare any (a query service's data) */
+  resultTripleText (p: any): string | null {
+    const t = p.triple;
+    if (!t)
+      return null;
+    try {
+      const dataMeta = this.app.Caches.inputData.meta || {};
+      const schemaMeta = this.app.Caches.inputSchema.meta || {};
+      const spell = {base: dataMeta.base || "",
+                     prefixes: Object.assign({}, schemaMeta.prefixes, dataMeta.prefixes)};
+      const say = (term: any, aForType?: boolean) =>
+        ShExWebApp.ShExTerm.shExJsTerm2Turtle(term, spell, aForType);
+      return [say(t.subject), say(t.predicate, true), say(t.object)].join(" ");
+    } catch (e) {
+      return null;                    // no caches to spell with: say nothing
+    }
   }
 
   /** the text of one of the data source's documents: the showing one from
