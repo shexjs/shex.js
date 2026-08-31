@@ -1,6 +1,10 @@
 {
   "name": "@shexjs/eval-threaded-nerr",
   "version": "1.0.0-alpha.29",
+  "files": [
+    "lib",
+    "src"
+  ],
   "description": "Shape Expressions triple expression evaluator - hard-working regexp engine returning multiple errors.",
   "author": {
     "name": "Eric Prud'hommeaux",

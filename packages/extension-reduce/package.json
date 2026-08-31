@@ -1,6 +1,12 @@
 {
   "name": "@shexjs/extension-reduce",
   "version": "1.0.0-alpha.29",
+  "files": [
+    "doc",
+    "examples",
+    "lib",
+    "src"
+  ],
   "description": "ShEx as a parser generator: the schema recognizes an RDF subgraph, the semantic actions reduce it to an AST.",
   "author": {
     "name": "Eric Prud'hommeaux",

@@ -1,6 +1,10 @@
 {
   "name": "@shexjs/eval-validator-api",
   "version": "1.0.0-alpha.29",
+  "files": [
+    "lib",
+    "src"
+  ],
   "description": "Shape Expressions triple expression evaluator api - defines how @shexjs/validator invokes regex evaluators.",
   "author": {
     "name": "Eric Prud'hommeaux",

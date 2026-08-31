@@ -1,6 +1,13 @@
 {
   "name": "@shexjs/extension-map",
   "version": "1.0.0-alpha.29",
+  "files": [
+    "bin",
+    "doc",
+    "examples",
+    "lib",
+    "src"
+  ],
   "description": "Shape Expressions schema-to-schema mapping extension.",
   "author": {
     "name": "Eric Prud'hommeaux",

@@ -1,6 +1,10 @@
 {
   "name": "@shexjs/extension-wasi-test",
   "version": "1.0.0-alpha.29",
+  "files": [
+    "lib",
+    "src"
+  ],
   "description": "Shape Expressions Test semantic action module implemented in WebAssembly, printing via WASI fd_write.",
   "author": {
     "name": "Eric Prud'hommeaux",

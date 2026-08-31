@@ -1,6 +1,10 @@
 {
   "name": "@shexjs/extension-reduce-js",
   "version": "1.0.0-alpha.29",
+  "files": [
+    "lib",
+    "src"
+  ],
   "description": "The JavaScript evaluator for @shexjs/extension-reduce semantic actions.",
   "author": {
     "name": "Eric Prud'hommeaux",
