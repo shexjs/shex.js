@@ -28,7 +28,7 @@ jobs:
       # listed here (e.g. extension-reduce, extension-wasi, editor-services,
       # neighborhood-wikibase, semact-overlay) are not released.
       - run: >-
-          npm publish
+          npm publish --tag latest
           -w @shexjs/cli
           -w @shexjs/eval-simple-1err
           -w @shexjs/eval-threaded-nerr
