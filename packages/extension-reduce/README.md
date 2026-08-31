@@ -1,6 +1,13 @@
 # @shexjs/extension-reduce
 
+[![npm version](https://img.shields.io/npm/v/@shexjs/extension-reduce)](https://www.npmjs.com/package/@shexjs/extension-reduce)
+[![CI](https://github.com/shexjs/shex.js/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/shexjs/shex.js/actions/workflows/ci.yml)
+
 ShEx as a parser generator: the schema recognizes, the actions reduce.
+
+``` shell
+npm install @shexjs/extension-reduce
+```
 
 A ShEx schema recognizes a subgraph the way a grammar recognizes a string, and a
 validation result is the parse tree it recognized it by. This is the other half
@@ -353,3 +360,7 @@ reduced to:
 ```js
 [one('rdf:first')].concat(one('rdf:rest') === nil ? [] : one('rdf:rest'))
 ```
+
+---
+
+`@shexjs/extension-reduce` is one of the [shex.js](https://github.com/shexjs/shex.js#readme) packages; installing [`shex`](https://www.npmjs.com/package/shex) pulls in the whole suite, and [its README](https://github.com/shexjs/shex.js/tree/main/packages/shex#the-shexjs-packages) maps them.

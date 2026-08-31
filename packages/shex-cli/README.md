@@ -1,24 +1,35 @@
-[![NPM Version](https://badge.fury.io/js/@shexjs%2Feval-threaded-nerr.png)](https://npmjs.org/package/shex)
-[![ShapeExpressions Gitter chat https://gitter.im/shapeExpressions/Lobby](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/shapeExpressions/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1213693.svg)](https://doi.org/10.5281/zenodo.1213693)
-
 # @shexjs/cli
 
-Command line tools for ShEx.
+[![npm version](https://img.shields.io/npm/v/@shexjs/cli)](https://www.npmjs.com/package/@shexjs/cli)
+[![CI](https://github.com/shexjs/shex.js/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/shexjs/shex.js/actions/workflows/ci.yml)
 
-##  validation executable
+Command line tools for [ShEx](http://shex.io/): validate RDF data against schemas over HTTP, files or SPARQL, convert between schema formats, and run a validation server.
 
-### Validate over HTTP:
+## Install
+
+``` shell
+npm install @shexjs/cli
+```
+
+installs five executables (`npx` finds them in `node_modules/.bin/`):
+
+* **`shex-validate`** — validate nodes against shapes (plus the server and every option below)
+* **`shex-to-json`** / **`json-to-shex`** — convert ShExC ↔ ShExJ
+* **`shex-partition`** — extract the part of a schema some shapes depend on
+* **`shex-debug`** — step a validation from a REPL
+
+## Validate over HTTP
+
 ```sh
-./node_modules/.bin/shex-validate \
+npx shex-validate \
     -x http://shex.io/examples/IssueSchema \
     -d http://shex.io/examples/Issue1 \
     -s http://shex.io/examples/IssueSchema#IssueShape \
     -n http://shex.io/examples/Issue1#Issue1
 ```
 
-That validates node `http://shex.io/examples/Issue` in `http://shex.io/examples/Issue1.ttl` against shape `http://shex.io/examples/IssueSchema#IssueShape` in `http://shex.io/examples/Issue.shex`.
-The result is a JSON structure which tells you exactly how the data matched the schema.
+That validates node `…Issue1#Issue1` in the data `…Issue1` against shape `…IssueSchema#IssueShape` in the schema `…IssueSchema`.
+The result is a JSON structure which tells you exactly how the data matched the schema:
 
 ```json
 {
@@ -30,9 +41,11 @@ The result is a JSON structure which tells you exactly how the data matched the 
   }
 }
 ```
-The '-x' (shex) indicates a ShEx compact syntax file, which is the preferred type on shex.io; `-j … examples/IssueSchema.json` selects ShExJ and `-t … examples/IssueSchema.ttl` selects ShExR.
 
-Had we gotten a `Failure`, we'd know that the document was invalid with respect to the schema. For instance, tru this again changing `#Issue1` to `#User2` (because that User2 should not conform to IssueShape):
+`-x` names a ShEx compact syntax (ShExC) schema; `-j` selects ShExJ and `-t` ShExR.
+
+A `Failure` tells you the data was invalid with respect to the schema. Try the same command with `-n http://shex.io/examples/Issue1#User2` (a user, so it shouldn't conform to IssueShape):
+
 ``` json
 {
   "type": "Failure",
@@ -63,204 +76,199 @@ Had we gotten a `Failure`, we'd know that the document was invalid with respect 
         "datatype": "http://www.w3.org/2001/XMLSchema#dateTime"
       }
     }
+  ],
+  "repairs": [
+    …
   ]
 }
 ```
 
-See the [ShExJ primer](http://shex.io/primer/) for a description of ShEx validation and the [ShExJ specification](http://shex.io/primer/ShExJ) for more details about the results format.
+`errors` says what failed; `repairs` says the cheapest edits that would have made it pass. See the [ShEx primer](http://shex.io/primer/) for validation semantics.
 
-### Validate local files:
-Command line arguments which don't match "^(blob:)?[a-z]+://." (and don't start with 'file:') are assumed to be file paths.
+## Validate local files
+
+Command line arguments which don't look like URLs are file paths:
+
 ```sh
-./node_modules/.bin/shex-validate \
-    -x ./node_modules/shex-examples/IssueSchema.shex \
-    -d ./node_modules/shex-examples/Issue1.ttl \
-    -s '#IssueShape' \
-    -n '#Issue1'
+curl -s -O http://shex.io/examples/IssueSchema -O http://shex.io/examples/Issue1.ttl
+npx shex-validate -x IssueSchema -d Issue1.ttl -s '#IssueShape' -n '#Issue1'
 ```
-Note that the -s (--shape) and the -n (--node) are relative to the schema and data locations respectively.
-This means you don't have to try to construct the entire file: URL.
 
-In the output, we'll see that the response has file: URLs in it:
+`-s` (`--shape`) and `-n` (`--node`) are resolved against the schema and data locations respectively, so you don't have to construct the entire `file:` URL; the output has `file:` URLs in it:
+
 ``` json
 {
   "type": "ShapeTest",
-  "node": "file:///…/examples/Issue1.ttl#Issue1",
-  "shape": "file:///…/examples/IssueSchema.shex#IssueShape",
+  "node": "file:///…/Issue1.ttl#Issue1",
+  "shape": "file:///…/IssueSchema#IssueShape",
   "solution": {
     …
   }
 }
 ```
 
-Of course the schema can use http: and the data file: or visa-versa.
+Of course the schema can use `http:` and the data `file:`, or vice-versa. Data may also come from a SPARQL endpoint (`--endpoint`) or a Wikibase's entity pages (`--wikibase`) — each [neighborhood module](../neighborhood-api#readme) declares options `shex-validate` surfaces; see [`@shexjs/neighborhood-sparql`](../neighborhood-sparql#readme) and [`@shexjs/neighborhood-wikibase`](../neighborhood-wikibase#readme).
 
-Happy validating!
-
-
-
-### Validation server:
+## Validation server
 
 The `-S` switch specifies a URL at which to run a validation server:
+
 ```sh
-./node_modules/.bin/shex-validate \
+npx shex-validate \
     -S http://localhost:1234/validate \
-    -x ./node_modules/shex-examples/IssueSchema.shex \
-    -d ./node_modules/shex-examples/Issue1.ttl \
+    -x IssueSchema \
+    -d Issue1.ttl \
     -s '#IssueShape' \
     -n '#Issue1'
 ```
-The output of this command will direct you to
-  `http://localhost:1234/validate`.
-Because you supplied all necessary parameters in the invocation, by default, this server will validate `#Issue1` in `Issue1.ttl` against `#IssueShape` in `IssueSchema.shex`. If you play override the node
+
+Because you supplied all necessary parameters in the invocation, by default this server validates `#Issue1` in `Issue1.ttl` against `#IssueShape` in `IssueSchema`. Override any parameter in the query string —
   `http://localhost:1234/validate?node=%23Issue2`
-(note that with curl, you must encode the '#' as "%23"), you will see an error because that node has no arcs out in that graph.
+(note that the `#` must be encoded as `%23`) — and you'll see an error, because that node has no arcs out in that graph.
 
-#### POSTing with curl
+### POSTing with curl
 
-`curl` offers a convenient way to construct POST requests. Supposed you wanted a validation server with no default schema or data:
+`curl` offers a convenient way to construct POST requests. Suppose you wanted a validation server with no default schema or data:
+
 ```sh
-./node_modules/.bin/shex-validate -S http://localhost:1234/validate
+npx shex-validate -S http://localhost:1234/validate
 ```
-You could submit all the parameters as body parameters in a POST:
+
+You could submit all the parameters as body parameters in a POST (a leading `@` in a `-F` value reads from the named file):
+
 ```
 curl -i http://localhost:1234/validate \
-  -F "schema=@./node_modules/shex-examples/IssueSchema.shex" \
+  -F "schema=@IssueSchema" \
   -F "shape=#IssueShape" \
-  -F "data=@./node_modules/shex-examples/Issue1.ttl" \
+  -F "data=@Issue1.ttl" \
   -F "node=#Issue1"
 ```
-(prefixing a curl -F value with an '@' reads from the following filename)
 
-you can mix and match between URL search string and body parameters:
+and you can mix and match between URL search string and body parameters:
+
 ```
 curl -i http://localhost:1234/validate?node=%23Issue1 \
-  -F "schema=@./node_modules/shex-examples/IssueSchema.shex" \
+  -F "schema=@IssueSchema" \
   -F "shape=#IssueShape" \
-  -F "data=@./node_modules/shex-examples/Issue1.ttl"
+  -F "data=@Issue1.ttl"
 ```
-(Don't forget to escape the '#' as "%23".)
 
-### Loading extensions:
+(Don't forget to escape the `#` as `%23`.)
 
-The `--extension` switch loads ShEx [semantic action extensions](http://shex.io/extensions/) into the validator.
-It takes one or more file globs identifying extension modules, e.g. entries in `node_modules`:
+## Loading extensions
+
+The `--extension` switch loads ShEx [semantic action extensions](http://shex.io/extensions/) into the validator. It takes a package name or a file glob:
+
 ```sh
-./node_modules/.bin/shex-validate \
+npx shex-validate \
     -x bpfhir.shex -d bpfhir.ttl -n tag:BPfhir123 \
-    --extension node_modules/@shexjs/extension-map/shex-extension-map.js
+    --extension @shexjs/extension-map
 ```
-Each matched module is loaded and registered with the validator; the extension's results are included in the validation output.
-For example, loading [`@shexjs/extension-map`](../extension-map#readme) as above adorns the results with an `http://shex.io/extensions/Map/` entry which can be piped to the [materialize](#materialize) tool:
+
+Each module is loaded and registered with the validator, and its results are included in the validation output. For example, loading [`@shexjs/extension-map`](../extension-map#readme) as above adorns the results with an `http://shex.io/extensions/Map/` entry, which can be piped to [materialize](#materialize):
+
 ```sh
-./node_modules/.bin/shex-validate \
+npx shex-validate \
     -x bpfhir.shex -d bpfhir.ttl -n tag:BPfhir123 \
-    --extension node_modules/@shexjs/extension-map/shex-extension-map.js \
-  | ./node_modules/.bin/shexmap-materialize -t bpdam.shex
+    --extension @shexjs/extension-map \
+  | npx shexmap-materialize -t bpdam.shex
 ```
-Extensions needn't be implemented in Javascript:
-[`@shexjs/extension-wasi-test`](../extension-wasi-test#readme) implements the
-[Test extension](http://shex.io/extensions/Test/) in hand-written WebAssembly,
-printing through WASI's `fd_write`:
+
+Extensions needn't be implemented in Javascript: [`@shexjs/extension-wasi-test`](../extension-wasi-test#readme) implements the [Test extension](http://shex.io/extensions/Test/) in hand-written WebAssembly, printing through WASI's `fd_write`:
+
 ```sh
-    --extension node_modules/@shexjs/extension-wasi-test/lib/shex-extension-wasi-test.js
+    --extension @shexjs/extension-wasi-test
 ```
 
-## conversion
+The matching engine is also pluggable: `--regex-module @shexjs/eval-simple-1err` trades [the default](../eval-threaded-nerr#readme)'s exhaustive error enumeration for speed.
 
-As with validation (above), you can convert by either executable or library.
+## Conversion
 
-###  conversion executable
+ShEx can be represented in the compact syntax:
 
-ShEx can be represented in the compact syntax
 ```
-PREFIX ex: <http://ex.example/#>
-<IssueShape> {                       # An <IssueShape> has:
-    ex:state (ex:unassigned            # state which is
-              ex:assigned),            #   unassigned or assigned.
-    ex:reportedBy @<UserShape>        # reported by a <UserShape>.
+PREFIX ex: <http://ex.example/ns#>
+<#IssueShape> {                      # An <#IssueShape> has:
+    ex:state [ex:unassigned           # state which is
+              ex:assigned],           #   unassigned or assigned.
+    ex:reportedBy @<#UserShape>       # reported by a <#UserShape>.
 }
 ```
-or in JSON:
-```json
-{ "type": "schema", "start": "http://shex.io/examples/IssueSchema#IssueShape",
-  "shapes": {
-    "http://shex.io/examples/IssueSchema#IssueShape": { "type": "shape",
-      "expression": { "type": "eachOf",
-        "expressions": [
-          { "type": "tripleConstraint", "predicate": "http://ex.example/#state",
-            "valueExpr": { "type": "valueClass", "values": [
-                "http://ex.example/#unassigned", "http://ex.example/#assigned"
-          ] } },
-          { "type": "tripleConstraint", "predicate": "http://ex.example/#reportedBy",
-            "valueExpr": { "type": "valueClass", "reference": "http://shex.io/examples/UserShape" }
-          }
-] } } } }
-```
 
-You can convert between them with shex-to-json:
-```sh
-./node_modules/shex/bin/shex-to-json http://shex.io/examples/Issue.shex
-```
-and, less elegantly, back with json-to-shex.
+or in JSON (ShExJ):
 
-## materialize
-
-Materialize is used to transform from a source schema to a target schema after validation is done.
-
-The syntax is:
-```sh
-materialize `-t <target schema>`|-h [-j `<JSON Vars File>`] [-r `<RDF root IRI>`]
-```
-Materialize reads the output from the validate tool from STDIN and maps it to the specified target schema.
-
-If supplied, a JSON vars file will be referenced to fill in constant values not specified from the source.
-This is useful in assigning default fields to the target when there is no equivalent value in the source schema
-and source data.
-
-Here is an example of a simple JSON vars file:
 ```json
 {
-  "urn:local:Demographics:constSys": "System",
+  "type": "Schema",
+  "shapes": [
+    {
+      "id": "http://shex.io/examples/IssueSchema#IssueShape",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://ex.example/ns#state",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://ex.example/ns#unassigned",
+                  "http://ex.example/ns#assigned"
+                ]
+              }
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://ex.example/ns#reportedBy",
+              "valueExpr": "http://shex.io/examples/IssueSchema#UserShape"
+            }
+          ]
+        }
+      }
+    }
+  ]
 }
 ```
-If this vars file content is used, then any time a variable in the target file with
-value "urn:local:Demographics:constSys" is seen, the value "System will be substituted.
 
-The RDF root IRI specifies the root node from which all nodes in the schema will descend.
-The default root if none is specified is: ` tag:eric@w3.org/2016/root `
+Convert with `shex-to-json`:
 
-Here are some examples:
 ```sh
-materialize -h
-```
-```sh
-validate -x source_schema.shex -l data.jsonld -s ProblemShape | materialize -t target_schema.shex -j vars.json
-```
-```sh
-cat problem.val | materialize -t target_schema.shex -j vars.json -r http://hl7.org/fhir/shape/problem
+npx shex-to-json http://shex.io/examples/IssueSchema > IssueSchema.json
 ```
 
-# Lerna Monorepo
+and back with `json-to-shex`.
 
-This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM packages. These packages are located in `packages/*`:
+## Materialize
 
-- [`shape-map`](../shape-map#readme) -- a [ShapeMap](https://shexspec.github.io/shape-map/) parser
-- [`@shexjs/parser`](../shex-parser#readme) -- parse ShExC into ShExJ
-- [`@shexjs/writer`](../shex-writer#readme) -- serialize ShExK as ShExC
-- [`@shexjs/term`](../shex-term#readme) -- RDF terms uses in ShEx
-- [`@shexjs/util`](../shex-util#readme) -- some utilities for transforming schemas or validation output
-- [`@shexjs/visitor`](../shex-visitor#readme) -- a [visitor](https://en.wikipedia.org/wiki/Visitor_pattern) for schemas
-- [`@shexjs/validator`](../shex-validator#readme) -- validate nodes in an RDF graph against shapes in a schema
-- [`@shexjs/eval-validator-api`](../eval-validator-api#readme) -- API called by [`@shexjs/validator`](../shex-validator#readme) for validating Shapes, with tripleExpressions and EXTENDS etc.
-- [`@shexjs/eval-simple-1err`](../eval-simple-1err#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which reports only one error.
-- [`@shexjs/eval-threaded-nerr`](../eval-threaded-nerr#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which exhaustively enumerate combinations of ways the data fails to satisfy a shape's expression.
-- [`@shexjs/loader`](../shex-loader#readme) -- an API for loading and using ShEx schemas
-- [`@shexjs/node`](../shex-node#readme) -- additional API functionality for a node environment
-- [`@shexjs/cli`](../shex-cli#readme) -- a set of command line tools for transformaing and validating with schemas
-- [`@shexjs/webapp`](../shex-webapp#readme) -- the shex-simple WEBApp
-- [`@shexjs/shape-path-query`](../shex-shape-path-query#readme) -- traverse ShEx schemas with a path language
-- [`@shexjs/extension-test`](../extension-test#readme) -- a small language for testing semantic actions in ShEx implementations ([more](http://shex.io/extensions/Test/))
-- [`@shexjs/extension-map`](../extension-map#readme) -- an extension for transforming data from one schema to another ([more](http://shex.io/extensions/Map/))
-- [`@shexjs/extension-eval`](../extension-eval#readme) -- simple extension which evaluates Javascript semantic action code ([more](http://shex.io/extensions/Eval/))
+`shexmap-materialize` (an executable of [`@shexjs/extension-map`](../extension-map#readme)) transforms data from a source schema to a target schema after validation:
 
+```sh
+npx shexmap-materialize -t <target schema> | -h  [-j <JSON Vars File>] [-r <RDF root IRI>]
+```
+
+It reads the output of `shex-validate --extension @shexjs/extension-map` from STDIN and maps the captured bindings to the target schema.
+
+If supplied, a JSON vars file fills in constant values not bound from the source data — useful for assigning default fields the source schema has no equivalent for:
+
+```json
+{
+  "urn:local:Demographics:constSys": "System"
+}
+```
+
+Any variable in the target schema bound to `urn:local:Demographics:constSys` then materializes as `"System"`.
+
+The RDF root IRI (`-r`) names the node from which the materialized graph descends (default `tag:eric@w3.org/2016/root`).
+
+```sh
+npx shex-validate -x source_schema.shex -d data.ttl -s ProblemShape -n prob1 \
+    --extension @shexjs/extension-map \
+  | npx shexmap-materialize -t target_schema.shex -j vars.json
+```
+
+---
+
+`@shexjs/cli` is one of the [shex.js](https://github.com/shexjs/shex.js#readme) packages; installing [`shex`](https://www.npmjs.com/package/shex) pulls in the whole suite, and [its README](https://github.com/shexjs/shex.js/tree/main/packages/shex#the-shexjs-packages) maps them.

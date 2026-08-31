@@ -1,5 +1,8 @@
 # @shexjs/extension-wasi-test
 
+[![npm version](https://img.shields.io/npm/v/@shexjs/extension-wasi-test)](https://www.npmjs.com/package/@shexjs/extension-wasi-test)
+[![CI](https://github.com/shexjs/shex.js/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/shexjs/shex.js/actions/workflows/ci.yml)
+
 The ShEx [Test semantic-action extension](http://shex.io/extensions/Test/)
 reimplemented in hand-written WebAssembly.
 A drop-in alternative to
@@ -14,6 +17,10 @@ Wasm runtimes.  `fd_write`, the one import this module uses, is the
 `writev(2)`-shaped call that [wasi-libc](https://github.com/WebAssembly/wasi-libc)'s
 `printf` bottoms out in.
 
+``` shell
+npm install @shexjs/extension-wasi-test
+```
+
 Being WASI-portable is the point: the same `.wasm` binary could execute a
 schema's Test semantic actions under any conforming host — another ShEx
 implementation, wasmtime, a browser WASI polyfill — not just this JavaScript
@@ -22,12 +29,12 @@ one.
 ## usage
 
 Anywhere `@shexjs/extension-test` works. With the
-[CLI](../shex-cli#readme)'s `--extension` file glob:
+[CLI](../shex-cli#readme)'s `--extension`:
 
 ```sh
-./node_modules/.bin/shex-validate \
+npx shex-validate \
     -x doc.shex -d doc.ttl -n tag:node123 \
-    --extension node_modules/@shexjs/extension-wasi-test/lib/shex-extension-wasi-test.js
+    --extension @shexjs/extension-wasi-test
 ```
 
 or via the API:
@@ -122,3 +129,7 @@ npm install && npm run build
   throws a descriptive invocation error rather than a `TypeError`), but every
   code that throws there throws here and vice versa — see the parity suite in
   [`test/extension-wasi-test-test.js`](test/extension-wasi-test-test.js).
+
+---
+
+`@shexjs/extension-wasi-test` is one of the [shex.js](https://github.com/shexjs/shex.js#readme) packages; installing [`shex`](https://www.npmjs.com/package/shex) pulls in the whole suite, and [its README](https://github.com/shexjs/shex.js/tree/main/packages/shex#the-shexjs-packages) maps them.

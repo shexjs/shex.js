@@ -1,6 +1,13 @@
 # @shexjs/extension-reduce-js
 
+[![npm version](https://img.shields.io/npm/v/@shexjs/extension-reduce-js)](https://www.npmjs.com/package/@shexjs/extension-reduce-js)
+[![CI](https://github.com/shexjs/shex.js/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/shexjs/shex.js/actions/workflows/ci.yml)
+
 The JavaScript evaluator for [`@shexjs/extension-reduce`](../extension-reduce).
+
+``` shell
+npm install @shexjs/extension-reduce-js
+```
 
 `extension-reduce` folds one action per production over a validation result and
 hands each action a scope of plain data — which production reduced, and what its
@@ -96,3 +103,7 @@ variant can reuse the accessors and bring a different way of running the code.
 
 Running code that arrived with a document is a decision the caller makes by
 passing this evaluator at all — another one can run something safer.
+
+---
+
+`@shexjs/extension-reduce-js` is one of the [shex.js](https://github.com/shexjs/shex.js#readme) packages; installing [`shex`](https://www.npmjs.com/package/shex) pulls in the whole suite, and [its README](https://github.com/shexjs/shex.js/tree/main/packages/shex#the-shexjs-packages) maps them.

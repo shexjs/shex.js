@@ -1,6 +1,13 @@
 # @shexjs/semact-overlay
 
+[![npm version](https://img.shields.io/npm/v/@shexjs/semact-overlay)](https://www.npmjs.com/package/@shexjs/semact-overlay)
+[![CI](https://github.com/shexjs/shex.js/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/shexjs/shex.js/actions/workflows/ci.yml)
+
 Semantic actions, kept out of the schema.
+
+``` shell
+npm install @shexjs/semact-overlay
+```
 
 A ShExC schema with `%<ext>{ code %}` sprinkled through it is a schema only one
 program can read comfortably: everyone else has to step over somebody else's
@@ -133,3 +140,7 @@ name an overlay can use, so its actions stay where they are and it is listed in
 
 - [`@shexjs/extension-reduce`](../extension-reduce) — the extension these
   examples are written for: ShEx as a parser generator.
+
+---
+
+`@shexjs/semact-overlay` is one of the [shex.js](https://github.com/shexjs/shex.js#readme) packages; installing [`shex`](https://www.npmjs.com/package/shex) pulls in the whole suite, and [its README](https://github.com/shexjs/shex.js/tree/main/packages/shex#the-shexjs-packages) maps them.

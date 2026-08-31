@@ -1,5 +1,8 @@
 # @shexjs/extension-map
 
+[![npm version](https://img.shields.io/npm/v/@shexjs/extension-map)](https://www.npmjs.com/package/@shexjs/extension-map)
+[![CI](https://github.com/shexjs/shex.js/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/shexjs/shex.js/actions/workflows/ci.yml)
+
 ShExMap: a semantic-action extension that binds values as a node validates
 (`%Map:{ :name %}` on a triple constraint captures what the triple's object
 was) and materializes a graph of another schema from those bindings.  The
@@ -24,3 +27,7 @@ The library (`require("@shexjs/extension-map")`) is a factory taking the
 ShEx modules it works with and answering the extension -- `register(validator, ShEx)`,
 the `ThreadedMaterializer` and its debugger; see the repository for the
 ShExMap specification and `examples/` for worked pairs.
+
+---
+
+`@shexjs/extension-map` is one of the [shex.js](https://github.com/shexjs/shex.js#readme) packages; installing [`shex`](https://www.npmjs.com/package/shex) pulls in the whole suite, and [its README](https://github.com/shexjs/shex.js/tree/main/packages/shex#the-shexjs-packages) maps them.

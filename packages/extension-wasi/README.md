@@ -1,5 +1,8 @@
 # @shexjs/extension-wasi
 
+[![npm version](https://img.shields.io/npm/v/@shexjs/extension-wasi)](https://www.npmjs.com/package/@shexjs/extension-wasi)
+[![CI](https://github.com/shexjs/shex.js/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/shexjs/shex.js/actions/workflows/ci.yml)
+
 The generic WASI semantic-action extension,
 `http://shex.io/extensions/WASI/`.
 
@@ -9,6 +12,10 @@ program** in [WebAssembly Text](https://webassembly.github.io/spec/core/text/ind
 run as a [WASI](https://wasi.dev/) command.  Each invocation compiles the
 module (cached per code text, via [wabt](https://github.com/WebAssembly/wabt))
 and runs it under `wasi_snapshot_preview1`.
+
+``` shell
+npm install @shexjs/extension-wasi
+```
 
 The code takes one of two forms:
 
@@ -159,3 +166,7 @@ Two shexTest observations the suite works around:
 - `schemas/1dotAbstractShapeCode1.shex`, `schemas/open1dotcloseCode1.shex`
   and `schemas/openopen1dotcloseCode1closeCode3.shex` contain Test semacts
   but no validation test exercises them.
+
+---
+
+`@shexjs/extension-wasi` is one of the [shex.js](https://github.com/shexjs/shex.js#readme) packages; installing [`shex`](https://www.npmjs.com/package/shex) pulls in the whole suite, and [its README](https://github.com/shexjs/shex.js/tree/main/packages/shex#the-shexjs-packages) maps them.
