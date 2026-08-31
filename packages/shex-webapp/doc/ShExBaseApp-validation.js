@@ -57,6 +57,8 @@ mixin(ShExBaseApp, {
                     const errors = await this.Caches.shapeMap.copyEditMapToQueryMap(); // will update if #editMap is dirty
                     if (errors.length === 0)
                         resolve(await this.callValidator());
+                    else
+                        resolve({ shapeMapErrors: errors }); // settled either way: a waiter must not hang on a bad map
                 }
                 finally {
                     this.endValidation(new Date().getTime() - began);

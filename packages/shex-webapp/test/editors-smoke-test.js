@@ -919,6 +919,41 @@ if (!TEST_browser) {
         }
       });
 
+      /* ...and the validate path is covered too.  A slurp's data lands in
+       * the local store and its re-parse marks the edit map dirty, so the
+       * next validate rebuilt the fixed map -- re-asking the SPARQL
+       * question of a store that cannot answer it, and the refusal escaped
+       * as an unhandled rejection.  With rows standing, the refusal keeps
+       * them: the fixed map is what to validate. */
+      it("should validate with the standing fixed map when the source cannot re-answer", async function () {
+        const sparql = dom.window.ShExWebApp.NeighborhoodModules
+              .find(m => m.name === "neighborhood-sparql");
+        const resolver = sparql.queryMapResolvers[0];
+        const wasResolve = resolver.resolve;
+        resolver.resolve = () => [dom.window.N3js.DataFactory.namedNode("http://www.wikidata.org/entity/Q12078")];
+        try {
+          const schemas = $("#inputSchema .manifest li");
+          schemas.filter((i, li) => $(li).text() !== "wikidata query").first().trigger("click");
+          await shared.promise;
+          schemas.filter((i, li) => $(li).text() === "wikidata query").first().trigger("click");
+          await shared.promise;
+          $("#inputData .passes li").first().trigger("click");
+          await shared.promise;
+          expect($("#fixedMap tr.pair").length, "resolved into a fixed map").to.equal(1);
+
+          source().select("rdfjs");                    // as a slurp leaves the picker
+          shared.Caches.shapeMap.markEditMapDirty();   // as the slurped data's re-parse does
+          $("#validate").trigger("click");
+          await shared.promise;
+
+          expect($("#fixedMap tr.pair").length, "the rows stand").to.equal(1);
+          expect($("#results").text()).to.not.include("not supported by the neighborhood");
+          expect($("#fixedMap .pair a").first().text(), "and were validated").to.match(/[\u2713\u2717]/);
+        } finally {
+          resolver.resolve = wasResolve;
+        }
+      });
+
       /* What made these entries slow was a source rebuilt -- and
        * re-fetched, and re-translated -- for every dirty bit, and an engine
        * that took twenty seconds over one entity's worth of labels.  This

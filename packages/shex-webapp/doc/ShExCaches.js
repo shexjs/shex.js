@@ -219,9 +219,12 @@ class TurtleCache extends InterfaceCache {
         const { queryMapResolverFor, extensionName, moduleId } = ShExWebApp.NeighborhoodApi;
         const module = this.neighborhoods.module;
         const resolver = queryMapResolverFor(module, language);
-        if (!resolver)
-            throw Error("the QueryMap extension " + extensionName(language) +
+        if (!resolver) {
+            const e = Error("the QueryMap extension " + extensionName(language) +
                 " is not supported by the neighborhood " + moduleId(module));
+            e.unsupportedExtension = true; // resolveFixedMap keeps a standing map on this
+            throw e;
+        }
         // await: a resolver over an endpoint answers with a promise
         return await resolver.resolve(lexical, await this.refresh());
     }
