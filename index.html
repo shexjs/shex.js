@@ -27,6 +27,7 @@
       .app.shexmap { background-color: #f4fff4; border-color: #f0a133; }
       .app.shexreduce { background-color: #fff4f4; border-color: #fc561c; }
       .app.yours { background-color: #fffff4; border-color: #56fc1c; }
+      .app.semacts { background-color: #f8f4ff; border-color: #8a56fc; }
       .app h2 { font-size: 1.1em; margin: 0 0 .3em; }
       .app p { margin: .3em 0 .8em; font-size: .9em; color: #444; }
       .app ul { list-style: none; margin: 0; padding: 0; }
@@ -67,7 +68,7 @@
     <div class="local-dev">
       <p><strong>Browsing a clone?</strong> The app pages need the webpack
         bundles in (e.g. the <a href="packages/shex-webapp/doc/webpacks/shex-webapp.js">shex-webapp</a>, <a href="packages/extension-map/doc/webpacks/shexmap-webapp.js">shexmap</a>
-        and <a href="packages/extension-reduce/doc/webpacks/shexreduce-webapp.js">shexreduce</a> bundles), which aren't checked
+        and <a href="packages/extension-reduce/doc/webpacks/shexreduce-webapp.js">shexreduce</a> bundles, and the <a href="packages/extension-wasi/doc/webpacks/shexwasi-webapp.js">WASI</a> one), which aren't checked
         in on <code>main</code>. Build them with
         <code>npm ci &amp;&amp; npm run webpacks-all</code>, or fetch the
         last-published ones with <code>npm run webpacks-fetch</code>
@@ -103,6 +104,19 @@
           manifest's calculator entries show both.</p>
         <ul>
           <li><a href="packages/shex-webapp/doc/shex-simple.html?plugin=..%2F..%2Fextension-reduce%2Fdoc%2FShExReducePlugin.js&amp;manifestURL=..%2F..%2Fextension-reduce%2Fexamples%2Fmanifest.yaml">shex-simple + ShExReduce</a> <span class="variant">— with the calc examples</span></li>
+        </ul>
+      </div>
+      <div class="app semacts">
+        <h2>Semantic-action extensions</h2>
+        <p>Each link opens the validator on one extension's demo manifest;
+          every entry names the plugin it needs, so picking it installs the
+          handler.  Pass and fail examples each, appinfo shows what an
+          action recorded.</p>
+        <ul>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-eval%2Fexamples%2Fmanifest.yaml">Eval</a> <span class="variant">— JavaScript in a semantic action</span></li>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-test%2Fexamples%2Fmanifest.yaml">Test</a> <span class="variant">— print(o) / fail(…), the suite's probe</span></li>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-wasi%2Fexamples%2Fmanifest.yaml">WASI</a> <span class="variant">— WAT compiled in the page, prelude to standalone module</span></li>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-wasi-test%2Fexamples%2Fmanifest.yaml">Test in wasm</a> <span class="variant">— the probe, as hand-written WebAssembly</span></li>
         </ul>
       </div>
       <div class="app yours">
