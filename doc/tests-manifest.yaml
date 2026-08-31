@@ -766,3 +766,80 @@
   status: conformant
   plugins:
   - ../packages/extension-reduce/doc/ShExReducePlugin.js
+
+# --- packages/extension-eval/examples/manifest.yaml
+# the Eval extension: JavaScript semantic actions
+# The Eval extension (http://shex.io/extensions/Eval/): JavaScript in a
+# schema's semantic actions.  Each entry names the plugin it needs, so
+# opening this manifest in a plain app page installs the handler.
+- schemaLabel: Eval notes the match
+  schema: |
+    PREFIX : <http://a.example/>
+    PREFIX Eval: <http://shex.io/extensions/Eval/>
+    start = @<S>
+    <S> { :p . %Eval:{ extensionStorage.object = this.triples[0].object.value; return true; %} }
+  dataLabel: one triple
+  data: |
+    PREFIX : <http://a.example/>
+    :x :p "noted" .
+  queryMap: |
+    <http://a.example/x>@START
+  status: conformant
+  comment: The action writes what matched into the result's `extensions` -- switch the interface to appinfo to read it.
+  plugins:
+  - ../packages/extension-eval/doc/ShExEvalPlugin.js
+- schemaLabel: Eval refuses a value
+  schema: |
+    PREFIX : <http://a.example/>
+    PREFIX Eval: <http://shex.io/extensions/Eval/>
+    start = @<S>
+    <S> { :p . %Eval:{ return this.triples[0].object.value !== "999"; %} }
+  dataLabel: the refused value
+  data: |
+    PREFIX : <http://a.example/>
+    :x :p "999" .
+  queryMap: |
+    <http://a.example/x>@START
+  status: nonconformant
+  comment: An action that answers false fails the constraint it is written on.
+  plugins:
+  - ../packages/extension-eval/doc/ShExEvalPlugin.js
+
+# --- packages/extension-test/examples/manifest.yaml
+# the Test extension: the suite's semantic-action probe
+# The Test extension (http://shex.io/extensions/Test/), the suite's probe:
+# print(...) records a line on the validator, fail(...) records it and
+# fails the constraint it is written on.  Each entry names the plugin it
+# needs, so opening this manifest in a plain app page installs the handler.
+- schemaLabel: Test prints the object
+  schema: |
+    PREFIX : <http://a.example/>
+    PREFIX Test: <http://shex.io/extensions/Test/>
+    start = @<S>
+    <S> { :p . %Test:{ print(o) %} }
+  dataLabel: one triple
+  data: |
+    PREFIX : <http://a.example/>
+    :x :p "printed" .
+  queryMap: |
+    <http://a.example/x>@START
+  status: conformant
+  comment: print(o) records the matched object; the CLI shows the lines as semActResults.
+  plugins:
+  - ../packages/extension-test/doc/ShExTestPlugin.js
+- schemaLabel: Test can fail a match
+  schema: |
+    PREFIX : <http://a.example/>
+    PREFIX Test: <http://shex.io/extensions/Test/>
+    start = @<S>
+    <S> { :p . %Test:{ fail("unwelcome ", o) %} }
+  dataLabel: the failed value
+  data: |
+    PREFIX : <http://a.example/>
+    :x :p "999" .
+  queryMap: |
+    <http://a.example/x>@START
+  status: nonconformant
+  comment: fail(...) is a SemActFailure on the constraint, so the pair goes red.
+  plugins:
+  - ../packages/extension-test/doc/ShExTestPlugin.js

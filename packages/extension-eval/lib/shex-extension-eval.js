@@ -16,7 +16,15 @@ function register(validator, api) {
         dispatch: function (code, ctx, extensionStorage) {
             // return eval(code) // to enable implicit return
             // '"use strict";' + code to disable writing implicit globals
-            return Function('api', 'extensionStorage', code).call(ctx, api, extensionStorage);
+            const ret = Function('api', 'extensionStorage', code).call(ctx, api, extensionStorage);
+            // The contract above offers a bool; the validator takes only a list
+            // (an empty one is success), so say it that way -- `return true`
+            // was "unsupported response" for as long as nothing tested this.
+            if (ret === true || ret === undefined)
+                return [];
+            if (ret === false)
+                return [{ type: "SemActFailure", errors: ["semantic action " + EvalExt + " returned false: " + code.trim()] }];
+            return ret;
         }
     });
 }

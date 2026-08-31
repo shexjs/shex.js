@@ -37,6 +37,10 @@ const SOURCES = [
    what: "ShExMap: each entry loads the plugin it needs"},
   {file: "packages/extension-reduce/examples/manifest.yaml",
    what: "ShExReduce: the same, for the calculator"},
+  {file: "packages/extension-eval/examples/manifest.yaml",
+   what: "the Eval extension: JavaScript semantic actions"},
+  {file: "packages/extension-test/examples/manifest.yaml",
+   what: "the Test extension: the suite's semantic-action probe"},
 ];
 
 /** the keys whose value is a document reference: what the runner and the

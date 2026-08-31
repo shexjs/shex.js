@@ -109,6 +109,30 @@ link that names a plugin opens on the validator's screen unless it says
   `doc/plugin-skeleton/` carries the README and package.json it needs
   (2026-08-28); the repository is yours to create, and its `repository`
   field to fill in.
+- **C6 (done 2026-08-31) Eval and Test in the WebApp.**  Each has a
+  plugin (`extension-eval/doc/ShExEvalPlugin.js`,
+  `extension-test/doc/ShExTestPlugin.js`) -- one classic-script file with
+  both faces: on the page it registers a descriptor whose `register`
+  installs the handler, and, named as its own `worker`, the same file
+  registers the same handler where a worker app's matcher is -- and an
+  `examples/manifest.yaml` (pass and fail each), aggregated into
+  doc/tests-manifest.yaml.  Loading either lib file directly as
+  `?plugin=` still works (handler-only, no worker half).  Found on the
+  way: the Eval extension's documented bool return was "unsupported
+  response" against today's validator, untested since ever -- a bool is
+  normalized now (lib and plugin), and extension-eval has tests.  The
+  stale `@shexjs/util` dependencies (neither extension requires anything)
+  are gone.
+- **C7 (deferred) WASI in the WebApp.**  The pieces exist -- wabt has a
+  browser build, the extension's default host is its own shim (node:wasi
+  only behind `impl: "wasi"`) -- but `prelude()` reads prelude.wat with
+  Fs beside `__dirname`, `ready()` must complete before the first
+  validation on both threads, and extension-wasi-test reads its .wasm
+  from disk.  A browser plugin needs: the prelude as a generated module,
+  a webpack bundle (wabt included, ~2 MB), `init(app)` awaiting
+  `ready()`, the worker half awaiting it too, and a `configure({wasm})`
+  for wasi-test's bytes fetched beside the plugin.  Sized M; nothing
+  above blocks it.
 - **C5 (note)** The worker is classic; an ESM worker (`type: "module"`)
   would need a different loader.  Not now.
 

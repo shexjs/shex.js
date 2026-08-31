@@ -3,7 +3,9 @@
   "version": "1.0.0-alpha.28",
   "files": [
     "lib",
-    "src"
+    "src",
+    "doc",
+    "examples"
   ],
   "description": "Shape Expressions simple semantic action module.",
   "author": {
@@ -22,9 +24,6 @@
   "main": "./lib/shex-extension-test.js",
   "engines": {
     "node": ">=18"
-  },
-  "dependencies": {
-    "@shexjs/util": "^1.0.0-alpha.28"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
