@@ -47,7 +47,7 @@
     "typescript": "^5.5.0",
     "webpack": "^5.93.0",
     "webpack-bundle-analyzer": "^4.10.2",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^7.2.3"
   },
   "scripts": {
     "clean-all": "find . -maxdepth 3 -name node_modules -exec rm -r {} \\; ; find . -maxdepth 3 -name package-lock.json -exec rm -r {} \\; || true",
