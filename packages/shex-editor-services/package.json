@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/editor-services",
-  "version": "1.0.0-alpha.29",
+  "version": "1.0.0-alpha.30",
   "files": [
     "lib",
     "src"
@@ -32,8 +32,8 @@
     "@codemirror/lint": "^6.9.1",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.6",
-    "@shexjs/parser": "^1.0.0-alpha.28",
-    "@shexjs/util": "^1.0.0-alpha.28",
+    "@shexjs/parser": "^1.0.0-alpha.30",
+    "@shexjs/util": "^1.0.0-alpha.30",
     "codemirror": "^6.0.2",
     "lezer-shexc": "^0.1.0",
     "lezer-turtle": "^0.1.0",
@@ -41,8 +41,8 @@
     "shape-map": "^1.0.0"
   },
   "devDependencies": {
-    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.29",
-    "@shexjs/validator": "^1.0.0-alpha.29"
+    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.30",
+    "@shexjs/validator": "^1.0.0-alpha.30"
   },
   "scripts": {
     "test": "cd ../.. && mocha packages/shex-editor-services/test/*test.js",
