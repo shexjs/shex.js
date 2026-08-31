@@ -1,40 +1,27 @@
-[![NPM Version](https://badge.fury.io/js/@shexjs%2Feval-threaded-nerr.png)](https://npmjs.org/package/shex)
-[![ShapeExpressions Gitter chat https://gitter.im/shapeExpressions/Lobby](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/shapeExpressions/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1213693.svg)](https://doi.org/10.5281/zenodo.1213693)
-
 # @shexjs/eval-threaded-nerr
-Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which exhaustively enumerate combinations of ways the data fails to satisfy a shape's expression.
 
-This is called by [`@shexjs/validator`](../shex-validator#readme).
+[![npm version](https://img.shields.io/npm/v/@shexjs/eval-threaded-nerr)](https://www.npmjs.com/package/@shexjs/eval-threaded-nerr)
+[![CI](https://github.com/shexjs/shex.js/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/shexjs/shex.js/actions/workflows/ci.yml)
 
+The thorough matching engine for [`@shexjs/validator`](../shex-validator#readme): an implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which exhaustively enumerates the combinations of ways a node's triples can (fail to) satisfy a shape's triple expression.
 
-## install
+A shape's triple expression is essentially a regular expression over the node's arcs. This engine follows every thread of that match, so a failure reports *each* way the data missed — the error lists the WebApp and [`@shexjs/util`](../shex-util#readme)'s `errsToSimple` render. It is [`@shexjs/validator`](../shex-validator#readme)'s default; you only name it to be explicit:
 
-``` shell
-npm install --save @shexjs/eval-threaded-nerr
+``` js
+const {ShExValidator} = require("@shexjs/validator");
+new ShExValidator(schema, db, {
+  regexModule: require("@shexjs/eval-threaded-nerr").RegexpModule
+});
 ```
 
+From [`@shexjs/cli`](../shex-cli#readme), the same choice is `--regex-module @shexjs/eval-threaded-nerr`. When you want speed over diagnosis — the first error is enough — use [`@shexjs/eval-simple-1err`](../eval-simple-1err#readme) instead.
 
-# Lerna Monorepo
+## Install
 
-This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM packages. These packages are located in `packages/*`:
+``` shell
+npm install @shexjs/eval-threaded-nerr
+```
 
-- [`shape-map`](../shape-map#readme) -- a [ShapeMap](https://shexspec.github.io/shape-map/) parser
-- [`@shexjs/parser`](../shex-parser#readme) -- parse ShExC into ShExJ
-- [`@shexjs/writer`](../shex-writer#readme) -- serialize ShExK as ShExC
-- [`@shexjs/term`](../shex-term#readme) -- RDF terms uses in ShEx
-- [`@shexjs/util`](../shex-util#readme) -- some utilities for transforming schemas or validation output
-- [`@shexjs/visitor`](../shex-visitor#readme) -- a [visitor](https://en.wikipedia.org/wiki/Visitor_pattern) for schemas
-- [`@shexjs/validator`](../shex-validator#readme) -- validate nodes in an RDF graph against shapes in a schema
-- [`@shexjs/eval-validator-api`](../eval-validator-api#readme) -- API called by [`@shexjs/validator`](../shex-validator#readme) for validating Shapes, with tripleExpressions and EXTENDS etc.
-- [`@shexjs/eval-simple-1err`](../eval-simple-1err#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which reports only one error.
-- [`@shexjs/eval-threaded-nerr`](../eval-threaded-nerr#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which exhaustively enumerate combinations of ways the data fails to satisfy a shape's expression.
-- [`@shexjs/loader`](../shex-loader#readme) -- an API for loading and using ShEx schemas
-- [`@shexjs/node`](../shex-node#readme) -- additional API functionality for a node environment
-- [`@shexjs/cli`](../shex-cli#readme) -- a set of command line tools for transformaing and validating with schemas
-- [`@shexjs/webapp`](../shex-webapp#readme) -- the shex-simple WEBApp
-- [`@shexjs/shape-path-query`](../shex-shape-path-query#readme) -- traverse ShEx schemas with a path language
-- [`@shexjs/extension-test`](../extension-test#readme) -- a small language for testing semantic actions in ShEx implementations ([more](http://shex.io/extensions/Test/))
-- [`@shexjs/extension-map`](../extension-map#readme) -- an extension for transforming data from one schema to another ([more](http://shex.io/extensions/Map/))
-- [`@shexjs/extension-eval`](../extension-eval#readme) -- simple extension which evaluates Javascript semantic action code ([more](http://shex.io/extensions/Eval/))
+---
 
+`@shexjs/eval-threaded-nerr` is one of the [shex.js](https://github.com/shexjs/shex.js#readme) packages; installing [`shex`](https://www.npmjs.com/package/shex) pulls in the whole suite, and [its README](https://github.com/shexjs/shex.js/tree/main/packages/shex#the-shexjs-packages) maps them.

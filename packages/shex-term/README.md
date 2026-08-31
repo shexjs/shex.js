@@ -1,36 +1,49 @@
-[![NPM Version](https://badge.fury.io/js/@shexjs%2Fterm.png)](https://npmjs.org/package/shex)
-[![ShapeExpressions Gitter chat https://gitter.im/shapeExpressions/Lobby](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/shapeExpressions/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1213693.svg)](https://doi.org/10.5281/zenodo.1213693)
-
 # @shexjs/term
-Internal shexjs library subject to revision at any time.
 
-## install
+[![npm version](https://img.shields.io/npm/v/@shexjs/term)](https://www.npmjs.com/package/@shexjs/term)
+[![CI](https://github.com/shexjs/shex.js/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/shexjs/shex.js/actions/workflows/ci.yml)
+
+RDF terms as ShEx uses them: conversions between [RDF/JS terms](https://rdf.js.org/data-model-spec/), [ShExJ](https://shex.io/shex-semantics/#shexj)'s JSON-LD-style values, and Turtle lexical forms — plus the `Start` sentinel and the string-unescaping shared by the ShExC and ShapeMap parsers.
+
+## Install
 
 ``` shell
-npm install --save @shexjs/term
+npm install @shexjs/term
 ```
 
-# Lerna Monorepo
+## Quick start
 
-This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM packages. These packages are located in `packages/*`:
+``` js
+const Term = require("@shexjs/term");
+const {DataFactory} = require("n3");
 
-- [`shape-map`](../shape-map#readme) -- a [ShapeMap](https://shexspec.github.io/shape-map/) parser
-- [`@shexjs/parser`](../shex-parser#readme) -- parse ShExC into ShExJ
-- [`@shexjs/writer`](../shex-writer#readme) -- serialize ShExK as ShExC
-- [`@shexjs/term`](../shex-term#readme) -- RDF terms uses in ShEx
-- [`@shexjs/util`](../shex-util#readme) -- some utilities for transforming schemas or validation output
-- [`@shexjs/visitor`](../shex-visitor#readme) -- a [visitor](https://en.wikipedia.org/wiki/Visitor_pattern) for schemas
-- [`@shexjs/validator`](../shex-validator#readme) -- validate nodes in an RDF graph against shapes in a schema
-- [`@shexjs/eval-validator-api`](../eval-validator-api#readme) -- API called by [`@shexjs/validator`](../shex-validator#readme) for validating Shapes, with tripleExpressions and EXTENDS etc.
-- [`@shexjs/eval-simple-1err`](../eval-simple-1err#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which reports only one error.
-- [`@shexjs/eval-threaded-nerr`](../eval-threaded-nerr#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which exhaustively enumerate combinations of ways the data fails to satisfy a shape's expression.
-- [`@shexjs/loader`](../shex-loader#readme) -- an API for loading and using ShEx schemas
-- [`@shexjs/node`](../shex-node#readme) -- additional API functionality for a node environment
-- [`@shexjs/cli`](../shex-cli#readme) -- a set of command line tools for transformaing and validating with schemas
-- [`@shexjs/webapp`](../shex-webapp#readme) -- the shex-simple WEBApp
-- [`@shexjs/shape-path-query`](../shex-shape-path-query#readme) -- traverse ShEx schemas with a path language
-- [`@shexjs/extension-test`](../extension-test#readme) -- a small language for testing semantic actions in ShEx implementations ([more](http://shex.io/extensions/Test/))
-- [`@shexjs/extension-map`](../extension-map#readme) -- an extension for transforming data from one schema to another ([more](http://shex.io/extensions/Map/))
-- [`@shexjs/extension-eval`](../extension-eval#readme) -- simple extension which evaluates Javascript semantic action code ([more](http://shex.io/extensions/Eval/))
+// RDF/JS term → ShExJ value (an IRI is a string; a literal is an object)
+Term.rdfJsTerm2Ld(DataFactory.namedNode("http://a.example/n1"));
+// 'http://a.example/n1'
+Term.rdfJsTerm2Ld(DataFactory.literal("chat", "fr"));
+// { value: 'chat', language: 'fr' }
 
+// … and back
+Term.ld2RdfJsTerm({value: "chat", language: "fr"});
+// Literal { id: '"chat"@fr' }
+
+// either form → Turtle lexical form
+Term.rdfJsTerm2Turtle(DataFactory.literal("chat", "fr"));   // '"chat"@fr'
+Term.shExJsTerm2Turtle("http://a.example/n1");              // '<http://a.example/n1>'
+```
+
+## What's here
+
+* **`rdfJsTerm2Ld(term)` / `ld2RdfJsTerm(ld)`** — between RDF/JS terms and the values ShExJ writes (IRI as string, `_:`‑prefixed blank node, literal as `{value, type?, language?}`).
+* **`rdfJsTerm2Turtle(term, meta?)` / `shExJsTerm2Turtle(term, meta?)`** — render a term in Turtle, abbreviating with `meta`'s `base` and `prefixes` when given.
+* **`Start` / `isStart(x)`** — the sentinel a [shape map](https://shexspec.github.io/shape-map/) uses to say "the schema's start shape": `{node, shape: Start}`. There is one frozen `Start` object; `isStart` also recognizes a structural clone (`{term: "START"}`), which is what survives a `postMessage` across a worker boundary.
+* **`unescapeText(string, replacements)`** — the `\uXXXX`/`\U…` (and caller-supplied) escape decoding that the ShExC and ShapeMap grammars share.
+* **`RdfLangString`, `XsdString`** — the two implicit literal datatypes.
+* **`Terminals`** — regular expressions for RDF terminal productions (`IRIREF`, `PNAME_LN`, …).
+* Types used across the suite: `SchemaIndex`, `ShapeMapEntry`, `Meta` and friends.
+
+This package sits under everything else in the suite (the parsers, the validator, the neighborhoods), so it is versioned independently and depends on nothing else in it.
+
+---
+
+`@shexjs/term` is one of the [shex.js](https://github.com/shexjs/shex.js#readme) packages; installing [`shex`](https://www.npmjs.com/package/shex) pulls in the whole suite, and [its README](https://github.com/shexjs/shex.js/tree/main/packages/shex#the-shexjs-packages) maps them.

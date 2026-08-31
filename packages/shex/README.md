@@ -1,4 +1,4 @@
-[![NPM Version](https://badge.fury.io/js/shex.png)](https://npmjs.org/package/shex)
+[![npm version](https://img.shields.io/npm/v/shex)](https://www.npmjs.com/package/shex)
 [![CI](https://github.com/shexjs/shex.js/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/shexjs/shex.js/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/shexjs/shex.js/badge.svg?branch=main)](https://coveralls.io/github/shexjs/shex.js?branch=main)
 [![ShapeExpressions Gitter chat https://gitter.im/shapeExpressions/Lobby](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/shapeExpressions/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -13,7 +13,7 @@ If you only need one piece, each is published separately as an [`@shexjs/` packa
 ## install
 
 ``` shell
-npm install --save shex
+npm install shex
 ```
 
 ## validation library
@@ -57,33 +57,33 @@ Validate something in HTTP-land:
 
 ```sh
 npx shex-validate \
-    -x http://shex.io/examples/Issue.shex \
-    -d http://shex.io/examples/Issue1.ttl \
-    -s http://shex.io/examples/IssueShape \
-    -n http://shex.io/examples/Issue1
+    -x http://shex.io/examples/IssueSchema \
+    -d http://shex.io/examples/Issue1 \
+    -s http://shex.io/examples/IssueSchema#IssueShape \
+    -n http://shex.io/examples/Issue1#Issue1
 ```
 
-That validates node `http://shex.io/examples/Issue1` in `http://shex.io/examples/Issue1.ttl` against shape `http://shex.io/examples/IssueShape` in `http://shex.io/examples/Issue.shex`.
+That validates node `…Issue1#Issue1` in the data `…Issue1` against shape `…IssueSchema#IssueShape` in the schema `…IssueSchema`.
 The result is a JSON structure which tells you exactly how the data matched the schema; a result with `"errors"` tells you the data was invalid with respect to the schema.
 See the [ShExJ primer](http://shex.io/primer/) for a description of ShEx validation and the [ShExJ specification](http://shex.io/primer/ShExJ) for more details about the results format.
 
-`shex-validate`'s `-n` and `-s` arguments are evaluated as IRIs relative to the (first) data and schema sources respectively, so the above can be written `-s IssueShape -n Issue1`.
+`shex-validate`'s `-n` and `-s` arguments are evaluated as IRIs relative to the (first) data and schema sources respectively, so the above can be written `-s '#IssueShape' -n '#Issue1'`.
 
 Convert between the ShEx compact syntax (ShExC) and its JSON representation (ShExJ):
 
 ```sh
-npx shex-to-json http://shex.io/examples/Issue.shex > Issue.json
-npx json-to-shex Issue.json
+npx shex-to-json http://shex.io/examples/IssueSchema > IssueSchema.json
+npx json-to-shex IssueSchema.json
 ```
 
 Command line arguments which don't start with `http://` or `https://` are assumed to be file paths, so the JSON version works offline:
 
 ```sh
 npx shex-validate \
-    -j Issue.json \
-    -d http://shex.io/examples/Issue1.ttl \
-    -s http://shex.io/examples/IssueShape \
-    -n http://shex.io/examples/Issue1
+    -j IssueSchema.json \
+    -d http://shex.io/examples/Issue1 \
+    -s http://shex.io/examples/IssueSchema#IssueShape \
+    -n http://shex.io/examples/Issue1#Issue1
 ```
 
 ## materialize
@@ -91,14 +91,14 @@ npx shex-validate \
 `shexmap-materialize` (from [`@shexjs/extension-map`](https://github.com/shexjs/shex.js/tree/main/packages/extension-map#readme)) transforms data from a source schema to a target schema after validation:
 
 ```sh
-shexmap-materialize -t <target schema> | -h  [-j <JSON Vars File>] [-r <RDF root IRI>]
+npx shexmap-materialize -t <target schema> | -h  [-j <JSON Vars File>] [-r <RDF root IRI>]
 ```
 
-It reads the output of `shex-validate --extension` from STDIN and maps it to the specified target schema (`--extension` takes a path to the extension module):
+It reads the output of `shex-validate --extension` from STDIN and maps it to the specified target schema (`--extension` takes a package name or file glob):
 
 ```sh
 npx shex-validate -x source_schema.shex -d data.ttl -s ProblemShape -n prob1 \
-    --extension node_modules/@shexjs/extension-map \
+    --extension @shexjs/extension-map \
   | npx shexmap-materialize -t target_schema.shex -j vars.json
 ```
 

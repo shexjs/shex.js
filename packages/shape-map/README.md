@@ -1,58 +1,28 @@
 # shape-map
-Javascript library to parse [ShapeMap](https://shexspec.github.io/shape-map/)s
 
-## Usage:
+[![npm version](https://img.shields.io/npm/v/shape-map)](https://www.npmjs.com/package/shape-map)
+[![CI](https://github.com/shexjs/shex.js/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/shexjs/shex.js/actions/workflows/ci.yml)
 
-``` javascript
-const ShapeMap = require('shape-map');
-const shapeMapParser = ShapeMap.Parser.construct(
-  'http://base.example/fallback/',
-  { base: 'http://my.example/url/', prefixes: {} },
-  { base: 'http://my.example/url/', prefixes: {} }
-)
-const smap = shapeMapParser.parse(`<#n>@<#S1>`)
+Parse [ShapeMap](https://shexspec.github.io/shape-map/)s — the language that says which nodes to validate against which shapes, e.g. `<#n>@<#S1>`.
+
+## Install
+
+``` shell
+npm install shape-map
 ```
 
-### Methods
+## Quick start
 
-#### Parser.construct(fallbackBase, schemaMeta, dataMeta)
-
-Construct ShapeMap parser with appropriate bases and prefixes for parsing nodes and shapes.
-
-parameters:
-* fallbackBase - a URL string to use as a base if the schema or data don't supply one
-* schemaMeta - a base and prefixes to use when resolving shapes
-* dataMeta - a base and prefixes to use when resolving nodes
-
-returns: array of {node, shape} pairs
-
-example:
 ``` js
-const BASE = 'http://my.example/url/'
-const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
-const ShExValidator = require("..")
-const ShExLoader = require("@shexjs/loader")({
-  rdfjs: require('n3'),         // use N3 as an RdfJs implementation
-  // fetch: require('node-fetch'), // not needed with string arguments
-})
-const ShapeMap = require('shape-map')
-
-main()
-async function main () {
-  const loaded = await ShExLoader.load(
-    { shexc: [{url: BASE, text: `<#S1> { <p1> [1 2]; <p2> [3 4] }`}]},
-    { turtle: [{url: BASE, text: `<#n> <p1> 1 ; <p2> 3 .`}] }
-  )
-  const shapeMapParser = ShapeMap.Parser.construct(
-    'http://base.example/fallback/',
-    { base: BASE, prefixes: {} },
-    { base: BASE, prefixes: {} }
-  )
-  const smap = shapeMapParser.parse(`<#n>@<#S1>`)
-  console.log(smap)
-}
+const ShapeMap = require("shape-map");
+const shapeMapParser = ShapeMap.Parser.construct(
+  "http://base.example/fallback/",
+  { base: "http://my.example/url/", prefixes: {} },  // resolves shapes
+  { base: "http://my.example/url/", prefixes: {} }   // resolves nodes
+);
+const smap = shapeMapParser.parse("<#n>@<#S1>");
+console.log(smap);
 ```
-output:
 ```
 [
   {
@@ -63,30 +33,28 @@ output:
 ]
 ```
 
-For brevity, this example uses a common BASE for both the schema and data.
+The result is an array of node/shape associations, ready to hand to [`@shexjs/validator`](../shex-validator#readme)'s `validateShapeMap`. (`status` is the association's *asserted* status — a query map entry asserts `conformant` unless written with `!`.)
 
+### Parser.construct(fallbackBase, schemaMeta, dataMeta)
+
+Construct a ShapeMap parser with appropriate bases and prefixes for resolving shapes and nodes:
+
+* **fallbackBase** — a URL string to use as a base if `schemaMeta`/`dataMeta` don't supply one
+* **schemaMeta** — `{base, prefixes}` used to resolve the shape side (right of `@`)
+* **dataMeta** — `{base, prefixes}` used to resolve the node side (left of `@`)
 
 ### Base URLs for schema and data
 
-URLs in the node specifier (left of the `@` sign) are resolved against the dataMeta base and prefix. Likewise, the shape specifier uses the schemaMeta.
+URLs in the node specifier (left of the `@` sign) are resolved against the dataMeta base and prefixes; the shape specifier uses the schemaMeta. Here the schema and data have different base URLs:
 
-In this example, the schema and data use different base URLs. We used relative URLs in the data predicates in order to reference the terms defined in the schema:
-
-example:
 ``` js
-  const loaded = await ShExLoader.load(
-    { shexc: [{url: 'http://my.example/schema/', text: `<#S1> { <p1> [1 2]; <p2> [3 4] }`}]},
-    { turtle: [{url: 'http://my.example/data/', text: `<#n> <../schema/p1> 1 ; <../schema/p2> 3 .`}] }
-  )
-  const shapeMapParser = ShapeMap.Parser.construct(
-    'http://base.example/fallback/',
-    { base: 'http://my.example/schema/', prefixes: {} },
-    { base: 'http://my.example/data/', prefixes: {} }
-  )
-  const smap = shapeMapParser.parse(`<#n>@<#S1>`)
-  console.log(smap)
+const shapeMapParser = ShapeMap.Parser.construct(
+  "http://base.example/fallback/",
+  { base: "http://my.example/schema/", prefixes: {} },
+  { base: "http://my.example/data/", prefixes: {} }
+);
+const smap = shapeMapParser.parse("<#n>@<#S1>");
 ```
-output:
 ```
 [
   {
@@ -97,29 +65,18 @@ output:
 ]
 ```
 
-
 ### Prefixes for schema and data
 
-The above example uses relative URLs to make the predicates in the data be the predicates in the schema. This can also be accomplished with prefix declarations:
+Prefixes declared in the metas let the two sides of the map use each document's own names:
 
-example:
 ``` js
-  const loaded = await ShExLoader.load(
-    { shexc: [{url: 'http://my.example/schema/', text: `PREFIX p: <http://my.example/ns#>
-PREFIX s: <http://my.example/shapes#>
-s:S1 { p:p1 [1 2]; p:p2 [3 4] }`}]},
-    { turtle: [{url: 'http://my.example/data', text: `PREFIX : <http://my.example/ns#>
-<#n> :p1 1 ; :p2 3 .`}] }
-  )
-  const shapeMapParser = ShapeMap.Parser.construct(
-    'http://base.example/fallback/',
-    { base: 'http://my.example/schema/', prefixes: {shape: 'http://my.example/shapes#'} },
-    { base: 'http://my.example/data/', prefixes: {'': 'http://my.example/data#'} }
-  )
-  const smap = shapeMapParser.parse(`:n@shape:S1`)
-  console.log(smap)
+const shapeMapParser = ShapeMap.Parser.construct(
+  "http://base.example/fallback/",
+  { base: "http://my.example/schema/", prefixes: {shape: "http://my.example/shapes#"} },
+  { base: "http://my.example/data/", prefixes: {"": "http://my.example/data#"} }
+);
+const smap = shapeMapParser.parse(":n@shape:S1");
 ```
-output:
 ```
 [
   {
@@ -129,58 +86,45 @@ output:
 ]
 ```
 
-Here, we used different prefixes in the schema, data, and ShapeMap. We can bypass redundant declarations using the metadata from `ShExLoader.load()`.
+### Use with the @shexjs loader and validator
 
+The ShapeMap parser is typically used with [`@shexjs/loader`](../shex-loader#readme) (or [`@shexjs/node`](../shex-node#readme)), whose `load()` returns exactly the metadata `construct` wants. This example ShapeMap (`<#n>@s:S1`) uses the data's base URL and the schema's `s:` prefix:
 
-### Use with @shexjs loader and validator
-The ShapeMap parser is typically used with `@shexjs/loader` or some derivative (e.g. `@shexjs/node`). `ShExLoader.load()` returns metadata we can pass directly to the ShapeMap parse. This example ShapeMap (`<#n>@s:S1`) uses the data's base URL and the schema's `s:` prefix:
-
-example:
 ``` js
-const BASE = 'http://my.example/url/'
-const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
-const {ShExValidator} = require("..")
+const {ctor: RdfJsDb} = require("@shexjs/neighborhood-rdfjs");
+const {ShExValidator} = require("@shexjs/validator");
 const ShExLoader = require("@shexjs/loader")({
-  rdfjs: require('n3'),         // use N3 as an RdfJs implementation
-  // fetch: require('node-fetch'), // not needed with string arguments
-})
-const ShapeMap = require('shape-map')
+  rdfjs: require("n3"),  // no fetch needed with {url, text} arguments
+});
+const ShapeMap = require("shape-map");
 
-main()
+main();
 async function main () {
   const loaded = await ShExLoader.load(
-    { shexc: [{url: 'http://my.example/schema/', text: `PREFIX p: <http://my.example/ns#>
+    { shexc: [{url: "http://my.example/schema/", text: `PREFIX p: <http://my.example/ns#>
 PREFIX s: <http://my.example/shapes#>
 s:S1 { p:p1 [1 2]; p:p2 [3 4] }`}]},
-    { turtle: [{url: 'http://my.example/data', text: `PREFIX : <http://my.example/ns#>
+    { turtle: [{url: "http://my.example/data", text: `PREFIX : <http://my.example/ns#>
 <#n> :p1 1 ; :p2 3 .`}] }
-  )
-  const {schema, schemaMeta, data, dataMeta} = loaded
+  );
+  const {schema, schemaMeta, data, dataMeta} = loaded;
   const shapeMapParser = ShapeMap.Parser.construct(
-    'http://base.example/fallback/',
+    "http://base.example/fallback/",
     schemaMeta[0],
     dataMeta[0]
-  )
-  const smap = shapeMapParser.parse(`<#n>@s:S1`)
-  console.log(smap)
-  const validator = new ShExValidator(schema, RdfJsDb(data), {})
-  const res = validator.validate(smap)
-  console.log(res)
+  );
+  const smap = shapeMapParser.parse("<#n>@s:S1");
+  const validator = new ShExValidator(schema, RdfJsDb(data));
+  const results = validator.validateShapeMap(smap);
+  results.forEach(r => console.log(r.node, r.status));
 }
 ```
-output:
 ```
-[
-  {
-    node: 'http://my.example/data#n',
-    shape: 'http://my.example/shapes#S1'
-  }
-]
-{
-  type: 'ShapeTest',
-  node: 'http://my.example/data#n',
-  shape: 'http://my.example/shapes#S1',
-  solution: { type: 'EachOfSolutions', solutions: [ [Object] ] }
-}
+http://my.example/data#n conformant
 ```
 
+`validateShapeMap` returns the same associations with `status` set to what validation found and an `appinfo` saying why — see [`@shexjs/validator`](../shex-validator#readme).
+
+---
+
+`shape-map` is one of the [shex.js](https://github.com/shexjs/shex.js#readme) packages; installing [`shex`](https://www.npmjs.com/package/shex) pulls in the whole suite, and [its README](https://github.com/shexjs/shex.js/tree/main/packages/shex#the-shexjs-packages) maps them.

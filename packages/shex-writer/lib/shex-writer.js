@@ -72,7 +72,9 @@ class ShExWriter {
             _ShExWriter._write("START = " + _ShExWriter._writeShapeExpr(schema.start, done, true, 0).join('') + "\n");
         if ("shapes" in schema)
             schema.shapes.forEach(function (shapeDecl) {
-                _ShExWriter._write(_ShExWriter._writeShapeDecl(shapeDecl, done, true, 0).join("") + "\n", done);
+                // `done` reports serialization errors; it is not a write-completion
+                // callback, which would invoke it (argument-less) per flushed chunk
+                _ShExWriter._write(_ShExWriter._writeShapeDecl(shapeDecl, done, true, 0).join("") + "\n");
             });
     }
     _writeShapeDecl(shapeDecl, done, _forceBraces, _parentPrec) {
@@ -514,8 +516,17 @@ class ShExWriter {
         return this._writeShapeExpr(shapeExpr, undefined, forceBraces, 0).join("");
     }
     writeSchema(shape, done) {
-        this._writeSchema(shape, done);
-        this.end(done);
+        // call `done` exactly once: with the first serialization error, or else
+        // with the final text when end() flushes the stream
+        let called = false;
+        const once = done && ((error, result) => {
+            if (!called) {
+                called = true;
+                done(error, result);
+            }
+        });
+        this._writeSchema(shape, once);
+        this.end(once);
     }
     // ### `addShape` adds the shape to the output stream
     addShape(shape, name, done) {

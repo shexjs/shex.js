@@ -1,18 +1,18 @@
-[![NPM Version](https://badge.fury.io/js/@shexjs%2Fwriter.png)](https://npmjs.org/package/shex)
-[![ShapeExpressions Gitter chat https://gitter.im/shapeExpressions/Lobby](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/shapeExpressions/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1213693.svg)](https://doi.org/10.5281/zenodo.1213693)
+# @shexjs/util
 
-# @shexjs/writer
+[![npm version](https://img.shields.io/npm/v/@shexjs/util)](https://www.npmjs.com/package/@shexjs/util)
+[![CI](https://github.com/shexjs/shex.js/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/shexjs/shex.js/actions/workflows/ci.yml)
+
 Utility functions to work with [ShExJ](https://shex.io/shex-semantics/#shexj) schemas
 
-## install
+## Install
 
 ``` shell
-npm install --save @shexjs/writer
+npm install @shexjs/util
 ```
 
 ## Invocation
-Using `Partition(<schema>, [<URL>s])` as an example, an illustrative way to invoke from it from the command line uses `@shexjs/parser` and `@shexjs/writer`:
+Using `Partition(<schema>, [<URL>s])` as an example, an illustrative way to invoke it from the command line uses `@shexjs/parser` and `@shexjs/writer`:
 ``` sh
 node -e 'const base = "http://a.example/"
   const schema = require("@shexjs/parser")
@@ -27,7 +27,7 @@ node -e 'const base = "http://a.example/"
         console.log(text);
       })'
 ```
-The result is a ShExJ expression of the input schema:
+The result is the partition serialized as ShExC:
 ``` shex
 BASE <http://a.example/>
 <S2> {
@@ -88,17 +88,17 @@ See which shape declarations have no coreferences and can be nested inside their
 Return which predicates appear in which shapes, what their common type is, and whether they are polymorphic.
 
 ## getDependencies(schema, ret)
-Find which shappes depend on other shapes by inheritance or inclusion.
+Find which shapes depend on other shapes by inheritance or inclusion.
 
 ## Partition(<schema>, [<URL>s])
 Create subset of a schema with only desired shapes and their dependencies.
 
 ## merge(left, right, overwrite, inPlace)
 Merge right schema onto left schema if `inPlace` is true; otherwise return a new merged schema.
-`overwrite`: boolean specifies whether to replace and old shape declaration with a new one of the same name.
+`overwrite`: boolean specifies whether to replace an old shape declaration with a new one of the same name.
 
 ## absolutizeResults(res, base)
-In validation resutls with some relative URLs in it, re-evaluate all [`shape`, `reference`, `node`, `subject`, `predicate`, `object`] property values against `base`.
+In validation results with some relative URLs in it, re-evaluate all [`shape`, `reference`, `node`, `subject`, `predicate`, `object`] property values against `base`.
 
 ## getProofGraph(res, db, dataFactory)
 Parse a validation result and call `db.addQuad()` with each triple involved in validation.
@@ -111,14 +111,14 @@ Verify that schema has all necessary referents and conforms to ShEx's stratified
 ## valuesToSchema(values)
 Convert the results of validating an instance of ShExR against ShExR.shex into a ShExJ schema.
 
-## errsToSimple(failure)
-Attempt to make a validation failure human-readable.
+## errsToSimple(val, prefixes?, opts?)
+Render a validation failure as indented, human-readable lines. `opts.explain` picks what to include: the failure's `"errors"`, its `"repairs"` (the cheapest edits that would have made the node conform), or `"both"`; `opts.lex` and `opts.base` control how terms are written.
 
 ## executeQuery(query, endpoint, dataFactory)
-Synchronously Execute a SPARQL query against and endpoint.
+Synchronously execute a SPARQL query against an endpoint.
 
 ## executeQueryPromise(query, endpoint, dataFactory)
-Asynchronously Execute a SPARQL query against and endpoint.
+Asynchronously execute a SPARQL query against an endpoint.
 
 ## parseSparqlJsonResults (jsonObject)
 Parse JSON results to internal RDF term representations.
@@ -129,26 +129,6 @@ Parse XML results in a DOM to internal RDF term representations.
 ## parseSparqlXmlResults_jquery(jqObj)
 Parse XML results to internal RDF term representations using JQuery.
 
-# Lerna Monorepo
+---
 
-This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM packages. These packages are located in `packages/*`:
-
-- [`shape-map`](../shape-map#readme) -- a [ShapeMap](https://shexspec.github.io/shape-map/) parser
-- [`@shexjs/parser`](../shex-parser#readme) -- parse ShExC into ShExJ
-- [`@shexjs/writer`](../shex-writer#readme) -- serialize ShExK as ShExC
-- [`@shexjs/term`](../shex-term#readme) -- RDF terms uses in ShEx
-- [`@shexjs/util`](../shex-util#readme) -- some utilities for transforming schemas or validation output
-- [`@shexjs/visitor`](../shex-visitor#readme) -- a [visitor](https://en.wikipedia.org/wiki/Visitor_pattern) for schemas
-- [`@shexjs/validator`](../shex-validator#readme) -- validate nodes in an RDF graph against shapes in a schema
-- [`@shexjs/eval-validator-api`](../eval-validator-api#readme) -- API called by [`@shexjs/validator`](../shex-validator#readme) for validating Shapes, with tripleExpressions and EXTENDS etc.
-- [`@shexjs/eval-simple-1err`](../eval-simple-1err#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which reports only one error.
-- [`@shexjs/eval-threaded-nerr`](../eval-threaded-nerr#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which exhaustively enumerate combinations of ways the data fails to satisfy a shape's expression.
-- [`@shexjs/loader`](../shex-loader#readme) -- an API for loading and using ShEx schemas
-- [`@shexjs/node`](../shex-node#readme) -- additional API functionality for a node environment
-- [`@shexjs/cli`](../shex-cli#readme) -- a set of command line tools for transformaing and validating with schemas
-- [`@shexjs/webapp`](../shex-webapp#readme) -- the shex-simple WEBApp
-- [`@shexjs/shape-path-query`](../shex-shape-path-query#readme) -- traverse ShEx schemas with a path language
-- [`@shexjs/extension-test`](../extension-test#readme) -- a small language for testing semantic actions in ShEx implementations ([more](http://shex.io/extensions/Test/))
-- [`@shexjs/extension-map`](../extension-map#readme) -- an extension for transforming data from one schema to another ([more](http://shex.io/extensions/Map/))
-- [`@shexjs/extension-eval`](../extension-eval#readme) -- simple extension which evaluates Javascript semantic action code ([more](http://shex.io/extensions/Eval/))
-
+`@shexjs/util` is one of the [shex.js](https://github.com/shexjs/shex.js#readme) packages; installing [`shex`](https://www.npmjs.com/package/shex) pulls in the whole suite, and [its README](https://github.com/shexjs/shex.js/tree/main/packages/shex#the-shexjs-packages) maps them.
