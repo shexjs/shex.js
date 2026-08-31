@@ -53,6 +53,7 @@ const ContentTypes = {
   '.json': 'application/json',
   '.jsonld': 'application/ld+json',
   '.svg': 'image/svg+xml',
+  '.wasm': 'application/wasm',
 }
 
 function contentTypeFor (path) {
@@ -144,7 +145,7 @@ function readFromFilesystem (reqPath, fromDir, webroot) {
     ext => Fs.existsSync(last = filePath + ext)
   )
   if (ret !== undefined) {
-    const ret = Fs.readFileSync(last, 'utf8')
+    const ret = Fs.readFileSync(last)   // bytes, not utf8: a .wasm read as text is a CompileError
     log200(reqPath, last, ret.length)
     return [200, ret, {}]
   } else {

@@ -3,7 +3,9 @@
   "version": "1.0.0-alpha.1",
   "files": [
     "lib",
-    "src"
+    "src",
+    "doc",
+    "examples"
   ],
   "description": "generic WASI semantic-action extension: the action code is a WebAssembly (WAT) WASI command run per invocation",
   "author": "ericP <eric@w3.org> (http://www.w3.org/People/Eric/)",
@@ -12,7 +14,9 @@
   "scripts": {
     "test": "cd ../.. && mocha -C -R dot packages/extension-wasi/test/*test.js",
     "gen-tests": "node tools/gen-tests.js",
-    "build": "tsc"
+    "build": "node tools/gen-prelude.js && tsc",
+    "webpack": "webpack --config webpack.config.js --mode production",
+    "prepublishOnly": "npm run webpack"
   },
   "repository": {
     "type": "git",
@@ -28,5 +32,12 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "@shexjs/extension-wasi-test": "^1.0.0-alpha.29",
+    "@shexjs/webapp": "^1.0.0-alpha.29",
+    "terser-webpack-plugin": "*",
+    "webpack": "*",
+    "webpack-cli": "*"
   }
 }

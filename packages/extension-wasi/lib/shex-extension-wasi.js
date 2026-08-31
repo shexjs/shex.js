@@ -20,6 +20,13 @@
  *       n=           the focus node (Shape and NodeConstraint ctx)
  *     (startActs run with no bindings.)
  *
+ * A start action whose fields declare no $main is the schema's own library:
+ * it runs nothing, and its fields are composed -- after the prelude -- into
+ * every later action of the validation, so a constraint can call a function
+ * the schema declared once.  A start action with $main still runs once as
+ * its own program; a standalone (module ...) ignores the library along with
+ * the prelude.
+ *
  * Term values are serialized as in the Test extension: a term's `.value`,
  * except literals with a non-xsd:string datatype, which appear in Turtle
  * form (`"1"^^http://www.w3.org/2001/XMLSchema#integer`).
@@ -53,6 +60,7 @@
  * Select with configure({impl: "shim"|"wasi"}).
  */
 const Fs = require("fs");
+const prelude_wat_1 = require("./prelude-wat");
 const Os = require("os");
 const Path = require("path");
 const WasiExt = "http://shex.io/extensions/WASI/";
@@ -65,31 +73,30 @@ function ready() {
     return wabtPromise;
 }
 const moduleCache = new Map(); // WAT text -> WebAssembly.Module
-let preludeText = null;
 function prelude() {
-    if (preludeText === null)
-        preludeText = Fs.readFileSync(Path.join(__dirname, "prelude.wat"), "utf8"); // beside this file in lib/
-    return preludeText;
+    return prelude_wat_1.preludeWat; // generated from lib/prelude.wat, so no filesystem: the browser bundle has none
 }
 /** Complete a semantic action's WAT: code beginning with "(module" is a
  * standalone module; anything else is module fields (typically just
- * `(func $main …)` and data segments) composed with the library prelude.
- * The prelude comes first — WAT requires imports before other definitions —
- * so wabt error line numbers are offset by its length.
+ * `(func $main …)` and data segments) composed with the library prelude
+ * and whatever library the schema's start actions declared.  The prelude
+ * comes first — WAT requires imports before other definitions — so wabt
+ * error line numbers are offset by its length (and the library's).
  */
-function composeWat(code) {
+function composeWat(code, library = "") {
     return code.trimStart().startsWith("(module")
         ? code
-        : "(module\n" + prelude() + code + "\n)\n";
+        : "(module\n" + prelude() + library + code + "\n)\n";
 }
-function compile(code) {
-    if (moduleCache.has(code))
-        return moduleCache.get(code);
+function compile(code, library = "") {
+    const wat = composeWat(code, library); // the cache key: the same fields under a different library are a different module
+    if (moduleCache.has(wat))
+        return moduleCache.get(wat);
     if (wabt === null)
         throw Error("Invocation error: " + WasiExt + " not initialized; `await extension.ready()` before validating");
     let parsed;
     try {
-        parsed = wabt.parseWat("semact.wat", composeWat(code), {});
+        parsed = wabt.parseWat("semact.wat", wat, {});
     }
     catch (e) {
         throw Error("Invocation error: " + WasiExt + " WAT didn't compile: " + e.message);
@@ -99,7 +106,7 @@ function compile(code) {
     // (the casts to BufferSource/Uint8Array[] here and in runShim: the tree's
     // @types/node 10 Buffer predates TypeScript's generic typed arrays)
     const mod = new WebAssembly.Module(bin.buffer);
-    moduleCache.set(code, mod);
+    moduleCache.set(wat, mod);
     return mod;
 }
 /** run a compiled module under the ~5-call WASI shim, capturing fd 1.
@@ -147,7 +154,7 @@ function runShim(mod, args) {
                     const base = view.getUint32(iovs + 8 * i, true);
                     const len = view.getUint32(iovs + 8 * i + 4, true);
                     if (fd === 1)
-                        chunks.push(Buffer.from(new Uint8Array(memory.buffer, base, len))); // copy; buffer may move
+                        chunks.push(new Uint8Array(memory.buffer, base, len).slice()); // copy; buffer may move
                     total += len;
                 }
                 view.setUint32(nwrittenPtr, total, true);
@@ -168,7 +175,10 @@ function runShim(mod, args) {
         if (e !== ExitSentinel)
             throw Error("Invocation error: " + WasiExt + " module trapped: " + e.message);
     }
-    return { exitCode: exitCode, stdout: Buffer.concat(chunks) };
+    const total = chunks.reduce((sum, c) => sum + c.length, 0);
+    const stdout = new Uint8Array(total);
+    chunks.reduce((at, c) => { stdout.set(c, at); return at + c.length; }, 0);
+    return { exitCode: exitCode, stdout }; // no Buffer: this path runs in browsers too
 }
 /** run a compiled module under Node's built-in node:wasi, capturing fd 1
  * through a temporary file.
@@ -191,7 +201,7 @@ function runNodeWasi(mod, args) {
             : { wasi_snapshot_preview1: wasi.wasiImport };
         const instance = new WebAssembly.Instance(mod, importObject);
         const exitCode = wasi.start(instance);
-        return { exitCode: exitCode, stdout: Fs.readFileSync(tmp) };
+        return { exitCode: exitCode, stdout: Fs.readFileSync(tmp) }; // (@types/node 10 again)
     }
     finally {
         Fs.closeSync(fd);
@@ -228,6 +238,10 @@ function makeModule(opts) {
         if (api === undefined || !('ShExTerm' in api))
             throw Error('SemAct extensions must be called with register(validator, {ShExTerm, ...)');
         const run = (opts.impl || "shim") === "wasi" ? runNodeWasi : runShim;
+        // the schema's library: fields a start action declared for the whole
+        // validation.  Per register() call, so validators don't share it.
+        let library = "";
+        let sawAction = false;
         validator.semActHandler.results[WasiExt] = [];
         validator.semActHandler.register(WasiExt, {
             /**
@@ -241,8 +255,23 @@ function makeModule(opts) {
             dispatch: function (code, ctx, _extensionStorage) {
                 if (typeof code !== "string")
                     throw Error("Invocation error: " + WasiExt + " expected WAT code to dispatch, got: " + code);
-                const res = run(compile(code), ctxArgs(ctx));
-                const lines = res.stdout.toString("utf8").split("\n");
+                if ((ctx === null || ctx === undefined)
+                    && !code.trimStart().startsWith("(module") && !/\(func\s+\$main\b/.test(code)) {
+                    // a start action declaring no $main is the schema's library:
+                    // nothing to run -- its fields join the prelude in every later
+                    // action's module.  startActs come first, so a start action
+                    // arriving after constraint actions opens the next validation.
+                    if (sawAction) {
+                        library = "";
+                        sawAction = false;
+                    }
+                    library += code + "\n";
+                    return [];
+                }
+                if (ctx !== null && ctx !== undefined)
+                    sawAction = true;
+                const res = run(compile(code, library), ctxArgs(ctx));
+                const lines = new TextDecoder().decode(res.stdout).split("\n");
                 const tail = lines.pop(); // "" after a final "\n", else an unterminated tail
                 if (tail !== "")
                     lines.push(tail);

@@ -177,6 +177,93 @@ describe("@shexjs/extension-wasi", function () {
     });
   });
 
+  describe("a schema's own library (a start action with no $main)", function () {
+    const LIB = "(func $myPrint (call $put_o) (call $nl))\n(func $myFail (call $fail))";
+    const T = {triples: [{subject: {termType: "NamedNode", value: "http://a.example/s1"},
+                          predicate: {termType: "NamedNode", value: "http://a.example/p1"},
+                          object: {termType: "NamedNode", value: "http://a.example/o1"}}]};
+    function fresh () {
+      const validator = {semActHandler: {results: {}, handlers: {}, register (n, h) { this.handlers[n] = h; }}};
+      const results = WasiExtension.register(validator, {ShExTerm});
+      return {dispatch: (code, ctx) => validator.semActHandler.handlers[WasiUrl].dispatch(code, ctx, {}),
+              results};
+    }
+
+    it("should run nothing for the library itself", function () {
+      const {dispatch, results} = fresh();
+      expect(dispatch(LIB, null)).to.deep.equal([]);
+      expect(results).to.deep.equal([]);
+    });
+
+    it("should compose the library into a constraint's module", function () {
+      const {dispatch, results} = fresh();
+      dispatch(LIB, null);
+      expect(dispatch("(func $main (call $myPrint))", T)).to.deep.equal([]);
+      expect(results).to.deep.equal(["http://a.example/o1"]);
+    });
+
+    it("should let the library spell failure", function () {
+      const {dispatch} = fresh();
+      dispatch(LIB, null);
+      const failures = dispatch("(func $main (call $myFail))", T);
+      expect(failures.length).to.equal(1);
+      expect(failures[0].type).to.equal("SemActFailure");
+    });
+
+    it("should leave a standalone module alone", function () {
+      const {dispatch, results} = fresh();
+      dispatch(LIB, null);
+      expect(dispatch(`(module
+  (import "wasi_snapshot_preview1" "fd_write" (func $fd_write (param i32 i32 i32 i32) (result i32)))
+  (memory (export "memory") 1)
+  (data (i32.const 64) "standalone\\0a")
+  (func (export "_start")
+    (i32.store (i32.const 16) (i32.const 64))
+    (i32.store (i32.const 20) (i32.const 11))
+    (drop (call $fd_write (i32.const 1) (i32.const 16) (i32.const 1) (i32.const 32)))))`, T))
+        .to.deep.equal([]);
+      expect(results).to.deep.equal(["standalone"]);
+    });
+
+    it("should still run a start action that has $main", function () {
+      const {dispatch, results} = fresh();
+      dispatch(LIB, null);
+      expect(dispatch('(data (i32.const 8192) "start!") (func $main (call $println (i32.const 8192) (i32.const 6)))',
+                      null)).to.deep.equal([]);
+      expect(results).to.deep.equal(["start!"]);
+    });
+
+    it("should start over for the next validation's library", function () {
+      const {dispatch} = fresh();
+      dispatch(LIB, null);
+      dispatch("(func $main (call $myPrint))", T);   // this validation used it
+      dispatch("(func $other (call $nl))", null);    // the next validation's library
+      expect(() => dispatch("(func $main (call $myPrint))", T))
+        .to.throw(/didn't compile/);
+    });
+
+    it("should serve a whole schema: declared at the start, called at the constraint", function () {
+      const base = "http://a.example/lib-schema";
+      const schema = ShExParser.construct(base, null, {index: true}).parse([
+        "PREFIX : <http://a.example/>",
+        "PREFIX Wasi: <" + WasiUrl + ">",
+        "%Wasi:{ (func $myPrint (call $put_o) (call $nl)) (func $myFail (call $fail)) %}",
+        "start = @<S>",
+        "<S> { :p . %Wasi:{ (func $main (call $myPrint)) %} }",
+      ].join("\n"), base);
+      const store = new N3.Store();
+      new N3.Parser({baseIRI: base, format: "text/turtle"})
+        .parse('PREFIX : <http://a.example/>\n:x :p "from the library" .')
+        .forEach(q => store.addQuad(q));
+      const validator = new ShExValidator(schema, RdfJsDb(store), {});
+      const results = WasiExtension.register(validator, {ShExTerm});
+      const outcome = validator.validateShapeMap(
+        [{node: "http://a.example/x", shape: ShExValidator.Start}]);
+      expect(outcome[0].status).to.equal("conformant");
+      expect(results).to.deep.equal(["from the library"]);
+    });
+  });
+
   describe("node:wasi host parity", function () {
     it("should produce the same lines under Node's built-in WASI", function () {
       let hasWasi = true;

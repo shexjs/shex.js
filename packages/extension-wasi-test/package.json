@@ -3,7 +3,9 @@
   "version": "1.0.0-alpha.29",
   "files": [
     "lib",
-    "src"
+    "src",
+    "doc",
+    "examples"
   ],
   "description": "Shape Expressions Test semantic action module implemented in WebAssembly, printing via WASI fd_write.",
   "author": {

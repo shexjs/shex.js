@@ -62,9 +62,9 @@ packages/extension-test/lib/shex-extension-test.js: packages/extension-test/src/
 packages/extension-wasi-test/lib/shex-extension-wasi-test.js: packages/extension-wasi-test/src/shex-extension-wasi-test.ts packages/extension-wasi-test/package.json packages/extension-wasi-test/tsconfig.json
 	(cd packages/extension-wasi-test && tsc)
 
-# @shexjs/extension-wasi
-packages/extension-wasi/lib/shex-extension-wasi.js: packages/extension-wasi/src/shex-extension-wasi.ts packages/extension-wasi/package.json packages/extension-wasi/tsconfig.json
-	(cd packages/extension-wasi && tsc)
+# @shexjs/extension-wasi (gen-prelude embeds lib/prelude.wat as src/prelude-wat.ts)
+packages/extension-wasi/lib/shex-extension-wasi.js: packages/extension-wasi/src/shex-extension-wasi.ts packages/extension-wasi/lib/prelude.wat packages/extension-wasi/package.json packages/extension-wasi/tsconfig.json
+	(cd packages/extension-wasi && npm run build)
 
 # @shexjs/extension-map
 packages/extension-map/lib/shex-extension-map.js: $(wildcard packages/extension-map/src/*.ts) packages/shex-term/lib/shex-term.js packages/shex-visitor/lib/shex-visitor.js packages/shex-util/lib/shex-util.js packages/extension-map/package.json packages/extension-map/tsconfig.json

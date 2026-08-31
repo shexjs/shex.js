@@ -109,6 +109,41 @@ link that names a plugin opens on the validator's screen unless it says
   `doc/plugin-skeleton/` carries the README and package.json it needs
   (2026-08-28); the repository is yours to create, and its `repository`
   field to fill in.
+- **C6 (done 2026-08-31) Eval and Test in the WebApp.**  Each has a
+  plugin (`extension-eval/doc/ShExEvalPlugin.js`,
+  `extension-test/doc/ShExTestPlugin.js`) -- one classic-script file with
+  both faces: on the page it registers a descriptor whose `register`
+  installs the handler, and, named as its own `worker`, the same file
+  registers the same handler where a worker app's matcher is -- and an
+  `examples/manifest.yaml` (pass and fail each), aggregated into
+  doc/tests-manifest.yaml.  Loading either lib file directly as
+  `?plugin=` still works (handler-only, no worker half).  Found on the
+  way: the Eval extension's documented bool return was "unsupported
+  response" against today's validator, untested since ever -- a bool is
+  normalized now (lib and plugin), and extension-eval has tests.  The
+  stale `@shexjs/util` dependencies (neither extension requires anything)
+  are gone.
+- **C7 (done 2026-08-31) WASI in the WebApp.**  A bundle
+  (`extension-wasi/doc/webpacks/shexwasi-webapp.js`, wabt and both WASI
+  extensions over the core bundle's global; `npm run webpack` builds it
+  beside the others) and two dual-face plugins: `ShExWasiPlugin.js` (WAT
+  semantic actions compiled by wabt in the page) and, in
+  extension-wasi-test/doc, `ShExWasiTestPlugin.js` (the wasm Test module,
+  its bytes fetched from lib/ and handed to `configure({wasm, stdout:
+  false})` -- both options new: a browser has no file descriptors and no
+  `__dirname`).  What it took: the prelude is a generated module
+  (`tools/gen-prelude.js`, so no Fs in `prelude()`), the shim paths speak
+  Uint8Array rather than Buffer, `WasmPath` is computed lazily (the
+  bundle externalizes the node builtins to undefined, and a top-level
+  `Path.join` was the whole bundle failing to evaluate), a plugin `init`
+  may return a promise that rides `applied` (wabt and the wasm fetch
+  finish before a manifest entry validates), and the repo test server
+  read every file as utf8 -- a .wasm served as text is a CompileError.
+  Each extension has a pass/fail manifest, aggregated (41 entries from 7
+  manifests).  The worker race is closed too (same day): a worker plugin
+  hands `registerWorkerPlugin` a `ready` promise -- wabt, the wasm fetch --
+  and the worker thread awaits every plugin's `ready` before serving any
+  request, as the page awaits `init` through `applied`.
 - **C5 (note)** The worker is classic; an ESM worker (`type: "module"`)
   would need a different loader.  Not now.
 

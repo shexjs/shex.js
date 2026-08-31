@@ -69,7 +69,12 @@ mixin(ShExBaseApp, {
         if (typeof ext.init === "function" && !ext.initialized) {
             ext.initialized = true;
             try {
-                ext.init(this);
+                const readying = ext.init(this);
+                // an init with something to await -- a wasm toolchain to load, a
+                // module to fetch -- rides `applied`, so whoever loaded the plugin
+                // (loadEntryPlugins, ?plugin=) waits for it before validating
+                if (readying && typeof readying.then === "function")
+                    return readying.catch((e) => this.resultsWidget.failMessage(e, "loading " + (ext.label || ext.id)));
             }
             catch (e) {
                 this.resultsWidget.failMessage(e, "loading " + (ext.label || ext.id));
