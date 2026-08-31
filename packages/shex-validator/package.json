@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/validator",
-  "version": "1.0.0-alpha.29",
+  "version": "1.0.0-alpha.30",
   "files": [
     "lib",
     "src"
@@ -26,21 +26,21 @@
   },
   "dependencies": {
     "@rdfjs/data-model": "^2.0.2",
-    "@shexjs/eval-simple-1err": "^1.0.0-alpha.29",
-    "@shexjs/eval-threaded-nerr": "^1.0.0-alpha.29",
-    "@shexjs/eval-validator-api": "^1.0.0-alpha.29",
-    "@shexjs/neighborhood-api": "^1.0.0-alpha.28",
+    "@shexjs/eval-simple-1err": "^1.0.0-alpha.30",
+    "@shexjs/eval-threaded-nerr": "^1.0.0-alpha.30",
+    "@shexjs/eval-validator-api": "^1.0.0-alpha.30",
+    "@shexjs/neighborhood-api": "^1.0.0-alpha.30",
     "@shexjs/term": "^1.0.0-alpha.28",
-    "@shexjs/visitor": "^1.0.0-alpha.27",
+    "@shexjs/visitor": "^1.0.0-alpha.30",
     "@types/shexj": "^2.1.7",
     "hierarchy-closure": "^1.2.2"
   },
   "devDependencies": {
     "@rdfjs/types": "^1.1.0",
-    "@shexjs/extension-test": "^1.0.0-alpha.28",
-    "@shexjs/node": "^1.0.0-alpha.28",
-    "@shexjs/parser": "^1.0.0-alpha.28",
-    "@shexjs/util": "^1.0.0-alpha.28"
+    "@shexjs/extension-test": "^1.0.0-alpha.30",
+    "@shexjs/node": "^1.0.0-alpha.30",
+    "@shexjs/parser": "^1.0.0-alpha.30",
+    "@shexjs/util": "^1.0.0-alpha.30"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot"
