@@ -94,8 +94,9 @@ if (!TEST_browser) {
       });
     })));
 
-  /* The WASI manifest's other tiers: an action with its own data segment,
-   * and a standalone (module ...) that loads argv itself -- no prelude. */
+  /* The WASI manifest's other tiers: a library the schema declares once in
+   * a start action (and its failing twin), an action with its own data
+   * segment, and a standalone (module ...) that loads argv itself. */
   describe("the WASI manifest's other tiers", function () {
     this.timeout(20000);
     let dom, $, shared;
@@ -107,7 +108,11 @@ if (!TEST_browser) {
     });
     after(function () { if (dom) dom.window.close(); });
 
-    ["WASI writes its own data", "WASI standalone module"].forEach(schemaLabel =>
+    [{schemaLabel: "WASI library in a start action", list: ".passes", mark: "\u2713"},
+     {schemaLabel: "WASI library can fail a match", list: ".fails", mark: "\u2717"},
+     {schemaLabel: "WASI writes its own data", list: ".passes", mark: "\u2713"},
+     {schemaLabel: "WASI standalone module", list: ".passes", mark: "\u2713"},
+    ].forEach(({schemaLabel, list, mark}) =>
       it(`should validate "${schemaLabel}"`, async function () {
         const schemaLi = $("#inputSchema .manifest li")
               .filter((i, li) => $(li).text() === schemaLabel).first();
@@ -116,14 +121,14 @@ if (!TEST_browser) {
           schemaLi.trigger("click");
           await shared.promise;
         }
-        const dataLi = $("#inputData .passes li").first();
+        const dataLi = $(`#inputData ${list} li`).first();
         if (!dataLi.hasClass("selected")) {
           dataLi.trigger("click");
           await shared.promise;
         }
         $("#validate").trigger("click");
         await shared.promise;
-        expect($("#fixedMap .pair a").first().text(), "the pair's mark").to.equal("\u2713");
+        expect($("#fixedMap .pair a").first().text(), "the pair's mark").to.equal(mark);
       }));
   });
 }

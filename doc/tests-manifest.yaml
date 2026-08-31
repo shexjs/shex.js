@@ -884,6 +884,47 @@
   comment: exit(1) is a SemActFailure on the constraint, so the pair goes red.
   plugins:
   - ../packages/extension-wasi/doc/ShExWasiPlugin.js
+# The schema can bring a library of its own: a start action whose fields
+# declare no $main runs nothing -- it joins the prelude in every action of
+# the schema.  myPrint and myFail here are put_o/nl and fail, said once by
+# the schema; the standalone module at the bottom of this ladder writes the
+# same two by hand.
+- schemaLabel: WASI library in a start action
+  schema: |
+    PREFIX : <http://a.example/>
+    PREFIX Wasi: <http://shex.io/extensions/WASI/>
+    %Wasi:{ (func $myPrint (call $put_o) (call $nl))
+            (func $myFail (call $fail)) %}
+    start = @<S>
+    <S> { :p . %Wasi:{ (func $main (call $myPrint)) %} }
+  dataLabel: one triple
+  data: |
+    PREFIX : <http://a.example/>
+    :x :p "printed by the schema's library" .
+  queryMap: |
+    <http://a.example/x>@START
+  status: conformant
+  comment: The start action declares myPrint and myFail once for the whole schema; the constraint just calls myPrint.
+  plugins:
+  - ../packages/extension-wasi/doc/ShExWasiPlugin.js
+- schemaLabel: WASI library can fail a match
+  schema: |
+    PREFIX : <http://a.example/>
+    PREFIX Wasi: <http://shex.io/extensions/WASI/>
+    %Wasi:{ (func $myPrint (call $put_o) (call $nl))
+            (func $myFail (call $fail)) %}
+    start = @<S>
+    <S> { :p . %Wasi:{ (func $main (call $myPrint) (call $myFail)) %} }
+  dataLabel: the failed value
+  data: |
+    PREFIX : <http://a.example/>
+    :x :p "999" .
+  queryMap: |
+    <http://a.example/x>@START
+  status: nonconformant
+  comment: myFail is the library's spelling of fail -- the object prints, exit(1) goes red, like "WASI can fail a match" one rung up.
+  plugins:
+  - ../packages/extension-wasi/doc/ShExWasiPlugin.js
 # The next tier down: the action brings its own data segment and prints it
 # with the prelude's $put(ptr, len) -- the author's segments start at 8192
 # (the prelude's memory map).  test/wasi/*.shex holds more of these.
@@ -892,7 +933,15 @@
     PREFIX : <http://a.example/>
     PREFIX Wasi: <http://shex.io/extensions/WASI/>
     start = @<S>
-    <S> { :p . %Wasi:{ (data (i32.const 8192) "from a data segment") (func $main (call $put (i32.const 8192) (i32.const 19)) (call $nl)) %} }
+    <S> { :p . %Wasi:{
+          (data (i32.const 8192) "from a data segment")
+          (func $main (
+              call $put (i32.const 8192)
+              (i32.const 19)
+            )
+            (call $nl)
+          )
+          %} }
   dataLabel: one triple
   data: |
     PREFIX : <http://a.example/>

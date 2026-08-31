@@ -19,6 +19,13 @@
  *       n=           the focus node (Shape and NodeConstraint ctx)
  *     (startActs run with no bindings.)
  *
+ * A start action whose fields declare no $main is the schema's own library:
+ * it runs nothing, and its fields are composed -- after the prelude -- into
+ * every later action of the validation, so a constraint can call a function
+ * the schema declared once.  A start action with $main still runs once as
+ * its own program; a standalone (module ...) ignores the library along with
+ * the prelude.
+ *
  * Term values are serialized as in the Test extension: a term's `.value`,
  * except literals with a non-xsd:string datatype, which appear in Turtle
  * form (`"1"^^http://www.w3.org/2001/XMLSchema#integer`).
@@ -126,24 +133,26 @@ function prelude (): string {
 
 /** Complete a semantic action's WAT: code beginning with "(module" is a
  * standalone module; anything else is module fields (typically just
- * `(func $main …)` and data segments) composed with the library prelude.
- * The prelude comes first — WAT requires imports before other definitions —
- * so wabt error line numbers are offset by its length.
+ * `(func $main …)` and data segments) composed with the library prelude
+ * and whatever library the schema's start actions declared.  The prelude
+ * comes first — WAT requires imports before other definitions — so wabt
+ * error line numbers are offset by its length (and the library's).
  */
-function composeWat (code: string): string {
+function composeWat (code: string, library: string = ""): string {
   return code.trimStart().startsWith("(module")
     ? code
-    : "(module\n" + prelude() + code + "\n)\n";
+    : "(module\n" + prelude() + library + code + "\n)\n";
 }
 
-function compile (code: string): WebAssembly.Module {
-  if (moduleCache.has(code))
-    return moduleCache.get(code)!;
+function compile (code: string, library: string = ""): WebAssembly.Module {
+  const wat = composeWat(code, library);   // the cache key: the same fields under a different library are a different module
+  if (moduleCache.has(wat))
+    return moduleCache.get(wat)!;
   if (wabt === null)
     throw Error("Invocation error: " + WasiExt + " not initialized; `await extension.ready()` before validating");
   let parsed;
   try {
-    parsed = wabt.parseWat("semact.wat", composeWat(code), {});
+    parsed = wabt.parseWat("semact.wat", wat, {});
   } catch (e) {
     throw Error("Invocation error: " + WasiExt + " WAT didn't compile: " + (e as Error).message);
   }
@@ -152,7 +161,7 @@ function compile (code: string): WebAssembly.Module {
   // (the casts to BufferSource/Uint8Array[] here and in runShim: the tree's
   // @types/node 10 Buffer predates TypeScript's generic typed arrays)
   const mod = new WebAssembly.Module(bin.buffer as BufferSource);
-  moduleCache.set(code, mod);
+  moduleCache.set(wat, mod);
   return mod;
 }
 
@@ -290,6 +299,11 @@ function makeModule (opts: WasiExtensionOptions): WasiExtension {
 
     const run = (opts.impl || "shim") === "wasi" ? runNodeWasi : runShim;
 
+    // the schema's library: fields a start action declared for the whole
+    // validation.  Per register() call, so validators don't share it.
+    let library = "";
+    let sawAction = false;
+
     validator.semActHandler.results[WasiExt] = [];
     validator.semActHandler.register(
       WasiExt,
@@ -305,7 +319,22 @@ function makeModule (opts: WasiExtensionOptions): WasiExtension {
         dispatch: function (code: string | null, ctx: any, _extensionStorage: any): SemActFailure[] {
           if (typeof code !== "string")
             throw Error("Invocation error: " + WasiExt + " expected WAT code to dispatch, got: " + code);
-          const res = run(compile(code), ctxArgs(ctx));
+          if ((ctx === null || ctx === undefined)
+              && !code.trimStart().startsWith("(module") && !/\(func\s+\$main\b/.test(code)) {
+            // a start action declaring no $main is the schema's library:
+            // nothing to run -- its fields join the prelude in every later
+            // action's module.  startActs come first, so a start action
+            // arriving after constraint actions opens the next validation.
+            if (sawAction) {
+              library = "";
+              sawAction = false;
+            }
+            library += code + "\n";
+            return [];
+          }
+          if (ctx !== null && ctx !== undefined)
+            sawAction = true;
+          const res = run(compile(code, library), ctxArgs(ctx));
           const lines = new TextDecoder().decode(res.stdout).split("\n");
           const tail = lines.pop()!; // "" after a final "\n", else an unterminated tail
           if (tail !== "")

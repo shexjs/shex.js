@@ -28,6 +28,24 @@ The composed module still imports only `wasi_snapshot_preview1`, so any WASI
 host that performs the same composition (the prelude text is part of this
 extension's definition) runs the same actions.
 
+A schema can extend the library for itself: a **start action whose fields
+declare no `$main`** runs nothing — its fields are composed, after the
+prelude, into every later action of the validation, so a function is
+declared once and called per constraint:
+
+```
+%<http://shex.io/extensions/WASI/>{
+  (func $myPrint (call $put_o) (call $nl))
+  (func $myFail (call $fail))
+%}
+start = @<S>
+<S> { <p> . %<http://shex.io/extensions/WASI/>{ (func $main (call $myPrint)) %} }
+```
+
+A start action *with* `$main` still runs once as its own program, and a
+standalone `(module …)` ignores the schema's library along with the
+prelude.
+
 ### the library
 
 | helper | effect |
