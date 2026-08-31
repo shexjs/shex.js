@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@shexjs/neighborhood-api": "^1.0.0-alpha.30",
-    "n3": "^1.20.4"
+    "n3": "^2.6.4"
   },
   "scripts": {
     "build": "tsc",
