@@ -22,7 +22,7 @@ jobs:
       # OIDC trusted publishing requires npm >= 11.5.1
       - run: npm install -g npm@latest
 
-      - run: npm ci
+      - run: npm ci --allow-git=all
 
       # Explicit list: the published packages of this monorepo. Workspaces not
       # listed here (e.g. extension-reduce, extension-wasi, editor-services,
