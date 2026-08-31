@@ -1614,15 +1614,19 @@ if (!TEST_browser) {
         try {
           es.setPairHovers(es.lastMapped.pairs);
           // exactly the ranges of the results about this document: an object
-          // and a predicate each, and nothing from the document next door
+          // and a predicate each, a region per statement-opening subject,
+          // and nothing from the document next door
           const here = es.lastMapped.pairs.filter(p => p.doc === observationAt);
           const there = es.lastMapped.pairs.filter(p => p.doc === patientAt);
           expect(there.length, "results about the other document exist").to.be.above(0);
           const ranges = pairs => pairs.reduce((n, p) => n
             + (p.anchors.objectParts || (p.anchors.object ? [p.anchors.object] : [])).length
             + (p.anchors.predicateParts || (p.anchors.predicate ? [p.anchors.predicate] : [])).length, 0);
+          const subjectRanges = pairs => new Set(pairs.flatMap(p =>
+            (p.anchors.subjectParts || (p.anchors.subject ? [p.anchors.subject] : []))
+              .map(r => r.from + "-" + r.to))).size;
           expect(regions.length, "one per range of the results shown here")
-            .to.equal(ranges(here));
+            .to.equal(ranges(here) + subjectRanges(here));
 
           // a region built while this document was showing, hovered after
           // another has come forward: it may not drag the reader back
@@ -2638,6 +2642,18 @@ if (!TEST_browser) {
         const overSchema = titles("inputSchema");
         expect(overSchema.join("\n"), "the triples, over the constraint").to.include(':x :p "not a number"');
         expect(overSchema.join("\n")).to.include(":y :p 2");
+        // ...and over the node a statement opens, the way back: the
+        // constraints its triples were held to, and entering it lights them
+        const subjects = captured.inputData.filter(r => [":x", ":y"].includes(DATA.slice(r.from, r.to)));
+        expect(subjects.length, "a region per statement's subject").to.equal(2);
+        const yRegion = subjects.find(r => DATA.slice(r.from, r.to) === ":y");
+        expect(yRegion.title(), "the constraint, over the subject").to.include(":p xsd:integer");
+        const painted = [];
+        const origHl = es.panes.inputSchema.highlight;
+        es.panes.inputSchema.highlight = (rs) => painted.push(rs);
+        try { yRegion.enter(); } finally { es.panes.inputSchema.highlight = origHl; }
+        expect(painted.flat().map(r => SCHEMA.slice(r.from, r.to)).join(" "),
+               "entering it lights the constraint").to.include(":p xsd:integer");
       } finally {
         restore.forEach(f => f());
       }

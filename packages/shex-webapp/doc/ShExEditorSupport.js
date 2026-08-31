@@ -552,12 +552,33 @@ class EditorSupport {
         // would light up whatever text happens to sit at those offsets here.
         const showingDoc = this.app.neighborhoods ? this.app.neighborhoods.showing : -1;
         const shownHere = (p) => p.doc === undefined || p.doc < 0 || p.doc === showingDoc;
-        if (dataPane)
+        if (dataPane) {
+            // ...and the subject: the node a statement opens answers for all of
+            // it.  One region per subject range, the way the schema side groups
+            // by constraint, holding every pair whose triple it opens -- and the
+            // link a plugin aimed at the node, so ShExReduce's focus lights the
+            // shape it was assigned in and the node of the AST it made.  Not the
+            // `secondary` links: those are the same link said again at each
+            // constraint, which would only double the group.
+            const bySubject = new Map();
+            pairs.filter(shownHere).filter(p => !p.secondary).forEach(p => anchorRanges(p, "subject").forEach((r) => {
+                const key = r.from + "-" + r.to;
+                if (!bySubject.has(key))
+                    bySubject.set(key, { range: r, group: [] });
+                bySubject.get(key).group.push(p);
+            }));
             dataPane.setHoverRegions(pairs.filter(shownHere).flatMap(p => [].concat(anchorRanges(p, "object"), anchorRanges(p, "predicate"))
                 .map(r => ({ from: r.from, to: r.to,
                 enter: () => show([p], "data"),
                 click: freeze([p], "data"),
-                title: () => this.pairTitle([p], "data") }))), clearAll);
+                title: () => this.pairTitle([p], "data") })))
+                .concat([...bySubject.values()].map(({ range, group }) => ({
+                from: range.from, to: range.to,
+                enter: () => show(group, "data"),
+                click: freeze(group, "data"),
+                title: () => this.pairTitle(group, "data"),
+            }))), clearAll);
+        }
         // A pane a pair named is somewhere to hover from as well as somewhere
         // to light up: the reader may start at the AST and ask what made it.
         linkedPanes.forEach(name => {

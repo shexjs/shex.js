@@ -47,14 +47,21 @@ if (!TEST_browser) {
 
     after(function () { if (dom) dom.window.close(); });
 
-    /** pick a schema and a data entry by their labels, then validate */
+    /** pick a schema and a data entry by their labels, then validate.
+     * Clicking a selected entry deselects it (the app's toggle: see
+     * pickSchema/pickData), so one that is already picked is left alone. */
     async function open (schemaLabel, dataLabel) {
-      $("#inputSchema .manifest li").filter((i, li) => $(li).text() === schemaLabel)
-        .trigger("click");
-      await shared.promise;
-      $("#inputData .passes li, #inputData .fails li")
-        .filter((i, li) => $(li).text() === dataLabel).trigger("click");
-      await shared.promise;
+      const schemaLi = $("#inputSchema .manifest li").filter((i, li) => $(li).text() === schemaLabel);
+      if (!schemaLi.hasClass("selected")) {
+        schemaLi.trigger("click");
+        await shared.promise;
+      }
+      const dataLi = $("#inputData .passes li, #inputData .fails li")
+        .filter((i, li) => $(li).text() === dataLabel);
+      if (!dataLi.hasClass("selected")) {
+        dataLi.trigger("click");
+        await shared.promise;
+      }
       $("#validate").trigger("click");
       await shared.promise;
     }
@@ -398,6 +405,7 @@ if (!TEST_browser) {
          expect(carrying.length, "pairs that light the AST").to.be.above(links.length);
        });
 
+
     /* An action written in a document of its own is written nowhere else,
      * so that document is the fourth place this points at. */
     it("should link a node of the AST to the action in the overlay", async function () {
@@ -419,6 +427,42 @@ if (!TEST_browser) {
       const said = es.resolveLink(inOverlay[0]).filter(l => l.schema)
             .map(l => schemaText.substring(l.schema.from, l.schema.to));
       expect(said.some(s => /^<#\w+>/.test(s)), "which production: " + said).to.equal(true);
+    });
+    /* ...and from the data: hovering the node a statement opens lights the
+     * productions its triples matched, the action among them, and the node
+     * of the AST they made -- the same link, entered from the third side. */
+    it("should light the schema and the AST from a data subject node", async function () {
+      await open("calc, actions guide", "sums");
+      $("#reduce").trigger("click");
+      await shared.promise;
+
+      const es = shared.Caches.editorSupport;
+      const links = (es.linkSets || {})[REDUCE_ID] || [];
+      const whole = links.find(l => l.shape !== undefined);
+      const primary = es.resolveLink(whole).find(l => !l.secondary);
+      const captured = {};
+      const orig = es.panes.inputData.setHoverRegions;
+      es.panes.inputData.setHoverRegions = function (rs) { captured.regions = rs; return orig.apply(this, arguments); };
+      try { es.setPairHovers(es.linkSets.validation); } finally { es.panes.inputData.setHoverRegions = orig; }
+
+      const dataText = $("#inputData textarea").first().val();
+      const at = primary.anchors.subject;
+      const region = (captured.regions || []).find(r => r.from === at.from && r.to === at.to);
+      expect(region, "a hover region on the focus node " + dataText.substring(at.from, at.to)).to.exist;
+      expect(region.title(), "the production, the action among it").to.include("%Reduce:");
+
+      const painted = {schema: [], ast: []};
+      const origSchema = es.panes.inputSchema.highlight, origAst = es.panes.ast.highlight;
+      es.panes.inputSchema.highlight = (rs) => painted.schema.push(...rs);
+      es.panes.ast.highlight = (rs) => painted.ast.push(...rs);
+      try { region.enter(); } finally {
+        es.panes.inputSchema.highlight = origSchema;
+        es.panes.ast.highlight = origAst;
+      }
+      const schemaText = $("#inputSchema textarea").first().val();
+      expect(painted.schema.map(r => schemaText.substring(r.from, r.to).replace(/\s+/g, " ")).join(" "),
+             "the shape it was assigned in").to.include("%Reduce:");
+      expect(painted.ast.length, "and the node of the AST it made").to.be.above(0);
     });
 
     /* The validation's own highlighting is wired from the same list, so a
