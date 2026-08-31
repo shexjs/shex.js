@@ -44,10 +44,22 @@ class ShapeMapCache extends InterfaceCache {
                 return acc.concat([node + "@" + status + shape]);
             }, []).join(",\n");
             this.queryMap.empty().val(text);
-            const ret = await this.copyEditMapToFixedMap();
-            this.markEditMapClean();
-            this.resolvedQueryMapText = text;
-            return ret;
+            // dirty, but the same question: a data reload marks the edit map
+            // dirty without editing a pair, and an unchanged question may keep
+            // its standing answer if the source cannot re-answer it
+            const unchanged = text === this.resolvedQueryMapText;
+            try {
+                const ret = await this.copyEditMapToFixedMap(unchanged);
+                this.markEditMapClean();
+                this.resolvedQueryMapText = text;
+                return ret;
+            }
+            catch (e) {
+                // said where the results are, as the other direction says it; an
+                // unhandled rejection helps nobody
+                this.resultsWidget.failMessage(e, "resolving Fixed Map");
+                return [e];
+            }
         }
         else {
             return []; // no errors
@@ -459,20 +471,20 @@ class ShapeMapCache extends InterfaceCache {
      * asked of a local store) left the tab running for the rest of the
      * session.
      */
-    async copyEditMapToFixedMap() {
+    async copyEditMapToFixedMap(unchangedQuestion = false) {
         if ((this.fixedMapRuns = (this.fixedMapRuns || 0) + 1) === 1) {
             this.fixedMapLabel = this.fixedMapTab.text();
             this.fixedMapTab.text("resolving Fixed Map").addClass("running");
         }
         try {
-            return await this.resolveFixedMap();
+            return await this.resolveFixedMap(unchangedQuestion);
         }
         finally {
             if (--this.fixedMapRuns === 0)
                 this.fixedMapTab.text(this.fixedMapLabel).removeClass("running");
         }
     }
-    async resolveFixedMap() {
+    async resolveFixedMap(unchangedQuestion = false) {
         const generation = this.fixedMapGeneration = (this.fixedMapGeneration || 0) + 1;
         const getQuads = async (s, p, o) => {
             const get = s === ShExWebApp.ShapeMap.Focus ? "subject" : "object";
@@ -500,6 +512,17 @@ class ShapeMapCache extends InterfaceCache {
                     : sm.node.type === "Extension"
                         ? this.caches.inputData.resolveQueryMapExtension(sm.node.language, sm.node.lexical)
                             .then((terms) => ({ nodes: terms.map((term) => this.caches.inputData.meta.termToLex(term)), shape: shape }))
+                            // The source in the picker now cannot answer this question
+                            // -- a slurp handed over to the local store, which cannot
+                            // run SPARQL -- but if the question is the one already
+                            // answered, its rows are standing in the fixed map and they
+                            // are what to validate: keep them.  A question the reader
+                            // changed, or one never answered, refuses for real.
+                            .catch((e) => {
+                            if (e.unsupportedExtension && unchangedQuestion && this.fixedMap.find("tr.pair").length > 0)
+                                return { keep: true };
+                            throw e;
+                        })
                         : getQuads(sm.node.subject, sm.node.predicate, sm.node.object)
                             .then((nodes) => Promise.resolve({ nodes: nodes, shape: shape, status: status }));
                 return acc.concat(added);
@@ -568,6 +591,8 @@ class ShapeMapCache extends InterfaceCache {
         const pairs = await Promise.all(nodeShapePromises);
         if (generation !== this.fixedMapGeneration)
             return []; // a later edit is already resolving; its rows are the ones to show
+        if (pairs.some((pair) => pair && pair.keep))
+            return []; // an unanswerable question's rows stand; leave the table as it is
         this.fixedMap.find("tbody").empty();
         pairs.reduce((acc, pair) => {
             pair.nodes.forEach((node) => {
