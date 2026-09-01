@@ -117,7 +117,9 @@ const SchemaOptions = {
     collisionPolicy: ShExMerger.warnDuplicates,
 };
 // const RunMode = { NORMAL: 0, ERROR: 1, DRYRUN: 2, USAGE: 4, HELP: 6 };
-const REGEX_MODULES = "../lib/regex/";
+// the engines that ship with the suite, offered by `--regex-module ?`;
+// getRegexModule also takes any package name or path exporting a RegexpModule
+const KNOWN_REGEX_MODULES = ["@shexjs/eval-threaded-nerr", "@shexjs/eval-simple-1err"];
 const MISC_NODES = true; // validate nodes not found in data.
 const START_SHAPE_LABEL = "START";
 const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
@@ -168,7 +170,7 @@ const CommandLineOptions = [
     { name: "test-name", type: String, typeLabel: "IRI", multiple: true, defaultValue: [], description: "what tests to run in the manifest (.name OR .schemaLabel/.dataLabel)" },
     { name: "invocation", alias: "i", type: Boolean, description: "show invocation" },
     { name: "dry-run", alias: "N", type: Boolean, description: "prepare validation but don't execute" },
-    { name: "regex-module", type: String, typeLabel: "js module", multiple: false, defaultValue: undefined, description: "what regular expression module to use" },
+    { name: "regex-module", type: String, typeLabel: "js module", multiple: false, defaultValue: undefined, description: "matching engine: a package name or path, e.g. eval-simple-1err (? lists them)" },
 ];
 // Options declared by neighborhood modules (a spec whose cli.option is
 // already defined above, like sparql's allOutgoing riding --slurp-all,
@@ -1101,22 +1103,11 @@ function loadCommandLine(cmds) {
     if ("regex-module" in cmds) {
         if (cmds["regex-module"] === "?") {
             // "--regex-module ?" lists the known regular expression modules.
-            return new Promise(function (resolve, _reject) {
-                Fs.readdir(Path.join(__dirname, REGEX_MODULES), (err, fns) => {
-                    if (err)
-                        throw Error(String(err));
-                    fns.forEach(fn => {
-                        if (fn.endsWith(".js")) {
-                            try {
-                                const m = require(REGEX_MODULES + fn);
-                                console.log("  --regex-module " + m.name + " -- " + m.description);
-                            }
-                            catch (e) { }
-                        }
-                    });
-                    resolve(0);
-                });
+            KNOWN_REGEX_MODULES.forEach(pkg => {
+                const m = require(pkg).RegexpModule;
+                console.log("  --regex-module " + m.name + " -- " + m.description);
             });
+            return Promise.resolve(0);
         }
         else {
             ValidatorOptions.regexModule = getRegexModule(cmds["regex-module"]);
@@ -1287,7 +1278,7 @@ function runServer(serverLoaded, serverParms, serverOptions, cmds) {
                 let options = serverOptions;
                 if ("regex-module" in parms)
                     options = extend(options, {
-                        regexModule: require(REGEX_MODULES + parms["regex-module"])
+                        regexModule: getRegexModule(parms["regex-module"])
                     });
                 // Wrap in RdfJsDb for neighborhood-api.
                 if (!("getNeighborhood" in parms.data)) // !! clean up db chaos
@@ -1390,7 +1381,8 @@ function getRegexModule(module) {
         }
         catch (e1) {
             try {
-                return require(REGEX_MODULES + module).RegexpModule;
+                // the short form: "eval-simple-1err" names @shexjs/eval-simple-1err
+                return require("@shexjs/" + module).RegexpModule;
             }
             catch (e2) {
                 throw e1;

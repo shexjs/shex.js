@@ -31,7 +31,7 @@ describe("shape-map locations", function () {
       {node: "http://d.example/y", shape: "http://s.example/T", status: "nonconformant",
        reason: {"@value": "why"}, appinfo: {a: 1}},
       {node: {type: "TriplePattern", subject: ShapeMap.Focus, predicate: "http://d.example/p", object: null},
-       shape: ShapeMap.Start},
+       shape: ShapeMap.Start, status: "conformant"},
     ]);
     expect(Object.keys(sm), "the locations are not a pair").to.deep.equal(["0", "1", "2"]);
     expect(JSON.parse(JSON.stringify(sm)).length).to.equal(3);
@@ -61,5 +61,27 @@ describe("shape-map locations", function () {
     expect(caught, "thrown").to.exist;
     expect(caught.location, "where").to.include({first_line: 1, first_column: 12});
     expect(caught.message).to.match(/Expecting/);
+  });
+});
+
+/** The lexer fuses "@pfx:local", "@pfx:" and "@START" into single tokens,
+ * which used to skip the default-status production: only "@ <iri>" rows got
+ * status "conformant". Every spelling defaults alike now. */
+describe("shape-map default status", function () {
+  const spellings = {
+    "<x>@<S>": "conformant",
+    "ex:y@:T": "conformant",     // fused ATPNAME_LN
+    "ex:y@:": "conformant",      // fused ATPNAME_NS
+    "<x>@START": "conformant",   // fused ATSTART
+    "<x>@ START": "conformant",  // unfused, via the optional-status route
+    "ex:y@!:T": "nonconformant", // explicit still wins
+    "<x>@?<S>": "unknown",
+  };
+  Object.entries(spellings).forEach(([text, status]) => {
+    it(`should give ${JSON.stringify(text)} status ${JSON.stringify(status)}`, function () {
+      const [pair] = parser.parse(text);
+      expect(pair.status).to.equal(status);
+      expect(Object.keys(pair)).to.deep.equal(["node", "shape", "status"]);
+    });
   });
 });

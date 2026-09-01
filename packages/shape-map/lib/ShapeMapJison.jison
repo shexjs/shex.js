@@ -252,16 +252,16 @@ _QjsonAttributes_E_Opt:
 
 statusAndShape:
       GT_AT _Qstatus_E_Opt shapeSelector	{ $$ = extend({ shape: $3 }, $2); yy.shapeLoc = this._$; }
-    | ATSTART	{ $$ = { shape: ShapeMap.Start }; yy.shapeLoc = this._$; }
+    | ATSTART	{ $$ = { shape: ShapeMap.Start, status: 'conformant' }; yy.shapeLoc = this._$; } // fused @-forms default like _Qstatus_E_Opt
     | ATPNAME_NS	{
         $1 = $1.substr(1, $1.length-1);
-        $$ = { shape: yy.schemaMeta.expandPrefix($1.substr(0, $1.length - 1), yy) };
+        $$ = { shape: yy.schemaMeta.expandPrefix($1.substr(0, $1.length - 1), yy), status: 'conformant' };
         yy.shapeLoc = this._$;
       }
     | ATPNAME_LN	{
         $1 = $1.substr(1, $1.length-1);
         const namePos = $1.indexOf(':');
-        $$ = { shape: yy.schemaMeta.expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1) };
+        $$ = { shape: yy.schemaMeta.expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1), status: 'conformant' };
         yy.shapeLoc = this._$;
       }
     ;

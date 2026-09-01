@@ -1,6 +1,6 @@
 {
   "name": "shape-map",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "files": [
     "lib",
     "src"
@@ -25,7 +25,7 @@
   },
   "scripts": {
     "parser": "ts-jison -n ShapeMapJison -t javascript -p lalr -o ./lib/ShapeMapJison.js ./lib/ShapeMapJison.jison",
-    "test": "cd .. && mocha -C -R dot",
+    "test": "mocha -C -R dot",
     "build": "tsc"
   },
   "publishConfig": {

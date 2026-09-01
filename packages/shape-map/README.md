@@ -33,7 +33,7 @@ console.log(smap);
 ]
 ```
 
-The result is an array of node/shape associations, ready to hand to [`@shexjs/validator`](../shex-validator#readme)'s `validateShapeMap`. (`status` is the association's *asserted* status — a query map entry asserts `conformant` unless written with `!`.)
+The result is an array of node/shape associations, ready to hand to [`@shexjs/validator`](../shex-validator#readme)'s `validateShapeMap`. (`status` is the association's *asserted* status — `conformant` unless written with `!` for nonconformant or `?` for unknown.)
 
 ### Parser.construct(fallbackBase, schemaMeta, dataMeta)
 
@@ -81,7 +81,8 @@ const smap = shapeMapParser.parse(":n@shape:S1");
 [
   {
     node: 'http://my.example/data#n',
-    shape: 'http://my.example/shapes#S1'
+    shape: 'http://my.example/shapes#S1',
+    status: 'conformant'
   }
 ]
 ```
