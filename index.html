@@ -57,6 +57,8 @@
       parameterized shapes — <code>&lt;#List1Plus&gt;&lt;&lt;?T&gt;&gt;</code> — and apply
       them with <code>@&lt;#List1Plus&gt;&lt;&lt; @&lt;#ShapeDecl&gt; &gt;&gt;</code>.
       Comments welcome on the strawman.
+      <a href="packages/shex-webapp/doc/shex-simple.html?schema=PREFIX%20rdf%3A%20%3Chttp%3A%2F%2Fwww.w3.org%2F1999%2F02%2F22-rdf-syntax-ns%23%3E%0APREFIX%20ex%3A%20%3Chttp%3A%2F%2Fex.example%2F%23%3E%0A%3C%23List1Plus%3E%3C%3C%3FT%3E%3E%20CLOSED%20%7B%0A%20%20rdf%3Afirst%20%3FT%20%3B%0A%20%20rdf%3Arest%20%20%5Brdf%3Anil%5D%20OR%20%40%3C%23List1Plus%3E%3C%3C%3FT%3E%3E%0A%7D%0A%3C%23Person%3E%20%7B%20ex%3Aname%20.%20%7D%0A%3C%23Team%3E%20%7B%20ex%3Amembers%20%40%3C%23List1Plus%3E%3C%3C%20%40%3C%23Person%3E%20%3E%3E%20%7D%0A&amp;data=PREFIX%20ex%3A%20%3Chttp%3A%2F%2Fex.example%2F%23%3E%0A%3Ct1%3E%20ex%3Amembers%20%28%3Calice%3E%20%3Cbob%3E%29%20.%0A%3Calice%3E%20ex%3Aname%20%22Alice%22%20.%0A%3Cbob%3E%20ex%3Aname%20%22Bob%22%20.%0A&amp;shape-map=%3Ct1%3E%40%3C%23Team%3E">Try one</a>: a <code>List1Plus</code> template, instantiated for
+      <code>&lt;#Person&gt;</code>, validating an RDF list.
     </p>
     <p class="blurb">
       In-browser demos of the <a href="https://github.com/shexSpec/shex.js">shex.js</a>

@@ -360,9 +360,9 @@ Yes — at the **concepts-lite** level, and it's in the prototype:
 |---|---|
 | ShExC parsing | `@shexjs/parser` — [Templates-parse-test.js](../packages/shex-parser/test/Templates-parse-test.js) |
 | Expansion | `ShExUtil.expandTemplates` / [`templates.ts`](../packages/shex-util/src/templates.ts) — [Templates-test.js](../packages/shex-util/test/Templates-test.js) |
-| Loader/CLI | auto-expands after import merge; `shex-validate -x templated.shex` works |
+| Loader/CLI/WebApp | the loader auto-expands after import merge; `shex-validate -x templated.shex` works, and both app flavours validate templated schemas through the same path ([templates-webapp-test.js](../packages/shex-webapp/test/templates-webapp-test.js), live at [shex.js.org/generics](https://shex.js.org/generics/)) |
 | Validation | unchanged by design — [Templates-validation-test.js](../packages/shex-validator/test/Templates-validation-test.js) |
 | ShExR demo | [ShExR-templated.shex](../packages/shex-util/ShExR-templated.shex) ≡ ShExR.shex, machine-checked |
 | BNF | [doc/bnf](bnf) (marked strawman) |
 | ShExJ.jsg / spec grammar | staged in shexSpec/shexTest and shexSpec/spec as marked strawman blocks |
-| Writer, ShExR layer 2, webapp | not yet |
+| Writer, ShExR layer 2 | not yet |
