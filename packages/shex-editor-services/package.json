@@ -35,7 +35,7 @@
     "@shexjs/parser": "^1.0.0-alpha.33",
     "@shexjs/util": "^1.0.0-alpha.33",
     "codemirror": "^6.0.2",
-    "lezer-shexc": "^0.1.0",
+    "lezer-shexc": "git+https://github.com/shexjs/lezer-shexc.git#generics",
     "lezer-turtle": "^0.1.0",
     "n3": "^2.7.12",
     "shape-map": "^1.0.0"
