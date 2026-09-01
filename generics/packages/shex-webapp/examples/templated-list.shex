@@ -1,0 +1,18 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ex: <http://ex.example/#>
+
+# The RDF-list pattern, written once: a parameter list after the label
+# makes <#List1Plus> a template (see doc/templates.md).  The recursive
+# reference applies the template to its own parameter.
+<#List1Plus><<?T>> CLOSED {
+  rdf:first ?T ;
+  rdf:rest  [rdf:nil] OR @<#List1Plus><<?T>>
+}
+
+<#Person> { ex:name . }
+
+# A declaration whose body is an application *names* that instantiation,
+# so the rest of the schema (and a shape map) can refer to it:
+<#PersonList> @<#List1Plus><< @<#Person> >>
+
+<#Team> { ex:members @<#PersonList> }
