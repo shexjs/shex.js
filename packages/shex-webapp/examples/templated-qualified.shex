@@ -1,0 +1,16 @@
+PREFIX ex: <http://ex.example/#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+# A design pattern with a parameter of each kind (see doc/templates.md):
+# ?P IRI binds an IRI, usable as a predicate; ?V binds a shape
+# expression, here instantiated with datatypes.  Two applications, so
+# the pattern is stated once and enforced twice.
+<#Qualified><<?P IRI, ?V>> {
+  ?P ?V ;
+  ex:certainty xsd:decimal ?
+}
+
+<#Observation> {
+  ex:height @<#Qualified><< ex:cm, xsd:integer >> ;
+  ex:name   @<#Qualified><< ex:label, xsd:string >> ?
+}
