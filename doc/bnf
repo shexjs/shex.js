@@ -82,6 +82,8 @@
 # - tripleExprLable -= '$'
 # ~ align REGEXP with XML Schema
 # ~ align with current EXTENDS/RESTRICTS consensus
+# + STRAWMAN templates (doc/templates.md): templateParams on shapeExprDecl,
+#   templateArgs on shapeRef, VAR as shapeAtom/predicate (20260901)
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
@@ -96,7 +98,9 @@
 [6]     start                 ::= "start" '=' inlineShapeExpression
 [7]     startActions          ::= codeDecl+
 [8]     statement             ::= directive | notStartAction
-[9]     shapeExprDecl         ::= "ABSTRACT"? shapeExprLabel restrictions* (shapeExpression | "EXTERNAL")
+[9]     shapeExprDecl         ::= "ABSTRACT"? shapeExprLabel templateParams? restrictions* (shapeExpression | "EXTERNAL")
+[9a]    templateParams        ::= "<<" templateParam (',' templateParam)* ">>" /* STRAWMAN doc/templates.md */
+[9b]    templateParam         ::= VAR ("IRI")? ("EXTENDS" shapeExprLabel)?
 [10]    shapeExpression       ::= "NOT"? shapeAtomNoRef shapeOr?
                                 | "NOT" shapeRef shapeOr?
                                 | shapeRef shapeOr
@@ -112,20 +116,25 @@
                                 | litNodeConstraint
                                 | shapeOrRef nonLitNodeConstraint?
                                 | '(' shapeExpression ')'
+                                | VAR /* STRAWMAN doc/templates.md */
                                 | '.'
 [19]    shapeAtomNoRef        ::= nonLitNodeConstraint shapeOrRef?
                                 | litNodeConstraint
                                 | shapeDefinition nonLitNodeConstraint?
                                 | '(' shapeExpression ')'
+                                | VAR /* STRAWMAN doc/templates.md */
                                 | '.'
 [20]    inlineShapeAtom       ::= nonLitNodeConstraint inlineShapeOrRef?
                                 | litNodeConstraint
                                 | inlineShapeOrRef nonLitNodeConstraint?
                                 | '(' shapeExpression ')'
+                                | VAR /* STRAWMAN doc/templates.md */
                                 | '.'
 [21]    shapeOrRef            ::= shapeDefinition | shapeRef
 [22]    inlineShapeOrRef      ::= inlineShapeDefinition | shapeRef
-[23]    shapeRef              ::= ATPNAME_LN | ATPNAME_NS | '@' shapeExprLabel
+[23]    shapeRef              ::= (ATPNAME_LN | ATPNAME_NS | '@' shapeExprLabel) templateArgs?
+[23a]   templateArgs          ::= "<<" templateArg (',' templateArg)* ">>" /* STRAWMAN doc/templates.md */
+[23b]   templateArg           ::= inlineShapeExpression
 
 [24]    litNodeConstraint     ::= "LITERAL" xsFacet*
                                 | datatype xsFacet*
@@ -168,7 +177,7 @@
 [54]    semanticActions       ::= codeDecl*
 [55]    codeDecl              ::= '%' iri (CODE | '%')
 [13t]   literal               ::= rdfLiteral | numericLiteral | booleanLiteral
-[56]    predicate             ::= iri | RDF_TYPE
+[56]    predicate             ::= iri | RDF_TYPE | VAR /* STRAWMAN doc/templates.md */
 [57]    datatype              ::= iri
 [58]    shapeExprLabel        ::= iri | blankNode
 [59]    tripleExprLabel       ::= iri | blankNode
@@ -199,6 +208,7 @@
 [65]    ATPNAME_NS            ::= '@' PN_PREFIX? ':'
 [66]    ATPNAME_LN            ::= '@' PNAME_NS PN_LOCAL
 [67]    REGEXP                ::= '/' ([^#x2f#x5C#xA#xD] | '\\' [nrt\\|.?*+(){}$#x2D#x5B#x5D^/] | UCHAR)+ '/' [smix]*
+[72]    VAR                   ::= '?' (PN_CHARS_U | [0-9]) (PN_CHARS_U | [0-9] | #x00B7 | [#x0300-#x036F] | [#x203F-#x2040])* /* STRAWMAN doc/templates.md */
 
 [142s]  BLANK_NODE_LABEL      ::= '_:' (PN_CHARS_U | [0-9]) ((PN_CHARS | '.')* PN_CHARS)?
 [145s]  LANGTAG               ::= '@' [a-zA-Z]+ ('-' [a-zA-Z0-9]+)*

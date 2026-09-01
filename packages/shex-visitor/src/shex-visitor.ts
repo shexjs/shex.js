@@ -98,11 +98,44 @@ export class ShExVisitor {
     const ret = { type: "Schema" };
     this._expect(schema, "type", "Schema");
     this._maybeSet(schema, ret, "Schema",
-                   ["@context", "prefixes", "base", "imports", "startActs", "start", "shapes"],
+                   ["@context", "prefixes", "base", "imports", "startActs", "start", "templates", "shapes"],
                    ["_base", "_prefixes", "_index", "_sourceMap", "_locations", "_exprLocations"],
                    ...args
                   );
     return ret;
+  }
+
+  // ── templates (strawman: doc/templates.md) ──
+
+  visitTemplates (templates: any[], ...args: any[]): any {
+    return templates.map(t => this.visitTemplateDecl(t, ...args));
+  }
+
+  visitTemplateDecl (decl: any, ...args: any[]): any {
+    return this._maybeSet(decl, { type: "TemplateDecl" }, "TemplateDecl",
+                          ["id", "params", "shapeExpr"], null, ...args);
+  }
+
+  visitParams (params: any[], ..._args: any[]): any {
+    return params.map(p => Object.assign({}, p));
+  }
+
+  visitTemplateApp (expr: any, ...args: any[]): any {
+    return this._maybeSet(expr, { type: "TemplateApp" }, "TemplateApp",
+                          ["template", "args"], null, ...args);
+  }
+
+  visitTemplate (template: string, ..._args: any[]): any {
+    return template;
+  }
+
+  visitArgs (appArgs: any[], ...args: any[]): any {
+    return appArgs.map(a => this.visitShapeExpr(a, ...args));
+  }
+
+  visitParamRef (expr: any, ...args: any[]): any {
+    return this._maybeSet(expr, { type: "ParamRef" }, "ParamRef",
+                          ["name"], null, ...args);
   }
 
   visitPrefixes (prefixes: {[prefix: string]: string} | undefined, ..._args: any[]): any {
@@ -167,6 +200,10 @@ export class ShExVisitor {
   visitShapeExpr (expr: shapeExprOrRef, ...args: any[]): any {
     if (ShExVisitor.isShapeRef(expr))
       return this.visitShapeRef(expr, ...args)
+    if ((expr as any).type === "TemplateApp") // strawman: doc/templates.md
+      return this.visitTemplateApp(expr, ...args);
+    if ((expr as any).type === "ParamRef")
+      return this.visitParamRef(expr, ...args);
     switch (expr.type) {
     case "Shape": return this.visitShape(expr, ...args);
     case "NodeConstraint": return this.visitNodeConstraint(expr, ...args);

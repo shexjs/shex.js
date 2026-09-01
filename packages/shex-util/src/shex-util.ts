@@ -249,6 +249,12 @@ const ShExUtil = {
    * ShExR document is validated against before it is read */
   ShExRSchema,
 
+  /** monomorphize a schema's templates into plain ShExJ — the strawman in
+   * doc/templates.md; also @shexjs/util/lib/templates for the types */
+  expandTemplates: function (schema: any, opts?: any): any {
+    return require("./templates").expandTemplates(schema, opts);
+  },
+
   SX: SX,
   RDF: RDF,
   version: function (): string {

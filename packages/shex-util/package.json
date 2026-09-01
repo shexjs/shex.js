@@ -32,7 +32,7 @@
     "sync-request": "^6.1.0"
   },
   "scripts": {
-    "test": "cd .. && mocha -C -R dot",
+    "test": "mocha -C -R dot",
     "build": "tsc"
   },
   "publishConfig": {
@@ -46,6 +46,7 @@
     "url": "https://github.com/shexSpec/grammar/issues"
   },
   "devDependencies": {
+    "@shexjs/parser": "^1.0.0-alpha.30",
     "@types/shexj": "^2.1.7"
   },
   "types": "./src/shex-util.ts"

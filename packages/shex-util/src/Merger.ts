@@ -180,6 +180,27 @@ export class Merger {
 
     const lindex = this.left._index || ShExIndexVisitor.index(this.left);
 
+    // templates (strawman: doc/templates.md) — merged like shapes, keyed by id
+    const ltemplates = new Map((this.left.templates || []).map((t: any) => [t.id, t]));
+    if (!this.inPlace)
+      (this.left.templates || []).forEach((lt: any) => {
+        if (!("templates" in this.ret))
+          this.ret.templates = [];
+        this.ret.templates.push(lt);
+      });
+    (this.right.templates || []).forEach((rt: any) => {
+      if (!("templates" in this.ret))
+        this.ret.templates = [];
+      const prev = ltemplates.get(rt.id);
+      if (!prev) {
+        this.ret.templates.push(rt);
+        ltemplates.set(rt.id, rt);
+      } else if (this.overwrite('templateDecl', prev, rt, (this.left._locations || {})[rt.id], (this.right._locations || {})[rt.id], this.leftMeta, this.rightMeta)) {
+        this.ret.templates.splice(this.ret.templates.indexOf(prev), 1, rt);
+        ltemplates.set(rt.id, rt);
+      }
+    });
+
     // shapes
     if (!this.inPlace)
       (this.left.shapes || []).forEach((lshape: any) => {
@@ -224,7 +245,7 @@ export class Merger {
   static warnDuplicates (type: string, left: any, right: any, leftLloc?: Yylloc, rightLloc?: Yylloc, _leftMeta?: any, _rightMeta?: any): boolean {
     if (type === "_prefixes")
       return false;
-    if (type !== "shapeDecl")
+    if (type !== "shapeDecl" && type !== "templateDecl")
       throw Error(`Unexpected ${type} conflict: ${JSON.stringify(left)}, ${JSON.stringify(right)}`);
 
     const lStr = JSON.stringify(left);

@@ -271,6 +271,7 @@ REGEXP                  '/' ([^\u002f\u005C\u000A\u000D] | '\\' [nrt\\|.?*+(){}$
 BLANK_NODE_LABEL        '_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
 //ATBLANK_NODE_LABEL        '@_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
 PN_PREFIX               {PN_CHARS_BASE} (({PN_CHARS} | '.')* {PN_CHARS})?
+VARNAME                 ({PN_CHARS_U} | [0-9]) (({PN_CHARS_U} | [0-9] | [\u00b7] | [\u0300-\u036f] | [\u203f-\u2040]))*
 PNAME_NS                {PN_PREFIX}? ':'
 ATPNAME_NS              '@' {PNAME_NS}
 HEX                     [0-9] | [A-F] | [a-f]
@@ -399,6 +400,8 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 "]"                     return ']';
 "$"                     return '$';
 "!"                     return '!';
+"<<"                    return 'GT_LTLT';
+">>"                    return 'GT_GTGT';
 "^^"                    return '^^';
 "^"                     return '^';
 "."                     return '.';
@@ -406,6 +409,7 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 ";"                     return ';';
 "*"                     return '*';
 "+"                     return '+';
+"?"{VARNAME}            { yytext = yytext.substr(1); return 'VAR'; }
 "?"                     return '?';
 "-"                     return '-';
 "%"                     return '%';
@@ -429,8 +433,9 @@ shexDoc:
         const startObj = yy.start ? { start: yy.start } : {};
         const startActs = yy.startActs ? { startActs: yy.startActs } : {};
         let shapes = yy.shapes ? { shapes: Object.values(yy.shapes) } : {};
+        const templates = yy.templates ? { templates: Object.values(yy.templates) } : {};
         const shexj = Object.assign(
-          { type: "Schema" }, imports, startActs, startObj, shapes
+          { type: "Schema" }, imports, startActs, startObj, templates, shapes
         )
         if (yy.options.index) {
           if (yy._base !== null)
@@ -531,12 +536,48 @@ statement:
     ;
 
 shapeExprDecl:
-      mark _QIT_ABSTRACT_E_Opt shapeExprLabel _Qrestriction_E_Star _O_QshapeExpression_E_Or_QshapeRef_E_Or_QIT_EXTERNAL_E_C mark	{ // t: 1dot 1val1vsMinusiri3??
-        yy.addShape($3, Object.assign(
-          {type: "ShapeDecl"}, $2,
-          $4.length > 0 ? { restricts: $4 } : { },
-          {shapeExpr: $5} ), $1, $6)	// t: 0.json
+      mark _QIT_ABSTRACT_E_Opt shapeExprLabel _QtemplateParams_E_Opt _Qrestriction_E_Star _O_QshapeExpression_E_Or_QshapeRef_E_Or_QIT_EXTERNAL_E_C mark	{ // t: 1dot 1val1vsMinusiri3??
+        if ($4) { // a parameter list after the label makes this a template declaration
+          if ($2.abstract)
+            yy.error(new Error("Parse error: template " + $3 + " may not be ABSTRACT"));
+          if ($5.length > 0)
+            yy.error(new Error("Parse error: template " + $3 + " may not have restrictions"));
+          yy.addTemplate($3, { type: "TemplateDecl", params: $4, shapeExpr: $6 }, $1, $7);
+        } else {
+          yy.addShape($3, Object.assign(
+            {type: "ShapeDecl"}, $2,
+            $5.length > 0 ? { restricts: $5 } : { },
+            {shapeExpr: $6} ), $1, $7)	// t: 0.json
+        }
       }
+    ;
+
+_QtemplateParams_E_Opt:
+      	-> null
+    | templateParams
+    ;
+
+templateParams:
+      GT_LTLT templateParamList GT_GTGT	-> $2
+    ;
+
+templateParamList:
+      templateParam	-> [$1]
+    | templateParamList ',' templateParam	-> appendTo($1, $3)
+    ;
+
+templateParam:
+      VAR _QparamKind_E_Opt _QparamBound_E_Opt	-> Object.assign({name: $1}, $2, $3)
+    ;
+
+_QparamKind_E_Opt:
+      	-> {  } // default kind: shapeExpr
+    | IT_IRI	-> { kind: "iri" }
+    ;
+
+_QparamBound_E_Opt:
+      	-> {  }
+    | IT_EXTENDS shapeExprLabel	-> { extends: $2 }
     ;
 
 mark:
@@ -721,6 +762,7 @@ shapeAtom:
     | shapeOrRef _QnonLitNodeConstraint_E_Opt	
         -> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t: 1dotRef1 */ : $1 // t: @@ : 1val1vExprRefAND3
     | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: NOT1dotOR2dotX3
+    | VAR	-> yy.paramRef($1)
     | '.'	-> yy.EmptyShape // t: @@
     ;
 
@@ -741,6 +783,7 @@ shapeAtomNoRef:
     | shapeDefinition _QnonLitNodeConstraint_E_Opt	
 	-> $2 ? shapeJunction("ShapeAnd", $1, [$2]) : $1	 // t: @@ : 0 // 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
     | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: NOT1dotOR2dotX3
+    | VAR	-> yy.paramRef($1)
     | '.'	-> yy.EmptyShape // t: 1NOTNOTdot
     ;
 
@@ -751,6 +794,7 @@ inlineShapeAtom:
     | inlineShapeOrRef _QnonLitInlineNodeConstraint_E_Opt	
         -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: @@ : 1dotRef1
     | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: 1NOTNOTIRI
+    | VAR	-> yy.paramRef($1)
     | '.'	-> yy.EmptyShape // t: 1dot
     ;
 
@@ -775,16 +819,36 @@ inlineShapeOrRef:
     ;
 
 shapeRef:
-      ATPNAME_LN	{ // t: 1dotRefLNex1
+      ATPNAME_LN _QtemplateArgs_E_Opt	{ // t: 1dotRefLNex1
         $1 = $1.substr(1, $1.length-1);
         const namePos = $1.indexOf(':');
-        $$ = yy.addSourceMap(yy.expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1), this._$); // ShapeRef
+        const labelLN = yy.expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1);
+        $$ = yy.addSourceMap($2 ? { type: "TemplateApp", template: labelLN, args: $2 } : labelLN, this._$); // ShapeRef | TemplateApp
       }
-    | ATPNAME_NS	{ // t: 1dotRefNS1
+    | ATPNAME_NS _QtemplateArgs_E_Opt	{ // t: 1dotRefNS1
         $1 = $1.substr(1, $1.length-1);
-        $$ = yy.addSourceMap(yy.expandPrefix($1.substr(0, $1.length - 1), yy), this._$); // ShapeRef
+        const labelNS = yy.expandPrefix($1.substr(0, $1.length - 1), yy);
+        $$ = yy.addSourceMap($2 ? { type: "TemplateApp", template: labelNS, args: $2 } : labelNS, this._$); // ShapeRef | TemplateApp
       }
-    | '@' shapeExprLabel	-> yy.addSourceMap($2, this._$) // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
+    | '@' shapeExprLabel _QtemplateArgs_E_Opt	-> yy.addSourceMap($3 ? { type: "TemplateApp", template: $2, args: $3 } : $2, this._$) // ShapeRef | TemplateApp // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
+    ;
+
+_QtemplateArgs_E_Opt:
+      	-> null
+    | templateArgs
+    ;
+
+templateArgs:
+      GT_LTLT templateArgList GT_GTGT	-> $2
+    ;
+
+templateArgList:
+      templateArg	-> [$1]
+    | templateArgList ',' templateArg	-> appendTo($1, $3)
+    ;
+
+templateArg:
+      inlineShapeExpression
     ;
 
 litNodeConstraint:
@@ -1326,6 +1390,7 @@ literal:
 predicate:
       iri	// t: 1dot
     | 'a'	-> RDF_TYPE // t: 1AvalA
+    | VAR	-> yy.paramRef($1)
     ;
 
 datatype:
