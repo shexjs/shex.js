@@ -163,5 +163,50 @@
     "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<#n1>\n  :p 1.1 ;\n  :p <#n3> ;\n  :p <#n2> ;\n  :p 4 ;\n.\n\n<#n3> :q 5 .\n",
     "queryMap": "<#n1>@<#S1>\n",
     "status": "conformant"
+  },
+  {
+    "schemaLabel": "templated list",
+    "schemaURL": "templated-list.shex",
+    "dataLabel": "a team roster",
+    "data": "PREFIX ex: <http://ex.example/#>\n\n<t1> ex:members (<alice> <bob>) .\n<alice> ex:name \"Alice\" .\n<bob> ex:name \"Bob\" .\n",
+    "queryMap": "<t1>@<#Team>\n",
+    "status": "conformant",
+    "comment": "The list shape is written once, as the template <#List1Plus><<?T>>, and <#PersonList> names its instantiation for <#Person>.  Templates expand before validation (doc/templates.md), so the validator walks plain shapes."
+  },
+  {
+    "schemaLabel": "templated list",
+    "schemaURL": "templated-list.shex",
+    "dataLabel": "the list itself",
+    "data": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX ex: <http://ex.example/#>\n\n<roster> rdf:first <alice> ; rdf:rest <r2> .\n<r2> rdf:first <bob> ; rdf:rest rdf:nil .\n<alice> ex:name \"Alice\" .\n<bob> ex:name \"Bob\" .\n",
+    "queryMap": "<roster>@<#PersonList>\n",
+    "status": "conformant",
+    "comment": "A named instantiation is an ordinary shape: this map validates the list head directly against <#PersonList>, the name the declaration gave to <#List1Plus><< @<#Person> >>."
+  },
+  {
+    "schemaLabel": "templated list",
+    "schemaURL": "templated-list.shex",
+    "dataLabel": "a list that isn't one",
+    "data": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX ex: <http://ex.example/#>\n\n<t1> ex:members <l1> .\n<l1> rdf:first <alice> ; rdf:rest \"oops\" .\n<alice> ex:name \"Alice\" .\n",
+    "queryMap": "<t1>@<#Team>\n",
+    "status": "nonconformant",
+    "comment": "rdf:rest must be rdf:nil or another list cell, so the instantiated shape -- CLOSED, like the template that made it -- refuses the string."
+  },
+  {
+    "schemaLabel": "qualified statement",
+    "schemaURL": "templated-qualified.shex",
+    "dataLabel": "height, qualified",
+    "data": "PREFIX ex: <http://ex.example/#>\n\n<o1> ex:height <m1> ; ex:name <m2> .\n<m1> ex:cm 170 ; ex:certainty 0.9 .\n<m2> ex:label \"Bob\" .\n",
+    "queryMap": "<o1>@<#Observation>\n",
+    "status": "conformant",
+    "comment": "<#Qualified><<?P IRI, ?V>> takes an IRI parameter (used as the predicate) and a shape-expression parameter (here, datatypes).  One pattern, two instantiations: ex:cm/xsd:integer and ex:label/xsd:string."
+  },
+  {
+    "schemaLabel": "qualified statement",
+    "schemaURL": "templated-qualified.shex",
+    "dataLabel": "wrong unit property",
+    "data": "PREFIX ex: <http://ex.example/#>\n\n<o1> ex:height <m1> .\n<m1> ex:inches 67 ; ex:certainty 0.9 .\n",
+    "queryMap": "<o1>@<#Observation>\n",
+    "status": "nonconformant",
+    "comment": "The predicate came from the argument: the ex:cm/xsd:integer instantiation requires an ex:cm arc, and ex:inches is not it."
   }
 ]

@@ -284,3 +284,70 @@
   queryMap: |
     <#n1>@<#S1>
   status: conformant
+- schemaLabel: templated list
+  schemaURL: templated-list.shex
+  dataLabel: a team roster
+  data: |
+    PREFIX ex: <http://ex.example/#>
+
+    <t1> ex:members (<alice> <bob>) .
+    <alice> ex:name "Alice" .
+    <bob> ex:name "Bob" .
+  queryMap: |
+    <t1>@<#Team>
+  status: conformant
+  comment: 'The list shape is written once, as the template <#List1Plus><<?T>>, and <#PersonList> names its instantiation for <#Person>.  Templates expand before validation (doc/templates.md), so the validator walks plain shapes.'
+- schemaLabel: templated list
+  schemaURL: templated-list.shex
+  dataLabel: the list itself
+  data: |
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX ex: <http://ex.example/#>
+
+    <roster> rdf:first <alice> ; rdf:rest <r2> .
+    <r2> rdf:first <bob> ; rdf:rest rdf:nil .
+    <alice> ex:name "Alice" .
+    <bob> ex:name "Bob" .
+  queryMap: |
+    <roster>@<#PersonList>
+  status: conformant
+  comment: 'A named instantiation is an ordinary shape: this map validates the list head directly against <#PersonList>, the name the declaration gave to <#List1Plus><< @<#Person> >>.'
+- schemaLabel: templated list
+  schemaURL: templated-list.shex
+  dataLabel: a list that isn't one
+  data: |
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX ex: <http://ex.example/#>
+
+    <t1> ex:members <l1> .
+    <l1> rdf:first <alice> ; rdf:rest "oops" .
+    <alice> ex:name "Alice" .
+  queryMap: |
+    <t1>@<#Team>
+  status: nonconformant
+  comment: 'rdf:rest must be rdf:nil or another list cell, so the instantiated shape -- CLOSED, like the template that made it -- refuses the string.'
+- schemaLabel: qualified statement
+  schemaURL: templated-qualified.shex
+  dataLabel: height, qualified
+  data: |
+    PREFIX ex: <http://ex.example/#>
+
+    <o1> ex:height <m1> ; ex:name <m2> .
+    <m1> ex:cm 170 ; ex:certainty 0.9 .
+    <m2> ex:label "Bob" .
+  queryMap: |
+    <o1>@<#Observation>
+  status: conformant
+  comment: '<#Qualified><<?P IRI, ?V>> takes an IRI parameter (used as the predicate) and a shape-expression parameter (here, datatypes).  One pattern, two instantiations: ex:cm/xsd:integer and ex:label/xsd:string.'
+- schemaLabel: qualified statement
+  schemaURL: templated-qualified.shex
+  dataLabel: wrong unit property
+  data: |
+    PREFIX ex: <http://ex.example/#>
+
+    <o1> ex:height <m1> .
+    <m1> ex:inches 67 ; ex:certainty 0.9 .
+  queryMap: |
+    <o1>@<#Observation>
+  status: nonconformant
+  comment: 'The predicate came from the argument: the ex:cm/xsd:integer instantiation requires an ex:cm arc, and ex:inches is not it.'

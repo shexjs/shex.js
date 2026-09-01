@@ -65,6 +65,8 @@ function loadEntry (entry, dir, options = {}) {
     overlay.addQuads(new N3.Parser({baseIRI: base, format: "text/turtle"}).parse(overlayText));
     schema = require("@shexjs/semact-overlay").applyOverlay(schema, overlay, {prefixes: schema._prefixes || {}});
   }
+  if (schema.templates) // as the app does, via ShExLoader.load (doc/templates.md)
+    schema = require("@shexjs/util").expandTemplates(schema);
   const store = new N3.Store();
   const dataPrefixes = {};
   for (const text of [].concat(textOf(entry, "data", dir) === undefined ? [] : textOf(entry, "data", dir))) {
