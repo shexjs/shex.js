@@ -382,6 +382,8 @@ function ShExLoaderCjsModule (config: ConfigI = {}): LoaderI {
       returns.data.addQuads(dSrc.graph)
       delete dSrc.graph;
     });
+    if (returns.schema && returns.schema.templates) // strawman: doc/templates.md
+      returns.schema = ShExUtil.expandTemplates(returns.schema);
     if (returns.schemaMeta.length > 0 && !schemaOptions.keepImports)
       ShExUtil.isWellDefined(returns.schema, schemaOptions)
     return returns

@@ -49,6 +49,7 @@ export class ShExCParserState {
   _sourceMap: Map<object, Location[]> | null = null;
   _exprLocations: Map<object, Location> | null = null;
   shapes: { [label: string]: any } | null = null;
+  templates: { [label: string]: any } | null = null;
   productions: { [label: string]: any } | null = null;
   start: any = null;
   startActs: any = null;
@@ -64,7 +65,7 @@ export class ShExCParserState {
   recoverable: ((e: Error) => void) | undefined;
 
   reset () {
-    this._prefixes = this._imports = this._sourceMap = this._exprLocations = this.shapes = this.productions = this.start = this.startActs = null; // Reset state.
+    this._prefixes = this._imports = this._sourceMap = this._exprLocations = this.shapes = this.templates = this.productions = this.start = this.startActs = null; // Reset state.
     this._base = this._baseIRI = this._baseIRIPath = this._baseIRIRoot = null;
   }
 
@@ -229,6 +230,29 @@ export class ShExCParserState {
       this.shapes[label] = Object.assign({id: label}, shape);
       this.locations[label] = this.makeLocation(start, end);
     }
+  }
+
+  // Add a template declaration (strawman: doc/templates.md). Templates share
+  // the label namespace with shapes and triple expressions.
+  addTemplate (label: string, template: any, start: Location, end: Location) {
+    if (this.shapes && label in this.shapes)
+      this.error(new Error("Parse error: "+label+" is a shape expression"));
+    if (this.productions && label in this.productions)
+      this.error(new Error("Parse error: "+label+" is a triple expression"));
+    if (!this.templates)
+      this.templates = {};
+    if (label in this.templates && this.options.duplicateShape !== "replace" && this.options.duplicateShape !== "ignore")
+      this.error(new Error("Parse error: "+label+" already defined"));
+    if (!(label in this.templates) || this.options.duplicateShape === "replace") {
+      this.templates[label] = Object.assign({id: label}, template);
+      this.locations[label] = this.makeLocation(start, end);
+    }
+  }
+
+  // A use of a template parameter (a fresh object per use, so source maps
+  // and expression locations can key off identity like everything else).
+  paramRef (name: string) {
+    return { type: "ParamRef", name: name };
   }
 
   makeLocation (start: Location, end: Location): Location {

@@ -33,7 +33,7 @@
   },
   "scripts": {
     "parser": "ts-jison -n ShExJison -t javascript -p lr -o ./lib/ShExJison.js ./lib/ShExJison.jison",
-    "test": "cd .. && mocha -C -R dot",
+    "test": "mocha -C -R dot",
     "build": "tsc"
   },
   "publishConfig": {
