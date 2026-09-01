@@ -153,12 +153,12 @@ case 13:
  this.$ = extend({ shape: $$[$0] }, $$[$0-1]); yy.shapeLoc = this._$; 
 break;
 case 14:
- this.$ = { shape: ShapeMap.Start }; yy.shapeLoc = this._$; 
+ this.$ = { shape: ShapeMap.Start, status: 'conformant' }; yy.shapeLoc = this._$; 
 break;
 case 15:
 
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
-        this.$ = { shape: yy.schemaMeta.expandPrefix($$[$0].substr(0, $$[$0].length - 1), yy) };
+        this.$ = { shape: yy.schemaMeta.expandPrefix($$[$0].substr(0, $$[$0].length - 1), yy), status: 'conformant' };
         yy.shapeLoc = this._$;
       
 break;
@@ -166,7 +166,7 @@ case 16:
 
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
         const namePos = $$[$0].indexOf(':');
-        this.$ = { shape: yy.schemaMeta.expandPrefix($$[$0].substr(0, namePos), yy) + $$[$0].substr(namePos + 1) };
+        this.$ = { shape: yy.schemaMeta.expandPrefix($$[$0].substr(0, namePos), yy) + $$[$0].substr(namePos + 1), status: 'conformant' };
         yy.shapeLoc = this._$;
       
 break;

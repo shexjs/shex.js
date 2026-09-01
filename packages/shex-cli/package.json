@@ -25,6 +25,8 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@shexjs/eval-simple-1err": "^1.0.0-alpha.30",
+    "@shexjs/eval-threaded-nerr": "^1.0.0-alpha.30",
     "@shexjs/eval-validator-api": "^1.0.0-alpha.30",
     "@shexjs/editor-services": "^1.0.0-alpha.30",
     "@shexjs/extension-eval": "^1.0.0-alpha.30",
