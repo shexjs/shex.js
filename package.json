@@ -58,7 +58,7 @@
     "show-links": "find . -path \\*node_modules\\* -type l -prune -exec ls -l {} \\;",
     "make": "(cd test/ && make test)",
     "test": "mocha packages/*/test/*test.js -C -R dot",
-    "test-all": "TEST_cli=true TEST_browser=true TEST_server=true TEST_sparql=true TEST_wikidata=true mocha packages/*/test/*test.js -R dot",
+    "test-all": "TEST_cli=true TEST_browser=true TEST_server=true TEST_sparql=true TEST_wikidata=true TEST_network=true mocha packages/*/test/*test.js -R dot",
     "test-sparql": "TEST_sparql=true mocha packages/neighborhood-sparql/test/*test.js -R dot",
     "test-no-browser": "TEST_cli=true TEST_server=true TEST_sparql=true mocha packages/*/test/*test.js -R dot",
     "test-verbose": "mocha packages/*/test/*test.js && TEST_cli=true mocha packages/*/test/*test.js test/cli-test.js && TEST_browser=true mocha packages/*/test/*test.js test/browser-test.js",
