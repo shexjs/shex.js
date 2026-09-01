@@ -5,8 +5,10 @@ name: webapps-site
 # branch: the full main tree (so every URL GitHub Pages served from main keeps
 # working, CNAME included) plus
 #
-#   packages/{shex-webapp,extension-map,extension-reduce}/doc/webpacks/
+#   packages/{shex-webapp,extension-map,extension-reduce,extension-wasi}/doc/webpacks/
 #                 (the built bundles)
+#   <branch>/     experiment sites published by webapps-site-branch.yml,
+#                 carried over from the previous gh-pages commit (EXPERIMENTS)
 #   .nojekyll     (serve the tree as-is; test fixtures confuse Jekyll)
 #
 # and with the <!-- STRIP-FOR-PUBLICATION --> … <!-- /STRIP-FOR-PUBLICATION -->
@@ -71,11 +73,22 @@ jobs:
           git add -A .
           git add -f .nojekyll \
             packages/shex-webapp/doc/webpacks packages/extension-map/doc/webpacks \
-            packages/extension-reduce/doc/webpacks
+            packages/extension-reduce/doc/webpacks packages/extension-wasi/doc/webpacks
           # commit on top of the existing gh-pages history; if the branch was
           # deleted (to shed old bundle history), start it afresh
           git fetch origin gh-pages || true
           PARENT=$(git rev-parse --verify --quiet origin/gh-pages || true)
+          # carry the experiment-branch sites (webapps-site-branch.yml
+          # publishes each under a subdirectory named for its branch) across
+          # this root rebuild; names must not collide with main's own dirs
+          EXPERIMENTS="generics"
+          if [ -n "$PARENT" ]; then
+            for d in $EXPERIMENTS; do
+              if git rev-parse --verify --quiet "$PARENT:$d" >/dev/null; then
+                git read-tree --prefix="$d/" "$PARENT:$d"
+              fi
+            done
+          fi
           TREE=$(git write-tree)
           COMMIT=$(git commit-tree $TREE ${PARENT:+-p $PARENT} -m "webapps site built from $GITHUB_SHA")
           git push origin $COMMIT:refs/heads/gh-pages
