@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>ShEx.js WebApps</title>
+    <link rel="icon" href="packages/shex-webapp/doc/ShEx-bones-min.svg"/>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 46em;
+        margin: 3em auto;
+        padding: 0 1em;
+        color: #222;
+      }
+      header { display: flex; align-items: center; gap: .6em; }
+      header img { height: 2.2em; }
+      h1 { font-size: 1.6em; margin: 0; }
+      p.blurb { color: #555; }
+      .apps { display: grid; grid-template-columns: 1fr 1fr; gap: 1em; margin-top: 1.5em; }
+      .app {
+        border: 1px solid #ccc;
+        border-radius: .5em;
+        padding: 1em;
+      }
+      .app.shex { background-color: #f4f4ff; border-color: #fc561c; }
+      .app.shexmap { background-color: #f4fff4; border-color: #f0a133; }
+      .app.shexreduce { background-color: #fff4f4; border-color: #fc561c; }
+      .app.yours { background-color: #fffff4; border-color: #56fc1c; }
+      .app.semacts { background-color: #f8f4ff; border-color: #8a56fc; }
+      .app h2 { font-size: 1.1em; margin: 0 0 .3em; }
+      .app p { margin: .3em 0 .8em; font-size: .9em; color: #444; }
+      .app ul { list-style: none; margin: 0; padding: 0; }
+      .app li { margin: .3em 0; }
+      .app a { font-weight: bold; }
+      .variant { font-size: .85em; color: #666; }
+      .local-dev {
+        margin-top: 1.5em;
+        padding: .8em 1em;
+        border: 1px dashed #999;
+        border-radius: .5em;
+        background-color: #fffbe8;
+        font-size: .9em;
+      }
+      footer { margin-top: 2em; font-size: .85em; color: #666; }
+      @media (max-width: 34em) { .apps { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="packages/shex-webapp/doc/ShEx-bones-min.svg" alt="ShEx logo"/>
+      <h1>ShEx.js WebApps</h1>
+    </header>
+    <p class="blurb">
+      <strong>This is the <a href="https://github.com/shexjs/shex.js/blob/generics/doc/templates.md">templates
+      experiment</a></strong> (the <code>generics</code> branch): schemas here may declare
+      parameterized shapes — <code>&lt;#List1Plus&gt;&lt;&lt;?T&gt;&gt;</code> — and apply
+      them with <code>@&lt;#List1Plus&gt;&lt;&lt; @&lt;#ShapeDecl&gt; &gt;&gt;</code>.
+      Comments welcome on the strawman.
+    </p>
+    <p class="blurb">
+      In-browser demos of the <a href="https://github.com/shexSpec/shex.js">shex.js</a>
+      implementation of <a href="http://shex.io/">Shape Expressions</a>.
+      One validator, in two flavors: <em>simple</em> runs validation on the UI
+      thread; <em>worker</em> runs it in a Web Worker so the page stays
+      responsive (and validation can be interrupted).
+      Everything else is a <em>plugin</em> the validator loads by URL
+      (<code>?plugin=&lt;url&gt;</code>, or named by a manifest entry): a
+      module that may install
+      <a href="http://shex.io/extensions/">semantic-action extensions</a>
+      for schemas to dispatch, and may add a screen of panes and verbs of
+      its own beside the validator's.
+    </p>
+    <div class="apps">
+      <div class="app shex">
+        <h2>ShEx validator</h2>
+        <p>Validate RDF data against a ShEx schema (ShExC, ShExJ or ShExR).</p>
+        <ul>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html">shex-simple</a> <span class="variant">— single-threaded</span> (<a href="packages/shex-webapp/doc/shex-simple.html?editors=textarea">textareas</a>)</li>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?worker=1">shex-simple?worker=1</a> <span class="variant">— in a Web Worker</span> (<a href="packages/shex-webapp/doc/shex-worker.html?editors=textarea">textareas</a>)</li>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2F..%2Fdoc%2Ftests-manifest.yaml">every example at once</a> <span class="variant">— one manifest, and each entry brings the plugin it needs</span></li>
+        </ul>
+      </div>
+      <div class="app shexmap">
+        <h2>ShExMap plugin</h2>
+        <p>Validate with the <a href="http://shex.io/extensions/Map/">Map extension</a>,
+          capture bindings, and materialize them into another RDF graph on a
+          screen of its own.  These URLs open the validator with the plugin
+          and its examples loaded.</p>
+        <ul>
+          <li><a href="packages/extension-map/doc/shexmap-simple.html">shexmap-simple</a> <span class="variant">— single-threaded</span> (<a href="packages/extension-map/doc/shexmap-simple.html?editors=textarea">textareas</a>)</li>
+          <li><a href="packages/extension-map/doc/shexmap-worker.html">shexmap-worker</a> <span class="variant">— in a Web Worker</span> (<a href="packages/extension-map/doc/shexmap-worker.html?editors=textarea">textareas</a>)</li>
+        </ul>
+      </div>
+      <div class="app shexreduce">
+        <h2>ShExReduce plugin</h2>
+        <p>Validate with the Reduce extension — actions that steer or check a
+          match as it happens — then fold the parse into an AST.  The demo
+          manifest's calculator entries show both.</p>
+        <ul>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?plugin=..%2F..%2Fextension-reduce%2Fdoc%2FShExReducePlugin.js&amp;manifestURL=..%2F..%2Fextension-reduce%2Fexamples%2Fmanifest.yaml">shex-simple + ShExReduce</a> <span class="variant">— with the calc examples</span></li>
+        </ul>
+      </div>
+      <div class="app semacts">
+        <h2>Semantic-action extensions</h2>
+        <p>Each link opens the validator on one extension's demo manifest;
+          every entry names the plugin it needs, so picking it installs the
+          handler.  Pass and fail examples each, appinfo shows what an
+          action recorded.</p>
+        <ul>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-eval%2Fexamples%2Fmanifest.yaml">Eval</a> <span class="variant">— JavaScript in a semantic action</span></li>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-test%2Fexamples%2Fmanifest.yaml">Test</a> <span class="variant">— print(o) / fail(…), the suite's probe</span></li>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-wasi%2Fexamples%2Fmanifest.yaml">WASI</a> <span class="variant">— WAT compiled in the page, prelude to standalone module</span></li>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-wasi-test%2Fexamples%2Fmanifest.yaml">Test in wasm</a> <span class="variant">— the probe, as hand-written WebAssembly</span></li>
+        </ul>
+      </div>
+      <div class="app yours">
+        <h2>Write your own</h2>
+        <p>A plugin is one URL: a module that registers what it adds.
+          <a href="https://github.com/shexSpec/shex.js/blob/main/doc/plugins.md">doc/plugins.md</a>
+          is the contract, and
+          <a href="doc/plugin-skeleton/hello-plugin.js">hello-plugin.js</a>
+          is a working one in about forty lines.</p>
+        <ul>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?plugin=..%2F..%2F..%2Fdoc%2Fplugin-skeleton%2Fhello-plugin.js">shex-simple + Hello</a> <span class="variant">— the skeleton, loaded</span></li>
+        </ul>
+      </div>
+    </div>
+    <footer>
+      Built from <a href="https://github.com/shexSpec/shex.js">shexSpec/shex.js</a>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,58 @@
+{
+  "name": "@shexjs/extension-wasi-test",
+  "version": "1.0.0-alpha.30",
+  "files": [
+    "lib",
+    "src",
+    "doc",
+    "examples"
+  ],
+  "description": "Shape Expressions Test semantic action module implemented in WebAssembly, printing via WASI fd_write.",
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
+  "keywords": [
+    "shex",
+    "shape expressions",
+    "rdf",
+    "query",
+    "parser",
+    "webassembly",
+    "wasm",
+    "wasi"
+  ],
+  "license": "MIT",
+  "main": "./lib/shex-extension-wasi-test.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "wat2wasm lib/extension-wasi-test.wat -o lib/extension-wasi-test.wasm",
+    "prepublishOnly": "node -e \"require('fs').accessSync('lib/extension-wasi-test.wasm')\"",
+    "test": "../../node_modules/.bin/mocha test/*test.js -C -R dot"
+  },
+  "devDependencies": {
+    "@shexjs/extension-test": "^1.0.0-alpha.30",
+    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.30",
+    "@shexjs/parser": "^1.0.0-alpha.30",
+    "@shexjs/term": "^1.0.0-alpha.28",
+    "@shexjs/validator": "^1.0.0-alpha.30",
+    "chai": "^4.5.0",
+    "mocha": "^10.7.3",
+    "n3": "^1.17.3",
+    "wabt": "^1.0.36"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shexjs/shex.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shexSpec/grammar/issues"
+  },
+  "types": "./src/shex-extension-wasi-test.ts"
+}

@@ -1,0 +1,43 @@
+{
+  "name": "@shexjs/extension-wasi",
+  "version": "1.0.0-alpha.30",
+  "files": [
+    "lib",
+    "src",
+    "doc",
+    "examples"
+  ],
+  "description": "generic WASI semantic-action extension: the action code is a WebAssembly (WAT) WASI command run per invocation",
+  "author": "ericP <eric@w3.org> (http://www.w3.org/People/Eric/)",
+  "license": "MIT",
+  "main": "./lib/shex-extension-wasi.js",
+  "scripts": {
+    "test": "cd ../.. && mocha -C -R dot packages/extension-wasi/test/*test.js",
+    "gen-tests": "node tools/gen-tests.js",
+    "build": "node tools/gen-prelude.js && tsc",
+    "webpack": "webpack --config webpack.config.js --mode production",
+    "prepublishOnly": "npm run webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shexSpec/shex.js.git",
+    "directory": "packages/extension-wasi"
+  },
+  "dependencies": {
+    "wabt": "^1.0.36"
+  },
+  "types": "./src/shex-extension-wasi.ts",
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@shexjs/extension-wasi-test": "^1.0.0-alpha.30",
+    "@shexjs/webapp": "^1.0.0-alpha.30",
+    "terser-webpack-plugin": "*",
+    "webpack": "*",
+    "webpack-cli": "*"
+  }
+}

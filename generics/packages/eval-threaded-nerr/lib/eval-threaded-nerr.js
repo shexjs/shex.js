@@ -1,0 +1,556 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.RegexpModule = void 0;
+const term_1 = require("@shexjs/term");
+const UNBOUNDED = -1;
+/**
+ * A thread's remaining pool, cloned.
+ *
+ * The Map was copied but the arrays inside it were not, and
+ * matchTripleConstraint takes its triples by splicing them out -- so two
+ * threads forked from one shared a pool, and what either took the other went
+ * without.  Where a constraint is visited once that is invisible (the winner
+ * consumed everything anyway); where it is visited again -- an iteration of a
+ * repeated group -- the second visit found the pool drained by the first
+ * visit's *other* branch, and reported the property missing.
+ */
+function ownPool(avail) {
+    const mine = new Map();
+    avail.forEach((triples, constraint) => mine.set(constraint, triples.slice()));
+    return mine;
+}
+class RegexpThread {
+    constructor(avail = new Map(), errors = [], matched = [], expression) {
+        this.avail = avail;
+        this.errors = errors;
+        this.matched = matched;
+        this.expression = expression;
+    }
+    makeResultsThread(expr, tests, errors, matched, minmax) {
+        return new RegexpThread(ownPool(this.avail), // the parent's remaining triples, this thread's to spend
+        errors, matched.concat({
+            triples: tests.map(p => p.triple)
+        }), Object.assign({ type: "TripleConstraintSolutions", predicate: expr.predicate }, expr.valueExpr !== undefined ? { valueExpr: expr.valueExpr } : {}, expr.id !== undefined ? { productionLabel: expr.id } : {}, minmax, { solutions: tests.map(p => p.tested) }));
+    }
+    makeMissingPropertyThread(expr, matched) {
+        return new RegexpThread(ownPool(this.avail), this.errors.concat([
+            Object.assign({ type: "MissingProperty", property: expr.predicate }, expr.valueExpr ? { valueExpr: expr.valueExpr } : {})
+        ]), matched);
+    }
+}
+exports.RegexpModule = {
+    name: "eval-threaded-nerr",
+    description: "emulation of regular expression engine with error permutations",
+    /* compile - compile regular expression and index triple constraints
+     */
+    compile: (_schema, shape, index, debugHooks) => {
+        return new EvalThreadedNErrRegexEngine(shape, index, debugHooks); // not called if there's no expression
+    }
+};
+/**
+ * The actions on a schema element: its own, plus any an overlay indexed
+ * against it rather than writing into it.  The dispatcher answers, since it
+ * is the one holding the index; a dispatcher that predates the question
+ * keeps its elements' own.
+ */
+function semActsOn(semActHandler, node) {
+    return semActHandler.semActsFor === undefined
+        ? node.semActs
+        : semActHandler.semActsFor(node);
+}
+class EvalThreadedNErrRegexEngine {
+    constructor(shape, index, debugHooks) {
+        this.shape = shape;
+        this.index = index;
+        this.debugHooks = debugHooks;
+        this.node = null; // the focus node while match() runs
+        /** Set per match(): whether the frontier may be deduplicated. */
+        this.mayMerge = true;
+        this.outerExpression = shape.expression;
+        this.greedy = this.takesAllItCan(this.outerExpression);
+        this.semActNames = new Set();
+        this.semActNodes = new Set([this.shape]);
+        (this.shape.semActs || []).forEach(sa => this.semActNames.add(sa.name));
+        this.collectSemActs(this.outerExpression, new Set());
+    }
+    /**
+     * The semantic actions written anywhere in this shape, by name.
+     *
+     * Without any, ShEx asks only how many triples a constraint took: two
+     * ways of matching the same bag are the same answer, which is what lets
+     * mergeEquivalent drop all but one of them.  An action is handed the
+     * triples it fired on and does something opaque with them, so where one
+     * is watching the specific assignment is part of the answer -- both which
+     * triples it sees and, for a group's actions, how many threads it is
+     * dispatched over.
+     *
+     * Names rather than a flag, because an action nobody handles is never
+     * dispatched (SemActDispatcher.dispatchAll skips it) and so cannot
+     * observe anything.  Which handlers are registered isn't known until
+     * match() is called, so the question is asked there.
+     */
+    collectSemActs(exprOrRef, seen) {
+        if (typeof exprOrRef === "string") {
+            if (seen.has(exprOrRef))
+                return; // an Inclusion cycle
+            seen.add(exprOrRef);
+            const included = this.index.tripleExprs[exprOrRef];
+            if (included !== undefined)
+                this.collectSemActs(included, seen);
+            return;
+        }
+        this.semActNodes.add(exprOrRef);
+        (exprOrRef.semActs || []).forEach(sa => this.semActNames.add(sa.name));
+        switch (exprOrRef.type) {
+            case "EachOf":
+            case "OneOf":
+                exprOrRef.expressions.forEach(nested => this.collectSemActs(nested, seen));
+                return;
+        }
+    }
+    /** May the frontier be deduplicated, given who is listening? */
+    merging(semActHandler) {
+        const names = this.watching(semActHandler);
+        if (names.size === 0)
+            return true;
+        if (semActHandler.isRegistered === undefined)
+            return false; // can\'t ask: assume it is live
+        for (const name of names)
+            if (semActHandler.isRegistered(name))
+                return false;
+        return true; // written, but nobody is handling them
+    }
+    /**
+     * The actions on this shape, by name -- the ones the constructor found
+     * written into it, and the ones this dispatcher has indexed against its
+     * elements.  An overlay that indexes rather than amends is asked here
+     * because the dispatcher isn't known until match() is called.
+     */
+    watching(semActHandler) {
+        if (semActHandler.semActsFor === undefined)
+            return this.semActNames;
+        const names = new Set(this.semActNames);
+        this.semActNodes.forEach(node => (semActHandler.semActsFor(node) || []).forEach(sa => names.add(sa.name)));
+        return names;
+    }
+    /**
+     * Which constraints can take every triple assigned to them at once.
+     *
+     * The validator hands this engine an assignment: each triple in the
+     * neighborhood belongs to exactly one TripleConstraint (t2tc), and a
+     * triple this expression doesn't consume is an ExcessTripleViolation.  So
+     * for a constraint the expression reaches once, consuming fewer than all
+     * of its triples cannot lead anywhere the maximum doesn't: there is no
+     * other constraint those triples could go to.  Trying every prefix
+     * length, as this engine did, multiplies out -- one thread per
+     * combination of prefix lengths across the repeated constraints, all of
+     * them passing, all but one of them discarded.
+     *
+     * Two shapes of expression still need the enumeration, and are left to
+     * it: a constraint reached twice (the same TripleConstraint object under
+     * two Inclusions) shares one pool of triples between two occurrences, and
+     * a constraint under a repeated group is visited once per iteration.  In
+     * both, what one visit takes is what another goes without -- e.g.
+     * `&<onePlus>; &<onePlus>` over two triples matches only 1 + 1.
+     */
+    takesAllItCan(expr) {
+        const once = new Set();
+        const twice = new Set();
+        const walk = (e, repeated, seen) => {
+            if (typeof e === "string") {
+                if (seen.has(e))
+                    return; // recursive inclusion: already counted
+                const included = this.index.tripleExprs[e];
+                if (included === undefined)
+                    return;
+                return walk(included, repeated, new Set(seen).add(e));
+            }
+            switch (e.type) {
+                case "TripleConstraint":
+                    if (repeated || once.has(e))
+                        twice.add(e);
+                    once.add(e);
+                    return;
+                case "EachOf":
+                case "OneOf": {
+                    const max = e.max === undefined ? 1 : e.max;
+                    const iterates = repeated || max === UNBOUNDED || max > 1;
+                    e.expressions.forEach(nested => walk(nested, iterates, seen));
+                    return;
+                }
+            }
+        };
+        walk(expr, false, new Set());
+        twice.forEach(tc => once.delete(tc));
+        return once;
+    }
+    match(node, constraintToTripleMapping, semActHandler, _trace) {
+        this.node = node;
+        this.mayMerge = this.merging(semActHandler);
+        const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
+            tripleResult.forEach(res => allTriples.add(res.triple));
+            return allTriples;
+        }, new Set());
+        const startingThread = new RegexpThread();
+        const ret = this.matchTripleExpression(this.outerExpression, startingThread, constraintToTripleMapping, semActHandler);
+        // console.log(JSON.stringify(ret));
+        // note: don't return if ret.length === 1 because it might fail the unmatchedTriples test.
+        const longerChosen = ret.reduce((ret, elt) => {
+            if (elt.errors.length > 0)
+                return ret; // early return
+            const unmatchedTriples = new Set(allTriples);
+            // Removed triples matched in this thread.
+            elt.matched.forEach(m => {
+                m.triples.forEach(t => {
+                    unmatchedTriples.delete(t);
+                });
+            });
+            // Remaining triples are unaccounted for.
+            unmatchedTriples.forEach(t => {
+                elt.errors.push({
+                    type: "ExcessTripleViolation",
+                    triple: t,
+                });
+            });
+            return ret !== null ? ret : // keep first solution
+                // Accept thread with no unmatched triples.
+                unmatchedTriples.size > 0 ? null : elt;
+        }, null);
+        if (longerChosen !== null) {
+            // A thread that matched nothing -- a group taken zero times, over a
+            // node with none of its arcs -- built no solution on the way; the
+            // empty one is what it stands for.
+            let fromValidationPoint = longerChosen.expression
+                || this.emptySolution(this.outerExpression);
+            if (this.shape.semActs !== undefined)
+                fromValidationPoint.semActs = this.shape.semActs;
+            return fromValidationPoint;
+        }
+        else {
+            return ret.length > 1 ? {
+                // more than one way to read this neighborhood, and each of them
+                // failed: say so as a disjunction rather than as a nested array
+                type: "Alternatives",
+                errors: ret.reduce((all, e) => {
+                    return all.concat([{ type: "AllOf", errors: e.errors }]);
+                }, [])
+            } : {
+                type: "Failure",
+                node: node,
+                errors: ret[0].errors
+            };
+        }
+    }
+    matchTripleExpression(expr, thread, constraintToTripleMapping, semActHandler) {
+        if (typeof expr === "string") { // Inclusion
+            const included = this.index.tripleExprs[expr];
+            return this.matchTripleExpression(included, thread, constraintToTripleMapping, semActHandler);
+        }
+        let min = expr.min !== undefined ? expr.min : 1;
+        let max = expr.max !== undefined ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
+        switch (expr.type) {
+            case "OneOf":
+                return this.matchOneOf(expr, min, max, thread, constraintToTripleMapping, semActHandler);
+            case "EachOf":
+                return this.matchEachOf(expr, min, max, thread, constraintToTripleMapping, semActHandler);
+            case "TripleConstraint":
+                return this.matchTripleConstraint(expr, min, max, thread, constraintToTripleMapping, semActHandler);
+            default:
+                throw Error("how'd we get here?");
+        }
+    }
+    matchOneOf(oneOf, min, max, thread, constraintToTripleMapping, semActHandler) {
+        return EvalThreadedNErrRegexEngine.matchRepeat(oneOf, min, max, thread, "OneOfSolutions", (th) => {
+            // const accept = null;
+            const matched = [];
+            const failed = [];
+            for (const nested of oneOf.expressions) {
+                const thcopy = new RegexpThread(ownPool(th.avail), th.errors, th.matched //.slice() ever needed??
+                );
+                const sub = this.matchTripleExpression(nested, thcopy, constraintToTripleMapping, semActHandler);
+                if (sub[0].errors.length === 0) { // all subs pass or all fail
+                    Array.prototype.push.apply(matched, sub);
+                    sub.forEach(newThread => {
+                        const expressions = thcopy.solution !== undefined ? thcopy.solution.expressions : [];
+                        if (newThread.expression !== undefined) // undefined for no matches on min card:0
+                            expressions.push(newThread.expression);
+                        delete newThread.expression;
+                        newThread.solution = {
+                            type: "OneOfSolution",
+                            expressions: expressions
+                        };
+                    });
+                }
+                else
+                    Array.prototype.push.apply(failed, sub);
+            }
+            return matched.length > 0 ? matched : failed;
+        }, semActHandler, this.mayMerge);
+    }
+    matchEachOf(expr, min, max, thread, constraintToTripleMapping, semActHandler) {
+        return EvalThreadedNErrRegexEngine.homogenize(EvalThreadedNErrRegexEngine.matchRepeat(expr, min, max, thread, "EachOfSolutions", (th) => {
+            // Iterate through nested expressions, exprThreads starts as [th].
+            return expr.expressions.reduce((exprThreads, nested) => {
+                // Iterate through current thread list composing nextThreads.
+                // Consider e.g.
+                // <S1> { <p1> . | <p2> .; <p3> . } / { <x> <p2> 2; <p3> 3 } (should pass)
+                // <S1> { <p1> .; <p2> . }          / { <s1> <p1> 1 }        (should fail)
+                return EvalThreadedNErrRegexEngine.homogenize(exprThreads.reduce((nextThreads, exprThread) => {
+                    const sub = this.matchTripleExpression(nested, exprThread, constraintToTripleMapping, semActHandler);
+                    // Move newThread.expression into a hierarchical solution structure.
+                    sub.forEach(newThread => {
+                        if (newThread.errors.length === 0) {
+                            const expressions = exprThread.solution !== undefined ? exprThread.solution.expressions.slice() : [];
+                            if (newThread.expression !== undefined) // undefined for no matches on min card:0
+                                expressions.push(newThread.expression);
+                            delete newThread.expression;
+                            newThread.solution = {
+                                type: "EachOfSolution",
+                                expressions: expressions // exprThread.expression + newThread.expression
+                            };
+                        }
+                    });
+                    return nextThreads.concat(sub);
+                }, []));
+            }, [th]);
+        }, semActHandler, this.mayMerge));
+    }
+    /** the solution of an expression matched zero times: no solutions, with
+     * the cardinality that let it be zero */
+    emptySolution(expr) {
+        const resolved = typeof expr === "string" ? this.index.tripleExprs[expr] : expr;
+        const minmax = {};
+        if (resolved.min !== undefined && resolved.min !== 1 || resolved.max !== undefined && resolved.max !== 1) {
+            minmax.min = resolved.min;
+            minmax.max = resolved.max;
+        }
+        if (resolved.semActs !== undefined)
+            minmax.semActs = resolved.semActs;
+        if (resolved.annotations !== undefined)
+            minmax.annotations = resolved.annotations;
+        switch (resolved.type) {
+            case "TripleConstraint":
+                return Object.assign({ type: "TripleConstraintSolutions", predicate: resolved.predicate }, resolved.valueExpr !== undefined ? { valueExpr: resolved.valueExpr } : {}, minmax, { solutions: [] });
+            case "OneOf":
+                return Object.assign({ type: "OneOfSolutions", solutions: [] }, minmax);
+            default:
+                return Object.assign({ type: "EachOfSolutions", solutions: [] }, minmax);
+        }
+    }
+    // Early return in case of insufficient matching triples
+    matchTripleConstraint(constraint, min, max, thread, constraintToTripleMapping, semActHandler) {
+        // the debugger's view of the thread as it asks; and what came of it
+        const threadView = () => ({
+            matched: thread.matched.map(m => ({
+                predicate: m.triples.length ? m.triples[0].predicate.value : "",
+                triples: m.triples.slice(),
+            })),
+            errors: thread.errors.length,
+        });
+        if (this.debugHooks && this.debugHooks.onConstraint)
+            this.debugHooks.onConstraint(constraint, {
+                node: this.node,
+                triples: constraintToTripleMapping.get(constraint).map(pair => pair.triple),
+                thread: threadView(),
+            });
+        const report = (taken, passed, failed, spawned) => {
+            if (this.debugHooks && this.debugHooks.onConstraintResult)
+                this.debugHooks.onConstraintResult(constraint, {
+                    node: this.node, taken: taken.slice(), passed, failed, spawned, thread: threadView(),
+                });
+        };
+        if (thread.avail.get(constraint) === undefined)
+            thread.avail.set(constraint, constraintToTripleMapping.get(constraint).map(pair => pair.triple));
+        // all of them at once where nothing else could want them (takesAllItCan),
+        // otherwise the minimum, and one more thread per triple after that
+        const greedy = this.greedy.has(constraint);
+        const wanted = greedy ? Math.min(thread.avail.get(constraint).length, max) : min;
+        const taken = thread.avail.get(constraint).splice(0, Math.max(wanted, min));
+        if (!(taken.length >= min)) { // Early return
+            report(taken, [], [], 0);
+            return [thread.makeMissingPropertyThread(constraint, thread.matched)];
+        }
+        const ret = [];
+        let lastPassFail = { pass: [], fail: [] };
+        const minmax = {};
+        if (constraint.min !== undefined && constraint.min !== 1 || constraint.max !== undefined && constraint.max !== 1) {
+            minmax.min = constraint.min;
+            minmax.max = constraint.max;
+        }
+        if (constraint.semActs !== undefined)
+            minmax.semActs = constraint.semActs;
+        if (constraint.annotations !== undefined)
+            minmax.annotations = constraint.annotations;
+        do {
+            const passFail = taken.reduce((acc, triple) => {
+                const tested = {
+                    type: "TestedTriple",
+                    subject: (0, term_1.rdfJsTerm2Ld)(triple.subject),
+                    predicate: (0, term_1.rdfJsTerm2Ld)(triple.predicate),
+                    object: (0, term_1.rdfJsTerm2Ld)(triple.object)
+                };
+                const hit = constraintToTripleMapping.get(constraint).find(x => x.triple === triple);
+                if (hit.res !== undefined)
+                    tested.referenced = hit.res;
+                const constraintSemActs = semActsOn(semActHandler, constraint);
+                const semActErrors = thread.errors.concat(constraintSemActs !== undefined && constraintSemActs.length > 0
+                    ? semActHandler.dispatchAll(constraintSemActs, { triples: [triple], tripleExpr: constraint }, tested)
+                    : []);
+                if (semActErrors.length > 0)
+                    acc.fail.push({ triple, tested, semActErrors });
+                else
+                    acc.pass.push({ triple, tested, semActErrors });
+                return acc;
+            }, { pass: [], fail: [] });
+            lastPassFail = passFail;
+            // return an empty solution if min card was 0
+            if (passFail.fail.length === 0) {
+                // If we didn't take anything, fall back to old errors.
+                // Could do something fancy here with a semAct registration for negative matches.
+                const totalErrors = taken.length === 0 ? thread.errors.slice() : [];
+                const myThread = thread.makeResultsThread(constraint, passFail.pass, totalErrors, thread.matched, minmax);
+                ret.push(myThread);
+            }
+            else {
+                passFail.fail.forEach(f => ret.push(thread.makeResultsThread(constraint, [f], f.semActErrors, thread.matched, minmax)));
+            }
+        } while ((() => {
+            if (!greedy && thread.avail.get(constraint).length > 0 && taken.length < max) {
+                // build another thread.
+                taken.push(thread.avail.get(constraint).shift());
+                return true;
+            }
+            else {
+                // no more threads
+                return false;
+            }
+        })());
+        report(taken, lastPassFail.pass.map(p => p.triple), lastPassFail.fail.map(f => ({ triple: f.triple, errors: f.semActErrors })), ret.length);
+        return ret;
+    }
+    /*
+       * returns: list of all passing or all failing threads (no heterogeneous lists)
+       */
+    /**
+     * One thread per distinct future, rather than one per distinct past.
+     *
+     * Two threads at the same point in a repeated group with the same triples
+     * left will match the rest of the expression the same way; they differ
+     * only in *which* triples each iteration took, i.e. in the witness.  So
+     * the frontier only needs one of each, and the ways to split N triples
+     * across iterations -- the compositions of N, which is what made this
+     * exponential -- collapse to the N+1 counts they can leave behind.
+     *
+     * Counts alone identify the future because the validator has already
+     * assigned each triple to exactly one TripleConstraint (see t2tc): the
+     * triples in a pool are interchangeable, and none of them is wanted
+     * anywhere else.
+     */
+    static mergeEquivalent(threads) {
+        if (threads.length < 2)
+            return threads;
+        const byRemaining = new Map();
+        for (const thread of threads) {
+            const counts = [];
+            thread.avail.forEach(triples => counts.push(triples.length));
+            const key = counts.join(",");
+            if (!byRemaining.has(key))
+                byRemaining.set(key, thread);
+        }
+        return Array.from(byRemaining.values());
+    }
+    static matchRepeat(groupTE, min, max, thread, type, evalGroup, semActHandler, mayMerge) {
+        let repeated = 0, errOut = false;
+        let newThreads = [thread];
+        const minmax = {};
+        if (groupTE.min !== undefined && groupTE.min !== 1 || groupTE.max !== undefined && groupTE.max !== 1) {
+            minmax.min = groupTE.min;
+            minmax.max = groupTE.max;
+        }
+        if (groupTE.semActs !== undefined)
+            minmax.semActs = groupTE.semActs;
+        if (groupTE.annotations !== undefined)
+            minmax.annotations = groupTE.annotations;
+        for (; repeated < max && !errOut; ++repeated) {
+            let inner = [];
+            let stumbled = [];
+            for (let t = 0; t < newThreads.length; ++t) {
+                const newt = newThreads[t];
+                const sub = evalGroup(newt);
+                if (sub.length > 0 && sub[0].errors.length === 0) { // all subs pass or all fail
+                    sub.forEach(newThread => {
+                        const solutions = newt.expression !== undefined ? newt.expression.solutions.slice() : [];
+                        if (newThread.solution !== undefined)
+                            solutions.push(newThread.solution);
+                        delete newThread.solution;
+                        newThread.expression = Object.assign({
+                            type: type,
+                            solutions: solutions
+                        }, minmax);
+                    });
+                    inner = inner.concat(sub);
+                }
+                else {
+                    // This thread can't take another iteration.  Another might: the
+                    // threads here are the ways the last iteration could have gone,
+                    // and they leave different triples behind.  Returning on the
+                    // first that stumbles discards the ones that would have finished
+                    // -- which is how `( :p . + ; :q . ){2}` over two of each came to
+                    // report :p missing, having spent both :p's in one iteration of
+                    // the thread that happened to be looked at second.
+                    stumbled = stumbled.concat(sub);
+                }
+            }
+            if (inner.length === 0)
+                // none of them could: short of the minimum that is the failure,
+                // and past it the iterations already made stand
+                return repeated < min ? stumbled : newThreads;
+            newThreads = mayMerge ? EvalThreadedNErrRegexEngine.mergeEquivalent(inner) : inner;
+        }
+        const groupSemActs = semActsOn(semActHandler, groupTE);
+        if (newThreads.length > 0 && newThreads[0].errors.length === 0
+            && groupSemActs !== undefined && groupSemActs.length > 0) {
+            const passes = [];
+            const failures = [];
+            for (const newThread of newThreads) {
+                const ctx = {
+                    // (concat rather than flatMap: this package compiles against
+                    // lib ES2021.String, which brings no Array.prototype.flatMap)
+                    triples: [].concat(...newThread.matched.map(m => m.triples)),
+                    tripleExpr: groupTE,
+                };
+                const semActErrors = semActHandler.dispatchAll(groupSemActs, ctx, newThread);
+                if (semActErrors.length === 0) {
+                    passes.push(newThread);
+                }
+                else {
+                    Array.prototype.push.apply(newThread.errors, semActErrors);
+                    failures.push(newThread);
+                }
+            }
+            newThreads = passes.length > 0 ? passes : failures;
+        }
+        return newThreads;
+    }
+    static homogenize(list) {
+        return list.reduce((acc, elt) => {
+            if (elt.errors.length === 0) {
+                if (acc.errors) {
+                    return { errors: false, l: [elt] };
+                }
+                else {
+                    return { errors: false, l: acc.l.concat(elt) };
+                }
+            }
+            else {
+                if (acc.errors) {
+                    return { errors: true, l: acc.l.concat(elt) };
+                }
+                else {
+                    return acc;
+                }
+            }
+        }, { errors: true, l: [] }).l;
+    }
+}
+//# sourceMappingURL=eval-threaded-nerr.js.map

@@ -1,0 +1,270 @@
+# ShExR -> ShExJ, as an overlay on ShExR.shex.
+#
+# ShExR.shex is the schema for ShEx schemas written as RDF.  It already says,
+# production by production, what a ShExR graph may look like -- so a reader
+# for it is a reader ShEx can generate, given one action per production
+# saying what that production means in ShExJ.
+#
+# Nothing here is in ShExR.shex, which is a spec document and stays one.
+#
+# What comes out is ShExJ with every reference expanded in place; feed it to
+# ShExUtil.ShExRtoShExJ to fold the repeats back into shape references.
+
+PREFIX sa: <http://shex.io/ns/semact#>
+PREFIX sx: <http://www.w3.org/ns/shex#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+BASE <http://shex.io/examples/shexr-actions>
+
+<#toShExJ> a sa:Overlay ;
+  rdfs:comment "read a ShExR graph as ShExJ" ;
+  sa:extension <http://shex.io/extensions/Reduce/> ;
+
+  ##### the schema, and the declarations in it
+
+  # What the merging productions below are written with: a start action
+  # runs once, before the match, and what it puts in `state` every other
+  # action can see.  So the overlay brings its own helper rather than the
+  # caller having to pass one in -- these actions read a ShExR graph with
+  # nothing but ShExR.shex and an evaluator.
+  sa:action
+  [ sa:start true ; sa:code """
+      // What a production is: the parts its members said, merged.  Each
+      // member answers with the one ShExJ property it is -- `{min: 1}` --
+      // so no action here has to ask whether an arc was there.  A member
+      // that repeats answers once per triple and says `{extra: [iri]}`, and
+      // the lists join.
+      //
+      // An arc reference is one value where the schema allows one and the
+      // list of them where it allows more, so each group arrives either
+      // way and is read as however many there were.
+      state.merge = (target, ...groups) => {
+        groups.forEach(group => [].concat(group === undefined ? [] : group)
+          .forEach(part => Object.keys(part).forEach(key => {
+            target[key] = Array.isArray(target[key]) && Array.isArray(part[key])
+              ? target[key].concat(part[key])
+              : part[key];
+          })));
+        return target;
+      };
+  """ ] ,
+
+  [ sa:ref sx:Schema ;
+    sa:code "$$ = state.merge({type: 'Schema'}, $sx:imports, $sx:startActs, $sx:start, $sx:shapes)" ] ,
+  [ sa:path "@sx:Schema~sx:imports" ;   sa:code "$$ = {imports: $1}" ] ,
+  [ sa:path "@sx:Schema~sx:startActs" ; sa:code "$$ = {startActs: $1}" ] ,
+  [ sa:path "@sx:Schema~sx:start" ;     sa:code "$$ = {start: $1}" ] ,
+  [ sa:path "@sx:Schema~sx:shapes" ;    sa:code "$$ = {shapes: $1}" ] ,
+
+  [ sa:ref sx:ShapeDecl ;
+    sa:code """
+      // every node in RDF has a name, so everything gets an id here and
+      // ShExUtil.ShExRtoShExJ drops the ones nothing refers to twice
+      const d = {type: 'ShapeDecl', id: node};
+      if (has('sx:abstract')) d.abstract = str(one('sx:abstract')) === 'true';
+      d.shapeExpr = one('sx:shapeExpr');
+      return d;
+    """ ] ,
+
+  ##### shape expressions
+
+  [ sa:ref sx:ShapeOr ;
+    sa:code "{type: 'ShapeOr', shapeExprs: one('sx:shapeExprs')}" ] ,
+
+  [ sa:ref sx:ShapeAnd ;
+    sa:code "{type: 'ShapeAnd', shapeExprs: one('sx:shapeExprs')}" ] ,
+
+  [ sa:ref sx:ShapeNot ;
+    sa:code "{type: 'ShapeNot', shapeExpr: one('sx:shapeExpr')}" ] ,
+
+  [ sa:ref sx:ShapeExternal ;
+    sa:code "{type: 'ShapeExternal'}" ] ,
+
+  [ sa:ref sx:Shape ;
+    sa:code """
+      $$ = state.merge({type: 'Shape'}, $sx:extends, $sx:closed, $sx:extra,
+                       $sx:expression, $sx:semActs, $sx:annotation)
+    """ ] ,
+  [ sa:path "@sx:Shape~sx:extends" ;    sa:code "$$ = {extends: $1}" ] ,
+  [ sa:path "@sx:Shape~sx:closed" ;     sa:code "$$ = {closed: str($1) === 'true'}" ] ,
+  # `sx:extra IRI *` is the one arc that repeats, and an action on a
+  # constraint runs once per triple it matched, so this says what one of
+  # them contributes and state.merge() concatenates them.
+  [ sa:path "@sx:Shape~sx:extra" ;      sa:code "$$ = {extra: [$1]}" ] ,
+  [ sa:path "@sx:Shape~sx:expression" ; sa:code "$$ = {expression: $1}" ] ,
+  [ sa:path "@sx:Shape~sx:semActs" ;    sa:code "$$ = {semActs: $1}" ] ,
+  [ sa:path "@sx:Shape~sx:annotation" ; sa:code "$$ = {annotations: $1}" ] ,
+
+  # NodeConstraint is the one production here written as its sub-expressions.
+  # Every other action reads its own arcs with one() and has(); each of these
+  # says what one attribute means in ShExJ, and the production merges what
+  # they said.  That is yacc's `$$ = $1 + $3` with the sub-production named
+  # instead of numbered -- which is the spelling a grammar wants, since a
+  # ShEx production's parts are named by predicate rather than ordered.
+  [ sa:ref sx:NodeConstraint ;
+    sa:code """
+      $$ = state.merge({type: 'NodeConstraint'}, $sx:nodeKind, $sx:datatype,
+                       $sx:length, $sx:minlength, $sx:maxlength, $sx:pattern, $sx:flags,
+                       $sx:mininclusive, $sx:minexclusive, $sx:maxinclusive, $sx:maxexclusive,
+                       $sx:totaldigits, $sx:fractiondigits,
+                       $sx:values, $sx:semActs, $sx:annotation)
+    """ ] ,
+
+  # `$1` is the one value a triple constraint matched: its object, reduced.
+  [ sa:path "@sx:NodeConstraint~sx:nodeKind" ;   sa:code "$$ = {nodeKind: local($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:datatype" ;   sa:code "$$ = {datatype: $1}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:values" ;     sa:code "$$ = {values: $1}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:semActs" ;    sa:code "$$ = {semActs: $1}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:annotation" ; sa:code "$$ = {annotations: $1}" ] ,
+
+  # The facets are their own production -- NodeConstraint has them by
+  # `&<#xsFacets>` -- and ~ reads an inclusion as part of the body that
+  # takes it in, so they are addressed the way the arcs written into the
+  # shape are.  The values turn up in the NodeConstraint's arcs all the same.
+  [ sa:path "@sx:NodeConstraint~sx:length" ;         sa:code "$$ = {length: num($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:minlength" ;      sa:code "$$ = {minlength: num($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:maxlength" ;      sa:code "$$ = {maxlength: num($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:pattern" ;        sa:code "$$ = {pattern: str($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:flags" ;          sa:code "$$ = {flags: str($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:mininclusive" ;   sa:code "$$ = {mininclusive: num($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:minexclusive" ;   sa:code "$$ = {minexclusive: num($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:maxinclusive" ;   sa:code "$$ = {maxinclusive: num($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:maxexclusive" ;   sa:code "$$ = {maxexclusive: num($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:totaldigits" ;    sa:code "$$ = {totaldigits: num($1)}" ] ,
+  [ sa:path "@sx:NodeConstraint~sx:fractiondigits" ; sa:code "$$ = {fractiondigits: num($1)}" ] ,
+
+  ##### triple expressions
+
+  # every node in RDF has a name, so everything gets an id here and
+  # ShExUtil.ShExRtoShExJ drops the ones nothing refers to twice
+  [ sa:ref sx:TripleConstraint ;
+    sa:code """
+      $$ = state.merge({type: 'TripleConstraint', id: node},
+                       $sx:inverse, $sx:negated, $sx:predicate, $sx:valueExpr,
+                       $sx:min, $sx:max, $sx:semActs, $sx:annotation)
+    """ ] ,
+  [ sa:path "@sx:TripleConstraint~sx:inverse" ;
+    sa:code "$$ = {inverse: str($1) === 'true'}" ] ,
+  [ sa:path "@sx:TripleConstraint~sx:negated" ;
+    sa:code "$$ = {negated: str($1) === 'true'}" ] ,
+  [ sa:path "@sx:TripleConstraint~sx:predicate" ;  sa:code "$$ = {predicate: $1}" ] ,
+  [ sa:path "@sx:TripleConstraint~sx:valueExpr" ;  sa:code "$$ = {valueExpr: $1}" ] ,
+  [ sa:path "@sx:TripleConstraint~sx:min" ;        sa:code "$$ = {min: num($1)}" ] ,
+  [ sa:path "@sx:TripleConstraint~sx:max" ;        sa:code "$$ = {max: num($1)}" ] ,
+  [ sa:path "@sx:TripleConstraint~sx:semActs" ;    sa:code "$$ = {semActs: $1}" ] ,
+  [ sa:path "@sx:TripleConstraint~sx:annotation" ; sa:code "$$ = {annotations: $1}" ] ,
+
+  [ sa:ref sx:EachOf ;
+    sa:code """
+      $$ = state.merge({type: 'EachOf', id: node}, $sx:expressions,
+                       $sx:min, $sx:max, $sx:semActs, $sx:annotation)
+    """ ] ,
+  [ sa:path "@sx:EachOf~sx:expressions" ; sa:code "$$ = {expressions: $1}" ] ,
+  [ sa:path "@sx:EachOf~sx:min" ;         sa:code "$$ = {min: num($1)}" ] ,
+  [ sa:path "@sx:EachOf~sx:max" ;         sa:code "$$ = {max: num($1)}" ] ,
+  [ sa:path "@sx:EachOf~sx:semActs" ;     sa:code "$$ = {semActs: $1}" ] ,
+  [ sa:path "@sx:EachOf~sx:annotation" ;  sa:code "$$ = {annotations: $1}" ] ,
+
+  [ sa:ref sx:OneOf ;
+    sa:code """
+      $$ = state.merge({type: 'OneOf', id: node}, $sx:expressions,
+                       $sx:min, $sx:max, $sx:semActs, $sx:annotation)
+    """ ] ,
+  [ sa:path "@sx:OneOf~sx:expressions" ; sa:code "$$ = {expressions: $1}" ] ,
+  [ sa:path "@sx:OneOf~sx:min" ;         sa:code "$$ = {min: num($1)}" ] ,
+  [ sa:path "@sx:OneOf~sx:max" ;         sa:code "$$ = {max: num($1)}" ] ,
+  [ sa:path "@sx:OneOf~sx:semActs" ;     sa:code "$$ = {semActs: $1}" ] ,
+  [ sa:path "@sx:OneOf~sx:annotation" ;  sa:code "$$ = {annotations: $1}" ] ,
+
+  ##### value sets
+
+  [ sa:path "@sx:Wildcard/shapeExprs/*/thisShapeExpr::Shape" ;
+    sa:code "{type: 'Wildcard'}" ] ,
+
+  [ sa:ref sx:IriStem ;
+    sa:code "{type: 'IriStem', stem: str(one('sx:stem'))}" ] ,
+  [ sa:ref sx:LiteralStem ;
+    sa:code "{type: 'LiteralStem', stem: str(one('sx:stem'))}" ] ,
+  [ sa:ref sx:LanguageStem ;
+    sa:code "{type: 'LanguageStem', stem: str(one('sx:stem'))}" ] ,
+  [ sa:ref sx:Language ;
+    sa:code "{type: 'Language', languageTag: str(one('sx:languageTag'))}" ] ,
+
+  # a stem range's stem is a string or the Wildcard shape above
+  [ sa:ref sx:IriStemRange ;
+    sa:code """
+      const stem = one('sx:stem');
+      return {type: 'IriStemRange',
+              stem: stem && stem.type === 'Wildcard' ? stem : str(stem),
+              exclusions: one('sx:exclusion')};
+    """ ] ,
+  [ sa:ref sx:LiteralStemRange ;
+    sa:code """
+      const stem = one('sx:stem');
+      return {type: 'LiteralStemRange',
+              stem: stem && stem.type === 'Wildcard' ? stem : str(stem),
+              exclusions: one('sx:exclusion')};
+    """ ] ,
+  [ sa:ref sx:LanguageStemRange ;
+    sa:code """
+      const stem = one('sx:stem');
+      return {type: 'LanguageStemRange',
+              stem: stem && stem.type === 'Wildcard' ? stem : str(stem),
+              exclusions: one('sx:exclusion')};
+    """ ] ,
+
+  ##### semantic actions and annotations, in the schema being read
+
+  [ sa:ref sx:SemAct ;
+    sa:code """
+      const a = {type: 'SemAct', name: one('sx:name')};
+      if (has('sx:code')) a.code = str(one('sx:code'));
+      return a;
+    """ ] ,
+
+  [ sa:ref sx:Annotation ;
+    sa:code "{type: 'Annotation', predicate: one('sx:predicate'), object: one('sx:object')}" ] ,
+
+  ##### RDF lists
+  #
+  # A list is a shape that recurses on rdf:rest, so a list reduces the way
+  # every other production does: cons the head onto what the tail reduced to.
+
+  [ sa:path "@sx:IriList1Plus" ; sa:code """
+      [one('rdf:first')].concat(one('rdf:rest') === nil ? [] : one('rdf:rest'))""" ] ,
+  [ sa:path "@sx:SemActList1Plus" ; sa:code """
+      [one('rdf:first')].concat(one('rdf:rest') === nil ? [] : one('rdf:rest'))""" ] ,
+  [ sa:path "@sx:ShapeDeclList1Plus" ; sa:code """
+      [one('rdf:first')].concat(one('rdf:rest') === nil ? [] : one('rdf:rest'))""" ] ,
+  [ sa:path "@sx:valueSetValueList1Plus" ; sa:code """
+      [one('rdf:first')].concat(one('rdf:rest') === nil ? [] : one('rdf:rest'))""" ] ,
+  [ sa:path "@sx:AnnotationList1Plus" ; sa:code """
+      [one('rdf:first')].concat(one('rdf:rest') === nil ? [] : one('rdf:rest'))""" ] ,
+  [ sa:path "@sx:IriStemExclusionList1Plus" ; sa:code """
+      // an excluded literal is its lexical form in ShExJ, where an excluded
+      // IRI or a nested stem is the object it already reduced to
+      const head = one('rdf:first');
+      return [head && typeof head === 'object' && 'value' in head ? str(head) : head]
+        .concat(one('rdf:rest') === nil ? [] : one('rdf:rest'));""" ] ,
+  [ sa:path "@sx:LiteralStemExclusionList1Plus" ; sa:code """
+      // an excluded literal is its lexical form in ShExJ, where an excluded
+      // IRI or a nested stem is the object it already reduced to
+      const head = one('rdf:first');
+      return [head && typeof head === 'object' && 'value' in head ? str(head) : head]
+        .concat(one('rdf:rest') === nil ? [] : one('rdf:rest'));""" ] ,
+  [ sa:path "@sx:LanguageStemExclusionList1Plus" ; sa:code """
+      // an excluded literal is its lexical form in ShExJ, where an excluded
+      // IRI or a nested stem is the object it already reduced to
+      const head = one('rdf:first');
+      return [head && typeof head === 'object' && 'value' in head ? str(head) : head]
+        .concat(one('rdf:rest') === nil ? [] : one('rdf:rest'));""" ] ,
+  [ sa:path "@sx:tripleExpressionList1Plus" ; sa:code """
+      [one('rdf:first')].concat(one('rdf:rest') === nil ? [] : one('rdf:rest'))""" ] ,
+  [ sa:path "@sx:shapeDeclOrExprList1Plus" ; sa:code """
+      [one('rdf:first')].concat(one('rdf:rest') === nil ? [] : one('rdf:rest'))""" ] ,
+
+  # the 2Plus heads have no rdf:nil case: their tail is always another list
+  [ sa:path "@sx:tripleExpressionList2Plus" ; sa:code """
+      [one('rdf:first')].concat(one('rdf:rest'))""" ] ,
+  [ sa:path "@sx:shapeDeclOrExprList2Plus" ; sa:code """
+      [one('rdf:first')].concat(one('rdf:rest'))""" ]
+.

@@ -1,0 +1,85 @@
+{
+  "name": "@shexjs/cli",
+  "version": "1.0.0-alpha.30",
+  "files": [
+    "bin",
+    "lib",
+    "src",
+    "rest"
+  ],
+  "description": "Shape Expressions command line interface",
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
+  "keywords": [
+    "shex",
+    "shape expressions",
+    "rdf",
+    "query",
+    "parser"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@shexjs/eval-simple-1err": "^1.0.0-alpha.30",
+    "@shexjs/eval-threaded-nerr": "^1.0.0-alpha.30",
+    "@shexjs/eval-validator-api": "^1.0.0-alpha.30",
+    "@shexjs/editor-services": "^1.0.0-alpha.30",
+    "@shexjs/extension-eval": "^1.0.0-alpha.30",
+    "@shexjs/extension-map": "^1.0.0-alpha.30",
+    "@shexjs/extension-test": "^1.0.0-alpha.30",
+    "@shexjs/neighborhood-api": "^1.0.0-alpha.30",
+    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.30",
+    "@shexjs/neighborhood-sparql": "^1.0.0-alpha.30",
+    "@shexjs/neighborhood-wikibase": "^1.0.0-alpha.30",
+    "@shexjs/node": "^1.0.0-alpha.30",
+    "@shexjs/parser": "^1.0.0-alpha.30",
+    "@shexjs/term": "^1.0.0-alpha.28",
+    "@shexjs/util": "^1.0.0-alpha.30",
+    "@shexjs/validator": "^1.0.0-alpha.30",
+    "@shexjs/visitor": "^1.0.0-alpha.30",
+    "@shexjs/writer": "^1.0.0-alpha.30",
+    "chalk": "^4.1.2",
+    "command-line-args": "^5.0.2",
+    "command-line-usage": "^7.0.3",
+    "js-yaml": "^4.1.0",
+    "jsonld": "^9.0.0",
+    "koa": "^2.15.3",
+    "koa-body": "^6.0.1",
+    "lezer-turtle": "^0.1.0",
+    "n3": "^1.20.4",
+    "node-fetch": "^2.7.0",
+    "shape-map": "^1.0.0",
+    "shex-examples": "^0.1.0"
+  },
+  "bin": {
+    "json-to-shex": "bin/json-to-shex",
+    "shex-to-json": "bin/shex-to-json",
+    "shex-validate": "bin/validate",
+    "shex-partition": "bin/partition",
+    "shex-debug": "bin/shex-debug"
+  },
+  "scripts": {
+    "make": "(cd test/ && make test)",
+    "build": "tsc",
+    "test": "mocha -C -R dot"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shexjs/shex.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shexjs/shex.js/issues"
+  },
+  "pre-commit": [
+    "lint",
+    "test"
+  ]
+}

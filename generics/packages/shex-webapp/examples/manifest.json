@@ -1,0 +1,167 @@
+[
+  {
+    "schemaLabel": "clinical observation",
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "the least an Observation can be",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1> :subject <Patient2> .\n",
+    "queryMap": "<Obs1>@START\n",
+    "status": "conformant",
+    "comment": "Everything in <ObservationShape> is optional but :subject, so this is the whole of a conforming Observation.  Each example below adds one thing to it."
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "with birthdate",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31\"^^xsd:date .\n",
+    "queryMap": "{FOCUS :status _}@START,\n<Patient2>@!<ObservationShape>\n",
+    "status": "conformant",
+    "comment": "The query map is core ShapeMap: every node with a :status, and a claim that the patient is *not* an Observation."
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "a whole measurement",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nPREFIX loinc: <http://loinc.org/rdf#>\n\n<Obs1>\n  :status            \"final\" ;\n  :code              loinc:29463-7 ;        # Body weight\n  :effectiveDateTime \"2026-08-13T09:41:00Z\"^^xsd:dateTime ;\n  :performer         <Practitioner7> ;\n  :subject           <Patient2> ;\n  :valueQuantity     [\n    :value  81.2 ;\n    :unit   \"kg\" ;\n    :system <http://unitsofmeasure.org> ;\n    :code   \"kg\"\n  ] .\n\n<Practitioner7> :name \"Dr. Alice Chen\" .\n\n<Patient2>\n  :active     true ;\n  :name       \"Bob\" , \"Robert Smith\" ;\n  :gender     \"male\" ;\n  :birthdate  \"1999-12-31\"^^xsd:date ;\n  :identifier [\n    :system <http://hospital.example/mrn> ;\n    :value  \"MRN-40281\"\n  ] .\n",
+    "queryMap": "<Obs1>@START\n",
+    "status": "conformant",
+    "comment": "Every element the schema knows, in one document."
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "the same measurement, in two documents",
+    "dataURL": [
+      "ClinObs-observation.ttl",
+      "ClinObs-patient.ttl"
+    ],
+    "queryMap": "<http://hl7.example/Obs1>@<ObservationShape>\n",
+    "status": "conformant",
+    "comment": "A graph is not a file: the observation comes from an instrument, the patient from a registry, and they meet at the IRI one names and the other describes.  The tabs are named after what each document says it is, and hovering a constraint whose match is in the other document brings that document forward to highlight it."
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "no subject",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1> :status \"final\" .\n",
+    "queryMap": "<Obs1>@START\n",
+    "status": "nonconformant",
+    "comment": "The one thing an Observation must have."
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "a status outside the value set",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"finally\" ;\n  :subject   <Patient2> .\n",
+    "queryMap": "<Obs1>@START\n",
+    "status": "nonconformant"
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "a birthdate that is a dateTime",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1> :subject <Patient2> .\n\n<Patient2> :birthdate \"1999-12-31T01:23:45\"^^xsd:dateTime .\n",
+    "queryMap": "<Obs1>@START\n",
+    "status": "nonconformant",
+    "comment": "A date and a dateTime are different datatypes, however alike they read."
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "a quantity with no number and no code",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :subject       <Patient2> ;\n  :valueQuantity [\n    :unit \"kg\" ;\n    :system <http://unitsofmeasure.org> ;\n  ] .\n",
+    "queryMap": "<Obs1>@START\n",
+    "status": "nonconformant",
+    "comment": "Quantity :value is required and :system is contingent on :code"
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "a gender outside the value set",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1> :subject <Patient2> .\n\n<Patient2> :gender \"M\" .\n",
+    "queryMap": "<Obs1>@START\n",
+    "status": "nonconformant"
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schemaURL": "ClinObs.shex",
+    "dataLabel": "two documents, and the mistake is in the second",
+    "data": [
+      "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nBASE <http://hl7.example/>\n\n# Observation\n<Obs1>\n  :status  \"final\" ;\n  :subject <Patient2> .\n",
+      "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nBASE <http://hl7.example/>\n\n# Patient\n<Patient2>\n  :name   \"Bob\" ;\n  :gender \"M\" .\n"
+    ],
+    "queryMap": "<http://hl7.example/Obs1>@<ObservationShape>\n",
+    "status": "nonconformant",
+    "comment": "Validating the observation walks into the patient, so a bad gender code in the second document fails the first.  Hovering the failure switches to the document that caused it."
+  },
+  {
+    "schemaLabel": "GO-CAM example",
+    "schemaURL": "GO-CAM-schema.shex",
+    "dataLabel": "1 instance with parents",
+    "dataURL": "GO-CAM-instance.ttl",
+    "queryMap": "<http://model.geneontology.org/5b528b1100001416/5b528b1100001522>@<#S1>\n",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "wikidata query",
+    "schema": "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX prov: <http://www.w3.org/ns/prov#>\nPREFIX p: <http://www.wikidata.org/prop/>\nPREFIX pr: <http://www.wikidata.org/prop/reference/>\nPREFIX ps: <http://www.wikidata.org/prop/statement/>\n\nstart = @<wikidata_item>\n\n<wikidata_item> {\n  p:P1748 {\n    ps:P1748 LITERAL ;\n    prov:wasDerivedFrom @<reference>+\n  }+\n}\n\n<reference> {\n  pr:P248  IRI ;\n  pr:P813  xsd:dateTime ;\n  # pr:P699  LITERAL\n}\n",
+    "dataLabel": "12078",
+    "queryMap": "SPARQL '''SELECT ?item ?itemLabel WHERE {\n  ?item wdt:P279* wd:Q12078 .\n  SERVICE wikibase:label {\n    bd:serviceParam wikibase:language \"en\"\n  }\n} LIMIT 10'''@START",
+    "status": "conformant",
+    "neighborhood": "sparql",
+    "dataBase": "http://www.wikidata.org/entity/",
+    "endpoint": "https://query.wikidata.org/sparql"
+  },
+  {
+    "schemaLabel": "Wikidata person",
+    "schemaURL": "wikidata-person.shex",
+    "dataLabel": "Q42 from the query service",
+    "neighborhood": "sparql",
+    "dataBase": "http://www.wikidata.org/entity/",
+    "endpoint": "https://query.wikidata.org/sparql",
+    "queryMap": "<http://www.wikidata.org/entity/Q42>@START\n",
+    "status": "conformant",
+    "comment": "Douglas Adams, validated by asking query.wikidata.org for each neighborhood as the walk needs it."
+  },
+  {
+    "schemaLabel": "Wikidata person",
+    "schemaURL": "wikidata-person.shex",
+    "dataLabel": "Q42, Q76 from the JSON API",
+    "neighborhood": "wikibase",
+    "dataBase": "http://www.wikidata.org/entity/",
+    "base": "https://www.wikidata.org/wiki/Special:EntityData/",
+    "queryMap": "QENTITIES \"42 76\"@START\n",
+    "status": "conformant",
+    "comment": "The same entity, and Q76 with it, from the JSON pages Wikidata is edited through, turned back into the RDF the query service would serve.  The QueryMap names entities by id and lets this source work out what they are called."
+  },
+  {
+    "schemaLabel": "Wikidata person",
+    "schemaURL": "wikidata-person.shex",
+    "dataLabel": "Q42 from a downloaded page",
+    "neighborhood": "wikibase",
+    "dataBase": "http://www.wikidata.org/entity/",
+    "dataURL": "wikidata-Q42.json",
+    "queryMap": "<http://www.wikidata.org/entity/Q42>@START\n",
+    "status": "conformant",
+    "comment": "The same entity from a page downloaded earlier: edit it in the pane to see what an edit would validate as before making it.  With a downloaded site table too (the sitelinks in a page name wikis like \"enwiki\", and only that table says which URL and language that is), this entry needs no network at all.",
+    "sitematrix": "wikidata-sitematrix.json"
+  },
+  {
+    "schemaLabel": "Wikidata human gene",
+    "schemaURL": "wikidata-human-gene.shex",
+    "dataLabel": "BRCA1, its chromosome and its assembly",
+    "neighborhood": "wikibase",
+    "dataBase": "http://www.wikidata.org/entity/",
+    "base": "https://www.wikidata.org/wiki/Special:EntityData/",
+    "queryMap": "QENTITIES \"227339\"@START\n",
+    "status": "conformant",
+    "comment": "GeneWiki's human gene schema (EntitySchema:E37), with the two schemas it imports inlined: a gene's chromosome is E109's and the genome assembly its coordinates are given against is E108's.  So validating BRCA1 (Q227339) walks from the gene to chromosome 17 (Q220677) and on to GRCh38 (Q20966585) -- three entities, three shapes, each page fetched as the walk reaches it.  Four constraints are relaxed here, each marked RELAXED IN THIS COPY where it stands: three are places where the data cites a source the schema enumerates without (a newer Ensembl release, the OMA browser), and one is a normalized value this source can't derive from an entity page."
+  },
+  {
+    "schemaLabel": "repeated properties",
+    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<#S1> {\n  :p xsd:integer ;\n  :p IRI ;\n  :p xsd:decimal ;\n  :p @<#S2>\n}\n\n<#S2> {\n  :q [5]\n}\n",
+    "dataLabel": "passing data",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<#n1>\n  :p 1.1 ;\n  :p <#n3> ;\n  :p <#n2> ;\n  :p 4 ;\n.\n\n<#n3> :q 5 .\n",
+    "queryMap": "<#n1>@<#S1>\n",
+    "status": "conformant"
+  }
+]
