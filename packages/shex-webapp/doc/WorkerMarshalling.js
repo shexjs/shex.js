@@ -59,6 +59,11 @@ class WorkerMarshalling {
         return ret;
     }
     static rdfjsTermToJsonTerm(rdfjsTerm) {
+        if (rdfjsTerm.termType === "Quad") // doc/triple-terms.md
+            return { termType: "Quad", value: "",
+                subject: WorkerMarshalling.rdfjsTermToJsonTerm(rdfjsTerm.subject),
+                predicate: WorkerMarshalling.rdfjsTermToJsonTerm(rdfjsTerm.predicate),
+                object: WorkerMarshalling.rdfjsTermToJsonTerm(rdfjsTerm.object) };
         const ret = { termType: rdfjsTerm.termType, value: rdfjsTerm.value };
         if (ret.termType === "Literal") {
             // datatypeString is an N3.js extension; fall back to the RDF/JS interface
@@ -76,6 +81,8 @@ class WorkerMarshalling {
         return dataFactory.quad(WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.subject, dataFactory), WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.predicate, dataFactory), WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.object, dataFactory), jsonTriple.graph ? WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.graph, dataFactory) : undefined);
     }
     static jsonTermToRdfjsTerm(jsonTerm, dataFactory) {
+        if (jsonTerm.termType === "Quad") // doc/triple-terms.md
+            return dataFactory.quad(WorkerMarshalling.jsonTermToRdfjsTerm(jsonTerm.subject, dataFactory), WorkerMarshalling.jsonTermToRdfjsTerm(jsonTerm.predicate, dataFactory), WorkerMarshalling.jsonTermToRdfjsTerm(jsonTerm.object, dataFactory));
         switch (jsonTerm.termType) {
             case "NamedNode": return dataFactory.namedNode(jsonTerm.value);
             case "BlankNode": return dataFactory.blankNode(jsonTerm.value);

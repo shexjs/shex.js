@@ -17,6 +17,10 @@ interface JsonTerm {
   value: string;
   datatype?: string;
   language?: string;
+  // termType "Quad": an RDF 1.2 triple term (doc/triple-terms.md)
+  subject?: JsonTerm;
+  predicate?: JsonTerm;
+  object?: JsonTerm;
 }
 interface JsonTriple { subject: JsonTerm; predicate: JsonTerm; object: JsonTerm; graph?: JsonTerm; }
 
@@ -109,6 +113,11 @@ class WorkerMarshalling {
   }
 
   static rdfjsTermToJsonTerm (rdfjsTerm: TermLike): JsonTerm {
+    if (rdfjsTerm.termType === "Quad") // doc/triple-terms.md
+      return {termType: "Quad", value: "",
+              subject: WorkerMarshalling.rdfjsTermToJsonTerm((rdfjsTerm as any).subject),
+              predicate: WorkerMarshalling.rdfjsTermToJsonTerm((rdfjsTerm as any).predicate),
+              object: WorkerMarshalling.rdfjsTermToJsonTerm((rdfjsTerm as any).object)};
     const ret: JsonTerm = {termType: rdfjsTerm.termType, value: rdfjsTerm.value};
     if (ret.termType === "Literal") {
       // datatypeString is an N3.js extension; fall back to the RDF/JS interface
@@ -133,6 +142,11 @@ class WorkerMarshalling {
   }
 
   static jsonTermToRdfjsTerm (jsonTerm: JsonTerm, dataFactory: DataFactoryLike): any {
+    if (jsonTerm.termType === "Quad") // doc/triple-terms.md
+      return dataFactory.quad(
+        WorkerMarshalling.jsonTermToRdfjsTerm(jsonTerm.subject!, dataFactory),
+        WorkerMarshalling.jsonTermToRdfjsTerm(jsonTerm.predicate!, dataFactory),
+        WorkerMarshalling.jsonTermToRdfjsTerm(jsonTerm.object!, dataFactory));
     switch (jsonTerm.termType) {
     case "NamedNode": return dataFactory.namedNode(jsonTerm.value);
     case "BlankNode": return dataFactory.blankNode(jsonTerm.value);

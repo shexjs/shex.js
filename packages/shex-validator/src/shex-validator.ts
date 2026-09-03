@@ -1059,6 +1059,31 @@ export class ShExValidator {
           ? {type: "ShapeAndFailure", errors: andErrors} as ShapeAndFailure
           : {type: "ShapeAndResults", solutions: andPasses} as ShapeAndResults;
 
+      case "TripleTermConstraint" as any: { // doc/triple-terms.md
+        const ttc = shapeExpr as any;
+        if (focus.termType !== "Quad")
+          return {type: "Failure", node: rdfJsTerm2Ld(focus), shape: ctx.label, errors: [
+            {type: "NodeKindMismatch", expected: "tripleterm", actual: focus.termType.toLowerCase()}]} as Failure;
+        const tt = focus as any;
+        const ttErrors: any[] = [];
+        const parts: any = {};
+        if (ttc.predicate !== undefined && tt.predicate.value !== ttc.predicate)
+          ttErrors.push({type: "TripleTermPredicateMismatch", expected: ttc.predicate, actual: tt.predicate.value});
+        // components are ordinary checks of the component *term* against
+        // asserted data, under the ambient graph view (doc/datasets.md)
+        for (const [member, expr] of [["subject", ttc.subject], ["object", ttc.object]] as [string, any][]) {
+          if (expr === undefined)
+            continue;
+          const sub = yield* this.resumeShapeExpr(tt[member], expr, ctx.followTripleConstraint());
+          if ((sub as any).errors !== undefined)
+            ttErrors.push({type: "TripleTermComponentFailure", component: member, errors: [sub]});
+          else
+            parts[member] = sub;
+        }
+        return ttErrors.length > 0
+          ? {type: "Failure", node: rdfJsTerm2Ld(focus), shape: ctx.label, errors: ttErrors} as Failure
+          : Object.assign({type: "TripleTermTest", node: rdfJsTerm2Ld(focus)}, parts) as any;
+      }
       default:
         throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
     }
@@ -1997,10 +2022,20 @@ export class ShExValidator {
     }
 
     if (nc.nodeKind !== undefined) {
-      if (["iri", "bnode", "literal", "nonliteral"].indexOf(nc.nodeKind) === -1) {
+      if (["iri", "bnode", "literal", "nonliteral", "tripleterm"].indexOf(nc.nodeKind) === -1) {
         validationError(`unknown node kind '${nc.nodeKind}'`);
       }
-      if (focus.termType === "BlankNode") {
+      if (focus.termType === "Quad") { // doc/triple-terms.md: TRIPLE matches
+        // only triple terms; every other kind (nonliteral included, which
+        // has always meant iri-or-bnode) refuses them
+        if ((nc.nodeKind as string) !== "tripleterm") {
+          validationError({type: "NodeKindMismatch", expected: nc.nodeKind, actual: "tripleterm"},
+                          `triple term found when ${nc.nodeKind} expected`);
+        }
+      } else if ((nc.nodeKind as string) === "tripleterm") {
+        validationError({type: "NodeKindMismatch", expected: nc.nodeKind, actual: focus.termType.toLowerCase()},
+                        `${focus.termType} found when triple term expected`);
+      } else if (focus.termType === "BlankNode") {
         if (nc.nodeKind === "iri" || nc.nodeKind === "literal") {
           validationError({type: "NodeKindMismatch", expected: nc.nodeKind, actual: "bnode"},
                           `blank node found when ${nc.nodeKind} expected`);

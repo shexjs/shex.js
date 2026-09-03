@@ -70,7 +70,7 @@ function loadEntry (entry, dir, options = {}) {
   for (const text of [].concat(textOf(entry, "data", dir) === undefined ? [] : textOf(entry, "data", dir))) {
     // several documents are one graph, each parsed on its own; a query
     // map is written in their prefixes
-    const parser = new N3.Parser({baseIRI: base, format: "application/trig", blankNodePrefix: ""}); // TriG ⊇ Turtle (doc/datasets.md)
+    const parser = new N3.Parser({baseIRI: base, format: "application/trig*", blankNodePrefix: ""}); // TriG ⊇ Turtle (doc/datasets.md); * adds quoted triples (doc/triple-terms.md)
     store.addQuads(parser.parse(text));
     Object.assign(dataPrefixes, parser._prefixes);
   }

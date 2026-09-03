@@ -451,7 +451,7 @@ function ShExLoaderCjsModule (config: ConfigI = {}): LoaderI {
   function parseTurtle (text: string, mediaType: string, url: string, meta: any, _dataOptions: any, _resourceLoadControler: ResourceLoadControler, importers: string[]): Promise<any> {
     return new Promise(function (resolve, reject) {
       const graph: any[] = []
-      new config.rdfjs.Parser({baseIRI: url, blankNodePrefix: "", format: "application/trig"}). // TriG ⊇ Turtle (doc/datasets.md)
+      new config.rdfjs.Parser({baseIRI: url, blankNodePrefix: "", format: "application/trig*"}). // TriG ⊇ Turtle (doc/datasets.md); * adds quoted triples (doc/triple-terms.md)
         parse(text,
               function (this: any, error: any, quad: any, prefixes: any) {
                 if (prefixes) {
