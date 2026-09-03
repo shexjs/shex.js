@@ -27082,6 +27082,17 @@ function nestedConstraintExtent(tc, locations, starts) {
             if (expr.valueExpr && typeof expr.valueExpr === "object")
                 walk(expr.valueExpr);
         }
+        else if (expr.type === "TripleTermConstraint") { // doc/triple-terms.md
+            // the <<( ... )>> atom is the constraint's nested extent, so the
+            // referring triple's highlight stops before it (region 1 / region 2)
+            const range = yyllocToRange(locations.get(expr), starts);
+            if (range) {
+                if (min === null || range.from < min)
+                    min = range.from;
+                if (max === null || range.to > max)
+                    max = range.to;
+            }
+        }
         else if (expr.expressions)
             expr.expressions.forEach(walk);
         else if (expr.expression)
@@ -27388,11 +27399,30 @@ function synthesizeLocations(text, schema, base) {
  * an RDF/JS term (for canonical-key provenance lookups and store matches). */
 function ldTermToRdfJs(ld) {
     const F = RdfJs.DataFactory;
-    if (typeof ld === "object")
+    if (typeof ld === "object") {
+        if (ld.type === "TripleTerm") // doc/triple-terms.md
+            return F.quad(ldTermToRdfJs(ld.subject), F.namedNode(ld.predicate), ldTermToRdfJs(ld.object));
         return F.literal(ld.value, ld.language || (ld.type ? F.namedNode(ld.type) : undefined));
+    }
     return ld.startsWith("_:")
         ? F.blankNode(ld.substr(2))
         : F.namedNode(ld);
+}
+/** the text span of a quoted triple (an RDF 1.2 triple term) in the data.
+ * The located parser (lezer-turtle) reads `<< s p o >>` as an RDF 1.2
+ * reifier while the validator's N3 reads it as a quoted-triple object, so
+ * the two disagree on the arc but agree on the *term*: this finds the parsed
+ * quad whose object is that term and returns where its `<< ... >>` is
+ * written (doc/triple-terms.md). */
+function tripleTermSpan(parsed, ttLd) {
+    const term = ldTermToRdfJs(ttLd);
+    for (const q of parsed.quads)
+        if (q.object.termType === "Quad" && q.object.equals(term)) {
+            const a = quadAnchors(parsed, q, parsed.text);
+            if (a && a.object)
+                return a.object;
+        }
+    return null;
 }
 function uttRange(spans) {
     return spans && spans.length ? { from: spans[0].start, to: spans[0].end } : null;
@@ -27437,6 +27467,15 @@ function alignQuad(parsed, s, p, o, bnodes) {
     for (const q of parsed.quads)
         if (q.subject.equals(s) && q.predicate.equals(p) && q.object.equals(o))
             return q;
+    // a quoted-triple object: the parsers disagree on the arc's structure
+    // (N3 quotes, lezer reifies), so match by subject and predicate -- the
+    // reifier quad's own utterance already spans the `<< ... >>` -- and let
+    // tripleTermSpan anchor the term itself (doc/triple-terms.md)
+    if (o.termType === "Quad") {
+        for (const q of parsed.quads)
+            if (q.subject.equals(s) && q.predicate.equals(p) && q.object.termType !== "Quad")
+                return q;
+    }
     const sB = s.termType === "BlankNode", oB = o.termType === "BlankNode";
     if (!sB && !oB)
         return null;
@@ -27747,7 +27786,11 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed, opts = {}) {
                 // a shape result boundary: an inline shape continues its
                 // enclosing constraint chain, a referenced one starts fresh
                 constraintPath: node.shape !== undefined ? (ctx.pendingInlinePath || []) : ctx.constraintPath,
-                pendingInlinePath: node.shape !== undefined ? undefined : ctx.pendingInlinePath };
+                pendingInlinePath: node.shape !== undefined ? undefined : ctx.pendingInlinePath,
+                // doc/triple-terms.md: a TripleTermTest has a .node, which
+                // triggers this reset; keep the enclosing <<( ... )>> atom, but
+                // drop it at a shape boundary so components don't inherit it
+                ttConstraint: node.shape !== undefined ? undefined : ctx.ttConstraint };
         if (node.type in ErrorLeaves)
             emit("nonconformant", ErrorLeaves[node.type](node, ctx), node, ctx);
         // successful matches: each TestedTriple under a TripleConstraintSolutions
@@ -27765,12 +27808,31 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed, opts = {}) {
                         constraintOrdinal: ordinal,
                         constraintPath: ctx.constraintPath,
                         triple: sol,
+                        // an arc onto a triple term is region 1 (the referring triple);
+                        // the term itself is region 2, anchored by its TripleTermTest
+                        reifiesOuter: !!(sol.object && sol.object.type === "TripleTerm"),
                     }, node, ctx);
             });
             // an inline-shape valueExpr's referenced results anchor under this
             // constraint: extend the chain for the descent into the solutions
-            if (node.valueExpr && typeof node.valueExpr === "object")
+            if (node.valueExpr && typeof node.valueExpr === "object") {
                 ctx = Object.assign(Object.assign({}, ctx), { pendingInlinePath: (ctx.constraintPath || []).concat(node.predicate) });
+                if (node.valueExpr.type === "TripleTermConstraint") // doc/triple-terms.md
+                    ctx = Object.assign(Object.assign({}, ctx), { ttConstraint: node.valueExpr });
+            }
+        }
+        // a triple term's result (doc/triple-terms.md): region 2 pairs the
+        // <<( ... )>> atom with the << ... >> term in the data; its components
+        // are ordinary shape results, walked here since subject/object are not
+        // among the generic recurse keys (they name terms elsewhere)
+        if (node.type === "TripleTermTest") {
+            emit("conformant", {
+                message: `${termStr(node.node)} matched the triple term`,
+                schemaObj: ctx.ttConstraint,
+                tripleTerm: node.node,
+            }, node, ctx);
+            walk(node.subject, ctx);
+            walk(node.object, ctx);
         }
         for (const key of ["errors", "appinfo", "solutions", "solution",
             "expressions", "referenced", "unexpectedTriples"])
@@ -27811,6 +27873,21 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed, opts = {}) {
             }
             if (!dataRange && leaf.node !== undefined && leaf.node !== null)
                 dataRange = rangeOfNode(turtleParsed, leaf.node, bnodes);
+            // region 2: the term span itself (doc/triple-terms.md)
+            if (leaf.tripleTerm) {
+                const span = tripleTermSpan(turtleParsed, leaf.tripleTerm);
+                if (span) {
+                    anchors.object = span;
+                    dataRange = span;
+                }
+            }
+            // region 1: the referring triple stops before the term -- <a1>
+            // rdf:reifies, not the << ... >> its TripleTermTest owns
+            if (leaf.reifiesOuter) {
+                delete anchors.object;
+                delete anchors.objectParts;
+                dataRange = anchors.subject || dataRange;
+            }
         }
         pairs.push({
             id: pairs.length,
