@@ -239,6 +239,9 @@ IT_RESTRICTS		[Rr][Ee][Ss][Tt][Rr][Ii][Cc][Tt][Ss]
 IT_EXTENDS		[Ee][Xx][Tt][Ee][Nn][Dd][Ss]
 IT_CLOSED               [Cc][Ll][Oo][Ss][Ee][Dd]
 IT_EXTRA                [Ee][Xx][Tt][Rr][Aa]
+IT_GRAPH                [Gg][Rr][Aa][Pp][Hh]
+IT_TERM                 [Tt][Ee][Rr][Mm]
+IT_FRAGMENT             [Ff][Rr][Aa][Gg][Mm][Ee][Nn][Tt]
 IT_LITERAL              [Ll][Ii][Tt][Ee][Rr][Aa][Ll]
 IT_BNODE                [Bb][Nn][Oo][Dd][Ee]
 IT_IRI                  [Ii][Rr][Ii]
@@ -369,6 +372,9 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 {IT_EXTENDS}		return 'IT_EXTENDS';
 {IT_CLOSED}             return 'IT_CLOSED';
 {IT_EXTRA}              return 'IT_EXTRA';
+{IT_GRAPH}              return 'IT_GRAPH';
+{IT_TERM}               return 'IT_TERM';
+{IT_FRAGMENT}           return 'IT_FRAGMENT';
 {IT_LITERAL}            return 'IT_LITERAL';
 {IT_BNODE}              return 'IT_BNODE';
 {IT_IRI}                return 'IT_IRI';
@@ -1084,26 +1090,36 @@ _Qcardinality_E_Opt:
     ;
 
 tripleConstraint:
-      _QsenseFlags_E_Opt predicate inlineShapeExpression _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
-        // $6: t: 1dotCode1
-	// if ($3 !== yy.EmptyShape && false) {
-	//   const t = yy.blank();
-	//   yy.addShape(t, $3);
-	//   $3 = t; // ShapeRef
-	// }
-        // %7: t: 1inversedotCode1
+      _QsenseFlags_E_Opt predicate _QgraphSpec_E_Opt inlineShapeExpression _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
+        // $7: t: 1dotCode1
+        // %8: t: 1inversedotCode1
         $$ = Object.assign(
           { type: "TripleConstraint" },
           $1,
           { predicate: $2 },
-          ($3 === yy.EmptyShape ? {} : { valueExpr: $3 }), // 1dot : 1iri
-          $4,
-          $6
+          $3, // datasets strawman (doc/datasets.md): {graph: ...} or {}
+          ($4 === yy.EmptyShape ? {} : { valueExpr: $4 }), // 1dot : 1iri
+          $5,
+          $7
         ); // t: 1dot, 1inversedot
-        if ($5.length)
-          $$["annotations"] = $5; // t: 1dotAnnot3, 1inversedotAnnot3 : 1dot
+        if ($6.length)
+          $$["annotations"] = $6; // t: 1dotAnnot3, 1inversedotAnnot3 : 1dot
         yy.addExprLocation($$, this._$); // editors anchor validation errors here
       }
+    ;
+
+_QgraphSpec_E_Opt:
+      	-> {  }
+    | graphSpec	-> { graph: $1 }
+    ;
+
+// which graph of the dataset a constraint speaks of (doc/datasets.md):
+// a named one, the one the matched value names, or the one it names once
+// its fragment is stripped (a WebID's profile document)
+graphSpec:
+      IT_GRAPH iri	-> $2
+    | IT_GRAPH IT_TERM	-> { type: "GraphTerm" }
+    | IT_GRAPH IT_FRAGMENT	-> { type: "GraphFragment" }
     ;
 
 _QsenseFlags_E_Opt:

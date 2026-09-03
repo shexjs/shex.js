@@ -47,11 +47,16 @@ class WorkerMarshalling {
         };
     }
     static rdfjsTripleToJsonTriple(rdfjsTriple) {
-        return {
+        const ret = {
             subject: WorkerMarshalling.rdfjsTermToJsonTerm(rdfjsTriple.subject),
             predicate: WorkerMarshalling.rdfjsTermToJsonTerm(rdfjsTriple.predicate),
             object: WorkerMarshalling.rdfjsTermToJsonTerm(rdfjsTriple.object),
         };
+        // a quad's graph rides along (doc/datasets.md); the default graph stays
+        // implicit, so plain triples keep the wire shape they always had
+        if (rdfjsTriple.graph && rdfjsTriple.graph.termType !== "DefaultGraph")
+            ret.graph = WorkerMarshalling.rdfjsTermToJsonTerm(rdfjsTriple.graph);
+        return ret;
     }
     static rdfjsTermToJsonTerm(rdfjsTerm) {
         const ret = { termType: rdfjsTerm.termType, value: rdfjsTerm.value };
@@ -68,7 +73,7 @@ class WorkerMarshalling {
         return ret;
     }
     static jsonTripleToRdfjsTriple(jsonTriple, dataFactory) {
-        return dataFactory.quad(WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.subject, dataFactory), WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.predicate, dataFactory), WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.object, dataFactory));
+        return dataFactory.quad(WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.subject, dataFactory), WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.predicate, dataFactory), WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.object, dataFactory), jsonTriple.graph ? WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.graph, dataFactory) : undefined);
     }
     static jsonTermToRdfjsTerm(jsonTerm, dataFactory) {
         switch (jsonTerm.termType) {

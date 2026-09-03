@@ -1,0 +1,39 @@
+PREFIX gene:     <http://example.org/gene/>
+PREFIX ex:       <http://example.org/>
+PREFIX xsd:      <http://www.w3.org/2001/XMLSchema#>
+PREFIX prov:     <http://www.w3.org/ns/prov#>
+PREFIX ucscGb:   <http://genome.ucsc.edu/>
+PREFIX genebank: <http://ncbi.nlm.nih.gov/genebank/>
+PREFIX ensembl:  <http://www.ensembl.org/>
+
+# Each chromosome and each UniProt reference lives in its own graph,
+# named by the node it describes: `GRAPH TERM` follows the matched value
+# into the graph of the same name (doc/datasets.md).
+<#human-gene> {
+  gene:product @<#encodes>* ;
+  gene:chromosome GRAPH TERM @<#chromosome>*
+}
+
+<#encodes> {
+  gene:encodes IRI ;
+  prov:wasDerivedFrom GRAPH TERM @<#uniprot-reference>
+}
+
+<#chromosome> {
+  gene:assembly @<#sequence_assembly>+ ;
+  prov:wasDerivedFrom @<#ensembl-gene-reference> ?
+}
+
+<#uniprot-reference> {
+  ex:id LITERAL ;
+  ex:when xsd:dateTime
+}
+
+<#sequence_assembly> {
+  (ucscGb:id xsd:string | genebank:id xsd:string) ;
+  ex:publicationDate xsd:dateTime
+}
+
+<#ensembl-gene-reference> {
+  ensembl:geneId LITERAL
+}

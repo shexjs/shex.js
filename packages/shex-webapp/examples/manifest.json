@@ -163,5 +163,59 @@
     "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<#n1>\n  :p 1.1 ;\n  :p <#n3> ;\n  :p <#n2> ;\n  :p 4 ;\n.\n\n<#n3> :q 5 .\n",
     "queryMap": "<#n1>@<#S1>\n",
     "status": "conformant"
+  },
+  {
+    "schemaLabel": "card catalog",
+    "schemaURL": "dataset-catalog.shex",
+    "dataLabel": "metadata in its graph",
+    "data": "PREFIX ex: <http://ex.example/ns#>\n\n<s1> ex:foo \"bar\" .\n\nGRAPH <CardCatalog> {\n  <entry1> ex:manages <s1> ;\n    ex:source \"https://feed.example/s1\" ;\n    ex:refresh \"2026-09-01\"^^<http://www.w3.org/2001/XMLSchema#date> .\n}\n",
+    "queryMap": "<s1>@<#S1>\n",
+    "status": "conformant",
+    "comment": "A dataset with a housekeeping graph: `GRAPH <CardCatalog>` scopes the ^ex:manages arc and the whole catalog entry into it, the way a SPARQL `GRAPH <CardCatalog> { ... }` block would (doc/datasets.md)."
+  },
+  {
+    "schemaLabel": "card catalog",
+    "schemaURL": "dataset-catalog.shex",
+    "dataLabel": "metadata gone astray",
+    "data": "PREFIX ex: <http://ex.example/ns#>\n\n<s1> ex:foo \"bar\" .\n<entry1> ex:manages <s1> ;\n  ex:source \"https://feed.example/s1\" ;\n  ex:refresh \"2026-09-01\"^^<http://www.w3.org/2001/XMLSchema#date> .\n",
+    "queryMap": "<s1>@<#S1>\n",
+    "status": "nonconformant",
+    "comment": "The same entry written into the default graph: the constraint speaks only of <CardCatalog>, so the arc is missing where the schema looks."
+  },
+  {
+    "schemaLabel": "genes by graph",
+    "schemaURL": "dataset-gene.shex",
+    "dataLabel": "BRCA1 and its records",
+    "data": "PREFIX gene: <http://example.org/gene/>\nPREFIX prov: <http://www.w3.org/ns/prov#>\nPREFIX ex: <http://example.org/>\nPREFIX ucscGb: <http://genome.ucsc.edu/>\nPREFIX genebank: <http://ncbi.nlm.nih.gov/genebank/>\nPREFIX ensembl: <http://www.ensembl.org/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX uniprot: <http://uniprot.org/uniprot/>\nPREFIX uniprotRef: <http://uniprot.org/ref/>\n\n# BRCA1 - the gene's own facts, in the default graph\ngene:BRCA1\n  gene:product gene:BRCA1-encodes-001 , gene:BRCA1-encodes-002 ;\n  gene:chromosome gene:BRCA1-chr17 .\n\ngene:BRCA1-encodes-001\n  gene:encodes uniprot:P38398 ;\n  prov:wasDerivedFrom uniprotRef:P38398 .\n\ngene:BRCA1-encodes-002\n  gene:encodes uniprot:P38398-2 ;\n  prov:wasDerivedFrom uniprotRef:P38398-2 .\n\n# each chromosome and reference record lives in the graph named for it\nGRAPH gene:BRCA1-chr17 {\n  gene:BRCA1-chr17\n    gene:assembly [\n      ucscGb:id \"chr17:43044295-43125483\" ;\n      ex:publicationDate \"2023-06-10T00:00:00Z\"^^xsd:dateTime\n    ] , [\n      genebank:id \"NC_000017.11\" ;\n      ex:publicationDate \"2023-04-20T00:00:00Z\"^^xsd:dateTime\n    ] ;\n    prov:wasDerivedFrom [ ensembl:geneId \"ENSG00000012048\" ] .\n}\n\nGRAPH uniprotRef:P38398 {\n  uniprotRef:P38398 ex:id \"P38398\" ;\n    ex:when \"2024-01-15T09:30:00Z\"^^xsd:dateTime .\n}\n\nGRAPH uniprotRef:P38398-2 {\n  uniprotRef:P38398-2 ex:id \"P38398-2\" ;\n    ex:when \"2023-11-22T14:45:00Z\"^^xsd:dateTime .\n}\n",
+    "queryMap": "gene:BRCA1@<#human-gene>\n",
+    "status": "conformant",
+    "comment": "`GRAPH TERM` follows each matched value into the graph of the same name: the chromosome record in GRAPH gene:BRCA1-chr17, each UniProt reference in the graph named for it.  The gene's own arcs stay in the default graph."
+  },
+  {
+    "schemaLabel": "genes by graph",
+    "schemaURL": "dataset-gene.shex",
+    "dataLabel": "a reference outside its graph",
+    "data": "PREFIX gene: <http://example.org/gene/>\nPREFIX prov: <http://www.w3.org/ns/prov#>\nPREFIX ex: <http://example.org/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX uniprot: <http://uniprot.org/uniprot/>\nPREFIX uniprotRef: <http://uniprot.org/ref/>\n\ngene:BRCA1\n  gene:product gene:BRCA1-encodes-001 .\n\ngene:BRCA1-encodes-001\n  gene:encodes uniprot:P38398 ;\n  prov:wasDerivedFrom uniprotRef:P38398 .\n\n# the reference record strayed into the default graph\nuniprotRef:P38398 ex:id \"P38398\" ;\n  ex:when \"2024-01-15T09:30:00Z\"^^xsd:dateTime .\n",
+    "queryMap": "gene:BRCA1@<#human-gene>\n",
+    "status": "nonconformant",
+    "comment": "The reference's record must live in the graph named after it; written into the default graph it is outside the view `GRAPH TERM` switches to, so ex:id and ex:when are missing there."
+  },
+  {
+    "schemaLabel": "WebID profiles",
+    "schemaURL": "dataset-profile.shex",
+    "dataLabel": "two cards, mutual friends",
+    "data": "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\n\nGRAPH <https://alice.example/card> {\n  <https://alice.example/card> a foaf:PersonalProfileDocument ;\n    foaf:primaryTopic <https://alice.example/card#me> .\n\n  <https://alice.example/card#me> a foaf:Person ;\n    foaf:name \"Alice\" ;\n    foaf:knows <https://bob.example/card#me> .\n}\n\nGRAPH <https://bob.example/card> {\n  <https://bob.example/card> a foaf:PersonalProfileDocument ;\n    foaf:primaryTopic <https://bob.example/card#me> .\n\n  <https://bob.example/card#me> a foaf:Person ;\n    foaf:name \"Bob\" ;\n    foaf:knows <https://alice.example/card#me> .\n}\n",
+    "queryMap": "<https://alice.example/card>@<#ProfileDoc>\n",
+    "status": "conformant",
+    "comment": "Each profile document is a graph; `GRAPH FRAGMENT` follows <https://bob.example/card#me> into <https://bob.example/card>.  Alice and Bob know each other, and the cycle terminates the way recursive shapes always have."
+  },
+  {
+    "schemaLabel": "WebID profiles",
+    "schemaURL": "dataset-profile.shex",
+    "dataLabel": "an acquaintance with no card",
+    "data": "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\n\nGRAPH <https://bob.example/card> {\n  <https://bob.example/card> a foaf:PersonalProfileDocument ;\n    foaf:primaryTopic <https://bob.example/card#me> .\n\n  <https://bob.example/card#me> a foaf:Person ;\n    foaf:name \"Bob\" ;\n    foaf:knows <https://carol.example/card#me> .\n}\n",
+    "queryMap": "<https://bob.example/card>@<#ProfileDoc>\n",
+    "status": "nonconformant",
+    "comment": "Bob claims to know Carol, but no graph <https://carol.example/card> describes her: the foaf:knows arc matches the constraint's predicate and its value fails in the graph the schema says to look in."
   }
 ]

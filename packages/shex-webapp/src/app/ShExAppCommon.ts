@@ -318,7 +318,7 @@ class TurtleParser {
     RdfJs.Parser._resetBlankNodePrefix();
     const parser = new RdfJs.Parser({
       baseIRI: base,
-      format: "text/turtle",
+      format: "application/trig", // TriG ⊇ Turtle (doc/datasets.md)
       blankNodePrefix: ""
     });
     let quads;

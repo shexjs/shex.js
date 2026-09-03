@@ -272,8 +272,14 @@ export class ShExVisitor {
                             { type: "TripleConstraint" }
                           ),
                           "TripleConstraint",
-                          ["id", "inverse", "predicate", "valueExpr",
+                          ["id", "inverse", "predicate", "graph", "valueExpr",
                            "min", "max", "annotations", "semActs"], null, ...args)
+  }
+
+  // datasets strawman (doc/datasets.md): a named graph, or {type:
+  // "GraphTerm"} / {type: "GraphFragment"} for one the matched value names
+  visitGraph (graph: any, ..._args: any[]): any {
+    return typeof graph === "string" ? graph : Object.assign({}, graph);
   }
 
   visitTripleExpr (expr: tripleExprOrRef, ...args: any[]): any {
