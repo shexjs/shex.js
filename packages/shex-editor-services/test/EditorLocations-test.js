@@ -125,14 +125,17 @@ describe("EditorServices: located query maps and non-ShExC schemas", function ()
 
     it("should split the referring triple (region 1) from the term (region 2)", function () {
       const region1 = mapped.pairs.find(p => anchorText(p, "predicate") === "rdf:reifies");
-      const region2 = mapped.pairs.find(p => anchorText(p, "object") === "<< <tim> foaf:knows <henry> >>");
+      const region2 = mapped.pairs.find(p => p.message && p.message.indexOf("triple term") >= 0);
       expect(region1, "region 1 exists").to.exist;
       expect(region2, "region 2 exists").to.exist;
-      // region 1: <a1> rdf:reifies  <->  rdf:reifies (the atom excluded)
+      // region 1 keeps the delimiters: <a1> rdf:reifies << ... >> <-> rdf:reifies <<( ... )>>
       expect(anchorText(region1, "subject")).to.equal("<a1>");
-      expect(partsText(region1)).to.equal("rdf:reifies");
-      // region 2: the << ... >> term  <->  the <<( ... )>> atom
-      expect(partsText(region2)).to.equal("<<( @<#Person> foaf:knows @<#Person> )>>");
+      expect(partsText(region1)).to.equal("rdf:reifies <<()>>"); // <<( head + )>> tail
+      const dParts = region1.anchors.objectParts.map(r => slice(DATA, r));
+      expect(dParts, "the << >> delimiters go with region 1").to.deep.equal(["<<", ">>"]);
+      // region 2 is the contents between the delimiters
+      expect(partsText(region2)).to.equal("@<#Person> foaf:knows @<#Person>");
+      expect(anchorText(region2, "object")).to.equal("<tim> foaf:knows <henry>");
     });
 
     it("should anchor the term's components to <#Person> in the data", function () {
