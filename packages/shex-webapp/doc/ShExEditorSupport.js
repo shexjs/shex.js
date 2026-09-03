@@ -567,11 +567,29 @@ class EditorSupport {
                     bySubject.set(key, { range: r, group: [] });
                 bySubject.get(key).group.push(p);
             }));
-            dataPane.setHoverRegions(pairs.filter(shownHere).flatMap(p => [].concat(anchorRanges(p, "object"), anchorRanges(p, "predicate"))
+            // Objects and predicates group by range too: one triple may answer
+            // two constraints -- ^ex:manages in the referrer and ex:manages in
+            // the referent -- whose anchors are the same characters, and hovering
+            // them is asking about both.  A plugin's `secondary` links keep a
+            // region of their own, as before.
+            const byTermRange = new Map();
+            pairs.filter(shownHere).filter(p => !p.secondary).forEach(p => [].concat(anchorRanges(p, "object"), anchorRanges(p, "predicate")).forEach((r) => {
+                const key = r.from + "-" + r.to;
+                if (!byTermRange.has(key))
+                    byTermRange.set(key, { range: r, group: [] });
+                byTermRange.get(key).group.push(p);
+            }));
+            dataPane.setHoverRegions([...byTermRange.values()].map(({ range, group }) => ({
+                from: range.from, to: range.to,
+                enter: () => show(group, "data"),
+                click: freeze(group, "data"),
+                title: () => this.pairTitle(group, "data"),
+            }))
+                .concat(pairs.filter(shownHere).filter(p => p.secondary).flatMap(p => [].concat(anchorRanges(p, "object"), anchorRanges(p, "predicate"))
                 .map(r => ({ from: r.from, to: r.to,
                 enter: () => show([p], "data"),
                 click: freeze([p], "data"),
-                title: () => this.pairTitle([p], "data") })))
+                title: () => this.pairTitle([p], "data") }))))
                 .concat([...bySubject.values()].map(({ range, group }) => ({
                 from: range.from, to: range.to,
                 enter: () => show(group, "data"),
