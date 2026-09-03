@@ -18,7 +18,7 @@ interface JsonTerm {
   datatype?: string;
   language?: string;
 }
-interface JsonTriple { subject: JsonTerm; predicate: JsonTerm; object: JsonTerm; }
+interface JsonTriple { subject: JsonTerm; predicate: JsonTerm; object: JsonTerm; graph?: JsonTerm; }
 
 /** what a term looks like on either side: N3's, or any RDF/JS data model's */
 interface TermLike {
@@ -28,12 +28,12 @@ interface TermLike {
   datatype?: {value: string};
   language?: string;
 }
-interface TripleLike { subject: TermLike; predicate: TermLike; object: TermLike; }
+interface TripleLike { subject: TermLike; predicate: TermLike; object: TermLike; graph?: TermLike; }
 interface DataFactoryLike {
   namedNode (value: string): any;
   blankNode (value: string): any;
   literal (value: string, languageOrDatatype?: any): any;
-  quad (subject: any, predicate: any, object: any): any;
+  quad (subject: any, predicate: any, object: any, graph?: any): any;
 }
 
 /** one entry of a results shape map.  `shape` crosses the worker boundary
@@ -96,11 +96,16 @@ class WorkerMarshalling {
   }
 
   static rdfjsTripleToJsonTriple (rdfjsTriple: TripleLike): JsonTriple {
-    return {
+    const ret: JsonTriple = {
       subject: WorkerMarshalling.rdfjsTermToJsonTerm(rdfjsTriple.subject),
       predicate: WorkerMarshalling.rdfjsTermToJsonTerm(rdfjsTriple.predicate),
       object: WorkerMarshalling.rdfjsTermToJsonTerm(rdfjsTriple.object),
     };
+    // a quad's graph rides along (doc/datasets.md); the default graph stays
+    // implicit, so plain triples keep the wire shape they always had
+    if (rdfjsTriple.graph && rdfjsTriple.graph.termType !== "DefaultGraph")
+      ret.graph = WorkerMarshalling.rdfjsTermToJsonTerm(rdfjsTriple.graph);
+    return ret;
   }
 
   static rdfjsTermToJsonTerm (rdfjsTerm: TermLike): JsonTerm {
@@ -122,7 +127,8 @@ class WorkerMarshalling {
     return dataFactory.quad(
       WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.subject, dataFactory),
       WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.predicate, dataFactory),
-      WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.object, dataFactory)
+      WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.object, dataFactory),
+      jsonTriple.graph ? WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.graph, dataFactory) : undefined
     );
   }
 

@@ -322,6 +322,14 @@ class ShExWriter {
                       _ShExWriter._encodePredicate(expr.predicate),
                       " ");
 
+          const graph = (expr as any).graph; // datasets strawman (doc/datasets.md)
+          if (graph !== undefined)
+            pieces.push("GRAPH ",
+                        typeof graph === "string" ? _ShExWriter._encodeShapeName(graph, false)
+                        : graph.type === "GraphTerm" ? "TERM"
+                        : "FRAGMENT",
+                        " ");
+
           if ("valueExpr" in expr)
             [].push.apply(pieces, _ShExWriter._writeShapeExpr(expr.valueExpr!, done, true, 0) as never[]);
           else

@@ -92,7 +92,14 @@ const minOf = (tc: TripleConstraint) => tc.min === undefined ? 1 : tc.min || 1;
 const VERBOSE = false; // "VERBOSE" in process.env;
 const EvalThreadedNErr = require("@shexjs/eval-threaded-nerr").RegexpModule;
 
+/** which graph(s) of the dataset a validation is looking at
+ * (doc/datasets.md): null is the union -- every graph, the graph-blind
+ * behavior schemas without GRAPH have always had. */
+export type GraphView = { termType: string, value: string } | null;
+
 interface ValidatorOptions {
+  /** the view the shape map's own pairs validate in (default: the union) */
+  startGraph?: GraphView;
   regexModule?: ValidatorRegexEngine;
   coverage?: {
     exhaustive: string;
@@ -298,15 +305,19 @@ export class ShapeExprValidationContext {
       // The subGraph is the partition an extending CLOSED shape allocated to this
       // extension: every triple in it must be consumed, as any left over would be
       // unmatched in the extending shape's closed neighborhood.
-      public partitionClosed: boolean = false) {
+      public partitionClosed: boolean = false,
+      // Which graph(s) this branch of the validation is looking at
+      // (doc/datasets.md): null is the union; a GRAPH-modified triple
+      // constraint narrows it for the value's subtree.
+      public graphView: GraphView = null) {
   }
 
   public checkShapeLabel(label: LabelOrStart): ShapeExprValidationContext {
-    return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, this.matchTarget, this.subGraph, this.partitionClosed);
+    return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, this.matchTarget, this.subGraph, this.partitionClosed, this.graphView);
   }
 
-  public followTripleConstraint(): ShapeExprValidationContext {
-    return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, null, false);
+  public followTripleConstraint(graphView: GraphView = this.graphView): ShapeExprValidationContext {
+    return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, null, false, graphView);
   }
 
   /**
@@ -319,17 +330,17 @@ export class ShapeExprValidationContext {
    * first's in-progress mark and calls it recursion, which is a different
    * answer.  Siblings are different paths, so each takes its own copy.
    */
-  public forkTripleConstraint(): ShapeExprValidationContext {
+  public forkTripleConstraint(graphView: GraphView = this.graphView): ShapeExprValidationContext {
     return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker,
-                                          Object.assign({}, this.seen), this.matchTarget, null, false);
+                                          Object.assign({}, this.seen), this.matchTarget, null, false, graphView);
   }
 
   public checkExtendsPartition(subGraph: NeighborhoodDb, partitionClosed: boolean): ShapeExprValidationContext {
-    return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, subGraph, partitionClosed);
+    return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, subGraph, partitionClosed, this.graphView);
   }
 
   public checkExtendingClass(label: LabelOrStart, matchTarget: MatchTarget | null): ShapeExprValidationContext {
-    return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph, this.partitionClosed);
+    return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph, this.partitionClosed, this.graphView);
   }
 }
 
@@ -738,7 +749,7 @@ export class ShExValidator {
   }
 
   * resumeNodeShapePair (focus: RdfJsTerm, labelOrStart: LabelOrStart, tracker: QueryTracker = new EmptyTracker(), seen: SeenIndex = {}): Resumable<shapeExprTest> {
-    const ctx = new ShapeExprValidationContext(null, labelOrStart, 0, tracker, seen, null, null,)
+    const ctx = new ShapeExprValidationContext(null, labelOrStart, 0, tracker, seen, null, null, false, this.options.startGraph || null)
     const startActs = this.semActHandler.semActsFor(this.schema, this.schema.startActs);
     if (startActs !== undefined && startActs.length > 0) {
       const startActionStorage = {}; // !!! need test to see this write to results structure.
@@ -786,7 +797,8 @@ export class ShExValidator {
       return yield* this.resumeShapeExpr(focus, this.schema.start, ctx);
     }
 
-    const seenKey = ShExTerm.rdfJsTerm2Turtle(focus) + "@" + ctx.label;
+    const seenKey = ShExTerm.rdfJsTerm2Turtle(focus) + "@" + ctx.label
+          + (ctx.graphView ? "@@" + ctx.graphView.termType + ":" + ctx.graphView.value : "");
     if (!ctx.subGraph) { // Don't cache base shape validations as they aren't testing the full neighborhood.
       if (seenKey in ctx.seen)
         {
@@ -1069,13 +1081,18 @@ export class ShExValidator {
     // The one place a validation stops.  A partition's subgraph is triples
     // already read, so it answers here and now; only the real db can be a
     // question, and asking it is a yield rather than a call.
-    const fromDB: Neighborhood = ctx.subGraph
+    const wholeDB: Neighborhood = ctx.subGraph
           ? ctx.subGraph.getNeighborhood(focus, ctx.label, shape)
           : yield {point: focus, shapeLabel: ctx.label, shape};
-    const neighborhood = fromDB.outgoing.concat(fromDB.incoming);
 
     const { extendsTCs, tc2exts, localTCs } = this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
     const tripleConstraints = extendsTCs.concat(localTCs);
+
+    // datasets strawman (doc/datasets.md): under a graph view, the shape's
+    // neighborhood -- what CLOSED closes over, what EXTRA excuses -- is the
+    // view's arcs, plus the graphs its own GRAPH <g> constraints reach into
+    const fromDB = applyGraphView(wholeDB, tripleConstraints, ctx);
+    const neighborhood = fromDB.outgoing.concat(fromDB.incoming);
 
     // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
     const {t2tcs, t2tcErrors, tc2TResults} = yield* this.matchByPredicate(tripleConstraints, fromDB, ctx);
@@ -1618,8 +1635,16 @@ export class ShExValidator {
       const matchPredicate = index.byPredicate.get(constraint.predicate) ||
             []; // empty list when no triple matches that constraint
 
+      // datasets strawman: a GRAPH <g> constraint speaks of g's arcs; the
+      // rest (GRAPH TERM/FRAGMENT included) match in the ambient view
+      const arcView: GraphView = typeof (constraint as any).graph === "string"
+            ? { termType: "NamedNode", value: (constraint as any).graph }
+            : ctx.graphView;
+      const inView = arcView === null ? matchPredicate
+            : matchPredicate.filter(q => sameGraphTerm(q.graph, arcView));
+
       // strip to triples matching value constraints (apart from @<someShape>)
-      const matchConstraints = yield* _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
+      const matchConstraints = yield* _ShExValidator.triplesMatchingShapeExpr(inView, constraint, ctx);
 
       matchConstraints.hits.forEach(function (evidence) {
         ret.t2tcs.add(evidence.triple, constraint);
@@ -1904,6 +1929,7 @@ export class ShExValidator {
     // the only place a validation reaches sideways rather than downwards,
     // so it is the only place worth forking.
     if (this.canFork() && triples.length > 1 && constraint.valueExpr !== undefined
+        && (constraint as any).graph === undefined // datasets: graph switches take the sequential path
         && !(typeof constraint.valueExpr === "object" && constraint.valueExpr.type === "NodeConstraint")) {
       const subs = (yield {fork: triples.map(triple =>
         this.resumeShapeExpr(constraint.inverse ? triple.subject : triple.object,
@@ -1923,7 +1949,14 @@ export class ShExValidator {
       if (constraint.valueExpr === undefined)
         hits.push(new TriplesMatchingNoValueConstraint(triple));
       else {
-        ctx = ctx.followTripleConstraint();
+        const gv = childGraphView(constraint, value, ctx);
+        if ("error" in gv) {
+          misses.push(new TriplesMatchingMiss(triple, {
+            type: "Failure", node: rdfJsTerm2Ld(value), shape: "GRAPH", errors: [gv.error],
+          } as any));
+          continue;
+        }
+        ctx = ctx.followTripleConstraint(gv.view);
         // A NodeConstraint is a leaf: it looks at the value and nothing else,
         // so it can never reach a fetch and needs no generator.  This is the
         // innermost, most frequent call in a validation -- once per triple per
@@ -2282,6 +2315,44 @@ const N3jsTripleToString = function () {
  *     misses: list to receive value constraint failures.
  *   }
  */
+/** the same graph name: termType and value agree (a DefaultGraph's value is "") */
+function sameGraphTerm (a: { termType: string, value: string } | undefined, b: NonNullable<GraphView>): boolean {
+  return a !== undefined && a.termType === b.termType && a.value === b.value;
+}
+
+/** the view a GRAPH-modified constraint's *value* validates in
+ * (doc/datasets.md): GRAPH <g> pins it, GRAPH TERM follows the value term's
+ * graph, GRAPH FRAGMENT follows the value's document (its fragment
+ * stripped); an unmodified constraint inherits the ambient view. */
+function childGraphView (constraint: TripleConstraint, value: RdfJsTerm, ctx: ShapeExprValidationContext):
+{ view: GraphView } | { error: object } {
+  const graph = (constraint as any).graph;
+  if (graph === undefined)
+    return { view: ctx.graphView };
+  if (typeof graph === "string")
+    return { view: { termType: "NamedNode", value: graph } };
+  if (graph.type === "GraphTerm")
+    return value.termType === "NamedNode" || value.termType === "BlankNode"
+      ? { view: { termType: value.termType, value: value.value } }
+      : { error: { type: "GraphNameViolation", graphSpec: "TERM", node: rdfJsTerm2Ld(value) } };
+  // GraphFragment: the value names a thing *in* a document; the document is the graph
+  return value.termType === "NamedNode"
+    ? { view: { termType: "NamedNode", value: value.value.replace(/#.*$/, "") } }
+    : { error: { type: "GraphNameViolation", graphSpec: "FRAGMENT", node: rdfJsTerm2Ld(value) } };
+}
+
+/** the neighborhood a shape sees under a view: its arcs, plus those in any
+ * graph a GRAPH <g> constraint of the shape names */
+function applyGraphView (fromDB: Neighborhood, tripleConstraints: TripleConstraint[], ctx: ShapeExprValidationContext): Neighborhood {
+  if (ctx.graphView === null || ctx.subGraph) // no view, or a partition already chosen
+    return fromDB;
+  const view = ctx.graphView;
+  const fixed = new Set(tripleConstraints.map(tc => (tc as any).graph)
+                        .filter(g => typeof g === "string"));
+  const keep = (q: Quad) => sameGraphTerm(q.graph, view) || fixed.has(q.graph.value);
+  return { outgoing: fromDB.outgoing.filter(keep), incoming: fromDB.incoming.filter(keep) };
+}
+
 function indexNeighborhood (triples: Quad[]): NeighborhoodIndex {
   return {
     byPredicate: triples.reduce(function (ret, t) {
