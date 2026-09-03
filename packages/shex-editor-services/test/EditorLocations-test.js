@@ -87,6 +87,63 @@ describe("EditorServices: located query maps and non-ShExC schemas", function ()
     });
   });
 
+  describe("triple terms (doc/triple-terms.md): two regions, and the components", function () {
+    const ShExValidator = require("@shexjs/validator").ShExValidator;
+    const {ctor: RdfJsDb} = require("@shexjs/neighborhood-rdfjs");
+    const {Store, Parser: N3Parser} = require("n3");
+    const SCHEMA = [
+      "PREFIX ex: <http://ex.example/#>",
+      "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
+      "PREFIX foaf: <http://xmlns.com/foaf/0.1/>",
+      "<#Person> { foaf:name . }",
+      "<#Assertion> { rdf:reifies <<( @<#Person> foaf:knows @<#Person> )>> ; ex:assertedBy @<#Person> }",
+    ].join("\n");
+    const DATA = [
+      "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
+      "PREFIX foaf: <http://xmlns.com/foaf/0.1/>",
+      "PREFIX ex: <http://ex.example/#>",
+      "",
+      "<tim> foaf:name \"Tim\" .",
+      "<henry> foaf:name \"Henry\" .",
+      "<alice> foaf:name \"Alice\" .",
+      "",
+      "<a1> rdf:reifies << <tim> foaf:knows <henry> >> ;",
+      "  ex:assertedBy <alice> .",
+    ].join("\n");
+    const schema = EditorServices.parseShExC
+      ? null : null; // parse via ShExParser for identity with the validator
+    const parser = require("@shexjs/parser").construct("http://a.example/schema", {}, {index: true});
+    const parsed = parser.parse(SCHEMA);
+    const store = new Store(new N3Parser({baseIRI: "http://a.example/", format: "application/trig*"}).parse(DATA));
+    const res = new ShExValidator(parsed, RdfJsDb(store), {results: "api"})
+      .validateShapeMap([{node: "http://a.example/a1", shape: "http://a.example/schema#Assertion"}])[0];
+    const mapped = EditorServices.mapValidationErrors(
+      res.appinfo, EditorServices.locateInParsed(SCHEMA, parsed),
+      EditorServices.parseTurtle(DATA, {baseIRI: "http://a.example/"}), {});
+    const partsText = p => (p.schemaParts || (p.schema ? [p.schema] : [])).map(r => slice(SCHEMA, r)).join("");
+    const anchorText = (p, k) => p.anchors && p.anchors[k] ? slice(DATA, p.anchors[k]) : null;
+
+    it("should split the referring triple (region 1) from the term (region 2)", function () {
+      const region1 = mapped.pairs.find(p => anchorText(p, "predicate") === "rdf:reifies");
+      const region2 = mapped.pairs.find(p => anchorText(p, "object") === "<< <tim> foaf:knows <henry> >>");
+      expect(region1, "region 1 exists").to.exist;
+      expect(region2, "region 2 exists").to.exist;
+      // region 1: <a1> rdf:reifies  <->  rdf:reifies (the atom excluded)
+      expect(anchorText(region1, "subject")).to.equal("<a1>");
+      expect(partsText(region1)).to.equal("rdf:reifies");
+      // region 2: the << ... >> term  <->  the <<( ... )>> atom
+      expect(partsText(region2)).to.equal("<<( @<#Person> foaf:knows @<#Person> )>>");
+    });
+
+    it("should anchor the term's components to <#Person> in the data", function () {
+      const tim = mapped.pairs.filter(p => anchorText(p, "subject") === "<tim>");
+      const henry = mapped.pairs.filter(p => anchorText(p, "subject") === "<henry>");
+      expect(tim.length, "<tim> now hovers").to.be.above(0);
+      expect(henry.length, "<henry> now hovers").to.be.above(0);
+      expect(tim.map(partsText)).to.include("foaf:name .");
+    });
+  });
+
   describe("nodeRange", function () {
     it("should find where a node is first the subject", function () {
       const text = "PREFIX : <http://a.example/>\n:x :p 1 .\n:y :q :x .\n:x :r 2 .\n";
