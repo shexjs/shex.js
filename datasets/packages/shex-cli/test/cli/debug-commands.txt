@@ -1,4 +1,0 @@
-bs <http://a.example/S1>
-c
-c
-c

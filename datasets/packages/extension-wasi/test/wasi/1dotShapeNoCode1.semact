@@ -1,2 +1,0 @@
-%<http://shex.io/extensions/Test/>{ print("shape action") %}
-%<http://shex.io/extensions/WASI/>{ (data (i32.const 8192) "shape action") (func $main (call $put (i32.const 8192) (i32.const 12)) (call $nl)) %}

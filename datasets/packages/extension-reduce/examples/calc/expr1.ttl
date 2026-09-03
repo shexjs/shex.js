@@ -1,9 +1,0 @@
-# (1 + 2) * 3
-PREFIX : <http://a.example/calc#>
-BASE <http://a.example/expr1>
-
-<#e1> a :Mul ; :left <#e2> ; :right <#e3> .
-<#e2> a :Add ; :left <#e4> ; :right <#e5> .
-<#e3> a :Num ; :value 3 .
-<#e4> a :Num ; :value 1 .
-<#e5> a :Num ; :value 2 .

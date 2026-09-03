@@ -1,7 +1,0 @@
-%<http://shex.io/extensions/Test/>{ fail("startAct") %}
-%<http://shex.io/extensions/WASI/>{ (data (i32.const 8192) "startAct") (func $main (call $put (i32.const 8192) (i32.const 8)) (call $nl) (call $fail)) %}
-
-start=@<http://a.example/S1>
-<http://a.example/S1> {
-   <http://a.example/p1> .
-}

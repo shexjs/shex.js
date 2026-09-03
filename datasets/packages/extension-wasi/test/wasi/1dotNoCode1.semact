@@ -1,2 +1,0 @@
-%<http://shex.io/extensions/Test/>{ print(o) %}
-%<http://shex.io/extensions/WASI/>{ (func $main (call $put_o) (call $nl)) %}

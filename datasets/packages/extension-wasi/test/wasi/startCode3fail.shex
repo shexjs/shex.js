@@ -1,9 +1,0 @@
-%<http://shex.io/extensions/Test/>{ print("startAct 1") %}
-%<http://shex.io/extensions/WASI/>{ (data (i32.const 8192) "startAct 1") (func $main (call $put (i32.const 8192) (i32.const 10)) (call $nl)) %}
-%<http://shex.io/extensions/Test/>{ fail("startAct 2") %}
-%<http://shex.io/extensions/WASI/>{ (data (i32.const 8192) "startAct 2") (func $main (call $put (i32.const 8192) (i32.const 10)) (call $nl) (call $fail)) %}
-%<http://shex.io/extensions/Test/>{ print("startAct 3") %}
-%<http://shex.io/extensions/WASI/>{ (data (i32.const 8192) "startAct 3") (func $main (call $put (i32.const 8192) (i32.const 10)) (call $nl)) %}
-<http://a.example/S1> {
-   <http://a.example/p1> .
-}

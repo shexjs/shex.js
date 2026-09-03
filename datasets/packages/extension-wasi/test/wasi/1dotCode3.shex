@@ -1,9 +1,0 @@
-<http://a.example/S1> {
-   <http://a.example/p1> .
-     %<http://shex.io/extensions/Test/>{ print(s) %}
-     %<http://shex.io/extensions/WASI/>{ (func $main (call $put_s) (call $nl)) %}
-     %<http://shex.io/extensions/Test/>{ print(p) %}
-     %<http://shex.io/extensions/WASI/>{ (func $main (call $put_p) (call $nl)) %}
-     %<http://shex.io/extensions/Test/>{ print(o) %}
-     %<http://shex.io/extensions/WASI/>{ (func $main (call $put_o) (call $nl)) %}
-}

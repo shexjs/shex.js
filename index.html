@@ -27,7 +27,7 @@
       .app.shexmap { background-color: #f4fff4; border-color: #f0a133; }
       .app.shexreduce { background-color: #fff4f4; border-color: #fc561c; }
       .app.yours { background-color: #fffff4; border-color: #56fc1c; }
-      .app.semacts { background-color: #f8f4ff; border-color: #8a56fc; }
+      .app.semacts { background-color: #f8f4ff; border-color: #8a56fc; }\n      .app.experiments { background-color: #f4f9ff; border-color: #5691fc; }
       .app h2 { font-size: 1.1em; margin: 0 0 .3em; }
       .app p { margin: .3em 0 .8em; font-size: .9em; color: #444; }
       .app ul { list-style: none; margin: 0; padding: 0; }
@@ -64,6 +64,24 @@
       for schemas to dispatch, and may add a screen of panes and verbs of
       its own beside the validator's.
     </p>
+<!-- The experiment sites: one entry per published subdirectory of
+     shex.js.org.  This block drives three things with no synchronization:
+     the Experiments card rendered below, which subdirectories a root
+     (main) publish carries across (webapps-site.yml), and whether a
+     branch push publishes itself and where (webapps-site-branch.yml
+     looks its branch up here).  To add an experiment: add its entry here
+     on main (to preserve and list it) and on its branch (to publish it).
+     -->
+    <script type="application/json" id="experiment-sites">
+    [
+      {"dir": "generics", "branch": "generics",
+       "description": "templates: parameterized shapes \u2014 <#List1Plus><<?T>>, applied with @<#List1Plus><< @<#ShapeDecl> >>"},
+      {"dir": "graphs", "branch": "graphs",
+       "description": "datasets: GRAPH <g> | TERM | FRAGMENT say which named graph a constraint speaks of"},
+      {"dir": "triple-terms", "branch": "triple-terms",
+       "description": "RDF 1.2 triple terms: <<( \u2026 )>> value atoms and the TRIPLE node kind"}
+    ]
+    </script>
     <div class="apps">
       <div class="app shex">
         <h2>ShEx validator</h2>
@@ -118,7 +136,33 @@
           <li><a href="packages/shex-webapp/doc/shex-simple.html?plugin=..%2F..%2F..%2Fdoc%2Fplugin-skeleton%2Fhello-plugin.js">shex-simple + Hello</a> <span class="variant">— the skeleton, loaded</span></li>
         </ul>
       </div>
+      <div class="app experiments">
+        <h2>Experiments</h2>
+        <p>Long-running strawmen, each on a branch of its own, published
+          beside this site.  The table (and the publication itself) comes
+          from a data block in this page's source.</p>
+        <table id="experiment-table" style="width: 100%; border-collapse: collapse; font-size: .9em;"></table>
+      </div>
     </div>
+    <script>
+      (function () {
+        var data = JSON.parse(document.getElementById("experiment-sites").textContent);
+        var table = document.getElementById("experiment-table");
+        data.forEach(function (e) {
+          var row = table.insertRow();
+          row.style.borderTop = "1px solid #ddd";
+          var site = row.insertCell();
+          site.innerHTML = '<a href="https://shex.js.org/' + e.dir + '/">/' + e.dir + '/</a>';
+          site.style.whiteSpace = "nowrap"; site.style.padding = ".3em .5em .3em 0"; site.style.verticalAlign = "top";
+          var desc = row.insertCell();
+          desc.textContent = e.description;
+          desc.style.padding = ".3em .5em"; desc.style.verticalAlign = "top";
+          var br = row.insertCell();
+          br.innerHTML = '<a href="https://github.com/shexjs/shex.js/tree/' + e.branch + '"><code>' + e.branch + "</code></a>";
+          br.style.whiteSpace = "nowrap"; br.style.padding = ".3em 0 .3em .5em"; br.style.verticalAlign = "top";
+        });
+      })();
+    </script>
     <footer>
       Built from <a href="https://github.com/shexSpec/shex.js">shexSpec/shex.js</a>
     </footer>
