@@ -615,6 +615,7 @@ function parseTurtleUncached(text, opts = {}) {
     const { quads, provenance, diagnostics: lezerDiagnostics, prefixes, base } = (0, emit_1.parseTurtle)(text, {
         factory: RdfJs.DataFactory,
         baseIRI: opts.baseIRI || "urn:editor:data",
+        dialect: "trig", // TriG ⊇ Turtle: the data pane reads datasets (doc/datasets.md)
     });
     const diagnostics = lezerDiagnostics.map((d) => ({
         severity: "error",
@@ -945,6 +946,13 @@ function alignQuad(parsed, s, p, o, bnodes) {
     const direct = RdfJs.DataFactory.quad(s, p, o);
     if (parsed.provenance.get(direct).length) // labels aligned (same parser fed the validator)
         return direct;
+    // a validation result's triple carries no graph, and the provenance index
+    // keys by quad -- graph included -- so an utterance inside a GRAPH block
+    // (doc/datasets.md) answers to the parsed quad, not to the default-graph
+    // one built above
+    for (const q of parsed.quads)
+        if (q.subject.equals(s) && q.predicate.equals(p) && q.object.equals(o))
+            return q;
     const sB = s.termType === "BlankNode", oB = o.termType === "BlankNode";
     if (!sB && !oB)
         return null;
