@@ -49,6 +49,44 @@ describe("EditorServices: located query maps and non-ShExC schemas", function ()
     });
   });
 
+  describe("datasets (doc/datasets.md): locating quads inside GRAPH blocks", function () {
+    const text = [
+      'PREFIX ex: <http://ex.example/ns#>',
+      '',
+      '<s1> ex:foo "bar" .',
+      '',
+      'GRAPH <CardCatalog> {',
+      '  <entry1> ex:manages <s1> ;',
+      '    ex:source "https://feed.example/s1" .',
+      '}',
+    ].join("\n");
+    const parsed = EditorServices.parseTurtle(text, {baseIRI: base});
+    const F = require("n3").DataFactory;
+
+    it("should read TriG without diagnostics, graphs on the quads", function () {
+      expect(parsed.diagnostics).to.deep.equal([]);
+      expect(parsed.quads).to.have.length(3);
+      expect(parsed.quads.filter(q => q.graph.termType === "NamedNode")).to.have.length(2);
+    });
+
+    it("should anchor a triple written inside a GRAPH block", function () {
+      // a validation result's TestedTriple carries no graph; its utterance
+      // may sit in any of the dataset's
+      const ranges = EditorServices.quadRanges(parsed, F.quad(
+        F.namedNode(base + "entry1"), F.namedNode("http://ex.example/ns#manages"), F.namedNode(base + "s1")));
+      expect(ranges, "found in the block").to.not.equal(null);
+      expect(slice(text, {from: ranges.subject.from, to: ranges.object.to}))
+        .to.equal("<entry1> ex:manages <s1>");
+    });
+
+    it("should still anchor the default graph's own triples", function () {
+      const ranges = EditorServices.quadRanges(parsed, F.quad(
+        F.namedNode(base + "s1"), F.namedNode("http://ex.example/ns#foo"), F.literal("bar")));
+      expect(slice(text, {from: ranges.subject.from, to: ranges.object.to}))
+        .to.equal('<s1> ex:foo "bar"');
+    });
+  });
+
   describe("nodeRange", function () {
     it("should find where a node is first the subject", function () {
       const text = "PREFIX : <http://a.example/>\n:x :p 1 .\n:y :q :x .\n:x :r 2 .\n";
