@@ -1,0 +1,37 @@
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX ex:   <http://ex.example/ns#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+# People, asserted the ordinary way.
+<#Person> { a [foaf:Person] ; foaf:name xsd:string }
+
+# Provenance: an assertion is a *reifier* -- an ordinary node carrying
+# rdf:reifies to a triple term (doc/triple-terms.md).  The <<( ... )>>
+# atom constrains the term positionally; @<#Person> on a component walks
+# that term's asserted neighborhood, so this Assertion only reifies
+# knowings between described Persons.
+<#Assertion> {
+  rdf:reifies <<( @<#Person> foaf:knows @<#Person> )>> ;
+  ex:assertedBy @<#Person> ;
+  ex:confidence xsd:decimal ?
+}
+
+# Second-order talk needs no second-order quotation: the assertion is a
+# node, so a dispute references it.
+<#Dispute> {
+  ex:disputes @<#Assertion> ;
+  ex:isDisputedBy @<#Person> ;
+  ex:disputeReason xsd:string ;
+  ex:disputedOn xsd:date
+}
+
+# Property-graph edge properties: the weight lives on the reifier, and
+# the term reaches its reifiers through ^rdf:reifies -- a triple term is
+# a term, with a neighborhood of its own.
+<#WeightedEdge> {
+  rdf:reifies ( <<( IRI foaf:knows IRI )>> AND { ^rdf:reifies { ex:weight xsd:decimal } } )
+}
+
+# The purely syntactic reading: a mention, components unexamined.
+<#Mention> { rdf:reifies <<( IRI foaf:knows IRI )>> }

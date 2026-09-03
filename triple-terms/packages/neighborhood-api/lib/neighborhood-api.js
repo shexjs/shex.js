@@ -109,10 +109,11 @@ const termType2Prec = {
     'BlankNode': 1,
     'Literal': 2,
     'NamedNode': 3,
+    'Quad': 4, // RDF 1.2 orders triple terms after everything older (doc/triple-terms.md)
 };
 function prec(t) {
     let typeLabel = t.termType;
-    if (typeLabel === 'Quad' || typeLabel === 'Variable' || typeLabel === 'DefaultGraph')
+    if (typeLabel === 'Variable' || typeLabel === 'DefaultGraph')
         throw Error(`no defined SPARQL order for ${typeLabel} ${t.value}`);
     return termType2Prec[typeLabel];
 }

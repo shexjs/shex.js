@@ -84,10 +84,18 @@ class ShExVisitor {
             case "ShapeOr": return this.visitShapeOr(expr, ...args);
             case "ShapeNot": return this.visitShapeNot(expr, ...args);
             case "ShapeExternal": return this.visitShapeExternal(expr, ...args);
+            case "TripleTermConstraint": return this.visitTripleTermConstraint(expr, ...args);
             default:
                 throw Error("unexpected shapeExpr type: " + expr.type + JSON.stringify(expr));
         }
     }
+    // doc/triple-terms.md: subject/object are shape expressions, the
+    // predicate an IRI
+    visitTripleTermConstraint(expr, ...args) {
+        return this._maybeSet(expr, { type: "TripleTermConstraint" }, "TripleTermConstraint", ["subject", "predicate", "object"], null, ...args);
+    }
+    visitSubject(expr, ...args) { return this.visitShapeExpr(expr, ...args); }
+    visitObject(expr, ...args) { return this.visitShapeExpr(expr, ...args); }
     visitValueExpr(expr, ...args) {
         return this.visitShapeExpr(expr, ...args); // call potentially overloaded visitShapeExpr
     }

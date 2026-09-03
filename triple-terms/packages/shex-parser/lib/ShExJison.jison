@@ -242,6 +242,7 @@ IT_EXTRA                [Ee][Xx][Tt][Rr][Aa]
 IT_GRAPH                [Gg][Rr][Aa][Pp][Hh]
 IT_TERM                 [Tt][Ee][Rr][Mm]
 IT_FRAGMENT             [Ff][Rr][Aa][Gg][Mm][Ee][Nn][Tt]
+IT_TRIPLE               [Tt][Rr][Ii][Pp][Ll][Ee]
 IT_LITERAL              [Ll][Ii][Tt][Ee][Rr][Aa][Ll]
 IT_BNODE                [Bb][Nn][Oo][Dd][Ee]
 IT_IRI                  [Ii][Rr][Ii]
@@ -375,6 +376,7 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 {IT_GRAPH}              return 'IT_GRAPH';
 {IT_TERM}               return 'IT_TERM';
 {IT_FRAGMENT}           return 'IT_FRAGMENT';
+{IT_TRIPLE}             return 'IT_TRIPLE';
 {IT_LITERAL}            return 'IT_LITERAL';
 {IT_BNODE}              return 'IT_BNODE';
 {IT_IRI}                return 'IT_IRI';
@@ -399,6 +401,8 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 "||"                    return '||';
 "|"                     return '|';
 ","                     return ',';
+"<<("                   return 'GT_LTLTP';
+")>>"                   return 'GT_PGTGT';
 "("                     return '(';
 ")"                     return ')';
 "["                     return '[';
@@ -727,6 +731,7 @@ shapeAtom:
     | shapeOrRef _QnonLitNodeConstraint_E_Opt	
         -> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t: 1dotRef1 */ : $1 // t: @@ : 1val1vExprRefAND3
     | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: NOT1dotOR2dotX3
+    | tripleTermAtom
     | '.'	-> yy.EmptyShape // t: @@
     ;
 
@@ -747,6 +752,7 @@ shapeAtomNoRef:
     | shapeDefinition _QnonLitNodeConstraint_E_Opt	
 	-> $2 ? shapeJunction("ShapeAnd", $1, [$2]) : $1	 // t: @@ : 0 // 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
     | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: NOT1dotOR2dotX3
+    | tripleTermAtom
     | '.'	-> yy.EmptyShape // t: 1NOTNOTdot
     ;
 
@@ -757,6 +763,7 @@ inlineShapeAtom:
     | inlineShapeOrRef _QnonLitInlineNodeConstraint_E_Opt	
         -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: @@ : 1dotRef1
     | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: 1NOTNOTIRI
+    | tripleTermAtom
     | '.'	-> yy.EmptyShape // t: 1dot
     ;
 
@@ -878,6 +885,29 @@ nonLiteralKind:
       IT_IRI	-> { nodeKind: "iri" } // t: 1iriPattern
     | IT_BNODE	-> { nodeKind: "bnode" } // t: 1bnodeLength
     | IT_NONLITERAL	-> { nodeKind: "nonliteral" } // t: 1nonliteralLength
+    | IT_TRIPLE	-> { nodeKind: "tripleterm" } // doc/triple-terms.md
+    ;
+
+// an RDF 1.2 triple-term pattern, spelled the way Turtle spells the term
+// (doc/triple-terms.md): components are shape expressions, the predicate
+// is an IRI or unconstrained, and "." anywhere means anything
+tripleTermAtom:
+      GT_LTLTP ttComponent ttPredicate ttComponent GT_PGTGT	{
+        $$ = Object.assign({ type: "TripleTermConstraint" },
+                           $2 === yy.EmptyShape ? {} : { subject: nonest($2) },
+                           $3,
+                           $4 === yy.EmptyShape ? {} : { object: nonest($4) });
+        yy.addExprLocation($$, this._$);
+      }
+    ;
+
+ttComponent:
+      inlineShapeExpression
+    ;
+
+ttPredicate:
+      predicate	-> { predicate: $1 }
+    | '.'	-> {  }
     ;
 
 xsFacet:

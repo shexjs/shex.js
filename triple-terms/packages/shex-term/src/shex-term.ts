@@ -119,6 +119,10 @@ export function rdfJsTerm2Turtle (node: RdfJsTerm, meta?: Meta): string {
         ? ""
         : "^^" + node.datatype.value
     );
+  case ("Quad"): // an RDF 1.2 triple term (doc/triple-terms.md)
+    return "<<( " + rdfJsTerm2Turtle((node as any).subject, meta)
+      + " " + rdfJsTerm2Turtle((node as any).predicate, meta)
+      + " " + rdfJsTerm2Turtle((node as any).object, meta) + " )>>";
   default: throw Error(`rdfJsTerm2Turtle: unknown RDFJS node type: ${JSON.stringify(node)}`)
   }
 }
@@ -182,6 +186,11 @@ function characterReplacer (character: string): string {
 export function ld2RdfJsTerm (ld: objectValue): RdfJsTerm {
   switch (typeof ld) {
   case 'object':
+    if ((ld as any).type === "TripleTerm") // doc/triple-terms.md
+      return RdfJsFactory.quad(
+        ld2RdfJsTerm((ld as any).subject) as any,
+        RdfJsFactory.namedNode((ld as any).predicate),
+        ld2RdfJsTerm((ld as any).object) as any);
     const copy = JSON.parse(JSON.stringify(ld));
     if (!copy.value)
       throw Error(`JSON-LD-style object literal has no value: ${JSON.stringify(ld)}`)
@@ -219,6 +228,13 @@ export function rdfJsTerm2Ld (term: RdfJsTerm): objectValue {
     if (lang)
       ret.language = lang;
     return ret;
+  case "Quad": // an RDF 1.2 triple term (doc/triple-terms.md)
+    return {
+      type: "TripleTerm",
+      subject: rdfJsTerm2Ld((term as any).subject),
+      predicate: (term as any).predicate.value,
+      object: rdfJsTerm2Ld((term as any).object),
+    } as any;
   default:
     throw Error(`Unrecognized termType ${term.termType} ${term.value}`);
   }

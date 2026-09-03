@@ -12,7 +12,8 @@ const nodeKinds = {
     'iri': "IRI",
     'bnode': "BNODE",
     'literal': "LITERAL",
-    'nonliteral': "NONLITERAL"
+    'nonliteral': "NONLITERAL",
+    'tripleterm': "TRIPLE" // doc/triple-terms.md
 };
 class ShExWriter {
     constructor(outputStream, options) {
@@ -162,6 +163,22 @@ class ShExWriter {
         }
         else if (shapeExpr.type === "NodeConstraint") {
             [].push.apply(pieces, _ShExWriter._writeNodeConstraint(shapeExpr, done));
+        }
+        else if (shapeExpr.type === "TripleTermConstraint") { // doc/triple-terms.md
+            const ttc = shapeExpr;
+            pieces.push("<<( ");
+            const component = (expr) => {
+                if (expr === undefined)
+                    pieces.push(". ");
+                else {
+                    [].push.apply(pieces, _ShExWriter._writeShapeExpr(expr, done, true, 0));
+                    pieces.push(" ");
+                }
+            };
+            component(ttc.subject);
+            pieces.push(ttc.predicate === undefined ? "." : _ShExWriter._encodePredicate(ttc.predicate), " ");
+            component(ttc.object);
+            pieces.push(")>>");
         }
         else
             throw Error("expected Shape{,And,Or,Ref} or NodeConstraint in " + JSON.stringify(shapeExpr));
