@@ -1,0 +1,6 @@
+%<http://shex.io/extensions/Test/#a>{ print(s) %}
+%<http://shex.io/extensions/WASI/#a>{ (func $main (call $put_s) (call $nl)) %}
+%<http://shex.io/extensions/Test/#b>{ print(p) %}
+%<http://shex.io/extensions/WASI/#b>{ (func $main (call $put_p) (call $nl)) %}
+%<http://shex.io/extensions/Test/#c>{ print(o) %}
+%<http://shex.io/extensions/WASI/#c>{ (func $main (call $put_o) (call $nl)) %}

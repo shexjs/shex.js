@@ -1,0 +1,248 @@
+{
+  "type": "Schema",
+  "start": "http://schema.example/ObservationShape",
+  "shapes": [
+    {
+      "id": "http://schema.example/ObservationShape",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/status",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  {
+                    "value": "preliminary"
+                  },
+                  {
+                    "value": "final"
+                  },
+                  {
+                    "value": "amended"
+                  }
+                ]
+              },
+              "min": 0,
+              "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/code",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "iri"
+              },
+              "min": 0,
+              "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/effectiveDateTime",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "datatype": "http://www.w3.org/2001/XMLSchema#dateTime"
+              },
+              "min": 0,
+              "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/valueQuantity",
+              "valueExpr": "http://schema.example/QuantityShape",
+              "min": 0,
+              "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/performer",
+              "valueExpr": "http://schema.example/PractitionerShape",
+              "min": 0,
+              "max": -1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/subject",
+              "valueExpr": "http://schema.example/PatientShape"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http://schema.example/QuantityShape",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/value",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "datatype": "http://www.w3.org/2001/XMLSchema#decimal"
+              }
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/unit",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "datatype": "http://www.w3.org/2001/XMLSchema#string"
+              }
+            },
+            {
+              "type": "EachOf",
+              "expressions": [
+                {
+                  "type": "TripleConstraint",
+                  "predicate": "http://hl7.org/fhir/code",
+                  "valueExpr": {
+                    "type": "NodeConstraint",
+                    "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                  }
+                },
+                {
+                  "type": "TripleConstraint",
+                  "predicate": "http://hl7.org/fhir/system",
+                  "valueExpr": {
+                    "type": "NodeConstraint",
+                    "nodeKind": "iri"
+                  },
+                  "min": 0,
+                  "max": 1
+                }
+              ],
+              "min": 0,
+              "max": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http://schema.example/PractitionerShape",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "TripleConstraint",
+          "predicate": "http://hl7.org/fhir/name",
+          "valueExpr": {
+            "type": "NodeConstraint",
+            "datatype": "http://www.w3.org/2001/XMLSchema#string"
+          },
+          "min": 1,
+          "max": -1
+        }
+      }
+    },
+    {
+      "id": "http://schema.example/PatientShape",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/active",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "datatype": "http://www.w3.org/2001/XMLSchema#boolean"
+              },
+              "min": 0,
+              "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/name",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "datatype": "http://www.w3.org/2001/XMLSchema#string"
+              },
+              "min": 0,
+              "max": -1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/gender",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  {
+                    "value": "male"
+                  },
+                  {
+                    "value": "female"
+                  },
+                  {
+                    "value": "other"
+                  },
+                  {
+                    "value": "unknown"
+                  }
+                ]
+              },
+              "min": 0,
+              "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/birthdate",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "datatype": "http://www.w3.org/2001/XMLSchema#date"
+              },
+              "min": 0,
+              "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/identifier",
+              "valueExpr": "http://schema.example/IdentifierShape",
+              "min": 0,
+              "max": -1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http://schema.example/IdentifierShape",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/system",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "iri"
+              }
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/value",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "datatype": "http://www.w3.org/2001/XMLSchema#string"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "@context": "http://www.w3.org/ns/shex.jsonld"
+}

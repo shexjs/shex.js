@@ -1,0 +1,89 @@
+#!/usr/bin/env node
+
+/** shexmap-debug -- step through a ShExMap materialization (see
+ * doc/debugger-design.md in the shexjs/shex.js repository).
+ *
+ * shexmap-debug -t target_schema.shex --val validation_output.val [-j vars.json] [-r rootIRI]
+ * shexmap-debug -t target_schema.shex --bindings binding_tree.json [-j vars.json] [-r rootIRI]
+ *
+ * Commands are read from stdin (s/n/o/c/b/bp/bn/info/l/h/q); blocking on
+ * the prompt is the suspension mechanism, so this runs single-threaded.
+ * Unlike shexmap-materialize, the validation output cannot arrive on stdin
+ * (that's the command channel) -- save it to a file first.
+ */
+"use strict";
+
+const FS = require("fs");
+const ShExParser = require("@shexjs/parser");
+const ShExUtil = require("@shexjs/util");
+const {ShExMapDebugRepl} = require("../lib/ShExMapDebugRepl");
+
+const MapExt = "http://shex.io/extensions/Map/#";
+
+const CommandLineOptions = [
+  { name: "help", alias: "h", type: Boolean },
+  { name: "target", alias: "t", type: String, typeLabel: "file", description: "target (output) shex file" },
+  { name: "val", type: String, typeLabel: "file", description: "validation output (as piped to shexmap-materialize)" },
+  { name: "bindings", type: String, typeLabel: "file", description: "raw binding-tree JSON" },
+  { name: "jsonvars", alias: "j", type: String, typeLabel: "file", description: "json static vars file" },
+  { name: "root", alias: "r", type: String, typeLabel: "IRI", defaultValue: "tag:eric@w3.org/2016/root", description: "RDF root node IRI" },
+];
+const cmds = require("command-line-args")(CommandLineOptions);
+
+function usage (exitCode) {
+  console.error(require("command-line-usage")([
+    { header: "shexmap-debug",
+      content: "step through the materialization of a target schema; commands on stdin" },
+    { header: "Synopsis",
+      content: "shexmap-debug -t <target schema> (--val <file> | --bindings <file>) [-j <vars file>] [-r <root IRI>]" },
+    { header: "Options", optionList: CommandLineOptions },
+  ]));
+  process.exit(exitCode);
+}
+
+if (cmds.help || !cmds.target || (!cmds.val && !cmds.bindings))
+  usage(1); // family convention: usage always exits 1 (c.f. materialize)
+
+/** readLineSync - blocking stdin line reader: the debugger's suspension */
+function readLineSync (promptStr) {
+  process.stdout.write(promptStr);
+  const buf = Buffer.alloc(1);
+  let line = "";
+  while (true) {
+    let n;
+    try {
+      n = FS.readSync(0, buf, 0, 1);
+    } catch (e) {
+      if (e.code === "EAGAIN") // tty oddity: retry
+        continue;
+      throw e;
+    }
+    if (n === 0)
+      return line.length ? line : null; // EOF
+    const ch = buf.toString("utf8");
+    if (ch === "\n")
+      return line;
+    line += ch;
+  }
+}
+
+try {
+  const schemaText = FS.readFileSync(cmds.target, "utf8");
+  // single-document parse: the debugger displays source positions, which
+  // are only meaningful for one document (IMPORTs are not followed)
+  const schema = ShExParser.construct("file://" + cmds.target, {}, {index: true})
+        .parse(schemaText);
+  const bindings = cmds.bindings
+        ? JSON.parse(FS.readFileSync(cmds.bindings, "utf8"))
+        : ShExUtil.valToExtension(JSON.parse(FS.readFileSync(cmds.val, "utf8")), MapExt);
+  const staticVars = cmds.jsonvars ? JSON.parse(FS.readFileSync(cmds.jsonvars, "utf8")) : {};
+
+  const repl = new ShExMapDebugRepl(schemaText, schema, bindings, cmds.root, {
+    staticVars,
+    prompt: readLineSync,
+  });
+  process.exit(repl.run());
+} catch (e) {
+  console.error("stack" in e ? e.stack : String(e));
+  process.exit(3);
+}

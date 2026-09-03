@@ -1,0 +1,94 @@
+name: webapps-site
+
+# Build the doc/webpacks bundles (gitignored on main; jquery-components.* and
+# its hashed assets stay committed — see .gitignore) and publish the `gh-pages`
+# branch: the full main tree (so every URL GitHub Pages served from main keeps
+# working, CNAME included) plus
+#
+#   packages/{shex-webapp,extension-map,extension-reduce,extension-wasi}/doc/webpacks/
+#                 (the built bundles)
+#   <branch>/     experiment sites published by webapps-site-branch.yml,
+#                 carried over from the previous gh-pages commit (EXPERIMENTS)
+#   .nojekyll     (serve the tree as-is; test fixtures confuse Jekyll)
+#
+# and with the <!-- STRIP-FOR-PUBLICATION --> … <!-- /STRIP-FOR-PUBLICATION -->
+# block (clone-local instructions) removed from /index.html.
+#
+# The repo-relative layout is preserved because everything here points at
+# everything else relatively: shex-simple.html loads webpacks/shex-webapp.js,
+# shexmap-simple.html redirects to ../../shex-webapp/doc/shex-simple.html with
+# ?plugin=<absolutized URL of ShExMapPlugin.js>, and a plugin's `scripts`
+# are resolved against the plugin rather than the page -- so a plugin's
+# bundle has to be published beside it.
+#
+# Each publish commits ON TOP of the existing gh-pages history so consumers
+# can update with a plain `git pull`:
+#  - GitHub Pages (Pages source: "Deploy from a branch", gh-pages /root):
+#    serves https://shex.js.org/ per the CNAME.
+#  - shex.io: a clone checked out on gh-pages, updated by its /update CGI's
+#    `git pull` loop. (tools/sync-webpacks.sh remains for main checkouts that
+#    just want the bundles.)
+# The branch accumulates ~8MB of bundles per publish; to shed old history,
+# delete the gh-pages branch on GitHub — the next publish recreates it from
+# scratch (gh-pages clones then need one `git fetch origin gh-pages &&
+# git reset --hard origin/gh-pages`).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push to the gh-pages branch
+    steps:
+      - uses: actions/checkout@v4
+      - name: clone shexTest alongside the checkout, on the ref the shex-test dependency names
+        run: |
+          REF=$(sed -n 's|.*"shex-test": "github:shexSpec/shexTest#\([^"]*\)".*|\1|p' package.json)
+          git clone --depth=1 --branch="${REF:-main}" https://github.com/shexSpec/shexTest.git ../shexTest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run webpacks-all
+      - name: publish site to the gh-pages branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Drop the clone-local notice from the landing page. sed ranges are
+          # line-based, so the block may span any number of lines; each marker
+          # must sit on its own line (marker lines are deleted whole).
+          sed -i '/<!-- STRIP-FOR-PUBLICATION -->/,/<!-- \/STRIP-FOR-PUBLICATION -->/d' index.html
+          if grep -q 'STRIP-FOR-PUBLICATION' index.html; then
+            echo 'index.html still mentions STRIP-FOR-PUBLICATION after stripping (unbalanced markers?)' >&2
+            exit 1
+          fi
+          touch .nojekyll
+          # stage the full tree (`add -A` respects .gitignore, so no
+          # node_modules) plus the ignored built bundles
+          git add -A .
+          git add -f .nojekyll \
+            packages/shex-webapp/doc/webpacks packages/extension-map/doc/webpacks \
+            packages/extension-reduce/doc/webpacks packages/extension-wasi/doc/webpacks
+          # commit on top of the existing gh-pages history; if the branch was
+          # deleted (to shed old bundle history), start it afresh
+          git fetch origin gh-pages || true
+          PARENT=$(git rev-parse --verify --quiet origin/gh-pages || true)
+          # carry the experiment-branch sites (webapps-site-branch.yml
+          # publishes each under a subdirectory named for its branch) across
+          # this root rebuild; names must not collide with main's own dirs
+          EXPERIMENTS="generics"
+          if [ -n "$PARENT" ]; then
+            for d in $EXPERIMENTS; do
+              if git rev-parse --verify --quiet "$PARENT:$d" >/dev/null; then
+                git read-tree --prefix="$d/" "$PARENT:$d"
+              fi
+            done
+          fi
+          TREE=$(git write-tree)
+          COMMIT=$(git commit-tree $TREE ${PARENT:+-p $PARENT} -m "webapps site built from $GITHUB_SHA")
+          git push origin $COMMIT:refs/heads/gh-pages

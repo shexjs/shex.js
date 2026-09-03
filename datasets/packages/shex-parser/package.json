@@ -1,0 +1,50 @@
+{
+  "name": "@shexjs/parser",
+  "version": "1.0.0-alpha.30",
+  "files": [
+    "lib",
+    "src"
+  ],
+  "description": "Shape Expressions Compact Syntax (ShExC) parser.",
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
+  "keywords": [
+    "shex",
+    "shape expressions",
+    "rdf",
+    "query",
+    "parser"
+  ],
+  "license": "MIT",
+  "main": "./lib/shex-parser.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@shexjs/term": "^1.0.0-alpha.28",
+    "@ts-jison/lexer": "^0.4.1-alpha.1",
+    "@ts-jison/parser": "^0.4.1-alpha.3"
+  },
+  "devDependencies": {
+    "@ts-jison/parser-generator": "^0.4.1-alpha.2"
+  },
+  "scripts": {
+    "parser": "ts-jison -n ShExJison -t javascript -p lr -o ./lib/ShExJison.js ./lib/ShExJison.jison",
+    "test": "cd .. && mocha -C -R dot",
+    "build": "tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shexjs/shex.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shexSpec/grammar/issues"
+  },
+  "types": "./src/shex-parser.ts"
+}

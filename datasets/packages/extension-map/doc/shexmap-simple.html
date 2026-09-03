@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>ShExMap — Simple Online Translator</title>
+    <link rel="icon" href="../../shex-webapp/doc/ShEx-bones-min.svg" />
+    <link rel="stylesheet" href="../../shex-webapp/doc/shex-app.css" />
+    <script src="./redirect-to-plugin.js"></script>
+    <script>
+      // ShExMap is a plugin of shex-simple now, not a page of its own
+      // (doc/plugins.md).  This URL is published, so
+      // it keeps working: whatever it was asked for goes along.
+      redirectToPlugin("../../shex-webapp/doc/shex-simple.html",
+                       "./ShExMapPlugin.js",
+                       "../examples/manifest.json");
+    </script>
+  </head>
+  <body>
+    <p>ShExMap is a plugin of
+      <a href="../../shex-webapp/doc/shex-simple.html">shex-simple</a>.
+      If your browser did not follow it,
+      <a href="../../shex-webapp/doc/shex-simple.html">open it there</a>.</p>
+  </body>
+</html>

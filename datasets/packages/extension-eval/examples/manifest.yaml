@@ -1,0 +1,36 @@
+---
+# The Eval extension (http://shex.io/extensions/Eval/): JavaScript in a
+# schema's semantic actions.  Each entry names the plugin it needs, so
+# opening this manifest in a plain app page installs the handler.
+- schemaLabel: Eval notes the match
+  schema: |
+    PREFIX : <http://a.example/>
+    PREFIX Eval: <http://shex.io/extensions/Eval/>
+    start = @<S>
+    <S> { :p . %Eval:{ extensionStorage.object = this.triples[0].object.value; return true; %} }
+  dataLabel: one triple
+  data: |
+    PREFIX : <http://a.example/>
+    :x :p "noted" .
+  queryMap: |
+    <http://a.example/x>@START
+  status: conformant
+  comment: The action writes what matched into the result's `extensions` -- switch the interface to appinfo to read it.
+  plugins:
+  - ../doc/ShExEvalPlugin.js
+- schemaLabel: Eval refuses a value
+  schema: |
+    PREFIX : <http://a.example/>
+    PREFIX Eval: <http://shex.io/extensions/Eval/>
+    start = @<S>
+    <S> { :p . %Eval:{ return this.triples[0].object.value !== "999"; %} }
+  dataLabel: the refused value
+  data: |
+    PREFIX : <http://a.example/>
+    :x :p "999" .
+  queryMap: |
+    <http://a.example/x>@START
+  status: nonconformant
+  comment: An action that answers false fails the constraint it is written on.
+  plugins:
+  - ../doc/ShExEvalPlugin.js

@@ -1,0 +1,5 @@
+PREFIX : <http://a.example/>
+PREFIX Test: <http://shex.io/extensions/Test/>
+
+START=@:S1
+:S1 { :p1 . %Test:{ fail(s, " ", p, " ", o) %} }
