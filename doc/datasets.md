@@ -151,7 +151,10 @@ anywhere. So `GRAPH` modifiers (where asserted data lives) and triple-term
 constraints (statements about statements) don't reduce to each other, and a
 schema language wants both doors.
 
-**Prefer the reifier model.** RDF 1.2's final shape is not quoted triples
+**Prefer the reifier model.** (The concrete grammar this sketch grew into
+is [doc/triple-terms.md](triple-terms.md).)
+
+**The sketch.** RDF 1.2's final shape is not quoted triples
 in subject position but *reifiers*: `_:a rdf:reifies <<( s p o )>>`, with
 the annotations hung on `_:a`. That flattens your nested example — Bob's
 dispute targets *the assertion node*, an ordinary IRI/bnode, by an ordinary
