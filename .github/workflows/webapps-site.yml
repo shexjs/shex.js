@@ -81,7 +81,7 @@ jobs:
           # carry the experiment-branch sites (webapps-site-branch.yml
           # publishes each under a subdirectory named for its branch) across
           # this root rebuild; names must not collide with main's own dirs
-          EXPERIMENTS="generics"
+          EXPERIMENTS="generics datasets"
           if [ -n "$PARENT" ]; then
             for d in $EXPERIMENTS; do
               if git rev-parse --verify --quiet "$PARENT:$d" >/dev/null; then
