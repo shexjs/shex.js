@@ -1,0 +1,67 @@
+name: webapps-site-branch
+
+# Publish an experiment branch's WebApp under a subdirectory of the site:
+# push to a branch listed below and https://shex.js.org/<branch>/ serves that
+# branch's tree, built exactly the way webapps-site.yml builds the root site
+# (webpack bundles, STRIP-FOR-PUBLICATION removed).  The publish grafts the
+# build onto the *current* gh-pages tree as <branch>/, so the root site --
+# built from main -- is untouched; webapps-site.yml preserves the
+# subdirectories named in its EXPERIMENTS list when main publishes, so the
+# two workflows can interleave.  Branch names with "/" in them would nest;
+# keep experiment branches single-segment.
+#
+# A concurrent publish from the other workflow loses the push race and this
+# run fails on the non-fast-forward push; re-run it.
+
+on:
+  push:
+    branches: [generics, datasets]
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push to the gh-pages branch
+    steps:
+      - uses: actions/checkout@v4
+      - name: clone shexTest alongside the checkout, on the ref the shex-test dependency names
+        run: |
+          REF=$(sed -n 's|.*"shex-test": "github:shexSpec/shexTest#\([^"]*\)".*|\1|p' package.json)
+          git clone --depth=1 --branch="${REF:-main}" https://github.com/shexSpec/shexTest.git ../shexTest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run webpacks-all
+      - name: publish under /$GITHUB_REF_NAME on the gh-pages branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          sed -i '/<!-- STRIP-FOR-PUBLICATION -->/,/<!-- \/STRIP-FOR-PUBLICATION -->/d' index.html
+          if grep -q 'STRIP-FOR-PUBLICATION' index.html; then
+            echo 'index.html still mentions STRIP-FOR-PUBLICATION after stripping (unbalanced markers?)' >&2
+            exit 1
+          fi
+          # the branch's own tree, bundles included, as a subtree
+          git add -A .
+          git add -f packages/shex-webapp/doc/webpacks packages/extension-map/doc/webpacks \
+            packages/extension-reduce/doc/webpacks packages/extension-wasi/doc/webpacks
+          SUBTREE=$(git write-tree)
+          # graft it as <branch>/ onto the current site tree
+          git fetch origin gh-pages || true
+          PARENT=$(git rev-parse --verify --quiet origin/gh-pages || true)
+          export GIT_INDEX_FILE=$(mktemp)
+          if [ -n "$PARENT" ]; then
+            git read-tree "$PARENT"
+            git rm -r --cached --ignore-unmatch -q "$GITHUB_REF_NAME"
+          else
+            git read-tree --empty
+            NOJEKYLL=$(printf '' | git hash-object -w --stdin)
+            git update-index --add --cacheinfo "100644,$NOJEKYLL,.nojekyll"
+          fi
+          git read-tree --prefix="$GITHUB_REF_NAME/" "$SUBTREE"
+          TREE=$(git write-tree)
+          COMMIT=$(git commit-tree $TREE ${PARENT:+-p $PARENT} -m "webapps site /$GITHUB_REF_NAME built from $GITHUB_SHA")
+          git push origin $COMMIT:refs/heads/gh-pages
