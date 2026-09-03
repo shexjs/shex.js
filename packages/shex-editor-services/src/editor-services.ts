@@ -782,12 +782,14 @@ function nestedConstraintExtent (tc: any, locations: Map<object, Yylloc>, starts
       if (expr.valueExpr && typeof expr.valueExpr === "object")
         walk(expr.valueExpr);
     } else if (expr.type === "TripleTermConstraint") { // doc/triple-terms.md
-      // the <<( ... )>> atom is the constraint's nested extent, so the
-      // referring triple's highlight stops before it (region 1 / region 2)
+      // the atom's *contents* are the nested extent, so highlightParts keeps
+      // <<( in the head and )>> in the tail -- the delimiters belong to the
+      // referring triple (region 1), the contents to the term (region 2)
       const range = yyllocToRange(locations.get(expr), starts);
       if (range) {
-        if (min === null || range.from < min) min = range.from;
-        if (max === null || range.to > max) max = range.to;
+        const inner = {from: range.from + 3, to: range.to - 3};
+        if (min === null || inner.from < min) min = inner.from;
+        if (max === null || inner.to > max) max = inner.to;
       }
     } else if (expr.expressions)
       expr.expressions.forEach(walk);
@@ -1124,6 +1126,16 @@ function ldTermToRdfJs (ld: LdTerm): any {
  * the two disagree on the arc but agree on the *term*: this finds the parsed
  * quad whose object is that term and returns where its `<< ... >>` is
  * written (doc/triple-terms.md). */
+/** the range between an atom's delimiters, whitespace trimmed:
+ * `<<( X )>>` (delim 3) or `<< X >>` (delim 2) -> X.  The delimiters stay
+ * with the container, as `{ }` do with their shape (doc/triple-terms.md). */
+function innerRange (range: Range, delim: number, text: string): Range | null {
+  let from = range.from + delim, to = range.to - delim;
+  while (from < to && /\s/.test(text[from])) ++from;
+  while (to > from && /\s/.test(text[to - 1])) --to;
+  return to > from ? {from, to} : null;
+}
+
 function tripleTermSpan (parsed: ParsedTurtle, ttLd: any): Range | null {
   const term = ldTermToRdfJs(ttLd);
   for (const q of parsed.quads)
@@ -1649,13 +1661,16 @@ export function mapValidationErrors (valResult: unknown,
           ? shexcParsed.locate.constraintAnchors(ctx.shape, leaf.predicate, leaf.constraintOrdinal || 0,
                                                  leaf.constraintPath)
           : null;
-    const schemaRange =
+    let schemaRange =
           (leaf.schemaObj && shexcParsed.locate.expr(leaf.schemaObj)) ||
           (ca && ca.parts[0]) ||
           // last resort: just the shape's label token -- never the whole
           // declaration, which would paint innocent constraints red
           (ctx.shape && shexcParsed.locate.shapeLabel(ctx.shape)) ||
           null;
+    // region 2's schema is the atom's contents, delimiters left to region 1
+    if (leaf.tripleTerm && leaf.schemaObj && schemaRange)
+      schemaRange = innerRange(schemaRange, 3, shexcParsed.text) || schemaRange;
     // parts/path describe the constraint; only attach them when the
     // constraint anchor is what schemaRange resolved to
     const viaConstraint = ca && schemaRange === ca.parts[0] ? ca : null;
@@ -1680,17 +1695,18 @@ export function mapValidationErrors (valResult: unknown,
       }
       if (!dataRange && leaf.node !== undefined && leaf.node !== null)
         dataRange = rangeOfNode(turtleParsed, leaf.node, bnodes);
-      // region 2: the term span itself (doc/triple-terms.md)
+      // region 2: the contents between << and >> (doc/triple-terms.md)
       if (leaf.tripleTerm) {
         const span = tripleTermSpan(turtleParsed, leaf.tripleTerm);
-        if (span) { anchors.object = span; dataRange = span; }
+        const inner = span && innerRange(span, 2, turtleParsed.text);
+        if (inner) { anchors.object = inner; dataRange = inner; }
       }
-      // region 1: the referring triple stops before the term -- <a1>
-      // rdf:reifies, not the << ... >> its TripleTermTest owns
-      if (leaf.reifiesOuter) {
-        delete (anchors as any).object;
-        delete (anchors as any).objectParts;
-        dataRange = anchors.subject || dataRange;
+      // region 1: the referring triple keeps the << >> delimiters, the way a
+      // shape keeps its { } -- so the term's contents stay region 2's alone
+      if (leaf.reifiesOuter && anchors.object) {
+        const s = anchors.object;
+        (anchors as any).objectParts = [{from: s.from, to: s.from + 2}, {from: s.to - 2, to: s.to}];
+        dataRange = anchors.subject || s;
       }
     }
     pairs.push({
