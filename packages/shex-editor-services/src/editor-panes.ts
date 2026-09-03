@@ -223,7 +223,7 @@ interface StringState {
 
 /** Turtle via the incremental, error-recovering lezer-turtle grammar
  * (RDF 1.2; the same parse tree that powers provenance tracking). */
-const turtleLanguage = LRLanguage.define({parser: lezerTurtleParser});
+const turtleLanguage = LRLanguage.define({parser: lezerTurtleParser.configure({dialect: "trig"})}); // doc/datasets.md
 
 /** Shape maps (the query map pane): nodes and shapes as ShExC and Turtle
  * write terms, `@` with a status between each pair's two sides, `{FOCUS

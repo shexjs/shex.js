@@ -297,9 +297,9 @@
   queryMap: |
     <#n1>@<#S1>
   status: conformant
-- schemaLabel: card catalog
+- schemaLabel: fixed metadata graph
   schemaURL: ../packages/shex-webapp/examples/dataset-catalog.shex
-  dataLabel: metadata in its graph
+  dataLabel: validate management graph
   data: |
     PREFIX ex: <http://ex.example/ns#>
 
@@ -314,7 +314,7 @@
     <s1>@<#S1>
   status: conformant
   comment: 'A dataset with a housekeeping graph: `GRAPH <CardCatalog>` scopes the ^ex:manages arc and the whole catalog entry into it, the way a SPARQL `GRAPH <CardCatalog> { ... }` block would (doc/datasets.md).'
-- schemaLabel: card catalog
+- schemaLabel: fixed metadata graph
   schemaURL: ../packages/shex-webapp/examples/dataset-catalog.shex
   dataLabel: metadata gone astray
   data: |
