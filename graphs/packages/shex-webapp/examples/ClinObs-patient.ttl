@@ -1,0 +1,17 @@
+# Patient
+PREFIX : <http://hl7.org/fhir/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+BASE <http://hl7.example/>
+
+# The same graph, continued.  <Patient2> is the node the observation's
+# :subject points at: the two documents meet at that IRI, which is why they
+# both say BASE.
+<Patient2>
+  :active     true ;
+  :name       "Bob" , "Robert Smith" ;
+  :gender     "male" ;
+  :birthdate  "1999-12-31"^^xsd:date ;
+  :identifier [
+    :system <http://hospital.example/mrn> ;
+    :value  "MRN-40281"
+  ] .

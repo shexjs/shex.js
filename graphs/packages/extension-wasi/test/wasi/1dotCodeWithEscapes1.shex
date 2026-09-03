@@ -1,0 +1,5 @@
+<http://a.example/S1> {
+   <http://a.example/p1> .
+     %<http://shex.io/extensions/Test/>{ print\u0028\u0022\%{\\\\\%}\u0022\u0029 %}
+     %<http://shex.io/extensions/WASI/>{ (data (i32.const 8192) "\%{\\5c\%}") (func $main (call $put (i32.const 8192) (i32.const 5)) (call $nl)) %}
+}

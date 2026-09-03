@@ -1,0 +1,963 @@
+/** editor-panes - CodeMirror 6 glue for the ShEx web apps.
+ *
+ * makePane(textarea, opts) replaces a textarea with a language-aware editor
+ * while keeping the textarea as a live proxy: reads and writes of
+ * `textarea.value` (including jQuery's .val()) transparently hit the editor
+ * document, and editor changes write back and fire a native "change" event.
+ * The surrounding application (caches, permalinks, drag-and-drop, tests)
+ * keeps its textarea-shaped view of the world.
+ *
+ * Diagnostics come from ./editor-services (the editor itself never parses
+ * anything); each pane exposes setDiagnostics/highlight/clearHighlights for
+ * validation-error and shape-map anchoring.
+ */
+
+import {basicSetup} from "codemirror";
+import {EditorView, Decoration, DecorationSet, gutter, GutterMarker, Tooltip, showTooltip} from "@codemirror/view";
+import {StateField, StateEffect, Extension, RangeSet, EditorState, Annotation} from "@codemirror/state";
+import {StreamLanguage, StreamParser, LRLanguage, foldNodeProp, foldInside,
+        indentNodeProp, delimitedIndent} from "@codemirror/language";
+import {linter, setDiagnostics, lintGutter, LintSource} from "@codemirror/lint";
+import {autocompletion, CompletionContext, CompletionResult, Completion} from "@codemirror/autocomplete";
+import {json, jsonParseLinter} from "@codemirror/lang-json";
+import {parser as lezerTurtleParser} from "lezer-turtle";
+import {parser as lezerShExCParser} from "lezer-shexc";
+import * as EditorServices from "./editor-services";
+import {Diagnostic, Range} from "./editor-services";
+
+export type PaneLanguage = "shexc" | "turtle" | "json" | "shapemap";
+
+/** A language described by something that isn't this package -- a
+ * neighborhood module saying how the text that configures it should be
+ * edited (see ParamEditor in @shexjs/neighborhood-api).  It arrives as
+ * plain functions over plain strings, because a module that implements
+ * getNeighborhood must not be obliged to depend on an editor library; the
+ * adapters below are what turn that description into an editor.  Repeated
+ * structurally rather than imported so this package keeps its one-way
+ * dependency on nothing. */
+export interface SuppliedEditor {
+  language?: string;
+  tokens? (text: string, ctx?: any): {from: number, to: number, style: string}[];
+  lint? (text: string, ctx?: any): Diagnostic[];
+  complete? (text: string, pos: number, ctx?: any):
+    {from: number, to?: number, options: {label: string, detail?: string, type?: string}[]} | null;
+}
+
+/** completion vocabulary, supplied live by the application */
+export interface CompletionSets {
+  prefixes?: {[prefix: string]: string};
+  shapeLabels?: string[];
+  predicates?: string[];
+  /** the data's subjects, for the node side of a query map pair */
+  nodes?: string[];
+}
+
+export interface MakePaneOptions {
+  language?: PaneLanguage;
+  /** base IRI supplier for the live parsers (e.g. () => cache.meta.base) */
+  getBase?: () => string | undefined;
+  /** false disables live parse diagnostics */
+  lint?: boolean;
+  /** enables autocomplete of prefixes, shape labels and predicates */
+  completions?: () => CompletionSets;
+  /** a language described from outside this package (a neighborhood
+   * module's).  Its `language`, if it names one of ours, supplies the
+   * grammar; its tokens/lint/complete are overlaid on top, so a module
+   * whose pane is an RDF document with a header line of its own describes
+   * only the header.
+   *
+   * Called with the text to be described, never for the host to look the
+   * text up itself: which module claims a pane can change with every
+   * keystroke, and a host reading it back from the textarea would be
+   * answering about the document as it was before the edit -- the pane's
+   * proxy still reports the old text while the transaction that changes it
+   * is being applied. */
+  supplied?: (text: string) => SuppliedEditor | null;
+  /** context handed to the supplied editor's functions, e.g. {db} */
+  suppliedContext?: () => any;
+  /** for a shape-map pane: the base and the schema's and data's metas the
+   * two sides of each pair resolve against (see parseShapeMap) */
+  shapeMap?: () => EditorServices.ParseShapeMapOptions;
+}
+
+/** lexicalize - shortest lexical form for an IRI under the given prefixes */
+export function lexicalize (iri: string, prefixes: {[prefix: string]: string}): string {
+  let best: [string, string] | null = null;
+  for (const [prefix, ns] of Object.entries(prefixes || {}))
+    if (ns.length > 0 && iri.startsWith(ns) && (!best || ns.length > best[1].length))
+      best = [prefix, ns];
+  if (best) {
+    const local = iri.substring(best[1].length);
+    if (/^[A-Za-z0-9_.-]*$/.test(local))
+      return best[0] + ":" + local;
+  }
+  return "<" + iri + ">";
+}
+
+/** completionSource - a CodeMirror autocomplete source over the app-supplied
+ * vocabulary: prefix declarations, shape labels (plain and @ref forms) and
+ * predicates. */
+export function completionSource (getSets: () => CompletionSets) {
+  return (context: CompletionContext): CompletionResult | null => {
+    const word = context.matchBefore(/@?[<A-Za-z_:][^\s;,|(){}[\]]*/);
+    if (!word && !context.explicit)
+      return null;
+    const sets = getSets() || {};
+    const prefixes = sets.prefixes || {};
+    const options: Completion[] = [];
+    Object.keys(prefixes).forEach(prefix =>
+      options.push({label: prefix + ":", type: "namespace", detail: prefixes[prefix]}));
+    (sets.shapeLabels || []).forEach(iri => {
+      const lex = lexicalize(iri, prefixes);
+      options.push({label: lex, type: "class", detail: "shape"});
+      options.push({label: "@" + lex, type: "class", detail: "shape ref"});
+    });
+    (sets.predicates || []).forEach(iri =>
+      options.push({label: lexicalize(iri, prefixes), type: "property"}));
+    (sets.nodes || []).forEach(term =>
+      options.push({label: term.startsWith("_:") ? term : lexicalize(term, prefixes),
+                    type: "variable", detail: "node"}));
+    return options.length
+      ? {from: word ? word.from : context.pos, options, validFor: /^@?[<A-Za-z_:][^\s]*$/}
+      : null;
+  };
+}
+
+/** a document range that reacts to the mouse entering it, and optionally to
+ * being clicked -- which is how a transient highlight is made to stay */
+export interface HoverRegion extends Range {
+  enter (): void;
+  /** What to say about the range while the mouse is in it, in a tooltip
+   * above it: the constraint's text over the triple it matched, say.
+   * A function is asked when the mouse arrives, so it can read what is
+   * current; null or empty shows nothing. */
+  title?: string | (() => string | null);
+  /** Handle a click on this range.  Return true to consume it: the event is
+   * then stopped before the editor sees it, so the gesture doesn't also move
+   * the caret or drag out a selection.  Return false and the click is an
+   * ordinary one. */
+  click? (event: MouseEvent): boolean;
+}
+
+/** one annotated range: a CSS class to wear and, optionally, what it means */
+export interface PaneAnnotation extends Range {
+  cls?: string;
+  title?: string;
+}
+
+export interface Pane {
+  view: EditorView;
+  textarea: HTMLTextAreaElement;
+  language?: PaneLanguage;
+  /** diagnostics: editor-services format ({from, to, severity, message}) */
+  setDiagnostics (diagnostics: Diagnostic[]): void;
+  /** highlight ranges with an optional CSS class; scroll: bring the first
+   * range into view (default true -- pass false when the user's mouse is in
+   * this pane).
+   *
+   * The *first range given*, not the earliest in the document: a caller
+   * orders them by what a reader wants to see, and for a match that is the
+   * object.  Sorting these by position instead scrolled a Wikidata page to
+   * the entity id at the top of it rather than to the claim that matched,
+   * which is the one thing on screen the reader already knew. */
+  highlight (ranges: Range[], cls?: string, opts?: {scroll?: boolean}): void;
+  clearHighlights (): void;
+  /** Mark ranges with a lasting statement about them, on a layer of their
+   * own: highlights are the mouse's and are replaced by the next hover,
+   * while these stay until annotate() is called again.  Null or an empty
+   * list withdraws them. */
+  annotate (marks: PaneAnnotation[] | null): void;
+  /** replace the set of mouse-over-sensitive ranges; `leave` fires when the
+   * mouse leaves them all */
+  setHoverRegions (regions: HoverRegion[], leave?: () => void): void;
+  /** character offsets of the breakpoints: a line's start for one set in
+   * the gutter, the position itself for one set at a position */
+  listBreakpoints (): number[];
+  /** toggle a gutter breakpoint at a character offset's line */
+  toggleBreakpoint (pos: number): void;
+  /** toggle a breakpoint at the position itself -- the constraint there,
+   * for a line that holds several (the gutter marks the line either way) */
+  toggleBreakpointAt (pos: number): void;
+  /** Re-measure the editor.
+   *
+   * CodeMirror measures when it is created and when its own observers fire.
+   * A view built while it is not in the document, or inside something
+   * hidden -- a pane behind another tab, a result pane assembled before it
+   * is appended -- has nothing to measure, and what it drew from that
+   * survives: most visibly a gutter with more line numbers than there are
+   * lines.  A host that attaches, shows or resizes a pane says so here. */
+  requestMeasure (): void;
+  /** remove the editor and restore the textarea (with the current text) */
+  destroy (): void;
+}
+
+// ---------------------------------------------------------------------------
+// ShExC via lezer-shexc: the grammar the validator's parser has, in the
+// editor's parser model -- exact colours, incremental, and tolerant of the
+// half-typed (a schema with an error still parses around it).  The
+// semantic truth (diagnostics, shape/error ranges) still comes from the
+// real parser via editor-services.
+const shexcLanguage = LRLanguage.define({
+  parser: lezerShExCParser.configure({
+    props: [
+      foldNodeProp.add({
+        InlineShapeDefinition: foldInside,
+        ValueSet: foldInside,
+        BracketedTripleExpr: foldInside,
+      }),
+      indentNodeProp.add({
+        InlineShapeDefinition: delimitedIndent({closing: "}"}),
+        ValueSet: delimitedIndent({closing: "]"}),
+        BracketedTripleExpr: delimitedIndent({closing: ")"}),
+      }),
+    ],
+  }),
+  languageData: {commentTokens: {line: "#", block: {open: "/*", close: "*/"}}},
+});
+
+/** the state a stream tokenizer keeps: the closing quote of the string it
+ * is in, if it is in one */
+interface StringState {
+  inString: string | null;
+}
+
+/** Turtle via the incremental, error-recovering lezer-turtle grammar
+ * (RDF 1.2; the same parse tree that powers provenance tracking). */
+const turtleLanguage = LRLanguage.define({parser: lezerTurtleParser.configure({dialect: "trig"})}); // doc/datasets.md
+
+/** Shape maps (the query map pane): nodes and shapes as ShExC and Turtle
+ * write terms, `@` with a status between each pair's two sides, `{FOCUS
+ * ...}` triple patterns, a reason and appinfo after.  Approximate, like the
+ * ShExC tokenizer; the parser's diagnostics are the truth. */
+export const shapeMapStreamParser: StreamParser<StringState> = {
+  name: "shapemap",
+  startState: () => ({inString: null}),
+  token (stream, state) {
+    if (state.inString) {
+      while (!stream.eol()) {
+        if (stream.match(state.inString)) { state.inString = null; break; }
+        if (stream.next() === "\\") stream.next();
+      }
+      return "string";
+    }
+    if (stream.eatSpace()) return null;
+    if (stream.match(/^#.*/)) return "comment";
+    if (stream.match(/^<[^<>"{}|^`\\ ]*>/)) return "link";
+    if (stream.match(/^('''|""")/)) { state.inString = stream.current(); return "string"; }
+    if (stream.match(/^"(?:[^"\\\n]|\\.)*"/) || stream.match(/^'(?:[^'\\\n]|\\.)*'/)) {
+      stream.match(/^\^\^/) || stream.match(/^@[a-zA-Z-]+/);
+      return "string";
+    }
+    // the shape side: @shape, @START, or a bare @ with a status to follow
+    if (stream.match(/^@(?:START\b|<[^>]*>|[A-Za-z_][A-Za-z0-9_.-]*:[A-Za-z0-9_.:%\\-]*)/i)) return "typeName";
+    if (stream.match(/^@/)) return "operator";
+    if (stream.match(/^(?:START|FOCUS|SPARQL)\b/i)) return "keyword";
+    if (stream.match(/^\$\s*appinfo\s*:/i)) return "meta";
+    if (stream.match(/^_:[A-Za-z0-9_.-]+/)) return "variableName";      // blank node
+    if (stream.match(/^[A-Za-z_][A-Za-z0-9_.-]*:[A-Za-z0-9_.:%\\-]*/)) return "variableName"; // pname
+    if (stream.match(/^(?:true|false|null)\b/)) return "atom";
+    if (stream.match(/^[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/)) return "number";
+    if (stream.match(/^[!?]/)) return "operator";                      // status
+    if (stream.match(/^[{}[\],/_]/)) return "punctuation";
+    stream.next();
+    return null;
+  },
+};
+
+export const languages: {[lang in PaneLanguage]: () => Extension} = {
+  shexc: () => shexcLanguage,
+  turtle: () => turtleLanguage,
+  json: () => json(),
+  shapemap: () => StreamLanguage.define(shapeMapStreamParser),
+};
+
+export interface ResultPane {
+  dom: HTMLElement;
+  /** re-measure after the pane has been attached, shown or resized; see
+   * Pane.requestMeasure */
+  requestMeasure (): void;
+  /** bring a character offset to the top of the pane -- what a fragment
+   * link does for a document, for a document that is inside an editor */
+  scrollTo (pos: number): void;
+  highlight (ranges: Range[], cls?: string, opts?: {scroll?: boolean}): void;
+  /** a lasting layer, independent of highlight(): see Pane.annotate */
+  annotate (marks: PaneAnnotation[] | null): void;
+  clearHighlights (): void;
+  setHoverRegions (regions: HoverRegion[], leave?: () => void): void;
+}
+
+/** paintedLike - dress a pane in an element's colours, so an editor looks
+ * like the thing it stands in for (or, for a result pane, like the place it
+ * is put).  An element nobody painted contributes nothing rather than
+ * painting a pane transparent. */
+function paintedLike (elt: HTMLElement): Extension[] {
+  const dressed = window.getComputedStyle(elt);
+  const background = dressed.backgroundColor;
+  const foreground = dressed.color;
+  if (!background || /^(transparent|rgba\(0, 0, 0, 0\))$/.test(background))
+    return [];
+  return [EditorView.theme({
+    "&": {backgroundColor: background, color: foreground},
+    // the gutter reads as part of the pane, edged rather than shaded
+    ".cm-gutters": {backgroundColor: background, color: foreground,
+                    border: "none", borderRight: "1px solid rgba(0, 0, 0, 0.1)"},
+    ".cm-activeLineGutter": {backgroundColor: "rgba(0, 0, 0, 0.05)"},
+    ".cm-activeLine": {backgroundColor: "rgba(0, 0, 0, 0.03)"},
+  })];
+}
+
+/** makeResultPane - a read-only, syntax-highlighted view of a result
+ * document (validation results as JSON, a materialized graph as Turtle)
+ * sharing the highlight machinery of editor panes: highlight(ranges, cls,
+ * {scroll}) marks and scrolls to result regions; setHoverRegions supports
+ * results → schema/data cross-highlighting. */
+export function makeResultPane (text: string, language: PaneLanguage = "json",
+                                opts: {colorsFrom?: HTMLElement} = {}): ResultPane {
+  // a result pane replaces no textarea, so it has no colours of its own to
+  // inherit; the host says what it should look like by handing over an
+  // element it has styled (and attached, or there is nothing to compute)
+  const dressing = opts.colorsFrom ? paintedLike(opts.colorsFrom) : [];
+  const view = new EditorView({doc: text, extensions: [
+    basicSetup,
+    languages[language](),
+    highlightField,
+    annotationField,
+    tooltipField,
+    paneTheme,
+    ...dressing,
+    EditorView.editable.of(false),
+    EditorState.readOnly.of(true),
+  ]});
+  view.dom.classList.add("shexjs-editor-pane", "shexjs-" + language + "-pane");
+  const setHoverRegions = attachHoverRegions(view);
+  const clampRange = (r: Range | null): r is Range =>
+    !!r && r.from >= 0 && r.to <= view.state.doc.length && r.to > r.from;
+  return {
+    dom: view.dom,
+    requestMeasure (): void { view.requestMeasure(); },
+    scrollTo (pos: number): void {
+      const at = Math.max(0, Math.min(pos, view.state.doc.length));
+      view.dispatch({effects: EditorView.scrollIntoView(at, {y: "start"})});
+    },
+    highlight (ranges: Range[], cls = "shexjs-highlight", opts: {scroll?: boolean} = {}): void {
+      // kept in the order given: Decoration.set sorts what it needs sorted,
+      // and the caller's order is what says where to scroll
+      const inRange = (ranges || []).filter(clampRange);
+      const decos = ([] as Range[]).concat(...inRange.map(r => textRanges(view, r)))
+            .map((r: Range) => Decoration.mark({class: cls}).range(r.from, r.to));
+      view.dispatch({effects: setHighlightsEffect.of(Decoration.set(decos, true))});
+      if (inRange.length && opts.scroll !== false)
+        view.dispatch({effects: EditorView.scrollIntoView(inRange[0].from, {y: "center"})});
+    },
+    clearHighlights (): void {
+      view.dispatch({effects: setHighlightsEffect.of(Decoration.none)});
+    },
+    annotate (marks: PaneAnnotation[] | null): void { annotateOn(view, marks); },
+    setHoverRegions,
+  };
+}
+
+/** makeJsonPane - makeResultPane's original JSON-only spelling */
+export function makeJsonPane (text: string, opts: {colorsFrom?: HTMLElement} = {}): ResultPane {
+  return makeResultPane(text, "json", opts);
+}
+
+/** onText - is this mouse position over text, or past the end of a line?
+ *
+ * posAtCoords answers with a document offset for anywhere in the content,
+ * so a mouse in the comment column to the right of a short line reports
+ * that line's end -- which sits *inside* any range that spans the line.
+ * A range is about text, so a position with no text under it is a miss.
+ */
+function onText (view: EditorView, x: number, y: number, pos: number): boolean {
+  const line = view.state.doc.lineAt(pos);
+  const end = view.coordsAtPos(line.to);
+  const start = view.coordsAtPos(line.from);
+  if (!end || !start)
+    return true;                      // nothing measured (jsdom): don't guess
+  return x <= end.right && x >= start.left && y >= start.top && y <= end.bottom;
+}
+
+/** textRanges - a highlight, line by line, over the text it covers.
+ *
+ * A range that spans lines is one range, but painting it as one paints the
+ * indentation of every line after the first -- and, where the pane is wider
+ * than the text, everything to the right as well.  Splitting it per line and
+ * dropping each line's leading whitespace marks what was written instead of
+ * the rectangle it was written in.
+ */
+function textRanges (view: EditorView, range: Range): Range[] {
+  const doc = view.state.doc;
+  const first = doc.lineAt(range.from), last = doc.lineAt(range.to);
+  if (first.number === last.number)
+    return [range];
+  const out: Range[] = [];
+  for (let n = first.number; n <= last.number; ++n) {
+    const line = doc.line(n);
+    const from = Math.max(range.from, line.from + (line.text.match(/^\s*/) || [""])[0].length);
+    const to = Math.min(range.to, line.to);
+    if (to > from)
+      out.push({from, to});
+  }
+  return out;
+}
+
+/** track mouse-over-sensitive ranges on a view; returns the function that
+ * replaces the region set (the makePane/makeResultPane setHoverRegions API) */
+function attachHoverRegions (view: EditorView): (regions: HoverRegion[], leave?: () => void) => void {
+  let hoverRegions: HoverRegion[] = [];
+  let hoverLeave: (() => void) | undefined;
+  let currentRegion: HoverRegion | null = null;
+  const clearHover = () => {
+    if (currentRegion) {
+      currentRegion = null;
+      regionTooltip(view, null);
+      if (hoverLeave)
+        hoverLeave();
+    }
+  };
+  view.contentDOM.addEventListener("mousemove", (e: MouseEvent) => {
+    const pos = view.posAtCoords({x: e.clientX, y: e.clientY});
+    // smallest containing region wins: nested constructs (inline shapes,
+    // bnode property lists) sit inside their parents' regions
+    const hit = pos === null || !onText(view, e.clientX, e.clientY, pos) ? null
+          : hoverRegions.reduce((best: HoverRegion | null, r) =>
+              pos >= r.from && pos < r.to && (!best || r.to - r.from < best.to - best.from)
+                ? r : best, null);
+    if (hit !== currentRegion) {
+      currentRegion = hit;
+      regionTooltip(view, hit);
+      if (hit)
+        hit.enter();
+      else if (hoverLeave)
+        hoverLeave();
+    }
+  });
+  view.contentDOM.addEventListener("mouseleave", clearHover);
+  /* A click on a region is how a reader says "keep showing me this".
+   *
+   * In the *capture* phase, and stopped dead when the region claims it.  The
+   * editor installs its own mousedown handler when the view is built, which
+   * is before this one, so bubbling here would arrive after CodeMirror had
+   * already moved the caret -- and a modified click moves it by *extending*
+   * the selection, which is why pinning used to highlight everything between
+   * the old cursor and the click.  preventDefault after the fact undoes none
+   * of that; not letting the editor see it does.
+   */
+  const clickRegions = (e: MouseEvent): void => {
+    if (e.button !== 0)
+      return;
+    const pos = view.posAtCoords({x: e.clientX, y: e.clientY});
+    if (pos === null || !onText(view, e.clientX, e.clientY, pos))
+      return;
+    const hit = hoverRegions.reduce((best: HoverRegion | null, r) =>
+      r.click && pos >= r.from && pos < r.to && (!best || r.to - r.from < best.to - best.from)
+        ? r : best, null);
+    if (!hit || !hit.click)
+      return;
+    if (hit.click(e) === false)
+      return;                        // not this gesture: an ordinary click
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  };
+  view.contentDOM.addEventListener("mousedown", clickRegions, true);
+  // ctrl-click raises a context menu on a Mac even when the mousedown was
+  // swallowed, so the same gesture has to be refused here too
+  view.contentDOM.addEventListener("contextmenu", (e: MouseEvent) => {
+    if (!(e.ctrlKey || e.metaKey))
+      return;
+    const pos = view.posAtCoords({x: e.clientX, y: e.clientY});
+    if (pos === null)
+      return;
+    if (hoverRegions.some(r => r.click && pos >= r.from && pos < r.to))
+      e.preventDefault();
+  }, true);
+  return (regions, leave) => {
+    // replacing the region set while one of its regions is hovered would
+    // strand that region's highlights: with currentRegion nulled, the next
+    // mousemove over empty space compares null === null and no leave fires
+    clearHover();
+    hoverRegions = regions || [];
+    hoverLeave = leave;
+    currentRegion = null;
+  };
+}
+
+// ---------------------------------------------------------------------------
+// range highlights (shape-map hover, error-pair flashes)
+
+const setHighlightsEffect = StateEffect.define<DecorationSet>();
+const highlightField = StateField.define<DecorationSet>({
+  create: () => Decoration.none,
+  update (deco, tr) {
+    deco = deco.map(tr.changes);
+    for (const e of tr.effects)
+      if (e.is(setHighlightsEffect))
+        deco = e.value;
+    return deco;
+  },
+  provide: f => EditorView.decorations.from(f),
+});
+
+/** A second, independent decoration layer.
+ *
+ * Highlights belong to the mouse: every hover replaces the whole set and
+ * leaving clears it.  An annotation is a statement about the document that
+ * stays until it is withdrawn -- which bindings a materializer thread has
+ * consumed, say, which a reader wants to keep seeing while they hover
+ * around the panes comparing them.
+ */
+const setAnnotationsEffect = StateEffect.define<DecorationSet>();
+const annotationField = StateField.define<DecorationSet>({
+  create: () => Decoration.none,
+  update (deco, tr) {
+    deco = deco.map(tr.changes);
+    for (const e of tr.effects)
+      if (e.is(setAnnotationsEffect))
+        deco = e.value;
+    return deco;
+  },
+  provide: f => EditorView.decorations.from(f),
+});
+
+/** the shared body of Pane.annotate; see the interface */
+function annotateOn (view: EditorView, marks: PaneAnnotation[] | null): void {
+  const end = view.state.doc.length;
+  const decos = (marks || [])
+        .filter(m => m && m.to > m.from && m.from >= 0 && m.to <= end)
+        .sort((a, b) => a.from - b.from)
+        .map(m => Decoration.mark({
+          class: m.cls || "shexjs-annotation",
+          attributes: m.title ? {title: m.title} : undefined,
+        }).range(m.from, m.to));
+  view.dispatch({effects: setAnnotationsEffect.of(Decoration.set(decos, true))});
+}
+
+/** The tooltip a hover region asked for (HoverRegion.title): one at a time,
+ * shown while the mouse is in the region and withdrawn when it leaves.  An
+ * edit withdraws it too -- it was about text that has moved. */
+const setTooltipEffect = StateEffect.define<Tooltip | null>();
+const tooltipField = StateField.define<Tooltip | null>({
+  create: () => null,
+  update (tip, tr) {
+    if (tr.docChanged)
+      tip = null;
+    for (const e of tr.effects)
+      if (e.is(setTooltipEffect))
+        tip = e.value;
+    return tip;
+  },
+  provide: f => showTooltip.from(f),
+});
+
+/** show what a region has to say, or (null) take it back */
+function regionTooltip (view: EditorView, region: HoverRegion | null): void {
+  if (view.state.field(tooltipField, false) === undefined)
+    return;
+  let text: string | null = null;
+  if (region && region.title) {
+    try {
+      text = typeof region.title === "function" ? region.title() : region.title;
+    } catch (e) {
+      text = null;                     // a host's bug must not break hovering
+    }
+  }
+  if (!text && !view.state.field(tooltipField))
+    return;
+  view.dispatch({effects: setTooltipEffect.of(!text ? null : {
+    pos: region!.from,
+    end: region!.to,
+    above: true,
+    create: () => {
+      const dom = document.createElement("div");
+      dom.className = "shexjs-tooltip";
+      dom.textContent = text;
+      return {dom};
+    },
+  })});
+}
+
+const paneTheme = EditorView.baseTheme({
+  // Transparent to the mouse: a tall tooltip (a multi-line schema
+  // production) can be flipped below the hovered line, under the pointer --
+  // hit-testing must pass through it, or contentDOM sees a mouseleave, the
+  // hover clears the tooltip, the pointer is back on the text, and the
+  // tooltip flickers in and out.  It is plain text shown only while the
+  // mouse stays, so it was never clickable anyway.
+  ".cm-tooltip.shexjs-tooltip": {whiteSpace: "pre-wrap", fontFamily: "monospace", fontSize: "12px",
+                                 padding: "2px 6px", maxWidth: "48em", backgroundColor: "#ffffe8",
+                                 border: "1px solid #bbb", pointerEvents: "none"},
+  ".shexjs-annotation": {borderBottom: "2px solid #7a86c8"},
+  ".shexjs-binding-consumed": {backgroundColor: "#e6f0d8", borderBottom: "2px solid #6a9a3a"},
+  ".shexjs-binding-cursor": {borderBottom: "2px dashed #a8620a"},
+  ".shexjs-highlight": {backgroundColor: "#fff3b0"},
+  ".shexjs-highlight-match": {backgroundColor: "#c8f0c8"},
+  ".shexjs-highlight-fail": {backgroundColor: "#ffcdcd"},
+  ".shexjs-debug-current": {backgroundColor: "#cfe3ff"},
+  "&": {border: "1px solid #ddd", fontSize: "13px",
+        resize: "vertical", overflow: "hidden"}, // user-resizable, like a textarea
+  ".cm-scroller": {overflow: "auto"},
+  "&.cm-focused": {outline: "none", borderColor: "#88f"},
+  ".shexjs-breakpoint-gutter": {width: "1em", cursor: "pointer"},
+  ".shexjs-breakpoint-gutter .cm-gutterElement": {color: "#c22", paddingLeft: "2px"},
+});
+
+// ---------------------------------------------------------------------------
+// breakpoint gutter (debugger; see doc/debugger-design.md)
+
+const breakpointEffect = StateEffect.define<{pos: number, on: boolean}>();
+const breakpointMarker = new class extends GutterMarker {
+  toDOM () { return document.createTextNode("●"); }
+};
+const breakpointField = StateField.define<RangeSet<GutterMarker>>({
+  create: () => RangeSet.empty,
+  update (set, tr) {
+    set = set.map(tr.changes);
+    for (const e of tr.effects)
+      if (e.is(breakpointEffect))
+        set = e.value.on
+          ? set.update({add: [breakpointMarker.range(e.value.pos)]})
+          : set.update({filter: from => from !== e.value.pos});
+    return set;
+  },
+});
+
+function toggleBreakpoint (view: EditorView, pos: number): void {
+  let on = false;
+  view.state.field(breakpointField).between(pos, pos, () => { on = true; });
+  view.dispatch({effects: breakpointEffect.of({pos, on: !on})});
+}
+
+const breakpointExtension: Extension = [
+  breakpointField,
+  gutter({
+    class: "shexjs-breakpoint-gutter",
+    markers: view => view.state.field(breakpointField),
+    initialSpacer: () => breakpointMarker,
+    domEventHandlers: {
+      mousedown (view, line) {
+        toggleBreakpoint(view, line.from);
+        return true;
+      },
+    },
+  }),
+];
+
+// ---------------------------------------------------------------------------
+
+function lintSourceFor (language: PaneLanguage | undefined, opts: MakePaneOptions): LintSource | null {
+  switch (language) {
+  case "shexc":
+    // the schema pane holds ShExC, or ShExJ, ShExR or a DCTAP table: each
+    // is linted in its own language (see lintSchema)
+    return view => EditorServices.lintSchema(
+      view.state.doc.toString(),
+      {base: opts.getBase ? opts.getBase() : undefined});
+  case "shapemap":
+    return view => EditorServices.parseShapeMap(
+      view.state.doc.toString(),
+      opts.shapeMap ? opts.shapeMap() : {base: opts.getBase ? opts.getBase() : undefined}).diagnostics;
+  case "turtle":
+    return view => EditorServices.parseTurtle(
+      view.state.doc.toString(),
+      {baseIRI: opts.getBase ? opts.getBase() : undefined}).diagnostics;
+  case "json":
+    return jsonParseLinter();
+  default:
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// module-supplied languages
+//
+// A neighborhood module describes its text as plain functions over plain
+// strings (tokens, lint, complete); these adapters are the only place that
+// description meets an editor library.
+
+/** Styles a supplied tokenizer can ask for.  The names are the ones
+ * CodeMirror's own stream parsers use, so a module that grows into a real
+ * StreamParser keeps its vocabulary. */
+const suppliedTokenTheme = EditorView.baseTheme({
+  ".shexjs-tok-keyword": {color: "#708"},
+  ".shexjs-tok-link": {color: "#219", textDecoration: "underline"},
+  ".shexjs-tok-string": {color: "#a11"},
+  ".shexjs-tok-comment": {color: "#940", fontStyle: "italic"},
+  ".shexjs-tok-number": {color: "#164"},
+  ".shexjs-tok-variableName": {color: "#00c"},
+  ".shexjs-tok-typeName": {color: "#085"},
+  ".shexjs-tok-invalid": {color: "#f00", textDecoration: "underline wavy #f00"},
+});
+
+/** Recompute a supplied tokenizer's decorations whenever the document
+ * changes.  Whole-document rather than incremental: what modules describe
+ * are header lines, and their real body language (`language: "turtle"`) is
+ * still parsed incrementally by the grammar underneath. */
+function suppliedTokensExtension (
+  getSupplied: (text: string) => SuppliedEditor | null,
+  getContext: () => any,
+): Extension {
+  const compute = (doc: string): DecorationSet => {
+    const supplied = getSupplied(doc);
+    if (!supplied || !supplied.tokens)
+      return Decoration.none;
+    let tokens;
+    try {
+      tokens = supplied.tokens(doc, getContext()) || [];
+    } catch (e) {
+      return Decoration.none;      // a module's bug must not break editing
+    }
+    const marks = tokens
+          .filter(t => t.from >= 0 && t.to > t.from && t.to <= doc.length)
+          .sort((l, r) => l.from - r.from)
+          .map(t => Decoration.mark({class: "shexjs-tok-" + t.style}).range(t.from, t.to));
+    return Decoration.set(marks, true);
+  };
+  const field = StateField.define<DecorationSet>({
+    create: state => compute(state.doc.toString()),
+    update: (deco, tr) => tr.docChanged ? compute(tr.state.doc.toString()) : deco,
+    provide: f => EditorView.decorations.from(f),
+  });
+  return [field, suppliedTokenTheme];
+}
+
+/** A CodeMirror completion source over a supplied editor's `complete`. */
+function suppliedCompletionSource (
+  getSupplied: (text: string) => SuppliedEditor | null,
+  getContext: () => any,
+) {
+  return (context: CompletionContext): CompletionResult | null => {
+    const text = context.state.doc.toString();
+    const supplied = getSupplied(text);
+    if (!supplied || !supplied.complete)
+      return null;
+    let result;
+    try {
+      result = supplied.complete(text, context.pos, getContext());
+    } catch (e) {
+      return null;
+    }
+    if (!result || result.options.length === 0)
+      return null;
+    return {from: result.from, to: result.to, options: result.options};
+  };
+}
+
+/** Is there a language here to build an editor from?  A module that
+ * describes none gets no pane -- see makePaneIfDescribed. */
+function describesALanguage (opts: MakePaneOptions, text: string): boolean {
+  if (opts.language)
+    return true;
+  const supplied = opts.supplied ? opts.supplied(text) : null;
+  return !!supplied &&
+    !!(supplied.language || supplied.tokens || supplied.lint || supplied.complete);
+}
+
+/** makePane, unless nothing describes the text's language -- then null, and
+ * the textarea is left exactly as it is.
+ *
+ * This is the fallback for a host whose panes take their language from
+ * whatever module claims their text: a module that describes no language
+ * costs the user nothing but the plain textarea they would have had with
+ * the editors switched off.  Implementing getNeighborhood stays the only
+ * obligation; an editor is a thing a module may offer, not owe.
+ */
+export function makePaneIfDescribed (textarea: HTMLTextAreaElement, opts: MakePaneOptions = {}): Pane | null {
+  return describesALanguage(opts, textarea.value) ? makePane(textarea, opts) : null;
+}
+
+/** makePane - replace `textarea` with a CodeMirror 6 editor. */
+export const CHANGE_DEBOUNCE_MS = 350;
+
+/** marks a document change made by the application (a write through the
+ * textarea proxy) rather than by the user, so the pane doesn't report it as
+ * a typing pause -- see the updateListener in makePane */
+const appEdit = Annotation.define<boolean>();
+
+export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions = {}): Pane {
+  const nativeValue =
+        Object.getOwnPropertyDescriptor(Object.getPrototypeOf(textarea).constructor.prototype, "value")
+        || Object.getOwnPropertyDescriptor(textarea, "value")!;
+  let changeTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const extensions: Extension[] = [
+    basicSetup,
+    lintGutter(),
+    breakpointExtension,
+    highlightField,
+    annotationField,
+    tooltipField,
+    paneTheme,
+    EditorView.updateListener.of(update => {
+      if (update.docChanged) {
+        nativeValue.set!.call(textarea, update.state.doc.toString());
+        // "keyup" fires immediately, for writes through the proxy too: the
+        // apps' cache dirty-tracking listens for it, and a stale cache means
+        // validate ignores the new text (setTextAreaHandlers).
+        const KeyboardEventCtor = typeof KeyboardEvent !== "undefined" ? KeyboardEvent : Event;
+        textarea.dispatchEvent(new KeyboardEventCtor("keyup", {bubbles: true}));
+        // "change" is debounced to typing pauses: a textarea fires it on
+        // blur, and per-keystroke change handlers re-parse half-typed
+        // documents (e.g. an unclosed quote swallowing following lines).
+        // It says "the user stopped typing", so a write through the proxy
+        // must not raise it -- assigning to a plain textarea's value fires
+        // no change either, and handlers that react to one discard work the
+        // application did meanwhile: dataInputHandler's copyQueryMapToEditMap
+        // clears #results, wiping a materialization rendered since.  Any
+        // pending change from a real edit still stands: the application
+        // replacing the text does not mean the user's edit went unmade.
+        if (update.transactions.every(tr => tr.annotation(appEdit)))
+          return;
+        if (changeTimer !== null)
+          clearTimeout(changeTimer);
+        changeTimer = setTimeout(() => {
+          changeTimer = null;
+          textarea.dispatchEvent(new Event("change", {bubbles: true}));
+        }, CHANGE_DEBOUNCE_MS);
+      }
+    }),
+  ];
+  // a module-supplied language names the grammar (when it's one of ours)
+  // and overlays its own tokens, diagnostics and completions on it
+  const getSupplied = opts.supplied || ((_text: string) => null);
+  const getSuppliedContext = opts.suppliedContext || (() => undefined);
+  const supplied = getSupplied(textarea.value);
+  const language = opts.language
+        || (supplied && languages[supplied.language as PaneLanguage] ? supplied.language as PaneLanguage : undefined);
+
+  if (language === "shexc" || language === "turtle" || language === "shapemap") {
+    const lang = language === "shexc" ? shexcLanguage
+          : language === "shapemap" ? StreamLanguage.define(shapeMapStreamParser)
+          : turtleLanguage;
+    extensions.push(lang);
+    const autocompletes = [];
+    if (opts.completions) // basicSetup's autocompletion() reads languageData
+      autocompletes.push(completionSource(opts.completions));
+    if (opts.supplied)
+      autocompletes.push(suppliedCompletionSource(getSupplied, getSuppliedContext));
+    for (const autocomplete of autocompletes)
+      extensions.push(lang.data.of({autocomplete}));
+  } else if (language && languages[language]) {
+    extensions.push(languages[language]());
+  }
+  if (opts.supplied) {
+    extensions.push(suppliedTokensExtension(getSupplied, getSuppliedContext));
+    if (!language)
+      // no grammar to hang languageData on
+      extensions.push(autocompletion({override: [suppliedCompletionSource(getSupplied, getSuppliedContext)]}));
+  }
+
+  const langLintSource = opts.lint === false ? null : lintSourceFor(language, opts);
+  const lintSource: LintSource | null = opts.lint === false ? null : (view => {
+    const fromLanguage = langLintSource ? langLintSource(view) : [];
+    const text = view.state.doc.toString();
+    const current = getSupplied(text);
+    if (!current || !current.lint)
+      return fromLanguage;
+    let mine: Diagnostic[] = [];
+    try {
+      mine = current.lint(text, getSuppliedContext()) || [];
+    } catch (e) { /* a module's bug must not break editing */ }
+    return Promise.resolve(fromLanguage).then(
+      diagnostics => (diagnostics as Diagnostic[]).concat(
+        mine.filter(d => d.from >= 0 && d.to >= d.from && d.to <= view.state.doc.length)));
+  });
+  if (lintSource && (langLintSource || opts.supplied))
+    extensions.push(linter(lintSource, {delay: 500}));
+
+  // A pane stands where a textarea stood, and the application coloured that
+  // textarea to say what it holds -- the schema pane blue, the data pane
+  // green.  Take the colours with it rather than turning the pane white:
+  // the editors are a nicer way to show the same thing, not a different
+  // thing.  Read before hiding it, and only believe a real colour (jsdom
+  // and an unstyled page report none).
+  extensions.push(...paintedLike(textarea));
+
+  const view = new EditorView({doc: textarea.value, extensions});
+  view.dom.classList.add("shexjs-editor-pane");
+  // match the textarea's rendered size (measured before it's hidden); fall
+  // back to its rows attribute where there's no layout (e.g. jsdom)
+  view.dom.style.width = textarea.offsetWidth ? textarea.offsetWidth + "px"
+    : (textarea.style.width || "100%");
+  // ...and its height, unless the box it goes into says otherwise: a pane
+  // in a column that fills the page takes the column's height, where a
+  // pixel height measured from the textarea would hold it to the rows the
+  // textarea asked for (shex-app.css: #schemaDocument, .fillsColumn)
+  const box = textarea.parentNode as Element;
+  const styles = box && box.ownerDocument && (box.ownerDocument as any).defaultView;
+  const fills = !!(styles && styles.getComputedStyle
+                   && styles.getComputedStyle(box).flexDirection === "column");
+  view.dom.style.height =
+    fills ? ""
+    : textarea.offsetHeight ? textarea.offsetHeight + "px"
+    : `calc(${textarea.rows || 20} * 1.4em)`;
+  textarea.parentNode!.insertBefore(view.dom, textarea);
+  textarea.style.display = "none";
+
+  // hover regions (validation match/failure cross-highlighting)
+  const setHoverRegions = attachHoverRegions(view);
+
+  // live proxy: application code keeps talking to the textarea
+  Object.defineProperty(textarea, "value", {
+    configurable: true,
+    get: () => view.state.doc.toString(),
+    set: (v: unknown) => {
+      const text = String(v == null ? "" : v);
+      nativeValue.set!.call(textarea, text);
+      if (text !== view.state.doc.toString())
+        view.dispatch({changes: {from: 0, to: view.state.doc.length, insert: text},
+                       annotations: appEdit.of(true)});
+    },
+  });
+
+  const clampRange = (r: Range | null): r is Range =>
+        r !== null && r.to > r.from && r.to <= view.state.doc.length;
+  return {
+    view,
+    textarea,
+    language: opts.language,
+    setDiagnostics (diagnostics: Diagnostic[]): void {
+      view.dispatch(setDiagnostics(view.state, diagnostics.filter(
+        d => d.to >= d.from && d.to <= view.state.doc.length)));
+    },
+    highlight (ranges: Range[], cls = "shexjs-highlight", opts: {scroll?: boolean} = {}): void {
+      const inRange = (ranges || []).filter(clampRange);   // caller's order: see highlight()
+      const decos = ([] as Range[]).concat(...inRange.map(r => textRanges(view, r)))
+            .map((r: Range) => Decoration.mark({class: cls}).range(r.from, r.to));
+      view.dispatch({effects: setHighlightsEffect.of(Decoration.set(decos, true))});
+      if (inRange.length && opts.scroll !== false)
+        view.dispatch({effects: EditorView.scrollIntoView(inRange[0].from)});
+    },
+    clearHighlights (): void {
+      view.dispatch({effects: setHighlightsEffect.of(Decoration.none)});
+    },
+    annotate (marks: PaneAnnotation[] | null): void { annotateOn(view, marks); },
+    setHoverRegions,
+    requestMeasure (): void { view.requestMeasure(); },
+    listBreakpoints (): number[] {
+      const positions: number[] = [];
+      view.state.field(breakpointField).between(0, view.state.doc.length,
+                                                from => { positions.push(from); });
+      return positions;
+    },
+    toggleBreakpoint (pos: number): void {
+      toggleBreakpoint(view, view.state.doc.lineAt(pos).from);
+    },
+    toggleBreakpointAt (pos: number): void {
+      toggleBreakpoint(view, Math.max(0, Math.min(pos, view.state.doc.length)));
+    },
+    destroy (): void {
+      if (changeTimer !== null) {
+        clearTimeout(changeTimer);
+        changeTimer = null;
+      }
+      const text = view.state.doc.toString();
+      delete (textarea as {value?: string}).value; // restore the prototype accessor
+      textarea.value = text;
+      textarea.style.display = "";
+      view.destroy();
+      view.dom.remove();
+    },
+  };
+}

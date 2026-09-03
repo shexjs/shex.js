@@ -1,0 +1,72 @@
+{
+  "name": "shex",
+  "version": "1.0.0-alpha.30",
+  "files": [
+    "lib",
+    "src"
+  ],
+  "description": "Shape Expressions meta package",
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
+  "keywords": [
+    "shex",
+    "shape expressions",
+    "rdf",
+    "query",
+    "parser"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./lib/shex.js",
+  "dependencies": {
+    "@shexjs/cli": "^1.0.0-alpha.30",
+    "@shexjs/editor-services": "^1.0.0-alpha.30",
+    "@shexjs/eval-simple-1err": "^1.0.0-alpha.30",
+    "@shexjs/eval-threaded-nerr": "^1.0.0-alpha.30",
+    "@shexjs/eval-validator-api": "^1.0.0-alpha.30",
+    "@shexjs/extension-eval": "^1.0.0-alpha.30",
+    "@shexjs/extension-map": "^1.0.0-alpha.30",
+    "@shexjs/extension-reduce": "^1.0.0-alpha.30",
+    "@shexjs/extension-reduce-js": "^1.0.0-alpha.30",
+    "@shexjs/extension-test": "^1.0.0-alpha.30",
+    "@shexjs/extension-wasi": "^1.0.0-alpha.30",
+    "@shexjs/extension-wasi-test": "^1.0.0-alpha.30",
+    "@shexjs/loader": "^1.0.0-alpha.30",
+    "@shexjs/neighborhood-api": "^1.0.0-alpha.30",
+    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.30",
+    "@shexjs/neighborhood-sparql": "^1.0.0-alpha.30",
+    "@shexjs/neighborhood-wikibase": "^1.0.0-alpha.30",
+    "@shexjs/node": "^1.0.0-alpha.30",
+    "@shexjs/parser": "^1.0.0-alpha.30",
+    "@shexjs/semact-overlay": "^1.0.0-alpha.30",
+    "@shexjs/shape-path-query": "^1.0.0-alpha.30",
+    "@shexjs/term": "^1.0.0-alpha.28",
+    "@shexjs/util": "^1.0.0-alpha.30",
+    "@shexjs/validator": "^1.0.0-alpha.30",
+    "@shexjs/visitor": "^1.0.0-alpha.30",
+    "@shexjs/webapp": "^1.0.0-alpha.30",
+    "@shexjs/writer": "^1.0.0-alpha.30",
+    "n3": "^1.20.4",
+    "shape-map": "^1.0.0"
+  },
+  "scripts": {
+    "test": "cd ../.. && mocha packages/shex/test/*test.js",
+    "build": "tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shexjs/shex.js"
+  },
+  "bugs": {
+    "url": "https://github.com/shexjs/shex.js/issues"
+  },
+  "types": "./src/shex.ts"
+}
