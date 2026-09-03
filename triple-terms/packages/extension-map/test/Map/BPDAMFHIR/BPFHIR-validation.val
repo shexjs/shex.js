@@ -1,0 +1,913 @@
+{
+  "type": "ShapeTest",
+  "node": "tag:BPfhir123",
+  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/BPfhir",
+  "solution": {
+    "type": "EachOfSolutions",
+    "solutions": [
+      {
+        "type": "EachOfSolution",
+        "expressions": [
+          {
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+            "valueExpr": {
+              "type": "NodeConstraint",
+              "values": [
+                "http://hl7.org/fhir-rdf/Observation"
+              ]
+            },
+            "min": 0,
+            "max": 1,
+            "solutions": [
+              {
+                "type": "TestedTriple",
+                "subject": "tag:BPfhir123",
+                "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                "object": "http://hl7.org/fhir-rdf/Observation",
+                "referenced": {
+                  "type": "NodeConstraintTest",
+                  "node": "http://hl7.org/fhir-rdf/Observation",
+                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/BPfhir",
+                  "shapeExpr": {
+                    "type": "NodeConstraint",
+                    "values": [
+                      "http://hl7.org/fhir-rdf/Observation"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://hl7.org/fhir-rdf/coding",
+            "valueExpr": {
+              "type": "Shape",
+              "expression": {
+                "type": "TripleConstraint",
+                "predicate": "http://hl7.org/fhir-rdf/code",
+                "valueExpr": {
+                  "type": "NodeConstraint",
+                  "values": [
+                    "http://snomed.info/sct/Blood_Pressure"
+                  ]
+                }
+              }
+            },
+            "solutions": [
+              {
+                "type": "TestedTriple",
+                "subject": "tag:BPfhir123",
+                "predicate": "http://hl7.org/fhir-rdf/coding",
+                "object": "_:n3-0",
+                "referenced": {
+                  "type": "ShapeTest",
+                  "node": "_:n3-0",
+                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/BPfhir",
+                  "solution": {
+                    "type": "TripleConstraintSolutions",
+                    "predicate": "http://hl7.org/fhir-rdf/code",
+                    "valueExpr": {
+                      "type": "NodeConstraint",
+                      "values": [
+                        "http://snomed.info/sct/Blood_Pressure"
+                      ]
+                    },
+                    "solutions": [
+                      {
+                        "type": "TestedTriple",
+                        "subject": "_:n3-0",
+                        "predicate": "http://hl7.org/fhir-rdf/code",
+                        "object": "http://snomed.info/sct/Blood_Pressure",
+                        "referenced": {
+                          "type": "NodeConstraintTest",
+                          "node": "http://snomed.info/sct/Blood_Pressure",
+                          "shape": "file://localhost/shexTest/Map/BPDAMFHIR/BPfhir",
+                          "shapeExpr": {
+                            "type": "NodeConstraint",
+                            "values": [
+                              "http://snomed.info/sct/Blood_Pressure"
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://hl7.org/fhir-rdf/related",
+            "valueExpr": {
+              "type": "Shape",
+              "expression": {
+                "type": "EachOf",
+                "expressions": [
+                  {
+                    "type": "TripleConstraint",
+                    "predicate": "http://hl7.org/fhir-rdf/type",
+                    "valueExpr": {
+                      "type": "NodeConstraint",
+                      "values": [
+                        {
+                          "value": "has-component"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "TripleConstraint",
+                    "predicate": "http://hl7.org/fhir-rdf/target",
+                    "valueExpr": "file://localhost/shexTest/Map/BPDAMFHIR/sysBP"
+                  }
+                ]
+              }
+            },
+            "solutions": [
+              {
+                "type": "TestedTriple",
+                "subject": "tag:BPfhir123",
+                "predicate": "http://hl7.org/fhir-rdf/related",
+                "object": "_:n3-1",
+                "referenced": {
+                  "type": "ShapeTest",
+                  "node": "_:n3-1",
+                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/BPfhir",
+                  "solution": {
+                    "type": "EachOfSolutions",
+                    "solutions": [
+                      {
+                        "type": "EachOfSolution",
+                        "expressions": [
+                          {
+                            "type": "TripleConstraintSolutions",
+                            "predicate": "http://hl7.org/fhir-rdf/type",
+                            "valueExpr": {
+                              "type": "NodeConstraint",
+                              "values": [
+                                {
+                                  "value": "has-component"
+                                }
+                              ]
+                            },
+                            "solutions": [
+                              {
+                                "type": "TestedTriple",
+                                "subject": "_:n3-1",
+                                "predicate": "http://hl7.org/fhir-rdf/type",
+                                "object": {
+                                  "value": "has-component"
+                                },
+                                "referenced": {
+                                  "type": "NodeConstraintTest",
+                                  "node": {
+                                    "value": "has-component"
+                                  },
+                                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/BPfhir",
+                                  "shapeExpr": {
+                                    "type": "NodeConstraint",
+                                    "values": [
+                                      {
+                                        "value": "has-component"
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "type": "TripleConstraintSolutions",
+                            "predicate": "http://hl7.org/fhir-rdf/target",
+                            "valueExpr": "file://localhost/shexTest/Map/BPDAMFHIR/sysBP",
+                            "solutions": [
+                              {
+                                "type": "TestedTriple",
+                                "subject": "_:n3-1",
+                                "predicate": "http://hl7.org/fhir-rdf/target",
+                                "object": "_:sysBP123",
+                                "referenced": {
+                                  "type": "ShapeTest",
+                                  "node": "_:sysBP123",
+                                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/sysBP",
+                                  "solution": {
+                                    "type": "EachOfSolutions",
+                                    "solutions": [
+                                      {
+                                        "type": "EachOfSolution",
+                                        "expressions": [
+                                          {
+                                            "type": "TripleConstraintSolutions",
+                                            "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                                            "valueExpr": {
+                                              "type": "NodeConstraint",
+                                              "values": [
+                                                "http://hl7.org/fhir-rdf/Observation"
+                                              ]
+                                            },
+                                            "min": 0,
+                                            "max": 1,
+                                            "solutions": [
+                                              {
+                                                "type": "TestedTriple",
+                                                "subject": "_:sysBP123",
+                                                "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                                                "object": "http://hl7.org/fhir-rdf/Observation",
+                                                "referenced": {
+                                                  "type": "NodeConstraintTest",
+                                                  "node": "http://hl7.org/fhir-rdf/Observation",
+                                                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/sysBP",
+                                                  "shapeExpr": {
+                                                    "type": "NodeConstraint",
+                                                    "values": [
+                                                      "http://hl7.org/fhir-rdf/Observation"
+                                                    ]
+                                                  }
+                                                }
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "type": "TripleConstraintSolutions",
+                                            "predicate": "http://hl7.org/fhir-rdf/coding",
+                                            "valueExpr": {
+                                              "type": "Shape",
+                                              "expression": {
+                                                "type": "TripleConstraint",
+                                                "predicate": "http://hl7.org/fhir-rdf/code",
+                                                "valueExpr": {
+                                                  "type": "NodeConstraint",
+                                                  "values": [
+                                                    "http://snomed.info/sct/Systolic_Blood_Pressure"
+                                                  ]
+                                                }
+                                              }
+                                            },
+                                            "solutions": [
+                                              {
+                                                "type": "TestedTriple",
+                                                "subject": "_:sysBP123",
+                                                "predicate": "http://hl7.org/fhir-rdf/coding",
+                                                "object": "_:n3-3",
+                                                "referenced": {
+                                                  "type": "ShapeTest",
+                                                  "node": "_:n3-3",
+                                                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/sysBP",
+                                                  "solution": {
+                                                    "type": "TripleConstraintSolutions",
+                                                    "predicate": "http://hl7.org/fhir-rdf/code",
+                                                    "valueExpr": {
+                                                      "type": "NodeConstraint",
+                                                      "values": [
+                                                        "http://snomed.info/sct/Systolic_Blood_Pressure"
+                                                      ]
+                                                    },
+                                                    "solutions": [
+                                                      {
+                                                        "type": "TestedTriple",
+                                                        "subject": "_:n3-3",
+                                                        "predicate": "http://hl7.org/fhir-rdf/code",
+                                                        "object": "http://snomed.info/sct/Systolic_Blood_Pressure",
+                                                        "referenced": {
+                                                          "type": "NodeConstraintTest",
+                                                          "node": "http://snomed.info/sct/Systolic_Blood_Pressure",
+                                                          "shape": "file://localhost/shexTest/Map/BPDAMFHIR/sysBP",
+                                                          "shapeExpr": {
+                                                            "type": "NodeConstraint",
+                                                            "values": [
+                                                              "http://snomed.info/sct/Systolic_Blood_Pressure"
+                                                            ]
+                                                          }
+                                                        }
+                                                      }
+                                                    ]
+                                                  }
+                                                }
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "type": "TripleConstraintSolutions",
+                                            "predicate": "http://hl7.org/fhir-rdf/valueQuantity",
+                                            "valueExpr": {
+                                              "type": "Shape",
+                                              "expression": {
+                                                "type": "EachOf",
+                                                "expressions": [
+                                                  {
+                                                    "type": "TripleConstraint",
+                                                    "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                                                    "valueExpr": {
+                                                      "type": "NodeConstraint",
+                                                      "values": [
+                                                        "http://hl7.org/fhir-rdf/Quantity"
+                                                      ]
+                                                    },
+                                                    "min": 0,
+                                                    "max": 1
+                                                  },
+                                                  {
+                                                    "type": "TripleConstraint",
+                                                    "predicate": "http://hl7.org/fhir-rdf/value",
+                                                    "valueExpr": {
+                                                      "type": "NodeConstraint",
+                                                      "datatype": "http://www.w3.org/2001/XMLSchema#float"
+                                                    },
+                                                    "semActs": [
+                                                      {
+                                                        "type": "SemAct",
+                                                        "name": "http://shex.io/extensions/Map/#",
+                                                        "code": " bp:sysVal "
+                                                      }
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "TripleConstraint",
+                                                    "predicate": "http://hl7.org/fhir-rdf/units",
+                                                    "valueExpr": {
+                                                      "type": "NodeConstraint",
+                                                      "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                                                    },
+                                                    "semActs": [
+                                                      {
+                                                        "type": "SemAct",
+                                                        "name": "http://shex.io/extensions/Map/#",
+                                                        "code": " bp:sysUnits "
+                                                      }
+                                                    ]
+                                                  }
+                                                ]
+                                              }
+                                            },
+                                            "solutions": [
+                                              {
+                                                "type": "TestedTriple",
+                                                "subject": "_:sysBP123",
+                                                "predicate": "http://hl7.org/fhir-rdf/valueQuantity",
+                                                "object": "_:n3-4",
+                                                "referenced": {
+                                                  "type": "ShapeTest",
+                                                  "node": "_:n3-4",
+                                                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/sysBP",
+                                                  "solution": {
+                                                    "type": "EachOfSolutions",
+                                                    "solutions": [
+                                                      {
+                                                        "type": "EachOfSolution",
+                                                        "expressions": [
+                                                          {
+                                                            "type": "TripleConstraintSolutions",
+                                                            "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                                                            "valueExpr": {
+                                                              "type": "NodeConstraint",
+                                                              "values": [
+                                                                "http://hl7.org/fhir-rdf/Quantity"
+                                                              ]
+                                                            },
+                                                            "min": 0,
+                                                            "max": 1,
+                                                            "solutions": [
+                                                              {
+                                                                "type": "TestedTriple",
+                                                                "subject": "_:n3-4",
+                                                                "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                                                                "object": "http://hl7.org/fhir-rdf/Quantity",
+                                                                "referenced": {
+                                                                  "type": "NodeConstraintTest",
+                                                                  "node": "http://hl7.org/fhir-rdf/Quantity",
+                                                                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/sysBP",
+                                                                  "shapeExpr": {
+                                                                    "type": "NodeConstraint",
+                                                                    "values": [
+                                                                      "http://hl7.org/fhir-rdf/Quantity"
+                                                                    ]
+                                                                  }
+                                                                }
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "type": "TripleConstraintSolutions",
+                                                            "predicate": "http://hl7.org/fhir-rdf/value",
+                                                            "valueExpr": {
+                                                              "type": "NodeConstraint",
+                                                              "datatype": "http://www.w3.org/2001/XMLSchema#float"
+                                                            },
+                                                            "semActs": [
+                                                              {
+                                                                "type": "SemAct",
+                                                                "name": "http://shex.io/extensions/Map/#",
+                                                                "code": " bp:sysVal "
+                                                              }
+                                                            ],
+                                                            "solutions": [
+                                                              {
+                                                                "type": "TestedTriple",
+                                                                "subject": "_:n3-4",
+                                                                "predicate": "http://hl7.org/fhir-rdf/value",
+                                                                "object": {
+                                                                  "value": "110",
+                                                                  "type": "http://www.w3.org/2001/XMLSchema#float"
+                                                                },
+                                                                "referenced": {
+                                                                  "type": "NodeConstraintTest",
+                                                                  "node": {
+                                                                    "value": "110",
+                                                                    "type": "http://www.w3.org/2001/XMLSchema#float"
+                                                                  },
+                                                                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/sysBP",
+                                                                  "shapeExpr": {
+                                                                    "type": "NodeConstraint",
+                                                                    "datatype": "http://www.w3.org/2001/XMLSchema#float"
+                                                                  }
+                                                                },
+                                                                "extensions": {
+                                                                  "http://shex.io/extensions/Map/#": {
+                                                                    "http://shex.io/extensions/Map/#BPDAM-sysVal": {
+                                                                      "value": "110",
+                                                                      "type": "http://www.w3.org/2001/XMLSchema#float"
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "type": "TripleConstraintSolutions",
+                                                            "predicate": "http://hl7.org/fhir-rdf/units",
+                                                            "valueExpr": {
+                                                              "type": "NodeConstraint",
+                                                              "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                                                            },
+                                                            "semActs": [
+                                                              {
+                                                                "type": "SemAct",
+                                                                "name": "http://shex.io/extensions/Map/#",
+                                                                "code": " bp:sysUnits "
+                                                              }
+                                                            ],
+                                                            "solutions": [
+                                                              {
+                                                                "type": "TestedTriple",
+                                                                "subject": "_:n3-4",
+                                                                "predicate": "http://hl7.org/fhir-rdf/units",
+                                                                "object": {
+                                                                  "value": "mmHg"
+                                                                },
+                                                                "referenced": {
+                                                                  "type": "NodeConstraintTest",
+                                                                  "node": {
+                                                                    "value": "mmHg"
+                                                                  },
+                                                                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/sysBP",
+                                                                  "shapeExpr": {
+                                                                    "type": "NodeConstraint",
+                                                                    "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                                                                  }
+                                                                },
+                                                                "extensions": {
+                                                                  "http://shex.io/extensions/Map/#": {
+                                                                    "http://shex.io/extensions/Map/#BPDAM-sysUnits": {
+                                                                      "value": "mmHg"
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            ]
+                                                          }
+                                                        ]
+                                                      }
+                                                    ]
+                                                  }
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://hl7.org/fhir-rdf/related",
+            "valueExpr": {
+              "type": "Shape",
+              "expression": {
+                "type": "EachOf",
+                "expressions": [
+                  {
+                    "type": "TripleConstraint",
+                    "predicate": "http://hl7.org/fhir-rdf/type",
+                    "valueExpr": {
+                      "type": "NodeConstraint",
+                      "values": [
+                        {
+                          "value": "has-component"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "TripleConstraint",
+                    "predicate": "http://hl7.org/fhir-rdf/target",
+                    "valueExpr": "file://localhost/shexTest/Map/BPDAMFHIR/diaBP"
+                  }
+                ]
+              }
+            },
+            "solutions": [
+              {
+                "type": "TestedTriple",
+                "subject": "tag:BPfhir123",
+                "predicate": "http://hl7.org/fhir-rdf/related",
+                "object": "_:n3-2",
+                "referenced": {
+                  "type": "ShapeTest",
+                  "node": "_:n3-2",
+                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/BPfhir",
+                  "solution": {
+                    "type": "EachOfSolutions",
+                    "solutions": [
+                      {
+                        "type": "EachOfSolution",
+                        "expressions": [
+                          {
+                            "type": "TripleConstraintSolutions",
+                            "predicate": "http://hl7.org/fhir-rdf/type",
+                            "valueExpr": {
+                              "type": "NodeConstraint",
+                              "values": [
+                                {
+                                  "value": "has-component"
+                                }
+                              ]
+                            },
+                            "solutions": [
+                              {
+                                "type": "TestedTriple",
+                                "subject": "_:n3-2",
+                                "predicate": "http://hl7.org/fhir-rdf/type",
+                                "object": {
+                                  "value": "has-component"
+                                },
+                                "referenced": {
+                                  "type": "NodeConstraintTest",
+                                  "node": {
+                                    "value": "has-component"
+                                  },
+                                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/BPfhir",
+                                  "shapeExpr": {
+                                    "type": "NodeConstraint",
+                                    "values": [
+                                      {
+                                        "value": "has-component"
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "type": "TripleConstraintSolutions",
+                            "predicate": "http://hl7.org/fhir-rdf/target",
+                            "valueExpr": "file://localhost/shexTest/Map/BPDAMFHIR/diaBP",
+                            "solutions": [
+                              {
+                                "type": "TestedTriple",
+                                "subject": "_:n3-2",
+                                "predicate": "http://hl7.org/fhir-rdf/target",
+                                "object": "_:diaBP123",
+                                "referenced": {
+                                  "type": "ShapeTest",
+                                  "node": "_:diaBP123",
+                                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/diaBP",
+                                  "solution": {
+                                    "type": "EachOfSolutions",
+                                    "solutions": [
+                                      {
+                                        "type": "EachOfSolution",
+                                        "expressions": [
+                                          {
+                                            "type": "TripleConstraintSolutions",
+                                            "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                                            "valueExpr": {
+                                              "type": "NodeConstraint",
+                                              "values": [
+                                                "http://hl7.org/fhir-rdf/Observation"
+                                              ]
+                                            },
+                                            "min": 0,
+                                            "max": 1,
+                                            "solutions": [
+                                              {
+                                                "type": "TestedTriple",
+                                                "subject": "_:diaBP123",
+                                                "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                                                "object": "http://hl7.org/fhir-rdf/Observation",
+                                                "referenced": {
+                                                  "type": "NodeConstraintTest",
+                                                  "node": "http://hl7.org/fhir-rdf/Observation",
+                                                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/diaBP",
+                                                  "shapeExpr": {
+                                                    "type": "NodeConstraint",
+                                                    "values": [
+                                                      "http://hl7.org/fhir-rdf/Observation"
+                                                    ]
+                                                  }
+                                                }
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "type": "TripleConstraintSolutions",
+                                            "predicate": "http://hl7.org/fhir-rdf/coding",
+                                            "valueExpr": {
+                                              "type": "Shape",
+                                              "expression": {
+                                                "type": "TripleConstraint",
+                                                "predicate": "http://hl7.org/fhir-rdf/code",
+                                                "valueExpr": {
+                                                  "type": "NodeConstraint",
+                                                  "values": [
+                                                    "http://snomed.info/sct/Diastolic_Blood_Pressure"
+                                                  ]
+                                                }
+                                              }
+                                            },
+                                            "solutions": [
+                                              {
+                                                "type": "TestedTriple",
+                                                "subject": "_:diaBP123",
+                                                "predicate": "http://hl7.org/fhir-rdf/coding",
+                                                "object": "_:n3-5",
+                                                "referenced": {
+                                                  "type": "ShapeTest",
+                                                  "node": "_:n3-5",
+                                                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/diaBP",
+                                                  "solution": {
+                                                    "type": "TripleConstraintSolutions",
+                                                    "predicate": "http://hl7.org/fhir-rdf/code",
+                                                    "valueExpr": {
+                                                      "type": "NodeConstraint",
+                                                      "values": [
+                                                        "http://snomed.info/sct/Diastolic_Blood_Pressure"
+                                                      ]
+                                                    },
+                                                    "solutions": [
+                                                      {
+                                                        "type": "TestedTriple",
+                                                        "subject": "_:n3-5",
+                                                        "predicate": "http://hl7.org/fhir-rdf/code",
+                                                        "object": "http://snomed.info/sct/Diastolic_Blood_Pressure",
+                                                        "referenced": {
+                                                          "type": "NodeConstraintTest",
+                                                          "node": "http://snomed.info/sct/Diastolic_Blood_Pressure",
+                                                          "shape": "file://localhost/shexTest/Map/BPDAMFHIR/diaBP",
+                                                          "shapeExpr": {
+                                                            "type": "NodeConstraint",
+                                                            "values": [
+                                                              "http://snomed.info/sct/Diastolic_Blood_Pressure"
+                                                            ]
+                                                          }
+                                                        }
+                                                      }
+                                                    ]
+                                                  }
+                                                }
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "type": "TripleConstraintSolutions",
+                                            "predicate": "http://hl7.org/fhir-rdf/valueQuantity",
+                                            "valueExpr": {
+                                              "type": "Shape",
+                                              "expression": {
+                                                "type": "EachOf",
+                                                "expressions": [
+                                                  {
+                                                    "type": "TripleConstraint",
+                                                    "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                                                    "valueExpr": {
+                                                      "type": "NodeConstraint",
+                                                      "values": [
+                                                        "http://hl7.org/fhir-rdf/Quantity"
+                                                      ]
+                                                    },
+                                                    "min": 0,
+                                                    "max": 1
+                                                  },
+                                                  {
+                                                    "type": "TripleConstraint",
+                                                    "predicate": "http://hl7.org/fhir-rdf/value",
+                                                    "valueExpr": {
+                                                      "type": "NodeConstraint",
+                                                      "datatype": "http://www.w3.org/2001/XMLSchema#float"
+                                                    },
+                                                    "semActs": [
+                                                      {
+                                                        "type": "SemAct",
+                                                        "name": "http://shex.io/extensions/Map/#",
+                                                        "code": " bp:diaVal "
+                                                      }
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "TripleConstraint",
+                                                    "predicate": "http://hl7.org/fhir-rdf/units",
+                                                    "valueExpr": {
+                                                      "type": "NodeConstraint",
+                                                      "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                                                    },
+                                                    "semActs": [
+                                                      {
+                                                        "type": "SemAct",
+                                                        "name": "http://shex.io/extensions/Map/#",
+                                                        "code": " bp:diaUnits "
+                                                      }
+                                                    ]
+                                                  }
+                                                ]
+                                              }
+                                            },
+                                            "solutions": [
+                                              {
+                                                "type": "TestedTriple",
+                                                "subject": "_:diaBP123",
+                                                "predicate": "http://hl7.org/fhir-rdf/valueQuantity",
+                                                "object": "_:n3-6",
+                                                "referenced": {
+                                                  "type": "ShapeTest",
+                                                  "node": "_:n3-6",
+                                                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/diaBP",
+                                                  "solution": {
+                                                    "type": "EachOfSolutions",
+                                                    "solutions": [
+                                                      {
+                                                        "type": "EachOfSolution",
+                                                        "expressions": [
+                                                          {
+                                                            "type": "TripleConstraintSolutions",
+                                                            "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                                                            "valueExpr": {
+                                                              "type": "NodeConstraint",
+                                                              "values": [
+                                                                "http://hl7.org/fhir-rdf/Quantity"
+                                                              ]
+                                                            },
+                                                            "min": 0,
+                                                            "max": 1,
+                                                            "solutions": [
+                                                              {
+                                                                "type": "TestedTriple",
+                                                                "subject": "_:n3-6",
+                                                                "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                                                                "object": "http://hl7.org/fhir-rdf/Quantity",
+                                                                "referenced": {
+                                                                  "type": "NodeConstraintTest",
+                                                                  "node": "http://hl7.org/fhir-rdf/Quantity",
+                                                                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/diaBP",
+                                                                  "shapeExpr": {
+                                                                    "type": "NodeConstraint",
+                                                                    "values": [
+                                                                      "http://hl7.org/fhir-rdf/Quantity"
+                                                                    ]
+                                                                  }
+                                                                }
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "type": "TripleConstraintSolutions",
+                                                            "predicate": "http://hl7.org/fhir-rdf/value",
+                                                            "valueExpr": {
+                                                              "type": "NodeConstraint",
+                                                              "datatype": "http://www.w3.org/2001/XMLSchema#float"
+                                                            },
+                                                            "semActs": [
+                                                              {
+                                                                "type": "SemAct",
+                                                                "name": "http://shex.io/extensions/Map/#",
+                                                                "code": " bp:diaVal "
+                                                              }
+                                                            ],
+                                                            "solutions": [
+                                                              {
+                                                                "type": "TestedTriple",
+                                                                "subject": "_:n3-6",
+                                                                "predicate": "http://hl7.org/fhir-rdf/value",
+                                                                "object": {
+                                                                  "value": "70",
+                                                                  "type": "http://www.w3.org/2001/XMLSchema#float"
+                                                                },
+                                                                "referenced": {
+                                                                  "type": "NodeConstraintTest",
+                                                                  "node": {
+                                                                    "value": "70",
+                                                                    "type": "http://www.w3.org/2001/XMLSchema#float"
+                                                                  },
+                                                                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/diaBP",
+                                                                  "shapeExpr": {
+                                                                    "type": "NodeConstraint",
+                                                                    "datatype": "http://www.w3.org/2001/XMLSchema#float"
+                                                                  }
+                                                                },
+                                                                "extensions": {
+                                                                  "http://shex.io/extensions/Map/#": {
+                                                                    "http://shex.io/extensions/Map/#BPDAM-diaVal": {
+                                                                      "value": "70",
+                                                                      "type": "http://www.w3.org/2001/XMLSchema#float"
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "type": "TripleConstraintSolutions",
+                                                            "predicate": "http://hl7.org/fhir-rdf/units",
+                                                            "valueExpr": {
+                                                              "type": "NodeConstraint",
+                                                              "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                                                            },
+                                                            "semActs": [
+                                                              {
+                                                                "type": "SemAct",
+                                                                "name": "http://shex.io/extensions/Map/#",
+                                                                "code": " bp:diaUnits "
+                                                              }
+                                                            ],
+                                                            "solutions": [
+                                                              {
+                                                                "type": "TestedTriple",
+                                                                "subject": "_:n3-6",
+                                                                "predicate": "http://hl7.org/fhir-rdf/units",
+                                                                "object": {
+                                                                  "value": "mmHg"
+                                                                },
+                                                                "referenced": {
+                                                                  "type": "NodeConstraintTest",
+                                                                  "node": {
+                                                                    "value": "mmHg"
+                                                                  },
+                                                                  "shape": "file://localhost/shexTest/Map/BPDAMFHIR/diaBP",
+                                                                  "shapeExpr": {
+                                                                    "type": "NodeConstraint",
+                                                                    "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                                                                  }
+                                                                },
+                                                                "extensions": {
+                                                                  "http://shex.io/extensions/Map/#": {
+                                                                    "http://shex.io/extensions/Map/#BPDAM-diaUnits": {
+                                                                      "value": "mmHg"
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            ]
+                                                          }
+                                                        ]
+                                                      }
+                                                    ]
+                                                  }
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

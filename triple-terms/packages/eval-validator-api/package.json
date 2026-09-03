@@ -1,0 +1,47 @@
+{
+  "name": "@shexjs/eval-validator-api",
+  "version": "1.0.0-alpha.30",
+  "files": [
+    "lib",
+    "src"
+  ],
+  "description": "Shape Expressions triple expression evaluator api - defines how @shexjs/validator invokes regex evaluators.",
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
+  "keywords": [
+    "shex",
+    "shape expressions",
+    "rdf",
+    "query",
+    "parser"
+  ],
+  "license": "MIT",
+  "main": "./lib/validator-api.js",
+  "types": "./src/validator-api.ts",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@shexjs/term": "^1.0.0-alpha.28"
+  },
+  "scripts": {
+    "test": "cd ../.. && mocha packages/eval-validator-api/test/*test.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shexjs/shex.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shexSpec/grammar/issues"
+  },
+  "devDependencies": {
+    "@rdfjs/types": "^1.1.0",
+    "@shexjs/util": "^1.0.0-alpha.30"
+  }
+}

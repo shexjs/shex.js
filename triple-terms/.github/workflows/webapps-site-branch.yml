@@ -1,0 +1,84 @@
+name: webapps-site-branch
+
+# Publish an experiment branch's WebApp under a subdirectory of the site.
+# Which branches publish, and where, is not written here: the workflow looks
+# the pushed branch up in index.html's experiment-sites data block -- the
+# same block that renders the landing page's Experiments card and tells the
+# root publish (webapps-site.yml) which subdirectories to carry across.  A
+# push to a branch with no entry builds nothing and exits quietly, so this
+# trigger can stay broad.
+#
+# The publish grafts the build onto the *current* gh-pages tree as <dir>/,
+# so the root site (built from main) is untouched.  A concurrent publish
+# from the other workflow loses the push race and this run fails on the
+# non-fast-forward push; re-run it.
+
+on:
+  push:
+    branches-ignore: [main, gh-pages]
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push to the gh-pages branch
+    steps:
+      - uses: actions/checkout@v4
+      - name: is this branch a published experiment?
+        id: site
+        run: |
+          DIR=$(node -e '
+            const m = require("fs").readFileSync("index.html", "utf8")
+              .match(/id="experiment-sites">\s*([\s\S]*?)<\/script>/);
+            const e = m && JSON.parse(m[1]).find(e => e.branch === process.argv[1]);
+            process.stdout.write(e ? e.dir : "");' "$GITHUB_REF_NAME")
+          echo "dir=$DIR" >> "$GITHUB_OUTPUT"
+          [ -n "$DIR" ] && echo "publishing under /$DIR/" || echo "$GITHUB_REF_NAME is not in experiment-sites; nothing to publish"
+      - name: clone shexTest alongside the checkout, on the ref the shex-test dependency names
+        if: steps.site.outputs.dir != ''
+        run: |
+          REF=$(sed -n 's|.*"shex-test": "github:shexSpec/shexTest#\([^"]*\)".*|\1|p' package.json)
+          git clone --depth=1 --branch="${REF:-main}" https://github.com/shexSpec/shexTest.git ../shexTest
+      - uses: actions/setup-node@v4
+        if: steps.site.outputs.dir != ''
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+        if: steps.site.outputs.dir != ''
+      - run: npm run webpacks-all
+        if: steps.site.outputs.dir != ''
+      - name: publish under /${{ steps.site.outputs.dir }} on the gh-pages branch
+        if: steps.site.outputs.dir != ''
+        env:
+          DIR: ${{ steps.site.outputs.dir }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          sed -i '/<!-- STRIP-FOR-PUBLICATION -->/,/<!-- \/STRIP-FOR-PUBLICATION -->/d' index.html
+          if grep -q 'STRIP-FOR-PUBLICATION' index.html; then
+            echo 'index.html still mentions STRIP-FOR-PUBLICATION after stripping (unbalanced markers?)' >&2
+            exit 1
+          fi
+          # the branch's own tree, bundles included, as a subtree
+          git add -A .
+          git add -f packages/shex-webapp/doc/webpacks packages/extension-map/doc/webpacks \
+            packages/extension-reduce/doc/webpacks packages/extension-wasi/doc/webpacks
+          SUBTREE=$(git write-tree)
+          # graft it as <dir>/ onto the current site tree
+          git fetch origin gh-pages || true
+          PARENT=$(git rev-parse --verify --quiet origin/gh-pages || true)
+          export GIT_INDEX_FILE=$(mktemp)
+          if [ -n "$PARENT" ]; then
+            git read-tree "$PARENT"
+            git rm -r --cached --ignore-unmatch -q "$DIR"
+          else
+            git read-tree --empty
+            NOJEKYLL=$(printf '' | git hash-object -w --stdin)
+            git update-index --add --cacheinfo "100644,$NOJEKYLL,.nojekyll"
+          fi
+          git read-tree --prefix="$DIR/" "$SUBTREE"
+          TREE=$(git write-tree)
+          COMMIT=$(git commit-tree $TREE ${PARENT:+-p $PARENT} -m "webapps site /$DIR built from $GITHUB_SHA")
+          git push origin $COMMIT:refs/heads/gh-pages

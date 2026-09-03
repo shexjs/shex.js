@@ -1,0 +1,48 @@
+{
+  "name": "@shexjs/neighborhood-wikibase",
+  "version": "1.0.0-alpha.30",
+  "files": [
+    "lib",
+    "src"
+  ],
+  "description": "Implementation of @shexjs/neighborhood-api which synthesizes a Wikibase's RDF from entity JSON pages",
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
+  "keywords": [
+    "shex",
+    "shape expressions",
+    "rdf",
+    "wikidata",
+    "wikibase"
+  ],
+  "license": "MIT",
+  "main": "./lib/neighborhood-wikibase.js",
+  "types": "./src/neighborhood-wikibase.ts",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@shexjs/neighborhood-api": "^1.0.0-alpha.30",
+    "n3": "^1.20.4"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "cd ../.. && mocha packages/neighborhood-wikibase/test/*test.js -R dot"
+  },
+  "devDependencies": {
+    "@rdfjs/types": "^1.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shexjs/shex.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shexSpec/grammar/issues"
+  }
+}

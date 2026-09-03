@@ -1,0 +1,62 @@
+{
+  "type": "ShapeTest",
+  "node": "http://a.example/inst#each-2",
+  "shape": "http://a.example/sh#Child",
+  "solution": {
+    "type": "ExtendedResults",
+    "extensions": {
+      "type": "ExtensionResults",
+      "solutions": [
+        {
+          "type": "ShapeOrResults",
+          "solution": {
+            "type": "ShapeTest",
+            "node": "http://a.example/inst#each-2",
+            "shape": "http://a.example/sh#Base",
+            "solution": {
+              "type": "EachOfSolutions",
+              "solutions": [
+                {
+                  "type": "EachOfSolution",
+                  "expressions": [
+                    {
+                      "type": "TripleConstraintSolutions",
+                      "predicate": "http://a.example/ns#p",
+                      "solutions": [
+                        {
+                          "type": "TestedTriple",
+                          "subject": "http://a.example/inst#each-2",
+                          "predicate": "http://a.example/ns#p",
+                          "object": {
+                            "value": "0",
+                            "type": "http://www.w3.org/2001/XMLSchema#integer"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "TripleConstraintSolutions",
+                      "predicate": "http://a.example/ns#r",
+                      "solutions": [
+                        {
+                          "type": "TestedTriple",
+                          "subject": "http://a.example/inst#each-2",
+                          "predicate": "http://a.example/ns#r",
+                          "object": {
+                            "value": "2",
+                            "type": "http://www.w3.org/2001/XMLSchema#integer"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "resultName": "<http://a.example/inst#each-2>@<http://a.example/sh#Base>"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,140 @@
+# The DECEPTICON: a graph of decoys loaded alongside every test's data.
+#
+# Nothing in here is reachable from any test focus node, so it must never change
+# a validation result.  Everything in here is *shaped* like something that is:
+# same predicates, same literals, same bnode topologies as the shexTest
+# validation data.  A query that pins its blank node down by structure alone --
+# "the bnode with ex:p2 'X'" -- instead of by an anchored path from a ground
+# term will collect these too, and blow its cardinality constraints.
+#
+# Rules for anything added here:
+#   * never mention an http://a.example/ IRI as a subject or object.  Predicates
+#     are fine (that's the point); subjects and objects would add real arcs to
+#     real test nodes and change what the suite is supposed to prove.
+#   * do reuse the literals the test data uses.  Value-based discrimination is
+#     exactly what we want to see fail.
+#   * blank node labels are local to this file; N3 gives each parse its own
+#     prefix, so `_:n2` here can't merge with `_:n2` in a test's data.
+#
+# See also decepticon.js, which mirrors every shexTest validation graph into
+# this namespace so that predicate and topology coverage tracks the suite.
+
+PREFIX ex:  <http://a.example/>
+PREFIX dec: <http://decepticon.example/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX foaf: <http://xmlns.com/foaf/>
+
+## ── leaf blank nodes ────────────────────────────────────────────────────────
+## In1_Ip1_Bn2.Bn2_Ip2_LX.ttl and friends, rehomed.
+
+dec:n1 ex:p1 [ ex:p2 "X" ] .
+dec:s1 ex:p1 [] .                       # Is1_Ip1_Bab.ttl: a bnode with nothing on it
+dec:s2 ex:p1 dec:o1, [] .               # Is1_Ip1_Io1,Bo2.ttl: one IRI, one bnode
+
+## An unanchored bnode subject.  Any query that starts from a description
+## instead of from a ground term finds these first.
+[] ex:p1 [ ex:p2 "X" ] .
+[] ex:p1 dec:o1 .                       # Babcd_Ip1_Io1.ttl
+[] ex:p2 "ab" ; ex:p3 "ab" .
+
+## ── cycles ──────────────────────────────────────────────────────────────────
+
+dec:loop ex:p1 _:selfLoop .
+_:selfLoop ex:p1 _:selfLoop .           # In1_Ip1_Bn2.Bn2_Ip1_Bn2.ttl
+
+dec:back ex:p1 _:backRef .
+_:backRef ex:p1 dec:back .              # In1a_Ip1_Bn2.Bn2_Ip1_In1a.ttl
+
+dec:twoCycle ex:p1 _:cyc1 .
+_:cyc1 ex:p1 _:cyc2 .
+_:cyc2 ex:p1 _:cyc1 .                   # a cycle that doesn't include the anchor
+
+## A diamond: one bnode reached by two different arcs.  A walker that names
+## nodes by the path it took will think these are two nodes.
+dec:diamond ex:p1 _:dia ; ex:p2 _:dia .
+_:dia ex:p3 "ab" .
+
+## ── manual lists ────────────────────────────────────────────────────────────
+## Chains of bnodes wearing identical predicates: the case where "which bnode
+## did I mean" has no answer at all without the path.
+
+dec:list ex:p1 _:dl0 .
+_:dl0 rdf:first dec:v1 ; rdf:rest _:dl1 .
+_:dl1 rdf:first dec:v2 ; rdf:rest _:dl2 .
+_:dl2 rdf:first dec:v3 ; rdf:rest rdf:nil .
+
+dec:circularList ex:p1 _:cl0 .
+_:cl0 rdf:first dec:v1 ; rdf:rest _:cl1 .
+_:cl1 rdf:first dec:v2 ; rdf:rest _:cl2 .
+_:cl2 rdf:first dec:v3 ; rdf:rest _:cl0 .
+
+dec:twoFirsts ex:p1 _:tf0 .
+_:tf0 rdf:first dec:v1, dec:v2 ; rdf:rest _:tf2 .
+_:tf2 rdf:first dec:v3 ; rdf:rest rdf:nil .
+
+## A list whose cells are indistinguishable from each other: every cell carries
+## the same value.  Only position tells them apart, and position is only
+## expressible as a path.
+dec:sameList ex:p1 _:sl0 .
+_:sl0 rdf:first dec:v1 ; rdf:rest _:sl1 .
+_:sl1 rdf:first dec:v1 ; rdf:rest _:sl2 .
+_:sl2 rdf:first dec:v1 ; rdf:rest _:sl3 .
+_:sl3 rdf:first dec:v1 ; rdf:rest rdf:nil .
+
+## ── sibling groups ──────────────────────────────────────────────────────────
+
+## Interchangeable: no anchored pattern separates these, and none needs to.
+dec:twins ex:p1 [ ex:p2 "A" ], [ ex:p2 "A" ] .
+
+## Separable one step down.
+dec:fraternal ex:p1 [ ex:p2 "A" ], [ ex:p2 "B" ] .
+
+## Separable only two steps down...
+dec:deep2 ex:p1 [ ex:p2 [ ex:p3 "A" ] ], [ ex:p2 [ ex:p3 "B" ] ] .
+
+## ...only three...
+dec:deep3 ex:p1 [ ex:p2 [ ex:p3 [ ex:p4 "A" ] ] ],
+               [ ex:p2 [ ex:p3 [ ex:p4 "B" ] ] ] .
+
+## ...and only six, which is past the default description depth: a walker has
+## to notice it ran out of room and look further rather than guess.
+dec:deep6 ex:p1 [ ex:p2 [ ex:p2 [ ex:p2 [ ex:p2 [ ex:p2 [ ex:p2 "A" ] ] ] ] ] ],
+               [ ex:p2 [ ex:p2 [ ex:p2 [ ex:p2 [ ex:p2 [ ex:p2 "B" ] ] ] ] ] ] .
+
+## Siblings distinguished only by an arc that isn't there.
+dec:absence ex:p1 [ ex:p2 "A" ; ex:p3 "ab" ], [ ex:p2 "A" ] .
+
+## Siblings distinguished only by how many of something they have.
+dec:counting ex:p1 [ ex:p2 "A", "B" ], [ ex:p2 "A" ] .
+
+## Siblings distinguished only by the number of blank children.
+dec:blankCount ex:p1 [ ex:p2 [], [] ], [ ex:p2 [] ] .
+
+## ── shapes lifted from the wordier corners of the suite ─────────────────────
+
+## FocusIRI2EachBnodeNested3EachIRIRef.ttl
+dec:nested ex:p1 "ab"^^ex:dt1 ; ex:p2 _:nested2 .
+_:nested2 ex:p3 "ab" ; ex:p4 dec:nested ; ex:p5 5 .
+
+## A bnode carrying one of everything, so that an over-eager "slurp all arcs"
+## has something bulky to trip over.
+dec:everything ex:p1 _:kitchenSink .
+_:kitchenSink
+  ex:a "a" ; ex:b "b" ; ex:c "c" ; ex:d "d" ; ex:e "e" ;
+  ex:p "p" ; ex:p0 "p0" ; ex:p1- "p1-" ; ex:q "q" ; ex:r "r" ;
+  ex:p2 "X", "Y", "not allowed" ;
+  ex:p3 "ab", "ab"^^ex:dt1, "5"^^xsd:integer, "1"^^xsd:integer, "2"^^xsd:integer ;
+  ex:p4 "128"^^xsd:byte, "5"^^xsd:byte, "64"^^xsd:byte ;
+  ex:p5 "0E0"^^xsd:double, "4.5e0"^^xsd:double, "01.2345"^^xsd:decimal ;
+  rdf:type dec:Type ;
+  foaf:name "Bob" ; foaf:givenName "Bob" ; foaf:familyName "Smith" ;
+  foaf:mbox <mailto:bob@decepticon.example> ; foaf:phone <tel:+1-555-0100> .
+
+## Two nodes whose *outgoing* arcs are identical and whose incoming arcs are
+## not: the case where an out-tree description is not the whole story.
+dec:inArcsA ex:p1 _:inTwinA .
+dec:inArcsB ex:p1 _:inTwinB .
+dec:extra   ex:p2 _:inTwinB .
+_:inTwinA ex:p3 "ab" .
+_:inTwinB ex:p3 "ab" .

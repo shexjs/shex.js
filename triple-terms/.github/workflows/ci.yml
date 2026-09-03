@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags-ignore: ["v*"] # like the retired .travis.yml's `if: tag IS blank`
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CLI_TIMEOUT: 10000
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22, 24, 26]
+    steps:
+      - uses: actions/checkout@v4
+      - name: clone shexTest alongside the checkout, on the ref the shex-test dependency names
+        # package.json is the single switch (guarded on main by check-branch-deps)
+        run: |
+          REF=$(sed -n 's|.*"shex-test": "github:shexSpec/shexTest#\([^"]*\)".*|\1|p' package.json)
+          git clone --depth=1 --branch="${REF:-main}" https://github.com/shexSpec/shexTest.git ../shexTest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - run: npm ci
+      # browser tests load the webapp pages, whose webpack bundles are
+      # gitignored (see webapps-site.yml) and so must be built first
+      - run: npm run webpacks-all
+      - run: npm run test-all
+        if: matrix.node-version != 20
+      # jsdom's engines outpace the packages' own (jsdom 30 wants Node ≥ 22
+      # while the libraries claim ≥ 18): keep the older-node lane covering
+      # everything but the jsdom-hosted browser tests
+      - run: npm run test-no-browser
+        if: matrix.node-version == 20
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run check-branch-deps
+
+  webpack:
+    # the doc/webpacks bundles are gitignored and built on demand; make sure
+    # every package that has one still builds it
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run webpack
+
+  coverage:
+    runs-on: ubuntu-latest
+    continue-on-error: true # coverage reporting must not gate merges
+    steps:
+      - uses: actions/checkout@v4
+      - name: clone shexTest alongside the checkout, on the ref the shex-test dependency names
+        # package.json is the single switch (guarded on main by check-branch-deps)
+        run: |
+          REF=$(sed -n 's|.*"shex-test": "github:shexSpec/shexTest#\([^"]*\)".*|\1|p' package.json)
+          git clone --depth=1 --branch="${REF:-main}" https://github.com/shexSpec/shexTest.git ../shexTest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # coverage runs test-all, whose browser tests need the webpack bundles
+      - run: npm run webpacks-all
+      - run: npm run coverage
+      - uses: coverallsapp/github-action@v2
+        with:
+          file: coverage/lcov.info

@@ -1,0 +1,13 @@
+# (1 + 2) / 0
+#
+# A graph the grammar is perfectly happy with -- :Div is an operator and 0
+# is an integer -- and the compiler is not.  What the actions say about it
+# is in calc-actions.ttl.
+PREFIX : <http://a.example/calc#>
+BASE <http://a.example/expr3>
+
+<#e1> a :Div ; :left <#e2> ; :right <#e3> .
+<#e2> a :Add ; :left <#e4> ; :right <#e5> .
+<#e3> a :Num ; :value 0 .
+<#e4> a :Num ; :value 1 .
+<#e5> a :Num ; :value 2 .

@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      # OIDC trusted publishing requires npm >= 11.5.1
+      - run: npm install -g npm@latest
+
+      - run: npm ci --allow-git=all
+
+      # Explicit list: the published packages of this monorepo. Workspaces not
+      # listed here (e.g. extension-reduce, extension-wasi, editor-services,
+      # neighborhood-wikibase, semact-overlay) are not released.
+      - run: >-
+          npm publish --tag latest
+          -w @shexjs/cli
+          -w @shexjs/eval-simple-1err
+          -w @shexjs/eval-threaded-nerr
+          -w @shexjs/eval-validator-api
+          -w @shexjs/extension-eval
+          -w @shexjs/extension-map
+          -w @shexjs/extension-test
+          -w @shexjs/loader
+          -w @shexjs/neighborhood-api
+          -w @shexjs/neighborhood-rdfjs
+          -w @shexjs/neighborhood-sparql
+          -w @shexjs/node
+          -w @shexjs/parser
+          -w @shexjs/shape-path-query
+          -w @shexjs/term
+          -w @shexjs/util
+          -w @shexjs/validator
+          -w @shexjs/visitor
+          -w @shexjs/webapp
+          -w @shexjs/writer
+          -w shape-map
+          -w shex
