@@ -1,14 +1,15 @@
-# ShEx for RDF 1.2 triple terms — proposed syntax
+# ShEx for RDF 1.2 triple terms — a strawman, prototyped
 
-The companion question to [datasets](datasets.md) (its §6 has the modeling
-discussion): what should ShExC *say* about triple terms? This page is the
-concrete answer — grammar, AST, semantics, worked examples. Proposed, not
-yet prototyped; it is designed to drop into the same validator the datasets
-branch extends.
+The companion to [datasets](datasets.md) (its §6 has the modeling
+discussion): what ShExC *says* about triple terms. This branch implements
+it — grammar, term layer, validator, writer, worker marshalling — with a
+use-case manifest the suite machine-checks
+([TripleTerms-test.js](../packages/shex-validator/test/TripleTerms-test.js),
+[triple-terms.shex](../packages/shex-webapp/examples/triple-terms.shex)).
 
 ## 1. Two constructs, no `REIFIED`
 
-**A node kind.** RDF 1.2 adds triple terms as a fourth kind of term, so
+**A node kind.** RDF 1.2 adds triple terms as a new kind of term, so
 ShExC's node kinds grow one:
 
 ```
@@ -16,164 +17,133 @@ nonLiteralKind ::= "IRI" | "BNODE" | "NONLITERAL" | "TRIPLE"
 ```
 
 `rdf:reifies TRIPLE` says "reifies *some* triple term" the way `foaf:knows
-IRI` says "knows some IRI" — no structure, just kind.
+IRI` says "knows some IRI". `NONLITERAL` keeps meaning iri-or-bnode, as it
+always has; every pre-1.2 kind refuses triple terms.
 
-**A positional atom.** Where a shape expression can stand, a triple-term
-pattern can stand, written the way Turtle writes the term:
+**A positional atom**, spelled the way RDF 1.2's own Turtle spells the
+term — `<<( … )>>`, parens included:
 
 ```
 shapeAtom      ::= … | tripleTermAtom
-tripleTermAtom ::= "<<" ttComponent (predicate | ".") ttComponent ">>"
+tripleTermAtom ::= "<<(" ttComponent (predicate | ".") ttComponent ")>>"
 ttComponent    ::= inlineShapeExpression
 ```
 
-The three positions constrain the term's subject, predicate and object.
-`.` means unconstrained, as everywhere in ShExC, so `<< . . . >>` ≡
-`TRIPLE`. Components are full shape expressions, so the atom nests through
-its object position exactly as RDF 1.2 nests triple terms (a term's subject
-cannot be a triple term; its object can).
+The three positions constrain the term's subject, predicate and object;
+`.` means unconstrained, so `<<( . . . )>>` ≡ `TRIPLE`. Components are
+full shape expressions, and the atom nests through its object position
+exactly as RDF 1.2 nests triple terms.
 
-Why this replaces `REIFIED`: reification in RDF 1.2 is not a *mode* a shape
-is in but an ordinary arc — `rdf:reifies` — whose value is a triple term.
-Giving the *value* a syntax (rather than the shape a modifier) keeps every
-existing mechanism working around it: cardinality (`rdf:reifies << … >> +`),
-`EXTRA rdf:reifies`, OR/AND/NOT over the atom, and a declaration can name
-one (`<#KnowingTT> << @<#Person> foaf:knows @<#Person> >>`) to be
-referenced like any other shape expression.
+Why this replaces `REIFIED`: reification is not a *mode* a shape is in but
+an ordinary arc — `rdf:reifies` — whose value is a triple term. Giving the
+value a syntax keeps everything existing composable around it: cardinality,
+`EXTRA rdf:reifies`, junctions, named declarations
+(`<#KnowingTT> <<( @<#Person> foaf:knows @<#Person> )>>`).
 
-Lexical note: `<<`/`>>` are already free in ShExC (proved for the templates
-strawman, whose argument lists only ever follow a shape label or reference;
-this atom stands where a value expression stands, so the two coexist), and
-`TRIPLE` joins `GRAPH`/`TERM`/`FRAGMENT` as a keyword that was never a
-legal bare word.
+## 2. The `<<` question (asked directly)
 
-## 2. Semantics
+Does a triple-term atom conflict with the templates branch's `<<…>>`
+argument lists? Three answers, one per level:
 
-A term `T` satisfies `<< Se pe Oe >>` iff
+* **Parser: no.** Even a bare-`<<` atom would be LALR-unambiguous beside
+  templates — an argument list only ever follows a shape label or
+  reference, an atom stands where a value expression starts, and
+  `@<#L> <<…>>` can only be an application (the only thing ShExC lets
+  follow a reference is a non-literal node constraint). The two grammars
+  already coexist mechanically.
+* **Reader: yes**, and that collision is worth respecting — which is why
+  this branch spells the atom `<<( … )>>`: it is RDF 1.2 Turtle's own
+  triple-term spelling, so the schema pattern looks like the data it
+  matches, and it is visually disjoint from template lists without
+  spending a keyword.
+* **The keyword-plus-braces alternative is not free.** `TRIPLE { … }`
+  already parses today: a node kind followed by a shape is their
+  conjunction (`IRI { … }` is a legal schema), so braces would need a new
+  bracket pair anyway — at which point `<<( )>>` is the bracket pair RDF
+  1.2 already assigned.
 
-1. `T` is a triple term;
-2. `pe` is `.` or `T`'s predicate is `pe`;
-3. `T`'s subject satisfies `Se` and `T`'s object satisfies `Oe`.
+On the attractive-nuisance point: the reifier model is on your side. The
+mission-critical data stays in ordinary asserted triples (people, names,
+disputes — all plain nodes and arcs here); the quoted term appears in
+exactly one place, as `rdf:reifies`' value, pinning *which* statement an
+annotation is about. A schema can even enforce that discipline:
+`rdf:reifies` constraints are where triple terms may appear, and nothing
+else in the shape touches them.
 
-Component checks are ordinary shape-expression checks of the component
-*term* against the dataset's **asserted** data, under the ambient
-[graph view](datasets.md). That one sentence settles the quoted/asserted
-question: quotation asserts nothing and the validator infers nothing from
-being mentioned, but the terms inside a triple term are the same terms as
-everywhere else, so `@<#Person>` on a component walks that term's asserted
-neighborhood — the connection exists exactly where a schema author writes
-it. `<< IRI foaf:knows IRI >>` is the purely syntactic reading; both
-spellings are one edit apart, which is where that decision belongs.
+## 3. Semantics
 
-## 3. Representations
+A term `T` satisfies `<<( Se pe Oe )>>` iff `T` is a triple term, `pe` is
+`.` or `T`'s predicate is `pe`, and `T`'s subject and object satisfy `Se`
+and `Oe`. Component checks are ordinary shape checks of the component
+*term* against **asserted** data, under the ambient
+[graph view](datasets.md). Quotation asserts nothing and the validator
+infers nothing from being mentioned; but the terms inside a triple term are
+the same terms as everywhere else, so `@<#Person>` on a component walks
+that term's asserted neighborhood — the connection exists exactly where a
+schema author writes it, and `<<( IRI foaf:knows IRI )>>` is the purely
+syntactic reading.
 
-ShExJ, additive:
+A triple term is a term, so it can be a shape's *focus*: its neighborhood
+is what is said about it, and its reifiers are one `^rdf:reifies` away —
+see use case 3 below.
 
-``` json
-NodeConstraint    { … nodeKind:("iri"|"bnode"|"nonliteral"|"literal"|"tripleterm") ? … }
-TripleTermConstraint {
-  subject:shapeExprOrRef ?     # absent = unconstrained
-  predicate:IRIREF ?
-  object:shapeExprOrRef ?
-}
-shapeExpr = … | TripleTermConstraint ;
+## 4. Use cases explored (asked directly)
+
+The manifest group **triple terms** (six entries, pass and fail) walks
+these; findings after each.
+
+1. **Provenance** — `<#Assertion> { rdf:reifies <<( @<#Person> foaf:knows
+   @<#Person> )>> ; ex:assertedBy @<#Person> }`. The model fits exactly;
+   nothing strains.
+2. **Dispute / second-order talk** — `<#Dispute> { ex:disputes
+   @<#Assertion> ; … }`. The reifier model *flattens* what nested
+   quotation would tangle: no second-order construct needed, because the
+   assertion is a node. Finding: most "nested triple term" examples in the
+   wild are this case wearing the wrong clothes.
+3. **Property-graph edge properties** — `rdf:reifies ( <<( IRI foaf:knows
+   IRI )>> AND { ^rdf:reifies { ex:weight xsd:decimal } } )`. Finding, and
+   the pleasant surprise of the exploration: *the term-as-focus works*.
+   A triple term has a neighborhood, so LPG-style "the edge and its
+   properties" validates with no new machinery — the conjunction reads
+   "shaped like a knowing, and every reifier of it carries a weight".
+4. **Mention without description** — `<#Mention> { rdf:reifies <<( IRI
+   foaf:knows IRI )>> }` accepts quoted strangers; the same data fails
+   `<#Assertion>`. The opacity dial demonstrated in two entries.
+5. **Meta-annotation of an unasserted statement** — the nested atom
+   (`rdf:reifies <<( . ex:assertedBy <<( . foaf:knows . )>> )>>`) covers
+   the genuinely-nested case; tested, works, rarely needed given (2).
+
+**The one that suggests a different construct — underscored.** "Every
+*asserted* `foaf:knows` arc must be annotated" is not expressible with any
+node-focused shape: nothing in RDF connects an asserted triple to the term
+quoting it, so no walk gets from the arc to its reifiers. That is a gap in
+*shape-side* reach, not in the term model — the fix that suggests itself is
+an **arc-level construct** on the triple constraint (in the spirit of the
+datasets branch's `GRAPH`), e.g.
+
+```
+foaf:knows @<#Person> REIFIER { ex:weight xsd:decimal }
 ```
 
-ShExR: `sx:TripleTermConstraint` with `sx:ttSubject`, `sx:ttPredicate`,
-`sx:ttObject`. Data side: RDF/JS already models quoted triples (termType
-`"Quad"` in term position), N3.js parses `<<( … )>>` and lowers RDF 1.2's
-reifying syntaxes to `rdf:reifies` — so, as with datasets, the data layer
-is mostly already there.
+"for each matched arc, some reifier of its quotation matches the shape."
+Left as the headline open question rather than implemented; it is the one
+place your original `REIFIED` instinct — a modifier, not a value — was
+pointing at something the value atom cannot do.
 
-## 4. The worked example
+## 5. Representations and status
 
-The scenario (from the datasets discussion): Alice asserts that Tim knows
-Henry; Bob disputes Alice's assertion. In RDF 1.2 the annotations hang on
-*reifiers* — ordinary nodes — which is what flattens the nesting:
+ShExJ (additive): `nodeKind` gains `"tripleterm"`;
+`TripleTermConstraint {subject?, predicate?, object?}` joins `shapeExpr`;
+result solutions carry `TripleTermTest`, and a triple term serializes into
+results as `{type: "TripleTerm", subject, predicate, object}`.
 
-``` turtle
-PREFIX foaf: <http://xmlns.com/foaf/0.1/>
-PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX ex:   <http://example.org/>
-PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
-
-<tim>   a foaf:Person ; foaf:name "Tim Berners-Lee" .
-<henry> a foaf:Person ; foaf:name "Henry Story" .
-<alice> a foaf:Person ; foaf:name "Alice" .
-<bob>   a foaf:Person ; foaf:name "Bob" .
-
-# Alice's assertion: a reifier of the (unasserted) knowing
-_:a rdf:reifies <<( <tim> foaf:knows <henry> )>> ;
-    ex:assertedBy <alice> .
-
-# Bob's dispute targets the assertion -- an ordinary node
-_:d ex:disputes _:a ;
-    ex:isDisputedBy <bob> ;
-    ex:disputeReason "They have not been in contact for several years" ;
-    ex:disputedOn "2024-01-16"^^xsd:date ;
-    ex:confidence 0.30 .
-```
-
-``` shex
-PREFIX foaf: <http://xmlns.com/foaf/0.1/>
-PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX ex:   <http://example.org/>
-PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
-
-# the triple term, named and referenced like any shape expression
-<#KnowingTT> << @<#Person> foaf:knows @<#Person> >>
-
-<#Person> {
-  a [foaf:Person] ;
-  foaf:name xsd:string ;
-  foaf:knows @<#Person> *
-}
-
-<#Assertion> {
-  rdf:reifies @<#KnowingTT> ;
-  ex:assertedBy @<#Person>
-}
-
-<#Dispute> {
-  ex:disputes @<#Assertion> ;      # a reference, not a quotation
-  ex:isDisputedBy @<#Person> ;
-  ex:disputeReason xsd:string ;
-  ex:disputedOn xsd:date ;
-  ex:confidence xsd:decimal
-}
-```
-
-No second-order reification anywhere: `<#Dispute>` reaches the assertion by
-reference, because the assertion *is a node*. The nested atom exists for
-the case that genuinely needs it — disputing a statement nobody asserted:
-
-``` shex
-# Bob disputes the (unasserted) claim that the assertion was Alice's
-<#MetaDispute> {
-  rdf:reifies << @<#Assertion> ex:assertedBy @<#Person> >> ;
-  ex:isDisputedBy @<#Person>
-}
-```
-
-— one level of nesting per `rdf:reifies`, mirroring the data, never a
-grammar special case.
-
-And the kind alone, structure unconstrained:
-
-``` shex
-<#AnyAnnotation> { rdf:reifies TRIPLE ; ex:assertedBy IRI }
-```
-
-## 5. Open questions
-
-1. **Value sets of triple terms**: `[ <<( <tim> foaf:knows <henry> )>> ]` —
-   ground triple terms as valueSetValues. Natural, deferred.
-2. **Predicate position**: a single IRI or `.` today; a value set of
-   predicates (`<< . [foaf:knows foaf:met] . >>`) reads well and costs a
-   grammar alternative.
-3. **Classic quoted-subject data** (pre-1.2 RDF-star): the atom validates
-   the *term*; data using quoted triples directly in subject position
-   arrives from N3 as termType-Quad focus nodes and needs a decision about
-   whether a bare quoted triple can be a focus at all.
-4. **Facets**: none apply to triple terms; saying so in the spec text is
-   the whole job.
+| piece | state |
+|---|---|
+| parse / write / visit `<<( )>>` and `TRIPLE` | done, round-trips |
+| term layer (Turtle, LD, both ways) + SPARQL ordering of Quads | done |
+| validator: atom, kind, term-as-focus, nesting | done — [TripleTerms-test.js](../packages/shex-validator/test/TripleTerms-test.js) |
+| data mouths: `application/trig*` (classic star syntax; N3 has no `<<( )>>`/annotation syntax yet) | done |
+| worker marshalling of Quad terms | done |
+| examples | six manifest entries, machine-checked |
+| `REIFIER` arc modifier (§4), value sets of ground terms, predicate value-sets | open |
+| editor anchoring of quoted triples (lezer-turtle utterances for star data) | open |

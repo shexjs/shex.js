@@ -19,7 +19,8 @@ const nodeKinds: { [nodeKind: string]: string } = {
   'iri': "IRI",
   'bnode': "BNODE",
   'literal': "LITERAL",
-  'nonliteral': "NONLITERAL"
+  'nonliteral': "NONLITERAL",
+  'tripleterm': "TRIPLE" // doc/triple-terms.md
 };
 
 /** stream (e.g. process.stdout) accepted by the ShExCWriter constructor */
@@ -214,6 +215,17 @@ class ShExCWriter {
       [].push.apply(pieces, _ShExCWriter._writeShape(shapeExpr, done, forceBraces) as never[]);
     } else if (shapeExpr.type === "NodeConstraint") {
       [].push.apply(pieces, _ShExCWriter._writeNodeConstraint(shapeExpr, done) as never[]);
+    } else if ((shapeExpr as any).type === "TripleTermConstraint") { // doc/triple-terms.md
+      const ttc = shapeExpr as any;
+      pieces.push("<<( ");
+      const component = (expr: any) => {
+        if (expr === undefined) pieces.push(". ");
+        else { [].push.apply(pieces, _ShExCWriter._writeShapeExpr(expr, done, true, 0) as never[]); pieces.push(" "); }
+      };
+      component(ttc.subject);
+      pieces.push(ttc.predicate === undefined ? "." : _ShExCWriter._encodePredicate(ttc.predicate), " ");
+      component(ttc.object);
+      pieces.push(")>>");
     } else
       throw Error("expected Shape{,And,Or,Ref} or NodeConstraint in " + JSON.stringify(shapeExpr));
     return pieces;

@@ -217,5 +217,59 @@
     "queryMap": "<https://bob.example/card>@<#ProfileDoc>\n",
     "status": "nonconformant",
     "comment": "Bob claims to know Carol, but no graph <https://carol.example/card> describes her: the foaf:knows arc matches the constraint's predicate and its value fails in the graph the schema says to look in."
+  },
+  {
+    "schemaLabel": "triple terms",
+    "schemaURL": "triple-terms.shex",
+    "dataLabel": "an assertion, with provenance",
+    "data": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX foaf: <http://xmlns.com/foaf/0.1/>\nPREFIX ex: <http://ex.example/ns#>\n\n<tim> a foaf:Person ; foaf:name \"Tim Berners-Lee\" .\n<henry> a foaf:Person ; foaf:name \"Henry Story\" .\n<alice> a foaf:Person ; foaf:name \"Alice\" .\n\n<a1> rdf:reifies << <tim> foaf:knows <henry> >> ;\n  ex:assertedBy <alice> ;\n  ex:confidence 0.95 .\n",
+    "queryMap": "<a1>@<#Assertion>\n",
+    "status": "conformant",
+    "comment": "The reifier model: <a1> is an ordinary node whose rdf:reifies value is a triple term.  The <<( @<#Person> foaf:knows @<#Person> )>> atom checks the term positionally, and its components against their *asserted* descriptions -- quotation itself asserts nothing."
+  },
+  {
+    "schemaLabel": "triple terms",
+    "schemaURL": "triple-terms.shex",
+    "dataLabel": "a dispute, by reference",
+    "data": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX foaf: <http://xmlns.com/foaf/0.1/>\nPREFIX ex: <http://ex.example/ns#>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<tim> a foaf:Person ; foaf:name \"Tim Berners-Lee\" .\n<henry> a foaf:Person ; foaf:name \"Henry Story\" .\n<alice> a foaf:Person ; foaf:name \"Alice\" .\n<bob> a foaf:Person ; foaf:name \"Bob\" .\n\n<a1> rdf:reifies << <tim> foaf:knows <henry> >> ;\n  ex:assertedBy <alice> .\n\n<d1> ex:disputes <a1> ;\n  ex:isDisputedBy <bob> ;\n  ex:disputeReason \"They have not been in contact for several years\" ;\n  ex:disputedOn \"2024-01-16\"^^xsd:date .\n",
+    "queryMap": "<d1>@<#Dispute>\n",
+    "status": "conformant",
+    "comment": "Bob disputes Alice's assertion -- and because the assertion is a reifier node, the dispute is a plain reference.  Nesting quotations to talk about talk is the pre-reifier habit; the model flattens it away."
+  },
+  {
+    "schemaLabel": "triple terms",
+    "schemaURL": "triple-terms.shex",
+    "dataLabel": "a weighted edge",
+    "data": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX foaf: <http://xmlns.com/foaf/0.1/>\nPREFIX ex: <http://ex.example/ns#>\n\n<e1> rdf:reifies << <a> foaf:knows <b> >> ;\n  ex:weight 0.9 .\n",
+    "queryMap": "<e1>@<#WeightedEdge>\n",
+    "status": "conformant",
+    "comment": "The property-graph case: an edge's weight lives on its reifier.  The interesting move is <<( ... )>> AND { ^rdf:reifies ... } -- a triple term is a term, so it can be a shape's focus, and its reifiers are one inverse arc away."
+  },
+  {
+    "schemaLabel": "triple terms",
+    "schemaURL": "triple-terms.shex",
+    "dataLabel": "a mention of strangers",
+    "data": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX foaf: <http://xmlns.com/foaf/0.1/>\n\n<m1> rdf:reifies << <nobody> foaf:knows <noone> >> .\n",
+    "queryMap": "<m1>@<#Mention>\n",
+    "status": "conformant",
+    "comment": "The opacity dial's other end: <#Mention> constrains the term with <<( IRI foaf:knows IRI )>> -- pure syntax, components unexamined -- so quoting strangers is fine.  Compare \"asserting about strangers\"."
+  },
+  {
+    "schemaLabel": "triple terms",
+    "schemaURL": "triple-terms.shex",
+    "dataLabel": "asserting about strangers",
+    "data": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX foaf: <http://xmlns.com/foaf/0.1/>\nPREFIX ex: <http://ex.example/ns#>\n\n<alice> a foaf:Person ; foaf:name \"Alice\" .\n\n<a1> rdf:reifies << <nobody> foaf:knows <noone> >> ;\n  ex:assertedBy <alice> .\n",
+    "queryMap": "<a1>@<#Assertion>\n",
+    "status": "nonconformant",
+    "comment": "<#Assertion> opted into the connection: its components say @<#Person>, and <nobody> has no asserted description to satisfy it.  The schema author chooses, per component, whether quotation reaches out to asserted data."
+  },
+  {
+    "schemaLabel": "triple terms",
+    "schemaURL": "triple-terms.shex",
+    "dataLabel": "an edge without its weight",
+    "data": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX foaf: <http://xmlns.com/foaf/0.1/>\n\n<e1> rdf:reifies << <a> foaf:knows <b> >> .\n",
+    "queryMap": "<e1>@<#WeightedEdge>\n",
+    "status": "nonconformant",
+    "comment": "The term's own ^rdf:reifies neighborhood must include a weighted reifier, and this one isn't.  (What no node-focused shape can say: \"every *asserted* foaf:knows arc is annotated\" -- nothing connects an asserted triple to the term quoting it.  That gap argues for an arc-level construct, not a different term model; see doc/triple-terms.md.)"
   }
 ]
