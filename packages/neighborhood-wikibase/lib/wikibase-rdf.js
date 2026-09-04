@@ -275,6 +275,9 @@ const OBJECT_DATATYPES = new Set([
     "wikibase-sense", "url", "commonsMedia", "geo-shape", "tabular-data",
     "entity-schema",
 ]);
+// @rdfjs/types 2 added fromTerm/fromQuad to DataFactory; this converter uses
+// only namedNode/literal/blankNode/quad, and N3's factory (what both callers
+// pass) doesn't declare the two new methods, so ask for the subset we use.
 function wikibaseRdfConverter(dataFactory, options = {}) {
     const cb = options.conceptBase || "http://www.wikidata.org/";
     const dataBase = options.dataBase || "https://www.wikidata.org/wiki/Special:EntityData/";

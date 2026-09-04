@@ -386,7 +386,10 @@ const OBJECT_DATATYPES = new Set([
   "entity-schema",
 ]);
 
-export function wikibaseRdfConverter (dataFactory: RdfJs.DataFactory, options: WikibaseRdfOptions = {}) {
+// @rdfjs/types 2 added fromTerm/fromQuad to DataFactory; this converter uses
+// only namedNode/literal/blankNode/quad, and N3's factory (what both callers
+// pass) doesn't declare the two new methods, so ask for the subset we use.
+export function wikibaseRdfConverter (dataFactory: Omit<RdfJs.DataFactory, "fromTerm" | "fromQuad">, options: WikibaseRdfOptions = {}) {
   const cb = options.conceptBase || "http://www.wikidata.org/";
   const dataBase = options.dataBase || "https://www.wikidata.org/wiki/Special:EntityData/";
   const repositoryName = options.repositoryName === undefined ? "wikidata" : options.repositoryName;
