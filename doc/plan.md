@@ -42,7 +42,7 @@ first.  Items are numbered so a commit or a conversation can name one.
 | --- | --- | --- |
 | [plugins.md](plugins.md) | the plugin contract | normative; keep current |
 | [editor-integration-plan.md](editor-integration-plan.md) | editors, source ranges, error anchoring | phases 0–4 done; leftovers in §D |
-| [debugger-design.md](debugger-design.md) | stepping, breakpoints, capture + replay | phases 1–5 and half of 6 done; leftovers in §E |
+| [debugger-design.md](debugger-design.md) | stepping, breakpoints, capture + replay | phases 1–6 done (live worker-gate stepping + one unified panel); only E12 deferred |
 | [error-reporting.md](error-reporting.md), [error-normalization.md](error-normalization.md), [error-reporting-comparison.md](error-reporting-comparison.md) | structured errors, repairs | F0–F6 done and merged; one decision left, §G |
 | [../packages/extension-map/doc/threaded-materializer.md](../packages/extension-map/doc/threaded-materializer.md) | the NFA materializer | design; leftovers in §F |
 
@@ -105,10 +105,14 @@ link that names a plugin opens on the validator's screen unless it says
 `screen=` (C3), and panes share a column unless `panel:` says otherwise
 (C4).
 
-- **C1 (S, external)** Publish the skeleton as a repository of its own.
-  `doc/plugin-skeleton/` carries the README and package.json it needs
-  (2026-08-28); the repository is yours to create, and its `repository`
-  field to fill in.
+- **C1 (closed 2026-09-04 — won't do)** Publishing the skeleton as a
+  repository of its own buys nothing right now: it has no dependencies to
+  pack, no consumer is waiting on an installable package (a plugin author
+  copies `doc/plugin-skeleton/`, they don't `npm i` it), and a separate repo
+  is standing overhead — a release to keep in step with the plugin contract
+  in `plugins.md`.  `doc/plugin-skeleton/` stays in-tree as the worked
+  reference (README + package.json, 2026-08-28); revisit only if someone
+  actually needs to `npm create` a plugin.
 - **C6 (done 2026-08-31) Eval and Test in the WebApp.**  Each has a
   plugin (`extension-eval/doc/ShExEvalPlugin.js`,
   `extension-test/doc/ShExTestPlugin.js`) -- one classic-script file with
