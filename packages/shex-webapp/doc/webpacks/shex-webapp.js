@@ -24740,6 +24740,9 @@ const OBJECT_DATATYPES = new Set([
     "wikibase-sense", "url", "commonsMedia", "geo-shape", "tabular-data",
     "entity-schema",
 ]);
+// @rdfjs/types 2 added fromTerm/fromQuad to DataFactory; this converter uses
+// only namedNode/literal/blankNode/quad, and N3's factory (what both callers
+// pass) doesn't declare the two new methods, so ask for the subset we use.
 function wikibaseRdfConverter(dataFactory, options = {}) {
     const cb = options.conceptBase || "http://www.wikidata.org/";
     const dataBase = options.dataBase || "https://www.wikidata.org/wiki/Special:EntityData/";
@@ -33654,19 +33657,25 @@ class NearestAcceptedBag {
      * `( :name . ; :mbox . | :given . ; :family . ; :mbox . )` answer as its
      * one-`:mbox` spelling does.
      */
-    repairs(observed) {
-        const asked = key(observed, this.tcIndex);
+    repairs(observed, satisfies) {
+        // Keyed on the satisfaction relation when there is one -- it is what the
+        // node actually holds (which triples, and which constraints each could
+        // satisfy), of which `observed`'s per-constraint counts are one arbitrary
+        // reading -- else on the counts alone (a count-only caller).
+        const asked = satisfies === undefined
+            ? key(observed, this.tcIndex)
+            : this.satisfactionKey(satisfies);
         const already = this.answered.get(asked);
         if (already !== undefined)
             return already;
-        const answer = this.computeRepairs(observed);
+        const answer = this.computeRepairs(observed, satisfies);
         this.answered.set(asked, answer);
         return answer;
     }
-    computeRepairs(observed) {
+    computeRepairs(observed, satisfies) {
         let best = [];
         let bestCost = Infinity;
-        for (const dealt of this.deals(observed)) {
+        for (const dealt of this.deals(observed, satisfies)) {
             const found = this.repairsFor(dealt);
             if (found.length === 0 || found[0].cost > bestCost)
                 continue;
@@ -33686,11 +33695,109 @@ class NearestAcceptedBag {
         return best;
     }
     /**
+     * The ways to account the node's triples against the constraints that could
+     * take them, one count-vector each for the DP to price.
+     *
+     * With a satisfaction relation (`satisfies`, one entry per triple naming
+     * the constraints whose value expression it meets), G3: assign each triple
+     * to one constraint it satisfies and pool the distinct count-vectors.  A
+     * predicate constrained twice with *different* value expressions gets a
+     * min-cost bipartite assignment this way -- the DP prices every candidate
+     * vector and keeps the cheapest -- rather than the caller's arbitrary
+     * count.  A predicate constrained twice with the *same* value expression
+     * falls out as the special case where every triple satisfies both, which
+     * reproduces the old stars-and-bars spread.
+     *
+     * Without one (a count-only caller), fall back to dealing indistinguishable
+     * -- same predicate, same value expression -- constraints' pooled counts
+     * every way, which is the usual single-constraint-per-arc no-op.
+     */
+    deals(observed, satisfies) {
+        if (satisfies === undefined)
+            return this.dealsByKind(observed);
+        // group the triples' satisfying-sets by predicate (a triple has one
+        // predicate, and only same-predicate constraints can take it)
+        const byPredicate = new Map();
+        for (const set of satisfies) {
+            if (set.length === 0)
+                continue; // a triple no constraint takes is homeless, not the DP's
+            const already = byPredicate.get(set[0].predicate);
+            if (already === undefined)
+                byPredicate.set(set[0].predicate, [set]);
+            else
+                already.push(set);
+        }
+        let deals = [new Map()];
+        for (const sets of byPredicate.values()) {
+            const spreads = this.assignmentsFor(sets);
+            const grown = [];
+            for (const deal of deals)
+                for (const spread of spreads) {
+                    if (grown.length >= NearestAcceptedBag.DEALS)
+                        break;
+                    const next = new Map(deal);
+                    spread.forEach((n, tc) => next.set(tc, n));
+                    grown.push(next);
+                }
+            deals = grown;
+        }
+        return deals;
+    }
+    /**
+     * Every distinct count-vector from assigning each of one predicate's
+     * triples to one constraint it satisfies (its satisfying-set).  The DFS is
+     * over assignments, deduped by count-vector and capped at DEALS, so a
+     * triple that satisfies only one constraint fixes that count and the common
+     * one-constraint-per-predicate case yields a single vector.
+     */
+    assignmentsFor(sets) {
+        const seen = new Map();
+        const counts = new Map();
+        const vectorKey = () => {
+            const parts = [];
+            counts.forEach((n, tc) => { if (n > 0)
+                parts.push(this.tcIndex.get(tc) + ":" + n); });
+            return parts.sort().join(",");
+        };
+        const assign = (at) => {
+            if (seen.size >= NearestAcceptedBag.DEALS)
+                return;
+            if (at === sets.length) {
+                const k = vectorKey();
+                if (!seen.has(k)) {
+                    const vec = new Map();
+                    counts.forEach((n, tc) => { if (n > 0)
+                        vec.set(tc, n); });
+                    seen.set(k, vec);
+                }
+                return;
+            }
+            for (const tc of sets[at]) {
+                counts.set(tc, (counts.get(tc) || 0) + 1);
+                assign(at + 1);
+                counts.set(tc, counts.get(tc) - 1);
+                if (seen.size >= NearestAcceptedBag.DEALS)
+                    return;
+            }
+        };
+        assign(0);
+        return seen.size === 0 ? [new Map()] : [...seen.values()];
+    }
+    /** the satisfaction relation as a stable key: per triple, its satisfying
+     * constraints by index, sorted; the multiset of those over the node */
+    satisfactionKey(satisfies) {
+        return satisfies
+            .map(set => set.map(tc => this.tcIndex.get(tc)).sort((a, b) => a - b).join("."))
+            .sort()
+            .join("|");
+    }
+    /**
      * Every way of dealing the observed triples among constraints that are
      * indistinguishable -- same predicate, same value expression.  One deal
-     * where every arc is constrained once, which is the usual case.
+     * where every arc is constrained once, which is the usual case.  (The
+     * count-only fallback for a caller with no satisfaction relation.)
      */
-    deals(observed) {
+    dealsByKind(observed) {
         const byKind = new Map();
         this.tripleConstraints.forEach(tc => {
             const kind = tc.predicate + " " + JSON.stringify(tc.valueExpr === undefined ? null : tc.valueExpr);
@@ -34670,6 +34777,12 @@ class ShExValidator {
         // that would take it; which of two indistinguishable constraints gets it
         // doesn't matter, since the repair search deals them out again.
         const observedBag = new Map();
+        // ...and, for the repair search (G3), which constraints each triple could
+        // satisfy -- one entry per counted triple.  observedBag reads each triple
+        // against the first constraint that would take it; this keeps the choice
+        // open, so a predicate constrained twice with different value expressions
+        // gets a real assignment rather than that arbitrary first-match count.
+        const satisfaction = [];
         // ...and the arcs no constraint could take at all -- not one with a
         // bad value, which is a value failure and reported as such -- counted
         // here too, before the search prunes: a closed shape refuses them.
@@ -34681,8 +34794,10 @@ class ShExValidator {
         const outgoingArcs = new Set(fromDB.outgoing);
         t2tcs.reduce((_ret, triple, tcs) => {
             const local = tcs.filter(tc => extendsTCs.indexOf(tc) === -1);
-            if (local.length > 0)
+            if (local.length > 0) {
                 observedBag.set(local[0], (observedBag.get(local[0]) || 0) + 1);
+                satisfaction.push(local);
+            }
             if (tcs.length === 0 && !t2tcErrors.has(triple) && outgoingArcs.has(triple))
                 homeless.push(triple);
             return null;
@@ -34794,11 +34909,11 @@ class ShExValidator {
         const removed = removals.reduce((n, arc) => n - arc.delta, 0);
         if (this.options.repairs !== false && ret !== null && ret.type === "Failure"
             && (shape.expression !== undefined || removals.length > 0)) {
-            const expression = shape.expression, bag = observedBag, validator = this;
+            const expression = shape.expression, bag = observedBag, satisfies = satisfaction, validator = this;
             Object.defineProperty(ret, "repairs", {
                 enumerable: true, configurable: true,
                 get() {
-                    const ofBag = expression !== undefined ? validator.nearestBagRepairs(expression, bag) : [];
+                    const ofBag = expression !== undefined ? validator.nearestBagRepairs(expression, bag, satisfies) : [];
                     const repairs = removals.length === 0 ? ofBag
                         : ofBag.length === 0 ? [{ type: "NearestBag", cost: removed, arcs: removals }]
                             : ofBag.map(r => ({ type: r.type, cost: r.cost + removed, arcs: r.arcs.concat(removals) }));
@@ -34964,12 +35079,12 @@ class ShExValidator {
      * change nothing" is worse than saying nothing.  The classic errors
      * carry that failure; this only ever answers the counting question.
      */
-    nearestBagRepairs(expression, observed) {
+    nearestBagRepairs(expression, observed, satisfies) {
         try {
             let nearest = this.nearestBags.get(expression);
             if (nearest === undefined)
                 this.nearestBags.set(expression, nearest = new repairs_1.NearestAcceptedBag(expression, label => this.index.tripleExprs[label]));
-            const repairs = nearest.repairs(observed);
+            const repairs = nearest.repairs(observed, satisfies);
             return repairs.some(repair => repair.cost === 0) ? [] : repairs;
         }
         catch (e) {
