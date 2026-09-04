@@ -256,4 +256,44 @@ describe("nearest-bag repairs", function () {
       expect(ways).to.deep.equal([]);
     });
   });
+
+  /* G3: one predicate, constrained twice with DIFFERENT value expressions.
+   * Which triple answers which constraint is an assignment, not the caller's
+   * first-match count -- so the repair is the min-cost bipartite assignment of
+   * the node's triples to the constraints they satisfy, not the difference
+   * from whatever the first constraint happened to be counted. */
+  describe("assign triples to same-predicate constraints by what they satisfy", function () {
+    // c1 takes {a,b,c}, c2 takes {a,b}; the node has a, b and c.  Two of the
+    // three can be seated (c must go to c1, then one of a/b to c2), so one arc
+    // is too many: remove 1 :p, cost 1.  Counting all three against the first
+    // constraint (c1) instead would answer "remove 2 :p and add 1 :p" (cost
+    // 3) -- the arbitrary count the assignment corrects.
+    it("removes the one arc too many, not two-and-add-one", function () {
+      const {status, ways, cost} = repairs(
+        '<S> { :p ["a" "b" "c"] ; :p ["a" "b"] }', ':x :p "a", "b", "c" .');
+      expect(status).to.equal("nonconformant");
+      expect(ways).to.deep.equal(["remove 1 :p"]);
+      expect(cost).to.equal(1);
+    });
+
+    // c and a can be seated one each (c->c1, a->c2), so the node conforms --
+    // the assignment the repair search would find is the one the validator
+    // itself finds, and a conforming node has nothing to repair.
+    it("says nothing when an assignment seats every arc", function () {
+      const {status, ways} = repairs(
+        '<S> { :p ["a" "b" "c"] ; :p ["a" "b"] }', ':x :p "c", "a" .');
+      expect(status).to.equal("conformant");
+      expect(ways).to.deep.equal([]);
+    });
+
+    // disjoint value sets: c takes only the first constraint, the second has
+    // nothing it accepts -- add one of the second's values.
+    it("fills a constraint no present triple satisfies", function () {
+      const {status, ways, cost} = repairs(
+        '<S> { :p ["a" "b" "c"] ; :p ["x" "y"] }', ':x :p "c" .');
+      expect(status).to.equal("nonconformant");
+      expect(ways).to.deep.equal(["add 1 :p"]);
+      expect(cost).to.equal(1);
+    });
+  });
 });

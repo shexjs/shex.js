@@ -33,9 +33,16 @@ node**.
 > `MatchDebugger` -- schema-gutter breakpoints, ▶⤵⏭⏹ stepping (⏭ = next
 > NFA generation), and a threads pane whose hover/click renders a
 > thread's aspects: state-machine position (highlighted in the schema
-> pane), repeat counts, and its matched-triples partition.  Still
-> designed-only: LIVE whole-validation stepping in the browser (worker +
-> Atomics, phase 6) -- the CLI `shex-debug` already steps live.
+> pane), repeat counts, and its matched-triples partition.  **Live**
+> whole-validation stepping in the browser now ships too (phase 6, the
+> worker gate + `Atomics`): the validate panel's 🐞▶ (shown when the page is
+> cross-origin isolated) runs the validator in a dedicated worker that
+> blocks between events, stepping the whole validation shape by shape and
+> constraint by constraint beside the capture+replay 🐞.  All three
+> debuggers -- validation capture+replay, validation live, and the ShExMap
+> materializer -- now share **one** panel (control strip, status, threads),
+> driven by whichever session is live (`activeDebugSession`); they never run
+> at once (a validation finishes before its materialization starts).
 
 ## 1. The central problem: suspending an engine
 
@@ -148,11 +155,19 @@ the recorded matches are on offer.
   thread})` for what came of it: the candidates taken, which passed and
   which a semantic action refused (eval-threaded-nerr runs them there;
   eval-simple-1err at the end), and how many threads it spawned.
-- **Suspension**: in the worker, the tracker/hook callbacks call
-  `controller.gate(event)`, which `postMessage`s the event and
-  `Atomics.wait`s on the command cell; the UI writes
-  resume/into/over/out/abort into the SAB and `Atomics.notify`s.  Abort
-  throws a `DebugAbort` FlowControlError out of the engine.
+- ✅ **Suspension**: in the worker, the tracker/hook callbacks call
+  `WorkerGate.gate(event)` (`worker-gate.ts` in `@shexjs/eval-validator-api`),
+  which `postMessage`s the serialized event and `Atomics.wait`s on the
+  command cell; the controlling thread's `GateController` writes
+  into/over/out/continue/abort into the SAB and `Atomics.notify`s.  Abort
+  throws `DebugAbort` out of the engine.  Breakpoints are **frozen while the
+  worker runs and editable only while paused**: a resume carries them as a
+  JSON payload in the same buffer (constraints keyed by
+  `schemaTripleConstraints` ordinal, the clone-safe name both ends derive),
+  so the worker adopts the edited set as it wakes and never reads it
+  mid-search.  Proven under `worker_threads` by `WorkerGate-test.js` (the
+  in-page worker shim can't run `Atomics.wait`, so this is the mechanism's
+  CI); the browser `debugValidate` handler and the panel over it are E10.
 - The **main-thread app** can reuse the identical UI against the worker
   validator (`shex-worker.html` already validates there); for
   `shex-simple.html`'s in-thread validator, debugging redirects validation
@@ -161,11 +176,21 @@ the recorded matches are on offer.
 
 ## 5. UI (web apps)
 
-- A debug panel (hidden until "debug" is toggled in the Menu, carried in
-  permalinks like `editors=`): ▶ continue, ⤵ into, ⏭ over, ⤴ out, ⏹ stop;
-  a call-stack list (shape frames); the thread snapshot (for ShExMap: the
-  binding-frame index and consumed-count against a rendered frame table —
-  the `bindingsToTable` widget already renders frames).
+- **One floating panel over all three debuggers** (validation capture+replay,
+  validation live, ShExMap materialization), never more than one live at a
+  time (a validation finishes before its materialization starts): ▶ continue,
+  ⤵ into, ⏭ over, ⤴ out, ⏹ stop; a status line; the thread list (for ShExMap:
+  the binding-frame index and consumed-count against a rendered frame table —
+  the `bindingsToTable` widget already renders frames).  `#debugPanel` is
+  `position:fixed` (a bottom-right card in `shex-app.css`), so its controls
+  stay in reach whichever *screen* the stepped schema is on — the input
+  schema for validation, the output schema (the plugin's own screen) for
+  materialization.  The app's `activeDebugSession` is whichever session is
+  live and the shared buttons route to it (`showDebugPanel(mode)` /
+  `hideDebugPanel()` / `setDebugRunnable()` on the core app; the plugin's
+  materializer registers as `activeDebugSession` while it runs).  The step
+  verbs disable once a search is exhausted; picking a new schema/data ends a
+  session standing over the old inputs.
 - **Current-position highlighting** reuses `pane.highlight()`: the paused
   event's `tc` range in the schema pane (`locate.expr`), the focus/subject
   node's occurrence in the data pane (millan lookup), in a distinct
@@ -214,8 +239,21 @@ starts from the same base.
      differ, and the status says so); the semantic actions run once, at
      capture, and a replay answers from the recording
      (`recordingSemActHandler` / `replayingSemActHandler`);
-   - live whole-validation stepping (worker gate + Atomics) and a
-     unified panel over both engines remain.
+   - ✅ live whole-validation stepping's engine: the worker gate + SAB
+     command protocol (`WorkerGate`/`GateController`, frozen-while-running
+     breakpoints), CI-proven under `worker_threads`;
+   - ✅ the browser wiring of that gate: `debugValidate` in
+     `ShExWorkerThread.js` runs a gated validation in a dedicated worker, and
+     the validate panel's 🐞▶ (shown only when cross-origin isolated) drives
+     it beside the capture+replay 🐞, reusing the same controls, gutter and
+     breakpoints (E10); the live stepping rides the `worker_threads` harness
+     for the mechanism and a real isolated browser for the glue;
+   - ✅ one unified panel over both engines: the validation debugger and the
+     ShExMap materializer share a single control strip, status line and
+     thread list (core, in `shex-simple.html`), dispatched to the app's
+     `activeDebugSession` -- they never step at once (a validation finishes
+     before its materialization starts), so the plugin keeps only its
+     `#debugMaterialize` trigger and drives the shared strip.
 
 ## 8. Risks / notes
 

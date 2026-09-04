@@ -132,6 +132,53 @@ try {
       self.postMessage({ response: "done" });
     break;
 
+  case "debugValidate": {
+    // Live whole-validation stepping (doc/debugger-design.md §4).  The
+    // recursive validator can't yield mid-flight, so it runs synchronously
+    // here and a WorkerGate blocks this thread between events, on the SAB
+    // the page shares; the page drives it over that buffer (Atomics), never
+    // by postMessage -- a worker blocked in Atomics.wait can't read one.
+    // This is the browser twin of eval-validator-api/test/worker-gate-worker.js.
+    errorText = "starting the validation debugger";
+    const dbgDb = ShExWebApp.RdfJsDb(makeStaticDB(
+      (msg.data.data || []).map(t => WorkerMarshalling.jsonTripleToRdfjsTriple(t, N3js.DataFactory))));
+    const dbgOptions = Object.assign({ results: "api", noCache: true }, msg.data.options);
+    dbgOptions.regexModule = ShExWebApp[dbgOptions.regexModule]; // name -> module (undefined keeps the default)
+    const gate = new ShExWebApp.WorkerGate(
+      msg.data.sab,
+      m => self.postMessage({ response: "paused", event: m.event }),
+      ShExWebApp.schemaTripleConstraints(msg.data.schema));
+    // shape-level events from the tracker (a cached answer is no place to
+    // pause), constraint-level from the engine's debugHook -- the shex-debug
+    // wiring, but gate.gate blocks the thread instead of reading stdin
+    const dbgTracker = ShExWebApp.eventTracker(event => {
+      if (event.type !== "known")
+        gate.gate(event);
+    });
+    dbgOptions.debugHooks = {
+      onConstraint: (tc, ctx) => gate.gate({
+        type: "constraint", tc, node: ctx.node, triples: ctx.triples,
+        depth: dbgTracker.depth + 1 }),
+    };
+    const dbgValidator = new ShExWebApp.Validator(msg.data.schema, dbgDb, dbgOptions);
+    WorkerPlugins.forEach(ext => {
+      if (typeof ext.register === "function")
+        ext.register(dbgValidator, ShExWebApp);
+    });
+    const dbgMap = (msg.data.queryMap || []).map(m =>
+      ShExWebApp.ShExTerm.isStart(m.shape) ? Object.assign({}, m, { shape: ShExWebApp.Validator.Start }) : m);
+    try {
+      const dbgResults = dbgValidator.validateShapeMap(dbgMap, dbgTracker);
+      self.postMessage({ response: "done", conformant: dbgResults.every(r => r && r.status === "conformant") });
+    } catch (e) {
+      if (e && e.isDebugAbort)
+        self.postMessage({ response: "aborted" });
+      else
+        throw e;
+    }
+    break;
+  }
+
   default: {
     // a request a plugin added: ShExMap's "materialize" is one
     const handler = WorkerPlugins

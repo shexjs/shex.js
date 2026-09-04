@@ -184,20 +184,26 @@ export class NearestAcceptedBag {
    * `( :name . ; :mbox . | :given . ; :family . ; :mbox . )` answer as its
    * one-`:mbox` spelling does.
    */
-  repairs(observed: TcCounts): Repair[] {
-    const asked = key(observed, this.tcIndex);
+  repairs(observed: TcCounts, satisfies?: TripleConstraint[][]): Repair[] {
+    // Keyed on the satisfaction relation when there is one -- it is what the
+    // node actually holds (which triples, and which constraints each could
+    // satisfy), of which `observed`'s per-constraint counts are one arbitrary
+    // reading -- else on the counts alone (a count-only caller).
+    const asked = satisfies === undefined
+          ? key(observed, this.tcIndex)
+          : this.satisfactionKey(satisfies);
     const already = this.answered.get(asked);
     if (already !== undefined)
       return already;
-    const answer = this.computeRepairs(observed);
+    const answer = this.computeRepairs(observed, satisfies);
     this.answered.set(asked, answer);
     return answer;
   }
 
-  private computeRepairs(observed: TcCounts): Repair[] {
+  private computeRepairs(observed: TcCounts, satisfies?: TripleConstraint[][]): Repair[] {
     let best: Repair[] = [];
     let bestCost = Infinity;
-    for (const dealt of this.deals(observed)) {
+    for (const dealt of this.deals(observed, satisfies)) {
       const found = this.repairsFor(dealt);
       if (found.length === 0 || found[0].cost > bestCost)
         continue;
@@ -223,11 +229,110 @@ export class NearestAcceptedBag {
   static readonly DEALS = 64;
 
   /**
+   * The ways to account the node's triples against the constraints that could
+   * take them, one count-vector each for the DP to price.
+   *
+   * With a satisfaction relation (`satisfies`, one entry per triple naming
+   * the constraints whose value expression it meets), G3: assign each triple
+   * to one constraint it satisfies and pool the distinct count-vectors.  A
+   * predicate constrained twice with *different* value expressions gets a
+   * min-cost bipartite assignment this way -- the DP prices every candidate
+   * vector and keeps the cheapest -- rather than the caller's arbitrary
+   * count.  A predicate constrained twice with the *same* value expression
+   * falls out as the special case where every triple satisfies both, which
+   * reproduces the old stars-and-bars spread.
+   *
+   * Without one (a count-only caller), fall back to dealing indistinguishable
+   * -- same predicate, same value expression -- constraints' pooled counts
+   * every way, which is the usual single-constraint-per-arc no-op.
+   */
+  private deals(observed: TcCounts, satisfies?: TripleConstraint[][]): TcCounts[] {
+    if (satisfies === undefined)
+      return this.dealsByKind(observed);
+    // group the triples' satisfying-sets by predicate (a triple has one
+    // predicate, and only same-predicate constraints can take it)
+    const byPredicate = new Map<string, TripleConstraint[][]>();
+    for (const set of satisfies) {
+      if (set.length === 0)
+        continue; // a triple no constraint takes is homeless, not the DP's
+      const already = byPredicate.get(set[0].predicate);
+      if (already === undefined)
+        byPredicate.set(set[0].predicate, [set]);
+      else
+        already.push(set);
+    }
+    let deals: TcCounts[] = [new Map()];
+    for (const sets of byPredicate.values()) {
+      const spreads = this.assignmentsFor(sets);
+      const grown: TcCounts[] = [];
+      for (const deal of deals)
+        for (const spread of spreads) {
+          if (grown.length >= NearestAcceptedBag.DEALS)
+            break;
+          const next = new Map(deal);
+          spread.forEach((n, tc) => next.set(tc, n));
+          grown.push(next);
+        }
+      deals = grown;
+    }
+    return deals;
+  }
+
+  /**
+   * Every distinct count-vector from assigning each of one predicate's
+   * triples to one constraint it satisfies (its satisfying-set).  The DFS is
+   * over assignments, deduped by count-vector and capped at DEALS, so a
+   * triple that satisfies only one constraint fixes that count and the common
+   * one-constraint-per-predicate case yields a single vector.
+   */
+  private assignmentsFor(sets: TripleConstraint[][]): TcCounts[] {
+    const seen = new Map<string, TcCounts>();
+    const counts = new Map<TripleConstraint, number>();
+    const vectorKey = (): string => {
+      const parts: string[] = [];
+      counts.forEach((n, tc) => { if (n > 0) parts.push(this.tcIndex.get(tc) + ":" + n); });
+      return parts.sort().join(",");
+    };
+    const assign = (at: number): void => {
+      if (seen.size >= NearestAcceptedBag.DEALS)
+        return;
+      if (at === sets.length) {
+        const k = vectorKey();
+        if (!seen.has(k)) {
+          const vec: TcCounts = new Map();
+          counts.forEach((n, tc) => { if (n > 0) vec.set(tc, n); });
+          seen.set(k, vec);
+        }
+        return;
+      }
+      for (const tc of sets[at]) {
+        counts.set(tc, (counts.get(tc) || 0) + 1);
+        assign(at + 1);
+        counts.set(tc, counts.get(tc)! - 1);
+        if (seen.size >= NearestAcceptedBag.DEALS)
+          return;
+      }
+    };
+    assign(0);
+    return seen.size === 0 ? [new Map()] : [...seen.values()];
+  }
+
+  /** the satisfaction relation as a stable key: per triple, its satisfying
+   * constraints by index, sorted; the multiset of those over the node */
+  private satisfactionKey(satisfies: TripleConstraint[][]): string {
+    return satisfies
+      .map(set => set.map(tc => this.tcIndex.get(tc)).sort((a, b) => a! - b!).join("."))
+      .sort()
+      .join("|");
+  }
+
+  /**
    * Every way of dealing the observed triples among constraints that are
    * indistinguishable -- same predicate, same value expression.  One deal
-   * where every arc is constrained once, which is the usual case.
+   * where every arc is constrained once, which is the usual case.  (The
+   * count-only fallback for a caller with no satisfaction relation.)
    */
-  private deals(observed: TcCounts): TcCounts[] {
+  private dealsByKind(observed: TcCounts): TcCounts[] {
     const byKind = new Map<string, TripleConstraint[]>();
     this.tripleConstraints.forEach(tc => {
       const kind = tc.predicate + " " + JSON.stringify(tc.valueExpr === undefined ? null : tc.valueExpr);

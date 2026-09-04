@@ -29,6 +29,11 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: npm
       - run: npm ci
+      # lib/*.js is built from src, not committed (plan.md B3); the `prepare`
+      # script builds it on npm ci, and this makes that dependency explicit --
+      # a src change that stops compiling fails here rather than passing on a
+      # stale committed lib
+      - run: npm run compile
       # browser tests load the webapp pages, whose webpack bundles are
       # gitignored (see webapps-site.yml) and so must be built first
       - run: npm run webpacks-all
@@ -63,6 +68,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npm run compile   # lib/*.js is built, not committed (plan.md B3)
       - run: npm run webpack
 
   coverage:
@@ -80,6 +86,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npm run compile   # lib/*.js is built, not committed (plan.md B3)
       # coverage runs test-all, whose browser tests need the webpack bundles
       - run: npm run webpacks-all
       - run: npm run coverage

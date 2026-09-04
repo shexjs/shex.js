@@ -337,11 +337,16 @@ const ShExMapVerbs = {
                 }
             });
             this.debugSession = { dbg, materializer, outputShapeMap, located, pane };
-            // the step buttons beside the button that started them, the status on
-            // its own row -- see the validator's, which this follows.  🐞 stands
-            // down while its session is live.
-            $("#debugControls, #dbgStatusRow").show();
-            $("#debugMaterialize").hide();
+            // drive the app's one shared debug strip (doc/debugger-design.md §5),
+            // the same one the validation debugger uses -- only one runs at a time
+            if (this.activeDebugSession)
+                this.activeDebugSession.end();
+            this.activeDebugSession = { kind: "materialize", step: (c) => this.debugStep(c),
+                end: () => this.endDebugSession(true) };
+            // the app's shared floating debug panel, set up for materialization
+            // (no recorded-match picker or bp/bn entry -- the materializer breaks
+            // on the output-schema gutter); every 🐞 stands down while it runs
+            this.showDebugPanel("materialize");
             $("#dbgStatus").text("paused before materialization; step or continue");
             return this.debugSession;
         }
@@ -358,6 +363,9 @@ const ShExMapVerbs = {
         this.showDebugEvent(event);
         this.updateThreadList();
         if (session.dbg.done) {
+            // the walk is over: render the finished graph (the answer) and put the
+            // floating panel away -- a materialization's result is the graph, so it
+            // takes the results view rather than lingering behind a step panel
             this.endDebugSession(false);
             return event;
         }
@@ -608,28 +616,25 @@ const ShExMapVerbs = {
         this.resultsTabsAside().empty().append(div);
     },
     /** wrap up: on completion render the graph (or the error) as materialize
-     * would; on user stop just dismantle */
+     * would; on user stop just dismantle.  Either way the floating panel goes
+     * -- a materialization's answer is the graph, in the results view, not a
+     * lingering status line. */
     endDebugSession(stopped) {
         const session = this.debugSession;
         if (!session)
             return;
         this.debugSession = null;
+        this.activeDebugSession = null;
         session.pane.clearHighlights();
         const bindingsPane = this.editorSupport && this.editorSupport.panes
             && this.editorSupport.panes.bindings;
         if (bindingsPane)
             bindingsPane.annotate(null);
-        $("#debugControls").hide();
-        $("#debugMaterialize").show();
-        $("#dbgThreads").empty();
-        if (stopped) {
-            $("#dbgStatus").text("");
-            $("#dbgStatusRow").hide();
+        // the shared floating panel goes; the triggers come back (hideDebugPanel
+        // offers this plugin's #debugMaterialize and the validators')
+        this.hideDebugPanel();
+        if (stopped)
             return;
-        }
-        // a session that ran to the end keeps its last word: how it finished is
-        // the answer.  That was the intent before, but #dbgStatus lived inside
-        // #debugControls, so hiding those took the sentence with them.
         if (session.dbg.error) {
             this.reportMaterializationError(session.dbg.error, "materialization (debugged)");
         }
@@ -1168,18 +1173,9 @@ ShExPlugins.register({
         "/* and a bindings pane, which is neither schema nor data */",
         "#bindings1 textarea, .meta { background-color: #fffff4; color: #000000; border-color: #56fc1c }",
         "#bindings1 li.selected { background-color: #ffffe8; }",
-        "/* the debugger's step buttons, once a session has started */",
-        "#debugControls { margin-left: .6em; white-space: nowrap; }",
-        "#dbgStatus { display: inline-block; max-width: 100%;",
-        "             white-space: normal; overflow-wrap: anywhere; }",
-        "/* The thread list goes under the controls rather than in them: there it",
-        "   shared a right edge with the bindings pane, so every thread that",
-        "   appeared or died changed the width of the block the step buttons sit",
-        "   in and moved them out from under the mouse.  Here it grows rightward",
-        "   from an edge that doesn't move. */",
-        "#dbgThreadsRow { min-height: 1.6em; padding-top: .5em;",
-        "                 overflow-x: auto; white-space: nowrap; text-align: left; }",
-        "#dbgThreads { font-size: small; }",
+        // the debug strip (#debugControls/#dbgStatus/#dbgThreadsRow/#dbgThreads)
+        // is styled in the core shex-app.css now -- one shared panel, dressed
+        // whether or not this plugin is loaded
     ].join("\n"),
     // rows 1-3.  A pane is a textarea, a status line, a cache that parses
     // what is in it, and the query-string parameter and manifest key that
@@ -1234,29 +1230,16 @@ ShExPlugins.register({
             placeholder: "<node>@<shape>",
             title: "output ShapeMap, e.g. <tag:root>@<OutputShape> \u2014 the node names the graph root to create; right-click picks the shape",
             queryStringParm: "output-map", manifest: { key: "outputShapeMap" } },
-        { kind: "group", id: "debugControls", hidden: true, controls: [
-                { kind: "button", id: "dbgContinue", label: "\u25b6", title: "continue",
-                    run: app => app.debugStep("continue") },
-                { kind: "button", id: "dbgInto", label: "\u2935", title: "step into",
-                    run: app => app.debugStep("stepInto") },
-                { kind: "button", id: "dbgOver", label: "\u23ed", title: "step over",
-                    run: app => app.debugStep("stepOver") },
-                { kind: "button", id: "dbgOut", label: "\u2934", title: "step out",
-                    run: app => app.debugStep("stepOut") },
-                { kind: "button", id: "dbgStop", label: "\u23f9", title: "stop",
-                    run: app => app.endDebugSession(true) },
-            ] },
-        // the sentence lives outside #debugControls: hiding the buttons at the
-        // end of a session must not take the answer with them
-        { kind: "status", id: "dbgStatusRow", className: "valDbgRow", hidden: true,
-            contentId: "dbgStatus" },
     ],
-    // row 14's other half: what the debugger says while it is stepping.  In
-    // the statusbar rather than the toolbar because it grows and shrinks.
-    statusbar: [
-        { kind: "status", id: "dbgThreadsRow", contentId: "dbgThreads",
-            contentTitle: "pending and accepted threads; hover or click to render one's graph" },
-    ],
+    // The step controls (\u25b6\u2935\u23ed\u2934\u23f9), status line and thread list are the
+    // app's own *shared* debug strip (doc/debugger-design.md \u00a75, static in
+    // shex-simple.html -- every ShExMap page redirects there).  The
+    // materializer drives it through startDebugSession/debugStep below, the
+    // same strip the validation debugger uses: one panel, one engine at a time
+    // (a validation finishes before its materialization starts).  So this
+    // plugin contributes only the trigger (#debugMaterialize, above) and,
+    // while its session runs, registers as the app's activeDebugSession.
+    statusbar: [],
     // row 5's other half: two verbs that are only a keystroke.  The bindings
     // table is the only reader those bindings have that isn't the pane.
     keys: [

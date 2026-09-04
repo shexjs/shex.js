@@ -21580,6 +21580,20 @@ class EvalThreadedNErrRegexEngine {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MapArray = void 0;
 exports.capturingRegexModule = capturingRegexModule;
@@ -21588,6 +21602,8 @@ exports.replayingSemActHandler = replayingSemActHandler;
 exports.eventTracker = eventTracker;
 // import {NeighborhoodDb} from "@shexjs/neighborhood-api";
 const term_1 = __webpack_require__(2130);
+// live whole-validation stepping: the worker gate + SAB command protocol
+__exportStar(__webpack_require__(464), exports);
 class MapArray {
     constructor() {
         this.data = new Map(); // public 'cause I don't know how to fix reduce to use this.data
@@ -21719,6 +21735,275 @@ function eventTracker(onEvent) {
     };
     return tracker;
 }
+
+
+/***/ },
+
+/***/ 464
+(__unused_webpack_module, exports) {
+
+"use strict";
+
+/** worker-gate - the suspension mechanism for live whole-validation
+ * stepping in a browser (doc/debugger-design.md §1, §4).
+ *
+ * The recursive ShExValidator can't yield mid-flight the way the
+ * materializer's generator does, so to step it we run it synchronously in a
+ * Worker and block the worker thread between events.  Each time the
+ * validator's tracker or a regex engine's debugHook reports an event, the
+ * worker calls `WorkerGate.gate(event)`: if the current step mode or a
+ * breakpoint says to pause, it postMessages the event to the controlling
+ * thread and `Atomics.wait`s on a command cell in a SharedArrayBuffer until
+ * that thread writes a command (into/over/out/continue/abort) and
+ * `Atomics.notify`s.  Blocking the worker IS the suspension -- the CLI
+ * `shex-debug` gets the same suspension by blocking on stdin instead.
+ *
+ * The breakpoint set is **frozen while the worker runs and editable only
+ * while it is paused**: a resume carries the (possibly edited) breakpoints
+ * as a JSON payload in the same buffer, so the worker adopts them at the
+ * instant it wakes and never races the controller reading a set mid-search.
+ *
+ * The two ends:
+ *   - `WorkerGate` runs in the worker (owns the mode + frozen breakpoints,
+ *     blocks and reads commands);
+ *   - `GateController` runs in the controlling thread (writes commands +
+ *     breakpoints, notifies).
+ * Both are dependency-free (only `Atomics`/`SharedArrayBuffer`, global in a
+ * worker and in Node's worker_threads), so the wiring of an actual
+ * ShExValidator into a gate lives with each worker (the browser's
+ * ShExWorkerThread, a test's worker), not here -- keeping this below the
+ * validator in the dependency graph.
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GateController = exports.WorkerGate = exports.DebugAbort = exports.Command = void 0;
+exports.createCommandBuffer = createCommandBuffer;
+exports.schemaTripleConstraints = schemaTripleConstraints;
+/** The command a paused worker reads, written into CMD_INDEX by the
+ * controller.  WAIT (0) is the armed/blocked state: the worker waits *while*
+ * the cell holds it, and resets it to WAIT after adopting a command. */
+exports.Command = {
+    WAIT: 0,
+    INTO: 1,
+    OVER: 2,
+    OUT: 3,
+    CONTINUE: 4,
+    ABORT: 5,
+};
+const NAME_TO_CODE = {
+    into: exports.Command.INTO, over: exports.Command.OVER, out: exports.Command.OUT,
+    continue: exports.Command.CONTINUE, abort: exports.Command.ABORT,
+};
+/** SharedArrayBuffer layout: two Int32 control slots then a UTF-8 payload. */
+const CMD_INDEX = 0; // the command (Command.*)
+const LEN_INDEX = 1; // byte length of the resume payload
+const HEADER_INTS = 2;
+const HEADER_BYTES = HEADER_INTS * 4;
+const DEFAULT_PAYLOAD_BYTES = 1 << 16; // 64 KiB of breakpoints is plenty
+/** the buffer both ends share: header + room for a breakpoints payload */
+function createCommandBuffer(payloadBytes = DEFAULT_PAYLOAD_BYTES) {
+    return new SharedArrayBuffer(HEADER_BYTES + payloadBytes);
+}
+/** schemaTripleConstraints - every TripleConstraint of a schema in a
+ * deterministic order (shapes as declared, each expression tree depth-first,
+ * into a constraint's inline valueExpr but never through a reference).  An
+ * index into this ordering is the clone-safe name for a constraint that both
+ * the worker and the controller derive from their own copy of the schema --
+ * the same trick the materializer uses across postMessage. */
+function schemaTripleConstraints(schema) {
+    const found = [];
+    const seen = new Set();
+    const shapeExpr = (expr) => {
+        if (!expr || typeof expr !== "object" || seen.has(expr))
+            return; // a string is a reference: reached through its declaration
+        seen.add(expr);
+        switch (expr.type) {
+            case "ShapeDecl": return shapeExpr(expr.shapeExpr);
+            case "ShapeAnd":
+            case "ShapeOr": return (expr.shapeExprs || []).forEach(shapeExpr);
+            case "ShapeNot": return shapeExpr(expr.shapeExpr);
+            case "Shape": return tripleExpr(expr.expression);
+        }
+    };
+    const tripleExpr = (expr) => {
+        if (!expr || typeof expr !== "object" || seen.has(expr))
+            return; // a string is an Inclusion
+        seen.add(expr);
+        switch (expr.type) {
+            case "EachOf":
+            case "OneOf": return (expr.expressions || []).forEach(tripleExpr);
+            case "TripleConstraint":
+                found.push(expr);
+                return shapeExpr(expr.valueExpr);
+        }
+    };
+    (schema.shapes || []).forEach(shapeExpr);
+    return found;
+}
+/** thrown out of the engine when the controller commands abort; a
+ * FlowControlError the worker's run wrapper catches to report "aborted"
+ * (c.f. shex-debug's DebugQuit). */
+class DebugAbort extends Error {
+    constructor() {
+        super("validation aborted by debugger");
+        this.isDebugAbort = true;
+        this.name = "DebugAbort";
+    }
+}
+exports.DebugAbort = DebugAbort;
+function termLex(term) {
+    if (!term)
+        return undefined;
+    const t = term;
+    const out = { termType: t.termType, value: t.value };
+    if (t.datatype)
+        out.datatype = t.datatype.value;
+    if (t.language)
+        out.language = t.language;
+    return out;
+}
+/** the string a node breakpoint is keyed by: an IRI by its value, a blank
+ * node as "_:label" (matching shex-debug's `bn`). */
+function nodeKey(term) {
+    return term.termType === "BlankNode" ? "_:" + term.value : term.value;
+}
+/** WorkerGate - runs in the worker; `gate(event)` is what the validator's
+ * tracker and debugHooks call. */
+class WorkerGate {
+    /** @param sab the shared command buffer (from createCommandBuffer)
+     *  @param post posts a message to the controlling thread
+     *  @param tripleConstraints the schema's constraints in the shared
+     *    ordering (extension-map's / a walk of the same shape), for ordinals */
+    constructor(sab, post, tripleConstraints) {
+        this.decoder = new TextDecoder();
+        this.mode = { kind: "into" }; // pause at the first event
+        this.bp = {
+            shapes: new Set(), predicates: new Set(),
+            nodes: new Set(), constraints: new Set(),
+        };
+        this.ctrl = new Int32Array(sab, 0, HEADER_INTS);
+        this.bytes = new Uint8Array(sab, HEADER_BYTES);
+        this.post = post;
+        this.ordinalOf = new Map(tripleConstraints.map((tc, i) => [tc, i]));
+    }
+    /** the validator reports an event here; pause if the mode or a breakpoint
+     * says so, blocking the worker until the controller resumes it. */
+    gate(event) {
+        if (!this.shouldPause(event))
+            return;
+        // arm the cell *before* announcing the pause, so a controller that
+        // resumes immediately makes Atomics.wait return "not-equal" (no missed
+        // wakeup) rather than the notify racing ahead of the wait.
+        Atomics.store(this.ctrl, CMD_INDEX, exports.Command.WAIT);
+        this.post({ type: "paused", event: this.serialize(event) });
+        Atomics.wait(this.ctrl, CMD_INDEX, exports.Command.WAIT);
+        const code = Atomics.load(this.ctrl, CMD_INDEX);
+        const len = Atomics.load(this.ctrl, LEN_INDEX);
+        if (len > 0)
+            this.adoptBreakpoints(JSON.parse(this.decoder.decode(this.bytes.subarray(0, len))));
+        Atomics.store(this.ctrl, CMD_INDEX, exports.Command.WAIT); // disarm for the next gate
+        this.applyCommand(code, event.depth);
+    }
+    applyCommand(code, depth) {
+        switch (code) {
+            case exports.Command.INTO:
+                this.mode = { kind: "into" };
+                break;
+            case exports.Command.OVER:
+                this.mode = { kind: "over", depth };
+                break;
+            case exports.Command.OUT:
+                this.mode = { kind: "out", depth };
+                break;
+            case exports.Command.CONTINUE:
+                this.mode = { kind: "continue" };
+                break;
+            case exports.Command.ABORT: throw new DebugAbort();
+            default: this.mode = { kind: "continue" }; // unknown: don't wedge
+        }
+    }
+    adoptBreakpoints(bp) {
+        this.bp = {
+            shapes: new Set(bp.shapes || []),
+            predicates: new Set(bp.predicates || []),
+            nodes: new Set(bp.nodes || []),
+            constraints: new Set(bp.constraints || []),
+        };
+    }
+    /** the stepping semantics: pure logic over the mode and the frozen
+     * breakpoints (identical to shex-debug's, constraints keyed by ordinal). */
+    shouldPause(event) {
+        var _a;
+        if (event.type === "enter" &&
+            (this.bp.shapes.has(event.shape) || this.matchesNode(event.node)))
+            return true;
+        if (event.type === "constraint" &&
+            (this.bp.constraints.has((_a = this.ordinalOf.get(event.tc)) !== null && _a !== void 0 ? _a : -1) ||
+                this.bp.predicates.has(event.tc.predicate) ||
+                this.matchesNode(event.node)))
+            return true;
+        switch (this.mode.kind) {
+            case "into": return true;
+            case "over": return event.depth <= this.mode.depth;
+            case "out": return event.depth < this.mode.depth;
+            default: return false; // continue
+        }
+    }
+    matchesNode(term) {
+        if (!term || this.bp.nodes.size === 0)
+            return false;
+        return this.bp.nodes.has(nodeKey(term));
+    }
+    serialize(event) {
+        var _a;
+        const out = { type: event.type, depth: event.depth };
+        if ("node" in event && event.node)
+            out.node = termLex(event.node);
+        if (event.type === "constraint") {
+            out.tcOrdinal = (_a = this.ordinalOf.get(event.tc)) !== null && _a !== void 0 ? _a : -1;
+            out.predicate = event.tc.predicate;
+            out.candidates = event.triples ? event.triples.length : 0;
+        }
+        else if ("shape" in event && typeof event.shape === "string") {
+            out.shape = event.shape;
+        }
+        if (event.type === "exit")
+            out.ok = !isFailure(event.result);
+        return out;
+    }
+}
+exports.WorkerGate = WorkerGate;
+function isFailure(result) {
+    return !!result && typeof result === "object" && "errors" in result;
+}
+/** GateController - runs in the controlling thread; writes a command (and
+ * the possibly-edited breakpoints) into the shared buffer and wakes the
+ * paused worker.  Message routing is the caller's -- the worker's "paused"
+ * message is a normal postMessage the caller handles, then calls a
+ * resume method here. */
+class GateController {
+    constructor(sab) {
+        this.encoder = new TextEncoder();
+        this.ctrl = new Int32Array(sab, 0, HEADER_INTS);
+        this.bytes = new Uint8Array(sab, HEADER_BYTES);
+    }
+    /** resume the worker with a step command, adopting `breakpoints` as the
+     * new frozen set for the run until the next pause. */
+    resume(command, breakpoints = {}) {
+        const json = this.encoder.encode(JSON.stringify(breakpoints));
+        if (json.length > this.bytes.length)
+            throw new Error(`breakpoint payload ${json.length}B exceeds buffer ${this.bytes.length}B`);
+        this.bytes.set(json);
+        Atomics.store(this.ctrl, LEN_INDEX, json.length); // LEN before CMD: the
+        Atomics.store(this.ctrl, CMD_INDEX, NAME_TO_CODE[command]); // atomic that
+        Atomics.notify(this.ctrl, CMD_INDEX); // releases the payload
+    }
+    into(bp) { this.resume("into", bp); }
+    over(bp) { this.resume("over", bp); }
+    out(bp) { this.resume("out", bp); }
+    continue(bp) { this.resume("continue", bp); }
+    abort() { this.resume("abort", {}); }
+}
+exports.GateController = GateController;
 
 
 /***/ },
@@ -24455,6 +24740,9 @@ const OBJECT_DATATYPES = new Set([
     "wikibase-sense", "url", "commonsMedia", "geo-shape", "tabular-data",
     "entity-schema",
 ]);
+// @rdfjs/types 2 added fromTerm/fromQuad to DataFactory; this converter uses
+// only namedNode/literal/blankNode/quad, and N3's factory (what both callers
+// pass) doesn't declare the two new methods, so ask for the subset we use.
 function wikibaseRdfConverter(dataFactory, options = {}) {
     const cb = options.conceptBase || "http://www.wikidata.org/";
     const dataBase = options.dataBase || "https://www.wikidata.org/wiki/Special:EntityData/";
@@ -33388,19 +33676,25 @@ class NearestAcceptedBag {
      * `( :name . ; :mbox . | :given . ; :family . ; :mbox . )` answer as its
      * one-`:mbox` spelling does.
      */
-    repairs(observed) {
-        const asked = key(observed, this.tcIndex);
+    repairs(observed, satisfies) {
+        // Keyed on the satisfaction relation when there is one -- it is what the
+        // node actually holds (which triples, and which constraints each could
+        // satisfy), of which `observed`'s per-constraint counts are one arbitrary
+        // reading -- else on the counts alone (a count-only caller).
+        const asked = satisfies === undefined
+            ? key(observed, this.tcIndex)
+            : this.satisfactionKey(satisfies);
         const already = this.answered.get(asked);
         if (already !== undefined)
             return already;
-        const answer = this.computeRepairs(observed);
+        const answer = this.computeRepairs(observed, satisfies);
         this.answered.set(asked, answer);
         return answer;
     }
-    computeRepairs(observed) {
+    computeRepairs(observed, satisfies) {
         let best = [];
         let bestCost = Infinity;
-        for (const dealt of this.deals(observed)) {
+        for (const dealt of this.deals(observed, satisfies)) {
             const found = this.repairsFor(dealt);
             if (found.length === 0 || found[0].cost > bestCost)
                 continue;
@@ -33420,11 +33714,109 @@ class NearestAcceptedBag {
         return best;
     }
     /**
+     * The ways to account the node's triples against the constraints that could
+     * take them, one count-vector each for the DP to price.
+     *
+     * With a satisfaction relation (`satisfies`, one entry per triple naming
+     * the constraints whose value expression it meets), G3: assign each triple
+     * to one constraint it satisfies and pool the distinct count-vectors.  A
+     * predicate constrained twice with *different* value expressions gets a
+     * min-cost bipartite assignment this way -- the DP prices every candidate
+     * vector and keeps the cheapest -- rather than the caller's arbitrary
+     * count.  A predicate constrained twice with the *same* value expression
+     * falls out as the special case where every triple satisfies both, which
+     * reproduces the old stars-and-bars spread.
+     *
+     * Without one (a count-only caller), fall back to dealing indistinguishable
+     * -- same predicate, same value expression -- constraints' pooled counts
+     * every way, which is the usual single-constraint-per-arc no-op.
+     */
+    deals(observed, satisfies) {
+        if (satisfies === undefined)
+            return this.dealsByKind(observed);
+        // group the triples' satisfying-sets by predicate (a triple has one
+        // predicate, and only same-predicate constraints can take it)
+        const byPredicate = new Map();
+        for (const set of satisfies) {
+            if (set.length === 0)
+                continue; // a triple no constraint takes is homeless, not the DP's
+            const already = byPredicate.get(set[0].predicate);
+            if (already === undefined)
+                byPredicate.set(set[0].predicate, [set]);
+            else
+                already.push(set);
+        }
+        let deals = [new Map()];
+        for (const sets of byPredicate.values()) {
+            const spreads = this.assignmentsFor(sets);
+            const grown = [];
+            for (const deal of deals)
+                for (const spread of spreads) {
+                    if (grown.length >= NearestAcceptedBag.DEALS)
+                        break;
+                    const next = new Map(deal);
+                    spread.forEach((n, tc) => next.set(tc, n));
+                    grown.push(next);
+                }
+            deals = grown;
+        }
+        return deals;
+    }
+    /**
+     * Every distinct count-vector from assigning each of one predicate's
+     * triples to one constraint it satisfies (its satisfying-set).  The DFS is
+     * over assignments, deduped by count-vector and capped at DEALS, so a
+     * triple that satisfies only one constraint fixes that count and the common
+     * one-constraint-per-predicate case yields a single vector.
+     */
+    assignmentsFor(sets) {
+        const seen = new Map();
+        const counts = new Map();
+        const vectorKey = () => {
+            const parts = [];
+            counts.forEach((n, tc) => { if (n > 0)
+                parts.push(this.tcIndex.get(tc) + ":" + n); });
+            return parts.sort().join(",");
+        };
+        const assign = (at) => {
+            if (seen.size >= NearestAcceptedBag.DEALS)
+                return;
+            if (at === sets.length) {
+                const k = vectorKey();
+                if (!seen.has(k)) {
+                    const vec = new Map();
+                    counts.forEach((n, tc) => { if (n > 0)
+                        vec.set(tc, n); });
+                    seen.set(k, vec);
+                }
+                return;
+            }
+            for (const tc of sets[at]) {
+                counts.set(tc, (counts.get(tc) || 0) + 1);
+                assign(at + 1);
+                counts.set(tc, counts.get(tc) - 1);
+                if (seen.size >= NearestAcceptedBag.DEALS)
+                    return;
+            }
+        };
+        assign(0);
+        return seen.size === 0 ? [new Map()] : [...seen.values()];
+    }
+    /** the satisfaction relation as a stable key: per triple, its satisfying
+     * constraints by index, sorted; the multiset of those over the node */
+    satisfactionKey(satisfies) {
+        return satisfies
+            .map(set => set.map(tc => this.tcIndex.get(tc)).sort((a, b) => a - b).join("."))
+            .sort()
+            .join("|");
+    }
+    /**
      * Every way of dealing the observed triples among constraints that are
      * indistinguishable -- same predicate, same value expression.  One deal
-     * where every arc is constrained once, which is the usual case.
+     * where every arc is constrained once, which is the usual case.  (The
+     * count-only fallback for a caller with no satisfaction relation.)
      */
-    deals(observed) {
+    dealsByKind(observed) {
         const byKind = new Map();
         this.tripleConstraints.forEach(tc => {
             const kind = tc.predicate + " " + JSON.stringify(tc.valueExpr === undefined ? null : tc.valueExpr);
@@ -34414,6 +34806,12 @@ class ShExValidator {
         // that would take it; which of two indistinguishable constraints gets it
         // doesn't matter, since the repair search deals them out again.
         const observedBag = new Map();
+        // ...and, for the repair search (G3), which constraints each triple could
+        // satisfy -- one entry per counted triple.  observedBag reads each triple
+        // against the first constraint that would take it; this keeps the choice
+        // open, so a predicate constrained twice with different value expressions
+        // gets a real assignment rather than that arbitrary first-match count.
+        const satisfaction = [];
         // ...and the arcs no constraint could take at all -- not one with a
         // bad value, which is a value failure and reported as such -- counted
         // here too, before the search prunes: a closed shape refuses them.
@@ -34425,8 +34823,10 @@ class ShExValidator {
         const outgoingArcs = new Set(fromDB.outgoing);
         t2tcs.reduce((_ret, triple, tcs) => {
             const local = tcs.filter(tc => extendsTCs.indexOf(tc) === -1);
-            if (local.length > 0)
+            if (local.length > 0) {
                 observedBag.set(local[0], (observedBag.get(local[0]) || 0) + 1);
+                satisfaction.push(local);
+            }
             if (tcs.length === 0 && !t2tcErrors.has(triple) && outgoingArcs.has(triple))
                 homeless.push(triple);
             return null;
@@ -34538,11 +34938,11 @@ class ShExValidator {
         const removed = removals.reduce((n, arc) => n - arc.delta, 0);
         if (this.options.repairs !== false && ret !== null && ret.type === "Failure"
             && (shape.expression !== undefined || removals.length > 0)) {
-            const expression = shape.expression, bag = observedBag, validator = this;
+            const expression = shape.expression, bag = observedBag, satisfies = satisfaction, validator = this;
             Object.defineProperty(ret, "repairs", {
                 enumerable: true, configurable: true,
                 get() {
-                    const ofBag = expression !== undefined ? validator.nearestBagRepairs(expression, bag) : [];
+                    const ofBag = expression !== undefined ? validator.nearestBagRepairs(expression, bag, satisfies) : [];
                     const repairs = removals.length === 0 ? ofBag
                         : ofBag.length === 0 ? [{ type: "NearestBag", cost: removed, arcs: removals }]
                             : ofBag.map(r => ({ type: r.type, cost: r.cost + removed, arcs: r.arcs.concat(removals) }));
@@ -34708,12 +35108,12 @@ class ShExValidator {
      * change nothing" is worse than saying nothing.  The classic errors
      * carry that failure; this only ever answers the counting question.
      */
-    nearestBagRepairs(expression, observed) {
+    nearestBagRepairs(expression, observed, satisfies) {
         try {
             let nearest = this.nearestBags.get(expression);
             if (nearest === undefined)
                 this.nearestBags.set(expression, nearest = new repairs_1.NearestAcceptedBag(expression, label => this.index.tripleExprs[label]));
-            const repairs = nearest.repairs(observed);
+            const repairs = nearest.repairs(observed, satisfies);
             return repairs.some(repair => repair.cost === 0) ? [] : repairs;
         }
         catch (e) {
@@ -36945,6 +37345,15 @@ ShExWebApp = (function () {
     MatchDebugger:        modules["@shexjs/eval-simple-1err"].MatchDebugger,
     capturingRegexModule: modules["@shexjs/eval-validator-api"].capturingRegexModule,
     replayingSemActHandler: modules["@shexjs/eval-validator-api"].replayingSemActHandler,
+    /* live whole-validation stepping (doc/debugger-design.md §4): the worker
+       runs the validator and gates every event on a SharedArrayBuffer, the
+       page drives it -- eventTracker is the shape-level event source both
+       the worker gate and the free-running relay share */
+    eventTracker:         modules["@shexjs/eval-validator-api"].eventTracker,
+    WorkerGate:           modules["@shexjs/eval-validator-api"].WorkerGate,
+    GateController:       modules["@shexjs/eval-validator-api"].GateController,
+    createCommandBuffer:  modules["@shexjs/eval-validator-api"].createCommandBuffer,
+    schemaTripleConstraints: modules["@shexjs/eval-validator-api"].schemaTripleConstraints,
     ShapeMap:             modules["shape-map"],
     ShapeMapParser:       modules["shape-map"].Parser,
     JsYaml:               modules["js-yaml"],
