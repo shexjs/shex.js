@@ -1321,6 +1321,29 @@ if (!TEST_browser) {
         }
       });
 
+      it("should hide the Query Map editor behind the Editor and Fixed Map tabs", async function () {
+        // the editor is a CodeMirror view beside the #queryMap textarea (the
+        // tab's panel), so jQuery UI's show/hide of the textarea doesn't reach
+        // it -- it must be kept in step with the active tab, or it stays over
+        // the Query Map Editor and Fixed Map panels
+        $("#queryMap").val("<http://a.example/a>@<http://a.example/B>").trigger("change");
+        await shared.promise;
+        const pane = shared.Caches.editorSupport.panes.shapeMap;
+        expect(pane && pane.view, "the query map has a CodeMirror editor").to.exist;
+        const editor = pane.view.dom;
+        const activate = i => $("#shapeMap-tabs").tabs("option", "active", i);
+
+        activate(0); // Query Map
+        expect(editor.style.display, "editor shows on the Query Map tab").to.not.equal("none");
+        activate(1); // Query Map Editor
+        expect(editor.style.display, "editor hidden behind the Editor tab").to.equal("none");
+        expect($("#queryMap").css("display"), "the textarea it stands in for stays hidden").to.equal("none");
+        activate(2); // Fixed Map
+        expect(editor.style.display, "still hidden behind Fixed Map").to.equal("none");
+        activate(0); // back to Query Map
+        expect(editor.style.display, "editor shows again").to.not.equal("none");
+      });
+
       /* CodeMirror measures when it is built and when its own observers
        * fire; a pane built detached, or sitting behind another tab, has
        * measured nothing -- and draws a gutter for a viewport that never

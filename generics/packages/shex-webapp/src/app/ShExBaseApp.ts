@@ -411,12 +411,18 @@ onDataLoad (): void {
 
     $("#shapeMap-tabs").tabs({
       activate: async (event: any, ui: any) => {
+        // the Query Map pane's editor is a CodeMirror view built beside the
+        // #queryMap textarea (the tab's panel), so jQuery UI's show/hide of
+        // the textarea doesn't reach it: it would stay visible over the
+        // Editor and Fixed Map tabs.  Keep it in step with the active tab.
+        this.syncShapeMapEditor();
         if (ui.oldPanel.get(0) === $("#editMap-tab").get(0))
           await this.Caches.shapeMap.copyEditMapToQueryMap();
         else if (ui.oldPanel.get(0) === $("#queryMap").get(0))
           await this.Caches.shapeMap.copyQueryMapToEditMap()
       }
     });
+    this.syncShapeMapEditor(); // the initial tab, before any activate fires
     $("#queryMap").on("change", (evt: any) => {
       this.resultsWidget.clear();
       this.track(this.Caches.shapeMap.copyQueryMapToEditMap());
@@ -458,6 +464,23 @@ onDataLoad (): void {
       return await this.Caches.shapeMap.copyEditMapToQueryMap();
     else // if (active === "#queryMap")
       return await this.Caches.shapeMap.copyQueryMapToEditMap();
+  }
+
+  /** The Query Map pane's editor stands in for the #queryMap textarea, but
+   * it is a sibling of it rather than a child, so it is outside the panel
+   * jQuery UI's tabs show and hide.  Show the editor only when the Query Map
+   * tab is active, and keep the textarea hidden either way (jQuery UI un-hides
+   * it when its tab activates).  A no-op when the editors are off. */
+  syncShapeMapEditor (): void {
+    const pane = this.editorSupport && this.editorSupport.panes["shapeMap"];
+    if (!pane || !pane.view)
+      return;
+    const active = $("#shapeMap-tabs ul li.ui-tabs-active a").attr("href");
+    const showEditor = active === undefined || active === "#queryMap";
+    pane.view.dom.style.display = showEditor ? "" : "none";
+    $("#queryMap").css("display", "none");
+    if (showEditor)
+      pane.requestMeasure();
   }
 
   /* Keyboard events */
