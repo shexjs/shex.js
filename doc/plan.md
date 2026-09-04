@@ -239,10 +239,14 @@ Larger, design conversation first:
   capture+replay path; the live stepping itself needs a truly-blocking worker
   thread the in-process shim can't provide, so it rides E9's `worker_threads`
   harness for the mechanism and a cross-origin-isolated browser for the glue.
-  *Still open (optional):* folding the materializer's own debug panel and
-  this one into a single unified panel over both engines -- they share a
-  look but remain two panels (the materializer's is ShExMap-plugin-owned,
-  this one is core).
+  **Unified panel done (2026-09-04):** the validation debugger and the
+  ShExMap materializer debugger now share one control strip, status line and
+  thread list (core, in `shex-simple.html`/`shex-app.css`) -- they never step
+  at once (a validation finishes before its materialization starts), so the
+  app's `activeDebugSession` is whichever is live and the shared buttons
+  route to it.  `ShExMapPlugin` stops generating its own strip and keeps only
+  the `#debugMaterialize` trigger; every ShExMap page redirects to
+  `shex-simple.html`, so the static strip is always present.
 - **E11 (done 2026-09-04)** Worker-app materializer debugging.  The step
   session's `MaterializerDebugger` runs in the page even when the app
   validates in a worker (`app.remote`): its inputs -- output schema,

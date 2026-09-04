@@ -38,8 +38,11 @@ node**.
 > worker gate + `Atomics`): the validate panel's 🐞▶ (shown when the page is
 > cross-origin isolated) runs the validator in a dedicated worker that
 > blocks between events, stepping the whole validation shape by shape and
-> constraint by constraint beside the capture+replay 🐞.  What remains is
-> polish: one unified panel over the materializer and validator engines.
+> constraint by constraint beside the capture+replay 🐞.  All three
+> debuggers -- validation capture+replay, validation live, and the ShExMap
+> materializer -- now share **one** panel (control strip, status, threads),
+> driven by whichever session is live (`activeDebugSession`); they never run
+> at once (a validation finishes before its materialization starts).
 
 ## 1. The central problem: suspending an engine
 
@@ -235,9 +238,12 @@ starts from the same base.
      it beside the capture+replay 🐞, reusing the same controls, gutter and
      breakpoints (E10); the live stepping rides the `worker_threads` harness
      for the mechanism and a real isolated browser for the glue;
-   - folding the materializer's panel and the validation panel into a single
-     unified panel over both engines is the remaining polish (they share a
-     look but are two panels today).
+   - ✅ one unified panel over both engines: the validation debugger and the
+     ShExMap materializer share a single control strip, status line and
+     thread list (core, in `shex-simple.html`), dispatched to the app's
+     `activeDebugSession` -- they never step at once (a validation finishes
+     before its materialization starts), so the plugin keeps only its
+     `#debugMaterialize` trigger and drives the shared strip.
 
 ## 8. Risks / notes
 
