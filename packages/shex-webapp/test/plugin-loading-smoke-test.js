@@ -100,11 +100,12 @@ if (!TEST_browser) {
     it("should build its toolbar, and bring the module its verbs run on", async function () {
       const toolbar = $("#screens .screen[data-plugin] > .pluginToolbar");
       expect(toolbar.length, "one toolbar").to.equal(1);
+      // just the plugin's own verbs: the step controls are the app's shared
+      // debug strip now (core, driven by whichever debug session is live)
       expect(toolbar.find("button").map((i, b) => b.id).get()).to.deep.equal(
-        ["materialize", "debugMaterialize",
-         "dbgContinue", "dbgInto", "dbgOver", "dbgOut", "dbgStop"]);
+        ["materialize", "debugMaterialize"]);
       expect($("#outputShapeMap").length, "and the input that is not a pane").to.equal(1);
-      expect($("#debugControls").css("display"), "the step buttons wait").to.equal("none");
+      expect($("#debugControls").css("display"), "the shared step buttons wait").to.equal("none");
       expect(typeof dom.window.ShExWebApp.Map, "the module it fetched").to.equal("function");
 
       $("#materialize").trigger("click");

@@ -374,11 +374,14 @@ if (!TEST_browser) {
         expect($(sel).length, sel).to.equal(1);
         expect($(sel).closest(".pluginToolbarInner").length, sel + " is in the row").to.equal(1);
       });
-      // the step buttons wait inside it, hidden until a session starts
-      expect($("#debugControls").css("display")).to.equal("none");
-      expect($("#dbgStatusRow").closest(".pluginToolbarInner").length,
-             "and the status line is outside them, so hiding them keeps it").to.equal(1);
-      expect($("#dbgStatus").closest("#debugControls").length).to.equal(0);
+      // the step controls, status and threads are the app's *shared* debug
+      // strip (core, shared with the validation debugger -- one panel, one
+      // engine at a time), not generated here: they live outside the plugin
+      // toolbar and wait hidden until a session starts
+      expect($("#debugControls").css("display"), "the shared controls wait hidden").to.equal("none");
+      expect($("#debugControls").closest(".pluginToolbarInner").length,
+             "the strip is the app's own, not in the plugin toolbar").to.equal(0);
+      expect($("#dbgStatus").closest("#debugControls").length, "the status is its own row").to.equal(0);
     });
 
     /* Two of ShExMap's verbs are only a keystroke, so nothing else on the
@@ -476,13 +479,13 @@ if (!TEST_browser) {
       $("#dbgInto").trigger("click"); // at :fullName
       $("#dbgInto").trigger("click"); // at :phone; the mbox disjunct is pending
       expect($("#dbgThreads button").length, "pending threads listed").to.be.above(0);
-      // the list lives at the left edge of the target schema pane, not in
-      // the right-floating controls: a thread appearing or dying there
-      // changed the width of the block the step buttons sit in and moved
-      // them out from under the mouse
+      // the list lives in its own row of the shared debug strip, not in the
+      // right-floating controls: a thread appearing or dying there changed
+      // the width of the block the step buttons sit in and moved them out
+      // from under the mouse (the strip is core now, shared with the
+      // validation debugger, so this row is #dbgThreadsRow rather than the
+      // plugin statusbar it used to generate)
       expect($("#dbgThreads").closest("#debugControls").length, "not in the controls").to.equal(0);
-      expect($("#dbgThreads").closest(".pluginStatusbar").length,
-             "under the controls, in a row whose width nothing else depends on").to.equal(1);
       expect($("#dbgThreads").closest("#dbgThreadsRow").length, "on a row of its own").to.equal(1);
       $("#dbgThreads button").first().trigger("mouseenter"); // partial preview
       // ...and that preview is written the way the finished graph is.  A

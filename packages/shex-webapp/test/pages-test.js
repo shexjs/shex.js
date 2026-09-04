@@ -69,14 +69,17 @@ describe("the app pages", () => {
   });
 
   /* What ShExMap adds to a page is ShExMap's to
-   * say, so no page says any of it -- no panes, no controls, no results
-   * panel, no app class, no worker script.  This is the check that the port
-   * did not quietly leave something behind in the markup. */
+   * say, so no page says any of it -- no panes, no materialize control, no
+   * results panel, no app class, no worker script.  This is the check that
+   * the port did not quietly leave something behind in the markup.  (The
+   * debug strip -- #debugControls/#dbgStatus/#dbgThreads -- is *not* on this
+   * list: it is the core app's now, shared by the validation debugger and,
+   * when the plugin is loaded, the materializer.) */
   it("should keep ShExMap out of every page", () => {
     for (const {file} of pages.concat(redirects)) {
       const text = read(file);
       for (const id of ["bindings1", "staticVars", "outputSchema", "materialize",
-                        "outputShapeMap", "debugControls", "dbgStatus", "dbgThreads",
+                        "outputShapeMap",
                         "resultsTabs", "validationResults", "materializationResults"])
         expect(text, file + " leaves " + id + " to the plugin")
           .to.not.include('id="' + id + '"');

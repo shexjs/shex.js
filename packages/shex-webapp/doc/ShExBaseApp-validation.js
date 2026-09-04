@@ -128,16 +128,24 @@ mixin(ShExBaseApp, {
             // is which recorded matches to offer)
             const breakpoints = this.valDebugSession && this.valDebugSession.breakpoints
                 || { predicates: new Set(), nodes: new Set() };
-            this.valDebugSession = { captures, located, pane, schema, results, breakpoints };
-            const select = $("#valDbgMatches").empty();
+            if (this.activeDebugSession)
+                this.activeDebugSession.end();
+            this.valDebugSession = { kind: "replay", captures, located, pane, schema, results, breakpoints };
+            // the shared control strip drives whichever session is live (a
+            // materialization debugger runs here too, one at a time)
+            this.activeDebugSession = { kind: "replay", step: (c) => this.valDebugStep(c),
+                end: () => this.endValidationDebugSession() };
+            const select = $("#dbgMatches").empty();
             captures.forEach((cap, i) => select.append($("<option/>", { value: i }).text(this.matchCaptureLabel(cap, schema))));
             select.off("change").on("change", () => this.pickValidationMatch(parseInt(select.val(), 10)));
             this.renderValDebugBreakpoints();
-            // the step buttons, the match picker and the status line are three
-            // rows of one control; 🐞 started this session, and pressing it again
-            // would only start another over the same results
-            $("#valDebugControls, .valDbgRow").show();
-            $("#debugValidate").hide();
+            // the step buttons, the match picker and the status line are rows of
+            // one control; 🐞 started this session, and pressing it again would
+            // only start another over the same results.  A replay steps within one
+            // match, so step-out has nothing to leave -- hide ⤴.
+            $("#debugControls, .dbgRow").show();
+            $("#dbgOut").hide();
+            $("#debugValidate, #debugValidateLive").hide();
             this.pickValidationMatch(this.offeredMatches()[0] || 0);
             return this.valDebugSession;
         }
@@ -211,13 +219,17 @@ mixin(ShExBaseApp, {
             // a dedicated worker, independent of the app's ShExWorker: it runs only
             // this gated validation and is terminated when the session ends, so it
             // never disturbs the validator the app may hold in its own worker
+            if (this.activeDebugSession)
+                this.activeDebugSession.end();
             const worker = new Worker(WorkerUrl);
             const session = { live: true, located, pane, schema, tcs, controller, sab,
                 breakpoints, worker, done: false, currentEvent: null };
             this.valDebugSession = session;
+            this.activeDebugSession = { kind: "live", step: (c) => this.valDebugStep(c),
+                end: () => this.endValidationDebugSession() };
             worker.onmessage = (msg) => this.receiveLiveValDebug(msg);
             worker.onerror = (e) => {
-                $("#valDbgStatus").text("worker error: " + ((e && e.message) || e));
+                $("#dbgStatus").text("worker error: " + ((e && e.message) || e));
                 session.done = true;
             };
             worker.postMessage(Object.assign({ plugins: pluginWorkerUrls() }, {
@@ -229,11 +241,12 @@ mixin(ShExBaseApp, {
                 sab,
             }));
             this.renderValDebugBreakpoints();
-            $("#valDebugControls, .valDbgRow").show();
-            $("#valDbgMatches").hide(); // no recorded-match catalogue in live mode
-            $("#valDbgOver").attr("title", "step over this shape's body");
+            $("#debugControls, .dbgRow").show();
+            $("#dbgOut").show(); // whole-validation stepping can step out of a shape
+            $("#dbgMatches").hide(); // no recorded-match catalogue in live mode
+            $("#dbgOver").attr("title", "step over this shape's body");
             $("#debugValidate, #debugValidateLive").hide();
-            $("#valDbgStatus").text("starting the validation in a worker...");
+            $("#dbgStatus").text("starting the validation in a worker...");
             return session;
         }
         catch (e) {
@@ -256,17 +269,17 @@ mixin(ShExBaseApp, {
             case "done":
                 session.done = true;
                 session.pane.clearHighlights();
-                $("#valDbgStatus").text("validation finished: " +
+                $("#dbgStatus").text("validation finished: " +
                     (msg.data.conformant ? "conformant" : "nonconformant") + "; ⏹ to close");
                 break;
             case "aborted":
                 session.done = true;
                 session.pane.clearHighlights();
-                $("#valDbgStatus").text("validation debugger stopped");
+                $("#dbgStatus").text("validation debugger stopped");
                 break;
             case "error":
                 session.done = true;
-                $("#valDbgStatus").text("worker error: " + (msg.data.message || "?"));
+                $("#dbgStatus").text("worker error: " + (msg.data.message || "?"));
                 break;
         }
     },
@@ -288,11 +301,11 @@ mixin(ShExBaseApp, {
         };
         switch (event.type) {
             case "enter":
-                $("#valDbgStatus").text("enter " + at + "@<" + event.shape + ">  [depth " + event.depth + "]");
+                $("#dbgStatus").text("enter " + at + "@<" + event.shape + ">  [depth " + event.depth + "]");
                 shapeOf(event.shape);
                 break;
             case "constraint": {
-                $("#valDbgStatus").text("at <" + event.predicate + "> for " + at +
+                $("#dbgStatus").text("at <" + event.predicate + "> for " + at +
                     " (" + event.candidates + " candidate" + (event.candidates === 1 ? "" : "s") + ")" +
                     "  [depth " + event.depth + "]");
                 const tc = session.tcs[event.tcOrdinal];
@@ -301,12 +314,12 @@ mixin(ShExBaseApp, {
                 break;
             }
             case "exit":
-                $("#valDbgStatus").text("exit  " + at + "@<" + event.shape + "> -> " +
+                $("#dbgStatus").text("exit  " + at + "@<" + event.shape + "> -> " +
                     (event.ok ? "ok" : "fail") + "  [depth " + event.depth + "]");
                 shapeOf(event.shape);
                 break;
             case "recurse":
-                $("#valDbgStatus").text("recurse into <" + event.shape + ">  [depth " + event.depth + "]");
+                $("#dbgStatus").text("recurse into <" + event.shape + ">  [depth " + event.depth + "]");
                 shapeOf(event.shape);
                 break;
         }
@@ -370,7 +383,7 @@ mixin(ShExBaseApp, {
         const offered = [];
         session.captures.forEach((cap, i) => {
             const on = nodes.size === 0 || nodes.has(this.captureNodeLex(cap));
-            $("#valDbgMatches option[value='" + i + "']").toggle(on);
+            $("#dbgMatches option[value='" + i + "']").toggle(on);
             if (on)
                 offered.push(i);
         });
@@ -386,7 +399,7 @@ mixin(ShExBaseApp, {
         const session = this.valDebugSession;
         const m = (text || "").trim().match(/^(bp|bn)\s+(\S+)$/);
         if (!session || !m) {
-            $("#valDbgStatus").text("a breakpoint is bp PREDICATE or bn NODE");
+            $("#dbgStatus").text("a breakpoint is bp PREDICATE or bn NODE");
             return false;
         }
         const [, kind, lex] = m;
@@ -401,13 +414,13 @@ mixin(ShExBaseApp, {
             }
         }
         catch (e) {
-            $("#valDbgStatus").text("no such " + (kind === "bp" ? "predicate" : "node") + ": " + e.message);
+            $("#dbgStatus").text("no such " + (kind === "bp" ? "predicate" : "node") + ": " + e.message);
             return false;
         }
         this.renderValDebugBreakpoints();
         // re-arm, on a match still on offer
         const offered = this.offeredMatches();
-        const current = parseInt($("#valDbgMatches").val(), 10);
+        const current = parseInt($("#dbgMatches").val(), 10);
         this.pickValidationMatch(offered.indexOf(current) === -1 ? (offered[0] || 0) : current);
         return true;
     },
@@ -418,13 +431,13 @@ mixin(ShExBaseApp, {
         session.breakpoints[kind === "bp" ? "predicates" : "nodes"].delete(value);
         this.renderValDebugBreakpoints();
         const offered = this.offeredMatches();
-        const current = parseInt($("#valDbgMatches").val(), 10);
+        const current = parseInt($("#dbgMatches").val(), 10);
         this.pickValidationMatch(offered.indexOf(current) === -1 ? (offered[0] || 0) : current);
     },
     /** the breakpoints as chips, each with its × */
     renderValDebugBreakpoints() {
         const session = this.valDebugSession;
-        const list = $("#valDbgBreakpoints").empty();
+        const list = $("#dbgBreakpoints").empty();
         if (!session)
             return;
         const lex = (iri, meta) => { try {
@@ -452,7 +465,7 @@ mixin(ShExBaseApp, {
             return false;
         pane.toggleBreakpointAt(pane.view.state.selection.main.head);
         if (this.valDebugSession) // re-arm, so it counts from here on
-            this.pickValidationMatch(parseInt($("#valDbgMatches").val(), 10) || 0);
+            this.pickValidationMatch(parseInt($("#dbgMatches").val(), 10) || 0);
         return true;
     },
     /** (re)arm the debugger on one recorded match */
@@ -460,7 +473,7 @@ mixin(ShExBaseApp, {
         const session = this.valDebugSession;
         if (!session)
             return null;
-        $("#valDbgMatches").val(String(captureNo));
+        $("#dbgMatches").val(String(captureNo));
         const cap = session.captures[captureNo];
         // only eval-simple-1err's engine steps: a match another engine ran is
         // replayed by a fresh one over the same inputs
@@ -494,11 +507,11 @@ mixin(ShExBaseApp, {
         session.breakpoints.predicates.forEach((predicate) => dbg.addBreakpoint({ predicate }));
         session.dbg = dbg;
         session.capture = cap;
-        $("#valDbgStatus").text("paused before matching " + $("#valDbgMatches option:selected").text() +
+        $("#dbgStatus").text("paused before matching " + $("#dbgMatches option:selected").text() +
             "; step or continue" +
             (cap.regexModule === stepper.name ? ""
                 : " (captured with " + cap.regexModule + ", replayed with " + stepper.name + ")"));
-        $("#valDbgThreads").empty();
+        $("#dbgThreads").empty();
         return dbg;
     },
     valDebugStep(command) {
@@ -515,11 +528,15 @@ mixin(ShExBaseApp, {
                 session.controller.into(bp);
             else if (command === "stepOver")
                 session.controller.over(bp);
+            else if (command === "stepOut")
+                session.controller.out(bp);
             else if (command === "continue")
                 session.controller.continue(bp);
             return null;
         }
-        if (!session.dbg)
+        // capture+replay steps within one match: it has stepInto/stepOver/
+        // continue but no stepOut (⤴ is hidden for it)
+        if (!session.dbg || typeof session.dbg[command] !== "function")
             return null;
         const event = session.dbg[command]();
         this.showValDebugEvent(event);
@@ -539,25 +556,25 @@ mixin(ShExBaseApp, {
         const gen = "generation" in event ? " gen:" + event.generation : "";
         switch (event.type) {
             case "constraint": {
-                $("#valDbgStatus").text("at <" + event.tc.predicate + ">" + gen + threadStr);
+                $("#dbgStatus").text("at <" + event.tc.predicate + ">" + gen + threadStr);
                 const range = session.located.locate.expr(event.tc);
                 session.pane.highlight(range ? [range] : [], "shexjs-debug-current");
                 break;
             }
             case "fail":
-                $("#valDbgStatus").text("thread died at <" + event.tc.predicate + ">" + gen + threadStr);
+                $("#dbgStatus").text("thread died at <" + event.tc.predicate + ">" + gen + threadStr);
                 break;
             case "accept":
-                $("#valDbgStatus").text("thread accepted" + gen + threadStr);
+                $("#dbgStatus").text("thread accepted" + gen + threadStr);
                 break;
             case "done":
-                $("#valDbgStatus").text("match finished: " +
+                $("#dbgStatus").text("match finished: " +
                     (session.dbg.result && !("errors" in session.dbg.result) ? "matched" : "failed") +
                     "; pick another match or ⏹");
                 session.pane.clearHighlights();
                 break;
             case "error":
-                $("#valDbgStatus").text("failed: " + event.error.message);
+                $("#dbgStatus").text("failed: " + event.error.message);
                 break;
         }
     },
@@ -565,7 +582,7 @@ mixin(ShExBaseApp, {
      * advanced into the next); hover or click renders a thread's aspects */
     updateValThreadList() {
         const session = this.valDebugSession;
-        const list = $("#valDbgThreads").empty();
+        const list = $("#dbgThreads").empty();
         if (!session || !session.dbg)
             return;
         session.dbg.threads().forEach((t) => {
@@ -623,7 +640,8 @@ mixin(ShExBaseApp, {
         if (!session)
             return;
         this.valDebugSession = null;
-        if (session.live) {
+        this.activeDebugSession = null;
+        if (session.live)
             // terminate kills the dedicated worker even mid-search (a thread
             // blocked in Atomics.wait can't be asked to stop), and it was never
             // the app's own, so nothing else is disturbed
@@ -634,26 +652,22 @@ mixin(ShExBaseApp, {
                 }
             }
             catch (e) { /* already gone */ }
-            session.pane.clearHighlights();
-            $("#valDebugControls, .valDbgRow").hide();
-            $("#valDbgMatches").show(); // restored for the capture+replay 🐞
-            $("#valDbgOver").attr("title", "run to the next generation");
-            $("#debugValidate").show();
-            if (typeof SharedArrayBuffer !== "undefined" &&
-                typeof self !== "undefined" && self.crossOriginIsolated)
-                $("#debugValidateLive").show();
-            $("#valDbgStatus").text("");
-            $("#valDbgThreads, #valDbgBreakpoints").empty();
-            return;
-        }
         session.pane.clearHighlights();
         if (this.editorSupport && this.editorSupport.panes.inputData)
             this.editorSupport.panes.inputData.clearHighlights();
-        $("#valDebugControls, .valDbgRow").hide();
+        $("#debugControls, .dbgRow").hide();
+        $("#dbgStatus").text("");
+        $("#dbgThreads, #dbgBreakpoints").empty();
+        // the shared strip back to its resting state for the next session (the
+        // materializer's included): ⤴ shown, ⏭'s title, the match select and its
+        // options shown for the capture+replay 🐞, and the triggers offered again
+        $("#dbgOut").show();
+        $("#dbgOver").attr("title", "run to the next generation");
+        $("#dbgMatches").show().find("option").show();
         $("#debugValidate").show();
-        $("#valDbgStatus").text("");
-        $("#valDbgThreads, #valDbgBreakpoints").empty();
-        $("#valDbgMatches option").show();
+        if (typeof SharedArrayBuffer !== "undefined" &&
+            typeof self !== "undefined" && self.crossOriginIsolated)
+            $("#debugValidateLive").show();
     },
     async callValidator(done) {
         $("#fixedMap .pair").removeClass("passes fails");

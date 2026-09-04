@@ -317,15 +317,22 @@ onDataLoad (): void {
         typeof self !== "undefined" && (self as any).crossOriginIsolated)
       $("#debugValidateLive").show()
         .on("click", () => { this.track(this.startValidationDebugSessionLive()); });
-    $("#valDbgInto").on("click", () => this.valDebugStep("stepInto"));
-    $("#valDbgOver").on("click", () => this.valDebugStep("stepOver"));
-    $("#valDbgContinue").on("click", () => this.valDebugStep("continue"));
-    $("#valDbgStop").on("click", () => this.endValidationDebugSession());
-    $("#valDbgBreak").on("keydown", (e: any) => {
+    // One control strip drives whichever debug session is running -- the
+    // validation debugger (capture+replay or live) or, with the ShExMap
+    // plugin, the materializer; they never run at once (a validation
+    // finishes before its materialization starts), so `activeDebugSession`
+    // is whichever one is live and these buttons route to it.
+    const step = (command: string) => { if (this.activeDebugSession) this.activeDebugSession.step(command); };
+    $("#dbgInto").on("click", () => step("stepInto"));
+    $("#dbgOver").on("click", () => step("stepOver"));
+    $("#dbgOut").on("click", () => step("stepOut"));
+    $("#dbgContinue").on("click", () => step("continue"));
+    $("#dbgStop").on("click", () => { if (this.activeDebugSession) this.activeDebugSession.end(); });
+    $("#dbgBreak").on("keydown", (e: any) => {
       if (e.key !== "Enter")
         return true;
-      this.addValDebugBreakpoint($("#valDbgBreak").val());
-      $("#valDbgBreak").val("");
+      this.addValDebugBreakpoint($("#dbgBreak").val());
+      $("#dbgBreak").val("");
       return false;
     });
     $("#download-results-button").on("click", this.downloadResults.bind(this));
