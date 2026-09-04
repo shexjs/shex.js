@@ -1,339 +1,6 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 50
-(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-__exportStar(__webpack_require__(968), exports);
-__exportStar(__webpack_require__(352), exports);
-__exportStar(__webpack_require__(947), exports);
-__exportStar(__webpack_require__(417), exports);
-__exportStar(__webpack_require__(963), exports);
-__exportStar(__webpack_require__(135), exports);
-__exportStar(__webpack_require__(0), exports);
-//# sourceMappingURL=index.js.map
-
-/***/ },
-
-/***/ 968
-(__unused_webpack_module, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BlankNode = void 0;
-/**
- * A term that represents an RDF blank node with a label.
- */
-class BlankNode {
-    constructor(value) {
-        this.termType = 'BlankNode';
-        this.value = value;
-    }
-    equals(other) {
-        return !!other && other.termType === 'BlankNode' && other.value === this.value;
-    }
-}
-exports.BlankNode = BlankNode;
-//# sourceMappingURL=BlankNode.js.map
-
-/***/ },
-
-/***/ 352
-(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DataFactory = void 0;
-const BlankNode_1 = __webpack_require__(968);
-const DefaultGraph_1 = __webpack_require__(947);
-const Literal_1 = __webpack_require__(417);
-const NamedNode_1 = __webpack_require__(963);
-const Quad_1 = __webpack_require__(135);
-const Variable_1 = __webpack_require__(0);
-let dataFactoryCounter = 0;
-/**
- * A factory for instantiating RDF terms and quads.
- */
-class DataFactory {
-    constructor(options) {
-        this.blankNodeCounter = 0;
-        options = options || {};
-        this.blankNodePrefix = options.blankNodePrefix || `df_${dataFactoryCounter++}_`;
-    }
-    /**
-     * @param value The IRI for the named node.
-     * @return A new instance of NamedNode.
-     * @see NamedNode
-     */
-    namedNode(value) {
-        return new NamedNode_1.NamedNode(value);
-    }
-    /**
-     * @param value The optional blank node identifier.
-     * @return A new instance of BlankNode.
-     *         If the `value` parameter is undefined a new identifier
-     *         for the blank node is generated for each call.
-     * @see BlankNode
-     */
-    blankNode(value) {
-        return new BlankNode_1.BlankNode(value || `${this.blankNodePrefix}${this.blankNodeCounter++}`);
-    }
-    /**
-     * @param value              The literal value.
-     * @param languageOrDatatype The optional language or datatype.
-     *                           If `languageOrDatatype` is a NamedNode,
-     *                           then it is used for the value of `NamedNode.datatype`.
-     *                           Otherwise `languageOrDatatype` is used for the value
-     *                           of `NamedNode.language`.
-     * @return A new instance of Literal.
-     * @see Literal
-     */
-    literal(value, languageOrDatatype) {
-        return new Literal_1.Literal(value, languageOrDatatype);
-    }
-    /**
-     * This method is optional.
-     * @param value The variable name
-     * @return A new instance of Variable.
-     * @see Variable
-     */
-    variable(value) {
-        return new Variable_1.Variable(value);
-    }
-    /**
-     * @return An instance of DefaultGraph.
-     */
-    defaultGraph() {
-        return DefaultGraph_1.DefaultGraph.INSTANCE;
-    }
-    /**
-     * @param subject   The quad subject term.
-     * @param predicate The quad predicate term.
-     * @param object    The quad object term.
-     * @param graph     The quad graph term.
-     * @return A new instance of Quad.
-     * @see Quad
-     */
-    quad(subject, predicate, object, graph) {
-        return new Quad_1.Quad(subject, predicate, object, graph || this.defaultGraph());
-    }
-    /**
-     * Create a deep copy of the given term using this data factory.
-     * @param original An RDF term.
-     * @return A deep copy of the given term.
-     */
-    fromTerm(original) {
-        // TODO: remove nasty any casts when this TS bug has been fixed:
-        //  https://github.com/microsoft/TypeScript/issues/26933
-        switch (original.termType) {
-            case 'NamedNode':
-                return this.namedNode(original.value);
-            case 'BlankNode':
-                return this.blankNode(original.value);
-            case 'Literal':
-                if (original.language) {
-                    return this.literal(original.value, original.language);
-                }
-                if (!original.datatype.equals(Literal_1.Literal.XSD_STRING)) {
-                    return this.literal(original.value, this.fromTerm(original.datatype));
-                }
-                return this.literal(original.value);
-            case 'Variable':
-                return this.variable(original.value);
-            case 'DefaultGraph':
-                return this.defaultGraph();
-            case 'Quad':
-                return this.quad(this.fromTerm(original.subject), this.fromTerm(original.predicate), this.fromTerm(original.object), this.fromTerm(original.graph));
-        }
-    }
-    /**
-     * Create a deep copy of the given quad using this data factory.
-     * @param original An RDF quad.
-     * @return A deep copy of the given quad.
-     */
-    fromQuad(original) {
-        return this.fromTerm(original);
-    }
-    /**
-     * Reset the internal blank node counter.
-     */
-    resetBlankNodeCounter() {
-        this.blankNodeCounter = 0;
-    }
-}
-exports.DataFactory = DataFactory;
-//# sourceMappingURL=DataFactory.js.map
-
-/***/ },
-
-/***/ 947
-(__unused_webpack_module, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DefaultGraph = void 0;
-/**
- * A singleton term instance that represents the default graph.
- * It's only allowed to assign a DefaultGraph to the .graph property of a Quad.
- */
-class DefaultGraph {
-    constructor() {
-        this.termType = 'DefaultGraph';
-        this.value = '';
-        // Private constructor
-    }
-    equals(other) {
-        return !!other && other.termType === 'DefaultGraph';
-    }
-}
-exports.DefaultGraph = DefaultGraph;
-DefaultGraph.INSTANCE = new DefaultGraph();
-//# sourceMappingURL=DefaultGraph.js.map
-
-/***/ },
-
-/***/ 417
-(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Literal = void 0;
-const NamedNode_1 = __webpack_require__(963);
-/**
- * A term that represents an RDF literal, containing a string with an optional language tag or datatype.
- */
-class Literal {
-    constructor(value, languageOrDatatype) {
-        this.termType = 'Literal';
-        this.value = value;
-        if (typeof languageOrDatatype === 'string') {
-            this.language = languageOrDatatype;
-            this.datatype = Literal.RDF_LANGUAGE_STRING;
-        }
-        else if (languageOrDatatype) {
-            this.language = '';
-            this.datatype = languageOrDatatype;
-        }
-        else {
-            this.language = '';
-            this.datatype = Literal.XSD_STRING;
-        }
-    }
-    equals(other) {
-        return !!other && other.termType === 'Literal' && other.value === this.value &&
-            other.language === this.language && this.datatype.equals(other.datatype);
-    }
-}
-exports.Literal = Literal;
-Literal.RDF_LANGUAGE_STRING = new NamedNode_1.NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString');
-Literal.XSD_STRING = new NamedNode_1.NamedNode('http://www.w3.org/2001/XMLSchema#string');
-//# sourceMappingURL=Literal.js.map
-
-/***/ },
-
-/***/ 963
-(__unused_webpack_module, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.NamedNode = void 0;
-/**
- * A term that contains an IRI.
- */
-class NamedNode {
-    constructor(value) {
-        this.termType = 'NamedNode';
-        this.value = value;
-    }
-    equals(other) {
-        return !!other && other.termType === 'NamedNode' && other.value === this.value;
-    }
-}
-exports.NamedNode = NamedNode;
-//# sourceMappingURL=NamedNode.js.map
-
-/***/ },
-
-/***/ 135
-(__unused_webpack_module, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Quad = void 0;
-/**
- * An instance of DefaultGraph represents the default graph.
- * It's only allowed to assign a DefaultGraph to the .graph property of a Quad.
- */
-class Quad {
-    constructor(subject, predicate, object, graph) {
-        this.termType = 'Quad';
-        this.value = '';
-        this.subject = subject;
-        this.predicate = predicate;
-        this.object = object;
-        this.graph = graph;
-    }
-    equals(other) {
-        // `|| !other.termType` is for backwards-compatibility with old factories without RDF* support.
-        return !!other && (other.termType === 'Quad' || !other.termType) &&
-            this.subject.equals(other.subject) &&
-            this.predicate.equals(other.predicate) &&
-            this.object.equals(other.object) &&
-            this.graph.equals(other.graph);
-    }
-}
-exports.Quad = Quad;
-//# sourceMappingURL=Quad.js.map
-
-/***/ },
-
-/***/ 0
-(__unused_webpack_module, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Variable = void 0;
-/**
- * A term that represents a variable.
- */
-class Variable {
-    constructor(value) {
-        this.termType = 'Variable';
-        this.value = value;
-    }
-    equals(other) {
-        return !!other && other.termType === 'Variable' && other.value === this.value;
-    }
-}
-exports.Variable = Variable;
-//# sourceMappingURL=Variable.js.map
-
-/***/ },
-
 /***/ 441
 (module, __unused_webpack_exports, __webpack_require__) {
 
@@ -4263,7 +3930,7 @@ module.exports = ShExMapCjsModule;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.n3idQuad2RdfJs = n3idQuad2RdfJs;
 exports.n3idTerm2RdfJs = n3idTerm2RdfJs;
-const rdf_data_factory_1 = __webpack_require__(50);
+const rdf_data_factory_1 = __webpack_require__(793);
 const RdfJsFactory = new rdf_data_factory_1.DataFactory();
 /**
  * Map an N3id quad to an RdfJs quad
@@ -4929,6 +4596,359 @@ function prefixes(defaultPrefixes, factory) {
   }
   return processPrefix;
 }
+
+/***/ },
+
+/***/ 793
+(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__webpack_require__(931), exports);
+__exportStar(__webpack_require__(483), exports);
+__exportStar(__webpack_require__(142), exports);
+__exportStar(__webpack_require__(426), exports);
+__exportStar(__webpack_require__(988), exports);
+__exportStar(__webpack_require__(754), exports);
+__exportStar(__webpack_require__(401), exports);
+//# sourceMappingURL=index.js.map
+
+/***/ },
+
+/***/ 931
+(__unused_webpack_module, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BlankNode = void 0;
+/**
+ * A term that represents an RDF blank node with a label.
+ */
+class BlankNode {
+    constructor(value) {
+        this.termType = 'BlankNode';
+        this.value = value;
+    }
+    equals(other) {
+        return !!other && other.termType === 'BlankNode' && other.value === this.value;
+    }
+}
+exports.BlankNode = BlankNode;
+//# sourceMappingURL=BlankNode.js.map
+
+/***/ },
+
+/***/ 483
+(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DataFactory = void 0;
+const BlankNode_1 = __webpack_require__(931);
+const DefaultGraph_1 = __webpack_require__(142);
+const Literal_1 = __webpack_require__(426);
+const NamedNode_1 = __webpack_require__(988);
+const Quad_1 = __webpack_require__(754);
+const Variable_1 = __webpack_require__(401);
+let dataFactoryCounter = 0;
+/**
+ * A factory for instantiating RDF terms and quads.
+ */
+class DataFactory {
+    constructor(options) {
+        this.blankNodeCounter = 0;
+        options = options || {};
+        this.blankNodePrefix = options.blankNodePrefix || `df_${dataFactoryCounter++}_`;
+    }
+    /**
+     * @param value The IRI for the named node.
+     * @return A new instance of NamedNode.
+     * @see NamedNode
+     */
+    namedNode(value) {
+        return new NamedNode_1.NamedNode(value);
+    }
+    /**
+     * @param value The optional blank node identifier.
+     * @return A new instance of BlankNode.
+     *         If the `value` parameter is undefined a new identifier
+     *         for the blank node is generated for each call.
+     * @see BlankNode
+     */
+    blankNode(value) {
+        return new BlankNode_1.BlankNode(value || `${this.blankNodePrefix}${this.blankNodeCounter++}`);
+    }
+    /**
+     * @param value              The literal value.
+     * @param languageOrDatatype The optional language, datatype, or directional language.
+     *                           If `languageOrDatatype` is a NamedNode,
+     *                           then it is used for the value of `NamedNode.datatype`.
+     *                           If `languageOrDatatype` is a NamedNode, it is used for the value
+     *                           of `NamedNode.language`.
+     *                           Otherwise, it is used as a directional language,
+     *                           from which the language is set to `languageOrDatatype.language`
+     *                           and the direction to `languageOrDatatype.direction`.
+     * @return A new instance of Literal.
+     * @see Literal
+     */
+    literal(value, languageOrDatatype) {
+        return new Literal_1.Literal(value, languageOrDatatype);
+    }
+    /**
+     * This method is optional.
+     * @param value The variable name
+     * @return A new instance of Variable.
+     * @see Variable
+     */
+    variable(value) {
+        return new Variable_1.Variable(value);
+    }
+    /**
+     * @return An instance of DefaultGraph.
+     */
+    defaultGraph() {
+        return DefaultGraph_1.DefaultGraph.INSTANCE;
+    }
+    /**
+     * @param subject   The quad subject term.
+     * @param predicate The quad predicate term.
+     * @param object    The quad object term.
+     * @param graph     The quad graph term.
+     * @return A new instance of Quad.
+     * @see Quad
+     */
+    quad(subject, predicate, object, graph) {
+        return new Quad_1.Quad(subject, predicate, object, graph || this.defaultGraph());
+    }
+    /**
+     * Create a deep copy of the given term using this data factory.
+     * @param original An RDF term.
+     * @return A deep copy of the given term.
+     */
+    fromTerm(original) {
+        // TODO: remove nasty any casts when this TS bug has been fixed:
+        //  https://github.com/microsoft/TypeScript/issues/26933
+        switch (original.termType) {
+            case 'NamedNode':
+                return this.namedNode(original.value);
+            case 'BlankNode':
+                return this.blankNode(original.value);
+            case 'Literal':
+                if (original.language) {
+                    return this.literal(original.value, original.language);
+                }
+                if (!original.datatype.equals(Literal_1.Literal.XSD_STRING)) {
+                    return this.literal(original.value, this.fromTerm(original.datatype));
+                }
+                return this.literal(original.value);
+            case 'Variable':
+                return this.variable(original.value);
+            case 'DefaultGraph':
+                return this.defaultGraph();
+            case 'Quad':
+                return this.quad(this.fromTerm(original.subject), this.fromTerm(original.predicate), this.fromTerm(original.object), this.fromTerm(original.graph));
+        }
+    }
+    /**
+     * Create a deep copy of the given quad using this data factory.
+     * @param original An RDF quad.
+     * @return A deep copy of the given quad.
+     */
+    fromQuad(original) {
+        return this.fromTerm(original);
+    }
+    /**
+     * Reset the internal blank node counter.
+     */
+    resetBlankNodeCounter() {
+        this.blankNodeCounter = 0;
+    }
+}
+exports.DataFactory = DataFactory;
+//# sourceMappingURL=DataFactory.js.map
+
+/***/ },
+
+/***/ 142
+(__unused_webpack_module, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DefaultGraph = void 0;
+/**
+ * A singleton term instance that represents the default graph.
+ * It's only allowed to assign a DefaultGraph to the .graph property of a Quad.
+ */
+class DefaultGraph {
+    constructor() {
+        this.termType = 'DefaultGraph';
+        this.value = '';
+        // Private constructor
+    }
+    equals(other) {
+        return !!other && other.termType === 'DefaultGraph';
+    }
+}
+exports.DefaultGraph = DefaultGraph;
+DefaultGraph.INSTANCE = new DefaultGraph();
+//# sourceMappingURL=DefaultGraph.js.map
+
+/***/ },
+
+/***/ 426
+(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Literal = void 0;
+const NamedNode_1 = __webpack_require__(988);
+/**
+ * A term that represents an RDF literal,
+ * containing a string with an optional language tag and optional direction
+ * or datatype.
+ */
+class Literal {
+    constructor(value, languageOrDatatype) {
+        this.termType = 'Literal';
+        this.value = value;
+        if (typeof languageOrDatatype === 'string') {
+            this.language = languageOrDatatype;
+            this.datatype = Literal.RDF_LANGUAGE_STRING;
+            this.direction = '';
+        }
+        else if (languageOrDatatype) {
+            if ('termType' in languageOrDatatype) {
+                this.language = '';
+                this.datatype = languageOrDatatype;
+                this.direction = '';
+            }
+            else {
+                this.language = languageOrDatatype.language;
+                this.datatype = languageOrDatatype.direction ?
+                    Literal.RDF_DIRECTIONAL_LANGUAGE_STRING :
+                    Literal.RDF_LANGUAGE_STRING;
+                this.direction = languageOrDatatype.direction || '';
+            }
+        }
+        else {
+            this.language = '';
+            this.datatype = Literal.XSD_STRING;
+            this.direction = '';
+        }
+    }
+    equals(other) {
+        return !!other && other.termType === 'Literal' && other.value === this.value &&
+            other.language === this.language &&
+            ((other.direction === this.direction) || (!other.direction && this.direction === '')) &&
+            this.datatype.equals(other.datatype);
+    }
+}
+exports.Literal = Literal;
+Literal.RDF_LANGUAGE_STRING = new NamedNode_1.NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString');
+Literal.RDF_DIRECTIONAL_LANGUAGE_STRING = new NamedNode_1.NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#dirLangString');
+Literal.XSD_STRING = new NamedNode_1.NamedNode('http://www.w3.org/2001/XMLSchema#string');
+//# sourceMappingURL=Literal.js.map
+
+/***/ },
+
+/***/ 988
+(__unused_webpack_module, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.NamedNode = void 0;
+/**
+ * A term that contains an IRI.
+ */
+class NamedNode {
+    constructor(value) {
+        this.termType = 'NamedNode';
+        this.value = value;
+    }
+    equals(other) {
+        return !!other && other.termType === 'NamedNode' && other.value === this.value;
+    }
+}
+exports.NamedNode = NamedNode;
+//# sourceMappingURL=NamedNode.js.map
+
+/***/ },
+
+/***/ 754
+(__unused_webpack_module, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Quad = void 0;
+/**
+ * An instance of DefaultGraph represents the default graph.
+ * It's only allowed to assign a DefaultGraph to the .graph property of a Quad.
+ */
+class Quad {
+    constructor(subject, predicate, object, graph) {
+        this.termType = 'Quad';
+        this.value = '';
+        this.subject = subject;
+        this.predicate = predicate;
+        this.object = object;
+        this.graph = graph;
+    }
+    equals(other) {
+        // `|| !other.termType` is for backwards-compatibility with old factories without RDF* support.
+        return !!other && (other.termType === 'Quad' || !other.termType) &&
+            this.subject.equals(other.subject) &&
+            this.predicate.equals(other.predicate) &&
+            this.object.equals(other.object) &&
+            this.graph.equals(other.graph);
+    }
+}
+exports.Quad = Quad;
+//# sourceMappingURL=Quad.js.map
+
+/***/ },
+
+/***/ 401
+(__unused_webpack_module, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Variable = void 0;
+/**
+ * A term that represents a variable.
+ */
+class Variable {
+    constructor(value) {
+        this.termType = 'Variable';
+        this.value = value;
+    }
+    equals(other) {
+        return !!other && other.termType === 'Variable' && other.value === this.value;
+    }
+}
+exports.Variable = Variable;
+//# sourceMappingURL=Variable.js.map
 
 /***/ },
 
