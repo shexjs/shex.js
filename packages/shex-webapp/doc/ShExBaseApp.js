@@ -281,6 +281,7 @@ class ShExBaseApp {
             return false;
         });
         $("#download-results-button").on("click", this.downloadResults.bind(this));
+        $("#shortenPermalink").on("click", (evt) => { this.track(this.shortenPermalink(evt)); });
         $("#createGist").on("click", (evt) => { this.track(this.createGist(evt)); });
         $("#updateGist").on("click", (evt) => { this.track(this.updateGist(evt)); });
         $("#loadForm").dialog({
