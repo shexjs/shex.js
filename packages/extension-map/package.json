@@ -43,7 +43,7 @@
     "chalk": "^4.1.2",
     "command-line-args": "^6.0.2",
     "command-line-usage": "^7.0.3",
-    "n3": "^1.20.4",
+    "n3": "^2.7.4",
     "rdf-data-factory": "^1.1.2"
   },
   "devDependencies": {
@@ -56,10 +56,10 @@
     "@shexjs/validator": "^1.0.0-alpha.30",
     "@shexjs/writer": "^1.0.0-alpha.30",
     "dctap": "^0.0.6",
-    "jquery": "^3.7.1",
+    "jquery": "^4.0.0",
     "jquery-contextmenu": "^2.9.2",
     "jquery-ui": "^1.14.0",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^5.4.1",
     "shape-map": "^1.0.0"
   },
   "scripts": {

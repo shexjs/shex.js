@@ -30,7 +30,7 @@ module.exports = function (dirName) {
       return fromPackage;
     }
   } catch (e) {
-    throw new Error(fromPath + " not found and shex-test not installed. Either 'npm install shex-test' or '(cd .. && git clone git@github.com:shexSpec/shex-test.git)' .");
+    throw new Error(fromPath + " not found and shex-test not installed. Either 'npm install shex-test' or '(cd .. && git clone git@github.com:shexSpec/shex-test.git)' .", {cause: e});
   }
   throw new Error(fromPath + " not found and " + dirName + " not in shexTest repo.");
 };
