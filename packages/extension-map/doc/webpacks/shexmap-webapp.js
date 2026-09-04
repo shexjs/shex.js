@@ -1,547 +1,6 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 146
-(__unused_webpack_module, exports) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports["default"] = void 0;
-const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-  XSD = 'http://www.w3.org/2001/XMLSchema#',
-  SWAP = 'http://www.w3.org/2000/10/swap/';
-var _default = exports["default"] = {
-  xsd: {
-    decimal: `${XSD}decimal`,
-    boolean: `${XSD}boolean`,
-    double: `${XSD}double`,
-    integer: `${XSD}integer`,
-    string: `${XSD}string`
-  },
-  rdf: {
-    type: `${RDF}type`,
-    nil: `${RDF}nil`,
-    first: `${RDF}first`,
-    rest: `${RDF}rest`,
-    langString: `${RDF}langString`
-  },
-  owl: {
-    sameAs: 'http://www.w3.org/2002/07/owl#sameAs'
-  },
-  r: {
-    forSome: `${SWAP}reify#forSome`,
-    forAll: `${SWAP}reify#forAll`
-  },
-  log: {
-    implies: `${SWAP}log#implies`,
-    isImpliedBy: `${SWAP}log#isImpliedBy`
-  }
-};
-
-/***/ },
-
-/***/ 998
-(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports["default"] = exports.Variable = exports.Triple = exports.Term = exports.Quad = exports.NamedNode = exports.Literal = exports.DefaultGraph = exports.BlankNode = void 0;
-exports.escapeQuotes = escapeQuotes;
-exports.fromQuad = fromQuad;
-exports.fromTerm = fromTerm;
-exports.termFromId = termFromId;
-exports.termToId = termToId;
-exports.unescapeQuotes = unescapeQuotes;
-var _IRIs = _interopRequireDefault(__webpack_require__(146));
-function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
-// N3.js implementations of the RDF/JS core data types
-// See http://rdf.js.org/data-model-spec/
-
-const {
-  rdf,
-  xsd
-} = _IRIs.default;
-
-// eslint-disable-next-line prefer-const
-let DEFAULTGRAPH;
-let _blankNodeCounter = 0;
-const escapedLiteral = /^"(.*".*)(?="[^"]*$)/;
-
-// ## DataFactory singleton
-const DataFactory = {
-  namedNode,
-  blankNode,
-  variable,
-  literal,
-  defaultGraph,
-  quad,
-  triple: quad,
-  fromTerm,
-  fromQuad
-};
-var _default = exports["default"] = DataFactory; // ## Term constructor
-class Term {
-  constructor(id) {
-    this.id = id;
-  }
-
-  // ### The value of this term
-  get value() {
-    return this.id;
-  }
-
-  // ### Returns whether this object represents the same term as the other
-  equals(other) {
-    // If both terms were created by this library,
-    // equality can be computed through ids
-    if (other instanceof Term) return this.id === other.id;
-    // Otherwise, compare term type and value
-    return !!other && this.termType === other.termType && this.value === other.value;
-  }
-
-  // ### Implement hashCode for Immutable.js, since we implement `equals`
-  // https://immutable-js.com/docs/v4.0.0/ValueObject/#hashCode()
-  hashCode() {
-    return 0;
-  }
-
-  // ### Returns a plain object representation of this term
-  toJSON() {
-    return {
-      termType: this.termType,
-      value: this.value
-    };
-  }
-}
-
-// ## NamedNode constructor
-exports.Term = Term;
-class NamedNode extends Term {
-  // ### The term type of this term
-  get termType() {
-    return 'NamedNode';
-  }
-}
-
-// ## Literal constructor
-exports.NamedNode = NamedNode;
-class Literal extends Term {
-  // ### The term type of this term
-  get termType() {
-    return 'Literal';
-  }
-
-  // ### The text value of this literal
-  get value() {
-    return this.id.substring(1, this.id.lastIndexOf('"'));
-  }
-
-  // ### The language of this literal
-  get language() {
-    // Find the last quotation mark (e.g., '"abc"@en-us')
-    const id = this.id;
-    let atPos = id.lastIndexOf('"') + 1;
-    // If "@" it follows, return the remaining substring; empty otherwise
-    return atPos < id.length && id[atPos++] === '@' ? id.substr(atPos).toLowerCase() : '';
-  }
-
-  // ### The datatype IRI of this literal
-  get datatype() {
-    return new NamedNode(this.datatypeString);
-  }
-
-  // ### The datatype string of this literal
-  get datatypeString() {
-    // Find the last quotation mark (e.g., '"abc"^^http://ex.org/types#t')
-    const id = this.id,
-      dtPos = id.lastIndexOf('"') + 1;
-    const char = dtPos < id.length ? id[dtPos] : '';
-    // If "^" it follows, return the remaining substring
-    return char === '^' ? id.substr(dtPos + 2) :
-    // If "@" follows, return rdf:langString; xsd:string otherwise
-    char !== '@' ? xsd.string : rdf.langString;
-  }
-
-  // ### Returns whether this object represents the same term as the other
-  equals(other) {
-    // If both literals were created by this library,
-    // equality can be computed through ids
-    if (other instanceof Literal) return this.id === other.id;
-    // Otherwise, compare term type, value, language, and datatype
-    return !!other && !!other.datatype && this.termType === other.termType && this.value === other.value && this.language === other.language && this.datatype.value === other.datatype.value;
-  }
-  toJSON() {
-    return {
-      termType: this.termType,
-      value: this.value,
-      language: this.language,
-      datatype: {
-        termType: 'NamedNode',
-        value: this.datatypeString
-      }
-    };
-  }
-}
-
-// ## BlankNode constructor
-exports.Literal = Literal;
-class BlankNode extends Term {
-  constructor(name) {
-    super(`_:${name}`);
-  }
-
-  // ### The term type of this term
-  get termType() {
-    return 'BlankNode';
-  }
-
-  // ### The name of this blank node
-  get value() {
-    return this.id.substr(2);
-  }
-}
-exports.BlankNode = BlankNode;
-class Variable extends Term {
-  constructor(name) {
-    super(`?${name}`);
-  }
-
-  // ### The term type of this term
-  get termType() {
-    return 'Variable';
-  }
-
-  // ### The name of this variable
-  get value() {
-    return this.id.substr(1);
-  }
-}
-
-// ## DefaultGraph constructor
-exports.Variable = Variable;
-class DefaultGraph extends Term {
-  constructor() {
-    super('');
-    return DEFAULTGRAPH || this;
-  }
-
-  // ### The term type of this term
-  get termType() {
-    return 'DefaultGraph';
-  }
-
-  // ### Returns whether this object represents the same term as the other
-  equals(other) {
-    // If both terms were created by this library,
-    // equality can be computed through strict equality;
-    // otherwise, compare term types.
-    return this === other || !!other && this.termType === other.termType;
-  }
-}
-
-// ## DefaultGraph singleton
-exports.DefaultGraph = DefaultGraph;
-DEFAULTGRAPH = new DefaultGraph();
-
-// ### Constructs a term from the given internal string ID
-// The third 'nested' parameter of this function is to aid
-// with recursion over nested terms. It should not be used
-// by consumers of this library.
-// See https://github.com/rdfjs/N3.js/pull/311#discussion_r1061042725
-function termFromId(id, factory, nested) {
-  factory = factory || DataFactory;
-
-  // Falsy value or empty string indicate the default graph
-  if (!id) return factory.defaultGraph();
-
-  // Identify the term type based on the first character
-  switch (id[0]) {
-    case '?':
-      return factory.variable(id.substr(1));
-    case '_':
-      return factory.blankNode(id.substr(2));
-    case '"':
-      // Shortcut for internal literals
-      if (factory === DataFactory) return new Literal(id);
-      // Literal without datatype or language
-      if (id[id.length - 1] === '"') return factory.literal(id.substr(1, id.length - 2));
-      // Literal with datatype or language
-      const endPos = id.lastIndexOf('"', id.length - 1);
-      return factory.literal(id.substr(1, endPos - 1), id[endPos + 1] === '@' ? id.substr(endPos + 2) : factory.namedNode(id.substr(endPos + 3)));
-    case '[':
-      id = JSON.parse(id);
-      break;
-    default:
-      if (!nested || !Array.isArray(id)) {
-        return factory.namedNode(id);
-      }
-  }
-  return factory.quad(termFromId(id[0], factory, true), termFromId(id[1], factory, true), termFromId(id[2], factory, true), id[3] && termFromId(id[3], factory, true));
-}
-
-// ### Constructs an internal string ID from the given term or ID string
-// The third 'nested' parameter of this function is to aid
-// with recursion over nested terms. It should not be used
-// by consumers of this library.
-// See https://github.com/rdfjs/N3.js/pull/311#discussion_r1061042725
-function termToId(term, nested) {
-  if (typeof term === 'string') return term;
-  if (term instanceof Term && term.termType !== 'Quad') return term.id;
-  if (!term) return DEFAULTGRAPH.id;
-
-  // Term instantiated with another library
-  switch (term.termType) {
-    case 'NamedNode':
-      return term.value;
-    case 'BlankNode':
-      return `_:${term.value}`;
-    case 'Variable':
-      return `?${term.value}`;
-    case 'DefaultGraph':
-      return '';
-    case 'Literal':
-      return `"${term.value}"${term.language ? `@${term.language}` : term.datatype && term.datatype.value !== xsd.string ? `^^${term.datatype.value}` : ''}`;
-    case 'Quad':
-      const res = [termToId(term.subject, true), termToId(term.predicate, true), termToId(term.object, true)];
-      if (term.graph && term.graph.termType !== 'DefaultGraph') {
-        res.push(termToId(term.graph, true));
-      }
-      return nested ? res : JSON.stringify(res);
-    default:
-      throw new Error(`Unexpected termType: ${term.termType}`);
-  }
-}
-
-// ## Quad constructor
-class Quad extends Term {
-  constructor(subject, predicate, object, graph) {
-    super('');
-    this._subject = subject;
-    this._predicate = predicate;
-    this._object = object;
-    this._graph = graph || DEFAULTGRAPH;
-  }
-
-  // ### The term type of this term
-  get termType() {
-    return 'Quad';
-  }
-  get subject() {
-    return this._subject;
-  }
-  get predicate() {
-    return this._predicate;
-  }
-  get object() {
-    return this._object;
-  }
-  get graph() {
-    return this._graph;
-  }
-
-  // ### Returns a plain object representation of this quad
-  toJSON() {
-    return {
-      termType: this.termType,
-      subject: this._subject.toJSON(),
-      predicate: this._predicate.toJSON(),
-      object: this._object.toJSON(),
-      graph: this._graph.toJSON()
-    };
-  }
-
-  // ### Returns whether this object represents the same quad as the other
-  equals(other) {
-    return !!other && this._subject.equals(other.subject) && this._predicate.equals(other.predicate) && this._object.equals(other.object) && this._graph.equals(other.graph);
-  }
-}
-exports.Triple = exports.Quad = Quad;
-// ### Escapes the quotes within the given literal
-function escapeQuotes(id) {
-  return id.replace(escapedLiteral, (_, quoted) => `"${quoted.replace(/"/g, '""')}`);
-}
-
-// ### Unescapes the quotes within the given literal
-function unescapeQuotes(id) {
-  return id.replace(escapedLiteral, (_, quoted) => `"${quoted.replace(/""/g, '"')}`);
-}
-
-// ### Creates an IRI
-function namedNode(iri) {
-  return new NamedNode(iri);
-}
-
-// ### Creates a blank node
-function blankNode(name) {
-  return new BlankNode(name || `n3-${_blankNodeCounter++}`);
-}
-
-// ### Creates a literal
-function literal(value, languageOrDataType) {
-  // Create a language-tagged string
-  if (typeof languageOrDataType === 'string') return new Literal(`"${value}"@${languageOrDataType.toLowerCase()}`);
-
-  // Automatically determine datatype for booleans and numbers
-  let datatype = languageOrDataType ? languageOrDataType.value : '';
-  if (datatype === '') {
-    // Convert a boolean
-    if (typeof value === 'boolean') datatype = xsd.boolean;
-    // Convert an integer or double
-    else if (typeof value === 'number') {
-      if (Number.isFinite(value)) datatype = Number.isInteger(value) ? xsd.integer : xsd.double;else {
-        datatype = xsd.double;
-        if (!Number.isNaN(value)) value = value > 0 ? 'INF' : '-INF';
-      }
-    }
-  }
-
-  // Create a datatyped literal
-  return datatype === '' || datatype === xsd.string ? new Literal(`"${value}"`) : new Literal(`"${value}"^^${datatype}`);
-}
-
-// ### Creates a variable
-function variable(name) {
-  return new Variable(name);
-}
-
-// ### Returns the default graph
-function defaultGraph() {
-  return DEFAULTGRAPH;
-}
-
-// ### Creates a quad
-function quad(subject, predicate, object, graph) {
-  return new Quad(subject, predicate, object, graph);
-}
-function fromTerm(term) {
-  if (term instanceof Term) return term;
-
-  // Term instantiated with another library
-  switch (term.termType) {
-    case 'NamedNode':
-      return namedNode(term.value);
-    case 'BlankNode':
-      return blankNode(term.value);
-    case 'Variable':
-      return variable(term.value);
-    case 'DefaultGraph':
-      return DEFAULTGRAPH;
-    case 'Literal':
-      return literal(term.value, term.language || term.datatype);
-    case 'Quad':
-      return fromQuad(term);
-    default:
-      throw new Error(`Unexpected termType: ${term.termType}`);
-  }
-}
-function fromQuad(inQuad) {
-  if (inQuad instanceof Quad) return inQuad;
-  if (inQuad.termType !== 'Quad') throw new Error(`Unexpected termType: ${inQuad.termType}`);
-  return quad(fromTerm(inQuad.subject), fromTerm(inQuad.predicate), fromTerm(inQuad.object), fromTerm(inQuad.graph));
-}
-
-/***/ },
-
-/***/ 818
-(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.inDefaultGraph = inDefaultGraph;
-exports.isBlankNode = isBlankNode;
-exports.isDefaultGraph = isDefaultGraph;
-exports.isLiteral = isLiteral;
-exports.isNamedNode = isNamedNode;
-exports.isQuad = isQuad;
-exports.isVariable = isVariable;
-exports.prefix = prefix;
-exports.prefixes = prefixes;
-var _N3DataFactory = _interopRequireDefault(__webpack_require__(998));
-function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
-// **N3Util** provides N3 utility functions.
-
-// Tests whether the given term represents an IRI
-function isNamedNode(term) {
-  return !!term && term.termType === 'NamedNode';
-}
-
-// Tests whether the given term represents a blank node
-function isBlankNode(term) {
-  return !!term && term.termType === 'BlankNode';
-}
-
-// Tests whether the given term represents a literal
-function isLiteral(term) {
-  return !!term && term.termType === 'Literal';
-}
-
-// Tests whether the given term represents a variable
-function isVariable(term) {
-  return !!term && term.termType === 'Variable';
-}
-
-// Tests whether the given term represents a quad
-function isQuad(term) {
-  return !!term && term.termType === 'Quad';
-}
-
-// Tests whether the given term represents the default graph
-function isDefaultGraph(term) {
-  return !!term && term.termType === 'DefaultGraph';
-}
-
-// Tests whether the given quad is in the default graph
-function inDefaultGraph(quad) {
-  return isDefaultGraph(quad.graph);
-}
-
-// Creates a function that prepends the given IRI to a local name
-function prefix(iri, factory) {
-  return prefixes({
-    '': iri.value || iri
-  }, factory)('');
-}
-
-// Creates a function that allows registering and expanding prefixes
-function prefixes(defaultPrefixes, factory) {
-  // Add all of the default prefixes
-  const prefixes = Object.create(null);
-  for (const prefix in defaultPrefixes) processPrefix(prefix, defaultPrefixes[prefix]);
-  // Set the default factory if none was specified
-  factory = factory || _N3DataFactory.default;
-
-  // Registers a new prefix (if an IRI was specified)
-  // or retrieves a function that expands an existing prefix (if no IRI was specified)
-  function processPrefix(prefix, iri) {
-    // Create a new prefix if an IRI is specified or the prefix doesn't exist
-    if (typeof iri === 'string') {
-      // Create a function that expands the prefix
-      const cache = Object.create(null);
-      prefixes[prefix] = local => {
-        return cache[local] || (cache[local] = factory.namedNode(iri + local));
-      };
-    } else if (!(prefix in prefixes)) {
-      throw new Error(`Unknown prefix: ${prefix}`);
-    }
-    return prefixes[prefix];
-  }
-  return processPrefix;
-}
-
-/***/ },
-
 /***/ 50
 (__unused_webpack_module, exports, __webpack_require__) {
 
@@ -887,11 +346,11 @@ exports.Variable = Variable;
  * }
  */
 // **N3Writer** writes N3 documents.
-const namespaces = (__webpack_require__(146)["default"]);
-const N3Fac = __webpack_require__(998);
+const namespaces = (__webpack_require__(215)["default"]);
+const N3Fac = __webpack_require__(601);
 const { Term } = N3Fac;
 const N3DataFactory = N3Fac.default;
-const { isDefaultGraph } = __webpack_require__(818);
+const { isDefaultGraph } = __webpack_require__(539);
 const DEFAULTGRAPH = N3DataFactory.defaultGraph();
 const { rdf, xsd } = namespaces;
 // Characters in literals that require escaping
@@ -4385,8 +3844,8 @@ const ShExMapCjsModule = function (config) {
     const extensions = __webpack_require__(787);
     const { ShExVisitor, ShExIndexVisitor } = __webpack_require__(747);
     const ShExUtil = __webpack_require__(837);
-    const N3Util = __webpack_require__(818);
-    const N3DataFactory = (__webpack_require__(998)["default"]);
+    const N3Util = __webpack_require__(539);
+    const N3DataFactory = (__webpack_require__(601)["default"]);
     const materializer = __webpack_require__(554)(config);
     const StringToRdfJs = __webpack_require__(638);
     const MapExt = "http://shex.io/extensions/Map/#";
@@ -4848,6 +4307,628 @@ function n3idTerm2RdfJs(term) {
     }
 }
 //# sourceMappingURL=stringToRdfJs.js.map
+
+/***/ },
+
+/***/ 215
+(__unused_webpack_module, exports) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = void 0;
+const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+  XSD = 'http://www.w3.org/2001/XMLSchema#',
+  SWAP = 'http://www.w3.org/2000/10/swap/';
+var _default = exports["default"] = {
+  xsd: {
+    decimal: `${XSD}decimal`,
+    boolean: `${XSD}boolean`,
+    dateTime: `${XSD}dateTime`,
+    double: `${XSD}double`,
+    integer: `${XSD}integer`,
+    string: `${XSD}string`
+  },
+  rdf: {
+    type: `${RDF}type`,
+    nil: `${RDF}nil`,
+    first: `${RDF}first`,
+    rest: `${RDF}rest`,
+    langString: `${RDF}langString`,
+    dirLangString: `${RDF}dirLangString`,
+    reifies: `${RDF}reifies`
+  },
+  owl: {
+    sameAs: 'http://www.w3.org/2002/07/owl#sameAs'
+  },
+  r: {
+    forSome: `${SWAP}reify#forSome`,
+    forAll: `${SWAP}reify#forAll`
+  },
+  log: {
+    implies: `${SWAP}log#implies`,
+    isImpliedBy: `${SWAP}log#isImpliedBy`
+  }
+};
+
+/***/ },
+
+/***/ 601
+(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = exports.Variable = exports.Triple = exports.Term = exports.Quad = exports.NamedNode = exports.Literal = exports.DefaultGraph = exports.BlankNode = void 0;
+exports.escapeQuotes = escapeQuotes;
+exports.fromQuad = fromQuad;
+exports.fromTerm = fromTerm;
+exports.termFromId = termFromId;
+exports.termToId = termToId;
+exports.unescapeQuotes = unescapeQuotes;
+var _IRIs = _interopRequireDefault(__webpack_require__(215));
+function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
+// N3.js implementations of the RDF/JS core data types
+// See http://rdf.js.org/data-model-spec/
+
+const {
+  rdf,
+  xsd
+} = _IRIs.default;
+
+// eslint-disable-next-line prefer-const
+let DEFAULTGRAPH;
+let _blankNodeCounter = 0;
+const escapedLiteral = /^"(.*".*)(?="[^"]*$)/;
+
+// ## DataFactory singleton
+const DataFactory = {
+  namedNode,
+  blankNode,
+  variable,
+  literal,
+  defaultGraph,
+  quad,
+  triple: quad,
+  fromTerm,
+  fromQuad
+};
+var _default = exports["default"] = DataFactory; // ## Term constructor
+class Term {
+  constructor(id) {
+    this.id = id;
+  }
+
+  // ### The value of this term
+  get value() {
+    return this.id;
+  }
+
+  // ### Returns whether this object represents the same term as the other
+  equals(other) {
+    // If both terms were created by this library,
+    // equality can be computed through ids
+    if (other instanceof Term) return this.id === other.id;
+    // Otherwise, compare term type and value
+    return !!other && this.termType === other.termType && this.value === other.value;
+  }
+
+  // ### Implement hashCode for Immutable.js, since we implement `equals`
+  // https://immutable-js.com/docs/v4.0.0/ValueObject/#hashCode()
+  hashCode() {
+    return 0;
+  }
+
+  // ### Returns a plain object representation of this term
+  toJSON() {
+    return {
+      termType: this.termType,
+      value: this.value
+    };
+  }
+}
+
+// ## NamedNode constructor
+exports.Term = Term;
+class NamedNode extends Term {
+  // ### Creates a named node
+  /**
+   * @deprecated Create named nodes through a data factory instead
+   * (`DataFactory.namedNode(iri)`), so that term validation can be applied;
+   * the constructor assumes an already-validated IRI.
+   */
+  constructor(iri) {
+    super(iri);
+  }
+
+  // ### The term type of this term
+  get termType() {
+    return 'NamedNode';
+  }
+}
+
+// ## Literal constructor
+exports.NamedNode = NamedNode;
+class Literal extends Term {
+  // ### Creates a literal
+  /**
+   * @deprecated Create literals through a data factory instead
+   * (`DataFactory.literal(value, languageOrDatatype)`), so that term
+   * validation can be applied; the constructor takes the internal
+   * id representation and assumes it is already valid.
+   */
+  constructor(id) {
+    super(id);
+  }
+
+  // ### The term type of this term
+  get termType() {
+    return 'Literal';
+  }
+
+  // ### The text value of this literal
+  get value() {
+    return this.id.substring(1, this.id.lastIndexOf('"'));
+  }
+
+  // ### The language of this literal
+  get language() {
+    // Find the last quotation mark (e.g., '"abc"@en-us')
+    const id = this.id;
+    let atPos = id.lastIndexOf('"') + 1;
+    const dirPos = id.lastIndexOf('--');
+    // If "@" it follows, return the remaining substring; empty otherwise
+    return atPos < id.length && id[atPos++] === '@' ? (dirPos > atPos ? id.substr(0, dirPos) : id).substr(atPos).toLowerCase() : '';
+  }
+
+  // ### The direction of this literal
+  get direction() {
+    // Find the last double dash after the closing quote (e.g., '"abc"@en-us--ltr')
+    const id = this.id;
+    const endPos = id.lastIndexOf('"');
+    const dirPos = id.lastIndexOf('--');
+    return dirPos > endPos && dirPos + 2 < id.length ? id.substr(dirPos + 2).toLowerCase() : '';
+  }
+
+  // ### The datatype IRI of this literal
+  get datatype() {
+    return new NamedNode(this.datatypeString);
+  }
+
+  // ### The datatype string of this literal
+  get datatypeString() {
+    // Find the last quotation mark (e.g., '"abc"^^http://ex.org/types#t')
+    const id = this.id,
+      dtPos = id.lastIndexOf('"') + 1;
+    const char = dtPos < id.length ? id[dtPos] : '';
+    // If "^" it follows, return the remaining substring
+    return char === '^' ? id.substr(dtPos + 2) :
+    // If "@" follows, return rdf:langString or rdf:dirLangString; xsd:string otherwise
+    char !== '@' ? xsd.string : id.indexOf('--', dtPos) > 0 ? rdf.dirLangString : rdf.langString;
+  }
+
+  // ### Returns whether this object represents the same term as the other
+  equals(other) {
+    // If both literals were created by this library,
+    // equality can be computed through ids
+    if (other instanceof Literal) return this.id === other.id;
+    // Otherwise, compare term type, value, language, and datatype
+    return !!other && !!other.datatype && this.termType === other.termType && this.value === other.value && this.language === other.language && (this.direction === other.direction || this.direction === '' && !other.direction) && this.datatype.value === other.datatype.value;
+  }
+  toJSON() {
+    return {
+      termType: this.termType,
+      value: this.value,
+      language: this.language,
+      direction: this.direction,
+      datatype: {
+        termType: 'NamedNode',
+        value: this.datatypeString
+      }
+    };
+  }
+}
+
+// ## BlankNode constructor
+exports.Literal = Literal;
+class BlankNode extends Term {
+  // ### Creates a blank node
+  /**
+   * @deprecated Create blank nodes through a data factory instead
+   * (`DataFactory.blankNode(name)`), so that term validation can be applied;
+   * the constructor assumes an already-validated name.
+   */
+  constructor(name) {
+    super(`_:${name}`);
+  }
+
+  // ### The term type of this term
+  get termType() {
+    return 'BlankNode';
+  }
+
+  // ### The name of this blank node
+  get value() {
+    return this.id.substr(2);
+  }
+}
+exports.BlankNode = BlankNode;
+class Variable extends Term {
+  // ### Creates a variable
+  /**
+   * @deprecated Create variables through a data factory instead
+   * (`DataFactory.variable(name)`), so that term validation can be applied;
+   * the constructor assumes an already-validated name.
+   */
+  constructor(name) {
+    super(`?${name}`);
+  }
+
+  // ### The term type of this term
+  get termType() {
+    return 'Variable';
+  }
+
+  // ### The name of this variable
+  get value() {
+    return this.id.substr(1);
+  }
+}
+
+// ## DefaultGraph constructor
+exports.Variable = Variable;
+class DefaultGraph extends Term {
+  // ### Creates the default graph
+  /**
+   * @deprecated Obtain the default graph through a data factory instead
+   * (`DataFactory.defaultGraph()`).
+   */
+  constructor() {
+    super('');
+    return DEFAULTGRAPH || this;
+  }
+
+  // ### The term type of this term
+  get termType() {
+    return 'DefaultGraph';
+  }
+
+  // ### Returns whether this object represents the same term as the other
+  equals(other) {
+    // If both terms were created by this library,
+    // equality can be computed through strict equality;
+    // otherwise, compare term types.
+    return this === other || !!other && this.termType === other.termType;
+  }
+}
+
+// ## DefaultGraph singleton
+exports.DefaultGraph = DefaultGraph;
+DEFAULTGRAPH = new DefaultGraph();
+
+// ### Constructs a term from the given internal string ID
+// The third 'nested' parameter of this function is to aid
+// with recursion over nested terms. It should not be used
+// by consumers of this library.
+// See https://github.com/rdfjs/N3.js/pull/311#discussion_r1061042725
+function termFromId(id, factory, nested) {
+  factory = factory || DataFactory;
+
+  // Falsy value or empty string indicate the default graph
+  if (!id) return factory.defaultGraph();
+
+  // Identify the term type based on the first character
+  switch (id[0]) {
+    case '?':
+      return factory.variable(id.substr(1));
+    case '_':
+      return factory.blankNode(id.substr(2));
+    case '"':
+      // Shortcut for internal literals
+      if (factory === DataFactory) return new Literal(id);
+      // Literal without datatype or language
+      if (id[id.length - 1] === '"') return factory.literal(id.substr(1, id.length - 2));
+      // Literal with datatype or language
+      const endPos = id.lastIndexOf('"', id.length - 1);
+      let languageOrDatatype;
+      if (id[endPos + 1] === '@') {
+        languageOrDatatype = id.substr(endPos + 2);
+        const dashDashIndex = languageOrDatatype.lastIndexOf('--');
+        if (dashDashIndex > 0 && dashDashIndex < languageOrDatatype.length) {
+          languageOrDatatype = {
+            language: languageOrDatatype.substr(0, dashDashIndex),
+            direction: languageOrDatatype.substr(dashDashIndex + 2)
+          };
+        }
+      } else {
+        languageOrDatatype = factory.namedNode(id.substr(endPos + 3));
+      }
+      return factory.literal(id.substr(1, endPos - 1), languageOrDatatype);
+    case '[':
+      id = JSON.parse(id);
+      break;
+    default:
+      if (!nested || !Array.isArray(id)) {
+        return factory.namedNode(id);
+      }
+  }
+  return factory.quad(termFromId(id[0], factory, true), termFromId(id[1], factory, true), termFromId(id[2], factory, true), id[3] && termFromId(id[3], factory, true));
+}
+
+// ### Constructs an internal string ID from the given term or ID string
+// The third 'nested' parameter of this function is to aid
+// with recursion over nested terms. It should not be used
+// by consumers of this library.
+// See https://github.com/rdfjs/N3.js/pull/311#discussion_r1061042725
+function termToId(term, nested) {
+  if (typeof term === 'string') return term;
+  if (term instanceof Term && term.termType !== 'Quad') return term.id;
+  if (!term) return DEFAULTGRAPH.id;
+
+  // Term instantiated with another library
+  switch (term.termType) {
+    case 'NamedNode':
+      return term.value;
+    case 'BlankNode':
+      return `_:${term.value}`;
+    case 'Variable':
+      return `?${term.value}`;
+    case 'DefaultGraph':
+      return '';
+    case 'Literal':
+      return `"${term.value}"${term.language ? `@${term.language}${term.direction ? `--${term.direction}` : ''}` : term.datatype && term.datatype.value !== xsd.string ? `^^${term.datatype.value}` : ''}`;
+    case 'Quad':
+      const res = [termToId(term.subject, true), termToId(term.predicate, true), termToId(term.object, true)];
+      if (term.graph && term.graph.termType !== 'DefaultGraph') {
+        res.push(termToId(term.graph, true));
+      }
+      return nested ? res : JSON.stringify(res);
+    default:
+      throw new Error(`Unexpected termType: ${term.termType}`);
+  }
+}
+
+// ## Quad constructor
+class Quad extends Term {
+  // ### Creates a quad
+  /**
+   * @deprecated Create quads through a data factory instead
+   * (`DataFactory.quad(subject, predicate, object, graph)`), so that term
+   * validation can be applied; the constructor assumes already-validated terms.
+   */
+  constructor(subject, predicate, object, graph) {
+    super('');
+    this._subject = subject;
+    this._predicate = predicate;
+    this._object = object;
+    this._graph = graph || DEFAULTGRAPH;
+  }
+
+  // ### The term type of this term
+  get termType() {
+    return 'Quad';
+  }
+  get subject() {
+    return this._subject;
+  }
+  get predicate() {
+    return this._predicate;
+  }
+  get object() {
+    return this._object;
+  }
+  get graph() {
+    return this._graph;
+  }
+
+  // ### Returns a plain object representation of this quad
+  toJSON() {
+    return {
+      termType: this.termType,
+      subject: this._subject.toJSON(),
+      predicate: this._predicate.toJSON(),
+      object: this._object.toJSON(),
+      graph: this._graph.toJSON()
+    };
+  }
+
+  // ### Returns whether this object represents the same quad as the other
+  equals(other) {
+    return !!other && this._subject.equals(other.subject) && this._predicate.equals(other.predicate) && this._object.equals(other.object) && this._graph.equals(other.graph);
+  }
+}
+exports.Triple = exports.Quad = Quad;
+// ### Escapes the quotes within the given literal
+function escapeQuotes(id) {
+  return id.replace(escapedLiteral, (_, quoted) => `"${quoted.replace(/"/g, '""')}`);
+}
+
+// ### Unescapes the quotes within the given literal
+function unescapeQuotes(id) {
+  return id.replace(escapedLiteral, (_, quoted) => `"${quoted.replace(/""/g, '"')}`);
+}
+
+// ### Creates an IRI
+function namedNode(iri) {
+  return new NamedNode(iri);
+}
+
+// ### Creates a blank node
+function blankNode(name) {
+  return new BlankNode(name || `n3-${_blankNodeCounter++}`);
+}
+
+// ### Creates a literal
+function literal(value, languageOrDataType) {
+  // Create a language-tagged string
+  if (typeof languageOrDataType === 'string') return new Literal(`"${value}"@${languageOrDataType.toLowerCase()}`);
+
+  // Create a language-tagged string with base direction
+  if (languageOrDataType !== undefined && !('termType' in languageOrDataType)) {
+    return new Literal(`"${value}"@${languageOrDataType.language.toLowerCase()}${languageOrDataType.direction ? `--${languageOrDataType.direction.toLowerCase()}` : ''}`);
+  }
+
+  // Automatically determine datatype for booleans, numbers, and dates
+  let datatype = languageOrDataType ? languageOrDataType.value : '';
+  if (datatype === '') {
+    // Convert a boolean
+    if (typeof value === 'boolean') datatype = xsd.boolean;
+    // Convert an integer or double
+    else if (typeof value === 'number') {
+      if (Number.isFinite(value)) datatype = Number.isInteger(value) ? xsd.integer : xsd.double;else {
+        datatype = xsd.double;
+        if (!Number.isNaN(value)) value = value > 0 ? 'INF' : '-INF';
+      }
+    }
+    // Convert a valid date
+    else if (value instanceof Date && !Number.isNaN(value.getTime())) {
+      datatype = xsd.dateTime;
+      value = value.toISOString();
+    }
+  }
+
+  // Create a datatyped literal
+  return datatype === '' || datatype === xsd.string ? new Literal(`"${value}"`) : new Literal(`"${value}"^^${datatype}`);
+}
+
+// ### Creates a variable
+function variable(name) {
+  return new Variable(name);
+}
+
+// ### Returns the default graph
+function defaultGraph() {
+  return DEFAULTGRAPH;
+}
+
+// ### Creates a quad
+function quad(subject, predicate, object, graph) {
+  return new Quad(subject, predicate, object, graph);
+}
+function fromTerm(term) {
+  if (term instanceof Term) return term;
+
+  // Term instantiated with another library
+  switch (term.termType) {
+    case 'NamedNode':
+      return namedNode(term.value);
+    case 'BlankNode':
+      return blankNode(term.value);
+    case 'Variable':
+      return variable(term.value);
+    case 'DefaultGraph':
+      return DEFAULTGRAPH;
+    case 'Literal':
+      return literal(term.value, term.language || term.datatype);
+    case 'Quad':
+      return fromQuad(term);
+    default:
+      throw new Error(`Unexpected termType: ${term.termType}`);
+  }
+}
+function fromQuad(inQuad) {
+  if (inQuad instanceof Quad) return inQuad;
+  if (inQuad.termType !== 'Quad') throw new Error(`Unexpected termType: ${inQuad.termType}`);
+  return quad(fromTerm(inQuad.subject), fromTerm(inQuad.predicate), fromTerm(inQuad.object), fromTerm(inQuad.graph));
+}
+
+/***/ },
+
+/***/ 539
+(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.inDefaultGraph = inDefaultGraph;
+exports.isBlankNode = isBlankNode;
+exports.isDefaultGraph = isDefaultGraph;
+exports.isLiteral = isLiteral;
+exports.isNamedNode = isNamedNode;
+exports.isQuad = isQuad;
+exports.isVariable = isVariable;
+exports.prefix = prefix;
+exports.prefixes = prefixes;
+var _N3DataFactory = _interopRequireDefault(__webpack_require__(601));
+function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
+// **N3Util** provides N3 utility functions.
+
+// Tests whether the given term represents an IRI
+function isNamedNode(term) {
+  return !!term && term.termType === 'NamedNode';
+}
+
+// Tests whether the given term represents a blank node
+function isBlankNode(term) {
+  return !!term && term.termType === 'BlankNode';
+}
+
+// Tests whether the given term represents a literal
+function isLiteral(term) {
+  return !!term && term.termType === 'Literal';
+}
+
+// Tests whether the given term represents a variable
+function isVariable(term) {
+  return !!term && term.termType === 'Variable';
+}
+
+// Tests whether the given term represents a quad
+function isQuad(term) {
+  return !!term && term.termType === 'Quad';
+}
+
+// Tests whether the given term represents the default graph
+function isDefaultGraph(term) {
+  return !!term && term.termType === 'DefaultGraph';
+}
+
+// Tests whether the given quad is in the default graph
+function inDefaultGraph(quad) {
+  return isDefaultGraph(quad.graph);
+}
+
+// Creates a function that prepends the given IRI to a local name
+function prefix(iri, factory) {
+  return prefixes({
+    '': iri.value || iri
+  }, factory)('');
+}
+
+// Creates a function that allows registering and expanding prefixes
+function prefixes(defaultPrefixes, factory) {
+  // Add all of the default prefixes
+  const prefixes = Object.create(null);
+  for (const prefix in defaultPrefixes) processPrefix(prefix, defaultPrefixes[prefix]);
+  // Set the default factory if none was specified
+  factory = factory || _N3DataFactory.default;
+
+  // Registers a new prefix (if an IRI was specified)
+  // or retrieves a function that expands an existing prefix (if no IRI was specified)
+  function processPrefix(prefix, iri) {
+    // Create a new prefix if an IRI is specified or the prefix doesn't exist
+    if (typeof iri === 'string') {
+      // Create a function that expands the prefix
+      const cache = Object.create(null);
+      prefixes[prefix] = local => {
+        return cache[local] || (cache[local] = factory.namedNode(iri + local));
+      };
+    } else if (!(prefix in prefixes)) {
+      throw new Error(`Unknown prefix: ${prefix}`);
+    }
+    return prefixes[prefix];
+  }
+  return processPrefix;
+}
 
 /***/ },
 
