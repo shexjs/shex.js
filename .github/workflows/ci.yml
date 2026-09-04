@@ -24,7 +24,7 @@ jobs:
         run: |
           REF=$(sed -n 's|.*"shex-test": "github:shexSpec/shexTest#\([^"]*\)".*|\1|p' package.json)
           git clone --depth=1 --branch="${REF:-main}" https://github.com/shexSpec/shexTest.git ../shexTest
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -81,7 +81,7 @@ jobs:
         run: |
           REF=$(sed -n 's|.*"shex-test": "github:shexSpec/shexTest#\([^"]*\)".*|\1|p' package.json)
           git clone --depth=1 --branch="${REF:-main}" https://github.com/shexSpec/shexTest.git ../shexTest
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
