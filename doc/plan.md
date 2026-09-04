@@ -200,15 +200,63 @@ Short, high value:
 
 Larger, design conversation first:
 
-- **E9 (L)** Live whole-validation stepping in the browser: validator in a
-  Worker, events posted and `Atomics.wait` on a SharedArrayBuffer command
-  cell (`shex-serve --coi` and clone-safe anchors are in place).  Decide
-  breakpoints-frozen-at-start vs a side channel; CI needs a
-  `worker_threads` harness.
-- **E10 (L)** One debug panel over materialization and validation sessions.
-- **E11 (M–L)** Worker-app debugging: `MaterializerDebugger` runs in-thread
-  only; `accepts`, `lastReport` and breakpoints don't cross `postMessage`
-  (ship clone-safe anchors and the accepts list, as validation does).
+- **E9 (engine done 2026-09-04)** Live whole-validation stepping's
+  suspension mechanism: `worker-gate.ts` in `@shexjs/eval-validator-api`.
+  `WorkerGate.gate(event)` runs in the worker -- the validator's tracker and
+  the regex engines' `debugHooks.onConstraint` call it (same wiring as
+  `shex-debug`) -- and on a pause posts the (serialized) event and
+  `Atomics.wait`s on a command cell in a SharedArrayBuffer; `GateController`
+  in the controlling thread writes into/over/out/continue/abort and
+  `Atomics.notify`s, abort throwing `DebugAbort` out of the engine.  The
+  breakpoint model is **decided**: frozen while the worker runs, editable
+  only while paused -- a resume carries the (possibly edited) breakpoints as
+  a JSON payload in the same buffer (shapes/predicates/nodes by lexical
+  string, constraints by `schemaTripleConstraints` ordinal, the clone-safe
+  key both ends derive from their schema copy), so the worker adopts them the
+  instant it wakes and never races the controller mid-search.  The CI harness
+  the plan asked for is `WorkerGate-test.js`: it runs the real validator in a
+  `worker_threads` worker and drives it from the test thread (into walks the
+  event tree; continue runs free; a predicate or ordinal breakpoint *set
+  during a pause* fires; over skips a shape's body; abort reports aborted).
+  `shex-serve --coi` and clone-safe anchors were already in place.  What
+  remains is browser-only and lands with E10 (see there).
+- **E10 (browser live-stepping done 2026-09-04)** The browser end of E9's
+  mechanism, wired into the existing validation debug panel.  The
+  capture+replay 🐞 stays the default (no isolation needed); a new 🐞▶ beside
+  it steps the *whole* live validation.  `ShExWorkerThread.js` gained a
+  `debugValidate` request that builds a `WorkerGate` over a page-supplied SAB
+  and runs a gated `validateShapeMap` (the browser twin of
+  `worker-gate-worker.js`); `shex-webapp.js` re-exports the gate primitives
+  onto the `ShExWebApp` global; `startValidationDebugSessionLive` runs a
+  *dedicated* worker (so ⏹ terminating it never disturbs the app's own
+  validator) and drives it through a `GateController`, reusing the panel's
+  step controls, gutter/predicate/node breakpoints and status line and
+  reading the breakpoints fresh at each step
+  (`currentValWireBreakpoints`, the editable-while-paused half of the model;
+  constraints cross by `schemaTripleConstraints` ordinal).  The 🐞▶ button
+  shows only when `crossOriginIsolated` (`shex-serve --coi`).  CI covers the
+  wiring (button present/titled/hidden-without-isolation) and the unchanged
+  capture+replay path; the live stepping itself needs a truly-blocking worker
+  thread the in-process shim can't provide, so it rides E9's `worker_threads`
+  harness for the mechanism and a cross-origin-isolated browser for the glue.
+  **Unified panel done (2026-09-04):** the validation debugger and the
+  ShExMap materializer debugger now share one control strip, status line and
+  thread list (core, in `shex-simple.html`/`shex-app.css`) -- they never step
+  at once (a validation finishes before its materialization starts), so the
+  app's `activeDebugSession` is whichever is live and the shared buttons
+  route to it.  `ShExMapPlugin` stops generating its own strip and keeps only
+  the `#debugMaterialize` trigger; every ShExMap page redirects to
+  `shex-simple.html`, so the static strip is always present.
+- **E11 (done 2026-09-04)** Worker-app materializer debugging.  The step
+  session's `MaterializerDebugger` runs in the page even when the app
+  validates in a worker (`app.remote`): its inputs -- output schema,
+  bindings, shape map -- are all in-page panes (the worker's validation
+  populates the bindings pane), so re-materialization is deterministic and
+  its `accepts`/`lastReport`/breakpoints never need to cross `postMessage`.
+  `shexmap-editors-smoke-test.js` pins it with a worker-mode stepping test
+  (breakpoint, step, accept, rendered graph).  The clone-safe anchoring the
+  design worried about is only the *whole*-materialize path's, which already
+  names constraints by ordinal (`RemoteShExMaterializer`).
 - **E12 (deferred)** A steppable eval-threaded-nerr is a rewrite (recursive
   matcher, hot-path generators); only when "why these N errors" becomes a
   debugging goal.

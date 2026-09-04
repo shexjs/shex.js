@@ -53,6 +53,15 @@ ShExWebApp = (function () {
     MatchDebugger:        modules["@shexjs/eval-simple-1err"].MatchDebugger,
     capturingRegexModule: modules["@shexjs/eval-validator-api"].capturingRegexModule,
     replayingSemActHandler: modules["@shexjs/eval-validator-api"].replayingSemActHandler,
+    /* live whole-validation stepping (doc/debugger-design.md §4): the worker
+       runs the validator and gates every event on a SharedArrayBuffer, the
+       page drives it -- eventTracker is the shape-level event source both
+       the worker gate and the free-running relay share */
+    eventTracker:         modules["@shexjs/eval-validator-api"].eventTracker,
+    WorkerGate:           modules["@shexjs/eval-validator-api"].WorkerGate,
+    GateController:       modules["@shexjs/eval-validator-api"].GateController,
+    createCommandBuffer:  modules["@shexjs/eval-validator-api"].createCommandBuffer,
+    schemaTripleConstraints: modules["@shexjs/eval-validator-api"].schemaTripleConstraints,
     ShapeMap:             modules["shape-map"],
     ShapeMapParser:       modules["shape-map"].Parser,
     JsYaml:               modules["js-yaml"],

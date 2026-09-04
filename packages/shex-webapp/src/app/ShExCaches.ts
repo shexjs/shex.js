@@ -357,6 +357,7 @@ class ManifestCache extends InterfaceCache {
   caches: AppCaches;
   resultsWidget: ResultsWidget;
   queryParams: any[] | null;         // the app's QueryParams registry, assigned post-construction
+  onPickInputs: (() => void) | null = null;  // the app's, to end a debug session standing over inputs about to change
   // manifest-descriptor keys pickSchema/pickData/queryMapLoaded handle
   // themselves; loadExtraInputs loads the rest
   static pickLoadedKeys: string[] = ["schema", "data", "queryMap"];
@@ -860,6 +861,11 @@ class ManifestCache extends InterfaceCache {
   }
 
   async clearData (): Promise<void> {
+    // a debug session is about a specific schema/data; picking new ones
+    // pulls the ground from under it (stale highlights, breakpoints, status),
+    // so end it first
+    if (this.onPickInputs)
+      this.onPickInputs();
     // Clear out data textarea.
     await this.caches.inputData.set("", DefaultBase);
     $("#inputData .status").text(" ");

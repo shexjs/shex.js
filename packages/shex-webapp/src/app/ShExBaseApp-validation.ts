@@ -19,7 +19,24 @@ interface ShExBaseApp {
   disableResultsAndValidate (evt?: any): any;
   startValidation (): any;
   endValidation (elapsed: any): any;
+  /** whichever debug session is running -- validation (this file) or, with
+   * the ShExMap plugin, materialization -- driving the one shared control
+   * strip; only one at a time (a validation finishes before its
+   * materialization starts).  {kind, step(command), end()}. */
+  activeDebugSession: any;
+  /** the floating debug panel, shared by all three debuggers: show it for a
+   * mode ("replay" | "live" | "materialize"), hide it, enable/disable the
+   * step verbs when a search is (un)exhausted, and end whatever session is
+   * running (e.g. when the schema or data changes underneath it). */
+  showDebugPanel (mode: string): void;
+  hideDebugPanel (): void;
+  setDebugRunnable (runnable: boolean): void;
+  endActiveDebugSession (): void;
   startValidationDebugSession (): Promise<any>;
+  startValidationDebugSessionLive (): Promise<any>;
+  receiveLiveValDebug (msg: any): void;
+  showLiveValDebugEvent (event: any): void;
+  currentValWireBreakpoints (): any;
   matchCaptureLabel (cap: any, schema: any): any;
   captureNodeLex (cap: any): any;
   offeredMatches (): any;
@@ -53,6 +70,54 @@ mixin(ShExBaseApp, {
       node: this.Caches.inputData.meta.lexToTerm(node),
       shape: this.Caches.inputSchema.meta.lexToTerm(shape) // resolve with this.Caches.outputSchema
     }
+  },
+
+  /** reveal the shared floating debug panel for `mode` ("replay" |
+   * "live" | "materialize"): show the rows that mode uses, hide the rest,
+   * enable the step verbs, and stand the trigger buttons down. */
+  showDebugPanel (mode: any) {
+    $("#debugPanel").show();
+    // the card names which debugger it is driving (the title was a fixed
+    // "debugger" before -- it now says what is being stepped)
+    $("#debugPanelTitle").text(mode === "materialize" ? "materialization"
+                               : mode === "live" ? "live validation" : "validation");
+    this.setDebugRunnable(true);
+    // a replay steps within one match, so it can't step out; validation and
+    // materialization walk a call tree and can
+    $("#dbgOut").toggle(mode !== "replay");
+    // the bp/bn breakpoint entry is the validators'; the recorded-match
+    // picker is capture+replay's alone
+    $("#dbgMatchesRow").toggle(mode !== "materialize");
+    $("#dbgMatches").toggle(mode === "replay");
+    $("#dbgStatusRow, #dbgThreadsRow").show();
+    $("#dbgOver").attr("title", mode === "live" ? "step over this shape's body"
+                       : mode === "materialize" ? "step over" : "run to the next generation");
+    $("#debugValidate, #debugValidateLive, #debugMaterialize").hide();
+  },
+
+  /** hide the panel and offer the triggers again (live only where the page
+   * is cross-origin isolated) */
+  hideDebugPanel () {
+    $("#debugPanel").hide();
+    $("#dbgStatus").text("");
+    $("#dbgThreads, #dbgBreakpoints").empty();
+    $("#debugValidate, #debugMaterialize").show();  // #debugMaterialize is a no-op without the plugin
+    if (typeof SharedArrayBuffer !== "undefined" &&
+        typeof self !== "undefined" && (self as any).crossOriginIsolated)
+      $("#debugValidateLive").show();
+  },
+
+  /** enable or disable the step verbs (▶⤵⏭⤴): disabled once a search is
+   * exhausted, so a dead button reads as done rather than doing nothing */
+  setDebugRunnable (runnable: any) {
+    $("#dbgContinue, #dbgInto, #dbgOver, #dbgOut").prop("disabled", !runnable);
+  },
+
+  /** end whichever debug session is running -- called when the ground moves
+   * under it (the schema or data is re-picked) */
+  endActiveDebugSession () {
+    if (this.activeDebugSession)
+      this.activeDebugSession.end();
   },
 
   /* Executions */
@@ -177,23 +242,234 @@ endValidation (elapsed: any) {
       // is which recorded matches to offer)
       const breakpoints = this.valDebugSession && this.valDebugSession.breakpoints
             || {predicates: new Set(), nodes: new Set()};
-      this.valDebugSession = {captures, located, pane, schema, results, breakpoints};
-      const select = $("#valDbgMatches").empty();
+      if (this.activeDebugSession) this.activeDebugSession.end();
+      this.valDebugSession = {kind: "replay", captures, located, pane, schema, results, breakpoints};
+      // the shared control strip drives whichever session is live (a
+      // materialization debugger runs here too, one at a time)
+      this.activeDebugSession = {kind: "replay", step: (c: string) => this.valDebugStep(c),
+                                 end: () => this.endValidationDebugSession()};
+      const select = $("#dbgMatches").empty();
       captures.forEach((cap: any, i: any) =>
         select.append($("<option/>", {value: i}).text(this.matchCaptureLabel(cap, schema))));
       select.off("change").on("change", () => this.pickValidationMatch(parseInt(select.val(), 10)));
       this.renderValDebugBreakpoints();
-      // the step buttons, the match picker and the status line are three
-      // rows of one control; 🐞 started this session, and pressing it again
-      // would only start another over the same results
-      $("#valDebugControls, .valDbgRow").show();
-      $("#debugValidate").hide();
+      // 🐞 started this session, and pressing it again would only start
+      // another over the same results
+      this.showDebugPanel("replay");
       this.pickValidationMatch(this.offeredMatches()[0] || 0);
       return this.valDebugSession;
     } catch (e: any) {
       this.reportValidationError(e, currentAction);
       return null;
     }
+  },
+
+  /**
+   * Live whole-validation stepping (doc/debugger-design.md §4), the
+   * companion to the capture+replay 🐞 above.  Where that reruns the
+   * finished validation and replays one triple-expression match, this steps
+   * the *whole* validation as it runs -- every shape entered and left, every
+   * constraint considered -- by running the validator in a dedicated worker
+   * that blocks on Atomics.wait between events (WorkerGate) while this thread
+   * drives it over a SharedArrayBuffer (GateController).  It needs
+   * cross-origin isolation for SharedArrayBuffer (shex-serve --coi), so the
+   * 🐞▶ button offering it appears only there.  It reuses this panel's step
+   * controls, its gutter/predicate/node breakpoints and its status line; the
+   * recorded-match picker has no place here (there is one running validation,
+   * not a catalogue of matches) and is hidden.
+   *
+   * Breakpoints are frozen while the worker runs and adopted afresh at each
+   * resume: currentValWireBreakpoints() reads the live gutter and chips every
+   * time a step is sent, so a breakpoint added while paused takes effect on
+   * the next move and none is read mid-search.
+   */
+  async startValidationDebugSessionLive () {
+    const pane = this.editorSupport && this.editorSupport.panes.inputSchema;
+    if (!pane) {
+      this.resultsWidget.replace("Enable the language-aware editors (Menu → user interface) to debug validation.")
+        .removeClass("passes fails").addClass("error");
+      return null;
+    }
+    if (typeof SharedArrayBuffer === "undefined" ||
+        typeof self === "undefined" || !(self as any).crossOriginIsolated) {
+      this.resultsWidget.replace("Live validation stepping needs cross-origin isolation (SharedArrayBuffer); serve the app with shex-serve --coi.")
+        .removeClass("passes fails").addClass("error");
+      return null;
+    }
+    this.resultsWidget.clear();
+    let currentAction = "starting the live validation debugger";
+    try {
+      currentAction = "parsing input schema";
+      const schema = await this.Caches.inputSchema.refresh();
+      currentAction = "parsing input data";
+      const inputData = await this.Caches.inputData.refresh();
+      currentAction = "parsing shape map";
+      const fixedMap = $("#fixedMap tr").map((idx: any, tr: any) =>
+        this.fixValidationShapeMapEntry($(tr).find("input.focus").val(), $(tr).find("input.inputShape").val())
+      ).get();
+      if (fixedMap.length === 0) {
+        this.resultsWidget.replace("Add a node@shape pair to the fixed shape map to debug its validation.")
+          .removeClass("passes fails").addClass("error");
+        return null;
+      }
+      // the worker validates a static db it is handed; a source that fetches
+      // its neighborhoods as the walk needs them can't be stepped this way
+      const quads = inputData.getQuads();
+      if (quads.length === 0) {
+        this.resultsWidget.replace("Live stepping validates the data in the pane; load some triples (a fetching source has none to hand the worker).")
+          .removeClass("passes fails").addClass("error");
+        return null;
+      }
+      const schemaText = this.Caches.inputSchema.selection.val();
+      const located = ShExWebApp.EditorServices.locateInParsed(schemaText, schema);
+      const tcs = ShExWebApp.schemaTripleConstraints(schema);
+      const sab = ShExWebApp.createCommandBuffer();
+      const controller = new ShExWebApp.GateController(sab);
+      // carry any predicate/node breakpoints across from a prior session
+      const breakpoints = this.valDebugSession && this.valDebugSession.breakpoints
+            || {predicates: new Set(), nodes: new Set()};
+      // a dedicated worker, independent of the app's ShExWorker: it runs only
+      // this gated validation and is terminated when the session ends, so it
+      // never disturbs the validator the app may hold in its own worker
+      if (this.activeDebugSession) this.activeDebugSession.end();
+      const worker = new Worker(WorkerUrl);
+      const session: any = {live: true, located, pane, schema, tcs, controller, sab,
+                            breakpoints, worker, done: false, currentEvent: null};
+      this.valDebugSession = session;
+      this.activeDebugSession = {kind: "live", step: (c: string) => this.valDebugStep(c),
+                                 end: () => this.endValidationDebugSession()};
+      worker.onmessage = (msg: any) => this.receiveLiveValDebug(msg);
+      worker.onerror = (e: any) => {
+        $("#dbgStatus").text("worker error: " + ((e && e.message) || e));
+        session.done = true;
+      };
+      worker.postMessage(Object.assign({plugins: pluginWorkerUrls()}, {
+        request: "debugValidate",
+        schema,
+        data: quads.map((t: any) => WorkerMarshalling.rdfjsTripleToJsonTriple(t)),
+        queryMap: fixedMap.map((e: any) => ({node: e.node, shape: e.shape})),
+        options: {regexModule: $("#regexpEngine").val(), ignoreClosed: $("#ignoreClosed").is(":checked")},
+        sab,
+      }));
+      this.renderValDebugBreakpoints();
+      this.showDebugPanel("live");
+      $("#dbgStatus").text("starting the validation in a worker...");
+      return session;
+    } catch (e: any) {
+      this.reportValidationError(e, currentAction);
+      return null;
+    }
+  },
+
+  /** a message from the live debug worker: a pause to render, or the run's
+   * end.  Steps are sent back over the SAB (valDebugStep), never as a
+   * message -- a worker blocked in Atomics.wait can't read one. */
+  receiveLiveValDebug (msg: any) {
+    const session = this.valDebugSession;
+    if (!session || !session.live || msg.data.request)  // request: a message we posted, echoed
+      return;
+    switch (msg.data.response) {
+    case "paused":
+      session.currentEvent = msg.data.event;
+      this.showLiveValDebugEvent(msg.data.event);
+      break;
+    case "done":
+      session.done = true;
+      this.setDebugRunnable(false);   // the walk is over; only ⏹ is live
+      session.pane.clearHighlights();
+      $("#dbgStatus").text("validation finished: " +
+        (msg.data.conformant ? "conformant" : "nonconformant") + "; ⏹ to close");
+      break;
+    case "aborted":
+      session.done = true;
+      this.setDebugRunnable(false);
+      session.pane.clearHighlights();
+      $("#dbgStatus").text("validation debugger stopped");
+      break;
+    case "error":
+      session.done = true;
+      this.setDebugRunnable(false);
+      $("#dbgStatus").text("worker error: " + (msg.data.message || "?"));
+      break;
+    }
+  },
+
+  /** render a paused gate event (a SerializedGateEvent from the worker):
+   * the status line and the current-position highlight.  A constraint is
+   * named across the postMessage by its ordinal in schemaTripleConstraints,
+   * which indexes this side's own copy back to the object to highlight. */
+  showLiveValDebugEvent (event: any) {
+    const session = this.valDebugSession;
+    if (!event || !session)
+      return;
+    const at = event.node
+          ? (event.node.termType === "BlankNode" ? "_:" + event.node.value : "<" + event.node.value + ">")
+          : "";
+    const shapeOf = (label: any) => {
+      const locate = session.located.locate;
+      const hit = locate.shape ? locate.shape(label) : null;
+      session.pane.highlight(hit ? [hit] : [], "shexjs-debug-current");
+    };
+    switch (event.type) {
+    case "enter":
+      $("#dbgStatus").text("enter " + at + "@<" + event.shape + ">  [depth " + event.depth + "]");
+      shapeOf(event.shape);
+      break;
+    case "constraint": {
+      $("#dbgStatus").text("at <" + event.predicate + "> for " + at +
+        " (" + event.candidates + " candidate" + (event.candidates === 1 ? "" : "s") + ")" +
+        "  [depth " + event.depth + "]");
+      const tc = session.tcs[event.tcOrdinal];
+      const range = tc ? session.located.locate.expr(tc) : null;
+      session.pane.highlight(range ? [range] : [], "shexjs-debug-current");
+      break;
+    }
+    case "exit":
+      $("#dbgStatus").text("exit  " + at + "@<" + event.shape + "> -> " +
+        (event.ok ? "ok" : "fail") + "  [depth " + event.depth + "]");
+      shapeOf(event.shape);
+      break;
+    case "recurse":
+      $("#dbgStatus").text("recurse into <" + event.shape + ">  [depth " + event.depth + "]");
+      shapeOf(event.shape);
+      break;
+    }
+  },
+
+  /** the breakpoints a live resume carries, read fresh from the panel so a
+   * change while paused takes effect on the next step (the frozen/editable
+   * model): gutter dots resolved to constraint ordinals (the clone-safe key
+   * the worker shares), plus the predicate and node chips. */
+  currentValWireBreakpoints () {
+    const session = this.valDebugSession;
+    if (!session)
+      return {};
+    const constraints: number[] = [];
+    const schemaText = this.Caches.inputSchema.selection.val();
+    const lineStarts = ShExWebApp.EditorServices.lineOffsets(schemaText);
+    session.pane.listBreakpoints().forEach((pos: any) => {
+      const next = lineStarts.findIndex((start: any) => start > pos);
+      const lineFrom = lineStarts[(next === -1 ? lineStarts.length : next) - 1];
+      const lineEnd = next === -1 ? schemaText.length : lineStarts[next];
+      let hit = null;
+      if (pos === lineFrom) {
+        hit = session.located.locate.exprsStartingIn(lineFrom, lineEnd)[0] || null;
+        for (let offset = lineFrom; offset < lineEnd && !hit; ++offset)
+          hit = session.located.locate.exprAt(offset);
+      } else {
+        hit = session.located.locate.exprAt(pos);
+      }
+      if (hit) {
+        const ord = session.tcs.indexOf(hit.expr);
+        if (ord !== -1)
+          constraints.push(ord);
+      }
+    });
+    return {
+      constraints,
+      predicates: Array.from(session.breakpoints.predicates),
+      nodes: Array.from(session.breakpoints.nodes),
+    };
   },
 
 matchCaptureLabel (cap: any, schema: any) {
@@ -221,7 +497,7 @@ matchCaptureLabel (cap: any, schema: any) {
     const offered: any[] = [];
     session.captures.forEach((cap: any, i: any) => {
       const on = nodes.size === 0 || nodes.has(this.captureNodeLex(cap));
-      $("#valDbgMatches option[value='" + i + "']").toggle(on);
+      $("#dbgMatches option[value='" + i + "']").toggle(on);
       if (on)
         offered.push(i);
     });
@@ -238,7 +514,7 @@ matchCaptureLabel (cap: any, schema: any) {
     const session = this.valDebugSession;
     const m = (text || "").trim().match(/^(bp|bn)\s+(\S+)$/);
     if (!session || !m) {
-      $("#valDbgStatus").text("a breakpoint is bp PREDICATE or bn NODE");
+      $("#dbgStatus").text("a breakpoint is bp PREDICATE or bn NODE");
       return false;
     }
     const [, kind, lex] = m;
@@ -251,13 +527,13 @@ matchCaptureLabel (cap: any, schema: any) {
         session.breakpoints.nodes.add(typeof term === "string" ? term : lex);
       }
     } catch (e: any) {
-      $("#valDbgStatus").text("no such " + (kind === "bp" ? "predicate" : "node") + ": " + e.message);
+      $("#dbgStatus").text("no such " + (kind === "bp" ? "predicate" : "node") + ": " + e.message);
       return false;
     }
     this.renderValDebugBreakpoints();
     // re-arm, on a match still on offer
     const offered = this.offeredMatches();
-    const current = parseInt($("#valDbgMatches").val(), 10);
+    const current = parseInt($("#dbgMatches").val(), 10);
     this.pickValidationMatch(offered.indexOf(current) === -1 ? (offered[0] || 0) : current);
     return true;
   },
@@ -269,14 +545,14 @@ matchCaptureLabel (cap: any, schema: any) {
     session.breakpoints[kind === "bp" ? "predicates" : "nodes"].delete(value);
     this.renderValDebugBreakpoints();
     const offered = this.offeredMatches();
-    const current = parseInt($("#valDbgMatches").val(), 10);
+    const current = parseInt($("#dbgMatches").val(), 10);
     this.pickValidationMatch(offered.indexOf(current) === -1 ? (offered[0] || 0) : current);
   },
 
   /** the breakpoints as chips, each with its × */
   renderValDebugBreakpoints () {
     const session = this.valDebugSession;
-    const list = $("#valDbgBreakpoints").empty();
+    const list = $("#dbgBreakpoints").empty();
     if (!session)
       return;
     const lex = (iri: any, meta: any) => { try { return meta.termToLex(iri); } catch (e: any) { return iri; } };
@@ -300,7 +576,7 @@ matchCaptureLabel (cap: any, schema: any) {
       return false;
     pane.toggleBreakpointAt(pane.view.state.selection.main.head);
     if (this.valDebugSession)   // re-arm, so it counts from here on
-      this.pickValidationMatch(parseInt($("#valDbgMatches").val(), 10) || 0);
+      this.pickValidationMatch(parseInt($("#dbgMatches").val(), 10) || 0);
     return true;
   },
 
@@ -309,7 +585,7 @@ matchCaptureLabel (cap: any, schema: any) {
     const session = this.valDebugSession;
     if (!session)
       return null;
-    $("#valDbgMatches").val(String(captureNo));
+    $("#dbgMatches").val(String(captureNo));
     const cap = session.captures[captureNo];
     // only eval-simple-1err's engine steps: a match another engine ran is
     // replayed by a fresh one over the same inputs
@@ -343,17 +619,34 @@ matchCaptureLabel (cap: any, schema: any) {
     session.breakpoints.predicates.forEach((predicate: any) => dbg.addBreakpoint({predicate}));
     session.dbg = dbg;
     session.capture = cap;
-    $("#valDbgStatus").text("paused before matching " + $("#valDbgMatches option:selected").text() +
+    this.setDebugRunnable(true);   // a fresh match to step (re-arms after one finished)
+    $("#dbgStatus").text("paused before matching " + $("#dbgMatches option:selected").text() +
                             "; step or continue" +
                             (cap.regexModule === stepper.name ? ""
                              : " (captured with " + cap.regexModule + ", replayed with " + stepper.name + ")"));
-    $("#valDbgThreads").empty();
+    $("#dbgThreads").empty();
     return dbg;
   },
 
 valDebugStep (command: any) {
     const session = this.valDebugSession;
-    if (!session || !session.dbg)
+    if (!session)
+      return null;
+    // live mode: send the step over the SAB (with the current breakpoints)
+    // and wait -- the next event arrives as a "paused" worker message
+    if (session.live) {
+      if (session.done)
+        return null;   // the run is over; ⏹ closes the panel
+      const bp = this.currentValWireBreakpoints();
+      if (command === "stepInto")      session.controller.into(bp);
+      else if (command === "stepOver") session.controller.over(bp);
+      else if (command === "stepOut")  session.controller.out(bp);
+      else if (command === "continue") session.controller.continue(bp);
+      return null;
+    }
+    // capture+replay steps within one match: it has stepInto/stepOver/
+    // continue but no stepOut (⤴ is hidden for it)
+    if (!session.dbg || typeof session.dbg[command] !== "function")
       return null;
     const event = session.dbg[command]();
     this.showValDebugEvent(event);
@@ -374,25 +667,26 @@ showValDebugEvent (event: any) {
     const gen = "generation" in event ? " gen:" + event.generation : "";
     switch (event.type) {
     case "constraint": {
-      $("#valDbgStatus").text("at <" + event.tc.predicate + ">" + gen + threadStr);
+      $("#dbgStatus").text("at <" + event.tc.predicate + ">" + gen + threadStr);
       const range = session.located.locate.expr(event.tc);
       session.pane.highlight(range ? [range] : [], "shexjs-debug-current");
       break;
     }
     case "fail":
-      $("#valDbgStatus").text("thread died at <" + event.tc.predicate + ">" + gen + threadStr);
+      $("#dbgStatus").text("thread died at <" + event.tc.predicate + ">" + gen + threadStr);
       break;
     case "accept":
-      $("#valDbgStatus").text("thread accepted" + gen + threadStr);
+      $("#dbgStatus").text("thread accepted" + gen + threadStr);
       break;
     case "done":
-      $("#valDbgStatus").text("match finished: " +
+      this.setDebugRunnable(false);   // this match is exhausted; pick another to re-arm
+      $("#dbgStatus").text("match finished: " +
         (session.dbg.result && !("errors" in session.dbg.result) ? "matched" : "failed") +
         "; pick another match or ⏹");
       session.pane.clearHighlights();
       break;
     case "error":
-      $("#valDbgStatus").text("failed: " + event.error.message);
+      $("#dbgStatus").text("failed: " + event.error.message);
       break;
     }
   },
@@ -401,7 +695,7 @@ showValDebugEvent (event: any) {
    * advanced into the next); hover or click renders a thread's aspects */
   updateValThreadList () {
     const session = this.valDebugSession;
-    const list = $("#valDbgThreads").empty();
+    const list = $("#dbgThreads").empty();
     if (!session || !session.dbg)
       return;
     session.dbg.threads().forEach((t: any) => {
@@ -458,14 +752,16 @@ endValidationDebugSession () {
     if (!session)
       return;
     this.valDebugSession = null;
+    this.activeDebugSession = null;
+    if (session.live)
+      // terminate kills the dedicated worker even mid-search (a thread
+      // blocked in Atomics.wait can't be asked to stop), and it was never
+      // the app's own, so nothing else is disturbed
+      try { if (session.worker) { session.worker.onmessage = null; session.worker.terminate(); } } catch (e) { /* already gone */ }
     session.pane.clearHighlights();
     if (this.editorSupport && this.editorSupport.panes.inputData)
       this.editorSupport.panes.inputData.clearHighlights();
-    $("#valDebugControls, .valDbgRow").hide();
-    $("#debugValidate").show();
-    $("#valDbgStatus").text("");
-    $("#valDbgThreads, #valDbgBreakpoints").empty();
-    $("#valDbgMatches option").show();
+    this.hideDebugPanel();
   },
 
 async callValidator (done: any) {

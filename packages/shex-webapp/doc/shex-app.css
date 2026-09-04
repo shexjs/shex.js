@@ -442,37 +442,87 @@ ul {
     padding-right: .4em;
 }
 
-/* The validation debugger's controls (doc/debugger-design.md).
+/* The debugger's controls (doc/debugger-design.md).
  *
- * Three rows rather than one long line: the step buttons beside the button
- * that started them, then which match is being stepped, then what it is
- * doing.  On one line the status text -- "paused before matching
- * <http://…/P31>; step or continue" -- pushed everything after it off to
- * the right, and the pane scrolled sideways to follow. */
-#valDebugControls {
-    margin-left: .6em;
-    white-space: nowrap;
-}
-.valDbgRow {
-    margin-top: .35em;
+ * Rows rather than one long line: the step buttons beside the button that
+ * started them, then which match is being stepped (validation capture+replay
+ * only), then what it is doing, then the thread list.  On one line the
+ * status text -- "paused before matching <http://…/P31>; step or continue"
+ * -- pushed everything after it off to the right, and the pane scrolled
+ * sideways to follow.
+ *
+ * One debug panel drives both engines (doc/debugger-design.md §5): the
+   validation debugger (capture+replay, and live) and, when the ShExMap
+   plugin is loaded, the materializer -- never at once (a validation
+   finishes before its materialization starts), so they share this one
+   control strip, status line and thread list.  The styles live here, in the
+   core CSS, so the strip is dressed even on a page without the plugin. */
+/* The panel floats over whatever screen is showing, so its controls are in
+   reach whether the stepped schema is the input schema (validation, main
+   screen) or the output schema (materialization, the plugin's screen). */
+#debugPanel {
+    position: fixed;
+    bottom: 1em;
+    right: 1em;
+    z-index: 1000;
+    max-width: min(34em, 92vw);
+    max-height: 60vh;
+    overflow: auto;
+    background: #ffffff;
+    border: 1px solid #b9b9c9;
+    border-radius: 6px;
+    box-shadow: 0 3px 16px rgba(0, 0, 0, .28);
+    padding: .5em .7em .6em;
     font-size: small;
 }
-#valDbgMatches {
+/* The card is anchored at the right (it grows leftward as the status
+   sentence -- usually the widest row -- lengthens and shrinks each step).  So
+   the controls hug that fixed right edge and stay put while the reader steps:
+   the step verbs to the right of the title, the match picker / breakpoint
+   entry right-aligned on their row.  Only the status prose and the thread
+   list, which are meant to change, ride the moving left edge. */
+#debugPanelHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;   /* title left, step verbs pinned right */
+    gap: .4em;
+}
+#debugPanelTitle {
+    font-weight: bold;
+    color: #555;
+    letter-spacing: .02em;
+}
+#dbgMatchesRow { justify-content: flex-end; }   /* pinned right, like the verbs above */
+#debugControls { white-space: nowrap; }
+/* a step verb with nothing left to do (the search is exhausted) is disabled,
+   not silently inert */
+#debugControls button:disabled { opacity: .4; cursor: default; }
+.dbgRow {
+    margin-top: .35em;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .3em;
+    font-size: small;
+}
+#dbgMatches {
     max-width: 100%;
 }
-/* one small button per thread, and a generation can have a lot of them:
-   let the list scroll in its own strip instead of widening the page */
-#valDbgThreads {
+/* one small button per thread, and a generation (or a materialization) can
+   have a lot of them: let the list scroll in its own strip, on a row of its
+   own so a thread appearing or dying never moves the step buttons out from
+   under the mouse */
+#dbgThreadsRow { min-height: 1.6em; overflow-x: auto; white-space: nowrap; text-align: left; }
+#dbgThreads {
     display: inline-block;
     vertical-align: middle;
-    margin-left: .5em;
-    max-width: 22em;
+    max-width: 100%;
     overflow-x: auto;
     white-space: nowrap;
     font-size: small;
 }
 /* the breakpoints, one chip each, the × taking it away */
-#valDbgBreakpoints .dbgBreakpoint {
+#dbgBreakpoints .dbgBreakpoint {
     display: inline-block;
     margin-left: .4em;
     padding: 0 .3em;
@@ -480,7 +530,7 @@ ul {
     border-radius: .5em;
     font-size: small;
 }
-#valDbgBreakpoints .dbgBreakpoint button {
+#dbgBreakpoints .dbgBreakpoint button {
     border: none;
     background: none;
     padding: 0 0 0 .2em;
@@ -489,7 +539,7 @@ ul {
 table.dbgThreadState th { text-align: left; padding-right: .6em; vertical-align: top; }
 table.dbgThreadState caption { text-align: left; font-weight: bold; }
 /* the status is a sentence, so let it wrap rather than run off the edge */
-#valDbgStatus {
+#dbgStatus {
     display: inline-block;
     max-width: 100%;
     white-space: normal;
