@@ -92,6 +92,7 @@
     "check-branch-deps"
   ],
   "nyc": {
+    "sourceMap": false,
     "exclude": [
       "**/*Jison.*",
       "test/"
