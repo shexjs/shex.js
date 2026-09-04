@@ -388,13 +388,10 @@ const ShExMapVerbs = {
       if (this.activeDebugSession) this.activeDebugSession.end();
       this.activeDebugSession = {kind: "materialize", step: (c: string) => this.debugStep(c),
                                  end: () => this.endDebugSession(true)};
-      // the step controls, the status and the thread list; the match picker
-      // and bp/bn entry are the validator's, so that row stays hidden.  Every
-      // 🐞 stands down while a session is live.
-      $("#debugControls, #dbgStatusRow, #dbgThreadsRow").show();
-      $("#dbgOut").show();
-      $("#dbgMatchesRow").hide();
-      $("#debugMaterialize, #debugValidate, #debugValidateLive").hide();
+      // the app's shared floating debug panel, set up for materialization
+      // (no recorded-match picker or bp/bn entry -- the materializer breaks
+      // on the output-schema gutter); every 🐞 stands down while it runs
+      this.showDebugPanel("materialize");
       $("#dbgStatus").text("paused before materialization; step or continue");
       return this.debugSession;
     } catch (e) {
@@ -411,6 +408,9 @@ const ShExMapVerbs = {
     this.showDebugEvent(event);
     this.updateThreadList();
     if (session.dbg.done) {
+      // the walk is over: render the finished graph (the answer) and put the
+      // floating panel away -- a materialization's result is the graph, so it
+      // takes the results view rather than lingering behind a step panel
       this.endDebugSession(false);
       return event;
     }
@@ -674,7 +674,9 @@ const ShExMapVerbs = {
   },
 
   /** wrap up: on completion render the graph (or the error) as materialize
-   * would; on user stop just dismantle */
+   * would; on user stop just dismantle.  Either way the floating panel goes
+   * -- a materialization's answer is the graph, in the results view, not a
+   * lingering status line. */
   endDebugSession (stopped: boolean) {
     const session = this.debugSession;
     if (!session)
@@ -686,21 +688,11 @@ const ShExMapVerbs = {
           && this.editorSupport.panes.bindings;
     if (bindingsPane)
       bindingsPane.annotate(null);
-    $("#debugControls, #dbgThreadsRow").hide();
-    $("#dbgThreads").empty();
-    // the triggers come back: this plugin's, and the validator's shared strip
-    $("#debugMaterialize, #debugValidate").show();
-    if (typeof SharedArrayBuffer !== "undefined" &&
-        typeof self !== "undefined" && (self as any).crossOriginIsolated)
-      $("#debugValidateLive").show();
-    if (stopped) {
-      $("#dbgStatus").text("");
-      $("#dbgStatusRow").hide();
+    // the shared floating panel goes; the triggers come back (hideDebugPanel
+    // offers this plugin's #debugMaterialize and the validators')
+    this.hideDebugPanel();
+    if (stopped)
       return;
-    }
-    // a session that ran to the end keeps its last word: how it finished is
-    // the answer.  That was the intent before, but #dbgStatus lived inside
-    // #debugControls, so hiding those took the sentence with them.
     if (session.dbg.error) {
       this.reportMaterializationError(session.dbg.error, "materialization (debugged)");
     } else {

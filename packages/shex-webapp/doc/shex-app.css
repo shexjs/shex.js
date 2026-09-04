@@ -457,11 +457,46 @@ ul {
    finishes before its materialization starts), so they share this one
    control strip, status line and thread list.  The styles live here, in the
    core CSS, so the strip is dressed even on a page without the plugin. */
-.dbgRow {
-    margin-top: .35em;
+/* The panel floats over whatever screen is showing, so its controls are in
+   reach whether the stepped schema is the input schema (validation, main
+   screen) or the output schema (materialization, the plugin's screen). */
+#debugPanel {
+    position: fixed;
+    bottom: 1em;
+    right: 1em;
+    z-index: 1000;
+    max-width: min(34em, 92vw);
+    max-height: 60vh;
+    overflow: auto;
+    background: #ffffff;
+    border: 1px solid #b9b9c9;
+    border-radius: 6px;
+    box-shadow: 0 3px 16px rgba(0, 0, 0, .28);
+    padding: .5em .7em .6em;
     font-size: small;
 }
-#debugControls { margin-left: .6em; white-space: nowrap; }
+#debugPanelHead {
+    display: flex;
+    align-items: center;
+    gap: .4em;
+}
+#debugPanelTitle {
+    font-weight: bold;
+    color: #555;
+    letter-spacing: .02em;
+}
+#debugControls { white-space: nowrap; }
+/* a step verb with nothing left to do (the search is exhausted) is disabled,
+   not silently inert */
+#debugControls button:disabled { opacity: .4; cursor: default; }
+.dbgRow {
+    margin-top: .35em;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .3em;
+    font-size: small;
+}
 #dbgMatches {
     max-width: 100%;
 }

@@ -318,7 +318,7 @@ if (!TEST_browser) {
       $("#debugMaterialize").trigger("click");
       const session = await shared.promise;
       expect(session, "debug session started: " + $("#results").text().substring(0, 120)).to.exist;
-      expect($("#debugControls").css("display")).not.to.equal("none");
+      expect($("#debugPanel").css("display")).not.to.equal("none");
       // laid out like the validator's: steps beside the button that started
       // them, status on its own row, and 🐞 stands down meanwhile
       expect($("#dbgStatusRow").css("display"), "the status row").to.not.equal("none");
@@ -335,14 +335,12 @@ if (!TEST_browser) {
       expect($("#dbgStatus").text()).to.include("at <http://a.example/q>");
       expect($("#dbgStatus").text()).to.include("consumed:1"); // :v1 already bound
 
-      // continue to completion: session ends, graph renders
+      // continue to completion: the session ends, the floating panel is put
+      // away, and the finished graph -- a materialization's real answer --
+      // renders in the results
       $("#dbgContinue").trigger("click");
-      expect($("#dbgStatus").text()).to.include("accepted: 2 quads");
-      expect($("#debugControls").css("display")).to.equal("none");
-      // a session that ran to the end keeps its last word, which is the
-      // answer: hiding the controls used to take the sentence with them
-      expect($("#dbgStatusRow").css("display"), "how it finished is still readable")
-        .to.not.equal("none");
+      expect(shared.app.debugSession, "the session ran to the end").to.not.exist;
+      expect($("#debugPanel").css("display"), "the panel is put away on completion").to.equal("none");
       expect($("#debugMaterialize").css("display"), "and 🐞 is offered again").to.not.equal("none");
       expect($("#results").text()).to.include('"one"');
       expect($("#results").text()).to.include('"two"');
@@ -378,7 +376,7 @@ if (!TEST_browser) {
       // strip (core, shared with the validation debugger -- one panel, one
       // engine at a time), not generated here: they live outside the plugin
       // toolbar and wait hidden until a session starts
-      expect($("#debugControls").css("display"), "the shared controls wait hidden").to.equal("none");
+      expect($("#debugPanel").css("display"), "the shared controls wait hidden").to.equal("none");
       expect($("#debugControls").closest(".pluginToolbarInner").length,
              "the strip is the app's own, not in the plugin toolbar").to.equal(0);
       expect($("#dbgStatus").closest("#debugControls").length, "the status is its own row").to.equal(0);
@@ -442,7 +440,7 @@ if (!TEST_browser) {
       await shared.promise;
       $("#dbgInto").trigger("click");
       $("#dbgStop").trigger("click");
-      expect($("#debugControls").css("display")).to.equal("none");
+      expect($("#debugPanel").css("display")).to.equal("none");
       expect(shared.Caches.editorSupport.panes.outputSchema, "pane survives").to.exist;
     });
 
@@ -503,8 +501,9 @@ if (!TEST_browser) {
       expect($("#results").text()).to.match(/frame 0:.*:name ✓/);
 
       $("#dbgContinue").trigger("click"); // to completion
-      expect($("#dbgStatus").text()).to.include("viable");
-      expect($("#debugControls").css("display")).to.equal("none");
+      // the panel is put away on completion; the "viable" tally is the
+      // rendered result's now (the last word is the graph, not a status line)
+      expect($("#debugPanel").css("display")).to.equal("none");
       expect($("#results").text()).to.include("2 viable materializations");
       expect($("#results").text()).to.include('"+1"'); // chosen: first disjunct
 
@@ -1247,7 +1246,9 @@ if (!TEST_browser) {
       expect($("#dbgStatus").text(), "the gutter breakpoint on :q holds").to.include("at <http://a.example/q>");
       expect($("#dbgStatus").text()).to.include("consumed:1");
       $("#dbgContinue").trigger("click");
-      expect($("#dbgStatus").text(), "runs to an accept").to.include("accepted: 2 quads");
+      // runs to an accept: the session ends, the floating panel is put away,
+      // and the materialized graph -- the answer -- renders
+      expect($("#debugPanel").css("display"), "the panel is put away").to.equal("none");
       expect($("#results").text(), "and the materialized graph renders").to.include('"one"');
       expect($("#results").text()).to.include('"two"');
     });

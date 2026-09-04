@@ -223,10 +223,7 @@
           </div>
         </div>
         <div style="clear:both; padding-top: .5em;">
-            <button id="validate">validate (ctl-enter)</button> <button id="debugValidate" title="step through a triple-expression match (enable the language-aware editors; a gutter click in the schema sets a breakpoint on the constraint the line begins, ctrl-alt-b one at the cursor)">🐞</button><button id="debugValidateLive" style="display:none" title="step through the whole live validation in a worker, shape by shape and constraint by constraint (needs cross-origin isolation: serve with shex-serve --coi)">🐞▶</button><span id="debugControls" style="display:none"><button id="dbgContinue" title="continue">▶</button><button id="dbgInto" title="step into">⤵</button><button id="dbgOver" title="step over">⏭</button><button id="dbgOut" title="step out">⤴</button><button id="dbgStop" title="stop">⏹</button></span>
-            <div id="dbgMatchesRow" class="dbgRow" style="display:none"><select id="dbgMatches" title="which recorded node@shape match to step through"></select> <input id="dbgBreak" size="26" placeholder="bp predicate | bn node" title="a breakpoint (enter): bp PREDICATE pauses at every constraint with that predicate; bn NODE keeps only the recorded matches on that node"/><span id="dbgBreakpoints"></span></div>
-            <div id="dbgStatusRow" class="dbgRow" style="display:none"><span id="dbgStatus"></span></div>
-            <div id="dbgThreadsRow" class="dbgRow" style="display:none"><span id="dbgThreads" title="the debugger's threads; hover or click for a thread's state or its (partial) graph"></span></div>
+            <button id="validate">validate (ctl-enter)</button> <button id="debugValidate" title="step through a triple-expression match (enable the language-aware editors; a gutter click in the schema sets a breakpoint on the constraint the line begins, ctrl-alt-b one at the cursor)">🐞</button><button id="debugValidateLive" style="display:none" title="step through the whole live validation in a worker, shape by shape and constraint by constraint (needs cross-origin isolation: serve with shex-serve --coi)">🐞▶</button>
         </div>
       </div>
     </div>
@@ -234,6 +231,17 @@
     <div id="results">
       <h2 class="status"> </h2>
       <div></div>
+    </div>
+    <!-- The debugger's panel floats (fixed), a direct child of the content so
+         it is nobody's "last row", and it stays in reach on whichever screen
+         the stepped schema is showing -- the input schema for validation, the
+         output schema for materialization, which live on different screens.
+         One panel drives all three debuggers (doc/debugger-design.md §5). -->
+    <div id="debugPanel" style="display:none">
+        <div id="debugPanelHead"><span id="debugPanelTitle">debugger</span> <span id="debugControls"><button id="dbgContinue" title="continue">▶</button><button id="dbgInto" title="step into">⤵</button><button id="dbgOver" title="step over">⏭</button><button id="dbgOut" title="step out">⤴</button><button id="dbgStop" title="stop / close">⏹</button></span></div>
+        <div id="dbgMatchesRow" class="dbgRow"><select id="dbgMatches" title="which recorded node@shape match to step through"></select> <input id="dbgBreak" size="20" placeholder="bp predicate | bn node" title="a breakpoint (enter): bp PREDICATE pauses at every constraint with that predicate; bn NODE keeps only the recorded matches on that node"/><span id="dbgBreakpoints"></span></div>
+        <div id="dbgStatusRow" class="dbgRow"><span id="dbgStatus"></span></div>
+        <div id="dbgThreadsRow" class="dbgRow"><span id="dbgThreads" title="the debugger's threads; hover or click for a thread's state or its (partial) graph"></span></div>
     </div>
     <script src="webpacks/n3js.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.21/jquery.csv.js"></script>

@@ -105,7 +105,7 @@ if (!TEST_browser) {
       expect(toolbar.find("button").map((i, b) => b.id).get()).to.deep.equal(
         ["materialize", "debugMaterialize"]);
       expect($("#outputShapeMap").length, "and the input that is not a pane").to.equal(1);
-      expect($("#debugControls").css("display"), "the shared step buttons wait").to.equal("none");
+      expect($("#debugPanel").css("display"), "the shared step buttons wait").to.equal("none");
       expect(typeof dom.window.ShExWebApp.Map, "the module it fetched").to.equal("function");
 
       $("#materialize").trigger("click");

@@ -16,6 +16,9 @@ class ShExApp extends ShExBaseApp {
     this.Getables.push(manifestParameter);
     this.QueryParams.push(manifestParameter);
     manifestCache.queryParams = this.QueryParams; // drives ManifestCache.loadExtraInputs
+    // picking a schema or data (both clearData) ends a debug session left
+    // standing over the old inputs
+    manifestCache.onPickInputs = () => this.endActiveDebugSession();
   };
   getValidator (loaded: any, _base: string, inputData: any): DirectShExValidator | RemoteShExValidator {
     return new DirectShExValidator(loaded, inputData, this.makeRenderer());

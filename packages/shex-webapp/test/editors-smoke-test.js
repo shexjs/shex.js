@@ -2310,7 +2310,7 @@ if (!TEST_browser) {
       $("#debugValidate").trigger("click");
       const session = await shared.promise;
       expect(session, "session started: " + $("#results").text().substring(0, 120)).to.exist;
-      expect($("#debugControls").css("display")).not.to.equal("none");
+      expect($("#debugPanel").css("display")).not.to.equal("none");
       expect($("#dbgMatches option").length, "one recorded match").to.equal(1);
       expect($("#dbgMatches option").first().text()).to.include("x@");
       // captured with the selected engine (the default, eval-threaded-nerr),
@@ -2363,13 +2363,37 @@ if (!TEST_browser) {
       for (let i = 0; i < 10 && !$("#dbgStatus").text().includes("match finished"); ++i)
         $("#dbgContinue").trigger("click");
       expect($("#dbgStatus").text()).to.include("match finished: matched");
+      // the match is exhausted: the step verbs go dead (a disabled button
+      // reads as done rather than doing nothing), only ⏹ stays live
+      expect($("#dbgContinue").prop("disabled"), "continue disabled when exhausted").to.equal(true);
+      expect($("#dbgInto").prop("disabled"), "step-into disabled").to.equal(true);
+      expect($("#dbgOver").prop("disabled"), "step-over disabled").to.equal(true);
+      expect($("#dbgStop").prop("disabled"), "but stop stays live").to.not.equal(true);
 
       $("#dbgStop").trigger("click");
-      expect($("#debugControls").css("display")).to.equal("none");
-      $("#dbgMatchesRow, #dbgStatusRow").each((i, e) =>
-        expect($(e).css("display"), e.id).to.equal("none"));
+      expect($("#debugPanel").css("display"), "the floating panel is gone").to.equal("none");
       expect($("#debugValidate").css("display"), "the bug button is back").to.not.equal("none");
       pane.toggleBreakpoint(schemaText.indexOf(":q .")); // clean up the gutter
+    });
+
+    it("ends a running debug session when the schema or data is re-picked", async function () {
+      const set = (selector, value) => { const e = $(selector).first(); e.val(value); e.trigger("change"); };
+      set("#inputSchema textarea", "PREFIX : <http://a.example/>\n:S { :p . }");
+      set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .");
+      set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
+      await shared.promise;
+
+      $("#debugValidate").trigger("click");
+      await shared.promise;
+      expect($("#debugPanel").css("display"), "a session is up").to.not.equal("none");
+      expect(shared.app.activeDebugSession, "and active").to.exist;
+
+      // picking a new schema or data (both go through the manifest cache's
+      // clearData) pulls the ground from under the session -- its highlights,
+      // breakpoints and status are about the old inputs -- so it ends
+      await shared.Caches.manifest.clearData();
+      expect(shared.app.activeDebugSession, "the session ended with the inputs").to.not.exist;
+      expect($("#debugPanel").css("display"), "and the panel is gone").to.equal("none");
     });
 
     it("offers a live-stepping 🐞▶ button beside the capture+replay 🐞, gated on cross-origin isolation", function () {
@@ -2529,7 +2553,7 @@ if (!TEST_browser) {
       expect(shared.promise, "the validation actually started").to.not.equal(before);
       await shared.promise;
       expect(shared.app.valDebugSession, "the session went with its results").to.equal(null);
-      expect($("#debugControls").css("display")).to.equal("none");
+      expect($("#debugPanel").css("display"), "the floating panel is gone").to.equal("none");
       expect($("#debugValidate").css("display"), "and 🐞 is offered again").to.not.equal("none");
     });
 

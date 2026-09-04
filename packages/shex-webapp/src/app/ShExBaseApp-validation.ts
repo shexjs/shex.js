@@ -24,6 +24,14 @@ interface ShExBaseApp {
    * strip; only one at a time (a validation finishes before its
    * materialization starts).  {kind, step(command), end()}. */
   activeDebugSession: any;
+  /** the floating debug panel, shared by all three debuggers: show it for a
+   * mode ("replay" | "live" | "materialize"), hide it, enable/disable the
+   * step verbs when a search is (un)exhausted, and end whatever session is
+   * running (e.g. when the schema or data changes underneath it). */
+  showDebugPanel (mode: string): void;
+  hideDebugPanel (): void;
+  setDebugRunnable (runnable: boolean): void;
+  endActiveDebugSession (): void;
   startValidationDebugSession (): Promise<any>;
   startValidationDebugSessionLive (): Promise<any>;
   receiveLiveValDebug (msg: any): void;
@@ -62,6 +70,50 @@ mixin(ShExBaseApp, {
       node: this.Caches.inputData.meta.lexToTerm(node),
       shape: this.Caches.inputSchema.meta.lexToTerm(shape) // resolve with this.Caches.outputSchema
     }
+  },
+
+  /** reveal the shared floating debug panel for `mode` ("replay" |
+   * "live" | "materialize"): show the rows that mode uses, hide the rest,
+   * enable the step verbs, and stand the trigger buttons down. */
+  showDebugPanel (mode: any) {
+    $("#debugPanel").show();
+    this.setDebugRunnable(true);
+    // a replay steps within one match, so it can't step out; validation and
+    // materialization walk a call tree and can
+    $("#dbgOut").toggle(mode !== "replay");
+    // the bp/bn breakpoint entry is the validators'; the recorded-match
+    // picker is capture+replay's alone
+    $("#dbgMatchesRow").toggle(mode !== "materialize");
+    $("#dbgMatches").toggle(mode === "replay");
+    $("#dbgStatusRow, #dbgThreadsRow").show();
+    $("#dbgOver").attr("title", mode === "live" ? "step over this shape's body"
+                       : mode === "materialize" ? "step over" : "run to the next generation");
+    $("#debugValidate, #debugValidateLive, #debugMaterialize").hide();
+  },
+
+  /** hide the panel and offer the triggers again (live only where the page
+   * is cross-origin isolated) */
+  hideDebugPanel () {
+    $("#debugPanel").hide();
+    $("#dbgStatus").text("");
+    $("#dbgThreads, #dbgBreakpoints").empty();
+    $("#debugValidate, #debugMaterialize").show();  // #debugMaterialize is a no-op without the plugin
+    if (typeof SharedArrayBuffer !== "undefined" &&
+        typeof self !== "undefined" && (self as any).crossOriginIsolated)
+      $("#debugValidateLive").show();
+  },
+
+  /** enable or disable the step verbs (▶⤵⏭⤴): disabled once a search is
+   * exhausted, so a dead button reads as done rather than doing nothing */
+  setDebugRunnable (runnable: any) {
+    $("#dbgContinue, #dbgInto, #dbgOver, #dbgOut").prop("disabled", !runnable);
+  },
+
+  /** end whichever debug session is running -- called when the ground moves
+   * under it (the schema or data is re-picked) */
+  endActiveDebugSession () {
+    if (this.activeDebugSession)
+      this.activeDebugSession.end();
   },
 
   /* Executions */
@@ -197,13 +249,9 @@ endValidation (elapsed: any) {
         select.append($("<option/>", {value: i}).text(this.matchCaptureLabel(cap, schema))));
       select.off("change").on("change", () => this.pickValidationMatch(parseInt(select.val(), 10)));
       this.renderValDebugBreakpoints();
-      // the step buttons, the match picker and the status line are rows of
-      // one control; 🐞 started this session, and pressing it again would
-      // only start another over the same results.  A replay steps within one
-      // match, so step-out has nothing to leave -- hide ⤴.
-      $("#debugControls, .dbgRow").show();
-      $("#dbgOut").hide();
-      $("#debugValidate, #debugValidateLive").hide();
+      // 🐞 started this session, and pressing it again would only start
+      // another over the same results
+      this.showDebugPanel("replay");
       this.pickValidationMatch(this.offeredMatches()[0] || 0);
       return this.valDebugSession;
     } catch (e: any) {
@@ -300,11 +348,7 @@ endValidation (elapsed: any) {
         sab,
       }));
       this.renderValDebugBreakpoints();
-      $("#debugControls, .dbgRow").show();
-      $("#dbgOut").show();       // whole-validation stepping can step out of a shape
-      $("#dbgMatches").hide();   // no recorded-match catalogue in live mode
-      $("#dbgOver").attr("title", "step over this shape's body");
-      $("#debugValidate, #debugValidateLive").hide();
+      this.showDebugPanel("live");
       $("#dbgStatus").text("starting the validation in a worker...");
       return session;
     } catch (e: any) {
@@ -327,17 +371,20 @@ endValidation (elapsed: any) {
       break;
     case "done":
       session.done = true;
+      this.setDebugRunnable(false);   // the walk is over; only ⏹ is live
       session.pane.clearHighlights();
       $("#dbgStatus").text("validation finished: " +
         (msg.data.conformant ? "conformant" : "nonconformant") + "; ⏹ to close");
       break;
     case "aborted":
       session.done = true;
+      this.setDebugRunnable(false);
       session.pane.clearHighlights();
       $("#dbgStatus").text("validation debugger stopped");
       break;
     case "error":
       session.done = true;
+      this.setDebugRunnable(false);
       $("#dbgStatus").text("worker error: " + (msg.data.message || "?"));
       break;
     }
@@ -568,6 +615,7 @@ matchCaptureLabel (cap: any, schema: any) {
     session.breakpoints.predicates.forEach((predicate: any) => dbg.addBreakpoint({predicate}));
     session.dbg = dbg;
     session.capture = cap;
+    this.setDebugRunnable(true);   // a fresh match to step (re-arms after one finished)
     $("#dbgStatus").text("paused before matching " + $("#dbgMatches option:selected").text() +
                             "; step or continue" +
                             (cap.regexModule === stepper.name ? ""
@@ -627,6 +675,7 @@ showValDebugEvent (event: any) {
       $("#dbgStatus").text("thread accepted" + gen + threadStr);
       break;
     case "done":
+      this.setDebugRunnable(false);   // this match is exhausted; pick another to re-arm
       $("#dbgStatus").text("match finished: " +
         (session.dbg.result && !("errors" in session.dbg.result) ? "matched" : "failed") +
         "; pick another match or ⏹");
@@ -708,19 +757,7 @@ endValidationDebugSession () {
     session.pane.clearHighlights();
     if (this.editorSupport && this.editorSupport.panes.inputData)
       this.editorSupport.panes.inputData.clearHighlights();
-    $("#debugControls, .dbgRow").hide();
-    $("#dbgStatus").text("");
-    $("#dbgThreads, #dbgBreakpoints").empty();
-    // the shared strip back to its resting state for the next session (the
-    // materializer's included): ⤴ shown, ⏭'s title, the match select and its
-    // options shown for the capture+replay 🐞, and the triggers offered again
-    $("#dbgOut").show();
-    $("#dbgOver").attr("title", "run to the next generation");
-    $("#dbgMatches").show().find("option").show();
-    $("#debugValidate").show();
-    if (typeof SharedArrayBuffer !== "undefined" &&
-        typeof self !== "undefined" && (self as any).crossOriginIsolated)
-      $("#debugValidateLive").show();
+    this.hideDebugPanel();
   },
 
 async callValidator (done: any) {
