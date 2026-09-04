@@ -33,9 +33,13 @@ node**.
 > `MatchDebugger` -- schema-gutter breakpoints, ▶⤵⏭⏹ stepping (⏭ = next
 > NFA generation), and a threads pane whose hover/click renders a
 > thread's aspects: state-machine position (highlighted in the schema
-> pane), repeat counts, and its matched-triples partition.  Still
-> designed-only: LIVE whole-validation stepping in the browser (worker +
-> Atomics, phase 6) -- the CLI `shex-debug` already steps live.
+> pane), repeat counts, and its matched-triples partition.  **Live**
+> whole-validation stepping in the browser now ships too (phase 6, the
+> worker gate + `Atomics`): the validate panel's 🐞▶ (shown when the page is
+> cross-origin isolated) runs the validator in a dedicated worker that
+> blocks between events, stepping the whole validation shape by shape and
+> constraint by constraint beside the capture+replay 🐞.  What remains is
+> polish: one unified panel over the materializer and validator engines.
 
 ## 1. The central problem: suspending an engine
 
@@ -225,10 +229,15 @@ starts from the same base.
    - ✅ live whole-validation stepping's engine: the worker gate + SAB
      command protocol (`WorkerGate`/`GateController`, frozen-while-running
      breakpoints), CI-proven under `worker_threads`;
-   - the browser wiring of that gate (`debugValidate` in
-     `ShExWorkerThread.js`) and a unified panel over both engines remain
-     (E10) -- one browser-only unit, since a truly-blocking thread is what
-     the in-process worker shim can't emulate.
+   - ✅ the browser wiring of that gate: `debugValidate` in
+     `ShExWorkerThread.js` runs a gated validation in a dedicated worker, and
+     the validate panel's 🐞▶ (shown only when cross-origin isolated) drives
+     it beside the capture+replay 🐞, reusing the same controls, gutter and
+     breakpoints (E10); the live stepping rides the `worker_threads` harness
+     for the mechanism and a real isolated browser for the glue;
+   - folding the materializer's panel and the validation panel into a single
+     unified panel over both engines is the remaining polish (they share a
+     look but are two panels today).
 
 ## 8. Risks / notes
 

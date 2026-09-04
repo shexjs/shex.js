@@ -220,18 +220,29 @@ Larger, design conversation first:
   during a pause* fires; over skips a shape's body; abort reports aborted).
   `shex-serve --coi` and clone-safe anchors were already in place.  What
   remains is browser-only and lands with E10 (see there).
-- **E10 (L)** One debug panel over materialization and validation sessions,
-  **and the browser end of E9's mechanism** -- a `debugValidate` handler in
-  `ShExWorkerThread.js` that builds a `WorkerGate` over a page-supplied SAB
-  and runs a gated `validateShapeMap`, plus a page-side `GateController` and
-  the panel that drives it (reusing the materializer panel's controls,
-  gutter and highlight).  These three are one browser-only unit: the
-  mechanism's defining behaviour is a thread that *truly* blocks, which the
-  smoke tests' in-process worker shim can't emulate (`Atomics.wait` would
-  deadlock the shared thread), so there is no CI seam between wiring the
-  worker and building the panel -- the `worker_threads` harness is the
-  mechanism's CI, the panel is verified in a real (cross-origin-isolated)
-  browser.
+- **E10 (browser live-stepping done 2026-09-04)** The browser end of E9's
+  mechanism, wired into the existing validation debug panel.  The
+  capture+replay 🐞 stays the default (no isolation needed); a new 🐞▶ beside
+  it steps the *whole* live validation.  `ShExWorkerThread.js` gained a
+  `debugValidate` request that builds a `WorkerGate` over a page-supplied SAB
+  and runs a gated `validateShapeMap` (the browser twin of
+  `worker-gate-worker.js`); `shex-webapp.js` re-exports the gate primitives
+  onto the `ShExWebApp` global; `startValidationDebugSessionLive` runs a
+  *dedicated* worker (so ⏹ terminating it never disturbs the app's own
+  validator) and drives it through a `GateController`, reusing the panel's
+  step controls, gutter/predicate/node breakpoints and status line and
+  reading the breakpoints fresh at each step
+  (`currentValWireBreakpoints`, the editable-while-paused half of the model;
+  constraints cross by `schemaTripleConstraints` ordinal).  The 🐞▶ button
+  shows only when `crossOriginIsolated` (`shex-serve --coi`).  CI covers the
+  wiring (button present/titled/hidden-without-isolation) and the unchanged
+  capture+replay path; the live stepping itself needs a truly-blocking worker
+  thread the in-process shim can't provide, so it rides E9's `worker_threads`
+  harness for the mechanism and a cross-origin-isolated browser for the glue.
+  *Still open (optional):* folding the materializer's own debug panel and
+  this one into a single unified panel over both engines -- they share a
+  look but remain two panels (the materializer's is ShExMap-plugin-owned,
+  this one is core).
 - **E11 (done 2026-09-04)** Worker-app materializer debugging.  The step
   session's `MaterializerDebugger` runs in the page even when the app
   validates in a worker (`app.remote`): its inputs -- output schema,
