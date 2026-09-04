@@ -2310,37 +2310,38 @@ if (!TEST_browser) {
       $("#debugValidate").trigger("click");
       const session = await shared.promise;
       expect(session, "session started: " + $("#results").text().substring(0, 120)).to.exist;
-      expect($("#valDebugControls").css("display")).not.to.equal("none");
-      expect($("#valDbgMatches option").length, "one recorded match").to.equal(1);
-      expect($("#valDbgMatches option").first().text()).to.include("x@");
+      expect($("#debugPanel").css("display")).not.to.equal("none");
+      expect($("#debugPanelTitle").text(), "the card names which debugger it is").to.equal("validation");
+      expect($("#dbgMatches option").length, "one recorded match").to.equal(1);
+      expect($("#dbgMatches option").first().text()).to.include("x@");
       // captured with the selected engine (the default, eval-threaded-nerr),
       // replayed by the one that steps
       expect($("#regexpEngine").val()).to.equal("eval-threaded-nerr");
       expect(session.captures[0].regexModule).to.equal("eval-threaded-nerr");
-      expect($("#valDbgStatus").text()).to.include("captured with eval-threaded-nerr, replayed with eval-simple-1err");
+      expect($("#dbgStatus").text()).to.include("captured with eval-threaded-nerr, replayed with eval-simple-1err");
 
       // three rows, and the button that started this stands down: pressing
       // it again would open a second session over the same results
-      $("#valDbgMatchesRow, #valDbgStatusRow").each((i, e) =>
+      $("#dbgMatchesRow, #dbgStatusRow").each((i, e) =>
         expect($(e).css("display"), e.id).to.not.equal("none"));
       expect($("#debugValidate").css("display"), "the bug button").to.equal("none");
       // the step buttons sit beside #validate, not below it
-      expect($("#valDbgContinue").closest("#valDbgMatchesRow, #valDbgStatusRow").length,
+      expect($("#dbgContinue").closest("#dbgMatchesRow, #dbgStatusRow").length,
              "the step buttons are on the first row").to.equal(0);
-      expect($("#valDbgMatches").closest("#valDbgMatchesRow").length, "matches row").to.equal(1);
-      expect($("#valDbgStatus").closest("#valDbgStatusRow").length, "status row").to.equal(1);
+      expect($("#dbgMatches").closest("#dbgMatchesRow").length, "matches row").to.equal(1);
+      expect($("#dbgStatus").closest("#dbgStatusRow").length, "status row").to.equal(1);
 
       // step into: the first constraint event, with live threads listed
-      $("#valDbgInto").trigger("click");
-      expect($("#valDbgStatus").text()).to.include("at <http://a.example/p>");
-      expect($("#valDbgThreads button").length, "threads listed").to.be.above(0);
+      $("#dbgInto").trigger("click");
+      expect($("#dbgStatus").text()).to.include("at <http://a.example/p>");
+      expect($("#dbgThreads button").length, "threads listed").to.be.above(0);
 
       // continue runs to the :q gutter breakpoint
       expect(session.pane.listBreakpoints().length, "gutter breakpoint listed").to.equal(1);
       expect([...session.dbg.breakpoints.tcs][0].predicate, "breakpoint constraint")
         .to.equal("http://a.example/q");
-      $("#valDbgContinue").trigger("click");
-      expect($("#valDbgStatus").text()).to.include("at <http://a.example/q>");
+      $("#dbgContinue").trigger("click");
+      expect($("#dbgStatus").text()).to.include("at <http://a.example/q>");
 
       // a thread's aspects: state-machine position, repeats, matched partition
       // -- and the partition lit in the data pane
@@ -2349,7 +2350,7 @@ if (!TEST_browser) {
       const origHighlight = dataPane.highlight;
       dataPane.highlight = (rs, cls) => lit.push({rs, cls});
       try {
-        $("#valDbgThreads button").first().trigger("mouseenter");
+        $("#dbgThreads button").first().trigger("mouseenter");
       } finally {
         dataPane.highlight = origHighlight;
       }
@@ -2360,16 +2361,58 @@ if (!TEST_browser) {
       expect(lit[0].rs.map(r => dataText.slice(r.from, r.to)), "the :p triple it took").to.include("0");
 
       // run past the remaining breakpoint hits to the end of the match
-      for (let i = 0; i < 10 && !$("#valDbgStatus").text().includes("match finished"); ++i)
-        $("#valDbgContinue").trigger("click");
-      expect($("#valDbgStatus").text()).to.include("match finished: matched");
+      for (let i = 0; i < 10 && !$("#dbgStatus").text().includes("match finished"); ++i)
+        $("#dbgContinue").trigger("click");
+      expect($("#dbgStatus").text()).to.include("match finished: matched");
+      // the match is exhausted: the step verbs go dead (a disabled button
+      // reads as done rather than doing nothing), only ⏹ stays live
+      expect($("#dbgContinue").prop("disabled"), "continue disabled when exhausted").to.equal(true);
+      expect($("#dbgInto").prop("disabled"), "step-into disabled").to.equal(true);
+      expect($("#dbgOver").prop("disabled"), "step-over disabled").to.equal(true);
+      expect($("#dbgStop").prop("disabled"), "but stop stays live").to.not.equal(true);
 
-      $("#valDbgStop").trigger("click");
-      expect($("#valDebugControls").css("display")).to.equal("none");
-      $("#valDbgMatchesRow, #valDbgStatusRow").each((i, e) =>
-        expect($(e).css("display"), e.id).to.equal("none"));
+      $("#dbgStop").trigger("click");
+      expect($("#debugPanel").css("display"), "the floating panel is gone").to.equal("none");
       expect($("#debugValidate").css("display"), "the bug button is back").to.not.equal("none");
       pane.toggleBreakpoint(schemaText.indexOf(":q .")); // clean up the gutter
+    });
+
+    it("ends a running debug session when the schema or data is re-picked", async function () {
+      const set = (selector, value) => { const e = $(selector).first(); e.val(value); e.trigger("change"); };
+      set("#inputSchema textarea", "PREFIX : <http://a.example/>\n:S { :p . }");
+      set("#inputData textarea", "PREFIX : <http://a.example/>\n:x :p 1 .");
+      set("#queryMap", "<http://a.example/x>@<http://a.example/S>");
+      await shared.promise;
+
+      $("#debugValidate").trigger("click");
+      await shared.promise;
+      expect($("#debugPanel").css("display"), "a session is up").to.not.equal("none");
+      expect(shared.app.activeDebugSession, "and active").to.exist;
+
+      // picking a new schema or data (both go through the manifest cache's
+      // clearData) pulls the ground from under the session -- its highlights,
+      // breakpoints and status are about the old inputs -- so it ends
+      await shared.Caches.manifest.clearData();
+      expect(shared.app.activeDebugSession, "the session ended with the inputs").to.not.exist;
+      expect($("#debugPanel").css("display"), "and the panel is gone").to.equal("none");
+    });
+
+    it("offers a live-stepping 🐞▶ button beside the capture+replay 🐞, gated on cross-origin isolation", function () {
+      // The whole-validation live stepper (E10) reuses this panel's step
+      // controls but runs the validator in a worker that blocks on
+      // Atomics.wait, so it needs SharedArrayBuffer (shex-serve --coi).  The
+      // button is present and points at --coi...
+      expect($("#debugValidateLive").length, "the live-stepping button exists").to.equal(1);
+      expect($("#debugValidateLive").attr("title"), "and points at --coi").to.include("shex-serve --coi");
+      expect(typeof shared.app.startValidationDebugSessionLive, "its session method is wired").to.equal("function");
+      // ...but hidden where the page is not cross-origin isolated, as the
+      // jsdom test environment is not -- so a viewer served without --coi
+      // never sees it, and the capture+replay 🐞 (which needs no isolation)
+      // stays the default.  The live stepping itself needs a truly-blocking
+      // worker thread the in-process worker shim can't provide, so it is
+      // proven by eval-validator-api's worker_threads harness, not here.
+      expect($("#debugValidateLive").css("display"), "hidden without cross-origin isolation").to.equal("none");
+      expect($("#debugValidate").css("display"), "the capture+replay button stays offered").to.not.equal("none");
     });
 
     it("should step a match the stepper's own engine captured, without the note", async function () {
@@ -2388,10 +2431,10 @@ if (!TEST_browser) {
         const session = await shared.promise;
         expect(session, "session started").to.exist;
         expect(session.captures[0].regexModule).to.equal("eval-simple-1err");
-        expect($("#valDbgStatus").text()).to.not.include("captured with");
-        $("#valDbgInto").trigger("click");
-        expect($("#valDbgStatus").text()).to.include("at <http://a.example/p>");
-        $("#valDbgStop").trigger("click");
+        expect($("#dbgStatus").text()).to.not.include("captured with");
+        $("#dbgInto").trigger("click");
+        expect($("#dbgStatus").text()).to.include("at <http://a.example/p>");
+        $("#dbgStop").trigger("click");
       } finally {
         $("#regexpEngine").val("eval-threaded-nerr");
       }
@@ -2429,7 +2472,7 @@ if (!TEST_browser) {
         expect(session, "session started: " + $("#results").text().substring(0, 120)).to.exist;
         const predicates = [...session.dbg.breakpoints.tcs].map(tc => tc.predicate.replace("http://a.example/", ":")).sort();
         expect(predicates).to.deep.equal([":r", ":y"]);
-        $("#valDbgStop").trigger("click");
+        $("#dbgStop").trigger("click");
       } finally {
         pane.listBreakpoints().forEach(pos => pane.toggleBreakpointAt(pos));   // clean the gutter
       }
@@ -2451,33 +2494,33 @@ if (!TEST_browser) {
       $("#debugValidate").trigger("click");
       const session = await shared.promise;
       expect(session, "session started: " + $("#results").text().substring(0, 120)).to.exist;
-      expect($("#valDbgMatches option").length, "two recorded matches").to.equal(2);
+      expect($("#dbgMatches option").length, "two recorded matches").to.equal(2);
 
-      $("#valDbgBreak").val("bp :q").trigger($.Event("keydown", {key: "Enter"}));
+      $("#dbgBreak").val("bp :q").trigger($.Event("keydown", {key: "Enter"}));
       expect([...session.dbg.breakpoints.predicates]).to.deep.equal(["http://a.example/q"]);
-      expect($("#valDbgBreakpoints .dbgBreakpoint").text()).to.include("bp :q");
-      expect($("#valDbgBreak").val(), "the field is clear for the next").to.equal("");
-      $("#valDbgContinue").trigger("click");
-      expect($("#valDbgStatus").text()).to.include("at <http://a.example/q>");
+      expect($("#dbgBreakpoints .dbgBreakpoint").text()).to.include("bp :q");
+      expect($("#dbgBreak").val(), "the field is clear for the next").to.equal("");
+      $("#dbgContinue").trigger("click");
+      expect($("#dbgStatus").text()).to.include("at <http://a.example/q>");
 
-      $("#valDbgBreak").val("bn :b").trigger($.Event("keydown", {key: "Enter"}));
-      const offered = () => $("#valDbgMatches option").filter((i, o) => $(o).css("display") !== "none");
+      $("#dbgBreak").val("bn :b").trigger($.Event("keydown", {key: "Enter"}));
+      const offered = () => $("#dbgMatches option").filter((i, o) => $(o).css("display") !== "none");
       expect(offered().length, "only b's match on offer").to.equal(1);
       expect(offered().text()).to.include("b@");
-      expect($("#valDbgMatches").val(), "re-armed on it").to.equal(offered().attr("value"));
-      expect($("#valDbgBreakpoints .dbgBreakpoint").length).to.equal(2);
+      expect($("#dbgMatches").val(), "re-armed on it").to.equal(offered().attr("value"));
+      expect($("#dbgBreakpoints .dbgBreakpoint").length).to.equal(2);
 
-      $("#valDbgInto").trigger("click");
-      $("#valDbgThreads button").first().trigger("mouseenter");
+      $("#dbgInto").trigger("click");
+      $("#dbgThreads button").first().trigger("mouseenter");
       expect($("#results table.dbgThreadState").length, "a table, not a text dump").to.equal(1);
       expect($("#results table.dbgThreadState").text()).to.include("matched partition");
 
-      $("#valDbgBreakpoints .dbgBreakpoint[data-kind='bn'] button").trigger("click");
+      $("#dbgBreakpoints .dbgBreakpoint[data-kind='bn'] button").trigger("click");
       expect(offered().length, "× took the node breakpoint away").to.equal(2);
-      expect($("#valDbgBreak").val("nonsense").trigger($.Event("keydown", {key: "Enter"})) && $("#valDbgStatus").text())
+      expect($("#dbgBreak").val("nonsense").trigger($.Event("keydown", {key: "Enter"})) && $("#dbgStatus").text())
         .to.include("bp PREDICATE or bn NODE");
-      $("#valDbgStop").trigger("click");
-      expect($("#valDbgBreakpoints").children().length, "gone with the session").to.equal(0);
+      $("#dbgStop").trigger("click");
+      expect($("#dbgBreakpoints").children().length, "gone with the session").to.equal(0);
     });
 
     /* Validating again is not "continue, ignoring breakpoints" -- that is ▶.
@@ -2511,7 +2554,7 @@ if (!TEST_browser) {
       expect(shared.promise, "the validation actually started").to.not.equal(before);
       await shared.promise;
       expect(shared.app.valDebugSession, "the session went with its results").to.equal(null);
-      expect($("#valDebugControls").css("display")).to.equal("none");
+      expect($("#debugPanel").css("display"), "the floating panel is gone").to.equal("none");
       expect($("#debugValidate").css("display"), "and 🐞 is offered again").to.not.equal("none");
     });
 

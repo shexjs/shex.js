@@ -8,6 +8,9 @@ import {TripleConstraint} from "shexj";
 
 export {};
 
+// live whole-validation stepping: the worker gate + SAB command protocol
+export * from "./worker-gate";
+
 export class MapArray<A, T> {
   public data: Map<A, T[]> = new Map(); // public 'cause I don't know how to fix reduce to use this.data
   add (a:A, t:T): void {
