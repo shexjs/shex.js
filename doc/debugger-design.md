@@ -176,11 +176,21 @@ the recorded matches are on offer.
 
 ## 5. UI (web apps)
 
-- A debug panel (hidden until "debug" is toggled in the Menu, carried in
-  permalinks like `editors=`): ▶ continue, ⤵ into, ⏭ over, ⤴ out, ⏹ stop;
-  a call-stack list (shape frames); the thread snapshot (for ShExMap: the
-  binding-frame index and consumed-count against a rendered frame table —
-  the `bindingsToTable` widget already renders frames).
+- **One floating panel over all three debuggers** (validation capture+replay,
+  validation live, ShExMap materialization), never more than one live at a
+  time (a validation finishes before its materialization starts): ▶ continue,
+  ⤵ into, ⏭ over, ⤴ out, ⏹ stop; a status line; the thread list (for ShExMap:
+  the binding-frame index and consumed-count against a rendered frame table —
+  the `bindingsToTable` widget already renders frames).  `#debugPanel` is
+  `position:fixed` (a bottom-right card in `shex-app.css`), so its controls
+  stay in reach whichever *screen* the stepped schema is on — the input
+  schema for validation, the output schema (the plugin's own screen) for
+  materialization.  The app's `activeDebugSession` is whichever session is
+  live and the shared buttons route to it (`showDebugPanel(mode)` /
+  `hideDebugPanel()` / `setDebugRunnable()` on the core app; the plugin's
+  materializer registers as `activeDebugSession` while it runs).  The step
+  verbs disable once a search is exhausted; picking a new schema/data ends a
+  session standing over the old inputs.
 - **Current-position highlighting** reuses `pane.highlight()`: the paused
   event's `tc` range in the schema pane (`locate.expr`), the focus/subject
   node's occurrence in the data pane (millan lookup), in a distinct
