@@ -13,6 +13,7 @@ interface ShExBaseApp {
   loadSearchParameters (): Promise<any>;
   parseQueryString (query: any): any;
   getPermalink (): Promise<string>;
+  shortenPermalink (evt: any): Promise<any>;
   createGist (evt: any): Promise<any>;
   updateGist (evt: any): Promise<any>;
   getGistToken (): string | null;
@@ -196,6 +197,46 @@ parseQueryString (query: any) {
     }, []));
     const s = parms.join("&");
     return location.origin + location.pathname + "?" + s;
+  },
+
+  /** Menu → "shorten": swap the (often very long) permalink for a TinyURL
+   * short link.  TinyURL's keyless api-create.php is CORS-enabled and hands
+   * back the short URL as plain text, so no server of our own is needed; we
+   * show it beside Permalink and copy it to the clipboard.  TinyURL answers
+   * 200 with an error string rather than an HTTP error when it refuses a URL
+   * (an over-long one, say), so we vet the body, not just the status, and on
+   * any failure keep the long link -- for a link too big to shorten, "Create
+   * Gist" is the path that scales. */
+  async shortenPermalink (evt: any) {
+    if (evt) evt.preventDefault();
+    const $btn = $("#shortenPermalink"), $out = $("#shortPermalink");
+    // the menu builds the permalink as it opens; build one now in case the
+    // click somehow beat that
+    const long = $("#permalinkAnchor").attr("href") || await this.getPermalink();
+    $btn.text("shortening…");
+    $out.attr("href", "").text("");
+    try {
+      const resp = await fetch("https://tinyurl.com/api-create.php?url=" +
+                               encodeURIComponent(long));
+      const body = (await resp.text()).trim();
+      if (!resp.ok || !/^https?:\/\//.test(body))
+        throw new Error(body || ("HTTP " + resp.status));
+      $out.attr("href", body).text(body);
+      try {
+        await navigator.clipboard.writeText(body);
+        $btn.text("copied ✓");
+      } catch (e) {
+        // clipboard wants a secure context and permission; the link shows regardless
+        $btn.text("shortened");
+      }
+    } catch (e: any) {
+      $btn.text("shorten failed").attr("title", "TinyURL: " + e.message);
+      console.warn("TinyURL shorten failed:", e);
+    }
+    window.setTimeout(
+      () => $btn.text("shorten").attr("title", "Shorten this link with TinyURL"),
+      2500);
+    return null;
   },
 
   /** Menu → "Create Gist": publish the inputs this app registered with a
