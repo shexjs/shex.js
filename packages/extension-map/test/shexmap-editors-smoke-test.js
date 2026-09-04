@@ -319,6 +319,7 @@ if (!TEST_browser) {
       const session = await shared.promise;
       expect(session, "debug session started: " + $("#results").text().substring(0, 120)).to.exist;
       expect($("#debugPanel").css("display")).not.to.equal("none");
+      expect($("#debugPanelTitle").text(), "the card names this debugger").to.equal("materialization");
       // laid out like the validator's: steps beside the button that started
       // them, status on its own row, and 🐞 stands down meanwhile
       expect($("#dbgStatusRow").css("display"), "the status row").to.not.equal("none");

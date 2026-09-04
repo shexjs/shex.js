@@ -2311,6 +2311,7 @@ if (!TEST_browser) {
       const session = await shared.promise;
       expect(session, "session started: " + $("#results").text().substring(0, 120)).to.exist;
       expect($("#debugPanel").css("display")).not.to.equal("none");
+      expect($("#debugPanelTitle").text(), "the card names which debugger it is").to.equal("validation");
       expect($("#dbgMatches option").length, "one recorded match").to.equal(1);
       expect($("#dbgMatches option").first().text()).to.include("x@");
       // captured with the selected engine (the default, eval-threaded-nerr),

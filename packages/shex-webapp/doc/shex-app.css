@@ -475,9 +475,16 @@ ul {
     padding: .5em .7em .6em;
     font-size: small;
 }
+/* The card is anchored at the right (it grows leftward as the status
+   sentence -- usually the widest row -- lengthens and shrinks each step).  So
+   the controls hug that fixed right edge and stay put while the reader steps:
+   the step verbs to the right of the title, the match picker / breakpoint
+   entry right-aligned on their row.  Only the status prose and the thread
+   list, which are meant to change, ride the moving left edge. */
 #debugPanelHead {
     display: flex;
     align-items: center;
+    justify-content: space-between;   /* title left, step verbs pinned right */
     gap: .4em;
 }
 #debugPanelTitle {
@@ -485,6 +492,7 @@ ul {
     color: #555;
     letter-spacing: .02em;
 }
+#dbgMatchesRow { justify-content: flex-end; }   /* pinned right, like the verbs above */
 #debugControls { white-space: nowrap; }
 /* a step verb with nothing left to do (the search is exhausted) is disabled,
    not silently inert */

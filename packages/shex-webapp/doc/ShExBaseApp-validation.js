@@ -23,6 +23,10 @@ mixin(ShExBaseApp, {
      * enable the step verbs, and stand the trigger buttons down. */
     showDebugPanel(mode) {
         $("#debugPanel").show();
+        // the card names which debugger it is driving (the title was a fixed
+        // "debugger" before -- it now says what is being stepped)
+        $("#debugPanelTitle").text(mode === "materialize" ? "materialization"
+            : mode === "live" ? "live validation" : "validation");
         this.setDebugRunnable(true);
         // a replay steps within one match, so it can't step out; validation and
         // materialization walk a call tree and can
