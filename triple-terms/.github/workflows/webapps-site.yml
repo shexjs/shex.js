@@ -78,10 +78,15 @@ jobs:
           # deleted (to shed old bundle history), start it afresh
           git fetch origin gh-pages || true
           PARENT=$(git rev-parse --verify --quiet origin/gh-pages || true)
-          # carry the experiment-branch sites (webapps-site-branch.yml
-          # publishes each under a subdirectory named for its branch) across
-          # this root rebuild; names must not collide with main's own dirs
-          EXPERIMENTS="generics"
+          # carry the experiment-branch sites (webapps-site-branch.yml)
+          # across this root rebuild; the list is index.html's
+          # experiment-sites data block, the same source that renders the
+          # landing page's Experiments card
+          EXPERIMENTS=$(node -e '
+            const m = require("fs").readFileSync("index.html", "utf8")
+              .match(/id="experiment-sites">\s*([\s\S]*?)<\/script>/);
+            process.stdout.write(m ? JSON.parse(m[1]).map(e => e.dir).join(" ") : "");')
+          echo "carrying: $EXPERIMENTS"
           if [ -n "$PARENT" ]; then
             for d in $EXPERIMENTS; do
               if git rev-parse --verify --quiet "$PARENT:$d" >/dev/null; then
