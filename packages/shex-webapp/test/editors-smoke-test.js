@@ -2372,6 +2372,24 @@ if (!TEST_browser) {
       pane.toggleBreakpoint(schemaText.indexOf(":q .")); // clean up the gutter
     });
 
+    it("offers a live-stepping 🐞▶ button beside the capture+replay 🐞, gated on cross-origin isolation", function () {
+      // The whole-validation live stepper (E10) reuses this panel's step
+      // controls but runs the validator in a worker that blocks on
+      // Atomics.wait, so it needs SharedArrayBuffer (shex-serve --coi).  The
+      // button is present and points at --coi...
+      expect($("#debugValidateLive").length, "the live-stepping button exists").to.equal(1);
+      expect($("#debugValidateLive").attr("title"), "and points at --coi").to.include("shex-serve --coi");
+      expect(typeof shared.app.startValidationDebugSessionLive, "its session method is wired").to.equal("function");
+      // ...but hidden where the page is not cross-origin isolated, as the
+      // jsdom test environment is not -- so a viewer served without --coi
+      // never sees it, and the capture+replay 🐞 (which needs no isolation)
+      // stays the default.  The live stepping itself needs a truly-blocking
+      // worker thread the in-process worker shim can't provide, so it is
+      // proven by eval-validator-api's worker_threads harness, not here.
+      expect($("#debugValidateLive").css("display"), "hidden without cross-origin isolation").to.equal("none");
+      expect($("#debugValidate").css("display"), "the capture+replay button stays offered").to.not.equal("none");
+    });
+
     it("should step a match the stepper's own engine captured, without the note", async function () {
       const set = (selector, value) => {
         const elt = $(selector).first();

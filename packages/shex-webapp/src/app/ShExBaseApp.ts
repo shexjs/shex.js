@@ -309,6 +309,14 @@ onDataLoad (): void {
       this.resultsWidget.scrollToResult(window.location.hash.substring(1)));
     $("#validate").on("click", this.disableResultsAndValidate.bind(this));
     $("#debugValidate").on("click", () => { this.track(this.startValidationDebugSession()); });
+    // Live whole-validation stepping runs the validator in a worker and
+    // blocks it on Atomics.wait, so it needs SharedArrayBuffer -- offered
+    // only when the page is cross-origin isolated (shex-serve --coi).  The
+    // capture+replay 🐞 beside it needs none and is always available.
+    if (typeof SharedArrayBuffer !== "undefined" &&
+        typeof self !== "undefined" && (self as any).crossOriginIsolated)
+      $("#debugValidateLive").show()
+        .on("click", () => { this.track(this.startValidationDebugSessionLive()); });
     $("#valDbgInto").on("click", () => this.valDebugStep("stepInto"));
     $("#valDbgOver").on("click", () => this.valDebugStep("stepOver"));
     $("#valDbgContinue").on("click", () => this.valDebugStep("continue"));
