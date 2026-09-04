@@ -100,16 +100,30 @@ these; findings after each.
    quotation would tangle: no second-order construct needed, because the
    assertion is a node. Finding: most "nested triple term" examples in the
    wild are this case wearing the wrong clothes.
-3. **Property-graph edge properties** — `rdf:reifies ( <<( IRI foaf:knows
-   IRI )>> AND { ^rdf:reifies { ex:weight xsd:decimal } } )`. Finding, and
-   the pleasant surprise of the exploration: *the term-as-focus works*.
-   A triple term has a neighborhood, so LPG-style "the edge and its
-   properties" validates with no new machinery — the conjunction reads
-   "shaped like a knowing, and every reifier of it carries a weight".
-4. **Mention without description** — `<#Mention> { rdf:reifies <<( IRI
+3. **Property-graph edge properties** — `<#WeightedEdge> { rdf:reifies <<(
+   IRI foaf:knows IRI )>> ; ex:weight xsd:decimal }`. An edge's weight is a
+   property of *this* edge (this reifier), so it is a plain arc on the
+   focus. Finding: **don't reach the quoted statement for a per-edge
+   property.** A statement may carry several reifiers (two people annotating
+   the same fact), and an earlier draft that checked the weight by walking
+   `rdf:reifies … AND { ^rdf:reifies { ex:weight } }` was not merely
+   roundabout but *wrong* — it failed a genuinely-weighted edge whenever a
+   second, unweighted reifier of the same statement existed. The rule that
+   falls out: a property *of the edge* stays on the reifier; only a property
+   *of the statement* reaches across its reifiers (next).
+4. **Term as focus, when it is right** — `<#WellSourced> { rdf:reifies (
+   <<( IRI foaf:knows IRI )>> AND { ^rdf:reifies @<#Sourced> + } ) }`. The
+   pleasant surprise of the exploration still stands: a triple term is a
+   term with a neighborhood, so `^rdf:reifies` reaches the reifiers *of* a
+   statement, with no new machinery. It is the right tool when the property
+   is the statement's, not one edge's — "every attestation of this fact
+   names a source" is well-sourcedness *of the statement*, so reaching
+   across all of its reifiers is exactly the point. The same move that was a
+   bug in (3) is the strength here.
+5. **Mention without description** — `<#Mention> { rdf:reifies <<( IRI
    foaf:knows IRI )>> }` accepts quoted strangers; the same data fails
    `<#Assertion>`. The opacity dial demonstrated in two entries.
-5. **Meta-annotation of an unasserted statement** — the nested atom
+6. **Meta-annotation of an unasserted statement** — the nested atom
    (`rdf:reifies <<( . ex:assertedBy <<( . foaf:knows . )>> )>>`) covers
    the genuinely-nested case; tested, works, rarely needed given (2).
 

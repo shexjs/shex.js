@@ -26,12 +26,26 @@ PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
   ex:disputedOn xsd:date
 }
 
-# Property-graph edge properties: the weight lives on the reifier, and
-# the term reaches its reifiers through ^rdf:reifies -- a triple term is
-# a term, with a neighborhood of its own.
+# Property-graph edge properties: the weight is a property of *this* edge
+# -- this reifier -- so it is a plain arc on the focus.  Don't reach out to
+# the quoted statement for it: a statement can carry several reifiers (two
+# people annotating the same fact), and this edge's weight is none of their
+# business.  See <#WellSourced> for when reaching the statement is right.
 <#WeightedEdge> {
-  rdf:reifies ( <<( IRI foaf:knows IRI )>> AND { ^rdf:reifies { ex:weight xsd:decimal } } )
+  rdf:reifies <<( IRI foaf:knows IRI )>> ;
+  ex:weight xsd:decimal
 }
+
+# Term as focus: a triple term is a term with a neighborhood of its own, so
+# ^rdf:reifies reaches the reifiers OF a statement.  Well-sourcedness is a
+# property of the *statement*, not of one reifier -- "every attestation of
+# this fact names a source" -- so reaching across all of them is exactly
+# the point (the mistake <#WeightedEdge> avoids is the strength here).
+<#WellSourced> {
+  rdf:reifies ( <<( IRI foaf:knows IRI )>>
+    AND { ^rdf:reifies @<#Sourced> + } )
+}
+<#Sourced> { ex:source IRI }
 
 # The purely syntactic reading: a mention, components unexamined.
 <#Mention> { rdf:reifies <<( IRI foaf:knows IRI )>> }
