@@ -318,15 +318,37 @@ ShEx-1-era CLI cases are gone already, and the writer rename is in §I3.
   asked.  Replacing for good, and rewriting the failure fixtures once,
   waits on the repairs having been read in anger (error-normalization
   §4, step 4).
-- **G3 (L)** Assignment when several constraints could take a triple
-  (`EXTRA`, one predicate constrained twice): a min-cost bipartite
-  assignment inside the repair DP.
+- **G3 (done 2026-09-04)** Assignment when several constraints could take a
+  triple (a predicate constrained twice with different value expressions):
+  the repair search now carries the satisfaction relation (which constraints
+  each triple could satisfy, the validator's `t2tcs`) and assigns each triple
+  to one it satisfies, pricing every resulting count-vector -- a min-cost
+  bipartite assignment, capped at `DEALS`.  Same-value-expression duplicates
+  fall out as the special case (every triple satisfies both), reproducing the
+  old stars-and-bars deal.  `{ :p [a b c] ; :p [a b] }` over a, b, c now says
+  "remove 1 :p", not "remove 2 :p and add 1 :p".  (`Repairs-test`;
+  `NearestAcceptedBag.deals` in `repairs.ts`, fed from `shex-validator.ts`.)
 
 ## H. Data sources
 
-- **H1 (upstream)** The SPARQL suite against a local QLever is blocked by a
-  QLever query-planner blowup on `NOT EXISTS`; track upstream, keep the
-  repro.
+- **H1 (not blocking; QLever optional)** The SPARQL suite does **not** need
+  QLever: its default endpoint is in-process **Comunica**
+  (`@comunica/query-sparql-rdfjs`, a devDependency) over an `N3.Store`
+  (`neighborhood-sparql/test/sparql-test-server.js`, started in a Worker by
+  `launchEndpoint`), and the "results re-writer" is already there --
+  `termToJson` + the `{head,results}` envelope on the producing side,
+  `ShExUtil.parseSparqlJsonResults` on the consuming side (SPARQL 1.1 JSON,
+  round-trip proven by the suite passing).  The fixtures are tiny, so an
+  in-JS engine suffices; large scale (Wikidata) is a *runtime* concern that
+  points `neighborhood-sparql` at a remote HTTP endpoint, not the local test
+  engine.  QLever stays an **optional** conformance target
+  (`SPARQL_ENDPOINT=…`) -- a real third-party store exercises bnode
+  relabeling, literal normalization and long-query POST that Comunica is too
+  lenient to; the suite already passes on a native QLever build once
+  `neighborhood-sparql` emits correlated `MINUS` rather than `NOT EXISTS`
+  (which it does, at `neighborhood-sparql.ts:502`).  The `NOT EXISTS` planner
+  blowup (draft PR ad-freiburg/qlever#3190) now matters only for emitting
+  `NOT EXISTS` directly; keep the repro.
 
 ## I. Toolchain and repo hygiene
 
@@ -404,11 +426,22 @@ The Makefile is hand-maintained; the generator it grew out of
   lockstep line and co-owns the validator's `semActIndex` contract with
   `extension-reduce`; a package leaves when its dependency on shex.js is
   on a released API rather than a co-developed one.
-- **I3 (on request)** Majors deliberately not taken: chai 5+, n3 2.x,
-  eslint 10, jquery 4, node-fetch 3, koa 3, jsonld 9, glob 13, js-yaml 5,
-  pre-commit→husky; and, of this repo's own, renaming `ShExWriter` (it
-  writes ShExC) to `ShExCWriter`.  Remaining `npm audit` findings are in pre-commit's
-  transitive chains.
+- **I3 (on request; investigated 2026-09-04)** Majors not yet taken.  An
+  isolated-worktree probe (each bumped, `npm ci`, the full gated suite) found
+  **eight safe together in one PR** -- chai 6, eslint 10, glob 13, js-yaml 5,
+  koa 3, n3 2, jquery 4 (jsonld was **already** at `^9.0.0`; this line was
+  stale) -- verified green installed simultaneously.  Two need their own
+  change: **node-fetch 3** is ESM-only, so `require('node-fetch')` must
+  become `.default` (or Node's global `fetch`) at three product sites +
+  test harnesses; **pre-commit→husky** is a tooling swap (clears the
+  `cross-spawn`-via-pre-commit audit finding).  Two caveats for the batch:
+  eslint 10 raises the dev Node floor to 20.19+/22.13+/24+ (devDep only), and
+  the browser run wants `--max-old-space-size` headroom.  **Unverified on the
+  CI Node-20 lane**: the probe ran on Node 26 (where `require()` of ESM
+  works); chai 6 is ESM-only, so it needs checking on the Node-20 job before
+  merging.  Still this repo's own: renaming `ShExWriter` (it writes ShExC) to
+  `ShExCWriter`.  Remaining `npm audit` findings are in pre-commit's and
+  `@ts-jison`'s transitive chains.
 
 ## Decisions wanted
 
