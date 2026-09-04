@@ -206,9 +206,16 @@ Larger, design conversation first:
   breakpoints-frozen-at-start vs a side channel; CI needs a
   `worker_threads` harness.
 - **E10 (L)** One debug panel over materialization and validation sessions.
-- **E11 (M–L)** Worker-app debugging: `MaterializerDebugger` runs in-thread
-  only; `accepts`, `lastReport` and breakpoints don't cross `postMessage`
-  (ship clone-safe anchors and the accepts list, as validation does).
+- **E11 (done 2026-09-04)** Worker-app materializer debugging.  The step
+  session's `MaterializerDebugger` runs in the page even when the app
+  validates in a worker (`app.remote`): its inputs -- output schema,
+  bindings, shape map -- are all in-page panes (the worker's validation
+  populates the bindings pane), so re-materialization is deterministic and
+  its `accepts`/`lastReport`/breakpoints never need to cross `postMessage`.
+  `shexmap-editors-smoke-test.js` pins it with a worker-mode stepping test
+  (breakpoint, step, accept, rendered graph).  The clone-safe anchoring the
+  design worried about is only the *whole*-materialize path's, which already
+  names constraints by ordinal (`RemoteShExMaterializer`).
 - **E12 (deferred)** A steppable eval-threaded-nerr is a rewrite (recursive
   matcher, hot-path generators); only when "why these N errors" becomes a
   debugging goal.

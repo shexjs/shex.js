@@ -1206,4 +1206,47 @@ if (!TEST_browser) {
     });
 
   });
+
+  /* E11 (doc/debugger-design.md): worker-app materializer debugging.  The
+   * app validates in a worker (app.remote), but the step-through session
+   * runs an in-page MaterializerDebugger over the bindings the pane holds --
+   * deterministic re-materialization from (outputSchema, bindings,
+   * shapeMap), all of which are in-page -- so stepping, breakpoints and the
+   * accepted graph work without the debugger state crossing postMessage. */
+  describe("shexmap-worker with ?editors=1 (materializer debugging in the worker app)", function () {
+    this.timeout(20000);
+    const page = "packages/shex-webapp/doc/shex-simple.html";
+    const asShExMap = "&plugin=" + encodeURIComponent("../../extension-map/doc/ShExMapPlugin.js")
+          + "&manifestURL=" + encodeURIComponent("../../extension-map/examples/manifest.json");
+    let dom, $, shared;
+    before(async function () {
+      ({dom, $, shared} = await Harness.boot(page, "?editors=1&worker=1" + asShExMap, {worker: true}));
+    });
+    after(function () { if (dom) dom.window.close(); });
+
+    it("should step through a materialization while the app validates in a worker", async function () {
+      expect(shared.app.remote, "the app is in worker mode").to.equal(true);
+      const set = (selector, value) => { const e = $(selector).first(); e.val(value); e.trigger("change"); };
+      set("#outputSchema textarea", outputSchemaText);
+      set("#bindings1 textarea", bindingsJson);
+      $("#outputShapeMap").val("<tag:root>@<http://a.example/S>");
+
+      const pane = shared.Caches.editorSupport.panes.outputSchema;
+      pane.toggleBreakpoint(outputSchemaText.indexOf(":q ."));
+
+      $("#debugMaterialize").trigger("click");
+      const session = await shared.promise;
+      expect(session, "debug session started in worker mode: " + $("#results").text().substring(0, 120)).to.exist;
+
+      $("#dbgInto").trigger("click");
+      expect($("#dbgStatus").text(), "steps into the first constraint").to.include("at <http://a.example/p>");
+      $("#dbgContinue").trigger("click");
+      expect($("#dbgStatus").text(), "the gutter breakpoint on :q holds").to.include("at <http://a.example/q>");
+      expect($("#dbgStatus").text()).to.include("consumed:1");
+      $("#dbgContinue").trigger("click");
+      expect($("#dbgStatus").text(), "runs to an accept").to.include("accepted: 2 quads");
+      expect($("#results").text(), "and the materialized graph renders").to.include('"one"');
+      expect($("#results").text()).to.include('"two"');
+    });
+  });
 }
