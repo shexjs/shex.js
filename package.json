@@ -52,6 +52,7 @@
   "scripts": {
     "clean-all": "find . -maxdepth 3 -name node_modules -exec rm -r {} \\; ; find . -maxdepth 3 -name package-lock.json -exec rm -r {} \\; || true",
     "compile": "make ALL",
+    "prepare": "make ALL",
     "rebuild": "npm run clean-all && npm ci",
     "bump-versions": "node tools/bumpVersions.js",
     "reinstall-deps": "npm rebuild && npm run webpack && npm run test-all && git add -u",

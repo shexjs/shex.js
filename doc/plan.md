@@ -14,8 +14,12 @@ first.  Items are numbered so a commit or a conversation can name one.
   network).  The pre-commit hook runs the *ungated* suite; the gates hide
   their own fixtures, so a green ungated run says less than it looks.
 - TypeScript packages compile per package: `cd packages/<p> && npx tsc`.
-  The compiled `lib/` is committed, so a source change is a `lib/` change
-  in the same commit; `make ALL` covers them.
+  The compiled `lib/*.js` is **built, not committed** (B3): `npm run compile`
+  (`make ALL`) builds every package in order, and the `prepare` script runs
+  it on `npm install`/`npm ci`, so a source change is not also a `lib/`
+  change to stage.  What stays tracked in `lib/` are the sources that live
+  there: the `.jison` grammars, the `.wat`/`.wasm`, and shex-cli's three
+  hand-written `.js` (no `src/` counterpart).
 - The browser bundles in `packages/*/doc/webpacks/` are **gitignored and
   built on demand**: `npm run webpack` (all three) or `npm run webpacks-all`
   (n3js too).  Rebuild after changing any bundled package, or the browser
@@ -86,10 +90,19 @@ scripts' move to TypeScript and the untracked `.map`s are done (B1–B10,
   move would change the `packages/extension-map/doc/` URLs the site and
   the permalinks use.  Revisit only if the plugin grows dependencies of
   its own.
-- **B3 (decision: `lib/`)** CI runs `npm ci` and the tests with no build
-  step, so `lib/` stays committed unless CI (and `npm install` from git)
-  learns to build; that is one line in `ci.yml` and a `prepare` script,
-  and would take `lib/` out of every diff.  The `.map` files are untracked
+- **B3 (done 2026-09-04) `lib/*.js` is built, not committed.**  A `prepare`
+  script (`make ALL`) builds it on `npm install`/`npm ci`, and `ci.yml` runs
+  `npm run compile` in the test, webpack and coverage jobs -- so a `src`
+  change that stops compiling fails CI instead of passing on a stale
+  committed `lib/`, and `lib/` is out of every diff.  It surfaced exactly
+  that: a from-clean build caught neighborhood-wikibase no longer compiling
+  under the `@rdfjs/types` 2 bump (fixed in the commit before).  `.gitignore`
+  ignores `packages/*/lib/*.js` with three exceptions -- shex-cli's
+  hand-written `ExitCode`/`ProgressLoadController`/`ShExDebugRepl` `.js`,
+  which have no `src/`; the `.jison`, `.wat` and `.wasm` beside them are
+  sources too and stay tracked.  Published tarballs are unaffected (`files`
+  lists `lib`, and `prepare`/`prepublishOnly` build it before pack).  The
+  `.map` files are untracked
   (`.gitignore`: `packages/*/lib/*.map`) and are not what debugging a
   minified bundle needs: that is the *bundle's* map, which webpack would
   write beside `doc/webpacks/*.min.js` (`devtool: "source-map"`, not set
@@ -399,4 +412,4 @@ The Makefile is hand-maintained; the generator it grew out of
 
 ## Decisions wanted
 
-B3 (committed `lib/` -- stays, for now); the independent tier's versions (`shape-map` to `1.0.0`?).
+The independent tier's versions (`shape-map` to `1.0.0`?).
