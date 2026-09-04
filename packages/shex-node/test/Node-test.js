@@ -16,7 +16,7 @@ const [[GitRootServer]] = require('../../../tools/testServer')
 // Initialize @shexjs/loader with implementations of APIs.
 const ShExLoader = require("..")({
   rdfjs: require('n3'),         // use N3 as an RdfJs implementation
-  fetch: require('node-fetch'), // fetch implementation
+  fetch: globalThis.fetch, // fetch implementation
   jsonld: require('jsonld')     // JSON-LD (if you need it)
 })
 

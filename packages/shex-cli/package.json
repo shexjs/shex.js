@@ -43,7 +43,6 @@
     "@shexjs/validator": "^1.0.0-alpha.30",
     "@shexjs/visitor": "^1.0.0-alpha.30",
     "@shexjs/writer": "^1.0.0-alpha.30",
-    "chalk": "^4.1.2",
     "command-line-args": "^6.0.2",
     "command-line-usage": "^7.0.3",
     "js-yaml": "^5.4.1",
@@ -52,7 +51,6 @@
     "koa-body": "^6.0.1",
     "lezer-turtle": "^0.1.0",
     "n3": "^2.7.4",
-    "node-fetch": "^2.7.0",
     "shape-map": "^1.0.0",
     "shex-examples": "^0.1.0"
   },

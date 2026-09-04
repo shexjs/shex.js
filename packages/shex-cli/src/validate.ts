@@ -67,7 +67,7 @@ const N3 = require("n3");
 import ShExNodeCjsModule = require("@shexjs/node");
 const ShExNode = ShExNodeCjsModule({
   rdfjs: N3,
-  fetch: require('node-fetch'),
+  fetch: globalThis.fetch,
   jsonld: require('jsonld'),
 });
 const ExitCode: ExitCodes = require('../lib/ExitCode')
@@ -404,7 +404,7 @@ function abort (msg: string, exitCode: number): never {
       ]
     },
     {
-      content: "Project home: " + require('chalk').underline("https://github.com/shexSpec/shex.js")
+      content: "Project home: " + (process.stdout.isTTY ? "\u001b[4mhttps://github.com/shexSpec/shex.js\u001b[24m" : "https://github.com/shexSpec/shex.js")
     }
   ]));
   process.exit(exitCode);
