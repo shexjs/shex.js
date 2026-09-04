@@ -18,6 +18,15 @@ on:
     branches-ignore: [main, gh-pages]
   workflow_dispatch:
 
+# One publish per ref at a time (a newer push of this branch supersedes an
+# in-flight one); publishes of other refs -- main and the sibling experiment
+# branches -- still run concurrently and settle their gh-pages contention in
+# the push retry loop below.  (A shared group would drop publishes: GitHub
+# keeps only one pending run per group.)
+concurrency:
+  group: gh-pages-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
@@ -66,19 +75,31 @@ jobs:
           git add -f packages/shex-webapp/doc/webpacks packages/extension-map/doc/webpacks \
             packages/extension-reduce/doc/webpacks packages/extension-wasi/doc/webpacks
           SUBTREE=$(git write-tree)
-          # graft it as <dir>/ onto the current site tree
-          git fetch origin gh-pages || true
-          PARENT=$(git rev-parse --verify --quiet origin/gh-pages || true)
-          export GIT_INDEX_FILE=$(mktemp)
-          if [ -n "$PARENT" ]; then
-            git read-tree "$PARENT"
-            git rm -r --cached --ignore-unmatch -q "$DIR"
-          else
-            git read-tree --empty
-            NOJEKYLL=$(printf '' | git hash-object -w --stdin)
-            git update-index --add --cacheinfo "100644,$NOJEKYLL,.nojekyll"
-          fi
-          git read-tree --prefix="$DIR/" "$SUBTREE"
-          TREE=$(git write-tree)
-          COMMIT=$(git commit-tree $TREE ${PARENT:+-p $PARENT} -m "webapps site /$DIR built from $GITHUB_SHA")
-          git push origin $COMMIT:refs/heads/gh-pages
+          # Graft it as <dir>/ onto the current site tree and push, retrying if
+          # a concurrent publish (main's root rebuild, or a sibling branch)
+          # moved gh-pages under us: refetch, regraft onto the new parent, try
+          # again (6 attempts, backing off).  The branch subtree itself
+          # (SUBTREE) doesn't change between attempts.
+          for attempt in 1 2 3 4 5 6; do
+            git fetch origin gh-pages || true
+            PARENT=$(git rev-parse --verify --quiet origin/gh-pages || true)
+            GIT_INDEX_FILE=$(mktemp); export GIT_INDEX_FILE
+            if [ -n "$PARENT" ]; then
+              git read-tree "$PARENT"
+              git rm -r --cached --ignore-unmatch -q "$DIR"
+            else
+              git read-tree --empty
+              NOJEKYLL=$(printf '' | git hash-object -w --stdin)
+              git update-index --add --cacheinfo "100644,$NOJEKYLL,.nojekyll"
+            fi
+            git read-tree --prefix="$DIR/" "$SUBTREE"
+            TREE=$(git write-tree)
+            rm -f "$GIT_INDEX_FILE"; unset GIT_INDEX_FILE
+            COMMIT=$(git commit-tree $TREE ${PARENT:+-p $PARENT} -m "webapps site /$DIR built from $GITHUB_SHA")
+            if git push origin $COMMIT:refs/heads/gh-pages; then
+              echo "published /$DIR (attempt $attempt)"; exit 0
+            fi
+            echo "gh-pages moved under us (attempt $attempt); refetching and retrying"
+            sleep $((attempt * 3))
+          done
+          echo "could not publish /$DIR to gh-pages after several attempts" >&2; exit 1
