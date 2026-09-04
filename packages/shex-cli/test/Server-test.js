@@ -25,7 +25,7 @@ const Queue = require("timeout-promise-queue").PromiseQueue(25);
 
 const Fs = require("fs");
 const Path = require("path");
-const Fetch = require("node-fetch");
+const Fetch = globalThis.fetch;
 
 const manifestFile = "cli/manifest.json";
 

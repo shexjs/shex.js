@@ -17,7 +17,7 @@ const TEST_browser = "TEST_browser" in process.env ? JSON.parse(process.env["TES
 const Fs = require("fs");
 const Path = require("path");
 const expect = require("chai").expect;
-const node_fetch = require("node-fetch");
+const node_fetch = globalThis.fetch;
 let Harness;
 
 const [[GitRootServer]] = require("../../../tools/testServer")

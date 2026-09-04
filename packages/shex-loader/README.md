@@ -38,7 +38,7 @@ const N3 = require('n3'); // used for graph API example
 // Initialize @shexjs/loader with implementations of APIs.
 const ShExLoader = require("@shexjs/loader")({
   rdfjs: N3,                    // use N3 as an RdfJs implementation
-  fetch: require('node-fetch'), // fetch implementation
+  fetch: globalThis.fetch, // fetch implementation
   jsonld: require('jsonld')     // JSON-LD (if you need it)
 });
 
@@ -168,7 +168,7 @@ Use `@shexjs/loader` directly:
 ```js
 const ShExIo = require("@shexjs/loader")({
   rdfjs: N3,
-  fetch: require('node-fetch')
+  fetch: globalThis.fetch
 });
 ```
 
@@ -176,7 +176,7 @@ Extend `@shexjs/loader` with jsonld and a non-standard jsonld document loader:
 ```js
 const ShExIo = require("@shexjs/loader")({
   rdfjs: N3,
-  fetch: require('node-fetch'),
+  fetch: globalThis.fetch,
   jsonld: require('jsonld'),
   jsonLdOptions: { documentLoader }
 });

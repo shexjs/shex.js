@@ -14,7 +14,7 @@ const Path = require("path");
    >   // cwd: fromDir, // screws up absolutizeResults
    > });
    but instead wrap node-fetch and readFileSyn here: */
-const NodeFetch = require('node-fetch');
+const NodeFetch = globalThis.fetch;
 const ShExNode = {
   GET: function () {
     const [urlP, ...args] = arguments;
