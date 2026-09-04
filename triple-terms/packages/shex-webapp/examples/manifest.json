@@ -243,7 +243,7 @@
     "data": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX foaf: <http://xmlns.com/foaf/0.1/>\nPREFIX ex: <http://ex.example/ns#>\n\n<e1> rdf:reifies << <a> foaf:knows <b> >> ;\n  ex:weight 0.9 .\n",
     "queryMap": "<e1>@<#WeightedEdge>\n",
     "status": "conformant",
-    "comment": "The property-graph case: an edge's weight lives on its reifier.  The interesting move is <<( ... )>> AND { ^rdf:reifies ... } -- a triple term is a term, so it can be a shape's focus, and its reifiers are one inverse arc away."
+    "comment": "The property-graph case: an edge's weight is a property of *this* edge -- this reifier -- so it is a plain arc on the focus, checked directly.  A statement may carry other reifiers (see \"a well-sourced statement\"); this edge's weight is none of their business."
   },
   {
     "schemaLabel": "triple terms",
@@ -270,6 +270,24 @@
     "data": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX foaf: <http://xmlns.com/foaf/0.1/>\n\n<e1> rdf:reifies << <a> foaf:knows <b> >> .\n",
     "queryMap": "<e1>@<#WeightedEdge>\n",
     "status": "nonconformant",
-    "comment": "The term's own ^rdf:reifies neighborhood must include a weighted reifier, and this one isn't.  (What no node-focused shape can say: \"every *asserted* foaf:knows arc is annotated\" -- nothing connects an asserted triple to the term quoting it.  That gap argues for an arc-level construct, not a different term model; see doc/triple-terms.md.)"
+    "comment": "The reifier reifies a knows-statement but carries no ex:weight, so the focus is missing an arc <#WeightedEdge> requires -- a plain node-shape failure."
+  },
+  {
+    "schemaLabel": "triple terms",
+    "schemaURL": "triple-terms.shex",
+    "dataLabel": "a well-sourced statement",
+    "data": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX foaf: <http://xmlns.com/foaf/0.1/>\nPREFIX ex: <http://ex.example/ns#>\n\n<a1> rdf:reifies << <tim> foaf:knows <henry> >> ; ex:source <archive> .\n<a2> rdf:reifies << <tim> foaf:knows <henry> >> ; ex:source <register> .\n",
+    "queryMap": "<a1>@<#WellSourced>\n",
+    "status": "conformant",
+    "comment": "Term as focus, done right: well-sourcedness is a property of the *statement*, so <#WellSourced> reaches every reifier of it through ^rdf:reifies.  Both attestations of <tim> knowing <henry> name a source, so the statement is well-sourced.  (Contrast <#WeightedEdge>, where reaching across reifiers would be a bug.)"
+  },
+  {
+    "schemaLabel": "triple terms",
+    "schemaURL": "triple-terms.shex",
+    "dataLabel": "a statement one source short",
+    "data": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX foaf: <http://xmlns.com/foaf/0.1/>\nPREFIX ex: <http://ex.example/ns#>\n\n<a1> rdf:reifies << <tim> foaf:knows <henry> >> ; ex:source <archive> .\n<a2> rdf:reifies << <tim> foaf:knows <henry> >> .\n",
+    "queryMap": "<a1>@<#WellSourced>\n",
+    "status": "nonconformant",
+    "comment": "Even though <a1> names a source, the statement is not well-sourced: <a2> reifies the same fact without one, and ^rdf:reifies reaches it.  This is why the check belongs on the statement, not on <a1> alone."
   }
 ]
