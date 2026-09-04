@@ -18,7 +18,7 @@ jobs:
       matrix:
         node-version: [20, 22, 24, 26]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: clone shexTest alongside the checkout, on the ref the shex-test dependency names
         # package.json is the single switch (guarded on main by check-branch-deps)
         run: |
@@ -48,7 +48,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -62,7 +62,7 @@ jobs:
     # every package that has one still builds it
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -75,7 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true # coverage reporting must not gate merges
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: clone shexTest alongside the checkout, on the ref the shex-test dependency names
         # package.json is the single switch (guarded on main by check-branch-deps)
         run: |
