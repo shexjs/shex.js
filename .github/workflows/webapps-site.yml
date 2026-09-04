@@ -38,6 +38,16 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# One publish per ref at a time (a newer push supersedes an in-flight one);
+# publishes of *different* refs -- main and the experiment branches -- still
+# run concurrently and settle their gh-pages contention in the push retry
+# loop below.  (A shared group can't help here: GitHub keeps only one pending
+# run per group, so serializing main + N branches into one group would drop
+# publishes rather than queue them.)
+concurrency:
+  group: gh-pages-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
@@ -69,31 +79,46 @@ jobs:
           fi
           touch .nojekyll
           # stage the full tree (`add -A` respects .gitignore, so no
-          # node_modules) plus the ignored built bundles
+          # node_modules) plus the ignored built bundles, and freeze it as a
+          # tree object -- this main-side content doesn't change between push
+          # attempts, only the gh-pages parent it grafts onto does
           git add -A .
           git add -f .nojekyll \
             packages/shex-webapp/doc/webpacks packages/extension-map/doc/webpacks \
             packages/extension-reduce/doc/webpacks packages/extension-wasi/doc/webpacks
-          # commit on top of the existing gh-pages history; if the branch was
-          # deleted (to shed old bundle history), start it afresh
-          git fetch origin gh-pages || true
-          PARENT=$(git rev-parse --verify --quiet origin/gh-pages || true)
-          # carry the experiment-branch sites (webapps-site-branch.yml)
-          # across this root rebuild; the list is index.html's
-          # experiment-sites data block, the same source that renders the
-          # landing page's Experiments card
+          OURS=$(git write-tree)
+          # the experiment-branch sites to carry across this root rebuild:
+          # index.html's experiment-sites data block, the same source that
+          # renders the landing page's Experiments card
           EXPERIMENTS=$(node -e '
             const m = require("fs").readFileSync("index.html", "utf8")
               .match(/id="experiment-sites">\s*([\s\S]*?)<\/script>/);
             process.stdout.write(m ? JSON.parse(m[1]).map(e => e.dir).join(" ") : "");')
           echo "carrying: $EXPERIMENTS"
-          if [ -n "$PARENT" ]; then
-            for d in $EXPERIMENTS; do
-              if git rev-parse --verify --quiet "$PARENT:$d" >/dev/null; then
-                git read-tree --prefix="$d/" "$PARENT:$d"
-              fi
-            done
-          fi
-          TREE=$(git write-tree)
-          COMMIT=$(git commit-tree $TREE ${PARENT:+-p $PARENT} -m "webapps site built from $GITHUB_SHA")
-          git push origin $COMMIT:refs/heads/gh-pages
+          # Commit on top of the current gh-pages and push -- retrying if a
+          # concurrent publish (another branch's site) moved gh-pages under
+          # us: refetch, regraft the experiments onto the new parent, and try
+          # again.  (If the branch was deleted to shed history, PARENT is
+          # empty and this starts it afresh.)
+          for attempt in 1 2 3 4 5 6; do
+            git fetch origin gh-pages || true
+            PARENT=$(git rev-parse --verify --quiet origin/gh-pages || true)
+            GIT_INDEX_FILE=$(mktemp); export GIT_INDEX_FILE
+            git read-tree "$OURS"
+            if [ -n "$PARENT" ]; then
+              for d in $EXPERIMENTS; do
+                if git rev-parse --verify --quiet "$PARENT:$d" >/dev/null; then
+                  git read-tree --prefix="$d/" "$PARENT:$d"
+                fi
+              done
+            fi
+            TREE=$(git write-tree)
+            rm -f "$GIT_INDEX_FILE"; unset GIT_INDEX_FILE
+            COMMIT=$(git commit-tree $TREE ${PARENT:+-p $PARENT} -m "webapps site built from $GITHUB_SHA")
+            if git push origin $COMMIT:refs/heads/gh-pages; then
+              echo "published (attempt $attempt)"; exit 0
+            fi
+            echo "gh-pages moved under us (attempt $attempt); refetching and retrying"
+            sleep $((attempt * 3))
+          done
+          echo "could not publish to gh-pages after several attempts" >&2; exit 1
