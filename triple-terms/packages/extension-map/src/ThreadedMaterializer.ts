@@ -281,6 +281,7 @@ class ThreadedMaterializer {
         unusedStatics: Object.keys(this.globals).filter((g: any) => !report.referenced.has(g)),
         alternatives: accepts.length,
         explorationTruncated: truncated,
+        configsPruned: pruned, // duplicate thread configurations dropped (F1)
       };
       if (error)
         error.report = this.lastReport;
@@ -300,8 +301,36 @@ class ThreadedMaterializer {
     const deferred: any[] = [];
     this._live = {stack, deferred}; // liveThreads() inspects these
     let steps = 0;
+    let pruned = 0;            // threads dropped as duplicate configurations (F1)
     let acceptedAtStep = null; // step count at the first accept
     let truncated = false;     // exploration stopped by a budget, not exhaustion
+
+    // F1: PikeVM-style worklist dedup.  Two threads at the same NFA state, in
+    // the same call (callStack identity -- persistent, so the head node names
+    // the whole chain and its subject), over the same cursor (frame index +
+    // which bindings are consumed) and the same repetition counters have
+    // identical futures: whatever accepts one can reach, so can the other.
+    // So the first to be popped explores that future and the rest are
+    // dropped.  Under the greedy DFS the first arrival is the highest-priority
+    // (most-emitting) path, and distinct accepts keep distinct cursors, so no
+    // accept is lost; bnode labels differ but the graphs are isomorphic and
+    // collapse at acceptance.  This prunes the redundant re-exploration the
+    // exploreSteps budget was there to bound.
+    const seen = new Set<string>();
+    const csIds = new Map<object, number>();
+    let nextCsId = 1;
+    const configKey = (th: any): string => {
+      let csId = "0";
+      if (th.callStack !== null) {
+        let id = csIds.get(th.callStack);
+        if (id === undefined) { id = nextCsId++; csIds.set(th.callStack, id); }
+        csId = String(id);
+      }
+      const used = Object.keys(th.cursor.used).sort().join(",");
+      const rept = Object.keys(th.repeats).sort()
+            .map((k: any) => k + ":" + th.repeats[k].n + "@" + th.repeats[k].at).join(";");
+      return th.stateNo + "|" + csId + "|" + th.cursor.idx + "|" + used + "|" + rept;
+    };
 
     search:
     while (stack.length > 0 || deferred.length > 0) {
@@ -319,6 +348,15 @@ class ThreadedMaterializer {
       // deferred threads resume oldest-first: the greedy leader deferred at a
       // frame boundary gets back in front of the variants deferred after it
       const th = stack.length > 0 ? stack.pop() : deferred.shift();
+      // a configuration already explored has nothing new downstream: drop it
+      // (F1).  Checked at pop, not push, so a duplicate sits harmlessly until
+      // its turn -- and the leader that claimed the config is off the lists.
+      const key = configKey(th);
+      if (seen.has(key)) {
+        ++pruned;
+        continue;
+      }
+      seen.add(key);
       // the thread being stepped is off both lists while it is stepped, so
       // a debugger paused at a yield inside it would not find it anywhere
       // -- which is the one thread its reader is looking at

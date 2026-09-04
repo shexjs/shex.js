@@ -33,7 +33,7 @@
     "test": "cd ../.. && mocha packages/neighborhood-wikibase/test/*test.js -R dot"
   },
   "devDependencies": {
-    "@rdfjs/types": "^1.1.0"
+    "@rdfjs/types": "^2.0.1"
   },
   "publishConfig": {
     "access": "public"

@@ -318,7 +318,8 @@ if (!TEST_browser) {
       $("#debugMaterialize").trigger("click");
       const session = await shared.promise;
       expect(session, "debug session started: " + $("#results").text().substring(0, 120)).to.exist;
-      expect($("#debugControls").css("display")).not.to.equal("none");
+      expect($("#debugPanel").css("display")).not.to.equal("none");
+      expect($("#debugPanelTitle").text(), "the card names this debugger").to.equal("materialization");
       // laid out like the validator's: steps beside the button that started
       // them, status on its own row, and 🐞 stands down meanwhile
       expect($("#dbgStatusRow").css("display"), "the status row").to.not.equal("none");
@@ -335,14 +336,12 @@ if (!TEST_browser) {
       expect($("#dbgStatus").text()).to.include("at <http://a.example/q>");
       expect($("#dbgStatus").text()).to.include("consumed:1"); // :v1 already bound
 
-      // continue to completion: session ends, graph renders
+      // continue to completion: the session ends, the floating panel is put
+      // away, and the finished graph -- a materialization's real answer --
+      // renders in the results
       $("#dbgContinue").trigger("click");
-      expect($("#dbgStatus").text()).to.include("accepted: 2 quads");
-      expect($("#debugControls").css("display")).to.equal("none");
-      // a session that ran to the end keeps its last word, which is the
-      // answer: hiding the controls used to take the sentence with them
-      expect($("#dbgStatusRow").css("display"), "how it finished is still readable")
-        .to.not.equal("none");
+      expect(shared.app.debugSession, "the session ran to the end").to.not.exist;
+      expect($("#debugPanel").css("display"), "the panel is put away on completion").to.equal("none");
       expect($("#debugMaterialize").css("display"), "and 🐞 is offered again").to.not.equal("none");
       expect($("#results").text()).to.include('"one"');
       expect($("#results").text()).to.include('"two"');
@@ -374,11 +373,14 @@ if (!TEST_browser) {
         expect($(sel).length, sel).to.equal(1);
         expect($(sel).closest(".pluginToolbarInner").length, sel + " is in the row").to.equal(1);
       });
-      // the step buttons wait inside it, hidden until a session starts
-      expect($("#debugControls").css("display")).to.equal("none");
-      expect($("#dbgStatusRow").closest(".pluginToolbarInner").length,
-             "and the status line is outside them, so hiding them keeps it").to.equal(1);
-      expect($("#dbgStatus").closest("#debugControls").length).to.equal(0);
+      // the step controls, status and threads are the app's *shared* debug
+      // strip (core, shared with the validation debugger -- one panel, one
+      // engine at a time), not generated here: they live outside the plugin
+      // toolbar and wait hidden until a session starts
+      expect($("#debugPanel").css("display"), "the shared controls wait hidden").to.equal("none");
+      expect($("#debugControls").closest(".pluginToolbarInner").length,
+             "the strip is the app's own, not in the plugin toolbar").to.equal(0);
+      expect($("#dbgStatus").closest("#debugControls").length, "the status is its own row").to.equal(0);
     });
 
     /* Two of ShExMap's verbs are only a keystroke, so nothing else on the
@@ -439,7 +441,7 @@ if (!TEST_browser) {
       await shared.promise;
       $("#dbgInto").trigger("click");
       $("#dbgStop").trigger("click");
-      expect($("#debugControls").css("display")).to.equal("none");
+      expect($("#debugPanel").css("display")).to.equal("none");
       expect(shared.Caches.editorSupport.panes.outputSchema, "pane survives").to.exist;
     });
 
@@ -476,13 +478,13 @@ if (!TEST_browser) {
       $("#dbgInto").trigger("click"); // at :fullName
       $("#dbgInto").trigger("click"); // at :phone; the mbox disjunct is pending
       expect($("#dbgThreads button").length, "pending threads listed").to.be.above(0);
-      // the list lives at the left edge of the target schema pane, not in
-      // the right-floating controls: a thread appearing or dying there
-      // changed the width of the block the step buttons sit in and moved
-      // them out from under the mouse
+      // the list lives in its own row of the shared debug strip, not in the
+      // right-floating controls: a thread appearing or dying there changed
+      // the width of the block the step buttons sit in and moved them out
+      // from under the mouse (the strip is core now, shared with the
+      // validation debugger, so this row is #dbgThreadsRow rather than the
+      // plugin statusbar it used to generate)
       expect($("#dbgThreads").closest("#debugControls").length, "not in the controls").to.equal(0);
-      expect($("#dbgThreads").closest(".pluginStatusbar").length,
-             "under the controls, in a row whose width nothing else depends on").to.equal(1);
       expect($("#dbgThreads").closest("#dbgThreadsRow").length, "on a row of its own").to.equal(1);
       $("#dbgThreads button").first().trigger("mouseenter"); // partial preview
       // ...and that preview is written the way the finished graph is.  A
@@ -500,8 +502,9 @@ if (!TEST_browser) {
       expect($("#results").text()).to.match(/frame 0:.*:name ✓/);
 
       $("#dbgContinue").trigger("click"); // to completion
-      expect($("#dbgStatus").text()).to.include("viable");
-      expect($("#debugControls").css("display")).to.equal("none");
+      // the panel is put away on completion; the "viable" tally is the
+      // rendered result's now (the last word is the graph, not a status line)
+      expect($("#debugPanel").css("display")).to.equal("none");
       expect($("#results").text()).to.include("2 viable materializations");
       expect($("#results").text()).to.include('"+1"'); // chosen: first disjunct
 
@@ -1205,5 +1208,50 @@ if (!TEST_browser) {
       }
     });
 
+  });
+
+  /* E11 (doc/debugger-design.md): worker-app materializer debugging.  The
+   * app validates in a worker (app.remote), but the step-through session
+   * runs an in-page MaterializerDebugger over the bindings the pane holds --
+   * deterministic re-materialization from (outputSchema, bindings,
+   * shapeMap), all of which are in-page -- so stepping, breakpoints and the
+   * accepted graph work without the debugger state crossing postMessage. */
+  describe("shexmap-worker with ?editors=1 (materializer debugging in the worker app)", function () {
+    this.timeout(20000);
+    const page = "packages/shex-webapp/doc/shex-simple.html";
+    const asShExMap = "&plugin=" + encodeURIComponent("../../extension-map/doc/ShExMapPlugin.js")
+          + "&manifestURL=" + encodeURIComponent("../../extension-map/examples/manifest.json");
+    let dom, $, shared;
+    before(async function () {
+      ({dom, $, shared} = await Harness.boot(page, "?editors=1&worker=1" + asShExMap, {worker: true}));
+    });
+    after(function () { if (dom) dom.window.close(); });
+
+    it("should step through a materialization while the app validates in a worker", async function () {
+      expect(shared.app.remote, "the app is in worker mode").to.equal(true);
+      const set = (selector, value) => { const e = $(selector).first(); e.val(value); e.trigger("change"); };
+      set("#outputSchema textarea", outputSchemaText);
+      set("#bindings1 textarea", bindingsJson);
+      $("#outputShapeMap").val("<tag:root>@<http://a.example/S>");
+
+      const pane = shared.Caches.editorSupport.panes.outputSchema;
+      pane.toggleBreakpoint(outputSchemaText.indexOf(":q ."));
+
+      $("#debugMaterialize").trigger("click");
+      const session = await shared.promise;
+      expect(session, "debug session started in worker mode: " + $("#results").text().substring(0, 120)).to.exist;
+
+      $("#dbgInto").trigger("click");
+      expect($("#dbgStatus").text(), "steps into the first constraint").to.include("at <http://a.example/p>");
+      $("#dbgContinue").trigger("click");
+      expect($("#dbgStatus").text(), "the gutter breakpoint on :q holds").to.include("at <http://a.example/q>");
+      expect($("#dbgStatus").text()).to.include("consumed:1");
+      $("#dbgContinue").trigger("click");
+      // runs to an accept: the session ends, the floating panel is put away,
+      // and the materialized graph -- the answer -- renders
+      expect($("#debugPanel").css("display"), "the panel is put away").to.equal("none");
+      expect($("#results").text(), "and the materialized graph renders").to.include('"one"');
+      expect($("#results").text()).to.include('"two"');
+    });
   });
 }

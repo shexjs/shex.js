@@ -61,3 +61,14 @@ perf/*/corpus/
 
 # TypeScript source maps: built beside lib/*.js, read by nothing in the repository
 packages/*/lib/*.map
+
+# Compiled JavaScript: lib/*.js is built from src/ (and the .jison grammars) by
+# `npm run compile` / the `prepare` script -- on npm install, npm ci and before
+# publish -- so CI builds it fresh (which is what catches a src change that
+# stops compiling; plan.md B3).  The .jison, .wat and .wasm beside it are
+# sources, not output, and stay tracked; so do shex-cli's three hand-written
+# lib .js, which have no src/ counterpart.
+packages/*/lib/*.js
+!packages/shex-cli/lib/ExitCode.js
+!packages/shex-cli/lib/ProgressLoadController.js
+!packages/shex-cli/lib/ShExDebugRepl.js
