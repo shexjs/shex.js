@@ -200,12 +200,38 @@ Short, high value:
 
 Larger, design conversation first:
 
-- **E9 (L)** Live whole-validation stepping in the browser: validator in a
-  Worker, events posted and `Atomics.wait` on a SharedArrayBuffer command
-  cell (`shex-serve --coi` and clone-safe anchors are in place).  Decide
-  breakpoints-frozen-at-start vs a side channel; CI needs a
-  `worker_threads` harness.
-- **E10 (L)** One debug panel over materialization and validation sessions.
+- **E9 (engine done 2026-09-04)** Live whole-validation stepping's
+  suspension mechanism: `worker-gate.ts` in `@shexjs/eval-validator-api`.
+  `WorkerGate.gate(event)` runs in the worker -- the validator's tracker and
+  the regex engines' `debugHooks.onConstraint` call it (same wiring as
+  `shex-debug`) -- and on a pause posts the (serialized) event and
+  `Atomics.wait`s on a command cell in a SharedArrayBuffer; `GateController`
+  in the controlling thread writes into/over/out/continue/abort and
+  `Atomics.notify`s, abort throwing `DebugAbort` out of the engine.  The
+  breakpoint model is **decided**: frozen while the worker runs, editable
+  only while paused -- a resume carries the (possibly edited) breakpoints as
+  a JSON payload in the same buffer (shapes/predicates/nodes by lexical
+  string, constraints by `schemaTripleConstraints` ordinal, the clone-safe
+  key both ends derive from their schema copy), so the worker adopts them the
+  instant it wakes and never races the controller mid-search.  The CI harness
+  the plan asked for is `WorkerGate-test.js`: it runs the real validator in a
+  `worker_threads` worker and drives it from the test thread (into walks the
+  event tree; continue runs free; a predicate or ordinal breakpoint *set
+  during a pause* fires; over skips a shape's body; abort reports aborted).
+  `shex-serve --coi` and clone-safe anchors were already in place.  What
+  remains is browser-only and lands with E10 (see there).
+- **E10 (L)** One debug panel over materialization and validation sessions,
+  **and the browser end of E9's mechanism** -- a `debugValidate` handler in
+  `ShExWorkerThread.js` that builds a `WorkerGate` over a page-supplied SAB
+  and runs a gated `validateShapeMap`, plus a page-side `GateController` and
+  the panel that drives it (reusing the materializer panel's controls,
+  gutter and highlight).  These three are one browser-only unit: the
+  mechanism's defining behaviour is a thread that *truly* blocks, which the
+  smoke tests' in-process worker shim can't emulate (`Atomics.wait` would
+  deadlock the shared thread), so there is no CI seam between wiring the
+  worker and building the panel -- the `worker_threads` harness is the
+  mechanism's CI, the panel is verified in a real (cross-origin-isolated)
+  browser.
 - **E11 (done 2026-09-04)** Worker-app materializer debugging.  The step
   session's `MaterializerDebugger` runs in the page even when the app
   validates in a worker (`app.remote`): its inputs -- output schema,

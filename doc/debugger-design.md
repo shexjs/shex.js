@@ -148,11 +148,19 @@ the recorded matches are on offer.
   thread})` for what came of it: the candidates taken, which passed and
   which a semantic action refused (eval-threaded-nerr runs them there;
   eval-simple-1err at the end), and how many threads it spawned.
-- **Suspension**: in the worker, the tracker/hook callbacks call
-  `controller.gate(event)`, which `postMessage`s the event and
-  `Atomics.wait`s on the command cell; the UI writes
-  resume/into/over/out/abort into the SAB and `Atomics.notify`s.  Abort
-  throws a `DebugAbort` FlowControlError out of the engine.
+- ✅ **Suspension**: in the worker, the tracker/hook callbacks call
+  `WorkerGate.gate(event)` (`worker-gate.ts` in `@shexjs/eval-validator-api`),
+  which `postMessage`s the serialized event and `Atomics.wait`s on the
+  command cell; the controlling thread's `GateController` writes
+  into/over/out/continue/abort into the SAB and `Atomics.notify`s.  Abort
+  throws `DebugAbort` out of the engine.  Breakpoints are **frozen while the
+  worker runs and editable only while paused**: a resume carries them as a
+  JSON payload in the same buffer (constraints keyed by
+  `schemaTripleConstraints` ordinal, the clone-safe name both ends derive),
+  so the worker adopts the edited set as it wakes and never reads it
+  mid-search.  Proven under `worker_threads` by `WorkerGate-test.js` (the
+  in-page worker shim can't run `Atomics.wait`, so this is the mechanism's
+  CI); the browser `debugValidate` handler and the panel over it are E10.
 - The **main-thread app** can reuse the identical UI against the worker
   validator (`shex-worker.html` already validates there); for
   `shex-simple.html`'s in-thread validator, debugging redirects validation
@@ -214,8 +222,13 @@ starts from the same base.
      differ, and the status says so); the semantic actions run once, at
      capture, and a replay answers from the recording
      (`recordingSemActHandler` / `replayingSemActHandler`);
-   - live whole-validation stepping (worker gate + Atomics) and a
-     unified panel over both engines remain.
+   - ✅ live whole-validation stepping's engine: the worker gate + SAB
+     command protocol (`WorkerGate`/`GateController`, frozen-while-running
+     breakpoints), CI-proven under `worker_threads`;
+   - the browser wiring of that gate (`debugValidate` in
+     `ShExWorkerThread.js`) and a unified panel over both engines remain
+     (E10) -- one browser-only unit, since a truly-blocking thread is what
+     the in-process worker shim can't emulate.
 
 ## 8. Risks / notes
 
