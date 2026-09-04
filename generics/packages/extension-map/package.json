@@ -41,13 +41,13 @@
     "@shexjs/visitor": "^1.0.0-alpha.30",
     "@shexjs/webapp": "^1.0.0-alpha.30",
     "chalk": "^4.1.2",
-    "command-line-args": "^5.0.2",
+    "command-line-args": "^6.0.2",
     "command-line-usage": "^7.0.3",
     "n3": "^1.20.4",
     "rdf-data-factory": "^1.1.2"
   },
   "devDependencies": {
-    "@rdfjs/types": "^1.1.0",
+    "@rdfjs/types": "^2.0.1",
     "@shexjs/eval-threaded-nerr": "^1.0.0-alpha.30",
     "@shexjs/eval-validator-api": "^1.0.0-alpha.30",
     "@shexjs/loader": "^1.0.0-alpha.30",
