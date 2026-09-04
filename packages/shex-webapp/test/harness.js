@@ -30,7 +30,7 @@
 
 const Fs = require("fs");
 const Path = require("path");
-const node_fetch = require("node-fetch");
+const node_fetch = globalThis.fetch;
 const jsdom = require("jsdom");
 const {makeWorkerClass} = require("./fakeWorker");
 

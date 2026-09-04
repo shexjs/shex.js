@@ -24,7 +24,7 @@ const TESTS = [ // page and the labels on the top-most buttons on the manifest i
 let Fs = require('fs')
 let Path = require('path')
 let expect = require("chai").expect
-const node_fetch = require("node-fetch")
+const node_fetch = globalThis.fetch
 // jsdom's engines outpace the packages' own (e.g. jsdom 30 wants Node ≥ 22
 // while the libraries claim ≥ 18): required lazily under TEST_browser so the
 // other suites still run wherever the packages themselves do

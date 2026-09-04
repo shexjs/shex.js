@@ -40,7 +40,6 @@
     "@shexjs/util": "^1.0.0-alpha.30",
     "@shexjs/visitor": "^1.0.0-alpha.30",
     "@shexjs/webapp": "^1.0.0-alpha.30",
-    "chalk": "^4.1.2",
     "command-line-args": "^6.0.2",
     "command-line-usage": "^7.0.3",
     "n3": "^2.7.4",

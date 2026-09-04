@@ -89,7 +89,7 @@ function abort (msg) {
       optionList: CommandLineOptions
     },
     {
-      content: "Project home: " + require('chalk').underline("https://github.com/shexSpec/shex.js")
+      content: "Project home: " + (process.stdout.isTTY ? "\u001b[4mhttps://github.com/shexSpec/shex.js\u001b[24m" : "https://github.com/shexSpec/shex.js")
     }
   ]));
   process.exit(1);
