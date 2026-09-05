@@ -208,10 +208,10 @@ compiles `calc.shex` and `expr1.ttl` — the example files, unchanged — with a
 second overlay whose actions are JSON templates and a six-line evaluator for
 them, to the same AST the JavaScript actions build.
 
-(The JavaScript one is a *dependency* of this package rather than a
-devDependency for one reason: `shexreduce-webapp.js`, the browser bundle
-the plugin loads, has to put an evaluator on the page, and that is the one
-it ships.)
+(The JavaScript one is a *devDependency*: the runtime library never `require`s
+it — a host that wants JavaScript actions loads an evaluator itself — but the
+browser bundle `shexreduce-webapp.js` embeds one at build time, and that is the
+evaluator it ships.)
 
 An evaluator is a function, so a second action language is not a fork:
 

@@ -1,70 +1,93 @@
 #!/usr/bin/env node
 
-// time ./lib/partition ~/checkouts/hcls/hcls-fhir-rdf/generic/fhir-shapes.shex MedicationPrescriptionShape
+// Extract the shapes some shapes depend on into a smaller schema:
+//   shex-partition -x fhir-shapes.shex MedicationPrescriptionShape
 
-const ShExUtil = require('@shexjs/util');
-const ShExWriter = require('@shexjs/writer');
-const Jsonld = require("jsonld");
+const ShExUtil = require("@shexjs/util");
 const N3 = require("n3");
-const ShExNode = require("@shexjs/node")({rdfjs: N3, jsonld: Jsonld});
+const ShExNode = require("@shexjs/node")({
+  rdfjs: N3,
+  fetch: globalThis.fetch,
+  jsonld: require("jsonld"),
+});
+const ExitCode = require("../lib/ExitCode");
+const ShExCWriter = require("@shexjs/writer");
 
 // Generate command line interface
-const CLI = require("command-line-args")([
-    { name: "help",  alias: "h", type: Boolean },
-    { name: "shex"    ,  alias: "x", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
-    { name: "json"    ,  alias: "j", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
-    { name: "includes",  alias: "d", type: String, multiple:  true, defaultValue:   [], defaultOption:  true }
-]);
-
-const includes = process.argv.slice(3); // which shapes to include
-
-function abort (msg) {
-  console.error(msg);
-  console.error(CLI.getUsage({
-    title: "shex-to-json",
-    description: "load some number of schema files from web or filesystem and display as JSON (ShExJ), for example:\n    shex-to-json http://tracker.example/schemas/Issue.shex",
-    footer: "Project home: [underline]{https://github.com/shexSpec/shex.js}"
-  }));
-  process.exit(1);
+const CommandLineOptions = [
+    { name: "help",    alias: "h", type: Boolean },
+    // shex/json take one value per flag (lazyMultiple) so they don't swallow
+    // the positional shape names, which the greedy defaultOption `include` takes
+    { name: "shex",    alias: "x", type: String, lazyMultiple: true, defaultValue: [] },
+    { name: "json",    alias: "j", type: String, lazyMultiple: true, defaultValue: [] },
+    { name: "include", alias: "i", type: String, multiple: true, defaultValue: [], defaultOption: true },
+];
+let CLI;
+try {
+  CLI = require("command-line-args")(CommandLineOptions);
+} catch (e) {
+  abort(e.message, ExitCode.bad_argument);
+}
+function abort (msg, exitCode) {
+  const output = exitCode === ExitCode.help ? console.log : console.error;
+  output(msg);
+  output(require("command-line-usage")([
+    {
+      header: "shex-partition",
+      content: "extract the part of a schema that the named shapes depend on into a smaller schema, for example:\n    shex-partition -x fhir-shapes.shex MedicationPrescriptionShape" },
+    {
+      header: "Options",
+      optionList: CommandLineOptions
+    },
+    {
+      content: "Project home: " + (process.stdout.isTTY ? "\u001b[4mhttps://github.com/shexSpec/shex.js\u001b[24m" : "https://github.com/shexSpec/shex.js")
+    }
+  ]));
+  process.exit(exitCode);
 }
 
 // Extract user commands
-const cmds = CLI.parse();
+const cmds = CLI;
 if (cmds.help)
-    abort("");
-if (cmds.shex.length > 1 && cmds.includes.length === 0) {
-  cmds.includes = cmds.shex.splice(1); // push all but one into includes
-}
-if (cmds.json.length > 1 && cmds.includes.length === 0) {
-  cmds.includes = cmds.json.splice(1); // push all but one into includes
-}
-if (cmds.includes.length === 0) abort("no includes specified");
-if (cmds.shex.length === 0 && cmds.json.length === 0) abort("no shex specified");
+  abort("", ExitCode.help);
+if (cmds.include.length === 0)
+  abort("no shapes to include specified", ExitCode.bad_argument);
+if (cmds.shex.length === 0 && cmds.json.length === 0)
+  abort("no schema specified", ExitCode.bad_argument);
 const input = cmds.shex.concat(cmds.json).join(", ");
 
-
-ShExNode(cmds.shex, cmds.json, []).then(function (loaded) {
+ShExNode.load({shexc: cmds.shex, json: cmds.json}, null, { index: true }).then(function (loaded) {
   console.warn("calculating dependencies for " + input);
   const deps = ShExUtil.getDependencies(loaded.schema);
-  // console.log('%s', JSON.stringify(deps, null, '  '));
+  // resolve bare shape names against the schema's base, as shex-validate does for -s
+  const base = loaded.schema._base;
+  const includes = cmds.include.map(function (name) {
+    try { return base ? new URL(name, base).href : name; } catch (e) { return name; }
+  });
   console.warn("partitioning " + input);
-  partition = ShExUtil.partition(loaded.schema, cmds.includes, deps,
-				 // avoid throwing Error
-				 function (what, why) {
-				   console.warn("Warning: can't find shape "+
-						(why ?
-						 why + " dependency " + what :
-						 what));
-				 });
-  new ShExWriter().
+  const partition = ShExUtil.partition(loaded.schema, includes, deps,
+    // report rather than throw when an included shape isn't found
+    function (what, why) {
+      console.warn("Warning: can't find shape " +
+                   (why ? why + " dependency " + what : what));
+    });
+  new ShExCWriter(null, { simplifyParentheses: true }).
     writeSchema(partition,
-		function (error, text, prefixes) {
-		  if (error) throw error;
-		  else if (text) console.log(text);
-		});
-}).catch(function (e) {
-  console.error("aborting:", e);
-  // if (e.name === "SyntaxError")
-  //   console.error(input+":"+e.line+":"+e.column+": (offset: "+e.offset+"): error: "+e.message);
-})
-
+      function (error, text, prefixes) {
+        if (error) throw error;
+        else if (text) console.log(text);
+      });
+}, function (e) {
+  let exitCode;
+  if (e instanceof ShExNode.WebError) {
+    exitCode = ExitCode.resource_not_found;
+    console.error("Resource error:", e.message);
+  } else if (e instanceof Error) {
+    exitCode = e.code === "ENOENT" ? ExitCode.file_not_found : ExitCode.unspecified_error;
+    console.error(e.stack);
+  } else {
+    exitCode = ExitCode.unspecified_error;
+    console.error("Aborting:", e);
+  }
+  process.exit(exitCode);
+});
