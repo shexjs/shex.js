@@ -93,7 +93,7 @@ const VERBOSE = false; // "VERBOSE" in process.env;
 const EvalThreadedNErr = require("@shexjs/eval-threaded-nerr").RegexpModule;
 
 interface ValidatorOptions {
-  regexModule?: ValidatorRegexEngine;
+  regexModule?: ValidatorRegexModule; // a module (e.g. eval-threaded-nerr's RegexpModule); the validator calls .compile() on it
   coverage?: {
     exhaustive: string;
     firstError: string;

@@ -187,14 +187,16 @@ function ShExLoaderCjsModule (config: ConfigI = {}): LoaderI {
       ? myHttpRequest(url, mediaType)  // whatever fetch handles
       : (() => { throw new WebError(`Unrecognized URL protocol ${url}`) })()
 
-    async function myHttpRequest (url: string, _mediaType?: string): Promise<LoadedResourceI> {
+    async function myHttpRequest (url: string, mediaType?: string): Promise<LoadedResourceI> {
       if (typeof config.fetch !== "function")
         throw new WebError(`Unable to fetch ${url} with fetch=${config.fetch}`)
       let resp
       try {
         resp = await config.fetch(url, {
           headers: {
-            'Accept': 'text/shex,text/turtle,*/*'
+            // a caller's mediaType leads the Accept header so a server doing
+            // content negotiation can honor it; the fallbacks keep old behavior
+            'Accept': mediaType ? `${mediaType}, text/shex, text/turtle, */*` : 'text/shex,text/turtle,*/*'
           }
         })
       } catch (e: any) {

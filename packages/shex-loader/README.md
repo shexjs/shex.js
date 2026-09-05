@@ -159,7 +159,9 @@ A no-op here; [`@shexjs/node`](../shex-node#readme) overrides it to load [semant
 
 ### GET function(url, mediaType)
 
-return promise of {text, url}
+Fetch `url` and return a promise of `{text, url}`. When `mediaType` is given it
+leads the request's `Accept` header (ahead of the `text/shex,text/turtle,*/*`
+fallback), so a server doing content negotiation can honor it.
 
 Examples
 --------
