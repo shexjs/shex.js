@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/semact-overlay",
-  "version": "1.0.0-alpha.30",
+  "version": "1.0.0-alpha.31",
   "files": [
     "examples",
     "lib",
@@ -41,12 +41,12 @@
   },
   "homepage": "https://github.com/shexjs/shex.js#readme",
   "dependencies": {
-    "@shexjs/visitor": "^1.0.0-alpha.30",
+    "@shexjs/visitor": "^1.0.0-alpha.31",
     "shape-path-core": "^0.0.8"
   },
   "types": "./src/semact-overlay.ts",
   "devDependencies": {
-    "@shexjs/parser": "^1.0.0-alpha.30",
+    "@shexjs/parser": "^1.0.0-alpha.31",
     "n3": "^2.7.4"
   }
 }

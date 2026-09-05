@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/eval-simple-1err",
-  "version": "1.0.0-alpha.30",
+  "version": "1.0.0-alpha.31",
   "files": [
     "lib",
     "src"
@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@rdfjs/types": "^2.0.1",
-    "@shexjs/eval-validator-api": "^1.0.0-alpha.30",
+    "@shexjs/eval-validator-api": "^1.0.0-alpha.31",
     "@shexjs/term": "^1.0.0-alpha.28"
   },
   "scripts": {

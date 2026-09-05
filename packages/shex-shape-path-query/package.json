@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/shape-path-query",
-  "version": "1.0.0-alpha.30",
+  "version": "1.0.0-alpha.31",
   "files": [
     "bin",
     "lib",
@@ -26,11 +26,11 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@shexjs/extension-map": "^1.0.0-alpha.30",
-    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.30",
+    "@shexjs/extension-map": "^1.0.0-alpha.31",
+    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.31",
     "@shexjs/term": "^1.0.0-alpha.28",
-    "@shexjs/util": "^1.0.0-alpha.30",
-    "@shexjs/validator": "^1.0.0-alpha.30",
+    "@shexjs/util": "^1.0.0-alpha.31",
+    "@shexjs/validator": "^1.0.0-alpha.31",
     "n3": "^2.7.4",
     "shape-map": "^1.0.0",
     "shape-path-core": "^0.0.8"
