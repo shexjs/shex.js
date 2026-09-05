@@ -199,7 +199,10 @@ mixin(ShExBaseApp, {
       $("#permalinkAnchor").removeAttr("href"); // can't click until ready
       const permalink = await this.getPermalink();
       $("#permalinkAnchor").attr("href", permalink);
-      $("#shortPermalink").attr("href", "").text(""); // a fresh permalink outdates any short link
+      // a fresh permalink outdates any short link (removeAttr, never href="",
+      // which would make the anchor reload the page)
+      $("#shortPermalinkRow").hide();
+      $("#shortPermalink").removeAttr("href").text("");
     }
   },
 
