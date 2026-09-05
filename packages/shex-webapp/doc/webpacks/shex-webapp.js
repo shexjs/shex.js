@@ -52908,7 +52908,7 @@ __webpack_unused_export__ = nodeConstraintDetail;
 exports.describeError = describeError;
 exports.isLeafError = isLeafError;
 exports.repairText = repairText;
-const ShExWriter = __webpack_require__(6526);
+const ShExCWriter = __webpack_require__(6526);
 /** an IRI as the schema spells it, where it has a prefix for it */
 function iriText(iri, prefixes, base) {
     for (const [prefix, namespace] of Object.entries(prefixes || {}))
@@ -52987,7 +52987,7 @@ function shexcFragment(expr, prefixes, base) {
     if (typeof expr === "string") // a shape reference
         return "@" + iriText(expr, prefixes, base);
     try {
-        const writer = new ShExWriter({ simplifyParentheses: false, prefixes: prefixes || {} });
+        const writer = new ShExCWriter({ simplifyParentheses: false, prefixes: prefixes || {} });
         const said = writer.writeShapeExpr(expr);
         return typeof said === "string" ? said.trim() : "";
     }
@@ -58602,7 +58602,7 @@ const nodeKinds = {
     'literal': "LITERAL",
     'nonliteral': "NONLITERAL"
 };
-class ShExWriter {
+class ShExCWriter {
     constructor(outputStream, options) {
         // ### `_prefixRegex` matches a prefixed name or IRI that begins with one of the added prefixes
         this._prefixRegex = /$0^/;
@@ -58638,46 +58638,46 @@ class ShExWriter {
     }
     // ### `_writeSchema` writes the shape to the output stream
     _writeSchema(schema, done) {
-        const _ShExWriter = this;
+        const _ShExCWriter = this;
         this._expect(schema, "type", "Schema");
-        _ShExWriter.addPrefixes(schema._prefixes);
+        _ShExCWriter.addPrefixes(schema._prefixes);
         if (schema._base)
-            _ShExWriter._baseIRI = schema._base;
-        if (_ShExWriter._baseIRI)
-            _ShExWriter._write("BASE <" + _ShExWriter._baseIRI + ">\n"); // don't use _encodeIriOrBlankNode()
+            _ShExCWriter._baseIRI = schema._base;
+        if (_ShExCWriter._baseIRI)
+            _ShExCWriter._write("BASE <" + _ShExCWriter._baseIRI + ">\n"); // don't use _encodeIriOrBlankNode()
         if (schema.imports)
             schema.imports.forEach(function (imp) {
-                _ShExWriter._write("IMPORT " + _ShExWriter._encodeIriOrBlankNode(imp) + "\n");
+                _ShExCWriter._write("IMPORT " + _ShExCWriter._encodeIriOrBlankNode(imp) + "\n");
             });
         if (schema.startActs)
             schema.startActs.forEach(function (act) {
-                _ShExWriter._expect(act, "type", "SemAct");
-                _ShExWriter._write(" %" +
-                    _ShExWriter._encodePredicate(act.name) +
+                _ShExCWriter._expect(act, "type", "SemAct");
+                _ShExCWriter._write(" %" +
+                    _ShExCWriter._encodePredicate(act.name) +
                     ("code" in act ? "{" + escapeCode(act.code) + "%" + "}" : "%"));
             });
         if (schema.start)
-            _ShExWriter._write("START = " + _ShExWriter._writeShapeExpr(schema.start, done, true, 0).join('') + "\n");
+            _ShExCWriter._write("START = " + _ShExCWriter._writeShapeExpr(schema.start, done, true, 0).join('') + "\n");
         if ("shapes" in schema)
             schema.shapes.forEach(function (shapeDecl) {
                 // `done` reports serialization errors; it is not a write-completion
                 // callback, which would invoke it (argument-less) per flushed chunk
-                _ShExWriter._write(_ShExWriter._writeShapeDecl(shapeDecl, done, true, 0).join("") + "\n");
+                _ShExCWriter._write(_ShExCWriter._writeShapeDecl(shapeDecl, done, true, 0).join("") + "\n");
             });
     }
     _writeShapeDecl(shapeDecl, done, _forceBraces, _parentPrec) {
-        const _ShExWriter = this;
+        const _ShExCWriter = this;
         const pieces = [];
         if (shapeDecl.abstract)
             pieces.push("ABSTRACT ");
-        pieces.push(_ShExWriter._encodeShapeName(shapeDecl.id, false), " ");
-        return pieces.concat(_ShExWriter._writeShapeExpr(shapeDecl.shapeExpr, done, true, 0));
+        pieces.push(_ShExCWriter._encodeShapeName(shapeDecl.id, false), " ");
+        return pieces.concat(_ShExCWriter._writeShapeExpr(shapeDecl.shapeExpr, done, true, 0));
     }
     _writeShapeExpr(shapeExpr, done, forceBraces, parentPrec = 0) {
-        const _ShExWriter = this;
+        const _ShExCWriter = this;
         const pieces = [];
         if (typeof shapeExpr === "string") // ShapeRef
-            pieces.push("@", _ShExWriter._encodeShapeName(shapeExpr));
+            pieces.push("@", _ShExCWriter._encodeShapeName(shapeExpr));
         // !!! []s for precedence!
         else if (shapeExpr.type === "ShapeExternal")
             pieces.push("EXTERNAL");
@@ -58721,7 +58721,7 @@ class ShExWriter {
                     }
                     lastAndElided = elideAnd;
                 }
-                [].push.apply(pieces, _ShExWriter._writeShapeExpr(expr, done, false, 3));
+                [].push.apply(pieces, _ShExCWriter._writeShapeExpr(expr, done, false, 3));
             });
             if (parentPrec >= 3)
                 pieces.push(")");
@@ -58732,7 +58732,7 @@ class ShExWriter {
             shapeExpr.shapeExprs.forEach(function (expr, ord) {
                 if (ord > 0)
                     pieces.push(" OR ");
-                [].push.apply(pieces, _ShExWriter._writeShapeExpr(expr, done, forceBraces, 2));
+                [].push.apply(pieces, _ShExCWriter._writeShapeExpr(expr, done, forceBraces, 2));
             });
             if (parentPrec >= 2)
                 pieces.push(")");
@@ -58741,15 +58741,15 @@ class ShExWriter {
             if (parentPrec >= 4)
                 pieces.push("(");
             pieces.push("NOT ");
-            [].push.apply(pieces, _ShExWriter._writeShapeExpr(shapeExpr.shapeExpr, done, forceBraces, 4));
+            [].push.apply(pieces, _ShExCWriter._writeShapeExpr(shapeExpr.shapeExpr, done, forceBraces, 4));
             if (parentPrec >= 4)
                 pieces.push(")");
         }
         else if (shapeExpr.type === "Shape") {
-            [].push.apply(pieces, _ShExWriter._writeShape(shapeExpr, done, forceBraces));
+            [].push.apply(pieces, _ShExCWriter._writeShape(shapeExpr, done, forceBraces));
         }
         else if (shapeExpr.type === "NodeConstraint") {
-            [].push.apply(pieces, _ShExWriter._writeNodeConstraint(shapeExpr, done));
+            [].push.apply(pieces, _ShExCWriter._writeNodeConstraint(shapeExpr, done));
         }
         else
             throw Error("expected Shape{,And,Or,Ref} or NodeConstraint in " + JSON.stringify(shapeExpr));
@@ -58757,21 +58757,21 @@ class ShExWriter {
     }
     // ### `_writeShape` writes the shape to the output stream
     _writeShape(shape, done, _forceBraces) {
-        const _ShExWriter = this;
+        const _ShExCWriter = this;
         try {
             const pieces = []; // guessing push/join is faster than concat
             this._expect(shape, "type", "Shape");
             if (shape.closed)
                 pieces.push("CLOSED ");
             [{ keyword: "extends", marker: "EXTENDS " }].forEach(pair => {
-                // pieces = pieces.concat(_ShExWriter._writeShapeExpr(expr.valueExpr, done, true, 0));
+                // pieces = pieces.concat(_ShExCWriter._writeShapeExpr(expr.valueExpr, done, true, 0));
                 const exprs = shape[pair.keyword];
                 if (exprs && exprs.length > 0) {
                     exprs.forEach(function (i, ord) {
                         if (ord)
                             pieces.push(" ");
                         pieces.push(pair.marker);
-                        [].push.apply(pieces, _ShExWriter._writeShapeExpr(i, done, true, 0));
+                        [].push.apply(pieces, _ShExCWriter._writeShapeExpr(i, done, true, 0));
                     });
                     pieces.push(" ");
                 }
@@ -58779,7 +58779,7 @@ class ShExWriter {
             if (shape.extra && shape.extra.length > 0) {
                 pieces.push("EXTRA ");
                 shape.extra.forEach(function (i) {
-                    pieces.push(_ShExWriter._encodeShapeName(i, false) + " ");
+                    pieces.push(_ShExCWriter._encodeShapeName(i, false) + " ");
                 });
                 pieces.push(" ");
             }
@@ -58788,8 +58788,8 @@ class ShExWriter {
                 if (!semActs)
                     return;
                 semActs.forEach(function (act) {
-                    _ShExWriter._expect(act, "type", "SemAct");
-                    pieces.push(" %", _ShExWriter._encodePredicate(act.name), ("code" in act ? "{" + escapeCode(act.code) + "%" + "}" : "%"));
+                    _ShExCWriter._expect(act, "type", "SemAct");
+                    pieces.push(" %", _ShExCWriter._encodePredicate(act.name), ("code" in act ? "{" + escapeCode(act.code) + "%" + "}" : "%"));
                 });
             }
             function _writeCardinality(min, max) {
@@ -58807,9 +58807,9 @@ class ShExWriter {
                 function _writeExpressionActions(semActs) {
                     if (semActs) {
                         semActs.forEach(function (act) {
-                            _ShExWriter._expect(act, "type", "SemAct");
+                            _ShExCWriter._expect(act, "type", "SemAct");
                             pieces.push("\n" + indent + "   %");
-                            pieces.push(_ShExWriter._encodeValue(act.name));
+                            pieces.push(_ShExCWriter._encodeValue(act.name));
                             if ("code" in act)
                                 pieces.push("{" + escapeCode(act.code) + "%" + "}");
                             else
@@ -58833,39 +58833,39 @@ class ShExWriter {
                 }
                 if (typeof expr === "string") {
                     pieces.push("&");
-                    pieces.push(_ShExWriter._encodeShapeName(expr, false));
+                    pieces.push(_ShExCWriter._encodeShapeName(expr, false));
                 }
                 else {
                     if ("id" in expr && expr.id !== undefined) {
                         pieces.push("$");
-                        pieces.push(_ShExWriter._encodeIriOrBlankNode(expr.id, true));
+                        pieces.push(_ShExCWriter._encodeIriOrBlankNode(expr.id, true));
                     }
                     if (expr.type === "TripleConstraint") {
                         if (expr.inverse)
                             pieces.push("^");
                         if (expr.negated)
                             pieces.push("!");
-                        pieces.push(indent, _ShExWriter._encodePredicate(expr.predicate), " ");
+                        pieces.push(indent, _ShExCWriter._encodePredicate(expr.predicate), " ");
                         if ("valueExpr" in expr)
-                            [].push.apply(pieces, _ShExWriter._writeShapeExpr(expr.valueExpr, done, true, 0));
+                            [].push.apply(pieces, _ShExCWriter._writeShapeExpr(expr.valueExpr, done, true, 0));
                         else
                             pieces.push(". ");
                         _writeCardinality(expr.min, expr.max);
-                        _ShExWriter._annotations(pieces, expr.annotations, indent);
+                        _ShExCWriter._annotations(pieces, expr.annotations, indent);
                         _writeExpressionActions(expr.semActs);
                     }
                     else if (expr.type === "OneOf") {
                         const needsParens = "id" in expr || "min" in expr || "max" in expr || "annotations" in expr || "semActs" in expr;
-                        _exprGroup(expr.expressions, "\n" + indent + "| ", 1, needsParens || _ShExWriter.forceParens);
+                        _exprGroup(expr.expressions, "\n" + indent + "| ", 1, needsParens || _ShExCWriter.forceParens);
                         _writeCardinality(expr.min, expr.max); // t: open1dotclosecardOpt
-                        _ShExWriter._annotations(pieces, expr.annotations, indent);
+                        _ShExCWriter._annotations(pieces, expr.annotations, indent);
                         _writeExpressionActions(expr.semActs);
                     }
                     else if (expr.type === "EachOf") {
                         const needsParens = "id" in expr || "min" in expr || "max" in expr || "annotations" in expr || "semActs" in expr;
-                        _exprGroup(expr.expressions, ";\n" + indent, 2, needsParens || _ShExWriter.forceParens);
+                        _exprGroup(expr.expressions, ";\n" + indent, 2, needsParens || _ShExCWriter.forceParens);
                         _writeCardinality(expr.min, expr.max); // t: open1dotclosecardOpt
-                        _ShExWriter._annotations(pieces, expr.annotations, indent);
+                        _ShExCWriter._annotations(pieces, expr.annotations, indent);
                         _writeExpressionActions(expr.semActs);
                     }
                     else
@@ -58876,7 +58876,7 @@ class ShExWriter {
                 _writeExpression(shape.expression, "  ", 0);
             pieces.push("\n}");
             _writeShapeActions(shape.semActs);
-            _ShExWriter._annotations(pieces, shape.annotations, "  ");
+            _ShExCWriter._annotations(pieces, shape.annotations, "  ");
             return pieces;
         }
         catch (error) {
@@ -58886,20 +58886,20 @@ class ShExWriter {
     }
     // ### `_writeNodeConstraint` writes the node constraint to the output stream
     _writeNodeConstraint(v, done) {
-        const _ShExWriter = this;
+        const _ShExCWriter = this;
         try {
-            _ShExWriter._expect(v, "type", "NodeConstraint");
+            _ShExCWriter._expect(v, "type", "NodeConstraint");
             const pieces = [];
             if (v.nodeKind in nodeKinds)
                 pieces.push(nodeKinds[v.nodeKind], " ");
             else if (v.nodeKind !== undefined)
-                _ShExWriter._error("unexpected nodeKind: " + v.nodeKind); // !!!!
+                _ShExCWriter._error("unexpected nodeKind: " + v.nodeKind); // !!!!
             this._fillNodeConstraint(pieces, v, done);
             this._annotations(pieces, v.annotations, "  ");
             if (v.semActs)
                 v.semActs.forEach(function (act) {
-                    _ShExWriter._expect(act, "type", "SemAct");
-                    pieces.push(" %", _ShExWriter._encodePredicate(act.name), ("code" in act ? "{" + escapeCode(act.code) + "%" + "}" : "%"));
+                    _ShExCWriter._expect(act, "type", "SemAct");
+                    pieces.push(" %", _ShExCWriter._encodePredicate(act.name), ("code" in act ? "{" + escapeCode(act.code) + "%" + "}" : "%"));
                 });
             return pieces;
         }
@@ -58909,23 +58909,23 @@ class ShExWriter {
         }
     }
     _annotations(pieces, annotations, indent) {
-        const _ShExWriter = this;
+        const _ShExCWriter = this;
         if (annotations) {
             annotations.forEach(function (a) {
-                _ShExWriter._expect(a, "type", "Annotation");
+                _ShExCWriter._expect(a, "type", "Annotation");
                 pieces.push("//\n" + indent + "   ");
-                pieces.push(_ShExWriter._encodeValue(a.predicate));
+                pieces.push(_ShExCWriter._encodeValue(a.predicate));
                 pieces.push(" ");
-                pieces.push(_ShExWriter._encodeValue(a.object));
+                pieces.push(_ShExCWriter._encodeValue(a.object));
             });
         }
     }
     _fillNodeConstraint(pieces, v, _done) {
-        const _ShExWriter = this;
+        const _ShExCWriter = this;
         if (v.datatype && v.values)
-            _ShExWriter._error("found both datatype and values in " + JSON.stringify(v));
+            _ShExCWriter._error("found both datatype and values in " + JSON.stringify(v));
         if (v.datatype) {
-            pieces.push(_ShExWriter._encodeShapeName(v.datatype));
+            pieces.push(_ShExCWriter._encodeShapeName(v.datatype));
         }
         if (v.values) {
             pieces.push("[");
@@ -58935,15 +58935,15 @@ class ShExWriter {
                 if (!isTerm(t)) {
                     //          expect(t, "type", "IriStemRange");
                     if (!("type" in t))
-                        _ShExWriter._error("expected " + JSON.stringify(t) + " to have a 'type' attribute.");
+                        _ShExCWriter._error("expected " + JSON.stringify(t) + " to have a 'type' attribute.");
                     const stemRangeTypes = ["Language", "IriStem", "LiteralStem", "LanguageStem", "IriStemRange", "LiteralStemRange", "LanguageStemRange"];
                     if (stemRangeTypes.indexOf(t.type) === -1)
-                        _ShExWriter._error("expected type attribute '" + t.type + "' to be in '" + stemRangeTypes + "'.");
+                        _ShExCWriter._error("expected type attribute '" + t.type + "' to be in '" + stemRangeTypes + "'.");
                     if (t.type === "Language") {
                         pieces.push("@" + t.languageTag);
                     }
                     else if (!isTerm(t.stem)) {
-                        _ShExWriter._expect(t.stem, "type", "Wildcard");
+                        _ShExCWriter._expect(t.stem, "type", "Wildcard");
                         pieces.push(".");
                     }
                     else {
@@ -58955,10 +58955,10 @@ class ShExWriter {
                             if (!isTerm(c)) {
                                 //                expect(c, "type", "IriStem");
                                 if (!("type" in c))
-                                    _ShExWriter._error("expected " + JSON.stringify(c) + " to have a 'type' attribute.");
+                                    _ShExCWriter._error("expected " + JSON.stringify(c) + " to have a 'type' attribute.");
                                 const stemTypes = ["IriStem", "LiteralStem", "LanguageStem"];
                                 if (stemTypes.indexOf(c.type) === -1)
-                                    _ShExWriter._error("expected type attribute '" + c.type + "' to be in '" + stemTypes + "'.");
+                                    _ShExCWriter._error("expected type attribute '" + c.type + "' to be in '" + stemTypes + "'.");
                                 pieces.push(langOrLiteral(t, c.stem) + "~");
                             }
                             else {
@@ -58968,12 +58968,12 @@ class ShExWriter {
                     }
                 }
                 else {
-                    pieces.push(_ShExWriter._encodeValue(t));
+                    pieces.push(_ShExCWriter._encodeValue(t));
                 }
                 function langOrLiteral(t, c) {
                     return ["LanguageStem", "LanguageStemRange"].indexOf(t.type) !== -1 ? "@" + c :
                         ["LiteralStem", "LiteralStemRange"].indexOf(t.type) !== -1 ? '"' + c.replace(ESCAPE_g, characterReplacer) + '"' :
-                            _ShExWriter._encodeValue(c);
+                            _ShExCWriter._encodeValue(c);
                 }
             });
             pieces.push("]");
@@ -59223,7 +59223,7 @@ function expect(o, p, v) {
 }
 // The empty function
 function noop() { }
-module.exports = ShExWriter;
+module.exports = ShExCWriter;
 //# sourceMappingURL=shex-writer.js.map
 
 /***/ },
