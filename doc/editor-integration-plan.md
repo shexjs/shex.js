@@ -38,7 +38,7 @@
 >   (`synthesizeLocations`) and linted in its own language (`lintSchema`).
 >   The data side parses with lezer-turtle, not millan.
 > - 2026-08-29: the schema pane parses with a Lezer ShExC grammar
->   (`packages/lezer-shexc`, a port of the specification's grammar in
+>   (`lezer-shexc`, its own repo/npm package, a port of the specification's grammar in
 >   `ShExJison.jison`'s LALR shape): exact colours by role, folding,
 >   incremental and error-tolerant.  The stream tokenizer is gone.  The
 >   ts-jison `@$` wart is fixed on a branch of ts-jison (plan.md D8).

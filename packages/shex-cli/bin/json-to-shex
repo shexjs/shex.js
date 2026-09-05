@@ -35,7 +35,7 @@ function abort (msg, exitCode) {
   output(require('command-line-usage')([
     {
       header: "json-to-shex",
-      content: "load some number of schema files from web or filesystem and display as ShEx compact syntax (ShExC), for example:\n    shex-to-json https://raw.githubusercontent.com/shexSpec/shexTest/main/parsedSchemas/open2dotOr1dotclose.json" },
+      content: "load some number of schema files from web or filesystem and display as ShEx compact syntax (ShExC), for example:\n    json-to-shex https://raw.githubusercontent.com/shexSpec/shexTest/main/parsedSchemas/open2dotOr1dotclose.json" },
     {
       header: 'Options',
       optionList: CommandLineOptions

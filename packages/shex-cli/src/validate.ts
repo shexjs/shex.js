@@ -442,7 +442,7 @@ async function findNodesAndValidate (loaded: any, parms: any, options: any, sche
   };
   function allNodesWithType (type: string) {
     const triples = loaded.data.getQuads(null, RDF_TYPE, type);
-    return triples.length > 0 ? triples.map((t: any) => t.subject) : [ShExUtil.NotSupplied];
+    return triples.length > 0 ? triples.map((t: any) => ShExTerm.rdfJsTerm2Ld(t.subject)) : [ShExUtil.NotSupplied];
   };
   function getQuads (s: any, p: any, o: any) {
     const get = s === ShapeMap.Focus ? "subject" : "object";
