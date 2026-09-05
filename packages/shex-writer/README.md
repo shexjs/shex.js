@@ -108,7 +108,7 @@ BASE <http://a.example/>
 ```
 
 ## option: prefixes - Pre-loaded namespace prefixes
-A second parameter to `construct` is a map for prefixes that are not defined in the schema:
+The constructor's options object takes a `prefixes` map for prefixes not defined in the schema:
 ``` sh
 node -e 'new (require("@shexjs/writer"))({
     base: "http://a.example/",

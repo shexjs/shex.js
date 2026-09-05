@@ -5,7 +5,7 @@ ShapeExpression or TripleExpression; set **breakpoints in validation and
 materialization schemas** and **on the lexical representation of a graph
 node**.
 
-> **Status**: phases 1–4 are *implemented*.
+> **Status**: phases 1–6 are *implemented*.
 > Materialization: `ThreadedMaterializer.run()` is a step-event generator
 > and `MaterializerDebugger` (both in
 > `packages/extension-map/lib/ThreadedMaterializer.js`) provides
@@ -23,8 +23,9 @@ node**.
 > `ShExValidator`'s options), and `shex-debug` steps into them --
 > `b LINE` prefers the constraint on the line, `bp PRED` breaks on a
 > predicate.
-> What remains — phase 6's live stepping, a unified panel, worker-app
-> debugging and the polish items — is tracked in [plan.md](plan.md) §E.
+> What remained — phase 6's live stepping, a unified panel, worker-app
+> debugging — has since shipped; only the E12 polish item (a steppable
+> eval-threaded-nerr) stays deferred in [plan.md](plan.md) §E.
 > Browser validation debugging shipped as **capture + replay** (see §1):
 > the validate-side 🐞 in shex-simple/shexmap-simple reruns the
 > validation with `capturingRegexModule` recording every
@@ -204,7 +205,7 @@ the recorded matches are on offer.
 
 `shex-debug` (in `@shexjs/cli`): loads schema/data/shape-map like
 `shex-validate`, runs the engine in a `worker_threads` worker, REPL commands
-`c`/`s`/`n`/`o`/`b <line|term>`/`bt`/`info bindings`/`q`.  The materializer
+`s`/`n`/`o`/`c`/`b LINE[:COL]`/`bs SHAPE`/`bp PREDICATE`/`bn NODE`/`info`/`l`/`h`/`q`.  The materializer
 variant needs no worker at all (the generator is synchronous and
 single-threaded) — `shexmap-debug` can ship first.
 

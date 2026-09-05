@@ -3,7 +3,8 @@
   "version": "1.0.0-alpha.30",
   "files": [
     "lib",
-    "src"
+    "src",
+    "sync-fetch.js"
   ],
   "description": "Implementation of @shexjs/neighborhood-api which gets data from a SPARQL endpoint",
   "author": {

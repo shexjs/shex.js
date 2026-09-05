@@ -25,7 +25,7 @@ Term.rdfJsTerm2Ld(DataFactory.literal("chat", "fr"));
 
 // … and back
 Term.ld2RdfJsTerm({value: "chat", language: "fr"});
-// Literal { id: '"chat"@fr' }
+// a Literal RDF/JS term for "chat"@fr
 
 // either form → Turtle lexical form
 Term.rdfJsTerm2Turtle(DataFactory.literal("chat", "fr"));   // '"chat"@fr'

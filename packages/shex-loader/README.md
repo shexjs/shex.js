@@ -159,7 +159,7 @@ A no-op here; [`@shexjs/node`](../shex-node#readme) overrides it to load [semant
 
 ### GET function(url, mediaType)
 
-return promise of {contents, url}
+return promise of {text, url}
 
 Examples
 --------

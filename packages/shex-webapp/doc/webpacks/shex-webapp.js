@@ -50054,7 +50054,7 @@ function simpleEnd(buf) {
  * loadExtensions function(globs[])
  *   prototype of loadExtensions. does nothing
  * GET function(url, mediaType)
- *   return promise of {contents, url}
+ *   return promise of {text, url}
  */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }

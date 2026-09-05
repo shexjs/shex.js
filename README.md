@@ -52,7 +52,7 @@ The result is a JSON structure which tells you exactly how the data matched the 
 
 ```json
 {
-  "type": "test",
+  "type": "ShapeTest",
   "node": "http://shex.io/examples/Issue1",
   "shape": "http://shex.io/examples/IssueShape",
   "solution": {
@@ -90,7 +90,7 @@ const node = "http://shex.io/examples/Issue1#Issue1"; // node in that data
 
 const N3 = require("n3");
 const ShExLoader = require("@shexjs/loader")({        // initialize with:
-  fetch: require('node-fetch'),                       //   fetch implementation
+  fetch: globalThis.fetch,                            //   fetch implementation (Node >=18)
   rdfjs: N3,                                          //   RdfJs Turtle parser
 });
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
@@ -121,26 +121,26 @@ ShEx can be represented in the compact syntax
 ```
 PREFIX ex: <http://ex.example/#>
 <IssueShape> {                       # An <IssueShape> has:
-    ex:state (ex:unassigned            # state which is
-              ex:assigned),            #   unassigned or assigned.
+    ex:state [ex:unassigned            # state which is
+              ex:assigned],            #   unassigned or assigned.
     ex:reportedBy @<UserShape>        # reported by a <UserShape>.
 }
 ```
 or in JSON:
 ```json
-{ "type": "schema", "start": "http://shex.io/examples/IssueShape",
-  "shapes": {
-    "http://shex.io/examples/IssueShape": { "type": "shape",
-      "expression": { "type": "eachOf",
-        "expressions": [
-          { "type": "tripleConstraint", "predicate": "http://ex.example/#state",
-            "valueExpr": { "type": "valueClass", "values": [
-                "http://ex.example/#unassigned", "http://ex.example/#assigned"
-          ] } },
-          { "type": "tripleConstraint", "predicate": "http://ex.example/#reportedBy",
-            "valueExpr": { "type": "valueClass", "reference": "http://shex.io/examples/UserShape" }
-          }
-] } } } }
+{ "type": "Schema", "start": "http://shex.io/examples/IssueShape",
+  "shapes": [
+    { "id": "http://shex.io/examples/IssueShape", "type": "ShapeDecl",
+      "shapeExpr": { "type": "Shape",
+        "expression": { "type": "EachOf",
+          "expressions": [
+            { "type": "TripleConstraint", "predicate": "http://ex.example/#state",
+              "valueExpr": { "type": "NodeConstraint", "values": [
+                  "http://ex.example/#unassigned", "http://ex.example/#assigned"
+              ] } },
+            { "type": "TripleConstraint", "predicate": "http://ex.example/#reportedBy",
+              "valueExpr": "http://shex.io/examples/UserShape" }
+] } } } ] }
 ```
 
 You can convert between them with shex-to-json:
@@ -157,7 +157,7 @@ As with validation, the ShExLoader wraps the fetching and parsing:
 const shexc = "http://shex.io/examples/Issue.shex";
 
 const ShEx = require("shex");
-const ShExLoader = ShEx.Loader({fetch: require("node-fetch"), rdfjs: require("n3")});
+const ShExLoader = ShEx.Loader({fetch: globalThis.fetch, rdfjs: require("n3")});
 ShExLoader.load({shexc: [shexc]}, null).then(function (loaded) {
     console.log(JSON.stringify(loaded.schema, null, "  "));
 });
@@ -194,7 +194,7 @@ The syntax is:
 ```sh
 shexmap-materialize `-t <target schema>`|-h [-j `<JSON Vars File>`] [-r `<RDF root IRI>`]
 ```
-It reads the output of `shex-validate --extension` from STDIN and maps it to the specified target schema (`--extension` takes a path to the extension module).
+It reads the output of `shex-validate --extension` from STDIN and maps it to the specified target schema (`--extension` takes a package name or file glob for the extension module).
 
 If supplied, a JSON vars file will be referenced to fill in constant values not specified from the source.
 This is useful in assigning default fields to the target when there is no equivalent value in the source schema
@@ -218,7 +218,7 @@ npx shexmap-materialize -h
 ```
 ```sh
 npx shex-validate -x source_schema.shex -d data.ttl -s ProblemShape -n prob1 \
-    --extension node_modules/@shexjs/extension-map \
+    --extension @shexjs/extension-map \
   | npx shexmap-materialize -t target_schema.shex -j vars.json
 ```
 ```sh
@@ -261,6 +261,17 @@ This repo uses [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces)
 - [`@shexjs/extension-wasi-test`](packages/extension-wasi-test#readme) -- the Test extension reimplemented in hand-written WebAssembly, printing via WASI fd_write
 - [`@shexjs/extension-map`](packages/extension-map#readme) -- an extension for transforming data from one schema to another ([more](http://shex.io/extensions/Map/))
 - [`@shexjs/extension-eval`](packages/extension-eval#readme) -- simple extension which evaluates Javascript semantic action code ([more](http://shex.io/extensions/Eval/))
+- [`@shexjs/extension-reduce`](packages/extension-reduce#readme) -- the Reduce extension (the inverse of Map)
+- [`@shexjs/extension-reduce-js`](packages/extension-reduce-js#readme) -- the Reduce extension's JavaScript semantic-action handler
+- [`@shexjs/extension-wasi`](packages/extension-wasi#readme) -- run WAT/Wasm semantic actions via WASI
+- [`@shexjs/eval-validator-api`](packages/eval-validator-api#readme) -- the regex-engine interface the validator drives (with capture/replay debug hooks)
+- [`@shexjs/eval-simple-1err`](packages/eval-simple-1err#readme) is the "fast" engine (stops at the first error); [`@shexjs/eval-threaded-nerr`](packages/eval-threaded-nerr#readme) the "thorough" default (reports every error)
+- [`@shexjs/neighborhood-api`](packages/neighborhood-api#readme) -- the NeighborhoodDb interface the data sources implement
+- [`@shexjs/neighborhood-rdfjs`](packages/neighborhood-rdfjs#readme) -- a NeighborhoodDb over an in-memory RDF/JS store
+- [`@shexjs/neighborhood-sparql`](packages/neighborhood-sparql#readme) -- a NeighborhoodDb over a SPARQL endpoint
+- [`@shexjs/neighborhood-wikibase`](packages/neighborhood-wikibase#readme) -- a NeighborhoodDb over a Wikibase's entity JSON
+- [`@shexjs/semact-overlay`](packages/semact-overlay#readme) -- a visitor overlay that indexes semantic actions
+- [`@shexjs/editor-services`](packages/shex-editor-services#readme) -- editor language services (lint, hover, complete)
 
 ## building
 
