@@ -50158,7 +50158,7 @@ function ShExLoaderCjsModule(config = {}) {
                 : (url.match("^(blob:)?[a-z]+://."))
                     ? myHttpRequest(url, mediaType) // whatever fetch handles
                     : (() => { throw new WebError(`Unrecognized URL protocol ${url}`); })();
-            function myHttpRequest(url, _mediaType) {
+            function myHttpRequest(url, mediaType) {
                 return __awaiter(this, void 0, void 0, function* () {
                     if (typeof config.fetch !== "function")
                         throw new WebError(`Unable to fetch ${url} with fetch=${config.fetch}`);
@@ -50166,7 +50166,9 @@ function ShExLoaderCjsModule(config = {}) {
                     try {
                         resp = yield config.fetch(url, {
                             headers: {
-                                'Accept': 'text/shex,text/turtle,*/*'
+                                // a caller's mediaType leads the Accept header so a server doing
+                                // content negotiation can honor it; the fallbacks keep old behavior
+                                'Accept': mediaType ? `${mediaType}, text/shex, text/turtle, */*` : 'text/shex,text/turtle,*/*'
                             }
                         });
                     }
