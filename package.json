@@ -38,7 +38,6 @@
     "mocha": "^12.0.0",
     "nock": "^14.0.16",
     "nyc": "^18.0.0",
-    "pre-commit": "^1.2.2",
     "shex-test": "github:shexSpec/shexTest#main",
     "source-map-support": "^0.5.21",
     "style-loader": "^4.0.0",
@@ -48,12 +47,13 @@
     "typescript": "^5.5.0",
     "webpack": "^5.93.0",
     "webpack-bundle-analyzer": "^4.10.2",
-    "webpack-cli": "^7.2.3"
+    "webpack-cli": "^7.2.3",
+    "husky": "^9.1.7"
   },
   "scripts": {
     "clean-all": "find . -maxdepth 3 -name node_modules -exec rm -r {} \\; ; find . -maxdepth 3 -name package-lock.json -exec rm -r {} \\; || true",
     "compile": "make ALL",
-    "prepare": "make ALL",
+    "prepare": "husky || true; make ALL",
     "rebuild": "npm run clean-all && npm ci",
     "bump-versions": "node tools/bumpVersions.js",
     "reinstall-deps": "npm rebuild && npm run webpack && npm run test-all && git add -u",
@@ -88,11 +88,6 @@
   "bugs": {
     "url": "https://github.com/shexSpec/grammar/issues"
   },
-  "pre-commit": [
-    "lint",
-    "test",
-    "check-branch-deps"
-  ],
   "nyc": {
     "sourceMap": false,
     "exclude": [
