@@ -12,7 +12,7 @@ const ShExUtil = require("@shexjs/util");
 const {ShExVisitor} = require("@shexjs/visitor");
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
 const {ShExValidator} = require("@shexjs/validator");
-const ShExWriter = require("@shexjs/writer");
+const ShExCWriter = require("@shexjs/writer");
 const N3 = require("n3");
 const ShExNode = require("@shexjs/node")({
   rdfjs: N3,
@@ -210,7 +210,7 @@ describe("Parser-Writer-test", function () {
 
         it("should write '" + jsonSchemaFile + "' and parse to the same structure.", function () {
           let w;
-          new ShExWriter({simplifyParentheses: false, base: meta.base, prefixes: meta.prefixes}).
+          new ShExCWriter({simplifyParentheses: false, base: meta.base, prefixes: meta.prefixes}).
             writeSchema(abstractSyntax, function (error, text, prefixes) {
               if (error) throw error;
               else w = text;
@@ -225,7 +225,7 @@ describe("Parser-Writer-test", function () {
 
         it ("should write '" + jsonSchemaFile + "' with as few ()s as possible.", function () {
           let w;
-          new ShExWriter({simplifyParentheses: true }).
+          new ShExCWriter({simplifyParentheses: true }).
             writeSchema(abstractSyntax, function (error, text, prefixes) {
               if (error) throw error;
               else w = text;
