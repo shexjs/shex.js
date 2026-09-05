@@ -6,7 +6,7 @@
  * loadExtensions function(globs[])
  *   prototype of loadExtensions. does nothing
  * GET function(url, mediaType)
- *   return promise of {contents, url}
+ *   return promise of {text, url}
  */
 
 const ShExUtil = require("@shexjs/util");

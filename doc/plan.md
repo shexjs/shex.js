@@ -68,9 +68,11 @@ scripts' move to TypeScript and the untracked `.map`s are done (B1–B10,
   `noImplicitThis` found three nested functions reading `this` as the
   app -- the drag-and-drop `inject`, the LOG_PROGRESS trace's `sm`, the
   shape-map menu's failure report -- each a TypeError waiting; fixed.
-  Left `any`, honestly: what arrives through the bundles' globals
-  (jQuery, ShExWebApp.*, RdfJs, the editor panes) -- typing
-  `globals.d.ts` against the packages' own types is the next narrowing.
+  Left `any`, honestly: what arrives through the bundles' globals.  `RdfJs`
+  now types against `@rdfjs/types` (#453); the rest stay `any` -- jQuery,
+  CodeMirror, marked, N3js and IRI are CDN-loaded with no `@types/*`, and
+  `ShExWebApp` (the repo's own bundle) has no `types` entry -- narrowing them
+  wants `@types/*` added and a `strict` cascade absorbed, deferred.
   `extension-wasi*` are TypeScript too (same day), and so is the CLI:
   `shex-cli/src/validate.ts` -> `lib/validate.js` behind a two-line
   `bin/validate` (`module: node16`, which keeps the script's native
@@ -287,10 +289,13 @@ overflowing the stack and ShapeNot stays a clean error (F3), and
 `options.requireBindingsInSubshapes` drops the islands a static-only
 optional subshape would emit unasked (F4) -- all 2026-08-29.
 
-- **F1 (L)** PikeVM worklist dedup on (state, callStack, cursor); subsumes
-  the post-accept `exploreSteps` budget that can settle for a suboptimal
-  accept (`lastReport.explorationTruncated`).  The design note sketches it
-  and the lazy-DFA beyond.
+- **F1 (worklist dedup done 2026-09-04; lazy-DFA deferred)** The PikeVM
+  worklist dedups on (stateNo, callStack, cursor, repeats), pruning redundant
+  threads at pop (`ThreadedMaterializer`'s `seen` set, reported as
+  `lastReport.configsPruned`); it subsumes the post-accept `exploreSteps`
+  budget that could settle for a suboptimal accept.  The lazy-DFA the design
+  note sketches beyond it stays deferred -- a further optimization, not a
+  correctness gap.
 
 ## G. Errors and validation
 
@@ -368,7 +373,7 @@ The Makefile is hand-maintained; the generator it grew out of
   for every contributor, and a corpus that is an upstream artifact anyway.
   Not a fixture repository: a submodule's friction buys nothing for files
   nobody hand-edits.
-- **I4 (before publishing; 2026-08-30)** What a `publish-ordered` run
+- **I4 (done -- published 2026-08-31, completed 2026-09-05)** What a `publish-ordered` run
   needs first.  Never published: `lezer-shexc`, `@shexjs/editor-services`,
   `@shexjs/neighborhood-wikibase`, `@shexjs/extension-wasi`,
   `@shexjs/extension-wasi-test` (the order handles them; `extension-wasi`
@@ -385,7 +390,11 @@ The Makefile is hand-maintained; the generator it grew out of
   prerelease with no dist-tag, and the alphas have always been `latest`;
   the tool insists on one up front).  A dry run on 2026-08-30 (`--dry-run
   --tag latest`, before the suite bump) published nine and skipped twenty
-  whose versions the registry already had.
+  whose versions the registry already had.  Published for real 2026-08-31
+  (tag `v1.0.0-alpha.30`, fff21dfe); a partial run left seven behind
+  (editor-services, extension-reduce{,-js}, extension-wasi{,-test},
+  neighborhood-wikibase, semact-overlay), published from the tag 2026-09-05
+  to complete 29/29.
 - **I5 (done 2026-08-30) Two version lines.**  Packages with an audience
   outside shex.js -- `shape-map`, `lezer-shexc`, `lezer-turtle` (its own
   repository, on npm as of today) -- are on version lines of their own;
@@ -399,9 +408,8 @@ The Makefile is hand-maintained; the generator it grew out of
   leaves those versions and the ranges pointing at them alone, and
   `publish-ordered.js` skips a package whose version the registry already
   has.  Rule: suite -> tier with `^`; tier -> tier; tier never -> suite.
-  Their versions are theirs to move: `shape-map` is `1.0.0-alpha.26` on
-  the registry and has changed (no util) -- `1.0.0` when it next publishes
-  is the suggestion.
+  Their versions are theirs to move: `shape-map` published `1.0.0` with
+  alpha.30 (no util); `1.1.0` is staged in-tree for the next release.
 - **I6 (staged 2026-08-30) `lezer-shexc` is its own repository**,
   `shexjs/lezer-shexc` (the org, not a personal account: the rdfjs model,
   where the same maintainers hold the implementation and its grammars --
@@ -426,23 +434,21 @@ The Makefile is hand-maintained; the generator it grew out of
   lockstep line and co-owns the validator's `semActIndex` contract with
   `extension-reduce`; a package leaves when its dependency on shex.js is
   on a released API rather than a co-developed one.
-- **I3 (on request; investigated 2026-09-04)** Majors not yet taken.  An
-  isolated-worktree probe (each bumped, `npm ci`, the full gated suite) found
-  **eight safe together in one PR** -- chai 6, eslint 10, glob 13, js-yaml 5,
-  koa 3, n3 2, jquery 4 (jsonld was **already** at `^9.0.0`; this line was
-  stale) -- verified green installed simultaneously.  Two need their own
-  change: **node-fetch 3** is ESM-only, so `require('node-fetch')` must
-  become `.default` (or Node's global `fetch`) at three product sites +
-  test harnesses; **pre-commit→husky** is a tooling swap (clears the
-  `cross-spawn`-via-pre-commit audit finding).  Two caveats for the batch:
-  eslint 10 raises the dev Node floor to 20.19+/22.13+/24+ (devDep only), and
-  the browser run wants `--max-old-space-size` headroom.  **Unverified on the
-  CI Node-20 lane**: the probe ran on Node 26 (where `require()` of ESM
-  works); chai 6 is ESM-only, so it needs checking on the Node-20 job before
-  merging.  Still this repo's own: renaming `ShExWriter` (it writes ShExC) to
-  `ShExCWriter`.  Remaining `npm audit` findings are in pre-commit's and
-  `@ts-jison`'s transitive chains.
+- **I3 (done 2026-09-05)** The dependency majors, taken.  The eight-safe batch
+  landed in #444 (chai 6, eslint 10, glob 13, js-yaml 5, koa 3, n3 2, jquery 4;
+  jsonld was already `^9`), green on the CI Node-20 lane.  The ESM-only pair
+  went to built-ins rather than the bumps -- **node-fetch dropped for the
+  global `fetch`** and **chalk for an inline TTY underline** (#445; both were
+  ESM-only, breaking `require()` on Node 18-20.18).  `rdf-data-factory` 2
+  (#446) and `webpack-cli` 7 (#447) followed; **`typescript` 7 stays out** --
+  it is the native Go port ("tsgo"), whose main entry no longer exports the
+  classic compiler API `ts-jison`/`ts-loader` need.  The dev-major tail
+  `mocha` 12 + `sinon` 22 is in (#450), **pre-commit → husky** done (#451,
+  clearing the `cross-spawn` audit finding), and the `ShExWriter` →
+  `ShExCWriter` rename done (#452).  Remaining `npm audit` findings are in
+  `@ts-jison`'s transitive chain.
 
 ## Decisions wanted
 
-The independent tier's versions (`shape-map` to `1.0.0`?).
+(none open -- `shape-map` published `1.0.0` with alpha.30; `1.1.0` is staged
+for the next release.)

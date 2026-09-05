@@ -115,7 +115,7 @@ The ShExJ format is defined in [JSG](http://shex.io/shex-semantics/index.html#sh
 
 ## index(schema)
 
-`ShExIndexVisitor.index(schema)` creates a visitor and overrides `visitExpression` and `visitShapeExpr` to provide an index composed of two maps:
+`ShExIndexVisitor.index(schema)` creates a visitor and overrides `visitTripleExpr` and `visitShapeDecl` to provide an index composed of two maps:
 * **shapeExprs** - map from shape declaration name to definition in `schema`,
 * **tripleExprs** - map from triple expression name to definition in `schema`.
 
