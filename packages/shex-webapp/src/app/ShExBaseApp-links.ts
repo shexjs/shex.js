@@ -209,32 +209,39 @@ parseQueryString (query: any) {
    * Gist" is the path that scales. */
   async shortenPermalink (evt: any) {
     if (evt) evt.preventDefault();
-    const $btn = $("#shortenPermalink"), $out = $("#shortPermalink");
+    const $btn = $("#shortenPermalink"), $out = $("#shortPermalink"),
+          $row = $("#shortPermalinkRow");
+    const label = $btn.text() || "shorten";
     // the menu builds the permalink as it opens; build one now in case the
     // click somehow beat that
     const long = $("#permalinkAnchor").attr("href") || await this.getPermalink();
-    $btn.text("shortening…");
-    $out.attr("href", "").text("");
+    $btn.prop("disabled", true).text("shortening…");
+    $row.hide();
+    $out.removeAttr("href").text("");
     try {
       const resp = await fetch("https://tinyurl.com/api-create.php?url=" +
                                encodeURIComponent(long));
       const body = (await resp.text()).trim();
+      // TinyURL answers 200 with an error string (not an HTTP error) when it
+      // refuses a URL -- an over-long one, say -- so vet the body, not the status
       if (!resp.ok || !/^https?:\/\//.test(body))
         throw new Error(body || ("HTTP " + resp.status));
+      // show it beside Permalink, log it (a place to copy it from), and put it
+      // on the clipboard
       $out.attr("href", body).text(body);
-      try {
-        await navigator.clipboard.writeText(body);
-        $btn.text("copied ✓");
-      } catch (e) {
-        // clipboard wants a secure context and permission; the link shows regardless
-        $btn.text("shortened");
-      }
+      $row.show();
+      console.log("TinyURL short link: " + body);
+      let copied = false;
+      try { await navigator.clipboard.writeText(body); copied = true; }
+      catch (e) { /* clipboard needs a secure context + permission; link still shows */ }
+      $btn.text(copied ? "copied ✓" : "shortened");
     } catch (e: any) {
       $btn.text("shorten failed").attr("title", "TinyURL: " + e.message);
       console.warn("TinyURL shorten failed:", e);
     }
     window.setTimeout(
-      () => $btn.text("shorten").attr("title", "Shorten this link with TinyURL"),
+      () => $btn.prop("disabled", false).text(label)
+              .attr("title", "Shorten this link with TinyURL"),
       2500);
     return null;
   },
