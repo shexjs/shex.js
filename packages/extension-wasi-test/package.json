@@ -40,7 +40,7 @@
     "@shexjs/term": "^1.0.0-alpha.28",
     "@shexjs/validator": "^1.0.0-alpha.30",
     "chai": "^6.2.2",
-    "mocha": "^10.7.3",
+    "mocha": "^12.0.0",
     "n3": "^2.7.4",
     "wabt": "^1.0.36"
   },
