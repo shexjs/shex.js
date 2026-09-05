@@ -10,7 +10,7 @@
 "use strict";
 
 const {expect} = require("chai");
-const ShExWriter = require("@shexjs/writer");
+const ShExCWriter = require("@shexjs/writer");
 
 const S1 = "http://a.example/S1", p1 = "http://a.example/p1";
 const decl = (id, shapeExpr) => ({type: "Schema", shapes: [{type: "ShapeDecl", id, shapeExpr}]});
@@ -34,7 +34,7 @@ function collector () {
 function write (schema, options) {
   let text = null, error = null;
   try {
-    new ShExWriter(Object.assign({simplifyParentheses: true}, options))
+    new ShExCWriter(Object.assign({simplifyParentheses: true}, options))
       .writeSchema(schema, (e, t) => { if (e) error = e; else text = t; });
   } catch (e) { error = e; }
   return {text, error};
@@ -46,7 +46,7 @@ describe("writer API", function () {
 
     it("should write to a stream it was given", function () {
       const out = collector();
-      new ShExWriter(out, {simplifyParentheses: true}).writeSchema(ONE_DOT);
+      new ShExCWriter(out, {simplifyParentheses: true}).writeSchema(ONE_DOT);
       expect(out.text()).to.include("<" + S1 + ">");
       expect(out.text()).to.include("<" + p1 + ">");
       expect(out.ended, "and close it, by default").to.equal(true);
@@ -56,7 +56,7 @@ describe("writer API", function () {
      * open. */
     it("should leave the stream open with end: false", function () {
       const out = collector();
-      const writer = new ShExWriter(out, {simplifyParentheses: true, end: false});
+      const writer = new ShExCWriter(out, {simplifyParentheses: true, end: false});
       writer.writeSchema(ONE_DOT);
       expect(out.text()).to.include("<" + S1 + ">");
       expect(out.ended).to.equal(false);
@@ -65,13 +65,13 @@ describe("writer API", function () {
     it("should still report done when it doesn't close the stream", function () {
       const out = collector();
       let called = 0;
-      new ShExWriter(out, {end: false}).end(() => ++called);
+      new ShExCWriter(out, {end: false}).end(() => ++called);
       expect(called, "exactly once").to.equal(1);
       expect(out.ended).to.equal(false);
     });
 
     it("should refuse to write after end()", function () {
-      const writer = new ShExWriter({simplifyParentheses: true});
+      const writer = new ShExCWriter({simplifyParentheses: true});
       writer.end();
       expect(() => writer.addShape(shape(tc()), S1))
         .to.throw(/Cannot write because the writer has been closed/);
@@ -84,7 +84,7 @@ describe("writer API", function () {
      * schema uses the writer -- there is no ShExJ document to hand it. */
     it("should take prefixes and shapes one at a time", function () {
       const out = collector();
-      const writer = new ShExWriter(out, {simplifyParentheses: true});
+      const writer = new ShExCWriter(out, {simplifyParentheses: true});
       writer.addPrefix("ex", "http://a.example/");
       writer.addShape(shape(tc()), S1);
       writer.end();
@@ -95,7 +95,7 @@ describe("writer API", function () {
 
     it("should take a list of shapes", function () {
       const out = collector();
-      const writer = new ShExWriter(out, {simplifyParentheses: true});
+      const writer = new ShExCWriter(out, {simplifyParentheses: true});
       writer.addShapes([
         {shape: shape(tc()), name: S1},
         {shape: shape(tc({predicate: "http://a.example/p2"})), name: "http://a.example/S2"},
@@ -133,7 +133,7 @@ describe("writer API", function () {
   /* One shape expression, returned rather than written: how an error message
    * quotes the constraint a node didn't satisfy. */
   it("should write a shape expression on its own", function () {
-    const writer = new ShExWriter({simplifyParentheses: true, prefixes: {ex: "http://a.example/"}});
+    const writer = new ShExCWriter({simplifyParentheses: true, prefixes: {ex: "http://a.example/"}});
     expect(writer.writeShapeExpr({type: "NodeConstraint", datatype: "http://a.example/dt", mininclusive: 3}))
       .to.equal("ex:dt mininclusive 3");
     expect(writer.writeShapeExpr(shape(tc()), true)).to.include("ex:p1");
@@ -201,7 +201,7 @@ describe("writer API", function () {
     /* the error thrower is replaceable, e.g. to collect rather than throw */
     it("should use the error function it was given", function () {
       const said = [];
-      const writer = new ShExWriter({
+      const writer = new ShExCWriter({
         simplifyParentheses: true,
         error: (func, str) => { said.push(typeof func === "function" ? str : func); },
       });

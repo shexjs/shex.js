@@ -60,7 +60,7 @@ const QueryDbModules: QueryDbModule[] = [
 ];
 import * as ShExTerm from "@shexjs/term";
 import * as ShExParser from "@shexjs/parser";
-import ShExWriter = require("@shexjs/writer"); // for verbose output
+import ShExCWriter = require("@shexjs/writer"); // for verbose output
 import {ShExValidator, resultMapToShapeExprTest} from "@shexjs/validator";
 import ShapeMap = require("shape-map");
 const N3 = require("n3");
@@ -553,7 +553,7 @@ async function findNodesAndValidate (loaded: any, parms: any, options: any, sche
     let tz = shapeMap.map((p: any) => { return p.node + " AS " + p.shape; });
     tz = tz.length > 1 ? JSON.stringify(tz) : tz[0];
     let w: string | undefined;
-    new ShExWriter({simplifyParentheses: false }).
+    new ShExCWriter({simplifyParentheses: false }).
       writeSchema(loaded.schema, function (error: any, text: string) {
         if (error) throw error;
         else w = text;
