@@ -440,7 +440,12 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
           });
           return nextThreads.concat(sub);
         }, []));
-      }, [th]);
+        // Seed this EachOf's expression list from a fresh copy of `th` (its
+        // matching state, but no inherited `.solution`), so a *nested* EachOf
+        // starts its own solution from [] rather than aliasing the parent
+        // EachOf's expressions into its first sibling (issue #70).  `th` itself
+        // is left intact for the outer EachOf's own accumulation.
+      }, [new RegexpThread(ownPool(th.avail), th.errors, th.matched)]);
     }, semActHandler, this.mayMerge));
   }
 

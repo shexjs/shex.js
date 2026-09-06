@@ -154,4 +154,20 @@ describe("eval-threaded-nerr", function () {
     expect(result.status).to.equal("nonconformant");
     expect(JSON.stringify(result.appinfo)).to.include("MissingProperty");
   });
+
+  // #70: a nested group must build its own solution, not inherit the outer
+  // group's expressions into its first sibling (which used to alias the outer
+  // EachOf's leading constraint into the nested EachOfSolution).
+  it("does not alias the outer EachOf's solution into a nested group (#70)", function () {
+    const result = validate(
+      "PREFIX : <http://a.example/>\nstart = @<P>\n<P> { :t . ; ( :g . ; :f . ) }",
+      'PREFIX : <http://a.example/>\n:x :t 1 ; :g 2 ; :f 3 .');
+    expect(result.status).to.equal("conformant");
+    const eachOfs = [];
+    (function walk (o) { if (o && typeof o === "object") { if (o.type === "EachOfSolution") eachOfs.push(o); Object.values(o).forEach(walk); } })(result);
+    // the nested (:g ; :f) group is the EachOfSolution whose expressions are all triples
+    const nested = eachOfs.find(e => e.expressions.every(x => x.type === "TripleConstraintSolutions"));
+    expect(nested, "nested group solution").to.exist;
+    expect(nested.expressions.map(x => x.predicate)).to.eql([base + "g", base + "f"]);
+  });
 });
