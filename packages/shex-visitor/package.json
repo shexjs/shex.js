@@ -26,7 +26,8 @@
   },
   "dependencies": {
     "@rdfjs/types": "^2.0.1",
-    "@shexjs/term": "^1.0.0-alpha.28"
+    "@shexjs/term": "^1.0.0-alpha.28",
+    "@types/shexj": "^2.1.7"
   },
   "scripts": {
     "build": "tsc",

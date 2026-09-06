@@ -72,7 +72,7 @@ function register (validator: any, api: any) {
        * @return {bool} false if the extension failed or did not accept the ctx object.
        */
       dispatch: function (code: any, ctx: any, extensionStorage: any) {
-        function fail (msg: any) { const e = Error(msg); Error.captureStackTrace(e, fail); throw e; }
+        function fail (msg: any) { const e = Error(msg); if ("captureStackTrace" in Error) Error.captureStackTrace(e, fail); throw e; }
         function getPrefixedName(bindingName: any) {
            // already have the fully prefixed binding name ready to go
            if (typeof bindingName === "string") return bindingName;

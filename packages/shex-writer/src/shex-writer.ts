@@ -703,7 +703,7 @@ function _throwError (func: Function | string, str?: string): never {
     func = _throwError;
   }
   const e = new Error(str);
-  Error.captureStackTrace(e, func as Function);
+  if ("captureStackTrace" in Error) Error.captureStackTrace(e, func as Function);
   throw e;
 }
 

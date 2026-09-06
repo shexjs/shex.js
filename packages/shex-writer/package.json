@@ -23,6 +23,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@types/shexj": "^2.1.7",
     "relativize-url": "^0.1.0"
   },
   "scripts": {
