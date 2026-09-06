@@ -170,4 +170,35 @@ describe("eval-threaded-nerr", function () {
     expect(nested, "nested group solution").to.exist;
     expect(nested.expressions.map(x => x.predicate)).to.eql([base + "g", base + "f"]);
   });
+
+  /* #16: a Kleene star (or plus) over a *nullable* body -- here a OneOf whose
+   * every branch (`xsd:integer*`, `xsd:string*`) can match zero triples -- used
+   * to iterate the empty match forever and hang both engines.  The empty
+   * iteration must not repeat: the string branch matches "final" once, the
+   * outer star matches once, every triple is consumed, and validation
+   * terminates conformant.  A regression would hang rather than mis-assert, so
+   * the timeout is the real guard. */
+  it("terminates on a repeated nullable body and conforms, both engines (#16)", function () {
+    this.timeout(5000);
+    const schemaText = [
+      "PREFIX ex: <http://a.example/>",
+      "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>",
+      "ex:ObservationShape { ( ex:status xsd:integer* | ex:status xsd:string* )* }",
+    ].join("\n");
+    const dataText = 'PREFIX ex: <http://a.example/>\nex:Obs1 ex:status "final" .';
+    const node = base + "Obs1", shape = base + "ObservationShape";
+
+    // the default (threaded) engine, via the helper
+    const threaded = validate(schemaText, dataText, node, shape);
+    expect(threaded.status, JSON.stringify(threaded.appinfo)).to.equal("conformant");
+
+    // and the NFA engine, which the same empty loop hung
+    const schema = ShExParser.construct(base, {}, {index: true}).parse(schemaText);
+    const graph = new N3.Store();
+    graph.addQuads(new N3.Parser({baseIRI: base, format: "text/turtle"}).parse(dataText));
+    const simple = new ShExValidator(schema, RdfJsDb(graph),
+                                     {regexModule: require("@shexjs/eval-simple-1err").RegexpModule})
+          .validateShapeMap([{node, shape}])[0];
+    expect(simple.status, JSON.stringify(simple.appinfo)).to.equal("conformant");
+  });
 });
