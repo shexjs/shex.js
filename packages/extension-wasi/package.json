@@ -20,7 +20,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shexSpec/shex.js.git",
+    "url": "git+https://github.com/shexjs/shex.js.git",
     "directory": "packages/extension-wasi"
   },
   "dependencies": {
