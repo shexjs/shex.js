@@ -382,7 +382,7 @@ export class ShExVisitor {
                         return "\"" + p + "\"";
                       }).join(",") +
                       " in " + context + ": " + JSON.stringify(obj));
-      Error.captureStackTrace(e, captureFrame);
+      if ("captureStackTrace" in Error) Error.captureStackTrace(e, captureFrame);
       throw e;
     }
   }

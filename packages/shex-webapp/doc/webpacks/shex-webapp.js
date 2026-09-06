@@ -34954,7 +34954,8 @@ const prepareParser = function (baseIRI, schemaMeta, dataMeta) {
             const lineNo = "lexer" in parser.yy ? parser.yy.lexer.yylineno + 1 : 1;
             const pos = "lexer" in parser.yy ? parser.yy.lexer.showPosition() : "";
             const t = Error(`${baseIRI}(${lineNo}): ${e.message}\n${pos}`);
-            Error.captureStackTrace(t, runParser);
+            if ("captureStackTrace" in Error)
+                Error.captureStackTrace(t, runParser);
             // where it went wrong, for an editor to mark: the parser's own
             // location of the offending token, else the lexer's
             const loc = (e.hash && e.hash.loc) || ("lexer" in parser.yy && parser.yy.lexer.yylloc) || null;
@@ -58529,7 +58530,8 @@ class ShExVisitor {
                     return "\"" + p + "\"";
                 }).join(",") +
                 " in " + context + ": " + JSON.stringify(obj));
-            Error.captureStackTrace(e, captureFrame);
+            if ("captureStackTrace" in Error)
+                Error.captureStackTrace(e, captureFrame);
             throw e;
         }
     }
@@ -59213,7 +59215,8 @@ function _throwError(func, str) {
         func = _throwError;
     }
     const e = new Error(str);
-    Error.captureStackTrace(e, func);
+    if ("captureStackTrace" in Error)
+        Error.captureStackTrace(e, func);
     throw e;
 }
 // Expect property p with value v in object o

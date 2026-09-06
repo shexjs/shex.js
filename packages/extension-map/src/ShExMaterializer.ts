@@ -1230,7 +1230,7 @@ function noop () {  }
 function runtimeError (...args: any[]) {
   const errorStr = args.join("");
   const e = new Error("Runtime error: " + errorStr);
-  Error.captureStackTrace(e, runtimeError);
+  if ("captureStackTrace" in Error) Error.captureStackTrace(e, runtimeError);
   throw e;
 }
 

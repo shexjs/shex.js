@@ -1693,7 +1693,8 @@ const ShExMapMaterializerCjsModule = function (config) {
     function runtimeError(...args) {
         const errorStr = args.join("");
         const e = new Error("Runtime error: " + errorStr);
-        Error.captureStackTrace(e, runtimeError);
+        if ("captureStackTrace" in Error)
+            Error.captureStackTrace(e, runtimeError);
         throw e;
     }
     return {
@@ -3558,7 +3559,8 @@ const ShExMapCjsModule = function (config) {
              * @return {bool} false if the extension failed or did not accept the ctx object.
              */
             dispatch: function (code, ctx, extensionStorage) {
-                function fail(msg) { const e = Error(msg); Error.captureStackTrace(e, fail); throw e; }
+                function fail(msg) { const e = Error(msg); if ("captureStackTrace" in Error)
+                    Error.captureStackTrace(e, fail); throw e; }
                 function getPrefixedName(bindingName) {
                     // already have the fully prefixed binding name ready to go
                     if (typeof bindingName === "string")

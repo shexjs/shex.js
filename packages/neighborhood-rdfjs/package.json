@@ -27,7 +27,8 @@
   "dependencies": {
     "@shexjs/eval-validator-api": "^1.0.0-alpha.31",
     "@shexjs/neighborhood-api": "^1.0.0-alpha.31",
-    "@shexjs/term": "^1.0.0-alpha.28"
+    "@shexjs/term": "^1.0.0-alpha.28",
+    "@types/shexj": "^2.1.7"
   },
   "scripts": {
     "build": "tsc",
