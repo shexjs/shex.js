@@ -327,6 +327,10 @@ class RegExpThread {
       public stack = [],
       public matched: TriplesMatch[] = [],
       public errors = [],
+      /** for each repeat this thread is inside, the triple count when its
+       * current iteration began -- so an iteration that returns to the Rept
+       * with the count unchanged can be recognised as an empty match (#16). */
+      public reptStarts: Repeats = {},
   ) { }
 }
 
@@ -730,10 +734,24 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
         if (!(stateNo in thread.repeats))
           thread.repeats[stateNo] = 0;
         const repetitions = thread.repeats[stateNo];
+        // Triples consumed so far.  An iteration of a nullable body can come
+        // back to this Rept without having grown that count -- it matched
+        // empty -- and re-entering the body would match empty again forever
+        // (issue #16): the outer `*`/`+` over such a body spun off a thread
+        // with an ever-larger repeat counter each generation and never
+        // drained the worklist.  So the back-edge is barred once an iteration
+        // consumes nothing; the empty match can still pad any minimum, so the
+        // exit is offered even below min.
+        const consumedNow = thread.matched.reduce((n, m) => n + m.triples.length, 0);
+        const iterStart = thread.reptStarts[stateNo];
+        const emptyIteration = iterStart !== undefined && iterStart === consumedNow;
         // add(r < s.min ? outs[0] : r >= s.min && < s.max ? outs[0], outs[1] : outs[1])
-        if (repetitions < s.max!)
-          Array.prototype.push.apply(ret, this.addstate(list, s.outs[0], this.incrmRepeat(thread, stateNo), seen)); // outs[0] to repeat
-        if (repetitions >= s.min && repetitions <= s.max)
+        if (repetitions < s.max! && !emptyIteration) {
+          const entered = this.incrmRepeat(thread, stateNo);   // outs[0] to repeat
+          entered.reptStarts[stateNo] = consumedNow;           // this iteration starts here
+          Array.prototype.push.apply(ret, this.addstate(list, s.outs[0], entered, seen));
+        }
+        if ((repetitions >= s.min || emptyIteration) && repetitions <= s.max)
           Array.prototype.push.apply(ret, this.addstate(list, s.outs[1], this.resetRepeat(thread, stateNo), seen)); // outs[1] when done
         return ret;
       } else {
@@ -746,7 +764,8 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
             ownPool(thread.avail), // a thread spends its own triples: see ownPool
             thread.stack,
             thread.matched,
-            thread.errors
+            thread.errors,
+            thread.reptStarts
         )) - 1];
       }
     }
@@ -757,13 +776,21 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
           r[k] = thread.repeats[k];
         return r;
       }, {});
+      // leaving the repeat forgets where its iteration began, so a later
+      // re-entry (an enclosing repeat) starts its empty-match test afresh.
+      const trimmedStarts = Object.keys(thread.reptStarts).reduce<Repeats>((r, k) => {
+        if (parseInt(k) !== repeatedState)
+          r[k] = thread.reptStarts[k];
+        return r;
+      }, {});
       return new RegExpThread(
           thread.state/*???*/,
           trimmedRepeats,
           ownPool(thread.avail),
           thread.stack,
           thread.matched,
-          []
+          [],
+          trimmedStarts
       );
     }
 
@@ -778,7 +805,8 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
         ownPool(thread.avail),
         thread.stack,
         thread.matched,
-        []
+        [],
+        Object.assign({}, thread.reptStarts) // own copy: the caller stamps this iteration's start
       );
     }
 
