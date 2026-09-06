@@ -349,6 +349,7 @@ class ShExBaseApp {
             close: dismissModal
         });
         $("#about-button").click((evt) => {
+            this.toggleControls(); // close the menu; the dialog replaces it (issue #318)
             $("#about").dialog("open");
         });
         $("#gistHelp").dialog({
