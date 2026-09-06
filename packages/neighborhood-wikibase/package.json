@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/neighborhood-wikibase",
-  "version": "1.0.0-alpha.30",
+  "version": "1.0.0-alpha.31",
   "files": [
     "lib",
     "src"
@@ -25,7 +25,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@shexjs/neighborhood-api": "^1.0.0-alpha.30",
+    "@shexjs/neighborhood-api": "^1.0.0-alpha.31",
     "n3": "^2.7.4"
   },
   "scripts": {

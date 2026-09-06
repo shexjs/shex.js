@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/extension-wasi-test",
-  "version": "1.0.0-alpha.30",
+  "version": "1.0.0-alpha.31",
   "files": [
     "lib",
     "src",
@@ -34,11 +34,11 @@
     "test": "../../node_modules/.bin/mocha test/*test.js -C -R dot"
   },
   "devDependencies": {
-    "@shexjs/extension-test": "^1.0.0-alpha.30",
-    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.30",
-    "@shexjs/parser": "^1.0.0-alpha.30",
+    "@shexjs/extension-test": "^1.0.0-alpha.31",
+    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.31",
+    "@shexjs/parser": "^1.0.0-alpha.31",
     "@shexjs/term": "^1.0.0-alpha.28",
-    "@shexjs/validator": "^1.0.0-alpha.30",
+    "@shexjs/validator": "^1.0.0-alpha.31",
     "chai": "^6.2.2",
     "mocha": "^12.0.0",
     "n3": "^2.7.4",

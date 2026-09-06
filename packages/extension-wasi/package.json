@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/extension-wasi",
-  "version": "1.0.0-alpha.30",
+  "version": "1.0.0-alpha.31",
   "files": [
     "lib",
     "src",
@@ -34,8 +34,8 @@
     "access": "public"
   },
   "devDependencies": {
-    "@shexjs/extension-wasi-test": "^1.0.0-alpha.30",
-    "@shexjs/webapp": "^1.0.0-alpha.30",
+    "@shexjs/extension-wasi-test": "^1.0.0-alpha.31",
+    "@shexjs/webapp": "^1.0.0-alpha.31",
     "terser-webpack-plugin": "*",
     "webpack": "*",
     "webpack-cli": "*"

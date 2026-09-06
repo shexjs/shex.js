@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/neighborhood-rdfjs",
-  "version": "1.0.0-alpha.30",
+  "version": "1.0.0-alpha.31",
   "files": [
     "lib",
     "src"
@@ -25,8 +25,8 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@shexjs/eval-validator-api": "^1.0.0-alpha.30",
-    "@shexjs/neighborhood-api": "^1.0.0-alpha.30",
+    "@shexjs/eval-validator-api": "^1.0.0-alpha.31",
+    "@shexjs/neighborhood-api": "^1.0.0-alpha.31",
     "@shexjs/term": "^1.0.0-alpha.28"
   },
   "scripts": {

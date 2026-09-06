@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/extension-reduce",
-  "version": "1.0.0-alpha.30",
+  "version": "1.0.0-alpha.31",
   "files": [
     "doc",
     "examples",
@@ -47,12 +47,12 @@
   "types": "./src/shex-extension-reduce.ts",
   "dependencies": {},
   "devDependencies": {
-    "@shexjs/extension-reduce-js": "^1.0.0-alpha.30",
-    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.30",
-    "@shexjs/parser": "^1.0.0-alpha.30",
-    "@shexjs/semact-overlay": "^1.0.0-alpha.30",
-    "@shexjs/validator": "^1.0.0-alpha.30",
-    "@shexjs/webapp": "^1.0.0-alpha.30",
+    "@shexjs/extension-reduce-js": "^1.0.0-alpha.31",
+    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.31",
+    "@shexjs/parser": "^1.0.0-alpha.31",
+    "@shexjs/semact-overlay": "^1.0.0-alpha.31",
+    "@shexjs/validator": "^1.0.0-alpha.31",
+    "@shexjs/webapp": "^1.0.0-alpha.31",
     "n3": "^2.7.4"
   }
 }
