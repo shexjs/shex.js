@@ -4359,13 +4359,18 @@ class NfaToString {
     }
 }
 class RegExpThread {
-    constructor(state = -1, repeats = {}, avail = new Map(), stack = [], matched = [], errors = []) {
+    constructor(state = -1, repeats = {}, avail = new Map(), stack = [], matched = [], errors = [], 
+    /** for each repeat this thread is inside, the triple count when its
+     * current iteration began -- so an iteration that returns to the Rept
+     * with the count unchanged can be recognised as an empty match (#16). */
+    reptStarts = {}) {
         this.state = state;
         this.repeats = repeats;
         this.avail = avail;
         this.stack = stack;
         this.matched = matched;
         this.errors = errors;
+        this.reptStarts = reptStarts;
     }
 }
 /**
@@ -4734,10 +4739,24 @@ class EvalSimple1ErrRegexEngine {
             if (!(stateNo in thread.repeats))
                 thread.repeats[stateNo] = 0;
             const repetitions = thread.repeats[stateNo];
+            // Triples consumed so far.  An iteration of a nullable body can come
+            // back to this Rept without having grown that count -- it matched
+            // empty -- and re-entering the body would match empty again forever
+            // (issue #16): the outer `*`/`+` over such a body spun off a thread
+            // with an ever-larger repeat counter each generation and never
+            // drained the worklist.  So the back-edge is barred once an iteration
+            // consumes nothing; the empty match can still pad any minimum, so the
+            // exit is offered even below min.
+            const consumedNow = thread.matched.reduce((n, m) => n + m.triples.length, 0);
+            const iterStart = thread.reptStarts[stateNo];
+            const emptyIteration = iterStart !== undefined && iterStart === consumedNow;
             // add(r < s.min ? outs[0] : r >= s.min && < s.max ? outs[0], outs[1] : outs[1])
-            if (repetitions < s.max)
-                Array.prototype.push.apply(ret, this.addstate(list, s.outs[0], this.incrmRepeat(thread, stateNo), seen)); // outs[0] to repeat
-            if (repetitions >= s.min && repetitions <= s.max)
+            if (repetitions < s.max && !emptyIteration) {
+                const entered = this.incrmRepeat(thread, stateNo); // outs[0] to repeat
+                entered.reptStarts[stateNo] = consumedNow; // this iteration starts here
+                Array.prototype.push.apply(ret, this.addstate(list, s.outs[0], entered, seen));
+            }
+            if ((repetitions >= s.min || emptyIteration) && repetitions <= s.max)
                 Array.prototype.push.apply(ret, this.addstate(list, s.outs[1], this.resetRepeat(thread, stateNo), seen)); // outs[1] when done
             return ret;
         }
@@ -4747,7 +4766,7 @@ class EvalSimple1ErrRegexEngine {
             // }, false))
             return [list.push(new RegExpThread(// return [new list element index]
                 stateNo, thread.repeats, ownPool(thread.avail), // a thread spends its own triples: see ownPool
-                thread.stack, thread.matched, thread.errors)) - 1];
+                thread.stack, thread.matched, thread.errors, thread.reptStarts)) - 1];
         }
     }
     resetRepeat(thread, repeatedState) {
@@ -4756,14 +4775,22 @@ class EvalSimple1ErrRegexEngine {
                 r[k] = thread.repeats[k];
             return r;
         }, {});
-        return new RegExpThread(thread.state /*???*/, trimmedRepeats, ownPool(thread.avail), thread.stack, thread.matched, []);
+        // leaving the repeat forgets where its iteration began, so a later
+        // re-entry (an enclosing repeat) starts its empty-match test afresh.
+        const trimmedStarts = Object.keys(thread.reptStarts).reduce((r, k) => {
+            if (parseInt(k) !== repeatedState)
+                r[k] = thread.reptStarts[k];
+            return r;
+        }, {});
+        return new RegExpThread(thread.state /*???*/, trimmedRepeats, ownPool(thread.avail), thread.stack, thread.matched, [], trimmedStarts);
     }
     incrmRepeat(thread, repeatedState) {
         const incrmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
             r[k] = parseInt(k) == repeatedState ? thread.repeats[k] + 1 : thread.repeats[k];
             return r;
         }, {});
-        return new RegExpThread(thread.state /*???*/, incrmedRepeats, ownPool(thread.avail), thread.stack, thread.matched, []);
+        return new RegExpThread(thread.state /*???*/, incrmedRepeats, ownPool(thread.avail), thread.stack, thread.matched, [], Object.assign({}, thread.reptStarts) // own copy: the caller stamps this iteration's start
+        );
     }
     stateString(state, repeats) {
         const rs = Object.keys(repeats).map(rpt => {
@@ -5484,11 +5511,17 @@ class EvalThreadedNErrRegexEngine {
             minmax.semActs = groupTE.semActs;
         if (groupTE.annotations !== undefined)
             minmax.annotations = groupTE.annotations;
+        // triples a thread has consumed so far, the yardstick for progress: an
+        // iteration that matches a nullable body empty returns with this count
+        // unchanged.
+        const consumed = (th) => th.matched.reduce((n, m) => n + m.triples.length, 0);
         for (; repeated < max && !errOut; ++repeated) {
-            let inner = [];
+            let inner = []; // iterations that advanced: consumed >= 1
+            let stalled = false; // some thread matched the body empty
             let stumbled = [];
             for (let t = 0; t < newThreads.length; ++t) {
                 const newt = newThreads[t];
+                const before = consumed(newt);
                 const sub = evalGroup(newt);
                 if (sub.length > 0 && sub[0].errors.length === 0) { // all subs pass or all fail
                     sub.forEach(newThread => {
@@ -5501,7 +5534,18 @@ class EvalThreadedNErrRegexEngine {
                             solutions: solutions
                         }, minmax);
                     });
-                    inner = inner.concat(sub);
+                    // Only an iteration that consumed a triple may go round again.  One
+                    // that consumed none matched a nullable body empty, and re-running
+                    // it would match empty forever (issue #16): a `*`/`+` over a body
+                    // that can iterate empty never emptied `inner`, so the loop never
+                    // ended.  The empty match is a fixpoint -- the frontier reached
+                    // before it already stands as the result, and an empty match pads
+                    // to any minimum without consuming more -- so it carries no thread
+                    // onward; it only records, in `stalled`, that the body was nullable.
+                    sub.forEach(s => { if (consumed(s) > before)
+                        inner.push(s);
+                    else
+                        stalled = true; });
                 }
                 else {
                     // This thread can't take another iteration.  Another might: the
@@ -5515,9 +5559,11 @@ class EvalThreadedNErrRegexEngine {
                 }
             }
             if (inner.length === 0)
-                // none of them could: short of the minimum that is the failure,
-                // and past it the iterations already made stand
-                return repeated < min ? stumbled : newThreads;
+                // Nothing advanced.  If a nullable body matched empty (stalled), the
+                // repeat is satisfied at this level and the frontier already reached
+                // stands.  Otherwise the body failed outright: short of the minimum
+                // that is the failure, and past it the iterations already made stand.
+                return stalled || repeated >= min ? newThreads : stumbled;
             newThreads = mayMerge ? EvalThreadedNErrRegexEngine.mergeEquivalent(inner) : inner;
         }
         const groupSemActs = semActsOn(semActHandler, groupTE);

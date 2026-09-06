@@ -623,11 +623,18 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
       minmax.semActs = groupTE.semActs;
     if (groupTE.annotations !== undefined)
       minmax.annotations = groupTE.annotations;
+    // triples a thread has consumed so far, the yardstick for progress: an
+    // iteration that matches a nullable body empty returns with this count
+    // unchanged.
+    const consumed = (th: RegexpThread): number =>
+        th.matched.reduce((n, m) => n + m.triples.length, 0);
     for (; repeated < max && !errOut; ++repeated) {
-      let inner: RegexpThread[] = [];
+      let inner: RegexpThread[] = [];  // iterations that advanced: consumed >= 1
+      let stalled = false;             // some thread matched the body empty
       let stumbled: RegexpThread[] = [];
       for (let t = 0; t < newThreads.length; ++t) {
         const newt = newThreads[t];
+        const before = consumed(newt);
         const sub = evalGroup(newt);
         if (sub.length > 0 && sub[0].errors.length === 0) { // all subs pass or all fail
           sub.forEach(newThread => {
@@ -641,7 +648,15 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
               solutions: solutions
             }, minmax) as groupSolutions;
           });
-          inner = inner.concat(sub);
+          // Only an iteration that consumed a triple may go round again.  One
+          // that consumed none matched a nullable body empty, and re-running
+          // it would match empty forever (issue #16): a `*`/`+` over a body
+          // that can iterate empty never emptied `inner`, so the loop never
+          // ended.  The empty match is a fixpoint -- the frontier reached
+          // before it already stands as the result, and an empty match pads
+          // to any minimum without consuming more -- so it carries no thread
+          // onward; it only records, in `stalled`, that the body was nullable.
+          sub.forEach(s => { if (consumed(s) > before) inner.push(s); else stalled = true; });
         } else {
           // This thread can't take another iteration.  Another might: the
           // threads here are the ways the last iteration could have gone,
@@ -654,9 +669,11 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
         }
       }
       if (inner.length === 0)
-        // none of them could: short of the minimum that is the failure,
-        // and past it the iterations already made stand
-        return repeated < min ? stumbled : newThreads;
+        // Nothing advanced.  If a nullable body matched empty (stalled), the
+        // repeat is satisfied at this level and the frontier already reached
+        // stands.  Otherwise the body failed outright: short of the minimum
+        // that is the failure, and past it the iterations already made stand.
+        return stalled || repeated >= min ? newThreads : stumbled;
       newThreads = mayMerge ? EvalThreadedNErrRegexEngine.mergeEquivalent(inner) : inner;
     }
     const groupSemActs = semActsOn(semActHandler, groupTE);
