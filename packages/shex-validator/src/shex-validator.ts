@@ -245,6 +245,33 @@ class EmptyTracker implements QueryTracker {
   exit(_term: RdfJsTerm, _shapeLabel: string, _res: shapeExprTest) { --this.depth; }
 }
 
+/** The recursion assumptions a result rests on, as a set of `node`@`shape`
+ * keys.  A `Recursion` node is the validator assuming a pair holds because it
+ * is already on the validation stack -- the greatest-fixed-point step -- so a
+ * result carrying one passed only on that assumption.  These are collected once
+ * when the result is memoized and indexed, so that if an assumed pair later
+ * fails the results resting on it can be dropped by lookup (issue #14).  The
+ * whole proof is walked, so an assumption made only through a nested sub-proof
+ * is included too; the key matches the one a failing pair computes for itself. */
+function recursionAssumptions (res: any, into: Set<string> = new Set<string>()): Set<string> {
+  if (res && typeof res === "object") {
+    if (res.type === "Recursion")
+      into.add(JSON.stringify(res.node) + "@" + res.shape);
+    else if (Array.isArray(res))
+      res.forEach(x => recursionAssumptions(x, into));
+    else
+      // Recurse only into data properties: a lazy accessor (the `repairs`
+      // getter builds its answer on first read, and this walk must not be
+      // that read) never holds a Recursion node anyway.
+      for (const key of Object.keys(res)) {
+        const desc = Object.getOwnPropertyDescriptor(res, key);
+        if (desc && desc.get === undefined)
+          recursionAssumptions(res[key], into);
+      }
+  }
+  return into;
+}
+
 type LabelOrStart = shapeDeclLabel | typeof NeighborhoodStart;
 
 interface SeenIndex {
@@ -562,6 +589,11 @@ export class ShExValidator {
   public readonly known: {
     [id: string]: shapeExprTest;
   }
+  /** For each recursion assumption (a `node`@`shape` a `Recursion` node stood
+   * in for), the `known` keys whose result rests on it -- so that when a pair
+   * fails, the results that assumed it can be evicted by lookup instead of
+   * rescanning the whole cache (issue #14). */
+  private readonly contingentOn: { [assumption: string]: Set<string> } = {};
   public readonly schema: InternalSchema;
   /** SemActDispatcherImpl rather than the interface: this is the one that
    * holds the overlay index, and the validator asks it about that. */
@@ -810,8 +842,27 @@ export class ShExValidator {
     if (!ctx.subGraph) {
       ctx.tracker.exit(focus, ctx.label, ret);
       delete ctx.seen[seenKey];
-      if ("known" in this)
+      if ("known" in this) {
         this.known[seenKey] = ret;
+        // Index the recursion assumptions this result rests on, so a later
+        // failure can evict what depended on it by lookup, not by rescanning.
+        for (const assumed of recursionAssumptions(ret))
+          (this.contingentOn[assumed] || (this.contingentOn[assumed] = new Set<string>())).add(seenKey);
+        // If this pair has itself failed, evict every memoized result that
+        // passed only by assuming it on the recursion stack: the recursion
+        // loophole of issue #14, where such a result was reused after its
+        // assumption had been refuted.  A genuinely-recursive result whose
+        // assumption holds is never evicted, so valid co-recursion still
+        // memoizes as before and its proofs are unchanged.
+        if ("errors" in ret) {
+          const failedKey = JSON.stringify(rdfJsTerm2Ld(focus)) + "@" + ctx.label;
+          const dependents = this.contingentOn[failedKey];
+          if (dependents !== undefined) {
+            dependents.forEach(k => { if (k !== seenKey) delete this.known[k]; });
+            delete this.contingentOn[failedKey];
+          }
+        }
+      }
     }
     return ret;
   }
