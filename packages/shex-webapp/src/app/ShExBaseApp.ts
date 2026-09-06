@@ -407,6 +407,7 @@ onDataLoad (): void {
     });
 
     $("#about-button").click((evt: any) => {
+      this.toggleControls(); // close the menu; the dialog replaces it (issue #318)
       $("#about").dialog("open");
     });
 
