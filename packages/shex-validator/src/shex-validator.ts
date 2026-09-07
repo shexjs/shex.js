@@ -245,24 +245,38 @@ class EmptyTracker implements QueryTracker {
   exit(_term: RdfJsTerm, _shapeLabel: string, _res: shapeExprTest) { --this.depth; }
 }
 
+/** Each memoized result's set of recursion assumptions, held off the result
+ * object in a WeakMap so it never shows up in a proof or perturbs a comparison
+ * (a property -- even a Symbol one -- is seen by chai's deep-equal), and is
+ * reclaimed with the result. */
+const assumptionMemo = new WeakMap<object, Set<string>>();
+
 /** The recursion assumptions a result rests on, as a set of `node`@`shape`
  * keys.  A `Recursion` node is the validator assuming a pair holds because it
  * is already on the validation stack -- the greatest-fixed-point step -- so a
- * result carrying one passed only on that assumption.  These are collected once
- * when the result is memoized and indexed, so that if an assumed pair later
- * fails the results resting on it can be dropped by lookup (issue #14).  The
- * whole proof is walked, so an assumption made only through a nested sub-proof
- * is included too; the key matches the one a failing pair computes for itself. */
+ * result carrying one passed only on that assumption.  These are collected when
+ * the result is memoized and indexed, so that if an assumed pair later fails
+ * the results resting on it can be dropped by lookup (issue #14); the key
+ * matches the one a failing pair computes for itself.
+ *
+ * A result that has itself been memoized carries its set on `assumptionsTag`:
+ * the walk takes it and stops rather than descending again.  Every
+ * separately-validated sub-result (a `@`-reference) is such a memoized object,
+ * so a result is walked over its own inline structure once, not re-walked
+ * through every ancestor -- which keeps indexing a large, deeply-recursive
+ * schema (e.g. ShExR) linear instead of quadratic.  Lazy accessors (the
+ * `repairs` getter builds its answer on first read, and this walk must not be
+ * that read) are skipped; they hold no Recursion node anyway. */
 function recursionAssumptions (res: any, into: Set<string> = new Set<string>()): Set<string> {
   if (res && typeof res === "object") {
-    if (res.type === "Recursion")
+    const memo = assumptionMemo.get(res);
+    if (memo !== undefined)
+      memo.forEach(k => into.add(k));
+    else if (res.type === "Recursion")
       into.add(JSON.stringify(res.node) + "@" + res.shape);
     else if (Array.isArray(res))
       res.forEach(x => recursionAssumptions(x, into));
     else
-      // Recurse only into data properties: a lazy accessor (the `repairs`
-      // getter builds its answer on first read, and this walk must not be
-      // that read) never holds a Recursion node anyway.
       for (const key of Object.keys(res)) {
         const desc = Object.getOwnPropertyDescriptor(res, key);
         if (desc && desc.get === undefined)
@@ -844,10 +858,14 @@ export class ShExValidator {
       delete ctx.seen[seenKey];
       if ("known" in this) {
         this.known[seenKey] = ret;
-        // Index the recursion assumptions this result rests on, so a later
-        // failure can evict what depended on it by lookup, not by rescanning.
-        for (const assumed of recursionAssumptions(ret))
-          (this.contingentOn[assumed] || (this.contingentOn[assumed] = new Set<string>())).add(seenKey);
+        // Collect the recursion assumptions this result rests on, stamp them on
+        // it (so an ancestor reuses them instead of re-walking this sub-proof),
+        // and index them so a later failure evicts its dependents by lookup.
+        const assumed = recursionAssumptions(ret);
+        if (ret && typeof ret === "object")
+          assumptionMemo.set(ret, assumed);
+        for (const a of assumed)
+          (this.contingentOn[a] || (this.contingentOn[a] = new Set<string>())).add(seenKey);
         // If this pair has itself failed, evict every memoized result that
         // passed only by assuming it on the recursion stack: the recursion
         // loophole of issue #14, where such a result was reused after its
