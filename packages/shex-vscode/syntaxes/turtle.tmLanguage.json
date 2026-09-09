@@ -1,0 +1,72 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Turtle",
+  "scopeName": "source.turtle",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#directive" },
+    { "include": "#string" },
+    { "include": "#iriref" },
+    { "include": "#datatype" },
+    { "include": "#langtag" },
+    { "include": "#number" },
+    { "include": "#boolean" },
+    { "include": "#rdf-type" },
+    { "include": "#prefixed-name" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+    "comment": {
+      "match": "#.*$",
+      "name": "comment.line.number-sign.turtle"
+    },
+    "directive": {
+      "match": "@?(?:prefix|base|PREFIX|BASE)\\b",
+      "name": "keyword.control.directive.turtle"
+    },
+    "string": {
+      "patterns": [
+        { "begin": "\"\"\"", "end": "\"\"\"", "name": "string.quoted.triple.double.turtle",
+          "patterns": [ { "match": "\\\\.", "name": "constant.character.escape.turtle" } ] },
+        { "begin": "'''", "end": "'''", "name": "string.quoted.triple.single.turtle",
+          "patterns": [ { "match": "\\\\.", "name": "constant.character.escape.turtle" } ] },
+        { "begin": "\"", "end": "\"", "name": "string.quoted.double.turtle",
+          "patterns": [ { "match": "\\\\.", "name": "constant.character.escape.turtle" } ] },
+        { "begin": "'", "end": "'", "name": "string.quoted.single.turtle",
+          "patterns": [ { "match": "\\\\.", "name": "constant.character.escape.turtle" } ] }
+      ]
+    },
+    "iriref": {
+      "match": "<[^<>\"{}|^`\\\\\\s]*>",
+      "name": "markup.underline.link.iri.turtle"
+    },
+    "datatype": {
+      "match": "\\^\\^",
+      "name": "keyword.operator.datatype.turtle"
+    },
+    "langtag": {
+      "match": "@[a-zA-Z]+(?:-[a-zA-Z0-9]+)*",
+      "name": "storage.type.language-tag.turtle"
+    },
+    "number": {
+      "match": "[+-]?(?:\\d+\\.\\d*|\\.\\d+|\\d+)(?:[eE][+-]?\\d+)?",
+      "name": "constant.numeric.turtle"
+    },
+    "boolean": {
+      "match": "\\b(?:true|false)\\b",
+      "name": "constant.language.boolean.turtle"
+    },
+    "rdf-type": {
+      "match": "(?<![\\w:])a(?![\\w:])",
+      "name": "keyword.other.rdf-type.turtle"
+    },
+    "prefixed-name": {
+      "match": "(?:[A-Za-z_][\\w.-]*)?:(?:[A-Za-z_][\\w.%-]*)?",
+      "name": "entity.name.tag.prefixed-name.turtle"
+    },
+    "punctuation": {
+      "match": "[;,.\\[\\]()]",
+      "name": "punctuation.separator.turtle"
+    }
+  }
+}

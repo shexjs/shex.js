@@ -1,0 +1,78 @@
+# A ShEx manifest in the conventional shex.js form (an array of entries; the
+# shex-webapp reads the same JSON/YAML). `schema`/`data` are inline; `schemaURL`/
+# `dataURL` name a sibling file. Grouped by `schemaLabel` for the REPL browser.
+#
+# The "clinical observation" entries are the shex-webapp default (ClinObs.shex),
+# trimmed to the offline, single-focus ones.
+
+- schemaLabel: clinical observation
+  schemaURL: ClinObs.shex
+  dataLabel: the least an Observation can be
+  data: |
+    PREFIX : <http://hl7.org/fhir/>
+    <Obs1> :subject <Patient2> .
+  queryMap: <Obs1>@START
+  status: conformant
+  comment: Everything in <ObservationShape> is optional but :subject.
+
+- schemaLabel: clinical observation
+  schemaURL: ClinObs.shex
+  dataLabel: a status and a subject
+  data: |
+    PREFIX : <http://hl7.org/fhir/>
+    <Obs1> :status "final" ; :subject <Patient2> .
+  queryMap: <Obs1>@START
+  status: conformant
+
+- schemaLabel: clinical observation
+  schemaURL: ClinObs.shex
+  dataLabel: no subject
+  data: |
+    PREFIX : <http://hl7.org/fhir/>
+    <Obs1> :status "final" .
+  queryMap: <Obs1>@START
+  status: nonconformant
+  comment: The one thing an Observation must have.
+
+- schemaLabel: clinical observation
+  schemaURL: ClinObs.shex
+  dataLabel: a status outside the value set
+  data: |
+    PREFIX : <http://hl7.org/fhir/>
+    <Obs1> :status "finally" ; :subject <Patient2> .
+  queryMap: <Obs1>@START
+  status: nonconformant
+
+- schemaLabel: user
+  schema: |
+    PREFIX : <http://ex/>
+    :User { :name . ; :age . ? }
+  dataLabel: name and age
+  data: |
+    PREFIX : <http://ex/>
+    :alice :name "Alice" ; :age 30 .
+  queryMap: <http://ex/alice>@<http://ex/User>
+  status: conformant
+
+- schemaLabel: user
+  schema: |
+    PREFIX : <http://ex/>
+    :User { :name . ; :age . ? }
+  dataLabel: name and age, as TriG
+  data: |
+    PREFIX : <http://ex/>
+    :alice :name "Alice" ; :age 30 .
+    GRAPH :prov { :alice :source :d1 }
+  queryMap: <http://ex/alice>@<http://ex/User>
+  status: conformant
+
+- schemaLabel: user
+  schema: |
+    PREFIX : <http://ex/>
+    :User { :name . ; :age . ? }
+  dataLabel: missing name
+  data: |
+    PREFIX : <http://ex/>
+    :alice :age 30 .
+  queryMap: <http://ex/alice>@<http://ex/User>
+  status: nonconformant

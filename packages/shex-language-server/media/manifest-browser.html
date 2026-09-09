@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-{{nonce}}'; font-src {{cspSource}};">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShEx Manifest Browser</title>
+<style>
+  /* Theme-aware: VS Code injects --vscode-* vars; JCEF gets the fallbacks. */
+  :root {
+    --fg: var(--vscode-foreground, #ddd);
+    --bg: var(--vscode-editor-background, #1e1e1e);
+    --muted: var(--vscode-descriptionForeground, #999);
+    --border: var(--vscode-panel-border, #444);
+    --sel: var(--vscode-list-activeSelectionBackground, #094771);
+    --sel-fg: var(--vscode-list-activeSelectionForeground, #fff);
+    --hover: var(--vscode-list-hoverBackground, #2a2d2e);
+    --accent: var(--vscode-textLink-foreground, #4daafc);
+    --ok: var(--vscode-testing-iconPassed, #4bb543);
+    --bad: var(--vscode-testing-iconFailed, #f14c4c);
+    --code-bg: var(--vscode-textCodeBlock-background, #0c0c0c);
+    --mono: var(--vscode-editor-font-family, ui-monospace, SFMono-Regular, Menlo, monospace);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--fg); background: var(--bg);
+         font-family: var(--vscode-font-family, system-ui, sans-serif); font-size: 13px;
+         display: flex; flex-direction: column; height: 100vh; }
+  header { display: flex; align-items: baseline; gap: 12px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  header h1 { font-size: 13px; font-weight: 600; margin: 0; }
+  header .file { color: var(--muted); font-family: var(--mono); }
+  header .spacer { flex: 1; }
+  button { font: inherit; color: var(--fg); background: var(--vscode-button-secondaryBackground, #3a3d41);
+           border: 1px solid var(--border); border-radius: 4px; padding: 3px 10px; cursor: pointer; }
+  button:hover { background: var(--hover); }
+  button.primary { background: var(--vscode-button-background, #0e639c); color: var(--vscode-button-foreground, #fff); border-color: transparent; }
+
+  .tablewrap { flex: 1 1 auto; overflow: auto; border-bottom: 1px solid var(--border); }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: 4px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; vertical-align: top; }
+  th { position: sticky; top: 0; background: var(--bg); color: var(--muted); font-weight: 600; z-index: 1; }
+  td.qm { font-family: var(--mono); white-space: nowrap; max-width: 30ch; overflow: hidden; text-overflow: ellipsis; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: var(--hover); }
+  tbody tr.sel { background: var(--sel); color: var(--sel-fg); }
+  .badge { display: inline-block; min-width: 5.5em; text-align: center; padding: 1px 6px; border-radius: 10px;
+           font-size: 11px; border: 1px solid var(--border); color: var(--muted); }
+  .badge.pass { background: color-mix(in srgb, var(--ok) 22%, transparent); color: var(--ok); border-color: transparent; }
+  .badge.fail { background: color-mix(in srgb, var(--bad) 22%, transparent); color: var(--bad); border-color: transparent; }
+  .badge.want-conformant::before { content: "expects ✓ "; color: var(--muted); }
+  .badge.want-nonconformant::before { content: "expects ✗ "; color: var(--muted); }
+
+  .detail { flex: 0 0 auto; max-height: 42vh; overflow: auto; padding: 10px 12px; }
+  .detail .empty { color: var(--muted); }
+  .panes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+  .pane h2 { font-size: 12px; color: var(--muted); margin: 0 0 4px; font-weight: 600; }
+  .pane h2 .label { color: var(--fg); }
+  pre { margin: 0; padding: 8px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 4px;
+        font-family: var(--mono); font-size: 12px; overflow: auto; max-height: 40vh; white-space: pre; }
+  .assoc { width: 100%; margin-top: 6px; }
+  .assoc td, .assoc th { white-space: normal; }
+  .assoc .node, .assoc .shape { font-family: var(--mono); }
+  .verdict { font-weight: 600; }
+  .verdict.pass { color: var(--ok); }
+  .verdict.fail { color: var(--bad); }
+  .err { color: var(--bad); font-family: var(--mono); white-space: pre-wrap; }
+  .hint { color: var(--muted); margin-top: 4px; }
+  .qmline { margin-top: 4px; color: var(--muted); }
+  .qmline code, .detail code { font-family: var(--mono); color: var(--fg); }
+  .editors-hint { margin-top: 10px; color: var(--muted); max-width: 70ch; }
+  #rerun { margin-left: 8px; padding: 1px 8px; }
+  .neigh { color: var(--vscode-editorWarning-foreground, #cca700); }
+</style>
+</head>
+<body>
+  <header>
+    <h1>ShEx Manifest</h1>
+    <span class="file" id="file">—</span>
+    <span class="spacer"></span>
+    <span id="tally" class="file"></span>
+    <button id="runall" class="primary">Run all</button>
+    <button id="reload">Reload</button>
+  </header>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>#</th><th>schema</th><th>data</th><th>queryMap</th><th>expected</th><th>result</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="6" class="empty" style="padding:12px">Loading…</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="detail" id="detail"><div class="empty">Click an entry (or press Enter) to open its schema &amp; data in editors and validate.</div></div>
+
+<script nonce="{{nonce}}">
+(function () {
+  "use strict";
+  var vscode = (typeof acquireVsCodeApi !== "undefined") ? acquireVsCodeApi() : null;
+  function post(msg) {
+    if (vscode) vscode.postMessage(msg);
+    else if (window.__shexHostPost) window.__shexHostPost(JSON.stringify(msg)); // JCEF bridge
+  }
+
+  var state = { entries: [], file: "", selected: -1, results: {} };
+
+  var $rows = document.getElementById("rows");
+  var $detail = document.getElementById("detail");
+  var $file = document.getElementById("file");
+  var $tally = document.getElementById("tally");
+
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  function badgeFor(i) {
+    var e = state.entries[i], r = state.results[i];
+    if (!r) return '<span class="badge want-' + esc(e.status) + '">' + esc(e.status || "?") + "</span>";
+    if (r.errors) return '<span class="badge fail" title="' + esc(r.errors.join("; ")) + '">error</span>';
+    return '<span class="badge ' + (r.pass ? "pass" : "fail") + '">' + (r.pass ? "PASS" : "FAIL") + "</span>";
+  }
+
+  function renderRows() {
+    if (!state.entries.length) { $rows.innerHTML = '<tr><td colspan="6" class="empty" style="padding:12px">No entries in this manifest.</td></tr>'; return; }
+    $rows.innerHTML = state.entries.map(function (e, i) {
+      return '<tr data-i="' + i + '"' + (i === state.selected ? ' class="sel"' : "") + ">"
+        + "<td>" + i + "</td>"
+        + "<td>" + esc(e.schemaLabel || "—") + "</td>"
+        + "<td>" + esc(e.dataLabel || "—") + (e.neighborhood ? ' <span class="neigh" title="needs a ' + esc(e.neighborhood) + ' source (network)">◆</span>' : "") + "</td>"
+        + '<td class="qm" title="' + esc(e.queryMap) + '">' + esc(e.queryMap) + "</td>"
+        + "<td>" + esc(e.status || "—") + "</td>"
+        + '<td id="badge-' + i + '">' + badgeFor(i) + "</td>"
+        + "</tr>";
+    }).join("");
+  }
+  function refreshBadge(i) { var el = document.getElementById("badge-" + i); if (el) el.innerHTML = badgeFor(i); updateTally(); }
+
+  function updateTally() {
+    var ran = 0, pass = 0;
+    state.entries.forEach(function (_, i) { var r = state.results[i]; if (r) { ran++; if (r.pass) pass++; } });
+    $tally.textContent = state.entries.length + " entries" + (ran ? " · " + pass + "/" + ran + " pass" : "");
+  }
+
+  function renderDetail() {
+    var i = state.selected;
+    if (i < 0) { $detail.innerHTML = '<div class="empty">Select an entry.</div>'; return; }
+    var e = state.entries[i], r = state.results[i];
+    var html = "<div><strong>" + esc(e.schemaLabel || "") + "</strong> / " + esc(e.dataLabel || "") + "</div>";
+    if (e.comment) html += '<div class="hint">' + esc(e.comment) + "</div>";
+    html += '<div class="qmline">queryMap: <code>' + esc(e.queryMap) + "</code></div>";
+    if (e.neighborhood) html += '<div class="neigh">Needs a ' + esc(e.neighborhood) + " source (network) — not run here.</div>";
+
+    if (r && r.errors) html += '<div class="err">' + esc(r.errors.join("\n")) + "</div>";
+    else if (r) {
+      var v = r.pass ? "pass" : "fail";
+      html += '<div style="margin-top:6px">Verdict: <span class="verdict ' + v + '">' + (r.pass ? "PASS" : "FAIL") + "</span>"
+        + ' <button id="rerun" title="Re-validate the (edited) schema/data editors">Re-run</button></div>';
+      html += '<table class="assoc"><thead><tr><th>node</th><th>shape</th><th>expected</th><th>actual</th><th></th></tr></thead><tbody>'
+        + (r.assocs || []).map(function (a) {
+            return "<tr><td class='node'>" + esc(a.node) + "</td><td class='shape'>" + esc(a.shape) + (a.negated ? " <em>(!)</em>" : "")
+              + "</td><td>" + esc(a.expected) + "</td><td>" + esc(a.actual) + "</td>"
+              + "<td class='verdict " + (a.pass ? "pass" : "fail") + "'>" + (a.pass ? "✓" : "✗") + "</td></tr>";
+          }).join("") + "</tbody></table>";
+      html += '<div class="editors-hint">schema and data are open in the editors — edit them there (highlighting, go-to-definition, hover all work) and press <strong>Re-run</strong>.</div>';
+    } else if (e.neighborhood) { /* nothing to run */ }
+    else html += '<div class="hint">Click the row or press <strong>Enter</strong> to open its schema &amp; data in editors and validate.</div>';
+
+    $detail.innerHTML = html;
+    var rr = document.getElementById("rerun");
+    if (rr) rr.addEventListener("click", function () { if (state.selected >= 0) post({ type: "run", index: state.selected }); });
+  }
+
+  // Arrow keys just move the highlight (cheap); a click or Enter commits to
+  // opening the entry's schema/data editors and validating.
+  function highlight(i) {
+    if (i < 0 || i >= state.entries.length) return;
+    state.selected = i;
+    Array.prototype.forEach.call($rows.querySelectorAll("tr"), function (tr) {
+      tr.classList.toggle("sel", +tr.getAttribute("data-i") === i);
+    });
+    var sel = $rows.querySelector("tr.sel"); if (sel) sel.scrollIntoView({ block: "nearest" });
+    renderDetail();
+  }
+  function openAndRun(i) {
+    highlight(i);
+    if (i >= 0 && !state.entries[i].neighborhood) post({ type: "select", index: i });
+  }
+
+  $rows.addEventListener("click", function (ev) {
+    var tr = ev.target.closest("tr[data-i]"); if (tr) openAndRun(+tr.getAttribute("data-i"));
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "ArrowDown") { ev.preventDefault(); highlight(Math.min(state.selected + 1, state.entries.length - 1)); }
+    else if (ev.key === "ArrowUp") { ev.preventDefault(); highlight(Math.max(state.selected - 1, 0)); }
+    else if (ev.key === "Enter" && state.selected >= 0) openAndRun(state.selected);
+  });
+  document.getElementById("runall").addEventListener("click", function () { post({ type: "runAll" }); });
+  document.getElementById("reload").addEventListener("click", function () { post({ type: "reload" }); });
+
+  function onMessage(m) {
+    if (!m || !m.type) return;
+    if (m.type === "manifest") {
+      state.entries = m.entries || []; state.file = m.file || ""; state.results = {}; state.selected = -1;
+      $file.textContent = state.file; updateTally(); renderRows();
+      if (state.entries.length) highlight(0);
+      else renderDetail();
+    } else if (m.type === "result") {
+      state.results[m.index] = m.result; refreshBadge(m.index);
+      if (m.index === state.selected) renderDetail();
+    }
+  }
+  window.addEventListener("message", function (e) { onMessage(e.data); });
+  window.__shexDeliver = function (json) { onMessage(typeof json === "string" ? JSON.parse(json) : json); }; // JCEF bridge
+
+  // VS Code's acquireVsCodeApi is ready immediately; JCEF injects __shexHostPost
+  // on load-end, so retry until a host channel exists before announcing ready.
+  (function ready() {
+    if (vscode || window.__shexHostPost) post({ type: "ready" });
+    else setTimeout(ready, 50);
+  })();
+})();
+</script>
+</body>
+</html>
