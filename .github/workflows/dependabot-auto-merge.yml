@@ -53,11 +53,14 @@ jobs:
             echo "No open PR for commit $HEAD_SHA; nothing to merge."; exit 0
           fi
 
-          # Only ever touch Dependabot's own PRs.
+          # Only ever touch Dependabot's own PRs. Note gh reports the app as
+          # "app/dependabot" while the REST API elsewhere calls it
+          # "dependabot[bot]" -- match either (and nothing else).
           author=$(gh pr view "$pr" --repo "$REPO" --json author --jq '.author.login' 2>/dev/null || true)
-          if [ "$author" != "dependabot[bot]" ]; then
-            echo "PR #$pr is not a Dependabot PR (author: ${author:-unknown}); leaving it alone."; exit 0
-          fi
+          case "$author" in
+            *dependabot*) ;;
+            *) echo "PR #$pr is not a Dependabot PR (author: ${author:-unknown}); leaving it alone."; exit 0 ;;
+          esac
 
           # --- To hold semver-major bumps for a human, uncomment this guard: ---
           # title=$(gh pr view "$pr" --repo "$REPO" --json title --jq '.title')
