@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/language-server",
-  "version": "1.0.0-alpha.32",
+  "version": "1.0.0-alpha.33",
   "description": "Language Server Protocol server for ShEx (ShExC, Turtle/TriG, ShapeMap) built on @shexjs/editor-services",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -32,10 +32,10 @@
     "media"
   ],
   "dependencies": {
-    "@shexjs/editor-services": "^1.0.0-alpha.32",
-    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.32",
-    "@shexjs/util": "^1.0.0-alpha.32",
-    "@shexjs/validator": "^1.0.0-alpha.32",
+    "@shexjs/editor-services": "^1.0.0-alpha.33",
+    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.33",
+    "@shexjs/util": "^1.0.0-alpha.33",
+    "@shexjs/validator": "^1.0.0-alpha.33",
     "js-yaml": "^5.4.1",
     "n3": "^2.7.4",
     "vscode-languageserver": "^9.0.1",

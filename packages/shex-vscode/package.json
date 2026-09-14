@@ -2,7 +2,7 @@
   "name": "shex-vscode",
   "displayName": "ShEx",
   "description": "ShEx (Shape Expressions) language support: ShExC schemas, Turtle/TriG data, and ShapeMaps, powered by @shexjs/language-server.",
-  "version": "1.0.0-alpha.32",
+  "version": "1.0.0-alpha.33",
   "private": true,
   "publisher": "shexjs",
   "license": "MIT",
@@ -164,7 +164,7 @@
     }
   },
   "dependencies": {
-    "@shexjs/language-server": "^1.0.0-alpha.32",
+    "@shexjs/language-server": "^1.0.0-alpha.33",
     "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {

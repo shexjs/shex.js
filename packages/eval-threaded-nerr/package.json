@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/eval-threaded-nerr",
-  "version": "1.0.0-alpha.32",
+  "version": "1.0.0-alpha.33",
   "files": [
     "lib",
     "src"
@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@rdfjs/types": "^2.0.1",
-    "@shexjs/eval-validator-api": "^1.0.0-alpha.32",
+    "@shexjs/eval-validator-api": "^1.0.0-alpha.33",
     "@shexjs/term": "^1.0.0-alpha.28",
     "@types/shexj": "^2.1.7"
   },

@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/neighborhood-sparql",
-  "version": "1.0.0-alpha.32",
+  "version": "1.0.0-alpha.33",
   "files": [
     "lib",
     "src",
@@ -26,11 +26,11 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@shexjs/eval-validator-api": "^1.0.0-alpha.32",
-    "@shexjs/neighborhood-api": "^1.0.0-alpha.32",
+    "@shexjs/eval-validator-api": "^1.0.0-alpha.33",
+    "@shexjs/neighborhood-api": "^1.0.0-alpha.33",
     "@shexjs/term": "^1.0.0-alpha.28",
-    "@shexjs/util": "^1.0.0-alpha.32",
-    "@shexjs/visitor": "^1.0.0-alpha.32",
+    "@shexjs/util": "^1.0.0-alpha.33",
+    "@shexjs/visitor": "^1.0.0-alpha.33",
     "@types/shexj": "^2.1.7",
     "n3": "^2.7.4"
   },
