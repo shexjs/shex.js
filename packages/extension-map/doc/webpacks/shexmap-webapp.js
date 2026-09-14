@@ -2700,9 +2700,9 @@ function tripleConstraints(schema) {
     (schema.shapes || []).forEach(shapeExpr);
     return found;
 }
-module.exports = { ThreadedMaterializer, MaterializerDebugger,
-    normalizeBindingTree, normalizeBindingTreeWithOrigins,
-    MaterializationError, tripleConstraints };
+module.exports = { BS: ThreadedMaterializer, fW: MaterializerDebugger,
+    ...void (normalizeBindingTree), ...void (normalizeBindingTreeWithOrigins),
+    k: MaterializationError, Fl: tripleConstraints };
 //# sourceMappingURL=ThreadedMaterializer.js.map
 
 /***/ },
@@ -3904,10 +3904,10 @@ const ShExMapCjsModule = function (config) {
         register: register,
         done: done,
         materializer: materializer,
-        ThreadedMaterializer: (__webpack_require__(245).ThreadedMaterializer),
-        MaterializerDebugger: (__webpack_require__(245).MaterializerDebugger),
-        MaterializationError: (__webpack_require__(245).MaterializationError),
-        tripleConstraints: (__webpack_require__(245).tripleConstraints),
+        ThreadedMaterializer: (__webpack_require__(245)/* .ThreadedMaterializer */ .BS),
+        MaterializerDebugger: (__webpack_require__(245)/* .MaterializerDebugger */ .fW),
+        MaterializationError: (__webpack_require__(245)/* .MaterializationError */ .k),
+        tripleConstraints: (__webpack_require__(245)/* .tripleConstraints */ .Fl),
         // binder: binder,
         url: MapExt,
         // visitTripleConstraint: myvisitTripleConstraint

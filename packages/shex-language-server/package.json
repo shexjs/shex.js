@@ -36,8 +36,8 @@
     "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.33",
     "@shexjs/util": "^1.0.0-alpha.33",
     "@shexjs/validator": "^1.0.0-alpha.33",
-    "js-yaml": "^5.4.1",
-    "n3": "^2.7.4",
+    "js-yaml": "^5.4.2",
+    "n3": "^2.7.12",
     "vscode-languageserver": "^9.0.1",
     "vscode-languageserver-textdocument": "^1.0.12"
   },

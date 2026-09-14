@@ -6348,7 +6348,7 @@ exports.claimPaneText = claimPaneText;
 const neighborhood_api_1 = __webpack_require__(7682);
 const ShExUtil = __importStar(__webpack_require__(5590));
 const visitor_1 = __webpack_require__(2818);
-const N3 = __importStar(__webpack_require__(9387)); // TODO: set global externally
+const N3 = __importStar(__webpack_require__(7714)); // TODO: set global externally
 const rate_limit_1 = __webpack_require__(6006);
 var rate_limit_2 = __webpack_require__(6006);
 Object.defineProperty(exports, "RateLimiter", ({ enumerable: true, get: function () { return rate_limit_2.RateLimiter; } }));
@@ -7467,7 +7467,7 @@ exports.RateLimiter = RateLimiter;
 
 /***/ },
 
-/***/ 9387
+/***/ 7714
 (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -7501,6 +7501,56 @@ __webpack_require__.d(__webpack_exports__, {
   termFromId: () => (/* reexport */ termFromId),
   termToId: () => (/* reexport */ termToId)
 });
+
+// MODULE: ../neighborhood-sparql/node_modules/readable-stream/lib/ours/browser.js
+var browser_namespaceFn = /*#__PURE__*/__webpack_require__.cw(function(module, exports) {
+
+
+const CustomStream = (stream_namespaceFn())
+const promises = (promises_namespaceFn())
+const originalDestroy = CustomStream.Readable.destroy
+module.exports = CustomStream.Readable
+
+// Explicit export naming is needed for ESM
+module.exports._uint8ArrayToBuffer = CustomStream._uint8ArrayToBuffer
+module.exports._isUint8Array = CustomStream._isUint8Array
+module.exports.isDisturbed = CustomStream.isDisturbed
+module.exports.isErrored = CustomStream.isErrored
+module.exports.isReadable = CustomStream.isReadable
+module.exports.Readable = CustomStream.Readable
+module.exports.Writable = CustomStream.Writable
+module.exports.Duplex = CustomStream.Duplex
+module.exports.Transform = CustomStream.Transform
+module.exports.PassThrough = CustomStream.PassThrough
+module.exports.addAbortSignal = CustomStream.addAbortSignal
+module.exports.finished = CustomStream.finished
+module.exports.destroy = CustomStream.destroy
+module.exports.destroy = originalDestroy
+module.exports.pipeline = CustomStream.pipeline
+module.exports.compose = CustomStream.compose
+Object.defineProperty(CustomStream, 'promises', {
+  configurable: true,
+  enumerable: true,
+  get() {
+    return promises
+  }
+})
+module.exports.Stream = CustomStream.Stream
+
+// Allow default importing
+module.exports["default"] = module.exports
+
+});
+
+// EXTERNAL MODULE: ../neighborhood-sparql/node_modules/readable-stream/lib/stream.js
+var stream_namespaceFn = () => {
+	return __webpack_require__(2675);
+};
+
+// EXTERNAL MODULE: ../neighborhood-sparql/node_modules/readable-stream/lib/stream/promises.js
+var promises_namespaceFn = () => {
+	return __webpack_require__(8740);
+};
 
 // NAMESPACE OBJECT: ../neighborhood-sparql/node_modules/n3/src/N3Util.js
 var src_N3Util_namespaceObject = {};
@@ -7576,6 +7626,7 @@ const RDF  = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
 
 
 const { xsd } = IRIs;
+const SPACE = 0x20, TAB = 0x09, LF = 0x0A, CR = 0x0D, HASH = 0x23;
 
 // Regular expression and replacement strings to unescape N3 strings
 const escapeSequence = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\([^])/g;
@@ -7602,12 +7653,9 @@ const lineModeRegExps = {
   _unescapedIri: true,
   _simpleQuotedString: true,
   _langcode: true,
-  _dircode: true,
   _blank: true,
-  _newline: true,
-  _comment: true,
+  _commentLine: true,
   _whitespace: true,
-  _endOfFile: true,
 };
 const invalidRegExp = /$0^/;
 
@@ -7621,7 +7669,6 @@ class N3Lexer {
     this._simpleQuotedString = /^"([^"\\\r\n]*)"(?=[^"])/; // string without escape sequences
     this._simpleApostropheString = /^'([^'\\\r\n]*)'(?=[^'])/;
     this._langcode = /^@([a-z]+(?:-[a-z0-9]+)*)(?=[^a-z0-9])/i;
-    this._dircode = /^--(?:(ltr)|(rtl))/;
     this._prefix = /^((?:[A-Za-z\xc0-\xd6\xd8-\xf6\xf8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])(?:\.?[\-0-9A-Z_a-z\xb7\xc0-\xd6\xd8-\xf6\xf8-\u037d\u037f-\u1fff\u200c\u200d\u203f\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])*)?:(?=[#\s<])/;
     this._prefixed = /^((?:[A-Za-z\xc0-\xd6\xd8-\xf6\xf8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])(?:\.?[\-0-9A-Z_a-z\xb7\xc0-\xd6\xd8-\xf6\xf8-\u037d\u037f-\u1fff\u200c\u200d\u203f\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])*)?:((?:(?:[0-:A-Z_a-z\xc0-\xd6\xd8-\xf6\xf8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff]|%[0-9a-fA-F]{2}|\\[!#-\/;=?\-@_~])(?:(?:[\.\-0-:A-Z_a-z\xb7\xc0-\xd6\xd8-\xf6\xf8-\u037d\u037f-\u1fff\u200c\u200d\u203f\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff]|%[0-9a-fA-F]{2}|\\[!#-\/;=?\-@_~])*(?:[\-0-:A-Z_a-z\xb7\xc0-\xd6\xd8-\xf6\xf8-\u037d\u037f-\u1fff\u200c\u200d\u203f\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff]|%[0-9a-fA-F]{2}|\\[!#-\/;=?\-@_~]))?)?)(?:[ \t]+|(?=\.?[,;!\^\s#()\[\]\{\}"'<>]))/;
     this._variable = /^\?(?:(?:[A-Z_a-z\xc0-\xd6\xd8-\xf6\xf8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])(?:[\-0-:A-Z_a-z\xb7\xc0-\xd6\xd8-\xf6\xf8-\u037d\u037f-\u1fff\u200c\u200d\u203f\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])*)(?=[.,;!\^\s#()\[\]\{\}"'<>])/;
@@ -7633,10 +7680,8 @@ class N3Lexer {
     this._n3Verb = /^(?:has|is|of)(?=[\s#()\[\]\{\}"'<>?_+\-0-9])/;
     this._n3Id = /^id(?=[\s#<])/;
     this._shortPredicates = /^a(?=[\s#()\[\]\{\}"'<>])/;
-    this._newline = /^[ \t]*(?:#[^\n\r]*)?(?:\r\n|\n|\r)[ \t]*/;
-    this._comment = /#([^\n\r]*)/;
+    this._commentLine = /^[ \t]*#([^\n\r]*)(?:\r\n|\n|\r)([ \t]*)/;
     this._whitespace = /^[ \t]+/;
-    this._endOfFile = /^(?:#[^\n\r]*)?$/;
     options = options || {};
 
     // Whether the log:isImpliedBy predicate is supported
@@ -7667,40 +7712,85 @@ class N3Lexer {
   _tokenizeToEnd(callback, inputFinished) {
     // Continue parsing as far as possible; the loop will return eventually
     let input = this._input;
-    let currentLineLength = input.length;
+    let currentLineLength = this._linePosition + input.length;
     while (true) {
-      // Count and skip whitespace lines
-      let whiteSpaceMatch, comment;
-      while (whiteSpaceMatch = this._newline.exec(input)) {
-        // Try to find a comment
-        if (this.comments && (comment = this._comment.exec(whiteSpaceMatch[0])))
-          emitToken('comment', comment[1], '', this._line, whiteSpaceMatch[0].length);
-        // Advance the input
-        input = input.slice(whiteSpaceMatch[0].length);
-        currentLineLength = input.length;
-        this._line++;
+      // Consume one separator line at a time, including its following indentation.
+      while (true) {
+        let charCode = input.charCodeAt(0), separatorLength = 0;
+        if (charCode === SPACE || charCode === TAB) {
+          const next = input.charCodeAt(1);
+          separatorLength = next === SPACE || next === TAB ?
+            this._whitespace.exec(input)[0].length : 1;
+          charCode = input.charCodeAt(separatorLength);
+        }
+        if (charCode === HASH) {
+          const comment = this._commentLine.exec(input);
+          if (comment) {
+            const commentLength = comment[0].length;
+            // Keep a trailing CR buffered in case the next chunk starts with LF.
+            if (!inputFinished && commentLength === input.length &&
+                input.charCodeAt(commentLength - 1) === CR) {
+              this._linePosition = currentLineLength - input.length;
+              return this._input = input;
+            }
+            if (this.comments)
+              emitComment(comment[1], this._line, separatorLength);
+            input = input.slice(commentLength);
+            currentLineLength = input.length + comment[2].length;
+            this._line++;
+          }
+          else {
+            // A comment without a line ending stays buffered until EOF.
+            input = input.slice(separatorLength);
+            if (!inputFinished) {
+              this._linePosition = currentLineLength - input.length;
+              return this._input = input;
+            }
+            if (this.comments)
+              emitComment(input.slice(1), this._line, 0);
+            input = '';
+            break;
+          }
+        }
+        else if (charCode === LF || charCode === CR) {
+          // A CR at the end of a chunk may still be followed by LF.
+          if (!inputFinished && charCode === CR && separatorLength + 1 === input.length) {
+            this._linePosition = currentLineLength - input.length;
+            return this._input = input;
+          }
+          separatorLength += charCode === CR && input.charCodeAt(separatorLength + 1) === LF ? 2 : 1;
+          // Indentation is consumed with the newline, but belongs to the next line's columns.
+          let indentationLength = 0;
+          const next = input.charCodeAt(separatorLength);
+          if (next === SPACE || next === TAB) {
+            const following = input.charCodeAt(separatorLength + 1);
+            indentationLength = following === SPACE || following === TAB ?
+              this._whitespace.exec(input.slice(separatorLength))[0].length : 1;
+          }
+          input = input.slice(separatorLength + indentationLength);
+          currentLineLength = input.length + indentationLength;
+          this._line++;
+        }
+        else {
+          if (separatorLength !== 0)
+            input = input.slice(separatorLength);
+          break;
+        }
       }
-      // Skip whitespace on current line
-      if (!whiteSpaceMatch && (whiteSpaceMatch = this._whitespace.exec(input)))
-        input = input.slice(whiteSpaceMatch[0].length);
-
-      // Stop for now if we're at the end
-      if (this._endOfFile.test(input)) {
-        // If the input is finished, emit EOF
+      if (input.length === 0) {
         if (inputFinished) {
-          // Try to find a final comment
-          if (this.comments && (comment = this._comment.exec(input)))
-            emitToken('comment', comment[1], '', this._line, input.length);
           input = null;
           emitToken('eof', '', '', this._line, 0);
         }
+        this._linePosition = currentLineLength;
         return this._input = input;
       }
 
       // Look for specific token types based on the first character
       const line = this._line, firstChar = input[0];
       let type = '', value = '', prefix = '',
-          match = null, matchLength = 0, inconclusive = false;
+          match = null, matchLength = 0, lexicalLength = 0,
+          finalLineLength = 0, inconclusive = false;
       switch (firstChar) {
       case '^':
         // We need at least 3 tokens lookahead to distinguish ^^<IRI> and ^^pre:fixed
@@ -7727,14 +7817,17 @@ class N3Lexer {
         // Fall through in case the type is an IRI
       case '<':
         // Try to find a full IRI without escape sequences
-        if (match = this._unescapedIri.exec(input))
+        if (match = this._unescapedIri.exec(input)) {
           type = 'IRI', value = match[1];
+          lexicalLength = match[1].length + 2;
+        }
         // Try to find a full IRI with escape sequences
         else if (match = this._iri.exec(input)) {
           value = this._unescape(match[1], stringEscapeReplacements);
           if (value === null || illegalIriChars.test(value))
             return reportSyntaxError(this);
           type = 'IRI';
+          lexicalLength = match[1].length + 2;
         }
         // Try to find a triple term
         else if (input.length > 2 && input[1] === '<' && input[2] === '(')
@@ -7764,8 +7857,10 @@ class N3Lexer {
         // we always need a non-dot character before deciding it is a blank node.
         // Therefore, try inserting a space if we're at the end of the input.
         if ((match = this._blank.exec(input)) ||
-            inputFinished && (match = this._blank.exec(`${input} `)))
+            inputFinished && (match = this._blank.exec(`${input} `))) {
           type = 'blank', prefix = '_', value = match[1];
+          lexicalLength = match[1].length + 2;
+        }
         break;
 
       case '"':
@@ -7774,7 +7869,7 @@ class N3Lexer {
           value = match[1];
         // Try to find a literal wrapped in three pairs of quotes
         else {
-          ({ value, matchLength } = this._parseLiteral(input));
+          ({ value, matchLength, finalLineLength } = this._parseLiteral(input));
           if (value === null)
             return reportSyntaxError(this);
         }
@@ -7791,7 +7886,7 @@ class N3Lexer {
             value = match[1];
           // Try to find a literal wrapped in three pairs of quotes
           else {
-            ({ value, matchLength } = this._parseLiteral(input));
+            ({ value, matchLength, finalLineLength } = this._parseLiteral(input));
             if (value === null)
               return reportSyntaxError(this);
           }
@@ -7848,8 +7943,12 @@ class N3Lexer {
       case '-':
         if (input[1] === '-') {
           // Try to find a direction code
-          if (this._previousMarker === 'langcode' && (match = this._dircode.exec(input)))
-            type = 'dircode', matchLength = 2, value = (match[1] || match[2]), matchLength = value.length + 2;
+          if (this._previousMarker === 'langcode') {
+            if (input.startsWith('--ltr'))
+              type = 'dircode', value = 'ltr', matchLength = 5;
+            else if (input.startsWith('--rtl'))
+              type = 'dircode', value = 'rtl', matchLength = 5;
+          }
           break;
         }
 
@@ -7882,16 +7981,16 @@ class N3Lexer {
       case 'f':
       case 't':
         // Try to match a boolean
-        if (match = this._boolean.exec(input))
-          type = 'literal', value = match[0], prefix = xsd.boolean;
+        if (this._boolean.test(input))
+          type = 'literal', value = firstChar === 't' ? 'true' : 'false', prefix = xsd.boolean, matchLength = value.length;
         else
           inconclusive = true;
         break;
 
       case 'a':
         // Try to find an abbreviated predicate
-        if (match = this._shortPredicates.exec(input))
-          type = 'abbreviation', value = 'a';
+        if (this._shortPredicates.test(input))
+          type = 'abbreviation', value = 'a', matchLength = 1;
         else
           inconclusive = true;
         break;
@@ -7907,8 +8006,8 @@ class N3Lexer {
 
       case 'i':
         // Try to find an IRI property list identifier or N3 verb keyword
-        if (this._n3Mode && (match = this._n3Id.exec(input)))
-          type = 'id';
+        if (this._n3Mode && this._n3Id.test(input))
+          type = 'id', matchLength = 2;
         else if (this._n3Mode && (match = this._matchN3Verb(input, inputFinished)))
           type = match[0];
         else
@@ -7982,8 +8081,11 @@ class N3Lexer {
         // we always need a non-dot character before deciding it is a prefixed name.
         // Therefore, try inserting a space if we're at the end of the input.
         else if ((match = this._prefixed.exec(input)) ||
-                 inputFinished && (match = this._prefixed.exec(`${input} `)))
-          type = 'prefixed', prefix = match[1] || '', value = this._unescape(match[2], localNameEscapeReplacements);
+                 inputFinished && (match = this._prefixed.exec(`${input} `))) {
+          type = 'prefixed', prefix = match[1] || '';
+          value = this._unescape(match[2], localNameEscapeReplacements);
+          lexicalLength = prefix.length + match[2].length + 1;
+        }
       }
 
       // A type token is special: it can only be emitted after an IRI or prefixed name is read
@@ -8002,20 +8104,44 @@ class N3Lexer {
         // One exception: error on an unaccounted linebreak (= not inside a triple-quoted literal).
         if (inputFinished || (!/^'''|^"""/.test(input) && /\n|\r/.test(input)))
           return reportSyntaxError(this);
-        else
+        else {
+          this._linePosition = currentLineLength - input.length;
           return this._input = input;
+        }
       }
 
       // Emit the parsed token
+      // Consumption includes separator whitespace; lexicalLength excludes it
+      // and any synthetic EOF space. slice below clamps consumption to the input.
       const length = matchLength || match[0].length;
-      const token = emitToken(type, value, prefix, line, length);
+      let token;
+      if (finalLineLength) {
+        token = {
+          type, value, prefix, line,
+          start: currentLineLength - input.length,
+          end: finalLineLength, endLine: this._line,
+        };
+        callback(null, token);
+      }
+      else
+        token = emitToken(type, value, prefix, line, lexicalLength || length);
       this.previousToken = token;
       this._previousMarker = type;
 
       // Advance to next part to tokenize
       input = input.slice(length);
+      if (finalLineLength)
+        currentLineLength = input.length + finalLineLength;
     }
 
+    // Emits a comment at its exact position within matched whitespace.
+    function emitComment(value, line, offset) {
+      const start = currentLineLength - input.length + offset;
+      callback(null, {
+        type: 'comment', value, prefix: '', line,
+        start, end: start + value.length + 1,
+      });
+    }
     // Emits the token through the callback
     function emitToken(type, value, prefix, line, length) {
       const start = input ? currentLineLength - input.length : currentLineLength;
@@ -8058,6 +8184,8 @@ class N3Lexer {
   // ### `_unescape` replaces N3 escape codes by their corresponding characters,
   // allowing only the fixed escape sequences from the given replacement table
   _unescape(item, replacements) {
+    if (item.indexOf('\\') < 0)
+      return item;
     let invalid = false;
     const replaced = item.replace(escapeSequence, (sequence, unicode4, unicode8, escapedChar) => {
       // 4-digit unicode character
@@ -8093,9 +8221,12 @@ class N3Lexer {
   _parseLiteral(input) {
     // Ensure we have enough lookahead to identify triple-quoted strings
     if (input.length >= 3) {
-      // Identify the opening quote(s)
-      const opening = input.match(/^(?:"""|"|'''|'|)/)[0];
-      const openingLength = opening.length;
+      // The caller has already identified a single or double quote.
+      const quote = input[0];
+      const openingLength = input[1] === quote && input[2] === quote ? 3 : 1;
+      let opening = quote;
+      if (openingLength === 3)
+        opening = quote === '"' ? '"""' : "'''";
 
       // Find the next candidate closing quotes
       let closingPos = Math.max(this._literalClosingPos, openingLength);
@@ -8109,21 +8240,23 @@ class N3Lexer {
         // means these are actual, non-escaped closing quotes
         if (backslashCount % 2 === 0) {
           // Extract and unescape the value
-          const raw = input.substring(openingLength, closingPos);
-          const lines = raw.split(/\r\n|\r|\n/).length - 1;
+          const raw = input.substring(openingLength, closingPos),
+              lines = raw.split(/\r\n|\r|\n/),
+              lineCount = lines.length - 1;
           const matchLength = closingPos + openingLength;
           // Only triple-quoted strings can be multi-line
-          if (openingLength === 1 && lines !== 0 ||
+          if (openingLength === 1 && lineCount !== 0 ||
               openingLength === 3 && this._lineMode)
             break;
-          this._line += lines;
-          return { value: this._unescape(raw, stringEscapeReplacements), matchLength };
+          this._line += lineCount;
+          const finalLineLength = lineCount === 0 ? 0 : lines[lines.length - 1].length + openingLength;
+          return { value: this._unescape(raw, stringEscapeReplacements), matchLength, finalLineLength };
         }
         closingPos++;
       }
       this._literalClosingPos = input.length - openingLength + 1;
     }
-    return { value: '', matchLength: 0 };
+    return { value: '', matchLength: 0, finalLineLength: 0 };
   }
 
   // ### `_syntaxError` creates a syntax error for the given issue
@@ -8140,22 +8273,40 @@ class N3Lexer {
 
   // ### Strips off any starting UTF BOM mark.
   _readStartingBom(input) {
-    return input.startsWith('\ufeff') ? input.slice(1) : input;
+    if (input.startsWith('\ufeff')) {
+      this._linePosition = 1;
+      return input.slice(1);
+    }
+    return input;
   }
 
   // ## Public methods
 
   // ### `tokenize` starts the transformation of an N3 document into an array of tokens.
   // The input can be a string or a stream.
+  // Token ranges use one-based lines and zero-based, end-exclusive UTF-16 columns.
+  // Separator whitespace counts towards the next token's start, outside either range.
+  // Multiline tokens also have endLine; their end column is relative to that line.
   tokenize(input, callback) {
+    // Deferred tokenization and stream events can outlive their invocation.
+    // Ignore them once a later call takes ownership of the lexer state.
+    const tokenization = this._tokenization = {};
     this._line = 1;
+    this._linePosition = 0;
+    this._previousMarker = undefined;
+    this.previousToken = undefined;
+    this._literalClosingPos = 0;
+    this._input = undefined;
 
     // If the input is a string, continuously emit tokens through the callback until the end
     if (typeof input === 'string') {
       this._input = this._readStartingBom(input);
       // If a callback was passed, asynchronously call it
       if (typeof callback === 'function')
-        queueMicrotask(() => this._tokenizeToEnd(callback, true));
+        queueMicrotask(() => {
+          if (this._tokenization === tokenization)
+            this._tokenizeToEnd(callback, true);
+        });
       // If no callback was passed, tokenize synchronously and return
       else {
         const tokens = [];
@@ -8172,7 +8323,7 @@ class N3Lexer {
         input.setEncoding('utf8');
       // Adds the data chunk to the buffer and parses as far as possible
       input.on('data', data => {
-        if (this._input !== null && data.length !== 0) {
+        if (this._tokenization === tokenization && this._input !== null && data.length !== 0) {
           // Prepend any previous pending writes
           if (this._pendingBuffer) {
             data = buffer.Buffer.concat([this._pendingBuffer, data]);
@@ -8195,10 +8346,13 @@ class N3Lexer {
       });
       // Parses until the end
       input.on('end', () => {
-        if (typeof this._input === 'string')
+        if (this._tokenization === tokenization && typeof this._input === 'string')
           this._tokenizeToEnd(callback, true);
       });
-      input.on('error', callback);
+      input.on('error', error => {
+        if (this._tokenization === tokenization)
+          callback(error);
+      });
     }
   }
 }
@@ -10964,8 +11118,9 @@ function characterReplacer(character) {
   return result;
 }
 
-// EXTERNAL MODULE: ../neighborhood-sparql/node_modules/readable-stream/lib/ours/browser.js
-var browser = __webpack_require__(2995);
+;// ../neighborhood-sparql/node_modules/readable-stream/lib/ours/browser.js
+browser_namespaceFn();
+
 ;// ../neighborhood-sparql/node_modules/n3/src/N3Store.js
 // **N3Store** objects store N3 quads by graph in memory.
 
@@ -11517,7 +11672,7 @@ class N3Store {
   // ### `removeMatches` removes all matching quads from the store
   // Setting any field to `undefined` or `null` indicates a wildcard.
   removeMatches(subject, predicate, object, graph) {
-    const stream = new browser.Readable({ objectMode: true });
+    const stream = new (browser_namespaceFn().Readable)({ objectMode: true });
 
     const iterable = this.readQuads(subject, predicate, object, graph);
     stream._read = size => {
@@ -12175,7 +12330,7 @@ function indexMatch(index, ids, depth = 0) {
 /**
  * A class that implements both DatasetCore and Readable.
  */
-class DatasetCoreAndReadableStream extends browser.Readable {
+class DatasetCoreAndReadableStream extends (browser_namespaceFn().Readable) {
   constructor(n3Store, subject, predicate, object, graph, options) {
     super({ objectMode: true });
     Object.assign(this, { n3Store, subject, predicate, object, graph, options });
@@ -12614,10 +12769,9 @@ function termEq(t1, t2) {
 
 
 // ## Constructor
-class N3StreamParser extends browser.Transform {
+class N3StreamParser extends (browser_namespaceFn().Transform) {
   constructor(options) {
-    super({ decodeStrings: true });
-    this._readableState.objectMode = true;
+    super({ decodeStrings: true, readableObjectMode: true });
 
     // Set up parser with dummy stream to obtain `data` and `end` callbacks
     const parser = new N3Parser(options);
@@ -12649,9 +12803,13 @@ class N3StreamParser extends browser.Transform {
 
   // ### Parses a stream of strings
   import(stream) {
-    stream.on('data',  chunk => { this.write(chunk); });
-    stream.on('end',   ()      => { this.end(); });
     stream.on('error', error => { this.emit('error', error); });
+    if (typeof stream.pipe === 'function')
+      stream.pipe(this);
+    else {
+      stream.on('data', chunk => { this.write(chunk); });
+      stream.on('end',  ()    => { this.end(); });
+    }
     return this;
   }
 }
@@ -12665,7 +12823,7 @@ const MIN_CHUNK_SIZE = 16 * 1024;
 const DEFAULT_FLUSH_DELAY_MS = 20;
 
 // ## Constructor
-class N3StreamWriter extends browser.Transform {
+class N3StreamWriter extends (browser_namespaceFn().Transform) {
   constructor(options) {
     super({ encoding: 'utf8', writableObjectMode: true });
 
@@ -17380,21 +17538,21 @@ module.exports = {
   isDestroyed,
   kIsDestroyed,
   isDisturbed,
-  kIsDisturbed,
+  ...void (kIsDisturbed),
   isErrored,
-  kIsErrored,
+  ...void (kIsErrored),
   isReadable,
-  kIsReadable,
+  ...void (kIsReadable),
   kIsClosedPromise,
   kControllerErrorFunction,
-  kIsWritable,
+  ...void (kIsWritable),
   isClosed,
   isDuplexNodeStream,
   isFinished,
   isIterable,
   isReadableNodeStream,
   isReadableStream,
-  isReadableEnded,
+  ...void (isReadableEnded),
   isReadableFinished,
   isReadableErrored,
   isNodeStream,
@@ -17402,11 +17560,11 @@ module.exports = {
   isWritable,
   isWritableNodeStream,
   isWritableStream,
-  isWritableEnded,
+  ...void (isWritableEnded),
   isWritableFinished,
   isWritableErrored,
   isServerRequest,
-  isServerResponse,
+  ...void (isServerResponse),
   willEmitClose,
   isTransformStream
 }
@@ -18748,76 +18906,33 @@ function validateLinkHeaderValue(hints) {
   )
 }
 module.exports = {
-  isInt32,
-  isUint32,
-  parseFileMode,
-  validateArray,
-  validateStringArray,
-  validateBooleanArray,
-  validateAbortSignalArray,
+  ...void (isInt32),
+  ...void (isUint32),
+  ...void (parseFileMode),
+  ...void (validateArray),
+  ...void (validateStringArray),
+  ...void (validateBooleanArray),
+  ...void (validateAbortSignalArray),
   validateBoolean,
-  validateBuffer,
-  validateDictionary,
-  validateEncoding,
+  ...void (validateBuffer),
+  ...void (validateDictionary),
+  ...void (validateEncoding),
   validateFunction,
-  validateInt32,
+  ...void (validateInt32),
   validateInteger,
-  validateNumber,
+  ...void (validateNumber),
   validateObject,
-  validateOneOf,
-  validatePlainFunction,
-  validatePort,
-  validateSignalName,
-  validateString,
-  validateUint32,
-  validateUndefined,
-  validateUnion,
+  ...void (validateOneOf),
+  ...void (validatePlainFunction),
+  ...void (validatePort),
+  ...void (validateSignalName),
+  ...void (validateString),
+  ...void (validateUint32),
+  ...void (validateUndefined),
+  ...void (validateUnion),
   validateAbortSignal,
-  validateLinkHeaderValue
+  ...void (validateLinkHeaderValue)
 }
-
-
-/***/ },
-
-/***/ 2995
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-const CustomStream = __webpack_require__(2675)
-const promises = __webpack_require__(8740)
-const originalDestroy = CustomStream.Readable.destroy
-module.exports = CustomStream.Readable
-
-// Explicit export naming is needed for ESM
-module.exports._uint8ArrayToBuffer = CustomStream._uint8ArrayToBuffer
-module.exports._isUint8Array = CustomStream._isUint8Array
-module.exports.isDisturbed = CustomStream.isDisturbed
-module.exports.isErrored = CustomStream.isErrored
-module.exports.isReadable = CustomStream.isReadable
-module.exports.Readable = CustomStream.Readable
-module.exports.Writable = CustomStream.Writable
-module.exports.Duplex = CustomStream.Duplex
-module.exports.Transform = CustomStream.Transform
-module.exports.PassThrough = CustomStream.PassThrough
-module.exports.addAbortSignal = CustomStream.addAbortSignal
-module.exports.finished = CustomStream.finished
-module.exports.destroy = CustomStream.destroy
-module.exports.destroy = originalDestroy
-module.exports.pipeline = CustomStream.pipeline
-module.exports.compose = CustomStream.compose
-Object.defineProperty(CustomStream, 'promises', {
-  configurable: true,
-  enumerable: true,
-  get() {
-    return promises
-  }
-})
-module.exports.Stream = CustomStream.Stream
-
-// Allow default importing
-module.exports["default"] = module.exports
 
 
 /***/ },
@@ -20332,7 +20447,7 @@ exports.distributeDocuments = distributeDocuments;
 exports.claimPaneText = claimPaneText;
 exports.asAsyncDb = asAsyncDb;
 const neighborhood_api_1 = __webpack_require__(7682);
-const N3 = __importStar(__webpack_require__(2879));
+const N3 = __importStar(__webpack_require__(5102));
 const fs = __importStar(__webpack_require__(7955));
 const path = __importStar(__webpack_require__(2159));
 const url_1 = __webpack_require__(4797);
@@ -21722,7 +21837,7 @@ __webpack_unused_export__ = "Wikibase entity JSON pages to WDQS-flavor RDF";
 
 /***/ },
 
-/***/ 2879
+/***/ 5102
 (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -21756,6 +21871,56 @@ __webpack_require__.d(__webpack_exports__, {
   termFromId: () => (/* reexport */ termFromId),
   termToId: () => (/* reexport */ termToId)
 });
+
+// MODULE: ../neighborhood-wikibase/node_modules/readable-stream/lib/ours/browser.js
+var browser_namespaceFn = /*#__PURE__*/__webpack_require__.cw(function(module, exports) {
+
+
+const CustomStream = (stream_namespaceFn())
+const promises = (promises_namespaceFn())
+const originalDestroy = CustomStream.Readable.destroy
+module.exports = CustomStream.Readable
+
+// Explicit export naming is needed for ESM
+module.exports._uint8ArrayToBuffer = CustomStream._uint8ArrayToBuffer
+module.exports._isUint8Array = CustomStream._isUint8Array
+module.exports.isDisturbed = CustomStream.isDisturbed
+module.exports.isErrored = CustomStream.isErrored
+module.exports.isReadable = CustomStream.isReadable
+module.exports.Readable = CustomStream.Readable
+module.exports.Writable = CustomStream.Writable
+module.exports.Duplex = CustomStream.Duplex
+module.exports.Transform = CustomStream.Transform
+module.exports.PassThrough = CustomStream.PassThrough
+module.exports.addAbortSignal = CustomStream.addAbortSignal
+module.exports.finished = CustomStream.finished
+module.exports.destroy = CustomStream.destroy
+module.exports.destroy = originalDestroy
+module.exports.pipeline = CustomStream.pipeline
+module.exports.compose = CustomStream.compose
+Object.defineProperty(CustomStream, 'promises', {
+  configurable: true,
+  enumerable: true,
+  get() {
+    return promises
+  }
+})
+module.exports.Stream = CustomStream.Stream
+
+// Allow default importing
+module.exports["default"] = module.exports
+
+});
+
+// EXTERNAL MODULE: ../neighborhood-wikibase/node_modules/readable-stream/lib/stream.js
+var stream_namespaceFn = () => {
+	return __webpack_require__(5855);
+};
+
+// EXTERNAL MODULE: ../neighborhood-wikibase/node_modules/readable-stream/lib/stream/promises.js
+var promises_namespaceFn = () => {
+	return __webpack_require__(2520);
+};
 
 // NAMESPACE OBJECT: ../neighborhood-wikibase/node_modules/n3/src/N3Util.js
 var src_N3Util_namespaceObject = {};
@@ -21831,6 +21996,7 @@ const RDF  = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
 
 
 const { xsd } = IRIs;
+const SPACE = 0x20, TAB = 0x09, LF = 0x0A, CR = 0x0D, HASH = 0x23;
 
 // Regular expression and replacement strings to unescape N3 strings
 const escapeSequence = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\([^])/g;
@@ -21857,12 +22023,9 @@ const lineModeRegExps = {
   _unescapedIri: true,
   _simpleQuotedString: true,
   _langcode: true,
-  _dircode: true,
   _blank: true,
-  _newline: true,
-  _comment: true,
+  _commentLine: true,
   _whitespace: true,
-  _endOfFile: true,
 };
 const invalidRegExp = /$0^/;
 
@@ -21876,7 +22039,6 @@ class N3Lexer {
     this._simpleQuotedString = /^"([^"\\\r\n]*)"(?=[^"])/; // string without escape sequences
     this._simpleApostropheString = /^'([^'\\\r\n]*)'(?=[^'])/;
     this._langcode = /^@([a-z]+(?:-[a-z0-9]+)*)(?=[^a-z0-9])/i;
-    this._dircode = /^--(?:(ltr)|(rtl))/;
     this._prefix = /^((?:[A-Za-z\xc0-\xd6\xd8-\xf6\xf8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])(?:\.?[\-0-9A-Z_a-z\xb7\xc0-\xd6\xd8-\xf6\xf8-\u037d\u037f-\u1fff\u200c\u200d\u203f\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])*)?:(?=[#\s<])/;
     this._prefixed = /^((?:[A-Za-z\xc0-\xd6\xd8-\xf6\xf8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])(?:\.?[\-0-9A-Z_a-z\xb7\xc0-\xd6\xd8-\xf6\xf8-\u037d\u037f-\u1fff\u200c\u200d\u203f\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])*)?:((?:(?:[0-:A-Z_a-z\xc0-\xd6\xd8-\xf6\xf8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff]|%[0-9a-fA-F]{2}|\\[!#-\/;=?\-@_~])(?:(?:[\.\-0-:A-Z_a-z\xb7\xc0-\xd6\xd8-\xf6\xf8-\u037d\u037f-\u1fff\u200c\u200d\u203f\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff]|%[0-9a-fA-F]{2}|\\[!#-\/;=?\-@_~])*(?:[\-0-:A-Z_a-z\xb7\xc0-\xd6\xd8-\xf6\xf8-\u037d\u037f-\u1fff\u200c\u200d\u203f\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff]|%[0-9a-fA-F]{2}|\\[!#-\/;=?\-@_~]))?)?)(?:[ \t]+|(?=\.?[,;!\^\s#()\[\]\{\}"'<>]))/;
     this._variable = /^\?(?:(?:[A-Z_a-z\xc0-\xd6\xd8-\xf6\xf8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])(?:[\-0-:A-Z_a-z\xb7\xc0-\xd6\xd8-\xf6\xf8-\u037d\u037f-\u1fff\u200c\u200d\u203f\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])*)(?=[.,;!\^\s#()\[\]\{\}"'<>])/;
@@ -21888,10 +22050,8 @@ class N3Lexer {
     this._n3Verb = /^(?:has|is|of)(?=[\s#()\[\]\{\}"'<>?_+\-0-9])/;
     this._n3Id = /^id(?=[\s#<])/;
     this._shortPredicates = /^a(?=[\s#()\[\]\{\}"'<>])/;
-    this._newline = /^[ \t]*(?:#[^\n\r]*)?(?:\r\n|\n|\r)[ \t]*/;
-    this._comment = /#([^\n\r]*)/;
+    this._commentLine = /^[ \t]*#([^\n\r]*)(?:\r\n|\n|\r)([ \t]*)/;
     this._whitespace = /^[ \t]+/;
-    this._endOfFile = /^(?:#[^\n\r]*)?$/;
     options = options || {};
 
     // Whether the log:isImpliedBy predicate is supported
@@ -21922,40 +22082,85 @@ class N3Lexer {
   _tokenizeToEnd(callback, inputFinished) {
     // Continue parsing as far as possible; the loop will return eventually
     let input = this._input;
-    let currentLineLength = input.length;
+    let currentLineLength = this._linePosition + input.length;
     while (true) {
-      // Count and skip whitespace lines
-      let whiteSpaceMatch, comment;
-      while (whiteSpaceMatch = this._newline.exec(input)) {
-        // Try to find a comment
-        if (this.comments && (comment = this._comment.exec(whiteSpaceMatch[0])))
-          emitToken('comment', comment[1], '', this._line, whiteSpaceMatch[0].length);
-        // Advance the input
-        input = input.slice(whiteSpaceMatch[0].length);
-        currentLineLength = input.length;
-        this._line++;
+      // Consume one separator line at a time, including its following indentation.
+      while (true) {
+        let charCode = input.charCodeAt(0), separatorLength = 0;
+        if (charCode === SPACE || charCode === TAB) {
+          const next = input.charCodeAt(1);
+          separatorLength = next === SPACE || next === TAB ?
+            this._whitespace.exec(input)[0].length : 1;
+          charCode = input.charCodeAt(separatorLength);
+        }
+        if (charCode === HASH) {
+          const comment = this._commentLine.exec(input);
+          if (comment) {
+            const commentLength = comment[0].length;
+            // Keep a trailing CR buffered in case the next chunk starts with LF.
+            if (!inputFinished && commentLength === input.length &&
+                input.charCodeAt(commentLength - 1) === CR) {
+              this._linePosition = currentLineLength - input.length;
+              return this._input = input;
+            }
+            if (this.comments)
+              emitComment(comment[1], this._line, separatorLength);
+            input = input.slice(commentLength);
+            currentLineLength = input.length + comment[2].length;
+            this._line++;
+          }
+          else {
+            // A comment without a line ending stays buffered until EOF.
+            input = input.slice(separatorLength);
+            if (!inputFinished) {
+              this._linePosition = currentLineLength - input.length;
+              return this._input = input;
+            }
+            if (this.comments)
+              emitComment(input.slice(1), this._line, 0);
+            input = '';
+            break;
+          }
+        }
+        else if (charCode === LF || charCode === CR) {
+          // A CR at the end of a chunk may still be followed by LF.
+          if (!inputFinished && charCode === CR && separatorLength + 1 === input.length) {
+            this._linePosition = currentLineLength - input.length;
+            return this._input = input;
+          }
+          separatorLength += charCode === CR && input.charCodeAt(separatorLength + 1) === LF ? 2 : 1;
+          // Indentation is consumed with the newline, but belongs to the next line's columns.
+          let indentationLength = 0;
+          const next = input.charCodeAt(separatorLength);
+          if (next === SPACE || next === TAB) {
+            const following = input.charCodeAt(separatorLength + 1);
+            indentationLength = following === SPACE || following === TAB ?
+              this._whitespace.exec(input.slice(separatorLength))[0].length : 1;
+          }
+          input = input.slice(separatorLength + indentationLength);
+          currentLineLength = input.length + indentationLength;
+          this._line++;
+        }
+        else {
+          if (separatorLength !== 0)
+            input = input.slice(separatorLength);
+          break;
+        }
       }
-      // Skip whitespace on current line
-      if (!whiteSpaceMatch && (whiteSpaceMatch = this._whitespace.exec(input)))
-        input = input.slice(whiteSpaceMatch[0].length);
-
-      // Stop for now if we're at the end
-      if (this._endOfFile.test(input)) {
-        // If the input is finished, emit EOF
+      if (input.length === 0) {
         if (inputFinished) {
-          // Try to find a final comment
-          if (this.comments && (comment = this._comment.exec(input)))
-            emitToken('comment', comment[1], '', this._line, input.length);
           input = null;
           emitToken('eof', '', '', this._line, 0);
         }
+        this._linePosition = currentLineLength;
         return this._input = input;
       }
 
       // Look for specific token types based on the first character
       const line = this._line, firstChar = input[0];
       let type = '', value = '', prefix = '',
-          match = null, matchLength = 0, inconclusive = false;
+          match = null, matchLength = 0, lexicalLength = 0,
+          finalLineLength = 0, inconclusive = false;
       switch (firstChar) {
       case '^':
         // We need at least 3 tokens lookahead to distinguish ^^<IRI> and ^^pre:fixed
@@ -21982,14 +22187,17 @@ class N3Lexer {
         // Fall through in case the type is an IRI
       case '<':
         // Try to find a full IRI without escape sequences
-        if (match = this._unescapedIri.exec(input))
+        if (match = this._unescapedIri.exec(input)) {
           type = 'IRI', value = match[1];
+          lexicalLength = match[1].length + 2;
+        }
         // Try to find a full IRI with escape sequences
         else if (match = this._iri.exec(input)) {
           value = this._unescape(match[1], stringEscapeReplacements);
           if (value === null || illegalIriChars.test(value))
             return reportSyntaxError(this);
           type = 'IRI';
+          lexicalLength = match[1].length + 2;
         }
         // Try to find a triple term
         else if (input.length > 2 && input[1] === '<' && input[2] === '(')
@@ -22019,8 +22227,10 @@ class N3Lexer {
         // we always need a non-dot character before deciding it is a blank node.
         // Therefore, try inserting a space if we're at the end of the input.
         if ((match = this._blank.exec(input)) ||
-            inputFinished && (match = this._blank.exec(`${input} `)))
+            inputFinished && (match = this._blank.exec(`${input} `))) {
           type = 'blank', prefix = '_', value = match[1];
+          lexicalLength = match[1].length + 2;
+        }
         break;
 
       case '"':
@@ -22029,7 +22239,7 @@ class N3Lexer {
           value = match[1];
         // Try to find a literal wrapped in three pairs of quotes
         else {
-          ({ value, matchLength } = this._parseLiteral(input));
+          ({ value, matchLength, finalLineLength } = this._parseLiteral(input));
           if (value === null)
             return reportSyntaxError(this);
         }
@@ -22046,7 +22256,7 @@ class N3Lexer {
             value = match[1];
           // Try to find a literal wrapped in three pairs of quotes
           else {
-            ({ value, matchLength } = this._parseLiteral(input));
+            ({ value, matchLength, finalLineLength } = this._parseLiteral(input));
             if (value === null)
               return reportSyntaxError(this);
           }
@@ -22103,8 +22313,12 @@ class N3Lexer {
       case '-':
         if (input[1] === '-') {
           // Try to find a direction code
-          if (this._previousMarker === 'langcode' && (match = this._dircode.exec(input)))
-            type = 'dircode', matchLength = 2, value = (match[1] || match[2]), matchLength = value.length + 2;
+          if (this._previousMarker === 'langcode') {
+            if (input.startsWith('--ltr'))
+              type = 'dircode', value = 'ltr', matchLength = 5;
+            else if (input.startsWith('--rtl'))
+              type = 'dircode', value = 'rtl', matchLength = 5;
+          }
           break;
         }
 
@@ -22137,16 +22351,16 @@ class N3Lexer {
       case 'f':
       case 't':
         // Try to match a boolean
-        if (match = this._boolean.exec(input))
-          type = 'literal', value = match[0], prefix = xsd.boolean;
+        if (this._boolean.test(input))
+          type = 'literal', value = firstChar === 't' ? 'true' : 'false', prefix = xsd.boolean, matchLength = value.length;
         else
           inconclusive = true;
         break;
 
       case 'a':
         // Try to find an abbreviated predicate
-        if (match = this._shortPredicates.exec(input))
-          type = 'abbreviation', value = 'a';
+        if (this._shortPredicates.test(input))
+          type = 'abbreviation', value = 'a', matchLength = 1;
         else
           inconclusive = true;
         break;
@@ -22162,8 +22376,8 @@ class N3Lexer {
 
       case 'i':
         // Try to find an IRI property list identifier or N3 verb keyword
-        if (this._n3Mode && (match = this._n3Id.exec(input)))
-          type = 'id';
+        if (this._n3Mode && this._n3Id.test(input))
+          type = 'id', matchLength = 2;
         else if (this._n3Mode && (match = this._matchN3Verb(input, inputFinished)))
           type = match[0];
         else
@@ -22237,8 +22451,11 @@ class N3Lexer {
         // we always need a non-dot character before deciding it is a prefixed name.
         // Therefore, try inserting a space if we're at the end of the input.
         else if ((match = this._prefixed.exec(input)) ||
-                 inputFinished && (match = this._prefixed.exec(`${input} `)))
-          type = 'prefixed', prefix = match[1] || '', value = this._unescape(match[2], localNameEscapeReplacements);
+                 inputFinished && (match = this._prefixed.exec(`${input} `))) {
+          type = 'prefixed', prefix = match[1] || '';
+          value = this._unescape(match[2], localNameEscapeReplacements);
+          lexicalLength = prefix.length + match[2].length + 1;
+        }
       }
 
       // A type token is special: it can only be emitted after an IRI or prefixed name is read
@@ -22257,20 +22474,44 @@ class N3Lexer {
         // One exception: error on an unaccounted linebreak (= not inside a triple-quoted literal).
         if (inputFinished || (!/^'''|^"""/.test(input) && /\n|\r/.test(input)))
           return reportSyntaxError(this);
-        else
+        else {
+          this._linePosition = currentLineLength - input.length;
           return this._input = input;
+        }
       }
 
       // Emit the parsed token
+      // Consumption includes separator whitespace; lexicalLength excludes it
+      // and any synthetic EOF space. slice below clamps consumption to the input.
       const length = matchLength || match[0].length;
-      const token = emitToken(type, value, prefix, line, length);
+      let token;
+      if (finalLineLength) {
+        token = {
+          type, value, prefix, line,
+          start: currentLineLength - input.length,
+          end: finalLineLength, endLine: this._line,
+        };
+        callback(null, token);
+      }
+      else
+        token = emitToken(type, value, prefix, line, lexicalLength || length);
       this.previousToken = token;
       this._previousMarker = type;
 
       // Advance to next part to tokenize
       input = input.slice(length);
+      if (finalLineLength)
+        currentLineLength = input.length + finalLineLength;
     }
 
+    // Emits a comment at its exact position within matched whitespace.
+    function emitComment(value, line, offset) {
+      const start = currentLineLength - input.length + offset;
+      callback(null, {
+        type: 'comment', value, prefix: '', line,
+        start, end: start + value.length + 1,
+      });
+    }
     // Emits the token through the callback
     function emitToken(type, value, prefix, line, length) {
       const start = input ? currentLineLength - input.length : currentLineLength;
@@ -22313,6 +22554,8 @@ class N3Lexer {
   // ### `_unescape` replaces N3 escape codes by their corresponding characters,
   // allowing only the fixed escape sequences from the given replacement table
   _unescape(item, replacements) {
+    if (item.indexOf('\\') < 0)
+      return item;
     let invalid = false;
     const replaced = item.replace(escapeSequence, (sequence, unicode4, unicode8, escapedChar) => {
       // 4-digit unicode character
@@ -22348,9 +22591,12 @@ class N3Lexer {
   _parseLiteral(input) {
     // Ensure we have enough lookahead to identify triple-quoted strings
     if (input.length >= 3) {
-      // Identify the opening quote(s)
-      const opening = input.match(/^(?:"""|"|'''|'|)/)[0];
-      const openingLength = opening.length;
+      // The caller has already identified a single or double quote.
+      const quote = input[0];
+      const openingLength = input[1] === quote && input[2] === quote ? 3 : 1;
+      let opening = quote;
+      if (openingLength === 3)
+        opening = quote === '"' ? '"""' : "'''";
 
       // Find the next candidate closing quotes
       let closingPos = Math.max(this._literalClosingPos, openingLength);
@@ -22364,21 +22610,23 @@ class N3Lexer {
         // means these are actual, non-escaped closing quotes
         if (backslashCount % 2 === 0) {
           // Extract and unescape the value
-          const raw = input.substring(openingLength, closingPos);
-          const lines = raw.split(/\r\n|\r|\n/).length - 1;
+          const raw = input.substring(openingLength, closingPos),
+              lines = raw.split(/\r\n|\r|\n/),
+              lineCount = lines.length - 1;
           const matchLength = closingPos + openingLength;
           // Only triple-quoted strings can be multi-line
-          if (openingLength === 1 && lines !== 0 ||
+          if (openingLength === 1 && lineCount !== 0 ||
               openingLength === 3 && this._lineMode)
             break;
-          this._line += lines;
-          return { value: this._unescape(raw, stringEscapeReplacements), matchLength };
+          this._line += lineCount;
+          const finalLineLength = lineCount === 0 ? 0 : lines[lines.length - 1].length + openingLength;
+          return { value: this._unescape(raw, stringEscapeReplacements), matchLength, finalLineLength };
         }
         closingPos++;
       }
       this._literalClosingPos = input.length - openingLength + 1;
     }
-    return { value: '', matchLength: 0 };
+    return { value: '', matchLength: 0, finalLineLength: 0 };
   }
 
   // ### `_syntaxError` creates a syntax error for the given issue
@@ -22395,22 +22643,40 @@ class N3Lexer {
 
   // ### Strips off any starting UTF BOM mark.
   _readStartingBom(input) {
-    return input.startsWith('\ufeff') ? input.slice(1) : input;
+    if (input.startsWith('\ufeff')) {
+      this._linePosition = 1;
+      return input.slice(1);
+    }
+    return input;
   }
 
   // ## Public methods
 
   // ### `tokenize` starts the transformation of an N3 document into an array of tokens.
   // The input can be a string or a stream.
+  // Token ranges use one-based lines and zero-based, end-exclusive UTF-16 columns.
+  // Separator whitespace counts towards the next token's start, outside either range.
+  // Multiline tokens also have endLine; their end column is relative to that line.
   tokenize(input, callback) {
+    // Deferred tokenization and stream events can outlive their invocation.
+    // Ignore them once a later call takes ownership of the lexer state.
+    const tokenization = this._tokenization = {};
     this._line = 1;
+    this._linePosition = 0;
+    this._previousMarker = undefined;
+    this.previousToken = undefined;
+    this._literalClosingPos = 0;
+    this._input = undefined;
 
     // If the input is a string, continuously emit tokens through the callback until the end
     if (typeof input === 'string') {
       this._input = this._readStartingBom(input);
       // If a callback was passed, asynchronously call it
       if (typeof callback === 'function')
-        queueMicrotask(() => this._tokenizeToEnd(callback, true));
+        queueMicrotask(() => {
+          if (this._tokenization === tokenization)
+            this._tokenizeToEnd(callback, true);
+        });
       // If no callback was passed, tokenize synchronously and return
       else {
         const tokens = [];
@@ -22427,7 +22693,7 @@ class N3Lexer {
         input.setEncoding('utf8');
       // Adds the data chunk to the buffer and parses as far as possible
       input.on('data', data => {
-        if (this._input !== null && data.length !== 0) {
+        if (this._tokenization === tokenization && this._input !== null && data.length !== 0) {
           // Prepend any previous pending writes
           if (this._pendingBuffer) {
             data = buffer.Buffer.concat([this._pendingBuffer, data]);
@@ -22450,10 +22716,13 @@ class N3Lexer {
       });
       // Parses until the end
       input.on('end', () => {
-        if (typeof this._input === 'string')
+        if (this._tokenization === tokenization && typeof this._input === 'string')
           this._tokenizeToEnd(callback, true);
       });
-      input.on('error', callback);
+      input.on('error', error => {
+        if (this._tokenization === tokenization)
+          callback(error);
+      });
     }
   }
 }
@@ -25219,8 +25488,9 @@ function characterReplacer(character) {
   return result;
 }
 
-// EXTERNAL MODULE: ../neighborhood-wikibase/node_modules/readable-stream/lib/ours/browser.js
-var browser = __webpack_require__(7639);
+;// ../neighborhood-wikibase/node_modules/readable-stream/lib/ours/browser.js
+browser_namespaceFn();
+
 ;// ../neighborhood-wikibase/node_modules/n3/src/N3Store.js
 // **N3Store** objects store N3 quads by graph in memory.
 
@@ -25772,7 +26042,7 @@ class N3Store {
   // ### `removeMatches` removes all matching quads from the store
   // Setting any field to `undefined` or `null` indicates a wildcard.
   removeMatches(subject, predicate, object, graph) {
-    const stream = new browser.Readable({ objectMode: true });
+    const stream = new (browser_namespaceFn().Readable)({ objectMode: true });
 
     const iterable = this.readQuads(subject, predicate, object, graph);
     stream._read = size => {
@@ -26430,7 +26700,7 @@ function indexMatch(index, ids, depth = 0) {
 /**
  * A class that implements both DatasetCore and Readable.
  */
-class DatasetCoreAndReadableStream extends browser.Readable {
+class DatasetCoreAndReadableStream extends (browser_namespaceFn().Readable) {
   constructor(n3Store, subject, predicate, object, graph, options) {
     super({ objectMode: true });
     Object.assign(this, { n3Store, subject, predicate, object, graph, options });
@@ -26869,10 +27139,9 @@ function termEq(t1, t2) {
 
 
 // ## Constructor
-class N3StreamParser extends browser.Transform {
+class N3StreamParser extends (browser_namespaceFn().Transform) {
   constructor(options) {
-    super({ decodeStrings: true });
-    this._readableState.objectMode = true;
+    super({ decodeStrings: true, readableObjectMode: true });
 
     // Set up parser with dummy stream to obtain `data` and `end` callbacks
     const parser = new N3Parser(options);
@@ -26904,9 +27173,13 @@ class N3StreamParser extends browser.Transform {
 
   // ### Parses a stream of strings
   import(stream) {
-    stream.on('data',  chunk => { this.write(chunk); });
-    stream.on('end',   ()      => { this.end(); });
     stream.on('error', error => { this.emit('error', error); });
+    if (typeof stream.pipe === 'function')
+      stream.pipe(this);
+    else {
+      stream.on('data', chunk => { this.write(chunk); });
+      stream.on('end',  ()    => { this.end(); });
+    }
     return this;
   }
 }
@@ -26920,7 +27193,7 @@ const MIN_CHUNK_SIZE = 16 * 1024;
 const DEFAULT_FLUSH_DELAY_MS = 20;
 
 // ## Constructor
-class N3StreamWriter extends browser.Transform {
+class N3StreamWriter extends (browser_namespaceFn().Transform) {
   constructor(options) {
     super({ encoding: 'utf8', writableObjectMode: true });
 
@@ -31635,21 +31908,21 @@ module.exports = {
   isDestroyed,
   kIsDestroyed,
   isDisturbed,
-  kIsDisturbed,
+  ...void (kIsDisturbed),
   isErrored,
-  kIsErrored,
+  ...void (kIsErrored),
   isReadable,
-  kIsReadable,
+  ...void (kIsReadable),
   kIsClosedPromise,
   kControllerErrorFunction,
-  kIsWritable,
+  ...void (kIsWritable),
   isClosed,
   isDuplexNodeStream,
   isFinished,
   isIterable,
   isReadableNodeStream,
   isReadableStream,
-  isReadableEnded,
+  ...void (isReadableEnded),
   isReadableFinished,
   isReadableErrored,
   isNodeStream,
@@ -31657,11 +31930,11 @@ module.exports = {
   isWritable,
   isWritableNodeStream,
   isWritableStream,
-  isWritableEnded,
+  ...void (isWritableEnded),
   isWritableFinished,
   isWritableErrored,
   isServerRequest,
-  isServerResponse,
+  ...void (isServerResponse),
   willEmitClose,
   isTransformStream
 }
@@ -33003,76 +33276,33 @@ function validateLinkHeaderValue(hints) {
   )
 }
 module.exports = {
-  isInt32,
-  isUint32,
-  parseFileMode,
-  validateArray,
-  validateStringArray,
-  validateBooleanArray,
-  validateAbortSignalArray,
+  ...void (isInt32),
+  ...void (isUint32),
+  ...void (parseFileMode),
+  ...void (validateArray),
+  ...void (validateStringArray),
+  ...void (validateBooleanArray),
+  ...void (validateAbortSignalArray),
   validateBoolean,
-  validateBuffer,
-  validateDictionary,
-  validateEncoding,
+  ...void (validateBuffer),
+  ...void (validateDictionary),
+  ...void (validateEncoding),
   validateFunction,
-  validateInt32,
+  ...void (validateInt32),
   validateInteger,
-  validateNumber,
+  ...void (validateNumber),
   validateObject,
-  validateOneOf,
-  validatePlainFunction,
-  validatePort,
-  validateSignalName,
-  validateString,
-  validateUint32,
-  validateUndefined,
-  validateUnion,
+  ...void (validateOneOf),
+  ...void (validatePlainFunction),
+  ...void (validatePort),
+  ...void (validateSignalName),
+  ...void (validateString),
+  ...void (validateUint32),
+  ...void (validateUndefined),
+  ...void (validateUnion),
   validateAbortSignal,
-  validateLinkHeaderValue
+  ...void (validateLinkHeaderValue)
 }
-
-
-/***/ },
-
-/***/ 7639
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-const CustomStream = __webpack_require__(5855)
-const promises = __webpack_require__(2520)
-const originalDestroy = CustomStream.Readable.destroy
-module.exports = CustomStream.Readable
-
-// Explicit export naming is needed for ESM
-module.exports._uint8ArrayToBuffer = CustomStream._uint8ArrayToBuffer
-module.exports._isUint8Array = CustomStream._isUint8Array
-module.exports.isDisturbed = CustomStream.isDisturbed
-module.exports.isErrored = CustomStream.isErrored
-module.exports.isReadable = CustomStream.isReadable
-module.exports.Readable = CustomStream.Readable
-module.exports.Writable = CustomStream.Writable
-module.exports.Duplex = CustomStream.Duplex
-module.exports.Transform = CustomStream.Transform
-module.exports.PassThrough = CustomStream.PassThrough
-module.exports.addAbortSignal = CustomStream.addAbortSignal
-module.exports.finished = CustomStream.finished
-module.exports.destroy = CustomStream.destroy
-module.exports.destroy = originalDestroy
-module.exports.pipeline = CustomStream.pipeline
-module.exports.compose = CustomStream.compose
-Object.defineProperty(CustomStream, 'promises', {
-  configurable: true,
-  enumerable: true,
-  get() {
-    return promises
-  }
-})
-module.exports.Stream = CustomStream.Stream
-
-// Allow default importing
-module.exports["default"] = module.exports
 
 
 /***/ },
@@ -34290,7 +34520,7 @@ function simpleEnd(buf) {
 var __webpack_unused_export__;
 const { JisonParser, o } = __webpack_require__(5546);
 /**
- * parser generated by  @ts-jison/parser-generator 0.4.1-alpha.2
+ * parser generated by  @ts-jison/parser-generator 0.4.1-alpha.4
  * @returns Parser implementing JisonParserApi and a Lexer implementing JisonLexerApi.
  */
 
@@ -34595,7 +34825,7 @@ __webpack_unused_export__ = ({ value: true });
 exports.Gs = ShapeMapJisonParser;
 
 
-/* generated by @ts-jison/lexer-generator 0.4.1-alpha.2 */
+/* generated by @ts-jison/lexer-generator 0.4.1-alpha.4 */
 const { JisonLexer } = __webpack_require__(7450);
 
 class ShapeMapJisonLexer extends JisonLexer {
@@ -36003,7 +36233,7 @@ exports.stringifyWithOffsets = stringifyWithOffsets;
 const ShExParser = __importStar(__webpack_require__(4822));
 const ShapeMap = __importStar(__webpack_require__(234));
 const emit_1 = __webpack_require__(2388);
-const RdfJs = __importStar(__webpack_require__(3112));
+const RdfJs = __importStar(__webpack_require__(3197));
 const lang_json_1 = __webpack_require__(5533);
 const { describeError, relativeIri } = __webpack_require__(546);
 const XSD_STRING = "http://www.w3.org/2001/XMLSchema#string";
@@ -37534,7 +37764,7 @@ function stringifyWithOffsets(value, isTarget, indent = 2) {
 
 /***/ },
 
-/***/ 3112
+/***/ 3197
 (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -37568,6 +37798,56 @@ __webpack_require__.d(__webpack_exports__, {
   termFromId: () => (/* reexport */ termFromId),
   termToId: () => (/* reexport */ termToId)
 });
+
+// MODULE: ../shex-editor-services/node_modules/readable-stream/lib/ours/browser.js
+var browser_namespaceFn = /*#__PURE__*/__webpack_require__.cw(function(module, exports) {
+
+
+const CustomStream = (stream_namespaceFn())
+const promises = (promises_namespaceFn())
+const originalDestroy = CustomStream.Readable.destroy
+module.exports = CustomStream.Readable
+
+// Explicit export naming is needed for ESM
+module.exports._uint8ArrayToBuffer = CustomStream._uint8ArrayToBuffer
+module.exports._isUint8Array = CustomStream._isUint8Array
+module.exports.isDisturbed = CustomStream.isDisturbed
+module.exports.isErrored = CustomStream.isErrored
+module.exports.isReadable = CustomStream.isReadable
+module.exports.Readable = CustomStream.Readable
+module.exports.Writable = CustomStream.Writable
+module.exports.Duplex = CustomStream.Duplex
+module.exports.Transform = CustomStream.Transform
+module.exports.PassThrough = CustomStream.PassThrough
+module.exports.addAbortSignal = CustomStream.addAbortSignal
+module.exports.finished = CustomStream.finished
+module.exports.destroy = CustomStream.destroy
+module.exports.destroy = originalDestroy
+module.exports.pipeline = CustomStream.pipeline
+module.exports.compose = CustomStream.compose
+Object.defineProperty(CustomStream, 'promises', {
+  configurable: true,
+  enumerable: true,
+  get() {
+    return promises
+  }
+})
+module.exports.Stream = CustomStream.Stream
+
+// Allow default importing
+module.exports["default"] = module.exports
+
+});
+
+// EXTERNAL MODULE: ../shex-editor-services/node_modules/readable-stream/lib/stream.js
+var stream_namespaceFn = () => {
+	return __webpack_require__(3054);
+};
+
+// EXTERNAL MODULE: ../shex-editor-services/node_modules/readable-stream/lib/stream/promises.js
+var promises_namespaceFn = () => {
+	return __webpack_require__(5339);
+};
 
 // NAMESPACE OBJECT: ../shex-editor-services/node_modules/n3/src/N3Util.js
 var src_N3Util_namespaceObject = {};
@@ -37643,6 +37923,7 @@ const RDF  = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
 
 
 const { xsd } = IRIs;
+const SPACE = 0x20, TAB = 0x09, LF = 0x0A, CR = 0x0D, HASH = 0x23;
 
 // Regular expression and replacement strings to unescape N3 strings
 const escapeSequence = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\([^])/g;
@@ -37669,12 +37950,9 @@ const lineModeRegExps = {
   _unescapedIri: true,
   _simpleQuotedString: true,
   _langcode: true,
-  _dircode: true,
   _blank: true,
-  _newline: true,
-  _comment: true,
+  _commentLine: true,
   _whitespace: true,
-  _endOfFile: true,
 };
 const invalidRegExp = /$0^/;
 
@@ -37688,7 +37966,6 @@ class N3Lexer {
     this._simpleQuotedString = /^"([^"\\\r\n]*)"(?=[^"])/; // string without escape sequences
     this._simpleApostropheString = /^'([^'\\\r\n]*)'(?=[^'])/;
     this._langcode = /^@([a-z]+(?:-[a-z0-9]+)*)(?=[^a-z0-9])/i;
-    this._dircode = /^--(?:(ltr)|(rtl))/;
     this._prefix = /^((?:[A-Za-z\xc0-\xd6\xd8-\xf6\xf8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])(?:\.?[\-0-9A-Z_a-z\xb7\xc0-\xd6\xd8-\xf6\xf8-\u037d\u037f-\u1fff\u200c\u200d\u203f\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])*)?:(?=[#\s<])/;
     this._prefixed = /^((?:[A-Za-z\xc0-\xd6\xd8-\xf6\xf8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])(?:\.?[\-0-9A-Z_a-z\xb7\xc0-\xd6\xd8-\xf6\xf8-\u037d\u037f-\u1fff\u200c\u200d\u203f\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])*)?:((?:(?:[0-:A-Z_a-z\xc0-\xd6\xd8-\xf6\xf8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff]|%[0-9a-fA-F]{2}|\\[!#-\/;=?\-@_~])(?:(?:[\.\-0-:A-Z_a-z\xb7\xc0-\xd6\xd8-\xf6\xf8-\u037d\u037f-\u1fff\u200c\u200d\u203f\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff]|%[0-9a-fA-F]{2}|\\[!#-\/;=?\-@_~])*(?:[\-0-:A-Z_a-z\xb7\xc0-\xd6\xd8-\xf6\xf8-\u037d\u037f-\u1fff\u200c\u200d\u203f\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff]|%[0-9a-fA-F]{2}|\\[!#-\/;=?\-@_~]))?)?)(?:[ \t]+|(?=\.?[,;!\^\s#()\[\]\{\}"'<>]))/;
     this._variable = /^\?(?:(?:[A-Z_a-z\xc0-\xd6\xd8-\xf6\xf8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])(?:[\-0-:A-Z_a-z\xb7\xc0-\xd6\xd8-\xf6\xf8-\u037d\u037f-\u1fff\u200c\u200d\u203f\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd]|[\ud800-\udb7f][\udc00-\udfff])*)(?=[.,;!\^\s#()\[\]\{\}"'<>])/;
@@ -37700,10 +37977,8 @@ class N3Lexer {
     this._n3Verb = /^(?:has|is|of)(?=[\s#()\[\]\{\}"'<>?_+\-0-9])/;
     this._n3Id = /^id(?=[\s#<])/;
     this._shortPredicates = /^a(?=[\s#()\[\]\{\}"'<>])/;
-    this._newline = /^[ \t]*(?:#[^\n\r]*)?(?:\r\n|\n|\r)[ \t]*/;
-    this._comment = /#([^\n\r]*)/;
+    this._commentLine = /^[ \t]*#([^\n\r]*)(?:\r\n|\n|\r)([ \t]*)/;
     this._whitespace = /^[ \t]+/;
-    this._endOfFile = /^(?:#[^\n\r]*)?$/;
     options = options || {};
 
     // Whether the log:isImpliedBy predicate is supported
@@ -37734,40 +38009,85 @@ class N3Lexer {
   _tokenizeToEnd(callback, inputFinished) {
     // Continue parsing as far as possible; the loop will return eventually
     let input = this._input;
-    let currentLineLength = input.length;
+    let currentLineLength = this._linePosition + input.length;
     while (true) {
-      // Count and skip whitespace lines
-      let whiteSpaceMatch, comment;
-      while (whiteSpaceMatch = this._newline.exec(input)) {
-        // Try to find a comment
-        if (this.comments && (comment = this._comment.exec(whiteSpaceMatch[0])))
-          emitToken('comment', comment[1], '', this._line, whiteSpaceMatch[0].length);
-        // Advance the input
-        input = input.slice(whiteSpaceMatch[0].length);
-        currentLineLength = input.length;
-        this._line++;
+      // Consume one separator line at a time, including its following indentation.
+      while (true) {
+        let charCode = input.charCodeAt(0), separatorLength = 0;
+        if (charCode === SPACE || charCode === TAB) {
+          const next = input.charCodeAt(1);
+          separatorLength = next === SPACE || next === TAB ?
+            this._whitespace.exec(input)[0].length : 1;
+          charCode = input.charCodeAt(separatorLength);
+        }
+        if (charCode === HASH) {
+          const comment = this._commentLine.exec(input);
+          if (comment) {
+            const commentLength = comment[0].length;
+            // Keep a trailing CR buffered in case the next chunk starts with LF.
+            if (!inputFinished && commentLength === input.length &&
+                input.charCodeAt(commentLength - 1) === CR) {
+              this._linePosition = currentLineLength - input.length;
+              return this._input = input;
+            }
+            if (this.comments)
+              emitComment(comment[1], this._line, separatorLength);
+            input = input.slice(commentLength);
+            currentLineLength = input.length + comment[2].length;
+            this._line++;
+          }
+          else {
+            // A comment without a line ending stays buffered until EOF.
+            input = input.slice(separatorLength);
+            if (!inputFinished) {
+              this._linePosition = currentLineLength - input.length;
+              return this._input = input;
+            }
+            if (this.comments)
+              emitComment(input.slice(1), this._line, 0);
+            input = '';
+            break;
+          }
+        }
+        else if (charCode === LF || charCode === CR) {
+          // A CR at the end of a chunk may still be followed by LF.
+          if (!inputFinished && charCode === CR && separatorLength + 1 === input.length) {
+            this._linePosition = currentLineLength - input.length;
+            return this._input = input;
+          }
+          separatorLength += charCode === CR && input.charCodeAt(separatorLength + 1) === LF ? 2 : 1;
+          // Indentation is consumed with the newline, but belongs to the next line's columns.
+          let indentationLength = 0;
+          const next = input.charCodeAt(separatorLength);
+          if (next === SPACE || next === TAB) {
+            const following = input.charCodeAt(separatorLength + 1);
+            indentationLength = following === SPACE || following === TAB ?
+              this._whitespace.exec(input.slice(separatorLength))[0].length : 1;
+          }
+          input = input.slice(separatorLength + indentationLength);
+          currentLineLength = input.length + indentationLength;
+          this._line++;
+        }
+        else {
+          if (separatorLength !== 0)
+            input = input.slice(separatorLength);
+          break;
+        }
       }
-      // Skip whitespace on current line
-      if (!whiteSpaceMatch && (whiteSpaceMatch = this._whitespace.exec(input)))
-        input = input.slice(whiteSpaceMatch[0].length);
-
-      // Stop for now if we're at the end
-      if (this._endOfFile.test(input)) {
-        // If the input is finished, emit EOF
+      if (input.length === 0) {
         if (inputFinished) {
-          // Try to find a final comment
-          if (this.comments && (comment = this._comment.exec(input)))
-            emitToken('comment', comment[1], '', this._line, input.length);
           input = null;
           emitToken('eof', '', '', this._line, 0);
         }
+        this._linePosition = currentLineLength;
         return this._input = input;
       }
 
       // Look for specific token types based on the first character
       const line = this._line, firstChar = input[0];
       let type = '', value = '', prefix = '',
-          match = null, matchLength = 0, inconclusive = false;
+          match = null, matchLength = 0, lexicalLength = 0,
+          finalLineLength = 0, inconclusive = false;
       switch (firstChar) {
       case '^':
         // We need at least 3 tokens lookahead to distinguish ^^<IRI> and ^^pre:fixed
@@ -37794,14 +38114,17 @@ class N3Lexer {
         // Fall through in case the type is an IRI
       case '<':
         // Try to find a full IRI without escape sequences
-        if (match = this._unescapedIri.exec(input))
+        if (match = this._unescapedIri.exec(input)) {
           type = 'IRI', value = match[1];
+          lexicalLength = match[1].length + 2;
+        }
         // Try to find a full IRI with escape sequences
         else if (match = this._iri.exec(input)) {
           value = this._unescape(match[1], stringEscapeReplacements);
           if (value === null || illegalIriChars.test(value))
             return reportSyntaxError(this);
           type = 'IRI';
+          lexicalLength = match[1].length + 2;
         }
         // Try to find a triple term
         else if (input.length > 2 && input[1] === '<' && input[2] === '(')
@@ -37831,8 +38154,10 @@ class N3Lexer {
         // we always need a non-dot character before deciding it is a blank node.
         // Therefore, try inserting a space if we're at the end of the input.
         if ((match = this._blank.exec(input)) ||
-            inputFinished && (match = this._blank.exec(`${input} `)))
+            inputFinished && (match = this._blank.exec(`${input} `))) {
           type = 'blank', prefix = '_', value = match[1];
+          lexicalLength = match[1].length + 2;
+        }
         break;
 
       case '"':
@@ -37841,7 +38166,7 @@ class N3Lexer {
           value = match[1];
         // Try to find a literal wrapped in three pairs of quotes
         else {
-          ({ value, matchLength } = this._parseLiteral(input));
+          ({ value, matchLength, finalLineLength } = this._parseLiteral(input));
           if (value === null)
             return reportSyntaxError(this);
         }
@@ -37858,7 +38183,7 @@ class N3Lexer {
             value = match[1];
           // Try to find a literal wrapped in three pairs of quotes
           else {
-            ({ value, matchLength } = this._parseLiteral(input));
+            ({ value, matchLength, finalLineLength } = this._parseLiteral(input));
             if (value === null)
               return reportSyntaxError(this);
           }
@@ -37915,8 +38240,12 @@ class N3Lexer {
       case '-':
         if (input[1] === '-') {
           // Try to find a direction code
-          if (this._previousMarker === 'langcode' && (match = this._dircode.exec(input)))
-            type = 'dircode', matchLength = 2, value = (match[1] || match[2]), matchLength = value.length + 2;
+          if (this._previousMarker === 'langcode') {
+            if (input.startsWith('--ltr'))
+              type = 'dircode', value = 'ltr', matchLength = 5;
+            else if (input.startsWith('--rtl'))
+              type = 'dircode', value = 'rtl', matchLength = 5;
+          }
           break;
         }
 
@@ -37949,16 +38278,16 @@ class N3Lexer {
       case 'f':
       case 't':
         // Try to match a boolean
-        if (match = this._boolean.exec(input))
-          type = 'literal', value = match[0], prefix = xsd.boolean;
+        if (this._boolean.test(input))
+          type = 'literal', value = firstChar === 't' ? 'true' : 'false', prefix = xsd.boolean, matchLength = value.length;
         else
           inconclusive = true;
         break;
 
       case 'a':
         // Try to find an abbreviated predicate
-        if (match = this._shortPredicates.exec(input))
-          type = 'abbreviation', value = 'a';
+        if (this._shortPredicates.test(input))
+          type = 'abbreviation', value = 'a', matchLength = 1;
         else
           inconclusive = true;
         break;
@@ -37974,8 +38303,8 @@ class N3Lexer {
 
       case 'i':
         // Try to find an IRI property list identifier or N3 verb keyword
-        if (this._n3Mode && (match = this._n3Id.exec(input)))
-          type = 'id';
+        if (this._n3Mode && this._n3Id.test(input))
+          type = 'id', matchLength = 2;
         else if (this._n3Mode && (match = this._matchN3Verb(input, inputFinished)))
           type = match[0];
         else
@@ -38049,8 +38378,11 @@ class N3Lexer {
         // we always need a non-dot character before deciding it is a prefixed name.
         // Therefore, try inserting a space if we're at the end of the input.
         else if ((match = this._prefixed.exec(input)) ||
-                 inputFinished && (match = this._prefixed.exec(`${input} `)))
-          type = 'prefixed', prefix = match[1] || '', value = this._unescape(match[2], localNameEscapeReplacements);
+                 inputFinished && (match = this._prefixed.exec(`${input} `))) {
+          type = 'prefixed', prefix = match[1] || '';
+          value = this._unescape(match[2], localNameEscapeReplacements);
+          lexicalLength = prefix.length + match[2].length + 1;
+        }
       }
 
       // A type token is special: it can only be emitted after an IRI or prefixed name is read
@@ -38069,20 +38401,44 @@ class N3Lexer {
         // One exception: error on an unaccounted linebreak (= not inside a triple-quoted literal).
         if (inputFinished || (!/^'''|^"""/.test(input) && /\n|\r/.test(input)))
           return reportSyntaxError(this);
-        else
+        else {
+          this._linePosition = currentLineLength - input.length;
           return this._input = input;
+        }
       }
 
       // Emit the parsed token
+      // Consumption includes separator whitespace; lexicalLength excludes it
+      // and any synthetic EOF space. slice below clamps consumption to the input.
       const length = matchLength || match[0].length;
-      const token = emitToken(type, value, prefix, line, length);
+      let token;
+      if (finalLineLength) {
+        token = {
+          type, value, prefix, line,
+          start: currentLineLength - input.length,
+          end: finalLineLength, endLine: this._line,
+        };
+        callback(null, token);
+      }
+      else
+        token = emitToken(type, value, prefix, line, lexicalLength || length);
       this.previousToken = token;
       this._previousMarker = type;
 
       // Advance to next part to tokenize
       input = input.slice(length);
+      if (finalLineLength)
+        currentLineLength = input.length + finalLineLength;
     }
 
+    // Emits a comment at its exact position within matched whitespace.
+    function emitComment(value, line, offset) {
+      const start = currentLineLength - input.length + offset;
+      callback(null, {
+        type: 'comment', value, prefix: '', line,
+        start, end: start + value.length + 1,
+      });
+    }
     // Emits the token through the callback
     function emitToken(type, value, prefix, line, length) {
       const start = input ? currentLineLength - input.length : currentLineLength;
@@ -38125,6 +38481,8 @@ class N3Lexer {
   // ### `_unescape` replaces N3 escape codes by their corresponding characters,
   // allowing only the fixed escape sequences from the given replacement table
   _unescape(item, replacements) {
+    if (item.indexOf('\\') < 0)
+      return item;
     let invalid = false;
     const replaced = item.replace(escapeSequence, (sequence, unicode4, unicode8, escapedChar) => {
       // 4-digit unicode character
@@ -38160,9 +38518,12 @@ class N3Lexer {
   _parseLiteral(input) {
     // Ensure we have enough lookahead to identify triple-quoted strings
     if (input.length >= 3) {
-      // Identify the opening quote(s)
-      const opening = input.match(/^(?:"""|"|'''|'|)/)[0];
-      const openingLength = opening.length;
+      // The caller has already identified a single or double quote.
+      const quote = input[0];
+      const openingLength = input[1] === quote && input[2] === quote ? 3 : 1;
+      let opening = quote;
+      if (openingLength === 3)
+        opening = quote === '"' ? '"""' : "'''";
 
       // Find the next candidate closing quotes
       let closingPos = Math.max(this._literalClosingPos, openingLength);
@@ -38176,21 +38537,23 @@ class N3Lexer {
         // means these are actual, non-escaped closing quotes
         if (backslashCount % 2 === 0) {
           // Extract and unescape the value
-          const raw = input.substring(openingLength, closingPos);
-          const lines = raw.split(/\r\n|\r|\n/).length - 1;
+          const raw = input.substring(openingLength, closingPos),
+              lines = raw.split(/\r\n|\r|\n/),
+              lineCount = lines.length - 1;
           const matchLength = closingPos + openingLength;
           // Only triple-quoted strings can be multi-line
-          if (openingLength === 1 && lines !== 0 ||
+          if (openingLength === 1 && lineCount !== 0 ||
               openingLength === 3 && this._lineMode)
             break;
-          this._line += lines;
-          return { value: this._unescape(raw, stringEscapeReplacements), matchLength };
+          this._line += lineCount;
+          const finalLineLength = lineCount === 0 ? 0 : lines[lines.length - 1].length + openingLength;
+          return { value: this._unescape(raw, stringEscapeReplacements), matchLength, finalLineLength };
         }
         closingPos++;
       }
       this._literalClosingPos = input.length - openingLength + 1;
     }
-    return { value: '', matchLength: 0 };
+    return { value: '', matchLength: 0, finalLineLength: 0 };
   }
 
   // ### `_syntaxError` creates a syntax error for the given issue
@@ -38207,22 +38570,40 @@ class N3Lexer {
 
   // ### Strips off any starting UTF BOM mark.
   _readStartingBom(input) {
-    return input.startsWith('\ufeff') ? input.slice(1) : input;
+    if (input.startsWith('\ufeff')) {
+      this._linePosition = 1;
+      return input.slice(1);
+    }
+    return input;
   }
 
   // ## Public methods
 
   // ### `tokenize` starts the transformation of an N3 document into an array of tokens.
   // The input can be a string or a stream.
+  // Token ranges use one-based lines and zero-based, end-exclusive UTF-16 columns.
+  // Separator whitespace counts towards the next token's start, outside either range.
+  // Multiline tokens also have endLine; their end column is relative to that line.
   tokenize(input, callback) {
+    // Deferred tokenization and stream events can outlive their invocation.
+    // Ignore them once a later call takes ownership of the lexer state.
+    const tokenization = this._tokenization = {};
     this._line = 1;
+    this._linePosition = 0;
+    this._previousMarker = undefined;
+    this.previousToken = undefined;
+    this._literalClosingPos = 0;
+    this._input = undefined;
 
     // If the input is a string, continuously emit tokens through the callback until the end
     if (typeof input === 'string') {
       this._input = this._readStartingBom(input);
       // If a callback was passed, asynchronously call it
       if (typeof callback === 'function')
-        queueMicrotask(() => this._tokenizeToEnd(callback, true));
+        queueMicrotask(() => {
+          if (this._tokenization === tokenization)
+            this._tokenizeToEnd(callback, true);
+        });
       // If no callback was passed, tokenize synchronously and return
       else {
         const tokens = [];
@@ -38239,7 +38620,7 @@ class N3Lexer {
         input.setEncoding('utf8');
       // Adds the data chunk to the buffer and parses as far as possible
       input.on('data', data => {
-        if (this._input !== null && data.length !== 0) {
+        if (this._tokenization === tokenization && this._input !== null && data.length !== 0) {
           // Prepend any previous pending writes
           if (this._pendingBuffer) {
             data = buffer.Buffer.concat([this._pendingBuffer, data]);
@@ -38262,10 +38643,13 @@ class N3Lexer {
       });
       // Parses until the end
       input.on('end', () => {
-        if (typeof this._input === 'string')
+        if (this._tokenization === tokenization && typeof this._input === 'string')
           this._tokenizeToEnd(callback, true);
       });
-      input.on('error', callback);
+      input.on('error', error => {
+        if (this._tokenization === tokenization)
+          callback(error);
+      });
     }
   }
 }
@@ -41031,8 +41415,9 @@ function characterReplacer(character) {
   return result;
 }
 
-// EXTERNAL MODULE: ../shex-editor-services/node_modules/readable-stream/lib/ours/browser.js
-var browser = __webpack_require__(3762);
+;// ../shex-editor-services/node_modules/readable-stream/lib/ours/browser.js
+browser_namespaceFn();
+
 ;// ../shex-editor-services/node_modules/n3/src/N3Store.js
 // **N3Store** objects store N3 quads by graph in memory.
 
@@ -41584,7 +41969,7 @@ class N3Store {
   // ### `removeMatches` removes all matching quads from the store
   // Setting any field to `undefined` or `null` indicates a wildcard.
   removeMatches(subject, predicate, object, graph) {
-    const stream = new browser.Readable({ objectMode: true });
+    const stream = new (browser_namespaceFn().Readable)({ objectMode: true });
 
     const iterable = this.readQuads(subject, predicate, object, graph);
     stream._read = size => {
@@ -42242,7 +42627,7 @@ function indexMatch(index, ids, depth = 0) {
 /**
  * A class that implements both DatasetCore and Readable.
  */
-class DatasetCoreAndReadableStream extends browser.Readable {
+class DatasetCoreAndReadableStream extends (browser_namespaceFn().Readable) {
   constructor(n3Store, subject, predicate, object, graph, options) {
     super({ objectMode: true });
     Object.assign(this, { n3Store, subject, predicate, object, graph, options });
@@ -42681,10 +43066,9 @@ function termEq(t1, t2) {
 
 
 // ## Constructor
-class N3StreamParser extends browser.Transform {
+class N3StreamParser extends (browser_namespaceFn().Transform) {
   constructor(options) {
-    super({ decodeStrings: true });
-    this._readableState.objectMode = true;
+    super({ decodeStrings: true, readableObjectMode: true });
 
     // Set up parser with dummy stream to obtain `data` and `end` callbacks
     const parser = new N3Parser(options);
@@ -42716,9 +43100,13 @@ class N3StreamParser extends browser.Transform {
 
   // ### Parses a stream of strings
   import(stream) {
-    stream.on('data',  chunk => { this.write(chunk); });
-    stream.on('end',   ()      => { this.end(); });
     stream.on('error', error => { this.emit('error', error); });
+    if (typeof stream.pipe === 'function')
+      stream.pipe(this);
+    else {
+      stream.on('data', chunk => { this.write(chunk); });
+      stream.on('end',  ()    => { this.end(); });
+    }
     return this;
   }
 }
@@ -42732,7 +43120,7 @@ const MIN_CHUNK_SIZE = 16 * 1024;
 const DEFAULT_FLUSH_DELAY_MS = 20;
 
 // ## Constructor
-class N3StreamWriter extends browser.Transform {
+class N3StreamWriter extends (browser_namespaceFn().Transform) {
   constructor(options) {
     super({ encoding: 'utf8', writableObjectMode: true });
 
@@ -47447,21 +47835,21 @@ module.exports = {
   isDestroyed,
   kIsDestroyed,
   isDisturbed,
-  kIsDisturbed,
+  ...void (kIsDisturbed),
   isErrored,
-  kIsErrored,
+  ...void (kIsErrored),
   isReadable,
-  kIsReadable,
+  ...void (kIsReadable),
   kIsClosedPromise,
   kControllerErrorFunction,
-  kIsWritable,
+  ...void (kIsWritable),
   isClosed,
   isDuplexNodeStream,
   isFinished,
   isIterable,
   isReadableNodeStream,
   isReadableStream,
-  isReadableEnded,
+  ...void (isReadableEnded),
   isReadableFinished,
   isReadableErrored,
   isNodeStream,
@@ -47469,11 +47857,11 @@ module.exports = {
   isWritable,
   isWritableNodeStream,
   isWritableStream,
-  isWritableEnded,
+  ...void (isWritableEnded),
   isWritableFinished,
   isWritableErrored,
   isServerRequest,
-  isServerResponse,
+  ...void (isServerResponse),
   willEmitClose,
   isTransformStream
 }
@@ -48815,76 +49203,33 @@ function validateLinkHeaderValue(hints) {
   )
 }
 module.exports = {
-  isInt32,
-  isUint32,
-  parseFileMode,
-  validateArray,
-  validateStringArray,
-  validateBooleanArray,
-  validateAbortSignalArray,
+  ...void (isInt32),
+  ...void (isUint32),
+  ...void (parseFileMode),
+  ...void (validateArray),
+  ...void (validateStringArray),
+  ...void (validateBooleanArray),
+  ...void (validateAbortSignalArray),
   validateBoolean,
-  validateBuffer,
-  validateDictionary,
-  validateEncoding,
+  ...void (validateBuffer),
+  ...void (validateDictionary),
+  ...void (validateEncoding),
   validateFunction,
-  validateInt32,
+  ...void (validateInt32),
   validateInteger,
-  validateNumber,
+  ...void (validateNumber),
   validateObject,
-  validateOneOf,
-  validatePlainFunction,
-  validatePort,
-  validateSignalName,
-  validateString,
-  validateUint32,
-  validateUndefined,
-  validateUnion,
+  ...void (validateOneOf),
+  ...void (validatePlainFunction),
+  ...void (validatePort),
+  ...void (validateSignalName),
+  ...void (validateString),
+  ...void (validateUint32),
+  ...void (validateUndefined),
+  ...void (validateUnion),
   validateAbortSignal,
-  validateLinkHeaderValue
+  ...void (validateLinkHeaderValue)
 }
-
-
-/***/ },
-
-/***/ 3762
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-
-const CustomStream = __webpack_require__(3054)
-const promises = __webpack_require__(5339)
-const originalDestroy = CustomStream.Readable.destroy
-module.exports = CustomStream.Readable
-
-// Explicit export naming is needed for ESM
-module.exports._uint8ArrayToBuffer = CustomStream._uint8ArrayToBuffer
-module.exports._isUint8Array = CustomStream._isUint8Array
-module.exports.isDisturbed = CustomStream.isDisturbed
-module.exports.isErrored = CustomStream.isErrored
-module.exports.isReadable = CustomStream.isReadable
-module.exports.Readable = CustomStream.Readable
-module.exports.Writable = CustomStream.Writable
-module.exports.Duplex = CustomStream.Duplex
-module.exports.Transform = CustomStream.Transform
-module.exports.PassThrough = CustomStream.PassThrough
-module.exports.addAbortSignal = CustomStream.addAbortSignal
-module.exports.finished = CustomStream.finished
-module.exports.destroy = CustomStream.destroy
-module.exports.destroy = originalDestroy
-module.exports.pipeline = CustomStream.pipeline
-module.exports.compose = CustomStream.compose
-Object.defineProperty(CustomStream, 'promises', {
-  configurable: true,
-  enumerable: true,
-  get() {
-    return promises
-  }
-})
-module.exports.Stream = CustomStream.Stream
-
-// Allow default importing
-module.exports["default"] = module.exports
 
 
 /***/ },
@@ -50528,7 +50873,7 @@ module.exports = ShExLoaderCjsModule;
 var __webpack_unused_export__;
 const { JisonParser, o } = __webpack_require__(5546);
 /**
- * parser generated by  @ts-jison/parser-generator 0.4.1-alpha.2
+ * parser generated by  @ts-jison/parser-generator 0.4.1-alpha.4
  * @returns Parser implementing JisonParserApi and a Lexer implementing JisonLexerApi.
  */
 
@@ -51587,7 +51932,7 @@ __webpack_unused_export__ = ({ value: true });
 exports.JY = ShExJisonParser;
 
 
-/* generated by @ts-jison/lexer-generator 0.4.1-alpha.2 */
+/* generated by @ts-jison/lexer-generator 0.4.1-alpha.4 */
 const { JisonLexer } = __webpack_require__(7450);
 
 class ShExJisonLexer extends JisonLexer {
@@ -59358,7 +59703,7 @@ module.exports = ShExCWriter;
 /***/ 5074
 (__unused_webpack_module, exports) {
 
-/*! js-yaml 5.4.1 https://github.com/nodeca/js-yaml @license MIT */
+/*! js-yaml 5.4.2 https://github.com/nodeca/js-yaml @license MIT */
 Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 //#region src/tag.ts
 /**
@@ -62291,6 +62636,7 @@ function doubleQuoteWhitespaceOnly(layout) {
 function applyForceQuotesOption(layout) {
 	if (!layout.presenterOptions.forceQuotes) return;
 	if (layout.isKey || layout.style !== SCALAR_STYLE.PLAIN) return;
+	if (layout.node.tag !== layout.presenterOptions.schema.defaultScalarTag.tagName) return;
 	layout.style = layout.node.value.includes("\n") ? SCALAR_STYLE.DOUBLE_QUOTED : _preferredQuotedStyle(layout);
 }
 function tryLongOrMultilineAsBlock(layout) {
@@ -75439,7 +75785,7 @@ class Chunk {
         this.value = value;
         this.maxPoint = maxPoint;
     }
-    get length() { return this.to[this.to.length - 1]; }
+    get length() { return last(this.to); }
     // Find the index of the given position and side. Use the ranges'
     // `from` pos when `end == false`, `to` when `end == true`.
     findIndex(pos, side, end, startAt = 0) {
@@ -75462,9 +75808,9 @@ class Chunk {
             if (f(this.from[i] + offset, this.to[i] + offset, this.value[i]) === false)
                 return false;
     }
-    map(offset, changes) {
+    map(offset, changes, basePos, baseSide, spill) {
         let value = [], from = [], to = [], newPos = -1, maxPoint = -1;
-        for (let i = 0; i < this.value.length; i++) {
+        iter: for (let i = 0; i < this.value.length; i++) {
             let val = this.value[i], curFrom = this.from[i] + offset, curTo = this.to[i] + offset, newFrom, newTo;
             if (curFrom == curTo) {
                 let mapped = changes.mapPos(curFrom, val.startSide, val.mapMode);
@@ -75489,9 +75835,29 @@ class Chunk {
                 newPos = newFrom;
             if (val.point)
                 maxPoint = Math.max(maxPoint, newTo - newFrom);
-            value.push(val);
-            from.push(newFrom - newPos);
-            to.push(newTo - newPos);
+            if ((newFrom - basePos || val.startSide - baseSide) >= 0) {
+                value.push(val);
+                from.push(newFrom - newPos);
+                to.push(newTo - newPos);
+                basePos = newTo;
+                baseSide = val.endSide;
+            }
+            else {
+                if (newFrom == newTo) { // Try to reorder points to fit in here
+                    for (let i = value.length; i > 0; i--) {
+                        if ((newFrom - (to[i - 1] + newPos) || val.startSide - value[i - 1].endSide) >= 0) {
+                            value.splice(i, 0, val);
+                            from.splice(i, 0, newFrom - newPos);
+                            to.splice(i, 0, newTo - newPos);
+                            continue iter;
+                        }
+                        if ((newFrom - (from[i - 1] + newPos) || val.endSide - value[i - 1].startSide) > 0)
+                            break;
+                    }
+                }
+                // Otherwise, spill into a new layer
+                spill(newFrom, newTo, val);
+            }
         }
         return { mapped: value.length ? new Chunk(from, to, value, maxPoint) : null, pos: newPos };
     }
@@ -75578,7 +75944,7 @@ class RangeSet {
         while (cur.value || i < add.length) {
             if (i < add.length && (cur.from - add[i].from || cur.startSide - add[i].value.startSide) >= 0) {
                 let range = add[i++];
-                if (!builder.addInner(range.from, range.to, range.value))
+                if (!builder.addInner(range.from, range.to, range.value, false))
                     spill.push(range);
             }
             else if (cur.rangeIndex == 1 && cur.chunkIndex < this.chunk.length &&
@@ -75589,7 +75955,7 @@ class RangeSet {
             }
             else {
                 if (!filter || filterFrom > cur.to || filterTo < cur.from || filter(cur.from, cur.to, cur.value)) {
-                    if (!builder.addInner(cur.from, cur.to, cur.value))
+                    if (!builder.addInner(cur.from, cur.to, cur.value, false))
                         spill.push(Range.create(cur.from, cur.to, cur.value));
                 }
                 cur.next();
@@ -75605,6 +75971,12 @@ class RangeSet {
         if (changes.empty || this.isEmpty)
             return this;
         let chunks = [], chunkPos = [], maxPoint = -1;
+        let spilled;
+        let spill = (from, to, value) => {
+            if (!spilled)
+                spilled = new RangeSetBuilder();
+            spilled.addRange(from, to, value, false);
+        };
         for (let i = 0; i < this.chunk.length; i++) {
             let start = this.chunkPos[i], chunk = this.chunk[i];
             let touch = changes.touchesRange(start, start + chunk.length);
@@ -75614,7 +75986,9 @@ class RangeSet {
                 chunkPos.push(changes.mapPos(start));
             }
             else if (touch === true) {
-                let { mapped, pos } = chunk.map(start, changes);
+                let [prevPos, prevSide] = !chunks.length ? [-1, -1]
+                    : [last(chunkPos) + last(chunks).length, last(last(chunks).value).endSide];
+                let { mapped, pos } = chunk.map(start, changes, prevPos, prevSide, spill);
                 if (mapped) {
                     maxPoint = Math.max(maxPoint, mapped.maxPoint);
                     chunks.push(mapped);
@@ -75623,6 +75997,8 @@ class RangeSet {
             }
         }
         let next = this.nextLayer.map(changes);
+        if (spilled)
+            next = spilled.finishInner(next);
         return chunks.length == 0 ? next : new RangeSet(chunkPos, chunks, next || RangeSet.empty, maxPoint);
     }
     /**
@@ -75764,7 +76140,7 @@ class RangeSet {
     static join(sets) {
         if (!sets.length)
             return RangeSet.empty;
-        let result = sets[sets.length - 1];
+        let result = last(sets);
         for (let i = sets.length - 2; i >= 0; i--) {
             for (let layer = sets[i]; layer != RangeSet.empty; layer = layer.nextLayer)
                 result = new RangeSet(layer.chunkPos, layer.chunk, result, Math.max(layer.maxPoint, result.maxPoint));
@@ -75776,6 +76152,7 @@ class RangeSet {
 The empty set of ranges.
 */
 RangeSet.empty = new RangeSet([], [], null, -1);
+function last(arr) { return arr[arr.length - 1]; }
 function lazySort(ranges) {
     if (ranges.length > 1)
         for (let prev = ranges[0], i = 1; i < ranges.length; i++) {
@@ -75826,16 +76203,20 @@ class RangeSetBuilder {
     Add a range. Ranges should be added in sorted (by `from` and
     `value.startSide`) order.
     */
-    add(from, to, value) {
-        if (!this.addInner(from, to, value))
-            (this.nextLayer || (this.nextLayer = new RangeSetBuilder)).add(from, to, value);
+    add(from, to, value) { this.addRange(from, to, value, true); }
+    /**
+    @internal
+    */
+    addRange(from, to, value, strict) {
+        if (!this.addInner(from, to, value, strict))
+            (this.nextLayer || (this.nextLayer = new RangeSetBuilder)).addRange(from, to, value, strict);
     }
     /**
     @internal
     */
-    addInner(from, to, value) {
+    addInner(from, to, value, strict) {
         let diff = from - this.lastTo || value.startSide - this.last.endSide;
-        if (diff <= 0 && (from - this.lastFrom || value.startSide - this.last.startSide) < 0)
+        if (strict && diff <= 0 && (from - this.lastFrom || value.startSide - this.last.startSide) < 0)
             throw new Error("Ranges must be added sorted by `from` position and `startSide`");
         if (diff < 0)
             return false;
@@ -76992,6 +77373,22 @@ class DOMSelectionState {
         this.focusOffset = focusOffset;
     }
 }
+function getScrollStack(target) {
+    let stack = [];
+    for (let cur = target; cur; cur = cur.nodeType == 11 ? cur.host : cur.parentNode) {
+        if (cur.nodeType == 1)
+            stack.push({ node: cur, left: cur.scrollLeft, top: cur.scrollTop });
+    }
+    return stack;
+}
+function restoreScrollStack(stack, vert = true) {
+    for (let { node, left, top } of stack) {
+        if (vert && node.scrollTop != top)
+            node.scrollTop = top;
+        if (node.scrollLeft != left)
+            node.scrollLeft = left;
+    }
+}
 let preventScrollSupported = null;
 // Safari 26 breaks preventScroll support
 if (browser.safari && browser.safari_version >= 26)
@@ -77003,12 +77400,7 @@ function focusPreventScroll(dom) {
         return dom.setActive(); // in IE
     if (preventScrollSupported)
         return dom.focus(preventScrollSupported);
-    let stack = [];
-    for (let cur = dom; cur; cur = cur.parentNode) {
-        stack.push(cur, cur.scrollTop, cur.scrollLeft);
-        if (cur == cur.ownerDocument)
-            break;
-    }
+    let stack = getScrollStack(dom);
     dom.focus(preventScrollSupported == null ? {
         get preventScroll() {
             preventScrollSupported = { preventScroll: true };
@@ -77017,13 +77409,7 @@ function focusPreventScroll(dom) {
     } : undefined);
     if (!preventScrollSupported) {
         preventScrollSupported = false;
-        for (let i = 0; i < stack.length;) {
-            let elt = stack[i++], top = stack[i++], left = stack[i++];
-            if (elt.scrollTop != top)
-                elt.scrollTop = top;
-            if (elt.scrollLeft != left)
-                elt.scrollLeft = left;
-        }
+        restoreScrollStack(stack);
     }
 }
 let scratchRange;
@@ -79769,11 +80155,14 @@ class DocView {
         // can affect it. So this tries to kludge around the problem by
         // calling scrollIntoView on the scroll target's line.
         if (window.visualViewport && window.innerHeight - window.visualViewport.height > 1 &&
-            (rect.top > window.pageYOffset + window.visualViewport.offsetTop + window.visualViewport.height ||
-                rect.bottom < window.pageYOffset + window.visualViewport.offsetTop)) {
+            (rect.top > window.visualViewport.offsetTop + window.visualViewport.height ||
+                rect.bottom < window.visualViewport.offsetTop)) {
             let line = this.view.docView.lineAt(range.head, 1);
-            if (line)
+            if (line) {
+                let stack = getScrollStack(line.dom);
                 line.dom.scrollIntoView({ block: "nearest" });
+                restoreScrollStack(stack, false);
+            }
         }
     }
     lineHasWidget(pos) {
@@ -80195,23 +80584,22 @@ class InlineCoordsScan {
         search: while (lo < hi) {
             let dist = hi - lo, mid = (lo + hi) >> 1;
             adjust: if (seen.has(mid)) {
-                let scan = lo + Math.floor(Math.random() * dist);
-                for (let i = 0; i < dist; i++) {
+                for (let i = 1; i < dist; i++) {
+                    let scan = mid + i;
+                    if (scan >= hi)
+                        scan -= dist;
                     if (!seen.has(scan)) {
                         mid = scan;
                         break adjust;
                     }
-                    scan++;
-                    if (scan == hi)
-                        scan = lo; // Wrap around
                 }
                 break search; // No index found, we're done
             }
             seen.add(mid);
-            let rects = getRects(mid);
+            let rects = getRects(mid), side = 0;
             if (rects)
                 for (let i = 0; i < rects.length; i++) {
-                    let rect = rects[i], side = 0;
+                    let rect = rects[i];
                     // Ignore empty rectangles when there are other rectangles
                     if (rect.width == 0 && rects.length > 1)
                         continue;
@@ -80236,18 +80624,18 @@ class InlineCoordsScan {
                         if (off)
                             side = (off < 0) == (this.baseDir == exports.Direction.LTR) ? -1 : 1;
                     }
-                    // Narrow binary search when it is safe to do so
-                    if (side == -1 && (!bidi || this.baseDirAt(positions[mid], 1)))
-                        hi = mid;
-                    else if (side == 1 && (!bidi || this.baseDirAt(positions[mid + 1], -1)))
-                        lo = mid + 1;
                 }
+            // Narrow binary search when it is safe to do so
+            if (side == -1 && (!bidi || this.baseDirAt(positions[mid], 1)))
+                hi = mid;
+            else if (side == 1 && (!bidi || this.baseDirAt(positions[mid + 1], -1)))
+                lo = mid + 1;
         }
         // If no element with y overlap is found, find the nearest element
         // on the y axis, move this.y into it, and retry the scan.
         if (!closestRect) {
             if (!below && !above)
-                return { i: positions[0], after: false };
+                return { i: 0, after: false };
             let side = above && (!below || (this.y - above.bottom < below.top - this.y)) ? above : below;
             this.y = (side.top + side.bottom) / 2;
             return this.scan(positions, getRects, true);
@@ -80929,7 +81317,7 @@ class InputState {
                 iosVirtualKeyboardOpen(this.view.win))
                 mods.shiftKey = false;
             this.pendingIOSKey = { key: event.key, keyCode: event.keyCode, mods };
-            setTimeout(() => this.flushIOSKey(), 250);
+            setTimeout(() => this.flushIOSKey(), 50);
             return true;
         }
         if (event.keyCode != 229)
@@ -80938,7 +81326,7 @@ class InputState {
     }
     flushIOSKey(change) {
         let key = this.pendingIOSKey;
-        if (!key)
+        if (!key || this.view.observer.pendingRecords().length)
             return false;
         // This looks like an autocorrection before Enter
         if (key.key == "Enter" && change && change.from < change.to && /^\S+$/.test(change.insert.toString()))
@@ -82945,9 +83333,8 @@ class ViewState {
             scaleBlock(this.heightMap.lineAt(this.scaler.fromDOM(height), QueryType.ByHeight, this.heightOracle, 0, 0), this.scaler);
     }
     getScrollOffset() {
-        let base = this.scrollParent == this.view.scrollDOM ? this.scrollParent.scrollTop
+        return this.scrollParent == this.view.scrollDOM ? this.scrollParent.scrollTop * this.scaleY
             : (this.scrollParent ? this.scrollParent.getBoundingClientRect().top : 0) - this.view.contentDOM.getBoundingClientRect().top;
-        return base * this.scaleY;
     }
     scrollAnchorAt(scrollOffset) {
         let block = this.lineBlockAtHeight(scrollOffset + 8);
@@ -83339,8 +83726,9 @@ const baseTheme$1 = buildTheme("." + baseThemeID, {
         userSelect: "none"
     },
     ".cm-highlightSpace": {
-        backgroundImage: "radial-gradient(circle at 50% 55%, #aaa 20%, transparent 5%)",
-        backgroundPosition: "center",
+        background: "radial-gradient(circle at 50% 55%, #aaa 20%, transparent 0) no-repeat",
+        backgroundSize: ".4em",
+        backgroundPosition: "calc(min(50%, 0px)) center"
     },
     ".cm-highlightTab": {
         backgroundImage: `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="20"><path stroke="%23888" stroke-width="1" fill="none" d="M1 10H196L190 5M190 15L196 10M197 4L197 16"/></svg>')`,
@@ -84451,7 +84839,7 @@ class EditorView {
             this.observer.forceFlush();
         let updated = null;
         let scroll = this.viewState.scrollParent, scrollOffset = this.viewState.getScrollOffset();
-        let { scrollAnchorPos, scrollAnchorHeight } = this.viewState;
+        let { scrollAnchorPos, scrollAnchorHeight, scaleY: scrollScale } = this.viewState;
         if (Math.abs(scrollOffset - this.viewState.scrollOffset) > 1)
             scrollAnchorHeight = -1;
         this.viewState.scrollAnchorHeight = -1;
@@ -84460,13 +84848,14 @@ class EditorView {
                 if (scrollAnchorHeight < 0) {
                     if (isScrolledToBottom(scroll || this.win)) {
                         scrollAnchorPos = -1;
-                        scrollAnchorHeight = this.viewState.heightMap.height;
+                        scrollAnchorHeight = this.viewState.heightMap.height / this.viewState.scaleY;
                     }
                     else {
                         let block = this.viewState.scrollAnchorAt(scrollOffset);
                         scrollAnchorPos = block.from;
                         scrollAnchorHeight = block.top;
                     }
+                    scrollScale = this.viewState.scaleY;
                 }
                 this.updateState = 1 /* UpdateState.Measuring */;
                 let changed = this.viewState.measure();
@@ -84530,16 +84919,18 @@ class EditorView {
                         else {
                             let newAnchorHeight = scrollAnchorPos < 0 ? this.viewState.heightMap.height :
                                 this.viewState.lineBlockAt(scrollAnchorPos).top;
-                            let diff = (newAnchorHeight - scrollAnchorHeight) / this.scaleY;
+                            let diff = (newAnchorHeight / this.viewState.scaleY) - (scrollAnchorHeight / scrollScale);
                             if ((diff > 1 || diff < -1) &&
                                 !(browser.ios && this.inputState.lastIOSMomentumScroll > Date.now() - 100) &&
                                 (scroll == this.scrollDOM || this.hasFocus ||
                                     Math.max(this.inputState.lastWheelEvent, this.inputState.lastTouchTime) > Date.now() - 100)) {
                                 scrollOffset = scrollOffset + diff;
-                                if (scroll)
-                                    scroll.scrollTop += diff;
-                                else
+                                if (!scroll)
                                     this.win.scrollBy(0, diff);
+                                else if (scrollAnchorPos < 0)
+                                    scroll.scrollTop = scroll.scrollHeight;
+                                else
+                                    scroll.scrollTop += diff;
                                 scrollAnchorHeight = -1;
                                 continue;
                             }
@@ -85904,7 +86295,8 @@ const selectionLayer = layer({
     },
     class: "cm-selectionLayer"
 });
-const selectionBg = browser.gecko && browser.gecko_version >= 153 ? "#ffffff01" : "transparent";
+// https://discuss.codemirror.net/t/firefox-153-ignores-transparent-selection-styling/9838
+const selectionBg = browser.gecko && browser.gecko_version == 153 ? "#ffffff01" : "transparent";
 const hideNativeSelection = state.Prec.highest(EditorView.theme({
     ".cm-line": {
         "& ::selection, &::selection": { backgroundColor: `${selectionBg} !important` },
@@ -99645,48 +100037,52 @@ const parser = _lezer_lr__WEBPACK_IMPORTED_MODULE_0__/* .LRParser */ .U1.deseria
 /******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/concatenation wrap */
+/******/ 	// wrap a concatenated module body as a lazy, memoized accessor; mod is
+/******/ 	// set before the body runs so re-entrant calls (require cycles) observe
+/******/ 	// the partial exports like Node.js
+/******/ 	__webpack_require__.cw = (body) => {
+/******/ 		var mod;
+/******/ 		return () => {
+/******/ 			if (body) {
+/******/ 				var fn = body;
+/******/ 				body = 0;
+/******/ 				mod = { exports: {} };
+/******/ 				fn.call(mod.exports, mod, mod.exports);
+/******/ 			}
+/******/ 			return mod.exports;
+/******/ 		};
+/******/ 	};
+/******/ 	
 /******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter/value functions for harmony exports
-/******/ 		__webpack_require__.d = (exports, definition) => {
-/******/ 			if(Array.isArray(definition)) {
-/******/ 				var i = 0;
-/******/ 				while(i < definition.length) {
-/******/ 					var key = definition[i++];
-/******/ 					var binding = definition[i++];
-/******/ 					if(!__webpack_require__.o(exports, key)) {
-/******/ 						if(binding === 0) {
-/******/ 							Object.defineProperty(exports, key, { enumerable: true, value: definition[i++] });
-/******/ 						} else {
-/******/ 							Object.defineProperty(exports, key, { enumerable: true, get: binding });
-/******/ 						}
-/******/ 					} else if(binding === 0) { i++; }
-/******/ 				}
-/******/ 			} else {
-/******/ 				for(var key in definition) {
-/******/ 					if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
-/******/ 						Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 					}
+/******/ 	// define getter/value functions for harmony exports
+/******/ 	__webpack_require__.d = (exports, definition) => {
+/******/ 		if(Array.isArray(definition)) {
+/******/ 			var i = 0;
+/******/ 			while(i < definition.length) {
+/******/ 				var key = definition[i++];
+/******/ 				var binding = definition[i++];
+/******/ 				var descriptor = binding === 0 ? { enumerable: true, value: definition[i++] } : { enumerable: true, get: binding };
+/******/ 				if(!__webpack_require__.o(exports, key)) Object.defineProperty(exports, key, descriptor);
+/******/ 			}
+/******/ 		} else {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 				}
 /******/ 			}
-/******/ 		};
-/******/ 	})();
+/******/ 		}
+/******/ 	};
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
+/******/ 	__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop));
 /******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
-/******/ 		// define __esModule on exports
-/******/ 		__webpack_require__.r = (exports) => {
-/******/ 			if(Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	})();
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = (exports) => {
+/******/ 		Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
 /******/ 	
 /************************************************************************/
 /******/ 	

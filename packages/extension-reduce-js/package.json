@@ -45,6 +45,6 @@
     "@shexjs/parser": "^1.0.0-alpha.33",
     "@shexjs/semact-overlay": "^1.0.0-alpha.33",
     "@shexjs/validator": "^1.0.0-alpha.33",
-    "n3": "^2.7.4"
+    "n3": "^2.7.12"
   }
 }

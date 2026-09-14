@@ -1,37 +1,74 @@
 name: Dependabot auto-merge
 
-# Enable auto-merge on Dependabot PRs that aren't semver-major, so the weekly
-# grouped dev/prod PRs land by themselves once CI is green. Major bumps are left
-# for a human -- they arrive as their own PR and this workflow skips them.
+# Squash-merge a Dependabot PR automatically once the CI workflow has gone green
+# on it. CI runs `npm run test-all` (plus lint and the webpack build) across the
+# whole Node matrix, so "green" is the real gate you asked for.
 #
-# One-time repo setup this relies on:
-#   * Settings ▸ General ▸ "Allow auto-merge" enabled, and
-#   * a branch-protection rule on `main` requiring the CI checks,
-# so `--auto` waits for those checks and merges only when they pass. Without the
-# protection rule there's nothing to gate on and the PR would merge immediately.
+# This runs on `workflow_run` (i.e. after CI finishes), NOT on the Dependabot
+# `pull_request` event, on purpose:
+#   * workflow_run jobs run from the DEFAULT branch, so GITHUB_TOKEN gets the
+#     write permission a merge needs -- a Dependabot pull_request token is
+#     read-only and could not merge.
+#   * it gates on CI having actually *passed*, which a pull_request-time job
+#     can't see (CI hasn't run yet), and
+#   * it needs NO branch-protection rule and NO "Allow auto-merge" repo setting.
+#
+# Every semver level is merged, majors included, on the theory that the suite is
+# the gate. To hold majors for a human instead, see the commented guard below.
 
-on: pull_request
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
 
 permissions:
   contents: write
   pull-requests: write
 
+# Merge one PR at a time: each merge moves `main`, so a serialized queue lets the
+# next PR conflict cleanly (Dependabot then rebases it and CI re-runs) instead of
+# racing on package-lock.json.
+concurrency:
+  group: dependabot-auto-merge
+  cancel-in-progress: false
+
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
+    # Only a *passing* CI run that was triggered by a pull request is a candidate.
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
     steps:
-      - name: Fetch Dependabot metadata
-        id: meta
-        uses: dependabot/fetch-metadata@v2
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-
-      # Everything except a semver-major (grouped minor/patch PRs report the
-      # group's highest bump here, and majors are ungrouped by dependabot.yml).
-      - name: Enable auto-merge for non-major updates
-        if: steps.meta.outputs.update-type != 'version-update:semver-major'
-        run: gh pr merge --auto --squash "$PR_URL"
+      - name: Squash-merge the Dependabot PR now that CI is green
         env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          # The PR whose head commit this CI run tested.
+          pr=$(gh api "repos/$REPO/commits/$HEAD_SHA/pulls" \
+                 --jq '.[] | select(.state=="open") | .number' 2>/dev/null | head -n1)
+          if [ -z "${pr:-}" ]; then
+            echo "No open PR for commit $HEAD_SHA; nothing to merge."; exit 0
+          fi
+
+          # Only ever touch Dependabot's own PRs.
+          author=$(gh pr view "$pr" --repo "$REPO" --json author --jq '.author.login' 2>/dev/null || true)
+          if [ "$author" != "dependabot[bot]" ]; then
+            echo "PR #$pr is not a Dependabot PR (author: ${author:-unknown}); leaving it alone."; exit 0
+          fi
+
+          # --- To hold semver-major bumps for a human, uncomment this guard: ---
+          # title=$(gh pr view "$pr" --repo "$REPO" --json title --jq '.title')
+          # fromM=$(printf '%s' "$title" | sed -nE 's/.* from ([0-9]+)\..*/\1/p')
+          # toM=$(printf   '%s' "$title" | sed -nE 's/.* to ([0-9]+)\..*/\1/p')
+          # if [ -n "$fromM" ] && [ -n "$toM" ] && [ "$toM" -gt "$fromM" ]; then
+          #   echo "PR #$pr is a semver-major bump ($fromM -> $toM); leaving for review."; exit 0
+          # fi
+
+          echo "CI is green on Dependabot PR #$pr; squash-merging."
+          # Not-yet-mergeable (a stale branch needing a rebase) is expected and
+          # not an error: Dependabot rebases it, CI re-runs, and this fires again.
+          gh pr merge "$pr" --repo "$REPO" --squash --delete-branch \
+            || echo "PR #$pr not merged yet (likely needs a rebase); will retry after Dependabot updates it."
