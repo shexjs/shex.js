@@ -32,7 +32,7 @@
     "@shexjs/util": "^1.0.0-alpha.33",
     "@shexjs/visitor": "^1.0.0-alpha.33",
     "@types/shexj": "^2.1.7",
-    "n3": "^2.7.4"
+    "n3": "^2.7.12"
   },
   "scripts": {
     "build": "tsc",

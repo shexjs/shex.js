@@ -51,7 +51,7 @@
     "@shexjs/visitor": "^1.0.0-alpha.33",
     "@shexjs/webapp": "^1.0.0-alpha.33",
     "@shexjs/writer": "^1.0.0-alpha.33",
-    "n3": "^2.7.4",
+    "n3": "^2.7.12",
     "shape-map": "^1.0.0"
   },
   "scripts": {
