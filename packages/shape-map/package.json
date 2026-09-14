@@ -44,7 +44,7 @@
     "@ts-jison/parser": "^0.4.1-alpha.3"
   },
   "devDependencies": {
-    "@ts-jison/parser-generator": "^0.4.1-alpha.2"
+    "@ts-jison/parser-generator": "^0.4.1-alpha.4"
   },
   "types": "./src/shape-map.ts"
 }
