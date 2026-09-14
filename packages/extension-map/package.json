@@ -42,7 +42,7 @@
     "@shexjs/webapp": "^1.0.0-alpha.33",
     "command-line-args": "^6.0.2",
     "command-line-usage": "^7.0.3",
-    "n3": "^2.7.4",
+    "n3": "^2.7.12",
     "rdf-data-factory": "^2.0.2"
   },
   "devDependencies": {
