@@ -334,17 +334,32 @@ On `main`, the `shex-test` dependency must track `shexTest#main` (enforced by `n
 ## publishing
 
 The packages share one version line (formerly lerna's "fixed" mode; lerna is no longer used).
-To release:
+Publishing runs **in CI, not locally**: pushing a `v*` tag triggers
+[`.github/workflows/release.yml`](.github/workflows/release.yml), which runs
+`node tools/publish-ordered.js` under npm [OIDC trusted publishing](https://docs.npmjs.com/trusted-publishers).
+The tag is only the trigger — each package publishes the version in its own `package.json`.
 
 ``` shell
-npm run bump-versions -- 1.0.0-alpha.NN   # set every package version and cross-dependency range
-                                          # (add --dry-run to preview)
-npm install                               # sync package-lock.json
-npm run test-all                          # the meta-package tests check version-range consistency
-git commit -am 'chore(release): publish'
-git tag v1.0.0-alpha.NN
-git push --follow-tags
-node tools/publish-ordered.js            # publish every packages/* package, in dependency order
+# 1. Bump every workspace package (independents @shexjs/term / shape-map kept) + sync the lock
+node tools/bumpVersions.js --dry-run 1.0.0-alpha.NN   # preview first (optional)
+node tools/bumpVersions.js 1.0.0-alpha.NN             # (== npm run bump-versions 1.0.0-alpha.NN)
+npm install --package-lock-only                       # sync package-lock.json to the new versions
+
+# 2. Commit (the pre-commit hook runs the suite + check-branch-deps)
+git add -u
+git commit -m "chore(release): 1.0.0-alpha.NN"
+
+# 3. Annotated tag, then push — the v* tag is what triggers publishing
+git tag -a v1.0.0-alpha.NN -m "1.0.0-alpha.NN"
+git push origin main --follow-tags
 ```
 
-`tools/publish-ordered.js` publishes each workspace package after the ones it depends on (`--list` shows the order, `--dry-run` rehearses it); per-package `publishConfig` already grants public access.
+`tools/publish-ordered.js` publishes each workspace package after the ones it
+depends on and **skips any version the registry already has** (`--list` shows the
+order, `--dry-run` rehearses it); per-package `publishConfig` grants public access.
+
+Keep the lock in sync with a current npm. The release job's `npm ci` is strict: a
+lock left stale after a dependency's *major* bump fails it with "package.json and
+package-lock.json … not in sync" (older Node lanes' npm tolerates it, so CI can go
+half-red). If that bites, regenerate under the newest npm — `npx -y npm@latest
+install --package-lock-only` — and cut a fresh tag.
