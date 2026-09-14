@@ -37268,6 +37268,9 @@ function mapValidationErrors(valResult, shexcParsed, turtleParsed, opts = {}) {
             schemaParts: viaConstraint ? viaConstraint.parts : undefined,
             schemaPath: viaConstraint ? viaConstraint.path : undefined,
             triple: leaf.triple || (leaf.triples && leaf.triples[0]) || null,
+            pathTo: leaf.predicate && ctx.shape
+                ? { shape: ctx.shape, via: leaf.constraintPath || [], predicate: leaf.predicate, ordinal: leaf.constraintOrdinal || 0 }
+                : null,
         });
     }
     // squiggles come from failures only; conformant pairs drive hover highlights

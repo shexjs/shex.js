@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "target": "ES2020",
+        "outDir": "./lib",
+        "rootDir": "./src",
+        "sourceMap": true,
+        "strict": true,
+        "skipLibCheck": true,
+        "lib": ["ES2020"],
+        "types": ["node", "vscode"]
+    },
+    "include": ["src/**/*.ts"],
+    "exclude": ["node_modules", "lib"]
+}

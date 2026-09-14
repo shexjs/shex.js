@@ -1,0 +1,59 @@
+{
+  "name": "@shexjs/language-server",
+  "version": "1.0.0-alpha.33",
+  "description": "Language Server Protocol server for ShEx (ShExC, Turtle/TriG, ShapeMap) built on @shexjs/editor-services",
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
+  "keywords": [
+    "shex",
+    "shape expressions",
+    "rdf",
+    "turtle",
+    "lsp",
+    "language-server",
+    "editor"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./lib/server.js",
+  "bin": {
+    "shex-language-server": "./bin/shex-language-server"
+  },
+  "files": [
+    "lib",
+    "src",
+    "bin",
+    "examples",
+    "media"
+  ],
+  "dependencies": {
+    "@shexjs/editor-services": "^1.0.0-alpha.33",
+    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.33",
+    "@shexjs/util": "^1.0.0-alpha.33",
+    "@shexjs/validator": "^1.0.0-alpha.33",
+    "js-yaml": "^5.4.1",
+    "n3": "^2.7.4",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.12"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node ./lib/server.js --stdio",
+    "test": "cd ../.. && mocha packages/shex-language-server/test/*test.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shexjs/shex.js"
+  },
+  "bugs": {
+    "url": "https://github.com/shexjs/shex.js/issues"
+  }
+}
