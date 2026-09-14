@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/neighborhood-api",
-  "version": "1.0.0-alpha.31",
+  "version": "1.0.0-alpha.32",
   "files": [
     "lib",
     "src"
@@ -43,6 +43,6 @@
   },
   "devDependencies": {
     "@rdfjs/types": "^2.0.1",
-    "@shexjs/util": "^1.0.0-alpha.31"
+    "@shexjs/util": "^1.0.0-alpha.32"
   }
 }
