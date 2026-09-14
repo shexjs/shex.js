@@ -38,7 +38,7 @@
     "@shexjs/validator": "^1.0.0-alpha.33",
     "js-yaml": "^5.4.2",
     "n3": "^2.7.12",
-    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver": "^10.1.1",
     "vscode-languageserver-textdocument": "^1.0.12"
   },
   "scripts": {
