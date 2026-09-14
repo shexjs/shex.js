@@ -1,0 +1,59 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "ShExC",
+  "scopeName": "source.shexc",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#directive" },
+    { "include": "#keyword" },
+    { "include": "#string" },
+    { "include": "#iri" },
+    { "include": "#prefixedName" },
+    { "include": "#cardinality" },
+    { "include": "#number" }
+  ],
+  "repository": {
+    "comment": {
+      "patterns": [
+        { "name": "comment.line.number-sign.shexc", "match": "#.*$" },
+        { "name": "comment.block.shexc", "begin": "/\\*", "end": "\\*/" }
+      ]
+    },
+    "directive": {
+      "name": "keyword.control.directive.shexc",
+      "match": "(?i)(?:^|\\s)(PREFIX|BASE|IMPORT|EXTERNAL)\\b"
+    },
+    "keyword": {
+      "patterns": [
+        { "name": "keyword.other.shexc", "match": "(?i)\\b(start|CLOSED|EXTRA|AND|OR|NOT|EXTENDS|RESTRICTS)\\b" },
+        { "name": "support.type.nodekind.shexc", "match": "(?i)\\b(IRI|BNODE|NONLITERAL|LITERAL)\\b" },
+        { "name": "support.function.facet.shexc", "match": "(?i)\\b(MININCLUSIVE|MAXINCLUSIVE|MINEXCLUSIVE|MAXEXCLUSIVE|LENGTH|MINLENGTH|MAXLENGTH|TOTALDIGITS|FRACTIONDIGITS|PATTERN|FLAGS)\\b" },
+        { "name": "keyword.operator.shape.shexc", "match": "[@&]" },
+        { "name": "constant.language.shexc", "match": "\\ba\\b" }
+      ]
+    },
+    "string": {
+      "patterns": [
+        { "name": "string.quoted.triple.shexc", "begin": "\"\"\"|'''", "end": "\"\"\"|'''" },
+        { "name": "string.quoted.double.shexc", "begin": "\"", "end": "\"", "patterns": [{ "name": "constant.character.escape.shexc", "match": "\\\\." }] },
+        { "name": "string.quoted.single.shexc", "begin": "'", "end": "'", "patterns": [{ "name": "constant.character.escape.shexc", "match": "\\\\." }] }
+      ]
+    },
+    "iri": {
+      "name": "markup.underline.link.shexc",
+      "match": "<[^\\s<>\"{}|^`\\\\]*>"
+    },
+    "prefixedName": {
+      "name": "entity.name.type.prefixed.shexc",
+      "match": "[A-Za-z_][\\w.-]*:[A-Za-z_%][\\w.%-]*|[A-Za-z_][\\w.-]*:"
+    },
+    "cardinality": {
+      "name": "keyword.operator.cardinality.shexc",
+      "match": "[*+?]|\\{\\s*\\d+\\s*(?:,\\s*(?:\\d+|\\*)?\\s*)?\\}"
+    },
+    "number": {
+      "name": "constant.numeric.shexc",
+      "match": "[+-]?\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?"
+    }
+  }
+}

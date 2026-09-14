@@ -1,0 +1,151 @@
+{
+  "name": "shex-vscode",
+  "displayName": "ShEx",
+  "description": "ShEx (Shape Expressions) language support: ShExC schemas, Turtle/TriG data, and ShapeMaps, powered by @shexjs/language-server.",
+  "version": "1.0.0-alpha.31",
+  "private": true,
+  "publisher": "shexjs",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.84.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shexjs/shex.js"
+  },
+  "main": "./lib/extension.js",
+  "activationEvents": [
+    "onLanguage:shexc",
+    "onLanguage:turtle",
+    "onLanguage:shex-shapemap"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "shexc",
+        "aliases": ["ShExC", "shexc", "ShEx"],
+        "extensions": [".shex", ".shexc"],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "turtle",
+        "aliases": ["Turtle", "turtle", "TriG"],
+        "extensions": [".ttl", ".trig", ".turtle"],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "shex-shapemap",
+        "aliases": ["ShapeMap", "shapemap"],
+        "extensions": [".smap", ".shapemap"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "shexc",
+        "scopeName": "source.shexc",
+        "path": "./syntaxes/shexc.tmLanguage.json"
+      },
+      {
+        "language": "turtle",
+        "scopeName": "source.turtle",
+        "path": "./syntaxes/turtle.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "shex.validateThisNode",
+        "title": "ShEx: Validate this node…"
+      },
+      {
+        "command": "shex.validateAgainstThisShape",
+        "title": "ShEx: Validate against this shape…"
+      },
+      {
+        "command": "shex.clearValidationSelection",
+        "title": "ShEx: Clear validation selection"
+      },
+      {
+        "command": "shex.validateInteractive",
+        "title": "ShEx: Validate (enter a shape map)…"
+      },
+      {
+        "command": "shex.openManifestBrowser",
+        "title": "ShEx: Open Manifest Browser"
+      },
+      {
+        "command": "shex.showComposedManifest",
+        "title": "ShEx: Show Composed Manifest"
+      },
+      {
+        "command": "shex.revalidate",
+        "title": "ShEx: Re-validate (last node/shape or entry)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "shex.revalidate",
+        "key": "ctrl+alt+r",
+        "mac": "cmd+alt+r",
+        "when": "editorTextFocus && (editorLangId == shexc || editorLangId == turtle)"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "shex.validateThisNode",
+          "when": "editorLangId == turtle",
+          "group": "shex@1"
+        },
+        {
+          "command": "shex.validateAgainstThisShape",
+          "when": "editorLangId == shexc",
+          "group": "shex@1"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "ShEx",
+      "properties": {
+        "shex.autoValidateDelay": {
+          "type": "number",
+          "default": 0,
+          "markdownDescription": "Re-validate the current node/shape pair (or manifest entry) automatically this many milliseconds after you stop editing its schema or data. `0` disables it — use **ShEx: Re-validate** (`ctrl+alt+r` / `cmd+alt+r`) instead. Try `500`."
+        },
+        "shex.schemaMouseover": {
+          "type": "string",
+          "enum": ["highlight", "shexj"],
+          "enumDescriptions": [
+            "Light the matching data triples for the constraint under the pointer (no tooltip covering them).",
+            "Show the constraint's ShExJ (JSON) as a hover tooltip."
+          ],
+          "default": "highlight",
+          "markdownDescription": "What hovering a triple constraint in a ShExC schema does: `highlight` the matching data triples (default), or show its `shexj` (JSON) as a tooltip. In the manifest browser, `highlight` keeps the ShExJ tooltip from obscuring the cross-pane highlighting."
+        },
+        "shex.trace.server": {
+          "type": "string",
+          "enum": ["off", "messages", "verbose"],
+          "default": "off",
+          "description": "Trace the communication between VS Code and the ShEx language server."
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "@shexjs/language-server": "^1.0.0-alpha.31",
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.84.0",
+    "typescript": "^5.4.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "vscode:prepublish": "tsc"
+  }
+}
