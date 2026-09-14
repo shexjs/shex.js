@@ -58,7 +58,7 @@
     "jquery": "^4.0.0",
     "jquery-contextmenu": "^2.9.2",
     "jquery-ui": "^1.14.0",
-    "js-yaml": "^5.4.1",
+    "js-yaml": "^5.4.2",
     "shape-map": "^1.0.0"
   },
   "scripts": {
