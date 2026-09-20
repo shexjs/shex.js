@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@types/shexj": "^2.1.7",
-    "relativize-url": "^0.1.1"
+    "relativize-url": "^1.0.0"
   },
   "scripts": {
     "test": "cd ../.. && npm run test",
