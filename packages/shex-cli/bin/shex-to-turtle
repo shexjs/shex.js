@@ -5,7 +5,7 @@
 const Path = require('path');
 const Fs = require('fs');
 const ShExUtil = require("@shexjs/util");
-const ShExRWriter = require('../../../TODO/ShExRWriter');
+const ShExRWriter = require('../lib/ShExRWriter');
 const Jsonld = require("jsonld");
 const N3 = require("n3");
 const ShExNode = require("@shexjs/node")({rdfjs: N3, jsonld: Jsonld});
@@ -38,7 +38,7 @@ async function run (cmds) {
 
   try {
     const {schema, schemaMeta, data, dataMeta} = await ShExNode.load({shexc: cmds.shex, json: cmds.json}, null, schemaOptions);
-    if (false) {
+    if (true) {
       let w;
       new ShExRWriter({ base: cmds['schema-base'] || schemaMeta[0].base }).
         writeSchema(schema, function (error, text, prefixes) {
