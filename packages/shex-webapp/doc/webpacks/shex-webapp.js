@@ -4002,9 +4002,363 @@ process.umask = function() { return 0; };
 
 /***/ },
 
+/***/ 8050
+(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__webpack_require__(3968), exports);
+__exportStar(__webpack_require__(1352), exports);
+__exportStar(__webpack_require__(1947), exports);
+__exportStar(__webpack_require__(1417), exports);
+__exportStar(__webpack_require__(8963), exports);
+__exportStar(__webpack_require__(9135), exports);
+__exportStar(__webpack_require__(2000), exports);
+//# sourceMappingURL=index.js.map
+
+/***/ },
+
+/***/ 3968
+(__unused_webpack_module, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BlankNode = void 0;
+/**
+ * A term that represents an RDF blank node with a label.
+ */
+class BlankNode {
+    constructor(value) {
+        this.termType = 'BlankNode';
+        this.value = value;
+    }
+    equals(other) {
+        return !!other && other.termType === 'BlankNode' && other.value === this.value;
+    }
+}
+exports.BlankNode = BlankNode;
+//# sourceMappingURL=BlankNode.js.map
+
+/***/ },
+
+/***/ 1352
+(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DataFactory = void 0;
+const BlankNode_1 = __webpack_require__(3968);
+const DefaultGraph_1 = __webpack_require__(1947);
+const Literal_1 = __webpack_require__(1417);
+const NamedNode_1 = __webpack_require__(8963);
+const Quad_1 = __webpack_require__(9135);
+const Variable_1 = __webpack_require__(2000);
+let dataFactoryCounter = 0;
+/**
+ * A factory for instantiating RDF terms and quads.
+ */
+class DataFactory {
+    constructor(options) {
+        this.blankNodeCounter = 0;
+        options = options || {};
+        this.blankNodePrefix = options.blankNodePrefix || `df_${dataFactoryCounter++}_`;
+    }
+    /**
+     * @param value The IRI for the named node.
+     * @return A new instance of NamedNode.
+     * @see NamedNode
+     */
+    namedNode(value) {
+        return new NamedNode_1.NamedNode(value);
+    }
+    /**
+     * @param value The optional blank node identifier.
+     * @return A new instance of BlankNode.
+     *         If the `value` parameter is undefined a new identifier
+     *         for the blank node is generated for each call.
+     * @see BlankNode
+     */
+    blankNode(value) {
+        return new BlankNode_1.BlankNode(value || `${this.blankNodePrefix}${this.blankNodeCounter++}`);
+    }
+    /**
+     * @param value              The literal value.
+     * @param languageOrDatatype The optional language, datatype, or directional language.
+     *                           If `languageOrDatatype` is a NamedNode,
+     *                           then it is used for the value of `NamedNode.datatype`.
+     *                           If `languageOrDatatype` is a NamedNode, it is used for the value
+     *                           of `NamedNode.language`.
+     *                           Otherwise, it is used as a directional language,
+     *                           from which the language is set to `languageOrDatatype.language`
+     *                           and the direction to `languageOrDatatype.direction`.
+     * @return A new instance of Literal.
+     * @see Literal
+     */
+    literal(value, languageOrDatatype) {
+        return new Literal_1.Literal(value, languageOrDatatype);
+    }
+    /**
+     * This method is optional.
+     * @param value The variable name
+     * @return A new instance of Variable.
+     * @see Variable
+     */
+    variable(value) {
+        return new Variable_1.Variable(value);
+    }
+    /**
+     * @return An instance of DefaultGraph.
+     */
+    defaultGraph() {
+        return DefaultGraph_1.DefaultGraph.INSTANCE;
+    }
+    /**
+     * @param subject   The quad subject term.
+     * @param predicate The quad predicate term.
+     * @param object    The quad object term.
+     * @param graph     The quad graph term.
+     * @return A new instance of Quad.
+     * @see Quad
+     */
+    quad(subject, predicate, object, graph) {
+        return new Quad_1.Quad(subject, predicate, object, graph || this.defaultGraph());
+    }
+    /**
+     * Create a deep copy of the given term using this data factory.
+     * @param original An RDF term.
+     * @return A deep copy of the given term.
+     */
+    fromTerm(original) {
+        // TODO: remove nasty any casts when this TS bug has been fixed:
+        //  https://github.com/microsoft/TypeScript/issues/26933
+        switch (original.termType) {
+            case 'NamedNode':
+                return this.namedNode(original.value);
+            case 'BlankNode':
+                return this.blankNode(original.value);
+            case 'Literal':
+                if (original.language) {
+                    return this.literal(original.value, original.language);
+                }
+                if (!original.datatype.equals(Literal_1.Literal.XSD_STRING)) {
+                    return this.literal(original.value, this.fromTerm(original.datatype));
+                }
+                return this.literal(original.value);
+            case 'Variable':
+                return this.variable(original.value);
+            case 'DefaultGraph':
+                return this.defaultGraph();
+            case 'Quad':
+                return this.quad(this.fromTerm(original.subject), this.fromTerm(original.predicate), this.fromTerm(original.object), this.fromTerm(original.graph));
+        }
+    }
+    /**
+     * Create a deep copy of the given quad using this data factory.
+     * @param original An RDF quad.
+     * @return A deep copy of the given quad.
+     */
+    fromQuad(original) {
+        return this.fromTerm(original);
+    }
+    /**
+     * Reset the internal blank node counter.
+     */
+    resetBlankNodeCounter() {
+        this.blankNodeCounter = 0;
+    }
+}
+exports.DataFactory = DataFactory;
+//# sourceMappingURL=DataFactory.js.map
+
+/***/ },
+
+/***/ 1947
+(__unused_webpack_module, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DefaultGraph = void 0;
+/**
+ * A singleton term instance that represents the default graph.
+ * It's only allowed to assign a DefaultGraph to the .graph property of a Quad.
+ */
+class DefaultGraph {
+    constructor() {
+        this.termType = 'DefaultGraph';
+        this.value = '';
+        // Private constructor
+    }
+    equals(other) {
+        return !!other && other.termType === 'DefaultGraph';
+    }
+}
+exports.DefaultGraph = DefaultGraph;
+DefaultGraph.INSTANCE = new DefaultGraph();
+//# sourceMappingURL=DefaultGraph.js.map
+
+/***/ },
+
+/***/ 1417
+(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Literal = void 0;
+const NamedNode_1 = __webpack_require__(8963);
+/**
+ * A term that represents an RDF literal,
+ * containing a string with an optional language tag and optional direction
+ * or datatype.
+ */
+class Literal {
+    constructor(value, languageOrDatatype) {
+        this.termType = 'Literal';
+        this.value = value;
+        if (typeof languageOrDatatype === 'string') {
+            this.language = languageOrDatatype;
+            this.datatype = Literal.RDF_LANGUAGE_STRING;
+            this.direction = '';
+        }
+        else if (languageOrDatatype) {
+            if ('termType' in languageOrDatatype) {
+                this.language = '';
+                this.datatype = languageOrDatatype;
+                this.direction = '';
+            }
+            else {
+                this.language = languageOrDatatype.language;
+                this.datatype = languageOrDatatype.direction ?
+                    Literal.RDF_DIRECTIONAL_LANGUAGE_STRING :
+                    Literal.RDF_LANGUAGE_STRING;
+                this.direction = languageOrDatatype.direction || '';
+            }
+        }
+        else {
+            this.language = '';
+            this.datatype = Literal.XSD_STRING;
+            this.direction = '';
+        }
+    }
+    equals(other) {
+        return !!other && other.termType === 'Literal' && other.value === this.value &&
+            other.language === this.language &&
+            ((other.direction === this.direction) || (!other.direction && this.direction === '')) &&
+            this.datatype.equals(other.datatype);
+    }
+}
+exports.Literal = Literal;
+Literal.RDF_LANGUAGE_STRING = new NamedNode_1.NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString');
+Literal.RDF_DIRECTIONAL_LANGUAGE_STRING = new NamedNode_1.NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#dirLangString');
+Literal.XSD_STRING = new NamedNode_1.NamedNode('http://www.w3.org/2001/XMLSchema#string');
+//# sourceMappingURL=Literal.js.map
+
+/***/ },
+
+/***/ 8963
+(__unused_webpack_module, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.NamedNode = void 0;
+/**
+ * A term that contains an IRI.
+ */
+class NamedNode {
+    constructor(value) {
+        this.termType = 'NamedNode';
+        this.value = value;
+    }
+    equals(other) {
+        return !!other && other.termType === 'NamedNode' && other.value === this.value;
+    }
+}
+exports.NamedNode = NamedNode;
+//# sourceMappingURL=NamedNode.js.map
+
+/***/ },
+
+/***/ 9135
+(__unused_webpack_module, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Quad = void 0;
+/**
+ * An instance of DefaultGraph represents the default graph.
+ * It's only allowed to assign a DefaultGraph to the .graph property of a Quad.
+ */
+class Quad {
+    constructor(subject, predicate, object, graph) {
+        this.termType = 'Quad';
+        this.value = '';
+        this.subject = subject;
+        this.predicate = predicate;
+        this.object = object;
+        this.graph = graph;
+    }
+    equals(other) {
+        // `|| !other.termType` is for backwards-compatibility with old factories without RDF* support.
+        return !!other && (other.termType === 'Quad' || !other.termType) &&
+            this.subject.equals(other.subject) &&
+            this.predicate.equals(other.predicate) &&
+            this.object.equals(other.object) &&
+            this.graph.equals(other.graph);
+    }
+}
+exports.Quad = Quad;
+//# sourceMappingURL=Quad.js.map
+
+/***/ },
+
+/***/ 2000
+(__unused_webpack_module, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Variable = void 0;
+/**
+ * A term that represents a variable.
+ */
+class Variable {
+    constructor(value) {
+        this.termType = 'Variable';
+        this.value = value;
+    }
+    equals(other) {
+        return !!other && other.termType === 'Variable' && other.value === this.value;
+    }
+}
+exports.Variable = Variable;
+//# sourceMappingURL=Variable.js.map
+
+/***/ },
+
 /***/ 2962
 (module) {
 
+// GENERATED from relativize-url.mjs by scripts/build-cjs.mjs -- edit that file instead.
 class RelativizeUrl {
   static components = [
     {name: 'protocol', write: u => u.protocol },
@@ -52482,7 +52836,7 @@ exports.isStart = isStart;
 exports.unescapeText = unescapeText;
 const RelativizeIri = (__webpack_require__(2962).relativize);
 // import {relativize as RelativizeIri} from "relativize-url"; // someone should lecture the maintainer
-const rdf_data_factory_1 = __webpack_require__(9165);
+const rdf_data_factory_1 = __webpack_require__(8050);
 const RdfJsFactory = new rdf_data_factory_1.DataFactory();
 exports.RdfLangString = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
 exports.XsdString = "http://www.w3.org/2001/XMLSchema#string";
@@ -52676,359 +53030,6 @@ function unescapeText(string, replacements) {
     }
 }
 //# sourceMappingURL=shex-term.js.map
-
-/***/ },
-
-/***/ 9165
-(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-__exportStar(__webpack_require__(543), exports);
-__exportStar(__webpack_require__(3407), exports);
-__exportStar(__webpack_require__(6114), exports);
-__exportStar(__webpack_require__(430), exports);
-__exportStar(__webpack_require__(6488), exports);
-__exportStar(__webpack_require__(1182), exports);
-__exportStar(__webpack_require__(6965), exports);
-//# sourceMappingURL=index.js.map
-
-/***/ },
-
-/***/ 543
-(__unused_webpack_module, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BlankNode = void 0;
-/**
- * A term that represents an RDF blank node with a label.
- */
-class BlankNode {
-    constructor(value) {
-        this.termType = 'BlankNode';
-        this.value = value;
-    }
-    equals(other) {
-        return !!other && other.termType === 'BlankNode' && other.value === this.value;
-    }
-}
-exports.BlankNode = BlankNode;
-//# sourceMappingURL=BlankNode.js.map
-
-/***/ },
-
-/***/ 3407
-(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DataFactory = void 0;
-const BlankNode_1 = __webpack_require__(543);
-const DefaultGraph_1 = __webpack_require__(6114);
-const Literal_1 = __webpack_require__(430);
-const NamedNode_1 = __webpack_require__(6488);
-const Quad_1 = __webpack_require__(1182);
-const Variable_1 = __webpack_require__(6965);
-let dataFactoryCounter = 0;
-/**
- * A factory for instantiating RDF terms and quads.
- */
-class DataFactory {
-    constructor(options) {
-        this.blankNodeCounter = 0;
-        options = options || {};
-        this.blankNodePrefix = options.blankNodePrefix || `df_${dataFactoryCounter++}_`;
-    }
-    /**
-     * @param value The IRI for the named node.
-     * @return A new instance of NamedNode.
-     * @see NamedNode
-     */
-    namedNode(value) {
-        return new NamedNode_1.NamedNode(value);
-    }
-    /**
-     * @param value The optional blank node identifier.
-     * @return A new instance of BlankNode.
-     *         If the `value` parameter is undefined a new identifier
-     *         for the blank node is generated for each call.
-     * @see BlankNode
-     */
-    blankNode(value) {
-        return new BlankNode_1.BlankNode(value || `${this.blankNodePrefix}${this.blankNodeCounter++}`);
-    }
-    /**
-     * @param value              The literal value.
-     * @param languageOrDatatype The optional language, datatype, or directional language.
-     *                           If `languageOrDatatype` is a NamedNode,
-     *                           then it is used for the value of `NamedNode.datatype`.
-     *                           If `languageOrDatatype` is a NamedNode, it is used for the value
-     *                           of `NamedNode.language`.
-     *                           Otherwise, it is used as a directional language,
-     *                           from which the language is set to `languageOrDatatype.language`
-     *                           and the direction to `languageOrDatatype.direction`.
-     * @return A new instance of Literal.
-     * @see Literal
-     */
-    literal(value, languageOrDatatype) {
-        return new Literal_1.Literal(value, languageOrDatatype);
-    }
-    /**
-     * This method is optional.
-     * @param value The variable name
-     * @return A new instance of Variable.
-     * @see Variable
-     */
-    variable(value) {
-        return new Variable_1.Variable(value);
-    }
-    /**
-     * @return An instance of DefaultGraph.
-     */
-    defaultGraph() {
-        return DefaultGraph_1.DefaultGraph.INSTANCE;
-    }
-    /**
-     * @param subject   The quad subject term.
-     * @param predicate The quad predicate term.
-     * @param object    The quad object term.
-     * @param graph     The quad graph term.
-     * @return A new instance of Quad.
-     * @see Quad
-     */
-    quad(subject, predicate, object, graph) {
-        return new Quad_1.Quad(subject, predicate, object, graph || this.defaultGraph());
-    }
-    /**
-     * Create a deep copy of the given term using this data factory.
-     * @param original An RDF term.
-     * @return A deep copy of the given term.
-     */
-    fromTerm(original) {
-        // TODO: remove nasty any casts when this TS bug has been fixed:
-        //  https://github.com/microsoft/TypeScript/issues/26933
-        switch (original.termType) {
-            case 'NamedNode':
-                return this.namedNode(original.value);
-            case 'BlankNode':
-                return this.blankNode(original.value);
-            case 'Literal':
-                if (original.language) {
-                    return this.literal(original.value, original.language);
-                }
-                if (!original.datatype.equals(Literal_1.Literal.XSD_STRING)) {
-                    return this.literal(original.value, this.fromTerm(original.datatype));
-                }
-                return this.literal(original.value);
-            case 'Variable':
-                return this.variable(original.value);
-            case 'DefaultGraph':
-                return this.defaultGraph();
-            case 'Quad':
-                return this.quad(this.fromTerm(original.subject), this.fromTerm(original.predicate), this.fromTerm(original.object), this.fromTerm(original.graph));
-        }
-    }
-    /**
-     * Create a deep copy of the given quad using this data factory.
-     * @param original An RDF quad.
-     * @return A deep copy of the given quad.
-     */
-    fromQuad(original) {
-        return this.fromTerm(original);
-    }
-    /**
-     * Reset the internal blank node counter.
-     */
-    resetBlankNodeCounter() {
-        this.blankNodeCounter = 0;
-    }
-}
-exports.DataFactory = DataFactory;
-//# sourceMappingURL=DataFactory.js.map
-
-/***/ },
-
-/***/ 6114
-(__unused_webpack_module, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DefaultGraph = void 0;
-/**
- * A singleton term instance that represents the default graph.
- * It's only allowed to assign a DefaultGraph to the .graph property of a Quad.
- */
-class DefaultGraph {
-    constructor() {
-        this.termType = 'DefaultGraph';
-        this.value = '';
-        // Private constructor
-    }
-    equals(other) {
-        return !!other && other.termType === 'DefaultGraph';
-    }
-}
-exports.DefaultGraph = DefaultGraph;
-DefaultGraph.INSTANCE = new DefaultGraph();
-//# sourceMappingURL=DefaultGraph.js.map
-
-/***/ },
-
-/***/ 430
-(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Literal = void 0;
-const NamedNode_1 = __webpack_require__(6488);
-/**
- * A term that represents an RDF literal,
- * containing a string with an optional language tag and optional direction
- * or datatype.
- */
-class Literal {
-    constructor(value, languageOrDatatype) {
-        this.termType = 'Literal';
-        this.value = value;
-        if (typeof languageOrDatatype === 'string') {
-            this.language = languageOrDatatype;
-            this.datatype = Literal.RDF_LANGUAGE_STRING;
-            this.direction = '';
-        }
-        else if (languageOrDatatype) {
-            if ('termType' in languageOrDatatype) {
-                this.language = '';
-                this.datatype = languageOrDatatype;
-                this.direction = '';
-            }
-            else {
-                this.language = languageOrDatatype.language;
-                this.datatype = languageOrDatatype.direction ?
-                    Literal.RDF_DIRECTIONAL_LANGUAGE_STRING :
-                    Literal.RDF_LANGUAGE_STRING;
-                this.direction = languageOrDatatype.direction || '';
-            }
-        }
-        else {
-            this.language = '';
-            this.datatype = Literal.XSD_STRING;
-            this.direction = '';
-        }
-    }
-    equals(other) {
-        return !!other && other.termType === 'Literal' && other.value === this.value &&
-            other.language === this.language &&
-            ((other.direction === this.direction) || (!other.direction && this.direction === '')) &&
-            this.datatype.equals(other.datatype);
-    }
-}
-exports.Literal = Literal;
-Literal.RDF_LANGUAGE_STRING = new NamedNode_1.NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString');
-Literal.RDF_DIRECTIONAL_LANGUAGE_STRING = new NamedNode_1.NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#dirLangString');
-Literal.XSD_STRING = new NamedNode_1.NamedNode('http://www.w3.org/2001/XMLSchema#string');
-//# sourceMappingURL=Literal.js.map
-
-/***/ },
-
-/***/ 6488
-(__unused_webpack_module, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.NamedNode = void 0;
-/**
- * A term that contains an IRI.
- */
-class NamedNode {
-    constructor(value) {
-        this.termType = 'NamedNode';
-        this.value = value;
-    }
-    equals(other) {
-        return !!other && other.termType === 'NamedNode' && other.value === this.value;
-    }
-}
-exports.NamedNode = NamedNode;
-//# sourceMappingURL=NamedNode.js.map
-
-/***/ },
-
-/***/ 1182
-(__unused_webpack_module, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Quad = void 0;
-/**
- * An instance of DefaultGraph represents the default graph.
- * It's only allowed to assign a DefaultGraph to the .graph property of a Quad.
- */
-class Quad {
-    constructor(subject, predicate, object, graph) {
-        this.termType = 'Quad';
-        this.value = '';
-        this.subject = subject;
-        this.predicate = predicate;
-        this.object = object;
-        this.graph = graph;
-    }
-    equals(other) {
-        // `|| !other.termType` is for backwards-compatibility with old factories without RDF* support.
-        return !!other && (other.termType === 'Quad' || !other.termType) &&
-            this.subject.equals(other.subject) &&
-            this.predicate.equals(other.predicate) &&
-            this.object.equals(other.object) &&
-            this.graph.equals(other.graph);
-    }
-}
-exports.Quad = Quad;
-//# sourceMappingURL=Quad.js.map
-
-/***/ },
-
-/***/ 6965
-(__unused_webpack_module, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Variable = void 0;
-/**
- * A term that represents a variable.
- */
-class Variable {
-    constructor(value) {
-        this.termType = 'Variable';
-        this.value = value;
-    }
-    equals(other) {
-        return !!other && other.termType === 'Variable' && other.value === this.value;
-    }
-}
-exports.Variable = Variable;
-//# sourceMappingURL=Variable.js.map
 
 /***/ },
 
@@ -57814,7 +57815,19 @@ class ShExValidator {
         for (let eNo = 0; eNo < expr.extends.length; ++eNo) {
             const extend = expr.extends[eNo];
             const subgraph = new TrivialNeighborhood(null); // These triples were tracked earlier.
-            extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
+            // Direction matters: a triple the base shape matched with an inverse
+            // constraint (^p) has the focus as its object and must land in the
+            // subgraph's *incoming* arcs. Filing every allocation as outgoing hid
+            // inverse arcs from an extended shape's inverse triple constraints, so
+            // e.g. `<B> { ^<p2> . } <A> EXTENDS @<B> { ^<p1> . }` wrongly reported a
+            // missing <p2> (a reflexive triple, focus on both ends, lands in both).
+            const focusStr = ShExTerm.rdfJsTerm2Turtle(focus);
+            extendsToTriples[eNo].forEach(t => {
+                if (ShExTerm.rdfJsTerm2Turtle(t.subject) === focusStr)
+                    subgraph.addOutgoingTriples([t]);
+                if (ShExTerm.rdfJsTerm2Turtle(t.object) === focusStr)
+                    subgraph.addIncomingTriples([t]);
+            });
             // The same extension tested against the same subgraph in an earlier partition is
             // not repeated: the first result was named; later ones reference it.
             const cacheKey = eNo + "|" + extendsToTriples[eNo]
@@ -76570,8 +76583,10 @@ function compare(a, startA, b, startB, length, comparator) {
             boundChange = false;
         }
         else {
-            if (boundChange)
+            if (boundChange) {
                 comparator.boundChange(pos);
+                boundChange = false;
+            }
             if (clipEnd > pos && !sameValues(a.active, b.active))
                 comparator.compareRange(pos, clipEnd, a.active, b.active);
             if (bounds && clipEnd < endB && (dEnd || a.openEnd(end) != b.openEnd(end)))
@@ -79011,12 +79026,13 @@ class TileBuilder {
                 head = last;
             }
             else {
+                let { dom } = mark;
                 if (this.cache.reused.get(mark)) {
                     let tile = Tile.get(mark.dom);
                     if (tile)
-                        tile.setDOM(freeNode(mark.dom));
+                        dom = freeNode(mark.dom);
                 }
-                let nw = MarkTile.of(mark.mark, mark.dom);
+                let nw = MarkTile.of(mark.mark, dom);
                 head.append(nw);
                 head = nw;
             }
@@ -79516,12 +79532,14 @@ class TileUpdate {
             else if (tile === null || tile === void 0 ? void 0 : tile.isLine())
                 line = tile;
             else if (tile instanceof BlockWrapperTile) ; // Ignore
-            else if (parent.nodeName == "DIV" && !line && parent != this.view.contentDOM)
+            else if (parent.nodeName == "DIV" && !line)
                 line = new LineTile(parent, lineBaseAttrs);
             else if (!line)
                 marks.push(MarkTile.of(new MarkDecoration({ tagName: parent.nodeName.toLowerCase(), attributes: getAttrs(parent) }), parent));
         }
-        return { line: line, marks };
+        if (!line)
+            return null;
+        return { line, marks };
     }
 }
 function hasContent(tile, requireText) {
@@ -80352,18 +80370,21 @@ function blockAt(view, pos, side) {
     return line;
 }
 function moveToLineBoundary(view, start, forward, includeWrap) {
-    let line = blockAt(view, start.head, start.assoc || -1);
-    let coords = !includeWrap || line.type != exports.BlockType.Text || !(view.lineWrapping || line.widgetLineBreaks) ? null
-        : view.coordsAtPos(start.assoc < 0 && start.head > line.from ? start.head - 1 : start.head);
+    let block = blockAt(view, start.head, start.assoc || -1);
+    let coords = !includeWrap || block.type != exports.BlockType.Text || !(view.lineWrapping || block.widgetLineBreaks) ? null
+        : view.coordsAtPos(start.assoc < 0 && start.head > block.from ? start.head - 1 : start.head);
     if (coords) {
         let editorRect = view.dom.getBoundingClientRect();
-        let direction = view.textDirectionAt(line.from);
+        let direction = view.textDirectionAt(block.from);
         let pos = view.posAtCoords({ x: forward == (direction == exports.Direction.LTR) ? editorRect.right - 1 : editorRect.left + 1,
             y: (coords.top + coords.bottom) / 2 });
         if (pos != null)
             return state.EditorSelection.cursor(pos, forward ? -1 : 1);
     }
-    return state.EditorSelection.cursor(forward ? line.to : line.from, forward ? -1 : 1);
+    let line = view.state.doc.lineAt(start.head);
+    if (forward ? line.to == block.to : line.from == block.from)
+        return view.visualLineSide(line, forward);
+    return state.EditorSelection.cursor(forward ? block.to : block.from, forward ? -1 : 1);
 }
 function moveByChar(view, start, forward, by) {
     let line = view.state.doc.lineAt(start.head), spans = view.bidiSpans(line);
@@ -81951,6 +81972,13 @@ observers.compositionstart = observers.compositionupdate = view => {
     if (view.inputState.compositionFirstChange == null)
         view.inputState.compositionFirstChange = true;
     if (view.inputState.composing < 0) {
+        let { main } = view.state.selection;
+        if (!main.empty && view.lineBlockAt(main.from).from != view.lineBlockAt(main.to).from) {
+            view.dispatch({
+                changes: view.state.selection.ranges.filter(r => !r.empty).map(r => ({ from: r.from, to: r.to })),
+                userEvent: "input"
+            });
+        }
         // FIXME possibly set a timeout to clear it again on Android
         view.inputState.composing = 0;
     }
@@ -84584,6 +84612,7 @@ class EditorView {
         @internal
         */
         this.measureRequests = [];
+        this.clearAnnouncement = -1;
         this.contentDOM = document.createElement("div");
         this.scrollDOM = document.createElement("div");
         this.scrollDOM.tabIndex = -1;
@@ -84989,9 +85018,14 @@ class EditorView {
         for (let tr of trs)
             for (let effect of tr.effects)
                 if (effect.is(EditorView.announce)) {
-                    if (first)
+                    if (first) {
                         this.announceDOM.textContent = "";
-                    first = false;
+                        this.win.clearTimeout(this.clearAnnouncement);
+                        this.clearAnnouncement = this.win.setTimeout(() => {
+                            this.announceDOM.textContent = "\u00a0";
+                        }, 200);
+                        first = false;
+                    }
                     let div = this.announceDOM.appendChild(document.createElement("div"));
                     div.textContent = effect.value;
                 }
@@ -85341,6 +85375,7 @@ class EditorView {
         this.docView.destroy();
         this.dom.remove();
         this.observer.destroy();
+        this.win.clearTimeout(this.clearAnnouncement);
         if (this.measureScheduled > -1)
             this.win.cancelAnimationFrame(this.measureScheduled);
         this.destroyed = true;
