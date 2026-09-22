@@ -38,6 +38,7 @@
   "#inverseBnodeCoref_pass": "inverseBnodeCoref_pass.val",
   "#inverseClosedDiscrim_pass": "inverseClosedDiscrim_pass.val",
   "#1dotExtendsInverse_pass": "1dotExtendsInverse_pass.val",
+  "#1dotInverseExtends_pass": "1dotInverseExtends_pass.val",
   "#1dot2SameExtends_pass": "1dot2SameExtends_pass.val",
   "#2intersectP1ValueSet_pass": "2intersectP1ValueSet_pass.val",
   "#RecursionContingent_pass": "RecursionContingent_pass.val",
