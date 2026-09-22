@@ -43,7 +43,7 @@ import {ShExIndexVisitor} from "@shexjs/visitor";
 const {StoreDuplicates, yyllocToString, Merger: ShExMerger} = require("@shexjs/util/lib/Merger");
 import * as RdfJsModule from '@shexjs/neighborhood-rdfjs';
 const { ctor: RdfJsDb } = RdfJsModule;
-import { paramsToCommandLineArgs, queryMapResolverFor, extensionName, moduleId } from '@shexjs/neighborhood-api';
+import { paramsToCommandLineArgs, queryMapResolverFor, extensionName, moduleId, ordered } from '@shexjs/neighborhood-api';
 import type { NeighborhoodModule, NeighborhoodDb, DbParamSpec, DbQueryTracker, CliOptionDefinition } from '@shexjs/neighborhood-api';
 import type { Term as RdfJsTerm } from "@rdfjs/types";
 /** a neighborhood module this CLI can construct from its command line
@@ -112,6 +112,7 @@ interface Cmds {
   slurp?: boolean | string;
   provenance?: boolean;
   "slurp-all"?: boolean;
+  "sort-quads"?: boolean;
   help?: boolean;
   node?: string;
   "node-type"?: string;
@@ -222,6 +223,7 @@ const CommandLineOptions: CliOption[] = [
   { name: "slurp",                 type: Boolean , description: "record minimal neighborhoods needed by validation" },
   { name: "provenance",            type: Boolean , description: "parse Turtle data with source tracking and attach each matched triple's source ranges to the results" },
   { name: "slurp-all",             type: Boolean , description: "record complete neighborhoods visited by validation. implies --slurp; may be the same as --slurp, depending on the databse" },
+  { name: "sort-quads",            type: Boolean , description: "order each neighborhood's arcs canonically in the results (off by default; the order is cosmetic and never affects conformance)" },
   { name: "help",      alias: "h", type: Boolean , description: "print usage information and quit" },
   { name: "node",      alias: "n", type: String, typeLabel: "RDFTerm",   multiple: false, defaultValue: undefined, description: "node to validate" },
   { name: "node-type", alias: "t", type: String, typeLabel: "IRI",       multiple: false, defaultValue: undefined, description: "validate nodes of this type" },
@@ -700,6 +702,8 @@ async function loadSchemaAndData (valParms: any, validatorOptions: any, schemaOp
       || RdfJsDb(schemaAndData.data, queryTracker);
     if (typeof schemaAndData.data.setSchema === "function")
       schemaAndData.data.setSchema(schemaAndData.schema); // e.g. sparql narrows queries by shape
+    if (valParms["sort-quads"]) // opt in to a stable arc order; native order otherwise
+      schemaAndData.data = ordered(schemaAndData.data);
 
     if (valParms.diagnose) {
       const redefined = Object.keys(storeDuplicatesInstance.duplicates);
