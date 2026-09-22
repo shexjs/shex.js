@@ -279,11 +279,12 @@ class TurtleCache extends InterfaceCache {
     const db = module.asAsyncDb && typeof res.getNeighborhoodAsync === "function"
       ? module.asAsyncDb(res)
       : res;
-    // Neighborhoods now return arcs in native order; the WebApp shows them in a
-    // stable order so results don't reshuffle between runs.  This is the
-    // default-on wiring for a "sort quads" control -- gate it on that control
-    // once it lands in #controls.
-    return ShExWebApp.NeighborhoodApi.ordered(db);
+    // Neighborhoods return arcs in native order; the "sort quads" control
+    // (#controls, default on) orders them so results don't reshuffle between
+    // runs -- on too when the control is absent, e.g. the worker page.  The
+    // order is cosmetic and never affects conformance.
+    const sortQuads = $("#sortQuads").length === 0 || $("#sortQuads").is(":checked");
+    return sortQuads ? ShExWebApp.NeighborhoodApi.ordered(db) : db;
   }
 
   /** Resolve a query map extension -- SPARQL "SELECT ...", QENTITIES "42"
