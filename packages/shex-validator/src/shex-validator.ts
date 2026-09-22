@@ -1739,7 +1739,19 @@ export class ShExValidator {
     for (let eNo = 0; eNo < expr.extends.length; ++eNo) {
       const extend = expr.extends[eNo];
       const subgraph = new TrivialNeighborhood(null); // These triples were tracked earlier.
-      extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
+      // Direction matters: a triple the base shape matched with an inverse
+      // constraint (^p) has the focus as its object and must land in the
+      // subgraph's *incoming* arcs. Filing every allocation as outgoing hid
+      // inverse arcs from an extended shape's inverse triple constraints, so
+      // e.g. `<B> { ^<p2> . } <A> EXTENDS @<B> { ^<p1> . }` wrongly reported a
+      // missing <p2> (a reflexive triple, focus on both ends, lands in both).
+      const focusStr = ShExTerm.rdfJsTerm2Turtle(focus);
+      extendsToTriples[eNo].forEach(t => {
+        if (ShExTerm.rdfJsTerm2Turtle(t.subject) === focusStr)
+          subgraph.addOutgoingTriples([t]);
+        if (ShExTerm.rdfJsTerm2Turtle(t.object) === focusStr)
+          subgraph.addIncomingTriples([t]);
+      });
 
       // The same extension tested against the same subgraph in an earlier partition is
       // not repeated: the first result was named; later ones reference it.
