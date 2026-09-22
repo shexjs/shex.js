@@ -6419,6 +6419,8 @@ exports.queryMapResolverFor = queryMapResolverFor;
 exports.claimPane = claimPane;
 exports.paramsToCommandLineArgs = paramsToCommandLineArgs;
 exports.sparqlOrder = sparqlOrder;
+exports.sparqlQuadOrder = sparqlQuadOrder;
+exports.ordered = ordered;
 const term_1 = __webpack_require__(2130);
 Object.defineProperty(exports, "Start", ({ enumerable: true, get: function () { return term_1.Start; } }));
 Object.defineProperty(exports, "isStart", ({ enumerable: true, get: function () { return term_1.isStart; } }));
@@ -6514,6 +6516,48 @@ function sparqlOrder(l, r) {
     const [lprec, rprec] = [prec(l), prec(r)];
     return lprec === rprec ? l.value.localeCompare(r.value) : lprec - rprec;
 }
+/* sparqlQuadOrder - a total order on a node's arcs.  sparqlOrder ranks by one
+ * term, so two arcs to the same object -- a blank node reached by two
+ * predicates, say -- tie, and the sort falls to whatever incidental order the
+ * store or endpoint handed them back in (which differs between implementations,
+ * so two neighborhoods over the same graph could disagree).  Break the tie by
+ * predicate, then subject, so every implementation orders such arcs alike.
+ */
+function sparqlQuadOrder(l, r) {
+    return sparqlOrder(l.object, r.object)
+        || sparqlOrder(l.predicate, r.predicate)
+        || sparqlOrder(l.subject, r.subject);
+}
+/** Wrap a db so each neighborhood's arcs come back in a stable,
+ * implementation-independent order (sparqlQuadOrder).  The order is cosmetic --
+ * ShEx conformance never depends on it, and the validator enumerates partitions
+ * rather than matching greedily, so it can't change which solution is found,
+ * only the order arcs and errors are reported in.  So neighborhoods return arcs
+ * in their native order and a caller that wants determinism -- a UI, a test
+ * comparing serialized results, a diff of two runs -- opts in by wrapping here.
+ * Works over a sync or async db, and preserves every other member (setSchema,
+ * executeSelect, rateLimit, getNeighborhoodAsync, ...) by delegating through the
+ * wrapped object.  A blank-node object or subject is ordered by its label, which
+ * one source may assign differently from another; so this aligns two sources on
+ * ground terms and predicates, not on how each names its blank nodes.
+ */
+function ordered(db) {
+    const sort = (n) => ({
+        outgoing: n.outgoing.slice().sort(sparqlQuadOrder),
+        incoming: n.incoming.slice().sort(sparqlQuadOrder),
+    });
+    return Object.create(db, {
+        getNeighborhood: {
+            value(point, shapeLabel, shape) {
+                const n = db.getNeighborhood(point, shapeLabel, shape);
+                return n && typeof n.then === "function"
+                    ? n.then(sort)
+                    : sort(n);
+            },
+            enumerable: true, configurable: true,
+        },
+    });
+}
 const termType2Prec = {
     'BlankNode': 1,
     'Literal': 2,
@@ -6530,7 +6574,7 @@ function prec(t) {
 /***/ },
 
 /***/ 2932
-(__unused_webpack_module, exports, __webpack_require__) {
+(__unused_webpack_module, exports) {
 
 "use strict";
 
@@ -6539,7 +6583,6 @@ exports.paneEditor = exports.dbParams = exports.ctor = exports.description = exp
 exports.rdfjsDB = rdfjsDB;
 exports.documentTitle = documentTitle;
 exports.fromParams = fromParams;
-const neighborhood_api_1 = __webpack_require__(7682);
 function rdfjsDB(db, queryTracker) {
     function getNeighborhood(point, shapeLabel, _shape) {
         // I'm guessing a local DB doesn't benefit from shape optimization.
@@ -6549,14 +6592,14 @@ function rdfjsDB(db, queryTracker) {
             startTime = new Date();
             token = queryTracker.start(false, point, shapeLabel);
         }
-        const outgoing = [...db.match(point, null, null, null)].sort((l, r) => (0, neighborhood_api_1.sparqlOrder)(l.object, r.object));
+        const outgoing = [...db.match(point, null, null, null)];
         if (queryTracker) {
             const time = new Date();
             queryTracker.end(outgoing, time.valueOf() - startTime.valueOf(), token);
             startTime = time;
             token = queryTracker.start(true, point, shapeLabel);
         }
-        const incoming = [...db.match(null, null, point, null)].sort((l, r) => (0, neighborhood_api_1.sparqlOrder)(l.object, r.object));
+        const incoming = [...db.match(null, null, point, null)];
         if (queryTracker) {
             queryTracker.end(incoming, new Date().valueOf() - startTime.valueOf(), token);
         }
@@ -6699,7 +6742,6 @@ exports.asAsyncDb = asAsyncDb;
 exports.sparqlDB = sparqlDB;
 exports.fromParams = fromParams;
 exports.claimPaneText = claimPaneText;
-const neighborhood_api_1 = __webpack_require__(7682);
 const ShExUtil = __importStar(__webpack_require__(5590));
 const visitor_1 = __webpack_require__(2818);
 const N3 = __importStar(__webpack_require__(7714)); // TODO: set global externally
@@ -7289,8 +7331,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
                 d.outgoing = key === undefined ? null : quadsOf(d.label, bySubject.get(key) || [], internalOf);
             }
             const self = asN3Term(point);
-            return level0.map(t => DataFactory.quad((inverse ? toInternal(t.s, internalOf) : self), DataFactory.namedNode(t.p), (inverse ? self : toInternal(t.o, internalOf))))
-                .sort((l, r) => (0, neighborhood_api_1.sparqlOrder)(l.object, r.object));
+            return level0.map(t => DataFactory.quad((inverse ? toInternal(t.s, internalOf) : self), DataFactory.namedNode(t.p), (inverse ? self : toInternal(t.o, internalOf))));
         }
     }
     function quadsOf(label, triples, internalOf) {
@@ -7303,7 +7344,7 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
                 return null;
             out.push(DataFactory.quad(subject, DataFactory.namedNode(t.p), toInternal(t.o, internalOf)));
         }
-        return out.sort((l, r) => (0, neighborhood_api_1.sparqlOrder)(l.object, r.object));
+        return out;
     }
     /** Swap a result-set blank node for the handle this DB minted for it. */
     function toInternal(term, internalOf) {

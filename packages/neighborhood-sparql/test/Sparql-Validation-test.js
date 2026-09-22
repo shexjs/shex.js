@@ -43,6 +43,9 @@ const {ShExIndexVisitor} = require("@shexjs/visitor");
 const {ShExValidator} = require("@shexjs/validator");
 const {ctor: RdfJsDb} = require("@shexjs/neighborhood-rdfjs");
 const {ctor: SparqlDb} = require("..");
+// Both neighborhoods return arcs in native order; ordering them (the same way)
+// is what lets their serialized results be compared arc-for-arc.
+const {ordered} = require("@shexjs/neighborhood-api");
 const ShExNode = require("@shexjs/node")({rdfjs: N3});
 
 const findPath = require("../../shex-validator/test/findPath.js");
@@ -165,8 +168,8 @@ describe("A ShEx validator over SPARQL", function () {
       const map = shapeMapOf(test, dataURL, schemaURL);
       const options = validatorOptions(test, semActsFile, shapeExternsFile);
 
-      const expected = validate(schema, RdfJsDb(store), map, options);
-      const got = validate(schema, withSchema(SparqlDb(endpoint.url, null, {}), schema), map, options);
+      const expected = validate(schema, ordered(RdfJsDb(store)), map, options);
+      const got = validate(schema, ordered(withSchema(SparqlDb(endpoint.url, null, {}), schema)), map, options);
 
       if (VERBOSE && canonicalize(expected) !== canonicalize(got))
         console.log("rdfjs :", canonicalize(expected), "\nsparql:", canonicalize(got));

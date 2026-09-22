@@ -205,9 +205,14 @@ class TurtleCache extends InterfaceCache {
         // as long as the endpoint takes to answer, and a wikidata walk makes one
         // per entity it reaches.  Validation awaits it (see invoke).
         this.callOnLoad();
-        return module.asAsyncDb && typeof res.getNeighborhoodAsync === "function"
+        const db = module.asAsyncDb && typeof res.getNeighborhoodAsync === "function"
             ? module.asAsyncDb(res)
             : res;
+        // Neighborhoods now return arcs in native order; the WebApp shows them in a
+        // stable order so results don't reshuffle between runs.  This is the
+        // default-on wiring for a "sort quads" control -- gate it on that control
+        // once it lands in #controls.
+        return ShExWebApp.NeighborhoodApi.ordered(db);
     }
     /** Resolve a query map extension -- SPARQL "SELECT ...", QENTITIES "42"
      * -- by asking the selected data source, which is the only thing that can
