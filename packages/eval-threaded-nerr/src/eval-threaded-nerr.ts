@@ -515,7 +515,8 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
     const ret: RegexpThread[] = [];
     let lastPassFail: { pass: TripleTestedErrors[], fail: TripleTestedErrors[] } = {pass: [], fail: []};
     const minmax = {} as GroupAttrs;
-    if (constraint.min !== undefined && constraint.min !== 1 || constraint.max !== undefined && constraint.max !== 1) {
+    // as in matchRepeat: the cardinality the schema wrote, explicit `{1}` included
+    if (constraint.min !== undefined || constraint.max !== undefined) {
       minmax.min = constraint.min;
       minmax.max = constraint.max;
     }
@@ -615,7 +616,10 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
     let repeated = 0, errOut = false;
     let newThreads = [thread];
     const minmax = {} as GroupAttrs;
-    if (groupTE.min !== undefined && groupTE.min !== 1 || groupTE.max !== undefined && groupTE.max !== 1) {
+    // Echo the cardinality the schema wrote, an explicit `{1}` included: the
+    // solution mirrors the expression, and eval-simple-1err copies it the same
+    // way (an unwritten cardinality stays unwritten).
+    if (groupTE.min !== undefined || groupTE.max !== undefined) {
       minmax.min = groupTE.min;
       minmax.max = groupTE.max;
     }

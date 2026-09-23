@@ -584,7 +584,19 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
             }, 0) === allTriples.size;
         return ret !== null ? ret : (elt.state === thisEvalSimple1ErrRegexEngine.end && matchedAll) ? elt : null;
       }, null)
-      if (longerChosen) {
+      // A later accepting thread replaces the chosen one only when it spreads
+      // the triples over more iterations: `( :a .{1,2} ; :b . ? )*` over two
+      // :a's is one per iteration, not both in the first, which is what
+      // eval-threaded-nerr reports.  Every accepting thread has consumed every
+      // triple (matchedAll), so a later one that consumes them in the same
+      // matches differs only by appended empty matches -- an iteration of
+      // `( :a .* | :b .* )*` taken over nothing -- and keeping it padded the
+      // solution with them.  Empty iterations are always trailing (the Rept
+      // state refuses re-entry after one), so the non-empty matches decide.
+      const consumingKey = (t: RegExpThread): string => JSON.stringify(
+        t.matched.filter(m => m.triples.length > 0)
+                 .map(m => [m.stack.map(s => [s.i, s.e]), m.triples.length]));
+      if (longerChosen && (chosen === null || consumingKey(longerChosen) !== consumingKey(chosen))) {
         chosen = longerChosen;
         yield {type: "accept", generation, thread: this.threadView(longerChosen)};
       }
@@ -881,15 +893,18 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
             last[mis].i = null;
             // !!! on the way out to call after valueExpr test
             const groupSemActs = semActsOn(semActHandler, m.stack[mis].c);
-            if (groupSemActs !== undefined && groupSemActs.length > 0) {
+            if (errors.length === 0 && groupSemActs !== undefined && groupSemActs.length > 0) {
               const ctx = {
                 triples: constraintToTripleMapping.get(m.c)!
                   .map(m => m.triple),
                 tripleExpr: m.c
               };
-              const errors = semActHandler.dispatchAll(groupSemActs, ctx, ptr);
-              if (errors.length)
-                throw errors;
+              // A group action that fails fails the match the way a constraint
+              // action does (below): collected here and answered as a SemActFailure.
+              // It used to be thrown -- a bare array, which nothing caught, so a
+              // `( ... ) %Test{ fail(s) %}` escaped the validator as an exception
+              // instead of a nonconformant result.
+              Array.prototype.push.apply(errors, semActHandler.dispatchAll(groupSemActs, ctx, ptr));
             }
             // if (ret && "semActs" in expr) { ret.semActs = expr.semActs; }
           } else {
