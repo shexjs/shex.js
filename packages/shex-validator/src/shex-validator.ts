@@ -89,7 +89,6 @@ export const InterfaceOptions = {
 
 const minOf = (tc: TripleConstraint) => tc.min === undefined ? 1 : tc.min || 1;
 
-const VERBOSE = false; // "VERBOSE" in process.env;
 const EvalThreadedNErr = require("@shexjs/eval-threaded-nerr").RegexpModule;
 
 interface ValidatorOptions {
@@ -1345,12 +1344,6 @@ export class ShExValidator {
         (ret as any).shared = shared;
     }
 
-    // remove N3jsTripleToString
-    if (VERBOSE)
-      neighborhood.forEach(function (t) {
-        // @ts-ignore
-        delete t.toString;
-      });
 
     return this.addShapeAttributes(shape, ret!);
   }
@@ -2330,26 +2323,6 @@ function CrossProduct<KEY, LISTELT, EMPTY_VALUE>(sets: MapArray<KEY, LISTELT>, e
   };
 }
 
-/* N3jsTripleToString - simple toString function to make N3.js's triples
- * printable.
- */
-const N3jsTripleToString = function () {
-  function fmt (n: RdfJsTerm) {
-    return n.termType === "Literal" ?
-      [ "http://www.w3.org/2001/XMLSchema#integer",
-        "http://www.w3.org/2001/XMLSchema#float",
-        "http://www.w3.org/2001/XMLSchema#double"
-      ].indexOf(n.datatype.value) !== -1 ?
-      parseInt(n.value) :
-      n :
-    n.termType === "BlankNode" ?
-      n :
-      "<" + n + ">";
-  }
-  // @ts-ignore what's an elegant way add toString to Quads?
-  return fmt(this.subject) + " " + fmt(this.predicate) + " " + fmt(this.object) + " .";
-};
-
 /* indexNeighborhood - index triples by predicate
  * returns: {
  *     byPredicate: Object: mapping from predicate to triples containing that
@@ -2370,10 +2343,6 @@ function indexNeighborhood (triples: Quad[]): NeighborhoodIndex {
       if (!ret.has(p))
         ret.set(p, []);
       ret.get(p).push(t);
-
-      // If in VERBOSE mode, add a nice toString to N3.js's triple objects.
-      if (VERBOSE)
-        t.toString = N3jsTripleToString;
 
       return ret;
     }, new Map()),

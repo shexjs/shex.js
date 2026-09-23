@@ -1,0 +1,4 @@
+PREFIX : <http://a.example/>
+
+<x> a <http://a.example/T> ; :p2 "p2-0"; :p3 "p3-0" .
+<z> a <http://a.example/U> ; :p1 "p1-0" .

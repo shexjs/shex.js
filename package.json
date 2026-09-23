@@ -28,16 +28,17 @@
   "devDependencies": {
     "@comunica/query-sparql-rdfjs": "^5.4.1",
     "@eslint/js": "^10.0.1",
+    "c8": "^12.0.0",
     "chai": "^6.2.2",
     "cross-spawn": "^7.0.3",
     "css-loader": "^7.1.5",
     "eslint": "^10.9.1",
     "file-loader": "^6.2.0",
     "globals": "^17.12.0",
+    "husky": "^9.1.7",
     "jsdom": "^30.1.0",
     "mocha": "^12.0.0",
     "nock": "^14.0.17",
-    "nyc": "^18.0.0",
     "shex-test": "github:shexSpec/shexTest#main",
     "source-map-support": "^0.5.21",
     "style-loader": "^4.0.0",
@@ -47,8 +48,7 @@
     "typescript": "^5.5.0",
     "webpack": "^5.111.0",
     "webpack-bundle-analyzer": "^5.4.0",
-    "webpack-cli": "^7.2.3",
-    "husky": "^9.1.7"
+    "webpack-cli": "^7.2.3"
   },
   "scripts": {
     "clean-all": "find . -maxdepth 3 -name node_modules -exec rm -r {} \\; ; find . -maxdepth 3 -name package-lock.json -exec rm -r {} \\; || true",
@@ -68,7 +68,7 @@
     "earl": "cd test && make Parser-Writer-test && make Validation-test",
     "lint": "eslint packages/shex-cli/test/findPath.js",
     "check-branch-deps": "./tools/checkBranchDeps.sh",
-    "coverage": "nyc npm run test-all",
+    "coverage": "c8 npm run test-all",
     "parser-all": "(cd packages/shex-parser/ && npm run parser) && (cd packages/shape-map/ && npm run parser)",
     "webpack": "(cd packages/shex-webapp/ && npm run webpack) && (cd packages/extension-map/ && npm run webpack) && (cd packages/extension-reduce/ && npm run webpack) && (cd packages/extension-wasi/ && npm run webpack)",
     "webpacks-all": "(cd packages/shex-webapp/ && npm run webpack-n3js && npm run webpack) && (cd packages/extension-map/ && npm run webpack) && (cd packages/extension-reduce/ && npm run webpack) && (cd packages/extension-wasi/ && npm run webpack)",
@@ -87,21 +87,6 @@
   },
   "bugs": {
     "url": "https://github.com/shexjs/shex.js/issues"
-  },
-  "nyc": {
-    "sourceMap": false,
-    "exclude": [
-      "**/*Jison.*",
-      "test/"
-    ],
-    "extension": [
-      ".js",
-      ".ts"
-    ],
-    "reporter": [
-      "lcov",
-      "text"
-    ]
   },
   "overrides": {
     "brace-expansion": "5.0.8"

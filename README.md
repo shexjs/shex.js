@@ -324,7 +324,7 @@ npm test                # quick suite, as run by the pre-commit hook
 npm run test-all        # everything, including the cli, browser and server tests
 TESTS='ThreadedMaterializer|Map' npm test  # filter by test name pattern
 npm run lint
-npm run coverage        # test-all under nyc; writes coverage/lcov.info
+npm run coverage        # test-all under c8; writes coverage/lcov.info
 ```
 
 `npm run test-all` sets `TEST_cli`/`TEST_browser`/`TEST_server`; the same suite runs in [CI](.github/workflows/ci.yml) on every supported Node version.
