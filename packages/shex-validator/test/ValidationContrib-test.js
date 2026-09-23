@@ -31,7 +31,13 @@ const regexModules = [
 let contribPath = null;
 try { contribPath = findPath("validation-contrib"); } catch (e) { /* no contrib corpus */ }
 
-(contribPath ? describe : describe.skip)("A ShEx validator (contrib)", function () {
+describe("A ShEx validator (contrib)", function () {
+  // describe.skip would still run this body to collect its (pending) tests,
+  // so the corpus check has to be inside it: one pending test says why.
+  if (contribPath === null) {
+    it.skip("is skipped: no validation-contrib/ in any shexTest checkout");
+    return;
+  }
   const manifest = JSON.parse(fs.readFileSync(contribPath + "manifest.jsonld", "utf8"));
   let entries = manifest["@graph"][0].entries;
   if (TESTS)
