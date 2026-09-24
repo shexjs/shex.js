@@ -308,6 +308,48 @@ describe("EditorPanes", function () {
     }
   });
 
+  // issue #493: the page sizes panes by .shexjs-editor-pane, and CodeMirror
+  // rewrites its outer element's class attribute whenever its own state
+  // changes, e.g. on focus -- a class it wasn't told about didn't survive
+  it("should keep its pane classes when CodeMirror redraws them", function () {
+    const {makeResultPane} = require("../lib/editor-panes");
+    const textarea = dom.window.document.createElement("textarea");
+    textarea.value = "<x> <p> 1 .\n";
+    dom.window.document.body.appendChild(textarea);
+    const pane = makePane(textarea, {language: "turtle", lint: false});
+    const result = makeResultPane('{"a": 1}', "json");
+    try {
+      [pane.view, result.view || null].filter(Boolean).forEach(view => {
+        // what a click in the text does: focus, and a redraw with cm-focused
+        view.contentDOM.focus();
+        view.observer.flush();
+        view.dispatch({});
+      });
+      expect(pane.view.dom.classList.contains("cm-focused"), "the redraw happened").to.equal(true);
+      expect([...pane.view.dom.classList]).to.include("shexjs-editor-pane");
+      expect([...result.dom.classList]).to.include.members(["shexjs-editor-pane", "shexjs-json-pane"]);
+    } finally {
+      pane.destroy();
+      textarea.remove();
+    }
+  });
+
+  // a declared width is how the textarea follows the page; the pixels it
+  // measured at load would pin the pane when the window is resized
+  it("should take the width the textarea declares, not the one it measured", function () {
+    const textarea = dom.window.document.createElement("textarea");
+    textarea.style.width = "75%";
+    Object.defineProperty(textarea, "offsetWidth", {configurable: true, get: () => 640});
+    dom.window.document.body.appendChild(textarea);
+    const pane = makePane(textarea, {language: "turtle", lint: false});
+    try {
+      expect(pane.view.dom.style.width).to.equal("75%");
+    } finally {
+      pane.destroy();
+      textarea.remove();
+    }
+  });
+
   it("should leave an unpainted textarea's pane alone", function () {
     const textarea = dom.window.document.createElement("textarea");
     textarea.value = "<x> <p> 1 .\n";

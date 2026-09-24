@@ -306,6 +306,28 @@ function paintedLike (elt: HTMLElement): Extension[] {
   })];
 }
 
+/** whether an element is as wide as its parent's content box */
+function fillsWidth (elt: HTMLElement): boolean {
+  const box = elt.parentElement;
+  const view = box && box.ownerDocument && box.ownerDocument.defaultView;
+  if (!box || !view)
+    return false;
+  const cs = view.getComputedStyle(box);
+  const inner = box.clientWidth - parseFloat(cs.paddingLeft || "0") - parseFloat(cs.paddingRight || "0");
+  return elt.offsetWidth >= inner - 1;
+}
+
+/** A class on the editor's outer element, which the page's layout rules
+ * (shex-app.css: `#schemaDocument > .shexjs-editor-pane` and friends) size
+ * the pane by.  Through editorAttributes, never view.dom.classList:
+ * CodeMirror rewrites that element's class attribute from its own state
+ * whenever that changes -- focusing the editor, for one -- and drops any
+ * class it wasn't told about, so a hand-added one lasted until the first
+ * click in the text and the pane collapsed to its content (issue #493). */
+function paneClass (classes: string): Extension {
+  return EditorView.editorAttributes.of({class: classes});
+}
+
 /** makeResultPane - a read-only, syntax-highlighted view of a result
  * document (validation results as JSON, a materialized graph as Turtle)
  * sharing the highlight machinery of editor panes: highlight(ranges, cls,
@@ -327,8 +349,8 @@ export function makeResultPane (text: string, language: PaneLanguage = "json",
     ...dressing,
     EditorView.editable.of(false),
     EditorState.readOnly.of(true),
+    paneClass("shexjs-editor-pane shexjs-" + language + "-pane"),
   ]});
-  view.dom.classList.add("shexjs-editor-pane", "shexjs-" + language + "-pane");
   const setHoverRegions = attachHoverRegions(view);
   const clampRange = (r: Range | null): r is Range =>
     !!r && r.from >= 0 && r.to <= view.state.doc.length && r.to > r.from;
@@ -873,13 +895,16 @@ export function makePane (textarea: HTMLTextAreaElement, opts: MakePaneOptions =
   // thing.  Read before hiding it, and only believe a real colour (jsdom
   // and an unstyled page report none).
   extensions.push(...paintedLike(textarea));
+  extensions.push(paneClass("shexjs-editor-pane"));
 
   const view = new EditorView({doc: textarea.value, extensions});
-  view.dom.classList.add("shexjs-editor-pane");
-  // match the textarea's rendered size (measured before it's hidden); fall
-  // back to its rows attribute where there's no layout (e.g. jsdom)
-  view.dom.style.width = textarea.offsetWidth ? textarea.offsetWidth + "px"
-    : (textarea.style.width || "100%");
+  // match the textarea's width -- as it was declared where that says how it
+  // follows the page ("100%" keeps up with a window resize, where the pixels
+  // it measured at load would not), else as it was measured (before it's
+  // hidden), as "100%" if that filled its box; fall back to 100% where
+  // there's no layout (e.g. jsdom)
+  view.dom.style.width = textarea.style.width
+    || (!textarea.offsetWidth || fillsWidth(textarea) ? "100%" : textarea.offsetWidth + "px");
   // ...and its height, unless the box it goes into says otherwise: a pane
   // in a column that fills the page takes the column's height, where a
   // pixel height measured from the textarea would hold it to the rows the
