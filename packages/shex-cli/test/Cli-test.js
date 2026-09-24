@@ -20,6 +20,10 @@ const HTTPTEST = "HTTPTEST" in process.env ?
         __dirname, // server root
       );
 
+// the one node most rows validate, and a closed shape it fails
+const X1 = ["-x", "cli/1dotOr2dot.shex", "-d", "cli/p2p3.ttl", "-n", "x", "-s", "http://a.example/S1"];
+const CLOSED4 = ["-x", "cli/1dotOr2dotCLOSED.shex", "-d", "cli/p2p3p4.ttl", "-n", "x", "-s", "http://a.example/S1"];
+
 const AllTests = {
   "validate": [
     // pleas for help
@@ -108,7 +112,62 @@ const AllTests = {
     { name: "simple-jsonld-http" , args: ["--json-manifest", HTTPTEST + "cli/manifest-simple.jsonld"], result: HTTPTEST + "cli/1dotOr2dot_pass_p1.val", status: X.val_match_pass },
     { name: "simple-as-jsonld-http" , args: ["--jsonld-manifest", HTTPTEST + "cli/manifest-simple.jsonld"], result: HTTPTEST + "cli/1dotOr2dot_pass_p1.val", status: X.val_match_pass },
     { name: "simple-as-turtle-http" , args: ["--turtle-manifest", HTTPTEST + "cli/manifest-simple.ttl"], result: HTTPTEST + "cli/1dotOr2dot_pass_p1.val", status: X.val_match_pass },
-    { name: "results-http", args: ["--json-manifest", HTTPTEST + "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: X.val_match_pass }
+    { name: "results-http", args: ["--json-manifest", HTTPTEST + "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: X.val_match_pass },
+    // options and diagnostics the rows above never reached (coverage-driven)
+    { name: "coverage-bad", args: [...X1, "--coverage", "bogus"], errorMatch: "unknown coverage option", status: X.bad_argument },
+    { name: "explain-bad", args: [...X1, "--explain", "bogus"], errorMatch: "--explain takes", status: X.bad_argument },
+    { name: "verbose", args: [...X1, "--verbose"], resultMatch: "validating .* over 2 triples against", status: X.shape_test_pass },
+    { name: "query", args: [...X1, "--query"], resultMatch: ":p2 \"p2-0\"", status: X.graph_match_pass },
+    { name: "remainder", args: [...X1, "--remainder"], resultMatch: "^# <.*>@<http://a.example/S1>", status: X.graph_match_pass },
+    { name: "invocation-dry", args: [...X1, "-i", "--dry-run"], resultMatch: "validate -x 'cli/1dotOr2dot.shex'", status: X.dry_run },
+    { name: "invocation-options", args: [...X1, "-i", "--dry-run", "--regex-module", "eval-simple-1err", "--result", "cli/1dotOr2dot_pass_p2p3.val"], resultMatch: "--result 'cli/1dotOr2dot_pass_p2p3.val'", status: X.dry_run },
+    { name: "regex-module-list", args: [...X1, "--regex-module", "?"], resultMatch: "eval-threaded-nerr", status: X.help },
+    { name: "regex-module-package", args: [...X1, "--regex-module", "@shexjs/eval-simple-1err"], resultMatch: "ShapeTest", status: X.shape_test_pass },
+    { name: "regex-module-short", args: [...X1, "--regex-module", "eval-simple-1err"], resultMatch: "ShapeTest", status: X.shape_test_pass },
+    { name: "regex-module-missing", args: [...X1, "--regex-module", "no-such-module"], errorMatch: "Cannot find module 'no-such-module'", status: 1 }, // an uncaught require error
+    { name: "exec", args: [...X1, "--exec", "return {type: \"Exec\", validator: typeof validator}"], resultMatch: "\"validator\": \"object\"", status: X.shape_test_pass },
+    { name: "result-true", args: [...X1, "--result", "true"], resultMatch: "^true", status: X.val_match_pass },
+    { name: "result-true-fails", args: [...CLOSED4, "--result", "true"], resultMatch: "^false", status: X.val_match_fail },
+    { name: "result-file", args: [...X1, "--result", "cli/1dotOr2dot_pass_p2p3.val"], resultMatch: "^true", status: X.val_match_pass },
+    { name: "human-pass", args: [...X1, "--human"], resultMatch: "x@http://a.example/S1", status: X.shape_test_pass },
+    { name: "human-fail", args: [...CLOSED4, "--human"], resultMatch: "to conform: remove 1 :p4", status: X.shape_test_fail },
+    { name: "human-explain-errors", args: [...CLOSED4, "--human", "--explain", "errors"], resultMatch: "unexpected in a closed shape", status: X.shape_test_fail },
+    { name: "terse", args: [...X1, "--terse"], resultMatch: "ShapeTest", status: X.shape_test_pass },
+    { name: "quiet", args: [...X1, "--quiet"], resultMatch: "^$", status: X.shape_test_pass },
+    { name: "slurp-all", args: [...X1, "--slurp-all"], resultMatch: "PREFIX : <http://a.example/>", status: X.shape_test_pass },
+    { name: "track", args: [...X1, "--track"], resultMatch: "@:S1 2 triples", status: X.shape_test_pass },
+    { name: "sort-quads", args: [...X1, "--sort-quads"], resultMatch: "ShapeTest", status: X.shape_test_pass },
+    { name: "provenance", args: [...X1, "--provenance"], resultMatch: "ShapeTest", status: X.shape_test_pass },
+    { name: "skipCycleCheck", args: [...X1, "--skipCycleCheck"], resultMatch: "ShapeTest", status: X.shape_test_pass },
+    { name: "schema-then-data-as-x", args: ["-x", "cli/1dotOr2dot.shex", "-x", "cli/p2p3.ttl", "-n", "x", "-s", "http://a.example/S1"], resultMatch: "ShapeTest", status: X.shape_test_pass },
+    { name: "json-then-data-as-j", args: ["-j", "cli/1dotOr2dot.json", "-j", "cli/p2p3.ttl", "-n", "x", "-s", "http://a.example/S1"], resultMatch: "ShapeTest", status: X.shape_test_pass },
+    { name: "duplicate-shapes-identical", args: ["-x", "cli/1dotOr2dot.shex", "-x", "cli/noStart.shex", "-d", "cli/p2p3.ttl", "-n", "x", "-s", "http://a.example/S1"], errorMatch: "Duplicate definitions for http://a.example/S1", status: X.shape_test_pass }, // (one criterion per row: the warning on stderr)
+    { name: "conflicting-shapes", args: ["-x", "cli/1dotOr2dot.shex", "-x", "cli/S1-different.shex", "-d", "cli/p2p3.ttl", "-n", "x", "-s", "http://a.example/S1"], errorMatch: "Conflicing definitions", status: X.unspecified_error },
+    { name: "diagnose-dry", args: ["-x", "cli/1dotOr2dot.shex", "--diagnose", "--dry-run"], resultMatch: "Found 0 redefinitions, 0 errors", status: X.dry_run },
+    { name: "diagnose-redefinitions", args: ["-x", "cli/1dotOr2dot.shex", "-x", "cli/noStart.shex", "-d", "cli/p2p3.ttl", "--diagnose", "--dry-run"], resultMatch: "1 Redefinitions:\\n  <http://a.example/S1>: 2 defintions", status: X.shape_test_fail },
+    { name: "guess-shape", args: ["-x", "cli/noStart.shex", "-d", "cli/p2p3.ttl", "-n", "x"], resultMatch: "Guessing shape http://a.example/S1", status: X.shape_test_pass },
+    { name: "no-shape-at-all", args: ["-x", "cli/empty.shex", "-d", "cli/p2p3.ttl", "-n", "x"], errorMatch: "No shape specified", status: X.bad_argument },
+    { name: "no-node", args: ["-x", "cli/1dotOr2dot.shex", "-d", "cli/p2p3.ttl", "-s", "http://a.example/S1"], resultMatch: "Failure", status: X.shape_test_fail },
+    { name: "unknown-node", args: ["-x", "cli/1dotOr2dot.shex", "-d", "cli/p2p3.ttl", "-n", "y", "-s", "http://a.example/S1"], resultMatch: "Failure", status: X.shape_test_fail },
+    { name: "node-type", args: ["-x", "cli/1dotOr2dot.shex", "-d", "cli/typed.ttl", "-t", "http://a.example/T", "-s", "http://a.example/S1"], resultMatch: "cli/x\"", status: X.shape_test_pass },
+    { name: "node-type-missing", args: ["-x", "cli/1dotOr2dot.shex", "-d", "cli/typed.ttl", "-t", "http://a.example/Nope", "-s", "http://a.example/S1"], errorMatch: "no default found looking for type", status: X.unspecified_error },
+    { name: "grep", args: [...X1, "--grep"], resultMatch: "ShapeTest", status: X.shape_test_pass },
+    { name: "grep-list", args: [...X1, "--grep", "--list"], resultMatch: "^\\[\\s*\"file:.*/cli/x\"\\s*\\]", status: X.shape_test_pass },
+    { name: "grep-verbose", args: [...X1, "--grep", "--verbose"], resultMatch: "validating .* over 2 triples", status: X.shape_test_pass },
+    { name: "grep-two-nodes", args: ["-x", "cli/1dotOr2dot.shex", "-d", "cli/p2p3.ttl", "-m", "<x>@<http://a.example/S1>,<y>@<http://a.example/S1>", "--grep"], resultMatch: "ShapeTest", status: X.shape_test_pass },
+    { name: "manifest-list", args: ["--json-manifest", "cli/manifest-results.json", "--list"], resultMatch: "true", status: X.val_match_pass },
+    { name: "manifest-grep", args: ["--json-manifest", "cli/manifest-results.json", "--grep"], resultMatch: "false", status: X.val_match_fail },
+    { name: "manifest-object", args: ["--json-manifest", "cli/manifest-object.json"], resultMatch: "ShapeTest", status: X.shape_test_pass },
+    { name: "turtle-manifest-test-name", args: ["--turtle-manifest", "cli/manifest-simple.ttl", "--test-name", "1dotOr2dot_pass_p1"], resultMatch: "ShapeTest", status: X.shape_test_pass },
+    { name: "turtle-manifest-missing", args: ["--turtle-manifest", "cli/nope.ttl"], errorMatch: "failed to load manifest file", status: X.manifest_not_found },
+    { name: "serve-bad-url", args: ["-S", "bogus-url"], errorMatch: "Unable to parse requested server URL", status: X.unspecified_error },
+    { name: "serve-privileged-port", args: ["-S", "http://localhost:81/validate"], errorMatch: "Unable to bind port 81. Try a port > 1023", status: X.unspecified_error },
+    { name: "serve-default-port", args: ["-S", "http://localhost/validate"], errorMatch: "Unable to bind port 80. Try adding a port", status: X.unspecified_error },
+    { name: "exec-throws", args: [...X1, "--exec", "throw \"boom\""], errorMatch: "^Aborting: boom", status: X.unspecified_error },
+    { name: "invocation-manifest", args: ["--json-manifest", "cli/manifest-simple.json", "-i", "--dry-run"], resultMatch: "validate -x .cli/1dotOr2dot.shex.  -d .cli/p1.ttl.", status: X.dry_run },
+    { name: "yaml-manifest", args: ["--yaml-manifest", "cli/manifest-simple.yaml"], resultMatch: "ShapeTest", status: X.shape_test_pass },
+    { name: "yaml-manifest-bad", args: ["--yaml-manifest", "cli/manifest-dupkeys.yaml"], errorMatch: "failed to process json manifest: YAMLException", status: X.manifest_error },
+    { name: "coverage-exhaustive", args: [...X1, "--coverage", "exhaustive"], resultMatch: "ShapeTest", status: X.shape_test_pass },
   ],
 
   "shex-to-json": [

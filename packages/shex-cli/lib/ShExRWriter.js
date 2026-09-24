@@ -32,7 +32,7 @@ const INT_KEYS = new Set(["min", "max", "length", "minlength", "maxlength", "tot
 // ShExJ numeric-literal keys (value may be number or {value,type}).
 const NUM_KEYS = new Set(["mininclusive", "minexclusive", "maxinclusive", "maxexclusive"]);
 // ShExJ string keys.
-const STRING_KEYS = new Set(["pattern", "flags", "code", "stem", "languageTag"]);
+const STRING_KEYS = new Set(["pattern", "flags", "code", "languageTag"]);
 // ShExJ keys whose value is a nested shape/triple expression (ref or object).
 const EXPR_KEYS = new Set(["shapeExpr", "valueExpr", "start", "expression", "object"]);
 
@@ -115,7 +115,7 @@ function node (obj, depth) {
   const parts = [];
   for (const k of Object.keys(obj)) {
     if (k === "type" || k === "id" || k[0] === "_") continue;
-    parts.push(prop(k, obj[k], depth + 1, ind));
+    parts.push(prop(k, obj[k], depth + 1, ind, obj));
   }
   let body = `a sx:${obj.type}`;
   if (parts.length) body += ` ;\n${ind}${parts.join(` ;\n${ind}`)}`;
@@ -123,23 +123,25 @@ function node (obj, depth) {
 }
 
 // Serialize one `key: value` as one-or-more `sx:pred …` clauses.
-function prop (k, v, depth, ind) {
+function prop (k, v, depth, ind, owner) {
   if (k === "extra") return v.map(x => `sx:extra ${iri(x)}`).join(` ;\n${ind}`);
   if (k === "nodeKind") return `sx:nodeKind sx:${v}`;
+  // a stem is a string, or the Wildcard object of a `- exclusions`-only range
+  if (k === "stem") return `sx:stem ${typeof v === "string" ? strLit(v) : node(v, depth)}`;
   if (BOOL_KEYS.has(k)) return `sx:${k} ${v ? "true" : "false"}`;
   if (INT_KEYS.has(k)) return `sx:${k} ${v}`;
   if (NUM_KEYS.has(k)) return `sx:${k} ${numLit(v)}`;
   if (STRING_KEYS.has(k)) return `sx:${k} ${strLit(v)}`;
   if (IRI_KEYS.has(k)) return `sx:${k} ${iri(v)}`;
   if (EXPR_KEYS.has(k)) return `sx:${predName(k)} ${k === "object" ? valueSetValue(v, depth) : expr(v, depth)}`;
-  if (LIST_KEYS.has(k)) return `sx:${predName(k)} ${coll(v.map(item => listItem(k, item, depth)))}`;
+  if (LIST_KEYS.has(k)) return `sx:${predName(k)} ${coll(v.map(item => listItem(k, item, depth, owner)))}`;
   throw new Error(`ShExRWriter: unhandled ShExJ property '${k}'`);
 }
 
-// ShExJ key -> ShExR predicate local name (only `annotations` differs).
-function predName (k) { return k === "annotations" ? "annotation" : k; }
+// ShExJ key -> ShExR predicate local name (the two plurals are singular in ShExR).
+function predName (k) { return k === "annotations" ? "annotation" : k === "exclusions" ? "exclusion" : k; }
 
-function listItem (k, item, depth) {
+function listItem (k, item, depth, owner) {
   switch (k) {
     case "shapeExprs":
     case "extends":     return shapeExpr(item, depth);
@@ -149,7 +151,9 @@ function listItem (k, item, depth) {
     case "annotations": return node(item, depth);          // SemAct / Annotation
     case "imports":     return iri(item);
     case "values":      return valueSetValue(item, depth);
-    case "exclusions":  return typeof item === "string" ? iri(item) : node(item, depth);
+    case "exclusions":  return typeof item === "string"
+      ? (owner.type === "IriStemRange" ? iri(item) : strLit(item))   // the range type says what a bare string is
+      : valueSetValue(item, depth);                                   // a stem object or (ShExJ-only) a literal
     default:            return typeof item === "string" ? iri(item) : node(item, depth);
   }
 }
@@ -157,8 +161,8 @@ function listItem (k, item, depth) {
 // A value-set value: bare IRI, RDF literal, or a stem/language object.
 function valueSetValue (v, depth) {
   if (typeof v === "string") return iri(v);            // objectValue: IRI
+  if (v && "value" in v) return rdfLiteral(v);         // objectValue: LITERAL (its `type`, if any, is the datatype)
   if (v && v.type) return node(v, depth);              // IriStem / LiteralStem / Language / … / Wildcard
-  if (v && "value" in v) return rdfLiteral(v);         // objectValue: LITERAL
   throw new Error(`ShExRWriter: unhandled value-set value ${JSON.stringify(v)}`);
 }
 

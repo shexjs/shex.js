@@ -337,8 +337,8 @@ async function main () {
     abort("--explain takes both, repairs or errors, not " + cmds.explain, ExitCode.bad_argument);
 
   if (cmds.coverage) {
-    if (!(cmds.coverage in ShExValidator.InterfaceOptions.coverage))
-      throw Error("unknown coverage option \"" + cmds.coverage + "\" - expected one of " + Object.keys(ShExValidator.InterfaceOptions.coverage).join(", ") + "\".");
+    if (!(cmds.coverage in ShExValidator.InterfaceOptions.coverage)) // a usage error, like --explain's
+      abort("unknown coverage option \"" + cmds.coverage + "\" - expected one of " + Object.keys(ShExValidator.InterfaceOptions.coverage).join(", ") + "\".", ExitCode.bad_argument);
     ValidatorOptions.coverage = cmds.coverage;
   }
 
@@ -488,10 +488,13 @@ async function findNodesAndValidate (loaded: any, parms: any, options: any, sche
       shapeLabel = ShExValidator.Start;
       ret.shape = shapeLabel;
     } else {
-      const found = typeof shapeP === "string"
+      // a string is resolved against the schema; none at all is guessed
+      // (parsePassedNode falls back to someShape); anything else is already
+      // a token like .start
+      const found = typeof shapeP === "string" || shapeP === undefined
             ? ShExUtil.parsePassedNode(shapeP, loaded.schemaMeta[0],
 				       someShape, knownShape, unknownShape)
-            : shapeP; // already a token like .start
+            : shapeP;
       if (found === ShExUtil.NotSupplied || found === ShExUtil.UnknownIRI)
         throw Error("shape " + shapeP + " not defined" + optsStr(shapeP, loaded.schema.shapes));
       // shape = { type: "ShapeRef", reference: found };
@@ -526,11 +529,10 @@ async function findNodesAndValidate (loaded: any, parms: any, options: any, sche
       }
       // Make sure we have a start node.
       if (shape === undefined && !("start" in loaded.schema)) {
-        const schemaKeys = Object.keys(loaded.schema.shapes);
-        schemaKeys.join(", ");
+        const schemaKeys = (loaded.schema.shapes || []).map((decl: any) => decl.id);
         msgs.push("No shape specified on command line or in ShEx schema" +
                   (schemaKeys.length < 50 ?
-                   "; try -n with one of: " + schemaKeys.join(", ") :
+                   "; try -s with one of: " + schemaKeys.join(", ") :
                    "")
                  );
       }
@@ -1023,7 +1025,9 @@ async function runValidator (db: any, shapeMap: any, schema: any, options: any, 
        w.addTriples(db); w.end(function (error, result) { console.log(result); });
        });'
     */
-    return eval("function (validator) {\n" + cmds.exec + "}")(validator);
+    // parenthesized: a bare `function (validator) {…}` is a statement, and a
+    // function statement needs a name, so --exec always failed with a SyntaxError
+    return eval("(function (validator) {\n" + cmds.exec + "\n})")(validator);
   } else {
     if (!cmds.quiet)
       if ("errors" in res && Object.keys(validator.semActHandler.results).length) {
@@ -1534,12 +1538,6 @@ async function mergeParm (parms: ServerParms, parm: string, text: string, url: U
     // node and shape will be evaluated as relative URLs in findNodesAndValidate.
     parms[parm] = text;
   }
-}
-
-function objKeyVal (pairs: any[]) {
-  const ret: { [key: string]: any } = {};
-  pairs.forEach(pair => ret[pair[0]] = pair[1]);
-  return ret;
 }
 
 function makeError (msg: string, status: number) {

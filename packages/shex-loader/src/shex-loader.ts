@@ -436,7 +436,8 @@ function ShExLoaderCjsModule (config: ConfigI = {}): LoaderI {
         {}
       );
       const schemaRoot = graph.getQuads(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
-      const val = graphParser.validate(schemaRoot, schemaOptions.graphParser.validator.Start);
+      // (validateNodeShapePair is the validator's API; .validate() went away with the old validator)
+      const val = graphParser.validateNodeShapePair(schemaRoot, schemaOptions.graphParser.validator.Start);
       if ("errors" in val)
         throw new ResourceError(`${url} did not validate as a ShEx schema: ${JSON.stringify(val.errors, null, 2)}`, url)
       const schema = ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val))));

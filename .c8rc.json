@@ -1,0 +1,8 @@
+{
+  "//": "V8 coverage (c8): follows worker threads and child processes and reports compiled TS against src/*.ts; nyc could see neither the worker gate nor the sources",
+  "src": ["packages", "tools"],
+  "exclude": ["**/test/**", "**/*Jison*", "**/examples/**", "**/webpacks/**", "**/*.d.ts", "coverage/**"],
+  "exclude-after-remap": true,
+  "reporter": ["lcov", "text"],
+  "reports-dir": "coverage"
+}

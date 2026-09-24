@@ -4638,80 +4638,6 @@ exports.RegexpModule = {
         }
     }
 };
-/**
- * debugging tool; lots of ts-ignores
- */
-class NfaToString {
-    constructor() {
-        this.known = { OneOf: [], EachOf: [] };
-    }
-    dumpTripleConstraint(tc) {
-        return "<" + tc.predicate + ">";
-    }
-    card(obj) {
-        let x = "";
-        if ("min" in obj)
-            // @ts-ignore
-            x += obj.min;
-        if ("max" in obj)
-            // @ts-ignore
-            x += "," + obj.max;
-        return x ? "{" + x + "}" : "";
-    }
-    junct(j) {
-        // @ts-ignore
-        let id = known[j.type].indexOf(j);
-        if (id === -1) { // @ts-ignore
-            id = known[j.type].push(j) - 1;
-        }
-        // @ts-ignore
-        return j.type + id; // + card(j);
-    }
-    dumpStackElt(elt) {
-        return this.junct(elt.c) + "." + elt.e + ("i" in elt ? "[" + elt.i + "]" : "");
-    }
-    dumpStack(stack) {
-        return stack.map(elt => {
-            return this.dumpStackElt(elt);
-        }).join("/");
-    }
-    dumpNFA(states, startNo) {
-        return states.map((s, i) => {
-            return (i === startNo
-                ? s instanceof MatchState
-                    ? "."
-                    : "S"
-                : s instanceof MatchState
-                    ? "E"
-                    : " ")
-                + i + " " + (s instanceof SplitState
-                ? ("Split-" + this.junct(s.expr))
-                : s instanceof ReptState
-                    ? ("Rept-" + this.junct(s.expr))
-                    : s instanceof MatchState
-                        ? "Match"
-                        : this.dumpTripleConstraint(s.c))
-                + this.card(s) + "→" + s.outs.join(" | ") + ("stack" in s
-                ? this.dumpStack(s.stack)
-                : "");
-        }).join("\n");
-    }
-    dumpMatched(matched) {
-        return matched.map(m => {
-            return this.dumpTripleConstraint(m.c) + "[" + m.triples.join(",") + "]" + this.dumpStack(m.stack);
-        }).join(",");
-    }
-    dumpThread(thread) {
-        return "S" + thread.state + ":" + Object.keys(thread.repeats).map(k => {
-            return k + "×" + thread.repeats[k];
-        }).join(",") + " " + this.dumpMatched(thread.matched);
-    }
-    dumpThreadList(list) {
-        return "[[" + list.map(thread => {
-            return this.dumpThread(thread);
-        }).join("\n  ") + "]]";
-    }
-}
 class RegExpThread {
     constructor(state = -1, repeats = {}, avail = new Map(), stack = [], matched = [], errors = [], 
     /** for each repeat this thread is inside, the triple count when its
@@ -4831,7 +4757,6 @@ class EvalSimple1ErrRegexEngine {
         if (thisEvalSimple1ErrRegexEngine.states.length === 1)
             return this.matchedToResult([], constraintToTripleMapping, semActHandler);
         let chosen = null;
-        // console.log(new NfaToString().dumpNFA(this.states, this.start));
         this.addstate(clist, this.start, new RegExpThread());
         // The start's closure may already reach the end -- a group taken zero
         // times -- and that is the match where there is nothing to match.
@@ -6148,7 +6073,7 @@ function eventTracker(onEvent) {
     };
     return tracker;
 }
-
+//# sourceMappingURL=validator-api.js.map
 
 /***/ },
 
@@ -6417,7 +6342,7 @@ class GateController {
     abort() { this.resume("abort", {}); }
 }
 exports.GateController = GateController;
-
+//# sourceMappingURL=worker-gate.js.map
 
 /***/ },
 
@@ -6587,7 +6512,7 @@ function prec(t) {
         throw Error(`no defined SPARQL order for ${typeLabel} ${t.value}`);
     return termType2Prec[typeLabel];
 }
-
+//# sourceMappingURL=neighborhood-api.js.map
 
 /***/ },
 
@@ -51209,7 +51134,8 @@ function ShExLoaderCjsModule(config = {}) {
                 graph.addQuads(x.graph);
                 const graphParser = new schemaOptions.graphParser.validator(schemaOptions.graphParser.schema, schemaOptions.graphParser.rdfjsdb(graph), {});
                 const schemaRoot = graph.getQuads(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
-                const val = graphParser.validate(schemaRoot, schemaOptions.graphParser.validator.Start);
+                // (validateNodeShapePair is the validator's API; .validate() went away with the old validator)
+                const val = graphParser.validateNodeShapePair(schemaRoot, schemaOptions.graphParser.validator.Start);
                 if ("errors" in val)
                     throw new ResourceError(`${url} did not validate as a ShEx schema: ${JSON.stringify(val.errors, null, 2)}`, url);
                 const schema = ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val))));
@@ -54207,8 +54133,8 @@ const ShExUtil = {
                         }).concat(opts)) : opts;
                     return reqd;
                 }
-                if (typeof expr === "string") { // Inclusion
-                    const included = schema._index.tripleExprs[expr].expression;
+                if (typeof expr === "string") { // Inclusion: the labelled triple expression it names
+                    const included = schema._index.tripleExprs[expr];
                     return _compileExpression(included, schema);
                 }
                 else if (expr.type === "TripleConstraint") {
@@ -54484,7 +54410,7 @@ const ShExUtil = {
                     // filter(function (el, ord, l) { return l.indexOf(el) === ord; })
                     for (let i = a.length - 1; i > -1; --i)
                         if (a.indexOf(a[i]) < i)
-                            a.splice(i, i + 1);
+                            a.splice(i, 1); // (used to splice i+1 elements, eating the neighbours of a repeat)
                 }
                 for (const k in this.needs)
                     _trim(this.needs[k]);
@@ -54826,15 +54752,17 @@ const ShExUtil = {
                         }
                     }
                 }
-                (["extends", "restricts"]).forEach(attr => {
-                    if (shape[attr] && shape[attr].length > 0)
-                        shape[attr].forEach(function (i) {
-                            ret.add(shapeDecl.id, i);
-                        });
-                });
+                if (shape.extends && shape.extends.length > 0)
+                    shape.extends.forEach(function (i) {
+                        ret.add(shapeDecl.id, i);
+                    });
                 if (shape.expression)
                     _walkTripleExpression(shape.expression, negated);
             }
+            // RESTRICTS sits on the declaration (ShExJ 2.1), not on its shape
+            (shapeDecl.restricts || []).forEach(function (i) {
+                _walkShapeExpression(i, 0);
+            });
             _walkShapeExpression(shapeDecl.shapeExpr, 0); // 0 means false for bitwise XOR
         });
         return ret;
@@ -55747,7 +55675,8 @@ const ShExUtil = {
                                 ? dataFactory.namedNode(elt.datatype)
                                 : undefined);
                     case "typed-literal": // encountered in wikidata query service
-                        return dataFactory.literal(elt.value, elt.datatype);
+                        // (a bare string here would be taken for a language tag)
+                        return dataFactory.literal(elt.value, dataFactory.namedNode(elt.datatype));
                     default: throw "unknown XML results type: " + elt.type;
                 }
             });
@@ -56500,7 +56429,6 @@ exports.InterfaceOptions = {
     }
 };
 const minOf = (tc) => tc.min === undefined ? 1 : tc.min || 1;
-const VERBOSE = false; // "VERBOSE" in process.env;
 const EvalThreadedNErr = (__webpack_require__(4516).RegexpModule);
 class SemActDispatcherImpl {
     constructor(externalCode, indexed) {
@@ -57520,10 +57448,6 @@ class ShExValidator {
             if (anyShared)
                 ret.shared = shared;
         }
-        // remove N3jsTripleToString
-        if (false)
-            // removed by dead control flow
-{}
         return this.addShapeAttributes(shape, ret);
     }
     /** Arc-consistency pass: delete a triple's candidate constraint when committing one
@@ -58421,25 +58345,6 @@ function CrossProduct(sets, emptyValue) {
         }
     };
 }
-/* N3jsTripleToString - simple toString function to make N3.js's triples
- * printable.
- */
-const N3jsTripleToString = function () {
-    function fmt(n) {
-        return n.termType === "Literal" ?
-            ["http://www.w3.org/2001/XMLSchema#integer",
-                "http://www.w3.org/2001/XMLSchema#float",
-                "http://www.w3.org/2001/XMLSchema#double"
-            ].indexOf(n.datatype.value) !== -1 ?
-                parseInt(n.value) :
-                n :
-            n.termType === "BlankNode" ?
-                n :
-                "<" + n + ">";
-    }
-    // @ts-ignore what's an elegant way add toString to Quads?
-    return fmt(this.subject) + " " + fmt(this.predicate) + " " + fmt(this.object) + " .";
-};
 /* indexNeighborhood - index triples by predicate
  * returns: {
  *     byPredicate: Object: mapping from predicate to triples containing that
@@ -58460,10 +58365,6 @@ function indexNeighborhood(triples) {
             if (!ret.has(p))
                 ret.set(p, []);
             ret.get(p).push(t);
-            // If in VERBOSE mode, add a nice toString to N3.js's triple objects.
-            if (false)
-                // removed by dead control flow
-{}
             return ret;
         }, new Map()),
         // candidates: _seq<number>(triples.length).map(function () {
