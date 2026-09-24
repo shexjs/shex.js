@@ -6,7 +6,7 @@
  */
 "use strict";
 
-const TEST_browser = "TEST_browser" in process.env ? JSON.parse(process.env["TEST_browser"]) : false;
+const TEST_browser = require("../../shex-cli/test/testGate.js")("TEST_browser");
 
 const Fs = require("fs");
 const Path = require("path");
