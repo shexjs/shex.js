@@ -210,7 +210,7 @@ if (!TEST_browser) {
    * one name themselves by. */
   describe("shex-simple, given the manifest that aggregates them all", function () {
     this.timeout(20000);
-    let dom, $, shared;
+    let dom, $, shared, errors;
 
     /** pick a schema, then one of its documents */
     async function open (schemaLabel, dataLabel) {
@@ -223,7 +223,7 @@ if (!TEST_browser) {
     }
 
     before(async function () {
-      ({dom, $, shared} = await boot("?manifestURL=" + encodeURIComponent(ALL_MANIFEST)));
+      ({dom, $, shared, errors} = await boot("?manifestURL=" + encodeURIComponent(ALL_MANIFEST)));
     });
     after(function () { if (dom) dom.window.close(); });
 
@@ -266,6 +266,16 @@ if (!TEST_browser) {
         .to.deep.equal(["", MAP_ID, REDUCE_ID]);
       expect($("#screenTabs .unloadPlugin").length, "an × each, and none on the page's")
         .to.equal(2);
+    });
+
+    /* The manifest's lists were made before either plugin brought its panes,
+     * so they have no entries for them: an edit in one marks nothing, and
+     * mustn't go looking. */
+    it("should take an edit in a plugin's pane", async function () {
+      const before = errors.length;
+      $("#reduceOverlay textarea").first().trigger("keyup");
+      await new Promise(resolve => dom.window.setTimeout(resolve, 400)); // past INPUTAREA_TIMEOUT
+      Harness.expectClean(errors.slice(before));
     });
 
     /* ...and one of two plugins unloads without taking the other with it. */

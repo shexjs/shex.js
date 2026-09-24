@@ -518,8 +518,11 @@ class ManifestCache extends InterfaceCache {
             acc[k] = undefined;
             return acc;
         }, {});
+        // Every paint of the manifest comes here, and each would add a handler
+        // to every pane: one handler per pane, with the latest list.
         Object.keys(this.caches).forEach((cache) => {
-            this.caches[cache].selection.keyup((e) => {
+            this.caches[cache].selection.off("keyup.manifestSelection");
+            this.caches[cache].selection.on("keyup.manifestSelection", (e) => {
                 const code = e.keyCode || e.charCode;
                 // if (!(e.ctrlKey)) {
                 //   this.resultsWidget.clear();
@@ -551,12 +554,17 @@ class ManifestCache extends InterfaceCache {
                 clearTimeout(timeouts[side]);
             timeouts[side] = setTimeout(() => {
                 timeouts[side] = undefined;
-                const curSum = ManifestCache.sum($(target).val());
-                if (curSum in listItems[side])
-                    listItems[side][curSum].addClass("selected");
-                else // ...and an entry with no document keeps its mark: the pane was never its
-                    Object.keys(listItems[side]).forEach(sum => listItems[side][sum].removeClass("selected"));
                 delete cache.url;
+                // a pane the manifest lists nothing for -- a plugin's, whose cache
+                // came after the list was made -- has no entry to mark
+                const items = listItems[side];
+                if (items === undefined)
+                    return;
+                const curSum = ManifestCache.sum($(target).val());
+                if (curSum in items)
+                    items[curSum].addClass("selected");
+                else // ...and an entry with no document keeps its mark: the pane was never its
+                    Object.keys(items).forEach(sum => items[sum].removeClass("selected"));
             }, INPUTAREA_TIMEOUT);
         }
     }
