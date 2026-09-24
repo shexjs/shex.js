@@ -79,6 +79,25 @@ VERBOSE=1 npx mocha packages/shex-cli/test/Parser-Writer-test.js
 - The shexTest corpus location (`TESTSDIR`, `../shexTest`, …) and `.val`
   regeneration (`REGEN=1`) are covered in the shextest-paired-branches skill.
 
+### Quiet output
+
+A passing run prints only the reporter's dots and the totals, so anything
+else is worth reading. Keep it that way:
+
+- The jsdom harness (`packages/shex-webapp/test/harness.js`) records what
+  a page, its fake worker and jsdom say instead of printing it. A failing
+  test gets all of it printed under its name. A passing test gets only the
+  console errors it didn't expect. A test that provokes an error on purpose
+  declares it: `Harness.expectConsole(/pattern/)`. A suite that builds its
+  own JSDOM uses `Harness.pageConsole()`. `VERBOSE=1` prints everything
+  live.
+- A process warning a suite provokes on purpose (node:wasi's
+  `ExperimentalWarning`) is declared with
+  `packages/shex-cli/test/expectWarning.js`, which passes every other
+  warning through.
+- Code that writes to the real stdout (a WASI module's fd 1, say) should
+  write to a file the test reads back and asserts on.
+
 ### TEST_* gates
 
 `npm test` skips whole suites unless you set their gate. Each skipped suite

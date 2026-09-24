@@ -17,7 +17,6 @@ const TEST_browser = require("../../shex-cli/test/testGate.js")("TEST_browser");
 const Fs = require("fs");
 const Path = require("path");
 const expect = require("chai").expect;
-const node_fetch = globalThis.fetch;
 let Harness;
 
 const [[GitRootServer]] = require("../../../tools/testServer")
