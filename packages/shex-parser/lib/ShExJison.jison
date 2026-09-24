@@ -162,7 +162,7 @@
     const lang = string.substr(at);
     string = string.substr(0, at);
     const u = unescapeString(string, trimLength);
-    return extend(u, { language: lowercase(lang.substr(1)) });
+    return extend(u, { language: lang.substr(1) });
   }
 
   // Translates regular expression escape codes in the string into their textual equivalent

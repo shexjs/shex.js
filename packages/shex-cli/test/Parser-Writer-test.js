@@ -187,7 +187,8 @@ describe("Parser-Writer-test", function () {
              // The order of nesting affects productions so don't look at them.
              delete canonParsed.productions;
              delete canonAbstractSyntax.productions;
-             expect(canonParsed).to.deep.equal(canonAbstractSyntax);
+             // Turtle parsers (N3.js) lowercase language tags; BCP 47 says case is insignificant.
+             expect(caseFoldLangTags(canonParsed)).to.deep.equal(caseFoldLangTags(canonAbstractSyntax));
          });
 
       // ShExRWriter is what shex-to-turtle uses to author the corpus .ttl files: its
@@ -205,7 +206,7 @@ describe("Parser-Writer-test", function () {
            const canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
            delete canonParsed.productions;
            delete canonAbstractSyntax.productions;
-           expect(canonParsed).to.deep.equal(canonAbstractSyntax);
+           expect(caseFoldLangTags(canonParsed)).to.deep.equal(caseFoldLangTags(canonAbstractSyntax));
          });
     }
 
@@ -455,3 +456,22 @@ function restoreUndefined(object) {
   return object;
 }
 
+
+// Lowercase every "language" (literal's language tag) and every
+// Language/LanguageStem value, since language tags compare case-insensitively.
+function caseFoldLangTags (object) {
+  "use strict";
+  if (Array.isArray(object))
+    return object.map(caseFoldLangTags);
+  if (object === null || typeof object !== "object")
+    return object;
+  const ret = {};
+  for (const key in object) {
+    const item = object[key];
+    ret[key] = key === "language" && typeof item === "string"
+      || (key === "languageTag" || key === "stem") && /^Language/.test(object.type) && typeof item === "string"
+      ? item.toLowerCase()
+      : caseFoldLangTags(item);
+  }
+  return ret;
+}
