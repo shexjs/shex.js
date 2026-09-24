@@ -1,0 +1,195 @@
+{
+  "type": "ShapeTest",
+  "node": "http://a.example/s1",
+  "shape": "http://a.example/S",
+  "solution": {
+    "type": "EachOfSolutions",
+    "solutions": [
+      {
+        "type": "EachOfSolution",
+        "expressions": [
+          {
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://a.example/p1",
+            "valueExpr": "http://a.example/A",
+            "solutions": [
+              {
+                "type": "TestedTriple",
+                "subject": "_:in1",
+                "predicate": "http://a.example/p1",
+                "object": "http://a.example/s1",
+                "referenced": {
+                  "type": "ShapeTest",
+                  "node": "_:in1",
+                  "shape": "http://a.example/A",
+                  "solution": {
+                    "type": "EachOfSolutions",
+                    "solutions": [
+                      {
+                        "type": "EachOfSolution",
+                        "expressions": [
+                          {
+                            "type": "TripleConstraintSolutions",
+                            "predicate": "http://a.example/p1",
+                            "valueExpr": {
+                              "type": "NodeConstraint",
+                              "nodeKind": "iri"
+                            },
+                            "solutions": [
+                              {
+                                "type": "TestedTriple",
+                                "subject": "_:in1",
+                                "predicate": "http://a.example/p1",
+                                "object": "http://a.example/s1",
+                                "referenced": {
+                                  "type": "NodeConstraintTest",
+                                  "node": "http://a.example/s1",
+                                  "shape": "http://a.example/A",
+                                  "shapeExpr": {
+                                    "type": "NodeConstraint",
+                                    "nodeKind": "iri"
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "type": "TripleConstraintSolutions",
+                            "predicate": "http://a.example/p2",
+                            "valueExpr": {
+                              "type": "NodeConstraint",
+                              "values": [
+                                {
+                                  "value": "A"
+                                }
+                              ]
+                            },
+                            "solutions": [
+                              {
+                                "type": "TestedTriple",
+                                "subject": "_:in1",
+                                "predicate": "http://a.example/p2",
+                                "object": {
+                                  "value": "A"
+                                },
+                                "referenced": {
+                                  "type": "NodeConstraintTest",
+                                  "node": {
+                                    "value": "A"
+                                  },
+                                  "shape": "http://a.example/A",
+                                  "shapeExpr": {
+                                    "type": "NodeConstraint",
+                                    "values": [
+                                      {
+                                        "value": "A"
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://a.example/p1",
+            "valueExpr": "http://a.example/B",
+            "solutions": [
+              {
+                "type": "TestedTriple",
+                "subject": "_:in2",
+                "predicate": "http://a.example/p1",
+                "object": "http://a.example/s1",
+                "referenced": {
+                  "type": "ShapeTest",
+                  "node": "_:in2",
+                  "shape": "http://a.example/B",
+                  "solution": {
+                    "type": "EachOfSolutions",
+                    "solutions": [
+                      {
+                        "type": "EachOfSolution",
+                        "expressions": [
+                          {
+                            "type": "TripleConstraintSolutions",
+                            "predicate": "http://a.example/p1",
+                            "valueExpr": {
+                              "type": "NodeConstraint",
+                              "nodeKind": "iri"
+                            },
+                            "solutions": [
+                              {
+                                "type": "TestedTriple",
+                                "subject": "_:in2",
+                                "predicate": "http://a.example/p1",
+                                "object": "http://a.example/s1",
+                                "referenced": {
+                                  "type": "NodeConstraintTest",
+                                  "node": "http://a.example/s1",
+                                  "shape": "http://a.example/B",
+                                  "shapeExpr": {
+                                    "type": "NodeConstraint",
+                                    "nodeKind": "iri"
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "type": "TripleConstraintSolutions",
+                            "predicate": "http://a.example/p2",
+                            "valueExpr": {
+                              "type": "NodeConstraint",
+                              "values": [
+                                {
+                                  "value": "B"
+                                }
+                              ]
+                            },
+                            "solutions": [
+                              {
+                                "type": "TestedTriple",
+                                "subject": "_:in2",
+                                "predicate": "http://a.example/p2",
+                                "object": {
+                                  "value": "B"
+                                },
+                                "referenced": {
+                                  "type": "NodeConstraintTest",
+                                  "node": {
+                                    "value": "B"
+                                  },
+                                  "shape": "http://a.example/B",
+                                  "shapeExpr": {
+                                    "type": "NodeConstraint",
+                                    "values": [
+                                      {
+                                        "value": "B"
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
