@@ -36,7 +36,17 @@ jobs:
       - run: npm run compile
       # browser tests load the webapp pages, whose webpack bundles are
       # gitignored (see webapps-site.yml) and so must be built first
+      # DEBUG (draft PR): instrument CodeMirror's gutters before the bundles are built
+      - run: node tools/debug/patch-cm-gutter.js
       - run: npm run webpacks-all
+      - name: gutter debug (shexmap editors, 3 runs)
+        if: matrix.node-version != 20
+        run: |
+          for i in 1 2 3; do
+            TEST_browser=true npx mocha -R dot packages/extension-map/test/shexmap-editors-smoke-test.js > gutter-$i.log 2>&1 || true
+            grep -c 'GUTTER-DEBUG' gutter-$i.log || true
+          done
+          cat gutter-*.log | grep -v '^\s*[.,!]*\s*$' | head -400
       - run: npm run test-all
         if: matrix.node-version != 20
       # jsdom's engines outpace the packages' own (jsdom 30 wants Node ≥ 22
