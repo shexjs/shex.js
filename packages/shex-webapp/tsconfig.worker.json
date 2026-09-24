@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.cache/tsc/tsconfig.app.tsbuildinfo", // tsc -b (npm run build/watch)
+    "tsBuildInfoFile": "./node_modules/.cache/tsc/tsconfig.worker.tsbuildinfo", // tsc -b (npm run build/watch)
     "forceConsistentCasingInFileNames": true,
     "module": "none",
     "outDir": "./doc",
-    "rootDir": "./src/app",
+    "rootDir": "./src/worker",
     "target": "ES2022",
     "useDefineForClassFields": false,
     "sourceMap": false,
@@ -13,7 +13,7 @@
     "strict": true,
     "alwaysStrict": false,
     "types": [],
-    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+    "lib": ["ES2022", "WebWorker"]
   },
-  "include": ["src/app/**/*.ts"]
+  "include": ["src/worker/**/*.ts"]
 }

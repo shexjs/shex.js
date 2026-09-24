@@ -3,6 +3,7 @@
         "sourceType": "module"
     },
     "compilerOptions": {
+        "tsBuildInfoFile": "./node_modules/.cache/tsc/tsconfig.tsbuildinfo", // tsc -b (npm run build/watch)
         "forceConsistentCasingInFileNames": true,
         "module": "commonjs",
         "esModuleInterop": true,
@@ -21,6 +22,7 @@
     },
     "exclude": [
         "node_modules",
-        "src/app"
+        "src/app",
+        "src/worker"
     ]
 }

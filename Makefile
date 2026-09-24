@@ -97,25 +97,31 @@ packages/shex-parser/lib/ShExJison.js: packages/shex-parser/lib/ShExJison.jison
 packages/shape-map/lib/ShapeMapJison.js: packages/shape-map/lib/ShapeMapJison.jison
 	$(JISON) -n ShapeMapJison -t javascript -p lalr -o $@ $^
 
-# The web apps' page scripts: TypeScript under src/app (src/plugin) compiled
-# with `module: none` into the COMMITTED doc/*.js the pages load.  One tsc run
-# writes them all; CI rebuilds them and fails if the committed copies differ.
-WEBAPP_PAGE_SOURCES := $(wildcard packages/shex-webapp/src/app/*.ts)
-WEBAPP_PAGES := $(patsubst packages/shex-webapp/src/app/%.ts,packages/shex-webapp/doc/%.js,$(filter-out %.d.ts,$(WEBAPP_PAGE_SOURCES)))
-$(WEBAPP_PAGES): $(WEBAPP_PAGE_SOURCES) packages/shex-webapp/tsconfig.app.json
-	cd packages/shex-webapp && $(TSC) -p tsconfig.app.json
+# The web apps' page scripts: TypeScript compiled with `module: none` into
+# the COMMITTED doc/*.js a page (or a worker) loads as-is.  Each group is one
+# tsconfig over one src/ subdirectory, and one tsc run writes all of it; CI
+# rebuilds them (npm run check-page-scripts) and fails if the committed
+# copies differ.
+#   $(call page-scripts,DIR,SUBDIR,TSCONFIG): packages/DIR/src/SUBDIR/*.ts -> packages/DIR/doc/*.js
+page-sources = $(wildcard packages/$(1)/src/$(2)/*.ts)
+page-outputs = $(patsubst packages/$(1)/src/$(2)/%.ts,packages/$(1)/doc/%.js,$(filter-out %.d.ts,$(call page-sources,$(1),$(2))))
+define page-scripts
+PAGE_SCRIPTS += $(call page-outputs,$(1),$(2))
+PAGE_GROUPS += page-scripts/$(1)/$(2)
+$(call page-outputs,$(1),$(2)): $(call page-sources,$(1),$(2)) packages/$(1)/$(3)
+	cd packages/$(1) && $(TSC) -p $(3)
+.PHONY: page-scripts/$(1)/$(2)
+page-scripts/$(1)/$(2):
+	cd packages/$(1) && $(TSC) -p $(3)
+endef
 
-MAP_PLUGIN_SOURCES := $(wildcard packages/extension-map/src/plugin/*.ts)
-MAP_PLUGIN_PAGES := packages/extension-map/doc/ShExMapPlugin.js
-$(MAP_PLUGIN_PAGES): $(MAP_PLUGIN_SOURCES) packages/extension-map/tsconfig.plugin.json
-	cd packages/extension-map && $(TSC) -p tsconfig.plugin.json
-
-PAGE_SCRIPTS := $(WEBAPP_PAGES) $(MAP_PLUGIN_PAGES)
+$(eval $(call page-scripts,shex-webapp,app,tsconfig.app.json))           # the app
+$(eval $(call page-scripts,shex-webapp,worker,tsconfig.worker.json))     # its validation worker
+$(eval $(call page-scripts,extension-map,plugin,tsconfig.plugin.json))   # the ShExMap plugin
+$(eval $(call page-scripts,extension-reduce,plugin,tsconfig.plugin.json)) # the ShExReduce plugin
 
 .PHONY: ALL page-scripts
 ALL: $(PACKAGE_OUTPUTS) $(PAGE_SCRIPTS)
 
 # Rebuild the page scripts unconditionally (CI's freshness check).
-page-scripts:
-	cd packages/shex-webapp && $(TSC) -p tsconfig.app.json
-	cd packages/extension-map && $(TSC) -p tsconfig.plugin.json
+page-scripts: $(PAGE_GROUPS)

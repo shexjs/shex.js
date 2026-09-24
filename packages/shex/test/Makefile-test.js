@@ -7,9 +7,14 @@ const {packages} = require("../../../tools/publish-ordered.js");
 
 const ROOT = Path.join(__dirname, "../../..");
 
+/** the Makefile, with its continued lines joined */
+function makefileText () {
+  return Fs.readFileSync(Path.join(ROOT, "Makefile"), "utf8").replace(/\\\n/g, " ");
+}
+
 /** [{dir, output, upstream}] from the `$(eval $(call package,…))` lines, in order. */
 function makefileTable () {
-  const text = Fs.readFileSync(Path.join(ROOT, "Makefile"), "utf8").replace(/\\\n/g, " ");
+  const text = makefileText();
   return [...text.matchAll(/^\$\(eval \$\(call package,([^)]*)\)\)\s*$/mg)].map(m => {
     const [dir, output, upstream] = m[1].split(",").map(s => s.trim());
     return {dir, output, upstream: upstream ? upstream.split(/\s+/).sort() : []};
@@ -48,7 +53,9 @@ describe("the Makefile's package table", function () {
   });
 
   it("should see every source: src/ has no subdirectories but the page-script ones", function () {
-    const pageScriptDirs = ["packages/shex-webapp/src/app", "packages/extension-map/src/plugin"];
+    // the src/ subdirectories the Makefile compiles as page scripts
+    const pageScriptDirs = [...makefileText().matchAll(/^\$\(eval \$\(call page-scripts,([^,]+),([^,]+),/mg)]
+          .map(m => `packages/${m[1].trim()}/src/${m[2].trim()}`);
     tsPackages.forEach(p => {
       const src = Path.join(ROOT, p.dir, "src");
       Fs.readdirSync(src, {withFileTypes: true}).filter(e => e.isDirectory()).forEach(e =>

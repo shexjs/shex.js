@@ -32,26 +32,35 @@ hand-written `doc/*Plugin.js` but no bundle of their own.
 
 ### Three kinds of browser JS. Know which one you're editing
 
-- **Compiled page scripts: tracked, committed.**
-  `packages/shex-webapp/src/app/*.ts` compiles to `packages/shex-webapp/doc/*.js`
-  through `tsconfig.app.json` (`module: none`, so plain globals, no
-  imports). `extension-map/src/plugin/ShExMapPlugin.ts` compiles to
-  `extension-map/doc/ShExMapPlugin.js` through `tsconfig.plugin.json`. Edit
-  the `.ts`, recompile, and **commit both**:
-  ```sh
-  (cd packages/shex-webapp && npx tsc -p tsconfig.app.json)
-  (cd packages/extension-map && npx tsc -p tsconfig.plugin.json)
-  ```
-  (`npm run build` in either package does `tsc` plus that; so do
-  `npm run compile` and `make page-scripts`.) CI's
+- **Compiled page scripts: tracked, committed.** TypeScript compiled with
+  `module: none` (plain globals, no imports) into the `doc/*.js` a page or
+  worker loads. Four groups, each one tsconfig over one `src/` subdirectory
+  and one line in the Makefile (`$(call page-scripts,…)`):
+
+  | Source | Output | tsconfig |
+  |---|---|---|
+  | `shex-webapp/src/app/*.ts` | `shex-webapp/doc/*.js` (the app) | `tsconfig.app.json` |
+  | `shex-webapp/src/worker/ShExWorkerThread.ts` | `shex-webapp/doc/ShExWorkerThread.js` | `tsconfig.worker.json` (`lib: WebWorker`) |
+  | `extension-map/src/plugin/ShExMapPlugin.ts` | `extension-map/doc/ShExMapPlugin.js` | `tsconfig.plugin.json` |
+  | `extension-reduce/src/plugin/ShExReducePlugin.ts` | `extension-reduce/doc/ShExReducePlugin.js` | `tsconfig.plugin.json` |
+
+  Edit the `.ts`, rebuild (`make page-scripts`, `npm run compile`, or
+  `npm run build` in the package), and **commit both**. While editing,
+  `npm run watch` in the package (`tsc -b` over all its tsconfigs, with
+  `--watch`) rebuilds `lib/` and the page scripts as you save. CI's
   `npm run check-page-scripts` rebuilds them and **fails if a committed
   `doc/*.js` differs from its `.ts`**, or if a new one was never committed.
-  Globals the page scripts share (`ShExWebApp`, `ShExWorker`,
-  `WorkerUrl`, …) are declared in `src/app/globals.d.ts`.
-- **Hand-written page scripts: tracked, no `.ts`.** `ShExWorkerThread.js`,
-  `iri.js`, `n3-components.js` (the n3js entry), `ShExMapWorkerThread.js`,
-  `redirect-to-plugin.js`, the reduce/WASI/eval/test plugin files. Edit
-  these directly.
+  Each group is its own program, so it sees only its own `globals.d.ts`
+  (the app's declares `ShExWebApp`, `ShExWorker`, `WorkerUrl`, …; the
+  worker's and the plugins' declare what their pages or `importScripts`
+  give them). The worker is separate from the app because it needs the
+  WebWorker library instead of the DOM, and a plugin can't see the app's
+  sources. A new group needs a tsconfig, a `src/` exclude in the package's
+  main `tsconfig.json`, and a `page-scripts` line in the Makefile.
+- **Hand-written page scripts: tracked, no `.ts`.** `iri.js`,
+  `n3-components.js` (the n3js entry), `ShExMapWorkerThread.js`,
+  `ShExReduceWorkerThread.js`, `redirect-to-plugin.js`, and the
+  WASI/eval/test plugin files. Edit these directly.
 - **Webpack bundles: gitignored build output.** Everything in
   `doc/webpacks/` **except** shex-webapp's `jquery-components.*` and its
   hashed png/font assets. Those stay committed. Don't rebuild them with
