@@ -30,7 +30,8 @@
   "scripts": {
     "webpack": "webpack --config webpack.config.js --mode production",
     "test": "cd ../.. && mocha -C -R dot packages/extension-reduce/test/*test.js",
-    "build": "tsc",
+    "build": "tsc -b tsconfig.json tsconfig.plugin.json",
+    "watch": "tsc -b tsconfig.json tsconfig.plugin.json --watch",
     "prepublishOnly": "npm run webpack"
   },
   "publishConfig": {
