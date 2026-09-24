@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.cache/tsc/tsconfig.plugin.tsbuildinfo", // tsc -b (npm run build/watch)
     "forceConsistentCasingInFileNames": true,
     "module": "none",
     "outDir": "./doc",

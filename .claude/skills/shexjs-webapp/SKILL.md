@@ -45,7 +45,9 @@ hand-written `doc/*Plugin.js` but no bundle of their own.
   | `extension-reduce/src/plugin/ShExReducePlugin.ts` | `extension-reduce/doc/ShExReducePlugin.js` | `tsconfig.plugin.json` |
 
   Edit the `.ts`, rebuild (`make page-scripts`, `npm run compile`, or
-  `npm run build` in the package), and **commit both**. CI's
+  `npm run build` in the package), and **commit both**. While editing,
+  `npm run watch` in the package (`tsc -b` over all its tsconfigs, with
+  `--watch`) rebuilds `lib/` and the page scripts as you save. CI's
   `npm run check-page-scripts` rebuilds them and **fails if a committed
   `doc/*.js` differs from its `.ts`**, or if a new one was never committed.
   Each group is its own program, so it sees only its own `globals.d.ts`

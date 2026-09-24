@@ -17,6 +17,7 @@ files at `packages/*/test/*test.js`, run from the **repository root**.
 | `npm run compile` | `make ALL`: every package's `src/` → `lib/`, both jison parsers, and the web apps' committed page scripts |
 | `make page-scripts` | rebuild the page scripts unconditionally |
 | `npx tsc` (in a package) | rebuild just that package |
+| `npm run watch` (in shex-webapp, extension-map, extension-reduce) | `tsc -b --watch` over the package's tsconfigs: `lib/` and its page scripts together. Its `.tsbuildinfo` files go in the package's `node_modules/.cache/tsc/` |
 | `npm run parser` (in `packages/shex-parser` or `packages/shape-map`) | regenerate `lib/ShExJison.js` / `lib/ShapeMapJison.js` from the `.jison` grammar |
 | `npm run parser-all` | both parsers |
 

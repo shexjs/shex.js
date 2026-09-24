@@ -61,7 +61,8 @@
     "webpack-jquery-components": "webpack --config webpack-jquery-components.config.js --mode development",
     "webpack-monitor": "WEBPACK_MONITOR=true webpack --config webpack.config.js --mode production",
     "webpack-n3js": "webpack --config webpack-n3js.config.js --mode development",
-    "build": "tsc && tsc -p tsconfig.app.json && tsc -p tsconfig.worker.json",
+    "build": "tsc -b tsconfig.json tsconfig.app.json tsconfig.worker.json",
+    "watch": "tsc -b tsconfig.json tsconfig.app.json tsconfig.worker.json --watch",
     "prepublishOnly": "npm run webpack-n3js && npm run webpack"
   },
   "devDependencies": {
