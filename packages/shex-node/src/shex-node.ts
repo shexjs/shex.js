@@ -76,7 +76,9 @@ function ShExNodeCjsModule (config: ShExNodeCjsModule.Config = {}): ShExLoader.L
         });
 
         process.stdin.on("end", function () {
-          fulfill({text: inputChunks.join(""), url: url});
+          // as if the text were a file "-" in the cwd: relative IRIs in it
+          // resolve there, and nothing downstream has to cope with a bare "-"
+          fulfill({text: inputChunks.join(""), url: "file://" + Path.resolve(process.cwd(), url)});
         });
 
         process.stdin.on("error", function (e) {

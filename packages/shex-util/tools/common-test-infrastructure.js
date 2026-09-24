@@ -132,7 +132,7 @@ function runCliTests (scriptArgumentLists, fromDir, dumpTimeStamps) {
                const ref = both[0];
                const exec = both[1];
 
-               if (test.status === 0) {      // Keep this test before exitCode in order to
+               if (test.status === 0 && !("errorMatch" in test)) { // Keep this test before exitCode in order to
                  if (exec.stderr.length > 0)
                    console.error('stderr:', exec.stderr);
                  expect(exec.stderr).to.be.empty; // print errors from spawn.

@@ -4,6 +4,7 @@
         "module": "commonjs",
         "esModuleInterop": true,
         "outDir": "./lib",
+        "sourceMap": true,
         "rootDir": "./src",
         "target": "es6",
         "skipLibCheck": true,

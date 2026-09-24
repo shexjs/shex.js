@@ -205,96 +205,6 @@ export const RegexpModule: ValidatorRegexModule = {
   }
 }
 
-/**
- * debugging tool; lots of ts-ignores
- */
-class NfaToString {
-  public known: {
-    OneOf: ShExJ.tripleExpr[],
-    EachOf: ShExJ.tripleExpr[]
-  } = {OneOf: [], EachOf: []};
-
-  dumpTripleConstraint (tc: ShExJ.TripleConstraint) {
-    return "<" + tc.predicate + ">";
-  }
-
-  card (obj: RegExpState) {
-    let x = "";
-    if ("min" in obj)
-        // @ts-ignore
-      x += obj.min;
-    if ("max" in obj)
-        // @ts-ignore
-      x += "," + obj.max;
-    return x ? "{" + x + "}" : "";
-  }
-
-  junct (j: string | ShExJ.tripleExpr) { // string.type is undefined so this works in js
-    // @ts-ignore
-    let id = known[j.type].indexOf(j);
-    if (id === -1) { // @ts-ignore
-      id = known[j.type].push(j) - 1;
-    }
-    // @ts-ignore
-    return j.type + id; // + card(j);
-  }
-
-  public dumpStackElt (elt: StackEntry) {
-    return this.junct(elt.c) + "." + elt.e + ("i" in elt ? "[" + elt.i + "]" : "");
-  }
-
-  public dumpStack (stack: StackEntry[]) {
-    return stack.map(elt => {
-      return this.dumpStackElt(elt);
-    }).join("/");
-  }
-
-  public dumpNFA (states: RegExpState[], startNo: number) {
-    return states.map((s, i) => {
-      return (i === startNo
-                  ? s instanceof MatchState
-                      ? "."
-                      : "S"
-                  : s instanceof MatchState
-                      ? "E"
-                      : " "
-          )
-          + i + " " + (
-              s instanceof SplitState
-                  ? ("Split-" + this.junct(s.expr))
-                  : s instanceof ReptState
-                      ? ("Rept-" + this.junct(s.expr))
-                      : s instanceof MatchState
-                          ? "Match"
-                          : this.dumpTripleConstraint((s as TripleConstraintState).c as ShExJ.TripleConstraint)
-          )
-          + this.card(s) + "→" + s.outs!.join(" | ") + (
-              "stack" in s
-                  ? this.dumpStack((s as TripleConstraintState).stack)
-                  : ""
-          );
-    }).join("\n");
-  }
-
-  public dumpMatched (matched: TriplesMatch[]) {
-    return matched.map(m => {
-      return this.dumpTripleConstraint(m.c) + "[" + m.triples.join(",") + "]" + this.dumpStack(m.stack);
-    }).join(",");
-  }
-
-  public dumpThread (thread: RegExpThread) {
-    return "S" + thread.state + ":" + Object.keys(thread.repeats).map(k => {
-      return k + "×" + thread.repeats[k];
-    }).join(",") + " " + this.dumpMatched(thread.matched);
-  }
-
-  public dumpThreadList(list: RegExpThread[]) {
-    return "[[" + list.map(thread => {
-      return this.dumpThread(thread);
-    }).join("\n  ") + "]]";
-  }
-}
-
 interface Repeats {
   [key: string]: number;
 }
@@ -464,7 +374,6 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
       return this.matchedToResult([], constraintToTripleMapping, semActHandler);
 
     let chosen = null;
-    // console.log(new NfaToString().dumpNFA(this.states, this.start));
     this.addstate(clist, this.start, new RegExpThread());
     // The start's closure may already reach the end -- a group taken zero
     // times -- and that is the match where there is nothing to match.

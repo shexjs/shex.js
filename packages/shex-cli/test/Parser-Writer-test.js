@@ -13,6 +13,7 @@ const {ShExVisitor} = require("@shexjs/visitor");
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
 const {ShExValidator} = require("@shexjs/validator");
 const ShExCWriter = require("@shexjs/writer");
+const ShExRWriter = require("../lib/ShExRWriter");
 const N3 = require("n3");
 const ShExNode = require("@shexjs/node")({
   rdfjs: N3,
@@ -178,20 +179,7 @@ describe("Parser-Writer-test", function () {
 
            const shexR = Fs.readFileSync(shexRFile, "utf8");
            if (VERBOSE) console.log("\nShExR:", shexR);
-             const schemaGraph = new N3.Store();
-             schemaGraph.addQuads(new N3.Parser({baseIRI: BASE, blankNodePrefix: "", format: "text/turtle"}).parse(shexR));
-             // console.log(schemaGraph.getQuads());
-             const schemaDriver = RdfJsDb(schemaGraph);
-             const schemaRoot = schemaDriver.getQuads(null, ShExUtil.RDF.type, nsPath + "Schema")[0].subject;
-             const graphParser = new ShExValidator(
-               GraphSchema,
-               schemaDriver,
-               {  } // regexModule: require("@shexjs/eval-simple-1err") is no faster
-             );
-             const val = graphParser.validateNodeShapePair(schemaRoot, ShExValidator.Start); // start shape
-             if ("errors" in val)
-               throw Error(`${shexRFile} did not comply with ShExR.shex\n${JSON.stringify(val.errors, null, 2)}`);
-             const parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));
+             const parsedSchema = parseShExR(shexR, shexRFile);
              const canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
              const canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
              if (VERBOSE) console.log("transformed:" + JSON.stringify(parsedSchema));
@@ -200,6 +188,24 @@ describe("Parser-Writer-test", function () {
              delete canonParsed.productions;
              delete canonAbstractSyntax.productions;
              expect(canonParsed).to.deep.equal(canonAbstractSyntax);
+         });
+
+      // ShExRWriter is what shex-to-turtle uses to author the corpus .ttl files: its
+      // output must say exactly what the .json says once read back through ShExR.
+      it("should round-trip ShExJ schema '" + jsonSchemaFile +
+         "' through ShExRWriter to the same structure.", function () {
+           let shexR = null;
+           new ShExRWriter({base: BASE}).writeSchema(abstractSyntax, (error, text) => {
+             if (error) throw error;
+             shexR = text;
+           });
+           if (VERBOSE) console.log("\nwritten ShExR:", shexR);
+           const parsedSchema = parseShExR(shexR, jsonSchemaFile + " (via ShExRWriter)");
+           const canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
+           const canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
+           delete canonParsed.productions;
+           delete canonAbstractSyntax.productions;
+           expect(canonParsed).to.deep.equal(canonAbstractSyntax);
          });
     }
 
@@ -367,6 +373,24 @@ describe("Parser-Writer-test", function () {
     });
   }
 });
+
+/** Read a ShExR (Turtle) schema back into ShExJ: validate the graph against ShExR.shex
+ * and rebuild the schema from the validation result, as the corpus .ttl tests do. */
+function parseShExR (shexR, label) {
+  const schemaGraph = new N3.Store();
+  schemaGraph.addQuads(new N3.Parser({baseIRI: BASE, blankNodePrefix: "", format: "text/turtle"}).parse(shexR));
+  const schemaDriver = RdfJsDb(schemaGraph);
+  const schemaRoot = schemaDriver.getQuads(null, ShExUtil.RDF.type, nsPath + "Schema")[0].subject;
+  const graphParser = new ShExValidator(
+    GraphSchema,
+    schemaDriver,
+    {  } // regexModule: require("@shexjs/eval-simple-1err") is no faster
+  );
+  const val = graphParser.validateNodeShapePair(schemaRoot, ShExValidator.Start); // start shape
+  if ("errors" in val)
+    throw Error(`${label} did not comply with ShExR.shex\n${JSON.stringify(val.errors, null, 2)}`);
+  return ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));
+}
 
 function loadGraphSchema () {
   if (TEST_ShExR) {
