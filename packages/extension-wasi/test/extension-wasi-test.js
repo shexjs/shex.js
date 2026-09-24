@@ -266,6 +266,10 @@ describe("@shexjs/extension-wasi", function () {
   });
 
   describe("node:wasi host parity", function () {
+    // constructing node:wasi's WASI warns that it is experimental; we know
+    let quiet;
+    before(() => { quiet = require("../../shex-cli/test/expectWarning.js")(/WASI is an experimental feature/); });
+    after(() => quiet.restore());
     it("should produce the same lines under Node's built-in WASI", function () {
       let hasWasi = true;
       try { require("node:wasi"); } catch (e) { hasWasi = false; }

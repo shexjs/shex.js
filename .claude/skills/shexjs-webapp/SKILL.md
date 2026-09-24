@@ -131,6 +131,10 @@ from disk.
   yourself. CI runs `compile` + `webpacks-all` + `test-all`.
 - Workers in tests are an in-process fake (`test/fakeWorker.js`), not real
   threads.
+- What the page and the fake worker say is recorded, not printed: a
+  failing test shows it all, and a passing one only the errors it didn't
+  declare with `Harness.expectConsole(/pattern/)`. See "Quiet output" in the
+  shexjs-build-and-test skill.
 
 ## Debugger and workers
 
