@@ -996,6 +996,10 @@ async function runValidator (db: any, shapeMap: any, schema: any, options: any, 
   // prepare validator
   const validator = new ShExValidator(schema, db, options);
   const extensions = ShExNode.loadExtensions(cmds.extension);
+  // An extension that initializes asynchronously (extension-wasi loads wabt)
+  // exports ready(); it must settle before the first action is dispatched.
+  await Promise.all(Object.values(extensions).map((ext: any) =>
+    typeof ext.ready === "function" ? ext.ready() : undefined));
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator, {ShExTerm});
   });

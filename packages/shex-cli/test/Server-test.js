@@ -2,7 +2,7 @@
 
 "use strict";
 const DEBUG = "DEBUG" in process.env;
-const TEST_server = "TEST_server" in process.env ? JSON.parse(process.env["TEST_server"]) : false;
+const TEST_server = require("./testGate.js")("TEST_server");
 const TIME = "TIME" in process.env;
 const TESTS = "TESTS" in process.env ?
     process.env.TESTS.split(/,/) :

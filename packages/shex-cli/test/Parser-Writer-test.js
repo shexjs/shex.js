@@ -1,5 +1,5 @@
 //  "use strict";
-const TEST_ShExR = "TEST_ShExR" in process.env ? JSON.parse(process.env["TEST_ShExR"]) : true;
+const TEST_ShExR = require("./testGate.js")("TEST_ShExR", true);
 const TEST_Vestiges = true;
 const VERBOSE = "VERBOSE" in process.env;
 const TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;

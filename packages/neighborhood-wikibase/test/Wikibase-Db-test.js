@@ -291,7 +291,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
   });
 
   describe("live wikidata.org", () => {
-    if (!("TEST_wikidata" in process.env)) {
+    if (!require("../../shex-cli/test/testGate.js")("TEST_wikidata")) {
       it("needs TEST_wikidata=true (and a network)");
       return;
     }
