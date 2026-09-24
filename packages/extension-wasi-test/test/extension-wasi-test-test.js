@@ -11,6 +11,11 @@ const TestJs = require("@shexjs/extension-test");
 
 const TestExt = "http://shex.io/extensions/Test/";
 
+// node:wasi warns that it is experimental the first time it's loaded --
+// which the probe below does while this file's suites are being defined,
+// and the default host does again -- so from here to the suite's end: we know
+const quiet = require("../../shex-cli/test/expectWarning.js")(/WASI is an experimental feature/);
+
 function haveNodeWasi () {
   try { require("node:wasi"); return true; } catch (e) { return false; }
 }
@@ -43,6 +48,8 @@ const T = tripleCtx("http://a.example/n1", "http://a.example/p1", "val-1");
 const U = tripleCtx("Δ☃", "", "😀"); // non-ASCII, empty and astral term values
 
 describe("@shexjs/extension-wasi-test", function () {
+  after(() => quiet.restore());
+
   this.timeout(10000);
 
   describe("module shape", function () {
@@ -60,11 +67,17 @@ describe("@shexjs/extension-wasi-test", function () {
     });
 
     it("should return the live results array from register()", function () {
-      const validator = mockValidator();
-      const results = WasiTest.register(validator, {ShExTerm: {}});
-      expect(results).to.equal(validator.semActHandler.results[TestExt]);
-      validator.semActHandler.handlers[TestExt].dispatch('print("x")', null, {});
-      expect(results).to.deep.equal(["x"]);
+      const out = captured("auto");  // print() writes to fd 1 too: catch it here
+      try {
+        const validator = mockValidator();
+        const results = out.mod.register(validator, {ShExTerm: {}});
+        expect(results).to.equal(validator.semActHandler.results[TestExt]);
+        validator.semActHandler.handlers[TestExt].dispatch('print("x")', null, {});
+        expect(results).to.deep.equal(["x"]);
+        expect(out.read()).to.equal("x\n");
+      } finally {
+        out.close();
+      }
     });
 
     it("should implement done() like the reference implementation", function () {
@@ -73,11 +86,17 @@ describe("@shexjs/extension-wasi-test", function () {
       WasiTest.done(validator);
       expect(validator.semActHandler.results).to.not.have.property(TestExt);
 
-      const validator2 = mockValidator();
-      WasiTest.register(validator2, {ShExTerm: {}});
-      validator2.semActHandler.handlers[TestExt].dispatch('print("x")', null, {});
-      WasiTest.done(validator2);
-      expect(validator2.semActHandler.results[TestExt]).to.deep.equal(["x"]);
+      const out = captured("auto");  // print() writes to fd 1 too: catch it here
+      try {
+        const validator2 = mockValidator();
+        out.mod.register(validator2, {ShExTerm: {}});
+        validator2.semActHandler.handlers[TestExt].dispatch('print("x")', null, {});
+        out.mod.done(validator2);
+        expect(validator2.semActHandler.results[TestExt]).to.deep.equal(["x"]);
+        expect(out.read()).to.equal("x\n");
+      } finally {
+        out.close();
+      }
     });
   });
 

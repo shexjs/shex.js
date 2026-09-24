@@ -14,7 +14,6 @@ const TEST_browser = require("../../shex-cli/test/testGate.js")("TEST_browser");
 const Fs = require("fs");
 const Path = require("path");
 const expect = require("chai").expect;
-const node_fetch = globalThis.fetch;
 let Harness;
 
 const [[GitRootServer]] = require("../../../tools/testServer")
@@ -162,6 +161,7 @@ if (!TEST_browser) {
      * errors go; it also goes in the pane the actions build, which is where
      * a reader who is working on the actions is looking. */
     it("should say in the AST pane when an action throws", async function () {
+      Harness.expectConsole(/ReduceError: matching .*\n.*nope\(/);
       await open("calc, actions guide", "sums");
       const good = shared.Caches.inputSchema.get();
       const base = shared.Caches.inputSchema.meta.base;
@@ -627,6 +627,7 @@ if (!TEST_browser) {
      * than an Error -- with its name on it, which is how this side knows
      * whose failure it is and puts it where the other page puts it. */
     it("should bring an action's exception home from the worker", async function () {
+      Harness.expectConsole(/ReduceError\]?: matching .*\n.*nope\(/);
       const good = shared.Caches.inputSchema.get();
       const base = shared.Caches.inputSchema.meta.base;
       try {
