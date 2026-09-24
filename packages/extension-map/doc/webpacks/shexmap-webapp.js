@@ -3582,7 +3582,9 @@ const ShExMapCjsModule = function (config) {
              * @param {string} code - text of the semantic action.
              * @param {object} ctx - matched triple or results subset.
              * @param {object} extensionStorage - place where the extension writes into the result structure.
-             * @return {bool} false if the extension failed or did not accept the ctx object.
+             * @return {Array} [] on success; otherwise the errors that fail the
+             *   constraint (by convention [{type: "SemActFailure", errors: [msg]}]).
+             *   Throw for an invocation error, e.g. code that doesn't parse.
              */
             dispatch: function (code, ctx, extensionStorage) {
                 function fail(msg) { const e = Error(msg); if ("captureStackTrace" in Error)
