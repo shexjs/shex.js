@@ -44,7 +44,7 @@ files at `packages/*/test/*test.js`, run from the **repository root**.
   make compares mtimes to the second, so a file touched in the same second as
   its output looks up to date.
 - `make ALL` also rebuilds the web apps' **committed** page scripts
-  (`doc/*.js` from `src/app/*.ts` and `src/plugin/*.ts`); commit them with
+  (`doc/*.js` from `src/app`, `src/worker` and `src/plugin`); commit them with
   their sources. It does not build the webpack bundles. The shexjs-webapp
   skill covers both.
 - **Types point at source**: each package's `types` is `./src/<name>.ts`.
