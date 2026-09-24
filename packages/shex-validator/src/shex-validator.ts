@@ -2088,7 +2088,14 @@ export class ShExValidator {
   }
 }
 
-function testLanguageStem(typedValue: string, stem: string) {
+// BCP 47 language tags are case-insensitive, so compare them case-folded.
+function sameLanguageTag(a: string | undefined, b: string | undefined) {
+  return a === b || (a !== undefined && b !== undefined && a.toLowerCase() === b.toLowerCase());
+}
+
+function testLanguageStem(typedValueP: string, stemP: string) {
+  const typedValue = typedValueP.toLowerCase();
+  const stem = stemP.toLowerCase();
   const trail = typedValue.substring(stem.length);
   return (typedValue !== "" && typedValue.startsWith(stem) && (stem === "" || trail === "" || trail[0] === "-"));
 }
@@ -2111,7 +2118,7 @@ function valueInExclusions(exclusions: Array<IRIREF | IriStem | ObjectLiteral | 
         case "LiteralStem":
           return (value.startsWith(valueConstraint.stem));
         case "Language":
-          return (value === valueConstraint.languageTag);
+          return sameLanguageTag(value, valueConstraint.languageTag);
         case "LanguageStem":
           return testLanguageStem(value, valueConstraint.stem);
       }
@@ -2132,7 +2139,7 @@ function testValueSetValue(valueSetValueP: string | ObjectLiteral | IriStem | Ir
       const vsValueLiteral = valueSetValueP as ObjectLiteral;
       const valLiteral = value as RdfJsLiteral;
       return (value.value === vsValueLiteral.value
-          && (vsValueLiteral.language === undefined || vsValueLiteral.language === valLiteral.language)
+          && (vsValueLiteral.language === undefined || sameLanguageTag(vsValueLiteral.language, valLiteral.language))
           && (vsValueLiteral.type === undefined || vsValueLiteral.type === valLiteral.datatype.value));
     }
   } else {
@@ -2159,7 +2166,7 @@ function testValueSetValue(valueSetValueP: string | ObjectLiteral | IriStem | Ir
         return (!valueInExclusions(valueSetValue.exclusions, value.value));
       case "Language":
         if (value.termType !== "Literal") return false;
-        return (value.language === valueSetValue.languageTag);
+        return sameLanguageTag(value.language, valueSetValue.languageTag);
       case "LanguageStem":
         if (value.termType !== "Literal") return false;
         return testLanguageStem(value.language, valueSetValue.stem);

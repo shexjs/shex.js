@@ -39,6 +39,17 @@ const stable = o =>
       : Array.isArray(o) ? "[" + o.map(stable).join(",") + "]"
       : "{" + Object.keys(o).sort().map(k => JSON.stringify(k) + ":" + stable(o[k])).join(",") + "}";
 
+/** Language tags are case-insensitive (BCP 47) and Turtle parsers (N3.js)
+ *  lowercase them, so a ShExR reading only matches its .json case-folded. */
+const foldLangTags = o =>
+      o === null || typeof o !== "object" ? o
+      : Array.isArray(o) ? o.map(foldLangTags)
+      : Object.fromEntries(Object.entries(o).map(([k, v]) => [k,
+          typeof v === "string" && (k === "language"
+            || (k === "languageTag" || k === "stem") && /^Language/.test(o.type))
+          ? v.toLowerCase()
+          : foldLangTags(v)]));
+
 describe("ShExR, read by ShEx", function () {
 
   /* ...and what the manifest entry validates: a schema, written as RDF,
@@ -95,7 +106,7 @@ BASE <http://a.example/>
         } catch (e) {
           return;                 // not a schema: coverage.json and friends
         }
-        if (got !== null && stable(canon(got)) === stable(canon(want)))
+        if (got !== null && stable(foldLangTags(canon(got))) === stable(foldLangTags(canon(want))))
           outcome.read.push(f);
         else
           outcome.differed.push(f);
