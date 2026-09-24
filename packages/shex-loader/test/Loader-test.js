@@ -12,7 +12,7 @@ const {expect, assert} = require("chai");
 const Path = require('path');
 const N3 = require('n3'); // used for graph API example
 
-const findPath = require('../../shex-validator/test/findPath');
+const findPath = require('../../shex-cli/test/findPath.js');
 const Path_schemas = findPath("schemas");
 const [[SchemaServer, GitRootServer]] = require('../../../tools/testServer')
       .startServer( [

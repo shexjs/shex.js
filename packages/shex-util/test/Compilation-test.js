@@ -6,7 +6,7 @@ var ShExUtil = require("..");
 
 var fs = require("fs");
 var expect = require("chai").expect;
-var findPath = require("./findPath.js");
+var findPath = require("../../shex-cli/test/findPath.js");
 
 var schemasPath = findPath("parsedSchemas");
 var jsonASTsPath = findPath("ASTs");

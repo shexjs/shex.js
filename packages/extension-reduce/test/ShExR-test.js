@@ -18,7 +18,7 @@ const Fs = require("fs");
 const Path = require("path");
 const ShExUtil = require("@shexjs/util");
 const {makeReader, read} = require("../examples/shexr/reader.js");
-const findPath = require("./findPath.js");
+const findPath = require("../../shex-cli/test/findPath.js");
 
 const BASE = "http://a.example/application/base/";
 const schemasPath = findPath("schemas");

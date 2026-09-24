@@ -1,0 +1,61 @@
+{
+  "type": "ShapeTest",
+  "node": "http://a.example/s1",
+  "shape": "http://a.example/A",
+  "solution": {
+    "type": "ExtendedResults",
+    "extensions": {
+      "type": "ExtensionResults",
+      "solutions": [
+        {
+          "type": "ShapeTest",
+          "node": "http://a.example/s1",
+          "shape": "http://a.example/B",
+          "solution": {
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://a.example/p2",
+            "solutions": [
+              {
+                "type": "TestedTriple",
+                "subject": "http://a.example/s1",
+                "predicate": "http://a.example/p2",
+                "object": "http://a.example/o2"
+              }
+            ]
+          },
+          "resultName": "<http://a.example/s1>@<http://a.example/B>"
+        },
+        {
+          "type": "ShapeTest",
+          "node": "http://a.example/s1",
+          "shape": "http://a.example/B",
+          "solution": {
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://a.example/p2",
+            "solutions": [
+              {
+                "type": "TestedTriple",
+                "subject": "http://a.example/s1",
+                "predicate": "http://a.example/p2",
+                "object": "http://a.example/o2"
+              }
+            ]
+          },
+          "resultName": "<http://a.example/s1>@<http://a.example/B>#2"
+        }
+      ]
+    },
+    "local": {
+      "type": "TripleConstraintSolutions",
+      "predicate": "http://a.example/p1",
+      "solutions": [
+        {
+          "type": "TestedTriple",
+          "subject": "http://a.example/s1",
+          "predicate": "http://a.example/p1",
+          "object": "http://a.example/o1"
+        }
+      ]
+    }
+  }
+}

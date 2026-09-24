@@ -4949,7 +4949,18 @@ class EvalSimple1ErrRegexEngine {
                 }, 0) === allTriples.size;
                 return ret !== null ? ret : (elt.state === thisEvalSimple1ErrRegexEngine.end && matchedAll) ? elt : null;
             }, null);
-            if (longerChosen) {
+            // A later accepting thread replaces the chosen one only when it spreads
+            // the triples over more iterations: `( :a .{1,2} ; :b . ? )*` over two
+            // :a's is one per iteration, not both in the first, which is what
+            // eval-threaded-nerr reports.  Every accepting thread has consumed every
+            // triple (matchedAll), so a later one that consumes them in the same
+            // matches differs only by appended empty matches -- an iteration of
+            // `( :a .* | :b .* )*` taken over nothing -- and keeping it padded the
+            // solution with them.  Empty iterations are always trailing (the Rept
+            // state refuses re-entry after one), so the non-empty matches decide.
+            const consumingKey = (t) => JSON.stringify(t.matched.filter(m => m.triples.length > 0)
+                .map(m => [m.stack.map(s => [s.i, s.e]), m.triples.length]));
+            if (longerChosen && (chosen === null || consumingKey(longerChosen) !== consumingKey(chosen))) {
                 chosen = longerChosen;
                 yield { type: "accept", generation, thread: this.threadView(longerChosen) };
             }
@@ -5212,15 +5223,18 @@ class EvalSimple1ErrRegexEngine {
                     last[mis].i = null;
                     // !!! on the way out to call after valueExpr test
                     const groupSemActs = semActsOn(semActHandler, m.stack[mis].c);
-                    if (groupSemActs !== undefined && groupSemActs.length > 0) {
+                    if (errors.length === 0 && groupSemActs !== undefined && groupSemActs.length > 0) {
                         const ctx = {
                             triples: constraintToTripleMapping.get(m.c)
                                 .map(m => m.triple),
                             tripleExpr: m.c
                         };
-                        const errors = semActHandler.dispatchAll(groupSemActs, ctx, ptr);
-                        if (errors.length)
-                            throw errors;
+                        // A group action that fails fails the match the way a constraint
+                        // action does (below): collected here and answered as a SemActFailure.
+                        // It used to be thrown -- a bare array, which nothing caught, so a
+                        // `( ... ) %Test{ fail(s) %}` escaped the validator as an exception
+                        // instead of a nonconformant result.
+                        Array.prototype.push.apply(errors, semActHandler.dispatchAll(groupSemActs, ctx, ptr));
                     }
                     // if (ret && "semActs" in expr) { ret.semActs = expr.semActs; }
                 }
@@ -5767,7 +5781,8 @@ class EvalThreadedNErrRegexEngine {
         const ret = [];
         let lastPassFail = { pass: [], fail: [] };
         const minmax = {};
-        if (constraint.min !== undefined && constraint.min !== 1 || constraint.max !== undefined && constraint.max !== 1) {
+        // as in matchRepeat: the cardinality the schema wrote, explicit `{1}` included
+        if (constraint.min !== undefined || constraint.max !== undefined) {
             minmax.min = constraint.min;
             minmax.max = constraint.max;
         }
@@ -5857,7 +5872,10 @@ class EvalThreadedNErrRegexEngine {
         let repeated = 0, errOut = false;
         let newThreads = [thread];
         const minmax = {};
-        if (groupTE.min !== undefined && groupTE.min !== 1 || groupTE.max !== undefined && groupTE.max !== 1) {
+        // Echo the cardinality the schema wrote, an explicit `{1}` included: the
+        // solution mirrors the expression, and eval-simple-1err copies it the same
+        // way (an unwritten cardinality stays unwritten).
+        if (groupTE.min !== undefined || groupTE.max !== undefined) {
             minmax.min = groupTE.min;
             minmax.max = groupTE.max;
         }

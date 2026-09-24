@@ -24,7 +24,7 @@ const path = require("path");
 const chai = require("chai");
 const expect = chai.expect;
 const assert = chai.assert;
-const findPath = require("./findPath.js");
+const findPath = require("../../shex-cli/test/findPath.js");
 
 const schemasPath = findPath("schemas");
 const validationPath = findPath("validation");
