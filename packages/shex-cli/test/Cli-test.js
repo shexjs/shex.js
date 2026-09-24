@@ -4,7 +4,7 @@
  */
 
 "use strict";
-const TEST_cli = "TEST_cli" in process.env ? JSON.parse(process.env["TEST_cli"]) : false;
+const TEST_cli = require("./testGate.js")("TEST_cli");
 const TIME = "TIME" in process.env;
 const TestUtils = require("@shexjs/util/tools/common-test-infrastructure.js");
 const X = require('../lib/ExitCode'); // short name for brevity in tests
@@ -85,6 +85,8 @@ const AllTests = {
     //   extension-test exports a plain object; fail(o) semAct forces a Failure adorned with semActResults
     { name: "extension-test-fail" , args: ["-x", "cli/1dotTestFail.shex", "-s", "<http://a.example/S1>", "-d", "cli/p1.ttl", "-n", "<x>", "--extension", "../../extension-test/lib/shex-extension-test.js"], resultMatch: "\"semActResults\"[\\s\\S]*http://shex.io/extensions/Test/", status: X.shape_test_fail },
     { name: "extension-test-by-name" , args: ["-x", "cli/1dotTestFail.shex", "-s", "<http://a.example/S1>", "-d", "cli/p1.ttl", "-n", "<x>", "--extension", "@shexjs/extension-test"], resultMatch: "\"semActResults\"[\\s\\S]*http://shex.io/extensions/Test/", status: X.shape_test_fail },
+    //   extension-wasi initializes asynchronously; validate must await its ready() before dispatching
+    { name: "extension-wasi-ready" , args: ["-x", "../../extension-wasi/test/wasi/1dotCode3fail.shex", "-s", "<http://a.example/S1>", "-d", "cli/p1.ttl", "-n", "<x>", "--extension", "@shexjs/extension-wasi"], resultMatch: "\"SemActFailure\"[\\s\\S]*http://shex.io/extensions/WASI/", status: X.shape_test_fail },
     //   extension-map exports a factory function; map bindings appear in the passing result structure
     { name: "extension-map" , args: ["-x", "../../extension-map/examples/BPfhir-schema.shex", "-d", "../../extension-map/examples/BPfhir-instance.ttl", "-n", "tag:BPfhir123", "--extension", "../../extension-map/lib/shex-extension-map.js"], resultMatch: "http://shex.io/extensions/Map/#", status: X.shape_test_pass },
 

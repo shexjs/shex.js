@@ -56,6 +56,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run check-branch-deps
+      - run: npm run check-page-scripts
 
   webpack:
     # the doc/webpacks bundles are gitignored and built on demand; make sure

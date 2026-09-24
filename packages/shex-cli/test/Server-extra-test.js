@@ -4,7 +4,7 @@
  * Server-test.js drives the JSON validation endpoint; this covers the rest. */
 "use strict";
 
-const TEST_server = "TEST_server" in process.env ? JSON.parse(process.env["TEST_server"]) : false;
+const TEST_server = require("./testGate.js")("TEST_server");
 const child_process = require("child_process");
 const Path = require("path");
 const Fs = require("fs");

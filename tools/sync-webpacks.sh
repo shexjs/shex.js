@@ -20,11 +20,12 @@
 remote=${1:-origin}
 cd "$(dirname "$0")/.."
 
-dirs="packages/shex-webapp/doc/webpacks packages/extension-map/doc/webpacks
-      packages/extension-reduce/doc/webpacks"
-
 # FETCH_HEAD works even in single-branch clones that track only main.
 git fetch "$remote" gh-pages
+
+# Every package's bundle dir that gh-pages publishes, so a new plugin's
+# bundles come along without editing this list.
+dirs=$(git ls-tree -r -d --name-only FETCH_HEAD packages | grep '/doc/webpacks$')
 
 # `git checkout <tree> -- <path>` also stages what it writes, so unstage after.
 git checkout FETCH_HEAD -- $dirs

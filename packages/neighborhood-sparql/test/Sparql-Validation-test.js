@@ -70,7 +70,7 @@ const manifestFile = validationPath + "manifest.jsonld";
  * will fail here loudly rather than be quietly over-skipped.  A meta-test
  * below keeps the ToldBNode/focus coupling honest. */
 
-const ENABLED = "TEST_sparql" in process.env;
+const ENABLED = require("../../shex-cli/test/testGate.js")("TEST_sparql");
 
 describe("A ShEx validator over SPARQL", function () {
   // One pending test rather than a thousand when the gate is off.
