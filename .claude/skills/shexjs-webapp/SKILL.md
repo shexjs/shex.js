@@ -68,6 +68,14 @@ hand-written `doc/*Plugin.js` but no bundle of their own.
   and tests depend on (see the comment in `.gitignore`). Never
   `git add -f` a bundle.
 
+**A pane may hold a live CodeMirror editor** (the default). Never select
+by tag inside one (`$("#pane div")`, `$("#pane textarea").show()`): the
+editor is divs all the way down, and its textarea is a hidden proxy. Tag
+what you add with a class and remove that; hide and show
+`.shexjs-editor-pane` (or the textarea when the editors are off). Pulling
+an editor's DOM out from under it shows up later, on its next update, as
+`CodeMirror plugin crashed: … reading 'nextSibling'`.
+
 A new `src/app/Foo.ts` also needs a `<script src="./Foo.js">` in
 `shex-simple.html`, in dependency order. If the app boots it, add it to
 `APP_FILES` in `packages/shex-webapp/test/pages-test.js` too.

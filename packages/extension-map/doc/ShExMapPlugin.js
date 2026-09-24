@@ -1115,10 +1115,15 @@ const ShExMapVerbs = {
     },
     bindingsToTable() {
         let d = JSON.parse($("#bindings1 textarea").val());
-        let div = $("<div/>").css("overflow", "auto").css("border", "thin solid red");
-        div.css("width", $("#bindings1 textarea").width() + 10);
-        div.css("height", $("#bindings1 textarea").height() + 12);
-        $("#bindings1 textarea").hide();
+        // what is showing the bindings: the editor pane, or (editors off) the
+        // textarea -- which, with the editors on, is already hidden behind it
+        const shown = $("#bindings1").find(".shexjs-editor-pane, textarea")
+            .filter((i, elt) => elt.style.display !== "none").first();
+        $("#bindings1 > .bindingsTable").remove();
+        let div = $("<div/>").addClass("bindingsTable").css("overflow", "auto").css("border", "thin solid red");
+        div.css("width", shown.width() + 10);
+        div.css("height", shown.height() + 12);
+        shown.addClass("hiddenForTable").hide();
         let thead = $("<thead/>");
         let tbody = $("<tbody/>");
         let table = $("<table>").append(thead, tbody);
@@ -1158,8 +1163,15 @@ const ShExMapVerbs = {
         });
     },
     tableToBindings() {
-        $("#bindings1 div").remove();
-        $("#bindings1 textarea").show();
+        // only the table bindingsToTable made: #bindings1 also holds the editor
+        // pane, which is divs all the way down, and pulling those out from under
+        // a live CodeMirror left its gutters' bookkeeping pointing at nothing
+        // ("CodeMirror plugin crashed: ... reading 'nextSibling'" on its next
+        // update)
+        $("#bindings1 > .bindingsTable").remove();
+        $("#bindings1 .hiddenForTable").removeClass("hiddenForTable").show();
+        // an editor measures nothing while hidden
+        this.remeasureScreenPanes(MAP_ID);
     },
 };
 ShExPlugins.register({
