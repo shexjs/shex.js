@@ -45,9 +45,9 @@ function done (validator) { /* e.g. delete results[URL] if empty */ }
   array fails the constraint: `dispatchAll` wraps it as
   `{type: "SemActFailure", errors: <your array>}`. By convention the stock
   extensions return `[{type: "SemActFailure", errors: [msg]}]`. Any other
-  return value (`true`, `undefined`) throws "unsupported response". The
-  `@return {bool}` doc comments in the older code are wrong. After the
-  first failure in a list, the remaining actions are not dispatched.
+  return value (`true`, `undefined`) throws "unsupported response". (The
+  ShExMap materializer has its own dispatcher, which treats results as
+  booleans.) After the first failure in a list, the remaining actions are not dispatched.
   Throwing is for invocation errors (bad code syntax).
 - `ctx` depends on where the action is. On a triple constraint or an
   EachOf/OneOf it is `{triples, tripleExpr}`. On a shape it is
