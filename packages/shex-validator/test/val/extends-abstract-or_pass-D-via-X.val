@@ -1,0 +1,20 @@
+{
+  "type": "ShapeOrResults",
+  "solution": {
+    "type": "ShapeTest",
+    "node": "http://a.example/via-X",
+    "shape": "http://a.example/X",
+    "solution": {
+      "type": "TripleConstraintSolutions",
+      "predicate": "http://a.example/p3",
+      "solutions": [
+        {
+          "type": "TestedTriple",
+          "subject": "http://a.example/via-X",
+          "predicate": "http://a.example/p3",
+          "object": "http://a.example/o3"
+        }
+      ]
+    }
+  }
+}

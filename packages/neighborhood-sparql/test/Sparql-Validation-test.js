@@ -48,7 +48,7 @@ const {ctor: SparqlDb} = require("..");
 const {ordered} = require("@shexjs/neighborhood-api");
 const ShExNode = require("@shexjs/node")({rdfjs: N3});
 
-const findPath = require("../../shex-validator/test/findPath.js");
+const findPath = require("../../shex-cli/test/findPath.js");
 const {launchEndpoint} = require("./sparql-endpoint");
 const Decepticon = require("./decepticon");
 const {opaqueBnodes, canonicalize} = require("./compare");

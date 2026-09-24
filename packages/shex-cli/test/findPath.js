@@ -2,19 +2,22 @@ var fs = require("fs");
 var path = require("path");
 
 // Where to look for the shexTest corpus, in order: an explicit TESTSDIR
-// override, a sibling `../shexTest` (a clone or a symlink), the shexSpec-org
-// `../../shexSpec/shexTest` layout, and finally the `shex-test` devDependency
-// in node_modules. Each base is probed both through its package.json `main`
+// override, then -- starting at this repo's root -- a sibling `../shexTest`
+// (a clone or a symlink), `../../shexTest`, and the shexSpec-org layout
+// `../../shexSpec/shexTest`; finally the `shex-test` devDependency in
+// node_modules. Each base is probed both through its package.json `main`
 // (which maps the standard dirs) and by a direct subdirectory (which also
 // resolves the `*-contrib` dirs the module doesn't export).
+var ROOT = path.resolve(__dirname, "../../..");
 var CANDIDATES = ("TESTSDIR" in process.env ? [process.env.TESTSDIR] : []).concat([
-  "../../../../shexTest",              // ../shexTest         (sibling clone or symlink)
-  "../../../../../shexSpec/shexTest",  // ../../shexSpec/shexTest  (shexSpec-org checkout)
+  path.resolve(ROOT, "../shexTest"),
+  path.resolve(ROOT, "../../shexTest"),
+  path.resolve(ROOT, "../../shexSpec/shexTest"),
 ]);
 
 module.exports = function (dirName) {
   for (var i = 0; i < CANDIDATES.length; ++i) {
-    var base = path.resolve(__dirname, CANDIDATES[i]);
+    var base = path.resolve(CANDIDATES[i]); // TESTSDIR may be relative to the cwd
 
     // try the checkout's package.json `main` (maps the standard test dirs)
     var packageName = path.join(base, "package.json");
@@ -43,7 +46,7 @@ module.exports = function (dirName) {
       return fromPackage;
     }
   } catch (e) {
-    throw new Error(dirName + " not found in ../shexTest or ../../shexSpec/shexTest, and shex-test not installed. Either 'npm install shex-test' or '(cd .. && git clone git@github.com:shexSpec/shexTest.git)' .", {cause: e});
+    throw new Error(dirName + " not found in ../shexTest, ../../shexTest or ../../shexSpec/shexTest (from the repo root), and shex-test not installed. Either 'npm install shex-test' or '(cd .. && git clone git@github.com:shexSpec/shexTest.git)' .", {cause: e});
   }
   throw new Error(dirName + " not found in any shexTest checkout.");
 };

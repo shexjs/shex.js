@@ -51,6 +51,8 @@ ShExRWriter.prototype.writeSchema = function (schema, callback) {
     out.push("");
 
     const shapes = schema.shapes || [];
+    pendingTripleExprs = [];
+    queuedTripleExprIds = new Set();
     // --- the Schema node ---
     const sprops = [];
     if (schema.imports) sprops.push(`sx:imports ${coll(schema.imports.map(iri))}`);
@@ -68,6 +70,12 @@ ShExRWriter.prototype.writeSchema = function (schema, callback) {
       out.push(`${iri(declId(decl))} a sx:ShapeDecl ;${abstract} sx:shapeExpr ${shapeExpr(se, 1)} .`);
       out.push("");
     }
+    // --- labelled triple expressions, each as its own top-level statement ---
+    // (a definition may reference further labelled expressions; they queue up as it is written)
+    while (pendingTripleExprs.length) {
+      out.push(`${node(pendingTripleExprs.shift(), 0)} .`);
+      out.push("");
+    }
     callback(null, out.join("\n"), { sx: SX, xsd: XSD });
   } catch (e) { callback(e); }
 };
@@ -79,8 +87,27 @@ function shapeExpr (se, depth) {
   if (typeof se === "string") return iri(se);
   return node(se, depth);
 }
+// Triple-expression types; a labelled one (`$<t> …`) is referenced where it is used
+// and defined once as a top-level statement, as ShExR.shex requires (a labelled
+// object cannot sit inline as `sx:expression <t> a sx:EachOf ; …`). "Once" is
+// tracked by label: the queue is consumed as it is written, so a definition
+// already written must not be queued again when a later one references it.
+const TRIPLE_EXPR_TYPES = new Set(["EachOf", "OneOf", "TripleConstraint"]);
+let pendingTripleExprs = [];
+let queuedTripleExprIds = new Set();
+
 // A nested expression value that may be a ref (string) or an inline object.
-function expr (v, depth) { return typeof v === "string" ? iri(v) : node(v, depth); }
+function expr (v, depth) {
+  if (typeof v === "string") return iri(v);
+  if (v.id !== undefined && TRIPLE_EXPR_TYPES.has(v.type)) {
+    if (!queuedTripleExprIds.has(v.id)) {
+      queuedTripleExprIds.add(v.id);
+      pendingTripleExprs.push(v);
+    }
+    return iri(v.id);
+  }
+  return node(v, depth);
+}
 
 // Serialize any typed ShExJ object as `[ a sx:Type ; … ]` (or `<id> …` if named).
 function node (obj, depth) {
@@ -136,7 +163,8 @@ function valueSetValue (v, depth) {
 }
 
 // --- terminals ---
-function iri (i) { return `<${i}>`; }
+// A blank-node label is written as one (`_:b`), never as an IRI.
+function iri (i) { return String(i).startsWith("_:") ? String(i) : `<${i}>`; }
 function strLit (s) { return JSON.stringify(String(s)); }
 function numLit (v) { return (v && typeof v === "object") ? rdfLiteral(v) : String(v); }
 function rdfLiteral (lit) {
