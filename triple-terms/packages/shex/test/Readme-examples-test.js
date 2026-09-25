@@ -11,7 +11,7 @@ const {execSync} = require("child_process");
 const {expect} = require("chai");
 
 const RepoRoot = Path.join(__dirname, "../../..");
-const TEST_network = process.env.TEST_network === "true";
+const TEST_network = require("../../shex-cli/test/testGate.js")("TEST_network");
 
 const Specs = [
   {

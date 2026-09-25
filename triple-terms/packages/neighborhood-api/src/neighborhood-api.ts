@@ -426,6 +426,50 @@ export function sparqlOrder (l: RdfJsTerm, r: RdfJsTerm): number {
   return lprec === rprec ? l.value.localeCompare(r.value) : lprec - rprec;
 }
 
+/* sparqlQuadOrder - a total order on a node's arcs.  sparqlOrder ranks by one
+ * term, so two arcs to the same object -- a blank node reached by two
+ * predicates, say -- tie, and the sort falls to whatever incidental order the
+ * store or endpoint handed them back in (which differs between implementations,
+ * so two neighborhoods over the same graph could disagree).  Break the tie by
+ * predicate, then subject, so every implementation orders such arcs alike.
+ */
+export function sparqlQuadOrder (l: RdfJs.Quad, r: RdfJs.Quad): number {
+  return sparqlOrder(l.object, r.object)
+      || sparqlOrder(l.predicate, r.predicate)
+      || sparqlOrder(l.subject, r.subject);
+}
+
+/** Wrap a db so each neighborhood's arcs come back in a stable,
+ * implementation-independent order (sparqlQuadOrder).  The order is cosmetic --
+ * ShEx conformance never depends on it, and the validator enumerates partitions
+ * rather than matching greedily, so it can't change which solution is found,
+ * only the order arcs and errors are reported in.  So neighborhoods return arcs
+ * in their native order and a caller that wants determinism -- a UI, a test
+ * comparing serialized results, a diff of two runs -- opts in by wrapping here.
+ * Works over a sync or async db, and preserves every other member (setSchema,
+ * executeSelect, rateLimit, getNeighborhoodAsync, ...) by delegating through the
+ * wrapped object.  A blank-node object or subject is ordered by its label, which
+ * one source may assign differently from another; so this aligns two sources on
+ * ground terms and predicates, not on how each names its blank nodes.
+ */
+export function ordered<DB extends NeighborhoodDb | AsyncNeighborhoodDb> (db: DB): DB {
+  const sort = (n: Neighborhood): Neighborhood => ({
+    outgoing: n.outgoing.slice().sort(sparqlQuadOrder),
+    incoming: n.incoming.slice().sort(sparqlQuadOrder),
+  });
+  return Object.create(db, {
+    getNeighborhood: {
+      value (point: RdfJsTerm, shapeLabel: string | typeof Start, shape: Shape) {
+        const n = (db as NeighborhoodDb | AsyncNeighborhoodDb).getNeighborhood(point, shapeLabel, shape);
+        return n && typeof (n as Promise<Neighborhood>).then === "function"
+          ? (n as Promise<Neighborhood>).then(sort)
+          : sort(n as Neighborhood);
+      },
+      enumerable: true, configurable: true,
+    },
+  }) as DB;
+}
+
 const termType2Prec: {
   [key in 'BlankNode' | 'NamedNode' | 'Literal' | 'Quad']: number
 } = {

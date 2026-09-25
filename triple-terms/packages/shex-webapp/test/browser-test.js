@@ -1,7 +1,7 @@
 // Test shex-simple browser interface.
 
 "use strict";
-const TEST_browser = "TEST_browser" in process.env ? JSON.parse(process.env["TEST_browser"]) : false;
+const TEST_browser = require("../../shex-cli/test/testGate.js")("TEST_browser");
 
 const SHEX_IO_TESTS = "https://shex.io/shexTest/main/";
 // const SHEX_IO_TESTS = "http://localhost/checkouts/shexSpec/shexTest/";
@@ -24,7 +24,6 @@ const TESTS = [ // page and the labels on the top-most buttons on the manifest i
 let Fs = require('fs')
 let Path = require('path')
 let expect = require("chai").expect
-const node_fetch = require("node-fetch")
 // jsdom's engines outpace the packages' own (e.g. jsdom 30 wants Node ≥ 22
 // while the libraries claim ≥ 18): required lazily under TEST_browser so the
 // other suites still run wherever the packages themselves do
@@ -757,7 +756,9 @@ async function loadPage (page, searchParms) {
   }, SCRIPT_CALLBACK_TIMEOUT)
   let dom = getDom(page, searchParms)
   // stamp('dom')
-  dom.window.fetch = node_fetch
+  // looked up at each call: nock replaces globalThis.fetch when it is first
+  // required, and this file requires it only in 'WEBapp create gist'
+  dom.window.fetch = (...args) => globalThis.fetch(...args)
   // jsdom lacks the CSS namespace; jquery-ui ≥1.14 calls CSS.escape.
   if (!dom.window.CSS)
     dom.window.CSS = { escape: s => String(s).replace(/[^a-zA-Z0-9_\u00A0-\uFFFF-]/g, c => `\\${c}`) }
@@ -788,13 +789,9 @@ async function loadPage (page, searchParms) {
     if (!/[?&]editors=/.test(searchParms))
       searchParms += (searchParms.startsWith("?") ? "&" : "?") + "editors=textarea"
     let url = GitRootServer.urlFor(page + searchParms)
-    // forward page console traffic, but drop the expected jsdom complaint
-    // from tests that set location.search (jsdom can't navigate)
-    const virtualConsole = new jsdom.VirtualConsole().forwardTo(console, { jsdomErrors: "none" })
-    virtualConsole.on("jsdomError", e => {
-      if (!String(e.message).includes("Not implemented: navigation"))
-        console.error(e.type === "unhandled-exception" ? e.cause.stack : e.message)
-    })
+    // what the page says is recorded, and printed only for a failing test
+    // (or an error it didn't expect): harness.js's pageConsole
+    const virtualConsole = require("./harness").pageConsole()
     return new JSDOM(Fs.readFileSync(base, 'utf8'), {
       url: url,
       runScripts: "dangerously",

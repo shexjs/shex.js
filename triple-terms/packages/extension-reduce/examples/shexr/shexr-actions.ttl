@@ -139,13 +139,11 @@ BASE <http://shex.io/examples/shexr-actions>
   [ sa:ref sx:TripleConstraint ;
     sa:code """
       $$ = state.merge({type: 'TripleConstraint', id: node},
-                       $sx:inverse, $sx:negated, $sx:predicate, $sx:valueExpr,
+                       $sx:inverse, $sx:predicate, $sx:valueExpr,
                        $sx:min, $sx:max, $sx:semActs, $sx:annotation)
     """ ] ,
   [ sa:path "@sx:TripleConstraint~sx:inverse" ;
     sa:code "$$ = {inverse: str($1) === 'true'}" ] ,
-  [ sa:path "@sx:TripleConstraint~sx:negated" ;
-    sa:code "$$ = {negated: str($1) === 'true'}" ] ,
   [ sa:path "@sx:TripleConstraint~sx:predicate" ;  sa:code "$$ = {predicate: $1}" ] ,
   [ sa:path "@sx:TripleConstraint~sx:valueExpr" ;  sa:code "$$ = {valueExpr: $1}" ] ,
   [ sa:path "@sx:TripleConstraint~sx:min" ;        sa:code "$$ = {min: num($1)}" ] ,

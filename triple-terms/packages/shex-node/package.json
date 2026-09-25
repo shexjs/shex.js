@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/node",
-  "version": "1.0.0-alpha.30",
+  "version": "1.0.0-alpha.33",
   "files": [
     "lib",
     "src"
@@ -24,8 +24,8 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@shexjs/loader": "^1.0.0-alpha.30",
-    "glob": "^11.0.0"
+    "@shexjs/loader": "^1.0.0-alpha.33",
+    "glob": "^13.0.6"
   },
   "scripts": {
     "test": "cd ../.. && npm run test",

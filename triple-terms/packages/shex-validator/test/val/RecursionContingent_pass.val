@@ -1,0 +1,263 @@
+{
+  "type": "ShapeTest",
+  "node": "http://a.example/d",
+  "shape": "http://a.example/D",
+  "solution": {
+    "type": "EachOfSolutions",
+    "solutions": [
+      {
+        "type": "EachOfSolution",
+        "expressions": [
+          {
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://a.example/predd",
+            "valueExpr": {
+              "type": "NodeConstraint",
+              "datatype": "http://www.w3.org/2001/XMLSchema#string"
+            },
+            "solutions": [
+              {
+                "type": "TestedTriple",
+                "subject": "http://a.example/d",
+                "predicate": "http://a.example/predd",
+                "object": {
+                  "value": "final"
+                },
+                "referenced": {
+                  "type": "NodeConstraintTest",
+                  "node": {
+                    "value": "final"
+                  },
+                  "shape": "http://a.example/D",
+                  "shapeExpr": {
+                    "type": "NodeConstraint",
+                    "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "OneOfSolutions",
+            "solutions": [
+              {
+                "type": "OneOfSolution",
+                "expressions": [
+                  {
+                    "type": "TripleConstraintSolutions",
+                    "predicate": "http://a.example/test",
+                    "valueExpr": "http://a.example/A",
+                    "min": 0,
+                    "max": -1,
+                    "solutions": [
+                      {
+                        "type": "TestedTriple",
+                        "subject": "http://a.example/d",
+                        "predicate": "http://a.example/test",
+                        "object": "http://a.example/a",
+                        "referenced": {
+                          "type": "ShapeTest",
+                          "node": "http://a.example/a",
+                          "shape": "http://a.example/A",
+                          "solution": {
+                            "type": "EachOfSolutions",
+                            "solutions": [
+                              {
+                                "type": "EachOfSolution",
+                                "expressions": [
+                                  {
+                                    "type": "TripleConstraintSolutions",
+                                    "predicate": "http://a.example/subject",
+                                    "valueExpr": "http://a.example/C",
+                                    "solutions": [
+                                      {
+                                        "type": "TestedTriple",
+                                        "subject": "http://a.example/a",
+                                        "predicate": "http://a.example/subject",
+                                        "object": "http://a.example/c",
+                                        "referenced": {
+                                          "type": "ShapeTest",
+                                          "node": "http://a.example/c",
+                                          "shape": "http://a.example/C",
+                                          "solution": {
+                                            "type": "EachOfSolutions",
+                                            "solutions": [
+                                              {
+                                                "type": "EachOfSolution",
+                                                "expressions": [
+                                                  {
+                                                    "type": "TripleConstraintSolutions",
+                                                    "predicate": "http://a.example/subject",
+                                                    "valueExpr": "http://a.example/A",
+                                                    "solutions": [
+                                                      {
+                                                        "type": "TestedTriple",
+                                                        "subject": "http://a.example/c",
+                                                        "predicate": "http://a.example/subject",
+                                                        "object": "http://a.example/a",
+                                                        "referenced": {
+                                                          "type": "Recursion",
+                                                          "node": "http://a.example/a",
+                                                          "shape": "http://a.example/A"
+                                                        }
+                                                      }
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "TripleConstraintSolutions",
+                                                    "predicate": "http://a.example/predc",
+                                                    "valueExpr": {
+                                                      "type": "NodeConstraint",
+                                                      "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                                                    },
+                                                    "solutions": [
+                                                      {
+                                                        "type": "TestedTriple",
+                                                        "subject": "http://a.example/c",
+                                                        "predicate": "http://a.example/predc",
+                                                        "object": {
+                                                          "value": "final"
+                                                        },
+                                                        "referenced": {
+                                                          "type": "NodeConstraintTest",
+                                                          "node": {
+                                                            "value": "final"
+                                                          },
+                                                          "shape": "http://a.example/C",
+                                                          "shapeExpr": {
+                                                            "type": "NodeConstraint",
+                                                            "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                                                          }
+                                                        }
+                                                      }
+                                                    ]
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "type": "TripleConstraintSolutions",
+                                    "predicate": "http://a.example/preda",
+                                    "valueExpr": {
+                                      "type": "NodeConstraint",
+                                      "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                                    },
+                                    "solutions": [
+                                      {
+                                        "type": "TestedTriple",
+                                        "subject": "http://a.example/a",
+                                        "predicate": "http://a.example/preda",
+                                        "object": {
+                                          "value": "final"
+                                        },
+                                        "referenced": {
+                                          "type": "NodeConstraintTest",
+                                          "node": {
+                                            "value": "final"
+                                          },
+                                          "shape": "http://a.example/A",
+                                          "shapeExpr": {
+                                            "type": "NodeConstraint",
+                                            "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://a.example/test2",
+            "valueExpr": "http://a.example/C",
+            "solutions": [
+              {
+                "type": "TestedTriple",
+                "subject": "http://a.example/d",
+                "predicate": "http://a.example/test2",
+                "object": "http://a.example/c",
+                "referenced": {
+                  "type": "ShapeTest",
+                  "node": "http://a.example/c",
+                  "shape": "http://a.example/C",
+                  "solution": {
+                    "type": "EachOfSolutions",
+                    "solutions": [
+                      {
+                        "type": "EachOfSolution",
+                        "expressions": [
+                          {
+                            "type": "TripleConstraintSolutions",
+                            "predicate": "http://a.example/subject",
+                            "valueExpr": "http://a.example/A",
+                            "solutions": [
+                              {
+                                "type": "TestedTriple",
+                                "subject": "http://a.example/c",
+                                "predicate": "http://a.example/subject",
+                                "object": "http://a.example/a",
+                                "referenced": {
+                                  "type": "Recursion",
+                                  "node": "http://a.example/a",
+                                  "shape": "http://a.example/A"
+                                }
+                              }
+                            ]
+                          },
+                          {
+                            "type": "TripleConstraintSolutions",
+                            "predicate": "http://a.example/predc",
+                            "valueExpr": {
+                              "type": "NodeConstraint",
+                              "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                            },
+                            "solutions": [
+                              {
+                                "type": "TestedTriple",
+                                "subject": "http://a.example/c",
+                                "predicate": "http://a.example/predc",
+                                "object": {
+                                  "value": "final"
+                                },
+                                "referenced": {
+                                  "type": "NodeConstraintTest",
+                                  "node": {
+                                    "value": "final"
+                                  },
+                                  "shape": "http://a.example/C",
+                                  "shapeExpr": {
+                                    "type": "NodeConstraint",
+                                    "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

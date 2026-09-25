@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/editor-services",
-  "version": "1.0.0-alpha.30",
+  "version": "1.0.0-alpha.33",
   "files": [
     "lib",
     "src"
@@ -28,21 +28,21 @@
     "@codemirror/autocomplete": "^6.18.0",
     "@codemirror/lang-json": "^6.0.2",
     "@codemirror/language": "^6.11.3",
-    "@codemirror/legacy-modes": "^6.5.2",
+    "@codemirror/legacy-modes": "^6.5.4",
     "@codemirror/lint": "^6.9.1",
-    "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.38.6",
-    "@shexjs/parser": "^1.0.0-alpha.30",
-    "@shexjs/util": "^1.0.0-alpha.30",
+    "@codemirror/state": "^6.7.5",
+    "@codemirror/view": "^6.43.12",
+    "@shexjs/parser": "^1.0.0-alpha.33",
+    "@shexjs/util": "^1.0.0-alpha.33",
     "codemirror": "^6.0.2",
     "lezer-shexc": "^0.1.0",
     "lezer-turtle": "^0.1.0",
-    "n3": "^1.20.4",
+    "n3": "^2.7.12",
     "shape-map": "^1.0.0"
   },
   "devDependencies": {
-    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.30",
-    "@shexjs/validator": "^1.0.0-alpha.30"
+    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.33",
+    "@shexjs/validator": "^1.0.0-alpha.33"
   },
   "scripts": {
     "test": "cd ../.. && mocha packages/shex-editor-services/test/*test.js",

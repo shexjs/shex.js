@@ -9,12 +9,11 @@
  */
 "use strict";
 
-const TEST_browser = "TEST_browser" in process.env ? JSON.parse(process.env["TEST_browser"]) : false;
+const TEST_browser = require("../../shex-cli/test/testGate.js")("TEST_browser");
 
 const Fs = require("fs");
 const Path = require("path");
 const expect = require("chai").expect;
-const node_fetch = require("node-fetch");
 // jsdom's engines outpace the packages' own; required lazily under
 // TEST_browser (c.f. browser-test.js)
 let Harness;
@@ -901,6 +900,8 @@ if (!TEST_browser) {
        * neighborhood rdfjs" over a fixed map that was already there.  The
        * map is rebuilt only from a query map that changed. */
       it("should keep a resolved fixed map across a tab switch, whatever source is selected now", async function () {
+        // the switch back to rdfjs meets the SPARQL pair, and says so
+        Harness.expectConsole(/the QueryMap extension SPARQL is not supported by the neighborhood rdfjs/);
         const sparql = dom.window.ShExWebApp.NeighborhoodModules
               .find(m => m.name === "neighborhood-sparql");
         const resolver = sparql.queryMapResolvers[0];
@@ -1146,6 +1147,7 @@ if (!TEST_browser) {
        * than leaving a line half-written and the reader wondering which of
        * a hundred requests never came home. */
       it("should say where a request got nothing back", async function () {
+        Harness.expectConsole(/GET <[^>]*\/no\/such\/directory\/Q42\.json> returned 404/);
         this.timeout(60000);
         await shared.Caches.manifest.set([{
           schemaLabel: "person", schema: Fs.readFileSync(
@@ -1247,6 +1249,7 @@ if (!TEST_browser) {
        * the session. */
       it("should give the Fixed Map tab its label back when a pair won't resolve",
          async function () {
+           Harness.expectConsole(/the QueryMap extension SPARQL is not supported by the neighborhood rdfjs/);
            source().select("rdfjs");
            const tab = $('#shapeMap-tabs [href="#fixedMap-tab"]');
            const label = tab.text();

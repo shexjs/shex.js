@@ -69,10 +69,12 @@ function register (validator: any, api: any) {
        * @param {string} code - text of the semantic action.
        * @param {object} ctx - matched triple or results subset.
        * @param {object} extensionStorage - place where the extension writes into the result structure.
-       * @return {bool} false if the extension failed or did not accept the ctx object.
+       * @return {Array} [] on success; otherwise the errors that fail the
+       *   constraint (by convention [{type: "SemActFailure", errors: [msg]}]).
+       *   Throw for an invocation error, e.g. code that doesn't parse.
        */
       dispatch: function (code: any, ctx: any, extensionStorage: any) {
-        function fail (msg: any) { const e = Error(msg); Error.captureStackTrace(e, fail); throw e; }
+        function fail (msg: any) { const e = Error(msg); if ("captureStackTrace" in Error) Error.captureStackTrace(e, fail); throw e; }
         function getPrefixedName(bindingName: any) {
            // already have the fully prefixed binding name ready to go
            if (typeof bindingName === "string") return bindingName;
@@ -399,50 +401,6 @@ function n3ify (ldterm: any) {
                        : prefixedName.substr(0, index + 3) +
                          base + prefixedName.substr(index + prefix.length + 4);
   }
-
-function extractBindingsDelMe (soln: any, min: any, max: any, depth: any) {
-  if ("min" in soln && soln.min < min)
-    min = soln.min
-  const myMax = "max" in soln ?
-      (soln.max === UNBOUNDED ?
-       Infinity :
-       soln.max) :
-      1;
-  if (myMax > max)
-    max = myMax
-
-  function walkExpressions (s: any) {
-    return s.expressions.reduce((inner: any, e: any) => {
-      return inner.concat(extractBindingsDelMe(e, min, max, depth+1));
-    }, []);
-  }
-
-  function walkTriple (s: any) {
-    const fromTriple = "extensions" in s && MapExt in s.extensions ?
-        [{ depth: depth, min: min, max: max, obj: s.extensions[MapExt] }] :
-        [];
-    return "referenced" in s ?
-      fromTriple.concat(extractBindingsDelMe(s.referenced.solution, min, max, depth+1)) :
-      fromTriple;
-  }
-
-  function structuralError (msg: any) { throw Error(msg); }
-
-  const walk = // function to explore each solution
-      soln.type === "someOfSolutions" ||
-      soln.type === "eachOfSolutions" ? walkExpressions :
-      soln.type === "tripleConstraintSolutions" ? walkTriple :
-      structuralError("unknown type: " + soln.type);
-
-  if (myMax > 1) // preserve important associations:
-    // map: e.g. [[1,2],[3,4]]
-    // [walk(soln.solutions[0]), walk(soln.solutions[1]),...]
-    return soln.solutions.map(walk);
-  else // hide unimportant nesting:
-    // flatmap: e.g. [1,2,3,4]
-    // [].concat(walk(soln.solutions[0])).concat(walk(soln.solutions[1]))...
-    return [].concat.apply([], soln.solutions.map(walk));
-}
 
 return {
   register: register,

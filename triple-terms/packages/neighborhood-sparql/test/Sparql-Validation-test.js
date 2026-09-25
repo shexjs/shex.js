@@ -43,9 +43,12 @@ const {ShExIndexVisitor} = require("@shexjs/visitor");
 const {ShExValidator} = require("@shexjs/validator");
 const {ctor: RdfJsDb} = require("@shexjs/neighborhood-rdfjs");
 const {ctor: SparqlDb} = require("..");
+// Both neighborhoods return arcs in native order; ordering them (the same way)
+// is what lets their serialized results be compared arc-for-arc.
+const {ordered} = require("@shexjs/neighborhood-api");
 const ShExNode = require("@shexjs/node")({rdfjs: N3});
 
-const findPath = require("../../shex-validator/test/findPath.js");
+const findPath = require("../../shex-cli/test/findPath.js");
 const {launchEndpoint} = require("./sparql-endpoint");
 const Decepticon = require("./decepticon");
 const {opaqueBnodes, canonicalize} = require("./compare");
@@ -67,7 +70,7 @@ const manifestFile = validationPath + "manifest.jsonld";
  * will fail here loudly rather than be quietly over-skipped.  A meta-test
  * below keeps the ToldBNode/focus coupling honest. */
 
-const ENABLED = "TEST_sparql" in process.env;
+const ENABLED = require("../../shex-cli/test/testGate.js")("TEST_sparql");
 
 describe("A ShEx validator over SPARQL", function () {
   // One pending test rather than a thousand when the gate is off.
@@ -165,8 +168,8 @@ describe("A ShEx validator over SPARQL", function () {
       const map = shapeMapOf(test, dataURL, schemaURL);
       const options = validatorOptions(test, semActsFile, shapeExternsFile);
 
-      const expected = validate(schema, RdfJsDb(store), map, options);
-      const got = validate(schema, withSchema(SparqlDb(endpoint.url, null, {}), schema), map, options);
+      const expected = validate(schema, ordered(RdfJsDb(store)), map, options);
+      const got = validate(schema, ordered(withSchema(SparqlDb(endpoint.url, null, {}), schema)), map, options);
 
       if (VERBOSE && canonicalize(expected) !== canonicalize(got))
         console.log("rdfjs :", canonicalize(expected), "\nsparql:", canonicalize(got));

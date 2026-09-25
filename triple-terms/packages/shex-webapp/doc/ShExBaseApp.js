@@ -281,6 +281,7 @@ class ShExBaseApp {
             return false;
         });
         $("#download-results-button").on("click", this.downloadResults.bind(this));
+        $("#shortenPermalink").on("click", (evt) => { this.track(this.shortenPermalink(evt)); });
         $("#createGist").on("click", (evt) => { this.track(this.createGist(evt)); });
         $("#updateGist").on("click", (evt) => { this.track(this.updateGist(evt)); });
         $("#loadForm").dialog({
@@ -348,6 +349,7 @@ class ShExBaseApp {
             close: dismissModal
         });
         $("#about-button").click((evt) => {
+            this.toggleControls(); // close the menu; the dialog replaces it (issue #318)
             $("#about").dialog("open");
         });
         $("#gistHelp").dialog({

@@ -52,7 +52,7 @@ they are answered from the store; asking about one this DB has never seen
 raises `EntityResolutionError` rather than returning a quietly empty
 neighborhood.
 
-## ctor(queryTracker: QueryTracker?, options: object?)
+## ctor(queryTracker: DbQueryTracker?, options: object?)
 
 - `cacheDir`: keep each fetched JSON page on disk, so re-validating costs no
   requests. Pages are cached forever — delete a file (or the directory) to
@@ -72,6 +72,7 @@ that wants the site's current answer again.
   `require("@shexjs/neighborhood-sparql/sync-fetch").installXhrShim()`).
   Wikimedia's servers 403 anonymous clients, so a node transport should send
   a real `User-Agent`.
+- `fetchDocAsync(url)`: the async form of `fetchDoc` (preferred; defaults to `fetch()`).
 - `entityDataUrl(id)`, `siteMatrixUrl`, `conceptBase`, `dataBase`,
   `repositoryName`, `commonsMediaBase`, `commonsDataBase`, `license`: point
   at a different Wikibase instance (defaults are wikidata.org's).

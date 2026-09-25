@@ -12,8 +12,9 @@ const N3 = require("n3");
 /** Relabel blank nodes `oracleN`, numbering them by what they look like rather
  * than by where they appear in the file.
  *
- * Both neighborhood implementations sort a node's arcs by object, and blank
- * objects sort by label -- an arbitrary order on either side.  Numbering the
+ * The harness wraps both neighborhood implementations in ordered(), which
+ * sorts a node's arcs by object, and blank objects sort by label -- an
+ * arbitrary order on either side.  Numbering the
  * oracle's blank nodes the way @shexjs/neighborhood-sparql does, by content,
  * lines the two orders up so that a comparison sees structure rather than label
  * roulette.  Relabelling is an isomorphism, so nothing else moves.
