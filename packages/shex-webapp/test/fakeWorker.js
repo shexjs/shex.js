@@ -47,6 +47,11 @@ function makeWorkerClass (pageDir, extraGlobals = {}, urlRoots = []) {
       const workerGlobal = Object.assign(webGlobals, {
         console, setTimeout, clearTimeout, setInterval, clearInterval,
         URL, TextEncoder, TextDecoder, queueMicrotask,
+        // Not a worker global: a real worker has none, and the setImmediate
+        // polyfill in Comunica's bundle (extension-shacl-sparql) builds one on a
+        // MessageChannel instead.  Here that channel's open port would keep
+        // node, and so mocha, from ever exiting; node's own leaves no handle.
+        setImmediate, clearImmediate,
         postMessage: (data) => {
           if (this._terminated)
             return;

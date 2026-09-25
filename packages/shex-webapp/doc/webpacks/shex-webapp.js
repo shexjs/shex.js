@@ -6558,6 +6558,7 @@ function rdfjsDB(db, queryTracker) {
         getObjects: () => db.getObjects(),
         getQuads: (...args) => db.getQuads(...args),
         get size() { return db.size; },
+        querySource: () => ({ kind: "rdfjs", dataset: db }),
     };
 }
 exports.name = "neighborhood-rdfjs";
@@ -6735,6 +6736,8 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         : new rate_limit_1.RateLimiter(options.rateLimit || {});
     const execute = (q, ep, df) => rateLimit.runSync(() => askSync(q, ep, df));
     const executeAsync = (q, ep, df) => rateLimit.run(() => askAsync(q, ep, df));
+    const askAny = options.executeSparqlAsync ||
+        ((q, ep, df) => ShExUtil.executeSparqlPromise(q, ep, df));
     const queryCache = options.cacheQueries === false ? null : new Map();
     /**
      * Ask the endpoint, without saying how to wait for it.
@@ -7372,6 +7375,10 @@ function sparqlDB(endpoint, queryTracker, options = {}) {
         setSchema: function (schema) { schemaIndex = schema._index || visitor_1.ShExIndexVisitor.index(schema); },
         executeSelect: (query) => driveSync(runQuery(query)),
         executeSelectAsync: (query) => driveAsync(runQuery(query)),
+        querySource: () => ({
+            kind: "endpoint", endpoint,
+            query: (text) => rateLimit.run(() => askAny(text, endpoint, DataFactory)),
+        }),
         rateLimit,
     };
 }
@@ -21222,6 +21229,7 @@ function wikibaseDB(queryTracker, options = {}) {
         suggestFocusNodes,
         labelOf,
         loadedPages,
+        querySource: () => ({ kind: "rdfjs", dataset: store }),
         entityIri: (id) => NS.wd + id,
         locateDocument,
     };
@@ -55624,6 +55632,17 @@ const ShExUtil = {
         return e;
     },
     executeQueryPromise: function (query, endpoint, dataFactory) {
+        return this.fetchSparqlJson(query, endpoint).then((jsonObject) => this.parseSparqlJsonResults(jsonObject, dataFactory));
+    },
+    /** Any query, answered as its variables and rows or, for an ASK, its
+     * boolean -- where executeQueryPromise answers only a SELECT's rows. */
+    executeSparqlPromise: function (query, endpoint, dataFactory) {
+        return this.fetchSparqlJson(query, endpoint).then((jsonObject) => "boolean" in jsonObject
+            ? { boolean: jsonObject.boolean === true }
+            : { vars: jsonObject.head.vars, rows: this.parseSparqlJsonResults(jsonObject, dataFactory) });
+    },
+    /** a query's application/sparql-results+json, over fetch() */
+    fetchSparqlJson: function (query, endpoint) {
         if (!endpoint)
             throw Error(`Can't execute a SPARQL query with no endpoint`);
         const queryURL = endpoint + "?query=" + encodeURIComponent(query);
@@ -55645,9 +55664,7 @@ const ShExUtil = {
             if (!resp.ok)
                 throw this.sparqlHttpError(endpoint, resp.status, resp.statusText, yield resp.text().catch(() => ""), query, resp.headers && resp.headers.get("retry-after"));
             return resp.json();
-        })).then(jsonObject => {
-            return this.parseSparqlJsonResults(jsonObject, dataFactory);
-        }, (e) => {
+        })).then(undefined, (e) => {
             // a timeout arrives as an AbortError, which says nothing about what
             // was being waited on
             if (e && (e.name === "TimeoutError" || e.name === "AbortError"))
@@ -56435,6 +56452,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ShExValidator = exports.ShapeExprValidationContext = exports.InterfaceOptions = void 0;
 exports.resultMapToShapeExprTest = resultMapToShapeExprTest;
 exports.isFork = isFork;
+exports.isSettle = isSettle;
 // interface constants
 const ShExTerm = __importStar(__webpack_require__(2130));
 const term_1 = __webpack_require__(2130);
@@ -56457,6 +56475,8 @@ class SemActDispatcherImpl {
     constructor(externalCode, indexed) {
         this.handlers = {};
         this.results = {};
+        /** what deferring handlers are waiting for; see takePending */
+        this.pending = [];
         this.externalCode = externalCode || {};
         this.indexed = indexed || new Map();
     }
@@ -56488,6 +56508,13 @@ class SemActDispatcherImpl {
     register(name, handler) {
         this.handlers[name] = handler;
     }
+    /** take what the handlers dispatched since the last take are waiting for */
+    takePending() {
+        // splice rather than reassign: the recording and replaying dispatchers
+        // are Object.create()s of this one, and assigning through one of them
+        // would hide this array behind a new one of its own
+        return this.pending.splice(0);
+    }
     /** Is there a handler for this action?  If not, dispatchAll skips it. */
     isRegistered(name) {
         return name in this.handlers;
@@ -56507,7 +56534,14 @@ class SemActDispatcherImpl {
                 const existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
                 const extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
                 const response = this.handlers[semAct.name].dispatch(code, semActParm, extensionStorage, resultsArtifact);
-                if (typeof response === 'object' && Array.isArray(response)) {
+                if (isThenable(response)) {
+                    // Not answerable yet: fail provisionally, which also stops the
+                    // rest of the list, and leave the promise for our caller to wait
+                    // on before it asks again (see SemActHandler.dispatch).
+                    this.pending.push(response);
+                    ret.push({ type: "SemActFailure", errors: ["awaiting " + semAct.name] });
+                }
+                else if (typeof response === 'object' && Array.isArray(response)) {
                     if (response.length > 0)
                         ret.push({ type: "SemActFailure", errors: response });
                 }
@@ -56711,6 +56745,9 @@ class TrivialNeighborhood {
 function isFork(r) {
     return r.fork !== undefined;
 }
+function isSettle(r) {
+    return r.settle !== undefined;
+}
 /** every semantic action named anywhere in a schema */
 function collectSemActNames(v, into) {
     if (Array.isArray(v)) {
@@ -56747,6 +56784,28 @@ function semActCut(e) {
             : [String(said.message === undefined ? said : said.message)]
     };
 }
+/**
+ * Put `target` back the way `snapshot` says it was, keeping the objects.
+ *
+ * An extension may hold on to what it keeps in the shared results --
+ * extension-test's register() returns its array of prints -- so rolling
+ * back by replacing them would leave it holding one nobody writes to.
+ */
+function restoreInPlace(target, snapshot) {
+    for (const k of Object.keys(target))
+        if (!(k in snapshot))
+            delete target[k];
+    for (const k of Object.keys(snapshot))
+        if (Array.isArray(target[k]) && Array.isArray(snapshot[k]))
+            target[k].splice(0, target[k].length, ...snapshot[k]);
+        else
+            target[k] = snapshot[k];
+}
+/** a handler's "ask me again later" rather than its answer */
+function isThenable(x) {
+    return x !== null && typeof x === "object"
+        && typeof x.then === "function";
+}
 /** is this a validation that may stop, rather than a finished answer? */
 function isResumable(x) {
     return x !== null && typeof x === "object"
@@ -56759,6 +56818,9 @@ function driveSync(task, db) {
     while (!step.done) {
         const request = step.value;
         try {
+            if (isSettle(request))
+                throw Error("a semantic action handler answered with a promise;"
+                    + " validate with validateShapeMapAsync to wait for it");
             step = task.next(isFork(request)
                 // nothing to overlap when the data is already here: run them in order
                 ? request.fork.map(sub => driveSync(sub, db))
@@ -56776,6 +56838,10 @@ function driveSync(task, db) {
     return step.value;
 }
 class ShExValidator {
+    /** Where this validator gets its data.  Read-only: an extension that
+     * wants to ask the same data something else -- a SPARQL query, through
+     * the db's querySource() -- finds it here. */
+    get db() { return this._db; }
     /* ShExValidator - construct an object for validating a schema.
      *
      * schema: a structure produced by a ShEx parser or equivalent.
@@ -56803,7 +56869,7 @@ class ShExValidator {
         this.options = options;
         this.known = {};
         this.schema = schema;
-        this.db = db;
+        this._db = db;
         // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
         this.regexModule = this.options.regexModule || EvalThreadedNErr;
         this.semActHandler = new SemActDispatcherImpl(options.semActs, options.semActIndex);
@@ -56908,6 +56974,10 @@ class ShExValidator {
                             // overlap and duplicates meet each other in `inFlight`
                             answer = yield Promise.all(request.fork.map(sub => run(sub)));
                         }
+                        else if (isSettle(request)) {
+                            yield Promise.all(request.settle);
+                            answer = undefined;
+                        }
                         else {
                             answer = yield demand(request);
                         }
@@ -56939,7 +57009,7 @@ class ShExValidator {
         const startActs = this.semActHandler.semActsFor(this.schema, this.schema.startActs);
         if (startActs !== undefined && startActs.length > 0) {
             const startActionStorage = {}; // !!! need test to see this write to results structure.
-            const semActErrors = this.semActHandler.dispatchAll(startActs, null, startActionStorage);
+            const semActErrors = yield* this.settleSemActs(startActs, null, startActionStorage);
             if (semActErrors.length)
                 return {
                     type: "Failure",
@@ -57207,7 +57277,7 @@ class ShExValidator {
         }
         switch (shapeExpr.type) {
             case "NodeConstraint":
-                return this.validateNodeConstraint(focus, shapeExpr, ctx);
+                return yield* this.resumeNodeConstraint(focus, shapeExpr, ctx);
             case "Shape":
                 return yield* this.validateShape(focus, shapeExpr, ctx);
             case "ShapeExternal":
@@ -57258,15 +57328,43 @@ class ShExValidator {
         }
     }
     // TODO: should this be called for and, or, not?
-    evaluateShapeExprSemActs(ret, shapeExpr, point, shapeLabel) {
+    *evaluateShapeExprSemActs(ret, shapeExpr, point, shapeLabel) {
         const semActs = this.semActHandler.semActsFor(shapeExpr);
         if (!("errors" in ret) && semActs !== undefined && semActs.length > 0) {
-            const semActErrors = this.semActHandler.dispatchAll(semActs, Object.assign({}, ret, { node: point }), ret);
+            const semActErrors = yield* this.settleSemActs(semActs, Object.assign({}, ret, { node: point }), ret);
             if (semActErrors.length)
                 // some semAct aborted
                 return { type: "Failure", node: (0, term_1.rdfJsTerm2Ld)(point), shape: shapeLabel, errors: semActErrors };
         }
         return ret;
+    }
+    /**
+     * Dispatch some actions, waiting for any that can't answer yet.
+     *
+     * A handler that has to wait returns a promise; the dispatcher answers
+     * for it with a provisional failure and keeps the promise.  Here we stop
+     * until those settle (see SettleRequest) and then dispatch the list
+     * again, having rolled back what the first try left in the shared
+     * results and in the artifact's extensions, since the actions before the
+     * one that waited will be dispatched a second time.  A handler that is
+     * ready the second time around -- the contract -- ends the loop.
+     */
+    *settleSemActs(semActs, ctx, resultsArtifact) {
+        const results = JSON.stringify(this.semActHandler.results);
+        const hadExtensions = resultsArtifact !== null && "extensions" in resultsArtifact;
+        const extensions = hadExtensions ? JSON.stringify(resultsArtifact.extensions) : undefined;
+        for (;;) {
+            const failures = this.semActHandler.dispatchAll(semActs, ctx, resultsArtifact);
+            const waiting = this.semActHandler.takePending();
+            if (waiting.length === 0)
+                return failures;
+            restoreInPlace(this.semActHandler.results, JSON.parse(results));
+            if (hadExtensions)
+                resultsArtifact.extensions = JSON.parse(extensions);
+            else
+                delete resultsArtifact.extensions;
+            yield { settle: waiting };
+        }
     }
     *validateShape(focus, shape, ctx) {
         let ret = null;
@@ -57349,7 +57447,7 @@ class ShExValidator {
             // that came to nothing.
             const shapeSemActs = errors.length === 0 ? this.semActHandler.semActsFor(shape) : undefined;
             if (shapeSemActs !== undefined && shapeSemActs.length > 0) {
-                const semActErrors = this.semActHandler.dispatchAll(shapeSemActs, Object.assign({ node: focus, triples }, results), possibleRet);
+                const semActErrors = yield* this.settleSemActs(shapeSemActs, Object.assign({ node: focus, triples }, results), possibleRet);
                 if (semActErrors.length)
                     // some semAct aborted
                     Array.prototype.push.apply(errors, semActErrors);
@@ -57728,7 +57826,19 @@ class ShExValidator {
         let results = yield* this.testExtends(shape, focus, extendsToTriples, ctx, extendsResultCache);
         if (results === null || !("errors" in results)) {
             if (regexEngine !== null /* i.e. shape.expression !== undefined */) {
-                const sub = regexEngine.match(focus, tc2ts, this.semActHandler, null);
+                // An action in the triple expression that can't answer yet fails
+                // provisionally and leaves a promise; wait for them all and match
+                // again, until a match finishes with every action answered.  Each
+                // round can only find actions the last one didn't reach, so it ends.
+                const mayDefer = !this.canFork() || this.semActHandler.hasIndexed();
+                const before = mayDefer ? JSON.stringify(this.semActHandler.results) : null;
+                let sub = regexEngine.match(focus, tc2ts, this.semActHandler, null);
+                for (let waiting = this.semActHandler.takePending(); waiting.length > 0; waiting = this.semActHandler.takePending()) {
+                    if (before !== null)
+                        restoreInPlace(this.semActHandler.results, JSON.parse(before));
+                    yield { settle: waiting };
+                    sub = regexEngine.match(focus, tc2ts, this.semActHandler, null);
+                }
                 if (!("errors" in sub) && results) {
                     results = { type: "ExtendedResults", extensions: results, local: sub };
                 }
@@ -58060,13 +58170,16 @@ class ShExValidator {
             else {
                 ctx = ctx.followTripleConstraint();
                 // A NodeConstraint is a leaf: it looks at the value and nothing else,
-                // so it can never reach a fetch and needs no generator.  This is the
+                // so it can never reach a fetch and needs no generator -- unless it
+                // carries a semantic action, which might have to be waited for.  This is the
                 // innermost, most frequent call in a validation -- once per triple per
                 // constraint -- and in FHIR most of them are exactly this, a datatype
                 // or a value set on fhir:v.
                 const sub = typeof constraint.valueExpr === "object"
                     && constraint.valueExpr.type === "NodeConstraint"
-                    ? _ShExValidator.validateNodeConstraint(value, constraint.valueExpr, ctx)
+                    ? (_ShExValidator.semActHandler.semActsFor(constraint.valueExpr) === undefined
+                        ? _ShExValidator.testNodeConstraint(value, constraint.valueExpr, ctx)
+                        : yield* _ShExValidator.resumeNodeConstraint(value, constraint.valueExpr, ctx))
                     : yield* _ShExValidator.resumeShapeExpr(value, constraint.valueExpr, ctx);
                 if (sub.errors === undefined) { // TODO: improve typing to cast isn't necessary
                     hits.push(new TriplesMatchingHit(triple, sub));
@@ -58083,6 +58196,16 @@ class ShExValidator {
      * expression without checking shape references.
      */
     validateNodeConstraint(focus, nc, ctx) {
+        return driveSync(this.resumeNodeConstraint(focus, nc, ctx), this.db);
+    }
+    /** validateNodeConstraint, able to wait for a semantic action that can't
+     * answer yet.  Only an action can make it wait: without one, the
+     * generator finishes on its first step. */
+    *resumeNodeConstraint(focus, nc, ctx) {
+        return yield* this.evaluateShapeExprSemActs(this.testNodeConstraint(focus, nc, ctx), nc, focus, ctx.label);
+    }
+    /** the node constraint alone, without its semantic actions */
+    testNodeConstraint(focus, nc, ctx) {
         const errors = [];
         /**
          * Why a node didn't satisfy this constraint: a leaf saying what failed,
@@ -58134,7 +58257,7 @@ class ShExValidator {
         Object.assign(ncRet, errors.length > 0
             ? { type: "NodeConstraintViolation", errors: errors }
             : { type: "NodeConstraintTest", });
-        return this.evaluateShapeExprSemActs(ncRet, nc, focus, ctx.label);
+        return ncRet;
     }
 }
 exports.ShExValidator = ShExValidator;

@@ -1045,3 +1045,188 @@
   comment: fail(...) comes back as a SemActFailure from the wasm module, so the pair goes red.
   plugins:
   - ../packages/extension-wasi-test/doc/ShExWasiTestPlugin.js
+
+# --- packages/extension-shacl-sparql/examples/manifest.yaml
+# the SPARQL extension: SHACL-SPARQL constraints, with ShEx's semantics
+# The SPARQL extension (http://shex.io/extensions/SHACL-SPARQL/): SHACL-SPARQL
+# constraints as semantic actions, with ShEx's semantics around them.
+#
+# A query is written the way SHACL-SPARQL writes it and means what it means
+# there: a SELECT fails on each row it finds (a row's ?message says why),
+# an ASK passes when it answers true.  $this is the node being validated;
+# on a triple constraint $value is the other end of the triple it matched.
+# The schema's PREFIXes are in scope.  Queries run over the data pane's
+# dataset, in the page, through Comunica.
+#
+# Each entry names the plugin it needs; loading it brings Comunica along
+# (~3 MB), which is the price of running SPARQL in a page.
+
+# ── A SHACL sh:SPARQLConstraint, as written ─────────────────────────────────
+- schemaLabel: Events end after they start
+  schemaURL: ../packages/extension-shacl-sparql/examples/events.shex
+  dataLabel: a conference
+  data: |
+    PREFIX : <http://a.example/>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    :conf :name "ShEx Symposium" ;
+      :start "2026-10-05"^^xsd:date ; :end "2026-10-07"^^xsd:date .
+  queryMap: |
+    <http://a.example/conf>@<http://a.example/Event>
+  status: conformant
+  comment: The SELECT finds no row, so the shape holds.
+  plugins:
+  - ../packages/extension-shacl-sparql/doc/ShExShaclSparqlPlugin.js
+- schemaLabel: Events end after they start
+  schemaURL: ../packages/extension-shacl-sparql/examples/events.shex
+  dataLabel: backwards dates
+  data: |
+    PREFIX : <http://a.example/>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    :conf :name "ShEx Symposium" ;
+      :start "2026-10-07"^^xsd:date ; :end "2026-10-05"^^xsd:date .
+  queryMap: |
+    <http://a.example/conf>@<http://a.example/Event>
+  status: nonconformant
+  comment: One row, so one failure, and its ?message says why.
+  plugins:
+  - ../packages/extension-shacl-sparql/doc/ShExShaclSparqlPlugin.js
+- schemaLabel: Events end after they start
+  schemaURL: ../packages/extension-shacl-sparql/examples/events.shex
+  dataLabel: a bad session, three levels down
+  data: |
+    PREFIX : <http://a.example/>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    :conf :name "ShEx Symposium" ;
+      :start "2026-10-05"^^xsd:date ; :end "2026-10-07"^^xsd:date ;
+      :part :day1 .
+    :day1 :name "Day one" ;
+      :start "2026-10-05"^^xsd:date ; :end "2026-10-05"^^xsd:date ;
+      :part :keynote .
+    :keynote :name "Keynote" ;
+      :start "2026-10-05"^^xsd:date ; :end "2026-10-04"^^xsd:date .
+  queryMap: |
+    <http://a.example/conf>@<http://a.example/Event>
+  status: nonconformant
+  comment: >-
+    The shape is recursive, so the same query runs on every event it reaches:
+    the keynote's dates fail it, and so the conference fails.  SHACL leaves
+    recursive shapes undefined.
+  plugins:
+  - ../packages/extension-shacl-sparql/doc/ShExShaclSparqlPlugin.js
+
+# ── $value on a triple constraint ───────────────────────────────────────────
+- schemaLabel: No two books share an ISBN
+  schemaURL: ../packages/extension-shacl-sparql/examples/books.shex
+  dataLabel: two books, two ISBNs
+  data: |
+    PREFIX : <http://a.example/>
+    :primer :title "A ShEx Primer" ; :isbn "978-0-00-000001-1" .
+    :sequel :title "ShEx Returns" ; :isbn "978-0-00-000002-8" .
+  queryMap: |
+    <http://a.example/primer>@<http://a.example/Book>
+  status: conformant
+  comment: $value is the ISBN the triple constraint matched; nobody else has it.
+  plugins:
+  - ../packages/extension-shacl-sparql/doc/ShExShaclSparqlPlugin.js
+- schemaLabel: No two books share an ISBN
+  schemaURL: ../packages/extension-shacl-sparql/examples/books.shex
+  dataLabel: a copied ISBN
+  data: |
+    PREFIX : <http://a.example/>
+    :primer :title "A ShEx Primer" ; :isbn "978-0-00-000001-1" .
+    :sequel :title "ShEx Returns" ; :isbn "978-0-00-000001-1" .
+  queryMap: |
+    <http://a.example/primer>@<http://a.example/Book>
+  status: nonconformant
+  comment: The query looks past the node being validated, at the whole dataset.
+  plugins:
+  - ../packages/extension-shacl-sparql/doc/ShExShaclSparqlPlugin.js
+
+# ── What ShEx adds: actions take part in matching ───────────────────────────
+- schemaLabel: One label in German, one in English
+  schemaURL: ../packages/extension-shacl-sparql/examples/labels.shex
+  dataLabel: Hund and dog
+  data: |
+    PREFIX : <http://a.example/>
+    :dog :label "dog"@en, "Hund"@de .
+  queryMap: |
+    <http://a.example/dog>@<http://a.example/Term>
+  status: conformant
+  comment: >-
+    Two constraints on one predicate, told apart only by their ASKs.  An
+    action on a triple constraint is part of deciding which triple goes to
+    which constraint, so the German label goes to the first and the English
+    one to the second.  In SHACL a failed sh:sparql is only reported, after
+    the fact; here it steers the match.
+  plugins:
+  - ../packages/extension-shacl-sparql/doc/ShExShaclSparqlPlugin.js
+- schemaLabel: One label in German, one in English
+  schemaURL: ../packages/extension-shacl-sparql/examples/labels.shex
+  dataLabel: two German labels
+  data: |
+    PREFIX : <http://a.example/>
+    :dog :label "Hund"@de, "Köter"@de .
+  queryMap: |
+    <http://a.example/dog>@<http://a.example/Term>
+  status: nonconformant
+  comment: No way to share out the triples satisfies both ASKs.
+  plugins:
+  - ../packages/extension-shacl-sparql/doc/ShExShaclSparqlPlugin.js
+
+- schemaLabel: CLOSED, with English labels only
+  schemaURL: ../packages/extension-shacl-sparql/examples/closed-labels.shex
+  dataLabel: English labels
+  data: |
+    PREFIX : <http://a.example/>
+    :dog :label "dog"@en, "hound"@en-GB .
+  queryMap: |
+    <http://a.example/dog>@<http://a.example/Term>
+  status: conformant
+  comment: Every label is English, so every triple has a constraint to go to.
+  plugins:
+  - ../packages/extension-shacl-sparql/doc/ShExShaclSparqlPlugin.js
+- schemaLabel: CLOSED, with English labels only
+  schemaURL: ../packages/extension-shacl-sparql/examples/closed-labels.shex
+  dataLabel: a German label slips in
+  data: |
+    PREFIX : <http://a.example/>
+    :dog :label "dog"@en, "Hund"@de .
+  queryMap: |
+    <http://a.example/dog>@<http://a.example/Term>
+  status: nonconformant
+  comment: >-
+    The ASK refuses "Hund"@de, so no constraint takes it, and the shape is
+    CLOSED: a triple left over fails it.
+  plugins:
+  - ../packages/extension-shacl-sparql/doc/ShExShaclSparqlPlugin.js
+
+# ── A check over the whole dataset, in the start actions ────────────────────
+- schemaLabel: Every parent is a Person
+  schemaURL: ../packages/extension-shacl-sparql/examples/parents.shex
+  dataLabel: a family
+  data: |
+    PREFIX : <http://a.example/>
+    :alice a :Person ; :name "Alice" ; :parent :carol .
+    :carol a :Person ; :name "Carol" .
+  queryMap: |
+    <http://a.example/alice>@<http://a.example/Person>
+  status: conformant
+  comment: A start action has no $this; it asks about the whole dataset, once.
+  plugins:
+  - ../packages/extension-shacl-sparql/doc/ShExShaclSparqlPlugin.js
+- schemaLabel: Every parent is a Person
+  schemaURL: ../packages/extension-shacl-sparql/examples/parents.shex
+  dataLabel: someone else's orphan
+  data: |
+    PREFIX : <http://a.example/>
+    :alice a :Person ; :name "Alice" ; :parent :carol .
+    :carol a :Person ; :name "Carol" .
+    :dan :parent :erin .
+  queryMap: |
+    <http://a.example/alice>@<http://a.example/Person>
+  status: nonconformant
+  comment: >-
+    Alice is fine, but the dataset isn't: :dan's parent isn't a Person, and
+    a start action speaks for the whole of the data.
+  plugins:
+  - ../packages/extension-shacl-sparql/doc/ShExShaclSparqlPlugin.js

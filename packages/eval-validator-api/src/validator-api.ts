@@ -278,6 +278,16 @@ export interface SemActDispatcher {
    */
   semActsFor?(node: any, own?: ShExJ.SemAct[]): ShExJ.SemAct[] | undefined;
   dispatchAll(semActs: ShExJ.SemAct[] | undefined, ctx: any, resultsArtifact: any): SemActFailure[];
+  /**
+   * What the handlers dispatched since the last call are still waiting for.
+   *
+   * A handler that has to wait (see SemActHandler.dispatch) leaves its
+   * promise here, and dispatchAll answers for it with a provisional
+   * failure.  Whoever called dispatchAll takes these, waits for them, and
+   * dispatches again.  Optional so an implementation that predates it still
+   * works: one without it never defers.
+   */
+  takePending?(): PromiseLike<unknown>[];
   results: { [id: string]: string | undefined }; // TODO: improve this trivial storage mechanism
 }
 
@@ -290,7 +300,21 @@ export interface SemActHandler {
    * TestedTriple, ShapeTest or NodeConstraintTest this action applies to,
    * which is what an action that wants to know what its object matched has
    * to read.  Optional, since a handler that only records ignores it.
+   *
+   * A handler that can't answer yet (it has to ask a SPARQL engine, say)
+   * returns a promise instead: "ask me again once this settles".  The
+   * validator waits for it -- only under validateShapeMapAsync; a
+   * synchronous validation throws -- and then dispatches the same action
+   * with the same arguments again, so the handler has to be able to answer
+   * that second call outright, typically from a cache the promise filled.
+   * What the promise resolves to is ignored; if it rejects, the rejection
+   * is thrown into the validation.
+   *
+   * Waiting may mean re-running the match the action was part of, which
+   * dispatches the actions around it again.  What they left in
+   * `SemActDispatcher.results` and in results' `extensions` is rolled back
+   * before they are, but any other side effect of theirs is repeated.
    */
   dispatch(code: string | null, ctx: any, extensionStorage: any,
-           resultsArtifact?: any): SemActFailure[];
+           resultsArtifact?: any): SemActFailure[] | PromiseLike<unknown>;
 }

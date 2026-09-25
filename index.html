@@ -27,7 +27,9 @@
       .app.shexmap { background-color: #f4fff4; border-color: #f0a133; }
       .app.shexreduce { background-color: #fff4f4; border-color: #fc561c; }
       .app.yours { background-color: #fffff4; border-color: #56fc1c; }
-      .app.semacts { background-color: #f8f4ff; border-color: #8a56fc; }\n      .app.experiments { background-color: #f4f9ff; border-color: #5691fc; }
+      .app.semacts { background-color: #f8f4ff; border-color: #8a56fc; }
+      .app.shacl-sparql { background-color: #f4fffc; border-color: #1cb0a0; }
+      .app.experiments { background-color: #f4f9ff; border-color: #5691fc; }
       .app h2 { font-size: 1.1em; margin: 0 0 .3em; }
       .app p { margin: .3em 0 .8em; font-size: .9em; color: #444; }
       .app ul { list-style: none; margin: 0; padding: 0; }
@@ -123,6 +125,19 @@
           <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-test%2Fexamples%2Fmanifest.yaml">Test</a> <span class="variant">— print(o) / fail(…), the suite's probe</span></li>
           <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-wasi%2Fexamples%2Fmanifest.yaml">WASI</a> <span class="variant">— WAT compiled in the page, prelude to standalone module</span></li>
           <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-wasi-test%2Fexamples%2Fmanifest.yaml">Test in wasm</a> <span class="variant">— the probe, as hand-written WebAssembly</span></li>
+        </ul>
+      </div>
+      <div class="app shacl-sparql">
+        <h2>SHACL-SPARQL</h2>
+        <p>Your <code>sh:sparql</code> queries as ShEx semantic actions:
+          a <code>SELECT</code> fails on each row, an <code>ASK</code> passes
+          when true, <code>$this</code> and <code>$value</code> pre-bound
+          &mdash; with ShEx's recursion, <code>CLOSED</code> shapes, and
+          queries that steer which triple matches which constraint.  Queries
+          run over the data in the page, through Comunica (~3&nbsp;MB).</p>
+        <ul>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?manifestURL=..%2F..%2Fextension-shacl-sparql%2Fexamples%2Fmanifest.yaml">shex-simple + SPARQL</a> <span class="variant">— event dates, unique ISBNs, labels by language, a dataset-wide check</span></li>
+          <li><a href="packages/shex-webapp/doc/shex-simple.html?worker=1&amp;manifestURL=..%2F..%2Fextension-shacl-sparql%2Fexamples%2Fmanifest.yaml">shex-simple?worker=1 + SPARQL</a> <span class="variant">— the same, in a Web Worker</span></li>
         </ul>
       </div>
       <div class="app yours">

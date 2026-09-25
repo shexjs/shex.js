@@ -87,6 +87,9 @@ const AllTests = {
     { name: "extension-test-by-name" , args: ["-x", "cli/1dotTestFail.shex", "-s", "<http://a.example/S1>", "-d", "cli/p1.ttl", "-n", "<x>", "--extension", "@shexjs/extension-test"], resultMatch: "\"semActResults\"[\\s\\S]*http://shex.io/extensions/Test/", status: X.shape_test_fail },
     //   extension-wasi initializes asynchronously; validate must await its ready() before dispatching
     { name: "extension-wasi-ready" , args: ["-x", "../../extension-wasi/test/wasi/1dotCode3fail.shex", "-s", "<http://a.example/S1>", "-d", "cli/p1.ttl", "-n", "<x>", "--extension", "@shexjs/extension-wasi"], resultMatch: "\"SemActFailure\"[\\s\\S]*http://shex.io/extensions/WASI/", status: X.shape_test_fail },
+    //   extension-shacl-sparql answers asynchronously (asynchronous: true); validate must drive validateShapeMapAsync
+    { name: "extension-shacl-sparql-fail" , args: ["-x", "../../extension-shacl-sparql/test/cli/events.shex", "-s", "<http://a.example/Event>", "-d", "../../extension-shacl-sparql/test/cli/events-bad.ttl", "-n", "<http://a.example/conf>", "--extension", "@shexjs/extension-shacl-sparql"], resultMatch: "the event ends before it starts", status: X.shape_test_fail },
+    { name: "extension-shacl-sparql-pass" , args: ["-x", "../../extension-shacl-sparql/test/cli/events.shex", "-s", "<http://a.example/Event>", "-d", "../../extension-shacl-sparql/test/cli/events-ok.ttl", "-n", "<http://a.example/conf>", "--extension", "@shexjs/extension-shacl-sparql"], resultMatch: "\"ShapeTest\"", status: X.shape_test_pass },
     //   extension-map exports a factory function; map bindings appear in the passing result structure
     { name: "extension-map" , args: ["-x", "../../extension-map/examples/BPfhir-schema.shex", "-d", "../../extension-map/examples/BPfhir-instance.ttl", "-n", "tag:BPfhir123", "--extension", "../../extension-map/lib/shex-extension-map.js"], resultMatch: "http://shex.io/extensions/Map/#", status: X.shape_test_pass },
 
@@ -372,6 +375,54 @@ if (!TEST_cli) {
         await server.close();
       }
     });
+  });
+
+  /* A SPARQL semantic action with the data behind an endpoint: the query
+   * goes to the endpoint, with $this written into it.  Hand-rolled for the
+   * same reason as above. */
+  describe("extension-shacl-sparql over an endpoint", function () {
+    const Path = require("path");
+    const Fs = require("fs");
+    const child_process = require("child_process");
+    const expect = require("chai").expect;
+    const N3 = require("n3");
+    const fixtures = Path.resolve(__dirname, "../../extension-shacl-sparql/test/cli");
+
+    function validate (args) {
+      return new Promise((resolve, reject) => {
+        const program = child_process.spawn("../bin/validate", args, {cwd: __dirname});
+        let stdout = "", stderr = "";
+        program.stdout.on("data", d => stdout += d);
+        program.stderr.on("data", d => stderr += d);
+        program.on("close", exitCode => resolve({stdout, stderr, exitCode}));
+        program.on("error", reject);
+      });
+    }
+
+    [{data: "events-ok.ttl", status: X.shape_test_pass, says: "\"ShapeTest\""},
+     {data: "events-bad.ttl", status: X.shape_test_fail, says: "the event ends before it starts"},
+    ].forEach(({data, status, says}) =>
+      it(`should ask the endpoint about ${data}`, async function () {
+        this.timeout(60000);
+        const {startSparqlTestServer} = require("../../neighborhood-sparql/test/sparql-test-server");
+        const server = await startSparqlTestServer({});
+        try {
+          server.store.addQuads(new N3.Parser({baseIRI: "http://a.example/"})
+            .parse(Fs.readFileSync(Path.join(fixtures, data), "utf8")));
+          const {stdout, stderr, exitCode} = await validate([
+            "-x", Path.join(fixtures, "events.shex"),
+            "-m", "<http://a.example/conf>@<http://a.example/Event>", "--endpoint", server.url,
+            "--extension", "@shexjs/extension-shacl-sparql"]);
+          expect(stderr).to.equal("");
+          expect(exitCode).to.equal(status);
+          expect(stdout).to.include(says);
+          // the SPARQL action's query reached the endpoint, $this written in
+          expect(server.queryLog.some(q => q.includes("<http://a.example/conf>") && q.includes("?message")))
+            .to.equal(true);
+        } finally {
+          await server.close();
+        }
+      }));
   });
 }
 

@@ -1003,6 +1003,14 @@ async function runValidator (db: any, shapeMap: any, schema: any, options: any, 
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator, {ShExTerm});
   });
+  // An extension whose actions answer with promises (extension-shacl-sparql asks
+  // a query engine) says so, and gets the resumable driver that waits for
+  // them.  Everything else keeps the synchronous one, which costs nothing
+  // per node.
+  const asynchronous = Object.values(extensions).some((ext: any) => ext.asynchronous === true);
+  const validate = async (map: any) => asynchronous
+        ? validator.validateShapeMapAsync(map)
+        : validator.validateShapeMap(map);
 
   if (cmds["dry-run"])
     return 0;
@@ -1010,7 +1018,7 @@ async function runValidator (db: any, shapeMap: any, schema: any, options: any, 
   // run validator
   const res = cmds.grep
       ? await grep(shapeMap)
-      : resultMapToShapeExprTest(validator.validateShapeMap(shapeMap));
+      : resultMapToShapeExprTest(await validate(shapeMap));
 
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].done(validator);
@@ -1041,16 +1049,16 @@ async function runValidator (db: any, shapeMap: any, schema: any, options: any, 
   }
 
   async function grep (fixedMap: any): Promise<any> {
-    const passes = fixedMap.reduce((acc: any, row: any) => {
+    let passes: any[] = [];
+    for (const row of fixedMap) {
       if (cmds.verbose)
         process.stdout.write('checking ' + JSON.stringify(row))
-      const res = resultMapToShapeExprTest(validator.validateShapeMap([row]));
+      const res = resultMapToShapeExprTest(await validate([row]));
       if (cmds.verbose)
         process.stdout.write(' -> ' + !('errors' in res) + "\n")
-      return "errors" in res
-        ? acc
-        : acc.concat(cmds.list ? row.node : res);
-    }, []);
+      if (!("errors" in res))
+        passes = passes.concat(cmds.list ? row.node : res);
+    }
     return cmds.list
       ? passes
     :passes.length > 1

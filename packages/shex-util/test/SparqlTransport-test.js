@@ -51,6 +51,22 @@ describe("asking a SPARQL endpoint", function () {
     expect(rows.map(r => r[0].value)).to.deep.equal(["http://a.example/x"]);
   });
 
+  it("should answer any query with its variables, or an ASK with its boolean", async function () {
+    const wasFetch = globalThis.fetch;
+    try {
+      globalThis.fetch = ok({head: {vars: ["s", "o"]},
+                             results: {bindings: [{s: {type: "uri", value: "http://a.example/x"}}]}});
+      const select = await ShExUtil.executeSparqlPromise(query, endpoint, N3.DataFactory);
+      expect(select.vars).to.deep.equal(["s", "o"]);
+      expect(select.rows.map(r => [r[0].value, r[1]])).to.deep.equal([["http://a.example/x", null]]);
+      globalThis.fetch = ok({head: {}, boolean: false});
+      expect(await ShExUtil.executeSparqlPromise("ASK {}", endpoint, N3.DataFactory))
+        .to.deep.equal({boolean: false});
+    } finally {
+      globalThis.fetch = wasFetch;
+    }
+  });
+
   /* Wikidata's query service answers 429 with an empty body when it is
    * throttling, and this used to be reported as "Unexpected end of JSON
    * input" -- true of the body, and no help at all about anything else. */
