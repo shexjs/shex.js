@@ -1,0 +1,25 @@
+{
+  "type": "ShapeTest",
+  "node": "http://a.example/n2a",
+  "shape": "http://a.example/S1",
+  "solution": {
+    "type": "TripleConstraintSolutions",
+    "predicate": "http://a.example/p1",
+    "min": 2,
+    "max": 2,
+    "solutions": [
+      {
+        "type": "TestedTriple",
+        "subject": "http://a.example/n1",
+        "predicate": "http://a.example/p1",
+        "object": "http://a.example/n2a"
+      },
+      {
+        "type": "TestedTriple",
+        "subject": "http://a.example/n2a",
+        "predicate": "http://a.example/p1",
+        "object": "http://a.example/n2a"
+      }
+    ]
+  }
+}

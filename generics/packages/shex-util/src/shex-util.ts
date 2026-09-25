@@ -363,8 +363,8 @@ const ShExUtil = {
           return reqd;
         }
 
-        if (typeof expr === "string") { // Inclusion
-          const included = schema._index.tripleExprs[expr].expression;
+        if (typeof expr === "string") { // Inclusion: the labelled triple expression it names
+          const included = schema._index.tripleExprs[expr];
           return _compileExpression(included, schema);
         }
 
@@ -653,7 +653,7 @@ const ShExUtil = {
           // filter(function (el, ord, l) { return l.indexOf(el) === ord; })
           for (let i = a.length-1; i > -1; --i)
             if (a.indexOf(a[i]) < i)
-              a.splice(i, i+1);
+              a.splice(i, 1); // (used to splice i+1 elements, eating the neighbours of a repeat)
         }
         for (const k in this.needs)
           _trim(this.needs[k]);
@@ -988,15 +988,17 @@ const ShExUtil = {
           }
         }
 
-        (["extends", "restricts"]).forEach(attr => {
-        if (shape[attr] && shape[attr].length > 0)
-          shape[attr].forEach(function (i: any) {
+        if (shape.extends && shape.extends.length > 0)
+          shape.extends.forEach(function (i: any) {
             ret.add(shapeDecl.id, i);
           });
-        })
         if (shape.expression)
           _walkTripleExpression(shape.expression, negated);
       }
+      // RESTRICTS sits on the declaration (ShExJ 2.1), not on its shape
+      (shapeDecl.restricts || []).forEach(function (i: any) {
+        _walkShapeExpression(i, 0);
+      });
       _walkShapeExpression(shapeDecl.shapeExpr, 0); // 0 means false for bitwise XOR
     });
     return ret;
@@ -1928,7 +1930,8 @@ const ShExUtil = {
               : undefined
           );
         case "typed-literal": // encountered in wikidata query service
-          return dataFactory.literal(elt.value, elt.datatype);
+          // (a bare string here would be taken for a language tag)
+          return dataFactory.literal(elt.value, dataFactory.namedNode(elt.datatype));
         default: throw "unknown XML results type: " + elt.type;
         }
       })

@@ -26,7 +26,8 @@ const WasiExtension = require("../lib/shex-extension-wasi");
 
 const TestUrl = "http://shex.io/extensions/Test/";
 const WasiUrl = "http://shex.io/extensions/WASI/";
-const ShexTestDir = Path.join(__dirname, "../../../../shexTest");
+const findPath = require("../../shex-cli/test/findPath.js");
+const ShexTestDir = Path.resolve(findPath("schemas"), ".."); // the corpus root, wherever the resolver finds it
 const WasiDir = Path.join(__dirname, "wasi");
 const Manifest = JSON.parse(Fs.readFileSync(Path.join(WasiDir, "manifest.json"), "utf8"));
 
@@ -265,6 +266,10 @@ describe("@shexjs/extension-wasi", function () {
   });
 
   describe("node:wasi host parity", function () {
+    // constructing node:wasi's WASI warns that it is experimental; we know
+    let quiet;
+    before(() => { quiet = require("../../shex-cli/test/expectWarning.js")(/WASI is an experimental feature/); });
+    after(() => quiet.restore());
     it("should produce the same lines under Node's built-in WASI", function () {
       let hasWasi = true;
       try { require("node:wasi"); } catch (e) { hasWasi = false; }

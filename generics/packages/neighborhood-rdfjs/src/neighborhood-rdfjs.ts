@@ -2,7 +2,7 @@
  */
 import * as RdfJs from "@rdfjs/types";
 import {Shape} from "shexj";
-import {DbParamSpec, DbQueryTracker, Neighborhood, NeighborhoodDb, ParamEditor, sparqlOrder, Start} from "@shexjs/neighborhood-api";
+import {DbParamSpec, DbQueryTracker, Neighborhood, NeighborhoodDb, ParamEditor, Start} from "@shexjs/neighborhood-api";
 
 /** The subset of an RDF/JS quad store needed by rdfjsDB, satisfied by e.g. an N3.Store.
  */
@@ -25,18 +25,14 @@ export function rdfjsDB (db: RdfJsQuadSource, queryTracker?: DbQueryTracker): Ne
       startTime = new Date();
       token = queryTracker.start(false, point, shapeLabel);
     }
-    const outgoing: RdfJs.Quad[] = [...db.match(point, null, null, null)].sort(
-      (l, r) => sparqlOrder(l.object, r.object)
-    );
+    const outgoing: RdfJs.Quad[] = [...db.match(point, null, null, null)];
     if (queryTracker) {
       const time = new Date();
       queryTracker.end(outgoing, time.valueOf() - startTime!.valueOf(), token);
       startTime = time;
       token = queryTracker.start(true, point, shapeLabel);
     }
-    const incoming: RdfJs.Quad[] = [...db.match(null, null, point, null)].sort(
-      (l, r) => sparqlOrder(l.object, r.object)
-    );
+    const incoming: RdfJs.Quad[] = [...db.match(null, null, point, null)];
     if (queryTracker) {
       queryTracker.end(incoming, new Date().valueOf() - startTime!.valueOf(), token);
     }

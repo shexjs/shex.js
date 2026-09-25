@@ -16,7 +16,7 @@ npm install @shexjs/extension-test
 shex-validate --extension @shexjs/extension-test -x schema.shex -d data.ttl -n <node> -s <shape>
 ```
 
-`require("@shexjs/extension-test").register(validator, ShEx)` installs it on
+`require("@shexjs/extension-test").register(validator, {ShExTerm})` installs it on
 a validator you construct yourself.
 
 ---

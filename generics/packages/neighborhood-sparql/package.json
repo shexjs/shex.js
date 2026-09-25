@@ -1,9 +1,10 @@
 {
   "name": "@shexjs/neighborhood-sparql",
-  "version": "1.0.0-alpha.30",
+  "version": "1.0.0-alpha.33",
   "files": [
     "lib",
-    "src"
+    "src",
+    "sync-fetch.js"
   ],
   "description": "Implementation of @shexjs/neighborhood-api which gets data from a SPARQL endpoint",
   "author": {
@@ -25,12 +26,13 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@shexjs/eval-validator-api": "^1.0.0-alpha.30",
-    "@shexjs/neighborhood-api": "^1.0.0-alpha.30",
+    "@shexjs/eval-validator-api": "^1.0.0-alpha.33",
+    "@shexjs/neighborhood-api": "^1.0.0-alpha.33",
     "@shexjs/term": "^1.0.0-alpha.28",
-    "@shexjs/util": "^1.0.0-alpha.30",
-    "@shexjs/visitor": "^1.0.0-alpha.30",
-    "n3": "^1.20.4"
+    "@shexjs/util": "^1.0.0-alpha.33",
+    "@shexjs/visitor": "^1.0.0-alpha.33",
+    "@types/shexj": "^2.1.7",
+    "n3": "^2.7.12"
   },
   "scripts": {
     "build": "tsc",

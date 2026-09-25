@@ -1,0 +1,147 @@
+<idea-plugin>
+    <id>org.shexjs.jetbrains</id>
+    <name>ShEx</name>
+    <vendor url="https://github.com/shexjs/shex.js" email="eric@w3.org">shex.js</vendor>
+
+    <description><![CDATA[
+        <p><b>ShEx (Shape Expressions) language support</b> for IntelliJ-based IDEs.</p>
+        <p>Diagnostics, hover, go-to-definition, find-references, a document
+        outline, completion and a <code>shex.validate</code> command are provided
+        by the <code>@shexjs/language-server</code> Language Server, wired in
+        through <a href="https://plugins.jetbrains.com/plugin/23257-lsp4ij">LSP4IJ</a>.</p>
+        <p>Handles ShExC (<code>.shex</code>/<code>.shexc</code>), ShExJ
+        (<code>.shexj</code>), ShExR (<code>.shexr</code>), shape maps
+        (<code>.smap</code>/<code>.shapemap</code>) and the RDF data they validate
+        (<code>.ttl</code>/<code>.trig</code>/<code>.turtle</code>).</p>
+        <p>Requires Node.js and a built copy of the ShEx language server; see the
+        plugin README for how to point it at the server.</p>
+    ]]></description>
+
+    <!-- Bare platform + the Red Hat LSP4IJ client runtime we plug into. -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.redhat.devtools.lsp4ij</depends>
+    <!-- JCEF (the manifest browser's web view) is a bundled plugin since 2026.x. -->
+    <depends>com.intellij.modules.jcef</depends>
+
+    <!-- ShEx's own file types. (Turtle/TriG is intentionally absent here and
+         mapped by pattern below, to avoid clashing with any RDF plugin.) -->
+    <extensions defaultExtensionNs="com.intellij">
+        <fileType name="ShExC"
+                  language="ShExC"
+                  implementationClass="org.shexjs.jetbrains.ShExCFileType"
+                  fieldName="INSTANCE"
+                  extensions="shex;shexc"/>
+        <fileType name="ShapeMap"
+                  language="ShapeMap"
+                  implementationClass="org.shexjs.jetbrains.ShapeMapFileType"
+                  fieldName="INSTANCE"
+                  extensions="smap;shapemap"/>
+        <fileType name="ShExJ"
+                  language="ShExJ"
+                  implementationClass="org.shexjs.jetbrains.ShExJFileType"
+                  fieldName="INSTANCE"
+                  extensions="shexj"/>
+        <fileType name="ShExR"
+                  language="ShExR"
+                  implementationClass="org.shexjs.jetbrains.ShExRFileType"
+                  fieldName="INSTANCE"
+                  extensions="shexr"/>
+        <!-- RDF data companions get their own (ShEx-specific) Turtle language so
+             the data panes are highlighted. The server is also bound to these
+             files by filename pattern below, so a foreign .ttl owner doesn't
+             cost validation. -->
+        <fileType name="ShExTurtle"
+                  language="ShExTurtle"
+                  implementationClass="org.shexjs.jetbrains.TurtleFileType"
+                  fieldName="INSTANCE"
+                  extensions="ttl;trig;turtle"/>
+
+        <!-- Base (lexical) ShExC highlighting. The server's semantic-token
+             overlay (shape declaration vs reference) is layered on top by LSP4IJ. -->
+        <lang.syntaxHighlighterFactory language="ShExC"
+                                       implementationClass="org.shexjs.jetbrains.ShExCSyntaxHighlighterFactory"/>
+        <!-- Base (lexical) Turtle / TriG highlighting for the data panes. -->
+        <lang.syntaxHighlighterFactory language="ShExTurtle"
+                                       implementationClass="org.shexjs.jetbrains.TurtleSyntaxHighlighterFactory"/>
+
+        <!-- The manifest browser: a JCEF panel hosting the same web view as the
+             VS Code client, filled by the "Open ShEx Manifest Browser" action. -->
+        <toolWindow id="ShEx Manifest"
+                    anchor="bottom"
+                    secondary="true"
+                    canCloseContents="true"
+                    factoryClass="org.shexjs.jetbrains.ShexManifestToolWindowFactory"/>
+
+        <!-- Balloons for validate-by-pointing verdicts. -->
+        <notificationGroup id="ShEx" displayType="BALLOON"/>
+    </extensions>
+
+    <!-- Register the ShEx language server with LSP4IJ and map files to it. The
+         languageId on each mapping is the LSP TextDocumentItem#languageId the
+         server switches on (see kindOf() in the server). -->
+    <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">
+        <server id="shexLanguageServer"
+                name="ShEx Language Server"
+                factoryClass="org.shexjs.jetbrains.ShexLanguageServerFactory">
+            <description><![CDATA[
+                ShEx Language Server (@shexjs/language-server), launched as
+                <code>node .../lib/server.js --stdio</code>.
+            ]]></description>
+        </server>
+
+        <!-- ShEx's own languages, by IntelliJ Language id. -->
+        <languageMapping language="ShExC" serverId="shexLanguageServer" languageId="shexc"/>
+        <languageMapping language="ShapeMap" serverId="shexLanguageServer" languageId="shapemap"/>
+        <languageMapping language="ShExJ" serverId="shexLanguageServer" languageId="shexj"/>
+        <languageMapping language="ShExR" serverId="shexLanguageServer" languageId="shexr"/>
+        <languageMapping language="ShExTurtle" serverId="shexLanguageServer" languageId="turtle"/>
+
+        <!-- RDF data companions also by filename pattern, so the server still
+             connects even when another plugin owns the .ttl file type (the same
+             serverId, so this only ever adds a binding, never a second server). -->
+        <fileNamePatternMapping patterns="*.ttl;*.trig;*.turtle"
+                                serverId="shexLanguageServer"
+                                languageId="turtle"/>
+    </extensions>
+
+    <actions>
+        <action id="org.shexjs.jetbrains.OpenManifestBrowser"
+                class="org.shexjs.jetbrains.ShexOpenManifestBrowserAction"
+                text="Open ShEx Manifest Browser"
+                description="Browse and run a ShEx test manifest in a table with live schema/data editors">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+
+        <!-- Validate-by-pointing: right-click a node in data, a shape in a
+             schema (either order); the pair is validated when both are set. -->
+        <action id="org.shexjs.jetbrains.ValidateThisNode"
+                class="org.shexjs.jetbrains.ValidateThisNodeAction"
+                text="ShEx: Validate This Node"
+                description="Mark the node at the caret, to validate against a shape you pick in a schema">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+        <action id="org.shexjs.jetbrains.ValidateAgainstThisShape"
+                class="org.shexjs.jetbrains.ValidateAgainstThisShapeAction"
+                text="ShEx: Validate Against This Shape"
+                description="Mark the shape at the caret, to validate a node you pick in a data document against">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+
+        <!-- Re-run the last pointed pair against the current (edited) documents. -->
+        <!-- No default keyboard shortcut: the obvious ones (e.g. ctrl/⌃⌥R) are
+             taken by IDE "Run…"/"Edit Configurations". Assign one in
+             Settings ▸ Keymap (search "ShEx: Re-validate") if you want it. -->
+        <action id="org.shexjs.jetbrains.Revalidate"
+                class="org.shexjs.jetbrains.RevalidateAction"
+                text="ShEx: Re-validate Last Node/Shape"
+                description="Re-run the last pointed node/shape pair against the current (edited) documents">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+        <action id="org.shexjs.jetbrains.ToggleAutoValidate"
+                class="org.shexjs.jetbrains.ToggleAutoValidateAction"
+                text="ShEx: Toggle Auto-validate on Edit"
+                description="Toggle re-validating the last node/shape pair automatically a beat after each edit">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>

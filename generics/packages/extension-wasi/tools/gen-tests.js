@@ -3,7 +3,7 @@
  * Re-code shexTest's Test-extension semantic-action tests for the generic
  * WASI extension <http://shex.io/extensions/WASI/>.
  *
- * Reads ../../../../shexTest/validation/manifest.jsonld, takes every test
+ * Reads shexTest's validation/manifest.jsonld (located by the CLI findPath), takes every test
  * with the sht:SemanticAction trait whose schema contains Test semacts
  * (the shapeExtern* tests carry the trait for the ExternalShape mechanism
  * and have no code to re-code), and writes into ../test/wasi/:
@@ -24,7 +24,8 @@ const Path = require("path");
 
 const TestUrl = "http://shex.io/extensions/Test/";
 const WasiUrl = "http://shex.io/extensions/WASI/";
-const ShexTestDir = Path.join(__dirname, "../../../../shexTest");
+const findPath = require("../../shex-cli/test/findPath.js");
+const ShexTestDir = Path.resolve(findPath("schemas"), ".."); // the corpus root, wherever the resolver finds it
 const OutDir = Path.join(__dirname, "../test/wasi");
 
 // ── ShExC CODE token escaping ────────────────────────────────────────────────

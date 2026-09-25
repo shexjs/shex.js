@@ -5,7 +5,7 @@
 
 const expect = require("chai").expect;
 const Path = require("path");
-const fetch = require("node-fetch");
+const fetch = globalThis.fetch;
 const {makeServer} = require("../lib/shex-serve");
 
 const repoRoot = Path.join(__dirname, "../../..");

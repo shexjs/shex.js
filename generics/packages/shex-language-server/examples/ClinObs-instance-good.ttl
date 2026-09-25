@@ -1,0 +1,14 @@
+PREFIX : <http://hl7.org/fhir/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+<Obs1>
+    :status "final" ;
+    :subject <Patient2> .
+
+<Patient2>
+    :identifier [
+        :system <http://hospital.smarthealthit.org> ;
+        :value "12345"
+    ] ;
+    :name "Doe" , "John" ;
+    :gender "male" ;
+    :birthDate "1980-01-01"^^xsd:date .

@@ -336,6 +336,7 @@ onDataLoad (): void {
       return false;
     });
     $("#download-results-button").on("click", this.downloadResults.bind(this));
+    $("#shortenPermalink").on("click", (evt: any) => { this.track(this.shortenPermalink(evt)); });
     $("#createGist").on("click", (evt: any) => { this.track(this.createGist(evt)); });
     $("#updateGist").on("click", (evt: any) => { this.track(this.updateGist(evt)); });
 
@@ -406,6 +407,7 @@ onDataLoad (): void {
     });
 
     $("#about-button").click((evt: any) => {
+      this.toggleControls(); // close the menu; the dialog replaces it (issue #318)
       $("#about").dialog("open");
     });
 

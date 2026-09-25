@@ -6,7 +6,7 @@
 ShExMap: a semantic-action extension that binds values as a node validates
 (`%Map:{ :name %}` on a triple constraint captures what the triple's object
 was) and materializes a graph of another schema from those bindings.  The
-extension registers as `http://shex.io/extensions/Map/`.
+extension registers as `http://shex.io/extensions/Map/#`.
 
 ```sh
 npm install @shexjs/extension-map
@@ -24,7 +24,7 @@ npm install @shexjs/extension-map
   `npm run build`, which also compiles the library into `lib/`.
 
 The library (`require("@shexjs/extension-map")`) is a factory taking the
-ShEx modules it works with and answering the extension -- `register(validator, ShEx)`,
+ShEx modules it works with and answering the extension -- `register(validator, {ShExTerm})`,
 the `ThreadedMaterializer` and its debugger; see the repository for the
 ShExMap specification and `examples/` for worked pairs.
 

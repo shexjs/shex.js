@@ -32,9 +32,9 @@ console.log(results[0].status);  // "conformant"
 
 ## ctor(store, queryTracker?)
 
-Wraps the store for the Neighborhood API. The store must answer `getQuads(subject, predicate, object, graph)` with quads of RDF/JS terms — N3.js's `Store` does, as does anything implementing the RDF/JS [Store](https://rdf.js.org/stream-spec/#store-interface) match semantics synchronously.
+Wraps the store for the Neighborhood API. The store must implement the RDF/JS `match(subject, predicate, object, graph)` interface, returning quads of RDF/JS terms synchronously — N3.js's `Store` does, as does anything implementing the RDF/JS [Store](https://rdf.js.org/stream-spec/#store-interface) match semantics synchronously.
 
-A validation is a walk: for each node it reaches, the validator asks this db for the node's *neighborhood* — the arcs out of (and, for inverse constraints, into) the node — which is two `getQuads` calls. The optional `queryTracker` hears about each ask, which is how the WebApp paints what a validation touched.
+A validation is a walk: for each node it reaches, the validator asks this db for the node's *neighborhood* — the arcs out of (and, for inverse constraints, into) the node — which is two `match` calls. The optional `queryTracker` hears about each ask, which is how the WebApp paints what a validation touched.
 
 Because the store is local and complete, every kind of constraint works here — `CLOSED` shapes, inverse arcs, blank-node focus nodes — which is why the [shexTest](https://github.com/shexSpec/shexTest) suite runs over this module, and other neighborhoods ([SPARQL](../neighborhood-sparql#readme), [Wikibase](../neighborhood-wikibase#readme)) measure themselves against it.
 

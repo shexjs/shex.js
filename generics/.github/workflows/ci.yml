@@ -18,13 +18,13 @@ jobs:
       matrix:
         node-version: [20, 22, 24, 26]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: clone shexTest alongside the checkout, on the ref the shex-test dependency names
         # package.json is the single switch (guarded on main by check-branch-deps)
         run: |
           REF=$(sed -n 's|.*"shex-test": "github:shexSpec/shexTest#\([^"]*\)".*|\1|p' package.json)
           git clone --depth=1 --branch="${REF:-main}" https://github.com/shexSpec/shexTest.git ../shexTest
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
@@ -48,22 +48,23 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
       - run: npm ci
       - run: npm run lint
       - run: npm run check-branch-deps
+      - run: npm run check-page-scripts
 
   webpack:
     # the doc/webpacks bundles are gitignored and built on demand; make sure
     # every package that has one still builds it
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -75,13 +76,13 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true # coverage reporting must not gate merges
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: clone shexTest alongside the checkout, on the ref the shex-test dependency names
         # package.json is the single switch (guarded on main by check-branch-deps)
         run: |
           REF=$(sed -n 's|.*"shex-test": "github:shexSpec/shexTest#\([^"]*\)".*|\1|p' package.json)
           git clone --depth=1 --branch="${REF:-main}" https://github.com/shexSpec/shexTest.git ../shexTest
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm

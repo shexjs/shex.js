@@ -8,8 +8,23 @@ updates:
     open-pull-requests-limit: 10
     labels: [dependencies]
     versioning-strategy: increase
+    # Batch the low-risk churn into two PRs (dev vs. prod), so a normal week is
+    # a couple of green PRs the auto-merge workflow lands on its own. Majors stay
+    # ungrouped -- one PR each -- so a breaking bump gets its own review + CI.
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+      production-dependencies:
+        dependency-type: production
+        update-types: [minor, patch]
     ignore:
+      # node-fetch 3 is pure ESM; the CJS build targets can't take it.
       - dependency-name: "node-fetch"
+        update-types: ["version-update:semver-major"]
+      # TypeScript 7 is the native (Go) port with no classic tsc JS API, which
+      # ts-jison / ts-loader still need -- stay on 5.x. (See the TS-conversion notes.)
+      - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
@@ -19,6 +34,7 @@ updates:
       time: "10:00"
     open-pull-requests-limit: 10
     labels: [dependencies]
-    ignore:
-      - dependency-name: "node-fetch"
-        update-types: ["version-update:semver-major"]
+    # Action bumps are almost always safe; take them as one grouped PR.
+    groups:
+      github-actions:
+        patterns: ["*"]

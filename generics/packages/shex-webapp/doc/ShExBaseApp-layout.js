@@ -172,9 +172,13 @@ mixin(ShExBaseApp, {
                 const left = bottonBBox.right - bottonBBox.width; // - controlsBBox.width;
                 $("#controls").css("top", bottonBBox.bottom).css("left", left);
             }
-            $("#permalink a").removeAttr("href"); // can't click until ready
+            $("#permalinkAnchor").removeAttr("href"); // can't click until ready
             const permalink = await this.getPermalink();
-            $("#permalink a").attr("href", permalink);
+            $("#permalinkAnchor").attr("href", permalink);
+            // a fresh permalink outdates any short link (removeAttr, never href="",
+            // which would make the anchor reload the page)
+            $("#shortPermalinkRow").hide();
+            $("#shortPermalink").removeAttr("href").text("");
         }
     },
     toggleControlsArrow(which) {

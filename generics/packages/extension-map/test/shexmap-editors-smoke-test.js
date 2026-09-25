@@ -4,12 +4,11 @@
  */
 "use strict";
 
-const TEST_browser = "TEST_browser" in process.env ? JSON.parse(process.env["TEST_browser"]) : false;
+const TEST_browser = require("../../shex-cli/test/testGate.js")("TEST_browser");
 
 const Fs = require("fs");
 const Path = require("path");
 const expect = require("chai").expect;
-const node_fetch = require("node-fetch");
 // jsdom's engines outpace the packages' own; required lazily under
 // TEST_browser (c.f. browser-test.js)
 let Harness, nock;
@@ -49,9 +48,9 @@ if (!TEST_browser) {
     const asShExMap = "&plugin=" + encodeURIComponent("../../extension-map/doc/ShExMapPlugin.js")
           + "&manifestURL=" + encodeURIComponent("../../extension-map/examples/manifest.json");
 
-    let dom, $, shared, app;
+    let dom, $, shared, app, errors;
     before(async function () {
-      ({dom, $, shared} = await Harness.boot(page, "?editors=1" + asShExMap));
+      ({dom, $, shared, errors} = await Harness.boot(page, "?editors=1" + asShExMap));
     });
 
     after(function () {
@@ -420,20 +419,33 @@ if (!TEST_browser) {
         app.materialize = real;
       }
 
-      // the table is built from whatever the pane holds
-      const pane = $("#bindings1 textarea").first();
-      pane.val(bindingsJson);
+      // the table is built from whatever the pane holds -- the editor's
+      // text, through the textarea it stands in front of
+      const textarea = $("#bindings1 textarea").first();
+      const editor = $("#bindings1 .shexjs-editor-pane");
+      textarea.val(bindingsJson);
+      const gutterElements = () => $("#bindings1 .cm-gutterElement").length;
+      const gutters = gutterElements();
+      expect(gutters, "the editor has gutters to lose").to.be.above(0);
+      const erred = errors.length;
       key("[");
       expect($("#bindings1 table thead th").map((i, th) => $(th).text()).get(),
              "a column per variable").to.include("http://a.example/v1");
       expect($("#bindings1 table tbody tr").length, "a row per binding").to.be.above(0);
       // jsdom lays nothing out, so :visible is no help; hide() writes the
       // inline style this reads
-      expect(pane.css("display"), "the textarea steps aside").to.equal("none");
+      expect(editor[0].style.display, "the editor steps aside").to.equal("none");
 
       key("]");
       expect($("#bindings1 table").length, "and comes back").to.equal(0);
-      expect(pane.css("display"), "with the textarea in front again").to.not.equal("none");
+      // "back" once removed every div in #bindings1, which is the editor's
+      // inside: its next update found its gutters gone ("CodeMirror plugin
+      // crashed: ... reading 'nextSibling'")
+      expect(gutterElements(), "its gutters intact").to.equal(gutters);
+      textarea.val(textarea.val() + "\n");
+      Harness.expectClean(errors.slice(erred));
+      expect(editor[0].style.display, "with the editor in front again").to.not.equal("none");
+      expect(textarea[0].style.display, "and the textarea still behind it").to.equal("none");
     });
 
     it("should stop a session on demand", async function () {

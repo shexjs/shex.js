@@ -257,7 +257,7 @@ const prepareParser = function (baseIRI: string | null, schemaMeta: ResourceMeta
       const lineNo = "lexer" in parser.yy ? parser.yy.lexer.yylineno + 1 : 1;
       const pos = "lexer" in parser.yy ? parser.yy.lexer.showPosition() : "";
       const t: Error & {location?: Location} = Error(`${baseIRI}(${lineNo}): ${e.message}\n${pos}`);
-      Error.captureStackTrace(t, runParser);
+      if ("captureStackTrace" in Error) Error.captureStackTrace(t, runParser);
       // where it went wrong, for an editor to mark: the parser's own
       // location of the offending token, else the lexer's
       const loc = (e.hash && e.hash.loc) || ("lexer" in parser.yy && parser.yy.lexer.yylloc) || null;

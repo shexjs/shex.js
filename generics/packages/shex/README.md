@@ -29,7 +29,7 @@ const node = "http://shex.io/examples/Issue1#Issue1"; // node in that data
 
 const N3 = require("n3");
 const ShExLoader = ShEx.Loader({                      // initialize with:
-  fetch: require("node-fetch"),                       //   fetch implementation
+  fetch: globalThis.fetch,                       //   fetch implementation
   rdfjs: N3,                                          //   RdfJs Turtle parser
 });
 

@@ -10,6 +10,9 @@ const ShExTerm = require("@shexjs/term");
 const ShExParser = require("@shexjs/parser");
 const ShapeMapParser = require("shape-map").Parser;
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
+// Reference results are stored in a canonical arc order, so order the
+// neighborhood; the library leaves arcs in native order (see @shexjs/neighborhood-api ordered()).
+const { ordered } = require('@shexjs/neighborhood-api')
 const {ShExValidator, resultMapToShapeExprTest} = require("..");
 const TestExtension = require("@shexjs/extension-test")
 
@@ -21,7 +24,7 @@ const path = require("path");
 const chai = require("chai");
 const expect = chai.expect;
 const assert = chai.assert;
-const findPath = require("./findPath.js");
+const findPath = require("../../shex-cli/test/findPath.js");
 
 const schemasPath = findPath("schemas");
 const validationPath = findPath("validation");
@@ -125,7 +128,7 @@ describe("A ShEx validator", function () {
                       validateExtern: undefined
                       // (point, shapeLabel, ctx) => validator.validateShapeDecl(point, shapeExterns[shapeLabel], ctx)
                     };
-                    const validator = new ShExValidator(schema, RdfJsDb(store), schemaOptions);
+                    const validator = new ShExValidator(schema, ordered(RdfJsDb(store)), schemaOptions);
                     const smParser = ShapeMapParser.construct(manifestURL, schemaMeta, dataMeta);
                     const smap = smParser.parse(test.queryMap);
                     const validationResults = validator.validateShapeMap(smap);
@@ -276,7 +279,7 @@ describe("A ShEx validator", function () {
                         const shape = maybeGetTerm(schemaURL, test.action.shape) || ShExValidator.Start;
                         map = [{node: focus, shape: shape}];
                       }
-                      validator = new ShExValidator(schema, RdfJsDb(store), schemaOptions);
+                      validator = new ShExValidator(schema, ordered(RdfJsDb(store)), schemaOptions);
                       const testResults = TestExtension.register(validator, {ShExTerm});
                       const validationResult = schemaOptions.results === 'api'
                           ? validator.validateShapeMap(map)

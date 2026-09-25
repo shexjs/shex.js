@@ -38,7 +38,7 @@
 import * as RdfJs from "@rdfjs/types";
 import {Shape, ShapeDecl, shapeExprOrRef, tripleExprOrRef} from "shexj";
 import {InternalSchema, SchemaIndex} from "@shexjs/term";
-import {DbParamSpec, DbQueryTracker, Neighborhood, NeighborhoodDb, ParamEditor, sparqlOrder, Start} from "@shexjs/neighborhood-api";
+import {DbParamSpec, DbQueryTracker, Neighborhood, NeighborhoodDb, ParamEditor, Start} from "@shexjs/neighborhood-api";
 import * as ShExUtil from "@shexjs/util";
 import {ShExIndexVisitor} from "@shexjs/visitor";
 import * as N3 from "n3"; // TODO: set global externally
@@ -794,7 +794,7 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
         (inverse ? toInternal(t.s, internalOf) : self) as RdfJs.Quad_Subject,
         DataFactory.namedNode(t.p),
         (inverse ? self : toInternal(t.o, internalOf)) as RdfJs.Quad_Object)) as unknown as RdfJs.Quad[])
-        .sort((l, r) => sparqlOrder(l.object, r.object));
+        ;
     }
   }
 
@@ -809,7 +809,7 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
       out.push(DataFactory.quad(subject, DataFactory.namedNode(t.p),
                                 toInternal(t.o, internalOf) as RdfJs.Quad_Object) as unknown as RdfJs.Quad);
     }
-    return out.sort((l, r) => sparqlOrder(l.object, r.object));
+    return out;
   }
 
   /** Swap a result-set blank node for the handle this DB minted for it. */

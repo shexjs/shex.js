@@ -13,7 +13,7 @@ This is called by [`@shexjs/validator`](../shex-validator#readme).
 npm install @shexjs/neighborhood-sparql
 ```
 
-## ctor(endpoint: string, queryTracker: QueryTracker?, options: object?)
+## ctor(endpoint: string, queryTracker: DbQueryTracker?, options: object?)
 Present a SPARQL endpoint through the Neighborhood API. Call `setSchema(schema)`
 before validating: the schema says which predicates a neighborhood needs, which
 is what keeps the queries narrow.
@@ -30,6 +30,8 @@ is what keeps the queries narrow.
   (EXTENDS alone revisits nodes once per extended shape), and the graph does
   not change under a validation
 - `executeQuery`: replace the SPARQL transport, e.g. to log queries
+- `executeQueryAsync`: the async form of `executeQuery` (preferred — the DB awaits it)
+- `expectBnodes`: expect blank nodes in every neighborhood rather than probing depth-0 first (default `false`)
 - `rateLimit`: how fast to ask, and what to do when the service says not that
   fast — see below
 
