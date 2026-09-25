@@ -63,6 +63,40 @@ export interface AsyncNeighborhoodDb {
   get size(): number
 }
 
+// ── querying what a DB sees ─────────────────────────────────────────────────
+// A neighborhood answers one question -- the arcs around a node -- but an
+// extension may want to ask the same data a whole SPARQL query
+// (@shexjs/extension-shacl-sparql runs SHACL-SPARQL constraints).  What that query
+// runs over is the DB's own view: the whole dataset for a local store or an
+// endpoint, the pages loaded so far for a source that fetches a page at a
+// time.  A DB says which by answering querySource(); one that doesn't answer
+// can't be queried.
+
+/** What a query returns: a SELECT's variables and rows, or an ASK's answer.
+ * A row holds null where its variable is unbound. */
+export type SparqlAnswer =
+  | { vars: string[], rows: (RdfJs.Term | null)[][] }
+  | { boolean: boolean };
+
+/** The subset of an RDF/JS dataset a query engine needs to read one
+ * (e.g. an N3.Store, which Comunica queries in place). */
+export interface QueryableDataset {
+  match(subject?: RdfJs.Term | null, predicate?: RdfJs.Term | null,
+        object?: RdfJs.Term | null, graph?: RdfJs.Term | null): any;
+}
+
+export type QuerySource =
+  /** the data is here, as a dataset: run the query over it yourself */
+  | { kind: "rdfjs", dataset: QueryableDataset }
+  /** the data is behind an endpoint: `query` sends it there and parses the
+   * answer, pacing and failing as the DB's own queries do */
+  | { kind: "endpoint", endpoint: string, query (text: string): Promise<SparqlAnswer> };
+
+/** A DB that can be queried: optional, and feature-tested for. */
+export interface QueryableDb {
+  querySource?(): QuerySource;
+}
+
 // ── declaring a DB's construction parameters ────────────────────────────────
 // STRAWMAN (names and shapes negotiable).  Each neighborhood implementation
 // needs different things to come to life -- an rdfjs store wants files (with

@@ -1,0 +1,12 @@
+PREFIX : <http://a.example/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX shacl-sparql: <http://shex.io/extensions/SHACL-SPARQL/>
+:Event {
+  :name xsd:string ;
+  :start xsd:date ;
+  :end xsd:date ;
+  :part @:Event *
+} %shacl-sparql:{
+  SELECT $this ?start ?end ("the event ends before it starts" AS ?message)
+  WHERE { $this :start ?start ; :end ?end . FILTER (?end < ?start) }
+%}

@@ -38,7 +38,7 @@
 import * as RdfJs from "@rdfjs/types";
 import {Shape, ShapeDecl, shapeExprOrRef, tripleExprOrRef} from "shexj";
 import {InternalSchema, SchemaIndex} from "@shexjs/term";
-import {DbParamSpec, DbQueryTracker, Neighborhood, NeighborhoodDb, ParamEditor, Start} from "@shexjs/neighborhood-api";
+import {DbParamSpec, DbQueryTracker, Neighborhood, NeighborhoodDb, ParamEditor, QuerySource, SparqlAnswer, Start} from "@shexjs/neighborhood-api";
 import * as ShExUtil from "@shexjs/util";
 import {ShExIndexVisitor} from "@shexjs/visitor";
 import * as N3 from "n3"; // TODO: set global externally
@@ -79,6 +79,10 @@ export interface SparqlDbOptions {
   /** the same over fetch(), for the asynchronous db.  Defaults to
    * ShExUtil.executeQueryPromise.  This is the one to want. */
   executeQueryAsync?: (query: string, endpoint: string, dataFactory: any) => Promise<any[][]>;
+  /** the transport for querySource(): any query, answered with its
+   * variables as well as its rows, or with an ASK's boolean.  Defaults to
+   * ShExUtil.executeSparqlPromise. */
+  executeSparqlAsync?: (query: string, endpoint: string, dataFactory: any) => Promise<SparqlAnswer>;
   /** How fast to ask, and what to do when the service says "not that fast".
    *
    * A walk is one request per node it reaches, and a public endpoint meters
@@ -103,6 +107,9 @@ export interface SparqlNeighborhoodDb extends NeighborhoodDb {
   executeSelect (query: string): RdfJs.Term[][];
   /** the same over fetch() -- what a browser should use */
   executeSelectAsync (query: string): Promise<RdfJs.Term[][]>;
+  /** this endpoint, for a query that isn't about a neighborhood (see
+   * QuerySource); paced by the same rate limiter as the rest */
+  querySource (): QuerySource;
   /** a neighborhood over fetch() rather than a blocking request.  Use it
    * through asAsyncDb(); see that for why. */
   getNeighborhoodAsync (point: RdfJs.Term, shapeLabel: string | typeof Start,
@@ -202,6 +209,8 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
         rateLimit.runSync(() => askSync(q, ep, df));
   const executeAsync = (q: string, ep: string, df: any) =>
         rateLimit.run(() => askAsync(q, ep, df));
+  const askAny = options.executeSparqlAsync ||
+        ((q: string, ep: string, df: any) => ShExUtil.executeSparqlPromise(q, ep, df));
   const queryCache: Map<string, any[][]> | null = options.cacheQueries === false ? null : new Map();
 
   /**
@@ -902,6 +911,10 @@ export function sparqlDB (endpoint: string, queryTracker?: DbQueryTracker, optio
     setSchema: function (schema: InternalSchema) { schemaIndex = schema._index || ShExIndexVisitor.index(schema) },
     executeSelect: (query: string) => driveSync(runQuery(query)),
     executeSelectAsync: (query: string) => driveAsync(runQuery(query)),
+    querySource: (): QuerySource => ({
+      kind: "endpoint", endpoint,
+      query: (text: string) => rateLimit.run(() => askAny(text, endpoint, DataFactory)),
+    }),
     rateLimit,
   };
 }

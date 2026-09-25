@@ -47,6 +47,7 @@ packages/shex-webapp/doc/webpacks/*.LICENSE.txt
 packages/extension-map/doc/webpacks/
 packages/extension-reduce/doc/webpacks/
 packages/extension-wasi/doc/webpacks/
+packages/extension-shacl-sparql/doc/webpacks/
 
 .coveralls.yml
 

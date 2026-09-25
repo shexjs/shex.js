@@ -60,6 +60,7 @@ $(eval $(call package,extension-map,        shex-extension-map.js,       eval-si
                                                                          shex-parser shex-term shex-util shex-visitor shex-webapp))
 $(eval $(call package,extension-reduce,     shex-extension-reduce.js,))
 $(eval $(call package,extension-reduce-js,  shex-extension-reduce-js.js,))
+$(eval $(call package,extension-shacl-sparql,shex-extension-shacl-sparql.js,))
 $(eval $(call package,extension-test,       shex-extension-test.js,))
 $(eval $(call package,extension-wasi,       shex-extension-wasi.js,))
 $(eval $(call package,extension-wasi-test,  shex-extension-wasi-test.js,))

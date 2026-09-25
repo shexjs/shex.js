@@ -39,7 +39,7 @@
 import * as RdfJs from "@rdfjs/types";
 import type {Shape} from "shexj";
 import {DbParamSpec, DbQueryTracker, EditorCompletion, Neighborhood, NeighborhoodDb,
-        NeighborhoodWebAppDb, ParamEditor, sparqlOrder, Start} from "@shexjs/neighborhood-api";
+        NeighborhoodWebAppDb, ParamEditor, QuerySource, sparqlOrder, Start} from "@shexjs/neighborhood-api";
 import * as N3 from "n3";
 import * as fs from "fs";
 import * as path from "path";
@@ -209,6 +209,9 @@ export interface WikibaseNeighborhoodDb extends NeighborhoodWebAppDb {
     diagnostics: {from: number, to: number, severity: string, message: string}[];
   } | null;
   loadedPages (): { id: string, text: string }[];
+  /** the pages loaded so far, for a query: this DB's current view of the
+   * wikibase, not the wikibase (see QuerySource) */
+  querySource (): QuerySource;
   /** a neighborhood, fetching the entity page with fetch() if it hasn't got
    * it.  Use it through asAsyncDb(); see that for why. */
   getNeighborhoodAsync (point: RdfJs.Term, shapeLabel: string | typeof Start,
@@ -550,6 +553,7 @@ export function wikibaseDB (queryTracker?: DbQueryTracker, options: WikibaseDbOp
     suggestFocusNodes,
     labelOf,
     loadedPages,
+    querySource: (): QuerySource => ({kind: "rdfjs", dataset: store}),
     entityIri: (id: string) => NS.wd + id,
     locateDocument,
   };
