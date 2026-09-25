@@ -19,9 +19,10 @@ const Path = require("path");
 const expect = require("chai").expect;
 let Harness;
 
+const {testPort} = require("../../../tools/testPorts");
 const [[GitRootServer]] = require("../../../tools/testServer")
       .startServer(
-        [ { url: "http://localhost:9999/shex.js/",
+        [ { url: `http://localhost:${testPort(9999)}/shex.js/`,
             fromDir: Path.join(__dirname, "../../..") }
         ]
       );

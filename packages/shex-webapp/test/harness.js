@@ -41,8 +41,9 @@ const jsdom = require("jsdom");
 const {makeWorkerClass} = require("./fakeWorker");
 
 const ROOT = Path.join(__dirname, "../../..");
+const {testPort} = require("../../../tools/testPorts");
 const [[RepoServer]] = require("../../../tools/testServer")
-      .startServer([{url: "http://localhost:9999/shex.js/", fromDir: ROOT}]);
+      .startServer([{url: `http://localhost:${testPort(9999)}/shex.js/`, fromDir: ROOT}]);
 
 /** subresources jsdom would fetch from the network, served from a local copy */
 const StaticResources = {

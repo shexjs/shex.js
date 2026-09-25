@@ -1,6 +1,6 @@
 ---
 name: shexjs-build-and-test
-description: Build and test the shex.js monorepo without falling into its traps — compiling packages/*/src TypeScript to the gitignored lib/, regenerating the jison parsers, rebuilding after switching branches or pulling, running one test file or a TESTS subset, the TEST_* gates (cli, browser, server, sparql, wikidata, network), the husky pre-commit hook, and c8 coverage. Use before running or debugging shex.js tests, after a checkout/pull/merge, when a test hangs or "reverts" a fix, or when deciding which suites a change must pass.
+description: Build and test the shex.js monorepo without falling into its traps — compiling packages/*/src TypeScript to the gitignored lib/, regenerating the jison parsers, rebuilding after switching branches or pulling, running one test file or a TESTS subset, the TEST_* gates (cli, browser, server, sparql, wikidata, network), the husky pre-commit hook, c8 coverage, and SHEXJS_TEST_PORTS port ranges for testing two checkouts at once. Use before running or debugging shex.js tests, after a checkout/pull/merge, when a test hangs or "reverts" a fix, when a run dies with EADDRINUSE, or when deciding which suites a change must pass.
 ---
 
 # Building and testing shex.js
@@ -106,7 +106,7 @@ prints a `Skipping …` warning or shows up as a pending test.
 | Gate | Enables | Needs |
 |---|---|---|
 | `TEST_cli=true` | shex-cli `Cli-test`, `Stdin-test`, `Debug-cli-test`; extension-map `Map-cli-test` | nothing extra |
-| `TEST_server=true` | shex-cli `Server-test`, `Server-extra-test` | local ports |
+| `TEST_server=true` | shex-cli `Server-test`, `Server-extra-test` | local ports (see port ranges below) |
 | `TEST_browser=true` | jsdom smoke tests in shex-webapp, extension-map, extension-reduce | **the webpack bundles** (see the shexjs-webapp skill); Node ≥ 22 (jsdom) |
 | `TEST_sparql=true` | neighborhood-sparql `Sparql-Validation-test`, `Sparql-Bnode-test` | a built-in comunica endpoint, or `SPARQL_ENDPOINT=<url>` |
 | `TEST_wikidata=true` | a live wikidata.org smoke test in `Wikibase-Db-test` | network |
@@ -131,6 +131,36 @@ prints a `Skipping …` warning or shows up as a pending test.
   `test-no-browser` on Node 20. Its lint job also runs `check-branch-deps` and
   `check-page-scripts` (the committed page scripts must match their
   TypeScript).
+
+### Testing beside another checkout (port ranges)
+
+A few suites listen on fixed ports: the repo server that the jsdom and
+`TEST_browser` suites load pages from (9999, bound as soon as those files
+load, even when the gate is off), the cross-origin plugin hosts (9994,
+9993) and `Server-test`'s `validate -S` (8088). Two checkouts testing at
+once (worktrees, or two sessions) collide on them, and the second run dies
+with `EADDRINUSE`. Give each session its own range:
+
+```sh
+SHEXJS_TEST_PORTS=20100 npm test         # 9999 -> 20100, 9994 -> 20101, ...
+node tools/testPorts.js                  # this session's ports, and which are taken
+```
+
+- Unset or empty, nothing changes: the default ports are used.
+- **Set it once per session.** In a Claude Code session, put
+  `{"env": {"SHEXJS_TEST_PORTS": "20100"}}` in that worktree's
+  `.claude/settings.local.json`, so every command in the session, the
+  pre-commit hook included, uses it. Give each concurrent checkout a
+  different base, at least `Slots.length` ports apart (currently 4).
+- The ports stay **fixed** within a session on purpose. With `listen(0)`, a
+  hung run would keep its port while the next run silently took another.
+  Here, the session's next run fails at once, and the error names the port
+  and the `lsof` command that shows who holds it.
+- **A new fixed port** goes through `testPort(<default>)` from
+  `tools/testPorts.js`, with an entry appended to its `Slots` table. Append
+  only: reordering moves every session's ports. `testPort` throws on a port
+  that isn't in the table. A suite that doesn't need a known port should use
+  `listen(0)`, as `serve-test.js` does.
 
 ## Pre-commit hook
 
